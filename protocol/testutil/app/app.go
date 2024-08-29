@@ -1283,7 +1283,7 @@ func launchValidatorInDir(
 		// TODO(CORE-29): Allow the daemons to be launched and cleaned-up successfully by default.
 		"--price-daemon-enabled",
 		"false",
-		"--liquidation-daemon-enabled",
+		"--deleveraging-daemon-enabled",
 		"false",
 	})
 

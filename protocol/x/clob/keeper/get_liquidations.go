@@ -186,7 +186,7 @@ func (k Keeper) GetNextBlocksPricesFromExtendedCommitInfo(ctx sdk.Context, exten
 	if (extendedCommitInfo != &abcicomet.ExtendedCommitInfo{}) && ctxErr == nil {
 		veCodec := vecodec.NewDefaultVoteExtensionCodec()
 		votes, err := veaggregator.FetchVotesFromExtCommitInfo(*extendedCommitInfo, veCodec)
-		if err == nil {
+		if err == nil && len(votes) > 0 {
 			prices, err := k.PriceApplier.VoteAggregator().AggregateDaemonVEIntoFinalPrices(ctx, votes)
 			if err == nil {
 				err = k.PriceApplier.WritePricesToStoreAndMaybeCache(branchedCtx, prices, 0, false)

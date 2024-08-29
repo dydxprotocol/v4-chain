@@ -17,7 +17,7 @@ type SubTaskRunner interface {
 	RunDeleveragingDaemonTaskLoop(
 		ctx context.Context,
 		client *Client,
-		liqFlags flags.DeleveragingFlags,
+		deleveragingFlags flags.DeleveragingFlags,
 	) error
 }
 
@@ -31,7 +31,7 @@ var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 func (s *SubTaskRunnerImpl) RunDeleveragingDaemonTaskLoop(
 	ctx context.Context,
 	daemonClient *Client,
-	liqFlags flags.DeleveragingFlags,
+	deleveragingFlags flags.DeleveragingFlags,
 ) error {
 	defer telemetry.ModuleMeasureSince(
 		metrics.DeleveragingDaemon,
@@ -49,7 +49,7 @@ func (s *SubTaskRunnerImpl) RunDeleveragingDaemonTaskLoop(
 	subaccounts, err := daemonClient.FetchSubaccountsAtBlockHeight(
 		ctx,
 		lastCommittedBlockHeight,
-		liqFlags,
+		deleveragingFlags,
 	)
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func (s *SubTaskRunnerImpl) RunDeleveragingDaemonTaskLoop(
 func (c *Client) FetchSubaccountsAtBlockHeight(
 	ctx context.Context,
 	blockHeight uint32,
-	liqFlags flags.DeleveragingFlags,
+	deleveragingFlags flags.DeleveragingFlags,
 ) (
 	subaccounts []satypes.Subaccount,
 	err error,
@@ -89,7 +89,7 @@ func (c *Client) FetchSubaccountsAtBlockHeight(
 	queryCtx := newContextWithQueryBlockHeight(ctx, blockHeight)
 
 	// Subaccounts
-	subaccounts, err = c.GetAllSubaccounts(queryCtx, liqFlags.QueryPageLimit)
+	subaccounts, err = c.GetAllSubaccounts(queryCtx, deleveragingFlags.QueryPageLimit)
 	if err != nil {
 		return nil, err
 	}

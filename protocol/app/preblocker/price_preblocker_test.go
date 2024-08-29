@@ -324,7 +324,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			Txs: [][]byte{},
 		})
 
-		s.Require().EqualError(err, "proposal does not contain enough set messages (VE's, proposed operations, or premium votes): 0")
+		s.Require().EqualError(err, "error fetching extended-commit-info: proposal slice is too short, expected at least 1 elements but got 0")
 	})
 }
 

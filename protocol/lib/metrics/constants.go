@@ -251,11 +251,12 @@ const (
 	RecipientSubaccount           = "recipient_subaccount"
 
 	// Subaccount.
-	CanUpdateSubaccounts                  = "can_update_subaccounts"
-	GetNetCollateralAndMarginRequirements = "get_net_collateral_and_margin_requirements"
-	GetSubaccount                         = "get_subaccount"
-	UpdateSubaccounts                     = "update_subaccounts"
-	SubaccountOwner                       = "subaccount_owner"
+	CanUpdateSubaccounts                     = "can_update_subaccounts"
+	GetNetCollateralAndMarginRequirements    = "get_net_collateral_and_margin_requirements"
+	GetSubaccount                            = "get_subaccount"
+	UpdateSubaccounts                        = "update_subaccounts"
+	SubaccountOwner                          = "subaccount_owner"
+	SubaccountWithdrawalsAndTransfersBlocked = "subaccount_withdrawals_and_transfers_blocked"
 
 	// Deleveraging Daemon.
 	FetchSubaccountsAtBlockHeight = "fetch_subaccounts_at_block_height"

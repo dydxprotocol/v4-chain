@@ -2105,7 +2105,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
 			}
 
-			ks.ClobKeeper.DaemonLiquidationInfo.UpdateSubaccountsWithPositions(
+			ks.ClobKeeper.DaemonDeleveragingInfo.UpdateSubaccountsWithPositions(
 				clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
 			)
 

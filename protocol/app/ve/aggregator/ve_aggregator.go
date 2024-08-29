@@ -168,6 +168,11 @@ func FetchExtCommitInfoFromProposal(
 	proposal [][]byte,
 	extCommitCodec codec.ExtendedCommitCodec,
 ) (abci.ExtendedCommitInfo, error) {
+
+	if len(proposal) <= constants.DaemonInfoIndex {
+		return abci.ExtendedCommitInfo{}, fmt.Errorf("proposal slice is too short, expected at least %d elements but got %d", constants.DaemonInfoIndex+1, len(proposal))
+	}
+
 	extCommitInfoBytes := proposal[constants.DaemonInfoIndex]
 
 	extCommitInfo, err := extCommitCodec.Decode(extCommitInfoBytes)

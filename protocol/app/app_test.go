@@ -93,7 +93,7 @@ func TestAppIsFullyInitialized(t *testing.T) {
 				// Normally they would be only disabled for non-validating full nodes or for nodes where any
 				// daemon is explicitly disabled.
 				"PriceFeedClient",
-				"LiquidationsClient",
+				"DeleveragingClient",
 
 				// Any default constructed type can be considered initialized if the default is what is
 				// expected. getUninitializedStructFields relies on fields being the non-default and

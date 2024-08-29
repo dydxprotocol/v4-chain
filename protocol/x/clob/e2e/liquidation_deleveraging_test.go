@@ -4,13 +4,11 @@ import (
 	"math"
 	"testing"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 
 	"github.com/cometbft/cometbft/types"
 
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
-	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
@@ -620,10 +618,10 @@ func TestLiquidationConfig(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
-			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				LiquidatableSubaccountIds: tc.liquidatableSubaccountIds,
-			})
-			require.NoError(t, err)
+			// _, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
+			// 	LiquidatableSubaccountIds: tc.liquidatableSubaccountIds,
+			// })
+			// require.NoError(t, err)
 
 			// Verify test expectations.
 			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
@@ -1194,11 +1192,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
-			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
-				SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
-			})
-			require.NoError(t, err)
+			// _, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
+			// 	LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
+			// 	SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
+			// })
+			// require.NoError(t, err)
 
 			// Verify test expectations.
 			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})

@@ -10,7 +10,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
@@ -1049,12 +1048,6 @@ func TestLiquidateSubaccounts(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
-			// Update the liquidatable subaccount IDs.
-			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				LiquidatableSubaccountIds: tc.liquidatableSubaccounts,
-			})
-			require.NoError(t, err)
-
 			// TODO(DEC-1971): Replace these test assertions with new verifications on operations queue.
 			// Verify test expectations.
 			// ctx, app = tApp.AdvanceToBlock(3)
@@ -1227,9 +1220,6 @@ func TestPrepareCheckState(t *testing.T) {
 		// Memclob state.
 		placedOperations []types.Operation
 
-		// Parameters.
-		liquidatableSubaccounts []satypes.SubaccountId
-
 		// Expectations.
 		expectedOperationsQueue []types.InternalOperation
 		expectedBids            []memclob.OrderWithRemainingSize
@@ -1244,8 +1234,6 @@ func TestPrepareCheckState(t *testing.T) {
 				BlockHeight: 4,
 			},
 			placedOperations: []types.Operation{},
-
-			liquidatableSubaccounts: []satypes.SubaccountId{},
 
 			expectedOperationsQueue: []types.InternalOperation{},
 			expectedBids:            []memclob.OrderWithRemainingSize{},
@@ -1281,7 +1269,6 @@ func TestPrepareCheckState(t *testing.T) {
 					constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16.MustGetOrder(),
 				),
 			},
-			liquidatableSubaccounts: []satypes.SubaccountId{},
 
 			expectedOperationsQueue: []types.InternalOperation{
 				types.NewShortTermOrderPlacementInternalOperation(
@@ -1462,9 +1449,6 @@ func TestPrepareCheckState(t *testing.T) {
 					}
 				}
 			}
-
-			// Set the liquidatable subaccount IDs.
-			ks.ClobKeeper.DaemonLiquidationInfo.UpdateLiquidatableSubaccountIds(tc.liquidatableSubaccounts)
 
 			// Run the test.
 			clob.PrepareCheckState(
