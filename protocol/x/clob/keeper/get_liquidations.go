@@ -67,7 +67,7 @@ func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 		}
 
 		// Check if the subaccount is liquidatable.
-		isLiquidatable, hasNegativeTnc, liquidationPriority, err := k.CheckSubaccountCollateralization(
+		isLiquidatable, hasNegativeTnc, _, err := k.CheckSubaccountCollateralization(
 			subaccount,
 			marketPrices,
 			perpetuals,
