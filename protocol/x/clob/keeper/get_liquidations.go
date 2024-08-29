@@ -51,15 +51,15 @@ func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 	ctx sdk.Context,
 	extendedCommitInfo *abcicomet.ExtendedCommitInfo,
 ) (
-	liquidatableSubaccountIds []satypes.SubaccountId,
+	liquidatableSubaccountIds *LiquidationPriorityHeap,
 	negativeTncSubaccountIds []satypes.SubaccountId,
 	err error,
 ) {
 
 	subaccounts, marketPrices, perpetuals, liquidityTiers := k.FetchInformationForLiquidations(ctx, extendedCommitInfo)
 
-	liquidatableSubaccountIds = make([]satypes.SubaccountId, 0)
 	negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
+	liquidatableSubaccountIds = NewLiquidationPriorityHeap()
 	for _, subaccount := range subaccounts {
 		// Skip subaccounts with no open positions.
 		if len(subaccount.PerpetualPositions) == 0 {
@@ -67,7 +67,7 @@ func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 		}
 
 		// Check if the subaccount is liquidatable.
-		isLiquidatable, hasNegativeTnc, _, err := k.CheckSubaccountCollateralization(
+		isLiquidatable, hasNegativeTnc, liquidationPriority, err := k.CheckSubaccountCollateralization(
 			subaccount,
 			marketPrices,
 			perpetuals,
@@ -79,7 +79,7 @@ func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 		}
 
 		if isLiquidatable {
-			liquidatableSubaccountIds = append(liquidatableSubaccountIds, *subaccount.Id)
+			liquidatableSubaccountIds.AddSubaccount(*subaccount.Id, liquidationPriority)
 		}
 		if hasNegativeTnc {
 			negativeTncSubaccountIds = append(negativeTncSubaccountIds, *subaccount.Id)

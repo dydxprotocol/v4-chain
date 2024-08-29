@@ -34,7 +34,7 @@ type subaccountToDeleverage struct {
 // failed to fill.
 func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	ctx sdk.Context,
-	subaccountIds []satypes.SubaccountId,
+	subaccountIds *LiquidationPriorityHeap,
 ) (
 	subaccountsToDeleverage []subaccountToDeleverage,
 	err error,
