@@ -67,7 +67,7 @@ func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 		}
 
 		// Check if the subaccount is liquidatable.
-		isLiquidatable, hasNegativeTnc, err := k.CheckSubaccountCollateralization(
+		isLiquidatable, hasNegativeTnc, liquidationPriority, err := k.CheckSubaccountCollateralization(
 			subaccount,
 			marketPrices,
 			perpetuals,
@@ -97,6 +97,7 @@ func (k Keeper) CheckSubaccountCollateralization(
 ) (
 	isLiquidatable bool,
 	hasNegativeTnc bool,
+	liquidationPriority *big.Float,
 	err error,
 ) {
 
@@ -107,17 +108,18 @@ func (k Keeper) CheckSubaccountCollateralization(
 		perpetuals,
 	)
 	if err != nil {
-		return false, false, err
+		return false, false, nil, err
 	}
 
 	bigTotalNetCollateral := big.NewInt(0)
 	bigTotalMaintenanceMargin := big.NewInt(0)
+	bigWeightedMaintenanceMargin := big.NewInt(0)
 
 	// Calculate the net collateral and maintenance margin for each of the asset positions.
 	// Note that we only expect USDC before multi-collateral support is added.
 	for _, assetPosition := range settledSubaccount.AssetPositions {
 		if assetPosition.AssetId != assetstypes.AssetUsdc.Id {
-			return false, false, errorsmod.Wrapf(
+			return false, false, nil, errorsmod.Wrapf(
 				assetstypes.ErrNotImplementedMulticollateral,
 				"Asset %d is not supported",
 				assetPosition.AssetId,
@@ -132,7 +134,7 @@ func (k Keeper) CheckSubaccountCollateralization(
 	for _, perpetualPosition := range settledSubaccount.PerpetualPositions {
 		perpetual, ok := perpetuals[perpetualPosition.PerpetualId]
 		if !ok {
-			return false, false, errorsmod.Wrapf(
+			return false, false, nil, errorsmod.Wrapf(
 				perptypes.ErrPerpetualDoesNotExist,
 				"Perpetual not found for perpetual id %d",
 				perpetualPosition.PerpetualId,
@@ -141,7 +143,7 @@ func (k Keeper) CheckSubaccountCollateralization(
 
 		marketPrice, ok := marketPrices[perpetual.Params.MarketId]
 		if !ok {
-			return false, false, errorsmod.Wrapf(
+			return false, false, nil, errorsmod.Wrapf(
 				pricestypes.ErrMarketPriceDoesNotExist,
 				"MarketPrice not found for perpetual %+v",
 				perpetual,
@@ -154,9 +156,12 @@ func (k Keeper) CheckSubaccountCollateralization(
 		bigNetCollateralQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums)
 		bigTotalNetCollateral.Add(bigTotalNetCollateral, bigNetCollateralQuoteQuantums)
 
+		increment := new(big.Int).Mul(bigNetCollateralQuoteQuantums.Abs(bigNetCollateralQuoteQuantums), new(big.Int).SetUint64(uint64(perpetual.Params.DangerIndexPpm)))
+		bigWeightedMaintenanceMargin.Add(bigWeightedMaintenanceMargin, increment)
+
 		liquidityTier, ok := liquidityTiers[perpetual.Params.LiquidityTier]
 		if !ok {
-			return false, false, errorsmod.Wrapf(
+			return false, false, nil, errorsmod.Wrapf(
 				perptypes.ErrLiquidityTierDoesNotExist,
 				"LiquidityTier not found for perpetual %+v",
 				perpetual,
@@ -173,8 +178,12 @@ func (k Keeper) CheckSubaccountCollateralization(
 		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
 	}
 
+	health := GetHealth(bigTotalNetCollateral, bigTotalMaintenanceMargin)
+	liquidationPriority = new(big.Float).Quo(health, new(big.Float).SetInt(bigWeightedMaintenanceMargin))
+
 	return CanLiquidateSubaccount(bigTotalNetCollateral, bigTotalMaintenanceMargin),
 		bigTotalNetCollateral.Sign() == -1,
+		liquidationPriority,
 		nil
 }
 

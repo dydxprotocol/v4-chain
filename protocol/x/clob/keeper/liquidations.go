@@ -382,6 +382,31 @@ func CanLiquidateSubaccount(
 	return bigMaintenanceMargin.Sign() > 0 && bigMaintenanceMargin.Cmp(bigNetCollateral) == 1
 }
 
+// getHealth returns the ratio of collateral to maintenance margin.
+// If the net collateral is negative, it returns 0.
+// If the maintenance margin is less than or equal to zero, it returns a large number.
+//
+// This is a stateless function.
+func GetHealth(
+	bigNetCollateral *big.Int,
+	bigMaintenanceMargin *big.Int,
+) *big.Float {
+	// If net collateral is less than 0, return 0
+	if bigNetCollateral.Sign() < 0 {
+		return big.NewFloat(0)
+	}
+
+	// If maintenance margin is less than or equal to 0, return a large number
+	if bigMaintenanceMargin.Sign() <= 0 {
+		return big.NewFloat(math.MaxFloat64)
+	}
+
+	// Calculate the collateral/maintenance margin ratio
+	health := new(big.Float).Quo(new(big.Float).SetInt(bigNetCollateral), new(big.Float).SetInt(bigMaintenanceMargin))
+
+	return health
+}
+
 // EnsureIsLiquidatable returns an error if the subaccount is not liquidatable.
 func (k Keeper) EnsureIsLiquidatable(
 	ctx sdk.Context,
