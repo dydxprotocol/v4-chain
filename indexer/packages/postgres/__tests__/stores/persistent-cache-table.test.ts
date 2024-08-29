@@ -30,7 +30,7 @@ describe('Persistent cache store', () => {
       defaultKV.key,
     );
     expect(kv).toEqual(expect.objectContaining(newKv));
-    
+
     const newKv2 = {
       ...defaultKV,
       value: 'someOtherValue2',
@@ -56,11 +56,11 @@ describe('Persistent cache store', () => {
     expect(kvs.length).toEqual(2);
     expect(kvs).toEqual(expect.arrayContaining([
       expect.objectContaining(defaultKV),
-      expect.objectContaining(defaultKV2)
+      expect.objectContaining(defaultKV2),
     ]));
   });
 
-  it('Successfully finds a Wallet', async () => {
+  it('Successfully finds a kv pair', async () => {
     await PersistentCacheTable.create(defaultKV);
 
     const kv: PersistentCacheFromDatabase | undefined = await PersistentCacheTable.findById(

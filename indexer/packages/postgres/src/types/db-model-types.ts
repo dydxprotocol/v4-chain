@@ -274,8 +274,8 @@ export interface LeaderboardPnlFromDatabase {
 }
 
 export interface PersistentCacheFromDatabase {
-  key: string;
-  value: string;
+  key: string,
+  value: string,
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:

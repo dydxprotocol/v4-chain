@@ -326,5 +326,5 @@ export interface LeaderboardPnlQueryConfig extends QueryConfig {
 }
 
 export interface PersistentCacheQueryConfig extends QueryConfig {
-  [QueryableField.KEY]?: string;
+  [QueryableField.KEY]?: string,
 }

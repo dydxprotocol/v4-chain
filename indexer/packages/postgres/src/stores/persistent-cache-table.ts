@@ -1,4 +1,4 @@
-import { PartialModelObject, QueryBuilder } from 'objection';
+import { QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
@@ -13,7 +13,6 @@ import {
   PersistentCacheCreateObject,
   PersistentCacheFromDatabase,
   PersistentCacheQueryConfig,
-  PersistentCacheUpdateObject,
 } from '../types';
 
 export async function findAll(
@@ -78,7 +77,7 @@ export async function upsert(
   const kvs: PersistentCacheModel[] = await PersistentCacheModel.query(
     Transaction.get(options.txId),
   ).upsert(kvToUpsert).returning('*');
-  // should only ever be one key value
+  // should only ever be one key value pair
   return kvs[0];
 }
 export async function findById(
