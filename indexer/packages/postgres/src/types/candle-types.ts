@@ -1,33 +1,33 @@
 import { IsoString } from './utility-types';
 
 export interface CandleCreateObject {
-  startedAt: IsoString;
-  ticker: string;
-  resolution: CandleResolution;
-  low: string;
-  high: string;
-  open: string;
-  close: string;
-  baseTokenVolume: string;
-  usdVolume: string;
-  trades: number;
-  startingOpenInterest: string;
-  orderbookMidPriceOpen: string | undefined;
-  orderbookMidPriceClose: string | undefined;
+  startedAt: IsoString,
+  ticker: string,
+  resolution: CandleResolution,
+  low: string,
+  high: string,
+  open: string,
+  close: string,
+  baseTokenVolume: string,
+  usdVolume: string,
+  trades: number,
+  startingOpenInterest: string,
+  orderbookMidPriceOpen: string | undefined,
+  orderbookMidPriceClose: string | undefined,
 }
 
 export interface CandleUpdateObject {
-  id: string;
-  low?: string;
-  high?: string;
-  open?: string;
-  close?: string;
-  baseTokenVolume?: string;
-  usdVolume?: string;
-  trades?: number;
-  startingOpenInterest?: string;
-  orderbookMidPriceOpen?: string;
-  orderbookMidPriceClose?: string;
+  id: string,
+  low?: string,
+  high?: string,
+  open?: string,
+  close?: string,
+  baseTokenVolume?: string,
+  usdVolume?: string,
+  trades?: number,
+  startingOpenInterest?: string,
+  orderbookMidPriceOpen?: string,
+  orderbookMidPriceClose?: string,
 }
 
 export enum CandleResolution {

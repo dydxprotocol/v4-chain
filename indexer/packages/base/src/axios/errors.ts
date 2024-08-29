@@ -1,8 +1,8 @@
 import { WrappedError } from '../errors';
 
 export interface AxiosOriginalError extends Error {
-  isAxiosError: true;
-  toJSON(): Error;
+  isAxiosError: true,
+  toJSON(): Error,
 }
 
 export interface AxiosErrorResponse {

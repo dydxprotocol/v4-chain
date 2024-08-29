@@ -1,41 +1,41 @@
 /* ------- PERPETUAL MARKET TYPES ------- */
 
 export interface PerpetualMarketCreateObject {
-  id: string;
-  clobPairId: string;
-  ticker: string;
-  marketId: number;
-  status: PerpetualMarketStatus;
-  priceChange24H: string;
-  volume24H: string;
-  trades24H: number;
-  nextFundingRate: string;
-  openInterest: string;
-  quantumConversionExponent: number;
-  atomicResolution: number;
-  subticksPerTick: number;
-  stepBaseQuantums: number;
-  liquidityTierId: number;
-  marketType: PerpetualMarketType;
-  baseOpenInterest: string;
+  id: string,
+  clobPairId: string,
+  ticker: string,
+  marketId: number,
+  status: PerpetualMarketStatus,
+  priceChange24H: string,
+  volume24H: string,
+  trades24H: number,
+  nextFundingRate: string,
+  openInterest: string,
+  quantumConversionExponent: number,
+  atomicResolution: number,
+  subticksPerTick: number,
+  stepBaseQuantums: number,
+  liquidityTierId: number,
+  marketType: PerpetualMarketType,
+  baseOpenInterest: string,
 }
 
 export interface PerpetualMarketUpdateObject {
-  id?: string;
-  clobPairId?: string;
-  ticker?: string;
-  marketId?: number;
-  status?: PerpetualMarketStatus;
-  priceChange24H?: string;
-  volume24H?: string;
-  trades24H?: number;
-  nextFundingRate?: string;
-  openInterest?: string;
-  quantumConversionExponent?: number;
-  atomicResolution?: number;
-  subticksPerTick?: number;
-  stepBaseQuantums?: number;
-  liquidityTierId?: number;
+  id?: string,
+  clobPairId?: string,
+  ticker?: string,
+  marketId?: number,
+  status?: PerpetualMarketStatus,
+  priceChange24H?: string,
+  volume24H?: string,
+  trades24H?: number,
+  nextFundingRate?: string,
+  openInterest?: string,
+  quantumConversionExponent?: number,
+  atomicResolution?: number,
+  subticksPerTick?: number,
+  stepBaseQuantums?: number,
+  liquidityTierId?: number,
 }
 
 export enum PerpetualMarketColumns {

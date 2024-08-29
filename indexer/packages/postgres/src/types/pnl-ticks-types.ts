@@ -9,7 +9,7 @@ export interface PnlTicksCreateObject {
   netTransfers: string,
   createdAt: string,
   blockHeight: string,
-  blockTime: IsoString;
+  blockTime: IsoString,
 }
 
 export enum PnlTicksColumns {

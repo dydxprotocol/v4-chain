@@ -99,53 +99,53 @@ export const APIOrderStatusEnum = {
 };
 
 export interface OrderSubaccountMessageContents {
-  id: string;
-  subaccountId: string;
-  clientId: string;
-  clobPairId?: string;
-  side?: OrderSide;
-  size?: string;
+  id: string,
+  subaccountId: string,
+  clientId: string,
+  clobPairId?: string,
+  side?: OrderSide,
+  size?: string,
   ticker?: string,
-  price?: string;
-  type?: OrderType;
-  timeInForce?: APITimeInForce;
-  postOnly?: boolean;
-  reduceOnly?: boolean;
-  status: APIOrderStatus;
-  orderFlags: string;
+  price?: string,
+  type?: OrderType,
+  timeInForce?: APITimeInForce,
+  postOnly?: boolean,
+  reduceOnly?: boolean,
+  status: APIOrderStatus,
+  orderFlags: string,
 
-  totalFilled?: string;
-  totalOptimisticFilled?: string;
-  goodTilBlock?: string;
-  goodTilBlockTime?: string;
-  triggerPrice?: string;
-  updatedAt?: IsoString;
-  updatedAtHeight?: string;
+  totalFilled?: string,
+  totalOptimisticFilled?: string,
+  goodTilBlock?: string,
+  goodTilBlockTime?: string,
+  triggerPrice?: string,
+  updatedAt?: IsoString,
+  updatedAtHeight?: string,
 
   // This will only be filled if the order was removed
-  removalReason?: string;
+  removalReason?: string,
   // This will only be set for stateful orders
-  createdAtHeight?: string;
-  clientMetadata?: string;
+  createdAtHeight?: string,
+  clientMetadata?: string,
 }
 
 export interface FillSubaccountMessageContents {
-  id: string;
-  subaccountId: string;
-  side: OrderSide;
-  liquidity: Liquidity;
-  type: FillType;
-  clobPairId: string;
-  size: string;
-  price: string;
-  quoteAmount: string;
+  id: string,
+  subaccountId: string,
+  side: OrderSide,
+  liquidity: Liquidity,
+  type: FillType,
+  clobPairId: string,
+  size: string,
+  price: string,
+  quoteAmount: string,
   eventId: string,
-  transactionHash: string;
-  createdAt: IsoString;
-  createdAtHeight: string;
-  orderId?: string;
-  ticker: string;
-  clientMetadata?: string;
+  transactionHash: string,
+  createdAt: IsoString,
+  createdAtHeight: string,
+  orderId?: string,
+  ticker: string,
+  clientMetadata?: string,
 }
 
 export interface TransferSubaccountMessageContents {
@@ -161,14 +161,14 @@ export interface TransferSubaccountMessageContents {
   size: string,
   type: TransferType,
   transactionHash: string,
-  createdAt: IsoString;
-  createdAtHeight: string;
+  createdAt: IsoString,
+  createdAtHeight: string,
 }
 
 export interface TradingRewardSubaccountMessageContents {
-  tradingReward: string;
-  createdAtHeight: string;
-  createdAt: string;
+  tradingReward: string,
+  createdAtHeight: string,
+  createdAt: string,
 }
 
 /* ------- TradeMessageContents ------- */
@@ -195,34 +195,34 @@ export interface MarketMessageContents {
 }
 
 export type TradingMarketMessageContents = {
-  [ticker: string]: TradingPerpetualMarketMessage
+  [ticker: string]: TradingPerpetualMarketMessage,
 };
 
 // All the fields in PerpetualMarketFromDatabase, but optional
 export interface TradingPerpetualMarketMessage {
   // These fields are very unlikely to change
-  id?: string;
-  clobPairId?: string;
-  ticker?: string;
-  marketId?: number;
-  status?: PerpetualMarketStatus;
-  initialMarginFraction?: string;
-  maintenanceMarginFraction?: string;
-  openInterest?: string;
-  quantumConversionExponent?: number;
-  atomicResolution?: number;
-  subticksPerTick?: number;
-  stepBaseQuantums?: number;
-  marketType?: PerpetualMarketType;
-  openInterestLowerCap?: string;
-  openInterestUpperCap?: string;
-  baseOpenInterest?: string;
+  id?: string,
+  clobPairId?: string,
+  ticker?: string,
+  marketId?: number,
+  status?: PerpetualMarketStatus,
+  initialMarginFraction?: string,
+  maintenanceMarginFraction?: string,
+  openInterest?: string,
+  quantumConversionExponent?: number,
+  atomicResolution?: number,
+  subticksPerTick?: number,
+  stepBaseQuantums?: number,
+  marketType?: PerpetualMarketType,
+  openInterestLowerCap?: string,
+  openInterestUpperCap?: string,
+  baseOpenInterest?: string,
 
   // Fields that are likely to change
-  priceChange24H?: string;
-  volume24H?: string;
-  trades24H?: number;
-  nextFundingRate?: string;
+  priceChange24H?: string,
+  volume24H?: string,
+  trades24H?: number,
+  nextFundingRate?: string,
 }
 
 export type OraclePriceMarketMessageContentsMapping = {
@@ -248,6 +248,6 @@ export interface CandleMessageContents {
   close: string,
   baseTokenVolume: string,
   trades: number,
-  usdVolume: string
+  usdVolume: string,
   startingOpenInterest: string,
 }

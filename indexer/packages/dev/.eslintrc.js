@@ -62,6 +62,7 @@ module.exports = {
     ],
     'import/no-extraneous-dependencies': 'off',
     'import/prefer-default-export': 'off',
+    'key-spacing': ['error', { beforeColon: false, afterColon: true }],
     'max-classes-per-file': 'off',
     'no-await-in-loop': 'off',
     'no-continue': 'off',
@@ -139,6 +140,16 @@ module.exports = {
       'always',
       { exceptAfterSingleLine: true },
     ],
+    '@typescript-eslint/member-delimiter-style': ['error', {
+      multiline: {
+        delimiter: 'comma',
+        requireLast: true,
+      },
+      singleline: {
+        delimiter: 'comma',
+        requireLast: false,
+      },
+    }],
     '@typescript-eslint/naming-convention': ['error',
       {
         selector: 'variableLike',

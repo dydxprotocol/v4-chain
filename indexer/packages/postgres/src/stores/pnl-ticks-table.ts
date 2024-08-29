@@ -217,7 +217,7 @@ export async function findLatestProcessedBlocktimeAndCount(): Promise<{
   count: number,
 }> {
   const result: {
-    rows: [{ max: string, count: number }]
+    rows: [{ max: string, count: number }],
   } = await knexReadReplica.getConnection().raw(
     `
     WITH maxBlockTime AS (
@@ -248,12 +248,12 @@ export async function findLatestProcessedBlocktimeAndCount(): Promise<{
 export async function findMostRecentPnlTickForEachAccount(
   createdOnOrAfterHeight: string,
 ): Promise<{
-  [subaccountId: string]: PnlTicksCreateObject
+  [subaccountId: string]: PnlTicksCreateObject,
 }> {
   verifyAllInjectableVariables([createdOnOrAfterHeight]);
 
   const result: {
-    rows: PnlTicksFromDatabase[]
+    rows: PnlTicksFromDatabase[],
   } = await knexReadReplica.getConnection().raw(
     `
     SELECT DISTINCT ON ("subaccountId") *
