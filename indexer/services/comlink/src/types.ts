@@ -31,7 +31,7 @@ import express from 'express';
 /* ------- GENERAL/UNCATEGORIZED TYPES ------- */
 
 export interface ResponseWithBody extends express.Response {
-  body: unknown
+  body: unknown,
 }
 
 export enum RequestMethod {
@@ -80,14 +80,14 @@ export interface SubaccountResponseObject {
 }
 
 export interface ParentSubaccountResponse {
-  address: string;
+  address: string,
   /**
    * @isInt
    */
-  parentSubaccountNumber: number;
-  equity: string; // aggregated over all child subaccounts
-  freeCollateral: string; // aggregated over all child subaccounts
-  childSubaccounts: SubaccountResponseObject[];
+  parentSubaccountNumber: number,
+  equity: string, // aggregated over all child subaccounts
+  freeCollateral: string, // aggregated over all child subaccounts
+  childSubaccounts: SubaccountResponseObject[],
 }
 
 export type SubaccountById = {[id: string]: SubaccountFromDatabase};
@@ -102,50 +102,50 @@ export interface TimeResponse {
 /* ------- POSITION TYPES ------- */
 
 export interface PerpetualPositionResponse {
-  positions: PerpetualPositionResponseObject[];
+  positions: PerpetualPositionResponseObject[],
 }
 
 export interface PerpetualPositionWithFunding extends PerpetualPositionFromDatabase {
-  unsettledFunding: string;
+  unsettledFunding: string,
 }
 
 export interface PerpetualPositionResponseObject {
-  market: string;
-  status: PerpetualPositionStatus;
-  side: PositionSide;
-  size: string;
-  maxSize: string;
-  entryPrice: string;
-  realizedPnl: string;
-  createdAt: IsoString;
-  createdAtHeight: string;
-  sumOpen: string;
-  sumClose: string;
-  netFunding: string;
-  unrealizedPnl: string;
-  closedAt?: IsoString | null;
-  exitPrice?: string | null;
+  market: string,
+  status: PerpetualPositionStatus,
+  side: PositionSide,
+  size: string,
+  maxSize: string,
+  entryPrice: string,
+  realizedPnl: string,
+  createdAt: IsoString,
+  createdAtHeight: string,
+  sumOpen: string,
+  sumClose: string,
+  netFunding: string,
+  unrealizedPnl: string,
+  closedAt?: IsoString | null,
+  exitPrice?: string | null,
   /**
    * @isInt
    */
-  subaccountNumber: number;
+  subaccountNumber: number,
 }
 
 export type PerpetualPositionsMap = { [market: string]: PerpetualPositionResponseObject };
 
 export interface AssetPositionResponse {
-  positions: AssetPositionResponseObject[];
+  positions: AssetPositionResponseObject[],
 }
 
 export interface AssetPositionResponseObject {
-  symbol: string;
-  side: PositionSide;
-  size: string;
-  assetId: string;
+  symbol: string,
+  side: PositionSide,
+  size: string,
+  assetId: string,
   /**
    * @isInt
    */
-  subaccountNumber: number;
+  subaccountNumber: number,
 }
 
 export type AssetPositionsMap = { [symbol: string]: AssetPositionResponseObject };
@@ -305,46 +305,46 @@ export enum MarketType {
 export interface PerpetualMarketResponse {
   markets: {
     [ticker: string]: PerpetualMarketResponseObject,
-  }
+  },
 }
 
 export interface PerpetualMarketResponseObject {
-  clobPairId: string;
-  ticker: string;
-  status: PerpetualMarketStatus;
-  oraclePrice: string;
-  priceChange24H: string;
-  volume24H: string;
+  clobPairId: string,
+  ticker: string,
+  status: PerpetualMarketStatus,
+  oraclePrice: string,
+  priceChange24H: string,
+  volume24H: string,
   /**
    * @isInt
    */
-  trades24H: number;
-  nextFundingRate: string;
-  initialMarginFraction: string;
-  maintenanceMarginFraction: string;
-  openInterest: string;
+  trades24H: number,
+  nextFundingRate: string,
+  initialMarginFraction: string,
+  maintenanceMarginFraction: string,
+  openInterest: string,
   /**
    * @isInt
    */
-  atomicResolution: number;
+  atomicResolution: number,
   /**
    * @isInt
    */
-  quantumConversionExponent: number;
-  tickSize: string;
-  stepSize: string;
+  quantumConversionExponent: number,
+  tickSize: string,
+  stepSize: string,
   /**
    * @isInt
    */
-  stepBaseQuantums: number;
+  stepBaseQuantums: number,
   /**
    * @isInt
    */
-  subticksPerTick: number;
-  marketType: PerpetualMarketType;
-  openInterestLowerCap?: string;
-  openInterestUpperCap?: string;
-  baseOpenInterest: string;
+  subticksPerTick: number,
+  marketType: PerpetualMarketType,
+  openInterestLowerCap?: string,
+  openInterestUpperCap?: string,
+  baseOpenInterest: string,
 }
 
 /* ------- ORDERBOOK TYPES ------- */
@@ -366,13 +366,13 @@ export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForc
   timeInForce: APITimeInForce,
   status: APIOrderStatus,
   postOnly: boolean,
-  ticker: string;
-  updatedAt?: IsoString;
-  updatedAtHeight?: string
+  ticker: string,
+  updatedAt?: IsoString,
+  updatedAtHeight?: string,
   /**
    * @isInt
    */
-  subaccountNumber: number;
+  subaccountNumber: number,
 }
 
 export type RedisOrderMap = { [orderId: string]: RedisOrder };
@@ -427,7 +427,7 @@ export interface ParentSubaccountRequest extends AddressRequest {
 }
 
 export interface PaginationRequest {
-  page?: number;
+  page?: number,
 }
 
 export interface LimitRequest {
@@ -553,22 +553,22 @@ export interface HistoricalFundingRequest extends LimitAndEffectiveBeforeRequest
 /* ------- COLLATERALIZATION TYPES ------- */
 
 export interface Risk {
-  initial: Big;
-  maintenance: Big;
+  initial: Big,
+  maintenance: Big,
 }
 
 /* ------- COMPLIANCE TYPES ------- */
 
 export interface ComplianceResponse {
-  restricted: boolean;
-  reason?: string;
+  restricted: boolean,
+  reason?: string,
 }
 
 export interface ComplianceRequest extends AddressRequest {}
 
 export interface SetComplianceStatusRequest extends AddressRequest {
-  status: ComplianceStatus;
-  reason?: ComplianceReason;
+  status: ComplianceStatus,
+  reason?: ComplianceReason,
 }
 
 export enum BlockedCode {
@@ -577,9 +577,9 @@ export enum BlockedCode {
 }
 
 export interface ComplianceV2Response {
-  status: ComplianceStatus;
-  reason?: ComplianceReason;
-  updatedAt?: string;
+  status: ComplianceStatus,
+  reason?: ComplianceReason,
+  updatedAt?: string,
 }
 
 /* ------- HISTORICAL TRADING REWARD TYPES ------- */
@@ -628,7 +628,7 @@ export interface HistoricalBlockTradingReward {
 /* ------- Social Trading Types ------- */
 
 export interface TraderSearchResponse {
-  result?: TraderSearchResponseObject
+  result?: TraderSearchResponseObject,
 }
 
 export interface TraderSearchRequest {
@@ -645,27 +645,27 @@ export interface TraderSearchResponseObject {
 /* ------- Vault Types ------- */
 
 export interface VaultHistoricalPnl {
-  ticker: string;
-  historicalPnl: PnlTicksResponseObject[];
+  ticker: string,
+  historicalPnl: PnlTicksResponseObject[],
 }
 
 export interface MegavaultHistoricalPnlResponse {
-  megavaultPnl: PnlTicksResponseObject[];
+  megavaultPnl: PnlTicksResponseObject[],
 }
 
 export interface VaultsHistoricalPnlResponse {
-  vaultsPnl: VaultHistoricalPnl[];
+  vaultsPnl: VaultHistoricalPnl[],
 }
 
 export interface VaultPosition {
-  ticker: string;
-  assetPosition: AssetPositionResponseObject;
-  perpetualPosition?: PerpetualPositionResponseObject;
-  equity: string;
+  ticker: string,
+  assetPosition: AssetPositionResponseObject,
+  perpetualPosition?: PerpetualPositionResponseObject,
+  equity: string,
 }
 
 export interface MegavaultPositionResponse {
-  positions: VaultPosition[];
+  positions: VaultPosition[],
 }
 
 /* ------- Affiliates Types ------- */

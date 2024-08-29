@@ -222,7 +222,7 @@ export async function findLatestProcessedBlocktimeAndCount(): Promise<{
   count: number,
 }> {
   const result: {
-    rows: [{ max: string, count: number }]
+    rows: [{ max: string, count: number }],
   } = await knexReadReplica.getConnection().raw(
     `
     WITH maxBlockTime AS (
@@ -253,12 +253,12 @@ export async function findLatestProcessedBlocktimeAndCount(): Promise<{
 export async function findMostRecentPnlTickForEachAccount(
   createdOnOrAfterHeight: string,
 ): Promise<{
-  [subaccountId: string]: PnlTicksCreateObject
+  [subaccountId: string]: PnlTicksCreateObject,
 }> {
   verifyAllInjectableVariables([createdOnOrAfterHeight]);
 
   const result: {
-    rows: PnlTicksFromDatabase[]
+    rows: PnlTicksFromDatabase[],
   } = await knexReadReplica.getConnection().raw(
     `
     SELECT DISTINCT ON ("subaccountId") *
@@ -331,7 +331,7 @@ async function getRankedPnlTicksForTimeSpan(
   const vaultAddressesString: string = vaultAddresses.map((address) => `'${address}'`).join(',');
   const intervalSqlString: string = convertTimespanToSQL(timeSpan);
   const result: {
-    rows: LeaderboardPnlCreateObject[]
+    rows: LeaderboardPnlCreateObject[],
   } = await knexReadReplica.getConnection().raw(
     `
     WITH latest_subaccount_pnl_x_days_ago AS (
@@ -410,7 +410,7 @@ async function getAllTimeRankedPnlTicks(): Promise<LeaderboardPnlCreateObject[]>
   const vaultAddresses: string[] = getVaultAddresses();
   const vaultAddressesString: string = vaultAddresses.map((address) => `'${address}'`).join(',');
   const result: {
-    rows: LeaderboardPnlCreateObject[]
+    rows: LeaderboardPnlCreateObject[],
   } = await knexReadReplica.getConnection().raw(
     `
     WITH latest_pnl as (

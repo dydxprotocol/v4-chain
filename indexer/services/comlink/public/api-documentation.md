@@ -3418,6 +3418,104 @@ fetch(`${baseURL}/vault/v1/vaults/historicalPnl`,
 This operation does not require authentication
 </aside>
 
+## GetMegavaultPositions
+
+<a id="opIdGetMegavaultPositions"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/vault/v1/megavault/positions', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/vault/v1/megavault/positions`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /vault/v1/megavault/positions`
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "positions": [
+    {
+      "ticker": "string",
+      "assetPosition": {
+        "symbol": "string",
+        "side": "LONG",
+        "size": "string",
+        "assetId": "string",
+        "subaccountNumber": 0
+      },
+      "perpetualPosition": {
+        "market": "string",
+        "status": "OPEN",
+        "side": "LONG",
+        "size": "string",
+        "maxSize": "string",
+        "entryPrice": "string",
+        "realizedPnl": "string",
+        "createdAt": "string",
+        "createdAtHeight": "string",
+        "sumOpen": "string",
+        "sumClose": "string",
+        "netFunding": "string",
+        "unrealizedPnl": "string",
+        "closedAt": "string",
+        "exitPrice": "string",
+        "subaccountNumber": 0
+      },
+      "equity": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[MegavaultPositionResponse](#schemamegavaultpositionresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 # Schemas
 
 ## PerpetualPositionStatus
@@ -5766,4 +5864,103 @@ or
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |vaultsPnl|[[VaultHistoricalPnl](#schemavaulthistoricalpnl)]|true|none|none|
+
+## VaultPosition
+
+<a id="schemavaultposition"></a>
+<a id="schema_VaultPosition"></a>
+<a id="tocSvaultposition"></a>
+<a id="tocsvaultposition"></a>
+
+```json
+{
+  "ticker": "string",
+  "assetPosition": {
+    "symbol": "string",
+    "side": "LONG",
+    "size": "string",
+    "assetId": "string",
+    "subaccountNumber": 0
+  },
+  "perpetualPosition": {
+    "market": "string",
+    "status": "OPEN",
+    "side": "LONG",
+    "size": "string",
+    "maxSize": "string",
+    "entryPrice": "string",
+    "realizedPnl": "string",
+    "createdAt": "string",
+    "createdAtHeight": "string",
+    "sumOpen": "string",
+    "sumClose": "string",
+    "netFunding": "string",
+    "unrealizedPnl": "string",
+    "closedAt": "string",
+    "exitPrice": "string",
+    "subaccountNumber": 0
+  },
+  "equity": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|ticker|string|true|none|none|
+|assetPosition|[AssetPositionResponseObject](#schemaassetpositionresponseobject)|true|none|none|
+|perpetualPosition|[PerpetualPositionResponseObject](#schemaperpetualpositionresponseobject)|false|none|none|
+|equity|string|true|none|none|
+
+## MegavaultPositionResponse
+
+<a id="schemamegavaultpositionresponse"></a>
+<a id="schema_MegavaultPositionResponse"></a>
+<a id="tocSmegavaultpositionresponse"></a>
+<a id="tocsmegavaultpositionresponse"></a>
+
+```json
+{
+  "positions": [
+    {
+      "ticker": "string",
+      "assetPosition": {
+        "symbol": "string",
+        "side": "LONG",
+        "size": "string",
+        "assetId": "string",
+        "subaccountNumber": 0
+      },
+      "perpetualPosition": {
+        "market": "string",
+        "status": "OPEN",
+        "side": "LONG",
+        "size": "string",
+        "maxSize": "string",
+        "entryPrice": "string",
+        "realizedPnl": "string",
+        "createdAt": "string",
+        "createdAtHeight": "string",
+        "sumOpen": "string",
+        "sumClose": "string",
+        "netFunding": "string",
+        "unrealizedPnl": "string",
+        "closedAt": "string",
+        "exitPrice": "string",
+        "subaccountNumber": 0
+      },
+      "equity": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|positions|[[VaultPosition](#schemavaultposition)]|true|none|none|
 

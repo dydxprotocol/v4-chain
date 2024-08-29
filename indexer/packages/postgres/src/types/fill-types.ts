@@ -49,14 +49,14 @@ export interface FillCreateObject {
 }
 
 export interface FillUpdateObject {
-  id: string;
-  side?: OrderSide;
-  type?: FillType;
-  clobPairId?: string;
-  orderId?: string | null;
-  size?: string;
-  price?: string;
-  quoteAmount?: string;
+  id: string,
+  side?: OrderSide,
+  type?: FillType,
+  clobPairId?: string,
+  orderId?: string | null,
+  size?: string,
+  price?: string,
+  quoteAmount?: string,
 }
 
 export enum FillColumns {
@@ -80,27 +80,27 @@ export enum FillColumns {
 }
 
 export type CostOfFills = {
-  cost: number;
+  cost: number,
 };
 
 export interface OrderedFillsWithFundingIndices {
-  id: string;
-  subaccountId: string;
-  side: OrderSide;
-  size: string;
-  createdAtHeight: string;
-  fundingIndex: string;
-  lastFillId: string;
-  lastFillSide: OrderSide;
-  lastFillSize: string;
-  lastFillCreatedAtHeight: string;
-  lastFillFundingIndex: string;
+  id: string,
+  subaccountId: string,
+  side: OrderSide,
+  size: string,
+  createdAtHeight: string,
+  fundingIndex: string,
+  lastFillId: string,
+  lastFillSide: OrderSide,
+  lastFillSize: string,
+  lastFillCreatedAtHeight: string,
+  lastFillFundingIndex: string,
 }
 
 export interface OpenSizeWithFundingIndex {
-  clobPairId: string;
-  openSize: string;
-  lastFillHeight: string;
-  fundingIndex: string;
-  fundingIndexHeight: string;
+  clobPairId: string,
+  openSize: string,
+  lastFillHeight: string,
+  fundingIndex: string,
+  fundingIndexHeight: string,
 }

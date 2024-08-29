@@ -145,6 +145,10 @@ module.exports = {
         delimiter: 'comma',
         requireLast: true,
       },
+      singleline: {
+        delimiter: 'comma',
+        requireLast: false,
+      },
     }],
     '@typescript-eslint/naming-convention': ['error',
       {

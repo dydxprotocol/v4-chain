@@ -13,21 +13,21 @@ type UnusedLevels = 'warn' | 'help' | 'data' | 'prompt' | 'http' | 'verbose' | '
 
 // Enforce type constraints on the objects passed into Winston logging functions.
 interface LeveledLogMethod {
-  (infoObject: InfoObject): winston.Logger;
+  (infoObject: InfoObject): winston.Logger,
 }
 // Exclude the functions whose type we want to change from the base definition. This seems to be
 // enough (and the only way I've found) to trick TypeScript into accepting the modified LoggerExport
 // as a valid extension of the base winston.Logger type.
 type SyslogLevels = 'emerg' | 'alert' | 'crit' | 'error' | 'warning' | 'notice' | 'info' | 'debug';
 export interface LoggerExport extends Omit<winston.Logger, UnusedLevels | SyslogLevels> {
-  emerg: LeveledLogMethod;
-  alert: LeveledLogMethod;
-  crit: LeveledLogMethod;
-  error: LeveledLogMethod;
-  warning: LeveledLogMethod;
-  notice: LeveledLogMethod;
-  info: LeveledLogMethod;
-  debug: LeveledLogMethod;
+  emerg: LeveledLogMethod,
+  alert: LeveledLogMethod,
+  crit: LeveledLogMethod,
+  error: LeveledLogMethod,
+  warning: LeveledLogMethod,
+  notice: LeveledLogMethod,
+  info: LeveledLogMethod,
+  debug: LeveledLogMethod,
 }
 
 const logger: LoggerExport = winston.createLogger({

@@ -40,10 +40,14 @@ export default class WalletModel extends BaseModel {
       required: [
         'address',
         'totalTradingRewards',
+        'totalVolume',
+        'isWhitelistAffiliate',
       ],
       properties: {
         address: { type: 'string' },
         totalTradingRewards: { type: 'string', pattern: NonNegativeNumericPattern },
+        totalVolume: { type: 'string', pattern: NonNegativeNumericPattern },
+        isWhitelistAffiliate: { type: 'boolean' },
       },
     };
   }
@@ -57,6 +61,9 @@ export default class WalletModel extends BaseModel {
   static get sqlToJsonConversions() {
     return {
       address: 'string',
+      totalTradingRewards: 'string',
+      totalVolume: 'string',
+      isWhitelistAffiliate: 'boolean',
     };
   }
 
@@ -65,4 +72,8 @@ export default class WalletModel extends BaseModel {
   address!: string;
 
   totalTradingRewards!: string;
+
+  totalVolume!: string;
+
+  isWhitelistAffiliate!: boolean;
 }
