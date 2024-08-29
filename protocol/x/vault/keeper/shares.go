@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -197,12 +199,66 @@ func (k Keeper) LockShares(
 		)
 	}
 
-	// TODO (TRA-565): delay a MsgUnlockShares.
+	// Schedule an unlock at block height `tilBlock`.
+	_, err := k.delayMsgKeeper.DelayMessageByBlocks(
+		ctx,
+		&types.MsgUnlockShares{
+			Authority:    delaymsgtypes.ModuleAddress.String(),
+			OwnerAddress: ownerAddress,
+		},
+		tilBlock-uint32(ctx.BlockHeight()),
+	)
+	if err != nil {
+		return err
+	}
 
-	err := k.SetOwnerShareUnlocks(ctx, ownerAddress, ownerShareUnlocks)
+	err = k.SetOwnerShareUnlocks(ctx, ownerAddress, ownerShareUnlocks)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// UnlockShares unlocks all shares of an owner that are due to unlock at or before current block height.
+func (k Keeper) UnlockShares(
+	ctx sdk.Context,
+	ownerAddress string,
+) (unlockedShares types.NumShares, err error) {
+	ownerShareUnlocks, exists := k.GetOwnerShareUnlocks(ctx, ownerAddress)
+	if !exists {
+		return unlockedShares, types.ErrOwnerNotFound
+	}
+
+	// Process all unlocks that are due.
+	totalSharesUnlocked := big.NewInt(0)
+	currentBlockHeight := uint32(ctx.BlockHeight())
+	remainingUnlocks := []types.ShareUnlock{}
+	for _, unlock := range ownerShareUnlocks.ShareUnlocks {
+		if unlock.UnlockBlockHeight <= currentBlockHeight {
+			totalSharesUnlocked.Add(totalSharesUnlocked, unlock.Shares.NumShares.BigInt())
+		} else {
+			remainingUnlocks = append(remainingUnlocks, unlock)
+		}
+	}
+
+	// Remove from store if no more unlocks. Update otherwise.
+	if len(remainingUnlocks) == 0 {
+		ownerShareUnlocksStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OwnerShareUnlocksKeyPrefix))
+		ownerShareUnlocksStore.Delete([]byte(ownerAddress))
+	} else {
+		err = k.SetOwnerShareUnlocks(
+			ctx,
+			ownerAddress,
+			types.OwnerShareUnlocks{
+				OwnerAddress: ownerAddress,
+				ShareUnlocks: remainingUnlocks,
+			},
+		)
+		if err != nil {
+			return unlockedShares, err
+		}
+	}
+
+	return types.BigIntToNumShares(totalSharesUnlocked), nil
 }

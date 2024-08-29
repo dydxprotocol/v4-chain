@@ -54,6 +54,7 @@ func createVaultKeeper(
 		cdc,
 		storeKey,
 		&mocks.ClobKeeper{},
+		&mocks.DelayMsgKeeper{},
 		&mocks.PerpetualsKeeper{},
 		&mocks.PricesKeeper{},
 		&mocks.SendingKeeper{},
