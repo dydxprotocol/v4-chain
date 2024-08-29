@@ -98,23 +98,23 @@ export interface PerpetualMarketFromDatabase {
 }
 
 export interface FillFromDatabase {
-  id: string;
-  subaccountId: string;
-  side: OrderSide;
-  liquidity: Liquidity;
-  type: FillType;
-  clobPairId: string;
-  size: string;
-  price: string;
-  quoteAmount: string;
-  eventId: Buffer;
-  transactionHash: string;
-  createdAt: IsoString;
-  createdAtHeight: string;
-  orderId?: string;
-  clientMetadata?: string;
-  fee: string;
-  affiliateEarnedRevShare: string;
+  id: string,
+  subaccountId: string,
+  side: OrderSide,
+  liquidity: Liquidity,
+  type: FillType,
+  clobPairId: string,
+  size: string,
+  price: string,
+  quoteAmount: string,
+  eventId: Buffer,
+  transactionHash: string,
+  createdAt: IsoString,
+  createdAtHeight: string,
+  orderId?: string,
+  clientMetadata?: string,
+  fee: string,
+  affiliateEarnedRevShare: string,
 }
 
 export interface BlockFromDatabase {

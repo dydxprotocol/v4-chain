@@ -30,22 +30,22 @@ export enum FillType {
 }
 
 export interface FillCreateObject {
-  subaccountId: string;
-  side: OrderSide;
-  liquidity: Liquidity;
-  type: FillType;
-  clobPairId: string;
-  orderId?: string;
-  size: string;
-  price: string;
-  quoteAmount: string;
-  eventId: Buffer;
-  transactionHash: string;
-  createdAt: string;
-  createdAtHeight: string;
-  clientMetadata?: string;
-  fee: string;
-  affiliateEarnedRevShare: string;
+  subaccountId: string,
+  side: OrderSide,
+  liquidity: Liquidity,
+  type: FillType,
+  clobPairId: string,
+  orderId?: string,
+  size: string,
+  price: string,
+  quoteAmount: string,
+  eventId: Buffer,
+  transactionHash: string,
+  createdAt: string,
+  createdAtHeight: string,
+  clientMetadata?: string,
+  fee: string,
+  affiliateEarnedRevShare: string,
 }
 
 export interface FillUpdateObject {
