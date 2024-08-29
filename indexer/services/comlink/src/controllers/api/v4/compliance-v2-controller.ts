@@ -220,50 +220,7 @@ router.post(
       if (failedValidationResponse) {
         return failedValidationResponse;
       }
-<<<<<<< HEAD
-
-      if (isWhitelistedAddress(address)) {
-        return res.send({
-          status: ComplianceStatus.COMPLIANT,
-          updatedAt: DateTime.utc().toISO(),
-        });
-      }
-
-      const [
-        complianceStatus,
-        wallet,
-      ]: [
-        ComplianceStatusFromDatabase[],
-        WalletFromDatabase | undefined,
-      ] = await Promise.all([
-        ComplianceStatusTable.findAll(
-          { address: [address] },
-          [],
-        ),
-        WalletTable.findById(address),
-      ]);
-
-      const updatedAt: string = DateTime.utc().toISO();
-      const complianceStatusFromDatabase:
-      ComplianceStatusFromDatabase | undefined = await upsertComplianceStatus(
-        req,
-        action,
-        address,
-        wallet,
-        complianceStatus,
-        updatedAt,
-      );
-
-      const response = {
-        status: complianceStatusFromDatabase!.status,
-        reason: complianceStatusFromDatabase!.reason,
-        updatedAt: complianceStatusFromDatabase!.updatedAt,
-      };
-
-      return res.send(response);
-=======
       return await checkCompliance(req, res, address, action, false);
->>>>>>> a814b332 (Keplr geoblock new endpoint (#2117))
     } catch (error) {
       return handleError(error, 'geoblock', message, req, res);
     } finally {
