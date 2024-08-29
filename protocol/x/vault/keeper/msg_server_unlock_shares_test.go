@@ -17,21 +17,61 @@ import (
 
 func TestMsgUnlockShares(t *testing.T) {
 	tests := map[string]struct {
+		// Existing owner share unlocks.
+		ownerShareUnlocks *types.OwnerShareUnlocks
+		// Current block height.
+		currentBlockHeight uint32
 		// Msg.
 		msg *types.MsgUnlockShares
+		// Expected owner share unlocks after unlocking.
+		expectedOwnerShareUnlocks *types.OwnerShareUnlocks
 		// Expected error
 		expectedErr string
 	}{
-		"Success - Authority is gov module, Unlocks shares of Alice": {
+		"Success - Authority is gov module, Unlocks all shares of Alice": {
+			ownerShareUnlocks: &types.OwnerShareUnlocks{
+				OwnerAddress: constants.AliceAccAddress.String(),
+				ShareUnlocks: []types.ShareUnlock{
+					{
+						Shares:            types.BigIntToNumShares(big.NewInt(1)),
+						UnlockBlockHeight: 3,
+					},
+				},
+			},
+			currentBlockHeight: 3,
 			msg: &types.MsgUnlockShares{
 				Authority:    lib.GovModuleAddress.String(),
 				OwnerAddress: constants.AliceAccAddress.String(),
 			},
+			expectedOwnerShareUnlocks: nil,
 		},
-		"Success - Authority is delaymsg module, Unlocks shares of Bob": {
+		"Success - Authority is delaymsg module, Unlocks some shares of Bob": {
+			ownerShareUnlocks: &types.OwnerShareUnlocks{
+				OwnerAddress: constants.BobAccAddress.String(),
+				ShareUnlocks: []types.ShareUnlock{
+					{
+						Shares:            types.BigIntToNumShares(big.NewInt(55)),
+						UnlockBlockHeight: 6,
+					},
+					{
+						Shares:            types.BigIntToNumShares(big.NewInt(66)),
+						UnlockBlockHeight: 7,
+					},
+				},
+			},
+			currentBlockHeight: 6,
 			msg: &types.MsgUnlockShares{
 				Authority:    delaymsgtypes.ModuleAddress.String(),
 				OwnerAddress: constants.BobAccAddress.String(),
+			},
+			expectedOwnerShareUnlocks: &types.OwnerShareUnlocks{
+				OwnerAddress: constants.BobAccAddress.String(),
+				ShareUnlocks: []types.ShareUnlock{
+					{
+						Shares:            types.BigIntToNumShares(big.NewInt(66)),
+						UnlockBlockHeight: 7,
+					},
+				},
 			},
 		},
 		"Failure - Invalid authority": {
@@ -55,37 +95,39 @@ func TestMsgUnlockShares(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			k := tApp.App.VaultKeeper
 			ms := keeper.NewMsgServerImpl(k)
+			ctx := tApp.InitChain()
 
-			testBlockHeight := uint32(7)
-			testShares := big.NewInt(123_456_789)
-			ctx := tApp.AdvanceToBlock(testBlockHeight, testapp.AdvanceToBlockOptions{})
-
-			ownerShareUnlocks := types.OwnerShareUnlocks{
-				OwnerAddress: tc.msg.OwnerAddress,
-				ShareUnlocks: []types.ShareUnlock{
-					{
-						Shares:            types.BigIntToNumShares(testShares),
-						UnlockBlockHeight: testBlockHeight,
-					},
-				},
+			if tc.currentBlockHeight > 1 {
+				ctx = tApp.AdvanceToBlock(tc.currentBlockHeight, testapp.AdvanceToBlockOptions{})
 			}
-			if tc.msg.OwnerAddress != "" {
-				err := k.SetOwnerShareUnlocks(ctx, tc.msg.OwnerAddress, ownerShareUnlocks)
+
+			if tc.ownerShareUnlocks != nil {
+				err := k.SetOwnerShareUnlocks(ctx, tc.msg.OwnerAddress, *tc.ownerShareUnlocks)
 				require.NoError(t, err)
 			}
 
 			res, err := ms.UnlockShares(ctx, tc.msg)
-			newLockedShares, exists := k.GetOwnerShareUnlocks(ctx, tc.msg.OwnerAddress)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
-				if tc.msg.OwnerAddress != "" {
-					require.True(t, exists)
-					require.Equal(t, ownerShareUnlocks, newLockedShares)
-				}
 			} else {
 				require.NoError(t, err)
+			}
+
+			newOwnerShareUnlocks, exists := k.GetOwnerShareUnlocks(ctx, tc.msg.OwnerAddress)
+			if tc.expectedOwnerShareUnlocks != nil {
+				// Verify that owner share unlocks are as expected.
+				require.True(t, exists)
+				require.Equal(t, *tc.expectedOwnerShareUnlocks, newOwnerShareUnlocks)
+				// Verify that number of unlocked shares in response is as expected.
+				expectedUnlockedShares := tc.ownerShareUnlocks.GetTotalLockedShares()
+				expectedUnlockedShares.Sub(expectedUnlockedShares, newOwnerShareUnlocks.GetTotalLockedShares())
+				require.Equal(
+					t,
+					types.BigIntToNumShares(expectedUnlockedShares),
+					res.UnlockedShares,
+				)
+			} else {
 				require.False(t, exists)
-				require.Equal(t, types.BigIntToNumShares(testShares), res.UnlockedShares)
 			}
 		})
 	}
