@@ -672,6 +672,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 				)
 				require.NoError(t, err)
 			}
@@ -1368,6 +1369,7 @@ func TestPrepareCheckState(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 				)
 				require.NoError(t, err)
 			}

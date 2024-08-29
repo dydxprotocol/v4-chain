@@ -60,6 +60,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			marketId,
 			defaultFundingPpm,
 			liquidityTier,
+			uint32(0),
 		)
 		require.NoError(t, err)
 
@@ -144,6 +145,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 		defaultFundingPpm int32
 		liquidityTier     uint32
 		marketType        types.PerpetualMarketType
+		dangerIndexPpm    uint32
 		expectedError     error
 	}{
 		"Price doesn't exist": {
@@ -154,6 +156,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
 			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			dangerIndexPpm:    0,
 			expectedError:     errorsmod.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
 		},
 		"Positive default funding magnitude exceeds maximum": {
@@ -164,6 +167,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			defaultFundingPpm: int32(lib.OneMillion + 1),
 			liquidityTier:     0,
 			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			dangerIndexPpm:    0,
 			expectedError: errorsmod.Wrap(
 				types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 				fmt.Sprint(int32(lib.OneMillion+1)),
@@ -177,6 +181,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			defaultFundingPpm: 0 - int32(lib.OneMillion) - 1,
 			liquidityTier:     0,
 			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			dangerIndexPpm:    0,
 			expectedError: errorsmod.Wrap(
 				types.ErrDefaultFundingPpmMagnitudeExceedsMax,
 				fmt.Sprint(0-int32(lib.OneMillion)-1),
@@ -190,6 +195,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			defaultFundingPpm: math.MinInt32,
 			liquidityTier:     0,
 			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			dangerIndexPpm:    0,
 			expectedError:     errorsmod.Wrap(types.ErrDefaultFundingPpmMagnitudeExceedsMax, fmt.Sprint(math.MinInt32)),
 		},
 		"Ticker is an empty string": {
@@ -200,6 +206,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
 			marketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			dangerIndexPpm:    0,
 			expectedError:     types.ErrTickerEmptyString,
 		},
 		"Invalid market type": {
@@ -210,6 +217,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
 			marketType:        3,
+			dangerIndexPpm:    0,
 			expectedError: errorsmod.Wrap(
 				types.ErrInvalidMarketType,
 				fmt.Sprintf("market type %v", 3),
@@ -234,6 +242,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 				tc.defaultFundingPpm,
 				tc.liquidityTier,
 				tc.marketType,
+				tc.dangerIndexPpm,
 			)
 
 			require.Error(t, err)
@@ -249,6 +258,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 		marketId          uint32
 		defaultFundingPpm int32
 		liquidityTier     uint32
+		dangerIndexPpm    uint32
 		expectedError     error
 	}{
 		"Perpetual doesn't exist": {
@@ -257,6 +267,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			marketId:          0,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
+			dangerIndexPpm:    0,
 			expectedError:     errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(999)),
 		},
 		"Price doesn't exist": {
@@ -265,6 +276,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			marketId:          999,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
+			dangerIndexPpm:    0,
 			expectedError:     errorsmod.Wrap(pricestypes.ErrMarketPriceDoesNotExist, fmt.Sprint(999)),
 		},
 		"Ticker is an empty string": {
@@ -273,6 +285,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			marketId:          0,
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
+			dangerIndexPpm:    0,
 			expectedError:     types.ErrTickerEmptyString,
 		},
 		"Modified to empty liquidity tier": {
@@ -281,6 +294,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			marketId:          0,
 			defaultFundingPpm: 0,
 			liquidityTier:     999,
+			dangerIndexPpm:    0,
 			expectedError:     errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, fmt.Sprint(999)),
 		},
 	}
@@ -300,6 +314,7 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 				tc.marketId,
 				tc.defaultFundingPpm,
 				tc.liquidityTier,
+				tc.dangerIndexPpm,
 			)
 
 			require.Error(t, err)
@@ -367,6 +382,7 @@ func TestHasPerpetual(t *testing.T) {
 			perps[perp].Params.DefaultFundingPpm,
 			perps[perp].Params.LiquidityTier,
 			perps[perp].Params.MarketType,
+			perps[perp].Params.DangerIndexPpm,
 		)
 		require.NoError(t, err)
 	}
@@ -446,6 +462,7 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 			perps[perp].Params.DefaultFundingPpm,
 			perps[perp].Params.LiquidityTier,
 			perps[perp].Params.MarketType,
+			perps[perp].Params.DangerIndexPpm,
 		)
 		require.NoError(t, err)
 	}
@@ -870,6 +887,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
 				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+				0,
 			)
 			require.NoError(t, err)
 
@@ -1081,6 +1099,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
 				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+				0,
 			)
 			require.NoError(t, err)
 
@@ -1244,6 +1263,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
 				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+				0,
 			)
 			require.NoError(t, err)
 
@@ -1408,6 +1428,7 @@ func TestGetNetCollateral_Success(t *testing.T) {
 				int32(0),                        // DefaultFundingPpm
 				0,
 				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+				0,
 			)
 			require.NoError(t, err)
 
@@ -2142,6 +2163,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 				)
 				require.NoError(t, err)
 				oldPerps[i] = perp

@@ -2383,6 +2383,7 @@ func setupProcessProposerOperationsTestCase(
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
 			p.Params.MarketType,
+			p.Params.DangerIndexPpm,
 		)
 		require.NoError(t, err)
 	}

@@ -1522,6 +1522,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 				tc.perpetual.Params.DefaultFundingPpm,
 				tc.perpetual.Params.LiquidityTier,
 				tc.perpetual.Params.MarketType,
+				tc.perpetual.Params.DangerIndexPpm,
 			)
 			require.NoError(t, err)
 

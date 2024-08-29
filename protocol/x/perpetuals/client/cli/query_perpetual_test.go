@@ -67,10 +67,11 @@ func networkWithLiquidityTierAndPerpetualObjects(
 		}
 		perpetual := types.Perpetual{
 			Params: types.PerpetualParams{
-				Id:            uint32(i),
-				Ticker:        fmt.Sprintf("test_query_ticker_%d", i),
-				LiquidityTier: uint32(i % m),
-				MarketType:    marketType,
+				Id:             uint32(i),
+				Ticker:         fmt.Sprintf("test_query_ticker_%d", i),
+				LiquidityTier:  uint32(i % m),
+				MarketType:     marketType,
+				DangerIndexPpm: uint32(0),
 			},
 			FundingIndex:    dtypes.ZeroInt(),
 			OpenInterest:    dtypes.ZeroInt(),

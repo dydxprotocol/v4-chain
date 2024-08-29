@@ -68,6 +68,9 @@ message PerpetualParams {
 
   // The market type specifying if this perpetual is cross or isolated
   PerpetualMarketType market_type = 7;
+
+  // The danger index is used to prioritze certain accounts and positions in liquidations
+  uint32 danger_index_ppm = 8;
 }
 
 // MarketPremiums stores a list of premiums for a single perpetual market.

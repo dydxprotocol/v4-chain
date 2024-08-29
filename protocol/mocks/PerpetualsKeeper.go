@@ -33,9 +33,9 @@ func (_m *PerpetualsKeeper) AddPremiumVotes(ctx types.Context, votes []perpetual
 	return r0
 }
 
-// CreatePerpetual provides a mock function with given fields: ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier, marketType
-func (_m *PerpetualsKeeper) CreatePerpetual(ctx types.Context, id uint32, ticker string, marketId uint32, atomicResolution int32, defaultFundingPpm int32, liquidityTier uint32, marketType perpetualstypes.PerpetualMarketType) (perpetualstypes.Perpetual, error) {
-	ret := _m.Called(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier, marketType)
+// CreatePerpetual provides a mock function with given fields: ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier, marketType, dangerIndexPpm
+func (_m *PerpetualsKeeper) CreatePerpetual(ctx types.Context, id uint32, ticker string, marketId uint32, atomicResolution int32, defaultFundingPpm int32, liquidityTier uint32, marketType perpetualstypes.PerpetualMarketType, dangerIndexPpm uint32) (perpetualstypes.Perpetual, error) {
+	ret := _m.Called(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier, marketType, dangerIndexPpm)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreatePerpetual")
@@ -43,17 +43,17 @@ func (_m *PerpetualsKeeper) CreatePerpetual(ctx types.Context, id uint32, ticker
 
 	var r0 perpetualstypes.Perpetual
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, int32, uint32, perpetualstypes.PerpetualMarketType) (perpetualstypes.Perpetual, error)); ok {
-		return rf(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier, marketType)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, int32, uint32, perpetualstypes.PerpetualMarketType, uint32) (perpetualstypes.Perpetual, error)); ok {
+		return rf(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier, marketType, dangerIndexPpm)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, int32, uint32, perpetualstypes.PerpetualMarketType) perpetualstypes.Perpetual); ok {
-		r0 = rf(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier, marketType)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, int32, uint32, perpetualstypes.PerpetualMarketType, uint32) perpetualstypes.Perpetual); ok {
+		r0 = rf(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier, marketType, dangerIndexPpm)
 	} else {
 		r0 = ret.Get(0).(perpetualstypes.Perpetual)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, int32, int32, uint32, perpetualstypes.PerpetualMarketType) error); ok {
-		r1 = rf(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier, marketType)
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, int32, int32, uint32, perpetualstypes.PerpetualMarketType, uint32) error); ok {
+		r1 = rf(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier, marketType, dangerIndexPpm)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -296,9 +296,9 @@ func (_m *PerpetualsKeeper) ModifyOpenInterest(ctx types.Context, perpetualId ui
 	return r0
 }
 
-// ModifyPerpetual provides a mock function with given fields: ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier
-func (_m *PerpetualsKeeper) ModifyPerpetual(ctx types.Context, id uint32, ticker string, marketId uint32, defaultFundingPpm int32, liquidityTier uint32) (perpetualstypes.Perpetual, error) {
-	ret := _m.Called(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier)
+// ModifyPerpetual provides a mock function with given fields: ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier, dangerIndexPpm
+func (_m *PerpetualsKeeper) ModifyPerpetual(ctx types.Context, id uint32, ticker string, marketId uint32, defaultFundingPpm int32, liquidityTier uint32, dangerIndexPpm uint32) (perpetualstypes.Perpetual, error) {
+	ret := _m.Called(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier, dangerIndexPpm)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ModifyPerpetual")
@@ -306,17 +306,17 @@ func (_m *PerpetualsKeeper) ModifyPerpetual(ctx types.Context, id uint32, ticker
 
 	var r0 perpetualstypes.Perpetual
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, uint32) (perpetualstypes.Perpetual, error)); ok {
-		return rf(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, uint32, uint32) (perpetualstypes.Perpetual, error)); ok {
+		return rf(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier, dangerIndexPpm)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, uint32) perpetualstypes.Perpetual); ok {
-		r0 = rf(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, uint32, uint32) perpetualstypes.Perpetual); ok {
+		r0 = rf(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier, dangerIndexPpm)
 	} else {
 		r0 = ret.Get(0).(perpetualstypes.Perpetual)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, int32, uint32) error); ok {
-		r1 = rf(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier)
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, int32, uint32, uint32) error); ok {
+		r1 = rf(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier, dangerIndexPpm)
 	} else {
 		r1 = ret.Error(1)
 	}

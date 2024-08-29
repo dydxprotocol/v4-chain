@@ -79,6 +79,7 @@ func (k Keeper) CreatePerpetual(
 	defaultFundingPpm int32,
 	liquidityTier uint32,
 	marketType types.PerpetualMarketType,
+	dangerIndexPpm uint32,
 ) (types.Perpetual, error) {
 	// Check if perpetual exists.
 	if k.HasPerpetual(ctx, id) {
@@ -98,6 +99,7 @@ func (k Keeper) CreatePerpetual(
 			DefaultFundingPpm: defaultFundingPpm,
 			LiquidityTier:     liquidityTier,
 			MarketType:        marketType,
+			DangerIndexPpm:    dangerIndexPpm,
 		},
 		FundingIndex:    dtypes.ZeroInt(),
 		OpenInterest:    dtypes.ZeroInt(),
@@ -139,6 +141,7 @@ func (k Keeper) ModifyPerpetual(
 	marketId uint32,
 	defaultFundingPpm int32,
 	liquidityTier uint32,
+	dangerIndexPpm uint32,
 ) (types.Perpetual, error) {
 	// Get perpetual.
 	perpetual, err := k.GetPerpetual(ctx, id)
@@ -151,6 +154,7 @@ func (k Keeper) ModifyPerpetual(
 	perpetual.Params.MarketId = marketId
 	perpetual.Params.DefaultFundingPpm = defaultFundingPpm
 	perpetual.Params.LiquidityTier = liquidityTier
+	perpetual.Params.DangerIndexPpm = dangerIndexPpm
 
 	// Store the modified perpetual.
 	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {

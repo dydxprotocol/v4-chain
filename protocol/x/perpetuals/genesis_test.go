@@ -143,10 +143,11 @@ func TestGenesis_Failure(t *testing.T) {
 				Perpetuals: []types.Perpetual{
 					{
 						Params: types.PerpetualParams{
-							MarketId:      tc.marketId,
-							Ticker:        tc.ticker,
-							LiquidityTier: 0,
-							MarketType:    types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+							MarketId:       tc.marketId,
+							Ticker:         tc.ticker,
+							LiquidityTier:  0,
+							MarketType:     types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+							DangerIndexPpm: uint32(0),
 						},
 						FundingIndex:    dtypes.ZeroInt(),
 						OpenInterest:    dtypes.ZeroInt(),

@@ -115,6 +115,9 @@ export interface PerpetualParams {
   /** The market type specifying if this perpetual is cross or isolated */
 
   marketType: PerpetualMarketType;
+  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+
+  dangerIndexPpm: number;
 }
 /**
  * PerpetualParams represents the parameters of a perpetual on the dYdX
@@ -154,6 +157,9 @@ export interface PerpetualParamsSDKType {
   /** The market type specifying if this perpetual is cross or isolated */
 
   market_type: PerpetualMarketTypeSDKType;
+  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+
+  danger_index_ppm: number;
 }
 /** MarketPremiums stores a list of premiums for a single perpetual market. */
 
@@ -429,7 +435,8 @@ function createBasePerpetualParams(): PerpetualParams {
     atomicResolution: 0,
     defaultFundingPpm: 0,
     liquidityTier: 0,
-    marketType: 0
+    marketType: 0,
+    dangerIndexPpm: 0
   };
 }
 
@@ -461,6 +468,10 @@ export const PerpetualParams = {
 
     if (message.marketType !== 0) {
       writer.uint32(56).int32(message.marketType);
+    }
+
+    if (message.dangerIndexPpm !== 0) {
+      writer.uint32(64).uint32(message.dangerIndexPpm);
     }
 
     return writer;
@@ -503,6 +514,10 @@ export const PerpetualParams = {
           message.marketType = (reader.int32() as any);
           break;
 
+        case 8:
+          message.dangerIndexPpm = reader.uint32();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -521,6 +536,7 @@ export const PerpetualParams = {
     message.defaultFundingPpm = object.defaultFundingPpm ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
     message.marketType = object.marketType ?? 0;
+    message.dangerIndexPpm = object.dangerIndexPpm ?? 0;
     return message;
   }
 
