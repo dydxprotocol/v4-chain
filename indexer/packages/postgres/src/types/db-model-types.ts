@@ -28,6 +28,8 @@ export interface SubaccountFromDatabase extends IdBasedModelFromDatabase {
 export interface WalletFromDatabase {
   address: string,
   totalTradingRewards: string,
+  totalVolume: string,
+  isWhitelistAffiliate: boolean,
 }
 
 export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase {

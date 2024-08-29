@@ -132,16 +132,32 @@ export const isolatedSubaccountId2: string = SubaccountTable.uuid(
 export const defaultWallet: WalletCreateObject = {
   address: defaultAddress,
   totalTradingRewards: denomToHumanReadableConversion(0),
+  totalVolume: '0',
+  isWhitelistAffiliate: false,
 };
 
 export const defaultWallet2: WalletCreateObject = {
   address: defaultWalletAddress,
   totalTradingRewards: denomToHumanReadableConversion(1),
+  totalVolume: '0',
+  isWhitelistAffiliate: false,
 };
 
+<<<<<<< HEAD
+=======
+export const vaultWallet: WalletCreateObject = {
+  address: vaultAddress,
+  totalTradingRewards: denomToHumanReadableConversion(0),
+  totalVolume: '0',
+  isWhitelistAffiliate: false,
+};
+
+>>>>>>> ecc5df61 ([OTE-752] Add totalVolume and isWhitelistAffiliate to wallets table (#2166))
 export const defaultWallet3: WalletCreateObject = {
   address: defaultAddress2,
   totalTradingRewards: denomToHumanReadableConversion(0),
+  totalVolume: '0',
+  isWhitelistAffiliate: true,
 };
 
 // ============== Assets ==============
