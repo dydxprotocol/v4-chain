@@ -16,6 +16,7 @@ type (
 		cdc               codec.BinaryCodec
 		storeKey          storetypes.StoreKey
 		clobKeeper        types.ClobKeeper
+		delayMsgKeeper    types.DelayMsgKeeper
 		perpetualsKeeper  types.PerpetualsKeeper
 		pricesKeeper      types.PricesKeeper
 		sendingKeeper     types.SendingKeeper
@@ -28,6 +29,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	clobKeeper types.ClobKeeper,
+	delayMsgKeeper types.DelayMsgKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
 	pricesKeeper types.PricesKeeper,
 	sendingKeeper types.SendingKeeper,
@@ -38,6 +40,7 @@ func NewKeeper(
 		cdc:               cdc,
 		storeKey:          storeKey,
 		clobKeeper:        clobKeeper,
+		delayMsgKeeper:    delayMsgKeeper,
 		perpetualsKeeper:  perpetualsKeeper,
 		pricesKeeper:      pricesKeeper,
 		sendingKeeper:     sendingKeeper,

@@ -1158,6 +1158,7 @@ func New(
 		appCodec,
 		keys[vaultmoduletypes.StoreKey],
 		app.ClobKeeper,
+		app.DelayMsgKeeper,
 		app.PerpetualsKeeper,
 		app.PricesKeeper,
 		app.SendingKeeper,

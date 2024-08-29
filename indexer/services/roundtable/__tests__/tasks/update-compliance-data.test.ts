@@ -24,7 +24,7 @@ import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
 import { DateTime } from 'luxon';
 
 interface ComplianceClientResponseWithNull extends Omit<ComplianceClientResponse, 'riskScore'> {
-  riskScore: string | undefined | null;
+  riskScore: string | undefined | null,
 }
 
 describe('update-compliance-data', () => {

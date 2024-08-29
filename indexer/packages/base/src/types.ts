@@ -21,8 +21,8 @@ export enum BugsnagReleaseStage {
 }
 
 export interface PagerDutyInfo {
-  message: {};
-  id?: string;
+  message: {},
+  id?: string,
 }
 
 // Enforce type constraints on the objects passed into Winston logging functions.

@@ -5,8 +5,8 @@ import {
 import { ComplianceProvider } from '@dydxprotocol-indexer/postgres';
 
 export interface ClientAndProvider {
-  client: ComplianceClient;
-  provider: ComplianceProvider;
+  client: ComplianceClient,
+  provider: ComplianceProvider,
 }
 
 export const complianceProvider: ClientAndProvider = {

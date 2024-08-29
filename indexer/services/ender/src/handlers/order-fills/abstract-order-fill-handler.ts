@@ -32,16 +32,16 @@ import {
 import { Handler } from '../handler';
 
 export type OrderFillEventBase = {
-  subaccountId: string;
-  orderId: string | undefined;
-  fillType: FillType;
-  clobPairId: string;
-  side: OrderSide;
+  subaccountId: string,
+  orderId: string | undefined,
+  fillType: FillType,
+  clobPairId: string,
+  side: OrderSide,
   makerOrder: IndexerOrder,
-  fillAmount: Long;
-  liquidity: Liquidity;
-  clientMetadata?: string;
-  fee: Long;
+  fillAmount: Long,
+  liquidity: Liquidity,
+  clientMetadata?: string,
+  fee: Long,
 };
 
 export abstract class AbstractOrderFillHandler<T> extends Handler<T> {

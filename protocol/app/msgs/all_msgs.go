@@ -253,8 +253,11 @@ var (
 		"/dydxprotocol.vault.MsgDepositToMegavaultResponse":         {},
 		"/dydxprotocol.vault.MsgSetVaultParams":                     {},
 		"/dydxprotocol.vault.MsgSetVaultParamsResponse":             {},
+		"/dydxprotocol.vault.MsgUnlockShares":                       {},
+		"/dydxprotocol.vault.MsgUnlockSharesResponse":               {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": {},
+		"/dydxprotocol.vault.MsgUpdateParams":                       {},
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            {},

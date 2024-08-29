@@ -18,6 +18,10 @@ const (
 	// OwnerShares store: owner string -> shares NumShares.
 	OwnerSharesKeyPrefix = "OwnerShares:"
 
+	// OwnerShareUnlocksKeyPrefix is the prefix to retrieve all OwnerShareUnlocks.
+	// OwnerShareUnlocks store: owner string -> ownerShareUnlocks OwnerShareUnlocks.
+	OwnerShareUnlocksKeyPrefix = "OwnerShareUnlocks:"
+
 	// DefaultQuotingParams is the key to retrieve DefaultQuotingParams.
 	// A vault uses DefaultQuotingParams if it does not have its own QuotingParams.
 	DefaultQuotingParamsKey = "DefaultQuotingParams"
