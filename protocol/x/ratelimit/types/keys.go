@@ -38,6 +38,7 @@ const (
 
 	// Denom of sDAI in the x/bank module
 	SDaiDenom         = "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8"
+	SDaiBaseDenom     = "gsdai"
 	SDaiDenomExponent = -18
 
 	// Denom of tDAI in the x/bank module

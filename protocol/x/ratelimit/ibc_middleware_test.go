@@ -1,10 +1,12 @@
 package ratelimit_test
 
 import (
+	"math/big"
 	"strconv"
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -24,6 +26,9 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/testutil"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -32,8 +37,9 @@ import (
 )
 
 var (
-	globalStartTime = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
-	chainIDPrefix   = "localdydxprotocol"
+	globalStartTime              = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
+	chainIDPrefix                = "localdydxprotocol"
+	sDaiPoolAccountAddressString = "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0"
 )
 
 type KeeperTestSuite struct {
@@ -79,10 +85,28 @@ func convertSimAccountsToSenderAccounts(simAccounts []simtypes.Account) []ibctes
 	return senderAccounts
 }
 
-func setupChainForIBC(t *testing.T, coord *ibctesting.Coordinator, chainID string) *ibctesting.TestChain {
+func setupChainForIBC(
+	t *testing.T,
+	coord *ibctesting.Coordinator,
+	chainID string,
+	accountCoinDenom string,
+	accountCoinAmount *big.Int,
+) *ibctesting.TestChain {
+	if accountCoinDenom == ratelimittypes.SDaiDenom {
+		panic("Cannot use sDAI denom as the coin denom. Cannot deposit sDAI directly into user account")
+	}
+
 	t.Helper()
 	r := testutil.NewRand()
 	simAccounts := simtypes.RandomAccounts(r, 10)
+
+	// sdai_amount / tdai_amount
+	sDaiToTDaiConversionRate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	sDaiToTDaiConversionRateAsBigInt, found := new(big.Int).SetString(sDaiToTDaiConversionRate, 10)
+	if !found {
+		panic("Could not convert sdai to tdai conversion rate to big.Int")
+	}
+
 	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		genesis.ChainID = chainID // Update chain_id to chainID
@@ -101,12 +125,43 @@ func setupChainForIBC(t *testing.T, coord *ibctesting.Coordinator, chainID strin
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
 			func(genesisState *banktypes.GenesisState) {
+				// deposit equivalent sdai amount into the sdai pool account
+				if accountCoinDenom == assettypes.TDaiDenom {
+					totalUTDaiAmount := big.NewInt(0).Mul(accountCoinAmount, big.NewInt(int64(len(simAccounts))))
+					tenScaledBySDaiDecimals := new(big.Int).Exp(
+						big.NewInt(ratelimittypes.BASE_10),
+						big.NewInt(ratelimittypes.SDAI_DECIMALS),
+						nil,
+					)
+					scaledSDaiAmount := big.NewInt(0).Mul(totalUTDaiAmount, tenScaledBySDaiDecimals)
+					sDaiAmount := scaledSDaiAmount.Div(scaledSDaiAmount, sDaiToTDaiConversionRateAsBigInt)
+
+					// Perform denom exponent conversion
+					conversionDecimals := new(big.Int).Abs(
+						big.NewInt(ratelimittypes.SDaiDenomExponent - assettypes.TDaiDenomExponent),
+					)
+					tenScaledByConversionDecimals := new(big.Int).Exp(
+						big.NewInt(10),
+						conversionDecimals,
+						nil,
+					)
+					gSDaiAmount := new(big.Int).Mul(sDaiAmount, tenScaledByConversionDecimals)
+					genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
+						Address: sDaiPoolAccountAddressString,
+						Coins: sdktypes.NewCoins(sdktypes.NewCoin(
+							ratelimittypes.SDaiDenom,
+							math.NewIntFromBigInt(gSDaiAmount),
+						)),
+					})
+
+				}
+
 				for _, simAccount := range simAccounts {
 					genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
 						Address: sdktypes.AccAddress(simAccount.PubKey.Address()).String(),
-						Coins: sdktypes.NewCoins(sdktypes.NewInt64Coin(
-							sdk.DefaultBondDenom,
-							constants.TDai_Asset_500_000.Quantums.BigInt().Int64(),
+						Coins: sdktypes.NewCoins(sdktypes.NewCoin(
+							accountCoinDenom,
+							math.NewIntFromBigInt(accountCoinAmount),
 						)),
 					})
 				}
@@ -115,6 +170,19 @@ func setupChainForIBC(t *testing.T, coord *ibctesting.Coordinator, chainID strin
 		return genesis
 	}).WithNonDeterminismChecksEnabled(false).Build()
 	ctx := tApp.InitChain()
+
+	if accountCoinDenom == assettypes.TDaiDenom {
+		k := tApp.App.RatelimitKeeper
+		k.SetSDAIPrice(ctx, sDaiToTDaiConversionRateAsBigInt)
+		denomTrace := transfertypes.DenomTrace{
+			Path:      "transfer/channel-0",
+			BaseDenom: ratelimittypes.SDaiBaseDenom,
+		}
+		tApp.App.TransferKeeper.SetDenomTrace(
+			ctx,
+			denomTrace,
+		)
+	}
 
 	// create current header and call begin block
 	header := cmtproto.Header{
@@ -163,7 +231,7 @@ func setupChainForIBC(t *testing.T, coord *ibctesting.Coordinator, chainID strin
 
 }
 
-func NewCoordinator(t *testing.T, n int) *ibctesting.Coordinator {
+func NewCoordinator(t *testing.T, n int, accountCoinDenom string, accountCoinAmount *big.Int) *ibctesting.Coordinator {
 	t.Helper()
 	chains := make(map[string]*ibctesting.TestChain)
 	coord := &ibctesting.Coordinator{
@@ -173,7 +241,7 @@ func NewCoordinator(t *testing.T, n int) *ibctesting.Coordinator {
 
 	for i := 1; i <= n; i++ {
 		chainID := GetChainID(i)
-		chains[chainID] = setupChainForIBC(t, coord, chainID)
+		chains[chainID] = setupChainForIBC(t, coord, chainID, accountCoinDenom, accountCoinAmount)
 	}
 	coord.Chains = chains
 
@@ -184,8 +252,8 @@ func GetChainID(i int) string {
 	return chainIDPrefix + "-" + strconv.Itoa(i)
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.coordinator = NewCoordinator(suite.T(), 3)
+func (suite *KeeperTestSuite) SetupTest(accountCoinDenom string, accountCoinAmount *big.Int) {
+	suite.coordinator = NewCoordinator(suite.T(), 3, accountCoinDenom, accountCoinAmount)
 	suite.chainA = suite.coordinator.GetChain(GetChainID(1))
 	suite.chainB = suite.coordinator.GetChain(GetChainID(2))
 	suite.chainC = suite.coordinator.GetChain(GetChainID(3))
@@ -194,26 +262,71 @@ func (suite *KeeperTestSuite) SetupTest() {
 	transfertypes.RegisterQueryServer(queryHelper, suite.chainA.App.(*app.App).TransferKeeper)
 }
 
+func (suite *KeeperTestSuite) setupSDaiDenomTrace() {
+	chains := []*ibctesting.TestChain{suite.chainA, suite.chainB, suite.chainC}
+	for _, chain := range chains {
+		chainApp := chain.App.(*app.App)
+		chainApp.TransferKeeper.SetDenomTrace(
+			chain.GetContext(),
+			transfertypes.DenomTrace{
+				Path:      "transfer/channel-0",
+				BaseDenom: ratelimittypes.SDaiBaseDenom,
+			},
+		)
+	}
+}
+
 func (suite *KeeperTestSuite) TestSendTransfer() {
 	var (
-		coin            sdk.Coin
-		path            *ibctesting.Path
-		sender          sdk.AccAddress
-		timeoutHeight   clienttypes.Height
-		memo            string
-		expEscrowAmount sdkmath.Int // total amount in escrow for denom on receiving chain
+		coin          sdk.Coin
+		path          *ibctesting.Path
+		sender        sdk.AccAddress
+		timeoutHeight clienttypes.Height
+		memo          string
 	)
 
 	testCases := []struct {
-		name     string
-		malleate func()
-		expPass  bool
+		name              string
+		accountCoinDenom  string
+		accountCoinAmount *big.Int
+		sendCoinDenom     string
+		sendCoinAmount    math.Int
+		additionalSetup   func()
+		malleate          func()
+		expPass           bool
 	}{
 		{
-			"successful transfer with native token",
-			func() {
-				expEscrowAmount = sdkmath.NewInt(100)
-			}, true,
+			name:              "successful transfer with native token",
+			accountCoinDenom:  sdk.DefaultBondDenom,
+			accountCoinAmount: constants.TDai_Asset_500_000.Quantums.BigInt(),
+			sendCoinDenom:     sdk.DefaultBondDenom,
+			sendCoinAmount:    sdkmath.NewInt(100),
+			additionalSetup:   func() {},
+			malleate:          func() {},
+			expPass:           true,
+		},
+		{
+			name:              "successful transfer with tDAI and sDAI: basic",
+			accountCoinDenom:  assettypes.TDaiDenom,
+			accountCoinAmount: constants.TDai_Asset_500_000.Quantums.BigInt(), // Note: represents amount of utdai
+			sendCoinDenom:     ratelimittypes.SDaiDenom,
+			sendCoinAmount:    sdkmath.NewInt(100), // Note: represents amount of gsdai
+			additionalSetup:   suite.setupSDaiDenomTrace,
+			malleate:          func() {},
+			expPass:           true,
+		},
+		{
+			name:              "successful transfer with tDAI and sDAI: account sends all of its funds",
+			accountCoinDenom:  assettypes.TDaiDenom,
+			accountCoinAmount: constants.TDai_Asset_500_000.Quantums.BigInt(), // Note: represents amount of utdai
+			sendCoinDenom:     ratelimittypes.SDaiDenom,
+			sendCoinAmount: func() sdkmath.Int {
+				bi, _ := new(big.Int).SetString("496681580107906596", 10)
+				return sdkmath.NewIntFromBigInt(bi)
+			}(), // Note: represents amount of gsdai
+			additionalSetup: suite.setupSDaiDenomTrace,
+			malleate:        func() {},
+			expPass:         true,
 		},
 	}
 
@@ -221,16 +334,17 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			suite.SetupTest() // reset
+			suite.SetupTest(tc.accountCoinDenom, tc.accountCoinAmount)
+
+			tc.additionalSetup()
 
 			path = ibctesting.NewTransferPath(suite.chainA, suite.chainB)
 			suite.coordinator.Setup(path)
 
-			coin = sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100))
+			coin = sdk.NewCoin(tc.sendCoinDenom, tc.sendCoinAmount)
 			sender = suite.chainA.SenderAccount.GetAddress()
 			memo = ""
 			timeoutHeight = suite.chainB.GetTimeoutHeight()
-			expEscrowAmount = sdkmath.ZeroInt()
 
 			//create IBC token on chainA
 			transferMsg := transfertypes.NewMsgTransfer(path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, coin, suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.GetTimeoutHeight(), 0, "")
@@ -257,7 +371,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 
 			// check total amount in escrow of sent token denom on sending chain
 			amount := suite.chainA.App.(*app.App).TransferKeeper.GetTotalEscrowForDenom(suite.chainA.GetContext(), coin.GetDenom())
-			suite.Require().Equal(expEscrowAmount, amount.Amount)
+			suite.Require().Equal(tc.sendCoinAmount, amount.Amount)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
