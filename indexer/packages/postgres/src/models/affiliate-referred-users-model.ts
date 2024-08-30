@@ -1,6 +1,6 @@
 import BaseModel from './base-model';
 
-export default class WalletModel extends BaseModel {
+export default class AffiliateReferredUsersModel extends BaseModel {
   static get tableName() {
     return 'affiliate_referred_users';
   }

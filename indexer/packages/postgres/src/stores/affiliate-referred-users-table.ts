@@ -33,7 +33,7 @@ export async function findAll(
     requiredFields,
   );
 
-  // splitting the line after = does not work as it reformatted to one line by eslint
+  // splitting the line after = does not work because it is reformatted to one line by eslint
   // eslint-disable-next-line max-len
   let baseQuery: QueryBuilder<AffiliateReferredUsersModel> = setupBaseQuery<AffiliateReferredUsersModel>(
     AffiliateReferredUsersModel,
@@ -70,19 +70,19 @@ export async function findAll(
 }
 
 export async function create(
-  pairToCreate: AffiliateReferredUsersCreateObject,
+  entryToCreate: AffiliateReferredUsersCreateObject,
   options: Options = { txId: undefined },
 ): Promise<AffiliateReferredUserFromDatabase> {
   return AffiliateReferredUsersModel.query(
     Transaction.get(options.txId),
-  ).insert(pairToCreate).returning('*');
+  ).insert(entryToCreate).returning('*');
 }
 
 export async function findByAffiliateAddress(
   address: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AffiliateReferredUserFromDatabase[] | undefined> {
-  // splitting the line after = does not work as it reformatted to one line by eslint
+  // splitting the line after = does not work because it is reformatted to one line by eslint
   // eslint-disable-next-line max-len
   const baseQuery: QueryBuilder<AffiliateReferredUsersModel> = setupBaseQuery<AffiliateReferredUsersModel>(
     AffiliateReferredUsersModel,
@@ -97,7 +97,7 @@ export async function findByRefereeAddress(
   address: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AffiliateReferredUserFromDatabase | undefined> {
-  // splitting the line after = does not work as it reformatted to one line by eslint
+  // splitting the line after = does not work because it is reformatted to one line by eslint
   // eslint-disable-next-line max-len
   const baseQuery: QueryBuilder<AffiliateReferredUsersModel> = setupBaseQuery<AffiliateReferredUsersModel>(
     AffiliateReferredUsersModel,
