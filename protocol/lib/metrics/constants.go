@@ -79,7 +79,6 @@ const (
 	ClobPairId                                              = "clob_pair_id"
 	ClobLiquidateSubaccountsAgainstOrderbook                = "liquidate_subaccounts_against_orderbook"
 	ClobGetSubaccountsWithPositionsInFinalSettlementMarkets = "get_subaccounts_with_positions_in_final_settlement_markets"
-	LiquidateSubaccounts_GetLiquidations                    = "liquidate_subaccounts_against_orderbook_get_liquidations"
 	LiquidateSubaccounts_PlaceLiquidations                  = "liquidate_subaccounts_against_orderbook_place_liquidations"
 	LiquidateSubaccounts_Deleverage                         = "liquidate_subaccounts_against_orderbook_deleverage"
 	CollateralizationCheck                                  = "place_order_collateralization_check"

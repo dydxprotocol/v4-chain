@@ -10,11 +10,15 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	abcicomet "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -43,11 +47,11 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 	metrics.AddSample(
 		metrics.LiquidationsLiquidatableSubaccountIdsCount,
-		float32(len(subaccountIds)),
+		float32(subaccountIds.Len()),
 	)
 
 	// Early return if there are 0 subaccounts to liquidate.
-	numSubaccounts := len(subaccountIds)
+	numSubaccounts := subaccountIds.Len()
 	if numSubaccounts == 0 {
 		return nil, nil
 	}
@@ -59,57 +63,15 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		metrics.Latency,
 	)
 
-	// Get the liquidation order for each subaccount.
-	// Process at-most `MaxLiquidationAttemptsPerBlock` subaccounts, starting from a pseudorandom location
-	// in the slice. Note `numSubaccounts` is guaranteed to be non-zero at this point, so `Intn` shouldn't panic.
-	pseudoRand := k.GetPseudoRand(ctx)
-	liquidationOrders := make([]types.LiquidationOrder, 0)
+	// Process at-most `MaxLiquidationAttemptsPerBlock` in order of priority.
 	numLiqOrders := lib.Min(numSubaccounts, int(k.Flags.MaxLiquidationAttemptsPerBlock))
-	indexOffset := pseudoRand.Intn(numSubaccounts)
-
 	startGetLiquidationOrders := time.Now()
 	for i := 0; i < numLiqOrders; i++ {
-		index := (i + indexOffset) % numSubaccounts
-		subaccountId := subaccountIds[index]
-		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
-		if err != nil {
-			// Subaccount might not always be liquidatable since liquidation daemon runs
-			// in a separate goroutine and is not always in sync with the application.
-			// Therefore, if subaccount is not liquidatable, continue.
-			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
-				telemetry.IncrCounter(1, metrics.MaybeGetLiquidationOrder, metrics.SubaccountsNotLiquidatable, metrics.Count)
-				continue
-			}
 
-			// Return unexpected errors.
-			return nil, err
-		}
+		subaccountId := subaccountIds.PopHighestPriority()
 
-		liquidationOrders = append(liquidationOrders, *liquidationOrder)
-	}
-	telemetry.MeasureSince(
-		startGetLiquidationOrders,
-		types.ModuleName,
-		metrics.LiquidateSubaccounts_GetLiquidations,
-		metrics.Latency,
-	)
-
-	// Sort liquidation orders. The most underwater accounts should be liquidated first.
-	// These orders are only used for sorting. When we match these orders here in PrepareCheckState,
-	// liquidation matches will be put into the Operations Queue. However, when we process liquidations,
-	// we will generate a new liquidation order for each subaccount because previous liquidation orders
-	// can alter quantity sizes of subsequent liquidation orders.
-	k.SortLiquidationOrders(ctx, liquidationOrders)
-
-	subaccountIdsToLiquidate := lib.MapSlice(liquidationOrders, func(order types.LiquidationOrder) satypes.SubaccountId {
-		return order.GetSubaccountId()
-	})
-
-	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	startPlaceLiquidationOrders := time.Now()
-	for _, subaccountId := range subaccountIdsToLiquidate {
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
-		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
+		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId.SubaccountId)
 		if err != nil {
 			// Subaccount might not always be liquidatable if previous liquidation orders
 			// improves the net collateral of this subaccount.
@@ -140,9 +102,18 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 				PerpetualId:  liquidationOrder.MustGetLiquidatedPerpetualId(),
 			})
 		}
+
+		subaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidationOrder.GetSubaccountId())
+		priority, err := k.GetSubaccountPriority(ctx, subaccount)
+		if err != nil {
+			return nil, err
+		}
+
+		// the subaccount has been updated to reflect the order match
+		subaccountIds.AddSubaccount(liquidationOrder.GetSubaccountId(), priority)
 	}
 	telemetry.MeasureSince(
-		startPlaceLiquidationOrders,
+		startGetLiquidationOrders,
 		types.ModuleName,
 		metrics.LiquidateSubaccounts_PlaceLiquidations,
 		metrics.Latency,
@@ -157,10 +128,29 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	return subaccountsToDeleverage, nil
 }
 
+func (k Keeper) GetSubaccountPriority(
+	ctx sdk.Context,
+	subaccount satypes.Subaccount,
+) (
+	priority *big.Float,
+	err error,
+) {
+
+	_, marketPricesMap, perpetualsMap, liquidityTiersMap := k.FetchInformationForLiquidations(ctx, &abcicomet.ExtendedCommitInfo{})
+	_, _, liquidationPriority, err := k.CheckSubaccountCollateralization(
+		subaccount,
+		marketPricesMap,
+		perpetualsMap,
+		liquidityTiersMap,
+	)
+
+	return liquidationPriority, err
+
+}
+
 // MaybeGetLiquidationOrder takes a subaccount ID and returns a liquidation order that can be used to
 // liquidate the subaccount.
-// If the subaccount is not currently liquidatable, it will do nothing. This function will return an error if calling
-// `IsLiquidatable`, `GetPerpetualPositionToLiquidate` or `GetFillablePrice` returns an error.
+// The account is assumed to be liquidatable
 func (k Keeper) MaybeGetLiquidationOrder(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
@@ -168,10 +158,6 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	liquidationOrder *types.LiquidationOrder,
 	err error,
 ) {
-	// If the subaccount is not liquidatable, do nothing.
-	if err := k.EnsureIsLiquidatable(ctx, subaccountId); err != nil {
-		return nil, err
-	}
 
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
@@ -202,6 +188,7 @@ func (k Keeper) GetLiquidationOrderForPerpetual(
 	liquidationOrder *types.LiquidationOrder,
 	err error,
 ) {
+	// SOLAL uses price should probably change this
 	deltaQuantums, err := k.GetLiquidatablePositionSizeDelta(
 		ctx,
 		subaccountId,
@@ -211,6 +198,7 @@ func (k Keeper) GetLiquidationOrderForPerpetual(
 		return nil, err
 	}
 
+	// SOLAL uses price & seems we should just do max
 	// Get the fillable price of the liquidation order in subticks.
 	fillablePriceRat, err := k.GetFillablePrice(ctx, subaccountId, perpetualId, deltaQuantums)
 	if err != nil {
@@ -319,6 +307,7 @@ func (k Keeper) PlacePerpetualLiquidation(
 	)
 
 	// Stat the volume of liquidation orders placed.
+	// SOLAL uses price & seems like would change once we change logic
 	if totalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		perpetualId,
@@ -785,20 +774,36 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 ) {
 	// Fetch the subaccount from state.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
+	marketPrices := k.pricesKeeper.GetAllMarketPrices(ctx)
+	marketPricesMap := lib.UniqueSliceToMap(marketPrices, func(m pricestypes.MarketPrice) uint32 {
+		return m.Id
+	})
 
-	numPositions := len(subaccount.PerpetualPositions)
-	if numPositions > 0 {
-		subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
-		indexOffset := k.GetPseudoRand(ctx).Intn(numPositions)
-		for i := 0; i < numPositions; i++ {
-			position := subaccount.PerpetualPositions[(i+indexOffset)%numPositions]
-			// Note that this could run in O(n^2) time. This is fine for now because we have less than a hundred
-			// perpetuals and only liquidate once per subaccount per block. This means that the position with smallest
-			// id will be liquidated first.
-			if !subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(position.PerpetualId) {
-				return position.PerpetualId, nil
+	bestPriority := big.NewFloat(-1)
+	bestPerpetualId := uint32(0)
+
+	for _, position := range subaccount.PerpetualPositions {
+		if !subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(position.PerpetualId) {
+			closedSubaccount, err := k.simulateClosePerpetualPosition(ctx, subaccount, position, marketPricesMap[position.PerpetualId])
+			if err != nil {
+				return 0, err
+			}
+
+			priority, err := k.GetSubaccountPriority(ctx, closedSubaccount)
+			if err != nil {
+				return 0, err
+			}
+
+			if priority.Cmp(bestPriority) > 0 {
+				bestPriority = priority
+				bestPerpetualId = position.PerpetualId
 			}
 		}
+	}
+
+	if bestPriority.Sign() > 0 {
+		return bestPerpetualId, nil
 	}
 
 	// Return an error if there are no perpetual positions to liquidate.
@@ -808,6 +813,50 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 			"Subaccount ID: %v",
 			subaccount.Id,
 		)
+}
+
+func (k Keeper) simulateClosePerpetualPosition(
+	ctx sdk.Context,
+	subaccount satypes.Subaccount,
+	position *satypes.PerpetualPosition,
+	price pricestypes.MarketPrice,
+) (
+	closedSubaccount satypes.Subaccount,
+	err error,
+) {
+	// Copy the subaccount to avoid modifying the original
+	closedSubaccount = subaccount
+
+	// Find and remove the perpetual position
+	for i, pos := range closedSubaccount.PerpetualPositions {
+		if pos.PerpetualId == position.PerpetualId {
+			// Remove the position from the slice
+			closedSubaccount.PerpetualPositions = append(
+				closedSubaccount.PerpetualPositions[:i],
+				closedSubaccount.PerpetualPositions[i+1:]...,
+			)
+			break
+		}
+	}
+
+	// Get the perpetual details
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, position.PerpetualId)
+	if err != nil {
+		return satypes.Subaccount{}, err
+	}
+
+	// Calculate the net notional in quote quantums
+	bigQuantums := position.GetBigQuantums()
+	bigNetCollateralQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, price, bigQuantums)
+
+	// Add the net notional to the USDC balance
+	usdcPosition := closedSubaccount.AssetPositions[0]
+	usdcPosition.Quantums = dtypes.NewIntFromBigInt(new(big.Int).Add(usdcPosition.Quantums.BigInt(), bigNetCollateralQuoteQuantums))
+
+	// Update the USDC position in the subaccount
+	closedSubaccount.AssetPositions = []*satypes.AssetPosition{usdcPosition}
+
+	return closedSubaccount, nil
 }
 
 // GetLiquidatablePositionSizeDelta returns the max number of base quantums to liquidate

@@ -21,12 +21,12 @@ func TestLiquidationPriorityHeap(t *testing.T) {
 		assert.Equal(t, 1, h.Len())
 	})
 
-	t.Run("PopLowestPriority", func(t *testing.T) {
+	t.Run("PopHighestPriority", func(t *testing.T) {
 		h := NewLiquidationPriorityHeap()
 		h.AddSubaccount(types.SubaccountId{Owner: "owner1", Number: 1}, big.NewFloat(2.0))
 		h.AddSubaccount(types.SubaccountId{Owner: "owner2", Number: 2}, big.NewFloat(1.0))
 
-		lowest := h.PopLowestPriority()
+		lowest := h.PopHighestPriority()
 		assert.NotNil(t, lowest)
 		assert.Equal(t, "owner2", lowest.SubaccountId.Owner)
 		assert.Equal(t, uint32(2), lowest.SubaccountId.Number)
@@ -43,7 +43,7 @@ func TestLiquidationPriorityHeap(t *testing.T) {
 		success := h.UpdatePriority(item, big.NewFloat(0.5))
 		assert.True(t, success)
 
-		lowest := h.PopLowestPriority()
+		lowest := h.PopHighestPriority()
 		assert.NotNil(t, lowest)
 		assert.Equal(t, "owner1", lowest.SubaccountId.Owner)
 		assert.Equal(t, uint32(1), lowest.SubaccountId.Number)
@@ -71,7 +71,7 @@ func TestLiquidationPriorityHeap(t *testing.T) {
 
 		expected := []string{"owner2", "owner3", "owner1"}
 		for i := 0; i < 3; i++ {
-			item := h.PopLowestPriority()
+			item := h.PopHighestPriority()
 			assert.Equal(t, expected[i], item.SubaccountId.Owner)
 		}
 		assert.Equal(t, 0, h.Len())

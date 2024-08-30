@@ -67,7 +67,7 @@ func (h *LiquidationPriorityHeap) AddSubaccount(subaccountId types.SubaccountId,
 }
 
 // PopLowestPriority removes and returns the subaccount with the lowest priority
-func (h *LiquidationPriorityHeap) PopLowestPriority() *LiquidationPriority {
+func (h *LiquidationPriorityHeap) PopHighestPriority() *LiquidationPriority {
 	if h.Len() == 0 {
 		return nil
 	}
