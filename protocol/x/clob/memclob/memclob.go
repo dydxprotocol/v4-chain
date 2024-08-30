@@ -447,8 +447,6 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
-	fmt.Println("XXXXX PlaceOrder", ctx.BlockHeight())
-
 	// Perform invariant checks that the orderbook is not crossed after `PlaceOrder` finishes execution.
 	defer func() {
 		orderbook := m.openOrders.mustGetOrderbook(ctx, order.GetClobPairId())
@@ -776,8 +774,6 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	makerOrdersToRemove []OrderWithRemovalReason,
 	err error,
 ) {
-
-	fmt.Println("XXXXX MatchOrder", ctx.BlockHeight())
 
 	offchainUpdates = types.NewOffchainUpdates()
 
@@ -1577,8 +1573,6 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 	// returning the optimistically filled size to the caller.
 	takerOrderStatus types.TakerOrderStatus,
 ) {
-
-	fmt.Println("XXXXX mustPerformTakerOrderMatching", ctx.BlockHeight())
 	// Initialize return variables.
 	newMakerFills = make([]types.MakerFill, 0)
 	matchedOrderHashToOrder = make(map[types.OrderHash]types.MatchableOrder)

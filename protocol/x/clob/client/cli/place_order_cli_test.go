@@ -115,8 +115,6 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 	goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
 	goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
 
-	fmt.Println("XXXXX Before submitting the toder")
-
 	buyTx := "docker exec interchain-security-instance interchain-security-cd" +
 		" tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
 		" 0 1 0 1 1000 50000000000 " + goodTilBlockStr +
@@ -132,8 +130,6 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err = network.QueryCustomNetwork(sellTx)
 	s.Require().NoError(err)
-
-	fmt.Println("XXXXX After submitting the toder")
 
 	time.Sleep(5 * time.Second)
 

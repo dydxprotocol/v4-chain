@@ -1,9 +1,7 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
-	"math/rand"
 
 	errorsmod "cosmossdk.io/errors"
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
@@ -45,11 +43,6 @@ func (k Keeper) FetchInformationForLiquidations(
 		return m.Id
 	})
 
-	marketPrices[0].SpotPrice = uint64(rand.Int63())
-	marketPrices[0].PnlPrice = uint64(rand.Int63())
-
-	k.pricesKeeper.SetMarketPrice(ctx, marketPrices[0])
-
 	return subaccounts, marketPricesMap, perpetualsMap, liquidityTiersMap
 }
 
@@ -62,9 +55,6 @@ func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 ) {
 
 	subaccounts, marketPrices, perpetuals, liquidityTiers := k.FetchInformationForLiquidations(ctx)
-
-	fmt.Println("Prepare check state Market Prices post change", marketPrices)
-	fmt.Println("Prepare check state Perpetuals post change", ctx.BlockHeight())
 
 	negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
 	liquidatableSubaccountIds = NewLiquidationPriorityHeap()

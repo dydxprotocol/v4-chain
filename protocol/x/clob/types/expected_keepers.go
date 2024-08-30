@@ -154,7 +154,6 @@ type PerpetualsKeeper interface {
 type PricesKeeper interface {
 	GetMarketParam(ctx sdk.Context, id uint32) (param pricestypes.MarketParam, exists bool)
 	GetAllMarketPrices(ctx sdk.Context) []pricestypes.MarketPrice
-	SetMarketPrice(ctx sdk.Context, marketPrice pricestypes.MarketPrice) error
 }
 
 type StatsKeeper interface {
