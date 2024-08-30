@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,146 +47,6 @@ type PoolTestCase struct {
 	transfers []PoolTestTransfer
 }
 
-func TestDivideAndRoundUp_Success(t *testing.T) {
-	tests := map[string]struct {
-		x              *big.Int
-		y              *big.Int
-		expectedResult *big.Int
-	}{
-		"Divide positive number by positive number: Larger number divided evenly by smaller number.": {
-			x:              big.NewInt(100),
-			y:              big.NewInt(5),
-			expectedResult: big.NewInt(20),
-		},
-		"Divide positive number by another positive number: Larger number divided unevenly by smaller number.": {
-			x:              big.NewInt(100),
-			y:              big.NewInt(3),
-			expectedResult: big.NewInt(34),
-		},
-		"Divide positive number by positive number: Smaller number divided by larger number with result closer to larger whole number.": {
-			x:              big.NewInt(5),
-			y:              big.NewInt(6),
-			expectedResult: big.NewInt(1),
-		},
-		"Divide positive number by positive number: Smaller number divided by larger number with result closer to smaller whole number.": {
-			x:              big.NewInt(5),
-			y:              big.NewInt(100),
-			expectedResult: big.NewInt(1),
-		},
-		"Divide positive number by positive number: Divide by itself.": {
-			x:              big.NewInt(100),
-			y:              big.NewInt(100),
-			expectedResult: big.NewInt(1),
-		},
-		"Divide positive number by positive number: Divide by one.": {
-			x:              big.NewInt(100),
-			y:              big.NewInt(1),
-			expectedResult: big.NewInt(100),
-		},
-		"Divide positive number by positive number: Divide two big integers.": {
-			x:              big.NewInt(1000000000000),
-			y:              big.NewInt(987654321),
-			expectedResult: big.NewInt(1013),
-		},
-		"Divide 0 by positive number.": {
-			x:              big.NewInt(0),
-			y:              big.NewInt(987654321),
-			expectedResult: big.NewInt(0),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			gotResult, err := keeper.DivideAndRoundUp(tc.x, tc.y)
-			require.Equal(t, tc.expectedResult, gotResult, "DivideAndRoundUp value does not match the expected value")
-			require.Equal(t, err, nil, "Error should have been nil on success, but got non-nil.")
-		})
-	}
-}
-
-func TestDivideAndRoundUp_Failure(t *testing.T) {
-	tests := map[string]struct {
-		x              *big.Int
-		y              *big.Int
-		expectedResult *big.Int
-		expectedErr    error
-	}{
-		"Divide positive number by 0.": {
-			x:              big.NewInt(10000000),
-			y:              big.NewInt(0),
-			expectedResult: nil,
-			expectedErr:    errors.New("division by zero"),
-		},
-		"Divide nil by 0.": {
-			x:              nil,
-			y:              big.NewInt(0),
-			expectedResult: nil,
-			expectedErr:    errors.New("input values cannot be nil"),
-		},
-		"Divide negative number by 0.": {
-			x:              big.NewInt(-10000000),
-			y:              big.NewInt(0),
-			expectedResult: nil,
-			expectedErr:    errors.New("input values cannot be negative"),
-		},
-		"One input is negative: x is negative.": {
-			x:              big.NewInt(-10000000),
-			y:              big.NewInt(10),
-			expectedResult: nil,
-			expectedErr:    errors.New("input values cannot be negative"),
-		},
-		"One input is negative: y is negative.": {
-			x:              big.NewInt(10000000),
-			y:              big.NewInt(-10),
-			expectedResult: nil,
-			expectedErr:    errors.New("input values cannot be negative"),
-		},
-		"Both input are negative.": {
-			x:              big.NewInt(-20),
-			y:              big.NewInt(-10),
-			expectedResult: nil,
-			expectedErr:    errors.New("input values cannot be negative"),
-		},
-		"One input is nil: x is nil.": {
-			x:              nil,
-			y:              big.NewInt(10),
-			expectedResult: nil,
-			expectedErr:    errors.New("input values cannot be nil"),
-		},
-		"One input is nil: y is nil.": {
-			x:              big.NewInt(10),
-			y:              nil,
-			expectedResult: nil,
-			expectedErr:    errors.New("input values cannot be nil"),
-		},
-		"Both inputs are nil.": {
-			x:              nil,
-			y:              nil,
-			expectedResult: nil,
-			expectedErr:    errors.New("input values cannot be nil"),
-		},
-		"x is nil, y is negative.": {
-			x:              nil,
-			y:              big.NewInt(-10),
-			expectedResult: nil,
-			expectedErr:    errors.New("input values cannot be nil"),
-		},
-		"y is nil, x is negative.": {
-			x:              big.NewInt(-10),
-			y:              nil,
-			expectedResult: nil,
-			expectedErr:    errors.New("input values cannot be nil"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			gotResult, err := keeper.DivideAndRoundUp(tc.x, tc.y)
-			require.Equal(t, tc.expectedResult, gotResult, "Expected nil value on failure, but got non-nil.")
-			require.ErrorContains(t, err, tc.expectedErr.Error())
-		})
-	}
-}
-
 func TestGetTradingDAIFromSDAIAmount(t *testing.T) {
 
 	tests := map[string]struct {
@@ -203,9 +62,9 @@ func TestGetTradingDAIFromSDAIAmount(t *testing.T) {
 			expectedErr:        nil,
 		},
 		"Non-zero sDAI amount with valid price": {
-			sDAIAmount:         big.NewInt(1000),
+			sDAIAmount:         big.NewInt(500),
 			sDAIPrice:          price_two,
-			expectedTDAIAmount: big.NewInt(500),
+			expectedTDAIAmount: big.NewInt(1000),
 			expectedErr:        nil,
 		},
 		"sDAI price not found": {
@@ -221,21 +80,21 @@ func TestGetTradingDAIFromSDAIAmount(t *testing.T) {
 			expectedErr:        errors.New("sDAI price is zero"),
 		},
 		"Real example": {
-			sDAIAmount:         big.NewInt(1000),
+			sDAIAmount:         big.NewInt(913),
 			sDAIPrice:          price1,
-			expectedTDAIAmount: big.NewInt(912),
+			expectedTDAIAmount: big.NewInt(1000),
 			expectedErr:        nil,
 		},
 		"Real example 2": {
-			sDAIAmount:         big.NewInt(1000),
+			sDAIAmount:         big.NewInt(913),
 			sDAIPrice:          price2,
-			expectedTDAIAmount: big.NewInt(912),
+			expectedTDAIAmount: big.NewInt(1000),
 			expectedErr:        nil,
 		},
 		"Real example 3": {
-			sDAIAmount:         big.NewInt(98765432123456789),
+			sDAIAmount:         big.NewInt(90166324963409613),
 			sDAIPrice:          price3,
-			expectedTDAIAmount: big.NewInt(90166324963409612),
+			expectedTDAIAmount: big.NewInt(98765432123456789),
 			expectedErr:        nil,
 		},
 	}
@@ -281,9 +140,9 @@ func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
 			expectedErr:        nil,
 		},
 		"Non-zero sDAI amount with valid price": {
-			sDAIAmount:         big.NewInt(1000),
+			sDAIAmount:         big.NewInt(500),
 			sDAIPrice:          price_two,
-			expectedTDAIAmount: big.NewInt(500),
+			expectedTDAIAmount: big.NewInt(1000),
 			expectedErr:        nil,
 		},
 		"sDAI price not found": {
@@ -299,21 +158,21 @@ func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
 			expectedErr:        errors.New("sDAI price is zero"),
 		},
 		"Real example": {
-			sDAIAmount:         big.NewInt(1000),
+			sDAIAmount:         big.NewInt(913),
 			sDAIPrice:          price1,
-			expectedTDAIAmount: big.NewInt(913),
+			expectedTDAIAmount: big.NewInt(1001),
 			expectedErr:        nil,
 		},
 		"Real example 2": {
-			sDAIAmount:         big.NewInt(1000),
+			sDAIAmount:         big.NewInt(913),
 			sDAIPrice:          price2,
-			expectedTDAIAmount: big.NewInt(913),
+			expectedTDAIAmount: big.NewInt(1001),
 			expectedErr:        nil,
 		},
 		"Real example 3": {
-			sDAIAmount:         big.NewInt(98765432123456789),
+			sDAIAmount:         big.NewInt(90166324963409613),
 			sDAIPrice:          price3,
-			expectedTDAIAmount: big.NewInt(90166324963409613),
+			expectedTDAIAmount: big.NewInt(98765432123456790),
 			expectedErr:        nil,
 		},
 	}
@@ -350,11 +209,11 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 		"User has more sDAI than transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(500),
+					sDAIAmount:             big.NewInt(250),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
 					userInitialSDAIBalance: big.NewInt(1000),
-					expectedTDAIAmount:     big.NewInt(250),
+					expectedTDAIAmount:     big.NewInt(500),
 					expectedErr:            nil,
 					expectErr:              false,
 				},
@@ -363,11 +222,11 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 		"User has exactly the sDAI transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(1000),
+					sDAIAmount:             big.NewInt(500),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
 					userInitialSDAIBalance: big.NewInt(1000),
-					expectedTDAIAmount:     big.NewInt(500),
+					expectedTDAIAmount:     big.NewInt(1000),
 					expectedErr:            nil,
 					expectErr:              false,
 				},
@@ -406,7 +265,7 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
 					userInitialSDAIBalance: big.NewInt(1000000),
-					expectedTDAIAmount:     big.NewInt(0),
+					expectedTDAIAmount:     big.NewInt(2),
 					expectedErr:            nil,
 					expectErr:              false,
 				},
@@ -428,11 +287,11 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 		"Real price will round down": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(1000),
+					sDAIAmount:             big.NewInt(913),
 					sDAIPrice:              price2,
 					userAddr:               accAddrs[0],
 					userInitialSDAIBalance: big.NewInt(2000),
-					expectedTDAIAmount:     big.NewInt(912),
+					expectedTDAIAmount:     big.NewInt(1000),
 					expectErr:              false,
 				},
 			},
@@ -555,11 +414,11 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"User has more tDAI than transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(500),
+					sDAIAmount:             big.NewInt(250),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(1000),
-					expectedTDAIAmount:     big.NewInt(250),
+					expectedTDAIAmount:     big.NewInt(500),
 					expectedErr:            nil,
 					expectErr:              false,
 				},
@@ -568,11 +427,11 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"User has exactly the tDAI transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(1000),
+					sDAIAmount:             big.NewInt(500),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
-					userInitialTDAIBalance: big.NewInt(500),
-					expectedTDAIAmount:     big.NewInt(500),
+					userInitialTDAIBalance: big.NewInt(1000),
+					expectedTDAIAmount:     big.NewInt(1000),
 					expectedErr:            nil,
 					expectErr:              false,
 				},
@@ -586,7 +445,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(250),
 					expectedTDAIAmount:     nil,
-					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 250utdai is smaller than 500utdai: insufficient funds"),
+					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 250utdai is smaller than 2000utdai: insufficient funds"),
 					expectErr:              true,
 				},
 			},
@@ -599,7 +458,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(0),
 					expectedTDAIAmount:     nil,
-					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 0utdai is smaller than 500utdai: insufficient funds"),
+					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 0utdai is smaller than 2000utdai: insufficient funds"),
 					expectErr:              true,
 				},
 			},
@@ -611,7 +470,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(1000000),
-					expectedTDAIAmount:     big.NewInt(1),
+					expectedTDAIAmount:     big.NewInt(2),
 					expectedErr:            nil,
 					expectErr:              false,
 				},
@@ -625,7 +484,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(1),
 					expectedTDAIAmount:     nil,
-					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 1utdai is smaller than 500000utdai: insufficient funds"),
+					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 1utdai is smaller than 2000000utdai: insufficient funds"),
 					expectErr:              true,
 				},
 			},
@@ -633,11 +492,11 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"Real price will round up": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(1000),
+					sDAIAmount:             big.NewInt(913),
 					sDAIPrice:              price2,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(2000),
-					expectedTDAIAmount:     big.NewInt(913),
+					expectedTDAIAmount:     big.NewInt(1001),
 					expectErr:              false,
 				},
 			},

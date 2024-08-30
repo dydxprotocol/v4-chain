@@ -19,6 +19,7 @@ func (k Keeper) MintTradingDAIToUserAccount(
 	sDAIAmount *big.Int,
 ) error {
 
+	// TODO [YBCP-68]: Take into account coin denoms
 	tradingDAIAmount, err := k.GetTradingDAIFromSDAIAmount(ctx, sDAIAmount)
 	if err != nil {
 		return errorsmod.Wrap(err, "failed to convert sDAI to trading DAI")
@@ -45,19 +46,21 @@ func (k Keeper) MintTradingDAIToUserAccount(
 }
 
 // Withdraws the converted amount of TDai from the TDai pool and burns it.
-// Sends the amount of sDai to the user account.
+// Sends the amount of sDai to the user account. We round up the converted
+// amount of tdai on withdrawal, since we never want to leave "dangling" tdai.
 func (k Keeper) WithdrawSDaiFromTDai(
 	ctx sdk.Context,
 	userAddr sdk.AccAddress,
 	sDaiAmount *big.Int,
 ) error {
 
-	tDAIAmount, err := k.GetTradingDAIFromSDAIAmountAndRoundUp(ctx, sDaiAmount)
+	// TODO [YBCP-68]: Take into account coin denoms
+	tDaiDenomAmount, err := k.GetTradingDAIFromSDAIAmountAndRoundUp(ctx, sDaiAmount)
 	if err != nil {
 		return err
 	}
 
-	err = k.BurnTDaiInUserAccount(ctx, userAddr, tDAIAmount)
+	err = k.BurnTDaiInUserAccount(ctx, userAddr, tDaiDenomAmount)
 	if err != nil {
 		return err
 	}
@@ -107,17 +110,8 @@ func (k Keeper) SendSDaiAmountToUserAccount(
 	return nil
 }
 
-/*
-Converts sDAI to corresponding amount of tDAI, implementing the following maker code
-https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea.
-Note that shares and tDaiAmount are equivalent.
-
-	function deposit(uint256 assets, address receiver) external returns (uint256 shares) {
-		uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
-		shares = assets * RAY / chi;
-		_mint(assets, shares, receiver);
-	}
-*/
+// Inspired by the deposit function of the Maker code at:
+// https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
 func (k Keeper) GetTradingDAIFromSDAIAmount(ctx sdk.Context, sDaiAmount *big.Int) (*big.Int, error) {
 	sDAIPrice, found := k.GetSDAIPrice(ctx)
 	if !found {
@@ -128,20 +122,11 @@ func (k Keeper) GetTradingDAIFromSDAIAmount(ctx sdk.Context, sDaiAmount *big.Int
 		return nil, errors.New("sDAI price is zero")
 	}
 
-	return k.calculateTDaiAmount(ctx, sDaiAmount, sDAIPrice), nil
+	return k.calculateTDaiAmount(sDaiAmount, sDAIPrice), nil
 }
 
-/*
-Inspired by the following maker code.
-https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
-Note that shares and tDaiAmount are equivalent.
-
-	function withdraw(uint256 assets, address receiver, address owner) external returns (uint256 shares) {
-		uint256 chi = (block.timestamp > pot.rho()) ? pot.drip() : pot.chi();
-		shares = _divup(assets * RAY, chi);
-		_burn(assets, shares, receiver, owner);
-	}
-*/
+// Inspired by the withdraw function of the Maker code at:
+// https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
 func (k Keeper) GetTradingDAIFromSDAIAmountAndRoundUp(ctx sdk.Context, sDaiAmount *big.Int) (*big.Int, error) {
 	// Get the current sDAI price
 	sDAIPrice, found := k.GetSDAIPrice(ctx)
@@ -159,7 +144,7 @@ func (k Keeper) GetTradingDAIFromSDAIAmountAndRoundUp(ctx sdk.Context, sDaiAmoun
 		)
 	}
 
-	tDaiAmount, err := k.calculateTDaiAmountAndRoundUp(ctx, sDaiAmount, sDAIPrice)
+	tDaiAmount, err := k.calculateTDaiAmountAndRoundUp(sDaiAmount, sDAIPrice)
 	if err != nil {
 		return nil, err
 	}
@@ -167,60 +152,19 @@ func (k Keeper) GetTradingDAIFromSDAIAmountAndRoundUp(ctx sdk.Context, sDaiAmoun
 	return tDaiAmount, nil
 }
 
-func (k Keeper) calculateTDaiAmount(ctx sdk.Context, sDaiAmount *big.Int, sDAIPrice *big.Int) *big.Int {
-	scaledSDaiAmount := scaleAmountBySDaiDecimals(ctx, sDaiAmount)
-	tDaiAmount := scaledSDaiAmount.Div(scaledSDaiAmount, sDAIPrice)
+func (k Keeper) calculateTDaiAmount(sDaiAmount *big.Int, sDAIPrice *big.Int) *big.Int {
+	scaledSDaiAmount := new(big.Int).Mul(sDaiAmount, sDAIPrice)
+	tDaiAmount := divideAmountBySDaiDecimals(scaledSDaiAmount)
 	return tDaiAmount
 
 }
 
-func (k Keeper) calculateTDaiAmountAndRoundUp(ctx sdk.Context, sDaiAmount *big.Int, sDAIPrice *big.Int) (*big.Int, error) {
-	scaledSDaiAmount := scaleAmountBySDaiDecimals(ctx, sDaiAmount)
-	tDaiAmount, err := DivideAndRoundUp(scaledSDaiAmount, sDAIPrice)
+func (k Keeper) calculateTDaiAmountAndRoundUp(sDaiAmount *big.Int, sDAIPrice *big.Int) (*big.Int, error) {
+	scaledSDaiAmount := new(big.Int).Mul(sDaiAmount, sDAIPrice)
+	tenScaledBySDaiDecimals := getTenScaledBySDaiDecimals()
+	tDaiAmount, err := divideAndRoundUp(scaledSDaiAmount, tenScaledBySDaiDecimals)
 	if err != nil {
 		return nil, err
 	}
 	return tDaiAmount, nil
-}
-
-func scaleAmountBySDaiDecimals(ctx sdk.Context, sDaiAmount *big.Int) *big.Int {
-	tenScaledBySDaiDecimals := new(big.Int).Exp(
-		big.NewInt(types.BASE_10),
-		big.NewInt(types.SDAI_DECIMALS),
-		nil)
-
-	scaledSDaiAmount := new(big.Int).Mul(
-		sDaiAmount,
-		tenScaledBySDaiDecimals,
-	)
-
-	return scaledSDaiAmount
-}
-
-// DivideAndRoundUp performs division with rounding up: calculates x / y and rounds up to the nearest whole number
-func DivideAndRoundUp(x *big.Int, y *big.Int) (*big.Int, error) {
-	// Handle nil inputs
-	if x == nil || y == nil {
-		return nil, errors.New("input values cannot be nil")
-	}
-
-	// Handle negative inputs
-	if x.Cmp(big.NewInt(0)) < 0 || y.Cmp(big.NewInt(0)) < 0 {
-		return nil, errors.New("input values cannot be negative")
-	}
-
-	// Handle division by zero
-	if y.Cmp(big.NewInt(0)) == 0 {
-		return nil, errors.New("division by zero")
-	}
-
-	// Handle x being zero
-	if x.Cmp(big.NewInt(0)) == 0 {
-		return big.NewInt(0), nil
-	}
-
-	result := new(big.Int).Sub(x, big.NewInt(1))
-	result = result.Div(result, y)
-	result = result.Add(result, big.NewInt(1))
-	return result, nil
 }

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -85,9 +84,6 @@ func (k Keeper) MintNewTDaiYield(ctx sdk.Context) (*big.Int, *big.Int, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-
-	fmt.Println("tDAI SUPPLY BEFORE YIELD ", tDAISupply)
-	fmt.Println("tDAI SUPPLY after yield ", tDAIAfterYield)
 
 	if tDAIAfterYield.Cmp(tDAISupply) <= 0 {
 		return nil, nil, errorsmod.Wrap(
