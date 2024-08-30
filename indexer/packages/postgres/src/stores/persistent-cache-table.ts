@@ -80,6 +80,7 @@ export async function upsert(
   // should only ever be one key value pair
   return kvs[0];
 }
+
 export async function findById(
   kv: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
