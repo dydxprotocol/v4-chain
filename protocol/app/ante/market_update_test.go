@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"math/rand"
 	"testing"
 
@@ -820,12 +821,19 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			)
 			require.NoError(t, err)
 
+			ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 			_, err = anteHandler(ctx, tx, tt.args.simulate)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
+			gasConsumed := ctx.GasMeter().GasConsumed()
+			// Execute twice to ensure deterministic gas usage
+			ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+			_, err = anteHandler(ctx, tx, tt.args.simulate)
+			require.NoError(t, err)
+			require.Equal(t, gasConsumed, ctx.GasMeter().GasConsumed())
 		})
 	}
 }
