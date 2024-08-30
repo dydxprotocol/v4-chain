@@ -21,6 +21,9 @@ func TestAddFlagsToCommand(t *testing.T) {
 		fmt.Sprintf("Has %s flag", flags.MaxLiquidationAttemptsPerBlock): {
 			flagName: flags.MaxLiquidationAttemptsPerBlock,
 		},
+		fmt.Sprintf("Has %s flag", flags.MaxIsolatedLiquidationAttemptsPerBlock): {
+			flagName: flags.MaxIsolatedLiquidationAttemptsPerBlock,
+		},
 		fmt.Sprintf("Has %s flag", flags.MaxDeleveragingAttemptsPerBlock): {
 			flagName: flags.MaxDeleveragingAttemptsPerBlock,
 		},
@@ -45,46 +48,52 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		optsMap map[string]any
 
 		// Expectations.
-		expectedMaxLiquidationAttemptsPerBlock      uint32
-		expectedMaxDeleveragingAttemptsPerBlock     uint32
-		expectedMaxDeleveragingSubaccountsToIterate uint32
-		expectedMevTelemetryHosts                   []string
-		expectedMevTelemetryIdentifier              string
+		expectedMaxLiquidationAttemptsPerBlock         uint32
+		expectedMaxIsolatedLiquidationAttemptsPerBlock uint32
+		expectedMaxDeleveragingAttemptsPerBlock        uint32
+		expectedMaxDeleveragingSubaccountsToIterate    uint32
+		expectedMevTelemetryHosts                      []string
+		expectedMevTelemetryIdentifier                 string
 	}{
 		"Sets to default if unset": {
-			expectedMaxLiquidationAttemptsPerBlock:      flags.DefaultMaxLiquidationAttemptsPerBlock,
-			expectedMaxDeleveragingAttemptsPerBlock:     flags.DefaultMaxDeleveragingAttemptsPerBlock,
-			expectedMaxDeleveragingSubaccountsToIterate: flags.DefaultMaxDeleveragingSubaccountsToIterate,
-			expectedMevTelemetryHosts:                   flags.DefaultMevTelemetryHosts,
-			expectedMevTelemetryIdentifier:              flags.DefaultMevTelemetryIdentifier,
+			expectedMaxLiquidationAttemptsPerBlock:         flags.DefaultMaxLiquidationAttemptsPerBlock,
+			expectedMaxIsolatedLiquidationAttemptsPerBlock: flags.DefaultMaxIsolatedLiquidationAttemptsPerBlock,
+			expectedMaxDeleveragingAttemptsPerBlock:        flags.DefaultMaxDeleveragingAttemptsPerBlock,
+			expectedMaxDeleveragingSubaccountsToIterate:    flags.DefaultMaxDeleveragingSubaccountsToIterate,
+			expectedMevTelemetryHosts:                      flags.DefaultMevTelemetryHosts,
+			expectedMevTelemetryIdentifier:                 flags.DefaultMevTelemetryIdentifier,
 		},
 		"Sets values from options with one host": {
 			optsMap: map[string]any{
-				flags.MaxLiquidationAttemptsPerBlock:      uint32(50),
-				flags.MaxDeleveragingAttemptsPerBlock:     uint32(25),
-				flags.MaxDeleveragingSubaccountsToIterate: uint32(100),
-				flags.MevTelemetryHosts:                   "https://localhost:13137",
-				flags.MevTelemetryIdentifier:              "node-agent-01",
+				flags.MaxLiquidationAttemptsPerBlock:         uint32(50),
+				flags.MaxIsolatedLiquidationAttemptsPerBlock: uint32(10),
+				flags.MaxDeleveragingAttemptsPerBlock:        uint32(25),
+				flags.MaxDeleveragingSubaccountsToIterate:    uint32(100),
+				flags.MevTelemetryHosts:                      "https://localhost:13137",
+				flags.MevTelemetryIdentifier:                 "node-agent-01",
 			},
-			expectedMaxLiquidationAttemptsPerBlock:      uint32(50),
-			expectedMaxDeleveragingAttemptsPerBlock:     uint32(25),
-			expectedMaxDeleveragingSubaccountsToIterate: uint32(100),
-			expectedMevTelemetryHosts:                   []string{"https://localhost:13137"},
-			expectedMevTelemetryIdentifier:              "node-agent-01",
+			expectedMaxLiquidationAttemptsPerBlock:         uint32(50),
+			expectedMaxIsolatedLiquidationAttemptsPerBlock: uint32(10),
+			expectedMaxDeleveragingAttemptsPerBlock:        uint32(25),
+			expectedMaxDeleveragingSubaccountsToIterate:    uint32(100),
+			expectedMevTelemetryHosts:                      []string{"https://localhost:13137"},
+			expectedMevTelemetryIdentifier:                 "node-agent-01",
 		},
 		"Sets values from options with multiple hosts": {
 			optsMap: map[string]any{
-				flags.MaxLiquidationAttemptsPerBlock:      uint32(50),
-				flags.MaxDeleveragingAttemptsPerBlock:     uint32(25),
-				flags.MaxDeleveragingSubaccountsToIterate: uint32(100),
-				flags.MevTelemetryHosts:                   "https://localhost:13137,https://example.dev:443",
-				flags.MevTelemetryIdentifier:              "node-agent-01",
+				flags.MaxLiquidationAttemptsPerBlock:         uint32(50),
+				flags.MaxIsolatedLiquidationAttemptsPerBlock: uint32(10),
+				flags.MaxDeleveragingAttemptsPerBlock:        uint32(25),
+				flags.MaxDeleveragingSubaccountsToIterate:    uint32(100),
+				flags.MevTelemetryHosts:                      "https://localhost:13137,https://example.dev:443",
+				flags.MevTelemetryIdentifier:                 "node-agent-01",
 			},
-			expectedMaxLiquidationAttemptsPerBlock:      uint32(50),
-			expectedMaxDeleveragingAttemptsPerBlock:     uint32(25),
-			expectedMaxDeleveragingSubaccountsToIterate: uint32(100),
-			expectedMevTelemetryHosts:                   []string{"https://localhost:13137", "https://example.dev:443"},
-			expectedMevTelemetryIdentifier:              "node-agent-01",
+			expectedMaxLiquidationAttemptsPerBlock:         uint32(50),
+			expectedMaxIsolatedLiquidationAttemptsPerBlock: uint32(10),
+			expectedMaxDeleveragingAttemptsPerBlock:        uint32(25),
+			expectedMaxDeleveragingSubaccountsToIterate:    uint32(100),
+			expectedMevTelemetryHosts:                      []string{"https://localhost:13137", "https://example.dev:443"},
+			expectedMevTelemetryIdentifier:                 "node-agent-01",
 		},
 	}
 
@@ -111,6 +120,11 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				t,
 				tc.expectedMaxLiquidationAttemptsPerBlock,
 				flags.MaxLiquidationAttemptsPerBlock,
+			)
+			require.Equal(
+				t,
+				tc.expectedMaxIsolatedLiquidationAttemptsPerBlock,
+				flags.MaxIsolatedLiquidationAttemptsPerBlock,
 			)
 			require.Equal(
 				t,

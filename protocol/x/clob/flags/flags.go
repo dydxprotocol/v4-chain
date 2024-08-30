@@ -11,9 +11,10 @@ import (
 
 // A struct containing the values of all flags.
 type ClobFlags struct {
-	MaxLiquidationAttemptsPerBlock      uint32
-	MaxDeleveragingAttemptsPerBlock     uint32
-	MaxDeleveragingSubaccountsToIterate uint32
+	MaxLiquidationAttemptsPerBlock         uint32
+	MaxIsolatedLiquidationAttemptsPerBlock uint32
+	MaxDeleveragingAttemptsPerBlock        uint32
+	MaxDeleveragingSubaccountsToIterate    uint32
 
 	MevTelemetryEnabled    bool
 	MevTelemetryHosts      []string
@@ -23,9 +24,10 @@ type ClobFlags struct {
 // List of CLI flags.
 const (
 	// Liquidations and deleveraging.
-	MaxLiquidationAttemptsPerBlock      = "max-liquidation-attempts-per-block"
-	MaxDeleveragingAttemptsPerBlock     = "max-deleveraging-attempts-per-block"
-	MaxDeleveragingSubaccountsToIterate = "max-deleveraging-subaccounts-to-iterate"
+	MaxLiquidationAttemptsPerBlock         = "max-liquidation-attempts-per-block"
+	MaxIsolatedLiquidationAttemptsPerBlock = "max-isolated-liquidation-attempts-per-block"
+	MaxDeleveragingAttemptsPerBlock        = "max-deleveraging-attempts-per-block"
+	MaxDeleveragingSubaccountsToIterate    = "max-deleveraging-subaccounts-to-iterate"
 
 	// Mev.
 	MevTelemetryEnabled    = "mev-telemetry-enabled"
@@ -36,9 +38,10 @@ const (
 // Default values.
 
 const (
-	DefaultMaxLiquidationAttemptsPerBlock      = 50
-	DefaultMaxDeleveragingAttemptsPerBlock     = 10
-	DefaultMaxDeleveragingSubaccountsToIterate = 500
+	DefaultMaxLiquidationAttemptsPerBlock         = 50
+	DefaultMaxIsolatedLiquidationAttemptsPerBlock = 10
+	DefaultMaxDeleveragingAttemptsPerBlock        = 10
+	DefaultMaxDeleveragingSubaccountsToIterate    = 500
 
 	DefaultMevTelemetryEnabled    = false
 	DefaultMevTelemetryHostsFlag  = ""
@@ -57,6 +60,14 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 		fmt.Sprintf(
 			"Sets the maximum number of liquidation orders to process per block. Default = %d",
 			DefaultMaxLiquidationAttemptsPerBlock,
+		),
+	)
+	cmd.Flags().Uint32(
+		MaxIsolatedLiquidationAttemptsPerBlock,
+		DefaultMaxIsolatedLiquidationAttemptsPerBlock,
+		fmt.Sprintf(
+			"Sets the maximum number of liquidation orders to process per block for isolated markets. Default = %d",
+			DefaultMaxIsolatedLiquidationAttemptsPerBlock,
 		),
 	)
 	cmd.Flags().Uint32(
@@ -94,12 +105,13 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 
 func GetDefaultClobFlags() ClobFlags {
 	return ClobFlags{
-		MaxLiquidationAttemptsPerBlock:      DefaultMaxLiquidationAttemptsPerBlock,
-		MaxDeleveragingAttemptsPerBlock:     DefaultMaxDeleveragingAttemptsPerBlock,
-		MaxDeleveragingSubaccountsToIterate: DefaultMaxDeleveragingSubaccountsToIterate,
-		MevTelemetryEnabled:                 DefaultMevTelemetryEnabled,
-		MevTelemetryHosts:                   DefaultMevTelemetryHosts,
-		MevTelemetryIdentifier:              DefaultMevTelemetryIdentifier,
+		MaxLiquidationAttemptsPerBlock:         DefaultMaxLiquidationAttemptsPerBlock,
+		MaxIsolatedLiquidationAttemptsPerBlock: DefaultMaxIsolatedLiquidationAttemptsPerBlock,
+		MaxDeleveragingAttemptsPerBlock:        DefaultMaxDeleveragingAttemptsPerBlock,
+		MaxDeleveragingSubaccountsToIterate:    DefaultMaxDeleveragingSubaccountsToIterate,
+		MevTelemetryEnabled:                    DefaultMevTelemetryEnabled,
+		MevTelemetryHosts:                      DefaultMevTelemetryHosts,
+		MevTelemetryIdentifier:                 DefaultMevTelemetryIdentifier,
 	}
 }
 
@@ -133,6 +145,12 @@ func GetClobFlagValuesFromOptions(
 	if option := appOpts.Get(MaxLiquidationAttemptsPerBlock); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.MaxLiquidationAttemptsPerBlock = v
+		}
+	}
+
+	if option := appOpts.Get(MaxIsolatedLiquidationAttemptsPerBlock); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.MaxIsolatedLiquidationAttemptsPerBlock = v
 		}
 	}
 

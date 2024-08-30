@@ -16,6 +16,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	abcicomet "github.com/cometbft/cometbft/abci/types"
@@ -64,11 +65,40 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	)
 
 	// Process at-most `MaxLiquidationAttemptsPerBlock` in order of priority.
-	numLiqOrders := lib.Min(numSubaccounts, int(k.Flags.MaxLiquidationAttemptsPerBlock))
+	perpetuals := k.perpetualsKeeper.GetAllPerpetuals(ctx)
+	perpetualsMap := lib.UniqueSliceToMap(perpetuals, func(p perptypes.Perpetual) uint32 {
+		return p.Params.Id
+	})
+
+	numIsolatedLiquidations := 0
+	isolatedPositionsPriorityHeap := NewLiquidationPriorityHeap()
+
 	startGetLiquidationOrders := time.Now()
-	for i := 0; i < numLiqOrders; i++ {
+	for i := 0; i < int(k.Flags.MaxLiquidationAttemptsPerBlock); i++ {
+
+		if subaccountIds.Len() == 0 && isolatedPositionsPriorityHeap.Len() > 0 {
+			subaccountIds = isolatedPositionsPriorityHeap
+			numIsolatedLiquidations = -1000000
+		}
 
 		subaccountId := subaccountIds.PopHighestPriority()
+
+		subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId.SubaccountId)
+		if len(subaccount.PerpetualPositions) == 0 {
+			i--
+			continue
+		} else {
+			perpetual := perpetualsMap[subaccount.PerpetualPositions[0].PerpetualId]
+			if perpetual.Params.MarketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+				if numIsolatedLiquidations < int(k.Flags.MaxIsolatedLiquidationAttemptsPerBlock) {
+					numIsolatedLiquidations++
+				} else {
+					isolatedPositionsPriorityHeap.AddSubaccount(subaccountId.SubaccountId, subaccountId.Priority)
+					i--
+					continue
+				}
+			}
+		}
 
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
 		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId.SubaccountId)
@@ -76,6 +106,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			// Subaccount might not always be liquidatable if previous liquidation orders
 			// improves the net collateral of this subaccount.
 			if errors.Is(err, types.ErrSubaccountNotLiquidatable) {
+				i--
 				continue
 			}
 
@@ -103,14 +134,17 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			})
 		}
 
-		subaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidationOrder.GetSubaccountId())
-		priority, err := k.GetSubaccountPriority(ctx, subaccount)
+		// the subaccount has been updated to reflect the order match
+		subaccount = k.subaccountsKeeper.GetSubaccount(ctx, liquidationOrder.GetSubaccountId())
+		isLiquidatable, priority, err := k.GetSubaccountPriority(ctx, subaccount)
 		if err != nil {
 			return nil, err
 		}
 
-		// the subaccount has been updated to reflect the order match
-		subaccountIds.AddSubaccount(liquidationOrder.GetSubaccountId(), priority)
+		if isLiquidatable {
+			subaccountIds.AddSubaccount(liquidationOrder.GetSubaccountId(), priority)
+		}
+
 	}
 	telemetry.MeasureSince(
 		startGetLiquidationOrders,
@@ -132,19 +166,20 @@ func (k Keeper) GetSubaccountPriority(
 	ctx sdk.Context,
 	subaccount satypes.Subaccount,
 ) (
+	isLiquidatable bool,
 	priority *big.Float,
 	err error,
 ) {
 
 	_, marketPricesMap, perpetualsMap, liquidityTiersMap := k.FetchInformationForLiquidations(ctx, &abcicomet.ExtendedCommitInfo{})
-	_, _, liquidationPriority, err := k.CheckSubaccountCollateralization(
+	isLiquidatable, _, priority, err = k.CheckSubaccountCollateralization(
 		subaccount,
 		marketPricesMap,
 		perpetualsMap,
 		liquidityTiersMap,
 	)
 
-	return liquidationPriority, err
+	return isLiquidatable, priority, err
 
 }
 
@@ -790,7 +825,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 				return 0, err
 			}
 
-			priority, err := k.GetSubaccountPriority(ctx, closedSubaccount)
+			_, priority, err := k.GetSubaccountPriority(ctx, closedSubaccount)
 			if err != nil {
 				return 0, err
 			}
