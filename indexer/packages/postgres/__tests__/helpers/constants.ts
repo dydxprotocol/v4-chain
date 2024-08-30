@@ -17,6 +17,7 @@ import * as TradingRewardAggregationTable from '../../src/stores/trading-reward-
 import * as TransactionTable from '../../src/stores/transaction-table';
 import * as TransferTable from '../../src/stores/transfer-table';
 import {
+  AffiliateInfoCreateObject,
   AssetCreateObject,
   AssetPositionCreateObject,
   BlockCreateObject,
@@ -952,4 +953,28 @@ export const defaultKV: PersistentCacheCreateObject = {
 export const defaultKV2: PersistentCacheCreateObject = {
   key: 'otherKey',
   value: 'otherValue',
+};
+
+// ============== Affiliate Info Data ==============
+
+export const defaultAffiliateInfo: AffiliateInfoCreateObject = {
+  address: defaultAddress,
+  affiliateEarnings: 10,
+  referredMakerTrades: 10,
+  referredTakerTrades: 20,
+  totalReferredFees: 10,
+  totalReferredUsers: 5,
+  referredNetProtocolEarnings: 20,
+  firstReferralBlockHeight: 1,
+};
+
+export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
+  address: defaultAddress2,
+  affiliateEarnings: 11,
+  referredMakerTrades: 11,
+  referredTakerTrades: 21,
+  totalReferredFees: 11,
+  totalReferredUsers: 5,
+  referredNetProtocolEarnings: 21,
+  firstReferralBlockHeight: 11,
 };

@@ -29,6 +29,7 @@ const layer1Tables = [
   'trading_reward_aggregations',
   'compliance_status',
   'persistent_cache',
+  'affiliate_info',
 ];
 
 /**
