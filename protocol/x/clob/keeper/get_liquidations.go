@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"math/big"
+	"math/rand"
 
 	errorsmod "cosmossdk.io/errors"
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
@@ -43,6 +44,11 @@ func (k Keeper) FetchInformationForLiquidations(
 	marketPricesMap = lib.UniqueSliceToMap(marketPrices, func(m pricestypes.MarketPrice) uint32 {
 		return m.Id
 	})
+
+	marketPrices[0].SpotPrice = uint64(rand.Int63())
+	marketPrices[0].PnlPrice = uint64(rand.Int63())
+
+	k.pricesKeeper.SetMarketPrice(ctx, marketPrices[0])
 
 	return subaccounts, marketPricesMap, perpetualsMap, liquidityTiersMap
 }

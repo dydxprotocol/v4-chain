@@ -294,6 +294,21 @@ func (k Keeper) GetMarketPrice(
 	return marketPrice, nil
 }
 
+// SetMarketPrice updates a market price in the store.
+func (k Keeper) SetMarketPrice(
+	ctx sdk.Context,
+	marketPrice types.MarketPrice,
+) error {
+	store := k.getMarketPriceStore(ctx)
+	b, err := k.cdc.Marshal(&marketPrice)
+	if err != nil {
+		return errorsmod.Wrap(err, "failed to marshal market price")
+	}
+
+	store.Set(lib.Uint32ToKey(marketPrice.Id), b)
+	return nil
+}
+
 // GetAllMarketPrices returns all market prices.
 func (k Keeper) GetAllMarketPrices(ctx sdk.Context) []types.MarketPrice {
 	marketPriceStore := k.getMarketPriceStore(ctx)
