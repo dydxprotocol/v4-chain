@@ -19,7 +19,6 @@ import (
 
 func (k Keeper) FetchInformationForLiquidations(
 	ctx sdk.Context,
-	extendedCommitInfo *abcicomet.ExtendedCommitInfo,
 ) (
 	subaccounts []satypes.Subaccount,
 	marketPricesMap map[uint32]pricestypes.MarketPrice,
@@ -39,7 +38,7 @@ func (k Keeper) FetchInformationForLiquidations(
 		return l.Id
 	})
 
-	marketPrices := k.GetNextBlocksPricesFromExtendedCommitInfo(ctx, extendedCommitInfo)
+	marketPrices := k.pricesKeeper.GetAllMarketPrices(ctx)
 	marketPricesMap = lib.UniqueSliceToMap(marketPrices, func(m pricestypes.MarketPrice) uint32 {
 		return m.Id
 	})
@@ -49,14 +48,13 @@ func (k Keeper) FetchInformationForLiquidations(
 
 func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 	ctx sdk.Context,
-	extendedCommitInfo *abcicomet.ExtendedCommitInfo,
 ) (
 	liquidatableSubaccountIds *LiquidationPriorityHeap,
 	negativeTncSubaccountIds []satypes.SubaccountId,
 	err error,
 ) {
 
-	subaccounts, marketPrices, perpetuals, liquidityTiers := k.FetchInformationForLiquidations(ctx, extendedCommitInfo)
+	subaccounts, marketPrices, perpetuals, liquidityTiers := k.FetchInformationForLiquidations(ctx)
 
 	negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
 	liquidatableSubaccountIds = NewLiquidationPriorityHeap()
@@ -187,25 +185,26 @@ func (k Keeper) CheckSubaccountCollateralization(
 		nil
 }
 
-func (k Keeper) GetNextBlocksPricesFromExtendedCommitInfo(ctx sdk.Context, extendedCommitInfo *abcicomet.ExtendedCommitInfo) (marketPrices []pricestypes.MarketPrice) {
-
-	branchedCtx, ctxErr := ctx.CacheContext()
-	marketPrices = k.pricesKeeper.GetAllMarketPrices(ctx)
+func (k Keeper) SetNextBlocksPricesFromExtendedCommitInfo(ctx sdk.Context, extendedCommitInfo *abcicomet.ExtendedCommitInfo) error {
 
 	// from cometbft so is either nil or is valid and > 2/3
-	if (extendedCommitInfo != &abcicomet.ExtendedCommitInfo{}) && ctxErr == nil {
+	if (extendedCommitInfo != &abcicomet.ExtendedCommitInfo{}) {
 		veCodec := vecodec.NewDefaultVoteExtensionCodec()
 		votes, err := veaggregator.FetchVotesFromExtCommitInfo(*extendedCommitInfo, veCodec)
-		if err == nil && len(votes) > 0 {
+		if err != nil {
+			return err
+		}
+
+		if len(votes) > 0 {
 			prices, err := k.PriceApplier.VoteAggregator().AggregateDaemonVEIntoFinalPrices(ctx, votes)
 			if err == nil {
-				err = k.PriceApplier.WritePricesToStoreAndMaybeCache(branchedCtx, prices, 0, false)
-				if err == nil {
-					marketPrices = k.pricesKeeper.GetAllMarketPrices(branchedCtx)
+				err = k.PriceApplier.WritePricesToStoreAndMaybeCache(ctx, prices, 0, false)
+				if err != nil {
+					return err
 				}
 			}
 		}
 	}
 
-	return marketPrices
+	return nil
 }

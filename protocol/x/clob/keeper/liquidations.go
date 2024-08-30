@@ -19,7 +19,6 @@ import (
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	abcicomet "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -171,7 +170,7 @@ func (k Keeper) GetSubaccountPriority(
 	err error,
 ) {
 
-	_, marketPricesMap, perpetualsMap, liquidityTiersMap := k.FetchInformationForLiquidations(ctx, &abcicomet.ExtendedCommitInfo{})
+	_, marketPricesMap, perpetualsMap, liquidityTiersMap := k.FetchInformationForLiquidations(ctx)
 	isLiquidatable, _, priority, err = k.CheckSubaccountCollateralization(
 		subaccount,
 		marketPricesMap,
