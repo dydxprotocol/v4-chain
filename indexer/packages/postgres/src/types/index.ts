@@ -28,5 +28,6 @@ export * from './trading-reward-aggregation-types';
 export * from './pagination-types';
 export * from './subaccount-usernames-types';
 export * from './leaderboard-pnl-types';
+export * from './affiliate-referred-users-types';
 export * from './persistent-cache-types';
 export { PositionSide } from './position-types';
