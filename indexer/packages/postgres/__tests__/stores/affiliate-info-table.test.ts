@@ -3,7 +3,7 @@ import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { defaultAffiliateInfo, defaultAffiliateInfo1 } from '../helpers/constants';
 import * as AffiliateInfoTable from '../../src/stores/affiliate-info-table';
 
-describe('Persistent cache store', () => {
+describe('Affiliate info store', () => {
   beforeAll(async () => {
     await migrate();
   });
