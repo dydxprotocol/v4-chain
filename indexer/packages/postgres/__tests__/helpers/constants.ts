@@ -17,6 +17,7 @@ import * as TradingRewardAggregationTable from '../../src/stores/trading-reward-
 import * as TransactionTable from '../../src/stores/transaction-table';
 import * as TransferTable from '../../src/stores/transfer-table';
 import {
+  AffiliateReferredUsersCreateObject,
   AssetCreateObject,
   AssetPositionCreateObject,
   BlockCreateObject,
@@ -928,4 +929,11 @@ export const defaultLeaderboardPnlOneDayToUpsert: LeaderboardPnlCreateObject = {
   pnl: '100000',
   currentEquity: '1000',
   rank: 1,
+};
+
+// ============== Affiliate referred users data ==============
+export const defaultAffiliateReferredUser: AffiliateReferredUsersCreateObject = {
+  affiliateAddress: defaultAddress,
+  refereeAddress: defaultAddress2,
+  referredAtBlock: 1,
 };

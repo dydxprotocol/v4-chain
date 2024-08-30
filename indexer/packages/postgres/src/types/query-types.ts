@@ -88,6 +88,8 @@ export enum QueryableField {
   USERNAME = 'username',
   TIMESPAN = 'timeSpan',
   RANK = 'rank',
+  AFFILIATE_ADDRESS = 'affiliateAddress',
+  REFEREE_ADDRESS = 'refereeAddress',
 }
 
 export interface QueryConfig {
@@ -314,6 +316,11 @@ export interface TradingRewardAggregationQueryConfig extends QueryConfig {
   [QueryableField.PERIOD]?: TradingRewardAggregationPeriod;
   [QueryableField.STARTED_AT_BEFORE_OR_AT]?: IsoString;
   [QueryableField.STARTED_AT_HEIGHT_BEFORE_OR_AT]?: string;
+}
+
+export interface AffiliateReferredUsersQueryConfig extends QueryConfig {
+  [QueryableField.AFFILIATE_ADDRESS]?: string[];
+  [QueryableField.REFEREE_ADDRESS]?: string[];
 }
 
 export interface LeaderboardPnlQueryConfig extends QueryConfig {

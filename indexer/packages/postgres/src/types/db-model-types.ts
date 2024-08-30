@@ -270,6 +270,12 @@ export interface LeaderboardPnlFromDatabase {
   rank: number;
 }
 
+export interface AffiliateReferredUserFromDatabase {
+  affiliateAddress: string;
+  refereeAddress: string;
+  referredAtBlock: number;
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string } };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:
