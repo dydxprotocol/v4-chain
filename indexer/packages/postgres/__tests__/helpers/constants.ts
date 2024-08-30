@@ -57,6 +57,7 @@ import {
   TransactionCreateObject,
   TransferCreateObject,
   WalletCreateObject,
+  PersistentCacheCreateObject,
 } from '../../src/types';
 import { denomToHumanReadableConversion } from './conversion-helpers';
 
@@ -939,4 +940,16 @@ export const defaultLeaderboardPnlOneDayToUpsert: LeaderboardPnlCreateObject = {
   pnl: '100000',
   currentEquity: '1000',
   rank: 1,
+};
+
+// ============== Persistent cache Data ==============
+
+export const defaultKV: PersistentCacheCreateObject = {
+  key: 'someKey',
+  value: 'someValue',
+};
+
+export const defaultKV2: PersistentCacheCreateObject = {
+  key: 'otherKey',
+  value: 'otherValue',
 };

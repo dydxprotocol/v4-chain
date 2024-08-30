@@ -273,6 +273,11 @@ export interface LeaderboardPnlFromDatabase {
   rank: number,
 }
 
+export interface PersistentCacheFromDatabase {
+  key: string,
+  value: string,
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string }, };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:
