@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	storetypes "cosmossdk.io/store/types"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -85,6 +87,12 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 	default:
 		return ctx, fmt.Errorf("unrecognized message type: %T", msg)
 	}
+
+	// FOR BACKWARDS COMPATABILITY
+	// For the bug found in https://github.com/dydxprotocol/v4-chain/pull/2176, this is a
+	// backwards compatible bug-fix, which lets a node sync past blocks that were committed
+	// by nodes running with the bug.
+	_ = d.doMarketsContainCrossMarket(ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()), markets)
 
 	if contains := d.doMarketsContainCrossMarket(ctx, markets); contains {
 		return ctx, ErrNoCrossMarketUpdates
