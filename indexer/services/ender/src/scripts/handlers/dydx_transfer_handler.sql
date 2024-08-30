@@ -57,6 +57,8 @@ BEGIN
 
         recipient_wallet_record."address" = transfer_record."recipientWalletAddress";
         recipient_wallet_record."totalTradingRewards" = '0';
+        recipient_wallet_record."totalVolume" = '0';
+        recipient_wallet_record."isWhitelistAffiliate" = FALSE;
         INSERT INTO wallets VALUES (recipient_wallet_record.*) ON CONFLICT DO NOTHING;
     END IF;
 
@@ -65,6 +67,8 @@ BEGIN
 
         sender_wallet_record."address" = transfer_record."senderWalletAddress";
         sender_wallet_record."totalTradingRewards" = '0';
+        sender_wallet_record."totalVolume" = '0';
+        sender_wallet_record."isWhitelistAffiliate" = FALSE;
         INSERT INTO wallets VALUES (sender_wallet_record.*) ON CONFLICT DO NOTHING;
     END IF;
 

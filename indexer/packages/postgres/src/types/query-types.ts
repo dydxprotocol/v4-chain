@@ -90,232 +90,235 @@ export enum QueryableField {
   RANK = 'rank',
   AFFILIATE_ADDRESS = 'affiliateAddress',
   REFEREE_ADDRESS = 'refereeAddress',
+  KEY = 'key',
+  IS_WHITELIST_AFFILIATE = 'isWhitelistAffiliate',
 }
 
 export interface QueryConfig {
-  [QueryableField.LIMIT]?: number;
-  [QueryableField.PAGE]?: number;
+  [QueryableField.LIMIT]?: number,
+  [QueryableField.PAGE]?: number,
 }
 
 export interface SubaccountQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.ADDRESS]?: string;
-  [QueryableField.SUBACCOUNT_NUMBER]?: number;
-  [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
-  [QueryableField.UPDATED_ON_OR_AFTER]?: string;
+  [QueryableField.ID]?: string[],
+  [QueryableField.ADDRESS]?: string,
+  [QueryableField.SUBACCOUNT_NUMBER]?: number,
+  [QueryableField.UPDATED_BEFORE_OR_AT]?: string,
+  [QueryableField.UPDATED_ON_OR_AFTER]?: string,
 }
 
 export interface SubaccountUsernamesQueryConfig extends QueryConfig {
-  [QueryableField.USERNAME]?: string[];
-  [QueryableField.SUBACCOUNT_ID]?: string[];
+  [QueryableField.USERNAME]?: string[],
+  [QueryableField.SUBACCOUNT_ID]?: string[],
 }
 
 export interface WalletQueryConfig extends QueryConfig {
-  [QueryableField.ADDRESS]?: string;
+  [QueryableField.ADDRESS]?: string,
+  [QueryableField.IS_WHITELIST_AFFILIATE]?: boolean,
 }
 
 export interface PerpetualPositionQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.SUBACCOUNT_ID]?: string[];
-  [QueryableField.PERPETUAL_ID]?: string[];
-  [QueryableField.SIDE]?: PositionSide;
-  [QueryableField.STATUS]?: PerpetualPositionStatus[];
-  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string;
-  [QueryableField.CREATED_BEFORE_OR_AT]?: string;
+  [QueryableField.ID]?: string[],
+  [QueryableField.SUBACCOUNT_ID]?: string[],
+  [QueryableField.PERPETUAL_ID]?: string[],
+  [QueryableField.SIDE]?: PositionSide,
+  [QueryableField.STATUS]?: PerpetualPositionStatus[],
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
 }
 
 export interface OrderQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.SUBACCOUNT_ID]?: string[];
-  [QueryableField.CLIENT_ID]?: string;
-  [QueryableField.CLOB_PAIR_ID]?: string;
-  [QueryableField.SIDE]?: OrderSide;
-  [QueryableField.SIZE]?: string;
-  [QueryableField.TOTAL_FILLED]?: string;
-  [QueryableField.PRICE]?: string;
-  [QueryableField.TYPE]?: OrderType;
-  [QueryableField.STATUSES]?: OrderStatus[];
-  [QueryableField.POST_ONLY]?: boolean;
-  [QueryableField.REDUCE_ONLY]?: boolean;
-  [QueryableField.GOOD_TIL_BLOCK_BEFORE_OR_AT]?: string;
-  [QueryableField.GOOD_TIL_BLOCK_TIME_BEFORE_OR_AT]?: string;
-  [QueryableField.ORDER_FLAGS]?: string;
-  [QueryableField.CLIENT_METADATA]?: string;
-  [QueryableField.TRIGGER_PRICE]?: string;
+  [QueryableField.ID]?: string[],
+  [QueryableField.SUBACCOUNT_ID]?: string[],
+  [QueryableField.CLIENT_ID]?: string,
+  [QueryableField.CLOB_PAIR_ID]?: string,
+  [QueryableField.SIDE]?: OrderSide,
+  [QueryableField.SIZE]?: string,
+  [QueryableField.TOTAL_FILLED]?: string,
+  [QueryableField.PRICE]?: string,
+  [QueryableField.TYPE]?: OrderType,
+  [QueryableField.STATUSES]?: OrderStatus[],
+  [QueryableField.POST_ONLY]?: boolean,
+  [QueryableField.REDUCE_ONLY]?: boolean,
+  [QueryableField.GOOD_TIL_BLOCK_BEFORE_OR_AT]?: string,
+  [QueryableField.GOOD_TIL_BLOCK_TIME_BEFORE_OR_AT]?: string,
+  [QueryableField.ORDER_FLAGS]?: string,
+  [QueryableField.CLIENT_METADATA]?: string,
+  [QueryableField.TRIGGER_PRICE]?: string,
 }
 
 export interface PerpetualMarketQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.MARKET_ID]?: number[];
-  [QueryableField.LIQUIDITY_TIER_ID]?: number[];
+  [QueryableField.ID]?: string[],
+  [QueryableField.MARKET_ID]?: number[],
+  [QueryableField.LIQUIDITY_TIER_ID]?: number[],
 }
 
 export interface FillQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.SUBACCOUNT_ID]?: string[];
-  [QueryableField.SIDE]?: OrderSide;
-  [QueryableField.LIQUIDITY]?: Liquidity;
-  [QueryableField.TYPE]?: OrderType;
-  [QueryableField.CLOB_PAIR_ID]?: string;
-  [QueryableField.EVENT_ID]?: Buffer;
-  [QueryableField.TRANSACTION_HASH]?: string;
-  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string;
-  [QueryableField.CREATED_BEFORE_OR_AT]?: string;
-  [QueryableField.CREATED_ON_OR_AFTER_HEIGHT]?: string;
-  [QueryableField.CREATED_ON_OR_AFTER]?: string;
-  [QueryableField.CLIENT_METADATA]?: string;
-  [QueryableField.FEE]?: string;
+  [QueryableField.ID]?: string[],
+  [QueryableField.SUBACCOUNT_ID]?: string[],
+  [QueryableField.SIDE]?: OrderSide,
+  [QueryableField.LIQUIDITY]?: Liquidity,
+  [QueryableField.TYPE]?: OrderType,
+  [QueryableField.CLOB_PAIR_ID]?: string,
+  [QueryableField.EVENT_ID]?: Buffer,
+  [QueryableField.TRANSACTION_HASH]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER_HEIGHT]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER]?: string,
+  [QueryableField.CLIENT_METADATA]?: string,
+  [QueryableField.FEE]?: string,
 }
 
 export interface BlockQueryConfig extends QueryConfig {
-  [QueryableField.BLOCK_HEIGHT]?: string[];
-  [QueryableField.CREATED_ON_OR_AFTER]?: string;
+  [QueryableField.BLOCK_HEIGHT]?: string[],
+  [QueryableField.CREATED_ON_OR_AFTER]?: string,
 }
 
 export interface TendermintEventQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: Buffer[];
-  [QueryableField.BLOCK_HEIGHT]?: string[];
-  [QueryableField.TRANSACTION_INDEX]?: number[];
-  [QueryableField.EVENT_INDEX]?: number[];
+  [QueryableField.ID]?: Buffer[],
+  [QueryableField.BLOCK_HEIGHT]?: string[],
+  [QueryableField.TRANSACTION_INDEX]?: number[],
+  [QueryableField.EVENT_INDEX]?: number[],
 }
 
 export interface TransactionQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.BLOCK_HEIGHT]?: string[];
-  [QueryableField.TRANSACTION_INDEX]?: number[];
-  [QueryableField.TRANSACTION_HASH]?: string[];
+  [QueryableField.ID]?: string[],
+  [QueryableField.BLOCK_HEIGHT]?: string[],
+  [QueryableField.TRANSACTION_INDEX]?: number[],
+  [QueryableField.TRANSACTION_HASH]?: string[],
 }
 
 export interface AssetQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.SYMBOL]?: string;
-  [QueryableField.ATOMIC_RESOLUTION]?: number;
-  [QueryableField.HAS_MARKET]?: boolean;
-  [QueryableField.MARKET_ID]?: number;
+  [QueryableField.ID]?: string[],
+  [QueryableField.SYMBOL]?: string,
+  [QueryableField.ATOMIC_RESOLUTION]?: number,
+  [QueryableField.HAS_MARKET]?: boolean,
+  [QueryableField.MARKET_ID]?: number,
 }
 
 export interface AssetPositionQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.ASSET_ID]?: string[];
-  [QueryableField.SUBACCOUNT_ID]?: string[];
-  [QueryableField.SIZE]?: string;
-  [QueryableField.IS_LONG]?: boolean;
+  [QueryableField.ID]?: string[],
+  [QueryableField.ASSET_ID]?: string[],
+  [QueryableField.SUBACCOUNT_ID]?: string[],
+  [QueryableField.SIZE]?: string,
+  [QueryableField.IS_LONG]?: boolean,
 }
 
 export interface TransferQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.SENDER_SUBACCOUNT_ID]?: string[];
-  [QueryableField.RECIPIENT_SUBACCOUNT_ID]?: string[];
-  [QueryableField.SENDER_WALLET_ADDRESS]?: string[];
-  [QueryableField.RECIPIENT_WALLET_ADDRESS]?: string[];
-  [QueryableField.ASSET_ID]?: string[];
-  [QueryableField.SIZE]?: string;
-  [QueryableField.EVENT_ID]?: Buffer[];
-  [QueryableField.TRANSACTION_HASH]?: string[];
-  [QueryableField.CREATED_AT]?: string;
-  [QueryableField.CREATED_AT_HEIGHT]?: string[];
-  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string;
-  [QueryableField.CREATED_BEFORE_OR_AT]?: string;
-  [QueryableField.CREATED_AFTER]?: string;
-  [QueryableField.CREATED_AFTER_HEIGHT]?: string;
+  [QueryableField.ID]?: string[],
+  [QueryableField.SENDER_SUBACCOUNT_ID]?: string[],
+  [QueryableField.RECIPIENT_SUBACCOUNT_ID]?: string[],
+  [QueryableField.SENDER_WALLET_ADDRESS]?: string[],
+  [QueryableField.RECIPIENT_WALLET_ADDRESS]?: string[],
+  [QueryableField.ASSET_ID]?: string[],
+  [QueryableField.SIZE]?: string,
+  [QueryableField.EVENT_ID]?: Buffer[],
+  [QueryableField.TRANSACTION_HASH]?: string[],
+  [QueryableField.CREATED_AT]?: string,
+  [QueryableField.CREATED_AT_HEIGHT]?: string[],
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
+  [QueryableField.CREATED_AFTER]?: string,
+  [QueryableField.CREATED_AFTER_HEIGHT]?: string,
 }
 
 export interface ToAndFromSubaccountTransferQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.SUBACCOUNT_ID]?: string[];
-  [QueryableField.ASSET_ID]?: string[];
-  [QueryableField.SIZE]?: string;
-  [QueryableField.EVENT_ID]?: Buffer[];
-  [QueryableField.TRANSACTION_HASH]?: string[];
-  [QueryableField.CREATED_AT]?: string;
-  [QueryableField.CREATED_AT_HEIGHT]?: string[];
-  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string | undefined;
-  [QueryableField.CREATED_BEFORE_OR_AT]?: string | undefined;
-  [QueryableField.CREATED_AFTER_HEIGHT]?: string | undefined;
-  [QueryableField.CREATED_AFTER]?: string | undefined;
+  [QueryableField.ID]?: string[],
+  [QueryableField.SUBACCOUNT_ID]?: string[],
+  [QueryableField.ASSET_ID]?: string[],
+  [QueryableField.SIZE]?: string,
+  [QueryableField.EVENT_ID]?: Buffer[],
+  [QueryableField.TRANSACTION_HASH]?: string[],
+  [QueryableField.CREATED_AT]?: string,
+  [QueryableField.CREATED_AT_HEIGHT]?: string[],
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string | undefined,
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string | undefined,
+  [QueryableField.CREATED_AFTER_HEIGHT]?: string | undefined,
+  [QueryableField.CREATED_AFTER]?: string | undefined,
 }
 
 export interface OraclePriceQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.MARKET_ID]?: number[];
-  [QueryableField.PRICE]?: string[];
-  [QueryableField.EFFECTIVE_AT]?: string;
-  [QueryableField.EFFECTIVE_AT_HEIGHT]?: string;
-  [QueryableField.EFFECTIVE_BEFORE_OR_AT]?: string;
-  [QueryableField.EFFECTIVE_BEFORE_OR_AT_HEIGHT]?: string;
+  [QueryableField.ID]?: string[],
+  [QueryableField.MARKET_ID]?: number[],
+  [QueryableField.PRICE]?: string[],
+  [QueryableField.EFFECTIVE_AT]?: string,
+  [QueryableField.EFFECTIVE_AT_HEIGHT]?: string,
+  [QueryableField.EFFECTIVE_BEFORE_OR_AT]?: string,
+  [QueryableField.EFFECTIVE_BEFORE_OR_AT_HEIGHT]?: string,
 }
 
 export interface MarketQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: number[];
-  [QueryableField.PAIR]?: string[];
+  [QueryableField.ID]?: number[],
+  [QueryableField.PAIR]?: string[],
 }
 
 export interface CandleQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: number[];
-  [QueryableField.TICKER]?: string[];
-  [QueryableField.RESOLUTION]?: CandleResolution;
-  [QueryableField.FROM_ISO]?: IsoString;
-  [QueryableField.TO_ISO]?: IsoString;
+  [QueryableField.ID]?: number[],
+  [QueryableField.TICKER]?: string[],
+  [QueryableField.RESOLUTION]?: CandleResolution,
+  [QueryableField.FROM_ISO]?: IsoString,
+  [QueryableField.TO_ISO]?: IsoString,
 }
 
 export interface PnlTicksQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.SUBACCOUNT_ID]?: string[];
-  [QueryableField.CREATED_AT]?: string;
-  [QueryableField.BLOCK_HEIGHT]?: string;
-  [QueryableField.BLOCK_TIME]?: string;
-  [QueryableField.CREATED_BEFORE_OR_AT]?: string;
-  [QueryableField.CREATED_BEFORE_OR_AT_BLOCK_HEIGHT]?: string;
-  [QueryableField.CREATED_ON_OR_AFTER]?: string;
-  [QueryableField.CREATED_ON_OR_AFTER_BLOCK_HEIGHT]?: string;
+  [QueryableField.ID]?: string[],
+  [QueryableField.SUBACCOUNT_ID]?: string[],
+  [QueryableField.CREATED_AT]?: string,
+  [QueryableField.BLOCK_HEIGHT]?: string,
+  [QueryableField.BLOCK_TIME]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT_BLOCK_HEIGHT]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER_BLOCK_HEIGHT]?: string,
 }
 
 export interface FundingIndexUpdatesQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
-  [QueryableField.PERPETUAL_ID]?: string[];
-  [QueryableField.EVENT_ID]?: Buffer;
-  [QueryableField.EFFECTIVE_AT]?: string;
-  [QueryableField.EFFECTIVE_AT_HEIGHT]?: string;
-  [QueryableField.EFFECTIVE_BEFORE_OR_AT]?: string;
-  [QueryableField.EFFECTIVE_BEFORE_OR_AT_HEIGHT]?: string;
+  [QueryableField.ID]?: string[],
+  [QueryableField.PERPETUAL_ID]?: string[],
+  [QueryableField.EVENT_ID]?: Buffer,
+  [QueryableField.EFFECTIVE_AT]?: string,
+  [QueryableField.EFFECTIVE_AT_HEIGHT]?: string,
+  [QueryableField.EFFECTIVE_BEFORE_OR_AT]?: string,
+  [QueryableField.EFFECTIVE_BEFORE_OR_AT_HEIGHT]?: string,
 }
 
 export interface LiquidityTiersQueryConfig extends QueryConfig {
-  [QueryableField.ID]?: string[];
+  [QueryableField.ID]?: string[],
 }
 
 export interface ComplianceDataQueryConfig extends QueryConfig {
-  [QueryableField.ADDRESS]?: string[];
-  [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
-  [QueryableField.PROVIDER]?: string;
-  [QueryableField.BLOCKED]?: boolean;
+  [QueryableField.ADDRESS]?: string[],
+  [QueryableField.UPDATED_BEFORE_OR_AT]?: string,
+  [QueryableField.PROVIDER]?: string,
+  [QueryableField.BLOCKED]?: boolean,
 }
 
 export interface ComplianceStatusQueryConfig extends QueryConfig {
-  [QueryableField.ADDRESS]?: string[];
-  [QueryableField.STATUS]?: string[];
-  [QueryableField.CREATED_BEFORE_OR_AT]?: string;
-  [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
-  [QueryableField.REASON]?: string;
+  [QueryableField.ADDRESS]?: string[],
+  [QueryableField.STATUS]?: string[],
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
+  [QueryableField.UPDATED_BEFORE_OR_AT]?: string,
+  [QueryableField.REASON]?: string,
 }
 
 export interface TradingRewardQueryConfig extends QueryConfig {
-  [QueryableField.ADDRESS]?: string;
-  [QueryableField.BLOCK_HEIGHT]?: string;
-  [QueryableField.BLOCK_TIME_BEFORE_OR_AT]?: IsoString;
-  [QueryableField.BLOCK_TIME_AFTER_OR_AT]?: IsoString;
-  [QueryableField.BLOCK_TIME_BEFORE]?: IsoString;
-  [QueryableField.BLOCK_HEIGHT_BEFORE_OR_AT]?: IsoString;
+  [QueryableField.ADDRESS]?: string,
+  [QueryableField.BLOCK_HEIGHT]?: string,
+  [QueryableField.BLOCK_TIME_BEFORE_OR_AT]?: IsoString,
+  [QueryableField.BLOCK_TIME_AFTER_OR_AT]?: IsoString,
+  [QueryableField.BLOCK_TIME_BEFORE]?: IsoString,
+  [QueryableField.BLOCK_HEIGHT_BEFORE_OR_AT]?: IsoString,
 }
 
 export interface TradingRewardAggregationQueryConfig extends QueryConfig {
-  [QueryableField.ADDRESS]?: string;
-  [QueryableField.ADDRESSES]?: string[];
-  [QueryableField.STARTED_AT_HEIGHT]?: string;
-  [QueryableField.STARTED_AT_HEIGHT_OR_AFTER]?: string;
-  [QueryableField.PERIOD]?: TradingRewardAggregationPeriod;
-  [QueryableField.STARTED_AT_BEFORE_OR_AT]?: IsoString;
-  [QueryableField.STARTED_AT_HEIGHT_BEFORE_OR_AT]?: string;
+  [QueryableField.ADDRESS]?: string,
+  [QueryableField.ADDRESSES]?: string[],
+  [QueryableField.STARTED_AT_HEIGHT]?: string,
+  [QueryableField.STARTED_AT_HEIGHT_OR_AFTER]?: string,
+  [QueryableField.PERIOD]?: TradingRewardAggregationPeriod,
+  [QueryableField.STARTED_AT_BEFORE_OR_AT]?: IsoString,
+  [QueryableField.STARTED_AT_HEIGHT_BEFORE_OR_AT]?: string,
 }
 
 export interface AffiliateReferredUsersQueryConfig extends QueryConfig {
@@ -324,7 +327,11 @@ export interface AffiliateReferredUsersQueryConfig extends QueryConfig {
 }
 
 export interface LeaderboardPnlQueryConfig extends QueryConfig {
-  [QueryableField.ADDRESS]?: string[];
-  [QueryableField.TIMESPAN]?: string[];
-  [QueryableField.RANK]?: number[];
+  [QueryableField.ADDRESS]?: string[],
+  [QueryableField.TIMESPAN]?: string[],
+  [QueryableField.RANK]?: number[],
+}
+
+export interface PersistentCacheQueryConfig extends QueryConfig {
+  [QueryableField.KEY]?: string,
 }

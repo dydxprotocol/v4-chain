@@ -36,30 +36,30 @@ const KAFKA_TOPICS_TO_PARTITIONS: { [key in KafkaTopics]: number } = {
 
 export interface BazookaEventJson {
   // Run knex migrations
-  migrate: boolean;
+  migrate: boolean,
 
   // Clearing data inside the database, but not deleting the tables and schemas
-  clear_db: boolean;
+  clear_db: boolean,
 
   // Reset the database and all migrations
-  reset_db: boolean;
+  reset_db: boolean,
 
   // Create all kafka topics with replication and parition counts
-  create_kafka_topics: boolean;
+  create_kafka_topics: boolean,
 
   // Clearing data inside all topics, not removing the Kafka Topics
-  clear_kafka_topics: boolean;
+  clear_kafka_topics: boolean,
 
   // Clearing all data in redis
-  clear_redis: boolean;
+  clear_redis: boolean,
 
   // Force flag that is required to perform any breaking actions in testnet/mainnet
   // A breaking action is any action in bazooka other that db migration
-  force: boolean;
+  force: boolean,
 
   // Send stateful orders to Vulcan. This is done during Indexer fast sync to
   // uncross the orderbook.
-  send_stateful_orders_to_vulcan: boolean;
+  send_stateful_orders_to_vulcan: boolean,
 }
 
 // eslint-disable-next-line @typescript-eslint/require-await

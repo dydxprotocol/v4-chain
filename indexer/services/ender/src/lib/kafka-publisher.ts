@@ -28,8 +28,8 @@ import {
 } from './types';
 
 type TopicKafkaMessages = {
-  topic: KafkaTopics;
-  messages: ProducerMessage[];
+  topic: KafkaTopics,
+  messages: ProducerMessage[],
 };
 
 type OrderedMessage = AnnotatedSubaccountMessage | SingleTradeMessage;

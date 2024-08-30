@@ -34,13 +34,13 @@ import { ConsolidatedKafkaEvent, SingleTradeMessage } from './types';
 
 type BlockCandleUpdatesMap = { [ticker: string]: BlockCandleUpdate};
 type BlockCandleUpdate = {
-  low: string;
-  high: string;
-  open: string;
-  close: string;
-  baseTokenVolume: string;
-  usdVolume: string;
-  trades: number;
+  low: string,
+  high: string,
+  open: string,
+  close: string,
+  baseTokenVolume: string,
+  usdVolume: string,
+  trades: number,
 };
 
 type OrderbookMidPrice = string | undefined;
@@ -533,7 +533,7 @@ export class CandlesGenerator {
 /**
    * Get the cached orderbook mid price for a given ticker
 */
-export async function getOrderbookMidPriceMap(): Promise<{ [ticker: string]: OrderbookMidPrice; }> {
+export async function getOrderbookMidPriceMap(): Promise<{ [ticker: string]: OrderbookMidPrice }> {
   const start: number = Date.now();
   const perpetualMarkets = Object.values(perpetualMarketRefresher.getPerpetualMarketsMap());
 
@@ -546,7 +546,7 @@ export async function getOrderbookMidPriceMap(): Promise<{ [ticker: string]: Ord
   });
 
   const pricesArray = await Promise.all(promises);
-  const priceMap: { [ticker: string]: OrderbookMidPrice; } = {};
+  const priceMap: { [ticker: string]: OrderbookMidPrice } = {};
   pricesArray.forEach((price) => {
     Object.assign(priceMap, price);
   });

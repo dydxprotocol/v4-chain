@@ -18,6 +18,7 @@ export { default as TradingRewardModel } from './models/trading-reward-model';
 export { default as TradingRewardAggregationModel } from './models/trading-reward-aggregation-model';
 export { default as SubaccountUsernamesModel } from './models/subaccount-usernames-model';
 export { default as LeaderboardPnlModel } from './models/leaderboard-pnl-model';
+export { default as PersistentCacheModel } from './models/persistent-cache-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';
@@ -43,6 +44,7 @@ export * as TradingRewardTable from './stores/trading-reward-table';
 export * as TradingRewardAggregationTable from './stores/trading-reward-aggregation-table';
 export * as LeaderboardPnlTable from './stores/leaderboard-pnl-table';
 export * as SubaccountUsernamesTable from './stores/subaccount-usernames-table';
+export * as PersistentCacheTable from './stores/persistent-cache-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';
