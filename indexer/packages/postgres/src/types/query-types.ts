@@ -322,8 +322,8 @@ export interface TradingRewardAggregationQueryConfig extends QueryConfig {
 }
 
 export interface AffiliateReferredUsersQueryConfig extends QueryConfig {
-  [QueryableField.AFFILIATE_ADDRESS]?: string[];
-  [QueryableField.REFEREE_ADDRESS]?: string[];
+  [QueryableField.AFFILIATE_ADDRESS]?: string[],
+  [QueryableField.REFEREE_ADDRESS]?: string[],
 }
 
 export interface LeaderboardPnlQueryConfig extends QueryConfig {

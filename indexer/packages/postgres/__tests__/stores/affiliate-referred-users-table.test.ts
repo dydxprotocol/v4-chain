@@ -84,8 +84,7 @@ describe('Wallet store', () => {
     await AffiliateReferredUsersTable.create(entry1);
     await AffiliateReferredUsersTable.create(entry2);
 
-    const entries: AffiliateReferredUserFromDatabase[] | undefined = 
-      await AffiliateReferredUsersTable.findByAffiliateAddress('affiliate_address1');
+    const entries: AffiliateReferredUserFromDatabase[] | undefined = await AffiliateReferredUsersTable.findByAffiliateAddress('affiliate_address1');
 
     if (entries) {
       expect(entries.length).toEqual(2);

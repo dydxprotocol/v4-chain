@@ -33,11 +33,12 @@ export async function findAll(
     requiredFields,
   );
 
-  let baseQuery: QueryBuilder<AffiliateReferredUsersModel> = 
-    setupBaseQuery<AffiliateReferredUsersModel>(
-      AffiliateReferredUsersModel,
-      options,
-    );
+  // splitting the line after = does not work as it reformatted to one line by eslint
+  // eslint-disable-next-line max-len
+  let baseQuery: QueryBuilder<AffiliateReferredUsersModel> = setupBaseQuery<AffiliateReferredUsersModel>(
+    AffiliateReferredUsersModel,
+    options,
+  );
 
   if (affiliateAddress) {
     baseQuery = baseQuery.where(AffiliateReferredUsersColumns.affiliateAddress, affiliateAddress);
@@ -81,11 +82,12 @@ export async function findByAffiliateAddress(
   address: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AffiliateReferredUserFromDatabase[] | undefined> {
-  const baseQuery: QueryBuilder<AffiliateReferredUsersModel> = 
-    setupBaseQuery<AffiliateReferredUsersModel>(
-      AffiliateReferredUsersModel,
-      options,
-    );
+  // splitting the line after = does not work as it reformatted to one line by eslint
+  // eslint-disable-next-line max-len
+  const baseQuery: QueryBuilder<AffiliateReferredUsersModel> = setupBaseQuery<AffiliateReferredUsersModel>(
+    AffiliateReferredUsersModel,
+    options,
+  );
   return baseQuery
     .where('affiliateAddress', address)
     .returning('*');
@@ -95,11 +97,12 @@ export async function findByRefereeAddress(
   address: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<AffiliateReferredUserFromDatabase | undefined> {
-  const baseQuery: QueryBuilder<AffiliateReferredUsersModel> = 
-    setupBaseQuery<AffiliateReferredUsersModel>(
-      AffiliateReferredUsersModel,
-      options,
-    );
+  // splitting the line after = does not work as it reformatted to one line by eslint
+  // eslint-disable-next-line max-len
+  const baseQuery: QueryBuilder<AffiliateReferredUsersModel> = setupBaseQuery<AffiliateReferredUsersModel>(
+    AffiliateReferredUsersModel,
+    options,
+  );
   return baseQuery
     .where('refereeAddress', address)
     .returning('*')

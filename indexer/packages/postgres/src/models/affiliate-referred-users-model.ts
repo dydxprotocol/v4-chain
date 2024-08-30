@@ -1,4 +1,3 @@
-import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
 
 export default class WalletModel extends BaseModel {

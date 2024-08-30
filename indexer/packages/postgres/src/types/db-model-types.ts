@@ -279,9 +279,9 @@ export interface PersistentCacheFromDatabase {
 }
 
 export interface AffiliateReferredUserFromDatabase {
-  affiliateAddress: string;
-  refereeAddress: string;
-  referredAtBlock: number;
+  affiliateAddress: string,
+  refereeAddress: string,
+  referredAtBlock: number,
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
