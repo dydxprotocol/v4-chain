@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -55,6 +56,9 @@ func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 ) {
 
 	subaccounts, marketPrices, perpetuals, liquidityTiers := k.FetchInformationForLiquidations(ctx)
+
+	fmt.Println("Prepare check state Market Prices post change", marketPrices)
+	fmt.Println("Prepare check state Perpetuals post change", ctx.BlockHeight())
 
 	negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
 	liquidatableSubaccountIds = NewLiquidationPriorityHeap()

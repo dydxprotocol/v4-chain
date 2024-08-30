@@ -49,6 +49,11 @@ func (k Keeper) ProcessSingleMatch(
 	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
+
+	fmt.Println("XXXXX ProcessSingleMatch", ctx.BlockHeight())
+	prices := k.pricesKeeper.GetAllMarketPrices(ctx)
+	fmt.Println("XXXXX ProcessSingleMatch", prices)
+
 	if matchWithOrders.TakerOrder.IsLiquidation() {
 		defer func() {
 			if errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) && !takerUpdateResult.IsSuccess() {
