@@ -948,7 +948,7 @@ export const defaultLeaderboardPnlOneDayToUpsert: LeaderboardPnlCreateObject = {
 export const defaultAffiliateReferredUser: AffiliateReferredUsersCreateObject = {
   affiliateAddress: defaultAddress,
   refereeAddress: defaultAddress2,
-  referredAtBlock: 1,
+  referredAtBlock: '1',
 };
 
 // ============== Persistent cache Data ==============
@@ -967,22 +967,22 @@ export const defaultKV2: PersistentCacheCreateObject = {
 
 export const defaultAffiliateInfo: AffiliateInfoCreateObject = {
   address: defaultAddress,
-  affiliateEarnings: 10,
+  affiliateEarnings: '10.00',
   referredMakerTrades: 10,
   referredTakerTrades: 20,
-  totalReferredFees: 10,
+  totalReferredFees: '10.00',
   totalReferredUsers: 5,
-  referredNetProtocolEarnings: 20,
-  firstReferralBlockHeight: 1,
+  referredNetProtocolEarnings: '20.00',
+  firstReferralBlockHeight: '1',
 };
 
 export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
   address: defaultAddress2,
-  affiliateEarnings: 11,
+  affiliateEarnings: '11.00',
   referredMakerTrades: 11,
   referredTakerTrades: 21,
-  totalReferredFees: 11,
+  totalReferredFees: '11.00',
   totalReferredUsers: 5,
-  referredNetProtocolEarnings: 21,
-  firstReferralBlockHeight: 11,
+  referredNetProtocolEarnings: '21.00',
+  firstReferralBlockHeight: '11',
 };

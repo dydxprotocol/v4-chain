@@ -1,7 +1,7 @@
 export interface AffiliateReferredUsersCreateObject {
   affiliateAddress: string,
   refereeAddress: string,
-  referredAtBlock: number,
+  referredAtBlock: string,
 }
 
 export enum AffiliateReferredUsersColumns {

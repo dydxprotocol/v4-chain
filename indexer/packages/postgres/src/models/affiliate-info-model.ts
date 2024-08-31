@@ -26,13 +26,13 @@ export default class AffiliateInfoModel extends BaseModel {
       ],
       properties: {
         address: { type: 'string' },
-        affiliateEarnings: { type: 'int', pattern: NonNegativeNumericPattern },
-        referredMakerTrades: { type: 'int', pattern: NonNegativeNumericPattern },
-        referredTakerTrades: { type: 'int', pattern: NonNegativeNumericPattern },
-        totalReferredFees: { type: 'int', pattern: NonNegativeNumericPattern },
-        totalReferredUsers: { type: 'int', pattern: NonNegativeNumericPattern },
-        referredNetProtocolEarnings: { type: 'int', pattern: NonNegativeNumericPattern },
-        firstReferralBlockHeight: { type: 'int', pattern: NonNegativeNumericPattern },
+        affiliateEarnings: { type: 'string', pattern: NonNegativeNumericPattern },
+        referredMakerTrades: { type: 'int' },
+        referredTakerTrades: { type: 'int' },
+        totalReferredFees: { type: 'string', pattern: NonNegativeNumericPattern },
+        totalReferredUsers: { type: 'int' },
+        referredNetProtocolEarnings: { type: 'string', pattern: NonNegativeNumericPattern },
+        firstReferralBlockHeight: { type: 'string', pattern: NonNegativeNumericPattern },
       },
     };
   }
@@ -46,13 +46,13 @@ export default class AffiliateInfoModel extends BaseModel {
   static get sqlToJsonConversions() {
     return {
       address: 'string',
-      affiliateEarnings: 'int',
+      affiliateEarnings: 'string',
       referredMakerTrades: 'int',
       referredTakerTrades: 'int',
-      totalReferredFees: 'int',
+      totalReferredFees: 'string',
       totalReferredUsers: 'int',
-      referredNetProtocolEarnings: 'int',
-      firstReferralBlockHeight: 'int',
+      referredNetProtocolEarnings: 'string',
+      firstReferralBlockHeight: 'string',
     };
   }
 
@@ -60,17 +60,17 @@ export default class AffiliateInfoModel extends BaseModel {
 
   address!: string;
 
-  affiliateEarnings!: number;
+  affiliateEarnings!: string;
 
   referredMakerTrades!: number;
 
   referredTakerTrades!: number;
 
-  totalReferredFees!: number;
+  totalReferredFees!: string;
 
   totalReferredUsers!: number;
 
-  referredNetProtocolEarnings!: number;
+  referredNetProtocolEarnings!: string;
 
-  firstReferralBlockHeight!: number;
+  firstReferralBlockHeight!: string;
 }

@@ -1,3 +1,4 @@
+import { NonNegativeNumericPattern } from '../lib/validators';
 import BaseModel from './base-model';
 
 export default class AffiliateReferredUsersModel extends BaseModel {
@@ -20,7 +21,7 @@ export default class AffiliateReferredUsersModel extends BaseModel {
       properties: {
         affiliateAddress: { type: 'string' },
         refereeAddress: { type: 'string' },
-        referredAtBlock: { type: 'integer' },
+        referredAtBlock: { type: 'string', pattern: NonNegativeNumericPattern },
       },
     };
   }
@@ -35,7 +36,7 @@ export default class AffiliateReferredUsersModel extends BaseModel {
     return {
       affiliateAddress: 'string',
       refereeAddress: 'string',
-      referredAtBlock: 'integer',
+      referredAtBlock: 'string',
     };
   }
 
@@ -43,5 +44,5 @@ export default class AffiliateReferredUsersModel extends BaseModel {
 
   refereeAddress!: string;
 
-  referredAtBlock!: number;
+  referredAtBlock!: string;
 }

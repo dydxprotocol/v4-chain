@@ -73,12 +73,12 @@ describe('AffiliateReferredUsers store', () => {
     const entry1: AffiliateReferredUsersCreateObject = {
       affiliateAddress: 'affiliate_address1',
       refereeAddress: 'referee_address1',
-      referredAtBlock: 1,
+      referredAtBlock: '1',
     };
     const entry2: AffiliateReferredUsersCreateObject = {
       affiliateAddress: 'affiliate_address1',
       refereeAddress: 'referee_address2',
-      referredAtBlock: 20,
+      referredAtBlock: '20',
     };
 
     await AffiliateReferredUsersTable.create(entry1);
@@ -103,12 +103,12 @@ describe('AffiliateReferredUsers store', () => {
     const entry1: AffiliateReferredUsersCreateObject = {
       affiliateAddress: 'affiliate_address1',
       refereeAddress: 'referee_address1',
-      referredAtBlock: 1,
+      referredAtBlock: '1',
     };
     const entry2: AffiliateReferredUsersCreateObject = {
       affiliateAddress: 'affiliate_address1',
       refereeAddress: 'referee_address2',
-      referredAtBlock: 20,
+      referredAtBlock: '20',
     };
 
     await AffiliateReferredUsersTable.create(entry1);

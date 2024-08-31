@@ -20,7 +20,7 @@ describe('Affiliate info store', () => {
     await AffiliateInfoTable.create(defaultAffiliateInfo);
   });
 
-  it('Cannot create duplicate infor for duplicate address', async () => {
+  it('Cannot create duplicate info for duplicate address', async () => {
     await AffiliateInfoTable.create(defaultAffiliateInfo);
     await expect(AffiliateInfoTable.create(defaultAffiliateInfo)).rejects.toThrowError();
   });

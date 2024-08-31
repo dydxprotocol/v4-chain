@@ -1,12 +1,12 @@
 export interface AffiliateInfoCreateObject {
   address: string,
-  affiliateEarnings: number,
+  affiliateEarnings: string,
   referredMakerTrades: number,
   referredTakerTrades: number,
-  totalReferredFees: number,
+  totalReferredFees: string,
   totalReferredUsers: number,
-  referredNetProtocolEarnings: number,
-  firstReferralBlockHeight: number,
+  referredNetProtocolEarnings: string,
+  firstReferralBlockHeight: string,
 }
 
 export enum AffiliateInfoColumns {

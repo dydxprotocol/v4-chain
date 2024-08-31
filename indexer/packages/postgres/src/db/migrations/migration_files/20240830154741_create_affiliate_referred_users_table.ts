@@ -4,7 +4,7 @@ export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('affiliate_referred_users', (table) => {
     table.string('refereeAddress').primary().notNullable();
     table.string('affiliateAddress').notNullable();
-    table.integer('referredAtBlock').notNullable();
+    table.bigInteger('referredAtBlock').notNullable();
 
     // Index on affiliateAddress for faster queries
     table.index(['affiliateAddress']);
