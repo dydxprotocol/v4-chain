@@ -30,6 +30,7 @@ const layer1Tables = [
   'compliance_status',
   'affiliate_referred_users',
   'persistent_cache',
+  'affiliate_info',
 ];
 
 /**

@@ -17,6 +17,7 @@ import * as TradingRewardAggregationTable from '../../src/stores/trading-reward-
 import * as TransactionTable from '../../src/stores/transaction-table';
 import * as TransferTable from '../../src/stores/transfer-table';
 import {
+  AffiliateInfoCreateObject,
   AffiliateReferredUsersCreateObject,
   AssetCreateObject,
   AssetPositionCreateObject,
@@ -947,7 +948,7 @@ export const defaultLeaderboardPnlOneDayToUpsert: LeaderboardPnlCreateObject = {
 export const defaultAffiliateReferredUser: AffiliateReferredUsersCreateObject = {
   affiliateAddress: defaultAddress,
   refereeAddress: defaultAddress2,
-  referredAtBlock: 1,
+  referredAtBlock: '1',
 };
 
 // ============== Persistent cache Data ==============
@@ -960,4 +961,28 @@ export const defaultKV: PersistentCacheCreateObject = {
 export const defaultKV2: PersistentCacheCreateObject = {
   key: 'otherKey',
   value: 'otherValue',
+};
+
+// ============== Affiliate Info Data ==============
+
+export const defaultAffiliateInfo: AffiliateInfoCreateObject = {
+  address: defaultAddress,
+  affiliateEarnings: '10.00',
+  referredMakerTrades: 10,
+  referredTakerTrades: 20,
+  totalReferredFees: '10.00',
+  totalReferredUsers: 5,
+  referredNetProtocolEarnings: '20.00',
+  firstReferralBlockHeight: '1',
+};
+
+export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
+  address: defaultAddress2,
+  affiliateEarnings: '11.00',
+  referredMakerTrades: 11,
+  referredTakerTrades: 21,
+  totalReferredFees: '11.00',
+  totalReferredUsers: 5,
+  referredNetProtocolEarnings: '21.00',
+  firstReferralBlockHeight: '11',
 };
