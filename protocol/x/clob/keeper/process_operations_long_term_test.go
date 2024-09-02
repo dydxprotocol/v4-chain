@@ -634,7 +634,6 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_000_000_000, // Liquidated 1BTC at $50,000.
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -720,7 +719,6 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_000_000_000, // Liquidated 1BTC at $50,000.
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},

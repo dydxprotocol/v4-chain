@@ -222,8 +222,8 @@ func (k Keeper) GetLiquidationOrderForPerpetual(
 	liquidationOrder *types.LiquidationOrder,
 	err error,
 ) {
-	// SOLAL uses price should probably change this
-	deltaQuantums, err := k.GetLiquidatablePositionSizeDelta(
+
+	orderQuantums, err := k.GetNegativePositionSize(
 		ctx,
 		subaccountId,
 		perpetualId,
@@ -232,31 +232,34 @@ func (k Keeper) GetLiquidationOrderForPerpetual(
 		return nil, err
 	}
 
-	// SOLAL uses price & seems we should just do max
-	// Get the fillable price of the liquidation order in subticks.
-	fillablePriceRat, err := k.GetFillablePrice(ctx, subaccountId, perpetualId, deltaQuantums)
+	bankruptcyPriceQuoteQuantums, err := k.GetBankruptcyPriceInQuoteQuantums(ctx, subaccountId, perpetualId, orderQuantums)
 	if err != nil {
 		return nil, err
 	}
+	bankruptcyPriceQuoteQuantumsRat := new(big.Rat).SetInt(bankruptcyPriceQuoteQuantums)
+	bankruptcyPriceRat := new(big.Rat).Quo(
+		bankruptcyPriceQuoteQuantumsRat,
+		new(big.Rat).Neg(new(big.Rat).SetInt(orderQuantums)),
+	)
 
-	// Calculate the fillable price.
-	isLiquidatingLong := deltaQuantums.Sign() == -1
+	// Calculate the bankruptcy price.
+	isLiquidatingLong := orderQuantums.Sign() == -1
 	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
-	fillablePriceSubticks := k.ConvertFillablePriceToSubticks(
+	bankruptcyPriceSubticks := k.ConvertBankruptcyPriceToSubticks(
 		ctx,
-		fillablePriceRat,
+		bankruptcyPriceRat,
 		isLiquidatingLong,
 		clobPair,
 	)
 
 	// Create the liquidation order.
-	absBaseQuantums := deltaQuantums.Abs(deltaQuantums)
+	absBaseQuantums := orderQuantums.Abs(orderQuantums)
 	liquidationOrder = types.NewLiquidationOrder(
 		subaccountId,
 		clobPair,
 		!isLiquidatingLong,
 		satypes.BaseQuantums(absBaseQuantums.Uint64()),
-		fillablePriceSubticks,
+		bankruptcyPriceSubticks,
 	)
 	return liquidationOrder, nil
 }
@@ -573,143 +576,6 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	return bankruptcyPriceQuoteQuantumsBig, nil
 }
 
-// GetFillablePrice returns the fillable-price of a subaccount’s position. It returns a rational
-// number to avoid rounding errors.
-func (k Keeper) GetFillablePrice(
-	ctx sdk.Context,
-	subaccountId satypes.SubaccountId,
-	perpetualId uint32,
-	deltaQuantums *big.Int,
-) (
-	fillablePrice *big.Rat,
-	err error,
-) {
-	// The equation for calculating the fillable price is the following:
-	// `(PNNV - ABR * SMMR * PMMR) / PS`, where `ABR = BA * (1 - (TNC / TMMR))`.
-	// To calculate this, we must first fetch the following values:
-	// - PS (The perpetual position size held by the subaccount, used for calculating the
-	//   position net notional value and maintenance margin requirement).
-	// - PNNV (position net notional value).
-	// - PMMR (position maintenance margin requirement).
-	// - TNC (total net collateral).
-	// - TMMR (total maintenance margin requirement).
-	// - BA (bankruptcy adjustment PPM).
-	// - SMMR (spread to maintenance margin ratio)
-
-	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
-	position, _ := subaccount.GetPerpetualPositionForId(perpetualId)
-	psBig := position.GetBigQuantums()
-
-	// Validate that the provided deltaQuantums is valid with respect to
-	// the current position size.
-	if psBig.Sign()*deltaQuantums.Sign() != -1 || psBig.CmpAbs(deltaQuantums) == -1 {
-		return nil, errorsmod.Wrapf(
-			types.ErrInvalidPerpetualPositionSizeDelta,
-			"Position size delta %v is invalid for %v and perpetual %v, outstanding position size is %v",
-			deltaQuantums,
-			subaccountId,
-			perpetualId,
-			psBig,
-		)
-	}
-
-	pnnvBig, err := k.perpetualsKeeper.GetNetCollateral(ctx, perpetualId, psBig)
-	if err != nil {
-		return nil, err
-	}
-
-	_, pmmrBig, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, psBig)
-	if err != nil {
-		return nil, err
-	}
-
-	tncBig,
-		_,
-		tmmrBig,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
-		ctx,
-		satypes.Update{SubaccountId: subaccountId},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// stat liquidation order for negative TNC
-	// TODO(CLOB-906) Prevent duplicated stat emissions for liquidation orders in PrepareCheckState.
-	if tncBig.Sign() < 0 {
-		callback := metrics.PrepareCheckState
-		if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
-			callback = metrics.DeliverTx
-		}
-
-		metrics.IncrCounterWithLabels(
-			metrics.LiquidationsLiquidationMatchNegativeTNC,
-			1,
-			metrics.GetLabelForIntValue(
-				metrics.PerpetualId,
-				int(perpetualId),
-			),
-			metrics.GetLabelForStringValue(
-				metrics.Callback,
-				callback,
-			),
-		)
-
-		ctx.Logger().Info(
-			"GetFillablePrice: Subaccount has negative TNC. SubaccountId: %+v, TNC: %+v",
-			subaccountId,
-			tncBig,
-		)
-	}
-
-	liquidationsConfig := k.GetLiquidationsConfig(ctx)
-	ba := liquidationsConfig.FillablePriceConfig.BankruptcyAdjustmentPpm
-	smmr := liquidationsConfig.FillablePriceConfig.SpreadToMaintenanceMarginRatioPpm
-
-	// Calculate the ABR (adjusted bankruptcy rating).
-	tncDivTmmrRat := new(big.Rat).SetFrac(tncBig, tmmrBig)
-	unboundedAbrRat := lib.BigRatMulPpm(
-		new(big.Rat).Sub(
-			lib.BigRat1(),
-			tncDivTmmrRat,
-		),
-		ba,
-	)
-
-	// Bound the ABR between 0 and 1.
-	abrRat := lib.BigRatClamp(unboundedAbrRat, lib.BigRat0(), lib.BigRat1())
-
-	// Calculate `SMMR * PMMR` (the maximum liquidation spread in quote quantums).
-	maxLiquidationSpreadQuoteQuantumsRat := lib.BigRatMulPpm(
-		new(big.Rat).SetInt(pmmrBig),
-		smmr,
-	)
-
-	fillablePriceOracleDeltaQuoteQuantumsRat := new(big.Rat).Mul(abrRat, maxLiquidationSpreadQuoteQuantumsRat)
-
-	// Calculate `PNNV - ABR * SMMR * PMMR`, which represents the fillable price in quote quantums.
-	// For longs, `pnnvRat > 0` meaning the fillable price in quote quantums will be lower than the
-	// oracle price.
-	// For shorts, `pnnvRat < 0` meaning the fillable price in quote quantums will be higher than
-	// the oracle price (in this case the result will be negative, but dividing by `positionSize` below
-	// will make it positive since `positionSize < 0` for shorts).
-	pnnvRat := new(big.Rat).SetInt(pnnvBig)
-	fillablePriceQuoteQuantumsRat := new(big.Rat).Sub(pnnvRat, fillablePriceOracleDeltaQuoteQuantumsRat)
-
-	// Calculate the fillable price by dividing by `PS`.
-	// Note that `fillablePriceQuoteQuantumsRat` and `PS` should always have the same sign,
-	// meaning the resulting fillable price should always be positive.
-	fillablePrice = new(big.Rat).Quo(
-		fillablePriceQuoteQuantumsRat,
-		new(big.Rat).SetInt(psBig),
-	)
-	if fillablePrice.Sign() < 0 {
-		panic("GetFillablePrice: Calculated fillable price is negative")
-	}
-
-	return fillablePrice, nil
-}
-
 // GetLiquidationInsuranceFundDelta returns the net payment value between the liquidated account
 // and the insurance fund. Positive if the liquidated account pays fees to the insurance fund.
 // Negative if the insurance fund covers losses from the subaccount.
@@ -893,9 +759,8 @@ func (k Keeper) simulateClosePerpetualPosition(
 	return closedSubaccount, nil
 }
 
-// GetLiquidatablePositionSizeDelta returns the max number of base quantums to liquidate
-// from the perpetual position without exceeding the block and position limits.
-func (k Keeper) GetLiquidatablePositionSizeDelta(
+// GetNegativePositionSize returns the number of base quantums needed to liquidate
+func (k Keeper) GetNegativePositionSize(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
@@ -915,132 +780,7 @@ func (k Keeper) GetLiquidatablePositionSizeDelta(
 			)
 	}
 
-	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
-
-	// Get the maximum notional liquidatable for this position.
-	_, bigMaxPositionNotionalLiquidatable, err := k.GetMaxAndMinPositionNotionalLiquidatable(
-		ctx,
-		perpetualPosition,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the maximum notional liquidatable for this subaccount.
-	bigMaxSubaccountNotionalLiquidatable, err := k.GetSubaccountMaxNotionalLiquidatable(
-		ctx,
-		subaccountId,
-		perpetualId,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Take the minimum of the subaccount block limit and position block limit.
-	bigMaxQuoteQuantumsLiquidatable := lib.BigMin(
-		bigMaxPositionNotionalLiquidatable,
-		bigMaxSubaccountNotionalLiquidatable,
-	)
-
-	bigQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		perpetualId,
-		perpetualPosition.GetBigQuantums(),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	// Return the full position to avoid any rounding errors.
-	if bigQuoteQuantums.CmpAbs(bigMaxQuoteQuantumsLiquidatable) <= 0 ||
-		perpetualPosition.GetBigQuantums().CmpAbs(
-			new(big.Int).SetUint64(clobPair.StepBaseQuantums),
-		) <= 0 {
-		return new(big.Int).Neg(perpetualPosition.GetBigQuantums()), nil
-	}
-
-	// Convert the max notional liquidatable to base quantums.
-	absDeltaQuantums, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
-		ctx,
-		perpetualId,
-		bigMaxQuoteQuantumsLiquidatable,
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	// Round to the nearest step size.
-	absDeltaQuantums = lib.BigIntRoundToMultiple(
-		absDeltaQuantums,
-		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
-		false,
-	)
-
-	// Clamp the base quantums to liquidate to the step size and the size of the position
-	// in case there's rounding errors.
-	absDeltaQuantums = lib.BigIntClamp(
-		absDeltaQuantums,
-		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
-		new(big.Int).Abs(perpetualPosition.GetBigQuantums()),
-	)
-
-	// Negate the position size if it's a long position to get the size delta.
-	if perpetualPosition.GetIsLong() {
-		return absDeltaQuantums.Neg(absDeltaQuantums), nil
-	}
-
-	return absDeltaQuantums, nil
-}
-
-// GetSubaccountMaxNotionalLiquidatable returns the maximum notional that the subaccount can liquidate
-// without exceeding the subaccount block limits.
-// This function takes into account any previous liquidations in the same block and returns an error if
-// called with a previously liquidated perpetual id.
-func (k Keeper) GetSubaccountMaxNotionalLiquidatable(
-	ctx sdk.Context,
-	subaccountId satypes.SubaccountId,
-	perpetualId uint32,
-) (
-	bigMaxNotionalLiquidatable *big.Int,
-	err error,
-) {
-	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
-
-	// Make sure that this subaccount <> perpetual has not previously been liquidated in the same block.
-	if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(perpetualId) {
-		return nil, errorsmod.Wrapf(
-			types.ErrSubaccountHasLiquidatedPerpetual,
-			"Subaccount %v and perpetual %v have already been liquidated within the last block",
-			subaccountId,
-			perpetualId,
-		)
-	}
-
-	liquidationConfig := k.GetLiquidationsConfig(ctx)
-
-	// Calculate the maximum notional amount that the given subaccount can liquidate in this block.
-	bigTotalNotionalLiquidated := new(big.Int).SetUint64(subaccountLiquidationInfo.NotionalLiquidated)
-	bigNotionalLiquidatedBlockLimit := new(big.Int).SetUint64(
-		liquidationConfig.SubaccountBlockLimits.MaxNotionalLiquidated,
-	)
-	if bigTotalNotionalLiquidated.Cmp(bigNotionalLiquidatedBlockLimit) > 0 {
-		panic(
-			errorsmod.Wrapf(
-				types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
-				"Subaccount %+v notional liquidated exceeds block limit. Current notional liquidated: %v, block limit: %v",
-				subaccountId,
-				bigTotalNotionalLiquidated,
-				bigNotionalLiquidatedBlockLimit,
-			),
-		)
-	}
-
-	bigMaxNotionalLiquidatable = new(big.Int).Sub(
-		bigNotionalLiquidatedBlockLimit,
-		bigTotalNotionalLiquidated,
-	)
-
-	return bigMaxNotionalLiquidatable, nil
+	return new(big.Int).Neg(perpetualPosition.GetBigQuantums()), nil
 }
 
 // GetSubaccountMaxInsuranceLost returns the maximum insurance fund payout that can be performed
@@ -1093,53 +833,7 @@ func (k Keeper) GetSubaccountMaxInsuranceLost(
 	return bigMaxQuantumsInsuranceLost, nil
 }
 
-// GetMaxAndMinPositionNotionalLiquidatable returns the maximum and minimum notional that can be liquidated
-// without exceeding the position block limits.
-// The minimum amount to liquidate is specified by the liquidation config and is overridden
-// by the maximum size of the position.
-// The maximum amount of quantums is calculated using max_position_portion_liquidated_ppm
-// of the liquidation config, overridden by the minimum notional liquidatable.
-func (k Keeper) GetMaxAndMinPositionNotionalLiquidatable(
-	ctx sdk.Context,
-	positionToLiquidate *satypes.PerpetualPosition,
-) (
-	bigMinPosNotionalLiquidatable *big.Int,
-	bigMaxPosNotionalLiquidatable *big.Int,
-	err error,
-) {
-	liquidationConfig := k.GetLiquidationsConfig(ctx)
-
-	// Get the position size in quote quantums.
-	bigNetNotionalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		positionToLiquidate.PerpetualId,
-		positionToLiquidate.GetBigQuantums(),
-	)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	bigAbsNetNotionalQuoteQuantums := new(big.Int).Abs(bigNetNotionalQuoteQuantums)
-	// Get the mininum notional of this position that can be liquidated, which cannot exceed the size of the position.
-	bigMinPosNotionalLiquidatable = lib.BigMin(
-		new(big.Int).SetUint64(liquidationConfig.PositionBlockLimits.MinPositionNotionalLiquidated),
-		bigAbsNetNotionalQuoteQuantums,
-	)
-
-	// Get the maximum notional of this position that can be liquidated,
-	// which cannot be less than `minPositionNotionalLiquidated`.
-	bigMaxPosNotionalLiquidatable = lib.BigIntMulPpm(
-		bigAbsNetNotionalQuoteQuantums,
-		liquidationConfig.PositionBlockLimits.MaxPositionPortionLiquidatedPpm,
-	)
-	bigMaxPosNotionalLiquidatable = lib.BigMax(
-		bigMinPosNotionalLiquidatable,
-		bigMaxPosNotionalLiquidatable,
-	)
-	return bigMinPosNotionalLiquidatable, bigMaxPosNotionalLiquidatable, nil
-}
-
-// ConvertFillablePriceToSubticks converts the fillable price of a liquidation order to subticks.
+// ConvertBankruptcyPriceToSubticks converts the bankruptcy price of a liquidation order to subticks.
 // The returned subticks will be rounded to the nearest tick (such that
 // `subticks % clobPair.SubticksPerTick == 0`). This function will round up for sells
 // that close longs, and round down for buys that close shorts.
@@ -1147,17 +841,17 @@ func (k Keeper) GetMaxAndMinPositionNotionalLiquidatable(
 // Note the returned `subticks` will be bounded (inclusive) between `clobPair.SubticksPerTick` and
 // `math.MaxUint64 - math.MaxUint64 % clobPair.SubticksPerTick` (the maximum `uint64` that is a
 // multiple of `clobPair.SubticksPerTick`).
-func (k Keeper) ConvertFillablePriceToSubticks(
+func (k Keeper) ConvertBankruptcyPriceToSubticks(
 	ctx sdk.Context,
-	fillablePrice *big.Rat,
+	bankruptcyPrice *big.Rat,
 	isLiquidatingLong bool,
 	clobPair types.ClobPair,
 ) (
 	subticks types.Subticks,
 ) {
-	// The fillable price is invalid if it is negative.
-	if fillablePrice.Sign() < 0 {
-		panic("ConvertFillablePriceToSubticks: FillablePrice should not be negative")
+	// The bankruptcy price is invalid if it is negative.
+	if bankruptcyPrice.Sign() < 0 {
+		panic("ConvertBankruptcyPriceToSubticks: bankruptcyPrice should not be negative")
 	}
 
 	exponent := clobPair.QuantumConversionExponent
@@ -1168,10 +862,10 @@ func (k Keeper) ConvertFillablePriceToSubticks(
 		quoteQuantumsPerBaseQuantumAndSubtickRat.Inv(quoteQuantumsPerBaseQuantumAndSubtickRat)
 	}
 
-	// Assuming `fillablePrice` is in units of `quote quantums / base quantum`,  then dividing by
+	// Assuming `bankruptcyPrice` is in units of `quote quantums / base quantum`,  then dividing by
 	// `quote quantums / (base quantum * subtick)` will give the resulting units of subticks.
 	subticksRat := new(big.Rat).Quo(
-		fillablePrice,
+		bankruptcyPrice,
 		quoteQuantumsPerBaseQuantumAndSubtickRat,
 	)
 
@@ -1203,9 +897,9 @@ func (k Keeper) ConvertFillablePriceToSubticks(
 	// Panic if the bounded subticks is zero or is not a multiple of `clobPair.SubticksPerTick`,
 	// which would indicate the rounding or clamp logic failed.
 	if boundedSubticks == 0 {
-		panic("ConvertFillablePriceToSubticks: Bounded subticks is 0.")
+		panic("ConvertBankruptcyPriceToSubticks: Bounded subticks is 0.")
 	} else if boundedSubticks%uint64(clobPair.SubticksPerTick) != 0 {
-		panic("ConvertFillablePriceToSubticks: Bounded subticks is not a multiple of SubticksPerTick.")
+		panic("ConvertBankruptcyPriceToSubticks: Bounded subticks is not a multiple of SubticksPerTick.")
 	}
 
 	return types.Subticks(boundedSubticks)
@@ -1252,11 +946,10 @@ func (k Keeper) validateMatchedLiquidation(
 	}
 
 	// Validate that total notional liquidated and total insurance funds lost do not exceed subaccount block limits.
-	if err := k.validateLiquidationAgainstSubaccountBlockLimits(
+	if err := k.validateLiquidationParams(
 		ctx,
 		liquidatedSubaccountId,
 		perpetualId,
-		fillAmount,
 		insuranceFundDelta,
 	); err != nil {
 		return nil, err
@@ -1265,48 +958,33 @@ func (k Keeper) validateMatchedLiquidation(
 	return insuranceFundDelta, nil
 }
 
-// validateLiquidationAgainstSubaccountBlockLimits performs stateful validation
+// validateLiquidationParams performs stateful validation
 // against the subaccount block limits specified in liquidation configs.
 // If validation fails, an error is returned.
 //
 // The following validation occurs in this method:
 //   - The subaccount and perpetual ID pair has not been previously liquidated in the same block.
-//   - The total notional liquidated does not exceed the maximum notional amount that a single subaccount
-//     can have liquidated per block.
 //   - The total insurance lost does not exceed the maximum insurance lost per block.
-func (k Keeper) validateLiquidationAgainstSubaccountBlockLimits(
+func (k Keeper) validateLiquidationParams(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
-	fillAmount satypes.BaseQuantums,
 	insuranceFundDeltaQuoteQuantums *big.Int,
 ) (
 	err error,
 ) {
 	// Validate that this liquidation does not exceed the maximum notional amount that a single subaccount can have
 	// liquidated per block.
-	bigMaxNotionalLiquidatable, err := k.GetSubaccountMaxNotionalLiquidatable(
-		ctx,
-		subaccountId,
-		perpetualId,
-	)
-	if err != nil {
-		return err
-	}
 
-	bigNotionalLiquidated, err := k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, fillAmount.ToBigInt())
-	if err != nil {
-		return err
-	}
+	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
 
-	if bigNotionalLiquidated.CmpAbs(bigMaxNotionalLiquidatable) > 0 {
+	// Make sure that this subaccount <> perpetual has not previously been liquidated in the same block.
+	if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(perpetualId) {
 		return errorsmod.Wrapf(
-			types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated,
-			"Subaccount ID: %v, Perpetual ID: %v, Max Notional Liquidatable: %v, Notional Liquidated: %v",
+			types.ErrSubaccountHasLiquidatedPerpetual,
+			"Subaccount %v and perpetual %v have already been liquidated within the last block",
 			subaccountId,
 			perpetualId,
-			bigMaxNotionalLiquidatable,
-			bigNotionalLiquidated,
 		)
 	}
 
@@ -1375,11 +1053,11 @@ func (k Keeper) getAbsPercentageDiffFromOraclePrice(
 ) *big.Rat {
 	clobPair := k.mustGetClobPair(ctx, liquidationOrder.GetClobPairId())
 	oraclePriceRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
-	fillablePriceRat := liquidationOrder.GetOrderSubticks().ToBigRat()
+	bankruptcyPriceRat := liquidationOrder.GetOrderSubticks().ToBigRat()
 
 	return new(big.Rat).Abs(
 		new(big.Rat).Quo(
-			new(big.Rat).Sub(fillablePriceRat, oraclePriceRat),
+			new(big.Rat).Sub(bankruptcyPriceRat, oraclePriceRat),
 			oraclePriceRat,
 		),
 	)

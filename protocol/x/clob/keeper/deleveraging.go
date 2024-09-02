@@ -640,7 +640,7 @@ func (k Keeper) ProcessDeleveraging(
 }
 
 // GetSubaccountsWithPositionsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
-// liquidations daemon to fetch subaccounts with open positions in final settlement markets. These subaccounts
+// deleveraging daemon to fetch subaccounts with open positions in final settlement markets. These subaccounts
 // will be deleveraged in either at the oracle price if non-negative TNC or at bankruptcy price if negative TNC. This
 // function is called in PrepareCheckState during the deleveraging step.
 func (k Keeper) GetSubaccountsWithPositionsInFinalSettlementMarkets(

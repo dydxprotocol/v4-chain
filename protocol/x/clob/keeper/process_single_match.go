@@ -245,7 +245,6 @@ func (k Keeper) ProcessSingleMatch(
 		k.UpdateSubaccountLiquidationInfo(
 			ctx,
 			matchWithOrders.TakerOrder.GetSubaccountId(),
-			notionalLiquidatedQuoteQuantums,
 			takerInsuranceFundDelta,
 		)
 

@@ -2,14 +2,13 @@ package simulation
 
 import (
 	"fmt"
-	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
-	"math"
 	"math/rand"
+
+	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
@@ -136,26 +135,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		// MaxLiquidationFeePpm determines the fee that subaccount usually pays for liquidating a position.
 		// This is typically a very small percentage, so skewing towards lower values here.
 		MaxLiquidationFeePpm: genRandomPositivePpm(r, true),
-		FillablePriceConfig: types.FillablePriceConfig{
-			BankruptcyAdjustmentPpm: uint32(
-				simtypes.RandIntBetween(r, int(lib.OneMillion), int(math.MaxUint32)),
-			),
-			// SpreadToMaintenanceMarginRatioPpm represents the maximum liquidation spread
-			// in the fillable price calculation.
-			// This is typically also a small percentage to protect against MEV,
-			// so skewing towards lower values here.
-			SpreadToMaintenanceMarginRatioPpm: genRandomPositivePpm(r, true),
-		},
-		PositionBlockLimits: types.PositionBlockLimits{
-			MinPositionNotionalLiquidated: uint64(sim_helpers.GetRandomBucketValue(r, sim_helpers.MinPositionNotionalBuckets)),
-			// MaxPositionPortionLiquidatedPpm determines the maximum portion of a position
-			// that can be liquidated in a block.
-			// Since we may want to liquidate as quickly as possible to avoid losing any insurance fund,
-			// skewing towards larger values here.
-			MaxPositionPortionLiquidatedPpm: genRandomPositivePpm(r, false),
-		},
 		SubaccountBlockLimits: types.SubaccountBlockLimits{
-			MaxNotionalLiquidated:    uint64(sim_helpers.GetRandomBucketValue(r, sim_helpers.SubaccountBlockLimitsBuckets)),
 			MaxQuantumsInsuranceLost: uint64(sim_helpers.GetRandomBucketValue(r, sim_helpers.SubaccountBlockLimitsBuckets)),
 		},
 	}

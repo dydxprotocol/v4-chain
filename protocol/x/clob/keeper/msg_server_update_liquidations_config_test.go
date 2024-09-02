@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -31,11 +32,7 @@ func TestUpdateLiquidationsConfig(t *testing.T) {
 			msg: &types.MsgUpdateLiquidationsConfig{
 				Authority: lib.GovModuleAddress.String(),
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: 5_000,
-					FillablePriceConfig: types.FillablePriceConfig{
-						BankruptcyAdjustmentPpm: 0,
-					},
-					PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
+					MaxLiquidationFeePpm:  5_000,
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 				},
 			},

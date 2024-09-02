@@ -250,7 +250,6 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_000_000_000, // Liquidated 1BTC at $50,000.
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -336,7 +335,6 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_000_000_000, // Liquidated 1BTC at $50,000
 					QuantumsInsuranceLost: 1_000_000,
 				},
 				constants.Dave_Num0: {},
@@ -434,7 +432,6 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    25_000_000_000, // Liquidated 0.5 BTC at $50,000
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -539,7 +536,6 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    25_000_000_000, // Liquidated 0.5 BTC at $50,000
 					QuantumsInsuranceLost: 500_000,
 				},
 				constants.Dave_Num0: {},
@@ -643,7 +639,6 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_000_000_000,
 					QuantumsInsuranceLost: 250_000, // Insurance fund covered $0.25.
 				},
 				constants.Dave_Num0: {},
@@ -697,8 +692,6 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				// Cap the max liquidation fee ppm so that the bankruptcy price changes
 				// in the insurance fund delta calculation.
 				MaxLiquidationFeePpm:  10,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 			rawOperations: []types.OperationRaw{
@@ -756,7 +749,6 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_000_000_000,
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -855,7 +847,6 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    25_000_000_000,
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -957,7 +948,6 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    5_000,
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -1047,7 +1037,6 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 		// 	expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 		// 		constants.Carl_Num0: {
 		// 			PerpetualsLiquidated:  []uint32{0},
-		// 			NotionalLiquidated:    25_000_000_000,
 		// 			QuantumsInsuranceLost: 0,
 		// 		},
 		// 		constants.Dave_Num0: {},
@@ -2171,10 +2160,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    math.MaxUint64,
 					MaxQuantumsInsuranceLost: 999_999, // $0.999999
 				},
 			},
@@ -2224,10 +2210,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    math.MaxUint64,
 					MaxQuantumsInsuranceLost: 499_999, // $0.499999
 				},
 			},
@@ -2298,10 +2281,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			insuranceFundBalance: 10_000_000,
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated: math.MaxUint64,
 					// Max insurance lost that a subaccount can have is $0.5.
 					// For this liquidation, overall insurance fund delta is -$0.5, which is within the limit.
 					// but the delta for the second fill is -$0.75, therefore, still considered to be exceeding the limit.
@@ -2432,8 +2412,6 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 			insuranceFundBalance: 2_000_000, // Insurance fund has $2
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm:  5_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 			expectedError: nil,

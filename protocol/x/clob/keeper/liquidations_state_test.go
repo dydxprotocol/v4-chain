@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 	"testing"
 
@@ -43,7 +42,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 				k.UpdateSubaccountLiquidationInfo(
 					ctx,
 					constants.Alice_Num0,
-					big.NewInt(5),
 					big.NewInt(-10),
 				)
 			},
@@ -52,7 +50,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 
 			expectedSubaccountLiquidationInfo: types.SubaccountLiquidationInfo{
 				PerpetualsLiquidated:  []uint32{2},
-				NotionalLiquidated:    5,
 				QuantumsInsuranceLost: 10,
 			},
 		},
@@ -66,7 +63,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 				k.UpdateSubaccountLiquidationInfo(
 					ctx,
 					constants.Alice_Num0,
-					big.NewInt(5),
 					big.NewInt(10),
 				)
 			},
@@ -75,7 +71,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 
 			expectedSubaccountLiquidationInfo: types.SubaccountLiquidationInfo{
 				PerpetualsLiquidated:  []uint32{2},
-				NotionalLiquidated:    5,
 				QuantumsInsuranceLost: 0,
 			},
 		},
@@ -89,7 +84,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 				k.UpdateSubaccountLiquidationInfo(
 					ctx,
 					constants.Alice_Num0,
-					big.NewInt(-5),
 					big.NewInt(10),
 				)
 			},
@@ -98,7 +92,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 
 			expectedSubaccountLiquidationInfo: types.SubaccountLiquidationInfo{
 				PerpetualsLiquidated:  []uint32{2},
-				NotionalLiquidated:    5,
 				QuantumsInsuranceLost: 0,
 			},
 		},
@@ -112,7 +105,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 				k.UpdateSubaccountLiquidationInfo(
 					ctx,
 					constants.Alice_Num0,
-					big.NewInt(-5),
 					big.NewInt(10),
 				)
 				k.MustUpdateSubaccountPerpetualLiquidated(
@@ -123,7 +115,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 				k.UpdateSubaccountLiquidationInfo(
 					ctx,
 					constants.Alice_Num0,
-					big.NewInt(-25),
 					big.NewInt(-10),
 				)
 				k.MustUpdateSubaccountPerpetualLiquidated(
@@ -134,7 +125,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 				k.UpdateSubaccountLiquidationInfo(
 					ctx,
 					constants.Alice_Num0,
-					big.NewInt(25),
 					big.NewInt(-50),
 				)
 			},
@@ -143,7 +133,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 
 			expectedSubaccountLiquidationInfo: types.SubaccountLiquidationInfo{
 				PerpetualsLiquidated:  []uint32{2, 3, 100},
-				NotionalLiquidated:    55,
 				QuantumsInsuranceLost: 60,
 			},
 		},
@@ -157,7 +146,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 				k.UpdateSubaccountLiquidationInfo(
 					ctx,
 					constants.Alice_Num0,
-					big.NewInt(-5),
 					big.NewInt(10),
 				)
 				k.MustUpdateSubaccountPerpetualLiquidated(
@@ -168,7 +156,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 				k.UpdateSubaccountLiquidationInfo(
 					ctx,
 					constants.Alice_Num1,
-					big.NewInt(-25),
 					big.NewInt(-10),
 				)
 				k.MustUpdateSubaccountPerpetualLiquidated(
@@ -179,7 +166,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 				k.UpdateSubaccountLiquidationInfo(
 					ctx,
 					constants.Bob_Num0,
-					big.NewInt(25),
 					big.NewInt(-50),
 				)
 			},
@@ -188,7 +174,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 
 			expectedSubaccountLiquidationInfo: types.SubaccountLiquidationInfo{
 				PerpetualsLiquidated:  []uint32{100},
-				NotionalLiquidated:    25,
 				QuantumsInsuranceLost: 50,
 			},
 		},
@@ -219,52 +204,6 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 	}
 }
 
-func TestUpdateSubaccountLiquidationInfo_NotionalLiquidatedOverflowPanics(t *testing.T) {
-	memClob := memclob.NewMemClobPriceTimePriority(false)
-	bankMock := &mocks.BankKeeper{}
-	ks := keepertest.NewClobKeepersTestContext(
-		t,
-		memClob,
-		bankMock,
-		&mocks.IndexerEventManager{},
-	)
-
-	subaccountId := constants.Alice_Num0
-	ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(
-		ks.Ctx,
-		subaccountId,
-		0,
-	)
-	ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
-		ks.Ctx,
-		subaccountId,
-		new(big.Int).SetUint64(math.MaxUint64),
-		big.NewInt(50),
-	)
-
-	require.PanicsWithError(
-		t,
-		fmt.Sprintf(
-			"Notional liquidated update for subaccount %v overflows uint64: integer overflow",
-			subaccountId,
-		),
-		func() {
-			// Run the test and verify expectations.
-			ks.ClobKeeper.MustUpdateSubaccountPerpetualLiquidated(
-				ks.Ctx,
-				subaccountId,
-				1,
-			)
-			ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
-				ks.Ctx,
-				subaccountId,
-				big.NewInt(1),
-				big.NewInt(50),
-			)
-		},
-	)
-}
-
 func TestUpdateSubaccountLiquidationInfo_QuantumInsuranceLostOverflowPanics(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	bankMock := &mocks.BankKeeper{}
@@ -279,7 +218,6 @@ func TestUpdateSubaccountLiquidationInfo_QuantumInsuranceLostOverflowPanics(t *t
 	ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
 		ks.Ctx,
 		subaccountId,
-		big.NewInt(50),
 		constants.BigNegMaxUint64(),
 	)
 
@@ -298,7 +236,6 @@ func TestUpdateSubaccountLiquidationInfo_QuantumInsuranceLostOverflowPanics(t *t
 			ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
 				ks.Ctx,
 				subaccountId,
-				big.NewInt(50),
 				big.NewInt(-1),
 			)
 		},
@@ -321,7 +258,6 @@ func TestUpdateSubaccountLiquidationInfo_MultipleLiquidationsOfSubaccountAndPerp
 	ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
 		ks.Ctx,
 		subaccountId,
-		big.NewInt(50),
 		big.NewInt(20),
 	)
 
@@ -342,7 +278,6 @@ func TestUpdateSubaccountLiquidationInfo_MultipleLiquidationsOfSubaccountAndPerp
 			ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
 				ks.Ctx,
 				subaccountId,
-				big.NewInt(20),
 				big.NewInt(-1),
 			)
 		},

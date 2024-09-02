@@ -2,9 +2,10 @@ package simulation_test
 
 import (
 	"encoding/json"
+	"testing"
+
 	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	testutil_rand "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
@@ -57,19 +58,6 @@ func TestRandomizedGenState(t *testing.T) {
 		}
 
 		liquidationConfig := clobGenesis.LiquidationsConfig
-
-		// Validate minimum position notional is within the specified range since we don't do any
-		// validation in LiquidationConfig.Validate()
-		require.LessOrEqual(
-			t,
-			uint64(sim_helpers.MinPositionNotionalBuckets[0]),
-			liquidationConfig.PositionBlockLimits.MinPositionNotionalLiquidated,
-		)
-		require.GreaterOrEqual(
-			t,
-			uint64(sim_helpers.MinPositionNotionalBuckets[len(sim_helpers.MinPositionNotionalBuckets)-1]),
-			liquidationConfig.PositionBlockLimits.MinPositionNotionalLiquidated,
-		)
 		err := liquidationConfig.Validate()
 		require.NoError(t, err)
 	}

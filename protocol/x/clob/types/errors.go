@@ -279,11 +279,6 @@ var (
 		1010,
 		"Liquidation order has size greater than max position notional specified in the liquidation config",
 	)
-	ErrLiquidationExceedsSubaccountMaxNotionalLiquidated = errorsmod.Register(
-		ModuleName,
-		1011,
-		"Liquidation exceeds the maximum notional amount that a single subaccount can have liquidated per block",
-	)
 	ErrLiquidationExceedsSubaccountMaxInsuranceLost = errorsmod.Register(
 		ModuleName,
 		1012,

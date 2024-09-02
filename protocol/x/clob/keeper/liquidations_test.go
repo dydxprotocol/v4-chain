@@ -558,7 +558,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{1, 0},
-					NotionalLiquidated:    53_000_000_000, // $53,000
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -591,10 +590,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    10_000_000_000, // $10,000
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
 			},
@@ -632,7 +628,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{1, 0},
-					NotionalLiquidated:    3_000_000_000, // $3,000
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -646,10 +641,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    20_000_000_000, // $20,000
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
 			},
@@ -686,7 +678,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    12_500_000_000, // $12,500
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -719,10 +710,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    math.MaxUint64,
 					MaxQuantumsInsuranceLost: 50_000_000, // $50
 				},
 			},
@@ -760,8 +748,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{1, 0},
-					NotionalLiquidated:    3_000_000_000, // $3,000
-					QuantumsInsuranceLost: 30_000_000,    // $30
+					QuantumsInsuranceLost: 30_000_000, // $30
 				},
 				constants.Dave_Num0: {},
 			},
@@ -774,10 +761,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    math.MaxUint64,
 					MaxQuantumsInsuranceLost: 500_000, // $0.5
 				},
 			},
@@ -815,7 +799,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    12_500_000_000, // $12,500
 					QuantumsInsuranceLost: 250_000,
 				},
 				constants.Dave_Num0: {},
@@ -862,7 +845,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    0,
 					QuantumsInsuranceLost: 0,
 				},
 				constants.Dave_Num0: {},
@@ -910,7 +892,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				constants.Carl_Num0: {},
 				constants.Dave_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    0,
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -957,8 +938,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm:  5_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 			placedMatchableOrders: []types.MatchableOrder{
@@ -997,7 +976,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    12_500_000_000, // $12,500
 					QuantumsInsuranceLost: 250_000,
 				},
 				constants.Dave_Num0: {},
@@ -1045,8 +1023,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm:  5_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 			placedMatchableOrders: []types.MatchableOrder{
@@ -1086,7 +1062,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				constants.Carl_Num0: {},
 				constants.Dave_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    12_500_000_000, // $12,500
 					QuantumsInsuranceLost: 250_000,
 				},
 			},
@@ -1368,7 +1343,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_000_000_000, // $50,000
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -1426,7 +1400,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    12_500_000_000, // $12,500
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -1503,7 +1476,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    0, // $0
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -1562,7 +1534,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_500_000_000 / 4,
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -1637,7 +1608,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    0,
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -1674,7 +1644,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    12_500_000_000,
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -1748,7 +1717,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    0,
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -1824,7 +1792,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_500_000_000 / 4,
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -1903,7 +1870,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_500_000_000,
 					QuantumsInsuranceLost: 750_000,
 				},
 			},
@@ -1974,7 +1940,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
 					PerpetualsLiquidated:  []uint32{0},
-					NotionalLiquidated:    50_000_000_000 / 4,
 					QuantumsInsuranceLost: 0,
 				},
 			},
@@ -2876,517 +2841,6 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 	}
 }
 
-func TestGetFillablePrice(t *testing.T) {
-	tests := map[string]struct {
-		// Parameters.
-		perpetualId   uint32
-		deltaQuantums int64
-
-		// Perpetual state.
-		perpetuals []perptypes.Perpetual
-
-		// Subaccount state.
-		assetPositions     []*satypes.AssetPosition
-		perpetualPositions []*satypes.PerpetualPosition
-
-		// Liquidation config.
-		liquidationConfig *types.LiquidationsConfig
-
-		// Expectations.
-		expectedFillablePrice *big.Rat
-		expectedError         error
-	}{
-		`Can calculate fillable price for a subaccount with one long position that is slightly
-		below maintenance margin requirements`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-
-			// $49,999 = (49,999 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC long with a $4,999.9 notional sell order.
-			expectedFillablePrice: big.NewRat(49_999, 100),
-		},
-		`Can calculate fillable price for a subaccount with one long position when bankruptcyAdjustmentPpm is 2_000_000`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-
-			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig: types.FillablePriceConfig{
-					BankruptcyAdjustmentPpm:           2_000_000,
-					SpreadToMaintenanceMarginRatioPpm: 100_000,
-				},
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-			// $49,998 = (49,998 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC long with a $4,999.8 notional sell order.
-			expectedFillablePrice: big.NewRat(49_998, 100),
-		},
-		`Can calculate fillable price for a subaccount with one long position when 
-		spreadToMaintenanceMarginRatioPpm is 200_000`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-
-			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig: types.FillablePriceConfig{
-					BankruptcyAdjustmentPpm:           lib.OneMillion,
-					SpreadToMaintenanceMarginRatioPpm: 200_000,
-				},
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-			// $49,998 = (49,998 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC long with a $4,999.8 notional sell order.
-			expectedFillablePrice: big.NewRat(49_998, 100),
-		},
-		`Can calculate fillable price for a subaccount with one short position that is slightly
-		below maintenance margin requirements`: {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * 5_499),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCShort,
-			},
-
-			// $50,001 = (50,001 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC short with a $5,000.1 notional buy order.
-			expectedFillablePrice: big.NewRat(50_001, 100),
-		},
-		`Can calculate fillable price for a subaccount with one short position when bankruptcyAdjustmentPpm is 2_000_000`: {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * 5_499),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCShort,
-			},
-
-			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig: types.FillablePriceConfig{
-					BankruptcyAdjustmentPpm:           2_000_000,
-					SpreadToMaintenanceMarginRatioPpm: 100_000,
-				},
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-
-			// $50,002 = (50,002 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC short with a $5,000.2 notional buy order.
-			expectedFillablePrice: big.NewRat(50_002, 100),
-		},
-		`Can calculate fillable price for a subaccount with one short position when 
-		SpreadToMaintenanceMarginRatioPpm is 200_000`: {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * 5_499),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCShort,
-			},
-
-			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig: types.FillablePriceConfig{
-					BankruptcyAdjustmentPpm:           lib.OneMillion,
-					SpreadToMaintenanceMarginRatioPpm: 200_000,
-				},
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-
-			// $50,002 = (50,002 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC short with a $5,000.2 notional buy order.
-			expectedFillablePrice: big.NewRat(50_002, 100),
-		},
-		"Can calculate fillable price for a subaccount with one long position at the bankruptcy price": {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -5_000),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-
-			// $49,500 = (495 / 1) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC long with a $4,950 notional sell order.
-			expectedFillablePrice: big.NewRat(495, 1),
-		},
-		`Can calculate fillable price for a subaccount with one long position at the bankruptcy price
-		where we are liquidating half of the position`: {
-			perpetualId:   0,
-			deltaQuantums: -5_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -5_000),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-
-			// $49,500 = (495 / 1) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC long with a $4,950 notional sell order.
-			// Note that even though we are closing half of the position, the fillable price is the same as
-			// if we were closing the full position because it's calculated based on the position size.
-			expectedFillablePrice: big.NewRat(495, 1),
-		},
-		"Can calculate fillable price for a subaccount with one short position at the bankruptcy price": {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * 5_000),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCShort,
-			},
-
-			// $50,500 = (505 / 1) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC short with a $5,050 notional buy order.
-			expectedFillablePrice: big.NewRat(505, 1),
-		},
-		"Can calculate fillable price for a subaccount with one long position below the bankruptcy price": {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -5_500),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-
-			// $49,500 = (495 / 1) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC long with a $4,950 notional sell order.
-			expectedFillablePrice: big.NewRat(495, 1),
-		},
-		"Can calculate fillable price for a subaccount with one short position below the bankruptcy price": {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * 4_500),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCShort,
-			},
-
-			// $50,500 = (505 / 1) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC short with a $5,050 notional buy order.
-			expectedFillablePrice: big.NewRat(505, 1),
-		},
-		"Can calculate fillable price for a subaccount with multiple long positions": {
-			perpetualId:   1,
-			deltaQuantums: -100_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -490),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_FourThousandthsBTCLong,
-				&constants.PerpetualPosition_OneTenthEthLong,
-			},
-
-			// $2976 = (372 / 125) subticks * QuoteCurrencyAtomicResolution / BaseCurrencyAtomicResolution.
-			// This means we should close our 0.1 ETH long for $2,976 dollars.
-			expectedFillablePrice: big.NewRat(372, 125),
-		},
-		`Can calculate fillable price when bankruptcyAdjustmentPpm is max uint32`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-
-			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig: types.FillablePriceConfig{
-					BankruptcyAdjustmentPpm:           math.MaxUint32,
-					SpreadToMaintenanceMarginRatioPpm: 100_000,
-				},
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-
-			// $49,500 = (495 / 1) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC long with a $4,950 notional sell order.
-			expectedFillablePrice: big.NewRat(495, 1),
-		},
-		`Can calculate fillable price when SpreadTomaintenanceMarginRatioPpm is 1`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-
-			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig: types.FillablePriceConfig{
-					BankruptcyAdjustmentPpm:           lib.OneMillion,
-					SpreadToMaintenanceMarginRatioPpm: 1,
-				},
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-
-			expectedFillablePrice: big.NewRat(4_999_999_999, 10_000_000),
-		},
-		`Can calculate fillable price when SpreadTomaintenanceMarginRatioPpm is one million`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-
-			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig: types.FillablePriceConfig{
-					BankruptcyAdjustmentPpm:           lib.OneMillion,
-					SpreadToMaintenanceMarginRatioPpm: lib.OneMillion,
-				},
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-
-			// $49,990 = (49990 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
-			// This means we should close the 0.1 BTC long with a $4,999 notional sell order.
-			expectedFillablePrice: big.NewRat(49_990, 100),
-		},
-		`Returns error when deltaQuantums is zero`: {
-			perpetualId:   0,
-			deltaQuantums: 0,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
-			},
-
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
-		`Returns error when subaccount does not have an open position for perpetual id`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{},
-
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
-		`Returns error when delta quantums and perpetual position have the same sign`: {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
-			},
-
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
-		`Returns error when abs delta quantums is greater than position size`: {
-			perpetualId:   0,
-			deltaQuantums: -100_000_001,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
-			},
-
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			// Setup keeper state.
-			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-
-			// Initialize the liquidations config.
-			if tc.liquidationConfig != nil {
-				require.NoError(t,
-					ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, *tc.liquidationConfig),
-				)
-			} else {
-				require.NoError(t,
-					ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, types.LiquidationsConfig_Default),
-				)
-			}
-
-			// Create the default markets.
-			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
-
-			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
-
-			// Create all perpetuals.
-			for _, p := range tc.perpetuals {
-				_, err := ks.PerpetualsKeeper.CreatePerpetual(
-					ks.Ctx,
-					p.Params.Id,
-					p.Params.Ticker,
-					p.Params.MarketId,
-					p.Params.AtomicResolution,
-					p.Params.DefaultFundingPpm,
-					p.Params.LiquidityTier,
-					p.Params.MarketType,
-					p.Params.DangerIndexPpm,
-				)
-				require.NoError(t, err)
-			}
-
-			// Create the subaccount.
-			subaccount := satypes.Subaccount{
-				Id: &satypes.SubaccountId{
-					Owner:  "liquidations_test",
-					Number: 0,
-				},
-				AssetPositions:     tc.assetPositions,
-				PerpetualPositions: tc.perpetualPositions,
-			}
-			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, subaccount)
-
-			fillablePrice, err := ks.ClobKeeper.GetFillablePrice(
-				ks.Ctx,
-				*subaccount.Id,
-				tc.perpetualId,
-				big.NewInt(tc.deltaQuantums),
-			)
-
-			if tc.expectedError != nil {
-				require.ErrorIs(t, err, tc.expectedError)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedFillablePrice, fillablePrice)
-			}
-		})
-	}
-}
-
 func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 	tests := map[string]struct {
 		// Parameters.
@@ -3450,8 +2904,6 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm:  25_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 
@@ -3480,8 +2932,6 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm:  1_000_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 
@@ -3533,8 +2983,6 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm:  25_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 
@@ -3563,8 +3011,6 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm:  1_000_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 
@@ -3865,18 +3311,18 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 	}
 }
 
-func TestConvertFillablePriceToSubticks(t *testing.T) {
+func TestConvertBankruptcyPriceToSubticks(t *testing.T) {
 	tests := map[string]struct {
 		// Parameters.
-		fillablePrice     *big.Rat
+		bankruptcyPrice   *big.Rat
 		isLiquidatingLong bool
 		clobPair          types.ClobPair
 
 		// Expectations.
 		expectedSubticks types.Subticks
 	}{
-		`Converts fillable price to subticks for liquidating a BTC long position`: {
-			fillablePrice: big.NewRat(
+		`Converts bankruptcy price to subticks for liquidating a BTC long position`: {
+			bankruptcyPrice: big.NewRat(
 				int64(constants.FiveBillion),
 				1,
 			),
@@ -3885,8 +3331,8 @@ func TestConvertFillablePriceToSubticks(t *testing.T) {
 
 			expectedSubticks: 500_000_000_000_000_000,
 		},
-		`Converts fillable price to subticks for liquidating a BTC short position`: {
-			fillablePrice: big.NewRat(
+		`Converts bankruptcy price to subticks for liquidating a BTC short position`: {
+			bankruptcyPrice: big.NewRat(
 				int64(constants.FiveBillion),
 				1,
 			),
@@ -3895,8 +3341,8 @@ func TestConvertFillablePriceToSubticks(t *testing.T) {
 
 			expectedSubticks: 500_000_000_000_000_000,
 		},
-		`Converts fillable price to subticks for liquidating a long position and rounds up`: {
-			fillablePrice: big.NewRat(
+		`Converts bankruptcy price to subticks for liquidating a long position and rounds up`: {
+			bankruptcyPrice: big.NewRat(
 				7,
 				1,
 			),
@@ -3908,8 +3354,8 @@ func TestConvertFillablePriceToSubticks(t *testing.T) {
 
 			expectedSubticks: 100,
 		},
-		`Converts fillable price to subticks for liquidating a short position and rounds down`: {
-			fillablePrice: big.NewRat(
+		`Converts bankruptcy price to subticks for liquidating a short position and rounds down`: {
+			bankruptcyPrice: big.NewRat(
 				197,
 				1,
 			),
@@ -3921,9 +3367,9 @@ func TestConvertFillablePriceToSubticks(t *testing.T) {
 
 			expectedSubticks: 100,
 		},
-		`Converts fillable price to subticks for liquidating a short position and rounds down, but
+		`Converts bankruptcy price to subticks for liquidating a short position and rounds down, but
 		the result is lower bounded at SubticksPerTick`: {
-			fillablePrice: big.NewRat(
+			bankruptcyPrice: big.NewRat(
 				7,
 				1,
 			),
@@ -3935,9 +3381,9 @@ func TestConvertFillablePriceToSubticks(t *testing.T) {
 
 			expectedSubticks: 100,
 		},
-		`Converts zero fillable price to subticks for liquidating a short position and rounds down,
+		`Converts zero bankruptcy price to subticks for liquidating a short position and rounds down,
 		but the result is lower bounded at SubticksPerTick`: {
-			fillablePrice: big.NewRat(
+			bankruptcyPrice: big.NewRat(
 				0,
 				1,
 			),
@@ -3949,9 +3395,9 @@ func TestConvertFillablePriceToSubticks(t *testing.T) {
 
 			expectedSubticks: 100,
 		},
-		`Converts fillable price to subticks for liquidating a long position and rounds up, but
+		`Converts bankruptcy price to subticks for liquidating a long position and rounds up, but
 		the result is upper bounded at the max Uint64 that is most aligned with SubticksPerTick`: {
-			fillablePrice: big_testutil.MustFirst(
+			bankruptcyPrice: big_testutil.MustFirst(
 				new(big.Rat).SetString("10000000000000000000000"),
 			),
 			isLiquidatingLong: true,
@@ -3971,9 +3417,9 @@ func TestConvertFillablePriceToSubticks(t *testing.T) {
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 			// Run the test.
-			subticks := ks.ClobKeeper.ConvertFillablePriceToSubticks(
+			subticks := ks.ClobKeeper.ConvertBankruptcyPriceToSubticks(
 				ks.Ctx,
-				tc.fillablePrice,
+				tc.bankruptcyPrice,
 				tc.isLiquidatingLong,
 				tc.clobPair,
 			)
@@ -3986,14 +3432,14 @@ func TestConvertFillablePriceToSubticks(t *testing.T) {
 	}
 }
 
-func TestConvertFillablePriceToSubticks_PanicsOnNegativeFillablePrice(t *testing.T) {
+func TestConvertBankruptcyPriceToSubticks_PanicsOnNegativeBankruptcyPrice(t *testing.T) {
 	// Setup keeper state.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 
 	// Run the test.
 	require.Panics(t, func() {
-		ks.ClobKeeper.ConvertFillablePriceToSubticks(
+		ks.ClobKeeper.ConvertBankruptcyPriceToSubticks(
 			ks.Ctx,
 			big.NewRat(-1, 1),
 			false,
@@ -4035,54 +3481,6 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.PerpetualPosition_OneTenthBTCLong.GetBigQuantums(),
 			),
 		},
-		`Full position size is returned when MinPositionNotionalLiquidated is greater than position size`: {
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   10_000_000_000,
-					MaxPositionPortionLiquidatedPpm: lib.OneMillion,
-				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-
-			expectedClobPair: constants.ClobPair_Btc,
-			expectedQuantums: new(big.Int).SetInt64(-10_000_000),
-		},
-		`Half position size is returned when MaxPositionPortionLiquidatedPpm is 500,000`: {
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   1_000,
-					MaxPositionPortionLiquidatedPpm: 500_000,
-				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-
-			expectedClobPair: constants.ClobPair_Btc,
-			expectedQuantums: new(big.Int).SetInt64(-5_000_000),
-		},
 		`full position is returned when position size is smaller than StepBaseQuantums`: {
 			perpetualPositions: []*satypes.PerpetualPosition{
 				{
@@ -4094,12 +3492,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   1,
-					MaxPositionPortionLiquidatedPpm: 100_000,
-				},
+				MaxLiquidationFeePpm:  5_000,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 
@@ -4122,12 +3515,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   1,
-					MaxPositionPortionLiquidatedPpm: 100_000,
-				},
+				MaxLiquidationFeePpm:  5_000,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 
@@ -4151,12 +3539,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   1,
-					MaxPositionPortionLiquidatedPpm: 100_000,
-				},
+				MaxLiquidationFeePpm:  5_000,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 
@@ -4179,10 +3562,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			},
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    10_000_000_000, // $10,000
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
 			},
@@ -4203,10 +3583,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			},
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    2_500_000_000, // $2,500
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
 			},
@@ -4228,13 +3605,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			},
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   1_000,
-					MaxPositionPortionLiquidatedPpm: 500_000,
-				},
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    2_000_000_000, // $2,000
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
 			},
@@ -4256,13 +3627,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			},
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   1_000,
-					MaxPositionPortionLiquidatedPpm: 400_000, // 40%
-				},
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    2_500_000_000, // $2,500
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
 			},
@@ -4285,12 +3650,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   1_000,
-					MaxPositionPortionLiquidatedPpm: 500_000,
-				},
+				MaxLiquidationFeePpm:  5_000,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 
@@ -4340,55 +3700,6 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.PerpetualPosition_OneBTCShort.GetBigQuantums(),
 			),
 		},
-		`Full position size (short) is returned when MinPositionNotionalLiquidated is 
-		greater than position size`: {
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCShort,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   10_000_000_000,
-					MaxPositionPortionLiquidatedPpm: lib.OneMillion,
-				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-
-			expectedClobPair: constants.ClobPair_Btc,
-			expectedQuantums: new(big.Int).SetInt64(10_000_000),
-		},
-		`Half position size (short) is returned when MaxPositionPortionLiquidatedPpm is 500,000`: {
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthBTCShort,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   1_000,
-					MaxPositionPortionLiquidatedPpm: 500_000,
-				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-
-			expectedClobPair: constants.ClobPair_Btc,
-			expectedQuantums: new(big.Int).SetInt64(5_000_000),
-		},
 		`Full position (short) is returned when position smaller than subaccount limit`: {
 			perpetualPositions: []*satypes.PerpetualPosition{
 				&constants.PerpetualPosition_OneTenthBTCShort, // 0.1 BTC, $5,000 notional
@@ -4398,10 +3709,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			},
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    10_000_000_000, // $10,000
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
 			},
@@ -4422,10 +3730,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			},
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    2_500_000_000, // $2,500
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
 			},
@@ -4568,7 +3873,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			deltaQuantums, err := ks.ClobKeeper.GetLiquidatablePositionSizeDelta(
+			deltaQuantums, err := ks.ClobKeeper.GetNegativePositionSize(
 				ks.Ctx,
 				*subaccount.Id,
 				perpetualId,
@@ -4850,10 +4155,7 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 		"Can get max notional liquidatable and insurance lost": {
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    150,
 					MaxQuantumsInsuranceLost: 150,
 				},
 			},
@@ -4875,10 +4177,7 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 		"invalid notional liquidated": {
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    50,
 					MaxQuantumsInsuranceLost: 150,
 				},
 			},
@@ -4899,10 +4198,7 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 		"invalid insurance lost": {
 			liquidationConfig: types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits:  constants.PositionBlockLimits_No_Limit,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxNotionalLiquidated:    150,
 					MaxQuantumsInsuranceLost: 50,
 				},
 			},
@@ -4941,7 +4237,6 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 			ks.ClobKeeper.UpdateSubaccountLiquidationInfo(
 				ks.Ctx,
 				subaccountId,
-				tc.previousNotionalLiquidated,
 				tc.previousInsuranceFundLost,
 			)
 
@@ -4997,157 +4292,6 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 					require.NoError(t, err)
 					require.Equal(t, tc.expectedMaxInsuranceLost, actualMaxInsuranceLost)
 				}
-			}
-		})
-	}
-}
-
-func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
-	tests := map[string]struct {
-		// Setup
-		liquidationConfig   types.LiquidationsConfig
-		positionToLiquidate *satypes.PerpetualPosition
-
-		// Expectations.
-		expectedErr                        error
-		expectedMinPosNotionalLiquidatable *big.Int
-		expectedMaxPosNotionalLiquidatable *big.Int
-	}{
-		"Can get min notional liquidatable": {
-			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   100,
-					MaxPositionPortionLiquidatedPpm: lib.OneMillion,
-				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-			positionToLiquidate: &satypes.PerpetualPosition{
-				PerpetualId: uint32(0),
-				Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
-			},
-			expectedMinPosNotionalLiquidatable: big.NewInt(100),
-			expectedMaxPosNotionalLiquidatable: big.NewInt(50_000_000_000), // $50,000
-		},
-		"Can get max notional liquidatable": {
-			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   100,
-					MaxPositionPortionLiquidatedPpm: 500_000,
-				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-			positionToLiquidate: &satypes.PerpetualPosition{
-				PerpetualId: uint32(0),
-				Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
-			},
-			expectedMinPosNotionalLiquidatable: big.NewInt(100),
-			expectedMaxPosNotionalLiquidatable: big.NewInt(25_000_000_000), // $25,000
-		},
-		"min and max notional liquidatable can be overridden": {
-			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
-				PositionBlockLimits: types.PositionBlockLimits{
-					MinPositionNotionalLiquidated:   10_000_000, // $10
-					MaxPositionPortionLiquidatedPpm: lib.OneMillion,
-				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-			positionToLiquidate: &satypes.PerpetualPosition{
-				PerpetualId: uint32(0),
-				Quantums:    dtypes.NewInt(10_000), // $5 notional
-			},
-			expectedMinPosNotionalLiquidatable: big.NewInt(5_000_000), // $5
-			expectedMaxPosNotionalLiquidatable: big.NewInt(5_000_000), // $5
-		},
-		"errors are propagated": {
-			liquidationConfig: constants.LiquidationsConfig_No_Limit,
-			positionToLiquidate: &satypes.PerpetualPosition{
-				PerpetualId: uint32(999), // non-existent
-				Quantums:    dtypes.NewInt(1),
-			},
-			expectedErr: perptypes.ErrPerpetualDoesNotExist,
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			// Setup keeper state.
-			memClob := memclob.NewMemClobPriceTimePriority(false)
-			mockIndexerEventManager := &mocks.IndexerEventManager{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
-
-			// Create the default markets.
-			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
-
-			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
-
-			// Create perpetual.
-			_, err := ks.PerpetualsKeeper.CreatePerpetual(
-				ks.Ctx,
-				constants.BtcUsd_100PercentMarginRequirement.Params.Id,
-				constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
-				constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
-				constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
-				constants.BtcUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
-				constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
-				constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
-				constants.BtcUsd_100PercentMarginRequirement.Params.DangerIndexPpm,
-			)
-			require.NoError(t, err)
-
-			// Create all CLOBs.
-			mockIndexerEventManager.On("AddTxnEvent",
-				ks.Ctx,
-				indexerevents.SubtypePerpetualMarket,
-				indexerevents.PerpetualMarketEventVersion,
-				indexer_manager.GetBytes(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						constants.BtcUsd_100PercentMarginRequirement.Params.Ticker,
-						constants.BtcUsd_100PercentMarginRequirement.Params.MarketId,
-						constants.ClobPair_Btc.Status,
-						constants.ClobPair_Btc.QuantumConversionExponent,
-						constants.BtcUsd_100PercentMarginRequirement.Params.AtomicResolution,
-						constants.ClobPair_Btc.SubticksPerTick,
-						constants.ClobPair_Btc.StepBaseQuantums,
-						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
-						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
-					),
-				),
-			).Once().Return()
-			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
-				ks.Ctx,
-				constants.ClobPair_Btc.Id,
-				clobtest.MustPerpetualId(constants.ClobPair_Btc),
-				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
-				constants.ClobPair_Btc.QuantumConversionExponent,
-				constants.ClobPair_Btc.SubticksPerTick,
-				constants.ClobPair_Btc.Status,
-			)
-			require.NoError(t, err)
-
-			err = ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, tc.liquidationConfig)
-			require.NoError(t, err)
-
-			actualMinPosNotionalLiquidatable,
-				actualMaxPosNotionalLiquidatable,
-				err := ks.ClobKeeper.GetMaxAndMinPositionNotionalLiquidatable(
-				ks.Ctx,
-				tc.positionToLiquidate,
-			)
-			if tc.expectedErr != nil {
-				require.ErrorContains(t, err, tc.expectedErr.Error())
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedMinPosNotionalLiquidatable, actualMinPosNotionalLiquidatable)
-				require.Equal(t, tc.expectedMaxPosNotionalLiquidatable, actualMaxPosNotionalLiquidatable)
 			}
 		})
 	}

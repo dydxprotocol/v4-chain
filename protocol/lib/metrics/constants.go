@@ -280,7 +280,6 @@ const (
 	Liquidated                            = "liquidated"
 	Filled                                = "filled"
 	SubaccountMaxInsuranceLost            = "exceeds_subaccount_max_insurance_lost"
-	SubaccountMaxNotionalLiquidated       = "exceeds_subaccount_max_notional_liquidated"
 	LiquidationRequiresDeleveraging       = "liquidation_requires_deleveraging"
 	LiquidationMatchNegativeTNC           = "liquidation_match_negative_tnc"
 

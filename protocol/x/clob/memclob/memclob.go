@@ -1755,12 +1755,6 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 				takerOrderStatus.OrderStatus = types.LiquidationExceededSubaccountMaxInsuranceLost
 				break
 			}
-			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated) {
-				// Subaccount has reached max notional liquidated block limit. Stop matching.
-				telemetry.IncrCounter(1, types.ModuleName, metrics.SubaccountMaxNotionalLiquidated, metrics.Count)
-				takerOrderStatus.OrderStatus = types.LiquidationExceededSubaccountMaxNotionalLiquidated
-				break
-			}
 			if errors.Is(err, types.ErrInsuranceFundHasInsufficientFunds) {
 				// Deleveraging is required. Stop matching.
 				telemetry.IncrCounter(1, types.ModuleName, metrics.LiquidationRequiresDeleveraging, metrics.Count)

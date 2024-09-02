@@ -23,11 +23,7 @@ func TestMsgUpdateLiquidationsConfig_ValidateBasic(t *testing.T) {
 			msg: types.MsgUpdateLiquidationsConfig{
 				Authority: constants.AliceAccAddress.String(),
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: 5_000,
-					FillablePriceConfig: types.FillablePriceConfig{
-						BankruptcyAdjustmentPpm: 0,
-					},
-					PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
+					MaxLiquidationFeePpm:  5_000,
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 				},
 			},

@@ -42,11 +42,9 @@ func getValidGenesisStr() string {
 	gs := `{"clob_pairs":[{"id":0,"perpetual_clob_metadata":{"perpetual_id":0},"subticks_per_tick":100,`
 	gs += `"step_base_quantums":5,"status":"STATUS_ACTIVE"}],`
 	gs += `"liquidations_config":{`
-	gs += `"max_liquidation_fee_ppm":5000,"position_block_limits":{"min_position_notional_liquidated":"1000",`
-	gs += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`
-	gs += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
-	gs += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
-	gs += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
+	gs += `"max_liquidation_fee_ppm":5000,"subaccount_block_limits":`
+	gs += `{"max_quantums_insurance_lost":"100000000000000"},`
+	gs += `"block_rate_limit_config":`
 	gs += `{"max_short_term_orders_and_cancels_per_n_blocks":[{"limit": 400,"num_blocks":1}],`
 	gs += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},{"limit": 20,"num_blocks":100}]},`
 	gs += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[{"limit":0,"usd_tnc_required":"0"},`
@@ -162,11 +160,9 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := `{"clob_pairs":[],"liquidations_config":{`
-	expected += `"max_liquidation_fee_ppm":5000,"position_block_limits":{"min_position_notional_liquidated":"1000",`
-	expected += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`
-	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
-	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
-	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
+	expected += `"max_liquidation_fee_ppm":5000,,"subaccount_block_limits":`
+	expected += `{"max_quantums_insurance_lost":"100000000000000"},`
+	expected += `"block_rate_limit_config":`
 	expected += `{"max_short_term_orders_and_cancels_per_n_blocks":[],"max_stateful_orders_per_n_blocks":[],`
 	expected += `"max_short_term_order_cancellations_per_n_blocks":[],"max_short_term_orders_per_n_blocks":[]},`
 	expected += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[], "stateful_order_equity_tiers":[]}}`
@@ -328,11 +324,6 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	liquidationsConfig := keeper.GetLiquidationsConfig(ctx)
 	require.Equal(t, uint32(5_000), liquidationsConfig.MaxLiquidationFeePpm)
-	require.Equal(t, uint32(1_000_000), liquidationsConfig.FillablePriceConfig.BankruptcyAdjustmentPpm)
-	require.Equal(t, uint32(100_000), liquidationsConfig.FillablePriceConfig.SpreadToMaintenanceMarginRatioPpm)
-	require.Equal(t, uint64(1_000), liquidationsConfig.PositionBlockLimits.MinPositionNotionalLiquidated)
-	require.Equal(t, uint32(1_000_000), liquidationsConfig.PositionBlockLimits.MaxPositionPortionLiquidatedPpm)
-	require.Equal(t, uint64(100_000_000_000_000), liquidationsConfig.SubaccountBlockLimits.MaxNotionalLiquidated)
 	require.Equal(t, uint64(100_000_000_000_000), liquidationsConfig.SubaccountBlockLimits.MaxQuantumsInsuranceLost)
 
 	blockRateLimitConfig := keeper.GetBlockRateLimitConfiguration(ctx)
@@ -424,11 +415,9 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	expected += `"step_base_quantums":"5","subticks_per_tick":100,`
 	expected += `"quantum_conversion_exponent":0,"status":"STATUS_ACTIVE"}],`
 	expected += `"liquidations_config":{`
-	expected += `"max_liquidation_fee_ppm":5000,"position_block_limits":{"min_position_notional_liquidated":"1000",`
-	expected += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`
-	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
-	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
-	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
+	expected += `"max_liquidation_fee_ppm":5000,"subaccount_block_limits":`
+	expected += `{"max_quantums_insurance_lost":"100000000000000"},`
+	expected += `"block_rate_limit_config":`
 	expected += `{"max_short_term_orders_and_cancels_per_n_blocks":[{"limit": 400,"num_blocks":1}],`
 	expected += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},`
 	expected += `{"limit": 20,"num_blocks":100}],"max_short_term_order_cancellations_per_n_blocks":[],`

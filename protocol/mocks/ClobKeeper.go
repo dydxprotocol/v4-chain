@@ -129,17 +129,17 @@ func (_m *ClobKeeper) CancelStatefulOrder(ctx types.Context, msg *clobtypes.MsgC
 	return r0
 }
 
-// ConvertFillablePriceToSubticks provides a mock function with given fields: ctx, fillablePrice, isLiquidatingLong, clobPair
-func (_m *ClobKeeper) ConvertFillablePriceToSubticks(ctx types.Context, fillablePrice *big.Rat, isLiquidatingLong bool, clobPair clobtypes.ClobPair) clobtypes.Subticks {
-	ret := _m.Called(ctx, fillablePrice, isLiquidatingLong, clobPair)
+// ConvertBankruptcyPriceToSubticks provides a mock function with given fields: ctx, bankruptcyPrice, isLiquidatingLong, clobPair
+func (_m *ClobKeeper) ConvertBankruptcyPriceToSubticks(ctx types.Context, bankruptcyPrice *big.Rat, isLiquidatingLong bool, clobPair clobtypes.ClobPair) clobtypes.Subticks {
+	ret := _m.Called(ctx, bankruptcyPrice, isLiquidatingLong, clobPair)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ConvertFillablePriceToSubticks")
+		panic("no return value specified for ConvertBankruptcyPriceToSubticks")
 	}
 
 	var r0 clobtypes.Subticks
 	if rf, ok := ret.Get(0).(func(types.Context, *big.Rat, bool, clobtypes.ClobPair) clobtypes.Subticks); ok {
-		r0 = rf(ctx, fillablePrice, isLiquidatingLong, clobPair)
+		r0 = rf(ctx, bankruptcyPrice, isLiquidatingLong, clobPair)
 	} else {
 		r0 = ret.Get(0).(clobtypes.Subticks)
 	}
@@ -276,36 +276,6 @@ func (_m *ClobKeeper) GetClobPair(ctx types.Context, id clobtypes.ClobPairId) (c
 	return r0, r1
 }
 
-// GetFillablePrice provides a mock function with given fields: ctx, subaccountId, perpetualId, deltaQuantums
-func (_m *ClobKeeper) GetFillablePrice(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, deltaQuantums *big.Int) (*big.Rat, error) {
-	ret := _m.Called(ctx, subaccountId, perpetualId, deltaQuantums)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetFillablePrice")
-	}
-
-	var r0 *big.Rat
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) (*big.Rat, error)); ok {
-		return rf(ctx, subaccountId, perpetualId, deltaQuantums)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) *big.Rat); ok {
-		r0 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Rat)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
-		r1 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetIndexerEventManager provides a mock function with given fields:
 func (_m *ClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	ret := _m.Called()
@@ -422,45 +392,6 @@ func (_m *ClobKeeper) GetLongTermOrderPlacement(ctx types.Context, orderId clobt
 	return r0, r1
 }
 
-// GetMaxAndMinPositionNotionalLiquidatable provides a mock function with given fields: ctx, positionToLiquidate
-func (_m *ClobKeeper) GetMaxAndMinPositionNotionalLiquidatable(ctx types.Context, positionToLiquidate *subaccountstypes.PerpetualPosition) (*big.Int, *big.Int, error) {
-	ret := _m.Called(ctx, positionToLiquidate)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetMaxAndMinPositionNotionalLiquidatable")
-	}
-
-	var r0 *big.Int
-	var r1 *big.Int
-	var r2 error
-	if rf, ok := ret.Get(0).(func(types.Context, *subaccountstypes.PerpetualPosition) (*big.Int, *big.Int, error)); ok {
-		return rf(ctx, positionToLiquidate)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, *subaccountstypes.PerpetualPosition) *big.Int); ok {
-		r0 = rf(ctx, positionToLiquidate)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, *subaccountstypes.PerpetualPosition) *big.Int); ok {
-		r1 = rf(ctx, positionToLiquidate)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(2).(func(types.Context, *subaccountstypes.PerpetualPosition) error); ok {
-		r2 = rf(ctx, positionToLiquidate)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
 // GetPerpetualPositionToLiquidate provides a mock function with given fields: ctx, subaccountId
 func (_m *ClobKeeper) GetPerpetualPositionToLiquidate(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (uint32, error) {
 	ret := _m.Called(ctx, subaccountId)
@@ -571,36 +502,6 @@ func (_m *ClobKeeper) GetSubaccountMaxInsuranceLost(ctx types.Context, subaccoun
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSubaccountMaxInsuranceLost")
-	}
-
-	var r0 *big.Int
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) (*big.Int, error)); ok {
-		return rf(ctx, subaccountId, perpetualId)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) *big.Int); ok {
-		r0 = rf(ctx, subaccountId, perpetualId)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32) error); ok {
-		r1 = rf(ctx, subaccountId, perpetualId)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetSubaccountMaxNotionalLiquidatable provides a mock function with given fields: ctx, subaccountId, perpetualId
-func (_m *ClobKeeper) GetSubaccountMaxNotionalLiquidatable(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) (*big.Int, error) {
-	ret := _m.Called(ctx, subaccountId, perpetualId)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetSubaccountMaxNotionalLiquidatable")
 	}
 
 	var r0 *big.Int
@@ -1163,9 +1064,9 @@ func (_m *ClobKeeper) UpdateLiquidationsConfig(ctx types.Context, config clobtyp
 	return r0
 }
 
-// UpdateSubaccountLiquidationInfo provides a mock function with given fields: ctx, subaccountId, notionalLiquidatedQuoteQuantums, insuranceFundDeltaQuoteQuantums
-func (_m *ClobKeeper) UpdateSubaccountLiquidationInfo(ctx types.Context, subaccountId subaccountstypes.SubaccountId, notionalLiquidatedQuoteQuantums *big.Int, insuranceFundDeltaQuoteQuantums *big.Int) {
-	_m.Called(ctx, subaccountId, notionalLiquidatedQuoteQuantums, insuranceFundDeltaQuoteQuantums)
+// UpdateSubaccountLiquidationInfo provides a mock function with given fields: ctx, subaccountId, insuranceFundDeltaQuoteQuantums
+func (_m *ClobKeeper) UpdateSubaccountLiquidationInfo(ctx types.Context, subaccountId subaccountstypes.SubaccountId, insuranceFundDeltaQuoteQuantums *big.Int) {
+	_m.Called(ctx, subaccountId, insuranceFundDeltaQuoteQuantums)
 }
 
 // NewClobKeeper creates a new instance of ClobKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
