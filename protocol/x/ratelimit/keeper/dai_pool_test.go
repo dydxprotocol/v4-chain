@@ -28,6 +28,8 @@ var (
 	price3, _ = ConvertStringToBigInt("1095369387224518455677735570")
 
 	price_two = new(big.Int).Mul(big.NewInt(2), new(big.Int).Exp(big.NewInt(types.BASE_10), big.NewInt(types.SDAI_DECIMALS), nil))
+
+	priceMinimallyAboveOne, _ = ConvertStringToBigInt("1000000000000000000000000001")
 )
 
 type PoolTestTransfer struct {
@@ -61,8 +63,14 @@ func TestGetTradingDAIFromSDAIAmount(t *testing.T) {
 			expectedTDAIAmount: big.NewInt(0),
 			expectedErr:        nil,
 		},
-		"Non-zero sDAI amount with valid price": {
+		"Small sDAI amount gets rounded down to zero": {
 			sDAIAmount:         big.NewInt(500),
+			sDAIPrice:          price_two,
+			expectedTDAIAmount: big.NewInt(0),
+			expectedErr:        nil,
+		},
+		"Non-zero sDAI amount with valid price": {
+			sDAIAmount:         big.NewInt(500000000000000),
 			sDAIPrice:          price_two,
 			expectedTDAIAmount: big.NewInt(1000),
 			expectedErr:        nil,
@@ -79,22 +87,40 @@ func TestGetTradingDAIFromSDAIAmount(t *testing.T) {
 			expectedTDAIAmount: nil,
 			expectedErr:        errors.New("sDAI price is zero"),
 		},
-		"Real example": {
-			sDAIAmount:         big.NewInt(913),
+		"Real example 1": {
+			sDAIAmount:         big.NewInt(913000000000000),
 			sDAIPrice:          price1,
 			expectedTDAIAmount: big.NewInt(1000),
 			expectedErr:        nil,
 		},
 		"Real example 2": {
-			sDAIAmount:         big.NewInt(913),
+			sDAIAmount:         big.NewInt(913000000000000),
 			sDAIPrice:          price2,
 			expectedTDAIAmount: big.NewInt(1000),
 			expectedErr:        nil,
 		},
 		"Real example 3": {
-			sDAIAmount:         big.NewInt(90166324963409613),
+			sDAIAmount:         big.NewInt(913123456789),
+			sDAIPrice:          price2,
+			expectedTDAIAmount: big.NewInt(1),
+			expectedErr:        nil,
+		},
+		"Real example 4": {
+			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
 			sDAIPrice:          price3,
 			expectedTDAIAmount: big.NewInt(98765432123456789),
+			expectedErr:        nil,
+		},
+		"Real example 5": {
+			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
+			sDAIPrice:          price3,
+			expectedTDAIAmount: big.NewInt(98765432123456790),
+			expectedErr:        nil,
+		},
+		"Real example 6": {
+			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
+			sDAIPrice:          price2,
+			expectedTDAIAmount: big.NewInt(98765406092328),
 			expectedErr:        nil,
 		},
 	}
@@ -139,8 +165,20 @@ func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
 			expectedTDAIAmount: big.NewInt(0),
 			expectedErr:        nil,
 		},
-		"Non-zero sDAI amount with valid price": {
+		"Tiny sDAI amount gets rounded up to one": {
+			sDAIAmount:         big.NewInt(1),
+			sDAIPrice:          price_two,
+			expectedTDAIAmount: big.NewInt(1),
+			expectedErr:        nil,
+		},
+		"Small sDAI amount gets rounded up to one": {
 			sDAIAmount:         big.NewInt(500),
+			sDAIPrice:          price_two,
+			expectedTDAIAmount: big.NewInt(1),
+			expectedErr:        nil,
+		},
+		"Non-zero sDAI amount with valid price": {
+			sDAIAmount:         big.NewInt(500000000000000),
 			sDAIPrice:          price_two,
 			expectedTDAIAmount: big.NewInt(1000),
 			expectedErr:        nil,
@@ -158,13 +196,13 @@ func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
 			expectedErr:        errors.New("sDAI price is zero"),
 		},
 		"Real example": {
-			sDAIAmount:         big.NewInt(913),
+			sDAIAmount:         big.NewInt(913000000000000),
 			sDAIPrice:          price1,
 			expectedTDAIAmount: big.NewInt(1001),
 			expectedErr:        nil,
 		},
 		"Real example 2": {
-			sDAIAmount:         big.NewInt(913),
+			sDAIAmount:         big.NewInt(913000000000000),
 			sDAIPrice:          price2,
 			expectedTDAIAmount: big.NewInt(1001),
 			expectedErr:        nil,
@@ -172,7 +210,31 @@ func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
 		"Real example 3": {
 			sDAIAmount:         big.NewInt(90166324963409613),
 			sDAIPrice:          price3,
+			expectedTDAIAmount: big.NewInt(98766),
+			expectedErr:        nil,
+		},
+		"Real example 4": {
+			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
+			sDAIPrice:          price3,
 			expectedTDAIAmount: big.NewInt(98765432123456790),
+			expectedErr:        nil,
+		},
+		"Real example 5": {
+			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
+			sDAIPrice:          price3,
+			expectedTDAIAmount: big.NewInt(98765432123456791),
+			expectedErr:        nil,
+		},
+		"Real example 6": {
+			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
+			sDAIPrice:          price2,
+			expectedTDAIAmount: big.NewInt(98765406092329),
+			expectedErr:        nil,
+		},
+		"Rounds up on both divisions": {
+			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("1000000000000"),
+			sDAIPrice:          priceMinimallyAboveOne,
+			expectedTDAIAmount: big.NewInt(2),
 			expectedErr:        nil,
 		},
 	}
@@ -204,16 +266,15 @@ func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
 }
 
 func TestMintTradingDAIToUserAccount(t *testing.T) {
-	// Test Case Definition
 	tests := map[string]PoolTestCase{
 		"User has more sDAI than transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(250),
+					sDAIAmount:             big.NewInt(250000000000000), // amount is given in gsdai
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
-					userInitialSDAIBalance: big.NewInt(1000),
-					expectedTDAIAmount:     big.NewInt(500),
+					userInitialSDAIBalance: big.NewInt(1000000000000000), // amount is given in gsdai
+					expectedTDAIAmount:     big.NewInt(500),              // amount is given in utdai
 					expectedErr:            nil,
 					expectErr:              false,
 				},
@@ -222,10 +283,10 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 		"User has exactly the sDAI transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(500),
+					sDAIAmount:             big.NewInt(500000000000000),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
-					userInitialSDAIBalance: big.NewInt(1000),
+					userInitialSDAIBalance: big.NewInt(500000000000000),
 					expectedTDAIAmount:     big.NewInt(1000),
 					expectedErr:            nil,
 					expectErr:              false,
@@ -261,10 +322,10 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 		"User has large sDAI balance and small transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(1),
+					sDAIAmount:             big.NewInt(1000000000000),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
-					userInitialSDAIBalance: big.NewInt(1000000),
+					userInitialSDAIBalance: big.NewInt(1000000000000000),
 					expectedTDAIAmount:     big.NewInt(2),
 					expectedErr:            nil,
 					expectErr:              false,
@@ -284,14 +345,50 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 				},
 			},
 		},
-		"Real price will round down": {
+		"Real price will round down on even": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(913),
+					sDAIAmount:             big.NewInt(913000000000000),
 					sDAIPrice:              price2,
 					userAddr:               accAddrs[0],
-					userInitialSDAIBalance: big.NewInt(2000),
+					userInitialSDAIBalance: big.NewInt(2000000000000000),
 					expectedTDAIAmount:     big.NewInt(1000),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real price rounds down on uneven amount": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             big.NewInt(913123456789123),
+					sDAIPrice:              price2,
+					userAddr:               accAddrs[0],
+					userInitialSDAIBalance: big.NewInt(2000000000000000),
+					expectedTDAIAmount:     big.NewInt(1000),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real price rounds down on lowest sendable amount": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             big.NewInt(1),
+					sDAIPrice:              price2,
+					userAddr:               accAddrs[0],
+					userInitialSDAIBalance: big.NewInt(2000000000000000),
+					expectedTDAIAmount:     big.NewInt(0),
+					expectErr:              false,
+				},
+			},
+		},
+		"Minting 0 sDai results in 0 tDai": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             big.NewInt(0),
+					sDAIPrice:              price2,
+					userAddr:               accAddrs[0],
+					userInitialSDAIBalance: big.NewInt(2000000000000000),
+					expectedTDAIAmount:     big.NewInt(0),
 					expectErr:              false,
 				},
 			},
@@ -305,6 +402,78 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 					userInitialSDAIBalance: big.NewInt(1),
 					expectedTDAIAmount:     nil,
 					expectErr:              true,
+				},
+			},
+		},
+		"Real example 1": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             big.NewInt(913000000000000),
+					sDAIPrice:              price1,
+					userAddr:               accAddrs[0],
+					userInitialSDAIBalance: big.NewInt(913500000000000),
+					expectedTDAIAmount:     big.NewInt(1000),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real example 2": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             big.NewInt(913000000000000),
+					sDAIPrice:              price2,
+					userAddr:               accAddrs[0],
+					userInitialSDAIBalance: big.NewInt(913000000000000),
+					expectedTDAIAmount:     big.NewInt(1000),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real example 3": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             big.NewInt(913123456789),
+					sDAIPrice:              price2,
+					userAddr:               accAddrs[0],
+					userInitialSDAIBalance: big.NewInt(1000000000000),
+					expectedTDAIAmount:     big.NewInt(1),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real example 4": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
+					sDAIPrice:              price3,
+					userAddr:               accAddrs[0],
+					userInitialSDAIBalance: ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
+					expectedTDAIAmount:     big.NewInt(98765432123456789),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real example 5": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
+					sDAIPrice:              price3,
+					userAddr:               accAddrs[0],
+					userInitialSDAIBalance: ConvertStringToBigIntWithPanicOnErr("90166324963409614000000000000"),
+					expectedTDAIAmount:     big.NewInt(98765432123456790),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real example 6": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
+					sDAIPrice:              price2,
+					userAddr:               accAddrs[0],
+					userInitialSDAIBalance: ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
+					expectedTDAIAmount:     big.NewInt(98765406092328),
+					expectErr:              false,
 				},
 			},
 		},
@@ -392,16 +561,20 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 					).Amount.BigInt()
 
 					deltaPoolSDAI := new(big.Int).Sub(endingPoolSDAIBalance, initialPoolSDAIBalance)
-					require.Equal(t, transfer.sDAIAmount, deltaPoolSDAI, "Change in pool SDAI balance incorrect.")
+					equality := transfer.sDAIAmount.Cmp(deltaPoolSDAI)
+					require.Equal(t, 0, equality, "Change in pool SDAI balance incorrect. Expected %v, got %v", transfer.sDAIAmount, deltaPoolSDAI)
 
 					deltaPoolTDAI := new(big.Int).Sub(endingPoolTDAIBalance, initialPoolTDAIBalance)
-					require.Equal(t, big.NewInt(0), deltaPoolTDAI, "Change in pool TDAI balance incorrect. Should always be 0 when minting.")
+					equality = big.NewInt(0).Cmp(deltaPoolTDAI)
+					require.Equal(t, 0, equality, "Change in pool TDAI balance incorrect. Should always be 0 when minting. Expected %v, got %v", 0, deltaPoolTDAI)
 
 					deltaUserSDAI := new(big.Int).Sub(initialUserSDAIBalance, endingUserSDAIBalance)
-					require.Equal(t, transfer.sDAIAmount, deltaUserSDAI, "Change in user SDAI balance incorrect.")
+					equality = transfer.sDAIAmount.Cmp(deltaUserSDAI)
+					require.Equal(t, equality, 0, "Change in user SDAI balance incorrect. Expected %v, got %v", transfer.sDAIAmount, deltaUserSDAI)
 
 					deltaUserTDAI := new(big.Int).Sub(endingUserTDAIBalance, initialUserTDAIBalance)
-					require.Equal(t, transfer.expectedTDAIAmount, deltaUserTDAI, "Change in user TDAI balance incorrect.")
+					equality = transfer.expectedTDAIAmount.Cmp(deltaUserTDAI)
+					require.Equal(t, 0, equality, "Change in user TDAI balance incorrect. Expected %v, got %v", transfer.expectedTDAIAmount, deltaUserTDAI)
 				}
 			}
 		})
@@ -414,10 +587,10 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"User has more tDAI than transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(250),
+					sDAIAmount:             big.NewInt(250000000000000),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
-					userInitialTDAIBalance: big.NewInt(1000),
+					userInitialTDAIBalance: big.NewInt(1000000000000000),
 					expectedTDAIAmount:     big.NewInt(500),
 					expectedErr:            nil,
 					expectErr:              false,
@@ -427,7 +600,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"User has exactly the tDAI transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(500),
+					sDAIAmount:             big.NewInt(500000000000000),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(1000),
@@ -440,7 +613,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"User has less tDAI than transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(1000),
+					sDAIAmount:             big.NewInt(1000000000000000),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(250),
@@ -458,7 +631,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(0),
 					expectedTDAIAmount:     nil,
-					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 0utdai is smaller than 2000utdai: insufficient funds"),
+					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 0utdai is smaller than 1utdai: insufficient funds"),
 					expectErr:              true,
 				},
 			},
@@ -466,7 +639,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"User has large tDAI balance and small transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(1),
+					sDAIAmount:             big.NewInt(1000000000000),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(1000000),
@@ -479,12 +652,12 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"User has small tDAI balance and large transfer amount": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(1000000),
+					sDAIAmount:             big.NewInt(10000000000000000),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(1),
 					expectedTDAIAmount:     nil,
-					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 1utdai is smaller than 2000000utdai: insufficient funds"),
+					expectedErr:            errors.New("failed to send tDAI from user account to tDai pool account: spendable balance 1utdai is smaller than 20000utdai: insufficient funds"),
 					expectErr:              true,
 				},
 			},
@@ -492,7 +665,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"Real price will round up": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(913),
+					sDAIAmount:             big.NewInt(913000000000000),
 					sDAIPrice:              price2,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(2000),
@@ -501,15 +674,111 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 				},
 			},
 		},
+		"0 sDai transfer amount results in no change": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             big.NewInt(0),
+					sDAIPrice:              price2,
+					userAddr:               accAddrs[0],
+					userInitialTDAIBalance: big.NewInt(2000),
+					expectedTDAIAmount:     big.NewInt(0),
+					expectErr:              false,
+				},
+			},
+		},
 		"User has an invalid address": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             big.NewInt(1000000),
+					sDAIAmount:             big.NewInt(1000000000000),
 					sDAIPrice:              price_two,
 					userAddr:               accAddrs[1],
 					userInitialTDAIBalance: big.NewInt(1),
 					expectedTDAIAmount:     nil,
 					expectErr:              true,
+				},
+			},
+		},
+		"Real example 1": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             big.NewInt(913000000000000),
+					sDAIPrice:              price1,
+					userAddr:               accAddrs[0],
+					userInitialTDAIBalance: big.NewInt(1001),
+					expectedTDAIAmount:     big.NewInt(1001),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real example 2": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             big.NewInt(913000000000000),
+					sDAIPrice:              price2,
+					userAddr:               accAddrs[0],
+					userInitialTDAIBalance: big.NewInt(1001),
+					expectedTDAIAmount:     big.NewInt(1001),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real example 3": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             big.NewInt(90166324963409613),
+					sDAIPrice:              price3,
+					userAddr:               accAddrs[0],
+					userInitialTDAIBalance: big.NewInt(98767),
+					expectedTDAIAmount:     big.NewInt(98766),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real example 4": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
+					sDAIPrice:              price3,
+					userAddr:               accAddrs[0],
+					userInitialTDAIBalance: big.NewInt(98765432123456791),
+					expectedTDAIAmount:     big.NewInt(98765432123456790),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real example 5": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
+					sDAIPrice:              price3,
+					userAddr:               accAddrs[0],
+					userInitialTDAIBalance: big.NewInt(98765432123456791),
+					expectedTDAIAmount:     big.NewInt(98765432123456791),
+					expectErr:              false,
+				},
+			},
+		},
+		"Real example 6": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
+					sDAIPrice:              price2,
+					userAddr:               accAddrs[0],
+					userInitialTDAIBalance: big.NewInt(98765406092330),
+					expectedTDAIAmount:     big.NewInt(98765406092329),
+					expectErr:              false,
+				},
+			},
+		},
+		"Rounds up on both divisions": {
+			transfers: []PoolTestTransfer{
+				{
+					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("1000000000000"),
+					sDAIPrice:              priceMinimallyAboveOne,
+					userAddr:               accAddrs[0],
+					userInitialTDAIBalance: big.NewInt(2),
+					expectedTDAIAmount:     big.NewInt(2),
+					expectErr:              false,
 				},
 			},
 		},
@@ -606,16 +875,20 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 					).Amount.BigInt()
 
 					deltaPoolSDAI := new(big.Int).Sub(initialPoolSDAIBalance, endingPoolSDAIBalance)
-					require.Equal(t, transfer.sDAIAmount, deltaPoolSDAI, "Change in pool SDAI balance incorrect.")
+					equality := transfer.sDAIAmount.Cmp(deltaPoolSDAI)
+					require.Equal(t, 0, equality, "Change in pool SDAI balance incorrect. Expected %v, got %v", transfer.sDAIAmount, deltaPoolSDAI)
 
 					deltaPoolTDAI := new(big.Int).Sub(endingPoolTDAIBalance, initialPoolTDAIBalance)
-					require.Equal(t, big.NewInt(0), deltaPoolTDAI, "Change in pool TDAI balance incorrect. Should always be 0 when minting.")
+					equality = big.NewInt(0).Cmp(deltaPoolTDAI)
+					require.Equal(t, 0, equality, "Change in pool TDAI balance incorrect. Should always be 0 when minting. Expected %v, got %v", 0, deltaPoolTDAI)
 
 					deltaUserSDAI := new(big.Int).Sub(endingUserSDAIBalance, initialUserSDAIBalance)
-					require.Equal(t, transfer.sDAIAmount, deltaUserSDAI, "Change in user SDAI balance incorrect.")
+					equality = transfer.sDAIAmount.Cmp(deltaUserSDAI)
+					require.Equal(t, equality, 0, "Change in user SDAI balance incorrect. Expected %v, got %v", transfer.sDAIAmount, deltaUserSDAI)
 
 					deltaUserTDAI := new(big.Int).Sub(initialUserTDAIBalance, endingUserTDAIBalance)
-					require.Equal(t, transfer.expectedTDAIAmount, deltaUserTDAI, "Change in user TDAI balance incorrect.")
+					equality = transfer.expectedTDAIAmount.Cmp(deltaUserTDAI)
+					require.Equal(t, 0, equality, "Change in user TDAI balance incorrect. Expected %v, got %v", transfer.expectedTDAIAmount, deltaUserTDAI)
 				}
 			}
 		})
@@ -633,4 +906,14 @@ func ConvertStringToBigInt(str string) (*big.Int, error) {
 	}
 
 	return bigint, nil
+}
+
+func ConvertStringToBigIntWithPanicOnErr(str string) *big.Int {
+	bigint, err := ConvertStringToBigInt(str)
+
+	if err != nil {
+		panic("Could not convert string to big.Int")
+	}
+
+	return bigint
 }

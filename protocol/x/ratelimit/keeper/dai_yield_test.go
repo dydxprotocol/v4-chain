@@ -39,7 +39,7 @@ func TestMintNewTDaiYield(t *testing.T) {
 		},
 		{
 			name:                     "Successful minting",
-			initialSDAISupply:        sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewInt(200))),
+			initialSDAISupply:        sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewInt(200000000000000))),
 			initialTradingDAISupply:  sdk.NewCoins(sdk.NewCoin(types.TDaiDenom, sdkmath.NewInt(100))),
 			sdaiPrice:                new(big.Int).Mul(big.NewInt(1), new(big.Int).Exp(big.NewInt(types.BASE_10), big.NewInt(types.SDAI_DECIMALS), nil)),
 			expectedTDAISupply:       big.NewInt(100),

@@ -6,8 +6,20 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	sDaiToTDaiDenomExponentDecimals = new(big.Int).Abs(
+		big.NewInt(types.SDaiDenomExponent - assettypes.TDaiDenomExponent),
+	)
+	tenScaledBysDaiToTDaiDenomDecimals = new(big.Int).Exp(
+		big.NewInt(10),
+		sDaiToTDaiDenomExponentDecimals,
+		nil,
+	)
 )
 
 // MintTradingDAIToUserAccount transfers the input sDAI amount from the user's
@@ -122,13 +134,20 @@ func (k Keeper) GetTradingDAIFromSDAIAmount(ctx sdk.Context, sDaiAmount *big.Int
 		return nil, errors.New("sDAI price is zero")
 	}
 
-	return k.calculateTDaiAmount(sDaiAmount, sDAIPrice), nil
+	tDaiAmount := k.calculateTDaiAmount(sDaiAmount, sDAIPrice)
+
+	scaledTDaiAmount := k.scaleTDaiAmountByDenomExponent(tDaiAmount)
+
+	return scaledTDaiAmount, nil
 }
 
 // Inspired by the withdraw function of the Maker code at:
 // https://etherscan.deth.net/address/0x83f20f44975d03b1b09e64809b757c47f942beea
-func (k Keeper) GetTradingDAIFromSDAIAmountAndRoundUp(ctx sdk.Context, sDaiAmount *big.Int) (*big.Int, error) {
-	// Get the current sDAI price
+// NOTE: sDaiAmount should be provided as gsDai (i.e., scaled by the gsdai denom exponent)
+func (k Keeper) GetTradingDAIFromSDAIAmountAndRoundUp(
+	ctx sdk.Context,
+	sDaiAmount *big.Int,
+) (*big.Int, error) {
 	sDAIPrice, found := k.GetSDAIPrice(ctx)
 	if !found {
 		return nil, errorsmod.Wrap(
@@ -149,7 +168,12 @@ func (k Keeper) GetTradingDAIFromSDAIAmountAndRoundUp(ctx sdk.Context, sDaiAmoun
 		return nil, err
 	}
 
-	return tDaiAmount, nil
+	scaledTDaiAmount, err := k.scaleTDaiAmountByDenomExponentAndRoundUp(tDaiAmount)
+	if err != nil {
+		return nil, err
+	}
+
+	return scaledTDaiAmount, nil
 }
 
 func (k Keeper) calculateTDaiAmount(sDaiAmount *big.Int, sDAIPrice *big.Int) *big.Int {
@@ -167,4 +191,17 @@ func (k Keeper) calculateTDaiAmountAndRoundUp(sDaiAmount *big.Int, sDAIPrice *bi
 		return nil, err
 	}
 	return tDaiAmount, nil
+}
+
+func (k Keeper) scaleTDaiAmountByDenomExponent(tDaiAmount *big.Int) *big.Int {
+	scaledTDaiAmount := new(big.Int).Div(tDaiAmount, tenScaledBysDaiToTDaiDenomDecimals)
+	return scaledTDaiAmount
+}
+
+func (k Keeper) scaleTDaiAmountByDenomExponentAndRoundUp(tDaiAmount *big.Int) (*big.Int, error) {
+	scaledTDaiAmount, err := divideAndRoundUp(tDaiAmount, tenScaledBysDaiToTDaiDenomDecimals)
+	if err != nil {
+		return big.NewInt(0), err
+	}
+	return scaledTDaiAmount, nil
 }
