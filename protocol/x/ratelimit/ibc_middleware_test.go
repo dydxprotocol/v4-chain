@@ -1,6 +1,7 @@
 package ratelimit_test
 
 import (
+	"fmt"
 	"math/big"
 	"strconv"
 	"testing"
@@ -175,7 +176,7 @@ func setupChainForIBC(
 		k := tApp.App.RatelimitKeeper
 		k.SetSDAIPrice(ctx, sDaiToTDaiConversionRateAsBigInt)
 		denomTrace := transfertypes.DenomTrace{
-			Path:      "transfer/channel-0",
+			Path:      ratelimittypes.SDaiBaseDenomPathPrefix,
 			BaseDenom: ratelimittypes.SDaiBaseDenom,
 		}
 		tApp.App.TransferKeeper.SetDenomTrace(
@@ -264,25 +265,38 @@ func (suite *KeeperTestSuite) SetupTest(accountCoinDenom string, accountCoinAmou
 
 func (suite *KeeperTestSuite) setupSDaiDenomTrace() {
 	chains := []*ibctesting.TestChain{suite.chainA, suite.chainB, suite.chainC}
+	sDaiToTDaiConversionRate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	sDaiToTDaiConversionRateAsBigInt, found := new(big.Int).SetString(sDaiToTDaiConversionRate, 10)
+	if !found {
+		panic("Could not convert sdai to tdai conversion rate to big.Int")
+	}
+
 	for _, chain := range chains {
 		chainApp := chain.App.(*app.App)
 		chainApp.TransferKeeper.SetDenomTrace(
 			chain.GetContext(),
 			transfertypes.DenomTrace{
-				Path:      "transfer/channel-0",
+				Path:      ratelimittypes.SDaiBaseDenomPathPrefix,
 				BaseDenom: ratelimittypes.SDaiBaseDenom,
 			},
+		)
+
+		chainApp.RatelimitKeeper.SetSDAIPrice(
+			chain.GetContext(),
+			sDaiToTDaiConversionRateAsBigInt,
 		)
 	}
 }
 
 func (suite *KeeperTestSuite) TestSendTransfer() {
 	var (
-		coin          sdk.Coin
-		path          *ibctesting.Path
-		sender        sdk.AccAddress
-		timeoutHeight clienttypes.Height
-		memo          string
+		coin                  sdk.Coin
+		path                  *ibctesting.Path
+		sender                sdk.AccAddress
+		timeoutHeight         clienttypes.Height
+		isEscrow              bool     // if false, then we expect token to be burned
+		accountCoinAmountSent *big.Int // amount of coins in account that were sent
+		memo                  string
 	)
 
 	testCases := []struct {
@@ -294,6 +308,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 		additionalSetup   func()
 		malleate          func()
 		expPass           bool
+		expEarlyErr       bool
 	}{
 		{
 			name:              "successful transfer with native token",
@@ -302,8 +317,12 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			sendCoinDenom:     sdk.DefaultBondDenom,
 			sendCoinAmount:    sdkmath.NewInt(100),
 			additionalSetup:   func() {},
-			malleate:          func() {},
-			expPass:           true,
+			malleate: func() {
+				accountCoinAmountSent = big.NewInt(100)
+				isEscrow = true
+			},
+			expPass:     true,
+			expEarlyErr: false,
 		},
 		{
 			name:              "successful transfer with tDAI and sDAI: basic",
@@ -312,11 +331,15 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			sendCoinDenom:     ratelimittypes.SDaiDenom,
 			sendCoinAmount:    sdkmath.NewInt(100), // Note: represents amount of gsdai
 			additionalSetup:   suite.setupSDaiDenomTrace,
-			malleate:          func() {},
-			expPass:           true,
+			malleate: func() {
+				accountCoinAmountSent = big.NewInt(1)
+				isEscrow = false
+			},
+			expPass:     true,
+			expEarlyErr: false,
 		},
 		{
-			name:              "successful transfer with tDAI and sDAI: account sends all of its funds",
+			name:              "successful transfer with tDAI and sDAI: real scenario",
 			accountCoinDenom:  assettypes.TDaiDenom,
 			accountCoinAmount: constants.TDai_Asset_500_000.Quantums.BigInt(), // Note: represents amount of utdai
 			sendCoinDenom:     ratelimittypes.SDaiDenom,
@@ -325,8 +348,54 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				return sdkmath.NewIntFromBigInt(bi)
 			}(), // Note: represents amount of gsdai
 			additionalSetup: suite.setupSDaiDenomTrace,
+			malleate: func() {
+				accountCoinAmountSent = big.NewInt(500000)
+				isEscrow = false
+			},
+			expPass:     true,
+			expEarlyErr: false,
+		},
+		{
+			name:              "successful transfer with tDAI and sDAI: account sends its entire tDAI balance",
+			accountCoinDenom:  assettypes.TDaiDenom,
+			accountCoinAmount: big.NewInt(500000), // Note: represents amount of utdai
+			sendCoinDenom:     ratelimittypes.SDaiDenom,
+			sendCoinAmount: func() sdkmath.Int {
+				bi, _ := new(big.Int).SetString("496681580107906596", 10)
+				return sdkmath.NewIntFromBigInt(bi)
+			}(), // Note: represents amount of gsdai
+			additionalSetup: suite.setupSDaiDenomTrace,
+			malleate: func() {
+				accountCoinAmountSent = big.NewInt(500000)
+				isEscrow = false
+			},
+			expPass:     true,
+			expEarlyErr: false,
+		},
+		{
+			name:              "failed transfer with tDAI and sDAI: utdai balance too low",
+			accountCoinDenom:  assettypes.TDaiDenom,
+			accountCoinAmount: big.NewInt(1), // Note: represents amount of utdai
+			sendCoinDenom:     ratelimittypes.SDaiDenom,
+			sendCoinAmount: func() sdkmath.Int {
+				bi, _ := new(big.Int).SetString("496681580107906596", 10)
+				return sdkmath.NewIntFromBigInt(bi)
+			}(), // Note: represents amount of gsdai
+			additionalSetup: suite.setupSDaiDenomTrace,
 			malleate:        func() {},
-			expPass:         true,
+			expPass:         false,
+			expEarlyErr:     true,
+		},
+		{
+			name:              "failed transfer with tDAI and sDAI: sending 0 amount",
+			accountCoinDenom:  assettypes.TDaiDenom,
+			accountCoinAmount: big.NewInt(10000), // Note: represents amount of utdai
+			sendCoinDenom:     ratelimittypes.SDaiDenom,
+			sendCoinAmount:    sdkmath.NewInt(0), // Note: represents amount of gsdai
+			additionalSetup:   suite.setupSDaiDenomTrace,
+			malleate:          func() {},
+			expPass:           false,
+			expEarlyErr:       true,
 		},
 	}
 
@@ -349,6 +418,11 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			//create IBC token on chainA
 			transferMsg := transfertypes.NewMsgTransfer(path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, coin, suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.GetTimeoutHeight(), 0, "")
 			result, err := suite.chainB.SendMsgs(transferMsg)
+			if tc.expEarlyErr {
+				fmt.Println("ERR IS ", err)
+				suite.Require().Error(err)
+				return
+			}
 			suite.Require().NoError(err) // message committed
 
 			packet, err := ibctesting.ParsePacketFromEvents(result.Events)
@@ -358,6 +432,8 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			suite.Require().NoError(err)
 
 			tc.malleate()
+
+			initialSupply := suite.chainA.App.(*app.App).BankKeeper.GetSupply(suite.chainA.GetContext(), coin.GetDenom()).Amount
 
 			msg := transfertypes.NewMsgTransfer(
 				path.EndpointA.ChannelConfig.PortID,
@@ -369,17 +445,65 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 
 			res, err := suite.chainA.App.(*app.App).TransferKeeper.Transfer(suite.chainA.GetContext(), msg)
 
-			// check total amount in escrow of sent token denom on sending chain
-			amount := suite.chainA.App.(*app.App).TransferKeeper.GetTotalEscrowForDenom(suite.chainA.GetContext(), coin.GetDenom())
-			suite.Require().Equal(tc.sendCoinAmount, amount.Amount)
-
-			if tc.expPass {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(res)
-			} else {
+			if !tc.expPass {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+
+				supplyRemaining := suite.chainA.App.(*app.App).BankKeeper.GetSupply(suite.chainA.GetContext(), coin.GetDenom())
+
+				// Check whether appropriate amount of coins has been escrowed / burned
+				if isEscrow {
+					// When a token is escrowed, we still expect it to be part of the total denom supply
+					suite.Require().Equal(initialSupply, supplyRemaining.Amount)
+					amount := suite.chainA.App.(*app.App).TransferKeeper.GetTotalEscrowForDenom(suite.chainA.GetContext(), coin.GetDenom())
+					suite.Require().Equal(tc.sendCoinAmount, amount.Amount)
+				} else {
+					deltaAmount := initialSupply.Sub(supplyRemaining.Amount)
+					suite.Require().Equal(tc.sendCoinAmount, deltaAmount)
+				}
+
+				// Check that account does not hold the sent amount anymore
+				accountBalance := suite.chainA.App.(*app.App).BankKeeper.GetBalance(suite.chainA.GetContext(), sender, tc.accountCoinDenom)
+				actualAccountCoinAmountSent := tc.accountCoinAmount.Sub(tc.accountCoinAmount, accountBalance.Amount.BigInt())
+				suite.Require().Equal(accountCoinAmountSent, actualAccountCoinAmountSent)
 			}
+
+			// if tc.expPass {
+			// 	suite.Require().NoError(err)
+			// 	suite.Require().NotNil(res)
+			// } else {
+			// 	suite.Require().Error(err)
+			// 	suite.Require().Nil(res)
+			// // }
+
+			// supplyRemaining := suite.chainA.App.(*app.App).BankKeeper.GetSupply(suite.chainA.GetContext(), coin.GetDenom())
+
+			// // Check whether appropriate amount of coins has been escrowed / burned
+			// if isEscrow {
+			// 	// When a token is escrowed, we still expect it to be part of the total denom supply
+			// 	suite.Require().Equal(initialSupply, supplyRemaining.Amount)
+			// 	amount := suite.chainA.App.(*app.App).TransferKeeper.GetTotalEscrowForDenom(suite.chainA.GetContext(), coin.GetDenom())
+			// 	suite.Require().Equal(tc.sendCoinAmount, amount.Amount)
+			// } else {
+			// 	deltaAmount := initialSupply.Sub(supplyRemaining.Amount)
+			// 	suite.Require().Equal(tc.sendCoinAmount, deltaAmount)
+			// }
+
+			// // Check that account does not hold the sent amount anymore
+			// accountBalance := suite.chainA.App.(*app.App).BankKeeper.GetBalance(suite.chainA.GetContext(), sender, tc.accountCoinDenom)
+			// actualAccountCoinAmountSent := tc.accountCoinAmount.Sub(tc.accountCoinAmount, accountBalance.Amount.BigInt())
+			// suite.Require().Equal(accountCoinAmountSent, actualAccountCoinAmountSent)
+
+			// if tc.expPass {
+			// 	suite.Require().NoError(err)
+			// 	suite.Require().NotNil(res)
+			// } else {
+			// 	suite.Require().Error(err)
+			// 	suite.Require().Nil(res)
+			// }
 		})
 	}
 }

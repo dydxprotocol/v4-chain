@@ -697,8 +697,8 @@ github.com/Shopify/toxiproxy/v2 v2.5.0 h1:i4LPT+qrSlKNtQf5QliVjdP08GyAH8+BUIc9gT
 github.com/Shopify/toxiproxy/v2 v2.5.0/go.mod h1:yhM2epWtAmel9CB8r2+L+PCmhH6yH2pITaPAo7jxJl0=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
 github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
-github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240718000521-588bec01dd9a h1:1sPYdMHavL2uucP7UazhKrsctyxFBTGjHhSWDfdLIAM=
-github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240718000521-588bec01dd9a/go.mod h1:zdRV9kkL1blzF90ZYHYFU+KtzFgjDxDvWC8fz2hQYoM=
+github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240902125131-7e9b399e027e h1:Og10ymy4HLJStAgEcKxH19qRBeTRE+c6qb8/88ba7ys=
+github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240902125131-7e9b399e027e/go.mod h1:zdRV9kkL1blzF90ZYHYFU+KtzFgjDxDvWC8fz2hQYoM=
 github.com/VictoriaMetrics/fastcache v1.12.2 h1:N0y9ASrJ0F6h0QaC3o6uJb3NIZ9VKLjCM7NQbSmF7WI=
 github.com/VictoriaMetrics/fastcache v1.12.2/go.mod h1:AmC+Nzz1+3G2eCPapF6UcsnkThDcMsQicp4xDukwJYI=
 github.com/VividCortex/gohistogram v1.0.0 h1:6+hBz+qvs0JOrrNhhmR7lFxo5sINxBCGXrdtl/UvroE=

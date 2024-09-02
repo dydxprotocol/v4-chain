@@ -5,6 +5,8 @@ package keeper
 // See v4-chain/protocol/x/ratelimit/LICENSE and v4-chain/protocol/x/ratelimit/README.md for licensing information.
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/big"
 
 	"cosmossdk.io/store/prefix"
@@ -13,6 +15,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
@@ -213,13 +216,6 @@ func (k Keeper) TrySendRateLimitedPacket(ctx sdk.Context, packet channeltypes.Pa
 		return err
 	}
 
-	if packetInfo.Denom == types.SDaiDenom {
-		err = k.WithdrawSDaiFromTDai(ctx, packetInfo.Sender, packetInfo.Amount)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Store the sequence number of the packet so that if the transfer fails,
 	// we can identify if it was sent during this quota and can revert the outflow
 	k.SetPendingSendPacket(ctx, packetInfo.ChannelID, packet.Sequence)
@@ -240,4 +236,28 @@ func (k Keeper) WriteAcknowledgement(
 // GetAppVersion wraps IBC ChannelKeeper's GetAppVersion function
 func (k Keeper) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
 	return k.ics4Wrapper.GetAppVersion(ctx, portID, channelID)
+}
+
+// PreprocessSendPacket implements the ICS4WrapperWithPreprocess interface
+func (k Keeper) PreprocessSendPacket(ctx sdk.Context, packet []byte) error {
+	var packetData transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet, &packetData); err != nil {
+		return err
+	}
+
+	if packetData.Denom == types.SDaiBaseDenomFullPath {
+		amount, ok := new(big.Int).SetString(packetData.Amount, 10)
+		if !ok {
+			return fmt.Errorf("could not convert amount from string to big.Int")
+		}
+		senderAddress, err := sdk.AccAddressFromBech32(packetData.Sender)
+		if err != nil {
+			return err
+		}
+		err = k.WithdrawSDaiFromTDai(ctx, senderAddress, amount)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

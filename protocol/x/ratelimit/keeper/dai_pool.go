@@ -31,7 +31,6 @@ func (k Keeper) MintTradingDAIToUserAccount(
 	sDAIAmount *big.Int,
 ) error {
 
-	// TODO [YBCP-68]: Take into account coin denoms
 	tradingDAIAmount, err := k.GetTradingDAIFromSDAIAmount(ctx, sDAIAmount)
 	if err != nil {
 		return errorsmod.Wrap(err, "failed to convert sDAI to trading DAI")
@@ -66,7 +65,6 @@ func (k Keeper) WithdrawSDaiFromTDai(
 	sDaiAmount *big.Int,
 ) error {
 
-	// TODO [YBCP-68]: Take into account coin denoms
 	tDaiDenomAmount, err := k.GetTradingDAIFromSDAIAmountAndRoundUp(ctx, sDaiAmount)
 	if err != nil {
 		return err

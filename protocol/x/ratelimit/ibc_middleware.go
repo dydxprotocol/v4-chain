@@ -226,6 +226,11 @@ func (im IBCMiddleware) WriteAcknowledgement(
 	return im.keeper.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }
 
+// PreprocessSendPacket implements the ICS4WrapperWithPreprocess interface
+func (im IBCMiddleware) PreprocessSendPacket(ctx sdk.Context, packet []byte) error {
+	return im.keeper.PreprocessSendPacket(ctx, packet)
+}
+
 // GetAppVersion returns the application version of the underlying application
 func (i IBCMiddleware) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
 	return i.keeper.GetAppVersion(ctx, portID, channelID)
