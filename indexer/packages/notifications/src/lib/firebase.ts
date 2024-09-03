@@ -3,13 +3,17 @@ import {
   App,
   cert,
   initializeApp,
-  ServiceAccount,
 } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
 
 import config from '../config';
 
-const initializeFirebaseApp = () => {
+// Helper function to initialize Firebase App object that is used to send notifications
+function initializeFirebaseApp(): App | undefined {
+  // Create credentials object from config variables.
+  // To prevent AWS Secrets Manager from altering the private key, the key is base64 encoded
+  // before being submitted. Below, we decode the string and replace the escaped
+  // linebreak characters
   const defaultGoogleApplicationCredentials: { [key: string]: string } = {
     project_id: config.FIREBASE_PROJECT_ID,
     private_key: Buffer.from(config.FIREBASE_PRIVATE_KEY_BASE64, 'base64').toString('ascii').replace(/\\n/g, '\n'),
@@ -21,12 +25,10 @@ const initializeFirebaseApp = () => {
     message: 'Initializing Firebase App',
   });
 
-  const serviceAccount: ServiceAccount = defaultGoogleApplicationCredentials;
-
   let firebaseApp: App;
   try {
     firebaseApp = initializeApp({
-      credential: cert(serviceAccount),
+      credential: cert(defaultGoogleApplicationCredentials),
     });
   } catch (error) {
     logger.error({
@@ -43,10 +45,12 @@ const initializeFirebaseApp = () => {
   });
 
   return firebaseApp;
-};
+}
 
 const firebaseApp = initializeFirebaseApp();
-// Initialize Firebase Messaging if the app was initialized successfully
+
+// Initialize Firebase Messaging if the firebaseApp was initialized successfully
+// This can fail if the credentials passed to the firebaseApp are invalid
 let firebaseMessaging = null;
 if (firebaseApp) {
   try {

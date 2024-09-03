@@ -16,8 +16,7 @@
     "build": "rm -rf build/ && tsc",
     "build:prod": "pnpm run build",
     "build:watch": "pnpm run build -- --watch",
-    "test": "NODE_ENV=test jest --runInBand --forceExit",
-    "testNotification": "SERVICE_NAME=notifications ts-node src/local_test.ts TEST_ADDRESS"
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
   },
   "repository": {
     "type": "git",

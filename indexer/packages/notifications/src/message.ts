@@ -24,6 +24,7 @@ export async function sendFirebaseMessage(
     return;
   }
 
+  // Each set of tokens for a users should have the same language
   const language = tokens[0].language;
   const { title, body } = deriveLocalizedNotificationMessage(
     notification,
