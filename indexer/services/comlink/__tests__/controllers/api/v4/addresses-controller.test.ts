@@ -10,11 +10,13 @@ import {
   BlockTable,
   liquidityTierRefresher,
   SubaccountTable,
+  FirebaseNotificationTokenTable,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod } from '../../../../src/types';
 import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
 import { stats } from '@dydxprotocol-indexer/base';
+import config from '../../../../src/config';
 
 describe('addresses-controller#V4', () => {
   const latestHeight: string = '3';
@@ -42,6 +44,7 @@ describe('addresses-controller#V4', () => {
 
   afterEach(async () => {
     await dbHelpers.clearData();
+    jest.clearAllMocks();
   });
 
   const invalidAddress: string = 'invalidAddress';
@@ -574,4 +577,142 @@ describe('addresses-controller#V4', () => {
     });
   });
 
+  describe('/:address/testNotification', () => {
+    it('Post /:address/testNotification throws error in production', async () => {
+      // Mock the config to simulate production environment
+      const originalNodeEnv = config.NODE_ENV;
+      config.NODE_ENV = 'production';
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${testConstants.defaultAddress}/testNotification`,
+        expectedStatus: 404,
+      });
+
+      expect(response.statusCode).toEqual(404);
+      // Restore the original NODE_ENV
+      config.NODE_ENV = originalNodeEnv;
+    });
+  });
+
+  describe('/:address/registerToken', () => {
+    it('Post /:address/registerToken with valid params returns 200', async () => {
+      const token = 'validToken';
+      const language = 'en';
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
+        body: { token, language },
+        expectedStatus: 200,
+      });
+
+      expect(response.body).toEqual({});
+      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1, {
+        path: '/:address/registerToken',
+        method: 'POST',
+      });
+    });
+
+    it('should register a new token', async () => {
+      // Register a new token
+      const newToken = 'newToken';
+      const language = 'en';
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
+        body: { token: newToken, language },
+        expectedStatus: 200,
+      });
+
+      // Check that old tokens are deleted and new token is registered
+      const remainingTokens = await FirebaseNotificationTokenTable.findAll({}, []);
+      expect(remainingTokens.map((t) => t.token)).toContain(newToken);
+    });
+
+    it('Post /:address/registerToken with valid params calls TokenTable registerToken', async () => {
+      jest.spyOn(FirebaseNotificationTokenTable, 'registerToken');
+      const token = 'validToken';
+      const language = 'en';
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
+        body: { token, language },
+        expectedStatus: 200,
+      });
+      expect(FirebaseNotificationTokenTable.registerToken).toHaveBeenCalledWith(
+        token, testConstants.defaultAddress, language,
+      );
+      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1, {
+        path: '/:address/registerToken',
+        method: 'POST',
+      });
+    });
+
+    it('Post /:address/registerToken with invalid address returns 404', async () => {
+      const token = 'validToken';
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${invalidAddress}/registerToken`,
+        body: { token },
+        expectedStatus: 404,
+      });
+
+      expect(response.body).toEqual({
+        errors: [
+          {
+            msg: 'No wallet found with address: invalidAddress',
+          },
+        ],
+      });
+      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.404', 1, {
+        path: '/:address/registerToken',
+        method: 'POST',
+      });
+    });
+
+    it.each([
+      ['validToken', '', 'Invalid language code', 'language'],
+      ['validToken', 'qq', 'Invalid language code', 'language'],
+    ])('Post /:address/registerToken with bad language params returns 400', async (token, language, errorMsg, errorParam) => {
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
+        body: { token, language },
+        expectedStatus: 400,
+      });
+
+      expect(response.body).toEqual({
+        errors: [
+          {
+            location: 'body',
+            msg: errorMsg,
+            param: errorParam,
+            value: language,
+          },
+        ],
+      });
+    });
+
+    it.each([
+      ['', 'en', 'Token cannot be empty', 'token'],
+    ])('Post /:address/registerToken with bad token params returns 400', async (token, language, errorMsg, errorParam) => {
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
+        body: { token, language },
+        expectedStatus: 400,
+      });
+
+      expect(response.body).toEqual({
+        errors: [
+          {
+            location: 'body',
+            msg: errorMsg,
+            param: errorParam,
+            value: token,
+          },
+        ],
+      });
+    });
+  });
 });

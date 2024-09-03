@@ -21,6 +21,7 @@ export async function findAll(
   {
     address,
     limit,
+    updatedBeforeOrAt,
   }: FirebaseNotificationTokenQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
@@ -40,6 +41,10 @@ export async function findAll(
 
   if (address) {
     baseQuery = baseQuery.where(FirebaseNotificationTokenColumns.address, address);
+  }
+
+  if (updatedBeforeOrAt) {
+    baseQuery = baseQuery.where(FirebaseNotificationTokenColumns.updatedAt, '<=', updatedBeforeOrAt);
   }
 
   if (options.orderBy !== undefined) {
