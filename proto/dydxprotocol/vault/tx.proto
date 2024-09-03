@@ -23,6 +23,10 @@ service Msg {
 
   // SetVaultParams sets the parameters of a specific vault.
   rpc SetVaultParams(MsgSetVaultParams) returns (MsgSetVaultParamsResponse);
+
+  // UnlockShares unlocks an owner's shares that are due to unlock by the block
+  // height that this transaction is included in.
+  rpc UnlockShares(MsgUnlockShares) returns (MsgUnlockSharesResponse);
 }
 
 // MsgDepositToMegavault deposits the specified asset from the subaccount to
@@ -80,3 +84,31 @@ message MsgSetVaultParams {
 
 // MsgSetVaultParamsResponse is the Msg/SetVaultParams response type.
 message MsgSetVaultParamsResponse {}
+
+// MsgUnlockShares is the Msg/UnlockShares request type.
+message MsgUnlockShares {
+  // Authority is the address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // Address of the owner to unlock shares of.
+  string owner_address = 2;
+}
+
+// MsgUnlockSharesResponse is the Msg/UnlockShares response type.
+message MsgUnlockSharesResponse {
+  // The number of shares unlocked.
+  NumShares unlocked_shares = 1 [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+// Deprecated since v6.x as is replaced by MsgUpdateDefaultQuotingParams.
+message MsgUpdateParams {
+  option deprecated = true;
+  // Authority is the address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The parameters to update. Each field must be set.
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}

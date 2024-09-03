@@ -8,13 +8,13 @@
 }
  */
 export interface AuxoEventJson {
-  upgrade_tag: string;
-  prefix: string;
-  region: string;
+  upgrade_tag: string,
+  prefix: string,
+  region: string,
   // In our naming we often times use the appreviated region name
-  regionAbbrev: string;
-  addNewKafkaTopics: boolean;
-  onlyRunDbMigrationAndCreateKafkaTopics: boolean;
+  regionAbbrev: string,
+  addNewKafkaTopics: boolean,
+  onlyRunDbMigrationAndCreateKafkaTopics: boolean,
 }
 
 // EcsServiceName to task definition arn mapping

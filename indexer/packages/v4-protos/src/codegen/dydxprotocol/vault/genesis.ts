@@ -1,4 +1,4 @@
-import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
+import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType, OwnerShareUnlocks, OwnerShareUnlocksSDKType } from "./share";
 import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
 import * as _m0 from "protobufjs/minimal";
@@ -6,9 +6,9 @@ import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/vault`'s genesis state. */
 
 export interface GenesisState {
-  /** The total number of shares. */
+  /** The total number of shares, including any locked ones. */
   totalShares?: NumShares;
-  /** The shares of each owner. */
+  /** The shares of each owner, including any locked ones. */
 
   ownerShares: OwnerShare[];
   /** The vaults. */
@@ -17,13 +17,16 @@ export interface GenesisState {
   /** The default quoting parameters for all vaults. */
 
   defaultQuotingParams?: QuotingParams;
+  /** All owner share unlocks. */
+
+  allOwnerShareUnlocks: OwnerShareUnlocks[];
 }
 /** GenesisState defines `x/vault`'s genesis state. */
 
 export interface GenesisStateSDKType {
-  /** The total number of shares. */
+  /** The total number of shares, including any locked ones. */
   total_shares?: NumSharesSDKType;
-  /** The shares of each owner. */
+  /** The shares of each owner, including any locked ones. */
 
   owner_shares: OwnerShareSDKType[];
   /** The vaults. */
@@ -32,6 +35,9 @@ export interface GenesisStateSDKType {
   /** The default quoting parameters for all vaults. */
 
   default_quoting_params?: QuotingParamsSDKType;
+  /** All owner share unlocks. */
+
+  all_owner_share_unlocks: OwnerShareUnlocksSDKType[];
 }
 /** Vault defines the state of a vault. */
 
@@ -129,7 +135,8 @@ function createBaseGenesisState(): GenesisState {
     totalShares: undefined,
     ownerShares: [],
     vaults: [],
-    defaultQuotingParams: undefined
+    defaultQuotingParams: undefined,
+    allOwnerShareUnlocks: []
   };
 }
 
@@ -149,6 +156,10 @@ export const GenesisState = {
 
     if (message.defaultQuotingParams !== undefined) {
       QuotingParams.encode(message.defaultQuotingParams, writer.uint32(34).fork()).ldelim();
+    }
+
+    for (const v of message.allOwnerShareUnlocks) {
+      OwnerShareUnlocks.encode(v!, writer.uint32(42).fork()).ldelim();
     }
 
     return writer;
@@ -179,6 +190,10 @@ export const GenesisState = {
           message.defaultQuotingParams = QuotingParams.decode(reader, reader.uint32());
           break;
 
+        case 5:
+          message.allOwnerShareUnlocks.push(OwnerShareUnlocks.decode(reader, reader.uint32()));
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -194,6 +209,7 @@ export const GenesisState = {
     message.ownerShares = object.ownerShares?.map(e => OwnerShare.fromPartial(e)) || [];
     message.vaults = object.vaults?.map(e => Vault.fromPartial(e)) || [];
     message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
+    message.allOwnerShareUnlocks = object.allOwnerShareUnlocks?.map(e => OwnerShareUnlocks.fromPartial(e)) || [];
     return message;
   }
 

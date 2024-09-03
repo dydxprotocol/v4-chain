@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 
 	"github.com/stretchr/testify/require"
 )
@@ -70,6 +71,10 @@ func TestIsDydxMsg_Invalid(t *testing.T) {
 		appmsgs.AppInjectedMsgSamples,
 		appmsgs.NormalMsgsDydxCustom,
 		appmsgs.InternalMsgSamplesDydxCustom,
+		map[string]sdk.Msg{
+			// nolint:staticcheck
+			"/dydxprotocol.vault.MsgUpdateParams": &vaulttypes.MsgUpdateParams{},
+		},
 	)
 	allMsgsMinusDydx := lib.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
 	for key := range allDydxMsgs {

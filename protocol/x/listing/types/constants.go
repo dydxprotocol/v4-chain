@@ -5,7 +5,7 @@ const (
 
 	DefaultFundingPpm = 0
 
-	LiquidityTier_LongTail uint32 = 2
+	LiquidityTier_Isolated uint32 = 4
 
 	DefaultStepBaseQuantums uint64 = 1_000_000
 

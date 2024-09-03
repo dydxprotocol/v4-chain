@@ -27,6 +27,12 @@ import {
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import Big from 'big.js';
 
+const defaultWallet = {
+  ...testConstants.defaultWallet,
+  address: defaultWalletAddress, // defaultWalletAddress != testConstants.defaultWallet.address
+
+};
+
 describe('transfers-controller#V4', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -53,10 +59,8 @@ describe('transfers-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         createdAtHeight: testConstants.createdHeight,
       };
-      await WalletTable.create({
-        address: testConstants.defaultWalletAddress,
-        totalTradingRewards: '0',
-      });
+      // use wallet2 to not create duplicate
+      await WalletTable.create(testConstants.defaultWallet2);
       await Promise.all([
         TransferTable.create(testConstants.defaultTransfer),
         TransferTable.create(transfer2),
@@ -177,10 +181,7 @@ describe('transfers-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         createdAtHeight: testConstants.createdHeight,
       };
-      await WalletTable.create({
-        address: testConstants.defaultWalletAddress,
-        totalTradingRewards: '0',
-      });
+      await WalletTable.create(defaultWallet);
       await Promise.all([
         TransferTable.create(testConstants.defaultTransfer),
         TransferTable.create(transfer2),
@@ -458,10 +459,7 @@ describe('transfers-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         createdAtHeight: testConstants.createdHeight,
       };
-      await WalletTable.create({
-        address: testConstants.defaultWalletAddress,
-        totalTradingRewards: '0',
-      });
+      await WalletTable.create(defaultWallet);
       await Promise.all([
         TransferTable.create(testConstants.defaultTransfer),
         TransferTable.create(transfer2),
@@ -582,10 +580,7 @@ describe('transfers-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         createdAtHeight: testConstants.createdHeight,
       };
-      await WalletTable.create({
-        address: testConstants.defaultWalletAddress,
-        totalTradingRewards: '0',
-      });
+      await WalletTable.create(defaultWallet);
       await Promise.all([
         TransferTable.create(testConstants.defaultTransfer),
         TransferTable.create(transfer2),
@@ -735,10 +730,7 @@ describe('transfers-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         createdAtHeight: testConstants.createdHeight,
       };
-      await WalletTable.create({
-        address: testConstants.defaultWalletAddress,
-        totalTradingRewards: '0',
-      });
+      await WalletTable.create(defaultWallet);
       await Promise.all([
         TransferTable.create(testConstants.defaultTransfer),
         TransferTable.create(transfer2),
@@ -821,10 +813,7 @@ describe('transfers-controller#V4', () => {
         createdAt: createdDateTime.toISO(),
         createdAtHeight: createdHeight,
       };
-      await WalletTable.create({
-        address: testConstants.defaultWalletAddress,
-        totalTradingRewards: '0',
-      });
+      await WalletTable.create(defaultWallet);
       await Promise.all([
         TransferTable.create(transferFromNonParent),
         TransferTable.create(transferToNonParent),

@@ -1,5 +1,5 @@
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
-import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
+import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType, Params, ParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
 import { NumShares, NumSharesSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
@@ -102,6 +102,60 @@ export interface MsgSetVaultParamsResponse {}
 /** MsgSetVaultParamsResponse is the Msg/SetVaultParams response type. */
 
 export interface MsgSetVaultParamsResponseSDKType {}
+/** MsgUnlockShares is the Msg/UnlockShares request type. */
+
+export interface MsgUnlockShares {
+  authority: string;
+  /** Address of the owner to unlock shares of. */
+
+  ownerAddress: string;
+}
+/** MsgUnlockShares is the Msg/UnlockShares request type. */
+
+export interface MsgUnlockSharesSDKType {
+  authority: string;
+  /** Address of the owner to unlock shares of. */
+
+  owner_address: string;
+}
+/** MsgUnlockSharesResponse is the Msg/UnlockShares response type. */
+
+export interface MsgUnlockSharesResponse {
+  /** The number of shares unlocked. */
+  unlockedShares?: NumShares;
+}
+/** MsgUnlockSharesResponse is the Msg/UnlockShares response type. */
+
+export interface MsgUnlockSharesResponseSDKType {
+  /** The number of shares unlocked. */
+  unlocked_shares?: NumSharesSDKType;
+}
+/**
+ * MsgUpdateParams is the Msg/UpdateParams request type.
+ * Deprecated since v6.x as is replaced by MsgUpdateDefaultQuotingParams.
+ */
+
+/** @deprecated */
+
+export interface MsgUpdateParams {
+  authority: string;
+  /** The parameters to update. Each field must be set. */
+
+  params?: Params;
+}
+/**
+ * MsgUpdateParams is the Msg/UpdateParams request type.
+ * Deprecated since v6.x as is replaced by MsgUpdateDefaultQuotingParams.
+ */
+
+/** @deprecated */
+
+export interface MsgUpdateParamsSDKType {
+  authority: string;
+  /** The parameters to update. Each field must be set. */
+
+  params?: ParamsSDKType;
+}
 
 function createBaseMsgDepositToMegavault(): MsgDepositToMegavault {
   return {
@@ -386,6 +440,161 @@ export const MsgSetVaultParamsResponse = {
 
   fromPartial(_: DeepPartial<MsgSetVaultParamsResponse>): MsgSetVaultParamsResponse {
     const message = createBaseMsgSetVaultParamsResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUnlockShares(): MsgUnlockShares {
+  return {
+    authority: "",
+    ownerAddress: ""
+  };
+}
+
+export const MsgUnlockShares = {
+  encode(message: MsgUnlockShares, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.ownerAddress !== "") {
+      writer.uint32(18).string(message.ownerAddress);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUnlockShares {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUnlockShares();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.ownerAddress = reader.string();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUnlockShares>): MsgUnlockShares {
+    const message = createBaseMsgUnlockShares();
+    message.authority = object.authority ?? "";
+    message.ownerAddress = object.ownerAddress ?? "";
+    return message;
+  }
+
+};
+
+function createBaseMsgUnlockSharesResponse(): MsgUnlockSharesResponse {
+  return {
+    unlockedShares: undefined
+  };
+}
+
+export const MsgUnlockSharesResponse = {
+  encode(message: MsgUnlockSharesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.unlockedShares !== undefined) {
+      NumShares.encode(message.unlockedShares, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUnlockSharesResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUnlockSharesResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.unlockedShares = NumShares.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUnlockSharesResponse>): MsgUnlockSharesResponse {
+    const message = createBaseMsgUnlockSharesResponse();
+    message.unlockedShares = object.unlockedShares !== undefined && object.unlockedShares !== null ? NumShares.fromPartial(object.unlockedShares) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateParams(): MsgUpdateParams {
+  return {
+    authority: "",
+    params: undefined
+  };
+}
+
+export const MsgUpdateParams = {
+  encode(message: MsgUpdateParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.params !== undefined) {
+      Params.encode(message.params, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateParams {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateParams();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.params = Params.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateParams>): MsgUpdateParams {
+    const message = createBaseMsgUpdateParams();
+    message.authority = object.authority ?? "";
+    message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
     return message;
   }
 

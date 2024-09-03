@@ -44,7 +44,7 @@ export function loopMetricNames(taskName: string): {
   exceededMaxConcurrentTasksStat: string,
   couldNotAcquireExtendedLockStat: string,
   redisKey: string,
-  extendedLockKey: string
+  extendedLockKey: string,
 } {
   return {
     startedStat: `${config.SERVICE_NAME}.loops.${taskName}.started`,
