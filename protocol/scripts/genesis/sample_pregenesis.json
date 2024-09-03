@@ -640,7 +640,10 @@
     "dydxaccountplus": {
       "accounts": [],
       "authenticator_data": [],
-      "next_authenticator_id": "0"
+      "next_authenticator_id": "0",
+      "params": {
+        "is_smart_account_active": false
+      }
     },
     "epochs": {
       "epoch_info_list": [

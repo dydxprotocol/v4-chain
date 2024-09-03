@@ -1,5 +1,6 @@
 import { AccountAuthenticator, AccountAuthenticatorSDKType } from "./models";
 import { AccountState, AccountStateSDKType } from "./accountplus";
+import { Params, ParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 /**
@@ -38,6 +39,9 @@ export interface AuthenticatorDataSDKType {
 
 export interface GenesisState {
   accounts: AccountState[];
+  /** params define the parameters for the authenticator module. */
+
+  params?: Params;
   /** next_authenticator_id is the next available authenticator ID. */
 
   nextAuthenticatorId: Long;
@@ -52,6 +56,9 @@ export interface GenesisState {
 
 export interface GenesisStateSDKType {
   accounts: AccountStateSDKType[];
+  /** params define the parameters for the authenticator module. */
+
+  params?: ParamsSDKType;
   /** next_authenticator_id is the next available authenticator ID. */
 
   next_authenticator_id: Long;
@@ -121,6 +128,7 @@ export const AuthenticatorData = {
 function createBaseGenesisState(): GenesisState {
   return {
     accounts: [],
+    params: undefined,
     nextAuthenticatorId: Long.UZERO,
     authenticatorData: []
   };
@@ -132,12 +140,16 @@ export const GenesisState = {
       AccountState.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
+    if (message.params !== undefined) {
+      Params.encode(message.params, writer.uint32(18).fork()).ldelim();
+    }
+
     if (!message.nextAuthenticatorId.isZero()) {
-      writer.uint32(16).uint64(message.nextAuthenticatorId);
+      writer.uint32(24).uint64(message.nextAuthenticatorId);
     }
 
     for (const v of message.authenticatorData) {
-      AuthenticatorData.encode(v!, writer.uint32(26).fork()).ldelim();
+      AuthenticatorData.encode(v!, writer.uint32(34).fork()).ldelim();
     }
 
     return writer;
@@ -157,10 +169,14 @@ export const GenesisState = {
           break;
 
         case 2:
-          message.nextAuthenticatorId = (reader.uint64() as Long);
+          message.params = Params.decode(reader, reader.uint32());
           break;
 
         case 3:
+          message.nextAuthenticatorId = (reader.uint64() as Long);
+          break;
+
+        case 4:
           message.authenticatorData.push(AuthenticatorData.decode(reader, reader.uint32()));
           break;
 
@@ -176,6 +192,7 @@ export const GenesisState = {
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = createBaseGenesisState();
     message.accounts = object.accounts?.map(e => AccountState.fromPartial(e)) || [];
+    message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
     message.nextAuthenticatorId = object.nextAuthenticatorId !== undefined && object.nextAuthenticatorId !== null ? Long.fromValue(object.nextAuthenticatorId) : Long.UZERO;
     message.authenticatorData = object.authenticatorData?.map(e => AuthenticatorData.fromPartial(e)) || [];
     return message;

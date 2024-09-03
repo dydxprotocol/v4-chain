@@ -14,6 +14,10 @@ service Msg {
   // RemoveAuthenticator removes an authenticator from an account.
   rpc RemoveAuthenticator(MsgRemoveAuthenticator)
       returns (MsgRemoveAuthenticatorResponse);
+
+  // SetActiveState sets the active state of the authenticator.
+  // Primarily used for circuit breaking.
+  rpc SetActiveState(MsgSetActiveState) returns (MsgSetActiveStateResponse);
 }
 
 // MsgAddAuthenticatorRequest defines the Msg/AddAuthenticator request type.
@@ -42,6 +46,18 @@ message MsgRemoveAuthenticator {
 // MsgRemoveAuthenticatorResponse defines the Msg/RemoveAuthenticator response
 // type.
 message MsgRemoveAuthenticatorResponse { bool success = 1; }
+
+// MsgSetActiveState sets the active state of the module.
+message MsgSetActiveState {
+  option (amino.name) = "osmosis/smartaccount/set-active-state";
+  option (cosmos.msg.v1.signer) = "sender";
+
+  string sender = 1;
+  bool active = 2;
+}
+
+// MsgSetActiveStateResponse defines the Msg/SetActiveState response type.
+message MsgSetActiveStateResponse {}
 
 // TxExtension allows for additional authenticator-specific data in
 // transactions.

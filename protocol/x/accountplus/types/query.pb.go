@@ -6,6 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -28,6 +29,89 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryParamsRequest is request type for the Query/Params RPC method.
+type QueryParamsRequest struct {
+}
+
+func (m *QueryParamsRequest) Reset()         { *m = QueryParamsRequest{} }
+func (m *QueryParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryParamsRequest) ProtoMessage()    {}
+func (*QueryParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3beaace7ec4b0b78, []int{0}
+}
+func (m *QueryParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParamsRequest.Merge(m, src)
+}
+func (m *QueryParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+type QueryParamsResponse struct {
+	// params holds all the parameters of this module.
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+}
+
+func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
+func (m *QueryParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryParamsResponse) ProtoMessage()    {}
+func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_3beaace7ec4b0b78, []int{1}
+}
+func (m *QueryParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParamsResponse.Merge(m, src)
+}
+func (m *QueryParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
+
+func (m *QueryParamsResponse) GetParams() Params {
+	if m != nil {
+		return m.Params
+	}
+	return Params{}
+}
+
 // MsgGetAuthenticatorsRequest defines the Msg/GetAuthenticators request type.
 type GetAuthenticatorsRequest struct {
 	Account string `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
@@ -37,7 +121,7 @@ func (m *GetAuthenticatorsRequest) Reset()         { *m = GetAuthenticatorsReque
 func (m *GetAuthenticatorsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetAuthenticatorsRequest) ProtoMessage()    {}
 func (*GetAuthenticatorsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3beaace7ec4b0b78, []int{0}
+	return fileDescriptor_3beaace7ec4b0b78, []int{2}
 }
 func (m *GetAuthenticatorsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -82,7 +166,7 @@ func (m *GetAuthenticatorsResponse) Reset()         { *m = GetAuthenticatorsResp
 func (m *GetAuthenticatorsResponse) String() string { return proto.CompactTextString(m) }
 func (*GetAuthenticatorsResponse) ProtoMessage()    {}
 func (*GetAuthenticatorsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3beaace7ec4b0b78, []int{1}
+	return fileDescriptor_3beaace7ec4b0b78, []int{3}
 }
 func (m *GetAuthenticatorsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -128,7 +212,7 @@ func (m *GetAuthenticatorRequest) Reset()         { *m = GetAuthenticatorRequest
 func (m *GetAuthenticatorRequest) String() string { return proto.CompactTextString(m) }
 func (*GetAuthenticatorRequest) ProtoMessage()    {}
 func (*GetAuthenticatorRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3beaace7ec4b0b78, []int{2}
+	return fileDescriptor_3beaace7ec4b0b78, []int{4}
 }
 func (m *GetAuthenticatorRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -180,7 +264,7 @@ func (m *GetAuthenticatorResponse) Reset()         { *m = GetAuthenticatorRespon
 func (m *GetAuthenticatorResponse) String() string { return proto.CompactTextString(m) }
 func (*GetAuthenticatorResponse) ProtoMessage()    {}
 func (*GetAuthenticatorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_3beaace7ec4b0b78, []int{3}
+	return fileDescriptor_3beaace7ec4b0b78, []int{5}
 }
 func (m *GetAuthenticatorResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -217,6 +301,8 @@ func (m *GetAuthenticatorResponse) GetAccountAuthenticator() *AccountAuthenticat
 }
 
 func init() {
+	proto.RegisterType((*QueryParamsRequest)(nil), "dydxprotocol.accountplus.QueryParamsRequest")
+	proto.RegisterType((*QueryParamsResponse)(nil), "dydxprotocol.accountplus.QueryParamsResponse")
 	proto.RegisterType((*GetAuthenticatorsRequest)(nil), "dydxprotocol.accountplus.GetAuthenticatorsRequest")
 	proto.RegisterType((*GetAuthenticatorsResponse)(nil), "dydxprotocol.accountplus.GetAuthenticatorsResponse")
 	proto.RegisterType((*GetAuthenticatorRequest)(nil), "dydxprotocol.accountplus.GetAuthenticatorRequest")
@@ -228,32 +314,38 @@ func init() {
 }
 
 var fileDescriptor_3beaace7ec4b0b78 = []byte{
-	// 399 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x49, 0xa9, 0x4c, 0xa9,
-	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x4f, 0x4c, 0x4e, 0xce, 0x2f, 0xcd, 0x2b,
-	0x29, 0xc8, 0x29, 0x2d, 0xd6, 0x2f, 0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x03, 0x4b, 0x09, 0x49, 0x20,
-	0xab, 0xd2, 0x43, 0x52, 0x25, 0x25, 0x93, 0x9e, 0x9f, 0x9f, 0x9e, 0x93, 0xaa, 0x9f, 0x58, 0x90,
-	0xa9, 0x9f, 0x98, 0x97, 0x97, 0x5f, 0x92, 0x58, 0x92, 0x99, 0x9f, 0x57, 0x0c, 0xd1, 0x27, 0xa5,
-	0x8a, 0xd3, 0xf4, 0xdc, 0xfc, 0x94, 0xd4, 0x1c, 0xa8, 0x32, 0x25, 0x13, 0x2e, 0x09, 0xf7, 0xd4,
-	0x12, 0xc7, 0xd2, 0x92, 0x8c, 0xd4, 0xbc, 0x92, 0xcc, 0xe4, 0xc4, 0x92, 0xfc, 0xa2, 0xe2, 0xa0,
-	0xd4, 0xc2, 0xd2, 0xd4, 0xe2, 0x12, 0x21, 0x09, 0x2e, 0x76, 0xa8, 0x3e, 0x09, 0x46, 0x05, 0x46,
-	0x0d, 0xce, 0x20, 0x18, 0x57, 0xa9, 0x89, 0x91, 0x4b, 0x12, 0x8b, 0xb6, 0xe2, 0x82, 0xfc, 0xbc,
-	0xe2, 0x54, 0xa1, 0x54, 0x2e, 0x31, 0xa8, 0xc2, 0xf8, 0x44, 0x14, 0x15, 0x12, 0x8c, 0x0a, 0xcc,
-	0x1a, 0xdc, 0x46, 0x7a, 0x7a, 0xb8, 0xfc, 0xa4, 0xe7, 0x08, 0x61, 0xa3, 0x18, 0x1c, 0x24, 0x9a,
-	0x88, 0x45, 0xb4, 0x58, 0x29, 0x8e, 0x4b, 0x1c, 0xdd, 0x0d, 0x04, 0x5d, 0x2e, 0xa4, 0xc9, 0x25,
-	0x80, 0xe2, 0xa6, 0xf8, 0xcc, 0x14, 0x09, 0x26, 0x05, 0x46, 0x0d, 0x96, 0x20, 0x7e, 0x14, 0x71,
-	0xcf, 0x14, 0xa5, 0x7a, 0xcc, 0xa0, 0x81, 0x7b, 0x31, 0x99, 0x4b, 0x14, 0xab, 0x17, 0xc1, 0xd6,
-	0x91, 0xee, 0x43, 0x11, 0x6c, 0x3e, 0x34, 0xea, 0x61, 0xe6, 0x62, 0x0d, 0x04, 0x25, 0x05, 0xa1,
-	0xe3, 0x8c, 0x5c, 0x02, 0xe8, 0x6e, 0x11, 0x32, 0xc4, 0x6d, 0x09, 0x8e, 0x70, 0x91, 0x32, 0x22,
-	0x45, 0x0b, 0xc4, 0xab, 0x4a, 0x3e, 0x4d, 0x97, 0x9f, 0x4c, 0x66, 0x72, 0x13, 0x72, 0xd1, 0xc7,
-	0x99, 0xa2, 0x50, 0x82, 0x40, 0xbf, 0x1a, 0x2a, 0x55, 0xab, 0x5f, 0x8d, 0x1e, 0xd4, 0xb5, 0x42,
-	0x3b, 0x18, 0xb9, 0x04, 0x31, 0x52, 0x8e, 0x10, 0x09, 0xee, 0x82, 0xa5, 0x4e, 0x29, 0x63, 0x92,
-	0xf4, 0x40, 0x3d, 0x63, 0x05, 0xf6, 0x8c, 0x89, 0x90, 0x11, 0x91, 0x9e, 0x29, 0x46, 0xf8, 0xc6,
-	0x29, 0xfc, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0,
-	0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0x6c, 0xd3, 0x33, 0x4b,
-	0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0x51, 0xcd, 0x2d, 0x33, 0xd1, 0x4d, 0xce, 0x48, 0xcc,
-	0xcc, 0xd3, 0x87, 0x8b, 0x54, 0xa0, 0xd8, 0x55, 0x52, 0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06, 0x96,
-	0x35, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xe8, 0x56, 0xb6, 0xc4, 0x11, 0x04, 0x00, 0x00,
+	// 486 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0x41, 0x6b, 0xd4, 0x40,
+	0x14, 0xde, 0xa9, 0xeb, 0x8a, 0xd3, 0x83, 0x75, 0xdc, 0x6a, 0x5c, 0x24, 0x86, 0x41, 0x61, 0x05,
+	0x9b, 0xc1, 0x74, 0x4f, 0x82, 0x42, 0x8b, 0x28, 0x82, 0x07, 0x0d, 0x88, 0xe0, 0xc1, 0x32, 0x4d,
+	0x86, 0x6c, 0x20, 0x9b, 0x49, 0x33, 0x13, 0xe9, 0x52, 0x8a, 0xd0, 0x3f, 0xa0, 0xe0, 0xdd, 0xdf,
+	0xe1, 0x3f, 0xb0, 0xc7, 0x82, 0x17, 0x4f, 0x22, 0xbb, 0xfe, 0x10, 0xe9, 0x64, 0xba, 0x76, 0x76,
+	0x13, 0xb6, 0xb9, 0x25, 0xef, 0x7d, 0xdf, 0x7b, 0xdf, 0x37, 0xdf, 0x83, 0xf7, 0xc2, 0x71, 0xb8,
+	0x9f, 0xe5, 0x5c, 0xf2, 0x80, 0x27, 0x84, 0x06, 0x01, 0x2f, 0x52, 0x99, 0x25, 0x85, 0x20, 0x7b,
+	0x05, 0xcb, 0xc7, 0xae, 0x6a, 0x21, 0xeb, 0x3c, 0xca, 0x3d, 0x87, 0xea, 0x75, 0x23, 0x1e, 0x71,
+	0xd5, 0x21, 0xa7, 0x5f, 0x25, 0xbe, 0x77, 0x27, 0xe2, 0x3c, 0x4a, 0x18, 0xa1, 0x59, 0x4c, 0x68,
+	0x9a, 0x72, 0x49, 0x65, 0xcc, 0x53, 0xa1, 0xbb, 0xf7, 0x6b, 0x77, 0x8e, 0x78, 0xc8, 0x92, 0xe5,
+	0xb0, 0x8c, 0xe6, 0x74, 0xa4, 0x61, 0xb8, 0x0b, 0xd1, 0x9b, 0x53, 0xa9, 0xaf, 0x55, 0xd1, 0x67,
+	0x7b, 0x05, 0x13, 0x12, 0xbf, 0x85, 0x37, 0x8c, 0xaa, 0xc8, 0x78, 0x2a, 0x18, 0x7a, 0x0a, 0x3b,
+	0x25, 0xd9, 0x02, 0x0e, 0xe8, 0xaf, 0x7a, 0x8e, 0x5b, 0xe7, 0xcc, 0x2d, 0x99, 0xdb, 0xed, 0xe3,
+	0xdf, 0x77, 0x5b, 0xbe, 0x66, 0xe1, 0x01, 0xb4, 0x5e, 0x30, 0xb9, 0x55, 0xc8, 0x21, 0x4b, 0x65,
+	0x1c, 0x50, 0xc9, 0xf3, 0xb3, 0x95, 0xc8, 0x82, 0x57, 0x34, 0x5f, 0x0d, 0xbf, 0xea, 0x9f, 0xfd,
+	0xe2, 0x23, 0x00, 0x6f, 0x57, 0xd0, 0xb4, 0x26, 0x06, 0x6f, 0x6a, 0xe0, 0x0e, 0x35, 0x10, 0x16,
+	0x70, 0x2e, 0xf5, 0x57, 0x3d, 0xb7, 0x5e, 0xe3, 0x56, 0xf9, 0x6d, 0x0c, 0xf6, 0xd7, 0x69, 0x45,
+	0x55, 0xe0, 0x0f, 0xf0, 0xd6, 0xbc, 0x86, 0xa5, 0xca, 0xd1, 0x03, 0xb8, 0x66, 0x68, 0xda, 0x89,
+	0x43, 0x6b, 0xc5, 0x01, 0xfd, 0xb6, 0x7f, 0xcd, 0xa8, 0xbf, 0x0c, 0xf1, 0xa7, 0xc5, 0xa7, 0x99,
+	0x59, 0x0c, 0xe0, 0x7a, 0xa5, 0x45, 0x9d, 0x42, 0x53, 0x87, 0xdd, 0x2a, 0x87, 0xde, 0xb7, 0x36,
+	0xbc, 0xac, 0x32, 0x47, 0x9f, 0x01, 0xec, 0x94, 0xf1, 0xa1, 0x87, 0xf5, 0xa3, 0x17, 0xaf, 0xa6,
+	0xb7, 0x71, 0x41, 0x74, 0x69, 0x0b, 0xf7, 0x8f, 0x7e, 0xfe, 0xfd, 0xba, 0x82, 0x91, 0x43, 0x96,
+	0x9c, 0x2a, 0xfa, 0x01, 0xe0, 0xda, 0xfc, 0xeb, 0xa0, 0x47, 0xf5, 0xdb, 0x6a, 0x92, 0xea, 0x79,
+	0x4d, 0x28, 0x5a, 0xe5, 0x2b, 0xa5, 0xf2, 0x39, 0x7a, 0x56, 0xaf, 0xd2, 0x08, 0x85, 0x1c, 0xe8,
+	0xd6, 0x21, 0x39, 0x98, 0x0f, 0xff, 0x10, 0x7d, 0x07, 0xf0, 0xfa, 0xc2, 0x2d, 0xa3, 0x06, 0xba,
+	0x66, 0x8f, 0xbd, 0xd9, 0x88, 0xa3, 0xcd, 0x3c, 0x56, 0x66, 0x06, 0xc8, 0xbb, 0xa0, 0x19, 0xf1,
+	0xdf, 0xcd, 0xf6, 0xbb, 0xe3, 0x89, 0x0d, 0x4e, 0x26, 0x36, 0xf8, 0x33, 0xb1, 0xc1, 0x97, 0xa9,
+	0xdd, 0x3a, 0x99, 0xda, 0xad, 0x5f, 0x53, 0xbb, 0xf5, 0xfe, 0x49, 0x14, 0xcb, 0x61, 0xb1, 0xeb,
+	0x06, 0x7c, 0x64, 0xce, 0xfd, 0x38, 0xd8, 0x08, 0x86, 0x34, 0x4e, 0xc9, 0xac, 0xb2, 0x6f, 0xec,
+	0x92, 0xe3, 0x8c, 0x89, 0xdd, 0x8e, 0xea, 0x6e, 0xfe, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x8f, 0x3e,
+	0x4f, 0x88, 0x4d, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -268,6 +360,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// Parameters queries the parameters of the module.
+	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Queries a single authenticator by account and authenticator ID.
 	GetAuthenticator(ctx context.Context, in *GetAuthenticatorRequest, opts ...grpc.CallOption) (*GetAuthenticatorResponse, error)
 	// Queries all authenticators for a given account.
@@ -280,6 +374,15 @@ type queryClient struct {
 
 func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
+}
+
+func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
+	out := new(QueryParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.accountplus.Query/Params", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *queryClient) GetAuthenticator(ctx context.Context, in *GetAuthenticatorRequest, opts ...grpc.CallOption) (*GetAuthenticatorResponse, error) {
@@ -302,6 +405,8 @@ func (c *queryClient) GetAuthenticators(ctx context.Context, in *GetAuthenticato
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// Parameters queries the parameters of the module.
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Queries a single authenticator by account and authenticator ID.
 	GetAuthenticator(context.Context, *GetAuthenticatorRequest) (*GetAuthenticatorResponse, error)
 	// Queries all authenticators for a given account.
@@ -312,6 +417,9 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
+func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
 func (*UnimplementedQueryServer) GetAuthenticator(ctx context.Context, req *GetAuthenticatorRequest) (*GetAuthenticatorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAuthenticator not implemented")
 }
@@ -321,6 +429,24 @@ func (*UnimplementedQueryServer) GetAuthenticators(ctx context.Context, req *Get
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
+}
+
+func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Params(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.accountplus.Query/Params",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Query_GetAuthenticator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -364,6 +490,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "Params",
+			Handler:    _Query_Params_Handler,
+		},
+		{
 			MethodName: "GetAuthenticator",
 			Handler:    _Query_GetAuthenticator_Handler,
 		},
@@ -374,6 +504,62 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "dydxprotocol/accountplus/query.proto",
+}
+
+func (m *QueryParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *GetAuthenticatorsRequest) Marshal() (dAtA []byte, err error) {
@@ -524,6 +710,26 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *QueryParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Params.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
 func (m *GetAuthenticatorsRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -586,6 +792,139 @@ func sovQuery(x uint64) (n int) {
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *QueryParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *GetAuthenticatorsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

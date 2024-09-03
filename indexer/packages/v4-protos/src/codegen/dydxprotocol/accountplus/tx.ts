@@ -68,6 +68,24 @@ export interface MsgRemoveAuthenticatorResponseSDKType {
    */
   success: boolean;
 }
+/** MsgSetActiveState sets the active state of the module. */
+
+export interface MsgSetActiveState {
+  sender: string;
+  active: boolean;
+}
+/** MsgSetActiveState sets the active state of the module. */
+
+export interface MsgSetActiveStateSDKType {
+  sender: string;
+  active: boolean;
+}
+/** MsgSetActiveStateResponse defines the Msg/SetActiveState response type. */
+
+export interface MsgSetActiveStateResponse {}
+/** MsgSetActiveStateResponse defines the Msg/SetActiveState response type. */
+
+export interface MsgSetActiveStateResponseSDKType {}
 /**
  * TxExtension allows for additional authenticator-specific data in
  * transactions.
@@ -298,6 +316,95 @@ export const MsgRemoveAuthenticatorResponse = {
   fromPartial(object: DeepPartial<MsgRemoveAuthenticatorResponse>): MsgRemoveAuthenticatorResponse {
     const message = createBaseMsgRemoveAuthenticatorResponse();
     message.success = object.success ?? false;
+    return message;
+  }
+
+};
+
+function createBaseMsgSetActiveState(): MsgSetActiveState {
+  return {
+    sender: "",
+    active: false
+  };
+}
+
+export const MsgSetActiveState = {
+  encode(message: MsgSetActiveState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.sender !== "") {
+      writer.uint32(10).string(message.sender);
+    }
+
+    if (message.active === true) {
+      writer.uint32(16).bool(message.active);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetActiveState {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetActiveState();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.sender = reader.string();
+          break;
+
+        case 2:
+          message.active = reader.bool();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgSetActiveState>): MsgSetActiveState {
+    const message = createBaseMsgSetActiveState();
+    message.sender = object.sender ?? "";
+    message.active = object.active ?? false;
+    return message;
+  }
+
+};
+
+function createBaseMsgSetActiveStateResponse(): MsgSetActiveStateResponse {
+  return {};
+}
+
+export const MsgSetActiveStateResponse = {
+  encode(_: MsgSetActiveStateResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetActiveStateResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetActiveStateResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgSetActiveStateResponse>): MsgSetActiveStateResponse {
+    const message = createBaseMsgSetActiveStateResponse();
     return message;
   }
 

@@ -4,6 +4,7 @@ package dydxprotocol.accountplus;
 import "gogoproto/gogo.proto";
 import "dydxprotocol/accountplus/accountplus.proto";
 import "dydxprotocol/accountplus/models.proto";
+import "dydxprotocol/accountplus/params.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types";
 
@@ -24,11 +25,14 @@ message AuthenticatorData {
 message GenesisState {
   repeated AccountState accounts = 1 [ (gogoproto.nullable) = false ];
 
+  // params define the parameters for the authenticator module.
+  Params params = 2 [ (gogoproto.nullable) = false ];
+
   // next_authenticator_id is the next available authenticator ID.
-  uint64 next_authenticator_id = 2;
+  uint64 next_authenticator_id = 3;
 
   // authenticator_data contains the data for multiple accounts, each with their
   // authenticators.
-  repeated AuthenticatorData authenticator_data = 3
+  repeated AuthenticatorData authenticator_data = 4
       [ (gogoproto.nullable) = false ];
 }
