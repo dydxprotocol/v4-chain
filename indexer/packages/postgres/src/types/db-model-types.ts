@@ -294,6 +294,13 @@ export interface AffiliateReferredUserFromDatabase {
   referredAtBlock: string,
 }
 
+export interface FirebaseNotificationTokenFromDatabase {
+  address: string,
+  token: string,
+  updatedAt: IsoString,
+  language: string,
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string }, };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:
