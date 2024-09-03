@@ -46,60 +46,60 @@ export function isValidLanguageCode(code: string): code is LanguageCode {
 
 interface BaseNotification <T extends Record<string, string>> {
   type: NotificationType,
-  titleKey: LocalizationKey;
-  bodyKey: LocalizationKey;
-  topic: Topic;
-  deeplink: Deeplink;
+  titleKey: LocalizationKey,
+  bodyKey: LocalizationKey,
+  topic: Topic,
+  deeplink: Deeplink,
   dynamicValues: T,
 }
 
 interface DepositSuccessNotification extends BaseNotification<{
-  [NotificationDynamicFieldKey.AMOUNT]: string;
-  [NotificationDynamicFieldKey.MARKET]: string;
+  [NotificationDynamicFieldKey.AMOUNT]: string,
+  [NotificationDynamicFieldKey.MARKET]: string,
 }> {
-  type: NotificationType.DEPOSIT_SUCCESS;
-  titleKey: LocalizationKey.DEPOSIT_SUCCESS_TITLE;
-  bodyKey: LocalizationKey.DEPOSIT_SUCCESS_BODY;
-  topic: Topic.TRADING;
+  type: NotificationType.DEPOSIT_SUCCESS,
+  titleKey: LocalizationKey.DEPOSIT_SUCCESS_TITLE,
+  bodyKey: LocalizationKey.DEPOSIT_SUCCESS_BODY,
+  topic: Topic.TRADING,
   dynamicValues: {
-    [NotificationDynamicFieldKey.AMOUNT]: string;
-    [NotificationDynamicFieldKey.MARKET]: string;
-  }
+    [NotificationDynamicFieldKey.AMOUNT]: string,
+    [NotificationDynamicFieldKey.MARKET]: string,
+  },
 }
 
 interface OrderFilledNotification extends BaseNotification <{
-  [NotificationDynamicFieldKey.MARKET]: string;
-  [NotificationDynamicFieldKey.AVERAGE_PRICE]: string;
+  [NotificationDynamicFieldKey.MARKET]: string,
+  [NotificationDynamicFieldKey.AVERAGE_PRICE]: string,
 }>{
-  type: NotificationType.ORDER_FILLED;
-  titleKey: LocalizationKey.ORDER_FILLED_TITLE;
-  bodyKey: LocalizationKey.ORDER_FILLED_BODY;
-  topic: Topic.TRADING;
+  type: NotificationType.ORDER_FILLED,
+  titleKey: LocalizationKey.ORDER_FILLED_TITLE,
+  bodyKey: LocalizationKey.ORDER_FILLED_BODY,
+  topic: Topic.TRADING,
   dynamicValues: {
-    [NotificationDynamicFieldKey.MARKET]: string;
-    [NotificationDynamicFieldKey.AMOUNT]: string;
-    [NotificationDynamicFieldKey.AVERAGE_PRICE]: string;
-  };
+    [NotificationDynamicFieldKey.MARKET]: string,
+    [NotificationDynamicFieldKey.AMOUNT]: string,
+    [NotificationDynamicFieldKey.AVERAGE_PRICE]: string,
+  },
 }
 
 interface OrderTriggeredNotification extends BaseNotification <{
-  [NotificationDynamicFieldKey.MARKET]: string;
-  [NotificationDynamicFieldKey.PRICE]: string;
+  [NotificationDynamicFieldKey.MARKET]: string,
+  [NotificationDynamicFieldKey.PRICE]: string,
 }>{
-  type: NotificationType.ORDER_TRIGGERED;
-  titleKey: LocalizationKey.ORDER_TRIGGERED_TITLE;
-  bodyKey: LocalizationKey.ORDER_TRIGGERED_BODY;
-  topic: Topic.TRADING;
+  type: NotificationType.ORDER_TRIGGERED,
+  titleKey: LocalizationKey.ORDER_TRIGGERED_TITLE,
+  bodyKey: LocalizationKey.ORDER_TRIGGERED_BODY,
+  topic: Topic.TRADING,
   dynamicValues: {
-    [NotificationDynamicFieldKey.MARKET]: string;
-    [NotificationDynamicFieldKey.AMOUNT]: string;
-    [NotificationDynamicFieldKey.PRICE]: string;
-  };
+    [NotificationDynamicFieldKey.MARKET]: string,
+    [NotificationDynamicFieldKey.AMOUNT]: string,
+    [NotificationDynamicFieldKey.PRICE]: string,
+  },
 }
 
 export type NotificationMesage = {
-  title: string;
-  body: string;
+  title: string,
+  body: string,
 };
 
 export type Notification =
