@@ -1,7 +1,6 @@
-import { LOCALIZED_MESSAGES } from './localizedMessages';
+import { LOCALIZED_MESSAGES } from './localized-messages';
 import {
   Notification,
-  NotificationMesage,
   LanguageCode,
 } from './types';
 
@@ -9,10 +8,15 @@ function replacePlaceholders(template: string, variables: Record<string, string>
   return template.replace(/{(\w+)}/g, (_, key) => variables[key] || `{${key}}`);
 }
 
+type NotificationMessage = {
+  title: string,
+  body: string,
+};
+
 export function deriveLocalizedNotificationMessage(
   notification: Notification,
   languageCode: LanguageCode = 'en',
-): NotificationMesage {
+): NotificationMessage {
   const localizationFields = LOCALIZED_MESSAGES[languageCode] || LOCALIZED_MESSAGES.en;
 
   return {

@@ -1,8 +1,8 @@
+// Types of notifications that can be sent
 export enum NotificationType {
   DEPOSIT_SUCCESS = 'DEPOSIT_SUCCESS',
   ORDER_FILLED = 'ORDER_FILLED',
   ORDER_TRIGGERED = 'ORDER_TRIGGERED',
-  LIQUIDATION = 'LIQUIDATION',
 }
 
 // Keys for the dynamic values that are used in the notification messages
@@ -34,6 +34,8 @@ export enum Deeplink {
   ORDER_TRIGGERED = '/profile',
 }
 
+// Topics for each notification
+// Topics are used to send notifications to specific topics in Firebase
 export enum Topic {
   TRADING = 'trading',
   PRICE_ALERTS = 'price_alerts',
@@ -97,18 +99,16 @@ interface OrderTriggeredNotification extends BaseNotification <{
   },
 }
 
-export type NotificationMesage = {
-  title: string,
-  body: string,
-};
-
 export type Notification =
 DepositSuccessNotification |
 OrderFilledNotification |
 OrderTriggeredNotification;
 
+// dynamicValues is a conditional type that changes based on the notification type:
+// Below can be read as, if notificationType is DEPOSIT_SUCCESS then dynamicValues must
+// match the type of DepositSuccessNotification['dynamicValues']
 export function createNotification<T extends NotificationType>(
-  type: T,
+  notificationType: T,
   dynamicValues: T extends NotificationType.DEPOSIT_SUCCESS
     ? DepositSuccessNotification['dynamicValues']
     : T extends NotificationType.ORDER_FILLED
@@ -116,7 +116,7 @@ export function createNotification<T extends NotificationType>(
       : T extends NotificationType.ORDER_TRIGGERED
         ? OrderTriggeredNotification['dynamicValues'] : never,
 ): Notification {
-  switch (type) {
+  switch (notificationType) {
     case NotificationType.DEPOSIT_SUCCESS:
       return {
         type: NotificationType.DEPOSIT_SUCCESS,
