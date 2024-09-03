@@ -10,7 +10,6 @@ import {
   BlockTable,
   liquidityTierRefresher,
   SubaccountTable,
-  TokenTable,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod } from '../../../../src/types';
 import request from 'supertest';
@@ -43,7 +42,6 @@ describe('addresses-controller#V4', () => {
 
   afterEach(async () => {
     await dbHelpers.clearData();
-    jest.clearAllMocks();
   });
 
   const invalidAddress: string = 'invalidAddress';
@@ -576,108 +574,4 @@ describe('addresses-controller#V4', () => {
     });
   });
 
-  describe('/:address/registerToken', () => {
-    it('Post /:address/registerToken with valid params returns 200', async () => {
-      const token = 'validToken';
-      const language = 'en';
-      const response: request.Response = await sendRequest({
-        type: RequestMethod.POST,
-        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token, language },
-        expectedStatus: 200,
-      });
-
-      expect(response.body).toEqual({});
-      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1, {
-        path: '/:address/registerToken',
-        method: 'POST',
-      });
-    });
-
-    it('Post /:address/registerToken with valid params calls TokenTable registerToken', async () => {
-      jest.spyOn(TokenTable, 'registerToken');
-      const token = 'validToken';
-      const language = 'en';
-      await sendRequest({
-        type: RequestMethod.POST,
-        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token, language },
-        expectedStatus: 200,
-      });
-      expect(TokenTable.registerToken).toHaveBeenCalledWith(
-        token, testConstants.defaultAddress, language,
-      );
-      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1, {
-        path: '/:address/registerToken',
-        method: 'POST',
-      });
-    });
-
-    it('Post /:address/registerToken with invalid address returns 404', async () => {
-      const token = 'validToken';
-      const response: request.Response = await sendRequest({
-        type: RequestMethod.POST,
-        path: `/v4/addresses/${invalidAddress}/registerToken`,
-        body: { token },
-        expectedStatus: 404,
-      });
-
-      expect(response.body).toEqual({
-        errors: [
-          {
-            msg: 'No address found with address: invalidAddress',
-          },
-        ],
-      });
-      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.404', 1, {
-        path: '/:address/registerToken',
-        method: 'POST',
-      });
-    });
-
-    it.each([
-      ['validToken', '', 'Invalid language code', 'language'],
-      ['validToken', 'qq', 'Invalid language code', 'language'],
-    ])('Post /:address/registerToken with bad language params returns 400', async (token, language, errorMsg, errorParam) => {
-      const response: request.Response = await sendRequest({
-        type: RequestMethod.POST,
-        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token, language },
-        expectedStatus: 400,
-      });
-
-      expect(response.body).toEqual({
-        errors: [
-          {
-            location: 'body',
-            msg: errorMsg,
-            param: errorParam,
-            value: language,
-          },
-        ],
-      });
-    });
-
-    it.each([
-      ['', 'en', 'Token cannot be empty', 'token'],
-    ])('Post /:address/registerToken with bad token params returns 400', async (token, language, errorMsg, errorParam) => {
-      const response: request.Response = await sendRequest({
-        type: RequestMethod.POST,
-        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token, language },
-        expectedStatus: 400,
-      });
-
-      expect(response.body).toEqual({
-        errors: [
-          {
-            location: 'body',
-            msg: errorMsg,
-            param: errorParam,
-            value: token,
-          },
-        ],
-      });
-    });
-  });
 });

@@ -1,8 +1,5 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
-  createNotification, NotificationType, NotificationDynamicFieldKey, sendFirebaseMessage,
-} from '@dydxprotocol-indexer/notifications';
-import {
   AssetPositionFromDatabase,
   BlockTable,
   BlockFromDatabase,
@@ -23,7 +20,6 @@ import {
   WalletTable,
   WalletFromDatabase,
   perpetualMarketRefresher,
-  TokenTable,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -32,14 +28,12 @@ import {
 } from 'express-validator';
 import {
   Route, Get, Path, Controller,
-  Post,
-  Body,
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
-import { DatabaseError, NotFoundError } from '../../../lib/errors';
+import { NotFoundError } from '../../../lib/errors';
 import {
   getFundingIndexMaps,
   handleControllerError,
@@ -47,12 +41,7 @@ import {
   getSubaccountResponse,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import {
-  CheckAddressSchema,
-  CheckParentSubaccountSchema,
-  CheckSubaccountSchema,
-  RegisterTokenValidationSchema,
-} from '../../../lib/validation/schemas';
+import { CheckAddressSchema, CheckParentSubaccountSchema, CheckSubaccountSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
@@ -62,7 +51,6 @@ import {
   AddressResponse,
   ParentSubaccountResponse,
   ParentSubaccountRequest,
-  RegisterTokenRequest,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -306,53 +294,6 @@ class AddressesController extends Controller {
       childSubaccounts: subaccountResponses,
     };
   }
-
-  @Post('/:address/registerToken')
-  public async registerToken(
-    @Path() address: string,
-      @Body() body: { token: string, language: string },
-  ): Promise<void> {
-    const { token, language } = body;
-    const foundAddress = await WalletTable.findById(address);
-    if (!foundAddress) {
-      throw new NotFoundError(`No address found with address: ${address}`);
-    }
-
-    try {
-      await TokenTable.registerToken(
-        token,
-        address,
-        language,
-      );
-    } catch (error) {
-      throw new DatabaseError(`Error registering token: ${error}`);
-    }
-  }
-
-  @Post('/:address/testNotification')
-  public async testNotification(
-    @Path() address: string,
-  ): Promise<void> {
-    try {
-      const wallet = await WalletTable.findById(address);
-      if (!wallet) {
-        throw new NotFoundError(`No wallet found for address: ${address}`);
-      }
-      const allTokens = await TokenTable.findAll({ address: wallet.address }, []);
-      if (allTokens.length === 0) {
-        throw new NotFoundError(`No tokens found for address: ${address}`);
-      }
-
-      const notification = createNotification(NotificationType.ORDER_FILLED, {
-        [NotificationDynamicFieldKey.MARKET]: 'BTC/USD',
-        [NotificationDynamicFieldKey.AMOUNT]: '100',
-        [NotificationDynamicFieldKey.AVERAGE_PRICE]: '1000',
-      });
-      await sendFirebaseMessage(allTokens, notification);
-    } catch (error) {
-      throw new Error('Failed to send test notification');
-    }
-  }
 }
 
 router.get(
@@ -480,62 +421,6 @@ router.get(
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.get_parentSubaccount.timing`,
         Date.now() - start,
-      );
-    }
-  },
-);
-
-router.post(
-  '/:address/registerToken',
-  CheckAddressSchema,
-  RegisterTokenValidationSchema,
-  handleValidationErrors,
-  ExportResponseCodeStats({ controllerName }),
-  async (req: express.Request, res: express.Response) => {
-    const start: number = Date.now();
-    const { address, token, language = 'en' } = matchedData(req) as RegisterTokenRequest;
-
-    try {
-      const controller: AddressesController = new AddressesController();
-      await controller.registerToken(address, { token, language });
-      return res.status(200).send({});
-    } catch (error) {
-      return handleControllerError(
-        'AddressesController POST /:address/registerToken',
-        'Addresses error',
-        error,
-        req,
-        res,
-      );
-    } finally {
-      stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.post_registerToken.timing`,
-        Date.now() - start,
-      );
-    }
-  },
-);
-
-router.post(
-  '/:address/testNotification',
-  rateLimiterMiddleware(getReqRateLimiter),
-  ...CheckAddressSchema,
-  handleValidationErrors,
-  ExportResponseCodeStats({ controllerName }),
-  async (req: express.Request, res: express.Response) => {
-    const { address } = matchedData(req) as AddressRequest;
-
-    try {
-      const controller: AddressesController = new AddressesController();
-      await controller.testNotification(address);
-      return res.status(200).send({ message: 'Test notification sent successfully' });
-    } catch (error) {
-      return handleControllerError(
-        'AddressesController POST /:address/testNotification',
-        'Test notification error',
-        error,
-        req,
-        res,
       );
     }
   },
