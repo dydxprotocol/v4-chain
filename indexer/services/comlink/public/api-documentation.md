@@ -368,6 +368,141 @@ fetch(`${baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNu
 This operation does not require authentication
 </aside>
 
+## RegisterToken
+
+<a id="opIdRegisterToken"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Content-Type': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.post(f'{baseURL}/addresses/{address}/registerToken', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+const inputBody = '{
+  "language": "string",
+  "token": "string"
+}';
+const headers = {
+  'Content-Type':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/addresses/{address}/registerToken`,
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /addresses/{address}/registerToken`
+
+> Body parameter
+
+```json
+{
+  "language": "string",
+  "token": "string"
+}
+```
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|path|string|true|none|
+|body|body|object|true|none|
+|» language|body|string|true|none|
+|» token|body|string|true|none|
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|No content|None|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## TestNotification
+
+<a id="opIdTestNotification"></a>
+
+> Code samples
+
+```python
+import requests
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.post(f'{baseURL}/addresses/{address}/testNotification')
+
+print(r.json())
+
+```
+
+```javascript
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/addresses/{address}/testNotification`,
+{
+  method: 'POST'
+
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /addresses/{address}/testNotification`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|path|string|true|none|
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|No content|None|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetReferralCode
 
 <a id="opIdGetReferralCode"></a>
@@ -393,14 +528,7 @@ print(r.json())
 ```
 
 ```javascript
-<<<<<<< HEAD
 
-=======
-const inputBody = '{
-  "language": "string",
-  "token": "string"
-}';
->>>>>>> 48b1be9b (Add language to Token table)
 const headers = {
   'Accept':'application/json'
 };
@@ -423,26 +551,12 @@ fetch(`${baseURL}/affiliates/referral_code?address=string`,
 
 ```
 
-<<<<<<< HEAD
 `GET /affiliates/referral_code`
-=======
-`POST /addresses/{address}/registerToken`
-
-> Body parameter
-
-```json
-{
-  "language": "string",
-  "token": "string"
-}
-```
->>>>>>> 48b1be9b (Add language to Token table)
 
 ### Parameters
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-<<<<<<< HEAD
 |address|query|string|true|none|
 
 > Example responses
@@ -454,12 +568,6 @@ fetch(`${baseURL}/affiliates/referral_code?address=string`,
   "referralCode": "string"
 }
 ```
-=======
-|address|path|string|true|none|
-|body|body|object|true|none|
-|» language|body|string|true|none|
-|» token|body|string|true|none|
->>>>>>> 48b1be9b (Add language to Token table)
 
 ### Responses
 
@@ -630,62 +738,6 @@ fetch(`${baseURL}/affiliates/total_volume?address=string`,
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateTotalVolumeResponse](#schemaaffiliatetotalvolumeresponse)|
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-## TestNotification
-
-<a id="opIdTestNotification"></a>
-
-> Code samples
-
-```python
-import requests
-
-# For the deployment by DYDX token holders, use
-# baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
-
-r = requests.post(f'{baseURL}/addresses/{address}/testNotification')
-
-print(r.json())
-
-```
-
-```javascript
-
-// For the deployment by DYDX token holders, use
-// const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
-
-fetch(`${baseURL}/addresses/{address}/testNotification`,
-{
-  method: 'POST'
-
-})
-.then(function(res) {
-    return res.json();
-}).then(function(body) {
-    console.log(body);
-});
-
-```
-
-`POST /addresses/{address}/testNotification`
-
-### Parameters
-
-|Name|In|Type|Required|Description|
-|---|---|---|---|---|
-|address|path|string|true|none|
-
-### Responses
-
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|No content|None|
 
 <aside class="success">
 This operation does not require authentication

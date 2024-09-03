@@ -22,11 +22,8 @@ import {
   FundingIndexMap,
   WalletTable,
   WalletFromDatabase,
-<<<<<<< HEAD
   perpetualMarketRefresher,
-=======
   TokenTable,
->>>>>>> ce9ce9ab (Register token with postgres from comlink)
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -543,107 +540,6 @@ router.post(
     }
   },
 );
-
-/**
- * Gets subaccount response objects given the subaccount, perpetual positions and perpetual markets
- * @param subaccount Subaccount to get response for, from the database
- * @param positions List of perpetual positions held by the subaccount, from the database
- * @param markets List of perpetual markets, from the database
- * @param assetPositions List of asset positions held by the subaccount, from the database
- * @param assets List of assets from the database
- * @param unsettledFunding Total unsettled funding across all open perpetual positions for the
- *                         subaccount
- * @returns Response object for the subaccount
- */
-async function getSubaccountResponse(
-  subaccount: SubaccountFromDatabase,
-  perpetualPositions: PerpetualPositionWithFunding[],
-  assetPositions: AssetPositionFromDatabase[],
-  assets: AssetFromDatabase[],
-  markets: MarketFromDatabase[],
-  unsettledFunding: Big,
-  latestBlockHeight: string,
-): Promise<SubaccountResponseObject> {
-  const perpetualMarketsMap: PerpetualMarketsMap = perpetualMarketRefresher
-    .getPerpetualMarketsMap();
-  const marketIdToMarket: MarketsMap = _.keyBy(
-    markets,
-    MarketColumns.id,
-  );
-
-  const filteredPerpetualPositions: PerpetualPositionWithFunding[
-  ] = await filterPositionsByLatestEventIdPerPerpetual(perpetualPositions);
-
-  const perpetualPositionResponses:
-  PerpetualPositionResponseObject[] = filteredPerpetualPositions.map(
-    (perpetualPosition: PerpetualPositionWithFunding): PerpetualPositionResponseObject => {
-      return perpetualPositionToResponseObject(
-        perpetualPosition,
-        perpetualMarketsMap,
-        marketIdToMarket,
-        subaccount.subaccountNumber,
-      );
-    },
-  );
-
-  const perpetualPositionsMap: PerpetualPositionsMap = _.keyBy(
-    perpetualPositionResponses,
-    'market',
-  );
-
-  const assetIdToAsset: AssetById = _.keyBy(
-    assets,
-    AssetColumns.id,
-  );
-
-  const sortedAssetPositions:
-  AssetPositionFromDatabase[] = filterAssetPositions(assetPositions);
-
-  const assetPositionResponses: AssetPositionResponseObject[] = sortedAssetPositions.map(
-    (assetPosition: AssetPositionFromDatabase): AssetPositionResponseObject => {
-      return assetPositionToResponseObject(
-        assetPosition,
-        assetIdToAsset,
-        subaccount.subaccountNumber,
-      );
-    },
-  );
-
-  const assetPositionsMap: AssetPositionsMap = _.keyBy(
-    assetPositionResponses,
-    'symbol',
-  );
-
-  const {
-    assetPositionsMap: adjustedAssetPositionsMap,
-    adjustedUSDCAssetPositionSize,
-  }: {
-    assetPositionsMap: AssetPositionsMap,
-    adjustedUSDCAssetPositionSize: string,
-  } = adjustUSDCAssetPosition(assetPositionsMap, unsettledFunding);
-
-  const {
-    equity,
-    freeCollateral,
-  }: {
-    equity: string,
-    freeCollateral: string,
-  } = calculateEquityAndFreeCollateral(
-    filteredPerpetualPositions,
-    perpetualMarketsMap,
-    marketIdToMarket,
-    adjustedUSDCAssetPositionSize,
-  );
-
-  return subaccountToResponseObject({
-    subaccount,
-    equity,
-    freeCollateral,
-    latestBlockHeight,
-    openPerpetualPositions: perpetualPositionsMap,
-    assetPositions: adjustedAssetPositionsMap,
-  });
-}
 
 // eslint-disable-next-line  @typescript-eslint/require-await
 async function getOpenPerpetualPositionsForSubaccount(

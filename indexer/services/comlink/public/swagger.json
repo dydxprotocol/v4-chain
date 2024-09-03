@@ -1668,7 +1668,70 @@
         ]
       }
     },
-<<<<<<< HEAD
+    "/addresses/{address}/registerToken": {
+      "post": {
+        "operationId": "RegisterToken",
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "language": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "language",
+                  "token"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/addresses/{address}/testNotification": {
+      "post": {
+        "operationId": "TestNotification",
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/affiliates/referral_code": {
       "get": {
         "operationId": "GetReferralCode",
@@ -1682,31 +1745,18 @@
                 }
               }
             }
-=======
-    "/addresses/{address}/registerToken": {
-      "post": {
-        "operationId": "RegisterToken",
-        "responses": {
-          "204": {
-            "description": "No content"
->>>>>>> 09440d31 (Add register token endpoint)
           }
         },
         "security": [],
         "parameters": [
           {
-<<<<<<< HEAD
             "in": "query",
-=======
-            "in": "path",
->>>>>>> 09440d31 (Add register token endpoint)
             "name": "address",
             "required": true,
             "schema": {
               "type": "string"
             }
           }
-<<<<<<< HEAD
         ]
       }
     },
@@ -1803,52 +1853,6 @@
         "parameters": [
           {
             "in": "query",
-            "name": "address",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ]
-=======
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "properties": {
-                  "language": {
-                    "type": "string"
-                  },
-                  "token": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "language",
-                  "token"
-                ],
-                "type": "object"
-              }
-            }
-          }
-        }
->>>>>>> 09440d31 (Add register token endpoint)
-      }
-    },
-    "/addresses/{address}/testNotification": {
-      "post": {
-        "operationId": "TestNotification",
-        "responses": {
-          "204": {
-            "description": "No content"
-          }
-        },
-        "security": [],
-        "parameters": [
-          {
-            "in": "path",
             "name": "address",
             "required": true,
             "schema": {

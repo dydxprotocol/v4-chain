@@ -88,14 +88,11 @@ export enum QueryableField {
   USERNAME = 'username',
   TIMESPAN = 'timeSpan',
   RANK = 'rank',
-<<<<<<< HEAD
   AFFILIATE_ADDRESS = 'affiliateAddress',
   REFEREE_ADDRESS = 'refereeAddress',
   KEY = 'key',
   IS_WHITELIST_AFFILIATE = 'isWhitelistAffiliate',
-=======
   TOKEN = 'token',
->>>>>>> 8558d458 (Add Tokens table)
 }
 
 export interface QueryConfig {
