@@ -15,7 +15,6 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
-import { sendOrderTriggeredNotification } from '../../helpers/notifications/notifications-functions';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 
@@ -40,8 +39,6 @@ export class ConditionalOrderTriggeredHandler extends
 
     const indexerOrder: IndexerOrder = orderTranslations.convertToIndexerOrderWithSubaccount(
       order, perpetualMarket, subaccount);
-
-    await sendOrderTriggeredNotification(order, perpetualMarket, subaccount);
     return this.createKafkaEvents(indexerOrder);
   }
 

@@ -22,7 +22,6 @@
     "@dydxprotocol-indexer/redis": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/notifications": "workspace:^0.0.1",
     "big.js": "^6.0.2",
     "dd-trace": "^3.32.1",
     "dotenv-flow": "^3.2.0",
