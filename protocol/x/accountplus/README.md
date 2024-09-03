@@ -1,6 +1,6 @@
 <ins>**Attribution; Modification**.</ins>
 
-This module incorporates code from [Osmosis](https://github.com/osmosis-labs/osmosis/tree/362a01b08cd27d8e22e6c733a6f2c8c75b1d34df)'s `x/smart-account` [module](https://github.com/osmosis-labs/osmosis/tree/362a01b08cd27d8e22e6c733a6f2c8c75b1d34df/x/smart-account), which is subject to [this License](https://github.com/osmosis-labs/osmosis?tab=Apache-2.0-1-ov-file) and has been modified by us.
+This module incorporates code from [Osmosis](https://github.com/osmosis-labs/osmosis)'s `x/smart-account` [module](https://github.com/osmosis-labs/osmosis/tree/main/x/smart-account), which is subject to [this License](https://github.com/osmosis-labs/osmosis?tab=Apache-2.0-1-ov-file) and has been modified by us.
 
 Copyright for smart account attributed to 2021 Osmosis Foundation Ltd.
 
