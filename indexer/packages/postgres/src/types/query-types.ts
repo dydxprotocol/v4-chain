@@ -92,7 +92,6 @@ export enum QueryableField {
   REFEREE_ADDRESS = 'refereeAddress',
   KEY = 'key',
   IS_WHITELIST_AFFILIATE = 'isWhitelistAffiliate',
-  TOKEN = 'token',
 }
 
 export interface QueryConfig {
@@ -339,9 +338,4 @@ export interface PersistentCacheQueryConfig extends QueryConfig {
 
 export interface AffiliateInfoQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string,
-}
-
-export interface TokenQueryConfig extends QueryConfig {
-  [QueryableField.ADDRESS]?: string;
-  [QueryableField.TOKEN]?: string;
 }

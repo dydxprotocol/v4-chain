@@ -31,5 +31,4 @@ export * from './leaderboard-pnl-types';
 export * from './affiliate-referred-users-types';
 export * from './persistent-cache-types';
 export * from './affiliate-info-types';
-export * from './token-types';
 export { PositionSide } from './position-types';

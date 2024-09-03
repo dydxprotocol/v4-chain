@@ -45,7 +45,6 @@ export * as TradingRewardAggregationTable from './stores/trading-reward-aggregat
 export * as LeaderboardPnlTable from './stores/leaderboard-pnl-table';
 export * as SubaccountUsernamesTable from './stores/subaccount-usernames-table';
 export * as PersistentCacheTable from './stores/persistent-cache-table';
-export * as TokenTable from './stores/token-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';
