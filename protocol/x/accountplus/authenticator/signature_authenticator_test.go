@@ -86,11 +86,6 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 		ToAddress:   sdk.MustBech32ifyAddressBytes(bech32Prefix, s.TestAccAddress[1]),
 		Amount:      coins,
 	}
-	//testMsg4 := &banktypes.MsgSend{
-	//	FromAddress: sdk.MustBech32ifyAddressBytes(bech32Prefix, s.TestAccAddress[0]),
-	//	ToAddress:   sdk.MustBech32ifyAddressBytes(bech32Prefix, s.TestAccAddress[1]),
-	//	Amount:      coins,
-	//}
 	feeCoins := constants.TestFeeCoins_5Cents
 
 	tests := []SignatureVerificationTest{
@@ -409,28 +404,3 @@ func GenTx(
 	}
 	return tx.GetTx(), nil
 }
-
-// func generatePubKeysForMultiSig(
-// 	priv ...cryptotypes.PrivKey,
-// ) (pubkeys []cryptotypes.PubKey) {
-// 	pubkeys = make([]cryptotypes.PubKey, len(priv))
-// 	for i, p := range priv {
-// 		pubkeys[i] = p.PubKey()
-// 	}
-// 	return
-// }
-
-// func generateSignaturesForMultiSig(
-// 	msg []byte,
-// 	priv ...cryptotypes.PrivKey,
-// ) (signatures [][]byte) {
-// 	signatures = make([][]byte, len(priv))
-// 	for i, p := range priv {
-// 		var err error
-// 		signatures[i], err = p.Sign(msg)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 	}
-// 	return
-// }
