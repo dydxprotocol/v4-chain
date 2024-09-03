@@ -2,8 +2,6 @@ import { logger } from '@dydxprotocol-indexer/base';
 import { sendFirebaseMessage } from '../src/message';
 import { sendMulticast } from '../src/lib/firebase';
 import { createNotification, NotificationType } from '../src/types';
-import { testMocks, dbHelpers } from '@dydxprotocol-indexer/postgres';
-import { defaultToken } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 jest.mock('../src/lib/firebase', () => ({
   sendMulticast: jest.fn(),
@@ -26,13 +24,10 @@ describe('sendFirebaseMessage', () => {
     loggerErrorSpy.mockRestore();
   });
 
-  beforeEach(async () => {
-    await testMocks.seedData();
-  });
-
-  afterEach(async () => {
-    await dbHelpers.clearData();
-  });
+  const defaultToken = {
+    token: 'BTC-USD',
+    language: 'en',
+  };
 
   const mockNotification = createNotification(NotificationType.ORDER_FILLED, {
     AMOUNT: '10',
