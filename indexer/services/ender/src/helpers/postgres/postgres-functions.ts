@@ -27,6 +27,7 @@ function newScript(name: string, scriptPath: string): PostgresFunction {
 }
 
 const HANDLER_SCRIPTS: string[] = [
+  'dydx_register_affiliate_handler.sql',
   'dydx_asset_create_handler.sql',
   'dydx_block_processor_ordered_handlers.sql',
   'dydx_block_processor_unordered_handlers.sql',

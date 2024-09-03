@@ -1493,9 +1493,6 @@ export interface RegisterAffiliateEventV1 {
   /** Address of the affiliate associated with the referee. */
 
   affiliate: string;
-  /** Block number at which the affiliate was registered. */
-
-  registeredAtBlock: Long;
 }
 /** Event emitted when a referee is registered with an affiliate. */
 
@@ -1505,9 +1502,6 @@ export interface RegisterAffiliateEventV1SDKType {
   /** Address of the affiliate associated with the referee. */
 
   affiliate: string;
-  /** Block number at which the affiliate was registered. */
-
-  registered_at_block: Long;
 }
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
@@ -3758,8 +3752,7 @@ export const LiquidityTierUpsertEventV2 = {
 function createBaseRegisterAffiliateEventV1(): RegisterAffiliateEventV1 {
   return {
     referee: "",
-    affiliate: "",
-    registeredAtBlock: Long.UZERO
+    affiliate: ""
   };
 }
 
@@ -3771,10 +3764,6 @@ export const RegisterAffiliateEventV1 = {
 
     if (message.affiliate !== "") {
       writer.uint32(18).string(message.affiliate);
-    }
-
-    if (!message.registeredAtBlock.isZero()) {
-      writer.uint32(24).uint64(message.registeredAtBlock);
     }
 
     return writer;
@@ -3797,10 +3786,6 @@ export const RegisterAffiliateEventV1 = {
           message.affiliate = reader.string();
           break;
 
-        case 3:
-          message.registeredAtBlock = (reader.uint64() as Long);
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -3814,7 +3799,6 @@ export const RegisterAffiliateEventV1 = {
     const message = createBaseRegisterAffiliateEventV1();
     message.referee = object.referee ?? "";
     message.affiliate = object.affiliate ?? "";
-    message.registeredAtBlock = object.registeredAtBlock !== undefined && object.registeredAtBlock !== null ? Long.fromValue(object.registeredAtBlock) : Long.UZERO;
     return message;
   }
 
