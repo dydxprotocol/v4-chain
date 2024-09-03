@@ -280,13 +280,19 @@ func (k Keeper) GetVaultClobOrders(
 		leveragePpmI.Add(leveragePpmI, leveragePpm)
 
 		// Calculate skew.
+		// Also, if the side would increase the vault's inventory, make the order post-only.
 		skewPpmI := lib.BigMulPpm(leveragePpmI, skewFactorPpm, true)
+		timeInForceType := clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED
 		if leveragePpm.Sign() < 0 {
 			if side == clobtypes.Order_SIDE_SELL {
 				// ask when short: skew_i = (skew_factor * leverage_i - 1)^2 - 1
 				skewPpmI.Sub(skewPpmI, lib.BigIntOneMillion())
 				skewPpmI = lib.BigMulPpm(skewPpmI, skewPpmI, true)
 				skewPpmI.Sub(skewPpmI, lib.BigIntOneMillion())
+
+				// post-only order for sell orders when short
+				timeInForceType = clobtypes.Order_TIME_IN_FORCE_POST_ONLY
+
 			} else {
 				// bid when short: skew_i = -skew_factor * leverage_i
 				skewPpmI.Neg(skewPpmI)
@@ -301,6 +307,9 @@ func (k Keeper) GetVaultClobOrders(
 				skewPpmI = lib.BigMulPpm(skewPpmI, skewPpmI, true)
 				skewPpmI.Sub(skewPpmI, lib.BigIntOneMillion())
 				skewPpmI.Neg(skewPpmI)
+
+				// post-only order for buy orders when long
+				timeInForceType = clobtypes.Order_TIME_IN_FORCE_POST_ONLY
 			}
 		}
 
@@ -353,6 +362,7 @@ func (k Keeper) GetVaultClobOrders(
 			Quantums:     orderSize.Uint64(), // Validated to be a uint64 above.
 			Subticks:     subticksRounded,
 			GoodTilOneof: goodTilBlockTime,
+			TimeInForce:  timeInForceType,
 		}
 	}
 
