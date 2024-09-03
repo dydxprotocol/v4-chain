@@ -448,7 +448,6 @@ importers:
       '@dydxprotocol-indexer/base': workspace:^0.0.1
       '@dydxprotocol-indexer/compliance': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
-      '@dydxprotocol-indexer/notifications': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
       '@dydxprotocol-indexer/redis': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-proto-parser': workspace:^0.0.1
@@ -500,7 +499,6 @@ importers:
       '@cosmjs/encoding': 0.32.3
       '@dydxprotocol-indexer/base': link:../../packages/base
       '@dydxprotocol-indexer/compliance': link:../../packages/compliance
-      '@dydxprotocol-indexer/notifications': link:../../packages/notifications
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
       '@dydxprotocol-indexer/redis': link:../../packages/redis
       '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
@@ -551,7 +549,6 @@ importers:
       '@dydxprotocol-indexer/base': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
       '@dydxprotocol-indexer/kafka': workspace:^0.0.1
-      '@dydxprotocol-indexer/notifications': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
       '@dydxprotocol-indexer/redis': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-proto-parser': workspace:^0.0.1
@@ -578,7 +575,6 @@ importers:
     dependencies:
       '@dydxprotocol-indexer/base': link:../../packages/base
       '@dydxprotocol-indexer/kafka': link:../../packages/kafka
-      '@dydxprotocol-indexer/notifications': link:../../packages/notifications
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
       '@dydxprotocol-indexer/redis': link:../../packages/redis
       '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
@@ -10745,7 +10741,7 @@ packages:
       pretty-format: 28.1.1
       slash: 3.0.0
       strip-json-comments: 3.1.1
-      ts-node: 10.8.2_typescript@4.7.4
+      ts-node: 10.8.2_2dd5d46eecda2aef953638919121af58
     transitivePeerDependencies:
       - supports-color
 
@@ -11290,14 +11286,15 @@ packages:
     engines: {node: '>= 0.6.0'}
     dev: false
 
-  /js-sha3/0.8.0:
-    resolution: {integrity: sha512-gF1cRrHhIzNfToc802P800N8PpXS+evLLXfsVpowqmAFR9uwbi89WvXg2QspOmXL8QL86J4T1EpFu+yUkwJY3Q==}
-
   /jose/2.0.7:
     resolution: {integrity: sha512-5hFWIigKqC+e/lRyQhfnirrAqUdIPMB7SJRqflJaO29dW7q5DFvH1XCSTmv6PQ6pb++0k6MJlLRoS0Wv4s38Wg==}
     engines: {node: '>=10.13.0 < 13 || >=13.7.0'}
     dependencies:
       '@panva/asn1.js': 1.0.0
+    dev: false
+
+  /js-sha3/0.8.0:
+    resolution: {integrity: sha512-gF1cRrHhIzNfToc802P800N8PpXS+evLLXfsVpowqmAFR9uwbi89WvXg2QspOmXL8QL86J4T1EpFu+yUkwJY3Q==}
     dev: false
 
   /js-tokens/4.0.0:
@@ -14271,6 +14268,7 @@ packages:
       typescript: 4.7.4
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+    dev: true
 
   /tsconfig-paths/3.14.1:
     resolution: {integrity: sha512-fxDhWnFSLt3VuTwtvJt5fpwxBHg5AdKWMsgcPOOIilyjymcYVZoCQF8fvFRezCNfblEXmi+PcM1eYHeOAgXCOQ==}
@@ -14366,16 +14364,16 @@ packages:
       for-each: 0.3.3
       is-typed-array: 1.1.10
 
-  /typeforce/1.18.0:
-    resolution: {integrity: sha512-7uc1O8h1M1g0rArakJdf0uLRSSgFcYexrVoKo+bzJd32gd4gDy2L/Z+8/FjPnU9ydY3pEnVPtr9FyscYY60K1g==}
-    dev: false
-
   /typedarray-to-buffer/3.1.5:
     resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
     dependencies:
       is-typedarray: 1.0.0
     dev: false
     optional: true
+
+  /typeforce/1.18.0:
+    resolution: {integrity: sha512-7uc1O8h1M1g0rArakJdf0uLRSSgFcYexrVoKo+bzJd32gd4gDy2L/Z+8/FjPnU9ydY3pEnVPtr9FyscYY60K1g==}
+    dev: false
 
   /typescript/4.7.4:
     resolution: {integrity: sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==}
