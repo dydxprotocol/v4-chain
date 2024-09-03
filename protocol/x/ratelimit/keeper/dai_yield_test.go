@@ -92,58 +92,60 @@ func TestMintNewTDaiYield(t *testing.T) {
 			bankKeeper := tApp.App.BankKeeper
 
 			// Burn any tDAI that was created in test genesis.
-			request := banktypes.QueryDenomOwnersRequest{
-				Denom: types.TDaiDenom,
-			}
-			response, err := bankKeeper.DenomOwners(ctx, &request)
-			require.NoError(t, err)
+			burnAllCoinsOfDenom(t, ctx, tApp, types.TDaiDenom)
+			// request := banktypes.QueryDenomOwnersRequest{
+			// 	Denom: types.TDaiDenom,
+			// }
+			// response, err := bankKeeper.DenomOwners(ctx, &request)
+			// require.NoError(t, err)
 
-			for _, denomOwner := range response.DenomOwners {
-				convertedAddress, err := sdk.AccAddressFromBech32(denomOwner.Address)
-				if err != nil {
-					continue
-				}
-				err = bankKeeper.SendCoinsFromAccountToModule(
-					ctx,
-					convertedAddress,
-					types.TDaiPoolAccount,
-					sdk.NewCoins(denomOwner.Balance),
-				)
-				require.NoError(t, err)
-			}
+			// for _, denomOwner := range response.DenomOwners {
+			// 	convertedAddress, err := sdk.AccAddressFromBech32(denomOwner.Address)
+			// 	if err != nil {
+			// 		continue
+			// 	}
+			// 	err = bankKeeper.SendCoinsFromAccountToModule(
+			// 		ctx,
+			// 		convertedAddress,
+			// 		types.TDaiPoolAccount,
+			// 		sdk.NewCoins(denomOwner.Balance),
+			// 	)
+			// 	require.NoError(t, err)
+			// }
 
-			bankKeeper.BurnCoins(
-				ctx,
-				types.TDaiPoolAccount,
-				sdk.NewCoins(bankKeeper.GetSupply(ctx, types.TDaiDenom)),
-			)
+			// bankKeeper.BurnCoins(
+			// 	ctx,
+			// 	types.TDaiPoolAccount,
+			// 	sdk.NewCoins(bankKeeper.GetSupply(ctx, types.TDaiDenom)),
+			// )
 
 			// Burn any sDAI that was created in test genesis.
-			request = banktypes.QueryDenomOwnersRequest{
-				Denom: types.SDaiDenom,
-			}
-			response, err = bankKeeper.DenomOwners(ctx, &request)
-			require.NoError(t, err)
+			burnAllCoinsOfDenom(t, ctx, tApp, types.SDaiDenom)
+			// request = banktypes.QueryDenomOwnersRequest{
+			// 	Denom: types.SDaiDenom,
+			// }
+			// response, err = bankKeeper.DenomOwners(ctx, &request)
+			// require.NoError(t, err)
 
-			for _, denomOwner := range response.DenomOwners {
-				convertedAddress, err := sdk.AccAddressFromBech32(denomOwner.Address)
-				if err != nil {
-					continue
-				}
-				err = bankKeeper.SendCoinsFromAccountToModule(
-					ctx,
-					convertedAddress,
-					types.TDaiPoolAccount,
-					sdk.NewCoins(denomOwner.Balance),
-				)
-				require.NoError(t, err)
-			}
+			// for _, denomOwner := range response.DenomOwners {
+			// 	convertedAddress, err := sdk.AccAddressFromBech32(denomOwner.Address)
+			// 	if err != nil {
+			// 		continue
+			// 	}
+			// 	err = bankKeeper.SendCoinsFromAccountToModule(
+			// 		ctx,
+			// 		convertedAddress,
+			// 		types.TDaiPoolAccount,
+			// 		sdk.NewCoins(denomOwner.Balance),
+			// 	)
+			// 	require.NoError(t, err)
+			// }
 
-			bankKeeper.BurnCoins(
-				ctx,
-				types.TDaiPoolAccount,
-				sdk.NewCoins(bankKeeper.GetSupply(ctx, types.SDaiDenom)),
-			)
+			// bankKeeper.BurnCoins(
+			// 	ctx,
+			// 	types.TDaiPoolAccount,
+			// 	sdk.NewCoins(bankKeeper.GetSupply(ctx, types.SDaiDenom)),
+			// )
 
 			// Mint initial sDAI supply
 			if !tc.initialSDAISupply.IsZero() {
@@ -178,4 +180,33 @@ func TestMintNewTDaiYield(t *testing.T) {
 			}
 		})
 	}
+}
+
+func burnAllCoinsOfDenom(t *testing.T, ctx sdk.Context, tApp *testapp.TestApp, denom string) {
+	bankKeeper := tApp.App.BankKeeper
+	request := banktypes.QueryDenomOwnersRequest{
+		Denom: denom,
+	}
+	response, err := bankKeeper.DenomOwners(ctx, &request)
+	require.NoError(t, err)
+
+	for _, denomOwner := range response.DenomOwners {
+		convertedAddress, err := sdk.AccAddressFromBech32(denomOwner.Address)
+		if err != nil {
+			continue
+		}
+		err = bankKeeper.SendCoinsFromAccountToModule(
+			ctx,
+			convertedAddress,
+			types.TDaiPoolAccount,
+			sdk.NewCoins(denomOwner.Balance),
+		)
+		require.NoError(t, err)
+	}
+
+	bankKeeper.BurnCoins(
+		ctx,
+		types.TDaiPoolAccount,
+		sdk.NewCoins(bankKeeper.GetSupply(ctx, denom)),
+	)
 }
