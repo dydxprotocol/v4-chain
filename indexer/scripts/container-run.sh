@@ -13,11 +13,6 @@ then
     # Retrieve the secret from secrets manager if it exists
     values=$(aws secretsmanager get-secret-value --secret-id $SECRET_ID | jq -r ".SecretString")
     env_vars=$(echo $values | tr '\n' ' ' | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]")
-
-    # Log the environment variables to the console
-    echo "Environment Variables:"
-    echo "$env_vars"
-
     while read line; do
       export "$line"
     done <<< "$env_vars"
