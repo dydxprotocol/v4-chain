@@ -14,6 +14,12 @@ export interface LiquidationsConfig {
    */
 
   subaccountBlockLimits?: SubaccountBlockLimits;
+  /**
+   * Config about how the fillable-price spread from the oracle price
+   * increases based on the adjusted bankruptcy rating of the subaccount.
+   */
+
+  fillablePriceConfig?: FillablePriceConfig;
 }
 /** LiquidationsConfig stores all configurable fields related to liquidations. */
 
@@ -29,6 +35,12 @@ export interface LiquidationsConfigSDKType {
    */
 
   subaccount_block_limits?: SubaccountBlockLimitsSDKType;
+  /**
+   * Config about how the fillable-price spread from the oracle price
+   * increases based on the adjusted bankruptcy rating of the subaccount.
+   */
+
+  fillable_price_config?: FillablePriceConfigSDKType;
 }
 /**
  * SubaccountBlockLimits stores all configurable fields related to limits
@@ -56,11 +68,42 @@ export interface SubaccountBlockLimitsSDKType {
    */
   max_quantums_insurance_lost: Long;
 }
+/**
+ * FillablePriceConfig stores all configurable fields related to calculating
+ * the fillable price for liquidating a position.
+ */
+
+export interface FillablePriceConfig {
+  /** The rate at which the Adjusted Bankruptcy Rating increases. */
+  bankruptcyAdjustmentPpm: number;
+  /**
+   * The maximum value that the liquidation spread can take, as
+   * a ratio against the position's maintenance margin.
+   */
+
+  spreadToMaintenanceMarginRatioPpm: number;
+}
+/**
+ * FillablePriceConfig stores all configurable fields related to calculating
+ * the fillable price for liquidating a position.
+ */
+
+export interface FillablePriceConfigSDKType {
+  /** The rate at which the Adjusted Bankruptcy Rating increases. */
+  bankruptcy_adjustment_ppm: number;
+  /**
+   * The maximum value that the liquidation spread can take, as
+   * a ratio against the position's maintenance margin.
+   */
+
+  spread_to_maintenance_margin_ratio_ppm: number;
+}
 
 function createBaseLiquidationsConfig(): LiquidationsConfig {
   return {
     maxLiquidationFeePpm: 0,
-    subaccountBlockLimits: undefined
+    subaccountBlockLimits: undefined,
+    fillablePriceConfig: undefined
   };
 }
 
@@ -72,6 +115,10 @@ export const LiquidationsConfig = {
 
     if (message.subaccountBlockLimits !== undefined) {
       SubaccountBlockLimits.encode(message.subaccountBlockLimits, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.fillablePriceConfig !== undefined) {
+      FillablePriceConfig.encode(message.fillablePriceConfig, writer.uint32(26).fork()).ldelim();
     }
 
     return writer;
@@ -94,6 +141,10 @@ export const LiquidationsConfig = {
           message.subaccountBlockLimits = SubaccountBlockLimits.decode(reader, reader.uint32());
           break;
 
+        case 3:
+          message.fillablePriceConfig = FillablePriceConfig.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -107,6 +158,7 @@ export const LiquidationsConfig = {
     const message = createBaseLiquidationsConfig();
     message.maxLiquidationFeePpm = object.maxLiquidationFeePpm ?? 0;
     message.subaccountBlockLimits = object.subaccountBlockLimits !== undefined && object.subaccountBlockLimits !== null ? SubaccountBlockLimits.fromPartial(object.subaccountBlockLimits) : undefined;
+    message.fillablePriceConfig = object.fillablePriceConfig !== undefined && object.fillablePriceConfig !== null ? FillablePriceConfig.fromPartial(object.fillablePriceConfig) : undefined;
     return message;
   }
 
@@ -152,6 +204,61 @@ export const SubaccountBlockLimits = {
   fromPartial(object: DeepPartial<SubaccountBlockLimits>): SubaccountBlockLimits {
     const message = createBaseSubaccountBlockLimits();
     message.maxQuantumsInsuranceLost = object.maxQuantumsInsuranceLost !== undefined && object.maxQuantumsInsuranceLost !== null ? Long.fromValue(object.maxQuantumsInsuranceLost) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseFillablePriceConfig(): FillablePriceConfig {
+  return {
+    bankruptcyAdjustmentPpm: 0,
+    spreadToMaintenanceMarginRatioPpm: 0
+  };
+}
+
+export const FillablePriceConfig = {
+  encode(message: FillablePriceConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.bankruptcyAdjustmentPpm !== 0) {
+      writer.uint32(8).uint32(message.bankruptcyAdjustmentPpm);
+    }
+
+    if (message.spreadToMaintenanceMarginRatioPpm !== 0) {
+      writer.uint32(16).uint32(message.spreadToMaintenanceMarginRatioPpm);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): FillablePriceConfig {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseFillablePriceConfig();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.bankruptcyAdjustmentPpm = reader.uint32();
+          break;
+
+        case 2:
+          message.spreadToMaintenanceMarginRatioPpm = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<FillablePriceConfig>): FillablePriceConfig {
+    const message = createBaseFillablePriceConfig();
+    message.bankruptcyAdjustmentPpm = object.bankruptcyAdjustmentPpm ?? 0;
+    message.spreadToMaintenanceMarginRatioPpm = object.spreadToMaintenanceMarginRatioPpm ?? 0;
     return message;
   }
 

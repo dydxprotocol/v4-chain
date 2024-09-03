@@ -32,7 +32,10 @@ func TestUpdateLiquidationsConfig(t *testing.T) {
 			msg: &types.MsgUpdateLiquidationsConfig{
 				Authority: lib.GovModuleAddress.String(),
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm:  5_000,
+					MaxLiquidationFeePpm: 5_000,
+					FillablePriceConfig: types.FillablePriceConfig{
+						BankruptcyAdjustmentPpm: 0,
+					},
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 				},
 			},

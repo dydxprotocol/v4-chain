@@ -129,17 +129,17 @@ func (_m *ClobKeeper) CancelStatefulOrder(ctx types.Context, msg *clobtypes.MsgC
 	return r0
 }
 
-// ConvertBankruptcyPriceToSubticks provides a mock function with given fields: ctx, bankruptcyPrice, isLiquidatingLong, clobPair
-func (_m *ClobKeeper) ConvertBankruptcyPriceToSubticks(ctx types.Context, bankruptcyPrice *big.Rat, isLiquidatingLong bool, clobPair clobtypes.ClobPair) clobtypes.Subticks {
-	ret := _m.Called(ctx, bankruptcyPrice, isLiquidatingLong, clobPair)
+// ConvertLiquidationPriceToSubticks provides a mock function with given fields: ctx, liquidationPrice, isLiquidatingLong, clobPair
+func (_m *ClobKeeper) ConvertLiquidationPriceToSubticks(ctx types.Context, liquidationPrice *big.Rat, isLiquidatingLong bool, clobPair clobtypes.ClobPair) clobtypes.Subticks {
+	ret := _m.Called(ctx, liquidationPrice, isLiquidatingLong, clobPair)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ConvertBankruptcyPriceToSubticks")
+		panic("no return value specified for ConvertLiquidationPriceToSubticks")
 	}
 
 	var r0 clobtypes.Subticks
 	if rf, ok := ret.Get(0).(func(types.Context, *big.Rat, bool, clobtypes.ClobPair) clobtypes.Subticks); ok {
-		r0 = rf(ctx, bankruptcyPrice, isLiquidatingLong, clobPair)
+		r0 = rf(ctx, liquidationPrice, isLiquidatingLong, clobPair)
 	} else {
 		r0 = ret.Get(0).(clobtypes.Subticks)
 	}
@@ -271,6 +271,36 @@ func (_m *ClobKeeper) GetClobPair(ctx types.Context, id clobtypes.ClobPairId) (c
 		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// GetFillablePrice provides a mock function with given fields: ctx, subaccountId, perpetualId, deltaQuantums
+func (_m *ClobKeeper) GetFillablePrice(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, deltaQuantums *big.Int) (*big.Rat, error) {
+	ret := _m.Called(ctx, subaccountId, perpetualId, deltaQuantums)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFillablePrice")
+	}
+
+	var r0 *big.Rat
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) (*big.Rat, error)); ok {
+		return rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) *big.Rat); ok {
+		r0 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Rat)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
+		r1 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	} else {
+		r1 = ret.Error(1)
 	}
 
 	return r0, r1

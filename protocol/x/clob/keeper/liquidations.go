@@ -1,11 +1,9 @@
 package keeper
 
 import (
-	"bytes"
 	"errors"
 	"math"
 	"math/big"
-	"sort"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -242,12 +240,34 @@ func (k Keeper) GetLiquidationOrderForPerpetual(
 		new(big.Rat).Neg(new(big.Rat).SetInt(orderQuantums)),
 	)
 
+	fillablePriceRat, err := k.GetFillablePrice(ctx, subaccountId, perpetualId, orderQuantums)
+	if err != nil {
+		return nil, err
+	}
+
 	// Calculate the bankruptcy price.
 	isLiquidatingLong := orderQuantums.Sign() == -1
+
+	// take the most aggresive price
+	liquidationPriceRat := new(big.Rat)
+	if isLiquidatingLong {
+		if bankruptcyPriceRat.Cmp(fillablePriceRat) < 0 {
+			liquidationPriceRat = bankruptcyPriceRat
+		} else {
+			liquidationPriceRat = fillablePriceRat
+		}
+	} else {
+		if bankruptcyPriceRat.Cmp(fillablePriceRat) > 0 {
+			liquidationPriceRat = bankruptcyPriceRat
+		} else {
+			liquidationPriceRat = fillablePriceRat
+		}
+	}
+
 	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
-	bankruptcyPriceSubticks := k.ConvertBankruptcyPriceToSubticks(
+	liquidationPriceSubticks := k.ConvertLiquidationPriceToSubticks(
 		ctx,
-		bankruptcyPriceRat,
+		liquidationPriceRat,
 		isLiquidatingLong,
 		clobPair,
 	)
@@ -259,7 +279,7 @@ func (k Keeper) GetLiquidationOrderForPerpetual(
 		clobPair,
 		!isLiquidatingLong,
 		satypes.BaseQuantums(absBaseQuantums.Uint64()),
-		bankruptcyPriceSubticks,
+		liquidationPriceSubticks,
 	)
 	return liquidationOrder, nil
 }
@@ -452,6 +472,143 @@ func (k Keeper) EnsureIsLiquidatable(
 		)
 	}
 	return nil
+}
+
+// GetFillablePrice returns the fillable-price of a subaccount’s position. It returns a rational
+// number to avoid rounding errors.
+func (k Keeper) GetFillablePrice(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	deltaQuantums *big.Int,
+) (
+	fillablePrice *big.Rat,
+	err error,
+) {
+	// The equation for calculating the fillable price is the following:
+	// `(PNNV - ABR * SMMR * PMMR) / PS`, where `ABR = BA * (1 - (TNC / TMMR))`.
+	// To calculate this, we must first fetch the following values:
+	// - PS (The perpetual position size held by the subaccount, used for calculating the
+	//   position net notional value and maintenance margin requirement).
+	// - PNNV (position net notional value).
+	// - PMMR (position maintenance margin requirement).
+	// - TNC (total net collateral).
+	// - TMMR (total maintenance margin requirement).
+	// - BA (bankruptcy adjustment PPM).
+	// - SMMR (spread to maintenance margin ratio)
+
+	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+	position, _ := subaccount.GetPerpetualPositionForId(perpetualId)
+	psBig := position.GetBigQuantums()
+
+	// Validate that the provided deltaQuantums is valid with respect to
+	// the current position size.
+	if psBig.Sign()*deltaQuantums.Sign() != -1 || psBig.CmpAbs(deltaQuantums) == -1 {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidPerpetualPositionSizeDelta,
+			"Position size delta %v is invalid for %v and perpetual %v, outstanding position size is %v",
+			deltaQuantums,
+			subaccountId,
+			perpetualId,
+			psBig,
+		)
+	}
+
+	pnnvBig, err := k.perpetualsKeeper.GetNetCollateral(ctx, perpetualId, psBig)
+	if err != nil {
+		return nil, err
+	}
+
+	_, pmmrBig, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, psBig)
+	if err != nil {
+		return nil, err
+	}
+
+	tncBig,
+		_,
+		tmmrBig,
+		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+		ctx,
+		satypes.Update{SubaccountId: subaccountId},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// stat liquidation order for negative TNC
+	// TODO(CLOB-906) Prevent duplicated stat emissions for liquidation orders in PrepareCheckState.
+	if tncBig.Sign() < 0 {
+		callback := metrics.PrepareCheckState
+		if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
+			callback = metrics.DeliverTx
+		}
+
+		metrics.IncrCounterWithLabels(
+			metrics.LiquidationsLiquidationMatchNegativeTNC,
+			1,
+			metrics.GetLabelForIntValue(
+				metrics.PerpetualId,
+				int(perpetualId),
+			),
+			metrics.GetLabelForStringValue(
+				metrics.Callback,
+				callback,
+			),
+		)
+
+		ctx.Logger().Info(
+			"GetFillablePrice: Subaccount has negative TNC. SubaccountId: %+v, TNC: %+v",
+			subaccountId,
+			tncBig,
+		)
+	}
+
+	liquidationsConfig := k.GetLiquidationsConfig(ctx)
+	ba := liquidationsConfig.FillablePriceConfig.BankruptcyAdjustmentPpm
+	smmr := liquidationsConfig.FillablePriceConfig.SpreadToMaintenanceMarginRatioPpm
+
+	// Calculate the ABR (adjusted bankruptcy rating).
+	tncDivTmmrRat := new(big.Rat).SetFrac(tncBig, tmmrBig)
+	unboundedAbrRat := lib.BigRatMulPpm(
+		new(big.Rat).Sub(
+			lib.BigRat1(),
+			tncDivTmmrRat,
+		),
+		ba,
+	)
+
+	// Bound the ABR between 0 and 1.
+	abrRat := lib.BigRatClamp(unboundedAbrRat, lib.BigRat0(), lib.BigRat1())
+
+	// Calculate `SMMR * PMMR` (the maximum liquidation spread in quote quantums).
+	maxLiquidationSpreadQuoteQuantumsRat := lib.BigRatMulPpm(
+		new(big.Rat).SetInt(pmmrBig),
+		smmr,
+	)
+
+	fillablePriceOracleDeltaQuoteQuantumsRat := new(big.Rat).Mul(abrRat, maxLiquidationSpreadQuoteQuantumsRat)
+
+	// Calculate `PNNV - ABR * SMMR * PMMR`, which represents the fillable price in quote quantums.
+	// For longs, `pnnvRat > 0` meaning the fillable price in quote quantums will be lower than the
+	// oracle price.
+	// For shorts, `pnnvRat < 0` meaning the fillable price in quote quantums will be higher than
+	// the oracle price (in this case the result will be negative, but dividing by `positionSize` below
+	// will make it positive since `positionSize < 0` for shorts).
+	pnnvRat := new(big.Rat).SetInt(pnnvBig)
+	fillablePriceQuoteQuantumsRat := new(big.Rat).Sub(pnnvRat, fillablePriceOracleDeltaQuoteQuantumsRat)
+
+	// Calculate the fillable price by dividing by `PS`.
+	// Note that `fillablePriceQuoteQuantumsRat` and `PS` should always have the same sign,
+	// meaning the resulting fillable price should always be positive.
+	fillablePrice = new(big.Rat).Quo(
+		fillablePriceQuoteQuantumsRat,
+		new(big.Rat).SetInt(psBig),
+	)
+	if fillablePrice.Sign() < 0 {
+		panic("GetFillablePrice: Calculated fillable price is negative")
+	}
+
+	return fillablePrice, nil
 }
 
 // Returns the bankruptcy-price of a subaccount’s position delta in quote quantums.
@@ -833,7 +990,7 @@ func (k Keeper) GetSubaccountMaxInsuranceLost(
 	return bigMaxQuantumsInsuranceLost, nil
 }
 
-// ConvertBankruptcyPriceToSubticks converts the bankruptcy price of a liquidation order to subticks.
+// ConvertLiquidationPriceToSubticks converts the liquidation price of a liquidation order to subticks.
 // The returned subticks will be rounded to the nearest tick (such that
 // `subticks % clobPair.SubticksPerTick == 0`). This function will round up for sells
 // that close longs, and round down for buys that close shorts.
@@ -841,17 +998,17 @@ func (k Keeper) GetSubaccountMaxInsuranceLost(
 // Note the returned `subticks` will be bounded (inclusive) between `clobPair.SubticksPerTick` and
 // `math.MaxUint64 - math.MaxUint64 % clobPair.SubticksPerTick` (the maximum `uint64` that is a
 // multiple of `clobPair.SubticksPerTick`).
-func (k Keeper) ConvertBankruptcyPriceToSubticks(
+func (k Keeper) ConvertLiquidationPriceToSubticks(
 	ctx sdk.Context,
-	bankruptcyPrice *big.Rat,
+	liquidationPrice *big.Rat,
 	isLiquidatingLong bool,
 	clobPair types.ClobPair,
 ) (
 	subticks types.Subticks,
 ) {
-	// The bankruptcy price is invalid if it is negative.
-	if bankruptcyPrice.Sign() < 0 {
-		panic("ConvertBankruptcyPriceToSubticks: bankruptcyPrice should not be negative")
+	// The liquidation price is invalid if it is negative.
+	if liquidationPrice.Sign() < 0 {
+		panic("ConvertLiquidationPriceToSubticks: liquidationPrice should not be negative")
 	}
 
 	exponent := clobPair.QuantumConversionExponent
@@ -862,10 +1019,10 @@ func (k Keeper) ConvertBankruptcyPriceToSubticks(
 		quoteQuantumsPerBaseQuantumAndSubtickRat.Inv(quoteQuantumsPerBaseQuantumAndSubtickRat)
 	}
 
-	// Assuming `bankruptcyPrice` is in units of `quote quantums / base quantum`,  then dividing by
+	// Assuming `liquidationPrice` is in units of `quote quantums / base quantum`,  then dividing by
 	// `quote quantums / (base quantum * subtick)` will give the resulting units of subticks.
 	subticksRat := new(big.Rat).Quo(
-		bankruptcyPrice,
+		liquidationPrice,
 		quoteQuantumsPerBaseQuantumAndSubtickRat,
 	)
 
@@ -897,9 +1054,9 @@ func (k Keeper) ConvertBankruptcyPriceToSubticks(
 	// Panic if the bounded subticks is zero or is not a multiple of `clobPair.SubticksPerTick`,
 	// which would indicate the rounding or clamp logic failed.
 	if boundedSubticks == 0 {
-		panic("ConvertBankruptcyPriceToSubticks: Bounded subticks is 0.")
+		panic("ConvertLiquidationPriceToSubticks: Bounded subticks is 0.")
 	} else if boundedSubticks%uint64(clobPair.SubticksPerTick) != 0 {
-		panic("ConvertBankruptcyPriceToSubticks: Bounded subticks is not a multiple of SubticksPerTick.")
+		panic("ConvertLiquidationPriceToSubticks: Bounded subticks is not a multiple of SubticksPerTick.")
 	}
 
 	return types.Subticks(boundedSubticks)
@@ -1012,68 +1169,4 @@ func (k Keeper) validateLiquidationParams(
 		}
 	}
 	return nil
-}
-
-// SortLiquidationOrders deterministically sorts the liquidation orders in place.
-// Orders are first ordered by their absolute percentage difference from the oracle price in descending order,
-// followed by the their size in quote quantums in descending order, and finally by order hashes.
-func (k Keeper) SortLiquidationOrders(
-	ctx sdk.Context,
-	liquidationOrders []types.LiquidationOrder,
-) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.SortLiquidationOrders)
-
-	sort.Slice(liquidationOrders, func(i, j int) bool {
-		x, y := liquidationOrders[i], liquidationOrders[j]
-
-		// First, sort by abs percentage difference from oracle price in descending order.
-		xAbsPercentageDiffFromOraclePrice := k.getAbsPercentageDiffFromOraclePrice(ctx, x)
-		yAbsPercentageDiffFromOraclePrice := k.getAbsPercentageDiffFromOraclePrice(ctx, y)
-		if xAbsPercentageDiffFromOraclePrice.Cmp(yAbsPercentageDiffFromOraclePrice) != 0 {
-			return xAbsPercentageDiffFromOraclePrice.Cmp(yAbsPercentageDiffFromOraclePrice) == 1
-		}
-
-		// Then sort by order quote quantums in descending order.
-		xQuoteQuantums := k.getQuoteQuantumsForLiquidationOrder(ctx, x)
-		yQuoteQuantums := k.getQuoteQuantumsForLiquidationOrder(ctx, y)
-		if xQuoteQuantums.Cmp(yQuoteQuantums) != 0 {
-			return xQuoteQuantums.Cmp(yQuoteQuantums) == 1
-		}
-
-		// Sort by order hash by default.
-		xHash := x.GetOrderHash()
-		yHash := y.GetOrderHash()
-		return bytes.Compare(xHash[:], yHash[:]) == -1
-	})
-}
-
-func (k Keeper) getAbsPercentageDiffFromOraclePrice(
-	ctx sdk.Context,
-	liquidationOrder types.LiquidationOrder,
-) *big.Rat {
-	clobPair := k.mustGetClobPair(ctx, liquidationOrder.GetClobPairId())
-	oraclePriceRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
-	bankruptcyPriceRat := liquidationOrder.GetOrderSubticks().ToBigRat()
-
-	return new(big.Rat).Abs(
-		new(big.Rat).Quo(
-			new(big.Rat).Sub(bankruptcyPriceRat, oraclePriceRat),
-			oraclePriceRat,
-		),
-	)
-}
-
-func (k Keeper) getQuoteQuantumsForLiquidationOrder(
-	ctx sdk.Context,
-	liquidationOrder types.LiquidationOrder,
-) *big.Int {
-	quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		liquidationOrder.MustGetLiquidatedPerpetualId(),
-		liquidationOrder.GetBaseQuantums().ToBigInt(),
-	)
-	if err != nil {
-		panic(err)
-	}
-	return quoteQuantums
 }

@@ -15,6 +15,11 @@ message LiquidationsConfig {
   // be liquidated within a single block.
   SubaccountBlockLimits subaccount_block_limits = 2
       [ (gogoproto.nullable) = false ];
+
+  // Config about how the fillable-price spread from the oracle price
+  // increases based on the adjusted bankruptcy rating of the subaccount.
+  FillablePriceConfig fillable_price_config = 3
+      [ (gogoproto.nullable) = false ];
 }
 
 // SubaccountBlockLimits stores all configurable fields related to limits
@@ -25,4 +30,15 @@ message SubaccountBlockLimits {
   // The maximum insurance-fund payout amount for a given subaccount
   // per block. I.e. how much it can cover for that subaccount.
   uint64 max_quantums_insurance_lost = 1;
+}
+
+// FillablePriceConfig stores all configurable fields related to calculating
+// the fillable price for liquidating a position.
+message FillablePriceConfig {
+  // The rate at which the Adjusted Bankruptcy Rating increases.
+  uint32 bankruptcy_adjustment_ppm = 1;
+
+  // The maximum value that the liquidation spread can take, as
+  // a ratio against the position's maintenance margin.
+  uint32 spread_to_maintenance_margin_ratio_ppm = 2;
 }

@@ -692,6 +692,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				// Cap the max liquidation fee ppm so that the bankruptcy price changes
 				// in the insurance fund delta calculation.
 				MaxLiquidationFeePpm:  10,
+				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 			rawOperations: []types.OperationRaw{
@@ -2160,6 +2161,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
+				FillablePriceConfig:  constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: 999_999, // $0.999999
 				},
@@ -2210,6 +2212,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
+				FillablePriceConfig:  constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: 499_999, // $0.499999
 				},
@@ -2281,6 +2284,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			insuranceFundBalance: 10_000_000,
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm: 5_000,
+				FillablePriceConfig:  constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					// Max insurance lost that a subaccount can have is $0.5.
 					// For this liquidation, overall insurance fund delta is -$0.5, which is within the limit.
@@ -2412,6 +2416,7 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 			insuranceFundBalance: 2_000_000, // Insurance fund has $2
 			liquidationConfig: &types.LiquidationsConfig{
 				MaxLiquidationFeePpm:  5_000,
+				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 			expectedError: nil,

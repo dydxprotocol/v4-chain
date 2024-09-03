@@ -42,6 +42,15 @@ type LiquidationsKeeper interface {
 		quoteQuantums *big.Int,
 		err error,
 	)
+	GetFillablePrice(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		perpetualId uint32,
+		deltaQuantums *big.Int,
+	) (
+		fillablePrice *big.Rat,
+		err error,
+	)
 	GetInsuranceFundBalanceInQuoteQuantums(
 		ctx sdk.Context,
 		perpetualId uint32,
@@ -59,9 +68,9 @@ type LiquidationsKeeper interface {
 		insuranceFundDeltaQuoteQuantums *big.Int,
 		err error,
 	)
-	ConvertBankruptcyPriceToSubticks(
+	ConvertLiquidationPriceToSubticks(
 		ctx sdk.Context,
-		bankruptcyPrice *big.Rat,
+		liquidationPrice *big.Rat,
 		isLiquidatingLong bool,
 		clobPair ClobPair,
 	) (

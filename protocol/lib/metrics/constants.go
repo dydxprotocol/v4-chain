@@ -140,7 +140,6 @@ const (
 	RemovalReason                                           = "removal_reason"
 	RemoveAndClearOperationsQueue                           = "remove_and_clear_operations_queue"
 	ReplayOperations                                        = "replay_operations"
-	SortLiquidationOrders                                   = "sort_liquidation_orders"
 	SendCancelOrderOffchainUpdates                          = "send_cancel_order_offchain_updates"
 	SendPlaceOrderOffchainUpdates                           = "send_place_order_offchain_updates"
 	SendPlacePerpetualLiquidationOffchainUpdates            = "send_perpetual_liquidation_offchain_updates"
