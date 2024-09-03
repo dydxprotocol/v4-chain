@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	v6_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.0.0"
+	v6_0_0_testnet_fix "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.0.0_testnet_fix"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +16,7 @@ var (
 	// New upgrades should be added to this slice after they are implemented.
 	Upgrades = []upgrades.Upgrade{
 		v6_0_0.Upgrade,
+		v6_0_0_testnet_fix.Upgrade,
 	}
 	Forks = []upgrades.Fork{}
 )
@@ -35,6 +37,17 @@ func (app *App) setupUpgradeHandlers() {
 			app.MarketMapKeeper,
 			app.RevShareKeeper,
 			app.VaultKeeper,
+		),
+	)
+	// v6_0_0_testnet_fix not intended for prod use.
+	if app.UpgradeKeeper.HasHandler(v6_0_0_testnet_fix.UpgradeName) {
+		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v6_0_0_testnet_fix.UpgradeName))
+	}
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v6_0_0_testnet_fix.UpgradeName,
+		v6_0_0_testnet_fix.CreateUpgradeHandler(
+			app.ModuleManager,
+			app.configurator,
 		),
 	)
 }
