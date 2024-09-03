@@ -9,16 +9,22 @@ option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/c
 message LiquidationsConfig {
   // The maximum liquidation fee (in parts-per-million). This fee goes
   // 100% to the insurance fund.
-  uint32 max_liquidation_fee_ppm = 1;
+  uint32 insurance_fund_fee_ppm = 1;
+
+  // The fraction of the remaining collateral taken as a validator fee.
+  uint32 validator_fee_ppm = 2;
+  
+  // The fraction of the remaining collateral taken as a liquidity fee.
+  uint32 liquidity_fee_ppm = 3;
 
   // Limits around how many quote quantums from a single subaccount can
   // be liquidated within a single block.
-  SubaccountBlockLimits subaccount_block_limits = 2
+  SubaccountBlockLimits subaccount_block_limits = 4
       [ (gogoproto.nullable) = false ];
 
   // Config about how the fillable-price spread from the oracle price
   // increases based on the adjusted bankruptcy rating of the subaccount.
-  FillablePriceConfig fillable_price_config = 3
+  FillablePriceConfig fillable_price_config = 5
       [ (gogoproto.nullable) = false ];
 }
 

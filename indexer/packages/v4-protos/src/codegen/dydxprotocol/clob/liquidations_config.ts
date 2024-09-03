@@ -7,7 +7,13 @@ export interface LiquidationsConfig {
    * The maximum liquidation fee (in parts-per-million). This fee goes
    * 100% to the insurance fund.
    */
-  maxLiquidationFeePpm: number;
+  insuranceFundFeePpm: number;
+  /** The fraction of the remaining collateral taken as a validator fee. */
+
+  validatorFeePpm: number;
+  /** The fraction of the remaining collateral taken as a liquidity fee. */
+
+  liquidityFeePpm: number;
   /**
    * Limits around how many quote quantums from a single subaccount can
    * be liquidated within a single block.
@@ -28,7 +34,13 @@ export interface LiquidationsConfigSDKType {
    * The maximum liquidation fee (in parts-per-million). This fee goes
    * 100% to the insurance fund.
    */
-  max_liquidation_fee_ppm: number;
+  insurance_fund_fee_ppm: number;
+  /** The fraction of the remaining collateral taken as a validator fee. */
+
+  validator_fee_ppm: number;
+  /** The fraction of the remaining collateral taken as a liquidity fee. */
+
+  liquidity_fee_ppm: number;
   /**
    * Limits around how many quote quantums from a single subaccount can
    * be liquidated within a single block.
@@ -101,7 +113,9 @@ export interface FillablePriceConfigSDKType {
 
 function createBaseLiquidationsConfig(): LiquidationsConfig {
   return {
-    maxLiquidationFeePpm: 0,
+    insuranceFundFeePpm: 0,
+    validatorFeePpm: 0,
+    liquidityFeePpm: 0,
     subaccountBlockLimits: undefined,
     fillablePriceConfig: undefined
   };
@@ -109,16 +123,24 @@ function createBaseLiquidationsConfig(): LiquidationsConfig {
 
 export const LiquidationsConfig = {
   encode(message: LiquidationsConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.maxLiquidationFeePpm !== 0) {
-      writer.uint32(8).uint32(message.maxLiquidationFeePpm);
+    if (message.insuranceFundFeePpm !== 0) {
+      writer.uint32(8).uint32(message.insuranceFundFeePpm);
+    }
+
+    if (message.validatorFeePpm !== 0) {
+      writer.uint32(16).uint32(message.validatorFeePpm);
+    }
+
+    if (message.liquidityFeePpm !== 0) {
+      writer.uint32(24).uint32(message.liquidityFeePpm);
     }
 
     if (message.subaccountBlockLimits !== undefined) {
-      SubaccountBlockLimits.encode(message.subaccountBlockLimits, writer.uint32(18).fork()).ldelim();
+      SubaccountBlockLimits.encode(message.subaccountBlockLimits, writer.uint32(34).fork()).ldelim();
     }
 
     if (message.fillablePriceConfig !== undefined) {
-      FillablePriceConfig.encode(message.fillablePriceConfig, writer.uint32(26).fork()).ldelim();
+      FillablePriceConfig.encode(message.fillablePriceConfig, writer.uint32(42).fork()).ldelim();
     }
 
     return writer;
@@ -134,14 +156,22 @@ export const LiquidationsConfig = {
 
       switch (tag >>> 3) {
         case 1:
-          message.maxLiquidationFeePpm = reader.uint32();
+          message.insuranceFundFeePpm = reader.uint32();
           break;
 
         case 2:
-          message.subaccountBlockLimits = SubaccountBlockLimits.decode(reader, reader.uint32());
+          message.validatorFeePpm = reader.uint32();
           break;
 
         case 3:
+          message.liquidityFeePpm = reader.uint32();
+          break;
+
+        case 4:
+          message.subaccountBlockLimits = SubaccountBlockLimits.decode(reader, reader.uint32());
+          break;
+
+        case 5:
           message.fillablePriceConfig = FillablePriceConfig.decode(reader, reader.uint32());
           break;
 
@@ -156,7 +186,9 @@ export const LiquidationsConfig = {
 
   fromPartial(object: DeepPartial<LiquidationsConfig>): LiquidationsConfig {
     const message = createBaseLiquidationsConfig();
-    message.maxLiquidationFeePpm = object.maxLiquidationFeePpm ?? 0;
+    message.insuranceFundFeePpm = object.insuranceFundFeePpm ?? 0;
+    message.validatorFeePpm = object.validatorFeePpm ?? 0;
+    message.liquidityFeePpm = object.liquidityFeePpm ?? 0;
     message.subaccountBlockLimits = object.subaccountBlockLimits !== undefined && object.subaccountBlockLimits !== null ? SubaccountBlockLimits.fromPartial(object.subaccountBlockLimits) : undefined;
     message.fillablePriceConfig = object.fillablePriceConfig !== undefined && object.fillablePriceConfig !== null ? FillablePriceConfig.fromPartial(object.fillablePriceConfig) : undefined;
     return message;

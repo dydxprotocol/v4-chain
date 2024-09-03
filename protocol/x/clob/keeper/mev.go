@@ -556,7 +556,7 @@ func (k Keeper) GetMEVDataFromOperations(
 
 					// Calculate the insurance fund delta for this trade.
 					liquidationIsBuy := !makerOrder.IsBuy()
-					insuranceFundDelta, err := k.GetLiquidationInsuranceFundDelta(
+					_, insuranceFundDelta, err := k.GetLiquidationInsuranceFundDelta(
 						ctx,
 						matchLiquidation.Liquidated,
 						matchLiquidation.PerpetualId,

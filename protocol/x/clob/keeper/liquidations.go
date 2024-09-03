@@ -744,12 +744,13 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	fillAmount uint64,
 	subticks types.Subticks,
 ) (
+	remainingQuoteQuantumsBig *big.Int,
 	insuranceFundDeltaQuoteQuantums *big.Int,
 	err error,
 ) {
 	// Verify that fill amount is not zero.
 	if fillAmount == 0 {
-		return nil, errorsmod.Wrapf(
+		return nil, nil, errorsmod.Wrapf(
 			types.ErrInvalidQuantumsForInsuranceFundDeltaCalculation,
 			"FillAmount is zero for subaccount %v and perpetual %v.",
 			subaccountId,
@@ -766,7 +767,7 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 		satypes.BaseQuantums(fillAmount),
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if isBuy {
 		deltaQuoteQuantums.Neg(deltaQuoteQuantums)
@@ -782,12 +783,12 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 		deltaQuantums,
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Determine the delta between the quote quantums received from closing the position and the
 	// bankruptcy price in quote quantums.
-	insuranceFundDeltaQuoteQuantumsBig := new(big.Int).Sub(
+	bankruptcyDeltaQuoteQuantumsBig := new(big.Int).Sub(
 		deltaQuoteQuantums,
 		bankruptcyPriceInQuoteQuantumsBig,
 	)
@@ -795,8 +796,8 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	// If the insurance fund delta is less than or equal to zero, this means the insurance fund
 	// needs to cover the difference between the quote quantums received from closing the position
 	// and the bankruptcy price in quote quantums.
-	if insuranceFundDeltaQuoteQuantumsBig.Sign() <= 0 {
-		return insuranceFundDeltaQuoteQuantumsBig, nil
+	if bankruptcyDeltaQuoteQuantumsBig.Sign() <= 0 {
+		return big.NewInt(0), bankruptcyDeltaQuoteQuantumsBig, nil
 	}
 
 	// The insurance fund delta is positive. We must read the liquidations config from state to
@@ -807,15 +808,71 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	// will receive from closing this position and the max liquidation fee PPM.
 	maxLiquidationFeeQuoteQuantumsBig := lib.BigIntMulPpm(
 		new(big.Int).Abs(deltaQuoteQuantums),
-		liquidationsConfig.MaxLiquidationFeePpm,
+		liquidationsConfig.InsuranceFundFeePpm,
 	)
 
 	// The liquidation fee paid by the user is the minimum of the max liquidation fee and the
 	// leftover collateral from liquidating the position.
-	return lib.BigMin(
+	insuranceFundDeltaQuoteQuantumsBig := lib.BigMin(
 		maxLiquidationFeeQuoteQuantumsBig,
+		bankruptcyDeltaQuoteQuantumsBig,
+	)
+
+	remainingQuoteQuantumsBig = new(big.Int).Sub(
+		bankruptcyDeltaQuoteQuantumsBig,
 		insuranceFundDeltaQuoteQuantumsBig,
-	), nil
+	)
+
+	return remainingQuoteQuantumsBig, insuranceFundDeltaQuoteQuantumsBig, nil
+
+}
+
+func (k Keeper) GetValidatorAndLiquidityFee(
+	ctx sdk.Context,
+	remainingQuoteQuantumsBig *big.Int,
+) (
+	validatorFeeQuoteQuantums *big.Int,
+	liquidityFeeQuoteQuantums *big.Int,
+	err error,
+) {
+
+	if remainingQuoteQuantumsBig.Cmp(big.NewInt(0)) < 0 {
+		return nil, nil, errorsmod.Wrapf(
+			types.ErrInvalidQuantumsForInsuranceFundDeltaCalculation,
+			"Remaining quote quantums %v is negative",
+			remainingQuoteQuantumsBig,
+		)
+	}
+
+	if remainingQuoteQuantumsBig.Cmp(big.NewInt(0)) == 0 {
+		return big.NewInt(0), big.NewInt(0), nil
+	}
+
+	liquidationsConfig := k.GetLiquidationsConfig(ctx)
+
+	validatorFeeQuoteQuantums = lib.BigIntMulPpm(
+		remainingQuoteQuantumsBig,
+		liquidationsConfig.ValidatorFeePpm,
+	)
+
+	liquidityFeeQuoteQuantums = lib.BigIntMulPpm(
+		remainingQuoteQuantumsBig,
+		liquidationsConfig.LiquidityFeePpm,
+	)
+
+	// Ensure that validatorFeeQuoteQuantums + liquidityFeeQuoteQuantums <= remainingQuoteQuantumsBig
+	totalFees := new(big.Int).Add(validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums)
+	if totalFees.Cmp(remainingQuoteQuantumsBig) > 0 {
+		return nil, nil, errorsmod.Wrapf(
+			types.ErrInvalidQuantumsForInsuranceFundDeltaCalculation,
+			"Total fees %v exceed remaining quote quantums %v",
+			totalFees,
+			remainingQuoteQuantumsBig,
+		)
+	}
+
+	return validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, nil
+
 }
 
 // GetPerpetualPositionToLiquidate determines which position to liquidate on the
@@ -1070,6 +1127,8 @@ func (k Keeper) validateMatchedLiquidation(
 	makerSubticks types.Subticks,
 ) (
 	insuranceFundDelta *big.Int,
+	validatorFeeQuoteQuantums *big.Int,
+	liquidityFeeQuoteQuantums *big.Int,
 	err error,
 ) {
 	if !order.IsLiquidation() {
@@ -1078,7 +1137,7 @@ func (k Keeper) validateMatchedLiquidation(
 
 	// Calculate the insurance fund delta for this fill.
 	liquidatedSubaccountId := order.GetSubaccountId()
-	insuranceFundDelta, err = k.GetLiquidationInsuranceFundDelta(
+	remainingQuoteQuantumsBig, insuranceFundDelta, err := k.GetLiquidationInsuranceFundDelta(
 		ctx,
 		liquidatedSubaccountId,
 		perpetualId,
@@ -1087,19 +1146,27 @@ func (k Keeper) validateMatchedLiquidation(
 		makerSubticks,
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
 	// Validate that processing the liquidation fill does not leave insufficient funds
 	// in the insurance fund (such that the liquidation couldn't have possibly continued).
 	if !k.IsValidInsuranceFundDelta(ctx, insuranceFundDelta, perpetualId) {
 		log.DebugLog(ctx, "ProcessMatches: insurance fund has insufficient balance to process the liquidation.")
-		return nil, errorsmod.Wrapf(
+		return nil, nil, nil, errorsmod.Wrapf(
 			types.ErrInsuranceFundHasInsufficientFunds,
 			"Liquidation order %v, insurance fund delta %v",
 			order,
 			insuranceFundDelta.String(),
 		)
+	}
+
+	validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, err = k.GetValidatorAndLiquidityFee(
+		ctx,
+		remainingQuoteQuantumsBig,
+	)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
 	// Validate that total notional liquidated and total insurance funds lost do not exceed subaccount block limits.
@@ -1109,10 +1176,10 @@ func (k Keeper) validateMatchedLiquidation(
 		perpetualId,
 		insuranceFundDelta,
 	); err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
-	return insuranceFundDelta, nil
+	return insuranceFundDelta, validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, nil
 }
 
 // validateLiquidationParams performs stateful validation

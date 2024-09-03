@@ -58,8 +58,10 @@ func TestLiquidationConfig(t *testing.T) {
 			},
 			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Carl_Num1, constants.Carl_Num0},
 			liquidationConfig: clobtypes.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Max_Smmr,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Max_Smmr,
 				SubaccountBlockLimits: clobtypes.SubaccountBlockLimits{
 					// Subaccount may only lose $0.5 per block.
 					MaxQuantumsInsuranceLost: 500_000,
@@ -129,8 +131,10 @@ func TestLiquidationConfig(t *testing.T) {
 			},
 			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Dave_Num0, constants.Dave_Num1},
 			liquidationConfig: clobtypes.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Max_Smmr,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Max_Smmr,
 				SubaccountBlockLimits: clobtypes.SubaccountBlockLimits{
 					// Subaccount may only lose $0.5 per block.
 					MaxQuantumsInsuranceLost: 500_000,
@@ -653,8 +657,10 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			},
 			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0},
 			liquidationConfig: clobtypes.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Max_Smmr,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Max_Smmr,
 				SubaccountBlockLimits: clobtypes.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: 1,
 				},

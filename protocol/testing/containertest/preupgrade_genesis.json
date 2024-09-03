@@ -645,7 +645,9 @@
             "bankruptcy_adjustment_ppm": 1000000,
             "spread_to_maintenance_margin_ratio_ppm": 1500000
           },
-          "max_liquidation_fee_ppm": 15000,
+          "insurance_fund_fee_ppm": 15000,
+          "validator_fee_ppm": 200000,
+          "liquidity_fee_ppm": 800000,
           "subaccount_block_limits": {
             "max_quantums_insurance_lost": 1000000000000
           }

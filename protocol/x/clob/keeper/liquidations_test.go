@@ -589,8 +589,10 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
@@ -641,8 +643,10 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
@@ -711,8 +715,10 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: 50_000_000, // $50
 				},
@@ -763,8 +769,10 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: 500_000, // $0.5
 				},
@@ -941,7 +949,9 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm:  5_000,
+				InsuranceFundFeePpm:   5_000,
+				ValidatorFeePpm:       200_000,
+				LiquidityFeePpm:       800_000,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -1027,7 +1037,9 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm:  5_000,
+				InsuranceFundFeePpm:   5_000,
+				ValidatorFeePpm:       200_000,
+				LiquidityFeePpm:       800_000,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -1368,7 +1380,9 @@ func TestGetFillablePrice(t *testing.T) {
 			},
 
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
 				FillablePriceConfig: types.FillablePriceConfig{
 					BankruptcyAdjustmentPpm:           2_000_000,
 					SpreadToMaintenanceMarginRatioPpm: 100_000,
@@ -1396,7 +1410,9 @@ func TestGetFillablePrice(t *testing.T) {
 			},
 
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
 				FillablePriceConfig: types.FillablePriceConfig{
 					BankruptcyAdjustmentPpm:           lib.OneMillion,
 					SpreadToMaintenanceMarginRatioPpm: 200_000,
@@ -1443,7 +1459,9 @@ func TestGetFillablePrice(t *testing.T) {
 			},
 
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
 				FillablePriceConfig: types.FillablePriceConfig{
 					BankruptcyAdjustmentPpm:           2_000_000,
 					SpreadToMaintenanceMarginRatioPpm: 100_000,
@@ -1472,7 +1490,9 @@ func TestGetFillablePrice(t *testing.T) {
 			},
 
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
 				FillablePriceConfig: types.FillablePriceConfig{
 					BankruptcyAdjustmentPpm:           lib.OneMillion,
 					SpreadToMaintenanceMarginRatioPpm: 200_000,
@@ -1619,7 +1639,9 @@ func TestGetFillablePrice(t *testing.T) {
 			},
 
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
 				FillablePriceConfig: types.FillablePriceConfig{
 					BankruptcyAdjustmentPpm:           math.MaxUint32,
 					SpreadToMaintenanceMarginRatioPpm: 100_000,
@@ -1647,7 +1669,9 @@ func TestGetFillablePrice(t *testing.T) {
 			},
 
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
 				FillablePriceConfig: types.FillablePriceConfig{
 					BankruptcyAdjustmentPpm:           lib.OneMillion,
 					SpreadToMaintenanceMarginRatioPpm: 1,
@@ -1673,7 +1697,9 @@ func TestGetFillablePrice(t *testing.T) {
 			},
 
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
 				FillablePriceConfig: types.FillablePriceConfig{
 					BankruptcyAdjustmentPpm:           lib.OneMillion,
 					SpreadToMaintenanceMarginRatioPpm: lib.OneMillion,
@@ -2430,7 +2456,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			placedMatchableOrders: []types.MatchableOrder{
 				// First order at $50,000, matching against this order will make Carl's TNC >= MMR.
 				// Insurance fund fee will be maxed out. DeltaQuoteQuantums = .25 BTC * $50k/BTC = $12,500.
-				// Current maxLiquidationFeePpm = 5000.
+				// Current InsuranceFundFeePpm = 5000.
 				// Fee = $12,500 * 5000 / 1,000,000 = $62.5.
 				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 				// Carl's account has now become well-collateralized, however the liquidation order
@@ -2463,7 +2489,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 								54_999_000_000 - 50_000_000_000/4 -
 									lib.BigIntMulPpm(
 										big.NewInt(50_000_000_000/4),
-										constants.LiquidationsConfig_No_Limit.MaxLiquidationFeePpm,
+										constants.LiquidationsConfig_No_Limit.InsuranceFundFeePpm,
 									).Int64(),
 							),
 						},
@@ -3396,7 +3422,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			expectedLiquidationInsuranceFundDeltaBig: big.NewInt(28_050_000),
 		},
 		`Fully closing one long position above the bankruptcy price pays max liquidation fee 
-		when MaxLiquidationFeePpm is 25_000`: {
+		when InsuranceFundFeePpm is 25_000`: {
 			perpetualId: 0,
 			isBuy:       false,
 			fillAmount:  10_000_000,     // -0.1 BTC delta.
@@ -3413,7 +3439,9 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				&constants.PerpetualPosition_OneTenthBTCLong,
 			},
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm:  25_000,
+				InsuranceFundFeePpm:   25_000,
+				ValidatorFeePpm:       200_000,
+				LiquidityFeePpm:       800_000,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -3425,7 +3453,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			expectedLiquidationInsuranceFundDeltaBig: big.NewInt(140_250_000),
 		},
 		`Fully closing one long position above the bankruptcy price pays less than max liquidation fee 
-		when MaxLiquidationFeePpm is one million`: {
+		when InsuranceFundFeePpm is one million`: {
 			perpetualId: 0,
 			isBuy:       false,
 			fillAmount:  10_000_000,     // -0.1 BTC delta.
@@ -3442,7 +3470,9 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				&constants.PerpetualPosition_OneTenthBTCLong,
 			},
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm:  1_000_000,
+				InsuranceFundFeePpm:   1_000_000,
+				ValidatorFeePpm:       200_000,
+				LiquidityFeePpm:       800_000,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -3477,7 +3507,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			expectedLiquidationInsuranceFundDeltaBig: big.NewInt(22_050_000),
 		},
 		`Fully closing one short position above the bankruptcy price and pays max liquidation fee
-		when MaxLiquidationFeePpm is 25_000`: {
+		when InsuranceFundFeePpm is 25_000`: {
 			perpetualId: 0,
 			isBuy:       true,
 			fillAmount:  10_000_000,     // 0.1 BTC delta.
@@ -3494,7 +3524,9 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				&constants.PerpetualPosition_OneTenthBTCShort,
 			},
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm:  25_000,
+				InsuranceFundFeePpm:   25_000,
+				ValidatorFeePpm:       200_000,
+				LiquidityFeePpm:       800_000,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -3506,7 +3538,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			expectedLiquidationInsuranceFundDeltaBig: big.NewInt(110_250_000),
 		},
 		`Fully closing one short position above the bankruptcy price and pays less than max liquidation fee
-		when MaxLiquidationFeePpm is one million`: {
+		when InsuranceFundFeePpm is one million`: {
 			perpetualId: 0,
 			isBuy:       true,
 			fillAmount:  10_000_000,     // 0.1 BTC delta.
@@ -3523,7 +3555,9 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 				&constants.PerpetualPosition_OneTenthBTCShort,
 			},
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxLiquidationFeePpm:  1_000_000,
+				InsuranceFundFeePpm:   1_000_000,
+				ValidatorFeePpm:       200_000,
+				LiquidityFeePpm:       800_000,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -3802,7 +3836,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			}
 
 			// Run the test and verify expectations.
-			liquidationInsuranceFundDeltaBig, err := ks.ClobKeeper.GetLiquidationInsuranceFundDelta(
+			_, liquidationInsuranceFundDeltaBig, err := ks.ClobKeeper.GetLiquidationInsuranceFundDelta(
 				ks.Ctx,
 				*subaccount.Id,
 				tc.perpetualId,
@@ -4006,7 +4040,9 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm:  5_000,
+				InsuranceFundFeePpm:   5_000,
+				ValidatorFeePpm:       200_000,
+				LiquidityFeePpm:       800_000,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -4030,7 +4066,9 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm:  5_000,
+				InsuranceFundFeePpm:   5_000,
+				ValidatorFeePpm:       200_000,
+				LiquidityFeePpm:       800_000,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -4055,7 +4093,9 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm:  5_000,
+				InsuranceFundFeePpm:   5_000,
+				ValidatorFeePpm:       200_000,
+				LiquidityFeePpm:       800_000,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -4078,8 +4118,10 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
@@ -4100,8 +4142,10 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
@@ -4123,8 +4167,10 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
@@ -4146,8 +4192,10 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
@@ -4171,7 +4219,9 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm:  5_000,
+				InsuranceFundFeePpm:   5_000,
+				ValidatorFeePpm:       200_000,
+				LiquidityFeePpm:       800_000,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -4230,8 +4280,10 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
@@ -4252,8 +4304,10 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: math.MaxUint64,
 				},
@@ -4678,8 +4732,10 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 	}{
 		"Can get max notional liquidatable and insurance lost": {
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: 150,
 				},
@@ -4701,8 +4757,10 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 		},
 		"invalid notional liquidated": {
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: 150,
 				},
@@ -4723,8 +4781,10 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 		},
 		"invalid insurance lost": {
 			liquidationConfig: types.LiquidationsConfig{
-				MaxLiquidationFeePpm: 5_000,
-				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				InsuranceFundFeePpm: 5_000,
+				ValidatorFeePpm:     200_000,
+				LiquidityFeePpm:     800_000,
+				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: 50,
 				},

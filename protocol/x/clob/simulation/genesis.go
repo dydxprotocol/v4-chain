@@ -133,10 +133,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	clobGenesis.ClobPairs = clobPairs
 
+	validatorFee := genRandomPositivePpm(r, true)
+
 	clobGenesis.LiquidationsConfig = types.LiquidationsConfig{
-		// MaxLiquidationFeePpm determines the fee that subaccount usually pays for liquidating a position.
+		// InsuranceFundFeePpm determines the fee that subaccount usually pays for liquidating a position.
 		// This is typically a very small percentage, so skewing towards lower values here.
-		MaxLiquidationFeePpm: genRandomPositivePpm(r, true),
+		InsuranceFundFeePpm: genRandomPositivePpm(r, true),
+		ValidatorFeePpm:     validatorFee,
+		LiquidityFeePpm:     1_000_000 - validatorFee,
 		FillablePriceConfig: types.FillablePriceConfig{
 			BankruptcyAdjustmentPpm: uint32(
 				simtypes.RandIntBetween(r, int(lib.OneMillion), int(math.MaxUint32)),

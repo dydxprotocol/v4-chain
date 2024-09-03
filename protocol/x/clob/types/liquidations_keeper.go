@@ -65,6 +65,7 @@ type LiquidationsKeeper interface {
 		fillAmount uint64,
 		subticks Subticks,
 	) (
+		remainingQuoteQuantumsBig *big.Int,
 		insuranceFundDeltaQuoteQuantums *big.Int,
 		err error,
 	)

@@ -347,7 +347,7 @@ func (_m *ClobKeeper) GetInsuranceFundBalanceInQuoteQuantums(ctx types.Context, 
 }
 
 // GetLiquidationInsuranceFundDelta provides a mock function with given fields: ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks
-func (_m *ClobKeeper) GetLiquidationInsuranceFundDelta(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, isBuy bool, fillAmount uint64, subticks clobtypes.Subticks) (*big.Int, error) {
+func (_m *ClobKeeper) GetLiquidationInsuranceFundDelta(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, isBuy bool, fillAmount uint64, subticks clobtypes.Subticks) (*big.Int, *big.Int, error) {
 	ret := _m.Called(ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks)
 
 	if len(ret) == 0 {
@@ -355,8 +355,9 @@ func (_m *ClobKeeper) GetLiquidationInsuranceFundDelta(ctx types.Context, subacc
 	}
 
 	var r0 *big.Int
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, bool, uint64, clobtypes.Subticks) (*big.Int, error)); ok {
+	var r1 *big.Int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, bool, uint64, clobtypes.Subticks) (*big.Int, *big.Int, error)); ok {
 		return rf(ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, bool, uint64, clobtypes.Subticks) *big.Int); ok {
@@ -367,13 +368,21 @@ func (_m *ClobKeeper) GetLiquidationInsuranceFundDelta(ctx types.Context, subacc
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, bool, uint64, clobtypes.Subticks) error); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, bool, uint64, clobtypes.Subticks) *big.Int); ok {
 		r1 = rf(ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*big.Int)
+		}
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(types.Context, subaccountstypes.SubaccountId, uint32, bool, uint64, clobtypes.Subticks) error); ok {
+		r2 = rf(ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetLiquidationsConfig provides a mock function with given fields: ctx

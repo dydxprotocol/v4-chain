@@ -416,7 +416,9 @@ const GenesisState = `{
           "bankruptcy_adjustment_ppm": 1000000,
           "spread_to_maintenance_margin_ratio_ppm": 100000
         },
-        "max_liquidation_fee_ppm": 5000,
+        "insurance_fund_fee_ppm": 5000,
+        "validator_fee_ppm": 200000,
+        "liquidity_fee_ppm": 800000,
         "subaccount_block_limits": {
           "max_quantums_insurance_lost": 100000000000000
         }
