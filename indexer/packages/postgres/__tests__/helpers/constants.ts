@@ -989,7 +989,7 @@ export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
 
 // ==============  Tokens  =============
 
-export const defaultToken = {
+export const defaultFirebaseNotificationToken = {
   token: 'DEFAULT_TOKEN',
   address: defaultAddress,
   language: 'en',
