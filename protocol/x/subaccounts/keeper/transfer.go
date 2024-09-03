@@ -315,6 +315,44 @@ func (k Keeper) TransferInsuranceFundPayments(
 	)
 }
 
+func (k Keeper) TransferLiquidityFee(
+	ctx sdk.Context,
+	liquidityFeeQuoteQuantums *big.Int,
+	perpetualId uint32,
+) error {
+	if liquidityFeeQuoteQuantums.Sign() < 0 {
+		return errorsmod.Wrap(types.ErrAssetTransferQuantumsNotPositive, "Liquidity fee quote quantums cannot be negative")
+	}
+
+	if liquidityFeeQuoteQuantums.Sign() == 0 {
+		return nil
+	}
+
+	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
+		ctx,
+		assettypes.AssetUsdc.Id,
+		new(big.Int).Abs(liquidityFeeQuoteQuantums),
+	)
+	if err != nil {
+		// Panic if USDC does not exist.
+		panic(err)
+	}
+
+	// Determine the sender and receiver.
+	// Send coins from `subaccounts` to the `insurance_fund` module account by default.
+	fromModule, err := k.GetCollateralPoolFromPerpetualId(ctx, perpetualId)
+	if err != nil {
+		panic(err)
+	}
+
+	return k.bankKeeper.SendCoins(
+		ctx,
+		fromModule,
+		authtypes.NewModuleAddress(types.LiquidityFeeModuleAddress),
+		[]sdk.Coin{coinToTransfer},
+	)
+}
+
 // TransferFundsFromSubaccountToSubaccount returns an error if the call to `k.CanUpdateSubaccounts()`
 // fails. Otherwise, updates the asset quantums in the subaccounts, translates the
 // `assetId` and `quantums` into a `sdk.Coin`, and call `bankKeeper.SendCoins()` if the collateral

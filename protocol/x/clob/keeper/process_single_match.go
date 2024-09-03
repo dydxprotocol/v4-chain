@@ -445,6 +445,7 @@ func (k Keeper) persistMatchedOrders(
 	}
 
 	// TODO SOLAL transfer validator and liquidity fees
+	k.subaccountsKeeper.TransferLiquidityFee(ctx, liquidityFeeQuoteQuantums, perpetualId)
 
 	// Transfer the fee amount from subacounts module to fee collector module account.
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)

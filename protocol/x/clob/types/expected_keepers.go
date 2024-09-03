@@ -75,6 +75,11 @@ type SubaccountsKeeper interface {
 		amount *big.Int,
 		perpetualId uint32,
 	) error
+	TransferLiquidityFee(
+		ctx sdk.Context,
+		liquidityFeeQuoteQuantums *big.Int,
+		perpetualId uint32,
+	) error
 	GetCollateralPoolFromPerpetualId(
 		ctx sdk.Context,
 		perpetualId uint32,
