@@ -1053,7 +1053,7 @@ fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
       "price": "string",
       "size": "string",
       "fee": "string",
-      "affiliateEarnedRevShare": "string",
+      "affiliateRevShare": "string",
       "createdAt": "string",
       "createdAtHeight": "string",
       "orderId": "string",
@@ -1164,7 +1164,7 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
       "price": "string",
       "size": "string",
       "fee": "string",
-      "affiliateEarnedRevShare": "string",
+      "affiliateRevShare": "string",
       "createdAt": "string",
       "createdAtHeight": "string",
       "orderId": "string",
@@ -4510,7 +4510,7 @@ This operation does not require authentication
   "price": "string",
   "size": "string",
   "fee": "string",
-  "affiliateEarnedRevShare": "string",
+  "affiliateRevShare": "string",
   "createdAt": "string",
   "createdAtHeight": "string",
   "orderId": "string",
@@ -4533,7 +4533,7 @@ This operation does not require authentication
 |price|string|true|none|none|
 |size|string|true|none|none|
 |fee|string|true|none|none|
-|affiliateEarnedRevShare|string|true|none|none|
+|affiliateRevShare|string|true|none|none|
 |createdAt|[IsoString](#schemaisostring)|true|none|none|
 |createdAtHeight|string|true|none|none|
 |orderId|string|false|none|none|
@@ -4563,7 +4563,7 @@ This operation does not require authentication
       "price": "string",
       "size": "string",
       "fee": "string",
-      "affiliateEarnedRevShare": "string",
+      "affiliateRevShare": "string",
       "createdAt": "string",
       "createdAtHeight": "string",
       "orderId": "string",

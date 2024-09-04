@@ -114,7 +114,7 @@ export interface FillFromDatabase {
   orderId?: string,
   clientMetadata?: string,
   fee: string,
-  affiliateEarnedRevShare: string,
+  affiliateRevShare: string,
 }
 
 export interface BlockFromDatabase {
