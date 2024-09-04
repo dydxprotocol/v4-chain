@@ -6,7 +6,6 @@ package keeper
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
 
 	"cosmossdk.io/store/prefix"
@@ -246,11 +245,7 @@ func (k Keeper) PreprocessSendPacket(ctx sdk.Context, packet []byte) error {
 	}
 
 	if packetData.Denom == types.SDaiBaseDenomFullPath {
-		amount, ok := new(big.Int).SetString(packetData.Amount, 10)
-		if !ok {
-			return fmt.Errorf("could not convert amount from string to big.Int")
-		}
-		senderAddress, err := sdk.AccAddressFromBech32(packetData.Sender)
+		amount, senderAddress, _, err := util.GetValidatedFungibleTokenPacketData(packetData)
 		if err != nil {
 			return err
 		}
