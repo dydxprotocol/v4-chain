@@ -27,7 +27,7 @@ const KAFKA_TOPICS_TO_PARTITIONS: { [key in KafkaTopics]: number } = {
   [KafkaTopics.TO_ENDER]: 1,
   [KafkaTopics.TO_VULCAN]: 60,
   [KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS]: 1,
-  [KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS]: 1,
+  [KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS]: 30,
   [KafkaTopics.TO_WEBSOCKETS_TRADES]: 1,
   [KafkaTopics.TO_WEBSOCKETS_MARKETS]: 1,
   [KafkaTopics.TO_WEBSOCKETS_CANDLES]: 1,
@@ -183,6 +183,7 @@ async function maybeClearAndCreateKafkaTopics(
 
   if (event.create_kafka_topics) {
     await createKafkaTopics(existingKafkaTopics);
+    await partitionKafkaTopics();
   }
 
   if (event.clear_kafka_topics) {
@@ -232,6 +233,29 @@ async function createKafkaTopics(
     at: 'index#createKafkaTopics',
     message: 'Successfully created kafka topics',
   });
+}
+
+async function partitionKafkaTopics(): Promise<void> {
+  for (const kafkaTopic of KAFKA_TOPICS) {
+    const topicMetadata: { topics: Array<ITopicMetadata> } = await admin.fetchTopicMetadata({
+      topics: [kafkaTopic],
+    });
+    if (topicMetadata.topics.length === 1) {
+      if (topicMetadata.topics[0].partitions.length !== KAFKA_TOPICS_TO_PARTITIONS[kafkaTopic]) {
+        await admin.createPartitions({
+          validateOnly: false,
+          topicPartitions: [{
+            topic: kafkaTopic,
+            count: KAFKA_TOPICS_TO_PARTITIONS[kafkaTopic],
+          }],
+        });
+        logger.info({
+          at: 'index#createKafka  Topics',
+          message: `Successfully set topic ${kafkaTopic} to ${KAFKA_TOPICS_TO_PARTITIONS[kafkaTopic]} partitions`,
+        });
+      }
+    }
+  }
 }
 
 async function clearKafkaTopics(
