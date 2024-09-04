@@ -567,7 +567,7 @@
           "fee": {
             "type": "string"
           },
-          "affiliateEarnedRevShare": {
+          "affiliateRevShare": {
             "type": "string"
           },
           "createdAt": {
@@ -597,7 +597,7 @@
           "price",
           "size",
           "fee",
-          "affiliateEarnedRevShare",
+          "affiliateRevShare",
           "createdAt",
           "createdAtHeight",
           "subaccountNumber"
