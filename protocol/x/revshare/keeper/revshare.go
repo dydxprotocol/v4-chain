@@ -108,16 +108,12 @@ func (k Keeper) GetUnconditionalRevShareConfigParams(ctx sdk.Context) (types.Unc
 		[]byte(types.UnconditionalRevShareConfigKey),
 	)
 	var unconditionalRevShareConfig types.UnconditionalRevShareConfig
-	unconditionalRevShareConfig.Unmarshal(unconditionalRevShareConfigBytes)
+	k.cdc.MustUnmarshal(unconditionalRevShareConfigBytes, &unconditionalRevShareConfig)
 	return unconditionalRevShareConfig, nil
 }
 
-func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config types.UnconditionalRevShareConfig) error {
+func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config types.UnconditionalRevShareConfig) {
 	store := ctx.KVStore(k.storeKey)
-	unconditionalRevShareConfigBytes, err := config.Marshal()
-	if err != nil {
-		return err
-	}
+	unconditionalRevShareConfigBytes := k.cdc.MustMarshal(&config)
 	store.Set([]byte(types.UnconditionalRevShareConfigKey), unconditionalRevShareConfigBytes)
-	return nil
 }

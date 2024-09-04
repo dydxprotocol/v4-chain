@@ -24,7 +24,5 @@ func (msg *MsgUpdateUnconditionalRevShareConfig) ValidateBasic() error {
 			totalRevsharePercentagePpm,
 		)
 	}
-
 	return nil
-
 }

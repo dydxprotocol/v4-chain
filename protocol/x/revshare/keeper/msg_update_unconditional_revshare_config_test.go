@@ -71,5 +71,4 @@ func TestUpdateUnconditionalRevShareConfig(t *testing.T) {
 			}
 		})
 	}
-
 }
