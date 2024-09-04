@@ -16,11 +16,11 @@ install_prerequisites() {
 
 set_cosmovisor_binary_permissions() {
     # Set up upgrade binaries.
-    for version in "${!version_to_url[@]}"; do
+    for version in "${!testnet_version_to_url[@]}"; do
         echo "Setting up version ${version}..."
         version_dir="$HOME/cosmovisor/upgrades/$version"
         mkdir -p "$version_dir/bin"
-        url=${version_to_url[$version]}
+        url=${testnet_version_to_url[$version]}
         tar_file=$(basename $url)
 
         echo "Downloading tar file from ${url}..."
@@ -32,7 +32,7 @@ set_cosmovisor_binary_permissions() {
         chmod 755 "$version_dir/bin/dydxprotocold"
         echo "Successfully set up $version_dir/bin/dydxprotocold"
     done
-    current_version_path="$HOME/cosmovisor/upgrades/$CURRENT_VERSION/bin"
+    current_version_path="$HOME/cosmovisor/upgrades/$TESTNET_CURRENT_VERSION/bin"
     mkdir -p $current_version_path
     cp /bin/dydxprotocold $current_version_path
 }
