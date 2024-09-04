@@ -101,3 +101,23 @@ func (k Keeper) GetMarketMapperRevenueShareForMarket(ctx sdk.Context, marketId u
 
 	return revShareAddr, revShareParams.RevenueSharePpm, nil
 }
+
+func (k Keeper) GetUnconditionalRevShareConfigParams(ctx sdk.Context) (types.UnconditionalRevShareConfig, error) {
+	store := ctx.KVStore(k.storeKey)
+	unconditionalRevShareConfigBytes := store.Get(
+		[]byte(types.UnconditionalRevShareConfigKey),
+	)
+	var unconditionalRevShareConfig types.UnconditionalRevShareConfig
+	unconditionalRevShareConfig.Unmarshal(unconditionalRevShareConfigBytes)
+	return unconditionalRevShareConfig, nil
+}
+
+func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config types.UnconditionalRevShareConfig) error {
+	store := ctx.KVStore(k.storeKey)
+	unconditionalRevShareConfigBytes, err := config.Marshal()
+	if err != nil {
+		return err
+	}
+	store.Set([]byte(types.UnconditionalRevShareConfigKey), unconditionalRevShareConfigBytes)
+	return nil
+}
