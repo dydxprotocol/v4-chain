@@ -267,6 +267,8 @@ var (
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse":             {},
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarket":         {},
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse": {},
+		"/dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfig":               {},
+		"/dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfigResponse":       {},
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         {},

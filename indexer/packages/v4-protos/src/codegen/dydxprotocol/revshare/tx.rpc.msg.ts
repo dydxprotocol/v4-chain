@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgSetMarketMapperRevenueShare, MsgSetMarketMapperRevenueShareResponse, MsgSetMarketMapperRevShareDetailsForMarket, MsgSetMarketMapperRevShareDetailsForMarketResponse } from "./tx";
+import { MsgSetMarketMapperRevenueShare, MsgSetMarketMapperRevenueShareResponse, MsgSetMarketMapperRevShareDetailsForMarket, MsgSetMarketMapperRevShareDetailsForMarketResponse, MsgUpdateUnconditionalRevShareConfig, MsgUpdateUnconditionalRevShareConfigResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -15,6 +15,7 @@ export interface Msg {
    */
 
   setMarketMapperRevShareDetailsForMarket(request: MsgSetMarketMapperRevShareDetailsForMarket): Promise<MsgSetMarketMapperRevShareDetailsForMarketResponse>;
+  setUnconditionalRevShareConfig(request: MsgUpdateUnconditionalRevShareConfig): Promise<MsgUpdateUnconditionalRevShareConfigResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -23,6 +24,7 @@ export class MsgClientImpl implements Msg {
     this.rpc = rpc;
     this.setMarketMapperRevenueShare = this.setMarketMapperRevenueShare.bind(this);
     this.setMarketMapperRevShareDetailsForMarket = this.setMarketMapperRevShareDetailsForMarket.bind(this);
+    this.setUnconditionalRevShareConfig = this.setUnconditionalRevShareConfig.bind(this);
   }
 
   setMarketMapperRevenueShare(request: MsgSetMarketMapperRevenueShare): Promise<MsgSetMarketMapperRevenueShareResponse> {
@@ -35,6 +37,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgSetMarketMapperRevShareDetailsForMarket.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.revshare.Msg", "SetMarketMapperRevShareDetailsForMarket", data);
     return promise.then(data => MsgSetMarketMapperRevShareDetailsForMarketResponse.decode(new _m0.Reader(data)));
+  }
+
+  setUnconditionalRevShareConfig(request: MsgUpdateUnconditionalRevShareConfig): Promise<MsgUpdateUnconditionalRevShareConfigResponse> {
+    const data = MsgUpdateUnconditionalRevShareConfig.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.revshare.Msg", "SetUnconditionalRevShareConfig", data);
+    return promise.then(data => MsgUpdateUnconditionalRevShareConfigResponse.decode(new _m0.Reader(data)));
   }
 
 }
