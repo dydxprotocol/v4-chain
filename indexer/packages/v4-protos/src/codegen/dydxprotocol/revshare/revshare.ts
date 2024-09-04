@@ -36,6 +36,8 @@ export interface UnconditionalRevShareConfigSDKType {
   /** Configs for each recipient. */
   configs: UnconditionalRevShareConfig_RecipientConfigSDKType[];
 }
+/** Describes the config of a recipient */
+
 export interface UnconditionalRevShareConfig_RecipientConfig {
   /** Address of the recepient. */
   address: string;
@@ -43,6 +45,8 @@ export interface UnconditionalRevShareConfig_RecipientConfig {
 
   sharePpm: number;
 }
+/** Describes the config of a recipient */
+
 export interface UnconditionalRevShareConfig_RecipientConfigSDKType {
   /** Address of the recepient. */
   address: string;

@@ -15,7 +15,9 @@ export interface Msg {
    */
 
   setMarketMapperRevShareDetailsForMarket(request: MsgSetMarketMapperRevShareDetailsForMarket): Promise<MsgSetMarketMapperRevShareDetailsForMarketResponse>;
-  setUnconditionalRevShareConfig(request: MsgUpdateUnconditionalRevShareConfig): Promise<MsgUpdateUnconditionalRevShareConfigResponse>;
+  /** SetUnconditionalRevShareConfig sets the unconditional revshare config */
+
+  updateUnconditionalRevShareConfig(request: MsgUpdateUnconditionalRevShareConfig): Promise<MsgUpdateUnconditionalRevShareConfigResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -24,7 +26,7 @@ export class MsgClientImpl implements Msg {
     this.rpc = rpc;
     this.setMarketMapperRevenueShare = this.setMarketMapperRevenueShare.bind(this);
     this.setMarketMapperRevShareDetailsForMarket = this.setMarketMapperRevShareDetailsForMarket.bind(this);
-    this.setUnconditionalRevShareConfig = this.setUnconditionalRevShareConfig.bind(this);
+    this.updateUnconditionalRevShareConfig = this.updateUnconditionalRevShareConfig.bind(this);
   }
 
   setMarketMapperRevenueShare(request: MsgSetMarketMapperRevenueShare): Promise<MsgSetMarketMapperRevenueShareResponse> {
@@ -39,9 +41,9 @@ export class MsgClientImpl implements Msg {
     return promise.then(data => MsgSetMarketMapperRevShareDetailsForMarketResponse.decode(new _m0.Reader(data)));
   }
 
-  setUnconditionalRevShareConfig(request: MsgUpdateUnconditionalRevShareConfig): Promise<MsgUpdateUnconditionalRevShareConfigResponse> {
+  updateUnconditionalRevShareConfig(request: MsgUpdateUnconditionalRevShareConfig): Promise<MsgUpdateUnconditionalRevShareConfigResponse> {
     const data = MsgUpdateUnconditionalRevShareConfig.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.revshare.Msg", "SetUnconditionalRevShareConfig", data);
+    const promise = this.rpc.request("dydxprotocol.revshare.Msg", "UpdateUnconditionalRevShareConfig", data);
     return promise.then(data => MsgUpdateUnconditionalRevShareConfigResponse.decode(new _m0.Reader(data)));
   }
 

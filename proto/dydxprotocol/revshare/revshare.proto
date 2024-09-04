@@ -15,6 +15,7 @@ message MarketMapperRevShareDetails {
 // UnconditionalRevShareConfig stores recipients that
 // receive a share of net revenue unconditionally.
 message UnconditionalRevShareConfig {
+  // Describes the config of a recipient
   message RecipientConfig {
     // Address of the recepient.
     string address = 1;

@@ -117,6 +117,7 @@ func (m *UnconditionalRevShareConfig) GetConfigs() []UnconditionalRevShareConfig
 	return nil
 }
 
+// Describes the config of a recipient
 type UnconditionalRevShareConfig_RecipientConfig struct {
 	// Address of the recepient.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`

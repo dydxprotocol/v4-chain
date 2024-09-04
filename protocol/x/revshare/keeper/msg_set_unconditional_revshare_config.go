@@ -7,7 +7,7 @@ import (
 )
 
 // TODO(OTE-775): Add methods to set and get rev share config
-func (k msgServer) SetUnconditionalRevShareConfig(
+func (k msgServer) UpdateUnconditionalRevShareConfig(
 	goCtx context.Context,
 	msg *types.MsgUpdateUnconditionalRevShareConfig,
 ) (*types.MsgUpdateUnconditionalRevShareConfigResponse, error) {
