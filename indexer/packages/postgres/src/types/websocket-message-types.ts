@@ -203,6 +203,7 @@ export interface TradingPerpetualMarketMessage {
   openInterest?: string;
   quantumConversionExponent?: number;
   atomicResolution?: number;
+  dangerIndexPpm?: number;
   subticksPerTick?: number;
   stepBaseQuantums?: number;
   marketType?: PerpetualMarketType;

@@ -803,6 +803,10 @@
             "type": "number",
             "format": "double"
           },
+          "dangerIndexPpm": {
+            "type": "number",
+            "format": "double"
+          },
           "quantumConversionExponent": {
             "type": "number",
             "format": "double"
@@ -848,6 +852,7 @@
           "maintenanceMarginFraction",
           "openInterest",
           "atomicResolution",
+          "dangerIndexPpm",
           "quantumConversionExponent",
           "tickSize",
           "stepSize",
