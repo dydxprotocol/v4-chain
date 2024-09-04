@@ -136,8 +136,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse",
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare",
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse",
-		"/dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfig",
-		"/dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfigResponse",
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams",

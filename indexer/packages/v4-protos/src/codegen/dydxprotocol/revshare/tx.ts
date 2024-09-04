@@ -1,5 +1,5 @@
 import { MarketMapperRevenueShareParams, MarketMapperRevenueShareParamsSDKType } from "./params";
-import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType, UnconditionalRevShareConfig, UnconditionalRevShareConfigSDKType } from "./revshare";
+import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType } from "./revshare";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** Message to set the market mapper revenue share */
@@ -60,28 +60,6 @@ export interface MsgSetMarketMapperRevShareDetailsForMarketResponse {}
 /** Response to a MsgSetMarketMapperRevShareDetailsForMarket */
 
 export interface MsgSetMarketMapperRevShareDetailsForMarketResponseSDKType {}
-/** Message to update the unconditional revenue share config. */
-
-export interface MsgUpdateUnconditionalRevShareConfig {
-  authority: string;
-  /** The config to update. */
-
-  config?: UnconditionalRevShareConfig;
-}
-/** Message to update the unconditional revenue share config. */
-
-export interface MsgUpdateUnconditionalRevShareConfigSDKType {
-  authority: string;
-  /** The config to update. */
-
-  config?: UnconditionalRevShareConfigSDKType;
-}
-/** Response to MsgUpdateUnconditionalRevShareConfig */
-
-export interface MsgUpdateUnconditionalRevShareConfigResponse {}
-/** Response to MsgUpdateUnconditionalRevShareConfig */
-
-export interface MsgUpdateUnconditionalRevShareConfigResponseSDKType {}
 
 function createBaseMsgSetMarketMapperRevenueShare(): MsgSetMarketMapperRevenueShare {
   return {
@@ -266,95 +244,6 @@ export const MsgSetMarketMapperRevShareDetailsForMarketResponse = {
 
   fromPartial(_: DeepPartial<MsgSetMarketMapperRevShareDetailsForMarketResponse>): MsgSetMarketMapperRevShareDetailsForMarketResponse {
     const message = createBaseMsgSetMarketMapperRevShareDetailsForMarketResponse();
-    return message;
-  }
-
-};
-
-function createBaseMsgUpdateUnconditionalRevShareConfig(): MsgUpdateUnconditionalRevShareConfig {
-  return {
-    authority: "",
-    config: undefined
-  };
-}
-
-export const MsgUpdateUnconditionalRevShareConfig = {
-  encode(message: MsgUpdateUnconditionalRevShareConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.authority !== "") {
-      writer.uint32(10).string(message.authority);
-    }
-
-    if (message.config !== undefined) {
-      UnconditionalRevShareConfig.encode(message.config, writer.uint32(18).fork()).ldelim();
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateUnconditionalRevShareConfig {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgUpdateUnconditionalRevShareConfig();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.authority = reader.string();
-          break;
-
-        case 2:
-          message.config = UnconditionalRevShareConfig.decode(reader, reader.uint32());
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<MsgUpdateUnconditionalRevShareConfig>): MsgUpdateUnconditionalRevShareConfig {
-    const message = createBaseMsgUpdateUnconditionalRevShareConfig();
-    message.authority = object.authority ?? "";
-    message.config = object.config !== undefined && object.config !== null ? UnconditionalRevShareConfig.fromPartial(object.config) : undefined;
-    return message;
-  }
-
-};
-
-function createBaseMsgUpdateUnconditionalRevShareConfigResponse(): MsgUpdateUnconditionalRevShareConfigResponse {
-  return {};
-}
-
-export const MsgUpdateUnconditionalRevShareConfigResponse = {
-  encode(_: MsgUpdateUnconditionalRevShareConfigResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateUnconditionalRevShareConfigResponse {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgUpdateUnconditionalRevShareConfigResponse();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(_: DeepPartial<MsgUpdateUnconditionalRevShareConfigResponse>): MsgUpdateUnconditionalRevShareConfigResponse {
-    const message = createBaseMsgUpdateUnconditionalRevShareConfigResponse();
     return message;
   }
 
