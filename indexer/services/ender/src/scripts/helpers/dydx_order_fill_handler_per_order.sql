@@ -41,6 +41,8 @@ DECLARE
     order_price numeric;
     order_client_metadata bigint;
     fee numeric;
+    affiliate_rev_share numeric;
+    affiliate_rev
     fill_amount numeric;
     total_filled numeric;
     maker_price numeric;
@@ -80,6 +82,8 @@ BEGIN
                                    power(10, perpetual_market_record."atomicResolution")::numeric);
     fee = dydx_trim_scale(dydx_get_fee(fill_liquidity, event_data) *
                           power(10, asset_record."atomicResolution")::numeric);
+    affiliate_rev_share = COALESCE(dydx_trim_scale(dydx_from_jsonlib_long(event_data->'affiliateRevShare') *
+                                    power(10, asset_record."atomicResolution")::numeric), 0);
 
     order_uuid = dydx_uuid_from_order_id(order_->'orderId');
     subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));
@@ -143,7 +147,7 @@ BEGIN
         block_height, transaction_index, event_index);
     INSERT INTO fills
         ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
-         "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee")
+         "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, fill_liquidity),
             subaccount_uuid,
             order_side,
@@ -159,7 +163,8 @@ BEGIN
             block_time,
             block_height,
             order_client_metadata,
-            fee)
+            fee,
+            affiliate_rev_share)
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */
