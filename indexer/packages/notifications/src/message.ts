@@ -1,5 +1,6 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 
+import config from './config';
 import {
   MulticastMessage,
   sendMulticast,
@@ -11,18 +12,7 @@ export async function sendFirebaseMessage(
   tokens: {token: string, language: string}[],
   notification: Notification,
 ): Promise<void> {
-  // Re-add once stats are implemented
-  // const start = Date.now();
-
-  if (tokens.length === 0) {
-    logger.warning({
-      at: 'notifications#firebase',
-      message: 'Attempted to send Firebase message to user with no registration tokens',
-      tokens,
-      notificationType: notification.type,
-    });
-    return;
-  }
+  const start = Date.now();
 
   // Each set of tokens for a users should have the same language
   const language = tokens[0].language;
@@ -57,22 +47,27 @@ export async function sendFirebaseMessage(
 
   try {
     const result = await sendMulticast(message);
-    if (result?.failureCount && result?.failureCount > 0) {
-      throw new Error('Failed to send Firebase message');
+    if (!result || result?.failureCount > 0) {
+      const errorMessages = result?.responses
+        .map((response) => response.error?.message)
+        .filter(Boolean); // Remove any undefined values
+
+      throw new Error(`Failed to send Firebase message: ${errorMessages?.join(', ') || 'Unknown error'}`);
     }
-  } catch (error) {
-    logger.error({
-      at: 'notifications#firebase',
-      message: 'Failed to send Firebase message',
-      error: error as Error,
-      notificationType: notification.type,
-    });
-  } finally {
-    // stats.timing(`${config.SERVICE_NAME}.send_firebase_message.timing`, Date.now() - start);
+
     logger.info({
       at: 'notifications#firebase',
       message: 'Firebase message sent successfully',
       notificationType: notification.type,
     });
+  } catch (error) {
+    logger.error({
+      at: 'notifications#firebase',
+      message: error.message,
+      error: error as Error,
+      notificationType: notification.type,
+    });
+  } finally {
+    stats.timing(`${config.SERVICE_NAME}.send_firebase_message.timing`, Date.now() - start);
   }
 }

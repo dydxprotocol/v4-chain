@@ -25,7 +25,7 @@ describe('sendFirebaseMessage', () => {
   });
 
   const defaultToken = {
-    token: 'BTC-USD',
+    token: 'faketoken',
     language: 'en',
   };
 
@@ -41,20 +41,11 @@ describe('sendFirebaseMessage', () => {
       mockNotification,
     );
 
-    expect(sendMulticast).toHaveBeenCalled();
-    expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
-      message: 'Firebase message sent successfully',
-      notificationType: mockNotification.type,
-    }));
-  });
-
-  it('should log a warning if user has no registration tokens', async () => {
-    await sendFirebaseMessage([], mockNotification);
-
-    expect(logger.warning).toHaveBeenCalledWith(expect.objectContaining({
-      message: 'Attempted to send Firebase message to user with no registration tokens',
-      notificationType: mockNotification.type,
-    }));
+    expect(sendMulticast).toHaveBeenCalledWith(expect.objectContaining(
+      {
+        tokens: [defaultToken.token],
+        notification: { body: 'Your order for 10 BTC-USD was filled at $100.50', title: 'Order Filled' },
+      }));
   });
 
   it('should log an error if sending the message fails', async () => {
@@ -67,7 +58,7 @@ describe('sendFirebaseMessage', () => {
     );
 
     expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
-      message: 'Failed to send Firebase message',
+      message: 'Send failed',
       notificationType: mockNotification.type,
     }));
   });
