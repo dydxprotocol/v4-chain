@@ -146,3 +146,73 @@ func TestUnpackAcknowledgementResponseForTransfer(t *testing.T) {
 		})
 	}
 }
+
+func TestGetValidatedFungibleTokenPacketData(t *testing.T) {
+	testCases := []struct {
+		name           string
+		packetData     ibctransfertypes.FungibleTokenPacketData
+		expectedAmount *big.Int
+		expectedSender sdk.AccAddress
+		expectedRecv   sdk.AccAddress
+		expectedError  string
+	}{
+		{
+			name: "valid_packet_data",
+			packetData: ibctransfertypes.FungibleTokenPacketData{
+				Denom:    "atom",
+				Amount:   "100",
+				Sender:   "cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg",
+				Receiver: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			},
+			expectedAmount: big.NewInt(100),
+			expectedSender: sdk.MustAccAddressFromBech32("cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg"),
+			expectedRecv:   sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5"),
+		},
+		{
+			name: "invalid_amount",
+			packetData: ibctransfertypes.FungibleTokenPacketData{
+				Denom:    "atom",
+				Amount:   "invalid",
+				Sender:   "cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg",
+				Receiver: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			},
+			expectedError: "Unable to cast packet amount 'invalid' to big.Int",
+		},
+		{
+			name: "invalid_sender",
+			packetData: ibctransfertypes.FungibleTokenPacketData{
+				Denom:    "atom",
+				Amount:   "100",
+				Sender:   "invalid",
+				Receiver: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			},
+			expectedError: "Unable to convert sender address",
+		},
+		{
+			name: "invalid_receiver",
+			packetData: ibctransfertypes.FungibleTokenPacketData{
+				Denom:    "atom",
+				Amount:   "100",
+				Sender:   "cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg",
+				Receiver: "invalid",
+			},
+			expectedError: "Unable to convert receiver address",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			amount, sender, receiver, err := util.GetValidatedFungibleTokenPacketData(tc.packetData)
+
+			if tc.expectedError != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedError)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedAmount, amount)
+				require.Equal(t, tc.expectedSender, sender)
+				require.Equal(t, tc.expectedRecv, receiver)
+			}
+		})
+	}
+}
