@@ -459,6 +459,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 		/* --- Expectations --- */
 		expectedOrderSubticks []uint64
 		expectedOrderQuantums []uint64
+		expectedTimeInForce   []clobtypes.Order_TimeInForce
 		expectedErr           error
 	}{
 		"Success - Vault Clob 0, 2 layers, leverage 0, doesn't cross oracle price": {
@@ -533,6 +534,14 @@ func TestGetVaultClobOrders(t *testing.T) {
 				20_000_000_000,
 				20_000_000_000,
 				20_000_000_000,
+			},
+			// post-only if increases inventory
+			// vault is flat, all orders should be post-only
+			expectedTimeInForce: []clobtypes.Order_TimeInForce{
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
 			},
 		},
 		"Success - Vault Clob 1, 3 layers, leverage -0.6, doesn't cross oracle price": {
@@ -614,6 +623,16 @@ func TestGetVaultClobOrders(t *testing.T) {
 				41_666_000,
 				41_666_000,
 			},
+			// post-only if increases inventory
+			// vault is short, sell orders should be post-only
+			expectedTimeInForce: []clobtypes.Order_TimeInForce{
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+			},
 		},
 		"Success - Vault Clob 1, 3 layers, leverage -3, crosses oracle price": {
 			vaultQuotingParams: vaulttypes.QuotingParams{
@@ -694,6 +713,16 @@ func TestGetVaultClobOrders(t *testing.T) {
 				33_333_000,
 				33_333_000,
 			},
+			// post-only if increases inventory
+			// vault is short, sell orders should be post-only
+			expectedTimeInForce: []clobtypes.Order_TimeInForce{
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+			},
 		},
 		"Success - Vault Clob 1, 2 layers, leverage 3, crosses oracle price": {
 			vaultQuotingParams: vaulttypes.QuotingParams{
@@ -762,6 +791,14 @@ func TestGetVaultClobOrders(t *testing.T) {
 				333_333_000,
 				333_333_000,
 			},
+			// post-only if increases inventory
+			// vault is long, buy orders should be post-only
+			expectedTimeInForce: []clobtypes.Order_TimeInForce{
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+			},
 		},
 		"Success - Get orders from Vault for Clob Pair 1, No Orders due to Zero Order Size": {
 			vaultQuotingParams: vaulttypes.QuotingParams{
@@ -786,6 +823,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			// round down to nearest multiple of step_base_quantums=1_000.
 			// order size is 0.
 			expectedOrderQuantums: []uint64{},
+			expectedTimeInForce:   []clobtypes.Order_TimeInForce{},
 		},
 		"Success - Clob Pair doesn't exist, Empty orders": {
 			vaultQuotingParams:    vaulttypes.DefaultQuotingParams(),
@@ -796,6 +834,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			perpetual:             constants.EthUsd_NoMarginRequirement,
 			expectedOrderSubticks: []uint64{},
 			expectedOrderQuantums: []uint64{},
+			expectedTimeInForce:   []clobtypes.Order_TimeInForce{},
 		},
 		"Success - Clob Pair in status final settlement, Empty orders": {
 			vaultQuotingParams: vaulttypes.DefaultQuotingParams(),
@@ -817,6 +856,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			perpetual:             constants.EthUsd_NoMarginRequirement,
 			expectedOrderSubticks: []uint64{},
 			expectedOrderQuantums: []uint64{},
+			expectedTimeInForce:   []clobtypes.Order_TimeInForce{},
 		},
 		"Error - Vault equity is zero": {
 			vaultQuotingParams:         vaulttypes.DefaultQuotingParams(),
@@ -945,6 +985,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				side clobtypes.Order_Side,
 				quantums uint64,
 				subticks uint64,
+				timeInForce clobtypes.Order_TimeInForce,
 			) *clobtypes.Order {
 				return &clobtypes.Order{
 					OrderId: clobtypes.OrderId{
@@ -959,6 +1000,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 					GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
 						GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + tc.vaultQuotingParams.OrderExpirationSeconds,
 					},
+					TimeInForce: timeInForce,
 				}
 			}
 			expectedOrders := make([]*clobtypes.Order, 0)
@@ -971,6 +1013,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 						clobtypes.Order_SIDE_SELL,
 						tc.expectedOrderQuantums[i],
 						tc.expectedOrderSubticks[i],
+						tc.expectedTimeInForce[i],
 					),
 					// bid.
 					buildVaultClobOrder(
@@ -978,6 +1021,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 						clobtypes.Order_SIDE_BUY,
 						tc.expectedOrderQuantums[i+1],
 						tc.expectedOrderSubticks[i+1],
+						tc.expectedTimeInForce[i+1],
 					),
 				)
 			}
