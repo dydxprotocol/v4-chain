@@ -1,7 +1,6 @@
 package ratelimit_test
 
 import (
-	"fmt"
 	"math/big"
 	"strconv"
 	"testing"
@@ -419,7 +418,6 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			transferMsg := transfertypes.NewMsgTransfer(path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, coin, suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), suite.chainA.GetTimeoutHeight(), 0, "")
 			result, err := suite.chainB.SendMsgs(transferMsg)
 			if tc.expEarlyErr {
-				fmt.Println("ERR IS ", err)
 				suite.Require().Error(err)
 				return
 			}
@@ -470,40 +468,6 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				actualAccountCoinAmountSent := tc.accountCoinAmount.Sub(tc.accountCoinAmount, accountBalance.Amount.BigInt())
 				suite.Require().Equal(accountCoinAmountSent, actualAccountCoinAmountSent)
 			}
-
-			// if tc.expPass {
-			// 	suite.Require().NoError(err)
-			// 	suite.Require().NotNil(res)
-			// } else {
-			// 	suite.Require().Error(err)
-			// 	suite.Require().Nil(res)
-			// // }
-
-			// supplyRemaining := suite.chainA.App.(*app.App).BankKeeper.GetSupply(suite.chainA.GetContext(), coin.GetDenom())
-
-			// // Check whether appropriate amount of coins has been escrowed / burned
-			// if isEscrow {
-			// 	// When a token is escrowed, we still expect it to be part of the total denom supply
-			// 	suite.Require().Equal(initialSupply, supplyRemaining.Amount)
-			// 	amount := suite.chainA.App.(*app.App).TransferKeeper.GetTotalEscrowForDenom(suite.chainA.GetContext(), coin.GetDenom())
-			// 	suite.Require().Equal(tc.sendCoinAmount, amount.Amount)
-			// } else {
-			// 	deltaAmount := initialSupply.Sub(supplyRemaining.Amount)
-			// 	suite.Require().Equal(tc.sendCoinAmount, deltaAmount)
-			// }
-
-			// // Check that account does not hold the sent amount anymore
-			// accountBalance := suite.chainA.App.(*app.App).BankKeeper.GetBalance(suite.chainA.GetContext(), sender, tc.accountCoinDenom)
-			// actualAccountCoinAmountSent := tc.accountCoinAmount.Sub(tc.accountCoinAmount, accountBalance.Amount.BigInt())
-			// suite.Require().Equal(accountCoinAmountSent, actualAccountCoinAmountSent)
-
-			// if tc.expPass {
-			// 	suite.Require().NoError(err)
-			// 	suite.Require().NotNil(res)
-			// } else {
-			// 	suite.Require().Error(err)
-			// 	suite.Require().Nil(res)
-			// }
 		})
 	}
 }

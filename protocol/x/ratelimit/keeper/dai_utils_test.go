@@ -8,6 +8,72 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDivideAmountBySDaiDecimals(t *testing.T) {
+	tests := map[string]struct {
+		x              *big.Int
+		expectedResult *big.Int
+	}{
+		"Divide 0.": {
+			x:              ConvertStringToBigIntWithPanicOnErr("0"),
+			expectedResult: big.NewInt(0),
+		},
+		"Divide positive even amount.": {
+			x:              ConvertStringToBigIntWithPanicOnErr("1000000000000000000000000000"),
+			expectedResult: big.NewInt(1),
+		},
+		"Divide negative.": {
+			x:              ConvertStringToBigIntWithPanicOnErr("-1000000000000000000000000000"),
+			expectedResult: big.NewInt(-1),
+		},
+		"Divide positive uneven amount.": {
+			x:              ConvertStringToBigIntWithPanicOnErr("1234567890123456789123456789"),
+			expectedResult: big.NewInt(1),
+		},
+		"Divide negative uneven amount.": {
+			x:              ConvertStringToBigIntWithPanicOnErr("-1234567890123456789123456789"),
+			expectedResult: big.NewInt(-2),
+		},
+		"Divide large positive even amount.": {
+			x:              ConvertStringToBigIntWithPanicOnErr("1000000000000000000000000000000000000000"),
+			expectedResult: big.NewInt(1000000000000),
+		},
+		"Divide large negative even amount.": {
+			x:              ConvertStringToBigIntWithPanicOnErr("-1000000000000000000000000000000000000000"),
+			expectedResult: big.NewInt(-1000000000000),
+		},
+		"Divide large positive uneven amount.": {
+			x:              ConvertStringToBigIntWithPanicOnErr("1234567890123456789123456789123456789123"),
+			expectedResult: big.NewInt(1234567890123),
+		},
+		"Divide large negatibe uneven amount.": {
+			x:              ConvertStringToBigIntWithPanicOnErr("-1234567890123456789123456789123456789123"),
+			expectedResult: big.NewInt(-1234567890124),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotResult := divideAmountBySDaiDecimals(tc.x)
+			require.Equal(
+				t,
+				0,
+				tc.expectedResult.Cmp(gotResult),
+				"divideAmountBySDaiDecimals value does not match the expected value. Expected Result %v. Got result %v.",
+				tc.expectedResult,
+				gotResult,
+			)
+		})
+	}
+}
+
+func TestGetTenScaledBySDaiDecimals(t *testing.T) {
+	expectedInt, ok := big.NewInt(0).SetString("1000000000000000000000000000", 10)
+	if !ok {
+		panic("Could not set up test")
+	}
+	require.Equal(t, expectedInt, getTenScaledBySDaiDecimals())
+}
+
 func TestDivideAndRoundUp_Success(t *testing.T) {
 	tests := map[string]struct {
 		x              *big.Int
@@ -144,6 +210,385 @@ func TestDivideAndRoundUp_Failure(t *testing.T) {
 			gotResult, err := divideAndRoundUp(tc.x, tc.y)
 			require.Equal(t, tc.expectedResult, gotResult, "Expected nil value on failure, but got non-nil.")
 			require.ErrorContains(t, err, tc.expectedErr.Error())
+		})
+	}
+}
+
+func TestConvertStringToBigInt(t *testing.T) {
+	tests := map[string]struct {
+		x              string
+		expectedResult *big.Int
+		expectErr      bool
+	}{
+		"Zero.": {
+			x:              "0",
+			expectedResult: big.NewInt(0),
+			expectErr:      false,
+		},
+		"Basic positive example.": {
+			x:              "21",
+			expectedResult: big.NewInt(21),
+			expectErr:      false,
+		},
+		"Basic negative example.": {
+			x:              "-21",
+			expectedResult: big.NewInt(-21),
+			expectErr:      false,
+		},
+		"Large even positive example.": {
+			x: "10000000000000000000000000000000000000",
+			expectedResult: func() *big.Int {
+				result, ok := new(big.Int).SetString("10000000000000000000000000000000000000", 10)
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Large even negative example.": {
+			x: "-10000000000000000000000000000000000000",
+			expectedResult: func() *big.Int {
+				result, ok := new(big.Int).SetString("-10000000000000000000000000000000000000", 10)
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Large uneven positive example.": {
+			x: "123456789123456789123456789123456789",
+			expectedResult: func() *big.Int {
+				result, ok := new(big.Int).SetString("123456789123456789123456789123456789", 10)
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Large uneven negative example.": {
+			x: "-123456789123456789123456789123456789",
+			expectedResult: func() *big.Int {
+				result, ok := new(big.Int).SetString("-123456789123456789123456789123456789", 10)
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Fails: empty string": {
+			x:              "",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: non-numeric characters": {
+			x:              "123abc123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: underscores": {
+			x:              "1_000_000",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: leading whitespace": {
+			x:              " 123abc123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: trailing whitespace": {
+			x:              " 123abc123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: only a sign 1": {
+			x:              "+",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: only a sign 2": {
+			x:              "-",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: multiple signs": {
+			x:              "-+123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: sign not at strart": {
+			x:              "123+",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotResult, err := ConvertStringToBigInt(tc.x)
+			require.Equal(t, 0, tc.expectedResult.Cmp(gotResult), "Expected Result: %v. Got %v.", tc.expectedResult, gotResult)
+			if tc.expectErr {
+				require.ErrorContains(t, err, "Unable to convert the sDAI conversion rate to a big int")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestConvertStringToBigIntWithPanicOnErr(t *testing.T) {
+	tests := map[string]struct {
+		x              string
+		expectedResult *big.Int
+		expectErr      bool
+	}{
+		"Zero.": {
+			x:              "0",
+			expectedResult: big.NewInt(0),
+			expectErr:      false,
+		},
+		"Basic positive example.": {
+			x:              "21",
+			expectedResult: big.NewInt(21),
+			expectErr:      false,
+		},
+		"Basic negative example.": {
+			x:              "-21",
+			expectedResult: big.NewInt(-21),
+			expectErr:      false,
+		},
+		"Large even positive example.": {
+			x: "10000000000000000000000000000000000000",
+			expectedResult: func() *big.Int {
+				result, ok := new(big.Int).SetString("10000000000000000000000000000000000000", 10)
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Large even negative example.": {
+			x: "-10000000000000000000000000000000000000",
+			expectedResult: func() *big.Int {
+				result, ok := new(big.Int).SetString("-10000000000000000000000000000000000000", 10)
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Large uneven positive example.": {
+			x: "123456789123456789123456789123456789",
+			expectedResult: func() *big.Int {
+				result, ok := new(big.Int).SetString("123456789123456789123456789123456789", 10)
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Large uneven negative example.": {
+			x: "-123456789123456789123456789123456789",
+			expectedResult: func() *big.Int {
+				result, ok := new(big.Int).SetString("-123456789123456789123456789123456789", 10)
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Fails: empty string": {
+			x:              "",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: non-numeric characters": {
+			x:              "123abc123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: underscores": {
+			x:              "1_000_000",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: leading whitespace": {
+			x:              " 123abc123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: trailing whitespace": {
+			x:              " 123abc123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: only a sign 1": {
+			x:              "+",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: only a sign 2": {
+			x:              "-",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: multiple signs": {
+			x:              "-+123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: sign not at strart": {
+			x:              "123+",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if tc.expectErr {
+				require.Panics(t, func() { ConvertStringToBigIntWithPanicOnErr(tc.x) })
+			} else {
+				gotResult := ConvertStringToBigIntWithPanicOnErr(tc.x)
+				require.Equal(t, 0, tc.expectedResult.Cmp(gotResult), "Expected Result: %v. Got %v.", tc.expectedResult, gotResult)
+			}
+		})
+	}
+}
+
+func TestConvertStringToBigRatWithPanicOnErr(t *testing.T) {
+	tests := map[string]struct {
+		x              string
+		expectedResult *big.Rat
+		expectErr      bool
+	}{
+		"Zero.": {
+			x:              "0",
+			expectedResult: big.NewRat(0, 1),
+			expectErr:      false,
+		},
+		"Basic positive example.": {
+			x:              "2",
+			expectedResult: big.NewRat(2, 1),
+			expectErr:      false,
+		},
+		"Basic negative example.": {
+			x:              "-2",
+			expectedResult: big.NewRat(-2, 1),
+			expectErr:      false,
+		},
+		"Large even positive example.": {
+			x: "10000000000000000000000000000000000000",
+			expectedResult: func() *big.Rat {
+				result, ok := new(big.Rat).SetString("10000000000000000000000000000000000000")
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Large even negative example.": {
+			x: "-10000000000000000000000000000000000000",
+			expectedResult: func() *big.Rat {
+				result, ok := new(big.Rat).SetString("-10000000000000000000000000000000000000")
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Large uneven positive example.": {
+			x: "10000000000000000000000000000000000000.1234566789",
+			expectedResult: func() *big.Rat {
+				result, ok := new(big.Rat).SetString("10000000000000000000000000000000000000.1234566789")
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Large uneven negative example.": {
+			x: "-10000000000000000000000000000000000000.1234566789",
+			expectedResult: func() *big.Rat {
+				result, ok := new(big.Rat).SetString("-10000000000000000000000000000000000000.1234566789")
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Underscores": {
+			x: "1_000_000",
+			expectedResult: func() *big.Rat {
+				result, ok := new(big.Rat).SetString("1000000")
+				if !ok {
+					panic("Failed to set up test")
+				}
+				return result
+			}(),
+			expectErr: false,
+		},
+		"Fails: empty string": {
+			x:              "",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: non-numeric characters": {
+			x:              "123abc123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: leading whitespace": {
+			x:              " 123abc123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: trailing whitespace": {
+			x:              " 123abc123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: only a sign 1": {
+			x:              "+",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: only a sign 2": {
+			x:              "-",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: multiple signs": {
+			x:              "-+123",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+		"Fails: sign not at strart": {
+			x:              "123+",
+			expectedResult: nil,
+			expectErr:      true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if tc.expectErr {
+				require.Panics(t, func() { ConvertStringToBigRatWithPanicOnErr(tc.x) })
+			} else {
+				gotResult := ConvertStringToBigRatWithPanicOnErr(tc.x)
+				require.Equal(t, 0, tc.expectedResult.Cmp(gotResult), "Expected Result: %v. Got %v.", tc.expectedResult, gotResult)
+			}
 		})
 	}
 }

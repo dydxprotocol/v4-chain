@@ -2,16 +2,391 @@ package keeper_test
 
 import (
 	"math/big"
+	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	perpetualsmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
+
+func TestProcessNewTDaiConversionRateUpdate(t *testing.T) {
+
+	testCases := []struct {
+		name                     string
+		initialSDaiSupply        *big.Int
+		initialTDaiSupply        *big.Int
+		sDaiConversionRate       *big.Int
+		initialAssetYieldIndex   string
+		initialPerpYieldIndexes  []string
+		expectedTDAISupply       *big.Int
+		expectedAssetYieldIndex  string
+		expectedPerpYieldIndexes []string
+		expErr                   bool
+		customSetup              func(ctx sdk.Context, tApp *testapp.TestApp)
+	}{
+		{
+			name:                     "Basic: valid",
+			initialSDaiSupply:        big.NewInt(1000000000000),
+			initialTDaiSupply:        big.NewInt(1),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("2" + strings.Repeat("0", 27)),
+			initialAssetYieldIndex:   "0/1",
+			initialPerpYieldIndexes:  []string{"0/1", "0/1"},
+			expectedTDAISupply:       big.NewInt(2),
+			expectedAssetYieldIndex:  "1/1",
+			expectedPerpYieldIndexes: []string{"2/1", "1/1"},
+			expErr:                   false,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Basic: Large new yield",
+			initialSDaiSupply:        big.NewInt(1000000000000),
+			initialTDaiSupply:        big.NewInt(1),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("10" + strings.Repeat("0", 27)),
+			initialAssetYieldIndex:   "0/1",
+			initialPerpYieldIndexes:  []string{"0/1", "0/1"},
+			expectedTDAISupply:       big.NewInt(10),
+			expectedAssetYieldIndex:  "9/1",
+			expectedPerpYieldIndexes: []string{"18/1", "9/1"},
+			expErr:                   false,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Basic: Small new yield",
+			initialSDaiSupply:        big.NewInt(10000000000000000),
+			initialTDaiSupply:        big.NewInt(10000),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1000100000000000000000000000"),
+			initialAssetYieldIndex:   "0/1",
+			initialPerpYieldIndexes:  []string{"0/1", "0/1"},
+			expectedTDAISupply:       big.NewInt(10001),
+			expectedAssetYieldIndex:  "1/10000",
+			expectedPerpYieldIndexes: []string{"1/5000", "1/10000"},
+			expErr:                   false,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Large amounts: Large new yield",
+			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("123456789123456789123456789"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("9876543210"),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("123456789123456789123456789"),
+			initialAssetYieldIndex:   "0/1",
+			initialPerpYieldIndexes:  []string{"0/1", "0/1"},
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("15241578780673"),
+			expectedAssetYieldIndex:  "15231702237463/9876543210",
+			expectedPerpYieldIndexes: []string{"15231702237463/4938271605", "15231702237463/9876543210"},
+			expErr:                   false,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Large amounts: Small new yield",
+			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("987654321234567898765432123"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("997630627509663"),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1010101010101010101010101010"),
+			initialAssetYieldIndex:   "0/1",
+			initialPerpYieldIndexes:  []string{"0/1", "0/1"},
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("997630627509664"),
+			expectedAssetYieldIndex:  "1/997630627509663",
+			expectedPerpYieldIndexes: []string{"2/997630627509663", "1/997630627509663"},
+			expErr:                   false,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Initial AssetYieldIndex non-zero: Large new yield",
+			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("123456789123456789123456789"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("9876543210"),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("123456789123456789123456789"),
+			initialAssetYieldIndex:   "876/543",
+			initialPerpYieldIndexes:  []string{"123456/123457", "98765/198765"},
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("15241578780673"),
+			expectedAssetYieldIndex:  "2759822055598123/1787654321010",
+			expectedPerpYieldIndexes: []string{"1881069922389736471/609664197538485", "22433368533477547/14541563786190"},
+			expErr:                   false,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Initial AssetYieldIndex non-zero: Small new yield",
+			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("987654321234567898765432123"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("997630627509663"),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1010101010101010101010101010"),
+			initialAssetYieldIndex:   "345/678",
+			initialPerpYieldIndexes:  []string{"9876/5432", "123456789/12345678"},
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("997630627509664"),
+			expectedAssetYieldIndex:  "114727522163611471/225464521817183838",
+			expectedPerpYieldIndexes: []string{"351878574188765809/193540341736874622", "13684919320044230310865/1368491832241360142946"},
+			expErr:                   false,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Granular Mint",
+			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("987654321234567898765432123"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139000"),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1096681181716810314385961731"),
+			initialAssetYieldIndex:   "345/678",
+			initialPerpYieldIndexes:  []string{"9876/5432", "123456789/12345678"},
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139240"),
+			expectedAssetYieldIndex:  "1038010995300327/2039917260328450",
+			expectedPerpYieldIndexes: []string{"22285644759965357/12257555927106350", "123815946305719322809/12381593727953401150"},
+			expErr:                   false,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Zero sDai in Pool",
+			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("0"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("0"),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1096681181716810314385961731"),
+			initialAssetYieldIndex:   "0/1",
+			initialPerpYieldIndexes:  []string{"0/1", "0/1"},
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("0"),
+			expectedAssetYieldIndex:  "0/1",
+			expectedPerpYieldIndexes: []string{"0/1", "0/1"},
+			expErr:                   false,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Failure: Zero tDai Minted",
+			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("987654321234567898765432123"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139240"),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1096681181716810314385961731"),
+			initialAssetYieldIndex:   "345/678",
+			initialPerpYieldIndexes:  []string{"9876/5432", "123456789/12345678"},
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139240"),
+			expectedAssetYieldIndex:  "345/678",
+			expectedPerpYieldIndexes: []string{"9876/5432", "123456789/12345678"},
+			expErr:                   true,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Failure: Lower tDai amount after yield",
+			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("987654321234567898765432123"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139250"), // supply after mint: 1083141908139240
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1096681181716810314385961731"),
+			initialAssetYieldIndex:   "345/678",
+			initialPerpYieldIndexes:  []string{"9876/5432", "123456789/12345678"},
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139250"),
+			expectedAssetYieldIndex:  "345/678",
+			expectedPerpYieldIndexes: []string{"9876/5432", "123456789/12345678"},
+			expErr:                   true,
+			customSetup:              func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                     "Failure: Asset yield index not found",
+			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("987654321234567898765432123"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139230"),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1096681181716810314385961731"),
+			initialAssetYieldIndex:   "345/678",
+			initialPerpYieldIndexes:  []string{"9876/5432", "123456789/12345678"},
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139230"),
+			expectedAssetYieldIndex:  "345/678",
+			expectedPerpYieldIndexes: []string{"9876/5432", "123456789/12345678"},
+			expErr:                   true,
+			customSetup: func(ctx sdk.Context, tApp *testapp.TestApp) {
+				k := tApp.App.RatelimitKeeper
+				store := ctx.KVStore(k.GetStoreKey())
+				store.Delete([]byte(types.AssetYieldIndexPrefix))
+			},
+		},
+		{
+			name:                     "Failure: Asset yield index not found",
+			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("987654321234567898765432123"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139230"),
+			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1096681181716810314385961731"),
+			initialAssetYieldIndex:   "345/678",
+			initialPerpYieldIndexes:  []string{"9876/5432", "123456789/12345678"},
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139230"),
+			expectedAssetYieldIndex:  "345/678",
+			expectedPerpYieldIndexes: []string{"9876/5432", "123456789/12345678"},
+			expErr:                   true,
+			customSetup: func(ctx sdk.Context, tApp *testapp.TestApp) {
+				k := tApp.App.RatelimitKeeper
+				store := ctx.KVStore(k.GetStoreKey())
+				store.Delete([]byte(types.AssetYieldIndexPrefix))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.RatelimitKeeper
+
+			burnAllCoinsOfDenom(t, ctx, tApp, types.TDaiDenom)
+			burnAllCoinsOfDenom(t, ctx, tApp, types.SDaiDenom)
+
+			sDaiCoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewIntFromBigInt(tc.initialSDaiSupply)))
+			err := tApp.App.BankKeeper.MintCoins(
+				ctx,
+				types.TDaiPoolAccount,
+				sDaiCoins,
+			)
+			require.NoError(t, err)
+			err = tApp.App.BankKeeper.SendCoinsFromModuleToModule(
+				ctx,
+				types.TDaiPoolAccount,
+				types.SDaiPoolAccount,
+				sDaiCoins,
+			)
+			require.NoError(t, err)
+			tDaiCoins := sdk.NewCoins(sdk.NewCoin(types.TDaiDenom, sdkmath.NewIntFromBigInt(tc.initialTDaiSupply)))
+			err = tApp.App.BankKeeper.MintCoins(
+				ctx,
+				types.TDaiPoolAccount,
+				tDaiCoins,
+			)
+			require.NoError(t, err)
+
+			k.SetSDAIPrice(ctx, tc.sDaiConversionRate)
+			k.SetAssetYieldIndex(ctx, keeper.ConvertStringToBigRatWithPanicOnErr(tc.initialAssetYieldIndex))
+			allPerps := tApp.App.PerpetualsKeeper.GetAllPerpetuals(ctx)
+			require.Equal(t, len(tc.expectedPerpYieldIndexes), len(allPerps))
+			for i, perp := range allPerps {
+				perp.YieldIndex = tc.initialPerpYieldIndexes[i]
+				tApp.App.PerpetualsKeeper.SetPerpetualForTest(ctx, perp)
+			}
+			tc.customSetup(ctx, tApp)
+
+			err = k.ProcessNewTDaiConversionRateUpdate(ctx)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				sDaiSupply := tApp.App.BankKeeper.GetSupply(ctx, types.SDaiDenom)
+				require.Equal(t, 0, tc.initialSDaiSupply.Cmp(sDaiSupply.Amount.BigInt()),
+					"Expected sDai Supply: %v. Got sDai Supply: %v.", tc.initialSDaiSupply, sDaiSupply.Amount.BigInt(),
+				)
+				tDaiSupply := tApp.App.BankKeeper.GetSupply(ctx, types.TDaiDenom)
+				require.Equal(t, 0, tc.expectedTDAISupply.Cmp(tDaiSupply.Amount.BigInt()),
+					"Expected tDai Supply: %v. Got tDai Supply: %v.", tc.expectedTDAISupply, tDaiSupply.Amount.BigInt(),
+				)
+				sDaiConversionRate, found := k.GetSDAIPrice(ctx)
+				require.True(t, found)
+				require.Equal(t, 0, tc.sDaiConversionRate.Cmp(sDaiConversionRate),
+					"Expected sDaiConversionRate: %v. Got sDaiConversionRate: %v.", tc.sDaiConversionRate, sDaiConversionRate,
+				)
+				assetYieldIndex, found := k.GetAssetYieldIndex(ctx)
+				require.True(t, found)
+				require.Equal(t, tc.expectedAssetYieldIndex, assetYieldIndex.String())
+				allPerps := tApp.App.PerpetualsKeeper.GetAllPerpetuals(ctx)
+				require.Equal(t, len(tc.expectedPerpYieldIndexes), len(allPerps))
+				for i, perp := range allPerps {
+					require.Equal(t, tc.expectedPerpYieldIndexes[i], perp.YieldIndex)
+				}
+
+				// TODO [YBCP-73]: Add tests for indexer events being emitted
+			}
+		})
+	}
+}
+
+func TestSetNewYieldIndex(t *testing.T) {
+	testCases := []struct {
+		name                    string
+		totalTDaiPreMint        *big.Int
+		totalTDaiMinted         *big.Int
+		initialAssetYieldIndex  *big.Rat
+		expectedAssetYieldIndex *big.Rat
+		expectErr               bool
+		expectedErrMsg          string
+		customSetup             func(ctx sdk.Context, tApp *testapp.TestApp)
+	}{
+		{
+			name:                    "Basic increase",
+			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("1000"),
+			totalTDaiMinted:         keeper.ConvertStringToBigIntWithPanicOnErr("500"),
+			initialAssetYieldIndex:  keeper.ConvertStringToBigRatWithPanicOnErr("1"),
+			expectedAssetYieldIndex: keeper.ConvertStringToBigRatWithPanicOnErr("1.5"),
+			expectErr:               false,
+			customSetup:             func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                    "Large increase",
+			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("1"),
+			totalTDaiMinted:         keeper.ConvertStringToBigIntWithPanicOnErr("500000"),
+			initialAssetYieldIndex:  keeper.ConvertStringToBigRatWithPanicOnErr("1"),
+			expectedAssetYieldIndex: keeper.ConvertStringToBigRatWithPanicOnErr("500001"),
+			expectErr:               false,
+			customSetup:             func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                    "Small increase",
+			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("12345678"),
+			totalTDaiMinted:         keeper.ConvertStringToBigIntWithPanicOnErr("3"),
+			initialAssetYieldIndex:  keeper.ConvertStringToBigRatWithPanicOnErr("1"),
+			expectedAssetYieldIndex: keeper.ConvertStringToBigRatWithPanicOnErr("4115227/4115226"),
+			expectErr:               false,
+			customSetup:             func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                    "TotalTDaiMinted is 0",
+			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("12345678"),
+			totalTDaiMinted:         keeper.ConvertStringToBigIntWithPanicOnErr("0"),
+			initialAssetYieldIndex:  keeper.ConvertStringToBigRatWithPanicOnErr("1.2345"),
+			expectedAssetYieldIndex: keeper.ConvertStringToBigRatWithPanicOnErr("1.2345"),
+			expectErr:               false,
+			customSetup:             func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                    "TotalTDaiMinted is non-zero, but totalTDaiPreMint is zero",
+			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("0"),
+			totalTDaiMinted:         keeper.ConvertStringToBigIntWithPanicOnErr("2"),
+			initialAssetYieldIndex:  keeper.ConvertStringToBigRatWithPanicOnErr("0"),
+			expectedAssetYieldIndex: keeper.ConvertStringToBigRatWithPanicOnErr("0"),
+			expectErr:               true,
+			expectedErrMsg:          "total t-dai minted is non-zero, while total t-dai before mint is 0",
+			customSetup:             func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                    "Failure: Cannot find asset yield index",
+			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("0"),
+			totalTDaiMinted:         keeper.ConvertStringToBigIntWithPanicOnErr("2"),
+			initialAssetYieldIndex:  keeper.ConvertStringToBigRatWithPanicOnErr("0"),
+			expectedAssetYieldIndex: nil,
+			expectErr:               true,
+			expectedErrMsg:          "could not retrieve asset yield index",
+			customSetup: func(ctx sdk.Context, tApp *testapp.TestApp) {
+				k := tApp.App.RatelimitKeeper
+				store := ctx.KVStore(k.GetStoreKey())
+				store.Delete([]byte(types.AssetYieldIndexPrefix))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.RatelimitKeeper
+			k.SetAssetYieldIndex(ctx, tc.initialAssetYieldIndex)
+			tc.customSetup(ctx, tApp)
+
+			err := k.SetNewYieldIndex(ctx, tc.totalTDaiPreMint, tc.totalTDaiMinted)
+			resultAssetYieldIndex, found := k.GetAssetYieldIndex(ctx)
+
+			if tc.expectErr && tc.expectedAssetYieldIndex == nil {
+				require.False(t, found)
+			} else {
+				require.True(t, found)
+			}
+
+			if tc.expectErr {
+				require.ErrorContains(t, err, tc.expectedErrMsg)
+				if tc.expectedAssetYieldIndex != nil {
+					require.Equal(t, 0, tc.initialAssetYieldIndex.Cmp(resultAssetYieldIndex), "Expected AssetYieldIndex: %v. Got: %v.", tc.initialAssetYieldIndex, resultAssetYieldIndex)
+				}
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, 0, tc.expectedAssetYieldIndex.Cmp(resultAssetYieldIndex), "Expected AssetYieldIndex: %v. Got: %v.", tc.expectedAssetYieldIndex, resultAssetYieldIndex)
+			}
+		})
+	}
+}
 
 func TestMintNewTDaiYield(t *testing.T) {
 	testCases := []struct {
@@ -93,59 +468,9 @@ func TestMintNewTDaiYield(t *testing.T) {
 
 			// Burn any tDAI that was created in test genesis.
 			burnAllCoinsOfDenom(t, ctx, tApp, types.TDaiDenom)
-			// request := banktypes.QueryDenomOwnersRequest{
-			// 	Denom: types.TDaiDenom,
-			// }
-			// response, err := bankKeeper.DenomOwners(ctx, &request)
-			// require.NoError(t, err)
-
-			// for _, denomOwner := range response.DenomOwners {
-			// 	convertedAddress, err := sdk.AccAddressFromBech32(denomOwner.Address)
-			// 	if err != nil {
-			// 		continue
-			// 	}
-			// 	err = bankKeeper.SendCoinsFromAccountToModule(
-			// 		ctx,
-			// 		convertedAddress,
-			// 		types.TDaiPoolAccount,
-			// 		sdk.NewCoins(denomOwner.Balance),
-			// 	)
-			// 	require.NoError(t, err)
-			// }
-
-			// bankKeeper.BurnCoins(
-			// 	ctx,
-			// 	types.TDaiPoolAccount,
-			// 	sdk.NewCoins(bankKeeper.GetSupply(ctx, types.TDaiDenom)),
-			// )
 
 			// Burn any sDAI that was created in test genesis.
 			burnAllCoinsOfDenom(t, ctx, tApp, types.SDaiDenom)
-			// request = banktypes.QueryDenomOwnersRequest{
-			// 	Denom: types.SDaiDenom,
-			// }
-			// response, err = bankKeeper.DenomOwners(ctx, &request)
-			// require.NoError(t, err)
-
-			// for _, denomOwner := range response.DenomOwners {
-			// 	convertedAddress, err := sdk.AccAddressFromBech32(denomOwner.Address)
-			// 	if err != nil {
-			// 		continue
-			// 	}
-			// 	err = bankKeeper.SendCoinsFromAccountToModule(
-			// 		ctx,
-			// 		convertedAddress,
-			// 		types.TDaiPoolAccount,
-			// 		sdk.NewCoins(denomOwner.Balance),
-			// 	)
-			// 	require.NoError(t, err)
-			// }
-
-			// bankKeeper.BurnCoins(
-			// 	ctx,
-			// 	types.TDaiPoolAccount,
-			// 	sdk.NewCoins(bankKeeper.GetSupply(ctx, types.SDaiDenom)),
-			// )
 
 			// Mint initial sDAI supply
 			if !tc.initialSDAISupply.IsZero() {
@@ -209,4 +534,12 @@ func burnAllCoinsOfDenom(t *testing.T, ctx sdk.Context, tApp *testapp.TestApp, d
 		types.TDaiPoolAccount,
 		sdk.NewCoins(bankKeeper.GetSupply(ctx, denom)),
 	)
+}
+
+func getPerpetualsEventsFromIndexerBlock(
+	ctx sdk.Context,
+	perpetualsKeeper *perpetualsmodulekeeper.Keeper,
+) []*indexer_manager.IndexerTendermintEvent {
+	block := perpetualsKeeper.GetIndexerEventManager().ProduceBlock(ctx)
+	return block.Events
 }

@@ -438,3 +438,7 @@ func (k Keeper) GetAssetYieldIndex(ctx sdk.Context) (yieldIndex *big.Rat, found 
 func (k Keeper) GetSDAIEventManagerForTestingOnly() *sdaiserver.SDAIEventManager {
 	return k.sDAIEventManager
 }
+
+func (k Keeper) GetStoreKey() storetypes.StoreKey {
+	return k.storeKey
+}

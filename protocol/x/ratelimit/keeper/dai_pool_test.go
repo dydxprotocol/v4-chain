@@ -5,10 +5,10 @@ import (
 	"math/big"
 	"testing"
 
-	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,15 +21,15 @@ var (
 		sdk.AccAddress([]byte("invalid_______________")),
 	}
 
-	price1, _ = ConvertStringToBigInt("1095368296575849877285046738")
+	price1, _ = keeper.ConvertStringToBigInt("1095368296575849877285046738")
 
-	price2, _ = ConvertStringToBigInt("1095369098523294619828519483")
+	price2, _ = keeper.ConvertStringToBigInt("1095369098523294619828519483")
 
-	price3, _ = ConvertStringToBigInt("1095369387224518455677735570")
+	price3, _ = keeper.ConvertStringToBigInt("1095369387224518455677735570")
 
 	price_two = new(big.Int).Mul(big.NewInt(2), new(big.Int).Exp(big.NewInt(types.BASE_10), big.NewInt(types.SDAI_DECIMALS), nil))
 
-	priceMinimallyAboveOne, _ = ConvertStringToBigInt("1000000000000000000000000001")
+	priceMinimallyAboveOne, _ = keeper.ConvertStringToBigInt("1000000000000000000000000001")
 )
 
 type PoolTestTransfer struct {
@@ -106,19 +106,19 @@ func TestGetTradingDAIFromSDAIAmount(t *testing.T) {
 			expectedErr:        nil,
 		},
 		"Real example 4": {
-			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
+			sDAIAmount:         keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
 			sDAIPrice:          price3,
 			expectedTDAIAmount: big.NewInt(98765432123456789),
 			expectedErr:        nil,
 		},
 		"Real example 5": {
-			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
+			sDAIAmount:         keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
 			sDAIPrice:          price3,
 			expectedTDAIAmount: big.NewInt(98765432123456790),
 			expectedErr:        nil,
 		},
 		"Real example 6": {
-			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
+			sDAIAmount:         keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
 			sDAIPrice:          price2,
 			expectedTDAIAmount: big.NewInt(98765406092328),
 			expectedErr:        nil,
@@ -214,25 +214,25 @@ func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
 			expectedErr:        nil,
 		},
 		"Real example 4": {
-			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
+			sDAIAmount:         keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
 			sDAIPrice:          price3,
 			expectedTDAIAmount: big.NewInt(98765432123456790),
 			expectedErr:        nil,
 		},
 		"Real example 5": {
-			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
+			sDAIAmount:         keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
 			sDAIPrice:          price3,
 			expectedTDAIAmount: big.NewInt(98765432123456791),
 			expectedErr:        nil,
 		},
 		"Real example 6": {
-			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
+			sDAIAmount:         keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
 			sDAIPrice:          price2,
 			expectedTDAIAmount: big.NewInt(98765406092329),
 			expectedErr:        nil,
 		},
 		"Rounds up on both divisions": {
-			sDAIAmount:         ConvertStringToBigIntWithPanicOnErr("1000000000000"),
+			sDAIAmount:         keeper.ConvertStringToBigIntWithPanicOnErr("1000000000000"),
 			sDAIPrice:          priceMinimallyAboveOne,
 			expectedTDAIAmount: big.NewInt(2),
 			expectedErr:        nil,
@@ -444,10 +444,10 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 		"Real example 4": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
+					sDAIAmount:             keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
 					sDAIPrice:              price3,
 					userAddr:               accAddrs[0],
-					userInitialSDAIBalance: ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
+					userInitialSDAIBalance: keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
 					expectedTDAIAmount:     big.NewInt(98765432123456789),
 					expectErr:              false,
 				},
@@ -456,10 +456,10 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 		"Real example 5": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
+					sDAIAmount:             keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
 					sDAIPrice:              price3,
 					userAddr:               accAddrs[0],
-					userInitialSDAIBalance: ConvertStringToBigIntWithPanicOnErr("90166324963409614000000000000"),
+					userInitialSDAIBalance: keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409614000000000000"),
 					expectedTDAIAmount:     big.NewInt(98765432123456790),
 					expectErr:              false,
 				},
@@ -468,10 +468,10 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 		"Real example 6": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
+					sDAIAmount:             keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
 					sDAIPrice:              price2,
 					userAddr:               accAddrs[0],
-					userInitialSDAIBalance: ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
+					userInitialSDAIBalance: keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
 					expectedTDAIAmount:     big.NewInt(98765406092328),
 					expectErr:              false,
 				},
@@ -737,7 +737,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"Real example 4": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
+					sDAIAmount:             keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613000000000000"),
 					sDAIPrice:              price3,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(98765432123456791),
@@ -749,7 +749,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"Real example 5": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
+					sDAIAmount:             keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613999999999999"),
 					sDAIPrice:              price3,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(98765432123456791),
@@ -761,7 +761,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"Real example 6": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
+					sDAIAmount:             keeper.ConvertStringToBigIntWithPanicOnErr("90166324963409613123456789"),
 					sDAIPrice:              price2,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(98765406092330),
@@ -773,7 +773,7 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 		"Rounds up on both divisions": {
 			transfers: []PoolTestTransfer{
 				{
-					sDAIAmount:             ConvertStringToBigIntWithPanicOnErr("1000000000000"),
+					sDAIAmount:             keeper.ConvertStringToBigIntWithPanicOnErr("1000000000000"),
 					sDAIPrice:              priceMinimallyAboveOne,
 					userAddr:               accAddrs[0],
 					userInitialTDAIBalance: big.NewInt(2),
@@ -893,27 +893,4 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 			}
 		})
 	}
-}
-
-func ConvertStringToBigInt(str string) (*big.Int, error) {
-
-	bigint, ok := new(big.Int).SetString(str, 10)
-	if !ok {
-		return nil, errorsmod.Wrap(
-			types.ErrUnableToDecodeBigInt,
-			"Unable to convert the sDAI conversion rate to a big int",
-		)
-	}
-
-	return bigint, nil
-}
-
-func ConvertStringToBigIntWithPanicOnErr(str string) *big.Int {
-	bigint, err := ConvertStringToBigInt(str)
-
-	if err != nil {
-		panic("Could not convert string to big.Int")
-	}
-
-	return bigint
 }

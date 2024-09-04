@@ -70,12 +70,12 @@ func (k Keeper) WithdrawSDaiFromTDai(
 		return err
 	}
 
-	err = k.BurnTDaiInUserAccount(ctx, userAddr, tDaiDenomAmount)
+	err = k.burnTDaiInUserAccount(ctx, userAddr, tDaiDenomAmount)
 	if err != nil {
 		return err
 	}
 
-	err = k.SendSDaiAmountToUserAccount(ctx, userAddr, sDaiAmount)
+	err = k.sendSDaiAmountToUserAccount(ctx, userAddr, sDaiAmount)
 
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func (k Keeper) WithdrawSDaiFromTDai(
 	return nil
 }
 
-func (k Keeper) BurnTDaiInUserAccount(
+func (k Keeper) burnTDaiInUserAccount(
 	ctx sdk.Context,
 	userAddr sdk.AccAddress,
 	tDaiAmount *big.Int,
@@ -105,7 +105,7 @@ func (k Keeper) BurnTDaiInUserAccount(
 	return nil
 }
 
-func (k Keeper) SendSDaiAmountToUserAccount(
+func (k Keeper) sendSDaiAmountToUserAccount(
 	ctx sdk.Context,
 	userAddr sdk.AccAddress,
 	sDaiAmount *big.Int,

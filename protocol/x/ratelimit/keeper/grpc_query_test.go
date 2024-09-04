@@ -7,6 +7,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	bank_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/bank"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	ratelimitutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	cometbfttypes "github.com/cometbft/cometbft/types"
@@ -195,6 +196,53 @@ func TestGetSDAIPriceQuery(t *testing.T) {
 			k.SetSDAIPrice(ctx, big.NewInt(1))
 			res, err := k.GetSDAIPriceQuery(ctx, tc.req)
 			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.res, res)
+			}
+		})
+	}
+}
+
+func TestGetAssetYieldIndexQuery(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	for name, tc := range map[string]struct {
+		req *types.GetAssetYieldIndexQueryRequest
+		res *types.GetAssetYieldIndexQueryResponse
+		err error
+	}{
+		"Success": {
+			req: &types.GetAssetYieldIndexQueryRequest{},
+			res: &types.GetAssetYieldIndexQueryResponse{
+				AssetYieldIndex: "1/1",
+			},
+			err: nil,
+		},
+		"Invalid Request": {
+			req: nil,
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+		"AssetYieldIndex not found": {
+			req: &types.GetAssetYieldIndexQueryRequest{},
+			res: nil,
+			err: status.Error(codes.NotFound, "asset yield index not found"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if !(tc.req != nil && tc.res == nil) {
+				k.SetAssetYieldIndex(ctx, keeper.ConvertStringToBigRatWithPanicOnErr("1/1"))
+			} else {
+				store := ctx.KVStore(k.GetStoreKey())
+				store.Delete([]byte(types.AssetYieldIndexPrefix))
+			}
+			res, err := k.GetAssetYieldIndexQuery(ctx, tc.req)
+			if tc.err != nil {
+				require.Error(t, err)
 				require.ErrorIs(t, err, tc.err)
 			} else {
 				require.NoError(t, err)

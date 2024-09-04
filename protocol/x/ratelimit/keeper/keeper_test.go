@@ -12,6 +12,7 @@ import (
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -272,6 +273,235 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 				},
 				k.GetDenomCapacity(ctx, tc.denom),
 				"retrieved LimitParams do not match the set value")
+		})
+	}
+}
+
+func TestGetLimiterCapacityListForDenom_Success(t *testing.T) {
+	tests := map[string]struct {
+		denom      string
+		denomsData []struct {
+			denom    string
+			limiters []types.Limiter
+			capacity types.DenomCapacity
+		}
+		expectedlimiterCapacityList []types.LimiterCapacity
+	}{
+		"Only one denom stored": {
+			denom: testDenom,
+			denomsData: []struct {
+				denom    string
+				limiters []types.Limiter
+				capacity types.DenomCapacity
+			}{
+				{
+					denom: testDenom,
+					limiters: []types.Limiter{
+						{
+							Period:          3_600 * time.Second,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000),
+							BaselineTvlPpm:  10_000,
+						},
+						{
+							Period:          86_400 * time.Second,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000),
+							BaselineTvlPpm:  100_000,
+						},
+					},
+					capacity: types.DenomCapacity{
+						Denom: testDenom,
+						CapacityList: []dtypes.SerializableInt{
+							dtypes.NewInt(123_456_789),
+							dtypes.NewInt(500_000_000),
+						},
+					},
+				},
+			},
+			expectedlimiterCapacityList: []types.LimiterCapacity{
+				{
+					Limiter: types.Limiter{
+						Period:          3_600 * time.Second,
+						BaselineMinimum: dtypes.NewInt(100_000_000_000),
+						BaselineTvlPpm:  10_000,
+					},
+					Capacity: dtypes.NewInt(123_456_789),
+				},
+				{
+					Limiter: types.Limiter{
+						Period:          86_400 * time.Second,
+						BaselineMinimum: dtypes.NewInt(1_000_000_000_000),
+						BaselineTvlPpm:  100_000,
+					},
+					Capacity: dtypes.NewInt(500_000_000),
+				},
+			},
+		},
+		"Multiple denoms stored": {
+			denom: testDenom,
+			denomsData: []struct {
+				denom    string
+				limiters []types.Limiter
+				capacity types.DenomCapacity
+			}{
+				{
+					denom: testDenom,
+					limiters: []types.Limiter{
+						{
+							Period:          3_600 * time.Second,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000),
+							BaselineTvlPpm:  10_000,
+						},
+						{
+							Period:          86_400 * time.Second,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000),
+							BaselineTvlPpm:  100_000,
+						},
+					},
+					capacity: types.DenomCapacity{
+						Denom: testDenom,
+						CapacityList: []dtypes.SerializableInt{
+							dtypes.NewInt(123_456_789),
+							dtypes.NewInt(500_000_000),
+						},
+					},
+				},
+				{
+					denom: types.SDaiDenom,
+					limiters: []types.Limiter{
+						{
+							Period:          3_600 * time.Second,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000_000),
+							BaselineTvlPpm:  1_000,
+						},
+						{
+							Period:          86_400 * time.Second,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000_000),
+							BaselineTvlPpm:  1_000_000,
+						},
+					},
+					capacity: types.DenomCapacity{
+						Denom: types.SDaiDenom,
+						CapacityList: []dtypes.SerializableInt{
+							dtypes.NewInt(987_654_321),
+							dtypes.NewInt(1_000_000),
+						},
+					},
+				},
+			},
+			expectedlimiterCapacityList: []types.LimiterCapacity{
+				{
+					Limiter: types.Limiter{
+						Period:          3_600 * time.Second,
+						BaselineMinimum: dtypes.NewInt(100_000_000_000),
+						BaselineTvlPpm:  10_000,
+					},
+					Capacity: dtypes.NewInt(123_456_789),
+				},
+				{
+					Limiter: types.Limiter{
+						Period:          86_400 * time.Second,
+						BaselineMinimum: dtypes.NewInt(1_000_000_000_000),
+						BaselineTvlPpm:  100_000,
+					},
+					Capacity: dtypes.NewInt(500_000_000),
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.RatelimitKeeper
+
+			for _, denomData := range tc.denomsData {
+				limitParams := types.LimitParams{
+					Denom:    denomData.denom,
+					Limiters: denomData.limiters,
+				}
+				err := k.SetLimitParams(ctx, limitParams)
+				require.NoError(t, err)
+
+				k.SetDenomCapacity(ctx, denomData.capacity)
+			}
+
+			limiterCapacityList, err := k.GetLimiterCapacityListForDenom(ctx, tc.denom)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedlimiterCapacityList, limiterCapacityList)
+		})
+	}
+}
+
+func TestGetLimiterCapacityListForDenom_Failure(t *testing.T) {
+	tests := map[string]struct {
+		denom    string
+		limiters []types.Limiter
+		capacity types.DenomCapacity
+	}{
+		"Limiters shorter than capacity list": {
+			denom: testDenom,
+			limiters: []types.Limiter{
+				{
+					Period:          3_600 * time.Second,
+					BaselineMinimum: dtypes.NewInt(100_000_000_000),
+					BaselineTvlPpm:  10_000,
+				},
+				{
+					Period:          86_400 * time.Second,
+					BaselineMinimum: dtypes.NewInt(1_000_000_000_000),
+					BaselineTvlPpm:  100_000,
+				},
+			},
+			capacity: types.DenomCapacity{
+				Denom: testDenom,
+				CapacityList: []dtypes.SerializableInt{
+					dtypes.NewInt(123_456_789),
+					dtypes.NewInt(500_000_000),
+					dtypes.NewInt(700_000_000),
+				},
+			},
+		},
+		"Limiters longer than capacity list": {
+			denom: testDenom,
+			limiters: []types.Limiter{
+				{
+					Period:          3_600 * time.Second,
+					BaselineMinimum: dtypes.NewInt(100_000_000_000),
+					BaselineTvlPpm:  10_000,
+				},
+				{
+					Period:          86_400 * time.Second,
+					BaselineMinimum: dtypes.NewInt(1_000_000_000_000),
+					BaselineTvlPpm:  100_000,
+				},
+			},
+			capacity: types.DenomCapacity{
+				Denom: testDenom,
+				CapacityList: []dtypes.SerializableInt{
+					dtypes.NewInt(123_456_789),
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.RatelimitKeeper
+
+			limitParams := types.LimitParams{
+				Denom:    tc.denom,
+				Limiters: tc.limiters,
+			}
+			err := k.SetLimitParams(ctx, limitParams)
+			require.NoError(t, err)
+
+			k.SetDenomCapacity(ctx, tc.capacity)
+
+			_, err = k.GetLimiterCapacityListForDenom(ctx, tc.denom)
+			require.Error(t, err)
 		})
 	}
 }
@@ -1173,33 +1403,49 @@ func TestIncrementCapacitiesForDenom(t *testing.T) {
 }
 
 // Setting a valid sDAI price stores the correct byte representation in the KVStore
-func TestSetSDAIPrice(t *testing.T) {
+func TestSetGetSDAIPrice(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.RatelimitKeeper
 
 	price := big.NewInt(123456789)
 
-	// Test SetSDAIPrice
 	k.SetSDAIPrice(ctx, price)
-
-	// Test GetSDAIPrice
 	gotPrice, found := k.GetSDAIPrice(ctx)
 	require.True(t, found, "sDAI price not found in store")
 	require.Equal(t, price, gotPrice, "retrieved sDAI price does not match the set value")
 }
 
 // we should test not setting and just getting the price and expect found to be false
-func TestGetSDAIPriceWhenNotSet(t *testing.T) {
-	// Setup
+func TestGetSDAIPrice_PriceNotSet(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.RatelimitKeeper
 
-	// Test
 	price, found := k.GetSDAIPrice(ctx)
-
-	// Assertion
 	require.Nil(t, price, "Expected price to be nil when not set")
 	require.False(t, found, "Expected found to be false when price is not set")
+}
+
+func TestSetGetAssetYieldIndex(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	yieldIndex := keeper.ConvertStringToBigRatWithPanicOnErr("1234/5678")
+
+	k.SetAssetYieldIndex(ctx, yieldIndex)
+	gotYieldIndex, found := k.GetAssetYieldIndex(ctx)
+	require.True(t, found, "assetYieldIndex not found in store")
+	require.Equal(t, yieldIndex, gotYieldIndex, "assetYieldIndex does not match the set value")
+}
+
+func TestGetAssetYieldIndex_AssetYieldIndexNotSet(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	assetYieldIndex, found := k.GetAssetYieldIndex(ctx)
+	require.Nil(t, assetYieldIndex, "Expected assetYieldIndex to be nil when not set")
+	require.False(t, found, "Expected found to be false when assetYieldIndex is not set")
 }

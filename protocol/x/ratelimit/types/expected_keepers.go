@@ -36,7 +36,7 @@ type BlockTimeKeeper interface {
 }
 
 type PerpetualsKeeper interface {
-	UpdateYieldIndexToNewMint(ctx sdk.Context, totalTDaiPreMint *big.Int, totalTDaiMinted *big.Int)
+	UpdateYieldIndexToNewMint(ctx sdk.Context, totalTDaiPreMint *big.Int, totalTDaiMinted *big.Int) error
 }
 
 // ICS4Wrapper defines the expected ICS4Wrapper for middleware

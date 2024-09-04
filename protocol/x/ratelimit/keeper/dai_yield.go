@@ -23,7 +23,10 @@ func (k Keeper) ProcessNewTDaiConversionRateUpdate(ctx sdk.Context) error {
 		return err
 	}
 
-	k.perpetualsKeeper.UpdateYieldIndexToNewMint(ctx, tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted)
+	err = k.perpetualsKeeper.UpdateYieldIndexToNewMint(ctx, tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted)
+	if err != nil {
+		return err
+	}
 
 	// Emit indexer event
 	sDAIPrice, found := k.GetSDAIPrice(ctx)

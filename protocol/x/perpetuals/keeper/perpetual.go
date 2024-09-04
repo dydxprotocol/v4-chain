@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -649,14 +650,14 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 	ctx sdk.Context,
 	totalTDaiPreMint *big.Int,
 	totalTDaiMinted *big.Int,
-) {
+) error {
 
 	if totalTDaiMinted.Cmp(big.NewInt(0)) == 0 {
-		return
+		return nil
 	}
 
 	if totalTDaiPreMint.Cmp(big.NewInt(0)) == 0 {
-		panic("Total tDAI pre mint was 0, but total tDAI minted was not 0.")
+		return errors.New("total tDAI pre mint was 0, but total tDAI minted was not 0")
 	}
 
 	allPerps := k.GetAllPerpetuals(ctx)
@@ -665,26 +666,25 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 
 		marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		// Calculate yield index for this epoch
 		currEpochYieldIndex, err := k.CalculateYieldIndexForEpoch(ctx, totalTDaiPreMint, totalTDaiMinted, marketPrice, perp)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		// Get current cumulative yield index
 		cumulativeYieldIndex, _ := new(big.Rat).SetString(perp.YieldIndex)
 		newYieldIndex := new(big.Rat).Add(cumulativeYieldIndex, currEpochYieldIndex)
 
-		// TODO: Decide on how many decimal places this should be and convert to constant
-		perp.YieldIndex = newYieldIndex.FloatString(10)
+		perp.YieldIndex = newYieldIndex.String()
 
 		// Store the modified perpetual.
 		err = k.ValidateAndSetPerpetual(ctx, perp)
 		if err != nil {
-			panic("could not set new perp yield index")
+			return err
 		}
 
 		// Emit indexer event.
@@ -704,6 +704,8 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 			),
 		)
 	}
+
+	return nil
 }
 
 func (k Keeper) CalculateYieldIndexForEpoch(

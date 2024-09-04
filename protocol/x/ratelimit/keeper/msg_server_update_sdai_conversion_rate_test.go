@@ -260,20 +260,6 @@ func TestMsgUpdateSDAIConversionRate_PostFirstEpoch(t *testing.T) {
 			require.Equal(t, tc.expectedSDAIRate, conversionRate.String())
 			require.True(t, assetYieldIndexFound)
 			require.Equal(t, tc.expectedAssetYieldIndex, assetYieldIndex.String())
-
-			// if tc.expErr {
-			// 	require.Error(t, err)
-			// 	require.True(t, conversionRateFound)
-			// 	require.Equal(t, tc.expectedSDAIRate, conversionRate.String())
-			// 	require.True(t, assetYieldIndexFound)
-			// 	require.Equal(t, tc.expectedAssetYieldIndex, assetYieldIndex.String())
-			// } else {
-			// 	require.NoError(t, err)
-			// 	require.True(t, conversionRateFound)
-			// 	require.Equal(t, tc.expectedSDAIRate, conversionRate.String())
-			// 	require.True(t, assetYieldIndexFound)
-			// 	require.Equal(t, tc.expectedAssetYieldIndex, assetYieldIndex.String())
-			// }
 		})
 	}
 }
@@ -298,7 +284,7 @@ func TestMsgUpdateSDAIConversionRate_PerformsAllStateChanges(t *testing.T) {
 			},
 			expectedSDAIRate:         "1" + strings.Repeat("0", 27),
 			expectedAssetYieldIndex:  "1/1",
-			expectedPerpYieldIndexes: []string{"2.0000000000", "1.0000000000"},
+			expectedPerpYieldIndexes: []string{"2/1", "1/1"},
 			epoch:                    uint64(1),
 			setup: func(ctx sdk.Context, tApp *testapp.TestApp, sDAIEventManager *sdaiserver.SDAIEventManager) {
 				for i := 0; i < 8; i++ {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 )
 
@@ -52,4 +53,37 @@ func divideAndRoundUp(x *big.Int, y *big.Int) (*big.Int, error) {
 	result = result.Div(result, y)
 	result = result.Add(result, big.NewInt(1))
 	return result, nil
+}
+
+func ConvertStringToBigInt(str string) (*big.Int, error) {
+
+	bigint, ok := new(big.Int).SetString(str, 10)
+	if !ok {
+		return nil, errorsmod.Wrap(
+			types.ErrUnableToDecodeBigInt,
+			"Unable to convert the sDAI conversion rate to a big int",
+		)
+	}
+
+	return bigint, nil
+}
+
+func ConvertStringToBigIntWithPanicOnErr(str string) *big.Int {
+	bigint, err := ConvertStringToBigInt(str)
+
+	if err != nil {
+		panic("Could not convert string to big.Int")
+	}
+
+	return bigint
+}
+
+func ConvertStringToBigRatWithPanicOnErr(str string) *big.Rat {
+	bigrat, ok := new(big.Rat).SetString(str)
+
+	if !ok {
+		panic("Could not convert string to big.Rat")
+	}
+
+	return bigrat
 }

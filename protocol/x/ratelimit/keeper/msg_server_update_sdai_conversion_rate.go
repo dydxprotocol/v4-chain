@@ -93,15 +93,3 @@ func findMatchingConversionRate(
 		"The suggested sDAI conversion rate is not valid",
 	)
 }
-
-func ConvertStringToBigInt(str string) (*big.Int, error) {
-	bigint, ok := new(big.Int).SetString(str, 10)
-	if !ok {
-		return nil, errorsmod.Wrap(
-			types.ErrUnableToDecodeBigInt,
-			"Unable to convert the sDAI conversion rate to a big int",
-		)
-	}
-
-	return bigint, nil
-}
