@@ -286,7 +286,7 @@ describe('kafka-publisher', () => {
       createdAtHeight: testConstants.createdHeight,
       clientMetadata: '0',
       fee: '1.1',
-      affiliateEarnedRevShare: '0',
+      affiliateRevShare: '0',
     };
     const order: OrderFromDatabase = {
       ...testConstants.defaultOrderGoodTilBlockTime,

@@ -82,8 +82,8 @@ BEGIN
                                    power(10, perpetual_market_record."atomicResolution")::numeric);
     fee = dydx_trim_scale(dydx_get_fee(fill_liquidity, event_data) *
                           power(10, asset_record."atomicResolution")::numeric);
-    affiliate_rev_share = COALESCE(dydx_trim_scale(dydx_from_jsonlib_long(event_data->'affiliateRevShare') *
-                                    power(10, asset_record."atomicResolution")::numeric), 0);
+    affiliate_rev_share = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'affiliateRevShare') *
+                                    power(10, asset_record."atomicResolution")::numeric);
 
     order_uuid = dydx_uuid_from_order_id(order_->'orderId');
     subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));
