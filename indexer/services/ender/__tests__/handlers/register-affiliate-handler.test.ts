@@ -65,7 +65,6 @@ describe('registerAffiliateHandler', () => {
     await onMessage(kafkaMessage);
 
     let actualEntry: AffiliateReferredUserFromDatabase | undefined = await AffiliateReferredUsersTable.findByRefereeAddress('address2');
-    expect(actualEntry).not.toEqual(undefined);
     expect(actualEntry).toEqual({
       affiliateAddress: 'address1',
       refereeAddress: 'address2',
@@ -73,7 +72,6 @@ describe('registerAffiliateHandler', () => {
     });
 
     actualEntry = await AffiliateReferredUsersTable.findByRefereeAddress('address4');
-    expect(actualEntry).not.toEqual(undefined);
     expect(actualEntry).toEqual({
       affiliateAddress: 'address3',
       refereeAddress: 'address4',
