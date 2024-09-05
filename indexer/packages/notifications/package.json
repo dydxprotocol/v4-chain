@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/dydxprotocol/indexer#readme",
   "dependencies": {
+    "firebase-admin": "^12.4.0",
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
     "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
     "dotenv-flow": "^3.2.0"

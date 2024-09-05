@@ -68,11 +68,11 @@ if (firebaseApp) {
 }
 
 export const sendMulticast = firebaseMessaging
-  ? firebaseMessaging.sendMulticast.bind(firebaseMessaging)
+  ? firebaseMessaging.sendEachForMulticast.bind(firebaseMessaging)
   : () => {
     logger.error({
       at: 'notifications#firebase',
-      message: 'Firebase Messaging is not initialized, sendMulticast is a no-op',
+      message: 'Firebase Messaging is not initialized, sendEachForMulticast is a no-op',
     });
     return Promise.resolve(null);
   };
