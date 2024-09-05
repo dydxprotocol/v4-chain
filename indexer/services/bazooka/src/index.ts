@@ -241,6 +241,10 @@ async function partitionKafkaTopics(): Promise<void> {
     });
     if (topicMetadata.topics.length === 1) {
       if (topicMetadata.topics[0].partitions.length !== KAFKA_TOPICS_TO_PARTITIONS[kafkaTopic]) {
+        logger.info({
+          at: 'index#partitionKafkaTopics',
+          message: `Setting topic ${kafkaTopic} to ${KAFKA_TOPICS_TO_PARTITIONS[kafkaTopic]} partitions`,
+        });
         await admin.createPartitions({
           validateOnly: false,
           topicPartitions: [{
@@ -249,7 +253,7 @@ async function partitionKafkaTopics(): Promise<void> {
           }],
         });
         logger.info({
-          at: 'index#createKafka  Topics',
+          at: 'index#partitionKafkaTopics',
           message: `Successfully set topic ${kafkaTopic} to ${KAFKA_TOPICS_TO_PARTITIONS[kafkaTopic]} partitions`,
         });
       }
@@ -261,7 +265,7 @@ async function clearKafkaTopics(
   existingKafkaTopics: string[],
 ): Promise<void> {
   await Promise.all(
-    _.map(KAFKA_TOPICS_TO_PARTITIONS,
+    _.map(KAFKA_TOPICS,
       clearKafkaTopic.bind(null,
         1,
         config.CLEAR_KAFKA_TOPIC_RETRY_MS,
