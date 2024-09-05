@@ -191,6 +191,8 @@ func (k Keeper) GetTierForAffiliate(
 		if referredVolume.Cmp(lib.BigU(tier.ReqReferredVolumeQuoteQuantums)) >= 0 {
 			// safe to do as tier cannot be negative
 			currentTier = uint32(index)
+		} else {
+			break
 		}
 	}
 
