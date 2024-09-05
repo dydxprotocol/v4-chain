@@ -16,7 +16,7 @@ export interface AffiliateTiersSDKType {
 
 export interface AffiliateTiers_Tier {
   /** Required all-time referred volume in quote quantums. */
-  reqReferredVolume: Long;
+  reqReferredVolumeQuoteQuantums: Long;
   /** Required currently staked native tokens (in whole coins). */
 
   reqStakedWholeCoins: number;
@@ -28,7 +28,7 @@ export interface AffiliateTiers_Tier {
 
 export interface AffiliateTiers_TierSDKType {
   /** Required all-time referred volume in quote quantums. */
-  req_referred_volume: Long;
+  req_referred_volume_quote_quantums: Long;
   /** Required currently staked native tokens (in whole coins). */
 
   req_staked_whole_coins: number;
@@ -84,7 +84,7 @@ export const AffiliateTiers = {
 
 function createBaseAffiliateTiers_Tier(): AffiliateTiers_Tier {
   return {
-    reqReferredVolume: Long.UZERO,
+    reqReferredVolumeQuoteQuantums: Long.UZERO,
     reqStakedWholeCoins: 0,
     takerFeeSharePpm: 0
   };
@@ -92,8 +92,8 @@ function createBaseAffiliateTiers_Tier(): AffiliateTiers_Tier {
 
 export const AffiliateTiers_Tier = {
   encode(message: AffiliateTiers_Tier, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (!message.reqReferredVolume.isZero()) {
-      writer.uint32(8).uint64(message.reqReferredVolume);
+    if (!message.reqReferredVolumeQuoteQuantums.isZero()) {
+      writer.uint32(8).uint64(message.reqReferredVolumeQuoteQuantums);
     }
 
     if (message.reqStakedWholeCoins !== 0) {
@@ -117,7 +117,7 @@ export const AffiliateTiers_Tier = {
 
       switch (tag >>> 3) {
         case 1:
-          message.reqReferredVolume = (reader.uint64() as Long);
+          message.reqReferredVolumeQuoteQuantums = (reader.uint64() as Long);
           break;
 
         case 2:
@@ -139,7 +139,7 @@ export const AffiliateTiers_Tier = {
 
   fromPartial(object: DeepPartial<AffiliateTiers_Tier>): AffiliateTiers_Tier {
     const message = createBaseAffiliateTiers_Tier();
-    message.reqReferredVolume = object.reqReferredVolume !== undefined && object.reqReferredVolume !== null ? Long.fromValue(object.reqReferredVolume) : Long.UZERO;
+    message.reqReferredVolumeQuoteQuantums = object.reqReferredVolumeQuoteQuantums !== undefined && object.reqReferredVolumeQuoteQuantums !== null ? Long.fromValue(object.reqReferredVolumeQuoteQuantums) : Long.UZERO;
     message.reqStakedWholeCoins = object.reqStakedWholeCoins ?? 0;
     message.takerFeeSharePpm = object.takerFeeSharePpm ?? 0;
     return message;

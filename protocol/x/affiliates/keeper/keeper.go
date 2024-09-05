@@ -56,7 +56,8 @@ func (k Keeper) RegisterAffiliate(
 	affiliateAddr string,
 ) error {
 	if _, found := k.GetReferredBy(ctx, referee); found {
-		return errorsmod.Wrapf(types.ErrAffiliateAlreadyExistsForReferee, "referee: %s", referee)
+		return errorsmod.Wrapf(types.ErrAffiliateAlreadyExistsForReferee, "referee: %s, affiliate: %s",
+			referee, affiliateAddr)
 	}
 	if _, err := sdk.AccAddressFromBech32(referee); err != nil {
 		return errorsmod.Wrapf(types.ErrInvalidAddress, "referee: %s", referee)
@@ -106,7 +107,8 @@ func (k Keeper) AddReferredVolume(
 
 	updatedReferredVolumeBytes, err := updatedReferedVolume.Marshal()
 	if err != nil {
-		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume, "affiliate %s", affiliateAddr)
+		return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
+			"affiliate %s, error: %s", affiliateAddr, err)
 	}
 	affiliateReferredVolumePrefixStore.Set([]byte(affiliateAddr), updatedReferredVolumeBytes)
 	return nil
@@ -176,7 +178,8 @@ func (k Keeper) GetTierForAffiliate(
 	if err != nil {
 		return 0, 0, err
 	}
-	numTiers := uint32(len(affiliateTiers.GetTiers()))
+	tiers := affiliateTiers.GetTiers()
+	numTiers := uint32(len(tiers))
 	maxTierLevel := numTiers - 1
 	currentTier := uint32(0)
 	referredVolume, err := k.GetReferredVolume(ctx, affiliateAddr)
@@ -184,38 +187,38 @@ func (k Keeper) GetTierForAffiliate(
 		return 0, 0, err
 	}
 
-	for index, tier := range affiliateTiers.GetTiers() {
-		if referredVolume.Int64() >= int64(tier.ReqReferredVolume) {
+	for index, tier := range tiers {
+		if referredVolume.Cmp(lib.BigU(tier.ReqReferredVolumeQuoteQuantums)) >= 0 {
 			// safe to do as tier cannot be negative
 			currentTier = uint32(index)
 		}
 	}
 
 	if currentTier == maxTierLevel {
-		return currentTier, affiliateTiers.GetTiers()[currentTier].TakerFeeSharePpm, nil
+		return currentTier, tiers[currentTier].TakerFeeSharePpm, nil
 	}
 
 	numCoinsStaked := k.statsKeeper.GetStakedAmount(ctx, affiliateAddr)
 	for i := currentTier + 1; i < numTiers; i++ {
-		expMultiplier := new(big.Int).Exp(
-			big.NewInt(10),
-			big.NewInt(-lib.BaseDenomExponent),
-			nil,
-		)
+		expMultiplier, _ := lib.BigPow10(lib.BaseDenomExponent)
 		reqStakedCoins := new(big.Int).Mul(
-			big.NewInt(int64(affiliateTiers.GetTiers()[i].ReqStakedWholeCoins)),
+			lib.BigU(tiers[i].ReqStakedWholeCoins),
 			expMultiplier,
 		)
 		if numCoinsStaked.Cmp(reqStakedCoins) >= 0 {
 			currentTier = i
+		} else {
+			break
 		}
 	}
-	return currentTier, affiliateTiers.GetTiers()[currentTier].TakerFeeSharePpm, nil
+	return currentTier, tiers[currentTier].TakerFeeSharePpm, nil
 }
 
 // UpdateAffiliateTiers updates the affiliate tiers.
 // Used primarily through governance.
 func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.AffiliateTiers) {
 	store := ctx.KVStore(k.storeKey)
+	// TODO(OTE-779): Check strictly increasing volume and
+	// staking requirements hold in UpdateAffiliateTiers
 	store.Set([]byte(types.AffiliateTiersKey), k.cdc.MustMarshal(&affiliateTiers))
 }

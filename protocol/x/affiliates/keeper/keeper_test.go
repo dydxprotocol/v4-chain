@@ -11,6 +11,7 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
 )
@@ -60,7 +61,7 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := k.RegisterAffiliate(ctx, tc.referee, tc.affiliate)
 			if tc.expectError {
-				require.Error(t, err)
+				require.ErrorIs(t, err, types.ErrAffiliateAlreadyExistsForReferee)
 				return
 			}
 
@@ -125,7 +126,7 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	ctx := tApp.InitChain()
 	k := tApp.App.AffiliatesKeeper
 	// Set up affiliate tiers
-	affiliateTiers := constants.DefaultAffiliateTiers
+	affiliateTiers := types.DefaultAffiliateTiers
 	k.UpdateAffiliateTiers(ctx, affiliateTiers)
 	stakingKeeper := tApp.App.StakingKeeper
 
@@ -133,7 +134,7 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(
 				new(big.Int).Mul(
-					big.NewInt(int64(constants.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins)),
+					big.NewInt(int64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins)),
 					big.NewInt(1e18),
 				),
 			),
@@ -152,11 +153,11 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
-	require.Equal(t, constants.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm, feeSharePpm)
+	require.Equal(t, types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm, feeSharePpm)
 
 	// Add more referred volume to upgrade tier
 	err = k.AddReferredVolume(ctx, affiliate, big.NewInt(
-		int64(constants.DefaultAffiliateTiers.Tiers[1].ReqReferredVolume),
+		int64(types.DefaultAffiliateTiers.Tiers[1].ReqReferredVolumeQuoteQuantums),
 	))
 	require.NoError(t, err)
 
@@ -165,7 +166,7 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
-	require.Equal(t, constants.DefaultAffiliateTiers.Tiers[1].TakerFeeSharePpm, feeSharePpm)
+	require.Equal(t, types.DefaultAffiliateTiers.Tiers[1].TakerFeeSharePpm, feeSharePpm)
 }
 
 func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
@@ -174,7 +175,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	k := tApp.App.AffiliatesKeeper
 	ctx = ctx.WithBlockTime(time.Now())
 	// Set up affiliate tiers
-	affiliateTiers := constants.DefaultAffiliateTiers
+	affiliateTiers := types.DefaultAffiliateTiers
 	k.UpdateAffiliateTiers(ctx, affiliateTiers)
 
 	// Register affiliate and referee
@@ -185,7 +186,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(
 				new(big.Int).Mul(
-					big.NewInt(int64(constants.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins)),
+					big.NewInt(int64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins)),
 					big.NewInt(1e18),
 				),
 			),
@@ -200,7 +201,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
-	require.Equal(t, constants.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm, feeSharePpm)
+	require.Equal(t, types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm, feeSharePpm)
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(
 		time.Duration(statstypes.StakedAmountCacheDurationSeconds+1) * time.Second,
@@ -209,7 +210,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	err = stakingKeeper.SetDelegation(ctx,
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(new(big.Int).Mul(
-				big.NewInt(int64(constants.DefaultAffiliateTiers.Tiers[1].ReqStakedWholeCoins)),
+				big.NewInt(int64(types.DefaultAffiliateTiers.Tiers[1].ReqStakedWholeCoins)),
 				big.NewInt(1e18),
 			))))
 	require.NoError(t, err)
@@ -218,7 +219,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
-	require.Equal(t, constants.DefaultAffiliateTiers.Tiers[1].TakerFeeSharePpm, feeSharePpm)
+	require.Equal(t, types.DefaultAffiliateTiers.Tiers[1].TakerFeeSharePpm, feeSharePpm)
 }
 
 // Test volume qualifies for tier 2 and stake qualifies for tier 3
@@ -228,7 +229,7 @@ func TestGetTierForAffiliate_VolumeAndStake(t *testing.T) {
 	ctx := tApp.InitChain()
 	k := tApp.App.AffiliatesKeeper
 
-	affiliateTiers := constants.DefaultAffiliateTiers
+	affiliateTiers := types.DefaultAffiliateTiers
 	k.UpdateAffiliateTiers(ctx, affiliateTiers)
 	affiliate := constants.AliceAccAddress.String()
 	referee := constants.BobAccAddress.String()
@@ -238,7 +239,7 @@ func TestGetTierForAffiliate_VolumeAndStake(t *testing.T) {
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(
 				new(big.Int).Mul(
-					big.NewInt(int64(constants.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins)),
+					big.NewInt(int64(types.DefaultAffiliateTiers.Tiers[0].ReqStakedWholeCoins)),
 					big.NewInt(1e18),
 				),
 			),
@@ -249,7 +250,7 @@ func TestGetTierForAffiliate_VolumeAndStake(t *testing.T) {
 	err = k.RegisterAffiliate(ctx, referee, affiliate)
 	require.NoError(t, err)
 
-	reqReferredVolume := big.NewInt(int64(affiliateTiers.Tiers[2].ReqReferredVolume))
+	reqReferredVolume := big.NewInt(int64(affiliateTiers.Tiers[2].ReqReferredVolumeQuoteQuantums))
 	err = k.AddReferredVolume(ctx, affiliate, reqReferredVolume)
 	require.NoError(t, err)
 
@@ -278,7 +279,7 @@ func TestUpdateAffiliateTiers(t *testing.T) {
 	k := tApp.App.AffiliatesKeeper
 
 	// Set up valid affiliate tiers
-	validTiers := constants.DefaultAffiliateTiers
+	validTiers := types.DefaultAffiliateTiers
 	k.UpdateAffiliateTiers(ctx, validTiers)
 
 	// Retrieve and validate updated tiers

@@ -355,3 +355,9 @@ func (k Keeper) GetStakedAmount(ctx sdk.Context,
 	)
 	return stakedAmount
 }
+
+func (k Keeper) UnsafeSetCachedStakedAmount(ctx sdk.Context, delegatorAddr string,
+	cachedStakedAmount *types.CachedStakeAmount) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CachedStakeAmountKeyPrefix))
+	store.Set([]byte(delegatorAddr), k.cdc.MustMarshal(cachedStakedAmount))
+}

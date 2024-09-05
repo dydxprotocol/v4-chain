@@ -10,7 +10,7 @@ message AffiliateTiers {
   // Tier defines an affiliate tier.
   message Tier {
     // Required all-time referred volume in quote quantums.
-    uint64 req_referred_volume = 1;
+    uint64 req_referred_volume_quote_quantums = 1;
     // Required currently staked native tokens (in whole coins).
     uint32 req_staked_whole_coins = 2;
     // Taker fee share in parts-per-million.
