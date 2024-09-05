@@ -6,7 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -8,9 +8,9 @@ import (
 	"cosmossdk.io/log"
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
-	ethqueryclienttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/eth_query_client"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api"
+	ethqueryclienttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client/eth_query_client"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client/types"
 	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 	libtime "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -49,18 +49,15 @@ func (c *Client) Start(
 	grpcClient daemontypes.GrpcClient,
 ) error {
 
-	// Log the daemon flags.
 	c.logger.Info(
 		"Starting sDAI daemon with flags",
 		"SDAIFlags", flags.SDAI,
 	)
 
-	// Panic if EthRpcEndpoint is empty.
 	if flags.SDAI.EthRpcEndpoint == "" {
 		return fmt.Errorf("flag %s is not set", daemonflags.FlagSDAIDaemonEthRpcEndpoint)
 	}
 
-	// Make a connection to the private daemon gRPC server.
 	daemonConn, err := grpcClient.NewGrpcConnection(ctx, flags.Shared.SocketAddress)
 
 	if err != nil {
@@ -73,10 +70,8 @@ func (c *Client) Start(
 		}
 	}()
 
-	// Initialize gRPC clients from query connection and daemon server connection.
 	serviceClient := api.NewSDAIServiceClient(daemonConn)
 
-	// Initialize an Ethereum client from an RPC endpoint.
 	ethClient, err := ethclient.Dial(flags.SDAI.EthRpcEndpoint)
 	if err != nil {
 		c.logger.Error("Failed to establish connection to Ethereum node", "error", err)
@@ -85,10 +80,8 @@ func (c *Client) Start(
 	defer func() { ethClient.Close() }()
 
 	ticker := time.NewTicker(time.Duration(flags.SDAI.LoopDelayMs) * time.Millisecond)
-	// stop := make(chan bool, 1)
 
 	queryClient := &ethqueryclienttypes.EthQueryClientImpl{}
-	// Run the main task loop at an interval.
 	StartsDAIDaemonTaskLoop(
 		ctx,
 		c,

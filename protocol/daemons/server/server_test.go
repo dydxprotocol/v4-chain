@@ -1,18 +1,21 @@
 package server_test
 
 import (
-	"cosmossdk.io/log"
 	"errors"
 	"fmt"
+	"net"
+	"os"
+	"testing"
+
+	golanggrpc "google.golang.org/grpc"
+
+	"cosmossdk.io/log"
 	pricefeedconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/grpc"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"net"
-	"os"
-	"testing"
 )
 
 const (
@@ -156,6 +159,64 @@ func TestStart_MixedInvalid(t *testing.T) {
 			)
 		})
 	}
+}
+
+func TestStop(t *testing.T) {
+	mockGrpcServer := &mocks.GrpcServer{}
+	mockFileHandler := &mocks.FileHandler{}
+
+	server := server.NewServer(
+		log.NewNopLogger(),
+		mockGrpcServer,
+		mockFileHandler,
+		grpc.SocketPath,
+	)
+	mockGrpcServer.On("Stop").Return().Once()
+	server.Stop()
+	mockGrpcServer.AssertCalled(t, "Stop")
+}
+
+func TestStart_RegistersAllServices(t *testing.T) {
+	// Remove filepath in case net.Listen is reached.
+	defer os.RemoveAll(grpc.SocketPath)
+
+	mockGrpcServer := &mocks.GrpcServer{}
+	mockFileHandler := &mocks.FileHandler{}
+
+	s := createServerWithMocks(
+		t,
+		mockGrpcServer,
+		mockFileHandler,
+	)
+
+	mockFileHandler.On("RemoveAll", grpc.SocketPath).Return(nil)
+	mockGrpcServer.On("Serve", mock.Anything).Return(nil)
+
+	// Set up expectations for RegisterService calls
+	mockGrpcServer.On("RegisterService", mock.Anything, mock.Anything).Return()
+	require.NotPanics(t, s.Start)
+
+	// Verify that RegisterService was called exactly 3 times (one for each daemon)
+	mockGrpcServer.AssertNumberOfCalls(t, "RegisterService", 3)
+
+	// Verify that RegisterService was called for each daemon
+	mockGrpcServer.AssertCalled(t, "RegisterService", mock.MatchedBy(func(sd *golanggrpc.ServiceDesc) bool {
+		return sd.ServiceName == "dydxprotocol.daemons.pricefeed.PriceFeedService"
+	}), mock.Anything)
+	mockGrpcServer.AssertCalled(t, "RegisterService", mock.MatchedBy(func(sd *golanggrpc.ServiceDesc) bool {
+		return sd.ServiceName == "dydxprotocol.daemons.liquidation.LiquidationService"
+	}), mock.Anything)
+	mockGrpcServer.AssertCalled(t, "RegisterService", mock.MatchedBy(func(sd *golanggrpc.ServiceDesc) bool {
+		return sd.ServiceName == "dydxprotocol.daemons.sdai.sDAIService"
+	}), mock.Anything)
+
+	verifyGrpcServerMocks(
+		t,
+		mockGrpcServer,
+		mockFileHandler,
+		true,
+		true,
+	)
 }
 
 func createServerWithMocks(

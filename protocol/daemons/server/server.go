@@ -8,6 +8,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/constants"
 	liquidationapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
 	pricefeedapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
+	sdaioracleapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api"
 	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -97,6 +98,9 @@ func (server *Server) Start() {
 
 	// Register Server to ingest gRPC requests from liquidation daemon.
 	liquidationapi.RegisterLiquidationServiceServer(server.gsrv, server)
+
+	// Register Server to ingest gRPC request from sdaioracle daemon.
+	sdaioracleapi.RegisterSDAIServiceServer(server.gsrv, server)
 
 	if err := server.gsrv.Serve(ln); err != nil {
 		server.logger.Error("daemon gRPC server stopped with an error", "error", err)

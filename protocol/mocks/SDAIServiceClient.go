@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	api "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
+	api "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api"
 
 	grpc "google.golang.org/grpc"
 

@@ -1,9 +1,9 @@
 syntax = "proto3";
-package dydxprotocol.daemons.sDAI;
+package dydxprotocol.daemons.sdai;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api";
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api";
 
 // sDAIService defines the gRPC service used by sDAI daemon.
 service sDAIService {

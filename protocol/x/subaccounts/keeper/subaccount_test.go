@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

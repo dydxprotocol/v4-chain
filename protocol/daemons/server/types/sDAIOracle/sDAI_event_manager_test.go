@@ -4,23 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
-	sdaitypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api"
+	sdaitypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/stretchr/testify/require"
 )
 
-func setupEventManager() *sdaitypes.SDAIEventManager {
-	sdaitypes.SDAIEventFetcher = &sdaitypes.MockEventFetcher{}
-	return sdaitypes.NewsDAIEventManager()
-}
-
-func setupEventManagerWithNoEvents() *sdaitypes.SDAIEventManager {
-	sdaitypes.SDAIEventFetcher = &sdaitypes.MockEventFetcherNoEvents{}
-	return sdaitypes.NewsDAIEventManager()
-}
-
 func TestDefaultNewSDAIEventManager(t *testing.T) {
-	sdaiEventManager := setupEventManager()
+	sdaiEventManager := sdaitypes.SetupMockEventManager()
 	require.EqualValues(t, sdaitypes.FirstNextIndexInArray, sdaiEventManager.GetNextIndexInArray())
 	actualEvents := sdaiEventManager.GetLastTensDAIEventsUnordered()
 	for i := 0; i < sdaitypes.InitialNumEvents; i++ {
@@ -28,23 +18,66 @@ func TestDefaultNewSDAIEventManager(t *testing.T) {
 	}
 }
 
+func TestGetNextIndexInArray_Basic_HasInitialEvents(t *testing.T) {
+	sdaiEventManager := sdaitypes.SetupMockEventManager()
+	require.EqualValues(t, sdaitypes.INITIAL_EVENT_NUM, sdaiEventManager.GetNextIndexInArray())
+}
+
+func TestGetNextIndexInArray_Basic_NoInitialEvents(t *testing.T) {
+	sdaiEventManager := sdaitypes.SetupMockEventManagerWithNoEvents()
+	t.Cleanup(func() {
+		sdaitypes.InitialNumEvents = sdaitypes.INITIAL_EVENT_NUM
+		sdaitypes.FirstNextIndexInArray = sdaitypes.INITIAL_EVENT_NUM
+	})
+	require.EqualValues(t, sdaitypes.ZERO_EVENT_NUM, sdaiEventManager.GetNextIndexInArray())
+}
+
+func TestGetLastTensDAIEventsUnordered_Basic_HasInitialEvents(t *testing.T) {
+	sdaiEventManager := sdaitypes.SetupMockEventManager()
+	events := sdaiEventManager.GetLastTensDAIEventsUnordered()
+	require.Equal(t, 10, len(events))
+	fmt.Println("EVENTS ARE ", events)
+	for i, event := range events {
+		if i < sdaitypes.INITIAL_EVENT_NUM {
+			require.EqualValues(t, sdaitypes.TestSDAIEventRequests[i], event)
+		} else {
+			require.Empty(t, event)
+		}
+	}
+}
+
+func TestGetLastTensDAIEventsUnordered_Basic_NoInitialEvents(t *testing.T) {
+	sdaiEventManager := sdaitypes.SetupMockEventManagerWithNoEvents()
+	t.Cleanup(func() {
+		sdaitypes.InitialNumEvents = sdaitypes.INITIAL_EVENT_NUM
+		sdaitypes.FirstNextIndexInArray = sdaitypes.INITIAL_EVENT_NUM
+	})
+	events := sdaiEventManager.GetLastTensDAIEventsUnordered()
+	require.Equal(t, 10, len(events))
+	require.Empty(t, events)
+}
+
 // TODO: This implementation is not optimal. The latestIndex is still a constant.
 func TestSDAIEventManager_GetLatestsDAIEvent_Failure(t *testing.T) {
-	sdaiEventManager := setupEventManagerWithNoEvents()
+	sdaiEventManager := sdaitypes.SetupMockEventManagerWithNoEvents()
+	t.Cleanup(func() {
+		sdaitypes.InitialNumEvents = sdaitypes.INITIAL_EVENT_NUM
+		sdaitypes.FirstNextIndexInArray = sdaitypes.INITIAL_EVENT_NUM
+	})
 	lastEvent, found := sdaiEventManager.GetLatestsDAIEvent()
 	require.False(t, found)
 	require.EqualValues(t, api.AddsDAIEventsRequest{}, lastEvent)
 }
 
 func TestSDAIEventManager_GetLatestsDAIEvent_SuccessNoMod(t *testing.T) {
-	sdaiEventManager := setupEventManager()
+	sdaiEventManager := sdaitypes.SetupMockEventManager()
 	lastEvent, found := sdaiEventManager.GetLatestsDAIEvent()
 	require.True(t, found)
 	require.EqualValues(t, sdaitypes.TestSDAIEventRequests[sdaitypes.InitialNumEvents-1], lastEvent)
 }
 
 func TestSDAIEventManager_GetLatestsDAIEvent_SuccessMod(t *testing.T) {
-	sdaiEventManager := setupEventManager()
+	sdaiEventManager := sdaitypes.SetupMockEventManager()
 
 	// Fill up entire array so that we loop back around in the array
 	for i := 0; i < 10; i++ {
@@ -59,19 +92,52 @@ func TestSDAIEventManager_GetLatestsDAIEvent_SuccessMod(t *testing.T) {
 }
 
 func TestGetLastTensDAIEvents_NoWrapAround(t *testing.T) {
-	sdaiEventManager := setupEventManager()
+	sdaiEventManager := sdaitypes.SetupMockEventManager()
 	for i := sdaitypes.FirstNextIndexInArray; i < 10; i++ {
 		sdaiEventManager.AddsDAIEvent(&sdaitypes.TestSDAIEventRequests[i])
 	}
 	lastTenEvents := sdaiEventManager.GetLastTensDAIEventsUnordered()
+	require.Len(t, lastTenEvents, 10)
 
 	for i := 0; i < 10; i++ {
-		require.EqualValues(t, sdaitypes.TestSDAIEventRequests[i], lastTenEvents[i])
+		require.EqualValues(t, sdaitypes.TestSDAIEventRequests[i].ConversionRate, lastTenEvents[i].ConversionRate)
+	}
+}
+
+func TestGetLastTensDAIEvents_WrapAround(t *testing.T) {
+	sdaiEventManager := sdaitypes.SetupMockEventManager()
+
+	insertCount := make(map[string]int)
+	for i := 0; i < 25; i++ {
+		event := &sdaitypes.TestSDAIEventRequests[i%10]
+		sdaiEventManager.AddsDAIEvent(event)
+		if i >= 15 {
+			insertCount[event.ConversionRate]++
+		}
+	}
+
+	lastTenEvents := sdaiEventManager.GetLastTensDAIEventsUnordered()
+	require.Len(t, lastTenEvents, 10)
+
+	returnedCount := make(map[string]int)
+	for _, event := range lastTenEvents {
+		returnedCount[event.ConversionRate]++
+	}
+
+	for i := 0; i < 10; i++ {
+		rate := sdaitypes.TestSDAIEventRequests[i].ConversionRate
+		require.Equal(t, insertCount[rate], returnedCount[rate],
+			"Mismatch for ConversionRate %s", rate)
+	}
+
+	for rate, count := range returnedCount {
+		require.Equal(t, insertCount[rate], count,
+			"Mismatch for ConversionRate %s", rate)
 	}
 }
 
 func TestSDAIEventManager_AddsDAIEvent(t *testing.T) {
-	sdaiEventManager := setupEventManager()
+	sdaiEventManager := sdaitypes.SetupMockEventManager()
 	newEventIndex := sdaiEventManager.GetNextIndexInArray()
 
 	// Create a new event
@@ -132,8 +198,6 @@ func TestSDAIEventManager_AddsDAIEvent(t *testing.T) {
 
 	lastEvents = sdaiEventManager.GetLastTensDAIEventsUnordered()
 
-	fmt.Println(lastEvents)
-	fmt.Println(sdaitypes.TestSDAIEventRequests)
 	// Check if the lastEvents array is a rotated version of TestSDAIEventRequests
 	offset = -1
 	for i := 0; i < 10; i++ {

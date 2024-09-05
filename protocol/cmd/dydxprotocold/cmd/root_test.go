@@ -11,7 +11,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/dydxprotocold/cmd"
-	sdaidaemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
+	sdaidaemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/stretchr/testify/require"
 )

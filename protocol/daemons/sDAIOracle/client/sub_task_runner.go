@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
-	ethqueryclienttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/eth_query_client"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api"
+	ethqueryclienttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client/eth_query_client"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/ethereum/go-ethereum/ethclient"

@@ -5,18 +5,24 @@ import (
 	"sync"
 	"time"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api"
 
-	store "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/contract"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/types"
+	store "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client/contract"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+)
+
+const (
+	INITIAL_EVENT_NUM = 3
+	ZERO_EVENT_NUM    = 0
 )
 
 var (
 	SDAIEventFetcher      EventFetcher = &EthEventFetcher{}
-	InitialNumEvents                   = 3
-	FirstNextIndexInArray              = InitialNumEvents
-	TestSDAIEventRequests              = []api.AddsDAIEventsRequest{
+	InitialNumEvents                   = INITIAL_EVENT_NUM
+	FirstNextIndexInArray              = INITIAL_EVENT_NUM % 10
+
+	TestSDAIEventRequests = []api.AddsDAIEventsRequest{
 		{
 			ConversionRate: "1006681181716810314385961731",
 		},
@@ -57,6 +63,7 @@ func (m *MockEventFetcher) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEve
 	for i := 0; i < numOfEvents; i++ {
 		events[i] = TestSDAIEventRequests[i]
 	}
+
 	return events, nil
 }
 
@@ -64,6 +71,8 @@ type MockEventFetcherNoEvents struct{}
 
 func (m *MockEventFetcherNoEvents) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
 	events := [10]api.AddsDAIEventsRequest{}
+	InitialNumEvents = ZERO_EVENT_NUM
+	FirstNextIndexInArray = ZERO_EVENT_NUM
 	return events, nil
 }
 
@@ -119,7 +128,6 @@ func NewsDAIEventManager() *SDAIEventManager {
 	if err != nil {
 		log.Fatalf("Failed to get initial events: %v", err)
 	}
-
 	return &SDAIEventManager{
 		lastTenEvents:    events,
 		nextIndexInArray: InitialNumEvents,
@@ -167,4 +175,14 @@ func (s *SDAIEventManager) GetNextIndexInArray() int {
 	defer s.Unlock()
 
 	return s.nextIndexInArray
+}
+
+func SetupMockEventManager() *SDAIEventManager {
+	SDAIEventFetcher = &MockEventFetcher{}
+	return NewsDAIEventManager()
+}
+
+func SetupMockEventManagerWithNoEvents() *SDAIEventManager {
+	SDAIEventFetcher = &MockEventFetcherNoEvents{}
+	return NewsDAIEventManager()
 }

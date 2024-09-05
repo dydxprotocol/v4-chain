@@ -3,9 +3,9 @@ package server
 import (
 	"context"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
-	bdtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sDAIOracle"
+	bdtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 )
 
 // sDAIServer defines the fields required for sDAI conversion rate updates.

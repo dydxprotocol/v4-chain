@@ -4,7 +4,7 @@ import (
 	"context"
 	"math/big"
 
-	store "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/contract"
+	store "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client/contract"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 

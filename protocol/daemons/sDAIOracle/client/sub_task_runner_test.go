@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/grpc"

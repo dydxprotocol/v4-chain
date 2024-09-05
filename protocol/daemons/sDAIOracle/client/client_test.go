@@ -11,9 +11,9 @@ import (
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	d_constants "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/constants"
 	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/api"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client"
-	ethqueryclienttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sDAIOracle/client/eth_query_client"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client"
+	ethqueryclienttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client/eth_query_client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons"
@@ -42,10 +42,6 @@ func TestStart_EthRpcEndpointNotSet(t *testing.T) {
 
 // TODO: Maybe this is better suited as integration test.
 func TestStartAndStop(t *testing.T) {
-	// Mock the gRPC client to
-	// - successfully establish the gRPC connection
-	// - successfully close the gRPC connection.
-
 	mockGrpcClient := &mocks.GrpcClient{}
 	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(grpc.GrpcConn, nil)
 	mockGrpcClient.On("CloseConnection", grpc.GrpcConn).Return(nil)
@@ -70,13 +66,8 @@ func TestStartAndStop(t *testing.T) {
 		)
 	}()
 
-	// Allow some time for the client to start
 	time.Sleep(1 * time.Second)
-
-	// Call the Stop function
 	currClient.Stop()
-
-	// Allow some time for the client to stop
 	time.Sleep(1 * time.Second)
 
 	// Verify that the task loop has stopped
@@ -90,13 +81,9 @@ func TestStartAndStop(t *testing.T) {
 
 func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	errorMsg := "Failed to create connection"
-
-	// Mock the gRPC client to
-	// - return an error when creating a gRPC connection.
 	mockGrpcClient := &mocks.GrpcClient{}
 	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(nil, errors.New(errorMsg))
 
-	// Override default daemon flags with a non-empty EthRpcEndpoint.
 	daemonFlagsWithEthRpcEndpoint := daemonflags.GetDefaultDaemonFlags()
 	daemonFlagsWithEthRpcEndpoint.SDAI.EthRpcEndpoint = "http://localhost:8545"
 
@@ -148,8 +135,8 @@ func (f *FakeSubTaskRunner) RunsDAIDaemonTaskLoop(
 
 func TestHealthCheck_Mixed(t *testing.T) {
 	tests := map[string]struct {
-		// updateResult represents the list of responses for individual daemon task loops. Add a nil value to represent
-		// a successful update.
+		// updateResult represents the list of responses for individual daemon task loops.
+		// Add a nil value to represent a successful update.
 		updateResults        []error
 		expectedHealthStatus error
 	}{
