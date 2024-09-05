@@ -31,4 +31,7 @@ const (
 
 	// ParamsKey defines the key for the params
 	ParamsKey = "Params"
+
+	// CachedStakeAmountKey is the key to get the cached stake amount
+	CachedStakeAmountKeyPrefix = "CachedStakeAmount:"
 )
