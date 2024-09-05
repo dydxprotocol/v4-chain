@@ -275,7 +275,6 @@ export async function clearKafkaTopic(
   retryMs: number = config.CLEAR_KAFKA_TOPIC_RETRY_MS,
   maxRetries: number = config.CLEAR_KAFKA_TOPIC_MAX_RETRIES,
   existingKafkaTopics: string[],
-  numPartitions: number,
   kafkaTopic: KafkaTopics,
 ): Promise<void> {
   const kafkaTopicExists: boolean = _.includes(existingKafkaTopics, kafkaTopic);
@@ -287,6 +286,20 @@ export async function clearKafkaTopic(
     });
     return;
   }
+
+  const topicMetadata: { topics: Array<ITopicMetadata> } = await admin.fetchTopicMetadata({
+    topics: [kafkaTopic],
+  });
+
+  if (topicMetadata.topics.length !== 1) {
+    logger.info({
+      at: 'index#clearKafkaTopics',
+      message: `Cannot clear kafka topic that does not exist: ${kafkaTopic}`,
+    });
+    return;
+  }
+
+  const numPartitions = topicMetadata.topics[0].partitions.length;
 
   logger.info({
     at: 'index#clearKafkaTopics',
@@ -305,10 +318,6 @@ export async function clearKafkaTopic(
       ),
     });
   } catch (error) {
-    const topicMetadata: { topics: Array<ITopicMetadata> } = await admin.fetchTopicMetadata({
-      topics: [kafkaTopic],
-    });
-
     logger.error({
       at: 'index#clearKafkaTopics',
       message: 'Failed to delete topic records',
@@ -346,7 +355,6 @@ export async function clearKafkaTopic(
       retryMs,
       maxRetries,
       existingKafkaTopics,
-      numPartitions,
       kafkaTopic,
     );
   }
