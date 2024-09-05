@@ -8,4 +8,5 @@ var (
 	ErrInvalidAffiliateTiers            = errorsmod.Register(ModuleName, 3, "Invalid affiliate tier data")
 	ErrUpdatingAffiliateReferredVolume  = errorsmod.Register(ModuleName, 4, "Error updating affiliate referred volume")
 	ErrInvalidAddress                   = errorsmod.Register(ModuleName, 5, "Invalid address")
+	ErrAffiliateNotFound                = errorsmod.Register(ModuleName, 6, "Affiliate not found")
 )
