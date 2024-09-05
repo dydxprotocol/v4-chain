@@ -1023,9 +1023,20 @@ func New(
 	)
 	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
 
+	app.AffiliatesKeeper = *affiliatesmodulekeeper.NewKeeper(
+		appCodec,
+		keys[affiliatesmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+		app.StatsKeeper,
+	)
+	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
+
 	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
 		appCodec,
 		app.StatsKeeper,
+		app.AffiliatesKeeper,
 		keys[feetiersmoduletypes.StoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
@@ -1197,16 +1208,6 @@ func New(
 		keys[accountplusmoduletypes.StoreKey],
 	)
 	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
-
-	app.AffiliatesKeeper = *affiliatesmodulekeeper.NewKeeper(
-		appCodec,
-		keys[affiliatesmoduletypes.StoreKey],
-		[]string{
-			lib.GovModuleAddress.String(),
-		},
-		app.StatsKeeper,
-	)
-	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 
 	/****  Module Options ****/
 

@@ -3,8 +3,10 @@ package keeper_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
@@ -127,6 +129,76 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 
 			require.Equal(t, tc.expectedTakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, true))
 			require.Equal(t, tc.expectedMakerFeePpm, k.GetPerpetualFeePpm(ctx, tc.user, false))
+		})
+	}
+}
+
+func TestGetPerpetualFeePpm_Referral(t *testing.T) {
+	tests := map[string]struct {
+		expectedTakerFeePpm int32
+		setup               func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper)
+	}{
+		"regular user, first tier, no referral": {
+			expectedTakerFeePpm: 10,
+			setup:               func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper) {},
+		},
+		"regular user, referral": {
+			expectedTakerFeePpm: 30,
+			setup: func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper) {
+				err := affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
+				require.NoError(t, err)
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.FeeTiersKeeper
+			err := k.SetPerpetualFeeParams(
+				ctx,
+				types.PerpetualFeeParams{
+					Tiers: []*types.PerpetualFeeTier{
+						{
+							Name:        "1",
+							TakerFeePpm: 10,
+							MakerFeePpm: 1,
+						},
+						{
+							Name:                      "2",
+							AbsoluteVolumeRequirement: 1_000,
+							TakerFeePpm:               20,
+							MakerFeePpm:               2,
+						},
+						{
+							Name:                           "3",
+							AbsoluteVolumeRequirement:      1_000_000_000,
+							MakerVolumeShareRequirementPpm: 500_000,
+							TakerFeePpm:                    30,
+							MakerFeePpm:                    3,
+						},
+					},
+				},
+			)
+			require.NoError(t, err)
+
+			statsKeeper := tApp.App.StatsKeeper
+			statsKeeper.SetUserStats(ctx, constants.AliceAccAddress.String(), &stattypes.UserStats{
+				TakerNotional: 10,
+				MakerNotional: 10,
+			})
+			statsKeeper.SetGlobalStats(ctx, &stattypes.GlobalStats{
+				NotionalTraded: 10_000,
+			})
+
+			affiliatesKeeper := tApp.App.AffiliatesKeeper
+			if tc.setup != nil {
+				tc.setup(ctx, &affiliatesKeeper)
+			}
+
+			require.Equal(t, tc.expectedTakerFeePpm,
+				k.GetPerpetualFeePpm(ctx, constants.AliceAccAddress.String(), true))
 		})
 	}
 }

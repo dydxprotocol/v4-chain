@@ -15,25 +15,28 @@ import (
 
 type (
 	Keeper struct {
-		cdc         codec.BinaryCodec
-		statsKeeper types.StatsKeeper
-		vaultKeeper types.VaultKeeper
-		storeKey    storetypes.StoreKey
-		authorities map[string]struct{}
+		cdc              codec.BinaryCodec
+		statsKeeper      types.StatsKeeper
+		vaultKeeper      types.VaultKeeper
+		storeKey         storetypes.StoreKey
+		authorities      map[string]struct{}
+		affiliatesKeeper types.AffiliatesKeeper
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	statsKeeper types.StatsKeeper,
+	affiliatesKeeper types.AffiliatesKeeper,
 	storeKey storetypes.StoreKey,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:         cdc,
-		statsKeeper: statsKeeper,
-		storeKey:    storeKey,
-		authorities: lib.UniqueSliceToSet(authorities),
+		cdc:              cdc,
+		statsKeeper:      statsKeeper,
+		storeKey:         storeKey,
+		authorities:      lib.UniqueSliceToSet(authorities),
+		affiliatesKeeper: affiliatesKeeper,
 	}
 }
 
@@ -95,6 +98,15 @@ func (k Keeper) getUserFeeTier(ctx sdk.Context, address string) (uint32, *types.
 			break
 		}
 		idx = uint32(i)
+	}
+
+	// Bump up to RefereeStartingFeeTier if the user is referred by an affiliate.
+	// We subtract 1 because the fee tiers are 1-indexed.
+	if idx < types.RefereeStartingFeeTier-1 {
+		_, hasReferree := k.affiliatesKeeper.GetReferredBy(ctx, address)
+		if hasReferree {
+			idx = types.RefereeStartingFeeTier - 1
+		}
 	}
 
 	return idx, tiers[idx]
