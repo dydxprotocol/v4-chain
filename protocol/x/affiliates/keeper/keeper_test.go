@@ -29,14 +29,14 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 		name        string
 		referee     string
 		affiliate   string
-		expectError bool
+		expectError error
 		setup       func(t *testing.T, ctx sdk.Context, k *keeper.Keeper)
 	}{
 		{
 			name:        "Register new affiliate",
 			referee:     constants.AliceAccAddress.String(),
 			affiliate:   constants.BobAccAddress.String(),
-			expectError: false,
+			expectError: nil,
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				// No setup needed for this test case
 			},
@@ -45,7 +45,7 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 			name:        "Register existing referee",
 			referee:     constants.AliceAccAddress.String(),
 			affiliate:   constants.CarlAccAddress.String(),
-			expectError: true,
+			expectError: types.ErrAffiliateAlreadyExistsForReferee,
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				err := k.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
 				require.NoError(t, err)
@@ -60,8 +60,8 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 		tc.setup(t, ctx, &k)
 		t.Run(tc.name, func(t *testing.T) {
 			err := k.RegisterAffiliate(ctx, tc.referee, tc.affiliate)
-			if tc.expectError {
-				require.ErrorIs(t, err, types.ErrAffiliateAlreadyExistsForReferee)
+			if tc.expectError != nil {
+				require.ErrorIs(t, err, tc.expectError)
 				return
 			}
 
