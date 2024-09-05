@@ -51,6 +51,24 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 				require.NoError(t, err)
 			},
 		},
+		{
+			name:        "Invalid referee address",
+			referee:     "invalid_address",
+			affiliate:   constants.BobAccAddress.String(),
+			expectError: types.ErrInvalidAddress,
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+				// No setup needed for this test case
+			},
+		},
+		{
+			name:        "Invalid affiliate address",
+			referee:     constants.AliceAccAddress.String(),
+			affiliate:   "invalid_address",
+			expectError: types.ErrInvalidAddress,
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+				// No setup needed for this test case
+			},
+		},
 	}
 
 	for _, tc := range tests {
