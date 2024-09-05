@@ -19,6 +19,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
 
@@ -126,26 +128,45 @@ func (k Keeper) GetRewardShare(
 //     by quote quantums of the fill.
 func (k Keeper) AddRewardSharesForFill(
 	ctx sdk.Context,
-	takerAddress string,
-	makerAddress string,
-	bigFillQuoteQuantums *big.Int,
-	bigTakerFeeQuoteQuantums *big.Int,
-	bigMakerFeeQuoteQuantums *big.Int,
+	fill clobtypes.FillForProcess,
+	revshares []revsharetypes.RevShare,
 ) {
 	// Process reward weight for taker.
 	lowestMakerFee := k.feeTiersKeeper.GetLowestMakerFee(ctx)
 	maxMakerRebatePpm := lib.Min(int32(0), lowestMakerFee)
+
+	totalNetFeeRevSharePpm := uint32(0)
+	affiliateRevShareQuoteQuantums := big.NewInt(0)
+	for _, revshare := range revshares {
+		if revshare.RevShareFeeSource == revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE {
+			totalNetFeeRevSharePpm += revshare.RevSharePpm
+		}
+		if revshare.RevShareType == revsharetypes.REV_SHARE_TYPE_AFFILIATE {
+			affiliateRevShareQuoteQuantums = revshare.QuoteQuantums
+		}
+	}
+	remainingRevSharePpm := lib.OneMillion - totalNetFeeRevSharePpm
+
 	// Calculate quote_quantums * max_maker_rebate. Result is non-positive.
-	makerRebateMulTakerVolume := lib.BigMulPpm(bigFillQuoteQuantums, lib.BigI(maxMakerRebatePpm), false)
-	takerWeight := new(big.Int).Add(
-		bigTakerFeeQuoteQuantums,
+	makerRebateMulTakerVolume := lib.BigMulPpm(fill.FillQuoteQuantums, lib.BigI(maxMakerRebatePpm), false)
+	netTakerFeeWithoutAffiliateRevshare := new(big.Int).Add(
+		fill.TakerFeeQuoteQuantums,
 		makerRebateMulTakerVolume,
+	)
+	netTakerFee := new(big.Int).Sub(
+		netTakerFeeWithoutAffiliateRevshare,
+		affiliateRevShareQuoteQuantums,
+	)
+	takerWeight := lib.BigMulPpm(
+		netTakerFee,
+		lib.BigU(remainingRevSharePpm),
+		false,
 	)
 	if takerWeight.Sign() > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
 		if err := k.AddRewardShareToAddress(
 			ctx,
-			takerAddress,
+			fill.TakerAddr,
 			takerWeight,
 		); err != nil {
 			log.ErrorLogWithError(
@@ -157,12 +178,12 @@ func (k Keeper) AddRewardSharesForFill(
 	}
 
 	// Process reward weight for maker.
-	makerWeight := new(big.Int).Set(bigMakerFeeQuoteQuantums)
+	makerWeight := new(big.Int).Set(lib.BigMulPpm(fill.MakerFeeQuoteQuantums, lib.BigU(remainingRevSharePpm), false))
 	if makerWeight.Sign() > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
 		if err := k.AddRewardShareToAddress(
 			ctx,
-			makerAddress,
+			fill.MakerAddr,
 			makerWeight,
 		); err != nil {
 			log.ErrorLogWithError(

@@ -14,6 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	gometrics "github.com/hashicorp/go-metrics"
 )
@@ -45,6 +46,7 @@ func (k Keeper) ProcessSingleMatch(
 	success bool,
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
+	affiliateRevSharesQuoteQuantums *big.Int,
 	err error,
 ) {
 	if matchWithOrders.TakerOrder.IsLiquidation() {
@@ -72,7 +74,7 @@ func (k Keeper) ProcessSingleMatch(
 
 	// Perform stateless validation on the match.
 	if err := matchWithOrders.Validate(); err != nil {
-		return false, takerUpdateResult, makerUpdateResult, errorsmod.Wrapf(
+		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, errorsmod.Wrapf(
 			err,
 			"ProcessSingleMatch: Invalid MatchWithOrders: %+v",
 			matchWithOrders,
@@ -87,7 +89,7 @@ func (k Keeper) ProcessSingleMatch(
 	clobPairId := makerMatchableOrder.GetClobPairId()
 	clobPair, found := k.GetClobPair(ctx, clobPairId)
 	if !found {
-		return false, takerUpdateResult, makerUpdateResult, types.ErrInvalidClob
+		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, types.ErrInvalidClob
 	}
 
 	// Verify that the `fillAmount` is divisible by the `StepBaseQuantums` of the `clobPair`.
@@ -95,6 +97,7 @@ func (k Keeper) ProcessSingleMatch(
 		return false,
 			takerUpdateResult,
 			makerUpdateResult,
+			affiliateRevSharesQuoteQuantums,
 			types.ErrFillAmountNotDivisibleByStepSize
 	}
 
@@ -128,7 +131,7 @@ func (k Keeper) ProcessSingleMatch(
 	// Retrieve the associated perpetual id for the `ClobPair`.
 	perpetualId, err := clobPair.GetPerpetualId()
 	if err != nil {
-		return false, takerUpdateResult, makerUpdateResult, err
+		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 
 	// Calculate taker and maker fee ppms.
@@ -154,7 +157,7 @@ func (k Keeper) ProcessSingleMatch(
 		)
 
 		if err != nil {
-			return false, takerUpdateResult, makerUpdateResult, err
+			return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 		}
 	}
 
@@ -187,7 +190,7 @@ func (k Keeper) ProcessSingleMatch(
 		)
 
 		if err != nil {
-			return false, takerUpdateResult, makerUpdateResult, err
+			return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 		}
 	}
 
@@ -209,11 +212,11 @@ func (k Keeper) ProcessSingleMatch(
 	)
 
 	if err != nil {
-		return false, takerUpdateResult, makerUpdateResult, err
+		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 
 	// Update both subaccounts in the matched order atomically.
-	takerUpdateResult, makerUpdateResult, err = k.persistMatchedOrders(
+	takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err = k.persistMatchedOrders(
 		ctx,
 		matchWithOrders,
 		perpetualId,
@@ -224,7 +227,7 @@ func (k Keeper) ProcessSingleMatch(
 	)
 
 	if err != nil {
-		return false, takerUpdateResult, makerUpdateResult, err
+		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 
 	// Update subaccount total quantums liquidated and total insurance fund lost for liquidation orders.
@@ -235,7 +238,7 @@ func (k Keeper) ProcessSingleMatch(
 			fillAmount.ToBigInt(),
 		)
 		if err != nil {
-			return false, takerUpdateResult, makerUpdateResult, err
+			return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 		}
 
 		k.UpdateSubaccountLiquidationInfo(
@@ -287,7 +290,7 @@ func (k Keeper) ProcessSingleMatch(
 		curMakerPruneableBlockHeight,
 	)
 
-	return true, takerUpdateResult, makerUpdateResult, nil
+	return true, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, nil
 }
 
 // persistMatchedOrders persists a matched order to the subaccount state,
@@ -307,6 +310,7 @@ func (k Keeper) persistMatchedOrders(
 ) (
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
+	affiliateRevSharesQuoteQuantums *big.Int,
 	err error,
 ) {
 	isTakerLiquidation := matchWithOrders.TakerOrder.IsLiquidation()
@@ -400,7 +404,7 @@ func (k Keeper) persistMatchedOrders(
 		satypes.Match,
 	)
 	if err != nil {
-		return satypes.UpdateCausedError, satypes.UpdateCausedError, err
+		return satypes.UpdateCausedError, satypes.UpdateCausedError, affiliateRevSharesQuoteQuantums, err
 	}
 
 	takerUpdateResult = successPerUpdate[0]
@@ -412,7 +416,7 @@ func (k Keeper) persistMatchedOrders(
 		successPerUpdate,
 		updates,
 	); updateResultErr != nil {
-		return takerUpdateResult, makerUpdateResult, updateResultErr
+		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, updateResultErr
 	}
 
 	if !success {
@@ -432,18 +436,42 @@ func (k Keeper) persistMatchedOrders(
 	// keeper.
 
 	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta, perpetualId); err != nil {
-		return takerUpdateResult, makerUpdateResult, err
+		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+	}
+
+	fill := types.FillForProcess{
+		TakerAddr:             matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+		TakerFeeQuoteQuantums: bigTakerFeeQuoteQuantums,
+		MakerAddr:             matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+		MakerFeeQuoteQuantums: bigMakerFeeQuoteQuantums,
+		FillQuoteQuantums:     bigFillQuoteQuantums,
+		ProductId:             perpetualId,
+		MonthlyRollingTakerVolumeQuantums: k.statsKeeper.GetUserStats(
+			ctx,
+			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+		).TakerNotional,
 	}
 
 	// Distribute the fee amount from subacounts module to fee collector and rev share accounts
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
+	revshares, err := k.revshareKeeper.GetAllRevShares(ctx, fill)
+	affiliateRevSharesQuoteQuantums = big.NewInt(0)
+	for _, revshare := range revshares {
+		if revshare.RevShareType == revsharetypes.REV_SHARE_TYPE_AFFILIATE {
+			affiliateRevSharesQuoteQuantums = revshare.QuoteQuantums
+			break
+		}
+	}
+	if err != nil {
+		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+	}
 	if err := k.subaccountsKeeper.DistributeFees(
 		ctx,
 		assettypes.AssetUsdc.Id,
-		bigTotalFeeQuoteQuantums,
-		perpetualId,
+		revshares,
+		fill,
 	); err != nil {
-		return takerUpdateResult, makerUpdateResult, errorsmod.Wrapf(
+		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, errorsmod.Wrapf(
 			types.ErrSubaccountFeeTransferFailed,
 			"persistMatchedOrders: subaccounts (%v, %v) updated, but fee transfer (bigFeeQuoteQuantums: %v)"+
 				" to fee-collector failed. Err: %v",
@@ -460,11 +488,8 @@ func (k Keeper) persistMatchedOrders(
 	// Process fill in x/stats and x/rewards.
 	k.rewardsKeeper.AddRewardSharesForFill(
 		ctx,
-		matchWithOrders.TakerOrder.GetSubaccountId().Owner,
-		matchWithOrders.MakerOrder.GetSubaccountId().Owner,
-		bigFillQuoteQuantums,
-		bigTakerFeeQuoteQuantums,
-		bigMakerFeeQuoteQuantums,
+		fill,
+		revshares,
 	)
 
 	k.statsKeeper.RecordFill(
@@ -492,7 +517,7 @@ func (k Keeper) persistMatchedOrders(
 		),
 	)
 
-	return takerUpdateResult, makerUpdateResult, nil
+	return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, nil
 }
 
 func (k Keeper) setOrderFillAmountsAndPruning(

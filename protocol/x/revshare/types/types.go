@@ -34,6 +34,7 @@ type RevShare struct {
 	RevShareFeeSource RevShareFeeSource
 	RevShareType      RevShareType
 	QuoteQuantums     *big.Int
+	RevSharePpm       uint32
 }
 
 type RevShareFeeSource int
