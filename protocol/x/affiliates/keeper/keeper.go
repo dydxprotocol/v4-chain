@@ -188,6 +188,7 @@ func (k Keeper) GetTierForAffiliate(
 	}
 
 	for index, tier := range tiers {
+		// required referred volume is strictly increasing as tiers are traversed in order.
 		if referredVolume.Cmp(lib.BigU(tier.ReqReferredVolumeQuoteQuantums)) < 0 {
 			break
 		}
@@ -201,6 +202,7 @@ func (k Keeper) GetTierForAffiliate(
 
 	numCoinsStaked := k.statsKeeper.GetStakedAmount(ctx, affiliateAddr)
 	for i := currentTier + 1; i < numTiers; i++ {
+		// required staked coins is strictly increasing as tiers are traversed in order.
 		expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
 		reqStakedCoins := new(big.Int).Mul(
 			lib.BigU(tiers[i].ReqStakedWholeCoins),
