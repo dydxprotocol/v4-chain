@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
+	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
 )
@@ -304,4 +305,121 @@ func TestUpdateAffiliateTiers(t *testing.T) {
 	updatedTiers, err := k.GetAllAffiliateTiers(ctx)
 	require.NoError(t, err)
 	require.Equal(t, validTiers, updatedTiers)
+}
+
+func TestAggregateAffiliateVolumeForFills(t *testing.T) {
+	affiliate := constants.AliceAccAddress.String()
+	referee1 := constants.BobAccAddress.String()
+	referee2 := constants.DaveAccAddress.String()
+	maker := constants.CarlAccAddress.String()
+	testCases := []struct {
+		name           string
+		referrals      int
+		expectedVolume *big.Int
+		setup          func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper)
+	}{
+		{
+			name:           "0 referrals",
+			expectedVolume: big.NewInt(0),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:    referee1,
+							Maker:    maker,
+							Notional: 100_000_000_000,
+						},
+					},
+				})
+			},
+		},
+		{
+			name:           "1 referral",
+			referrals:      1,
+			expectedVolume: big.NewInt(100_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:    referee1,
+							Maker:    maker,
+							Notional: 100_000_000_000,
+						},
+					},
+				})
+			},
+		},
+		{
+			name:           "2 referrals",
+			referrals:      2,
+			expectedVolume: big.NewInt(300_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:    referee1,
+							Maker:    maker,
+							Notional: 100_000_000_000,
+						},
+						{
+							Taker:    referee2,
+							Maker:    maker,
+							Notional: 200_000_000_000,
+						},
+					},
+				})
+			},
+		},
+		{
+			name:           "2 referrals, maker also referred",
+			referrals:      2,
+			expectedVolume: big.NewInt(600_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, maker, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:    referee1,
+							Maker:    maker,
+							Notional: 100_000_000_000,
+						},
+						{
+							Taker:    referee2,
+							Maker:    maker,
+							Notional: 200_000_000_000,
+						},
+					},
+				})
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.AffiliatesKeeper
+			statsKeeper := tApp.App.StatsKeeper
+
+			tc.setup(t, ctx, &k, &statsKeeper)
+
+			err := k.AggregateAffiliateVolumeForFills(ctx)
+			require.NoError(t, err)
+
+			referredVolume, err := k.GetReferredVolume(ctx, affiliate)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedVolume, referredVolume)
+		})
+	}
 }

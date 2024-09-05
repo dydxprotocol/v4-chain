@@ -224,3 +224,38 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 	// staking requirements hold in UpdateAffiliateTiers
 	store.Set([]byte(types.AffiliateTiersKey), k.cdc.MustMarshal(&affiliateTiers))
 }
+
+func (k Keeper) AggregateAffiliateVolumeForFills(
+	ctx sdk.Context,
+) error {
+	blockStats := k.statsKeeper.GetBlockStats(ctx)
+	referredByCache := make(map[string]string)
+	for _, fill := range blockStats.Fills {
+		if _, ok := referredByCache[fill.Taker]; !ok {
+			referredByAddrTaker, found := k.GetReferredBy(ctx, fill.Taker)
+			if !found {
+				continue
+			}
+			referredByCache[fill.Taker] = referredByAddrTaker
+		}
+		err := k.AddReferredVolume(ctx, referredByCache[fill.Taker], lib.BigU(fill.Notional))
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, fill := range blockStats.Fills {
+		if _, ok := referredByCache[fill.Maker]; !ok {
+			referredByAddrMaker, found := k.GetReferredBy(ctx, fill.Maker)
+			if !found {
+				continue
+			}
+			referredByCache[fill.Maker] = referredByAddrMaker
+		}
+		err := k.AddReferredVolume(ctx, referredByCache[fill.Maker], lib.BigU(fill.Notional))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
