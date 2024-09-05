@@ -26,6 +26,7 @@ import {
   DeleveragingEventV1,
   OpenInterestUpdateEventV1,
   TradingRewardsEventV1,
+  RegisterAffiliateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
@@ -236,6 +237,15 @@ export function indexerTendermintEventToEventProtoWithType(
       return {
         type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
         eventProto: OpenInterestUpdateEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
+        blockEventIndex,
+      };
+    }
+    case (DydxIndexerSubtypes.REGISTER_AFFILIATE.toString()): {
+      return {
+        type: DydxIndexerSubtypes.REGISTER_AFFILIATE,
+        eventProto: RegisterAffiliateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
