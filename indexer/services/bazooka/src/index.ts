@@ -299,7 +299,7 @@ export async function clearKafkaTopic(
     return;
   }
 
-  let numPartitions = topicMetadata.topics[0].partitions.length;
+  const numPartitions = topicMetadata.topics[0].partitions.length;
 
   logger.info({
     at: 'index#clearKafkaTopics',
@@ -318,10 +318,6 @@ export async function clearKafkaTopic(
       ),
     });
   } catch (error) {
-    const topicMetadata: { topics: Array<ITopicMetadata> } = await admin.fetchTopicMetadata({
-      topics: [kafkaTopic],
-    });
-
     logger.error({
       at: 'index#clearKafkaTopics',
       message: 'Failed to delete topic records',
