@@ -321,7 +321,7 @@ func TestGetStakedAmount(t *testing.T) {
 			ctx := tApp.InitChain()
 			statsKeeper := tApp.App.StatsKeeper
 			stakingKeeper := tApp.App.StakingKeeper
-			expMultiplier, _ := lib.BigPow10(lib.BaseDenomExponent)
+			expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
 			coinsToStakeQuantums := new(big.Int).Mul(
 				lib.BigU(tc.wholeCoinsToStake),
 				expMultiplier,
@@ -342,7 +342,7 @@ func TestGetStakedAmount_Cache_Hit(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	statsKeeper := tApp.App.StatsKeeper
-	expMultiplier, _ := lib.BigPow10(lib.BaseDenomExponent)
+	expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
 	coinsToStakeQuantums := new(big.Int).Mul(
 		lib.BigI(100),
 		expMultiplier,
@@ -362,7 +362,7 @@ func TestGetStakedAmount_Cache_Miss(t *testing.T) {
 	statsKeeper := tApp.App.StatsKeeper
 	stakingKeeper := tApp.App.StakingKeeper
 
-	expMultiplier, _ := lib.BigPow10(lib.BaseDenomExponent)
+	expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
 	expiredWholeCoinsToStake := 100
 	latestWholeCoinsToStake := 200
 	expiredCoinsToStakeQuantums := new(big.Int).Mul(

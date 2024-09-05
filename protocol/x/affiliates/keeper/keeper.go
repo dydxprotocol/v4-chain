@@ -93,8 +93,8 @@ func (k Keeper) AddReferredVolume(
 		if err := prevReferredVolumeFromState.Unmarshal(
 			affiliateReferredVolumePrefixStore.Get([]byte(affiliateAddr)),
 		); err != nil {
-			// maybe change to errorsmod
-			return err
+			return errorsmod.Wrapf(types.ErrUpdatingAffiliateReferredVolume,
+				"affiliate %s, error: %s", affiliateAddr, err)
 		}
 		referredVolume = prevReferredVolumeFromState.BigInt()
 	}
@@ -188,12 +188,11 @@ func (k Keeper) GetTierForAffiliate(
 	}
 
 	for index, tier := range tiers {
-		if referredVolume.Cmp(lib.BigU(tier.ReqReferredVolumeQuoteQuantums)) >= 0 {
-			// safe to do as tier cannot be negative
-			currentTier = uint32(index)
-		} else {
+		if referredVolume.Cmp(lib.BigU(tier.ReqReferredVolumeQuoteQuantums)) < 0 {
 			break
 		}
+		// safe to do as tier cannot be negative
+		currentTier = uint32(index)
 	}
 
 	if currentTier == maxTierLevel {
@@ -202,16 +201,15 @@ func (k Keeper) GetTierForAffiliate(
 
 	numCoinsStaked := k.statsKeeper.GetStakedAmount(ctx, affiliateAddr)
 	for i := currentTier + 1; i < numTiers; i++ {
-		expMultiplier, _ := lib.BigPow10(lib.BaseDenomExponent)
+		expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
 		reqStakedCoins := new(big.Int).Mul(
 			lib.BigU(tiers[i].ReqStakedWholeCoins),
 			expMultiplier,
 		)
-		if numCoinsStaked.Cmp(reqStakedCoins) >= 0 {
-			currentTier = i
-		} else {
+		if numCoinsStaked.Cmp(reqStakedCoins) < 0 {
 			break
 		}
+		currentTier = i
 	}
 	return currentTier, tiers[currentTier].TakerFeeSharePpm, nil
 }
