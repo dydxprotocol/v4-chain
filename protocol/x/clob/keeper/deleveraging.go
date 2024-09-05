@@ -630,6 +630,8 @@ func (k Keeper) ProcessDeleveraging(
 			deleveragedSubaccountPerpetualQuantumsDelta,
 			offsettingSubaccountPerpetualQuantumsDelta,
 			big.NewInt(0),
+			big.NewInt(0),
+			big.NewInt(0),
 			false, // IsLiquidation is false since this isn't a liquidation match.
 			true,  // IsDeleverage is true since this is a deleveraging match.
 			perpetualId,

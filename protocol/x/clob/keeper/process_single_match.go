@@ -489,6 +489,8 @@ func (k Keeper) persistMatchedOrders(
 			bigTakerPerpetualQuantumsDelta,
 			bigMakerPerpetualQuantumsDelta,
 			insuranceFundDelta,
+			validatorFeeQuoteQuantums,
+			liquidityFeeQuoteQuantums,
 			isTakerLiquidation,
 			false,
 			perpetualId,
