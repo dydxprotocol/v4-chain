@@ -2,6 +2,7 @@ package events
 
 import (
 	"fmt"
+	"math/big"
 
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -19,6 +20,7 @@ func NewOrderFillEvent(
 	takerFee int64,
 	totalFilledMaker satypes.BaseQuantums,
 	totalFilledTaker satypes.BaseQuantums,
+	affiliateRevShareQuoteQuantums *big.Int,
 ) *OrderFillEventV1 {
 	indexerTakerOrder := v1.OrderToIndexerOrder(takerOrder)
 	return &OrderFillEventV1{
@@ -31,6 +33,8 @@ func NewOrderFillEvent(
 		TakerFee:         takerFee,
 		TotalFilledMaker: totalFilledMaker.ToUint64(),
 		TotalFilledTaker: totalFilledTaker.ToUint64(),
+		// Since revshare is always less than taker fee, this will not overflow.
+		AffiliateRevShare: affiliateRevShareQuoteQuantums.Uint64(),
 	}
 }
 
@@ -44,6 +48,7 @@ func NewLiquidationOrderFillEvent(
 	makerFee int64,
 	takerFee int64,
 	totalFilledMaker satypes.BaseQuantums,
+	affiliateRevShareQuoteQuantums *big.Int,
 ) *OrderFillEventV1 {
 	if !liquidationTakerOrder.IsLiquidation() {
 		panic(fmt.Sprintf("liquidationTakerOrder is not a liquidation order: %v", liquidationTakerOrder))
@@ -64,5 +69,7 @@ func NewLiquidationOrderFillEvent(
 		TakerFee:         takerFee,
 		TotalFilledMaker: totalFilledMaker.ToUint64(),
 		TotalFilledTaker: fillAmount.ToUint64(),
+		// Since revshare is always less than taker fee, this will not overflow.
+		AffiliateRevShare: affiliateRevShareQuoteQuantums.Uint64(),
 	}
 }

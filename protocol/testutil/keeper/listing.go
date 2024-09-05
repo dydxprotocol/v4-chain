@@ -150,6 +150,7 @@ func ListingKeepers(
 				statsKeeper,
 				rewardsKeeper,
 				subaccountsKeeper,
+				revShareKeeper,
 				indexerEventManager,
 				transientStoreKey,
 			)

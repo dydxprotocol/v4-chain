@@ -211,6 +211,7 @@ func (k Keeper) getAffiliateRevShares(
 			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 			RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
 			QuoteQuantums:     feesShared,
+			RevSharePpm:       feeSharePpm,
 		},
 	}, nil
 }
@@ -231,6 +232,7 @@ func (k Keeper) getUnconditionalRevShares(
 			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
 			RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
 			QuoteQuantums:     feeShared,
+			RevSharePpm:       revShare.SharePpm,
 		}
 		revShares = append(revShares, revShare)
 	}
@@ -257,6 +259,7 @@ func (k Keeper) getMarketMapperRevShare(
 		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
 		RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
 		QuoteQuantums:     marketMapperRevshareAmount,
+		RevSharePpm:       revenueSharePpm,
 	})
 
 	return revShares, nil
