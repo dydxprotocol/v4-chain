@@ -127,7 +127,7 @@ func TestMsgServer_UpdateAffiliateTiers(t *testing.T) {
 				require.NoError(t, err)
 				tiers, err := k.GetAllAffiliateTiers(sdkCtx)
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Tiers, tiers)
+				require.Equal(t, tc.msg.Tiers, &tiers)
 			}
 		})
 	}
