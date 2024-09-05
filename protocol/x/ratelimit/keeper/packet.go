@@ -99,6 +99,11 @@ func (k Keeper) UndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(
 		return err
 	}
 
+	// We use sDaiDenom, since denom is hashed when we parse
+	if packetInfo.Denom != types.SDaiDenom {
+		return nil
+	}
+
 	// Redeposit sDAI
 	return k.MintTradingDAIToUserAccount(ctx, packetInfo.Sender, packetInfo.Amount)
 }
@@ -123,7 +128,11 @@ func (k Keeper) UndoMintTradingDAIIfAfterTimeoutIBCTransferPacket(ctx sdk.Contex
 		return err
 	}
 
-	// Redeposit sDAI
+	// We use sDaiDenom, since denom is hashed when we parse
+	if packetInfo.Denom != types.SDaiDenom {
+		return nil
+	}
+
 	return k.MintTradingDAIToUserAccount(ctx, packetInfo.Sender, packetInfo.Amount)
 }
 

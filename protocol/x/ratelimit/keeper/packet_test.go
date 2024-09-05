@@ -48,40 +48,71 @@ var (
 		Amount:   "1abc2",
 	}
 
-	examplePacketData = ibctransfertypes.FungibleTokenPacketData{
+	examplePacketDataNoSourcePort = ibctransfertypes.FungibleTokenPacketData{
 		Sender:   testAddress1,
 		Receiver: testAddress2,
 		Denom:    "gsdai",
 		Amount:   "100000000",
 	}
 
-	examplePacketData2 = ibctransfertypes.FungibleTokenPacketData{
+	examplePacketDataForSourcePortPacket = ibctransfertypes.FungibleTokenPacketData{
 		Sender:   testAddress1,
 		Receiver: testAddress2,
 		Denom:    "gsdai",
 		Amount:   "100000000000000",
 	}
 
-	marshaledExamplePacketData = marshalPacketData(examplePacketData)
-
-	marshaledExamplePacketData2 = marshalPacketData(examplePacketData2)
-
-	examplePacket = channeltypes.Packet{
-		SourceChannel: "channel-0",
-		Sequence:      1,
-		Data:          marshaledExamplePacketData,
+	examplePacketDataNonSDai = ibctransfertypes.FungibleTokenPacketData{
+		Sender:   testAddress1,
+		Receiver: testAddress2,
+		Denom:    "pdai",
+		Amount:   "100000000000000",
 	}
 
-	examplePacket2 = channeltypes.Packet{
+	fullSDaiPathPacketData = ibctransfertypes.FungibleTokenPacketData{
+		Sender:   testAddress1,
+		Receiver: testAddress2,
+		Denom:    types.SDaiBaseDenomFullPath,
+		Amount:   "100000000000000",
+	}
+
+	marshaledExamplePacketDataNoSourcePort = marshalPacketData(examplePacketDataNoSourcePort)
+
+	marshaledexamplePacketDataForSourcePortPacket = marshalPacketData(examplePacketDataForSourcePortPacket)
+
+	marshaledExamplePacketDataNonSDai = marshalPacketData(examplePacketDataNonSDai)
+
+	marshaledExampleFullSDaiPathPacketData = marshalPacketData(fullSDaiPathPacketData)
+
+	examplePacketNoSourcePort = channeltypes.Packet{
 		SourceChannel: "channel-0",
 		Sequence:      1,
-		Data:          marshaledExamplePacketData2,
+		Data:          marshaledExamplePacketDataNoSourcePort,
+	}
+
+	examplePacketWithSourcePort = channeltypes.Packet{
+		SourceChannel: "channel-0",
+		SourcePort:    "transfer",
+		Sequence:      1,
+		Data:          marshaledexamplePacketDataForSourcePortPacket,
+	}
+
+	examplePacketNonSDai = channeltypes.Packet{
+		SourceChannel: "channel-0",
+		Sequence:      1,
+		Data:          marshaledExamplePacketDataNonSDai,
 	}
 
 	packetEmptyData = channeltypes.Packet{
 		SourceChannel: "channel-0",
 		Sequence:      1,
-		//Data:          []byte{},
+	}
+
+	packetFullSDaiPathPacketData = channeltypes.Packet{
+		SourceChannel: "channel-0",
+		SourcePort:    "transfer",
+		Sequence:      1,
+		Data:          marshaledExampleFullSDaiPathPacketData,
 	}
 
 	exampleAckError = errors.New("ABCI code: 1: error handling packet: see events for details")
@@ -142,11 +173,11 @@ func TestAcknowledgeIBCTransferPacket(t *testing.T) {
 		expectedErr string
 	}{
 		"Success: Ack Success": {
-			packet:     examplePacket,
+			packet:     examplePacketNoSourcePort,
 			ack:        channeltypes.NewResultAcknowledgement([]byte{1}),
 			ackSuccess: true,
 			customSetup: func(app *testapp.TestApp, ctx sdk.Context) {
-				app.App.RatelimitKeeper.SetPendingSendPacket(ctx, examplePacket.SourceChannel, examplePacket.Sequence)
+				app.App.RatelimitKeeper.SetPendingSendPacket(ctx, examplePacketNoSourcePort.SourceChannel, examplePacketNoSourcePort.Sequence)
 				denomCapcity := types.DenomCapacity{
 					Denom: "gsdai",
 					CapacityList: []dtypes.SerializableInt{
@@ -161,11 +192,11 @@ func TestAcknowledgeIBCTransferPacket(t *testing.T) {
 			expectedErr: "",
 		},
 		"Success: Ack Error": {
-			packet:     examplePacket,
+			packet:     examplePacketNoSourcePort,
 			ack:        channeltypes.NewErrorAcknowledgement(exampleAckError),
 			ackSuccess: false,
 			customSetup: func(app *testapp.TestApp, ctx sdk.Context) {
-				app.App.RatelimitKeeper.SetPendingSendPacket(ctx, examplePacket.SourceChannel, examplePacket.Sequence)
+				app.App.RatelimitKeeper.SetPendingSendPacket(ctx, examplePacketNoSourcePort.SourceChannel, examplePacketNoSourcePort.Sequence)
 				denomCapcity := types.DenomCapacity{
 					Denom: "gsdai",
 					CapacityList: []dtypes.SerializableInt{
@@ -183,7 +214,7 @@ func TestAcknowledgeIBCTransferPacket(t *testing.T) {
 			packet: channeltypes.Packet{
 				SourceChannel: "channel-0",
 				Sequence:      2,
-				Data:          marshaledExamplePacketData,
+				Data:          marshaledExamplePacketDataNoSourcePort,
 			},
 			ack:        channeltypes.Acknowledgement{},
 			ackSuccess: false,
@@ -320,7 +351,7 @@ func TestUndoSendPacket(t *testing.T) {
 			tc.customSetup(tApp, ctx)
 
 			initialDenomCapacity := k.GetDenomCapacity(ctx, denomForTest)
-			k.UndoSendPacket(ctx, examplePacket.SourceChannel, examplePacket.Sequence, denomForTest, amountSent)
+			k.UndoSendPacket(ctx, examplePacketNoSourcePort.SourceChannel, examplePacketNoSourcePort.Sequence, denomForTest, amountSent)
 			newDenomCapacity := k.GetDenomCapacity(ctx, denomForTest)
 
 			if tc.expectedUndo {
@@ -348,8 +379,8 @@ func TestUndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(t *testing.T) {
 		expectedErr        string
 	}{
 		"Success: mints when ack is not success": {
-			packet:             examplePacket2,
-			packetData:         examplePacketData2,
+			packet:             packetFullSDaiPathPacketData,
+			packetData:         fullSDaiPathPacketData,
 			ack:                channeltypes.NewErrorAcknowledgement(exampleAckError),
 			ackSuccess:         true,
 			expectedMintedTDai: big.NewInt(100),
@@ -359,8 +390,8 @@ func TestUndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(t *testing.T) {
 			expectedErr: "",
 		},
 		"Success: does not mint when ack is success": {
-			packet:             examplePacket,
-			packetData:         examplePacketData,
+			packet:             examplePacketNoSourcePort,
+			packetData:         examplePacketDataNoSourcePort,
 			ack:                channeltypes.NewResultAcknowledgement([]byte{1}),
 			ackSuccess:         true,
 			expectedMintedTDai: big.NewInt(0),
@@ -369,9 +400,20 @@ func TestUndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(t *testing.T) {
 			},
 			expectedErr: "",
 		},
+		"Success: does not mint when denom is not gsdai": {
+			packet:             examplePacketNonSDai,
+			packetData:         examplePacketDataNonSDai,
+			ack:                channeltypes.NewErrorAcknowledgement(exampleAckError),
+			ackSuccess:         true,
+			expectedMintedTDai: big.NewInt(0),
+			customSetup: func(app *testapp.TestApp, ctx sdk.Context) {
+				app.App.RatelimitKeeper.SetSDAIPrice(ctx, keeper.ConvertStringToBigIntWithPanicOnErr("1000000000000000000000000000"))
+			},
+			expectedErr: "",
+		},
 		"Failure: returns err when ack cannot be unpacked": {
-			packet:             examplePacket,
-			packetData:         examplePacketData,
+			packet:             examplePacketNoSourcePort,
+			packetData:         examplePacketDataNoSourcePort,
 			ack:                channeltypes.Acknowledgement{},
 			ackSuccess:         true,
 			expectedMintedTDai: big.NewInt(0),
@@ -386,7 +428,7 @@ func TestUndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(t *testing.T) {
 				Sequence:      1,
 				Data:          []byte(`invalid`),
 			},
-			packetData:         examplePacketData,
+			packetData:         examplePacketDataNoSourcePort,
 			ack:                channeltypes.NewErrorAcknowledgement(exampleAckError),
 			ackSuccess:         true,
 			expectedMintedTDai: big.NewInt(0),
@@ -490,28 +532,28 @@ func TestTimeoutIBCTransferPacket(t *testing.T) {
 		expectedErr  string
 	}{
 		"Success: Parses and undoes send packet": {
-			packet:       examplePacket,
-			packetData:   examplePacketData,
+			packet:       examplePacketNoSourcePort,
+			packetData:   examplePacketDataNoSourcePort,
 			customSetup:  func(app *testapp.TestApp, ctx sdk.Context) {},
 			expectedUndo: true,
 		},
 		"Success: Parses packet but can't find channelId": {
 			packet: channeltypes.Packet{
 				SourceChannel: "channel-1",
-				Sequence:      examplePacket.Sequence,
-				Data:          examplePacket.Data,
+				Sequence:      examplePacketNoSourcePort.Sequence,
+				Data:          examplePacketNoSourcePort.Data,
 			},
-			packetData:   examplePacketData,
+			packetData:   examplePacketDataNoSourcePort,
 			customSetup:  func(app *testapp.TestApp, ctx sdk.Context) {},
 			expectedUndo: false,
 		},
 		"Success: Parses packet but can't find sequence id": {
 			packet: channeltypes.Packet{
-				SourceChannel: examplePacket.SourceChannel,
+				SourceChannel: examplePacketNoSourcePort.SourceChannel,
 				Sequence:      2,
-				Data:          examplePacket.Data,
+				Data:          examplePacketNoSourcePort.Data,
 			},
-			packetData:   examplePacketData,
+			packetData:   examplePacketDataNoSourcePort,
 			customSetup:  func(app *testapp.TestApp, ctx sdk.Context) {},
 			expectedUndo: false,
 		},
@@ -552,7 +594,7 @@ func TestTimeoutIBCTransferPacket(t *testing.T) {
 				},
 			}
 			k.SetDenomCapacity(ctx, denomCapcity)
-			k.SetPendingSendPacket(ctx, examplePacket.SourceChannel, examplePacket.Sequence)
+			k.SetPendingSendPacket(ctx, examplePacketNoSourcePort.SourceChannel, examplePacketNoSourcePort.Sequence)
 
 			testPacket := tc.packet
 			testPacket.Data = marshalPacketData(tc.packetData)
@@ -566,18 +608,18 @@ func TestTimeoutIBCTransferPacket(t *testing.T) {
 			if tc.expectedErr == "" {
 				require.NoError(t, err)
 				if tc.expectedUndo {
-					require.False(t, k.HasPendingSendPacket(ctx, examplePacket.SourceChannel, examplePacket.Sequence))
+					require.False(t, k.HasPendingSendPacket(ctx, examplePacketNoSourcePort.SourceChannel, examplePacketNoSourcePort.Sequence))
 					for i, capacity := range newDenomCapacity.CapacityList {
 						expectedCapcity := dtypes.NewIntFromBigInt(new(big.Int).Add(initialDenomCapacity.CapacityList[i].BigInt(), amountSent))
 						require.Equal(t, expectedCapcity, capacity)
 					}
 				} else {
-					require.True(t, k.HasPendingSendPacket(ctx, examplePacket.SourceChannel, examplePacket.Sequence))
+					require.True(t, k.HasPendingSendPacket(ctx, examplePacketNoSourcePort.SourceChannel, examplePacketNoSourcePort.Sequence))
 					require.Equal(t, initialDenomCapacity, newDenomCapacity)
 				}
 			} else {
 				require.Error(t, err)
-				require.True(t, k.HasPendingSendPacket(ctx, examplePacket.SourceChannel, examplePacket.Sequence))
+				require.True(t, k.HasPendingSendPacket(ctx, examplePacketNoSourcePort.SourceChannel, examplePacketNoSourcePort.Sequence))
 				require.Equal(t, initialDenomCapacity, newDenomCapacity)
 			}
 		})
@@ -593,9 +635,18 @@ func TestUndoMintTradingDAIIfAfterTimeoutIBCTransferPacket(t *testing.T) {
 		expectedErr        string
 	}{
 		"Success: mints succesfully": {
-			packet:             examplePacket2,
-			packetData:         examplePacketData2,
+			packet:             packetFullSDaiPathPacketData,
+			packetData:         fullSDaiPathPacketData,
 			expectedMintedTDai: big.NewInt(100),
+			customSetup: func(app *testapp.TestApp, ctx sdk.Context) {
+				app.App.RatelimitKeeper.SetSDAIPrice(ctx, keeper.ConvertStringToBigIntWithPanicOnErr("1000000000000000000000000000"))
+			},
+			expectedErr: "",
+		},
+		"Success: nonSDai input does not mint": {
+			packet:             examplePacketNonSDai,
+			packetData:         examplePacketDataNonSDai,
+			expectedMintedTDai: big.NewInt(0),
 			customSetup: func(app *testapp.TestApp, ctx sdk.Context) {
 				app.App.RatelimitKeeper.SetSDAIPrice(ctx, keeper.ConvertStringToBigIntWithPanicOnErr("1000000000000000000000000000"))
 			},
@@ -607,7 +658,7 @@ func TestUndoMintTradingDAIIfAfterTimeoutIBCTransferPacket(t *testing.T) {
 				Sequence:      1,
 				Data:          []byte(`invalid`),
 			},
-			packetData:         examplePacketData,
+			packetData:         examplePacketDataNoSourcePort,
 			expectedMintedTDai: big.NewInt(0),
 			customSetup: func(app *testapp.TestApp, ctx sdk.Context) {
 				app.App.RatelimitKeeper.SetSDAIPrice(ctx, keeper.ConvertStringToBigIntWithPanicOnErr("1000000000000000000000000000"))
@@ -707,7 +758,7 @@ func TestSendPacket(t *testing.T) {
 			sourceChannel:    "channel-0",
 			timeoutHeight:    clienttypes.NewHeight(1, 1000),
 			timeoutTimestamp: 1000000,
-			data:             marshaledExamplePacketData2,
+			data:             marshaledexamplePacketDataForSourcePortPacket,
 			denomCapacities: []types.DenomCapacity{
 				{
 					Denom: "gsdai",
@@ -730,7 +781,7 @@ func TestSendPacket(t *testing.T) {
 			sourceChannel:    "channel-0",
 			timeoutHeight:    clienttypes.NewHeight(1, 1000),
 			timeoutTimestamp: 1000000,
-			data:             marshaledExamplePacketData2,
+			data:             marshaledexamplePacketDataForSourcePortPacket,
 			denomCapacities: []types.DenomCapacity{
 				{
 					Denom: "gsdai",
@@ -760,7 +811,7 @@ func TestSendPacket(t *testing.T) {
 			sourceChannel:    "channel-0",
 			timeoutHeight:    clienttypes.NewHeight(1, 1000),
 			timeoutTimestamp: 1000000,
-			data:             marshaledExamplePacketData2,
+			data:             marshaledexamplePacketDataForSourcePortPacket,
 			denomCapacities: []types.DenomCapacity{
 				{
 					Denom: "gsdai",
@@ -782,7 +833,7 @@ func TestSendPacket(t *testing.T) {
 			sourceChannel:    "channel-0",
 			timeoutHeight:    clienttypes.NewHeight(1, 1000),
 			timeoutTimestamp: 1000000,
-			data:             marshaledExamplePacketData2,
+			data:             marshaledexamplePacketDataForSourcePortPacket,
 			denomCapacities: []types.DenomCapacity{
 				{
 					Denom: "gsdai",
@@ -805,7 +856,7 @@ func TestSendPacket(t *testing.T) {
 			sourceChannel:    "channel-0",
 			timeoutHeight:    clienttypes.NewHeight(1, 1000),
 			timeoutTimestamp: 1000000,
-			data:             marshaledExamplePacketData2,
+			data:             marshaledexamplePacketDataForSourcePortPacket,
 			denomCapacities: []types.DenomCapacity{
 				{
 					Denom: "gsdai",
@@ -915,7 +966,7 @@ func TestTrySendRateLimitedPacket(t *testing.T) {
 		expectedErr     string
 	}{
 		"Success: Basic": {
-			packet: examplePacket2,
+			packet: examplePacketWithSourcePort,
 			denomCapacities: []types.DenomCapacity{
 				{
 					Denom: "gsdai",
@@ -928,7 +979,7 @@ func TestTrySendRateLimitedPacket(t *testing.T) {
 			expectedErr: "",
 		},
 		"Success: Multiple denom capacities": {
-			packet: examplePacket2,
+			packet: examplePacketWithSourcePort,
 			denomCapacities: []types.DenomCapacity{
 				{
 					Denom: "gsdai",
@@ -948,7 +999,7 @@ func TestTrySendRateLimitedPacket(t *testing.T) {
 			expectedErr: "",
 		},
 		"Success: Capacity goes to 0": {
-			packet: examplePacket2,
+			packet: examplePacketWithSourcePort,
 			denomCapacities: []types.DenomCapacity{
 				{
 					Denom: "gsdai",
@@ -960,7 +1011,7 @@ func TestTrySendRateLimitedPacket(t *testing.T) {
 			expectedErr: "",
 		},
 		"Failure: Capacity too low": {
-			packet: examplePacket,
+			packet: examplePacketNoSourcePort,
 			denomCapacities: []types.DenomCapacity{
 				{
 					Denom: "gsdai",

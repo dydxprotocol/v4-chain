@@ -147,6 +147,7 @@ func (im IBCMiddleware) OnRecvPacket(
 		return ack
 	}
 
+	// We use hashed SDaiDenom, since Denom trace should be hashed after ParsePacketInfo.
 	if ibcTransferPacketInfo.Denom == types.SDaiDenom {
 		err := im.keeper.MintTradingDAIToUserAccount(ctx, ibcTransferPacketInfo.Receiver, ibcTransferPacketInfo.Amount)
 		if err != nil {
