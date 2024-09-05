@@ -341,7 +341,7 @@ describe('LiquidationHandler', () => {
         orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
-        affiliateRevShare: '0',
+        affiliateRevShare: defaultAffiliateRevShare,
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,

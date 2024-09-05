@@ -42,7 +42,7 @@ DECLARE
     order_client_metadata bigint;
     fee numeric;
     affiliate_rev_share numeric;
-    affiliate_rev
+    affiliate_rev numeric;
     fill_amount numeric;
     total_filled numeric;
     maker_price numeric;

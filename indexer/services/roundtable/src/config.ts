@@ -196,6 +196,7 @@ export const configSchema = {
 
   // Subaccount username generator
   SUBACCOUNT_USERNAME_NUM_RANDOM_DIGITS: parseInteger({ default: 3 }),
+  SUBACCOUNT_USERNAME_MAX_LENGTH: parseInteger({ default: 13 }),
 };
 
 export default parseSchema(configSchema);
