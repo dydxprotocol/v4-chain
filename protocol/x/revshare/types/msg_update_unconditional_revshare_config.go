@@ -17,7 +17,7 @@ func (msg *MsgUpdateUnconditionalRevShareConfig) ValidateBasic() error {
 		totalRevsharePercentagePpm += config.SharePpm
 	}
 
-	if totalRevsharePercentagePpm > lib.OneMillion {
+	if totalRevsharePercentagePpm >= lib.OneMillion {
 		return errorsmod.Wrapf(
 			ErrInvalidRevShareConfig,
 			"total revshare percentage ppm %d is greater than 100%%",
