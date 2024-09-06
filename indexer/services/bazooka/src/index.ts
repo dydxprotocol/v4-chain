@@ -27,7 +27,7 @@ const KAFKA_TOPICS_TO_PARTITIONS: { [key in KafkaTopics]: number } = {
   [KafkaTopics.TO_ENDER]: 1,
   [KafkaTopics.TO_VULCAN]: 60,
   [KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS]: 1,
-  [KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS]: 30,
+  [KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS]: 3,
   [KafkaTopics.TO_WEBSOCKETS_TRADES]: 1,
   [KafkaTopics.TO_WEBSOCKETS_MARKETS]: 1,
   [KafkaTopics.TO_WEBSOCKETS_CANDLES]: 1,
