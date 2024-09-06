@@ -1829,7 +1829,6 @@ func TestGetFillablePrice(t *testing.T) {
 				ks.Ctx,
 				*subaccount.Id,
 				tc.perpetualId,
-				big.NewInt(tc.deltaQuantums),
 			)
 
 			if tc.expectedError != nil {
@@ -3377,7 +3376,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 	}
 }
 
-func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
+func TestGetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(t *testing.T) {
 	tests := map[string]struct {
 		// Parameters.
 		perpetualId uint32
@@ -3836,7 +3835,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			}
 
 			// Run the test and verify expectations.
-			_, liquidationInsuranceFundDeltaBig, err := ks.ClobKeeper.GetLiquidationInsuranceFundDelta(
+			_, liquidationInsuranceFundDeltaBig, err := ks.ClobKeeper.GetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(
 				ks.Ctx,
 				*subaccount.Id,
 				tc.perpetualId,
@@ -3996,7 +3995,7 @@ func TestConvertLiquidationPriceToSubticks_PanicsOnNegativeLiquidationPrice(t *t
 	})
 }
 
-func TestGetPerpetualPositionToLiquidate(t *testing.T) {
+func TestGetBestPerpetualPositionToLiquidate(t *testing.T) {
 	tests := map[string]struct {
 		// Subaccount state.
 		perpetualPositions []*satypes.PerpetualPosition
@@ -4445,7 +4444,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			err := ks.ClobKeeper.InitializeLiquidationsConfig(ks.Ctx, tc.liquidationConfig)
 			require.NoError(t, err)
 
-			perpetualId, err := ks.ClobKeeper.GetPerpetualPositionToLiquidate(
+			perpetualId, err := ks.ClobKeeper.GetBestPerpetualPositionToLiquidate(
 				ks.Ctx,
 				*subaccount.Id,
 			)
@@ -4868,7 +4867,7 @@ func TestGetMaxLiquidatableNotionalAndInsuranceLost(t *testing.T) {
 					},
 				)
 			} else {
-				actualMaxInsuranceLost, err := ks.ClobKeeper.GetSubaccountMaxInsuranceLost(
+				actualMaxInsuranceLost := ks.ClobKeeper.GetSubaccountMaxInsuranceLost(
 					ks.Ctx,
 					subaccountId,
 					perpetualId,

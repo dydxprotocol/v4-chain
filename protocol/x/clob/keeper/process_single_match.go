@@ -151,7 +151,7 @@ func (k Keeper) ProcessSingleMatch(
 		// the fee collector has insufficient funds to pay the maker rebate.
 		// TODO(CLOB-812): find a longer term solution to handle maker rebates for liquidations.
 		makerFeePpm = lib.Max(makerFeePpm, 0)
-		takerInsuranceFundDelta, validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, err = k.validateMatchedLiquidation(
+		takerInsuranceFundDelta, validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, err = k.validateMatchedLiquidationAndGetFees(
 			ctx,
 			takerMatchableOrder,
 			perpetualId,

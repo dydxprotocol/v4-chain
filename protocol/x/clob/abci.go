@@ -265,7 +265,7 @@ func PrepareCheckState(
 	}
 
 	// 7. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
-	liquidatableSubaccountIds, negativeTncSubaccountIds, err := keeper.GetLiquidatableAndTNCSubaccountIds(ctx)
+	liquidatableSubaccountIds, negativeTncSubaccountIds, err := keeper.GetLiquidatableAndNegativeTncSubaccountIds(ctx)
 	if err != nil {
 		panic(err)
 	}

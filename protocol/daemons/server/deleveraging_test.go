@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDeleveragingSubaccounts_Empty_Update_Subaccount_Open_Positions(t *testing.T) {
+func TestUpdateSubaccountsListForDeleveragingDaemonRequest_Empty_Update_Subaccount_Open_Positions(t *testing.T) {
 	mockGrpcServer := &mocks.GrpcServer{}
 	mockFileHandler := &mocks.FileHandler{}
 	daemonDeleveragingInfo := deleveragingtypes.NewDaemonDeleveragingInfo()
@@ -25,14 +25,14 @@ func TestDeleveragingSubaccounts_Empty_Update_Subaccount_Open_Positions(t *testi
 	).WithDaemonDeleveragingInfo(
 		daemonDeleveragingInfo,
 	)
-	_, err := s.DeleverageSubaccounts(grpc.Ctx, &api.DeleveragingSubaccountsRequest{
+	_, err := s.UpdateSubaccountsListForDeleveragingDaemon(grpc.Ctx, &api.UpdateSubaccountsListForDeleveragingDaemonRequest{
 		SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 	})
 	require.NoError(t, err)
 	require.Empty(t, daemonDeleveragingInfo.GetSubaccountsWithOpenPositions(0))
 }
 
-func TestDeleverageSubaccounts_Multiple_Subaccount_Open_Positions(t *testing.T) {
+func TestUpdateSubaccountsListForDeleveragingDaemon_Multiple_Subaccount_Open_Positions(t *testing.T) {
 	mockGrpcServer := &mocks.GrpcServer{}
 	mockFileHandler := &mocks.FileHandler{}
 	daemonDeleveragingInfo := deleveragingtypes.NewDaemonDeleveragingInfo()
@@ -76,7 +76,7 @@ func TestDeleverageSubaccounts_Multiple_Subaccount_Open_Positions(t *testing.T) 
 		constants.Bob_Num0,
 	}
 
-	_, err := s.DeleverageSubaccounts(grpc.Ctx, &api.DeleveragingSubaccountsRequest{
+	_, err := s.UpdateSubaccountsListForDeleveragingDaemon(grpc.Ctx, &api.UpdateSubaccountsListForDeleveragingDaemonRequest{
 		SubaccountOpenPositionInfo: subaccountOpenPositions,
 	})
 	require.NoError(t, err)

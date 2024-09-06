@@ -84,7 +84,7 @@ func (c *Client) GetAllSubaccounts(
 	return subaccounts, nil
 }
 
-// SendDeleveragingSubaccountIds sends a list of subaccounts with open positions for each perp to a gRPC server via `DeleverageSubaccounts`.
+// SendDeleveragingSubaccountIds sends a list of subaccounts with open positions for each perp to a gRPC server via `UpdateSubaccountsListForDeleveragingDaemon`.
 func (c *Client) SendDeleveragingSubaccountIds(
 	ctx context.Context,
 	openPositionInfoMap map[uint32]*clobtypes.SubaccountOpenPositionInfo,
@@ -105,11 +105,11 @@ func (c *Client) SendDeleveragingSubaccountIds(
 		subaccountOpenPositionInfo = append(subaccountOpenPositionInfo, *openPositionInfoMap[perpetualId])
 	}
 
-	request := &api.DeleveragingSubaccountsRequest{
+	request := &api.UpdateSubaccountsListForDeleveragingDaemonRequest{
 		SubaccountOpenPositionInfo: subaccountOpenPositionInfo,
 	}
 
-	if _, err := c.DeleveragingServiceClient.DeleverageSubaccounts(ctx, request); err != nil {
+	if _, err := c.DeleveragingServiceClient.UpdateSubaccountsListForDeleveragingDaemon(ctx, request); err != nil {
 		return err
 	}
 	return nil

@@ -34,6 +34,8 @@ export interface MEVMatchSDKType {
 export interface MEVLiquidationMatch {
   liquidatedSubaccountId?: SubaccountId;
   insuranceFundDeltaQuoteQuantums: Long;
+  validatorFeeQuoteQuantums: Long;
+  liquidityFeeQuoteQuantums: Long;
   makerOrderSubaccountId?: SubaccountId;
   makerOrderSubticks: Long;
   makerOrderIsBuy: boolean;
@@ -49,6 +51,8 @@ export interface MEVLiquidationMatch {
 export interface MEVLiquidationMatchSDKType {
   liquidated_subaccount_id?: SubaccountIdSDKType;
   insurance_fund_delta_quote_quantums: Long;
+  validator_fee_quote_quantums: Long;
+  liquidity_fee_quote_quantums: Long;
   maker_order_subaccount_id?: SubaccountIdSDKType;
   maker_order_subticks: Long;
   maker_order_is_buy: boolean;
@@ -228,6 +232,8 @@ function createBaseMEVLiquidationMatch(): MEVLiquidationMatch {
   return {
     liquidatedSubaccountId: undefined,
     insuranceFundDeltaQuoteQuantums: Long.ZERO,
+    validatorFeeQuoteQuantums: Long.ZERO,
+    liquidityFeeQuoteQuantums: Long.ZERO,
     makerOrderSubaccountId: undefined,
     makerOrderSubticks: Long.UZERO,
     makerOrderIsBuy: false,
@@ -247,28 +253,36 @@ export const MEVLiquidationMatch = {
       writer.uint32(16).int64(message.insuranceFundDeltaQuoteQuantums);
     }
 
+    if (!message.validatorFeeQuoteQuantums.isZero()) {
+      writer.uint32(24).int64(message.validatorFeeQuoteQuantums);
+    }
+
+    if (!message.liquidityFeeQuoteQuantums.isZero()) {
+      writer.uint32(32).int64(message.liquidityFeeQuoteQuantums);
+    }
+
     if (message.makerOrderSubaccountId !== undefined) {
-      SubaccountId.encode(message.makerOrderSubaccountId, writer.uint32(26).fork()).ldelim();
+      SubaccountId.encode(message.makerOrderSubaccountId, writer.uint32(42).fork()).ldelim();
     }
 
     if (!message.makerOrderSubticks.isZero()) {
-      writer.uint32(32).uint64(message.makerOrderSubticks);
+      writer.uint32(48).uint64(message.makerOrderSubticks);
     }
 
     if (message.makerOrderIsBuy === true) {
-      writer.uint32(40).bool(message.makerOrderIsBuy);
+      writer.uint32(56).bool(message.makerOrderIsBuy);
     }
 
     if (message.makerFeePpm !== 0) {
-      writer.uint32(48).int32(message.makerFeePpm);
+      writer.uint32(64).int32(message.makerFeePpm);
     }
 
     if (message.clobPairId !== 0) {
-      writer.uint32(56).uint32(message.clobPairId);
+      writer.uint32(72).uint32(message.clobPairId);
     }
 
     if (!message.fillAmount.isZero()) {
-      writer.uint32(64).uint64(message.fillAmount);
+      writer.uint32(80).uint64(message.fillAmount);
     }
 
     return writer;
@@ -292,26 +306,34 @@ export const MEVLiquidationMatch = {
           break;
 
         case 3:
-          message.makerOrderSubaccountId = SubaccountId.decode(reader, reader.uint32());
+          message.validatorFeeQuoteQuantums = (reader.int64() as Long);
           break;
 
         case 4:
-          message.makerOrderSubticks = (reader.uint64() as Long);
+          message.liquidityFeeQuoteQuantums = (reader.int64() as Long);
           break;
 
         case 5:
-          message.makerOrderIsBuy = reader.bool();
+          message.makerOrderSubaccountId = SubaccountId.decode(reader, reader.uint32());
           break;
 
         case 6:
-          message.makerFeePpm = reader.int32();
+          message.makerOrderSubticks = (reader.uint64() as Long);
           break;
 
         case 7:
-          message.clobPairId = reader.uint32();
+          message.makerOrderIsBuy = reader.bool();
           break;
 
         case 8:
+          message.makerFeePpm = reader.int32();
+          break;
+
+        case 9:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 10:
           message.fillAmount = (reader.uint64() as Long);
           break;
 
@@ -328,6 +350,8 @@ export const MEVLiquidationMatch = {
     const message = createBaseMEVLiquidationMatch();
     message.liquidatedSubaccountId = object.liquidatedSubaccountId !== undefined && object.liquidatedSubaccountId !== null ? SubaccountId.fromPartial(object.liquidatedSubaccountId) : undefined;
     message.insuranceFundDeltaQuoteQuantums = object.insuranceFundDeltaQuoteQuantums !== undefined && object.insuranceFundDeltaQuoteQuantums !== null ? Long.fromValue(object.insuranceFundDeltaQuoteQuantums) : Long.ZERO;
+    message.validatorFeeQuoteQuantums = object.validatorFeeQuoteQuantums !== undefined && object.validatorFeeQuoteQuantums !== null ? Long.fromValue(object.validatorFeeQuoteQuantums) : Long.ZERO;
+    message.liquidityFeeQuoteQuantums = object.liquidityFeeQuoteQuantums !== undefined && object.liquidityFeeQuoteQuantums !== null ? Long.fromValue(object.liquidityFeeQuoteQuantums) : Long.ZERO;
     message.makerOrderSubaccountId = object.makerOrderSubaccountId !== undefined && object.makerOrderSubaccountId !== null ? SubaccountId.fromPartial(object.makerOrderSubaccountId) : undefined;
     message.makerOrderSubticks = object.makerOrderSubticks !== undefined && object.makerOrderSubticks !== null ? Long.fromValue(object.makerOrderSubticks) : Long.UZERO;
     message.makerOrderIsBuy = object.makerOrderIsBuy ?? false;

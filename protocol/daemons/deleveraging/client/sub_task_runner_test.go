@@ -47,7 +47,7 @@ func TestRunDeleveragingDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.DeleveragingSubaccountsRequest{
+				req := &api.UpdateSubaccountsListForDeleveragingDaemonRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId:                 0,
@@ -58,8 +58,8 @@ func TestRunDeleveragingDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.DeleveragingSubaccountsResponse{}
-				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.UpdateSubaccountsListForDeleveragingDaemonResponse{}
+				mck.On("UpdateSubaccountsListForDeleveragingDaemon", ctx, req).Return(response3, nil)
 			},
 		},
 		"Can get subaccount with long position": {
@@ -82,7 +82,7 @@ func TestRunDeleveragingDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.DeleveragingSubaccountsRequest{
+				req := &api.UpdateSubaccountsListForDeleveragingDaemonRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -93,8 +93,8 @@ func TestRunDeleveragingDaemonTaskLoop(t *testing.T) {
 						},
 					},
 				}
-				response3 := &api.DeleveragingSubaccountsResponse{}
-				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.UpdateSubaccountsListForDeleveragingDaemonResponse{}
+				mck.On("UpdateSubaccountsListForDeleveragingDaemon", ctx, req).Return(response3, nil)
 			},
 		},
 		"Skip subaccounts with no open positions": {
@@ -117,11 +117,11 @@ func TestRunDeleveragingDaemonTaskLoop(t *testing.T) {
 				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
 
 				// Sends liquidatable subaccount ids to the server.
-				req := &api.DeleveragingSubaccountsRequest{
+				req := &api.UpdateSubaccountsListForDeleveragingDaemonRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
-				response3 := &api.DeleveragingSubaccountsResponse{}
-				mck.On("DeleverageSubaccounts", ctx, req).Return(response3, nil)
+				response3 := &api.UpdateSubaccountsListForDeleveragingDaemonResponse{}
+				mck.On("UpdateSubaccountsListForDeleveragingDaemon", ctx, req).Return(response3, nil)
 			},
 		},
 	}

@@ -187,7 +187,7 @@ func TestSendDeleveragingSubaccountIds(t *testing.T) {
 	}{
 		"Success": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &api.DeleveragingSubaccountsRequest{
+				req := &api.UpdateSubaccountsListForDeleveragingDaemonRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
 						{
 							PerpetualId: 0,
@@ -202,8 +202,8 @@ func TestSendDeleveragingSubaccountIds(t *testing.T) {
 						},
 					},
 				}
-				response := &api.DeleveragingSubaccountsResponse{}
-				mck.On("DeleverageSubaccounts", ctx, req).Return(response, nil)
+				response := &api.UpdateSubaccountsListForDeleveragingDaemonResponse{}
+				mck.On("UpdateSubaccountsListForDeleveragingDaemon", ctx, req).Return(response, nil)
 			},
 			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 				0: {
@@ -221,20 +221,20 @@ func TestSendDeleveragingSubaccountIds(t *testing.T) {
 		},
 		"Success Empty": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &api.DeleveragingSubaccountsRequest{
+				req := &api.UpdateSubaccountsListForDeleveragingDaemonRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
-				response := &api.DeleveragingSubaccountsResponse{}
-				mck.On("DeleverageSubaccounts", ctx, req).Return(response, nil)
+				response := &api.UpdateSubaccountsListForDeleveragingDaemonResponse{}
+				mck.On("UpdateSubaccountsListForDeleveragingDaemon", ctx, req).Return(response, nil)
 			},
 			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{},
 		},
 		"Errors are propagated": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &api.DeleveragingSubaccountsRequest{
+				req := &api.UpdateSubaccountsListForDeleveragingDaemonRequest{
 					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
-				mck.On("DeleverageSubaccounts", ctx, req).Return(nil, errors.New("test error"))
+				mck.On("UpdateSubaccountsListForDeleveragingDaemon", ctx, req).Return(nil, errors.New("test error"))
 			},
 			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{},
 			expectedError:              errors.New("test error"),

@@ -2,42 +2,42 @@ import { SubaccountOpenPositionInfo, SubaccountOpenPositionInfoSDKType } from ".
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../../helpers";
 /**
- * DeleveragingSubaccountsRequest is a request message that contains a list of
+ * UpdateSubaccountsListForDeleveragingDaemonRequest is a request message that contains a list of
  * perpetuals with the associated subaccounts that have open long and short positions
  */
 
-export interface DeleveragingSubaccountsRequest {
+export interface UpdateSubaccountsListForDeleveragingDaemonRequest {
   subaccountOpenPositionInfo: SubaccountOpenPositionInfo[];
 }
 /**
- * DeleveragingSubaccountsRequest is a request message that contains a list of
+ * UpdateSubaccountsListForDeleveragingDaemonRequest is a request message that contains a list of
  * perpetuals with the associated subaccounts that have open long and short positions
  */
 
-export interface DeleveragingSubaccountsRequestSDKType {
+export interface UpdateSubaccountsListForDeleveragingDaemonRequestSDKType {
   subaccount_open_position_info: SubaccountOpenPositionInfoSDKType[];
 }
 /**
- * DeleveragingSubaccountsResponse is a response message for
- * DeleverageSubaccountsRequest.
+ * UpdateSubaccountsListForDeleveragingDaemonResponse is a response message for
+ * UpdateSubaccountsListForDeleveragingDaemonRequest.
  */
 
-export interface DeleveragingSubaccountsResponse {}
+export interface UpdateSubaccountsListForDeleveragingDaemonResponse {}
 /**
- * DeleveragingSubaccountsResponse is a response message for
- * DeleverageSubaccountsRequest.
+ * UpdateSubaccountsListForDeleveragingDaemonResponse is a response message for
+ * UpdateSubaccountsListForDeleveragingDaemonRequest.
  */
 
-export interface DeleveragingSubaccountsResponseSDKType {}
+export interface UpdateSubaccountsListForDeleveragingDaemonResponseSDKType {}
 
-function createBaseDeleveragingSubaccountsRequest(): DeleveragingSubaccountsRequest {
+function createBaseUpdateSubaccountsListForDeleveragingDaemonRequest(): UpdateSubaccountsListForDeleveragingDaemonRequest {
   return {
     subaccountOpenPositionInfo: []
   };
 }
 
-export const DeleveragingSubaccountsRequest = {
-  encode(message: DeleveragingSubaccountsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const UpdateSubaccountsListForDeleveragingDaemonRequest = {
+  encode(message: UpdateSubaccountsListForDeleveragingDaemonRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.subaccountOpenPositionInfo) {
       SubaccountOpenPositionInfo.encode(v!, writer.uint32(10).fork()).ldelim();
     }
@@ -45,10 +45,10 @@ export const DeleveragingSubaccountsRequest = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): DeleveragingSubaccountsRequest {
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdateSubaccountsListForDeleveragingDaemonRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseDeleveragingSubaccountsRequest();
+    const message = createBaseUpdateSubaccountsListForDeleveragingDaemonRequest();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -67,27 +67,27 @@ export const DeleveragingSubaccountsRequest = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<DeleveragingSubaccountsRequest>): DeleveragingSubaccountsRequest {
-    const message = createBaseDeleveragingSubaccountsRequest();
+  fromPartial(object: DeepPartial<UpdateSubaccountsListForDeleveragingDaemonRequest>): UpdateSubaccountsListForDeleveragingDaemonRequest {
+    const message = createBaseUpdateSubaccountsListForDeleveragingDaemonRequest();
     message.subaccountOpenPositionInfo = object.subaccountOpenPositionInfo?.map(e => SubaccountOpenPositionInfo.fromPartial(e)) || [];
     return message;
   }
 
 };
 
-function createBaseDeleveragingSubaccountsResponse(): DeleveragingSubaccountsResponse {
+function createBaseUpdateSubaccountsListForDeleveragingDaemonResponse(): UpdateSubaccountsListForDeleveragingDaemonResponse {
   return {};
 }
 
-export const DeleveragingSubaccountsResponse = {
-  encode(_: DeleveragingSubaccountsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const UpdateSubaccountsListForDeleveragingDaemonResponse = {
+  encode(_: UpdateSubaccountsListForDeleveragingDaemonResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): DeleveragingSubaccountsResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdateSubaccountsListForDeleveragingDaemonResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseDeleveragingSubaccountsResponse();
+    const message = createBaseUpdateSubaccountsListForDeleveragingDaemonResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -102,8 +102,8 @@ export const DeleveragingSubaccountsResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<DeleveragingSubaccountsResponse>): DeleveragingSubaccountsResponse {
-    const message = createBaseDeleveragingSubaccountsResponse();
+  fromPartial(_: DeepPartial<UpdateSubaccountsListForDeleveragingDaemonResponse>): UpdateSubaccountsListForDeleveragingDaemonResponse {
+    const message = createBaseUpdateSubaccountsListForDeleveragingDaemonResponse();
     return message;
   }
 

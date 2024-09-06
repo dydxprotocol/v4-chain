@@ -4,8 +4,6 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
-	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
-	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
@@ -13,7 +11,6 @@ import (
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	subaccountskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	abcicomet "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -46,7 +43,7 @@ func (k Keeper) FetchInformationForLiquidations(
 	return subaccounts, marketPricesMap, perpetualsMap, liquidityTiersMap
 }
 
-func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
+func (k Keeper) GetLiquidatableAndNegativeTncSubaccountIds(
 	ctx sdk.Context,
 ) (
 	liquidatableSubaccountIds *LiquidationPriorityHeap,
@@ -59,19 +56,12 @@ func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 	negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
 	liquidatableSubaccountIds = NewLiquidationPriorityHeap()
 	for _, subaccount := range subaccounts {
-		// Skip subaccounts with no open positions.
+
 		if len(subaccount.PerpetualPositions) == 0 {
 			continue
 		}
 
-		// Check if the subaccount is liquidatable.
-		isLiquidatable, hasNegativeTnc, liquidationPriority, err := k.CheckSubaccountCollateralization(
-			subaccount,
-			marketPrices,
-			perpetuals,
-			liquidityTiers,
-		)
-
+		isLiquidatable, hasNegativeTnc, liquidationPriority, err := k.GetSubaccountCollateralizationInfo(subaccount, marketPrices, perpetuals, liquidityTiers)
 		if err != nil {
 			return nil, nil, errorsmod.Wrap(err, "Error checking collateralization status")
 		}
@@ -87,7 +77,7 @@ func (k Keeper) GetLiquidatableAndTNCSubaccountIds(
 	return liquidatableSubaccountIds, negativeTncSubaccountIds, nil
 }
 
-func (k Keeper) CheckSubaccountCollateralization(
+func (k Keeper) GetSubaccountCollateralizationInfo(
 	unsettledSubaccount satypes.Subaccount,
 	marketPrices map[uint32]pricestypes.MarketPrice,
 	perpetuals map[uint32]perptypes.Perpetual,
@@ -98,9 +88,10 @@ func (k Keeper) CheckSubaccountCollateralization(
 	liquidationPriority *big.Float,
 	err error,
 ) {
+	bigTotalNetCollateral := big.NewInt(0)
+	bigTotalMaintenanceMargin := big.NewInt(0)
+	bigWeightedMaintenanceMargin := big.NewInt(0)
 
-	// Funding payments are lazily settled, so get the settled subaccount
-	// to ensure that the funding payments are included in the net collateral calculation.
 	settledSubaccount, _, err := subaccountskeeper.GetSettledSubaccountWithPerpetuals(
 		unsettledSubaccount,
 		perpetuals,
@@ -109,102 +100,118 @@ func (k Keeper) CheckSubaccountCollateralization(
 		return false, false, nil, err
 	}
 
-	bigTotalNetCollateral := big.NewInt(0)
-	bigTotalMaintenanceMargin := big.NewInt(0)
-	bigWeightedMaintenanceMargin := big.NewInt(0)
+	err = updateCollateralizationInfoGivenAssets(settledSubaccount, bigTotalNetCollateral)
+	if err != nil {
+		return false, false, nil, err
+	}
 
-	// Calculate the net collateral and maintenance margin for each of the asset positions.
+	for _, perpetualPosition := range settledSubaccount.PerpetualPositions {
+		perpetual, price, liquidityTier, err := getPerpetualLiquidityTierAndPrice(perpetualPosition.PerpetualId, perpetuals, marketPrices, liquidityTiers)
+		if err != nil {
+			return false, false, nil, err
+		}
+		updateCollateralizationInfoGivenPerp(perpetual, price, liquidityTier, perpetualPosition.GetBigQuantums(), bigTotalNetCollateral, bigWeightedMaintenanceMargin, bigTotalMaintenanceMargin)
+	}
+
+	return finalizeCollateralizationInfo(bigTotalNetCollateral, bigTotalMaintenanceMargin, bigWeightedMaintenanceMargin)
+}
+
+func getPerpetualLiquidityTierAndPrice(
+	perpetualId uint32,
+	perpetuals map[uint32]perptypes.Perpetual,
+	marketPrices map[uint32]pricestypes.MarketPrice,
+	liquidityTiers map[uint32]perptypes.LiquidityTier,
+) (
+	perpetual perptypes.Perpetual,
+	price pricestypes.MarketPrice,
+	liquidityTier perptypes.LiquidityTier,
+	err error,
+) {
+	perpetual, ok := perpetuals[perpetualId]
+	if !ok {
+		return perptypes.Perpetual{}, pricestypes.MarketPrice{}, perptypes.LiquidityTier{}, errorsmod.Wrapf(
+			perptypes.ErrPerpetualDoesNotExist,
+			"Perpetual not found for perpetual id %d",
+			perpetualId,
+		)
+	}
+
+	price, ok = marketPrices[perpetual.Params.MarketId]
+	if !ok {
+		return perptypes.Perpetual{}, pricestypes.MarketPrice{}, perptypes.LiquidityTier{}, errorsmod.Wrapf(
+			pricestypes.ErrMarketPriceDoesNotExist,
+			"MarketPrice not found for perpetual %+v",
+			perpetual,
+		)
+	}
+
+	liquidityTier, ok = liquidityTiers[perpetual.Params.LiquidityTier]
+	if !ok {
+		return perptypes.Perpetual{}, pricestypes.MarketPrice{}, perptypes.LiquidityTier{}, errorsmod.Wrapf(
+			perptypes.ErrLiquidityTierDoesNotExist,
+			"LiquidityTier not found for perpetual %+v",
+			perpetual,
+		)
+	}
+
+	return perpetual, price, liquidityTier, nil
+}
+
+func updateCollateralizationInfoGivenAssets(
+	settledSubaccount satypes.Subaccount,
+	bigTotalNetCollateral *big.Int,
+) error {
+
 	// Note that we only expect USDC before multi-collateral support is added.
 	for _, assetPosition := range settledSubaccount.AssetPositions {
 		if assetPosition.AssetId != assetstypes.AssetUsdc.Id {
-			return false, false, nil, errorsmod.Wrapf(
+			return errorsmod.Wrapf(
 				assetstypes.ErrNotImplementedMulticollateral,
 				"Asset %d is not supported",
 				assetPosition.AssetId,
 			)
 		}
-		// Net collateral for USDC is the quantums of the position.
-		// Margin requirements for USDC are zero.
 		bigTotalNetCollateral.Add(bigTotalNetCollateral, assetPosition.GetBigQuantums())
 	}
-
-	// Calculate the net collateral and maintenance margin for each of the perpetual positions.
-	for _, perpetualPosition := range settledSubaccount.PerpetualPositions {
-		perpetual, ok := perpetuals[perpetualPosition.PerpetualId]
-		if !ok {
-			return false, false, nil, errorsmod.Wrapf(
-				perptypes.ErrPerpetualDoesNotExist,
-				"Perpetual not found for perpetual id %d",
-				perpetualPosition.PerpetualId,
-			)
-		}
-
-		marketPrice, ok := marketPrices[perpetual.Params.MarketId]
-		if !ok {
-			return false, false, nil, errorsmod.Wrapf(
-				pricestypes.ErrMarketPriceDoesNotExist,
-				"MarketPrice not found for perpetual %+v",
-				perpetual,
-			)
-		}
-
-		bigQuantums := perpetualPosition.GetBigQuantums()
-
-		// Get the net collateral for the position.
-		bigNetCollateralQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums)
-		bigTotalNetCollateral.Add(bigTotalNetCollateral, bigNetCollateralQuoteQuantums)
-
-		increment := new(big.Int).Mul(bigNetCollateralQuoteQuantums.Abs(bigNetCollateralQuoteQuantums), new(big.Int).SetUint64(uint64(perpetual.Params.DangerIndexPpm)))
-		bigWeightedMaintenanceMargin.Add(bigWeightedMaintenanceMargin, increment)
-
-		liquidityTier, ok := liquidityTiers[perpetual.Params.LiquidityTier]
-		if !ok {
-			return false, false, nil, errorsmod.Wrapf(
-				perptypes.ErrLiquidityTierDoesNotExist,
-				"LiquidityTier not found for perpetual %+v",
-				perpetual,
-			)
-		}
-
-		// Get the maintenance margin requirement for the position.
-		_, bigMaintenanceMarginQuoteQuantums := perpkeeper.GetMarginRequirementsInQuoteQuantums(
-			perpetual,
-			marketPrice,
-			liquidityTier,
-			bigQuantums,
-		)
-		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
-	}
-
-	health := GetHealth(bigTotalNetCollateral, bigTotalMaintenanceMargin)
-	liquidationPriority = new(big.Float).Quo(health, new(big.Float).SetInt(bigWeightedMaintenanceMargin))
-
-	return CanLiquidateSubaccount(bigTotalNetCollateral, bigTotalMaintenanceMargin),
-		bigTotalNetCollateral.Sign() == -1,
-		liquidationPriority,
-		nil
+	return nil
 }
 
-func (k Keeper) SetNextBlocksPricesFromExtendedCommitInfo(ctx sdk.Context, extendedCommitInfo *abcicomet.ExtendedCommitInfo) error {
+func updateCollateralizationInfoGivenPerp(
+	perpetual perptypes.Perpetual,
+	price pricestypes.MarketPrice,
+	liquidityTier perptypes.LiquidityTier,
+	bigPositionQuantums *big.Int,
+	bigTotalNetCollateral *big.Int,
+	bigWeightedMaintenanceMargin *big.Int,
+	bigTotalMaintenanceMargin *big.Int,
+) {
+	bigPositionQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, price, bigPositionQuantums)
+	bigTotalNetCollateral.Add(bigTotalNetCollateral, bigPositionQuoteQuantums)
 
-	// from cometbft so is either nil or is valid and > 2/3
-	if (extendedCommitInfo != &abcicomet.ExtendedCommitInfo{}) {
-		veCodec := vecodec.NewDefaultVoteExtensionCodec()
-		votes, err := veaggregator.FetchVotesFromExtCommitInfo(*extendedCommitInfo, veCodec)
-		if err != nil {
-			return err
-		}
+	weightedPositionQuoteQuantums := new(big.Int).Mul(bigPositionQuoteQuantums.Abs(bigPositionQuoteQuantums), new(big.Int).SetUint64(uint64(perpetual.Params.DangerIndexPpm)))
+	bigWeightedMaintenanceMargin.Add(bigWeightedMaintenanceMargin, weightedPositionQuoteQuantums)
 
-		if len(votes) > 0 {
-			prices, err := k.PriceApplier.VoteAggregator().AggregateDaemonVEIntoFinalPrices(ctx, votes)
-			if err == nil {
-				err = k.PriceApplier.WritePricesToStoreAndMaybeCache(ctx, prices, 0, false)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
+	_, bigMaintenanceMarginQuoteQuantums := perpkeeper.GetMarginRequirementsInQuoteQuantums(perpetual, price, liquidityTier, bigPositionQuantums)
+	bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
+}
 
-	return nil
+func finalizeCollateralizationInfo(
+	bigTotalNetCollateral *big.Int,
+	bigTotalMaintenanceMargin *big.Int,
+	bigWeightedMaintenanceMargin *big.Int,
+) (
+	isLiquidatable bool,
+	hasNegativeTnc bool,
+	liquidationPriority *big.Float,
+	err error,
+) {
+	isLiquidatable = CanLiquidateSubaccount(bigTotalNetCollateral, bigTotalMaintenanceMargin)
+	hasNegativeTnc = bigTotalNetCollateral.Sign() == -1
+	liquidationPriority = calculateLiquidationPriority(
+		bigTotalNetCollateral,
+		bigTotalMaintenanceMargin,
+		bigWeightedMaintenanceMargin,
+	)
+
+	return isLiquidatable, hasNegativeTnc, liquidationPriority, nil
 }

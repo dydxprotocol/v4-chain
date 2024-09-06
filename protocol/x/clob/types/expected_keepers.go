@@ -143,6 +143,7 @@ type PerpetualsKeeper interface {
 	) (val perpetualsmoduletypes.Perpetual, err error)
 	GetAllPerpetuals(ctx sdk.Context) (list []perpetualsmoduletypes.Perpetual)
 	GetAllLiquidityTiers(ctx sdk.Context) (list []perpetualsmoduletypes.LiquidityTier)
+	IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error)
 	GetPerpetualAndMarketPrice(
 		ctx sdk.Context,
 		perpetualId uint32,
@@ -164,6 +165,7 @@ type PerpetualsKeeper interface {
 type PricesKeeper interface {
 	GetMarketParam(ctx sdk.Context, id uint32) (param pricestypes.MarketParam, exists bool)
 	GetAllMarketPrices(ctx sdk.Context) []pricestypes.MarketPrice
+	GetMarketPrice(ctx sdk.Context, id uint32) (pricestypes.MarketPrice, error)
 }
 
 type StatsKeeper interface {

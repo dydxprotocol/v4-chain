@@ -230,6 +230,34 @@ func (_m *ClobKeeper) GetBankruptcyPriceInQuoteQuantums(ctx types.Context, subac
 	return r0, r1
 }
 
+// GetBestPerpetualPositionToLiquidate provides a mock function with given fields: ctx, subaccountId
+func (_m *ClobKeeper) GetBestPerpetualPositionToLiquidate(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (uint32, error) {
+	ret := _m.Called(ctx, subaccountId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBestPerpetualPositionToLiquidate")
+	}
+
+	var r0 uint32
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) (uint32, error)); ok {
+		return rf(ctx, subaccountId)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) uint32); ok {
+		r0 = rf(ctx, subaccountId)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
+		r1 = rf(ctx, subaccountId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBlockRateLimitConfiguration provides a mock function with given fields: ctx
 func (_m *ClobKeeper) GetBlockRateLimitConfiguration(ctx types.Context) clobtypes.BlockRateLimitConfiguration {
 	ret := _m.Called(ctx)
@@ -276,9 +304,9 @@ func (_m *ClobKeeper) GetClobPair(ctx types.Context, id clobtypes.ClobPairId) (c
 	return r0, r1
 }
 
-// GetFillablePrice provides a mock function with given fields: ctx, subaccountId, perpetualId, deltaQuantums
-func (_m *ClobKeeper) GetFillablePrice(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, deltaQuantums *big.Int) (*big.Rat, error) {
-	ret := _m.Called(ctx, subaccountId, perpetualId, deltaQuantums)
+// GetFillablePrice provides a mock function with given fields: ctx, subaccountId, perpetualId
+func (_m *ClobKeeper) GetFillablePrice(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) (*big.Rat, error) {
+	ret := _m.Called(ctx, subaccountId, perpetualId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetFillablePrice")
@@ -286,19 +314,19 @@ func (_m *ClobKeeper) GetFillablePrice(ctx types.Context, subaccountId subaccoun
 
 	var r0 *big.Rat
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) (*big.Rat, error)); ok {
-		return rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) (*big.Rat, error)); ok {
+		return rf(ctx, subaccountId, perpetualId)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) *big.Rat); ok {
-		r0 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) *big.Rat); ok {
+		r0 = rf(ctx, subaccountId, perpetualId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*big.Rat)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
-		r1 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32) error); ok {
+		r1 = rf(ctx, subaccountId, perpetualId)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -346,12 +374,12 @@ func (_m *ClobKeeper) GetInsuranceFundBalanceInQuoteQuantums(ctx types.Context, 
 	return r0
 }
 
-// GetLiquidationInsuranceFundDelta provides a mock function with given fields: ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks
-func (_m *ClobKeeper) GetLiquidationInsuranceFundDelta(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, isBuy bool, fillAmount uint64, subticks clobtypes.Subticks) (*big.Int, *big.Int, error) {
+// GetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral provides a mock function with given fields: ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks
+func (_m *ClobKeeper) GetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, isBuy bool, fillAmount uint64, subticks clobtypes.Subticks) (*big.Int, *big.Int, error) {
 	ret := _m.Called(ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetLiquidationInsuranceFundDelta")
+		panic("no return value specified for GetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral")
 	}
 
 	var r0 *big.Int
@@ -426,34 +454,6 @@ func (_m *ClobKeeper) GetLongTermOrderPlacement(ctx types.Context, orderId clobt
 		r1 = rf(ctx, orderId)
 	} else {
 		r1 = ret.Get(1).(bool)
-	}
-
-	return r0, r1
-}
-
-// GetPerpetualPositionToLiquidate provides a mock function with given fields: ctx, subaccountId
-func (_m *ClobKeeper) GetPerpetualPositionToLiquidate(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (uint32, error) {
-	ret := _m.Called(ctx, subaccountId)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetPerpetualPositionToLiquidate")
-	}
-
-	var r0 uint32
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) (uint32, error)); ok {
-		return rf(ctx, subaccountId)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) uint32); ok {
-		r0 = rf(ctx, subaccountId)
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
-		r1 = rf(ctx, subaccountId)
-	} else {
-		r1 = ret.Error(1)
 	}
 
 	return r0, r1
@@ -536,7 +536,7 @@ func (_m *ClobKeeper) GetSubaccountLiquidationInfo(ctx types.Context, subaccount
 }
 
 // GetSubaccountMaxInsuranceLost provides a mock function with given fields: ctx, subaccountId, perpetualId
-func (_m *ClobKeeper) GetSubaccountMaxInsuranceLost(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) (*big.Int, error) {
+func (_m *ClobKeeper) GetSubaccountMaxInsuranceLost(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) *big.Int {
 	ret := _m.Called(ctx, subaccountId, perpetualId)
 
 	if len(ret) == 0 {
@@ -544,10 +544,6 @@ func (_m *ClobKeeper) GetSubaccountMaxInsuranceLost(ctx types.Context, subaccoun
 	}
 
 	var r0 *big.Int
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) (*big.Int, error)); ok {
-		return rf(ctx, subaccountId, perpetualId)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) *big.Int); ok {
 		r0 = rf(ctx, subaccountId, perpetualId)
 	} else {
@@ -556,13 +552,7 @@ func (_m *ClobKeeper) GetSubaccountMaxInsuranceLost(ctx types.Context, subaccoun
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32) error); ok {
-		r1 = rf(ctx, subaccountId, perpetualId)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // HasAuthority provides a mock function with given fields: authority

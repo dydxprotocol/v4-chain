@@ -22,13 +22,13 @@ func (server *Server) WithDaemonDeleveragingInfo(
 	return server
 }
 
-// DeleverageSubaccounts stores the list of subaccount ids
+// UpdateSubaccountsListForDeleveragingDaemon stores the list of subaccount ids that can be deleveraged against
 // in a go-routine safe slice.
-func (s *Server) DeleverageSubaccounts(
+func (s *Server) UpdateSubaccountsListForDeleveragingDaemon(
 	ctx context.Context,
-	req *api.DeleveragingSubaccountsRequest,
+	req *api.UpdateSubaccountsListForDeleveragingDaemonRequest,
 ) (
-	response *api.DeleveragingSubaccountsResponse,
+	response *api.UpdateSubaccountsListForDeleveragingDaemonResponse,
 	err error,
 ) {
 
@@ -37,5 +37,5 @@ func (s *Server) DeleverageSubaccounts(
 	// Capture valid responses in metrics.
 	s.reportValidResponse(types.DeleveragingDaemonServiceName)
 
-	return &api.DeleveragingSubaccountsResponse{}, nil
+	return &api.UpdateSubaccountsListForDeleveragingDaemonResponse{}, nil
 }

@@ -39,14 +39,13 @@ type LiquidationsKeeper interface {
 		perpetualId uint32,
 		deltaQuantums *big.Int,
 	) (
-		quoteQuantums *big.Int,
+		bankruptcyPriceQuoteQuantumsBig *big.Int,
 		err error,
 	)
 	GetFillablePrice(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
-		deltaQuantums *big.Int,
 	) (
 		fillablePrice *big.Rat,
 		err error,
@@ -57,7 +56,7 @@ type LiquidationsKeeper interface {
 	) (
 		balance *big.Int,
 	)
-	GetLiquidationInsuranceFundDelta(
+	GetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
@@ -66,7 +65,7 @@ type LiquidationsKeeper interface {
 		subticks Subticks,
 	) (
 		remainingQuoteQuantumsBig *big.Int,
-		insuranceFundDeltaQuoteQuantums *big.Int,
+		insuranceFundFeeQuoteQuantums *big.Int,
 		err error,
 	)
 	ConvertLiquidationPriceToSubticks(
@@ -77,7 +76,7 @@ type LiquidationsKeeper interface {
 	) (
 		subticks Subticks,
 	)
-	GetPerpetualPositionToLiquidate(
+	GetBestPerpetualPositionToLiquidate(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 	) (
@@ -90,7 +89,6 @@ type LiquidationsKeeper interface {
 		perpetualId uint32,
 	) (
 		bigMaxQuantumsInsuranceLost *big.Int,
-		err error,
 	)
 	MaybeGetLiquidationOrder(
 		ctx sdk.Context,
