@@ -8,8 +8,12 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/gogoproto/proto"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -304,4 +308,44 @@ func TestUpdateAffiliateTiers(t *testing.T) {
 	updatedTiers, err := k.GetAllAffiliateTiers(ctx)
 	require.NoError(t, err)
 	require.Equal(t, validTiers, updatedTiers)
+}
+
+func getRegisterAffiliateEventsFromIndexerBlock(
+	ctx sdk.Context,
+	affiliatesKeeper *keeper.Keeper,
+) []*indexerevents.RegisterAffiliateEventV1 {
+	block := affiliatesKeeper.GetIndexerEventManager().ProduceBlock(ctx)
+	var registerAffiliateEvents []*indexerevents.RegisterAffiliateEventV1
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeRegisterAffiliate {
+			continue
+		}
+		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
+			var registerAffiliateEvent indexerevents.RegisterAffiliateEventV1
+			err := proto.Unmarshal(event.DataBytes, &registerAffiliateEvent)
+			if err != nil {
+				panic(err)
+			}
+			registerAffiliateEvents = append(registerAffiliateEvents, &registerAffiliateEvent)
+		}
+	}
+	return registerAffiliateEvents
+}
+
+func TestRegisterAffiliateEmitEvent(t *testing.T) {
+	ctx, k, _, _ := keepertest.AffiliatesKeepers(t, true)
+
+	affiliate := constants.AliceAccAddress.String()
+	referee := constants.BobAccAddress.String()
+
+	err := k.RegisterAffiliate(ctx, referee, affiliate)
+	require.NoError(t, err)
+	expectedEvent := &indexerevents.RegisterAffiliateEventV1{
+		Referee:   referee,
+		Affiliate: affiliate,
+	}
+
+	events := getRegisterAffiliateEventsFromIndexerBlock(ctx, k)
+	require.Equal(t, 1, len(events))
+	require.Equal(t, expectedEvent, events[0])
 }

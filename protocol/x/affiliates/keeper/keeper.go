@@ -11,17 +11,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 )
 
 type (
 	Keeper struct {
-		cdc            codec.BinaryCodec
-		storeKey       storetypes.StoreKey
-		authorities    map[string]struct{}
-		statsKeeper    types.StatsKeeper
-		revShareKeeper types.RevShareKeeper
+		cdc                 codec.BinaryCodec
+		storeKey            storetypes.StoreKey
+		authorities         map[string]struct{}
+		statsKeeper         types.StatsKeeper
+		revShareKeeper      types.RevShareKeeper
+		indexerEventManager indexer_manager.IndexerEventManager
 	}
 )
 
@@ -30,12 +33,14 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	authorities []string,
 	statsKeeper types.StatsKeeper,
+	indexerEventManager indexer_manager.IndexerEventManager,
 ) *Keeper {
 	return &Keeper{
-		cdc:         cdc,
-		storeKey:    storeKey,
-		authorities: lib.UniqueSliceToSet(authorities),
-		statsKeeper: statsKeeper,
+		cdc:                 cdc,
+		storeKey:            storeKey,
+		authorities:         lib.UniqueSliceToSet(authorities),
+		statsKeeper:         statsKeeper,
+		indexerEventManager: indexerEventManager,
 	}
 }
 
@@ -67,7 +72,17 @@ func (k Keeper) RegisterAffiliate(
 			referee, affiliateAddr)
 	}
 	prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredByKeyPrefix)).Set([]byte(referee), []byte(affiliateAddr))
-	// TODO(OTE-696): Emit indexer event.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeRegisterAffiliate,
+		indexerevents.RegisterAffiliateEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewRegisterAffiliateEventV1(
+				referee,
+				affiliateAddr,
+			),
+		),
+	)
 	return nil
 }
 
@@ -229,4 +244,8 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 
 func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
 	k.revShareKeeper = revShareKeeper
+}
+
+func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
+	return k.indexerEventManager
 }
