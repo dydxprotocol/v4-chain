@@ -1,6 +1,7 @@
 import { PartialModelObject, QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
+import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import WalletModel from '../models/wallet-model';
@@ -102,6 +103,7 @@ export async function upsert(
   // should only ever be one wallet
   return wallets[0];
 }
+
 export async function findById(
   address: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
@@ -113,4 +115,48 @@ export async function findById(
   return baseQuery
     .findById(address)
     .returning('*');
+}
+
+/**
+ * Calculates the total volume in a given time window for each address and adds the values to the
+ * existing totalVolume values.
+ *
+ * @param windowStartTs - The start timestamp of the time window (inclusive).
+ * @param windowEndTs - The end timestamp of the time window (exclusive).
+ */
+export async function updateTotalVolume(
+  windowStartTs: string,
+  windowEndTs: string,
+) : Promise<void> {
+
+  await knexReadReplica.getConnection().raw(
+    `
+    WITH fills_total AS (
+      -- Step 1: Calculate total volume for each subaccountId
+      SELECT "subaccountId", SUM("price" * "size") AS "totalVolume"
+      FROM fills
+      WHERE "createdAt" >= ? AND "createdAt" < ?
+      GROUP BY "subaccountId"
+    ),
+    subaccount_volume AS (
+      -- Step 2: Merge with subaccounts table to get the address
+      SELECT s."address", f."totalVolume"
+      FROM fills_total f
+      JOIN subaccounts s
+      ON f."subaccountId" = s."id"
+    ),
+    address_volume AS (
+      -- Step 3: Group by address and sum the totalVolume
+      SELECT "address", SUM("totalVolume") AS "totalVolume"
+      FROM subaccount_volume
+      GROUP BY "address"
+    )
+    -- Step 4: Left join the result with the wallets table and update the total volume
+    UPDATE wallets
+    SET "totalVolume" = COALESCE(wallets."totalVolume", 0) + av."totalVolume"
+    FROM address_volume av
+    WHERE wallets."address" = av."address";
+    `,
+    [windowStartTs, windowEndTs],
+  );
 }

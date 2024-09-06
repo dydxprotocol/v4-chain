@@ -1,7 +1,25 @@
 import { WalletFromDatabase } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
-import { defaultWallet2, defaultWallet3 } from '../helpers/constants';
+import { DateTime } from 'luxon';
+import {
+  defaultFill,
+  defaultOrder,
+  defaultSubaccount,
+  defaultTendermintEventId,
+  defaultTendermintEventId2,
+  defaultTendermintEventId3,
+  defaultTendermintEventId4,
+  defaultWallet,
+  defaultWallet2,
+  defaultWallet3,
+  isolatedMarketOrder,
+  isolatedSubaccount,
+} from '../helpers/constants';
+import * as FillTable from '../../src/stores/fill-table';
+import * as OrderTable from '../../src/stores/order-table';
 import * as WalletTable from '../../src/stores/wallet-table';
+import * as SubaccountTable from '../../src/stores/subaccount-table';
+import { seedData } from '../helpers/mock-generators';
 
 describe('Wallet store', () => {
   beforeAll(async () => {
@@ -92,4 +110,90 @@ describe('Wallet store', () => {
     expect(wallets.length).toEqual(1);
     expect(wallets[0]).toEqual(expect.objectContaining(defaultWallet3));
   });
+
+  it('Successfully updates totalVolume for time window multiple times', async () => {
+    const firstFillTime = await populateWalletSubaccountFill();
+
+    // Update totalVolume for a time window that covers all fills
+    await WalletTable.updateTotalVolume(
+      firstFillTime.toISO(),
+      firstFillTime.plus({ hours: 1 }).toISO(),
+    );
+    let wallet = await WalletTable.findById(defaultWallet.address);
+    expect(wallet).toEqual(expect.objectContaining({
+      ...defaultWallet,
+      totalVolume: '103',
+    }));
+
+    // Update totalVolume for a time window that excludes some fills
+    // For convenience, we will reuse the existing fills data. The total volume calculated in this
+    // window should be added to the total volume above.
+    await WalletTable.updateTotalVolume(
+      firstFillTime.toISO(),
+      firstFillTime.plus({ minutes: 2 }).toISO(),  // windowEntTs is exclusive -> filters out 1 fill
+    );
+    wallet = await WalletTable.findById(defaultWallet.address);
+    expect(wallet).toEqual(expect.objectContaining({
+      ...defaultWallet,
+      totalVolume: '205', // 103 + 102
+    }));
+  });
 });
+
+/**
+ * Helper function to add entries into wallet, subaccount, fill tables.
+ * Create a wallet with 2 subaccounts; one subaccount has 3 fills and the other has 1 fill.
+ * The fills are at t=0,1,2 and t=1 for the subaccounts respectively.
+ * This setup allows us to test that the totalVolume is correctly calculated for a time window.
+ * @returns first fill time in ISO format
+ */
+async function populateWalletSubaccountFill(): Promise<DateTime> {
+  await seedData();
+  await OrderTable.create(defaultOrder);
+  await OrderTable.create(isolatedMarketOrder);
+
+  // seedData() creates defaultWallet with defaultSubaccount and isolatedSubaccount
+  const defaultSubaccountId = await SubaccountTable.findAll(
+    { subaccountNumber: defaultSubaccount.subaccountNumber },
+    [],
+    {},
+  );
+  const isolatedSubaccountId = await SubaccountTable.findAll(
+    { subaccountNumber: isolatedSubaccount.subaccountNumber },
+    [],
+    {},
+  );
+
+  const referenceDt = DateTime.utc().minus({ hours: 1 });
+  const eventIds = [
+    defaultTendermintEventId,
+    defaultTendermintEventId2,
+    defaultTendermintEventId3,
+    defaultTendermintEventId4,
+  ];
+  let eventIdx = 0;
+
+  // Create 3 fills with 1 min increments for defaultSubaccount
+  for (let i = 0; i < 3; i++) {
+    await FillTable.create({
+      ...defaultFill,
+      subaccountId: defaultSubaccountId[0].id,
+      createdAt: referenceDt.plus({ minutes: i }).toISO(),
+      eventId: eventIds[eventIdx],
+      price: '1',
+      size: '1',
+    });
+    eventIdx += 1;
+  }
+  // Create 1 fill at referenceDt for isolatedSubaccount
+  await FillTable.create({
+    ...defaultFill,
+    subaccountId: isolatedSubaccountId[0].id,
+    createdAt: referenceDt.toISO(),
+    eventId: eventIds[eventIdx],
+    price: '10',
+    size: '10',
+  });
+
+  return referenceDt;
+}

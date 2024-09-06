@@ -57,6 +57,7 @@ export const configSchema = {
   LOOPS_ENABLED_LEADERBOARD_PNL_WEEKLY: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_MONTHLY: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_YEARLY: parseBoolean({ default: false }),
+  LOOPS_ENABLED_UPDATE_WALLET_TOTAL_VOLUME: parseBoolean({ default: true }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -124,6 +125,9 @@ export const configSchema = {
   }),
   LOOPS_INTERVAL_MS_LEADERBOARD_PNL_YEARLY: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_UPDATE_WALLET_TOTAL_VOLUME: parseInteger({
+    default: FIVE_MINUTES_IN_MILLISECONDS,
   }),
 
   // Start delay
