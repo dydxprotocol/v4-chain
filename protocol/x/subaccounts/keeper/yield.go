@@ -8,12 +8,9 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-const (
-	zeroPerpYieldIndex = "0/1"
 )
 
 func (k Keeper) ClaimYieldForSubaccountFromId(
@@ -28,12 +25,14 @@ func (k Keeper) ClaimYieldForSubaccountFromId(
 		return errors.New("there is no yield to claim for subaccount")
 	}
 
-	settledSubaccount, _, err := k.settleSubaccountYield(ctx, subaccount)
+	settledSubaccount, yieldEarned, err := k.settleSubaccountYield(ctx, subaccount)
 	if err != nil {
 		return err
 	}
 
 	k.SetSubaccount(ctx, settledSubaccount)
+
+	k.DepositYieldToSubaccount(ctx, *subaccountId, yieldEarned)
 
 	return nil
 }
@@ -313,4 +312,45 @@ func getCurrentYieldIndexForPerp(
 		return nil, errors.New("could not convert yield index of perp to big.Rat")
 	}
 	return generalYieldIndex, nil
+}
+
+// -------------------YIELD ON BANK LEVEL --------------------------
+
+func (k Keeper) DepositYieldToSubaccount(
+	ctx sdk.Context,
+	subaccountId types.SubaccountId,
+	amountToTransfer *big.Int,
+) error {
+	if amountToTransfer == nil {
+		return nil
+	}
+
+	if amountToTransfer.Cmp(big.NewInt(0)) == 0 {
+		return nil
+	}
+
+	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
+		ctx,
+		assettypes.AssetTDai.Id,
+		amountToTransfer,
+	)
+	if err != nil {
+		return err
+	}
+
+	collateralPoolAddr, err := k.GetCollateralPoolForSubaccount(ctx, subaccountId)
+	if err != nil {
+		return err
+	}
+
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(
+		ctx,
+		ratelimittypes.TDaiPoolAccount,
+		collateralPoolAddr,
+		[]sdk.Coin{coinToTransfer},
+	); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -307,7 +307,7 @@ func (c *Client) CheckSubaccountCollateralization(
 
 	// Funding payments are lazily settled, so get the settled subaccount
 	// to ensure that the funding payments are included in the net collateral calculation.
-	settledSubaccount, _, err := sakeeper.GetSettledSubaccountWithPerpetuals(
+	settledSubaccount, _, _, err := sakeeper.GetSettledSubaccountWithPerpetuals(
 		unsettledSubaccount,
 		perpetuals,
 		assetYieldIndex,
