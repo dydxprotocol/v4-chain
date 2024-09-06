@@ -195,6 +195,14 @@ async function createKafkaTopics(
 ): Promise<void> {
   const kafkaTopicsToCreate: KafkaTopics[] = [];
 
+  await admin.deleteTopics({
+    topics: [KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS],
+  });
+  logger.info({
+    at: 'index#createKafkaTopics',
+    message: `Deleted ${KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS}`,
+  });
+
   _.forEach(KAFKA_TOPICS, (kafkaTopic: KafkaTopics) => {
     if (_.includes(existingKafkaTopics, kafkaTopic)) {
       logger.info({
