@@ -28,6 +28,19 @@ func (k msgServer) UpdateUnconditionalRevShareConfig(
 	if err != nil {
 		return nil, err
 	}
+
+	affiliateTiers, err := k.affiliatesKeeper.GetAllAffiliateTiers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	marketMapperRevShareParams := k.GetMarketMapperRevenueShareParams(ctx)
+	if !k.ValidateRevShareSafety(affiliateTiers, msg.Config, marketMapperRevShareParams) {
+		return nil, errorsmod.Wrapf(
+			types.ErrRevShareSafetyViolation,
+			"rev share safety violation",
+		)
+	}
 	k.SetUnconditionalRevShareConfigParams(ctx, msg.Config)
 	return &types.MsgUpdateUnconditionalRevShareConfigResponse{}, nil
 }

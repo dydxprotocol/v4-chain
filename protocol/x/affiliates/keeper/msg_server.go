@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 )
 
@@ -18,6 +20,21 @@ func (k msgServer) RegisterAffiliate(ctx context.Context,
 
 func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
 	msg *types.MsgUpdateAffiliateTiers) (*types.MsgUpdateAffiliateTiersResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	unconditionalRevShareConfig, err := k.revShareKeeper.GetUnconditionalRevShareConfigParams(sdkCtx)
+	if err != nil {
+		return nil, err
+	}
+	marketMapperRevShareParams := k.revShareKeeper.GetMarketMapperRevenueShareParams(sdkCtx)
+
+	if !k.revShareKeeper.ValidateRevShareSafety(*msg.Tiers, unconditionalRevShareConfig, marketMapperRevShareParams) {
+		return nil, errorsmod.Wrapf(
+			types.ErrRevShareSafetyViolation,
+			"rev share safety violation",
+		)
+	}
+
 	return nil, nil
 }
 

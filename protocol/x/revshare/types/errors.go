@@ -25,4 +25,10 @@ var (
 		4,
 		"invalid unconditional revshare config",
 	)
+
+	ErrRevShareSafetyViolation = errorsmod.Register(
+		ModuleName,
+		5,
+		"rev shares exceed 100%",
+	)
 )

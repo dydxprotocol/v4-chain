@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 )
 
@@ -116,4 +117,23 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 	store := ctx.KVStore(k.storeKey)
 	unconditionalRevShareConfigBytes := k.cdc.MustMarshal(&config)
 	store.Set([]byte(types.UnconditionalRevShareConfigKey), unconditionalRevShareConfigBytes)
+}
+
+func (k Keeper) ValidateRevShareSafety(
+	affiliateTiers affiliatetypes.AffiliateTiers,
+	unconditionalRevShareConfig types.UnconditionalRevShareConfig,
+	marketMapperRevShareParams types.MarketMapperRevenueShareParams,
+) bool {
+	highestTierRevSharePpm := uint32(0)
+	if len(affiliateTiers.Tiers) > 0 {
+		highestTierRevSharePpm = affiliateTiers.Tiers[len(affiliateTiers.Tiers)-1].TakerFeeSharePpm
+	}
+	totalUnconditionalRevSharePpm := uint32(0)
+	for _, recipientConfig := range unconditionalRevShareConfig.Configs {
+		totalUnconditionalRevSharePpm += recipientConfig.SharePpm
+	}
+	totalMarketMapperRevSharePpm := marketMapperRevShareParams.RevenueSharePpm
+
+	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm + highestTierRevSharePpm
+	return totalRevSharePpm < lib.OneMillion
 }
