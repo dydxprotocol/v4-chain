@@ -55,15 +55,15 @@ func (k Keeper) RegisterAffiliate(
 	referee string,
 	affiliateAddr string,
 ) error {
-	if _, found := k.GetReferredBy(ctx, referee); found {
-		return errorsmod.Wrapf(types.ErrAffiliateAlreadyExistsForReferee, "referee: %s, affiliate: %s",
-			referee, affiliateAddr)
-	}
 	if _, err := sdk.AccAddressFromBech32(referee); err != nil {
 		return errorsmod.Wrapf(types.ErrInvalidAddress, "referee: %s", referee)
 	}
 	if _, err := sdk.AccAddressFromBech32(affiliateAddr); err != nil {
 		return errorsmod.Wrapf(types.ErrInvalidAddress, "affiliate: %s", affiliateAddr)
+	}
+	if _, found := k.GetReferredBy(ctx, referee); found {
+		return errorsmod.Wrapf(types.ErrAffiliateAlreadyExistsForReferee, "referee: %s, affiliate: %s",
+			referee, affiliateAddr)
 	}
 	prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredByKeyPrefix)).Set([]byte(referee), []byte(affiliateAddr))
 	// TODO(OTE-696): Emit indexer event.
