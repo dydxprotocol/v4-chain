@@ -121,8 +121,8 @@ export async function findById(
  * Calculates the total volume in a given time window for each address and adds the values to the
  * existing totalVolume values.
  *
- * @param windowStartTs - The start timestamp of the time window (inclusive).
- * @param windowEndTs - The end timestamp of the time window (exclusive).
+ * @param windowStartTs - The start timestamp of the time window (exclusive).
+ * @param windowEndTs - The end timestamp of the time window (inclusive).
  */
 export async function updateTotalVolume(
   windowStartTs: string,
@@ -131,11 +131,13 @@ export async function updateTotalVolume(
 
   await knexReadReplica.getConnection().raw(
     `
+    BEGIN;
+
     WITH fills_total AS (
       -- Step 1: Calculate total volume for each subaccountId
       SELECT "subaccountId", SUM("price" * "size") AS "totalVolume"
       FROM fills
-      WHERE "createdAt" >= ? AND "createdAt" < ?
+      WHERE "createdAt" > '${windowStartTs}' AND "createdAt" <= '${windowEndTs}'
       GROUP BY "subaccountId"
     ),
     subaccount_volume AS (
@@ -156,7 +158,14 @@ export async function updateTotalVolume(
     SET "totalVolume" = COALESCE(wallets."totalVolume", 0) + av."totalVolume"
     FROM address_volume av
     WHERE wallets."address" = av."address";
+
+    -- Step 5: Upsert new totalVolumeUpdateTime to persistent_cache table
+    INSERT INTO persistent_cache (key, value)
+    VALUES ('totalVolumeUpdateTime', '${windowEndTs}')
+    ON CONFLICT (key) 
+    DO UPDATE SET value = EXCLUDED.value;
+
+    COMMIT;
     `,
-    [windowStartTs, windowEndTs],
   );
 }

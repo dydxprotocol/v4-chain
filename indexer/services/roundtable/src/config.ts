@@ -127,7 +127,7 @@ export const configSchema = {
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_UPDATE_WALLET_TOTAL_VOLUME: parseInteger({
-    default: FIVE_MINUTES_IN_MILLISECONDS,
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
 
   // Start delay

@@ -19,6 +19,7 @@ import * as FillTable from '../../src/stores/fill-table';
 import * as OrderTable from '../../src/stores/order-table';
 import * as WalletTable from '../../src/stores/wallet-table';
 import * as SubaccountTable from '../../src/stores/subaccount-table';
+import * as PersistentCacheTable from '../../src/stores/persistent-cache-table';
 import { seedData } from '../helpers/mock-generators';
 
 describe('Wallet store', () => {
@@ -116,7 +117,7 @@ describe('Wallet store', () => {
 
     // Update totalVolume for a time window that covers all fills
     await WalletTable.updateTotalVolume(
-      firstFillTime.toISO(),
+      firstFillTime.minus({ hours: 1 }).toISO(), // need to minus because left bound is exclusive
       firstFillTime.plus({ hours: 1 }).toISO(),
     );
     let wallet = await WalletTable.findById(defaultWallet.address);
@@ -129,14 +130,30 @@ describe('Wallet store', () => {
     // For convenience, we will reuse the existing fills data. The total volume calculated in this
     // window should be added to the total volume above.
     await WalletTable.updateTotalVolume(
-      firstFillTime.toISO(),
-      firstFillTime.plus({ minutes: 2 }).toISO(),  // windowEntTs is exclusive -> filters out 1 fill
+      firstFillTime.toISO(), // exclusive -> filters out first fill from each subaccount
+      firstFillTime.plus({ minutes: 2 }).toISO(),
     );
     wallet = await WalletTable.findById(defaultWallet.address);
     expect(wallet).toEqual(expect.objectContaining({
       ...defaultWallet,
-      totalVolume: '205', // 103 + 102
+      totalVolume: '105', // 103 + 2
     }));
+  });
+
+  it('Successfully updates totalVolumeUpdateTime in persistent cache', async () => {
+    const leftBound = DateTime.utc().minus({ hours: 1 });
+    const rightBound = DateTime.utc();
+    await WalletTable.updateTotalVolume(leftBound.toISO(), rightBound.toISO());
+
+    const persistentCache = await PersistentCacheTable.findById('totalVolumeUpdateTime');
+    const lastUpdateTime = persistentCache?.value
+      ? DateTime.fromISO(persistentCache.value)
+      : undefined;
+
+    expect(lastUpdateTime).not.toBeUndefined();
+    if (lastUpdateTime?.toMillis() !== undefined) {
+      expect(lastUpdateTime.toMillis()).toEqual(rightBound.toMillis());
+    }
   });
 });
 

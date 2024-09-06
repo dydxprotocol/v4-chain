@@ -1,11 +1,10 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import {
-  PersistentCacheTable,
-  WalletTable,
-} from '@dydxprotocol-indexer/postgres';
+import { PersistentCacheTable, WalletTable } from '@dydxprotocol-indexer/postgres';
+import { DateTime } from 'luxon';
+
 import config from '../config';
 
-const defaultLastUpdateTime: string = '2000-01-01T00:00:00Z';
+const defaultLastUpdateTime: string = '2020-01-01T00:00:00Z';
 const persistentCacheKey: string = 'totalVolumeUpdateTime';
 
 /**
@@ -23,21 +22,20 @@ export default async function runTask(): Promise<void> {
       });
     }
 
-    const lastUpdateTime = persistentCacheEntry 
-      ? persistentCacheEntry.value 
-      : defaultLastUpdateTime;
-    const currentTime = new Date().toISOString();
+    const lastUpdateTime = DateTime.fromISO(persistentCacheEntry
+      ? persistentCacheEntry.value
+      : defaultLastUpdateTime);
+    let currentTime = DateTime.utc();
 
-    // On the first run of this roundtable, we need to calculate the total volume for all historical
-    // fills. This is a much more demanding task than regular roundtable runs.
-    // At time of commit, the total number of rows in 'fills' table in imperator mainnet is ~250M.
-    // This can be processed in ~1min with the introduction of 'createdAt' index in 'fills' table.
-    // This is relatively short and significanlty shorter than roundtable task cadence. Hence, 
-    // special handling for the first run is not required.
-    await WalletTable.updateTotalVolume(lastUpdateTime, currentTime);
+    // During backfilling, we process one day at a time to reduce roundtable runtime.
+    if (currentTime > lastUpdateTime.plus({ days: 1 })) {
+      currentTime = lastUpdateTime.plus({ days: 1 });
+    }
+
+    await WalletTable.updateTotalVolume(lastUpdateTime.toISO(), currentTime.toISO());
     await PersistentCacheTable.upsert({
       key: persistentCacheKey,
-      value: currentTime,
+      value: currentTime.toISO(),
     });
 
     stats.timing(
