@@ -23,7 +23,7 @@ var (
 	maccPerms = map[string][]string{
 		// -------- Native SDK module accounts --------
 		authtypes.FeeCollectorName:                    nil,
-		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner}, // Note: TDaiPoolAccount is another name for ibctransfertypes.ModuleName
 		ibcconsumertypes.ConsumerRedistributeName:     nil,
 		ibcconsumertypes.ConsumerToSendToProviderName: nil,
 		icatypes.ModuleName:                           nil,

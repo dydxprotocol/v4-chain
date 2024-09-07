@@ -23,14 +23,21 @@ const (
 var (
 	// 0 - 99: generic.
 	ErrIntegerOverflow = errorsmod.Register(ModuleName, 0, "integer overflow")
+	ErrRatConversion   = errorsmod.Register(ModuleName, 1, "could not convert rat to string")
+	ErrPositionIsNil   = errorsmod.Register(ModuleName, 2, "position is nil")
 
 	// 100 - 199: update related.
 	ErrNonUniqueUpdatesPosition = errorsmod.Register(
 		ModuleName, 100, "multiple updates were specified for the same position id")
 	ErrNonUniqueUpdatesSubaccount = errorsmod.Register(
 		ModuleName, 101, "multiple updates were specified for the same subaccountId")
-	ErrFailedToUpdateSubaccounts   = errorsmod.Register(ModuleName, 102, "failed to apply subaccount updates")
-	ErrProductPositionNotUpdatable = errorsmod.Register(ModuleName, 103, "product position is not updatable")
+	ErrFailedToUpdateSubaccounts                          = errorsmod.Register(ModuleName, 102, "failed to apply subaccount updates")
+	ErrProductPositionNotUpdatable                        = errorsmod.Register(ModuleName, 103, "product position is not updatable")
+	ErrGlobaYieldIndexNil                                 = errorsmod.Register(ModuleName, 104, "general yield index is nil")
+	ErrGlobalYieldIndexNegative                           = errorsmod.Register(ModuleName, 105, "general yield index is negative")
+	ErrYieldIndexUninitialized                            = errorsmod.Register(ModuleName, 106, "yield index for subaccount is badly initialised to empty string")
+	ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount = errorsmod.Register(ModuleName, 107, "general yield index is less than the current yield index")
+	ErrNoYieldToClaim                                     = errorsmod.Register(ModuleName, 108, "there is no yield to claim for subaccount")
 
 	// 200 - 299: subaccount id related.
 	ErrInvalidSubaccountIdNumber = errorsmod.Register(

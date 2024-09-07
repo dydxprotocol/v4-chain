@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 )
 
 func createAccountKeeper(
@@ -41,6 +42,7 @@ func createAccountKeeper(
 		satypes.ModuleName:                nil,
 		perpetualstypes.InsuranceFundName: nil,
 		ratelimittypes.SDaiPoolAccount:    nil,
+		ibctransfertypes.ModuleName:       {types.Minter, types.Burner},
 	}
 
 	k := keeper.NewAccountKeeper(

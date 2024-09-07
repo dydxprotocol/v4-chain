@@ -546,6 +546,7 @@ func GetSettledSubaccountWithPerpetuals(
 	newPerpetualPositions := []*types.PerpetualPosition{}
 	fundingPayments = make(map[uint32]dtypes.SerializableInt)
 
+	// TODO [YBCP-86]: Optimize yield addition if no yield to be claimed
 	subaccountWithYield, totalNewYield, err := AddYieldToSubaccount(subaccount, perpetuals, assetYieldIndex)
 	if err != nil {
 		return types.Subaccount{}, nil, nil, err

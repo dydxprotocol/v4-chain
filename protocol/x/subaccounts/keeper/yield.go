@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -22,7 +21,7 @@ func (k Keeper) ClaimYieldForSubaccountFromId(
 
 	subaccount := k.GetSubaccount(ctx, *subaccountId)
 	if len(subaccount.AssetPositions) == 0 && len(subaccount.PerpetualPositions) == 0 {
-		return errors.New("there is no yield to claim for subaccount")
+		return types.ErrNoYieldToClaim
 	}
 
 	settledSubaccount, yieldEarned, err := k.settleSubaccountYield(ctx, subaccount)
@@ -71,7 +70,7 @@ func IsYieldAlreadyClaimed(assetYieldIndex *big.Rat, subaccountAssetYieldIndex s
 
 	currentYieldIndex, success := new(big.Rat).SetString(subaccountAssetYieldIndex)
 	if !success {
-		return false, errors.New("could not convert the subaccount yield index to big.Rat")
+		return false, types.ErrRatConversion
 	}
 
 	if assetYieldIndex.Cmp(currentYieldIndex) == 0 {
@@ -79,7 +78,7 @@ func IsYieldAlreadyClaimed(assetYieldIndex *big.Rat, subaccountAssetYieldIndex s
 	}
 
 	if assetYieldIndex.Cmp(currentYieldIndex) == -1 {
-		return false, errors.New("subaccount's asset yield index greater than overall asset yield index")
+		return false, types.ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount
 	}
 
 	return false, nil
@@ -106,12 +105,13 @@ func AddYieldToSubaccount(
 
 	totalNewYield = new(big.Int).Add(assetYield, totalNewPerpYield)
 
+	stringIndex := assetYieldIndex.String()
 	newSubaccount := types.Subaccount{
 		Id:                 subaccount.Id,
 		AssetPositions:     subaccount.AssetPositions,
 		PerpetualPositions: newPerpetualPositions,
 		MarginEnabled:      subaccount.MarginEnabled,
-		AssetYieldIndex:    assetYieldIndex.String(),
+		AssetYieldIndex:    stringIndex,
 	}
 
 	// TODO [YBCP-21]: Handle negative yield more gracefully
@@ -159,12 +159,16 @@ func calculateAssetYieldInQuoteQuantums(
 	err error,
 ) {
 
+	if assetPosition == nil {
+		return nil, types.ErrPositionIsNil
+	}
+
 	if generalYieldIndex == nil {
-		return nil, errors.New("general yield index is nil")
+		return nil, types.ErrGlobaYieldIndexNil
 	}
 
 	if generalYieldIndex.Cmp(big.NewRat(0, 1)) < 0 {
-		return nil, errors.New("general yield index is negative")
+		return nil, types.ErrGlobalYieldIndexNegative
 	}
 
 	if generalYieldIndex.Cmp(big.NewRat(0, 1)) == 0 {
@@ -172,16 +176,16 @@ func calculateAssetYieldInQuoteQuantums(
 	}
 
 	if subaccount.AssetYieldIndex == "" {
-		return nil, errors.New("asset yield for subaccount is badly initialised 0/1")
+		return nil, types.ErrYieldIndexUninitialized
 	}
 
 	currentYieldIndex, success := new(big.Rat).SetString(subaccount.AssetYieldIndex)
 	if !success {
-		return nil, errors.New("could not convert the subaccount yield index to big.Rat")
+		return nil, types.ErrRatConversion
 	}
 
 	if generalYieldIndex.Cmp(currentYieldIndex) < 0 {
-		return nil, errors.New("general yield index is less than the current yield index")
+		return nil, types.ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount
 	}
 
 	yieldIndexDifference := new(big.Rat).Sub(generalYieldIndex, currentYieldIndex)
@@ -261,15 +265,15 @@ func calculatePerpetualYieldInQuoteQuantums(
 	err error,
 ) {
 	if perpPosition == nil {
-		return nil, errors.New("could not calculate perpetual yield: perp position is nil")
+		return nil, types.ErrPositionIsNil
 	}
 
 	if generalYieldIndex == nil {
-		return nil, errors.New("could not calculate perpetual yield: perp yield index is nil")
+		return nil, types.ErrGlobaYieldIndexNil
 	}
 
 	if generalYieldIndex.Cmp(big.NewRat(0, 1)) < 0 {
-		return nil, errors.New("general yield index is negative")
+		return nil, types.ErrGlobalYieldIndexNegative
 	}
 
 	if generalYieldIndex.Cmp(big.NewRat(0, 1)) == 0 {
@@ -277,16 +281,16 @@ func calculatePerpetualYieldInQuoteQuantums(
 	}
 
 	if perpPosition.YieldIndex == "" {
-		return nil, errors.New("perp yield index for perp is empty string")
+		return nil, types.ErrYieldIndexUninitialized
 	}
 
 	currentYieldIndex, success := new(big.Rat).SetString(perpPosition.YieldIndex)
 	if !success {
-		return nil, errors.New("could not convert yield index of perp position to big.Rat")
+		return nil, types.ErrRatConversion
 	}
 
 	if generalYieldIndex.Cmp(currentYieldIndex) < 0 {
-		return nil, errors.New("general yield index is less than the current yield index")
+		return nil, types.ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount
 	}
 
 	yieldIndexDifference := new(big.Rat).Sub(generalYieldIndex, currentYieldIndex)
@@ -304,12 +308,12 @@ func getCurrentYieldIndexForPerp(
 	err error,
 ) {
 	if perp.YieldIndex == "" {
-		return nil, errors.New("perp yield index for perp is not initialised")
+		return nil, types.ErrYieldIndexUninitialized
 	}
 
 	generalYieldIndex, success := new(big.Rat).SetString(perp.YieldIndex)
 	if !success {
-		return nil, errors.New("could not convert yield index of perp to big.Rat")
+		return nil, types.ErrRatConversion
 	}
 	return generalYieldIndex, nil
 }
