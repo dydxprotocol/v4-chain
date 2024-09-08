@@ -333,6 +333,8 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		!isDeleveragingLong,
 	)
 
+	fmt.Println("subaccountsWithOpenPositions: ", subaccountsWithOpenPositions)
+
 	numSubaccounts := len(subaccountsWithOpenPositions)
 	if numSubaccounts == 0 {
 		liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)

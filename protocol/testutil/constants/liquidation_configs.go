@@ -33,8 +33,15 @@ var (
 	}
 	LiquidationsConfig_FillablePrice_Max_Smmr = clobtypes.LiquidationsConfig{
 		InsuranceFundFeePpm:   5_000,
-		ValidatorFeePpm:       200_000,
-		LiquidityFeePpm:       800_000,
+		ValidatorFeePpm:       0,
+		LiquidityFeePpm:       0,
+		FillablePriceConfig:   FillablePriceConfig_Max_Smmr,
+		SubaccountBlockLimits: SubaccountBlockLimits_No_Limit,
+	}
+	LiquidationsConfig_FillablePrice_Max_Smmr_With_Fees = clobtypes.LiquidationsConfig{
+		InsuranceFundFeePpm:   5_000,
+		ValidatorFeePpm:       100_000,
+		LiquidityFeePpm:       400_000,
 		FillablePriceConfig:   FillablePriceConfig_Max_Smmr,
 		SubaccountBlockLimits: SubaccountBlockLimits_No_Limit,
 	}

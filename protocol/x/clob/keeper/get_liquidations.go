@@ -62,6 +62,7 @@ func (k Keeper) GetLiquidatableAndNegativeTncSubaccountIds(
 		}
 
 		isLiquidatable, hasNegativeTnc, liquidationPriority, err := k.GetSubaccountCollateralizationInfo(subaccount, marketPrices, perpetuals, liquidityTiers)
+
 		if err != nil {
 			return nil, nil, errorsmod.Wrap(err, "Error checking collateralization status")
 		}
