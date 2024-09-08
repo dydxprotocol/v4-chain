@@ -382,13 +382,7 @@ func (k Keeper) TransferValidatorFee(
 	if err != nil {
 		panic(err)
 	}
-
-	return k.bankKeeper.SendCoins(
-		ctx,
-		fromModule,
-		sdk.AccAddress(ctx.CometInfo().GetProposerAddress()),
-		[]sdk.Coin{coinToTransfer},
-	)
+	return k.bankKeeper.SendCoins(ctx, fromModule, sdk.AccAddress(ctx.BlockHeader().ProposerAddress), []sdk.Coin{coinToTransfer})
 }
 
 // TransferFundsFromSubaccountToSubaccount returns an error if the call to `k.CanUpdateSubaccounts()`

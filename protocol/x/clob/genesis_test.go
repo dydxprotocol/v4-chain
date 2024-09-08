@@ -416,6 +416,7 @@ func TestGenesis(t *testing.T) {
 								clobPair.StepBaseQuantums,
 								perpetual.Params.LiquidityTier,
 								perpetual.Params.MarketType,
+								perpetual.Params.DangerIndexPpm,
 							),
 						),
 					).Once().Return()

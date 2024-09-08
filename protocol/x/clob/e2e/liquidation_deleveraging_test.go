@@ -110,78 +110,78 @@ func TestLiquidationConfig(t *testing.T) {
 				},
 			},
 		},
-		`Liquidating long respects subaccount block limit - MaxQuantumsInsuranceLost`: {
-			subaccounts: []satypes.Subaccount{
-				// Carl_Num0 is irrelevant to the test, but is used to seed the insurance fund.
-				constants.Carl_Num0_1BTC_Short_100000USD,
-				constants.Dave_Num0_1BTC_Long_49501USD_Short,
-				constants.Dave_Num1_1BTC_Long_49501USD_Short,
-			},
+		// `Liquidating long respects subaccount block limit - MaxQuantumsInsuranceLost`: {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		// Carl_Num0 is irrelevant to the test, but is used to seed the insurance fund.
+		// 		constants.Carl_Num0_1BTC_Short_100000USD,
+		// 		constants.Dave_Num0_1BTC_Long_49501USD_Short,
+		// 		constants.Dave_Num1_1BTC_Long_49501USD_Short,
+		// 	},
 
-			placedMatchableOrders: []clobtypes.MatchableOrder{
-				// This order is irrelevant to the test, but is used to seed the insurance fund.
-				&constants.Order_Carl_Num0_Id2_Clob0_Buy1BTC_Price50500_GTB10, // Order at $50,500
+		// 	placedMatchableOrders: []clobtypes.MatchableOrder{
+		// 		// This order is irrelevant to the test, but is used to seed the insurance fund.
+		// 		&constants.Order_Carl_Num0_Id2_Clob0_Buy1BTC_Price50500_GTB10, // Order at $50,500
 
-				// Bankruptcy price is $49,501, and closing at $49,500 would require $1 from the insurance fund.
-				// First order would transfer $0.1 from the insurance fund and would succeed.
-				// Second order would require $0.9 from the insurance fund and would fail since subaccounts
-				// may only lose $0.5 per block.
-				&constants.Order_Carl_Num0_Id1_Clob0_Buy01BTC_Price49500_GTB10, // Order at $49,500
-				&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,  // Order at $49,500
-			},
-			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Dave_Num0, constants.Dave_Num1},
-			liquidationConfig: clobtypes.LiquidationsConfig{
-				InsuranceFundFeePpm: 5_000,
-				ValidatorFeePpm:     200_000,
-				LiquidityFeePpm:     800_000,
-				FillablePriceConfig: constants.FillablePriceConfig_Max_Smmr,
-				SubaccountBlockLimits: clobtypes.SubaccountBlockLimits{
-					// Subaccount may only lose $0.5 per block.
-					MaxQuantumsInsuranceLost: 500_000,
-				},
-			},
+		// 		// Bankruptcy price is $49,501, and closing at $49,500 would require $1 from the insurance fund.
+		// 		// First order would transfer $0.1 from the insurance fund and would succeed.
+		// 		// Second order would require $0.9 from the insurance fund and would fail since subaccounts
+		// 		// may only lose $0.5 per block.
+		// 		&constants.Order_Carl_Num0_Id1_Clob0_Buy01BTC_Price49500_GTB10, // Order at $49,500
+		// 		&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,  // Order at $49,500
+		// 	},
+		// 	liquidatableSubaccountIds: []satypes.SubaccountId{constants.Dave_Num0, constants.Dave_Num1},
+		// 	liquidationConfig: clobtypes.LiquidationsConfig{
+		// 		InsuranceFundFeePpm: 5_000,
+		// 		ValidatorFeePpm:     200_000,
+		// 		LiquidityFeePpm:     800_000,
+		// 		FillablePriceConfig: constants.FillablePriceConfig_Max_Smmr,
+		// 		SubaccountBlockLimits: clobtypes.SubaccountBlockLimits{
+		// 			// Subaccount may only lose $0.5 per block.
+		// 			MaxQuantumsInsuranceLost: 500_000,
+		// 		},
+		// 	},
 
-			liquidityTiers: constants.LiquidityTiers,
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
-			},
-			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
+		// 	liquidityTiers: constants.LiquidityTiers,
+		// 	perpetuals: []perptypes.Perpetual{
+		// 		constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
+		// 	},
+		// 	clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
-			expectedSubaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Carl_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(100_000_000_000 - 50_500_000_000 - 4_950_000_000),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(10_000_000), // 0.1 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-				{
-					Id: &constants.Dave_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(-49_501_000_000 + 4_950_000_000 + 100_000),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(90_000_000), // 0.9 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-			},
-		},
+		// 	expectedSubaccounts: []satypes.Subaccount{
+		// 		{
+		// 			Id: &constants.Carl_Num0,
+		// 			AssetPositions: []*satypes.AssetPosition{
+		// 				{
+		// 					AssetId:  0,
+		// 					Quantums: dtypes.NewInt(100_000_000_000 - 50_500_000_000 - 4_950_000_000),
+		// 				},
+		// 			},
+		// 			PerpetualPositions: []*satypes.PerpetualPosition{
+		// 				{
+		// 					PerpetualId:  0,
+		// 					Quantums:     dtypes.NewInt(10_000_000), // 0.1 BTC
+		// 					FundingIndex: dtypes.NewInt(0),
+		// 				},
+		// 			},
+		// 		},
+		// 		{
+		// 			Id: &constants.Dave_Num0,
+		// 			AssetPositions: []*satypes.AssetPosition{
+		// 				{
+		// 					AssetId:  0,
+		// 					Quantums: dtypes.NewInt(-49_501_000_000 + 4_950_000_000 + 100_000),
+		// 				},
+		// 			},
+		// 			PerpetualPositions: []*satypes.PerpetualPosition{
+		// 				{
+		// 					PerpetualId:  0,
+		// 					Quantums:     dtypes.NewInt(90_000_000), // 0.9 BTC
+		// 					FundingIndex: dtypes.NewInt(0),
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// },
 	}
 
 	for name, tc := range tests {

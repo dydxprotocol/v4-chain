@@ -8,8 +8,8 @@ import (
 // Validate validates each individual field of the liquidations config for validity.
 // It returns an error if any of the liquidation config fields fail the following validation:
 // - `InsuranceFundFeePpm == 0 || InsuranceFundFeePpm > 1_000_000`.
-// - `ValidatorFeePpm == 0 || ValidatorFeePpm > 1_000_000`.
-// - `LiquidityFeePpm == 0 || LiquidityFeePpm > 1_000_000`.
+// - `ValidatorFeePpm > 1_000_000`.
+// - `LiquidityFeePpm > 1_000_000`.
 // - `bankruptcyAdjustmentPpm < 1_000_000`.
 // - `spreadToMaintenanceMarginRatioPpm == 0.
 // - `maxQuantumsInsuranceLost == 0`.
@@ -26,7 +26,7 @@ func (lc *LiquidationsConfig) Validate() error {
 	}
 
 	// Validate the ValidatorFeePpm.
-	if lc.ValidatorFeePpm == 0 || lc.ValidatorFeePpm > lib.OneMillion {
+	if lc.ValidatorFeePpm > lib.OneMillion {
 		return errorsmod.Wrapf(
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid ValidatorFeePpm",
@@ -35,7 +35,7 @@ func (lc *LiquidationsConfig) Validate() error {
 	}
 
 	// Validate the LiquidityFeePpm.
-	if lc.LiquidityFeePpm == 0 || lc.LiquidityFeePpm > lib.OneMillion {
+	if lc.LiquidityFeePpm > lib.OneMillion {
 		return errorsmod.Wrapf(
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid LiquidityFeePpm",
@@ -43,7 +43,7 @@ func (lc *LiquidationsConfig) Validate() error {
 		)
 	}
 
-	if lc.ValidatorFeePpm+lc.LiquidityFeePpm != lib.OneMillion {
+	if lc.ValidatorFeePpm+lc.LiquidityFeePpm > lib.OneMillion {
 		return errorsmod.Wrapf(
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid sum of ValidatorFeePpm and LiquidityFeePpm",

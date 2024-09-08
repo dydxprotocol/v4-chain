@@ -274,6 +274,7 @@ func CreateNClobPair(
 					items[i].StepBaseQuantums,
 					perps[i].Params.LiquidityTier,
 					perps[i].Params.MarketType,
+					perps[i].Params.DangerIndexPpm,
 				),
 			),
 		).Return()

@@ -71,7 +71,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			MarketId:         marketId,
 			AtomicResolution: item.Params.AtomicResolution,
 			LiquidityTier:    liquidityTier,
-			DangerIndexPpm:   uint32(defaultFundingPpm),
+			DangerIndexPpm:   uint32(0),
 		}
 
 		// Verify updatedp perpetual in store.
@@ -106,6 +106,11 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			t,
 			liquidityTier,
 			newItem.Params.LiquidityTier,
+		)
+		require.Equal(
+			t,
+			uint32(0),
+			newItem.Params.DangerIndexPpm,
 		)
 	}
 

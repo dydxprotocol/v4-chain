@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"time"
@@ -41,6 +42,10 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	subaccountsToDeleverage []subaccountToDeleverage,
 	err error,
 ) {
+
+	fmt.Println("LiquidateSubaccountsAgainstOrderbook")
+	fmt.Println("subaccountIds", subaccountIds)
+
 	lib.AssertCheckTxMode(ctx)
 
 	defer telemetry.MeasureSince(
@@ -91,6 +96,12 @@ func (k Keeper) liquidateSubaccountsAgainstOrderbook(
 	numIsolatedLiquidations := 0
 	for i := 0; i < int(k.Flags.MaxLiquidationAttemptsPerBlock); i++ {
 		subaccount, subaccountId := k.getNextSubaccountToLiquidate(ctx, subaccountIds, isolatedPositionsPriorityHeap, &numIsolatedLiquidations)
+		if subaccountId == nil {
+			break
+		}
+
+		fmt.Println("subaccount", subaccount)
+		fmt.Println("subaccountId", subaccountId)
 
 		// will always have at least one perpetual position
 		isIsolated, err := k.perpetualsKeeper.IsIsolatedPerpetual(ctx, subaccount.PerpetualPositions[0].PerpetualId)
@@ -109,9 +120,14 @@ func (k Keeper) liquidateSubaccountsAgainstOrderbook(
 
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
 		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId.SubaccountId)
-		if err != nil {
+		if err == types.ErrNoPerpetualPositionsToLiquidate {
+			i--
+			continue
+		} else if err != nil {
 			return nil, err
 		}
+
+		fmt.Println("liquidationOrder", liquidationOrder)
 
 		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
 		// Exception for liquidation which conflicts with clob pair status. This is expected for liquidations generated
@@ -124,6 +140,8 @@ func (k Keeper) liquidateSubaccountsAgainstOrderbook(
 				continue
 			}
 		}
+
+		fmt.Println("optimisticallyFilledQuantums", optimisticallyFilledQuantums)
 
 		err = k.handleLiquidationOrderPlacementResult(ctx, liquidationOrder, optimisticallyFilledQuantums, &subaccountsToDeleverage, subaccountIds)
 		if err != nil {
@@ -144,10 +162,14 @@ func (k Keeper) getNextSubaccountToLiquidate(
 	subaccountId *LiquidationPriority,
 ) {
 	// If we have exceeded the max numIsolatedLiquidations and there are no more non-isolated subaccounts to liquidate
-	if subaccountIds.Len() == 0 && isolatedPositionsPriorityHeap.Len() > 0 {
-		*subaccountIds = *isolatedPositionsPriorityHeap
-		*isolatedPositionsPriorityHeap = *NewLiquidationPriorityHeap()
-		*numIsolatedLiquidations = -1000000
+	if subaccountIds.Len() == 0 {
+		if isolatedPositionsPriorityHeap.Len() > 0 {
+			*subaccountIds = *isolatedPositionsPriorityHeap
+			*isolatedPositionsPriorityHeap = *NewLiquidationPriorityHeap()
+			*numIsolatedLiquidations = -1000000
+		} else {
+			return satypes.Subaccount{}, nil
+		}
 	}
 
 	subaccountId = subaccountIds.PopHighestPriority()
@@ -248,12 +270,14 @@ func (k Keeper) GetLiquidationOrderForPerpetual(
 	if err != nil {
 		return nil, err
 	}
-	isPositionLong := orderQuantums.Sign() == 1
+	isPositionLong := orderQuantums.Sign() == -1
 
 	liquidationPrice, err := k.getLiquidationPrice(ctx, subaccountId, perpetualId, orderQuantums, isPositionLong, clobPair)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("liquidationPrice", liquidationPrice)
 
 	liquidationOrder = types.NewLiquidationOrder(
 		subaccountId,
@@ -488,6 +512,9 @@ func (k Keeper) getLiquidationPrice(
 	if err != nil {
 		return 0, err
 	}
+
+	fmt.Println("bankruptcyPriceRat", bankruptcyPriceRat)
+	fmt.Println("fillablePriceRat", fillablePriceRat)
 
 	liquidationPriceRat := getMostAggressivePrice(bankruptcyPriceRat, fillablePriceRat, isPositionLong)
 	return k.ConvertLiquidationPriceToSubticks(ctx, liquidationPriceRat, isPositionLong, clobPair), nil
@@ -1064,7 +1091,7 @@ func (k Keeper) GetBestPerpetualPositionToLiquidate(
 	if bestPriority.Sign() >= 0 {
 		return bestPerpetualId, nil
 	}
-	return 0, err
+	return 0, types.ErrNoPerpetualPositionsToLiquidate
 }
 
 func (k Keeper) SimulatePriorityWithClosedPosition(
@@ -1084,8 +1111,10 @@ func (k Keeper) SimulatePriorityWithClosedPosition(
 	if err != nil {
 		return err
 	}
+	fmt.Println("simulating priority with closed position", position.PerpetualId, subaccount)
 
 	if !subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(position.PerpetualId) {
+		fmt.Println("simulating priority with closed position")
 		err := k.simulatePriorityWithClosedPosition(ctx, subaccount, position, price, bestPriority, bestPerpetualId)
 		if err != nil {
 			return err
