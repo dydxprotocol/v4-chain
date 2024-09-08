@@ -1349,6 +1349,8 @@ func (k Keeper) validateMatchedLiquidationAndGetFees(
 		return nil, nil, nil, err
 	}
 
+	fmt.Println("INSURANCE FUND", insuranceFundDelta)
+
 	if err := k.validateLiquidationParams(ctx, order.GetSubaccountId(), perpetualId, insuranceFundDelta); err != nil {
 		return nil, nil, nil, err
 	}
