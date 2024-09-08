@@ -552,6 +552,10 @@ func GetSettledSubaccountWithPerpetuals(
 		return types.Subaccount{}, nil, nil, err
 	}
 
+	if totalNewYield.Cmp(big.NewInt(0)) < 0 {
+		return types.Subaccount{}, nil, nil, types.ErrYieldClaimedNegative
+	}
+
 	// Iterate through and settle all perpetual positions.
 	for _, perpetualPosition := range subaccountWithYield.PerpetualPositions {
 		perpetual, found := perpetuals[perpetualPosition.PerpetualId]
@@ -587,11 +591,6 @@ func GetSettledSubaccountWithPerpetuals(
 		PerpetualPositions: newPerpetualPositions,
 		MarginEnabled:      subaccountWithYield.MarginEnabled,
 		AssetYieldIndex:    subaccountWithYield.AssetYieldIndex,
-	}
-
-	// TODO [YBCP-21]: Handle negative yield more gracefully
-	if totalNewYield.Cmp(big.NewInt(0)) < 0 {
-		panic("Total yield is less than 0. This should not be the case")
 	}
 
 	newTDaiPosition := newSubaccount.GetTDaiPosition()

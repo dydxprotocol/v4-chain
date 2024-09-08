@@ -38,6 +38,7 @@ var (
 	ErrYieldIndexUninitialized                            = errorsmod.Register(ModuleName, 106, "yield index for subaccount is badly initialised to empty string")
 	ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount = errorsmod.Register(ModuleName, 107, "general yield index is less than the current yield index")
 	ErrNoYieldToClaim                                     = errorsmod.Register(ModuleName, 108, "there is no yield to claim for subaccount")
+	ErrYieldClaimedNegative                               = errorsmod.Register(ModuleName, 109, "subaccount has negative total yield claim")
 
 	// 200 - 299: subaccount id related.
 	ErrInvalidSubaccountIdNumber = errorsmod.Register(

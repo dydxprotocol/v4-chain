@@ -114,9 +114,8 @@ func AddYieldToSubaccount(
 		AssetYieldIndex:    stringIndex,
 	}
 
-	// TODO [YBCP-21]: Handle negative yield more gracefully
 	if totalNewYield.Cmp(big.NewInt(0)) < 0 {
-		panic("Total yield is less than 0. This should not be the case")
+		totalNewYield = big.NewInt(0)
 	}
 
 	newTDaiPosition := new(big.Int).Add(subaccount.GetTDaiPosition(), totalNewYield)
