@@ -281,6 +281,7 @@ func PrepareCheckState(
 	)
 
 	fmt.Println("DELEVERAGE: ", subaccountsToDeleverage)
+	fmt.Println("NTNC: ", negativeTncSubaccountIds)
 
 	// 8. Deleverage subaccounts.
 	// TODO(CLOB-1052) - decouple steps 6 and 7 by using DaemonLiquidationInfo.NegativeTncSubaccounts
