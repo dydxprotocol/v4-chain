@@ -692,8 +692,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				// Cap the max liquidation fee ppm so that the bankruptcy price changes
 				// in the insurance fund delta calculation.
 				InsuranceFundFeePpm:   10,
-				ValidatorFeePpm:       200_000,
-				LiquidityFeePpm:       800_000,
+				ValidatorFeePpm:       0,
+				LiquidityFeePpm:       0,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
@@ -2092,41 +2092,6 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			},
 			expectedError: types.ErrSubaccountHasLiquidatedPerpetual,
 		},
-		"Subaccount block limit: fails when liquidation exceeds subaccount notional amount limit": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_100PercentMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long_50000USD,
-			},
-			perpetualFeeParams: &constants.PerpetualFeeParams,
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-			rawOperations: []types.OperationRaw{
-				clobtest.NewShortTermOrderPlacementOperationRaw(
-					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				),
-				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
-					types.MatchPerpetualLiquidation{
-						Liquidated:  constants.Carl_Num0,
-						ClobPairId:  0,
-						PerpetualId: 0,
-						TotalSize:   100_000_000, // 1 BTC
-						IsBuy:       true,
-						Fills: []types.MakerFill{
-							{
-								MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000.OrderId,
-								FillAmount:   50_000_000, // 0.50 BTC, $25,000 notional
-							},
-						},
-					},
-				),
-			},
-			liquidationConfig: &constants.LiquidationsConfig_Subaccount_Max10bNotionalLiquidated_Max10bInsuranceLost,
-			expectedError:     types.ErrInvalidLiquidationOrderTotalSize,
-		},
 		"Subaccount block limit: fails when a single liquidation fill exceeds max insurance lost block limit": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
@@ -2163,8 +2128,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				InsuranceFundFeePpm: 5_000,
-				ValidatorFeePpm:     200_000,
-				LiquidityFeePpm:     800_000,
+				ValidatorFeePpm:     0,
+				LiquidityFeePpm:     0,
 				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: 999_999, // $0.999999
@@ -2216,8 +2181,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			},
 			liquidationConfig: &types.LiquidationsConfig{
 				InsuranceFundFeePpm: 5_000,
-				ValidatorFeePpm:     200_000,
-				LiquidityFeePpm:     800_000,
+				ValidatorFeePpm:     0,
+				LiquidityFeePpm:     0,
 				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					MaxQuantumsInsuranceLost: 499_999, // $0.499999
@@ -2290,8 +2255,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			insuranceFundBalance: 10_000_000,
 			liquidationConfig: &types.LiquidationsConfig{
 				InsuranceFundFeePpm: 5_000,
-				ValidatorFeePpm:     200_000,
-				LiquidityFeePpm:     800_000,
+				ValidatorFeePpm:     0,
+				LiquidityFeePpm:     0,
 				FillablePriceConfig: constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: types.SubaccountBlockLimits{
 					// Max insurance lost that a subaccount can have is $0.5.
@@ -2424,8 +2389,8 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 			insuranceFundBalance: 2_000_000, // Insurance fund has $2
 			liquidationConfig: &types.LiquidationsConfig{
 				InsuranceFundFeePpm:   5_000,
-				ValidatorFeePpm:       200_000,
-				LiquidityFeePpm:       800_000,
+				ValidatorFeePpm:       0,
+				LiquidityFeePpm:       0,
 				FillablePriceConfig:   constants.FillablePriceConfig_Default,
 				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},

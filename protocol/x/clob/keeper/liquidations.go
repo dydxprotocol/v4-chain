@@ -642,6 +642,10 @@ func (k Keeper) getFillablePriceCalculationInputs(
 ) {
 	bigPositionSizeQuantums = k.getPositionSize(ctx, subaccountId, perpetualId)
 
+	if bigPositionSizeQuantums.Sign() == 0 {
+		return nil, nil, nil, nil, 0, 0, nil, types.ErrInvalidPerpetualPositionSizeDelta
+	}
+
 	pnnvBig, err = k.perpetualsKeeper.GetNetCollateral(ctx, perpetualId, bigPositionSizeQuantums)
 	if err != nil {
 		return nil, nil, nil, nil, 0, 0, nil, err

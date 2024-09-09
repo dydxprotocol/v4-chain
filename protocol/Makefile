@@ -272,7 +272,7 @@ test-unit-and-integration: e2e-setup delete-anvil
 	$(MAKE) remove-container
 
 specific-test: 
-	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m -run "TestGetFillablePrice" ./x/clob/keeper/...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m -run "TestGetBestPerpetualPositionToLiquidate" ./x/clob/keeper/...
 
 
 test-unit-and-integration-linux: e2e-setup-linux 
