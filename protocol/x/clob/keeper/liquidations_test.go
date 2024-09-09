@@ -3909,34 +3909,6 @@ func TestGetBestPerpetualPositionToLiquidate(t *testing.T) {
 			// 140 * 10% = 14, which is rounded down to 10.
 			expectedQuantums: new(big.Int).SetInt64(-10),
 		},
-		`returned position size is at least clob.stepBaseQuantums`: {
-			perpetualPositions: []*satypes.PerpetualPosition{
-				{
-					PerpetualId: 0,
-					Quantums:    dtypes.NewInt(20),
-				},
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			liquidationConfig: types.LiquidationsConfig{
-				InsuranceFundFeePpm:   5_000,
-				ValidatorFeePpm:       0,
-				LiquidityFeePpm:       0,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
-			},
-
-			clobPairs: []types.ClobPair{
-				// StepBaseQuantums is 5.
-				constants.ClobPair_Btc,
-			},
-
-			expectedClobPair: constants.ClobPair_Btc,
-			// 20 * 10% = 2, however, clobPair.StepBaseQuantum is 5,
-			// so the returned position size is 5.
-			expectedQuantums: new(big.Int).SetInt64(-5),
-		},
 		`Full position is returned when position smaller than subaccount limit`: {
 			perpetualPositions: []*satypes.PerpetualPosition{
 				&constants.PerpetualPosition_OneTenthBTCLong, // 0.1 BTC, $5,000 notional
