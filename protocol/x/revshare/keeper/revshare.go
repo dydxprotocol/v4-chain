@@ -119,9 +119,11 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 	store.Set([]byte(types.UnconditionalRevShareConfigKey), unconditionalRevShareConfigBytes)
 }
 
-// ValidateRevShareSafety checks if the total rev share ppm is less than 1 million.
-// i.e the total percentage of fees that can be shared is less than 100%
-// This is to make sure the the protocol is net positive
+// ValidateRevShareSafety roughly checks if the total rev share is valid using the formula below
+// highest_affiliate_taker_share + sum(unconditional_rev_shares) + market_mapper_rev_share < 100%
+// Note: this is just an estimate as affiliate rev share is based on taker fees, while
+// the rest of the rev share is based on net fees.
+// TODO(OTE-788): Revisit this formula to ensure accuracy.
 func (k Keeper) ValidateRevShareSafety(
 	affiliateTiers affiliatetypes.AffiliateTiers,
 	unconditionalRevShareConfig types.UnconditionalRevShareConfig,
