@@ -22,10 +22,13 @@ type FullNodeStreamingManager interface {
 	// L3+ Orderbook updates.
 	InitializeNewStreams(
 		getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
-		getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+		subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	GetSubaccountSnapshotsForInitStreams(
+		getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+	) map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate
 	SendOrderbookUpdates(
 		offchainUpdates *clobtypes.OffchainUpdates,
 		blockHeight uint32,
@@ -42,7 +45,7 @@ type FullNodeStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
-	SendSubaccountUpdates(
+	SendFinalizedSubaccountUpdates(
 		subaccountUpdates []satypes.StreamSubaccountUpdate,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
