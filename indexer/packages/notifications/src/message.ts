@@ -20,7 +20,6 @@ export async function sendFirebaseMessage(
     notification,
     language as LanguageCode,
   );
-  const link = notification.deeplink;
 
   const message: MulticastMessage = {
     tokens: tokens.map((token) => token.token),
@@ -38,7 +37,6 @@ export async function sendFirebaseMessage(
         },
         data: {
           firebase: {
-            link,
           },
         },
       },

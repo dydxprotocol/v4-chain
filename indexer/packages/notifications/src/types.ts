@@ -27,12 +27,6 @@ export enum LocalizationKey {
   ORDER_TRIGGERED_BODY = 'ORDER_TRIGGERED_BODY',
 }
 
-// Deeplinks for each notification
-export enum Deeplink {
-  DEPOSIT = '/profile',
-  ORDER_FILLED = '/profile',
-  ORDER_TRIGGERED = '/profile',
-}
 
 // Topics for each notification
 // Topics are used to send notifications to specific topics in Firebase
@@ -51,7 +45,6 @@ interface BaseNotification <T extends Record<string, string>> {
   titleKey: LocalizationKey,
   bodyKey: LocalizationKey,
   topic: Topic,
-  deeplink: Deeplink,
   dynamicValues: T,
 }
 
@@ -125,7 +118,6 @@ export function createNotification<T extends NotificationType>(
         titleKey: LocalizationKey.DEPOSIT_SUCCESS_TITLE,
         bodyKey: LocalizationKey.DEPOSIT_SUCCESS_BODY,
         topic: Topic.TRADING,
-        deeplink: Deeplink.DEPOSIT,
         dynamicValues: dynamicValues as DepositSuccessNotification['dynamicValues'],
       };
     case NotificationType.ORDER_FILLED:
@@ -134,7 +126,6 @@ export function createNotification<T extends NotificationType>(
         titleKey: LocalizationKey.ORDER_FILLED_TITLE,
         bodyKey: LocalizationKey.ORDER_FILLED_BODY,
         topic: Topic.TRADING,
-        deeplink: Deeplink.ORDER_FILLED,
         dynamicValues: dynamicValues as OrderFilledNotification['dynamicValues'],
       };
     case NotificationType.ORDER_TRIGGERED:
@@ -143,7 +134,6 @@ export function createNotification<T extends NotificationType>(
         titleKey: LocalizationKey.ORDER_TRIGGERED_TITLE,
         bodyKey: LocalizationKey.ORDER_TRIGGERED_BODY,
         topic: Topic.TRADING,
-        deeplink: Deeplink.ORDER_TRIGGERED,
         dynamicValues: dynamicValues as OrderTriggeredNotification['dynamicValues'],
       };
 
