@@ -100,12 +100,10 @@ func (k Keeper) getUserFeeTier(ctx sdk.Context, address string) (uint32, *types.
 		idx = uint32(i)
 	}
 
-	// Bump up to RefereeStartingFeeTier if the user is referred by an affiliate.
-	// We subtract 1 because the fee tiers are 1-indexed.
-	if idx < types.RefereeStartingFeeTier-1 {
+	if idx < types.RefereeStartingFeeTier {
 		_, hasReferree := k.affiliatesKeeper.GetReferredBy(ctx, address)
 		if hasReferree {
-			idx = types.RefereeStartingFeeTier - 1
+			idx = types.RefereeStartingFeeTier
 		}
 	}
 

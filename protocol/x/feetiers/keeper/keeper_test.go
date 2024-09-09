@@ -8,6 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
 )
@@ -134,17 +135,99 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 }
 
 func TestGetPerpetualFeePpm_Referral(t *testing.T) {
+	testFeePerpetualParams := types.PerpetualFeeParams{
+		Tiers: []*types.PerpetualFeeTier{
+			{
+				Name:        "1",
+				TakerFeePpm: 10,
+				MakerFeePpm: 1,
+			},
+			{
+				Name:                      "2",
+				AbsoluteVolumeRequirement: 1_000,
+				TakerFeePpm:               20,
+				MakerFeePpm:               2,
+			},
+			{
+				Name:                           "3",
+				AbsoluteVolumeRequirement:      1_000_000_000,
+				MakerVolumeShareRequirementPpm: 500_000,
+				TakerFeePpm:                    30,
+				MakerFeePpm:                    3,
+			},
+			{
+				Name:                           "4",
+				AbsoluteVolumeRequirement:      2_000_000_000,
+				MakerVolumeShareRequirementPpm: 600_000,
+				TakerFeePpm:                    40,
+				MakerFeePpm:                    4,
+			},
+			{
+				Name:                           "5",
+				AbsoluteVolumeRequirement:      5_000_000_000,
+				MakerVolumeShareRequirementPpm: 700_000,
+				TakerFeePpm:                    50,
+				MakerFeePpm:                    5,
+			},
+		},
+	}
 	tests := map[string]struct {
 		expectedTakerFeePpm int32
-		setup               func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper)
+		setup               func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper, statsKeeper *statskeeper.Keeper)
 	}{
 		"regular user, first tier, no referral": {
 			expectedTakerFeePpm: 10,
-			setup:               func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper) {},
+			setup: func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				statsKeeper.SetUserStats(ctx, constants.AliceAccAddress.String(), &stattypes.UserStats{
+					TakerNotional: 10,
+					MakerNotional: 10,
+				})
+				statsKeeper.SetGlobalStats(ctx, &stattypes.GlobalStats{
+					NotionalTraded: 10_000,
+				})
+			},
 		},
 		"regular user, referral": {
 			expectedTakerFeePpm: 30,
-			setup: func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper) {
+			setup: func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				statsKeeper.SetUserStats(ctx, constants.AliceAccAddress.String(), &stattypes.UserStats{
+					TakerNotional: 10,
+					MakerNotional: 10,
+				})
+				statsKeeper.SetGlobalStats(ctx, &stattypes.GlobalStats{
+					NotionalTraded: 10_000,
+				})
+
+				err := affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
+				require.NoError(t, err)
+			},
+		},
+		"regular user, referral, already in tier 3": {
+			expectedTakerFeePpm: 30,
+			setup: func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				statsKeeper.SetUserStats(ctx, constants.AliceAccAddress.String(), &stattypes.UserStats{
+					TakerNotional: 10,
+					MakerNotional: 1_000_000_000,
+				})
+				statsKeeper.SetGlobalStats(ctx, &stattypes.GlobalStats{
+					NotionalTraded: 1_000_000_000,
+				})
+
+				err := affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
+				require.NoError(t, err)
+			},
+		},
+		"regular user, referral, above tier 3": {
+			expectedTakerFeePpm: 40,
+			setup: func(ctx sdk.Context, affiliatesKeeper *affiliateskeeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				statsKeeper.SetUserStats(ctx, constants.AliceAccAddress.String(), &stattypes.UserStats{
+					TakerNotional: 10,
+					MakerNotional: 2_000_000_001,
+				})
+				statsKeeper.SetGlobalStats(ctx, &stattypes.GlobalStats{
+					NotionalTraded: 3_000_000_000,
+				})
+
 				err := affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
 				require.NoError(t, err)
 			},
@@ -158,43 +241,14 @@ func TestGetPerpetualFeePpm_Referral(t *testing.T) {
 			k := tApp.App.FeeTiersKeeper
 			err := k.SetPerpetualFeeParams(
 				ctx,
-				types.PerpetualFeeParams{
-					Tiers: []*types.PerpetualFeeTier{
-						{
-							Name:        "1",
-							TakerFeePpm: 10,
-							MakerFeePpm: 1,
-						},
-						{
-							Name:                      "2",
-							AbsoluteVolumeRequirement: 1_000,
-							TakerFeePpm:               20,
-							MakerFeePpm:               2,
-						},
-						{
-							Name:                           "3",
-							AbsoluteVolumeRequirement:      1_000_000_000,
-							MakerVolumeShareRequirementPpm: 500_000,
-							TakerFeePpm:                    30,
-							MakerFeePpm:                    3,
-						},
-					},
-				},
+				testFeePerpetualParams,
 			)
 			require.NoError(t, err)
 
 			statsKeeper := tApp.App.StatsKeeper
-			statsKeeper.SetUserStats(ctx, constants.AliceAccAddress.String(), &stattypes.UserStats{
-				TakerNotional: 10,
-				MakerNotional: 10,
-			})
-			statsKeeper.SetGlobalStats(ctx, &stattypes.GlobalStats{
-				NotionalTraded: 10_000,
-			})
-
 			affiliatesKeeper := tApp.App.AffiliatesKeeper
 			if tc.setup != nil {
-				tc.setup(ctx, &affiliatesKeeper)
+				tc.setup(ctx, &affiliatesKeeper, &statsKeeper)
 			}
 
 			require.Equal(t, tc.expectedTakerFeePpm,
