@@ -51,7 +51,7 @@ func (sm *NoopGrpcStreamingManager) SendTakerOrderStatus(
 ) {
 }
 
-func (sm *NoopGrpcStreamingManager) SendSubaccountUpdates(
+func (sm *NoopGrpcStreamingManager) SendFinalizedSubaccountUpdates(
 	subaccountUpdates []satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -62,9 +62,15 @@ func (sm *NoopGrpcStreamingManager) TracksSubaccountId(id satypes.SubaccountId) 
 	return false
 }
 
+func (sm *NoopGrpcStreamingManager) GetSubaccountSnapshotsForInitStreams(
+	getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+) map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate {
+	return nil
+}
+
 func (sm *NoopGrpcStreamingManager) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
-	getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
