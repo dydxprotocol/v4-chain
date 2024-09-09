@@ -182,35 +182,35 @@ message StreamOrderbookUpdatesResponse {
 // StreamUpdate is an update that will be pushed through the
 // GRPC stream.
 message StreamUpdate {
+  // Block height of the update.
+  uint32 block_height = 1;
+
+  // Exec mode of the update.
+  uint32 exec_mode = 2;
+
   // Contains one of an StreamOrderbookUpdate,
   // StreamOrderbookFill, StreamTakerOrderStatus.
   oneof update_message {
-    StreamOrderbookUpdate orderbook_update = 1;
-    StreamOrderbookFill order_fill = 2;
-    StreamTakerOrder taker_order = 3;
-    dydxprotocol.subaccounts.StreamSubaccountUpdate subaccount_update = 4;
+    StreamOrderbookUpdate orderbook_update = 3;
+    StreamOrderbookFill order_fill = 4;
+    StreamTakerOrder taker_order = 5;
+    dydxprotocol.subaccounts.StreamSubaccountUpdate subaccount_update = 6;
   }
-
-  // Block height of the update.
-  uint32 block_height = 5;
-
-  // Exec mode of the update.
-  uint32 exec_mode = 6;
 }
 
 // StreamOrderbookUpdate provides information on an orderbook update. Used in
 // the full node GRPC stream.
 message StreamOrderbookUpdate {
-  // Orderbook updates for the clob pair. Can contain order place, removals,
-  // or updates.
-  repeated dydxprotocol.indexer.off_chain_updates.OffChainUpdateV1 updates = 1
-      [ (gogoproto.nullable) = false ];
-
   // Snapshot indicates if the response is from a snapshot of the orderbook.
   // All updates should be ignored until snapshot is recieved.
   // If the snapshot is true, then all previous entries should be
   // discarded and the orderbook should be resynced.
-  bool snapshot = 2;
+  bool snapshot = 1;
+
+  // Orderbook updates for the clob pair. Can contain order place, removals,
+  // or updates.
+  repeated dydxprotocol.indexer.off_chain_updates.OffChainUpdateV1 updates = 2
+      [ (gogoproto.nullable) = false ];
 }
 
 // StreamOrderbookFill provides information on an orderbook fill. Used in
