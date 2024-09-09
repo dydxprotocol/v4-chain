@@ -17,10 +17,11 @@ import (
 
 type (
 	Keeper struct {
-		cdc         codec.BinaryCodec
-		storeKey    storetypes.StoreKey
-		authorities map[string]struct{}
-		statsKeeper types.StatsKeeper
+		cdc            codec.BinaryCodec
+		storeKey       storetypes.StoreKey
+		authorities    map[string]struct{}
+		statsKeeper    types.StatsKeeper
+		revShareKeeper types.RevShareKeeper
 	}
 )
 
@@ -134,7 +135,8 @@ func (k Keeper) GetAllAffiliateTiers(ctx sdk.Context) (types.AffiliateTiers, err
 
 	var affiliateTiers types.AffiliateTiers
 	if affiliateTiersBytes == nil {
-		return affiliateTiers, errorsmod.Wrapf(types.ErrAffiliateTiersNotInitialized, "affiliate tiers not initialized")
+		// Return empty tiers if not initialized.
+		return types.AffiliateTiers{}, nil
 	}
 	err := k.cdc.Unmarshal(affiliateTiersBytes, &affiliateTiers)
 	if err != nil {
@@ -223,4 +225,8 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 	// TODO(OTE-779): Check strictly increasing volume and
 	// staking requirements hold in UpdateAffiliateTiers
 	store.Set([]byte(types.AffiliateTiersKey), k.cdc.MustMarshal(&affiliateTiers))
+}
+
+func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
+	k.revShareKeeper = revShareKeeper
 }

@@ -43,32 +43,14 @@ func RewardsKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
-		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
-		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper, marketMapKeeper)
-		// Mock time provider response for market creation.
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
-		assetsKeeper, _ = createAssetsKeeper(
-			stateStore,
-			db,
-			cdc,
-			pricesKeeper,
-			transientStoreKey,
-			true,
-		)
+
 		accountsKeeper, _ := createAccountKeeper(
 			stateStore,
 			db,
 			cdc,
 			registry)
-
-		bankKeeper, _ := createBankKeeper(
-			stateStore,
-			db,
-			cdc,
-			accountsKeeper,
-		)
-
+		bankKeeper, _ := createBankKeeper(stateStore, db, cdc, accountsKeeper)
 		stakingKeeper, _ := createStakingKeeper(
 			stateStore,
 			db,
@@ -76,13 +58,25 @@ func RewardsKeepers(
 			accountsKeeper,
 			bankKeeper,
 		)
-
 		statsKeeper, _ := createStatsKeeper(
 			stateStore,
 			epochsKeeper,
 			db,
 			cdc,
 			stakingKeeper,
+		)
+		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
+		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
+		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper, marketMapKeeper)
+		// Mock time provider response for market creation.
+		assetsKeeper, _ = createAssetsKeeper(
+			stateStore,
+			db,
+			cdc,
+			pricesKeeper,
+			transientStoreKey,
+			true,
 		)
 		vaultKeeper, _ := createVaultKeeper(
 			stateStore,

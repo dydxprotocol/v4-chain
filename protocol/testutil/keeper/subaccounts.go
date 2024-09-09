@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/streaming"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/streaming"
 
 	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
 
@@ -51,7 +52,30 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
+		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+
+		accountKeeper, _ = createAccountKeeper(
+			stateStore,
+			db,
+			cdc,
+			registry)
+		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
+		stakingKeeper, _ := createStakingKeeper(
+			stateStore,
+			db,
+			cdc,
+			accountKeeper,
+			bankKeeper,
+		)
+		statsKeeper, _ := createStatsKeeper(
+			stateStore,
+			epochsKeeper,
+			db,
+			cdc,
+			stakingKeeper,
+		)
+		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper)
+		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 		pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
@@ -61,14 +85,10 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 			revShareKeeper,
 			marketMapKeeper,
 		)
-		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		perpetualsKeeper, _ = createPerpetualsKeeper(stateStore, db, cdc, pricesKeeper, epochsKeeper, transientStoreKey)
 		assetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, pricesKeeper, transientStoreKey, msgSenderEnabled)
-
-		accountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
 		blocktimeKeeper, _ = createBlockTimeKeeper(stateStore, db, cdc)
 
-		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
 		keeper, storeKey = createSubaccountsKeeper(
 			stateStore,
 			db,

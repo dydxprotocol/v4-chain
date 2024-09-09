@@ -57,7 +57,30 @@ func AssetsKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+
+		accountKeeper, _ = createAccountKeeper(
+			stateStore,
+			db,
+			cdc,
+			registry)
+		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
+		stakingKeeper, _ := createStakingKeeper(
+			stateStore,
+			db,
+			cdc,
+			accountKeeper,
+			bankKeeper,
+		)
+		statsKeeper, _ := createStatsKeeper(
+			stateStore,
+			epochsKeeper,
+			db,
+			cdc,
+			stakingKeeper,
+		)
+		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 		pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
@@ -67,8 +90,6 @@ func AssetsKeepers(
 			revShareKeeper,
 			marketMapKeeper,
 		)
-		accountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
-		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
 		keeper, storeKey = createAssetsKeeper(stateStore, db, cdc, pricesKeeper, transientStoreKey, msgSenderEnabled)
 
 		return []GenesisInitializer{pricesKeeper, keeper}
