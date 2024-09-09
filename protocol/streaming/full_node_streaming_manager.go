@@ -3,6 +3,7 @@ package streaming
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -55,8 +56,8 @@ type FullNodeStreamingManagerImpl struct {
 type OrderbookSubscription struct {
 	subscriptionId uint32
 
-	// Initialize the subscription with orderbook snapshots.
-	initialize *sync.Once
+	// Whether the subscription is initialized with snapshot.
+	initialized *atomic.Bool
 
 	// Clob pair ids to subscribe to.
 	clobPairIds []uint32
@@ -73,6 +74,10 @@ type OrderbookSubscription struct {
 	// If interval snapshots are turned on, the next block height at which
 	// a snapshot should be sent out.
 	nextSnapshotBlock uint32
+}
+
+func (sub *OrderbookSubscription) IsInitialized() bool {
+	return sub.initialized.Load()
 }
 
 func NewFullNodeStreamingManager(
@@ -159,7 +164,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	}
 	subscription := &OrderbookSubscription{
 		subscriptionId: sm.nextSubscriptionId,
-		initialize:     &sync.Once{},
+		initialized:    &atomic.Bool{}, // False by default.
 		clobPairIds:    clobPairIds,
 		subaccountIds:  sIds,
 		messageSender:  messageSender,
@@ -511,18 +516,22 @@ func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
 	)
 }
 
-// SendSubaccountUpdates groups subaccount updates by their subaccount ids and
+// SendFinalizedSubaccountUpdates groups subaccount updates by their subaccount ids and
 // sends messages to the subscribers.
-func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
+func (sm *FullNodeStreamingManagerImpl) SendFinalizedSubaccountUpdates(
 	subaccountUpdates []satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
 	defer metrics.ModuleMeasureSince(
 		metrics.FullNodeGrpc,
-		metrics.GrpcSendSubaccountUpdatesLatency,
+		metrics.GrpcSendFinalizedSubaccountUpdatesLatency,
 		time.Now(),
 	)
+
+	if execMode != sdk.ExecModeFinalize {
+		panic("SendFinalizedSubaccountUpdates should only be called in ExecModeFinalize")
+	}
 
 	// Group subaccount updates by subaccount id.
 	streamUpdates := make([]clobtypes.StreamUpdate, 0)
@@ -670,9 +679,33 @@ func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 	sm.EmitMetrics()
 }
 
+func (sm *FullNodeStreamingManagerImpl) GetSubaccountSnapshotsForInitStreams(
+	getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+) map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate {
+	sm.Lock()
+	defer sm.Unlock()
+
+	ret := make(map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate)
+	for _, subscription := range sm.orderbookSubscriptions {
+		// If the subscription has been initialized, no need to grab the subaccount snapshot.
+		if alreadyInitialized := subscription.initialized.Load(); alreadyInitialized {
+			continue
+		}
+
+		for _, subaccountId := range subscription.subaccountIds {
+			if _, exists := ret[subaccountId]; exists {
+				continue
+			}
+
+			ret[subaccountId] = getSubaccountSnapshot(subaccountId)
+		}
+	}
+	return ret
+}
+
 func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
-	getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
@@ -686,31 +719,40 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 	updatesByClobPairId := make(map[uint32]*clobtypes.OffchainUpdates)
 
 	for subscriptionId, subscription := range sm.orderbookSubscriptions {
-		// If the snapshot block interval is enabled, reset the sync.Once in order to
-		// re-send snapshots out.
-		if sm.snapshotBlockInterval > 0 &&
-			blockHeight == subscription.nextSnapshotBlock {
-			subscription.initialize = &sync.Once{}
+		if alreadyInitialized := subscription.initialized.Swap(true); !alreadyInitialized {
+			allUpdates := clobtypes.NewOffchainUpdates()
+			for _, clobPairId := range subscription.clobPairIds {
+				if _, ok := updatesByClobPairId[clobPairId]; !ok {
+					updatesByClobPairId[clobPairId] = getOrderbookSnapshot(clobtypes.ClobPairId(clobPairId))
+				}
+				allUpdates.Append(updatesByClobPairId[clobPairId])
+			}
+
+			saUpdates := []*satypes.StreamSubaccountUpdate{}
+			for _, subaccountId := range subscription.subaccountIds {
+				// The subaccount snapshot may not exist due to the following race condition
+				// 1. At beginning of PrepareCheckState we get snapshot for all subscribed subaccounts.
+				// 2. A new subaccount is subscribed to by a new subscription.
+				// 3. InitializeNewStreams is called.
+				// Then the new subaccount would not be included in the snapshot.
+				// We are okay with this behavior.
+				if saUpdate, ok := subaccountSnapshots[subaccountId]; ok {
+					saUpdates = append(saUpdates, saUpdate)
+				}
+			}
+
+			sm.SendCombinedSnapshot(allUpdates, saUpdates, subscriptionId, blockHeight, execMode)
+
+			if sm.snapshotBlockInterval != 0 {
+				subscription.nextSnapshotBlock = blockHeight + sm.snapshotBlockInterval
+			}
 		}
 
-		subscription.initialize.Do(
-			func() {
-				allUpdates := clobtypes.NewOffchainUpdates()
-				for _, clobPairId := range subscription.clobPairIds {
-					if _, ok := updatesByClobPairId[clobPairId]; !ok {
-						updatesByClobPairId[clobPairId] = getOrderbookSnapshot(clobtypes.ClobPairId(clobPairId))
-					}
-					allUpdates.Append(updatesByClobPairId[clobPairId])
-				}
-				saUpdates := []*satypes.StreamSubaccountUpdate{}
-				for _, subaccountId := range subscription.subaccountIds {
-					saUpdates = append(saUpdates, getSubaccountSnapshot(subaccountId))
-				}
-				sm.SendCombinedSnapshot(allUpdates, saUpdates, subscriptionId, blockHeight, execMode)
-				if sm.snapshotBlockInterval != 0 {
-					subscription.nextSnapshotBlock = blockHeight + sm.snapshotBlockInterval
-				}
-			},
-		)
+		// If the snapshot block interval is enabled and the next block is a snapshot block,
+		// reset the `atomic.Bool` so snapshots are sent for the next block.
+		if sm.snapshotBlockInterval > 0 &&
+			blockHeight+1 == subscription.nextSnapshotBlock {
+			subscription.initialized = &atomic.Bool{} // False by default.
+		}
 	}
 }

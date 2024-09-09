@@ -14,6 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // PreBlocker executes all ABCI PreBlock logic respective to the clob module.
@@ -146,6 +147,15 @@ func PrepareCheckState(
 		log.BlockHeight, ctx.BlockHeight()+1,
 	)
 
+	// We just committed block `h`, preparing `CheckState` of `h+1`
+	// Before we modify the `CheckState`, we first take the snapshot of
+	// the subscribed subaccounts at the end of block `h`. This we send finalized state of
+	// the subaccounts below in `InitializeNewStreams`.
+	var subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate
+	if keeper.GetFullNodeStreamingManager().Enabled() {
+		subaccountSnapshots = keeper.GetSubaccountSnapshotsForInitStreams(ctx)
+	}
+
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
 	if ctx.BlockHeight() != int64(processProposerMatchesEvents.BlockHeight) {
@@ -259,7 +269,11 @@ func PrepareCheckState(
 	)
 
 	// Initialize new streams with orderbook snapshots, if any.
-	keeper.InitializeNewStreams(ctx)
+	keeper.InitializeNewStreams(
+		ctx,
+		// Use the subaccount snapshot at the top of function to initialize the streams.
+		subaccountSnapshots,
+	)
 
 	// Set per-orderbook gauges.
 	keeper.MemClob.SetMemclobGauges(ctx)
