@@ -250,7 +250,7 @@ test-slow:
 	$(MAKE) test-exchange-slow
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' ./x/clob/e2e/...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' ./x/clob/...
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -race -tags='test_ledger_mock $(build_tags)' ./...
@@ -272,7 +272,7 @@ test-unit-and-integration: e2e-setup delete-anvil
 	$(MAKE) remove-container
 
 specific-test: 
-	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m -run "TestPlacePerpetualLiquidation_Deleveraging" ./x/clob/e2e/...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m -run "TestGetFillablePrice" ./x/clob/keeper/...
 
 
 test-unit-and-integration-linux: e2e-setup-linux 

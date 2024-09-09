@@ -26,8 +26,8 @@ var (
 	// Liquidation Configs.
 	LiquidationsConfig_No_Limit = clobtypes.LiquidationsConfig{
 		InsuranceFundFeePpm:   5_000,
-		ValidatorFeePpm:       200_000,
-		LiquidityFeePpm:       800_000,
+		ValidatorFeePpm:       0,
+		LiquidityFeePpm:       0,
 		FillablePriceConfig:   FillablePriceConfig_Default,
 		SubaccountBlockLimits: SubaccountBlockLimits_No_Limit,
 	}

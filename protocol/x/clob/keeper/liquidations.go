@@ -1075,11 +1075,21 @@ func (k Keeper) GetBestPerpetualPositionToLiquidate(
 	err error,
 ) {
 
+	fmt.Println("SUBACCOUNT ID: ", subaccountId)
+
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
 
 	bestPriority := big.NewFloat(-1)
 	bestPerpetualId := uint32(0)
+
+	if len(subaccount.PerpetualPositions) == 1 {
+		if subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(subaccount.PerpetualPositions[0].PerpetualId) {
+			return 0, types.ErrNoPerpetualPositionsToLiquidate
+		} else {
+			return subaccount.PerpetualPositions[0].PerpetualId, nil
+		}
+	}
 
 	for _, position := range subaccount.PerpetualPositions {
 		err := k.SimulatePriorityWithClosedPosition(ctx, subaccount, subaccountLiquidationInfo, position, bestPriority, &bestPerpetualId)
@@ -1181,7 +1191,12 @@ func updateUSDCPosition(subaccount *satypes.Subaccount, quantumsDelta *big.Int) 
 	}
 
 	assetPosition.Quantums = dtypes.NewIntFromBigInt(new(big.Int).Add(assetPosition.Quantums.BigInt(), quantumsDelta))
-	subaccount.AssetPositions = []*satypes.AssetPosition{assetPosition}
+
+	if assetPosition.Quantums == dtypes.NewInt(0) {
+		subaccount.AssetPositions = []*satypes.AssetPosition{}
+	} else {
+		subaccount.AssetPositions = []*satypes.AssetPosition{assetPosition}
+	}
 	return nil
 }
 

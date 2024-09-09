@@ -275,6 +275,20 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 				satypes.ModuleAddress,
 				mock.Anything,
 			).Return(sdkerrors.ErrInsufficientFunds)
+			mockBankKeeper.On(
+				"SendCoins",
+				mock.Anything,
+				mock.Anything,
+				authtypes.NewModuleAddress(satypes.LiquidityFeeModuleAddress),
+				mock.Anything,
+			).Return(nil)
+			mockBankKeeper.On(
+				"SendCoins",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
 			// Give the insurance fund a 1M USDC balance.
 			mockBankKeeper.On(
 				"GetBalance",
