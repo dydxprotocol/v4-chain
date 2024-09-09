@@ -28,7 +28,7 @@ func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
 	}
 	marketMapperRevShareParams := k.revShareKeeper.GetMarketMapperRevenueShareParams(sdkCtx)
 
-	if !k.revShareKeeper.ValidateRevShareSafety(*msg.Tiers, unconditionalRevShareConfig, marketMapperRevShareParams) {
+	if !k.revShareKeeper.ValidateRevShareSafety(msg.Tiers, unconditionalRevShareConfig, marketMapperRevShareParams) {
 		return nil, errorsmod.Wrapf(
 			types.ErrRevShareSafetyViolation,
 			"rev share safety violation",

@@ -227,6 +227,6 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 	store.Set([]byte(types.AffiliateTiersKey), k.cdc.MustMarshal(&affiliateTiers))
 }
 
-func (k Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
-	k.revShareKeeper = revShareKeeper // nolint
+func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
+	k.revShareKeeper = revShareKeeper
 }

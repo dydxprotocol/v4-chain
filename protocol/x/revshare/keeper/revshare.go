@@ -119,6 +119,9 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 	store.Set([]byte(types.UnconditionalRevShareConfigKey), unconditionalRevShareConfigBytes)
 }
 
+// ValidateRevShareSafety checks if the total rev share ppm is less than 1 million.
+// i.e the total percentage of fees that can be shared is less than 100%
+// This is to make sure the the protocol is net positive
 func (k Keeper) ValidateRevShareSafety(
 	affiliateTiers affiliatetypes.AffiliateTiers,
 	unconditionalRevShareConfig types.UnconditionalRevShareConfig,

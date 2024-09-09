@@ -29,6 +29,6 @@ var (
 	ErrRevShareSafetyViolation = errorsmod.Register(
 		ModuleName,
 		5,
-		"rev shares exceed 100%",
+		"rev shares greater than or equal to 100%",
 	)
 )
