@@ -18,15 +18,19 @@ export enum NotificationDynamicFieldKey {
 
 // Keys for the strings that are contained in the localzation file
 // for each notification body and title
-export enum LocalizationKey {
-  DEPOSIT_SUCCESS_TITLE = 'DEPOSIT_SUCCESS_TITLE',
+export enum LocalizationBodyKey {
   DEPOSIT_SUCCESS_BODY = 'DEPOSIT_SUCCESS_BODY',
-  ORDER_FILLED_TITLE = 'ORDER_FILLED_TITLE',
   ORDER_FILLED_BODY = 'ORDER_FILLED_BODY',
-  ORDER_TRIGGERED_TITLE = 'ORDER_TRIGGERED_TITLE',
   ORDER_TRIGGERED_BODY = 'ORDER_TRIGGERED_BODY',
 }
 
+export enum LocalizationTitleKey {
+  DEPOSIT_SUCCESS_TITLE = 'DEPOSIT_SUCCESS_TITLE',
+  ORDER_FILLED_TITLE = 'ORDER_FILLED_TITLE',
+  ORDER_TRIGGERED_TITLE = 'ORDER_TRIGGERED_TITLE',
+}
+
+export type LocalizationKey = LocalizationBodyKey | LocalizationTitleKey;
 
 // Topics for each notification
 // Topics are used to send notifications to specific topics in Firebase
@@ -42,8 +46,8 @@ export function isValidLanguageCode(code: string): code is LanguageCode {
 
 interface BaseNotification <T extends Record<string, string>> {
   type: NotificationType,
-  titleKey: LocalizationKey,
-  bodyKey: LocalizationKey,
+  titleKey: LocalizationTitleKey,
+  bodyKey: LocalizationBodyKey,
   topic: Topic,
   dynamicValues: T,
 }
@@ -53,8 +57,8 @@ interface DepositSuccessNotification extends BaseNotification<{
   [NotificationDynamicFieldKey.MARKET]: string,
 }> {
   type: NotificationType.DEPOSIT_SUCCESS,
-  titleKey: LocalizationKey.DEPOSIT_SUCCESS_TITLE,
-  bodyKey: LocalizationKey.DEPOSIT_SUCCESS_BODY,
+  titleKey: LocalizationTitleKey.DEPOSIT_SUCCESS_TITLE,
+  bodyKey: LocalizationBodyKey.DEPOSIT_SUCCESS_BODY,
   topic: Topic.TRADING,
   dynamicValues: {
     [NotificationDynamicFieldKey.AMOUNT]: string,
@@ -67,8 +71,8 @@ interface OrderFilledNotification extends BaseNotification <{
   [NotificationDynamicFieldKey.AVERAGE_PRICE]: string,
 }>{
   type: NotificationType.ORDER_FILLED,
-  titleKey: LocalizationKey.ORDER_FILLED_TITLE,
-  bodyKey: LocalizationKey.ORDER_FILLED_BODY,
+  titleKey: LocalizationTitleKey.ORDER_FILLED_TITLE,
+  bodyKey: LocalizationBodyKey.ORDER_FILLED_BODY,
   topic: Topic.TRADING,
   dynamicValues: {
     [NotificationDynamicFieldKey.MARKET]: string,
@@ -82,8 +86,8 @@ interface OrderTriggeredNotification extends BaseNotification <{
   [NotificationDynamicFieldKey.PRICE]: string,
 }>{
   type: NotificationType.ORDER_TRIGGERED,
-  titleKey: LocalizationKey.ORDER_TRIGGERED_TITLE,
-  bodyKey: LocalizationKey.ORDER_TRIGGERED_BODY,
+  titleKey: LocalizationTitleKey.ORDER_TRIGGERED_TITLE,
+  bodyKey: LocalizationBodyKey.ORDER_TRIGGERED_BODY,
   topic: Topic.TRADING,
   dynamicValues: {
     [NotificationDynamicFieldKey.MARKET]: string,
@@ -115,28 +119,27 @@ export function createNotification<T extends NotificationType>(
     case NotificationType.DEPOSIT_SUCCESS:
       return {
         type: NotificationType.DEPOSIT_SUCCESS,
-        titleKey: LocalizationKey.DEPOSIT_SUCCESS_TITLE,
-        bodyKey: LocalizationKey.DEPOSIT_SUCCESS_BODY,
+        titleKey: LocalizationTitleKey.DEPOSIT_SUCCESS_TITLE,
+        bodyKey: LocalizationBodyKey.DEPOSIT_SUCCESS_BODY,
         topic: Topic.TRADING,
         dynamicValues: dynamicValues as DepositSuccessNotification['dynamicValues'],
       };
     case NotificationType.ORDER_FILLED:
       return {
         type: NotificationType.ORDER_FILLED,
-        titleKey: LocalizationKey.ORDER_FILLED_TITLE,
-        bodyKey: LocalizationKey.ORDER_FILLED_BODY,
+        titleKey: LocalizationTitleKey.ORDER_FILLED_TITLE,
+        bodyKey: LocalizationBodyKey.ORDER_FILLED_BODY,
         topic: Topic.TRADING,
         dynamicValues: dynamicValues as OrderFilledNotification['dynamicValues'],
       };
     case NotificationType.ORDER_TRIGGERED:
       return {
         type: NotificationType.ORDER_TRIGGERED,
-        titleKey: LocalizationKey.ORDER_TRIGGERED_TITLE,
-        bodyKey: LocalizationKey.ORDER_TRIGGERED_BODY,
+        titleKey: LocalizationTitleKey.ORDER_TRIGGERED_TITLE,
+        bodyKey: LocalizationBodyKey.ORDER_TRIGGERED_BODY,
         topic: Topic.TRADING,
         dynamicValues: dynamicValues as OrderTriggeredNotification['dynamicValues'],
       };
-
       // Add other cases for new notification types here
     default:
       throw new Error('Unknown notification type');
