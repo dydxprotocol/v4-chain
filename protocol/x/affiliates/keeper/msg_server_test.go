@@ -103,14 +103,14 @@ func TestMsgServer_UpdateAffiliateTiers(t *testing.T) {
 			name: "Gov module updates tiers",
 			msg: &types.MsgUpdateAffiliateTiers{
 				Authority: lib.GovModuleAddress.String(),
-				Tiers:     &types.DefaultAffiliateTiers,
+				Tiers:     types.DefaultAffiliateTiers,
 			},
 		},
 		{
 			name: "non-gov module updates tiers",
 			msg: &types.MsgUpdateAffiliateTiers{
 				Authority: constants.BobAccAddress.String(),
-				Tiers:     &types.DefaultAffiliateTiers,
+				Tiers:     types.DefaultAffiliateTiers,
 			},
 			expectErr: true,
 		},
@@ -127,7 +127,7 @@ func TestMsgServer_UpdateAffiliateTiers(t *testing.T) {
 				require.NoError(t, err)
 				tiers, err := k.GetAllAffiliateTiers(sdkCtx)
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Tiers, &tiers)
+				require.Equal(t, tc.msg.Tiers, tiers)
 			}
 		})
 	}
