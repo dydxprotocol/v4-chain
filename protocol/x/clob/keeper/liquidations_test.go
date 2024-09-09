@@ -1217,8 +1217,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 func TestGetFillablePrice(t *testing.T) {
 	tests := map[string]struct {
 		// Parameters.
-		perpetualId   uint32
-		deltaQuantums int64
+		perpetualId uint32
 
 		// Perpetual state.
 		perpetuals []perptypes.Perpetual
@@ -1236,8 +1235,7 @@ func TestGetFillablePrice(t *testing.T) {
 	}{
 		`Can calculate fillable price for a subaccount with one long position that is slightly
 		below maintenance margin requirements`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1255,8 +1253,7 @@ func TestGetFillablePrice(t *testing.T) {
 			expectedFillablePrice: big.NewRat(49_999, 100),
 		},
 		`Can calculate fillable price for a subaccount with one long position when bankruptcyAdjustmentPpm is 2_000_000`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1285,8 +1282,7 @@ func TestGetFillablePrice(t *testing.T) {
 		},
 		`Can calculate fillable price for a subaccount with one long position when 
 		spreadToMaintenanceMarginRatioPpm is 200_000`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1315,8 +1311,7 @@ func TestGetFillablePrice(t *testing.T) {
 		},
 		`Can calculate fillable price for a subaccount with one short position that is slightly
 		below maintenance margin requirements`: {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1334,8 +1329,7 @@ func TestGetFillablePrice(t *testing.T) {
 			expectedFillablePrice: big.NewRat(50_001, 100),
 		},
 		`Can calculate fillable price for a subaccount with one short position when bankruptcyAdjustmentPpm is 2_000_000`: {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1365,8 +1359,7 @@ func TestGetFillablePrice(t *testing.T) {
 		},
 		`Can calculate fillable price for a subaccount with one short position when 
 		SpreadToMaintenanceMarginRatioPpm is 200_000`: {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1395,8 +1388,7 @@ func TestGetFillablePrice(t *testing.T) {
 			expectedFillablePrice: big.NewRat(50_002, 100),
 		},
 		"Can calculate fillable price for a subaccount with one long position at the bankruptcy price": {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1415,8 +1407,7 @@ func TestGetFillablePrice(t *testing.T) {
 		},
 		`Can calculate fillable price for a subaccount with one long position at the bankruptcy price
 		where we are liquidating half of the position`: {
-			perpetualId:   0,
-			deltaQuantums: -5_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1436,8 +1427,7 @@ func TestGetFillablePrice(t *testing.T) {
 			expectedFillablePrice: big.NewRat(495, 1),
 		},
 		"Can calculate fillable price for a subaccount with one short position at the bankruptcy price": {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1455,8 +1445,7 @@ func TestGetFillablePrice(t *testing.T) {
 			expectedFillablePrice: big.NewRat(505, 1),
 		},
 		"Can calculate fillable price for a subaccount with one long position below the bankruptcy price": {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1474,8 +1463,7 @@ func TestGetFillablePrice(t *testing.T) {
 			expectedFillablePrice: big.NewRat(495, 1),
 		},
 		"Can calculate fillable price for a subaccount with one short position below the bankruptcy price": {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1493,8 +1481,7 @@ func TestGetFillablePrice(t *testing.T) {
 			expectedFillablePrice: big.NewRat(505, 1),
 		},
 		"Can calculate fillable price for a subaccount with multiple long positions": {
-			perpetualId:   1,
-			deltaQuantums: -100_000_000,
+			perpetualId: 1,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1514,8 +1501,7 @@ func TestGetFillablePrice(t *testing.T) {
 			expectedFillablePrice: big.NewRat(372, 125),
 		},
 		`Can calculate fillable price when bankruptcyAdjustmentPpm is max uint32`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1544,8 +1530,7 @@ func TestGetFillablePrice(t *testing.T) {
 			expectedFillablePrice: big.NewRat(495, 1),
 		},
 		`Can calculate fillable price when SpreadTomaintenanceMarginRatioPpm is 1`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1572,8 +1557,7 @@ func TestGetFillablePrice(t *testing.T) {
 			expectedFillablePrice: big.NewRat(4_999_999_999, 10_000_000),
 		},
 		`Can calculate fillable price when SpreadTomaintenanceMarginRatioPpm is one million`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1601,25 +1585,8 @@ func TestGetFillablePrice(t *testing.T) {
 			// This means we should close the 0.1 BTC long with a $4,999 notional sell order.
 			expectedFillablePrice: big.NewRat(49_990, 100),
 		},
-		`Returns error when deltaQuantums is zero`: {
-			perpetualId:   0,
-			deltaQuantums: 0,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
-			},
-
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
 		`Returns error when subaccount does not have an open position for perpetual id`: {
-			perpetualId:   0,
-			deltaQuantums: -10_000_000,
+			perpetualId: 0,
 
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -1628,38 +1595,6 @@ func TestGetFillablePrice(t *testing.T) {
 				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
 			),
 			perpetualPositions: []*satypes.PerpetualPosition{},
-
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
-		`Returns error when delta quantums and perpetual position have the same sign`: {
-			perpetualId:   0,
-			deltaQuantums: 10_000_000,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
-			},
-
-			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
-		},
-		`Returns error when abs delta quantums is greater than position size`: {
-			perpetualId:   0,
-			deltaQuantums: -100_000_001,
-
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(constants.QuoteBalance_OneDollar * -4_501),
-			),
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
-			},
 
 			expectedError: types.ErrInvalidPerpetualPositionSizeDelta,
 		},
