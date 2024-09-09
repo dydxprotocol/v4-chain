@@ -8012,7 +8012,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			},
 		},
 		"single negative asset": {
-			expectedErr: asstypes.ErrNotImplementedMargin,
+			expectedErr: asstypes.ErrNotImplementedMulticollateral,
 			assets: []*asstypes.Asset{
 				constants.BtcUsd,
 			},

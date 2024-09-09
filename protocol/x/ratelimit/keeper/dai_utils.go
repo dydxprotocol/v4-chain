@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -72,7 +73,7 @@ func ConvertStringToBigIntWithPanicOnErr(str string) *big.Int {
 	bigint, err := ConvertStringToBigInt(str)
 
 	if err != nil {
-		panic("Could not convert string to big.Int")
+		panic(fmt.Sprintf("Could not convert string to big.Int with err %v", err))
 	}
 
 	return bigint

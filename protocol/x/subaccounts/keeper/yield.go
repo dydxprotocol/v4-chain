@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) ClaimYieldForSubaccountFromId(
+func (k Keeper) ClaimYieldForSubaccountFromIdAndSetNewState(
 	ctx sdk.Context,
 	subaccountId *types.SubaccountId,
 ) (
@@ -24,64 +24,24 @@ func (k Keeper) ClaimYieldForSubaccountFromId(
 		return types.ErrNoYieldToClaim
 	}
 
-	settledSubaccount, yieldEarned, err := k.settleSubaccountYield(ctx, subaccount)
+	perpIdToPerp, assetYieldIndex, err := k.fetchParamsToSettleSubaccount(ctx, subaccount)
+	if err != nil {
+		return err
+	}
+
+	settledSubaccount, totalYield, err := AddYieldToSubaccount(subaccount, perpIdToPerp, assetYieldIndex)
+	if err != nil {
+		return err
+	}
+
+	err = k.DepositYieldToSubaccount(ctx, *settledSubaccount.Id, totalYield)
 	if err != nil {
 		return err
 	}
 
 	k.SetSubaccount(ctx, settledSubaccount)
 
-	k.DepositYieldToSubaccount(ctx, *subaccountId, yieldEarned)
-
 	return nil
-}
-
-func (k Keeper) settleSubaccountYield(
-	ctx sdk.Context,
-	subaccount types.Subaccount,
-) (
-	settledSubaccount types.Subaccount,
-	totalYield *big.Int,
-	err error,
-) {
-
-	perpIdToPerp, assetYieldIndex, err := k.fetchParamsToSettleSubaccount(ctx, subaccount)
-	if err != nil {
-		return types.Subaccount{}, nil, err
-	}
-
-	isYieldAlreadyClaimed, err := IsYieldAlreadyClaimed(assetYieldIndex, subaccount.AssetYieldIndex)
-	if err != nil {
-		return types.Subaccount{}, nil, err
-	}
-	if isYieldAlreadyClaimed {
-		return subaccount, big.NewInt(0), nil
-	}
-
-	settledSubaccount, totalYield, err = AddYieldToSubaccount(subaccount, perpIdToPerp, assetYieldIndex)
-	if err != nil {
-		return types.Subaccount{}, nil, err
-	}
-
-	return settledSubaccount, totalYield, nil
-}
-
-func IsYieldAlreadyClaimed(assetYieldIndex *big.Rat, subaccountAssetYieldIndex string) (bool, error) {
-
-	currentYieldIndex, success := new(big.Rat).SetString(subaccountAssetYieldIndex)
-	if !success {
-		return false, types.ErrRatConversion
-	}
-
-	if assetYieldIndex.Cmp(currentYieldIndex) == 0 {
-		return true, nil
-	}
-
-	if assetYieldIndex.Cmp(currentYieldIndex) == -1 {
-		return false, types.ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount
-	}
-
-	return false, nil
 }
 
 func AddYieldToSubaccount(
@@ -136,15 +96,15 @@ func getYieldFromAssetPositions(
 ) {
 	for _, assetPosition := range subaccount.AssetPositions {
 		if assetPosition.AssetId != assettypes.AssetTDai.Id {
-			continue
+			return nil, assettypes.ErrNotImplementedMulticollateral
 		}
 
 		newAssetYield, err := calculateAssetYieldInQuoteQuantums(subaccount, assetYieldIndex, assetPosition)
 		if err != nil {
 			return nil, err
+		} else {
+			return newAssetYield, err
 		}
-
-		return newAssetYield, err
 	}
 	return big.NewInt(0), nil
 }
@@ -256,6 +216,23 @@ func calculateNewPerpYield(
 	return newPerpYield, perpYieldIndex, nil
 }
 
+func getCurrentYieldIndexForPerp(
+	perp perptypes.Perpetual,
+) (
+	yieldIndex *big.Rat,
+	err error,
+) {
+	if perp.YieldIndex == "" {
+		return nil, types.ErrYieldIndexUninitialized
+	}
+
+	generalYieldIndex, success := new(big.Rat).SetString(perp.YieldIndex)
+	if !success {
+		return nil, types.ErrRatConversion
+	}
+	return generalYieldIndex, nil
+}
+
 func calculatePerpetualYieldInQuoteQuantums(
 	perpPosition *types.PerpetualPosition,
 	generalYieldIndex *big.Rat,
@@ -300,23 +277,6 @@ func calculatePerpetualYieldInQuoteQuantums(
 	return newYield, nil
 }
 
-func getCurrentYieldIndexForPerp(
-	perp perptypes.Perpetual,
-) (
-	yieldIndex *big.Rat,
-	err error,
-) {
-	if perp.YieldIndex == "" {
-		return nil, types.ErrYieldIndexUninitialized
-	}
-
-	generalYieldIndex, success := new(big.Rat).SetString(perp.YieldIndex)
-	if !success {
-		return nil, types.ErrRatConversion
-	}
-	return generalYieldIndex, nil
-}
-
 // -------------------YIELD ON BANK LEVEL --------------------------
 
 func (k Keeper) DepositYieldToSubaccount(
@@ -330,6 +290,10 @@ func (k Keeper) DepositYieldToSubaccount(
 
 	if amountToTransfer.Cmp(big.NewInt(0)) == 0 {
 		return nil
+	}
+
+	if amountToTransfer.Cmp(big.NewInt(0)) == -1 {
+		return types.ErrTryingToDepositNegativeYield
 	}
 
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(

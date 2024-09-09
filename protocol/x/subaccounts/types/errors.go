@@ -39,6 +39,7 @@ var (
 	ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount = errorsmod.Register(ModuleName, 107, "general yield index is less than the current yield index")
 	ErrNoYieldToClaim                                     = errorsmod.Register(ModuleName, 108, "there is no yield to claim for subaccount")
 	ErrYieldClaimedNegative                               = errorsmod.Register(ModuleName, 109, "subaccount has negative total yield claim")
+	ErrTryingToDepositNegativeYield                       = errorsmod.Register(ModuleName, 110, "attempting to deposit negative yield into collateral pool")
 
 	// 200 - 299: subaccount id related.
 	ErrInvalidSubaccountIdNumber = errorsmod.Register(
