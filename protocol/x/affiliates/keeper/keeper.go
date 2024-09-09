@@ -222,11 +222,7 @@ func (k Keeper) GetTierForAffiliate(
 // Used primarily through governance.
 func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.AffiliateTiers) error {
 	store := ctx.KVStore(k.storeKey)
-	affiliateTiersBytes, err := k.cdc.Marshal(&affiliateTiers)
-	if err != nil {
-		return errorsmod.Wrapf(types.ErrInvalidAffiliateTiers,
-			"error marshalling affiliate tiers: %s", err)
-	}
+	affiliateTiersBytes := k.cdc.MustMarshal(&affiliateTiers)
 	tiers := affiliateTiers.GetTiers()
 	// start at 1, since 0 is the default tier.
 	for i := 1; i < len(tiers); i++ {
