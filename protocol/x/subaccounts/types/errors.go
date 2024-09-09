@@ -22,9 +22,10 @@ const (
 // x/subaccounts module sentinel errors
 var (
 	// 0 - 99: generic.
-	ErrIntegerOverflow = errorsmod.Register(ModuleName, 0, "integer overflow")
-	ErrRatConversion   = errorsmod.Register(ModuleName, 1, "could not convert rat to string")
-	ErrPositionIsNil   = errorsmod.Register(ModuleName, 2, "position is nil")
+	ErrIntegerOverflow   = errorsmod.Register(ModuleName, 0, "integer overflow")
+	ErrRatConversion     = errorsmod.Register(ModuleName, 1, "could not convert rat to string")
+	ErrPositionIsNil     = errorsmod.Register(ModuleName, 2, "position is nil")
+	ErrSubaccountIdIsNil = errorsmod.Register(ModuleName, 3, "subaccount Id is nil")
 
 	// 100 - 199: update related.
 	ErrNonUniqueUpdatesPosition = errorsmod.Register(

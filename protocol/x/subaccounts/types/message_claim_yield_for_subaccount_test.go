@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgCreateTransfer_ValidateBasic(t *testing.T) {
+func TestMsgClaimYieldForSubaccount_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
 		msg  types.MsgClaimYieldForSubaccount

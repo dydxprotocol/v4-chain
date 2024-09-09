@@ -12,12 +12,17 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO: [YBCP-89]
 func (k Keeper) ClaimYieldForSubaccountFromIdAndSetNewState(
 	ctx sdk.Context,
 	subaccountId *types.SubaccountId,
 ) (
 	err error,
 ) {
+
+	if subaccountId == nil {
+		return types.ErrSubaccountIdIsNil
+	}
 
 	subaccount := k.GetSubaccount(ctx, *subaccountId)
 	if len(subaccount.AssetPositions) == 0 && len(subaccount.PerpetualPositions) == 0 {
