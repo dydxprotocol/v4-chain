@@ -81,7 +81,7 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (sdk.AccAddress, error)
-	SendSubaccountUpdates(
+	SendFinalizedSubaccountUpdates(
 		ctx sdk.Context,
 		subaccountUpdates []satypes.StreamSubaccountUpdate,
 	)
