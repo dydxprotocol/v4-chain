@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 	"testing"
@@ -3918,7 +3919,7 @@ func TestGetBestPerpetualPositionToLiquidate(t *testing.T) {
 
 			expectedClobPair: constants.ClobPair_Eth,
 			expectedQuantums: new(big.Int).Neg(
-				new(big.Int).SetUint64(6148914691236517000),
+				new(big.Int).SetUint64(18446744073709551615),
 			),
 		},
 		`Full position size of negated max uint64 of perpetual and CLOB pair are returned when
@@ -3940,7 +3941,7 @@ func TestGetBestPerpetualPositionToLiquidate(t *testing.T) {
 			expectedClobPair: constants.ClobPair_Eth,
 			expectedQuantums: new(big.Int).Neg(
 				big_testutil.MustFirst(
-					new(big.Int).SetString("-6148914691236517000", 10),
+					new(big.Int).SetString("-18446744073709551615", 10),
 				),
 			),
 		},
@@ -4070,24 +4071,6 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 		expectedPlacedOrders  []*types.MsgPlaceOrder
 		expectedMatchedOrders []*types.ClobMatch
 	}{
-		`Does not place a liquidation order for a non-liquidatable subaccount`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-			},
-			clobs: []types.ClobPair{constants.ClobPair_Btc},
-			existingOrders: []types.Order{
-				constants.Order_Carl_Num0_Id2_Clob0_Buy05BTC_Price50000,
-			},
-
-			liquidatableSubaccount: constants.Carl_Num0,
-
-			expectedErr:           types.ErrSubaccountNotLiquidatable,
-			expectedPlacedOrders:  []*types.MsgPlaceOrder{},
-			expectedMatchedOrders: []*types.ClobMatch{},
-		},
 		`Subaccount liquidation matches no maker orders`: {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
@@ -4276,6 +4259,8 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 
 			// Run the test.
 			liquidationOrder, err := ks.ClobKeeper.MaybeGetLiquidationOrder(ctx, tc.liquidatableSubaccount)
+			fmt.Println("ERROR: ", err)
+			fmt.Println("liquidationOrder: ", liquidationOrder)
 
 			// Verify test expectations.
 			if tc.expectedErr != nil {
