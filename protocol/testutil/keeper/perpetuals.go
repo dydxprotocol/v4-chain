@@ -227,6 +227,29 @@ func GetLiquidityTierUpsertEventsFromIndexerBlock(
 	return liquidityTierEvents
 }
 
+func GetUpdatePerpetualEventsFromIndexerBlock(
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+) []*indexerevents.UpdatePerpetualEventV1 {
+	var perpetualUpdateEvents []*indexerevents.UpdatePerpetualEventV1
+	block := keeper.GetIndexerEventManager().ProduceBlock(ctx)
+	if block == nil {
+		return perpetualUpdateEvents
+	}
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeUpdatePerpetual {
+			continue
+		}
+		var liquidityTierEvent indexerevents.UpdatePerpetualEventV1
+		err := proto.Unmarshal(event.DataBytes, &liquidityTierEvent)
+		if err != nil {
+			panic(err)
+		}
+		perpetualUpdateEvents = append(perpetualUpdateEvents, &liquidityTierEvent)
+	}
+	return perpetualUpdateEvents
+}
+
 func CreateNPerpetuals(
 	t *testing.T,
 	ctx sdk.Context,

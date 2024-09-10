@@ -39,6 +39,44 @@ import (
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
+func assertPerpetualtUpdateEventsInIndexerBlock(
+	t *testing.T,
+	k *keeper.Keeper,
+	ctx sdk.Context,
+	expectedErr error,
+	expectedPerpetuals []types.Perpetual,
+) {
+	perpetualEvents := keepertest.GetUpdatePerpetualEventsFromIndexerBlock(ctx, k)
+
+	// No subaccount update events included in the case of an error or failure to update subaccounts.
+	if expectedErr != nil {
+		require.Empty(t, perpetualEvents)
+		return
+	}
+
+	// There should be exactly as many subaccount update events included as there were successful
+	// subaccount updates.
+	require.Equal(t, len(expectedPerpetuals), len(perpetualEvents))
+
+	for _, perp := range expectedPerpetuals {
+
+		expectedUpdatePerpetualEvent := indexerevents.NewUpdatePerpetualEventV1(
+			perp.GetId(),
+			perp.Params.GetTicker(),
+			perp.Params.GetMarketId(),
+			perp.Params.GetAtomicResolution(),
+			perp.Params.GetLiquidityTier(),
+			perp.GetYieldIndex(),
+		)
+
+		for _, event := range perpetualEvents {
+			if event.Id == perp.GetId() {
+				require.Equal(t, expectedUpdatePerpetualEvent, event)
+			}
+		}
+	}
+}
+
 func TestModifyPerpetual_Success(t *testing.T) {
 	pc := keepertest.PerpetualsKeepers(t)
 	numLiquidityTiers := 4
@@ -3590,5 +3628,526 @@ func TestModifyOpenInterest_store(t *testing.T) {
 		err = serializedOpenInterest.Unmarshal(transientStore.Get(lib.Uint32ToKey(perpetualObject.Params.Id)))
 		require.NoError(t, err)
 		require.Equal(t, perpetualObject.OpenInterest, serializedOpenInterest)
+	}
+}
+
+func TestCalculateYieldIndexForEpoch(t *testing.T) {
+	testCases := map[string]struct {
+		totalTDaiPreMint   *big.Int
+		totalTDaiMinted    *big.Int
+		marketPrice        pricestypes.MarketPrice
+		perpetual          types.Perpetual
+		expectedErr        error
+		expectedYieldIndex *big.Rat
+	}{
+		"Success: price is one": {
+			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
+			totalTDaiMinted:  big.NewInt(5_000_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    100_000,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        nil,
+			expectedYieldIndex: big.NewRat(1, 20_000),
+		},
+		"Success: price is less than one": {
+			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
+			totalTDaiMinted:  big.NewInt(5_000_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -2,
+				Price:    200,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        nil,
+			expectedYieldIndex: big.NewRat(1, 10_000),
+		},
+		"Success: price is greater than one": {
+			totalTDaiPreMint: big.NewInt(10_000_000_000_000),
+			totalTDaiMinted:  big.NewInt(7_000_000_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    100_000_000,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        nil,
+			expectedYieldIndex: big.NewRat(700, 1),
+		},
+		"Success: total tDai minted is less than total tDai pre-mint": {
+			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
+			totalTDaiMinted:  big.NewInt(5_000_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    400_000,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        nil,
+			expectedYieldIndex: big.NewRat(1, 5_000),
+		},
+		"Success: total tDai minted is greater than total tDai pre-mint": {
+			totalTDaiPreMint: big.NewInt(5_000_000_000),
+			totalTDaiMinted:  big.NewInt(100_000_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    400_000,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        nil,
+			expectedYieldIndex: big.NewRat(80, 1),
+		},
+		"Success: total tDai minted is equal to total tDai pre-mint": {
+			totalTDaiPreMint: big.NewInt(5_000_000_000),
+			totalTDaiMinted:  big.NewInt(5_000_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -2,
+				Price:    123,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        nil,
+			expectedYieldIndex: big.NewRat(1, 1),
+		},
+		"Success: total tDai minted is 0": {
+			totalTDaiPreMint: big.NewInt(5_000_000_000),
+			totalTDaiMinted:  big.NewInt(0),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    123,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        nil,
+			expectedYieldIndex: big.NewRat(0, 1),
+		},
+		"Failure: total tDai pre-mint is 0": {
+			totalTDaiPreMint: big.NewInt(0),
+			totalTDaiMinted:  big.NewInt(500_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    12345,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        types.ErrTotalTDaiPreMintIsNil,
+			expectedYieldIndex: big.NewRat(0, 1),
+		},
+		"Failure: total tDai pre-mint is nil": {
+			totalTDaiPreMint: nil,
+			totalTDaiMinted:  big.NewInt(500_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    12345,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        types.ErrTotalTDaiPreMintIsNil,
+			expectedYieldIndex: big.NewRat(0, 1),
+		},
+		"Failure: total tDai minted is nil": {
+			totalTDaiPreMint: big.NewInt(100_000_000),
+			totalTDaiMinted:  nil,
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    12345,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        types.ErrTotalTDaiMintedIsNil,
+			expectedYieldIndex: big.NewRat(0, 1),
+		},
+		"Failure: perp market Id does not match market price Id": {
+			totalTDaiPreMint: big.NewInt(100_000_000),
+			totalTDaiMinted:  big.NewInt(1_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       2,
+				Exponent: -5,
+				Price:    12345,
+			},
+			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr:        types.ErrTotalTDaiMintedIsNil,
+			expectedYieldIndex: big.NewRat(0, 1),
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+			yieldIndex, err := pc.PerpetualsKeeper.CalculateYieldIndexForEpoch(
+				pc.Ctx,
+				tc.totalTDaiPreMint,
+				tc.totalTDaiMinted,
+				tc.marketPrice,
+				tc.perpetual,
+			)
+
+			if tc.expectedErr != nil {
+				require.Error(t, err)
+				require.Nil(t, yieldIndex)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, yieldIndex)
+				require.Equal(t, 0, tc.expectedYieldIndex.Cmp(yieldIndex),
+					"Expected yield index %v. Got %v.", tc.expectedYieldIndex, yieldIndex)
+			}
+		})
+	}
+}
+
+func TestCalculateNewTotalYieldIndex(t *testing.T) {
+	testCases := map[string]struct {
+		totalTDaiPreMint *big.Int
+		totalTDaiMinted  *big.Int
+		marketPrice      pricestypes.MarketPrice
+		perpetual        types.Perpetual
+		expectedErr      error
+		expectedPerp     types.Perpetual
+	}{
+		"Success: adds right yield index on top of 0": {
+			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
+			totalTDaiMinted:  big.NewInt(5_000_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    100_000,
+			},
+			perpetual:   constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr: nil,
+			expectedPerp: types.Perpetual{
+				Params:       constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
+				FundingIndex: constants.BtcUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
+				OpenInterest: constants.BtcUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
+				YieldIndex:   big.NewRat(1, 20_000).String(),
+			},
+		},
+		"Success: adds yield index on top of non-zero base": {
+			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
+			totalTDaiMinted:  big.NewInt(5_000_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -2,
+				Price:    200,
+			},
+			perpetual: types.Perpetual{
+				Params:       constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
+				FundingIndex: constants.BtcUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
+				OpenInterest: constants.BtcUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
+				YieldIndex:   big.NewRat(1, 20_000).String(),
+			},
+			expectedErr: nil,
+			expectedPerp: types.Perpetual{
+				Params:       constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
+				FundingIndex: constants.BtcUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
+				OpenInterest: constants.BtcUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
+				YieldIndex:   big.NewRat(3, 20_000).String(),
+			},
+		},
+		"Failure: total tDai pre-mint is 0": {
+			totalTDaiPreMint: big.NewInt(0),
+			totalTDaiMinted:  big.NewInt(500_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    12345,
+			},
+			perpetual:   constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr: types.ErrTotalTDaiPreMintIsNil,
+		},
+		"Failure: total tDai pre-mint is nil": {
+			totalTDaiPreMint: nil,
+			totalTDaiMinted:  big.NewInt(500_000_000),
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    12345,
+			},
+			perpetual:   constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr: types.ErrTotalTDaiPreMintIsNil,
+		},
+		"Failure: total tDai minted is nil": {
+			totalTDaiPreMint: big.NewInt(100_000_000),
+			totalTDaiMinted:  nil,
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    12345,
+			},
+			perpetual:   constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr: types.ErrTotalTDaiMintedIsNil,
+		},
+		"Failure: perp yield index malformed and cannot be parsed": {
+			totalTDaiPreMint: big.NewInt(100_000_000),
+			totalTDaiMinted:  nil,
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    12345,
+			},
+			perpetual: types.Perpetual{
+				Params:       constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
+				FundingIndex: constants.BtcUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
+				OpenInterest: constants.BtcUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
+				YieldIndex:   "malformed",
+			},
+			expectedErr: types.ErrTotalTDaiMintedIsNil,
+		},
+		"Failure: cannot find market for perp": {
+			totalTDaiPreMint: big.NewInt(100_000_000),
+			totalTDaiMinted:  nil,
+			marketPrice: pricestypes.MarketPrice{
+				Id:       1,
+				Exponent: -5,
+				Price:    12345,
+			},
+			perpetual:   constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			expectedErr: types.ErrTotalTDaiMintedIsNil,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+			_, err := pc.PricesKeeper.CreateMarket(
+				pc.Ctx,
+				pricestypes.MarketParam{
+					Id:                 tc.marketPrice.Id,
+					Pair:               "marketName",
+					Exponent:           tc.marketPrice.Exponent,
+					MinExchanges:       uint32(1),
+					MinPriceChangePpm:  uint32(50),
+					ExchangeConfigJson: "{}",
+				},
+				pricestypes.MarketPrice{
+					Id:       tc.marketPrice.Id,
+					Exponent: tc.marketPrice.Exponent,
+					Price:    tc.marketPrice.Price,
+				},
+			)
+			require.NoError(t, err)
+
+			resultPerp, err := pc.PerpetualsKeeper.CalculateNewTotalYieldIndex(
+				pc.Ctx,
+				tc.totalTDaiPreMint,
+				tc.totalTDaiMinted,
+				tc.perpetual,
+			)
+
+			if tc.expectedErr != nil {
+				require.Error(t, err)
+				require.Empty(t, resultPerp)
+			} else {
+				require.NoError(t, err)
+				require.NotEmpty(t, resultPerp)
+				require.Equal(t, tc.expectedPerp, resultPerp)
+			}
+		})
+	}
+}
+
+func TestUpdateYieldIndexToNewMint(t *testing.T) {
+	testCases := map[string]struct {
+		totalTDaiPreMint *big.Int
+		totalTDaiMinted  *big.Int
+		markets          []pricestypes.MarketPrice
+		perps            []types.Perpetual
+		expectedErr      error
+		expectedPerps    []types.Perpetual
+	}{
+		"Success: updates yield when one perp present": {
+			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
+			totalTDaiMinted:  big.NewInt(5_000_000_000),
+			markets: []pricestypes.MarketPrice{
+				{
+					Id:       0,
+					Exponent: -5,
+					Price:    100_000,
+				},
+			},
+			perps: []types.Perpetual{
+				constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			},
+			expectedPerps: []types.Perpetual{
+				{
+					Params:       constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
+					FundingIndex: constants.BtcUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
+					OpenInterest: constants.BtcUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
+					YieldIndex:   big.NewRat(1, 20_000).String(),
+				},
+			},
+			expectedErr: nil,
+		},
+		"Success: updates yield when multiple perp markets present": {
+			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
+			totalTDaiMinted:  big.NewInt(5_000_000_000),
+			markets: []pricestypes.MarketPrice{
+				{
+					Id:       0,
+					Exponent: -5,
+					Price:    100_000,
+				},
+				{
+					Id:       1,
+					Exponent: -5,
+					Price:    200_000,
+				},
+			},
+			perps: []types.Perpetual{
+				constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+				constants.EthUsd_0DefaultFunding_6AtomicResolution,
+			},
+			expectedPerps: []types.Perpetual{
+				{
+					Params:       constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
+					FundingIndex: constants.BtcUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
+					OpenInterest: constants.BtcUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
+					YieldIndex:   big.NewRat(1, 20_000).String(),
+				},
+				{
+					Params:       constants.EthUsd_0DefaultFunding_6AtomicResolution.Params,
+					FundingIndex: constants.EthUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
+					OpenInterest: constants.EthUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
+					YieldIndex:   big.NewRat(1, 10_000).String(),
+				},
+			},
+			expectedErr: nil,
+		},
+		"Failure: total tDai pre-mint is 0": {
+			totalTDaiPreMint: big.NewInt(0),
+			totalTDaiMinted:  big.NewInt(500_000_000),
+			markets: []pricestypes.MarketPrice{
+				{
+					Id:       0,
+					Exponent: -5,
+					Price:    12345,
+				},
+			},
+			perps: []types.Perpetual{
+				constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			},
+			expectedErr: types.ErrTotalTDaiPreMintIsNil,
+		},
+		"Failure: total tDai pre-mint is nil": {
+			totalTDaiPreMint: nil,
+			totalTDaiMinted:  big.NewInt(500_000_000),
+			markets: []pricestypes.MarketPrice{
+				{
+					Id:       0,
+					Exponent: -5,
+					Price:    12345,
+				},
+			},
+			perps: []types.Perpetual{
+				constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			},
+			expectedErr: types.ErrTotalTDaiPreMintIsNil,
+		},
+		"Failure: total tDai minted is nil": {
+			totalTDaiPreMint: big.NewInt(100_000_000),
+			totalTDaiMinted:  nil,
+			markets: []pricestypes.MarketPrice{
+				{
+					Id:       0,
+					Exponent: -5,
+					Price:    12345,
+				},
+			},
+			perps: []types.Perpetual{
+				constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			},
+			expectedErr: types.ErrTotalTDaiMintedIsNil,
+		},
+		"Failure: total tDai minted is non-zero, but pre-mint is zero": {
+			totalTDaiPreMint: big.NewInt(0),
+			totalTDaiMinted:  big.NewInt(1),
+			markets: []pricestypes.MarketPrice{
+				{
+					Id:       0,
+					Exponent: -5,
+					Price:    12345,
+				},
+			},
+			perps: []types.Perpetual{
+				constants.BtcUsd_0DefaultFunding_6AtomicResolution,
+			},
+			expectedErr: types.ErrTotalTDaiMintedIsNil,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+
+			for _, market := range tc.markets {
+				_, err := pc.PricesKeeper.CreateMarket(
+					pc.Ctx,
+					pricestypes.MarketParam{
+						Id:                 market.Id,
+						Pair:               "marketName",
+						Exponent:           market.Exponent,
+						MinExchanges:       uint32(1),
+						MinPriceChangePpm:  uint32(50),
+						ExchangeConfigJson: "{}",
+					},
+					pricestypes.MarketPrice{
+						Id:       market.Id,
+						Exponent: market.Exponent,
+						Price:    market.Price,
+					},
+				)
+				require.NoError(t, err)
+			}
+
+			for _, perp := range tc.perps {
+				pc.PerpetualsKeeper.SetPerpetualForTest(pc.Ctx, perp)
+			}
+
+			_, err := pc.PerpetualsKeeper.SetLiquidityTier(
+				pc.Ctx,
+				2,
+				"test",
+				0,
+				0,
+				1,
+				0,
+				0,
+			)
+			require.NoError(t, err)
+			_, err = pc.PerpetualsKeeper.SetLiquidityTier(
+				pc.Ctx,
+				5,
+				"test",
+				0,
+				0,
+				1,
+				0,
+				0,
+			)
+			require.NoError(t, err)
+
+			err = pc.PerpetualsKeeper.UpdateYieldIndexToNewMint(pc.Ctx, tc.totalTDaiPreMint, tc.totalTDaiMinted)
+
+			if tc.expectedErr != nil {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				for _, expectedPerp := range tc.expectedPerps {
+					actualPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, expectedPerp.Params.Id)
+					require.NoError(t, err)
+					require.Equal(t, expectedPerp, actualPerp)
+				}
+			}
+
+			assertPerpetualtUpdateEventsInIndexerBlock(
+				t,
+				pc.PerpetualsKeeper,
+				pc.Ctx,
+				tc.expectedErr,
+				tc.expectedPerps,
+			)
+		})
 	}
 }

@@ -162,6 +162,20 @@ var (
 		OpenInterest: dtypes.ZeroInt(),
 		YieldIndex:   big.NewRat(0, 1).String(),
 	}
+	BtcUsd_0DefaultFunding_6AtomicResolution = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                0,
+			Ticker:            "BTC-USD 0 percent default funding, -6 atomic resolution",
+			MarketId:          uint32(0),
+			AtomicResolution:  int32(-6),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(2),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
+	}
 	BtcUsd_NegativeDefaultFunding_10AtomicResolution = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
 			Id:                0,
@@ -325,6 +339,20 @@ var (
 			AtomicResolution:  int32(-8),
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(7),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
+		YieldIndex:   big.NewRat(0, 1).String(),
+	}
+	EthUsd_0DefaultFunding_6AtomicResolution = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                1,
+			Ticker:            "ETH-USD default fundingm, -9 atomic resolution",
+			MarketId:          uint32(1),
+			AtomicResolution:  int32(-6),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(5),
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),

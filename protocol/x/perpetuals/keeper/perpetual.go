@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -652,60 +651,92 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 	totalTDaiMinted *big.Int,
 ) error {
 
+	if totalTDaiPreMint == nil {
+		return types.ErrTotalTDaiPreMintIsNil
+	}
+
+	if totalTDaiMinted == nil {
+		return types.ErrTotalTDaiMintedIsNil
+	}
+
 	if totalTDaiMinted.Cmp(big.NewInt(0)) == 0 {
 		return nil
 	}
 
 	if totalTDaiPreMint.Cmp(big.NewInt(0)) == 0 {
-		return errors.New("total tDAI pre mint was 0, but total tDAI minted was not 0")
+		return types.ErrMintedTDaiFromNoPreexistingTDai
 	}
 
 	allPerps := k.GetAllPerpetuals(ctx)
 
 	for _, perp := range allPerps {
 
-		marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
+		modifiedPerp, err := k.CalculateNewTotalYieldIndex(
+			ctx,
+			totalTDaiPreMint,
+			totalTDaiMinted,
+			perp,
+		)
 		if err != nil {
 			return err
 		}
 
-		// Calculate yield index for this epoch
-		currEpochYieldIndex, err := k.CalculateYieldIndexForEpoch(ctx, totalTDaiPreMint, totalTDaiMinted, marketPrice, perp)
+		err = k.ValidateAndSetPerpetual(ctx, modifiedPerp)
 		if err != nil {
 			return err
 		}
 
-		// Get current cumulative yield index
-		cumulativeYieldIndex, _ := new(big.Rat).SetString(perp.YieldIndex)
-		newYieldIndex := new(big.Rat).Add(cumulativeYieldIndex, currEpochYieldIndex)
-
-		perp.YieldIndex = newYieldIndex.String()
-
-		// Store the modified perpetual.
-		err = k.ValidateAndSetPerpetual(ctx, perp)
-		if err != nil {
-			return err
-		}
-
-		// Emit indexer event.
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeUpdatePerpetual,
 			indexerevents.UpdatePerpetualEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewUpdatePerpetualEventV1(
-					perp.Params.Id,
-					perp.Params.Ticker,
-					perp.Params.MarketId,
-					perp.Params.AtomicResolution,
-					perp.Params.LiquidityTier,
-					perp.YieldIndex,
+					modifiedPerp.Params.Id,
+					modifiedPerp.Params.Ticker,
+					modifiedPerp.Params.MarketId,
+					modifiedPerp.Params.AtomicResolution,
+					modifiedPerp.Params.LiquidityTier,
+					modifiedPerp.YieldIndex,
 				),
 			),
 		)
 	}
 
 	return nil
+}
+
+func (k Keeper) CalculateNewTotalYieldIndex(
+	ctx sdk.Context,
+	totalTDaiPreMint *big.Int,
+	totalTDaiMinted *big.Int,
+	perp types.Perpetual,
+) (
+	types.Perpetual,
+	error,
+) {
+	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
+	if err != nil {
+		return types.Perpetual{}, err
+	}
+
+	// Calculate yield index for this epoch
+	currEpochYieldIndex, err := k.CalculateYieldIndexForEpoch(ctx, totalTDaiPreMint, totalTDaiMinted, marketPrice, perp)
+	if err != nil {
+		return types.Perpetual{}, err
+	}
+
+	// Get current cumulative yield index
+	cumulativeYieldIndex, err := perp.GetYieldIndexAsRat()
+	if err != nil {
+		return types.Perpetual{}, err
+	}
+
+	newYieldIndex := new(big.Rat).Add(cumulativeYieldIndex, currEpochYieldIndex)
+
+	perp.YieldIndex = newYieldIndex.String()
+
+	return perp, nil
 }
 
 func (k Keeper) CalculateYieldIndexForEpoch(
@@ -718,6 +749,18 @@ func (k Keeper) CalculateYieldIndexForEpoch(
 	yieldIndex *big.Rat,
 	err error,
 ) {
+
+	if totalTDaiPreMint == nil || totalTDaiPreMint.Cmp(big.NewInt(0)) == 0 {
+		return nil, types.ErrTotalTDaiPreMintIsNil
+	}
+
+	if totalTDaiMinted == nil {
+		return nil, types.ErrTotalTDaiMintedIsNil
+	}
+
+	if perpetual.Params.MarketId != marketPrice.Id {
+		return nil, errorsmod.Wrapf(types.ErrPerpAndPriceMarketsMismatched, "Perpetual Market Id: %v. Price Market Id: %v.", perpetual.Params.MarketId, marketPrice.Id)
+	}
 
 	oneBaseQuantum := big.NewInt(1)
 
@@ -1497,7 +1540,17 @@ func (k Keeper) validatePerpetual(
 	}
 
 	if perpetual.YieldIndex == "" {
-		return errorsmod.Wrap(types.ErrYieldIndexDoesNotExist, lib.UintToString(perpetual.Params.LiquidityTier))
+		return types.ErrYieldIndexDoesNotExist
+	}
+
+	yieldIndex, err := perpetual.GetYieldIndexAsRat()
+
+	if err != nil {
+		return err
+	}
+
+	if yieldIndex.Cmp(big.NewRat(0, 1)) == -1 {
+		return types.ErrYieldIndexNegative
 	}
 
 	return nil

@@ -125,9 +125,40 @@ var (
 	ErrYieldIndexDoesNotExist = errorsmod.Register(
 		ModuleName,
 		26,
-		"Perpetual yield index does not exist",
+		"perpetual yield index does not exist",
+	)
+	ErrPerpIsNil = errorsmod.Register(
+		ModuleName,
+		27,
+		"perp is nil",
+	)
+	ErrYieldIndexNegative = errorsmod.Register(
+		ModuleName,
+		28,
+		"perp yield index is negative",
+	)
+	ErrTotalTDaiPreMintIsNil = errorsmod.Register(
+		ModuleName,
+		29,
+		"tDai pre mint is nil",
+	)
+	ErrTotalTDaiMintedIsNil = errorsmod.Register(
+		ModuleName,
+		30,
+		"total tDai minted is nil",
+	)
+	ErrPerpAndPriceMarketsMismatched = errorsmod.Register(
+		ModuleName,
+		31,
+		"perpetual market id and market price id are mismatched",
+	)
+	ErrMintedTDaiFromNoPreexistingTDai = errorsmod.Register(
+		ModuleName,
+		32,
+		"total tDAI pre mint was 0, but total tDAI minted was not 0",
 	)
 
-	// Errors for Not Implemented
+	// Miscallaneous errors
 	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")
+	ErrRatToStringConversion = errorsmod.Register(ModuleName, 1002, "could not convert string to rat")
 )
