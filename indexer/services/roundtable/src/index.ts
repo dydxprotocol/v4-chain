@@ -14,6 +14,7 @@ import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
 import createLeaderboardTask from './tasks/create-leaderboard';
 import createPnlTicksTask from './tasks/create-pnl-ticks';
 import deleteOldFastSyncSnapshots from './tasks/delete-old-fast-sync-snapshots';
+import deleteOldFirebaseNotificationTokensTask from './tasks/delete-old-firebase-notification-tokens';
 import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
@@ -253,6 +254,14 @@ async function start(): Promise<void> {
       updateWalletTotalVolumeTask,
       'update_wallet_total_volume',
       config.LOOPS_INTERVAL_MS_UPDATE_WALLET_TOTAL_VOLUME,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_DELETE_OLD_FIREBASE_NOTIFICATION_TOKENS) {
+    startLoop(
+      deleteOldFirebaseNotificationTokensTask,
+      'delete-old-firebase-notification-tokens',
+      config.LOOPS_INTERVAL_MS_DELETE_FIREBASE_NOTIFICATION_TOKENS_MONTHLY,
     );
   }
 
