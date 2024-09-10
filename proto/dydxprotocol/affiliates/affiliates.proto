@@ -19,3 +19,18 @@ message AffiliateTiers {
   // All affiliate tiers
   repeated Tier tiers = 1 [ (gogoproto.nullable) = false ];
 }
+
+// AffiliateWhitelist specifies the whitelisted affiliates.
+// If an address is in the whitelist, then the affiliate fee share in
+// this object will override fee share from the regular affiliate tiers above.
+message AffiliateWhitelist {
+  // Tier defines an affiliate whitelist tier.
+  message Tier {
+    // List of unique whitelisted addresses.
+    repeated string addresses = 1;
+    // Taker fee share in parts-per-million.
+    uint32 taker_fee_share_ppm = 2;
+  }
+  // All affiliate whitelist tiers.
+  repeated Tier tiers = 1 [ (gogoproto.nullable) = false ];
+}

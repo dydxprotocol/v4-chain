@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,4 +73,10 @@ func (k Keeper) AllAffiliateTiers(c context.Context,
 	return &types.AllAffiliateTiersResponse{
 		Tiers: affiliateTiers,
 	}, nil
+}
+
+func (k Keeper) AffiliateWhitelist(c context.Context,
+	req *types.AffiliateWhitelistRequest) (*types.AffiliateWhitelistResponse, error) {
+	// TODO(OTE-791): Implement `AffiliateWhitelist` RPC method.
+	return nil, errors.New("not implemented")
 }
