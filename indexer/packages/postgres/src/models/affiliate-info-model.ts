@@ -23,6 +23,7 @@ export default class AffiliateInfoModel extends BaseModel {
         'totalReferredUsers',
         'referredNetProtocolEarnings',
         'firstReferralBlockHeight',
+        'totalReferredVolume',
       ],
       properties: {
         address: { type: 'string' },
@@ -33,6 +34,7 @@ export default class AffiliateInfoModel extends BaseModel {
         totalReferredUsers: { type: 'int' },
         referredNetProtocolEarnings: { type: 'string', pattern: NonNegativeNumericPattern },
         firstReferralBlockHeight: { type: 'string', pattern: NonNegativeNumericPattern },
+        totalReferredVolume: { type: 'string', pattern: NonNegativeNumericPattern },
       },
     };
   }
@@ -53,6 +55,7 @@ export default class AffiliateInfoModel extends BaseModel {
       totalReferredUsers: 'int',
       referredNetProtocolEarnings: 'string',
       firstReferralBlockHeight: 'string',
+      totalReferredVolume: 'string',
     };
   }
 
@@ -73,4 +76,6 @@ export default class AffiliateInfoModel extends BaseModel {
   referredNetProtocolEarnings!: string;
 
   firstReferralBlockHeight!: string;
+
+  totalReferredVolume!: string;
 }

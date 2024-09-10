@@ -1,4 +1,4 @@
-import { WalletFromDatabase } from '../../src/types';
+import { WalletFromDatabase, PersistentCacheKeys } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { DateTime } from 'luxon';
 import {
@@ -112,48 +112,68 @@ describe('Wallet store', () => {
     expect(wallets[0]).toEqual(expect.objectContaining(defaultWallet3));
   });
 
-  it('Successfully updates totalVolume for time window multiple times', async () => {
-    const firstFillTime = await populateWalletSubaccountFill();
+  describe('Wallet .updateTotalVolume()', () => {
+    it('Successfully updates totalVolume for time window multiple times', async () => {
+      const firstFillTime = await populateWalletSubaccountFill();
 
-    // Update totalVolume for a time window that covers all fills
-    await WalletTable.updateTotalVolume(
-      firstFillTime.minus({ hours: 1 }).toISO(), // need to minus because left bound is exclusive
-      firstFillTime.plus({ hours: 1 }).toISO(),
-    );
-    let wallet = await WalletTable.findById(defaultWallet.address);
-    expect(wallet).toEqual(expect.objectContaining({
-      ...defaultWallet,
-      totalVolume: '103',
-    }));
+      // Update totalVolume for a time window that covers all fills
+      await WalletTable.updateTotalVolume(
+        firstFillTime.minus({ hours: 1 }).toISO(), // need to minus because left bound is exclusive
+        firstFillTime.plus({ hours: 1 }).toISO(),
+      );
+      let wallet = await WalletTable.findById(defaultWallet.address);
+      expect(wallet).toEqual(expect.objectContaining({
+        ...defaultWallet,
+        totalVolume: '103',
+      }));
 
-    // Update totalVolume for a time window that excludes some fills
-    // For convenience, we will reuse the existing fills data. The total volume calculated in this
-    // window should be added to the total volume above.
-    await WalletTable.updateTotalVolume(
-      firstFillTime.toISO(), // exclusive -> filters out first fill from each subaccount
-      firstFillTime.plus({ minutes: 2 }).toISO(),
-    );
-    wallet = await WalletTable.findById(defaultWallet.address);
-    expect(wallet).toEqual(expect.objectContaining({
-      ...defaultWallet,
-      totalVolume: '105', // 103 + 2
-    }));
-  });
+      // Update totalVolume for a time window that excludes some fills
+      // For convenience, we will reuse the existing fills data. The total volume calculated in this
+      // window should be added to the total volume above.
+      await WalletTable.updateTotalVolume(
+        firstFillTime.toISO(), // exclusive -> filters out first fill from each subaccount
+        firstFillTime.plus({ minutes: 2 }).toISO(),
+      );
+      wallet = await WalletTable.findById(defaultWallet.address);
+      expect(wallet).toEqual(expect.objectContaining({
+        ...defaultWallet,
+        totalVolume: '105', // 103 + 2
+      }));
+    });
 
-  it('Successfully updates totalVolumeUpdateTime in persistent cache', async () => {
-    const leftBound = DateTime.utc().minus({ hours: 1 });
-    const rightBound = DateTime.utc();
-    await WalletTable.updateTotalVolume(leftBound.toISO(), rightBound.toISO());
+    it('Successfully upserts persistent cache', async () => {
+      const referenceDt = DateTime.utc();
 
-    const persistentCache = await PersistentCacheTable.findById('totalVolumeUpdateTime');
-    const lastUpdateTime = persistentCache?.value
-      ? DateTime.fromISO(persistentCache.value)
-      : undefined;
+      // Sets initial persistent cache value
+      let leftBound = referenceDt.minus({ hours: 2 });
+      let rightBound = referenceDt.minus({ hours: 1 });
 
-    expect(lastUpdateTime).not.toBeUndefined();
-    if (lastUpdateTime?.toMillis() !== undefined) {
-      expect(lastUpdateTime.toMillis()).toEqual(rightBound.toMillis());
-    }
+      await WalletTable.updateTotalVolume(leftBound.toISO(), rightBound.toISO());
+
+      let persistentCache = await PersistentCacheTable.findById(
+        PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
+      );
+      let lastUpdateTime = persistentCache?.value;
+      expect(lastUpdateTime).not.toBeUndefined();
+      if (lastUpdateTime !== undefined) {
+        expect(lastUpdateTime).toEqual(rightBound.toISO());
+      }
+
+      // Updates persistent cache value
+      leftBound = referenceDt.minus({ hours: 1 });
+      rightBound = referenceDt;
+
+      await WalletTable.updateTotalVolume(leftBound.toISO(), rightBound.toISO());
+
+      persistentCache = await PersistentCacheTable.findById(
+        PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
+      );
+      lastUpdateTime = persistentCache?.value;
+      expect(lastUpdateTime).not.toBeUndefined();
+      if (lastUpdateTime !== undefined) {
+        expect(lastUpdateTime).toEqual(rightBound.toISO());
+      }
+    });
   });
 });
 

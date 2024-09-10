@@ -1,5 +1,5 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { PersistentCacheTable, WalletTable, PersistentCacheKeys } from '@dydxprotocol-indexer/postgres';
+import { PersistentCacheTable, AffiliateInfoTable, PersistentCacheKeys } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 
 import config from '../config';
@@ -7,19 +7,19 @@ import config from '../config';
 const defaultLastUpdateTime: string = '2020-01-01T00:00:00Z';
 
 /**
- * Update the total volume for each addresses in the wallet table who filled recently.
+ * Update the affiliate info for all affiliate addresses.
  */
 export default async function runTask(): Promise<void> {
   try {
     const start = Date.now();
     const persistentCacheEntry = await PersistentCacheTable.findById(
-      PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
+      PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
     );
 
     if (!persistentCacheEntry) {
       logger.info({
-        at: 'update-wallet-total-volume#runTask',
-        message: `No previous ${PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME} found in persistent cache table. Will use default value: ${defaultLastUpdateTime}`,
+        at: 'update-affiliate-info#runTask',
+        message: `No previous ${PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME} found in persistent cache table. Will use default value: ${defaultLastUpdateTime}`,
       });
     }
 
@@ -33,16 +33,16 @@ export default async function runTask(): Promise<void> {
       windowEndTime = lastUpdateTime.plus({ days: 1 });
     }
 
-    await WalletTable.updateTotalVolume(lastUpdateTime.toISO(), windowEndTime.toISO());
+    await AffiliateInfoTable.updateInfo(lastUpdateTime.toISO(), windowEndTime.toISO());
 
     stats.timing(
-      `${config.SERVICE_NAME}.update_wallet_total_volume_timing`,
+      `${config.SERVICE_NAME}.update_affiliate_info_timing`,
       Date.now() - start,
     );
   } catch (error) {
     logger.error({
-      at: 'update-wallet-total-volume#runTask',
-      message: 'Error when updating totalVolume in wallets table',
+      at: 'update-affiliate-info#runTask',
+      message: 'Error when updating affiliate info in affiliate_info table',
       error,
     });
   }

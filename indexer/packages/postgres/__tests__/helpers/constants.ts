@@ -556,7 +556,7 @@ export const defaultFill: FillCreateObject = {
   createdAtHeight: createdHeight,
   clientMetadata: '0',
   fee: '1.1',
-  affiliateRevShare: '1.1',
+  affiliateRevShare: '1.10',
 };
 
 export const isolatedMarketFill: FillCreateObject = {
@@ -974,6 +974,7 @@ export const defaultAffiliateInfo: AffiliateInfoCreateObject = {
   totalReferredUsers: 5,
   referredNetProtocolEarnings: '20.00',
   firstReferralBlockHeight: '1',
+  totalReferredVolume: '1000.00',
 };
 
 export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
@@ -985,4 +986,5 @@ export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
   totalReferredUsers: 5,
   referredNetProtocolEarnings: '21.00',
   firstReferralBlockHeight: '11',
+  totalReferredVolume: '1100.00',
 };

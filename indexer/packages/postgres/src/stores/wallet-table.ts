@@ -15,6 +15,7 @@ import {
   WalletFromDatabase,
   WalletQueryConfig,
   WalletUpdateObject,
+  PersistentCacheKeys,
 } from '../types';
 
 export async function findAll(
@@ -161,7 +162,7 @@ export async function updateTotalVolume(
 
     -- Step 5: Upsert new totalVolumeUpdateTime to persistent_cache table
     INSERT INTO persistent_cache (key, value)
-    VALUES ('totalVolumeUpdateTime', '${windowEndTs}')
+    VALUES ('${PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME}', '${windowEndTs}')
     ON CONFLICT (key) 
     DO UPDATE SET value = EXCLUDED.value;
 

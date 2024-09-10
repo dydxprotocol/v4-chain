@@ -3,10 +3,10 @@ import {
   testConstants,
   testMocks,
   WalletTable,
-  SubaccountTable,
   PersistentCacheTable,
   FillTable,
   OrderTable,
+  PersistentCacheKeys,
 } from '@dydxprotocol-indexer/postgres';
 import walletTotalVolumeUpdateTask from '../../src/tasks/update-wallet-total-volume';
 import { DateTime } from 'luxon';
@@ -33,22 +33,16 @@ describe('update-wallet-total-volume', () => {
   });
 
   it('Successfully updates totalVolume multiple times', async () => {
-    const defaultSubaccountId = await SubaccountTable.findAll(
-      { subaccountNumber: testConstants.defaultSubaccount.subaccountNumber },
-      [],
-      {},
-    );
     // Set persistent cache totalVolumeUpdateTime so walletTotalVolumeUpdateTask() does not attempt
     // to backfill
     await PersistentCacheTable.create({
-      key: 'totalVolumeUpdateTime',
+      key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
       value: DateTime.utc().toISO(),
     });
 
     // First task run: one new fill
     await FillTable.create({
       ...testConstants.defaultFill,
-      subaccountId: defaultSubaccountId[0].id,
       createdAt: DateTime.utc().toISO(),
       eventId: testConstants.defaultTendermintEventId,
       price: '1',
@@ -72,7 +66,6 @@ describe('update-wallet-total-volume', () => {
     // Third task run: one new fill
     await FillTable.create({
       ...testConstants.defaultFill,
-      subaccountId: defaultSubaccountId[0].id,
       createdAt: DateTime.utc().toISO(),
       eventId: testConstants.defaultTendermintEventId2,
       price: '1',
@@ -90,7 +83,7 @@ describe('update-wallet-total-volume', () => {
     // Set persistent cache totalVolumeUpdateTime so walletTotalVolumeUpdateTask() does not attempt
     // to backfill
     await PersistentCacheTable.create({
-      key: 'totalVolumeUpdateTime',
+      key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
       value: DateTime.utc().toISO(),
     });
 
@@ -110,16 +103,10 @@ describe('update-wallet-total-volume', () => {
 
   it('Successfully backfills from past date', async () => {
     const currentDt: DateTime = DateTime.utc();
-    const defaultSubaccountId = await SubaccountTable.findAll(
-      { subaccountNumber: testConstants.defaultSubaccount.subaccountNumber },
-      [],
-      {},
-    );
 
     // Create 3 fills spanning 2 weeks in the past
     await FillTable.create({
       ...testConstants.defaultFill,
-      subaccountId: defaultSubaccountId[0].id,
       createdAt: currentDt.toISO(),
       eventId: testConstants.defaultTendermintEventId,
       price: '1',
@@ -127,7 +114,6 @@ describe('update-wallet-total-volume', () => {
     });
     await FillTable.create({
       ...testConstants.defaultFill,
-      subaccountId: defaultSubaccountId[0].id,
       createdAt: currentDt.minus({ weeks: 1 }).toISO(),
       eventId: testConstants.defaultTendermintEventId2,
       price: '2',
@@ -135,7 +121,6 @@ describe('update-wallet-total-volume', () => {
     });
     await FillTable.create({
       ...testConstants.defaultFill,
-      subaccountId: defaultSubaccountId[0].id,
       createdAt: currentDt.minus({ weeks: 2 }).toISO(),
       eventId: testConstants.defaultTendermintEventId3,
       price: '3',
@@ -144,7 +129,7 @@ describe('update-wallet-total-volume', () => {
 
     // Set persistent cache totalVolumeUpdateTime to 3 weeks ago to emulate backfill from 3 weeks.
     await PersistentCacheTable.create({
-      key: 'totalVolumeUpdateTime',
+      key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
       value: currentDt.minus({ weeks: 3 }).toISO(),
     });
 
@@ -162,12 +147,6 @@ describe('update-wallet-total-volume', () => {
   });
 
   it('Successfully backfills on first run', async () => {
-    const defaultSubaccountId = await SubaccountTable.findAll(
-      { subaccountNumber: testConstants.defaultSubaccount.subaccountNumber },
-      [],
-      {},
-    );
-
     // Leave persistent cache totalVolumeUpdateTime empty and create fills around
     // `defaultLastUpdateTime` value to emulate backfilling from very beginning
     expect(await getTotalVolumeUpdateTime()).toBeUndefined();
@@ -176,7 +155,6 @@ describe('update-wallet-total-volume', () => {
 
     await FillTable.create({
       ...testConstants.defaultFill,
-      subaccountId: defaultSubaccountId[0].id,
       createdAt: referenceDt.plus({ days: 1 }).toISO(),
       eventId: testConstants.defaultTendermintEventId,
       price: '1',
@@ -184,7 +162,6 @@ describe('update-wallet-total-volume', () => {
     });
     await FillTable.create({
       ...testConstants.defaultFill,
-      subaccountId: defaultSubaccountId[0].id,
       createdAt: referenceDt.plus({ days: 2 }).toISO(),
       eventId: testConstants.defaultTendermintEventId2,
       price: '2',
@@ -192,7 +169,6 @@ describe('update-wallet-total-volume', () => {
     });
     await FillTable.create({
       ...testConstants.defaultFill,
-      subaccountId: defaultSubaccountId[0].id,
       createdAt: referenceDt.plus({ days: 3 }).toISO(),
       eventId: testConstants.defaultTendermintEventId3,
       price: '3',
@@ -213,9 +189,11 @@ describe('update-wallet-total-volume', () => {
 });
 
 async function getTotalVolumeUpdateTime(): Promise<DateTime | undefined> {
-  const persistentCache = await PersistentCacheTable.findById('totalVolumeUpdateTime');
-  const lastUpdateTime1 = persistentCache?.value
+  const persistentCache = await PersistentCacheTable.findById(
+    PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
+  );
+  const lastUpdateTime = persistentCache?.value
     ? DateTime.fromISO(persistentCache.value)
     : undefined;
-  return lastUpdateTime1;
+  return lastUpdateTime;
 }

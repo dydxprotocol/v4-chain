@@ -287,6 +287,7 @@ export interface AffiliateInfoFromDatabase {
   totalReferredUsers: number,
   referredNetProtocolEarnings: string,
   firstReferralBlockHeight: string,
+  totalReferredVolume: string,
 }
 
 export interface AffiliateReferredUserFromDatabase {
