@@ -149,8 +149,8 @@ func TestMsgUpdateSDAIConversionRate_PostFirstEpoch(t *testing.T) {
 						ConversionRate: "1" + strings.Repeat("0", 26) + fmt.Sprintf("%d", i),
 					})
 				}
-				burnAllCoinsOfDenom(t, ctx, tApp, types.TDaiDenom)
-				burnAllCoinsOfDenom(t, ctx, tApp, types.SDaiDenom)
+				burnAllCoinsOfDenom(t, ctx, tApp.App.BankKeeper, types.TDaiDenom)
+				burnAllCoinsOfDenom(t, ctx, tApp.App.BankKeeper, types.SDaiDenom)
 
 				sDaiCoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewInt(2000000000000)))
 				err := tApp.App.BankKeeper.MintCoins(
@@ -209,8 +209,8 @@ func TestMsgUpdateSDAIConversionRate_PostFirstEpoch(t *testing.T) {
 						ConversionRate: fmt.Sprintf("%d", i),
 					})
 				}
-				burnAllCoinsOfDenom(t, ctx, tApp, types.TDaiDenom)
-				burnAllCoinsOfDenom(t, ctx, tApp, types.SDaiDenom)
+				burnAllCoinsOfDenom(t, ctx, tApp.App.BankKeeper, types.TDaiDenom)
+				burnAllCoinsOfDenom(t, ctx, tApp.App.BankKeeper, types.SDaiDenom)
 
 				coins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewInt(100)))
 				err := tApp.App.BankKeeper.MintCoins(
@@ -292,8 +292,8 @@ func TestMsgUpdateSDAIConversionRate_PerformsAllStateChanges(t *testing.T) {
 						ConversionRate: "1" + strings.Repeat("0", 26) + fmt.Sprintf("%d", i),
 					})
 				}
-				burnAllCoinsOfDenom(t, ctx, tApp, types.TDaiDenom)
-				burnAllCoinsOfDenom(t, ctx, tApp, types.SDaiDenom)
+				burnAllCoinsOfDenom(t, ctx, tApp.App.BankKeeper, types.TDaiDenom)
+				burnAllCoinsOfDenom(t, ctx, tApp.App.BankKeeper, types.SDaiDenom)
 
 				sDaiCoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewInt(2000000000000)))
 				err := tApp.App.BankKeeper.MintCoins(

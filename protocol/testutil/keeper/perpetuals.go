@@ -240,12 +240,12 @@ func GetUpdatePerpetualEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeUpdatePerpetual {
 			continue
 		}
-		var liquidityTierEvent indexerevents.UpdatePerpetualEventV1
-		err := proto.Unmarshal(event.DataBytes, &liquidityTierEvent)
+		var updatePerpetualEvent indexerevents.UpdatePerpetualEventV1
+		err := proto.Unmarshal(event.DataBytes, &updatePerpetualEvent)
 		if err != nil {
 			panic(err)
 		}
-		perpetualUpdateEvents = append(perpetualUpdateEvents, &liquidityTierEvent)
+		perpetualUpdateEvents = append(perpetualUpdateEvents, &updatePerpetualEvent)
 	}
 	return perpetualUpdateEvents
 }

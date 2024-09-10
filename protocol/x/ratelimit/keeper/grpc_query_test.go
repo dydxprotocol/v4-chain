@@ -237,7 +237,7 @@ func TestGetAssetYieldIndexQuery(t *testing.T) {
 			if !(tc.req != nil && tc.res == nil) {
 				k.SetAssetYieldIndex(ctx, keeper.ConvertStringToBigRatWithPanicOnErr("1/1"))
 			} else {
-				store := ctx.KVStore(k.GetStoreKey())
+				store := ctx.KVStore(k.GetStoreKeyForTestingOnly())
 				store.Delete([]byte(types.AssetYieldIndexPrefix))
 			}
 			res, err := k.GetAssetYieldIndexQuery(ctx, tc.req)

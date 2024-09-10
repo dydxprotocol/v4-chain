@@ -890,6 +890,7 @@ func TestSendPacket(t *testing.T) {
 				tApp.App.AppCodec(),
 				tApp.App.GetKey(types.StoreKey),
 				sDAIEventManager,
+				tApp.App.IndexerEventManager,
 				tApp.App.BankKeeper,
 				tApp.App.BlockTimeKeeper,
 				&tApp.App.PerpetualsKeeper,
@@ -1267,8 +1268,8 @@ func TestPreprocessSendPacket(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.RatelimitKeeper
 
-			burnAllCoinsOfDenom(t, ctx, tApp, types.TDaiDenom)
-			burnAllCoinsOfDenom(t, ctx, tApp, types.SDaiDenom)
+			burnAllCoinsOfDenom(t, ctx, tApp.App.BankKeeper, types.TDaiDenom)
+			burnAllCoinsOfDenom(t, ctx, tApp.App.BankKeeper, types.SDaiDenom)
 
 			// Setup
 			var accountAddr sdk.AccAddress

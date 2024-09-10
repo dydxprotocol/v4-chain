@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
@@ -25,13 +26,14 @@ import (
 
 type (
 	Keeper struct {
-		cdc              codec.BinaryCodec
-		storeKey         storetypes.StoreKey
-		sDAIEventManager *sdaiserver.SDAIEventManager
-		bankKeeper       types.BankKeeper
-		blockTimeKeeper  types.BlockTimeKeeper
-		perpetualsKeeper types.PerpetualsKeeper
-		ics4Wrapper      types.ICS4Wrapper
+		cdc                 codec.BinaryCodec
+		storeKey            storetypes.StoreKey
+		sDAIEventManager    *sdaiserver.SDAIEventManager
+		indexerEventManager indexer_manager.IndexerEventManager
+		bankKeeper          types.BankKeeper
+		blockTimeKeeper     types.BlockTimeKeeper
+		perpetualsKeeper    types.PerpetualsKeeper
+		ics4Wrapper         types.ICS4Wrapper
 
 		// the addresses capable of executing MsgSetLimitParams message.
 		authorities map[string]struct{}
@@ -42,22 +44,29 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	sDAIEventManager *sdaiserver.SDAIEventManager,
+	indexerEventsManager indexer_manager.IndexerEventManager,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
 	ics4Wrapper types.ICS4Wrapper,
 	authorities []string,
 ) *Keeper {
+	fmt.Println("CREATING NEW KEEPER. INDEXER EVENT MANAGER IS ", indexerEventsManager)
 	return &Keeper{
-		cdc:              cdc,
-		storeKey:         storeKey,
-		sDAIEventManager: sDAIEventManager,
-		bankKeeper:       bankKeeper,
-		blockTimeKeeper:  blockTimeKeeper,
-		perpetualsKeeper: perpetualsKeeper,
-		ics4Wrapper:      ics4Wrapper,
-		authorities:      lib.UniqueSliceToSet(authorities),
+		cdc:                 cdc,
+		storeKey:            storeKey,
+		sDAIEventManager:    sDAIEventManager,
+		indexerEventManager: indexerEventsManager,
+		bankKeeper:          bankKeeper,
+		blockTimeKeeper:     blockTimeKeeper,
+		perpetualsKeeper:    perpetualsKeeper,
+		ics4Wrapper:         ics4Wrapper,
+		authorities:         lib.UniqueSliceToSet(authorities),
 	}
+}
+
+func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
+	return k.indexerEventManager
 }
 
 // ProcessWithdrawal processes an outbound IBC transfer,
@@ -434,11 +443,11 @@ func (k Keeper) GetAssetYieldIndex(ctx sdk.Context) (yieldIndex *big.Rat, found 
 	return yieldIndex, true
 }
 
-// GetSDAIEventManagerForTestingOnly returns the sDAI event manager for testing only
+// functions for better testing
 func (k Keeper) GetSDAIEventManagerForTestingOnly() *sdaiserver.SDAIEventManager {
 	return k.sDAIEventManager
 }
 
-func (k Keeper) GetStoreKey() storetypes.StoreKey {
+func (k Keeper) GetStoreKeyForTestingOnly() storetypes.StoreKey {
 	return k.storeKey
 }

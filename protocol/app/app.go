@@ -562,10 +562,18 @@ func New(
 	// The in-memory data structure is shared by the x/ratelimit module and sdaioracle daemon.
 	sDAIEventManager := sdaidaemontypes.NewsDAIEventManager()
 
+	msgSender, indexerFlags := getIndexerFromOptions(appOpts, logger)
+	app.IndexerEventManager = indexer_manager.NewIndexerEventManager(
+		msgSender,
+		tkeys[indexer_manager.TransientStoreKey],
+		indexerFlags.SendOffchainData,
+	)
+
 	app.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
 		appCodec,
 		keys[ratelimitmoduletypes.StoreKey],
 		sDAIEventManager,
+		app.IndexerEventManager,
 		app.BankKeeper,
 		app.BlockTimeKeeper,
 		&app.PerpetualsKeeper,
@@ -665,13 +673,6 @@ func New(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	/****  dYdX specific modules/setup ****/
-	msgSender, indexerFlags := getIndexerFromOptions(appOpts, logger)
-	app.IndexerEventManager = indexer_manager.NewIndexerEventManager(
-		msgSender,
-		tkeys[indexer_manager.TransientStoreKey],
-		indexerFlags.SendOffchainData,
-	)
-
 	app.GrpcStreamingManager = getGrpcStreamingManagerFromOptions(appFlags, logger)
 
 	timeProvider := &timelib.TimeProviderImpl{}

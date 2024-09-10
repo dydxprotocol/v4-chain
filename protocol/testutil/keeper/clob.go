@@ -119,6 +119,8 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.BlockTimeKeeper,
 			bankKeeper,
 			ks.PerpetualsKeeper,
+			indexerEventsTransientStoreKey,
+			true,
 		)
 		ks.SubaccountsKeeper, _ = createSubaccountsKeeper(
 			stateStore,
