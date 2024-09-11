@@ -13,8 +13,8 @@ import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
   AffiliateAddressRequest,
-  AffiliateReferralCodeRequest,
-  AffiliateReferralCodeResponse,
+  AffiliateMetadataRequest,
+  AffiliateMetadataResponse,
   AffiliateAddressResponse,
   AffiliateSnapshotResponse,
   AffiliateSnapshotResponseObject,
@@ -29,14 +29,16 @@ const controllerName: string = 'affiliates-controller';
 // TODO(OTE-731): replace api stubs with real logic
 @Route('affiliates')
 class AffiliatesController extends Controller {
-  @Get('/referral_code')
-  async getReferralCode(
+  @Get('/metadata')
+  async getMetadata(
     @Query() address: string, // eslint-disable-line @typescript-eslint/no-unused-vars
-  ): Promise<AffiliateReferralCodeResponse> {
+  ): Promise<AffiliateMetadataResponse> {
     // simulate a delay
     await new Promise((resolve) => setTimeout(resolve, 100));
     return {
       referralCode: 'TempCode123',
+      isVolumeEligible: true,
+      isAffiliate: false,
     };
   }
 
@@ -67,12 +69,13 @@ class AffiliatesController extends Controller {
 
     const snapshot: AffiliateSnapshotResponseObject = {
       affiliateAddress: 'some_address',
-      affiliateEarnings: 100,
       affiliateReferralCode: 'TempCode123',
+      affiliateEarnings: 100,
       affiliateReferredTrades: 1000,
       affiliateTotalReferredFees: 100,
       affiliateReferredUsers: 10,
       affiliateReferredNetProtocolEarnings: 1000,
+      affiliateReferredTotalVolume: 1000000,
     };
 
     const affiliateSnapshots: AffiliateSnapshotResponseObject[] = [];
@@ -102,7 +105,7 @@ class AffiliatesController extends Controller {
 }
 
 router.get(
-  '/referral_code',
+  '/metadata',
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
     address: {
@@ -117,15 +120,15 @@ router.get(
     const start: number = Date.now();
     const {
       address,
-    }: AffiliateReferralCodeRequest = matchedData(req) as AffiliateReferralCodeRequest;
+    }: AffiliateMetadataRequest = matchedData(req) as AffiliateMetadataRequest;
 
     try {
       const controller: AffiliatesController = new AffiliatesController();
-      const response: AffiliateReferralCodeResponse = await controller.getReferralCode(address);
+      const response: AffiliateMetadataResponse = await controller.getMetadata(address);
       return res.send(response);
     } catch (error) {
       return handleControllerError(
-        'AffiliatesController GET /referral_code',
+        'AffiliatesController GET /metadata',
         'Affiliates referral code error',
         error,
         req,
@@ -133,7 +136,7 @@ router.get(
       );
     } finally {
       stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.get_referral_code.timing`,
+        `${config.SERVICE_NAME}.${controllerName}.get_metadata.timing`,
         Date.now() - start,
       );
     }
