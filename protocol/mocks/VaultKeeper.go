@@ -64,24 +64,6 @@ func (_m *VaultKeeper) GetTotalShares(ctx types.Context, vaultId vaulttypes.Vaul
 	return r0, r1
 }
 
-// GetVaultClobOrderClientId provides a mock function with given fields: ctx, side, layer
-func (_m *VaultKeeper) GetVaultClobOrderClientId(ctx types.Context, side clobtypes.Order_Side, layer uint8) uint32 {
-	ret := _m.Called(ctx, side, layer)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetVaultClobOrderClientId")
-	}
-
-	var r0 uint32
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order_Side, uint8) uint32); ok {
-		r0 = rf(ctx, side, layer)
-	} else {
-		r0 = ret.Get(0).(uint32)
-	}
-
-	return r0
-}
-
 // GetVaultClobOrders provides a mock function with given fields: ctx, vaultId
 func (_m *VaultKeeper) GetVaultClobOrders(ctx types.Context, vaultId vaulttypes.VaultId) ([]*clobtypes.Order, error) {
 	ret := _m.Called(ctx, vaultId)

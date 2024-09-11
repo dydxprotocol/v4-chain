@@ -186,6 +186,24 @@ func (_m *SubaccountsKeeper) GetRandomSubaccount(ctx types.Context, _a1 *rand.Ra
 	return r0, r1
 }
 
+// GetStreamSubaccountUpdate provides a mock function with given fields: ctx, id, snapshot
+func (_m *SubaccountsKeeper) GetStreamSubaccountUpdate(ctx types.Context, id subaccountstypes.SubaccountId, snapshot bool) subaccountstypes.StreamSubaccountUpdate {
+	ret := _m.Called(ctx, id, snapshot)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetStreamSubaccountUpdate")
+	}
+
+	var r0 subaccountstypes.StreamSubaccountUpdate
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, bool) subaccountstypes.StreamSubaccountUpdate); ok {
+		r0 = rf(ctx, id, snapshot)
+	} else {
+		r0 = ret.Get(0).(subaccountstypes.StreamSubaccountUpdate)
+	}
+
+	return r0
+}
+
 // GetSubaccount provides a mock function with given fields: ctx, id
 func (_m *SubaccountsKeeper) GetSubaccount(ctx types.Context, id subaccountstypes.SubaccountId) subaccountstypes.Subaccount {
 	ret := _m.Called(ctx, id)
@@ -230,6 +248,11 @@ func (_m *SubaccountsKeeper) LegacyGetNegativeTncSubaccountSeenAtBlock(ctx types
 	}
 
 	return r0, r1
+}
+
+// SendFinalizedSubaccountUpdates provides a mock function with given fields: ctx, subaccountUpdates
+func (_m *SubaccountsKeeper) SendFinalizedSubaccountUpdates(ctx types.Context, subaccountUpdates []subaccountstypes.StreamSubaccountUpdate) {
+	_m.Called(ctx, subaccountUpdates)
 }
 
 // SetNegativeTncSubaccountSeenAtBlock provides a mock function with given fields: ctx, perpetualId, blockHeight

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	oracletypes "github.com/skip-mev/slinky/pkg/types"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -16,7 +15,7 @@ import (
 func TestCurrencyPairIDStoreFunctions(t *testing.T) {
 	ctx, keeper, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
-	currencyPair := slinkytypes.CurrencyPair{
+	currencyPair := oracletypes.CurrencyPair{
 		Base:  "BTC",
 		Quote: "USD",
 	}
