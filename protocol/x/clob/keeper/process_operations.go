@@ -19,25 +19,6 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-// fetchOrdersInvolvedInOpQueue fetches all OrderIds involved in an operations
-// queue's matches + short term order placements and returns them as a set.
-func fetchOrdersInvolvedInOpQueue(
-	operations []types.InternalOperation,
-) (orderIdSet map[types.OrderId]struct{}) {
-	orderIdSet = make(map[types.OrderId]struct{})
-	for _, operation := range operations {
-		if shortTermOrderPlacement := operation.GetShortTermOrderPlacement(); shortTermOrderPlacement != nil {
-			orderId := shortTermOrderPlacement.GetOrder().OrderId
-			orderIdSet[orderId] = struct{}{}
-		}
-		if clobMatch := operation.GetMatch(); clobMatch != nil {
-			orderIdSetForClobMatch := clobMatch.GetAllOrderIds()
-			orderIdSet = lib.MergeMaps(orderIdSet, orderIdSetForClobMatch)
-		}
-	}
-	return orderIdSet
-}
-
 // ProcessProposerOperations updates on-chain state given an []OperationRaw operations queue
 // representing matches that occurred in the previous block. It performs validation on an operations
 // queue. If all validation passes, the operations queue is written to state.
