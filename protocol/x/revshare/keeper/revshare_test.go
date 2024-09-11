@@ -7,9 +7,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
@@ -269,25 +269,25 @@ func TestValidateRevShareSafety(t *testing.T) {
 
 func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 	tests := []struct {
-		name                              string
-		revenueSharePpmNetFees            uint32
-		revenueSharePpmTakerFees          uint32
-		expectedAffiliateRevShares        int
-		expectedUnconditionalRevShares    int
-		expectedMarketMapperRevShares     int
-		monthlyRollingTakerVolumeQuantums uint64
-		setup                             func(tApp *testapp.TestApp, ctx sdk.Context,
+		name                                  string
+		expectedRevShares                     int
+		monthlyRollingTakerVolumeQuantums     uint64
+		expectedTakerFeeRevSharesPpmByAddress map[string]uint32
+		expectedNetFeeRevSharesPpmByAddress   map[string]uint32
+		setup                                 func(tApp *testapp.TestApp, ctx sdk.Context,
 			keeper *keeper.Keeper, affiliatesKeeper *affiliateskeeper.Keeper)
 	}{
 		{
-			name: "Valid revenue share from affiliates, unconditional " +
-				"rev shares and market mapper rev share",
-			revenueSharePpmNetFees:            600_000, // 60%,
-			revenueSharePpmTakerFees:          150_000, // 15%
-			expectedAffiliateRevShares:        1,
-			expectedUnconditionalRevShares:    2,
-			expectedMarketMapperRevShares:     1,
+			name:                              "Valid revenue share from affiliates, unconditional and market mapper",
+			expectedRevShares:                 4,
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
+			expectedTakerFeeRevSharesPpmByAddress: map[string]uint32{
+				constants.BobAccAddress.String(): 150_000, // 15% of taker fees
+			},
+			expectedNetFeeRevSharesPpmByAddress: map[string]uint32{
+				constants.AliceAccAddress.String(): 400_000, // 40% of net fees
+				constants.BobAccAddress.String():   200_000, // 20% of net fees
+			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
@@ -317,13 +317,14 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-			name:                              "Valid revenue share with 30d volume greater than max 30d referral volume",
-			revenueSharePpmNetFees:            600_000, // 60%,
-			revenueSharePpmTakerFees:          0,       // 0%
-			expectedAffiliateRevShares:        0,
-			expectedUnconditionalRevShares:    2,
-			expectedMarketMapperRevShares:     1,
-			monthlyRollingTakerVolumeQuantums: types.Max30dRefereeVolumeQuantums + 1,
+			name:                                  "Valid revenue share with 30d volume greater than max 30d referral volume",
+			expectedRevShares:                     3,
+			monthlyRollingTakerVolumeQuantums:     types.Max30dRefereeVolumeQuantums + 1,
+			expectedTakerFeeRevSharesPpmByAddress: map[string]uint32{},
+			expectedNetFeeRevSharesPpmByAddress: map[string]uint32{
+				constants.AliceAccAddress.String(): 400_000, // 40% of net fees
+				constants.BobAccAddress.String():   200_000, // 20% of net fees
+			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
@@ -353,12 +354,14 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 		},
 		{
 			name:                              "Valid revenue share with no unconditional rev shares",
-			revenueSharePpmNetFees:            100_000, // 10%,
-			revenueSharePpmTakerFees:          150_000, // 15%
-			expectedAffiliateRevShares:        1,
-			expectedUnconditionalRevShares:    0,
-			expectedMarketMapperRevShares:     1,
+			expectedRevShares:                 2,
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
+			expectedTakerFeeRevSharesPpmByAddress: map[string]uint32{
+				constants.BobAccAddress.String(): 150_000, // 15% of taker fees
+			},
+			expectedNetFeeRevSharesPpmByAddress: map[string]uint32{
+				constants.AliceAccAddress.String(): 100_000, // 10% of net fees
+			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
@@ -376,12 +379,14 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 		},
 		{
 			name:                              "Valid revenue share with no market mapper rev share",
-			revenueSharePpmNetFees:            200_000, // 20%,
-			revenueSharePpmTakerFees:          150_000, // 15%
-			expectedAffiliateRevShares:        1,
-			expectedUnconditionalRevShares:    1,
-			expectedMarketMapperRevShares:     0,
+			expectedRevShares:                 2,
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
+			expectedTakerFeeRevSharesPpmByAddress: map[string]uint32{
+				constants.BobAccAddress.String(): 150_000, // 15% of taker fees
+			},
+			expectedNetFeeRevSharesPpmByAddress: map[string]uint32{
+				constants.BobAccAddress.String(): 200_000, // 20% of net fees
+			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				keeper.SetUnconditionalRevShareConfigParams(ctx, types.UnconditionalRevShareConfig{
@@ -399,13 +404,11 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-			name:                              "No rev shares",
-			revenueSharePpmNetFees:            0, // 0%,
-			revenueSharePpmTakerFees:          0, // 0%
-			expectedAffiliateRevShares:        0,
-			expectedUnconditionalRevShares:    0,
-			expectedMarketMapperRevShares:     0,
-			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
+			name:                                  "No rev shares",
+			expectedRevShares:                     0,
+			monthlyRollingTakerVolumeQuantums:     1_000_000_000_000, // 1 million USDC
+			expectedTakerFeeRevSharesPpmByAddress: map[string]uint32{},
+			expectedNetFeeRevSharesPpmByAddress:   map[string]uint32{},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 			},
@@ -426,6 +429,10 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				tc.monthlyRollingTakerVolumeQuantums,
 			)
 
+			takerFeeQuoteQuantums := fill.TakerFeeQuoteQuantums()
+			netFeeQuoteQuantums := big.NewInt(0).Add(fill.TakerFeeQuoteQuantums(),
+				fill.MakerFeeQuoteQuantums())
+
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			keeper := tApp.App.RevShareKeeper
@@ -439,36 +446,47 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			revShares, err := keeper.GetAllRevShares(ctx, fill)
 
 			require.NoError(t, err)
-			affiliateRevShares := 0
-			unconditionalRevShares := 0
-			marketMapperRevShares := 0
-			for _, revShare := range revShares {
-				switch revShare.RevShareType {
-				case types.REV_SHARE_TYPE_AFFILIATE:
-					affiliateRevShares++
-				case types.REV_SHARE_TYPE_UNCONDITIONAL:
-					unconditionalRevShares++
-				case types.REV_SHARE_TYPE_MARKET_MAPPER:
-					marketMapperRevShares++
-				}
-			}
-			require.Equal(t, tc.expectedAffiliateRevShares, affiliateRevShares)
-			require.Equal(t, tc.expectedUnconditionalRevShares, unconditionalRevShares)
-			require.Equal(t, tc.expectedMarketMapperRevShares, marketMapperRevShares)
+			require.Len(t, revShares, tc.expectedRevShares)
 
-			if tc.expectedAffiliateRevShares > 0 || tc.expectedUnconditionalRevShares > 0 ||
-				tc.expectedMarketMapperRevShares > 0 {
-				totalFees := new(big.Int).Add(fill.TakerFeeQuoteQuantums(), fill.MakerFeeQuoteQuantums())
-				actualShare := new(big.Int)
+			if tc.expectedRevShares > 0 {
+				actualTakerFeeRevSharesByAddress := make(map[string]*big.Int)
+				actualNetFeeRevSharesByAddress := make(map[string]*big.Int)
 
-				expectedShareFromNetFees := lib.BigMulPpm(totalFees, lib.BigI(int64(tc.revenueSharePpmNetFees)), false)
-				expectedShareFromTakerFees := lib.BigMulPpm(fill.TakerFeeQuoteQuantums(),
-					lib.BigI(int64(tc.revenueSharePpmTakerFees)), false)
-				expectedShare := new(big.Int).Add(expectedShareFromNetFees, expectedShareFromTakerFees)
 				for _, revShare := range revShares {
-					actualShare.Add(actualShare, revShare.QuoteQuantums)
+					if revShare.RevShareFeeSource == types.REV_SHARE_FEE_SOURCE_TAKER_FEE {
+						if _, exists := actualTakerFeeRevSharesByAddress[revShare.Recipient]; !exists {
+							actualTakerFeeRevSharesByAddress[revShare.Recipient] = big.NewInt(0)
+						}
+						actualTakerFeeRevSharesByAddress[revShare.Recipient].Add(
+							actualTakerFeeRevSharesByAddress[revShare.Recipient],
+							revShare.QuoteQuantums,
+						)
+					} else {
+						if _, exists := actualNetFeeRevSharesByAddress[revShare.Recipient]; !exists {
+							actualNetFeeRevSharesByAddress[revShare.Recipient] = big.NewInt(0)
+						}
+						actualNetFeeRevSharesByAddress[revShare.Recipient].Add(
+							actualNetFeeRevSharesByAddress[revShare.Recipient],
+							revShare.QuoteQuantums,
+						)
+					}
 				}
-				require.Equal(t, expectedShare, actualShare)
+
+				// Check taker fee rev shares
+				for address, expectedSharePpm := range tc.expectedTakerFeeRevSharesPpmByAddress {
+					expectedShare := lib.BigMulPpm(lib.BigU(expectedSharePpm), takerFeeQuoteQuantums, false)
+					actualShare, exists := actualTakerFeeRevSharesByAddress[address]
+					require.True(t, exists)
+					require.Equal(t, expectedShare, actualShare)
+				}
+
+				// Check net fee rev shares
+				for address, expectedSharePpm := range tc.expectedNetFeeRevSharesPpmByAddress {
+					expectedShare := lib.BigMulPpm(lib.BigU(expectedSharePpm), netFeeQuoteQuantums, false)
+					actualShare, exists := actualNetFeeRevSharesByAddress[address]
+					require.True(t, exists)
+					require.Equal(t, expectedShare, actualShare)
+				}
 			}
 		})
 	}
