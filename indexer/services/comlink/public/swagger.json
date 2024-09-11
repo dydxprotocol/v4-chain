@@ -240,15 +240,22 @@
         "type": "object",
         "additionalProperties": false
       },
-      "AffiliateReferralCodeResponse": {
+      "AffiliateMetadataResponse": {
         "properties": {
           "referralCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
+          },
+          "isVolumeEligible": {
+            "type": "boolean"
+          },
+          "isAffiliate": {
+            "type": "boolean"
           }
         },
         "required": [
-          "referralCode"
+          "referralCode",
+          "isVolumeEligible",
+          "isAffiliate"
         ],
         "type": "object",
         "additionalProperties": false
@@ -256,8 +263,7 @@
       "AffiliateAddressResponse": {
         "properties": {
           "address": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "required": [
@@ -1682,7 +1688,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AffiliateReferralCodeResponse"
+                  "$ref": "#/components/schemas/AffiliateMetadataResponse"
                 }
               }
             }

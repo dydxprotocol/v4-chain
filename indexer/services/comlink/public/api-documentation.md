@@ -430,7 +430,9 @@ fetch(`${baseURL}/affiliates/metadata?address=string`,
 
 ```json
 {
-  "referralCode": "string"
+  "referralCode": "string",
+  "isVolumeEligible": true,
+  "isAffiliate": true
 }
 ```
 
@@ -438,7 +440,7 @@ fetch(`${baseURL}/affiliates/metadata?address=string`,
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateReferralCodeResponse](#schemaaffiliatereferralcoderesponse)|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateMetadataResponse](#schemaaffiliatemetadataresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -4020,16 +4022,18 @@ This operation does not require authentication
 |freeCollateral|string|true|none|none|
 |childSubaccounts|[[SubaccountResponseObject](#schemasubaccountresponseobject)]|true|none|none|
 
-## AffiliateReferralCodeResponse
+## AffiliateMetadataResponse
 
-<a id="schemaaffiliatereferralcoderesponse"></a>
-<a id="schema_AffiliateReferralCodeResponse"></a>
-<a id="tocSaffiliatereferralcoderesponse"></a>
-<a id="tocsaffiliatereferralcoderesponse"></a>
+<a id="schemaaffiliatemetadataresponse"></a>
+<a id="schema_AffiliateMetadataResponse"></a>
+<a id="tocSaffiliatemetadataresponse"></a>
+<a id="tocsaffiliatemetadataresponse"></a>
 
 ```json
 {
-  "referralCode": "string"
+  "referralCode": "string",
+  "isVolumeEligible": true,
+  "isAffiliate": true
 }
 
 ```
@@ -4038,7 +4042,9 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|referralCode|string¦null|true|none|none|
+|referralCode|string|true|none|none|
+|isVolumeEligible|boolean|true|none|none|
+|isAffiliate|boolean|true|none|none|
 
 ## AffiliateAddressResponse
 
@@ -4058,7 +4064,7 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|address|string¦null|true|none|none|
+|address|string|true|none|none|
 
 ## AffiliateSnapshotResponseObject
 

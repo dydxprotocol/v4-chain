@@ -14,6 +14,8 @@ describe('affiliates-controller#V4', () => {
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
         referralCode: 'TempCode123',
+        isVolumeEligible: true,
+        isAffiliate: false,
       });
     });
   });

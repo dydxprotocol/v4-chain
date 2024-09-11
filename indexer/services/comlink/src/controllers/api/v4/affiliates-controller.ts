@@ -19,8 +19,8 @@ import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
   AffiliateAddressRequest,
-  AffiliateReferralCodeRequest,
-  AffiliateReferralCodeResponse,
+  AffiliateMetadataRequest,
+  AffiliateMetadataResponse,
   AffiliateAddressResponse,
   AffiliateSnapshotResponse,
   AffiliateSnapshotResponseObject,
@@ -37,6 +37,7 @@ const controllerName: string = 'affiliates-controller';
 class AffiliatesController extends Controller {
   @Get('/metadata')
   async getMetadata(
+<<<<<<< HEAD
     @Query() address: string,
   ): Promise<AffiliateReferralCodeResponse> {
     // Check that the address exists
@@ -78,6 +79,16 @@ class AffiliatesController extends Controller {
 
     return {
       referralCode: referralCode,
+=======
+    @Query() address: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ): Promise<AffiliateMetadataResponse> {
+    // simulate a delay
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    return {
+      referralCode: 'TempCode123',
+      isVolumeEligible: true,
+      isAffiliate: false,
+>>>>>>> main
     };
   }
 
@@ -159,11 +170,15 @@ router.get(
     const start: number = Date.now();
     const {
       address,
-    }: AffiliateReferralCodeRequest = matchedData(req) as AffiliateReferralCodeRequest;
+    }: AffiliateMetadataRequest = matchedData(req) as AffiliateMetadataRequest;
 
     try {
       const controller: AffiliatesController = new AffiliatesController();
+<<<<<<< HEAD
       const response: AffiliateReferralCodeResponse = await controller.getMetadata(address);
+=======
+      const response: AffiliateMetadataResponse = await controller.getMetadata(address);
+>>>>>>> main
       return res.send(response);
     } catch (error) {
       return handleControllerError(

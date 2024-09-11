@@ -669,7 +669,7 @@ export interface MegavaultPositionResponse {
 }
 
 /* ------- Affiliates Types ------- */
-export interface AffiliateReferralCodeRequest{
+export interface AffiliateMetadataRequest{
   address: string,
 }
 
@@ -687,12 +687,14 @@ export interface AffiliateTotalVolumeRequest{
   address: string,
 }
 
-export interface AffiliateReferralCodeResponse {
-  referralCode: string | null,
+export interface AffiliateMetadataResponse {
+  referralCode: string,
+  isVolumeEligible: boolean,
+  isAffiliate: boolean,
 }
 
 export interface AffiliateAddressResponse {
-  address: string | null,
+  address: string,
 }
 
 export interface AffiliateSnapshotResponse {
