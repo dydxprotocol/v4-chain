@@ -27,6 +27,7 @@ import trackLag from './tasks/track-lag';
 import uncrossOrderbookTask from './tasks/uncross-orderbook';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
+import updateWalletTotalVolumeTask from './tasks/update-wallet-total-volume';
 
 process.on('SIGTERM', () => {
   logger.info({
@@ -245,6 +246,13 @@ async function start(): Promise<void> {
       yearlyLeaderboardTask,
       'create_leaderboard_pnl_yearly',
       config.LOOPS_INTERVAL_MS_LEADERBOARD_PNL_YEARLY,
+    );
+  }
+  if (config.LOOPS_ENABLED_UPDATE_WALLET_TOTAL_VOLUME) {
+    startLoop(
+      updateWalletTotalVolumeTask,
+      'update_wallet_total_volume',
+      config.LOOPS_INTERVAL_MS_UPDATE_WALLET_TOTAL_VOLUME,
     );
   }
 

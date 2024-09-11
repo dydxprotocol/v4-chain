@@ -30,6 +30,17 @@ type ClobKeeper interface {
 	) (err error)
 }
 
+type DelayMsgKeeper interface {
+	DelayMessageByBlocks(
+		ctx sdk.Context,
+		msg sdk.Msg,
+		blockDelay uint32,
+	) (
+		id uint32,
+		err error,
+	)
+}
+
 type PerpetualsKeeper interface {
 	GetPerpetual(
 		ctx sdk.Context,

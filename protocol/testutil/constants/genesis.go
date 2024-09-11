@@ -43,6 +43,7 @@ const GenesisState = `{
         }
       ]
     },
+    "affiliates": {},
     "auth": {
       "params": {
         "max_memo_characters": "256",
@@ -877,32 +878,67 @@ const GenesisState = `{
     "perpetuals": {
       "liquidity_tiers": [
         {
-          "base_position_notional": 1000000000000,
           "id": 0,
           "impact_notional": 10000000000,
           "initial_margin_ppm": 50000,
           "maintenance_fraction_ppm": 600000,
-          "name": "Large-Cap"
+          "name": "Large-Cap",
+          "open_interest_lower_cap": 0,
+          "open_interest_upper_cap": 0
         },
         {
           "id": 1,
-          "name": "Mid-Cap",
+          "impact_notional": 5000000000,
           "initial_margin_ppm": 100000,
           "maintenance_fraction_ppm": 500000,
-          "base_position_notional": 250000000000,
-          "impact_notional": 5000000000,
+          "name": "Small-Cap",
           "open_interest_lower_cap": 20000000000000,
           "open_interest_upper_cap": 50000000000000
         },
         {
           "id": 2,
-          "name": "Long-Tail",
+          "impact_notional": 2500000000,
           "initial_margin_ppm": 200000,
           "maintenance_fraction_ppm": 500000,
-          "base_position_notional": 100000000000,
-          "impact_notional": 2500000000,
+          "name": "Long-Tail",
           "open_interest_lower_cap": 5000000000000,
           "open_interest_upper_cap": 10000000000000
+        },
+        {
+          "id": 3,
+          "impact_notional": 2500000000,
+          "initial_margin_ppm": 1000000,
+          "maintenance_fraction_ppm": 200000,
+          "name": "Safety",
+          "open_interest_lower_cap": 2000000000000,
+          "open_interest_upper_cap": 5000000000000
+        },
+        {
+          "id": 4,
+          "impact_notional": 2500000000,
+          "initial_margin_ppm": 50000,
+          "maintenance_fraction_ppm": 600000,
+          "name": "Isolated",
+          "open_interest_lower_cap": 500000000000,
+          "open_interest_upper_cap": 1000000000000
+        },
+        {
+          "id": 5,
+          "impact_notional": 5000000000,
+          "initial_margin_ppm": 50000,
+          "maintenance_fraction_ppm": 600000,
+          "name": "Mid-Cap",
+          "open_interest_lower_cap": 40000000000000,
+          "open_interest_upper_cap": 100000000000000
+        },
+        {
+          "id": 6,
+          "impact_notional": 2500000000,
+          "initial_margin_ppm": 10000,
+          "maintenance_fraction_ppm": 500000,
+          "name": "FX",
+          "open_interest_lower_cap": 500000000000,
+          "open_interest_upper_cap": 1000000000000
         }
       ],
       "params": {
@@ -4534,6 +4570,7 @@ const GenesisState = `{
     },
     "upgrade": {},
     "vault": {
+      "all_owner_share_unlocks": [],
       "default_quoting_params": {
         "layers": 2,
         "spread_min_ppm": 10000,
@@ -4542,6 +4579,10 @@ const GenesisState = `{
         "order_size_pct_ppm": 100000,
         "order_expiration_seconds": 60,
         "activation_threshold_quote_quantums": "1000000000"
+      },
+      "owner_shares": [],
+      "total_shares": {
+        "num_shares": "0"
       },
       "vaults": []
     },

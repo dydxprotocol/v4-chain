@@ -83,7 +83,30 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 		indexerEventsTransientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+
+		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+		accountsKeeper, _ := createAccountKeeper(
+			stateStore,
+			db,
+			cdc,
+			registry)
+
+		stakingKeeper, _ := createStakingKeeper(
+			stateStore,
+			db,
+			cdc,
+			accountsKeeper,
+			bankKeeper,
+		)
+		ks.StatsKeeper, _ = createStatsKeeper(
+			stateStore,
+			epochsKeeper,
+			db,
+			cdc,
+			stakingKeeper,
+		)
+		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, ks.StatsKeeper)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 		ks.MarketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
@@ -95,7 +118,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 		)
 		// Mock time provider response for market creation.
 		mockTimeProvider.On("Now").Return(constants.TimeT)
-		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		ks.PerpetualsKeeper, _ = createPerpetualsKeeper(
 			stateStore,
 			db,
@@ -113,12 +135,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			true,
 		)
 		ks.BlockTimeKeeper, _ = createBlockTimeKeeper(stateStore, db, cdc)
-		ks.StatsKeeper, _ = createStatsKeeper(
-			stateStore,
-			epochsKeeper,
-			db,
-			cdc,
-		)
 		ks.VaultKeeper, _ = createVaultKeeper(
 			stateStore,
 			db,

@@ -15,7 +15,7 @@ import { TradingRewardAggregationPeriod } from './trading-reward-aggregation-typ
 type IsoString = string;
 
 export interface IdBasedModelFromDatabase {
-  id: string;
+  id: string,
 }
 
 export interface SubaccountFromDatabase extends IdBasedModelFromDatabase {
@@ -28,102 +28,105 @@ export interface SubaccountFromDatabase extends IdBasedModelFromDatabase {
 export interface WalletFromDatabase {
   address: string,
   totalTradingRewards: string,
+  totalVolume: string,
+  isWhitelistAffiliate: boolean,
 }
 
 export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase {
-  id: string;
-  subaccountId: string;
-  perpetualId: string;
-  side: PositionSide;
-  status: PerpetualPositionStatus;
-  size: string;  // The size of the position. Positive for long, negative for short.
-  maxSize: string;
-  entryPrice: string;
-  exitPrice?: string;
-  sumOpen: string;
-  sumClose: string;
-  createdAt: IsoString;
-  closedAt?: IsoString;
-  createdAtHeight: string;
-  closedAtHeight?: string;
-  openEventId: Buffer;
-  closeEventId?: Buffer;
-  lastEventId: Buffer;
-  settledFunding: string;
+  id: string,
+  subaccountId: string,
+  perpetualId: string,
+  side: PositionSide,
+  status: PerpetualPositionStatus,
+  size: string,  // The size of the position. Positive for long, negative for short.
+  maxSize: string,
+  entryPrice: string,
+  exitPrice?: string,
+  sumOpen: string,
+  sumClose: string,
+  createdAt: IsoString,
+  closedAt?: IsoString,
+  createdAtHeight: string,
+  closedAtHeight?: string,
+  openEventId: Buffer,
+  closeEventId?: Buffer,
+  lastEventId: Buffer,
+  settledFunding: string,
 }
 
 export interface OrderFromDatabase extends IdBasedModelFromDatabase {
-  subaccountId: string;
-  clientId: string;
-  clobPairId: string;
-  side: OrderSide;
-  size: string;
-  totalFilled: string;
-  price: string;
-  type: OrderType;
-  status: OrderStatus;
-  timeInForce: TimeInForce;
-  reduceOnly: boolean;
-  orderFlags: string;
-  updatedAt: IsoString;
-  updatedAtHeight: string;
-  goodTilBlock?: string;
-  goodTilBlockTime?: string;
+  subaccountId: string,
+  clientId: string,
+  clobPairId: string,
+  side: OrderSide,
+  size: string,
+  totalFilled: string,
+  price: string,
+  type: OrderType,
+  status: OrderStatus,
+  timeInForce: TimeInForce,
+  reduceOnly: boolean,
+  orderFlags: string,
+  updatedAt: IsoString,
+  updatedAtHeight: string,
+  goodTilBlock?: string,
+  goodTilBlockTime?: string,
   // createdAtHeight is optional because short term orders do not have a createdAtHeight.
-  createdAtHeight?: string;
-  clientMetadata: string;
-  triggerPrice?: string;
+  createdAtHeight?: string,
+  clientMetadata: string,
+  triggerPrice?: string,
 }
 
 export interface PerpetualMarketFromDatabase {
-  id: string;
-  clobPairId: string;
-  ticker: string;
-  marketId: number;
-  status: PerpetualMarketStatus;
-  priceChange24H: string;
-  volume24H: string;
-  trades24H: number;
-  nextFundingRate: string;
-  openInterest: string;
-  quantumConversionExponent: number;
-  atomicResolution: number;
-  subticksPerTick: number;
-  stepBaseQuantums: number;
-  liquidityTierId: number;
-  marketType: PerpetualMarketType;
-  baseOpenInterest: string;
+  id: string,
+  clobPairId: string,
+  ticker: string,
+  marketId: number,
+  status: PerpetualMarketStatus,
+  priceChange24H: string,
+  volume24H: string,
+  trades24H: number,
+  nextFundingRate: string,
+  openInterest: string,
+  quantumConversionExponent: number,
+  atomicResolution: number,
+  subticksPerTick: number,
+  stepBaseQuantums: number,
+  liquidityTierId: number,
+  marketType: PerpetualMarketType,
+  baseOpenInterest: string,
 }
 
 export interface FillFromDatabase {
-  id: string;
-  subaccountId: string;
-  side: OrderSide;
-  liquidity: Liquidity;
-  type: FillType;
-  clobPairId: string;
-  size: string;
-  price: string;
-  quoteAmount: string;
-  eventId: Buffer;
-  transactionHash: string;
-  createdAt: IsoString;
-  createdAtHeight: string;
-  orderId?: string;
-  clientMetadata?: string;
-  fee: string;
+  id: string,
+  subaccountId: string,
+  side: OrderSide,
+  liquidity: Liquidity,
+  type: FillType,
+  clobPairId: string,
+  size: string,
+  price: string,
+  quoteAmount: string,
+  eventId: Buffer,
+  transactionHash: string,
+  createdAt: IsoString,
+  createdAtHeight: string,
+  orderId?: string,
+  clientMetadata?: string,
+  fee: string,
+  affiliateRevShare: string,
 }
 
 export interface BlockFromDatabase {
-  blockHeight: string;
-  time: IsoString;
+  blockHeight: string,
+  time: IsoString,
 }
 
 export interface TendermintEventFromDatabase {
-  id: Buffer;
-  blockHeight: string;
-  transactionIndex: number;
-  eventIndex: number;
+  id: Buffer,
+  blockHeight: string,
+  transactionIndex: number,
+  eventIndex: number,
 }
 
 export interface TransactionFromDatabase extends IdBasedModelFromDatabase {
@@ -134,146 +137,168 @@ export interface TransactionFromDatabase extends IdBasedModelFromDatabase {
 }
 
 export interface AssetFromDatabase {
-  id: string;
-  symbol: string;
-  atomicResolution: number;
-  hasMarket: boolean;
-  marketId?: number;
+  id: string,
+  symbol: string,
+  atomicResolution: number,
+  hasMarket: boolean,
+  marketId?: number,
 }
 
 export interface AssetPositionFromDatabase {
-  id: string;
-  assetId: string;
-  subaccountId: string;
-  size: string;
-  isLong: boolean;
+  id: string,
+  assetId: string,
+  subaccountId: string,
+  size: string,
+  isLong: boolean,
 }
 
 export interface TransferFromDatabase extends IdBasedModelFromDatabase {
-  senderSubaccountId?: string;
-  recipientSubaccountId?: string;
-  senderWalletAddress?: string;
-  recipientWalletAddress?: string;
-  assetId: string;
-  size: string;
-  eventId: Buffer;
-  transactionHash: string;
-  createdAt: IsoString;
-  createdAtHeight: string;
+  senderSubaccountId?: string,
+  recipientSubaccountId?: string,
+  senderWalletAddress?: string,
+  recipientWalletAddress?: string,
+  assetId: string,
+  size: string,
+  eventId: Buffer,
+  transactionHash: string,
+  createdAt: IsoString,
+  createdAtHeight: string,
 }
 
 export interface MarketFromDatabase {
-  id: number;
-  pair: string;
-  exponent: number;
-  minPriceChangePpm: number;
-  oraclePrice?: string;
+  id: number,
+  pair: string,
+  exponent: number,
+  minPriceChangePpm: number,
+  oraclePrice?: string,
 }
 
 export interface OraclePriceFromDatabase extends IdBasedModelFromDatabase {
-  marketId: number;
-  price: string;
-  effectiveAt: IsoString;
-  effectiveAtHeight: string;
+  marketId: number,
+  price: string,
+  effectiveAt: IsoString,
+  effectiveAtHeight: string,
 }
 
 export interface LiquidityTiersFromDatabase {
-  id: number;
-  name: string;
-  initialMarginPpm: string;
-  maintenanceFractionPpm: string;
-  openInterestLowerCap?: string;
-  openInterestUpperCap?: string;
+  id: number,
+  name: string,
+  initialMarginPpm: string,
+  maintenanceFractionPpm: string,
+  openInterestLowerCap?: string,
+  openInterestUpperCap?: string,
 }
 
 export interface CandleFromDatabase extends IdBasedModelFromDatabase {
-  startedAt: IsoString;
-  ticker: string;
-  resolution: CandleResolution;
-  low: string;
-  high: string;
-  open: string;
-  close: string;
-  baseTokenVolume: string;
-  usdVolume: string;
-  trades: number;
-  startingOpenInterest: string;
-  orderbookMidPriceOpen?: string | null;
-  orderbookMidPriceClose?: string | null;
+  startedAt: IsoString,
+  ticker: string,
+  resolution: CandleResolution,
+  low: string,
+  high: string,
+  open: string,
+  close: string,
+  baseTokenVolume: string,
+  usdVolume: string,
+  trades: number,
+  startingOpenInterest: string,
+  orderbookMidPriceOpen?: string | null,
+  orderbookMidPriceClose?: string | null,
 }
 
 export interface PnlTicksFromDatabase extends IdBasedModelFromDatabase {
-  subaccountId: string;
-  equity: string;
-  totalPnl: string;
-  netTransfers: string;
-  createdAt: IsoString;
-  blockHeight: string;
-  blockTime: IsoString;
+  subaccountId: string,
+  equity: string,
+  totalPnl: string,
+  netTransfers: string,
+  createdAt: IsoString,
+  blockHeight: string,
+  blockTime: IsoString,
 }
 
 export interface FundingIndexUpdatesFromDatabase extends IdBasedModelFromDatabase {
-  perpetualId: string;
-  eventId: Buffer;
-  rate: string;
-  oraclePrice: string;
-  fundingIndex: string;
-  effectiveAt: string;
-  effectiveAtHeight: string;
+  perpetualId: string,
+  eventId: Buffer,
+  rate: string,
+  oraclePrice: string,
+  fundingIndex: string,
+  effectiveAt: string,
+  effectiveAtHeight: string,
 }
 
 export interface ComplianceDataFromDatabase {
-  address: string;
-  chain?: string;
-  blocked: boolean;
-  riskScore?: string;
-  updatedAt: string;
+  address: string,
+  chain?: string,
+  blocked: boolean,
+  riskScore?: string,
+  updatedAt: string,
 }
 
 export interface ComplianceStatusFromDatabase {
-  address: string;
-  status: ComplianceStatus;
-  reason?: ComplianceReason;
-  createdAt: IsoString;
-  updatedAt: IsoString;
+  address: string,
+  status: ComplianceStatus,
+  reason?: ComplianceReason,
+  createdAt: IsoString,
+  updatedAt: IsoString,
 }
 
 export interface TradingRewardFromDatabase {
-  id: string;
-  address: string;
-  blockTime: IsoString;
-  blockHeight: string;
-  amount: string;
+  id: string,
+  address: string,
+  blockTime: IsoString,
+  blockHeight: string,
+  amount: string,
 }
 
 export interface TradingRewardAggregationFromDatabase {
-  id: string;
-  address: string;
-  startedAt: IsoString;
-  startedAtHeight: string;
-  endedAt?: IsoString;
-  endedAtHeight?: string;
-  period: TradingRewardAggregationPeriod;
-  amount: string;
+  id: string,
+  address: string,
+  startedAt: IsoString,
+  startedAtHeight: string,
+  endedAt?: IsoString,
+  endedAtHeight?: string,
+  period: TradingRewardAggregationPeriod,
+  amount: string,
 }
 
 export interface SubaccountUsernamesFromDatabase {
-  username: string;
-  subaccountId: string;
+  username: string,
+  subaccountId: string,
 }
 
 export interface LeaderboardPnlFromDatabase {
-  address: string;
-  timeSpan: string;
-  pnl: string;
-  currentEquity: string;
-  rank: number;
+  address: string,
+  timeSpan: string,
+  pnl: string,
+  currentEquity: string,
+  rank: number,
+}
+
+export interface PersistentCacheFromDatabase {
+  key: string,
+  value: string,
+}
+
+export interface AffiliateInfoFromDatabase {
+  address: string,
+  affiliateEarnings: string,
+  referredMakerTrades: number,
+  referredTakerTrades: number,
+  totalReferredFees: string,
+  totalReferredUsers: number,
+  referredNetProtocolEarnings: string,
+  firstReferralBlockHeight: string,
+}
+
+export interface AffiliateReferredUserFromDatabase {
+  affiliateAddress: string,
+  refereeAddress: string,
+  referredAtBlock: string,
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
-{ [assetId: string]: string } };
+{ [assetId: string]: string }, };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:
-{ [perpetualId: string]: PerpetualPositionFromDatabase } };
+{ [perpetualId: string]: PerpetualPositionFromDatabase }, };
 export type PerpetualPositionsMap = { [perpetualMarketId: string]: PerpetualPositionFromDatabase };
 export type PerpetualMarketsMap = { [perpetualMarketId: string]: PerpetualMarketFromDatabase };
 export type AssetsMap = { [assetId: string]: AssetFromDatabase };

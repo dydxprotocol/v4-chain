@@ -706,9 +706,9 @@ func (_m *ClobKeeper) InitializeEquityTierLimit(ctx types.Context, config clobty
 	return r0
 }
 
-// InitializeNewStreams provides a mock function with given fields: ctx
-func (_m *ClobKeeper) InitializeNewStreams(ctx types.Context) {
-	_m.Called(ctx)
+// InitializeNewStreams provides a mock function with given fields: ctx, subaccountSnapshots
+func (_m *ClobKeeper) InitializeNewStreams(ctx types.Context, subaccountSnapshots map[subaccountstypes.SubaccountId]*subaccountstypes.StreamSubaccountUpdate) {
+	_m.Called(ctx, subaccountSnapshots)
 }
 
 // IsInitialized provides a mock function with given fields:

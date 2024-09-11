@@ -164,6 +164,8 @@ message OrderFillEventV1 {
   uint64 total_filled_maker = 7;
   // Total filled of the taker order in base quantums.
   uint64 total_filled_taker = 8;
+  // rev share for affiliates in USDC quantums.
+  uint64 affiliate_rev_share = 9;
 }
 
 // DeleveragingEvent message contains all the information for a deleveraging
@@ -579,4 +581,12 @@ message LiquidityTierUpsertEventV2 {
 
   // Upper cap of open interest in quote quantums.
   uint64 open_interest_upper_cap = 7;
+}
+
+// Event emitted when a referee is registered with an affiliate.
+message RegisterAffiliateEventV1 {
+  // Address of the referee being registered.
+  string referee = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // Address of the affiliate associated with the referee.
+  string affiliate = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }

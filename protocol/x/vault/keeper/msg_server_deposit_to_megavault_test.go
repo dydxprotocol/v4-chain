@@ -45,24 +45,21 @@ type DepositorSetup struct {
 	depositorBalance *big.Int
 }
 
-func TestMsgDepositToVault(t *testing.T) {
+func TestMsgDepositToMegavault(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */
-		// Vault ID.
-		vaultId vaulttypes.VaultId
 		// Depositor setups.
 		depositorSetups []DepositorSetup
 		// Instances of deposits.
 		depositInstances []DepositInstance
 
 		/* --- Expectations --- */
-		// Vault total shares after each of the above deposit instances.
+		// Total shares after each of the above deposit instances.
 		totalSharesHistory []*big.Int
-		// Vault equity after each of the above deposit instances.
-		vaultEquityHistory []*big.Int
+		// Megavault equity after each of the above deposit instances.
+		equityHistory []*big.Int
 	}{
 		"Two successful deposits, Same depositor": {
-			vaultId: constants.Vault_Clob0,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -87,13 +84,12 @@ func TestMsgDepositToVault(t *testing.T) {
 				big.NewInt(123),
 				big.NewInt(444),
 			},
-			vaultEquityHistory: []*big.Int{
+			equityHistory: []*big.Int{
 				big.NewInt(123),
 				big.NewInt(444),
 			},
 		},
 		"Two successful deposits, Different depositors": {
-			vaultId: constants.Vault_Clob0,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -122,13 +118,12 @@ func TestMsgDepositToVault(t *testing.T) {
 				big.NewInt(1_000),
 				big.NewInt(1_500),
 			},
-			vaultEquityHistory: []*big.Int{
+			equityHistory: []*big.Int{
 				big.NewInt(1_000),
 				big.NewInt(1_500),
 			},
 		},
 		"One successful deposit, One failed deposit due to insufficient balance": {
-			vaultId: constants.Vault_Clob1,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -158,13 +153,12 @@ func TestMsgDepositToVault(t *testing.T) {
 				big.NewInt(1_000),
 				big.NewInt(1_000),
 			},
-			vaultEquityHistory: []*big.Int{
+			equityHistory: []*big.Int{
 				big.NewInt(1_000),
 				big.NewInt(1_000),
 			},
 		},
 		"One failed deposit due to incorrect signer, One successful deposit": {
-			vaultId: constants.Vault_Clob1,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -195,13 +189,12 @@ func TestMsgDepositToVault(t *testing.T) {
 				big.NewInt(0),
 				big.NewInt(1_000),
 			},
-			vaultEquityHistory: []*big.Int{
+			equityHistory: []*big.Int{
 				big.NewInt(0),
 				big.NewInt(1_000),
 			},
 		},
 		"Three failed deposits due to invalid deposit amount": {
-			vaultId: constants.Vault_Clob1,
 			depositorSetups: []DepositorSetup{
 				{
 					depositor:        constants.Alice_Num0,
@@ -246,7 +239,7 @@ func TestMsgDepositToVault(t *testing.T) {
 				big.NewInt(0),
 				big.NewInt(0),
 			},
-			vaultEquityHistory: []*big.Int{
+			equityHistory: []*big.Int{
 				big.NewInt(0),
 				big.NewInt(0),
 				big.NewInt(0),
@@ -285,14 +278,13 @@ func TestMsgDepositToVault(t *testing.T) {
 			// Simulate each deposit instance.
 			for i, depositInstance := range tc.depositInstances {
 				// Construct message.
-				msgDepositToVault := vaulttypes.MsgDepositToVault{
-					VaultId:       &(tc.vaultId),
+				msgDepositToMegavault := vaulttypes.MsgDepositToMegavault{
 					SubaccountId:  &(depositInstance.depositor),
 					QuoteQuantums: dtypes.NewIntFromBigInt(depositInstance.depositAmount),
 				}
 
 				// Invoke CheckTx.
-				CheckTx_MsgDepositToVault := testapp.MustMakeCheckTx(
+				CheckTx_MsgDepositToMegavault := testapp.MustMakeCheckTx(
 					ctx,
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
@@ -300,9 +292,9 @@ func TestMsgDepositToVault(t *testing.T) {
 						Gas:                  constants.TestGasLimit,
 						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
-					&msgDepositToVault,
+					&msgDepositToMegavault,
 				)
-				checkTxResp := tApp.CheckTx(CheckTx_MsgDepositToVault)
+				checkTxResp := tApp.CheckTx(CheckTx_MsgDepositToMegavault)
 
 				// Check that CheckTx response log contains expected string, if any.
 				if depositInstance.checkTxResponseContains != "" {
@@ -318,7 +310,7 @@ func TestMsgDepositToVault(t *testing.T) {
 				// Advance to next block (and check that DeliverTx is as expected).
 				nextBlock := uint32(ctx.BlockHeight()) + 1
 				if depositInstance.deliverTxFails {
-					// Check that DeliverTx fails on `msgDepositToVault`.
+					// Check that DeliverTx fails on `msgDepositToMegavault`.
 					ctx = tApp.AdvanceToBlock(nextBlock, testapp.AdvanceToBlockOptions{
 						ValidateFinalizeBlock: func(
 							context sdktypes.Context,
@@ -326,7 +318,7 @@ func TestMsgDepositToVault(t *testing.T) {
 							response abcitypes.ResponseFinalizeBlock,
 						) (haltChain bool) {
 							for i, tx := range request.Txs {
-								if bytes.Equal(tx, CheckTx_MsgDepositToVault.Tx) {
+								if bytes.Equal(tx, CheckTx_MsgDepositToMegavault.Tx) {
 									require.True(t, response.TxResults[i].IsErr())
 								} else {
 									require.True(t, response.TxResults[i].IsOK())
@@ -339,9 +331,8 @@ func TestMsgDepositToVault(t *testing.T) {
 					ctx = tApp.AdvanceToBlock(nextBlock, testapp.AdvanceToBlockOptions{})
 				}
 
-				// Check that total shares of the vault is as expected.
-				totalShares, exists := tApp.App.VaultKeeper.GetTotalShares(ctx, tc.vaultId)
-				require.True(t, exists)
+				// Check that total shares is as expected.
+				totalShares := tApp.App.VaultKeeper.GetTotalShares(ctx)
 				require.Equal(
 					t,
 					vaulttypes.BigIntToNumShares(tc.totalSharesHistory[i]),
@@ -350,7 +341,6 @@ func TestMsgDepositToVault(t *testing.T) {
 				// Check that owner shares of the depositor is as expected.
 				ownerShares, _ := tApp.App.VaultKeeper.GetOwnerShares(
 					ctx,
-					tc.vaultId,
 					depositInstance.depositor.Owner,
 				)
 				require.Equal(
@@ -358,22 +348,10 @@ func TestMsgDepositToVault(t *testing.T) {
 					vaulttypes.BigIntToNumShares(depositInstance.expectedOwnerShares),
 					ownerShares,
 				)
-				// Check that equity of the vault is as expected.
-				vaultEquity, err := tApp.App.VaultKeeper.GetVaultEquity(ctx, tc.vaultId)
+				// Check that equity of megavault is as expected.
+				vaultEquity, err := tApp.App.VaultKeeper.GetMegavaultEquity(ctx)
 				require.NoError(t, err)
-				require.Equal(t, tc.vaultEquityHistory[i], vaultEquity)
-				// Check that vault exists in address store.
-				require.True(t, tApp.App.VaultKeeper.IsVault(ctx, tc.vaultId.ToModuleAccountAddress()))
-				// Check that vault params are initialized.
-				vaultParams, exists := tApp.App.VaultKeeper.GetVaultParams(ctx, tc.vaultId)
-				require.True(t, exists)
-				require.Equal(
-					t,
-					vaulttypes.VaultParams{
-						Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
-					},
-					vaultParams,
-				)
+				require.Equal(t, tc.equityHistory[i], vaultEquity)
 			}
 		})
 	}

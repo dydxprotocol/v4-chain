@@ -23,6 +23,7 @@ import { MarketValidator } from '../validators/market-validator';
 import { OpenInterestUpdateValidator } from '../validators/open-interest-update-validator';
 import { OrderFillValidator } from '../validators/order-fill-validator';
 import { PerpetualMarketValidator } from '../validators/perpetual-market-validator';
+import { RegisterAffiliateValidator } from '../validators/register-affiliate-validator';
 import { StatefulOrderValidator } from '../validators/stateful-order-validator';
 import { SubaccountUpdateValidator } from '../validators/subaccount-update-validator';
 import { TradingRewardsValidator } from '../validators/trading-rewards-validator';
@@ -53,6 +54,7 @@ const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorIn
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString(), 1)]: UpdateClobPairValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.DELEVERAGING.toString(), 1)]: DeleveragingValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.LIQUIDITY_TIER.toString(), 2)]: LiquidityTierValidatorV2,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.REGISTER_AFFILIATE.toString(), 1)]: RegisterAffiliateValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
@@ -70,12 +72,12 @@ function serializeSubtypeAndVersion(
 }
 
 type DecodedIndexerTendermintBlock = Omit<IndexerTendermintBlock, 'events'> & {
-  events: DecodedIndexerTendermintEvent[];
+  events: DecodedIndexerTendermintEvent[],
 };
 
 type DecodedIndexerTendermintEvent = Omit<IndexerTendermintEvent, 'dataBytes'> & {
   /** Decoded tendermint event. */
-  dataBytes: object;
+  dataBytes: object,
 };
 
 export class BlockProcessor {

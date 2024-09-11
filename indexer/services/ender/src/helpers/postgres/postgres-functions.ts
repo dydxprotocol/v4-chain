@@ -6,9 +6,9 @@ import { dbHelpers, storeHelpers } from '@dydxprotocol-indexer/postgres';
 
 export type PostgresFunction = {
   // The name of the script
-  readonly name: string;
+  readonly name: string,
   // The contents of the script
-  readonly script: string;
+  readonly script: string,
 };
 
 /**
@@ -39,6 +39,7 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_open_interest_update_handler.sql',
   'dydx_perpetual_market_v1_handler.sql',
   'dydx_perpetual_market_v2_handler.sql',
+  'dydx_register_affiliate_handler.sql',
   'dydx_stateful_order_handler.sql',
   'dydx_subaccount_update_handler.sql',
   'dydx_trading_rewards_handler.sql',

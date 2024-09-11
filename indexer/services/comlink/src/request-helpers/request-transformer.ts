@@ -155,6 +155,7 @@ export function fillToResponseObject(
     price: fill.price,
     size: fill.size,
     fee: fill.fee,
+    affiliateRevShare: fill.affiliateRevShare,
     createdAt: fill.createdAt,
     createdAtHeight: fill.createdAtHeight,
     orderId: fill.orderId,

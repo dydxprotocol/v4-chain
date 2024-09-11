@@ -293,16 +293,15 @@ export interface StreamOrderbookUpdatesResponseSDKType {
  */
 
 export interface StreamUpdate {
-  orderbookUpdate?: StreamOrderbookUpdate;
-  orderFill?: StreamOrderbookFill;
-  takerOrder?: StreamTakerOrder;
-  subaccountUpdate?: StreamSubaccountUpdate;
   /** Block height of the update. */
-
   blockHeight: number;
   /** Exec mode of the update. */
 
   execMode: number;
+  orderbookUpdate?: StreamOrderbookUpdate;
+  orderFill?: StreamOrderbookFill;
+  takerOrder?: StreamTakerOrder;
+  subaccountUpdate?: StreamSubaccountUpdate;
 }
 /**
  * StreamUpdate is an update that will be pushed through the
@@ -310,16 +309,15 @@ export interface StreamUpdate {
  */
 
 export interface StreamUpdateSDKType {
-  orderbook_update?: StreamOrderbookUpdateSDKType;
-  order_fill?: StreamOrderbookFillSDKType;
-  taker_order?: StreamTakerOrderSDKType;
-  subaccount_update?: StreamSubaccountUpdateSDKType;
   /** Block height of the update. */
-
   block_height: number;
   /** Exec mode of the update. */
 
   exec_mode: number;
+  orderbook_update?: StreamOrderbookUpdateSDKType;
+  order_fill?: StreamOrderbookFillSDKType;
+  taker_order?: StreamTakerOrderSDKType;
+  subaccount_update?: StreamSubaccountUpdateSDKType;
 }
 /**
  * StreamOrderbookUpdate provides information on an orderbook update. Used in
@@ -328,18 +326,18 @@ export interface StreamUpdateSDKType {
 
 export interface StreamOrderbookUpdate {
   /**
-   * Orderbook updates for the clob pair. Can contain order place, removals,
-   * or updates.
-   */
-  updates: OffChainUpdateV1[];
-  /**
    * Snapshot indicates if the response is from a snapshot of the orderbook.
    * All updates should be ignored until snapshot is recieved.
    * If the snapshot is true, then all previous entries should be
    * discarded and the orderbook should be resynced.
    */
-
   snapshot: boolean;
+  /**
+   * Orderbook updates for the clob pair. Can contain order place, removals,
+   * or updates.
+   */
+
+  updates: OffChainUpdateV1[];
 }
 /**
  * StreamOrderbookUpdate provides information on an orderbook update. Used in
@@ -348,18 +346,18 @@ export interface StreamOrderbookUpdate {
 
 export interface StreamOrderbookUpdateSDKType {
   /**
-   * Orderbook updates for the clob pair. Can contain order place, removals,
-   * or updates.
-   */
-  updates: OffChainUpdateV1SDKType[];
-  /**
    * Snapshot indicates if the response is from a snapshot of the orderbook.
    * All updates should be ignored until snapshot is recieved.
    * If the snapshot is true, then all previous entries should be
    * discarded and the orderbook should be resynced.
    */
-
   snapshot: boolean;
+  /**
+   * Orderbook updates for the clob pair. Can contain order place, removals,
+   * or updates.
+   */
+
+  updates: OffChainUpdateV1SDKType[];
 }
 /**
  * StreamOrderbookFill provides information on an orderbook fill. Used in
@@ -1305,39 +1303,39 @@ export const StreamOrderbookUpdatesResponse = {
 
 function createBaseStreamUpdate(): StreamUpdate {
   return {
+    blockHeight: 0,
+    execMode: 0,
     orderbookUpdate: undefined,
     orderFill: undefined,
     takerOrder: undefined,
-    subaccountUpdate: undefined,
-    blockHeight: 0,
-    execMode: 0
+    subaccountUpdate: undefined
   };
 }
 
 export const StreamUpdate = {
   encode(message: StreamUpdate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.orderbookUpdate !== undefined) {
-      StreamOrderbookUpdate.encode(message.orderbookUpdate, writer.uint32(10).fork()).ldelim();
-    }
-
-    if (message.orderFill !== undefined) {
-      StreamOrderbookFill.encode(message.orderFill, writer.uint32(18).fork()).ldelim();
-    }
-
-    if (message.takerOrder !== undefined) {
-      StreamTakerOrder.encode(message.takerOrder, writer.uint32(26).fork()).ldelim();
-    }
-
-    if (message.subaccountUpdate !== undefined) {
-      StreamSubaccountUpdate.encode(message.subaccountUpdate, writer.uint32(34).fork()).ldelim();
-    }
-
     if (message.blockHeight !== 0) {
-      writer.uint32(40).uint32(message.blockHeight);
+      writer.uint32(8).uint32(message.blockHeight);
     }
 
     if (message.execMode !== 0) {
-      writer.uint32(48).uint32(message.execMode);
+      writer.uint32(16).uint32(message.execMode);
+    }
+
+    if (message.orderbookUpdate !== undefined) {
+      StreamOrderbookUpdate.encode(message.orderbookUpdate, writer.uint32(26).fork()).ldelim();
+    }
+
+    if (message.orderFill !== undefined) {
+      StreamOrderbookFill.encode(message.orderFill, writer.uint32(34).fork()).ldelim();
+    }
+
+    if (message.takerOrder !== undefined) {
+      StreamTakerOrder.encode(message.takerOrder, writer.uint32(42).fork()).ldelim();
+    }
+
+    if (message.subaccountUpdate !== undefined) {
+      StreamSubaccountUpdate.encode(message.subaccountUpdate, writer.uint32(50).fork()).ldelim();
     }
 
     return writer;
@@ -1353,27 +1351,27 @@ export const StreamUpdate = {
 
       switch (tag >>> 3) {
         case 1:
-          message.orderbookUpdate = StreamOrderbookUpdate.decode(reader, reader.uint32());
-          break;
-
-        case 2:
-          message.orderFill = StreamOrderbookFill.decode(reader, reader.uint32());
-          break;
-
-        case 3:
-          message.takerOrder = StreamTakerOrder.decode(reader, reader.uint32());
-          break;
-
-        case 4:
-          message.subaccountUpdate = StreamSubaccountUpdate.decode(reader, reader.uint32());
-          break;
-
-        case 5:
           message.blockHeight = reader.uint32();
           break;
 
-        case 6:
+        case 2:
           message.execMode = reader.uint32();
+          break;
+
+        case 3:
+          message.orderbookUpdate = StreamOrderbookUpdate.decode(reader, reader.uint32());
+          break;
+
+        case 4:
+          message.orderFill = StreamOrderbookFill.decode(reader, reader.uint32());
+          break;
+
+        case 5:
+          message.takerOrder = StreamTakerOrder.decode(reader, reader.uint32());
+          break;
+
+        case 6:
+          message.subaccountUpdate = StreamSubaccountUpdate.decode(reader, reader.uint32());
           break;
 
         default:
@@ -1387,12 +1385,12 @@ export const StreamUpdate = {
 
   fromPartial(object: DeepPartial<StreamUpdate>): StreamUpdate {
     const message = createBaseStreamUpdate();
+    message.blockHeight = object.blockHeight ?? 0;
+    message.execMode = object.execMode ?? 0;
     message.orderbookUpdate = object.orderbookUpdate !== undefined && object.orderbookUpdate !== null ? StreamOrderbookUpdate.fromPartial(object.orderbookUpdate) : undefined;
     message.orderFill = object.orderFill !== undefined && object.orderFill !== null ? StreamOrderbookFill.fromPartial(object.orderFill) : undefined;
     message.takerOrder = object.takerOrder !== undefined && object.takerOrder !== null ? StreamTakerOrder.fromPartial(object.takerOrder) : undefined;
     message.subaccountUpdate = object.subaccountUpdate !== undefined && object.subaccountUpdate !== null ? StreamSubaccountUpdate.fromPartial(object.subaccountUpdate) : undefined;
-    message.blockHeight = object.blockHeight ?? 0;
-    message.execMode = object.execMode ?? 0;
     return message;
   }
 
@@ -1400,19 +1398,19 @@ export const StreamUpdate = {
 
 function createBaseStreamOrderbookUpdate(): StreamOrderbookUpdate {
   return {
-    updates: [],
-    snapshot: false
+    snapshot: false,
+    updates: []
   };
 }
 
 export const StreamOrderbookUpdate = {
   encode(message: StreamOrderbookUpdate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.updates) {
-      OffChainUpdateV1.encode(v!, writer.uint32(10).fork()).ldelim();
+    if (message.snapshot === true) {
+      writer.uint32(8).bool(message.snapshot);
     }
 
-    if (message.snapshot === true) {
-      writer.uint32(16).bool(message.snapshot);
+    for (const v of message.updates) {
+      OffChainUpdateV1.encode(v!, writer.uint32(18).fork()).ldelim();
     }
 
     return writer;
@@ -1428,11 +1426,11 @@ export const StreamOrderbookUpdate = {
 
       switch (tag >>> 3) {
         case 1:
-          message.updates.push(OffChainUpdateV1.decode(reader, reader.uint32()));
+          message.snapshot = reader.bool();
           break;
 
         case 2:
-          message.snapshot = reader.bool();
+          message.updates.push(OffChainUpdateV1.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -1446,8 +1444,8 @@ export const StreamOrderbookUpdate = {
 
   fromPartial(object: DeepPartial<StreamOrderbookUpdate>): StreamOrderbookUpdate {
     const message = createBaseStreamOrderbookUpdate();
-    message.updates = object.updates?.map(e => OffChainUpdateV1.fromPartial(e)) || [];
     message.snapshot = object.snapshot ?? false;
+    message.updates = object.updates?.map(e => OffChainUpdateV1.fromPartial(e)) || [];
     return message;
   }
 

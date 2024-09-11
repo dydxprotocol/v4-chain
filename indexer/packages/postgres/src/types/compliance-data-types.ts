@@ -7,21 +7,21 @@ export enum ComplianceProvider {
 }
 
 export interface ComplianceDataCreateObject {
-  address: string;
-  provider: string;
-  chain?: string;
-  blocked: boolean;
-  riskScore?: string;
-  updatedAt?: IsoString;
+  address: string,
+  provider: string,
+  chain?: string,
+  blocked: boolean,
+  riskScore?: string,
+  updatedAt?: IsoString,
 }
 
 export interface ComplianceDataUpdateObject {
-  address: string;
-  provider: string;
-  chain?: string;
-  blocked?: boolean;
-  riskScore?: string;
-  updatedAt?: IsoString;
+  address: string,
+  provider: string,
+  chain?: string,
+  blocked?: boolean,
+  riskScore?: string,
+  updatedAt?: IsoString,
 }
 
 export enum ComplianceDataColumns {

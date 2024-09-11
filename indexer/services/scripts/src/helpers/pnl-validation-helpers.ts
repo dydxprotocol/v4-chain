@@ -55,7 +55,7 @@ export async function getUnsettledFunding(
       }: {
         clobPairId: string,
         openSize: string,
-        fundingIndex: string
+        fundingIndex: string,
       } = item;
       const fundingIndexDiff: Big = Big(mappedLastFundingIndexMap[clobPairId]).minus(fundingIndex);
       const unsettledFunding: Big = Big(openSize).mul(fundingIndexDiff);

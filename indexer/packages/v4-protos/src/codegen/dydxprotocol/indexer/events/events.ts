@@ -415,6 +415,9 @@ export interface OrderFillEventV1 {
   /** Total filled of the taker order in base quantums. */
 
   totalFilledTaker: Long;
+  /** rev share for affiliates in USDC quantums. */
+
+  affiliateRevShare: Long;
 }
 /**
  * OrderFillEvent message contains all the information from an order match in
@@ -444,6 +447,9 @@ export interface OrderFillEventV1SDKType {
   /** Total filled of the taker order in base quantums. */
 
   total_filled_taker: Long;
+  /** rev share for affiliates in USDC quantums. */
+
+  affiliate_rev_share: Long;
 }
 /**
  * DeleveragingEvent message contains all the information for a deleveraging
@@ -1479,6 +1485,24 @@ export interface LiquidityTierUpsertEventV2SDKType {
 
   open_interest_upper_cap: Long;
 }
+/** Event emitted when a referee is registered with an affiliate. */
+
+export interface RegisterAffiliateEventV1 {
+  /** Address of the referee being registered. */
+  referee: string;
+  /** Address of the affiliate associated with the referee. */
+
+  affiliate: string;
+}
+/** Event emitted when a referee is registered with an affiliate. */
+
+export interface RegisterAffiliateEventV1SDKType {
+  /** Address of the referee being registered. */
+  referee: string;
+  /** Address of the affiliate associated with the referee. */
+
+  affiliate: string;
+}
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
   return {
@@ -2034,7 +2058,8 @@ function createBaseOrderFillEventV1(): OrderFillEventV1 {
     makerFee: Long.ZERO,
     takerFee: Long.ZERO,
     totalFilledMaker: Long.UZERO,
-    totalFilledTaker: Long.UZERO
+    totalFilledTaker: Long.UZERO,
+    affiliateRevShare: Long.UZERO
   };
 }
 
@@ -2070,6 +2095,10 @@ export const OrderFillEventV1 = {
 
     if (!message.totalFilledTaker.isZero()) {
       writer.uint32(64).uint64(message.totalFilledTaker);
+    }
+
+    if (!message.affiliateRevShare.isZero()) {
+      writer.uint32(72).uint64(message.affiliateRevShare);
     }
 
     return writer;
@@ -2116,6 +2145,10 @@ export const OrderFillEventV1 = {
           message.totalFilledTaker = (reader.uint64() as Long);
           break;
 
+        case 9:
+          message.affiliateRevShare = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2135,6 +2168,7 @@ export const OrderFillEventV1 = {
     message.takerFee = object.takerFee !== undefined && object.takerFee !== null ? Long.fromValue(object.takerFee) : Long.ZERO;
     message.totalFilledMaker = object.totalFilledMaker !== undefined && object.totalFilledMaker !== null ? Long.fromValue(object.totalFilledMaker) : Long.UZERO;
     message.totalFilledTaker = object.totalFilledTaker !== undefined && object.totalFilledTaker !== null ? Long.fromValue(object.totalFilledTaker) : Long.UZERO;
+    message.affiliateRevShare = object.affiliateRevShare !== undefined && object.affiliateRevShare !== null ? Long.fromValue(object.affiliateRevShare) : Long.UZERO;
     return message;
   }
 
@@ -3710,6 +3744,61 @@ export const LiquidityTierUpsertEventV2 = {
     message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
     message.openInterestLowerCap = object.openInterestLowerCap !== undefined && object.openInterestLowerCap !== null ? Long.fromValue(object.openInterestLowerCap) : Long.UZERO;
     message.openInterestUpperCap = object.openInterestUpperCap !== undefined && object.openInterestUpperCap !== null ? Long.fromValue(object.openInterestUpperCap) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseRegisterAffiliateEventV1(): RegisterAffiliateEventV1 {
+  return {
+    referee: "",
+    affiliate: ""
+  };
+}
+
+export const RegisterAffiliateEventV1 = {
+  encode(message: RegisterAffiliateEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.referee !== "") {
+      writer.uint32(10).string(message.referee);
+    }
+
+    if (message.affiliate !== "") {
+      writer.uint32(18).string(message.affiliate);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): RegisterAffiliateEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRegisterAffiliateEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.referee = reader.string();
+          break;
+
+        case 2:
+          message.affiliate = reader.string();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<RegisterAffiliateEventV1>): RegisterAffiliateEventV1 {
+    const message = createBaseRegisterAffiliateEventV1();
+    message.referee = object.referee ?? "";
+    message.affiliate = object.affiliate ?? "";
     return message;
   }
 

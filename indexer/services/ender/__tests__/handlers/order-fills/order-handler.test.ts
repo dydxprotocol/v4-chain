@@ -79,12 +79,17 @@ import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
 const defaultTakerFeeQuantum: number = 2_000_000;
+const defaultAffiliateRevShareQuantum: number = 3_000_000;
 const defaultMakerFee: string = protocolTranslations.quantumsToHumanFixedString(
   defaultMakerFeeQuantum.toString(),
   testConstants.defaultAsset.atomicResolution,
 );
 const defaultTakerFee: string = protocolTranslations.quantumsToHumanFixedString(
   defaultTakerFeeQuantum.toString(),
+  testConstants.defaultAsset.atomicResolution,
+);
+const defaultAffiliateRevShare: string = protocolTranslations.quantumsToHumanFixedString(
+  defaultAffiliateRevShareQuantum.toString(),
   testConstants.defaultAsset.atomicResolution,
 );
 
@@ -360,6 +365,7 @@ describe('OrderHandler', () => {
         orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -378,6 +384,7 @@ describe('OrderHandler', () => {
         orderFlags: takerOrderProto.orderId!.orderFlags.toString(),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
         fee: defaultTakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
       });
 
       const expectedMakerOffchainUpdate: OffChainUpdateV1 = {
@@ -699,6 +706,7 @@ describe('OrderHandler', () => {
         orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -717,6 +725,7 @@ describe('OrderHandler', () => {
         orderFlags: takerOrderProto.orderId!.orderFlags.toString(),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
         fee: defaultTakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
       });
 
       const expectedMakerUpdateOffchainUpdate: OffChainUpdateV1 = {
@@ -983,6 +992,7 @@ describe('OrderHandler', () => {
         orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -1001,6 +1011,7 @@ describe('OrderHandler', () => {
         orderFlags: takerOrderProto.orderId!.orderFlags.toString(),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
         fee: defaultTakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
       });
 
       const expectedMakerUpdateOffchainUpdate: OffChainUpdateV1 = {
@@ -1204,6 +1215,7 @@ describe('OrderHandler', () => {
       orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
       fee: defaultMakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
     });
     await expectFillInDatabase({
       subaccountId: testConstants.defaultSubaccountId2,
@@ -1222,6 +1234,7 @@ describe('OrderHandler', () => {
       orderFlags: takerOrderProto.orderId!.orderFlags.toString(),
       clientMetadata: takerOrderProto.clientMetadata.toString(),
       fee: defaultTakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
     });
 
     await Promise.all([
@@ -1406,6 +1419,7 @@ describe('OrderHandler', () => {
       orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
       fee: defaultMakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
     });
     await expectFillInDatabase({
       subaccountId: testConstants.defaultSubaccountId2,
@@ -1424,6 +1438,7 @@ describe('OrderHandler', () => {
       orderFlags: takerOrderProto.orderId!.orderFlags.toString(),
       clientMetadata: takerOrderProto.clientMetadata.toString(),
       fee: defaultTakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
     });
 
     await Promise.all([
@@ -1831,6 +1846,7 @@ function createOrderFillEvent(
     takerFee: Long.fromValue(defaultTakerFeeQuantum, false),
     totalFilledMaker: Long.fromValue(totalFilledMaker, true),
     totalFilledTaker: Long.fromValue(totalFilledTaker, true),
+    affiliateRevShare: Long.fromValue(defaultAffiliateRevShareQuantum, false),
   } as OrderFillEventV1;
 }
 

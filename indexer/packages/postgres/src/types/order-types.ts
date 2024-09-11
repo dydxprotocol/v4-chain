@@ -43,46 +43,46 @@ export enum TimeInForce {
 }
 
 export interface OrderCreateObject {
-  subaccountId: string;
-  clientId: string;
-  clobPairId: string;
-  side: OrderSide;
-  size: string;
-  totalFilled: string;
-  price: string;
-  type: OrderType;
-  status: OrderStatus;
-  timeInForce: TimeInForce;
-  reduceOnly: boolean;
-  orderFlags: string;
-  updatedAt: IsoString;
-  updatedAtHeight: string;
-  goodTilBlock?: string;
-  goodTilBlockTime?: string;
+  subaccountId: string,
+  clientId: string,
+  clobPairId: string,
+  side: OrderSide,
+  size: string,
+  totalFilled: string,
+  price: string,
+  type: OrderType,
+  status: OrderStatus,
+  timeInForce: TimeInForce,
+  reduceOnly: boolean,
+  orderFlags: string,
+  updatedAt: IsoString,
+  updatedAtHeight: string,
+  goodTilBlock?: string,
+  goodTilBlockTime?: string,
   // createdAtHeight is optional because short term orders do not have a createdAtHeight.
-  createdAtHeight?: string;
-  clientMetadata: string;
+  createdAtHeight?: string,
+  clientMetadata: string,
   triggerPrice?: string,
 }
 
 export interface OrderUpdateObject {
-  id: string;
-  clobPairId?: string;
-  side?: OrderSide;
-  size?: string;
-  totalFilled?: string;
-  price?: string;
-  type?: OrderType;
-  status?: OrderStatus;
-  timeInForce?: TimeInForce;
-  reduceOnly?: boolean;
-  orderFlags?: string;
-  updatedAt?: IsoString;
-  updatedAtHeight?: string;
-  goodTilBlock?: string | null;
-  goodTilBlockTime?: string | null;
-  clientMetadata?: string;
-  triggerPrice?: string;
+  id: string,
+  clobPairId?: string,
+  side?: OrderSide,
+  size?: string,
+  totalFilled?: string,
+  price?: string,
+  type?: OrderType,
+  status?: OrderStatus,
+  timeInForce?: TimeInForce,
+  reduceOnly?: boolean,
+  orderFlags?: string,
+  updatedAt?: IsoString,
+  updatedAtHeight?: string,
+  goodTilBlock?: string | null,
+  goodTilBlockTime?: string | null,
+  clientMetadata?: string,
+  triggerPrice?: string,
 }
 
 export enum OrderColumns {

@@ -19,6 +19,7 @@ const (
 	SubtypeDeleveraging       = "deleveraging"
 	SubtypeTradingReward      = "trading_reward"
 	SubtypeOpenInterestUpdate = "open_interest_update"
+	SubtypeRegisterAffiliate  = "register_affiliate"
 )
 
 const (

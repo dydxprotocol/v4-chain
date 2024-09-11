@@ -36,6 +36,7 @@ import {
   TradingRewardsEventV1,
   OpenInterestUpdateEventV1,
   BlockHeightMessage,
+  RegisterAffiliateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { IHeaders } from 'kafkajs';
 import Long from 'long';
@@ -57,6 +58,7 @@ export enum DydxIndexerSubtypes {
   DELEVERAGING = 'deleveraging',
   TRADING_REWARD = 'trading_reward',
   OPEN_INTEREST_UPDATE = 'open_interest_update',
+  REGISTER_AFFILIATE = 'register_affiliate',
 }
 
 // Generic interface used for creating the Handler objects
@@ -165,6 +167,12 @@ export type EventProtoWithTypeAndVersion = {
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
+} | {
+  type: DydxIndexerSubtypes.REGISTER_AFFILIATE,
+  eventProto: RegisterAffiliateEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
 });
 
 // Events grouped into events block events and events for each transactionIndex
@@ -196,6 +204,7 @@ export type OrderFillEventWithOrder = {
   totalFilledTaker: Long,
   makerFee: Long,
   takerFee: Long,
+  affiliateRevShare: Long,
 };
 
 export type OrderFillEventWithLiquidation = {
@@ -206,6 +215,7 @@ export type OrderFillEventWithLiquidation = {
   totalFilledTaker: Long,
   makerFee: Long,
   takerFee: Long,
+  affiliateRevShare: Long,
 };
 
 export type FundingEventMessage = {
@@ -261,7 +271,7 @@ export type ConsolidatedKafkaEvent = {
   message: VulcanMessage,
 } | {
   topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
-  message: BlockHeightMessage
+  message: BlockHeightMessage,
 };
 
 export enum TransferEventType {

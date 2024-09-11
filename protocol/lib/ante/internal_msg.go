@@ -15,6 +15,7 @@ import (
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	affiliates "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -97,6 +98,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// listing
 		*listing.MsgSetMarketsHardCap,
+		*listing.MsgSetListingVaultDepositParams,
 
 		// perpetuals
 		*perpetuals.MsgCreatePerpetual,
@@ -115,6 +117,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		// revshare
 		*revshare.MsgSetMarketMapperRevenueShare,
 		*revshare.MsgSetMarketMapperRevShareDetailsForMarket,
+		*revshare.MsgUpdateUnconditionalRevShareConfig,
 
 		// rewards
 		*rewards.MsgUpdateParams,
@@ -127,6 +130,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// vault
 		*vault.MsgSetVaultParams,
+		*vault.MsgUnlockShares,
 		*vault.MsgUpdateDefaultQuotingParams,
 
 		// vest
@@ -137,7 +141,10 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*icahosttypes.MsgUpdateParams,
 		*ibctransfer.MsgUpdateParams,
 		*ibcclient.MsgUpdateParams,
-		*ibcconn.MsgUpdateParams:
+		*ibcconn.MsgUpdateParams,
+
+		// affiliates
+		*affiliates.MsgUpdateAffiliateTiers:
 
 		return true
 

@@ -18,6 +18,7 @@ export const consumer: Consumer = kafka.consumer({
   sessionTimeout: config.KAFKA_SESSION_TIMEOUT_MS,
   rebalanceTimeout: config.KAFKA_REBALANCE_TIMEOUT_MS,
   heartbeatInterval: config.KAFKA_HEARTBEAT_INTERVAL_MS,
+  maxWaitTimeInMs: config.KAFKA_WAIT_MAX_TIME_MS,
   readUncommitted: false,
   maxBytes: 4194304, // 4MB
 });
@@ -91,6 +92,8 @@ export async function startConsumer(batchProcessing: boolean = false): Promise<v
     eachBatchAutoResolve: true,
     partitionsConsumedConcurrently: config.KAFKA_CONCURRENT_PARTITIONS,
     autoCommit: true,
+    autoCommitThreshold: config.KAFKA_CONSUMER_AUTO_COMMIT_THRESHOLD,
+    autoCommitInterval: config.KAFKA_CONSUMER_AUTO_COMMIT_INTERVAL_MS,
   };
 
   if (batchProcessing) {

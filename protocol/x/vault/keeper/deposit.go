@@ -4,41 +4,77 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// MintShares mints shares of a vault for `owner` based on `quantumsToDeposit` by:
-// 1. Increasing total shares of the vault.
-// 2. Increasing owner shares of the vault for given `owner`.
+// DepositToMegavault deposits from a subaccount to megavault by
+// 1. Minting shares for owner address of `fromSubaccount`.
+// 2. Transferring `quoteQuantums` from `fromSubaccount` to megavault subaccount 0.
+func (k Keeper) DepositToMegavault(
+	ctx sdk.Context,
+	fromSubaccount satypes.SubaccountId,
+	quoteQuantums *big.Int,
+) (mintedShares *big.Int, err error) {
+	// Mint shares.
+	mintedShares, err = k.MintShares(
+		ctx,
+		fromSubaccount.Owner,
+		quoteQuantums,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Transfer from sender subaccount to megavault.
+	// Note: Transfer should take place after minting shares for
+	// shares calculation to be correct.
+	err = k.sendingKeeper.ProcessTransfer(
+		ctx,
+		&sendingtypes.Transfer{
+			Sender:    fromSubaccount,
+			Recipient: types.MegavaultMainSubaccount,
+			AssetId:   assettypes.AssetUsdc.Id,
+			Amount:    quoteQuantums.Uint64(),
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return mintedShares, nil
+}
+
+// MintShares mints shares for `owner` based on `quantumsToDeposit` by:
+// 1. Increasing total shares.
+// 2. Increasing owner shares for given `owner`.
 func (k Keeper) MintShares(
 	ctx sdk.Context,
-	vaultId types.VaultId,
 	owner string,
 	quantumsToDeposit *big.Int,
-) error {
+) (mintedShares *big.Int, err error) {
 	// Quantums to deposit should be positive.
 	if quantumsToDeposit.Sign() <= 0 {
-		return types.ErrInvalidDepositAmount
+		return nil, types.ErrInvalidDepositAmount
 	}
 	// Get existing TotalShares of the vault.
-	totalShares, exists := k.GetTotalShares(ctx, vaultId)
-	existingTotalShares := totalShares.NumShares.BigInt()
+	existingTotalShares := k.GetTotalShares(ctx).NumShares.BigInt()
 	// Calculate shares to mint.
 	var sharesToMint *big.Int
-	if !exists || existingTotalShares.Sign() <= 0 {
+	if existingTotalShares.Sign() <= 0 {
 		// Mint `quoteQuantums` number of shares.
 		sharesToMint = new(big.Int).Set(quantumsToDeposit)
-		// Initialize existingTotalShares as 0.
-		existingTotalShares = big.NewInt(0)
 	} else {
-		// Get vault equity.
-		equity, err := k.GetVaultEquity(ctx, vaultId)
+		// Get megavault equity.
+		equity, err := k.GetMegavaultEquity(ctx)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		// Don't mint shares if equity is non-positive.
 		if equity.Sign() <= 0 {
-			return types.ErrNonPositiveEquity
+			return nil, types.ErrNonPositiveEquity
 		}
 		// Mint `deposit (in quote quantums) * existing shares / vault equity (in quote quantums)`
 		// number of shares.
@@ -52,50 +88,47 @@ func (k Keeper) MintShares(
 
 		// Return error if `sharesToMint` is rounded down to 0.
 		if sharesToMint.Sign() == 0 {
-			return types.ErrZeroSharesToMint
+			return nil, types.ErrZeroSharesToMint
 		}
 	}
 
-	// Increase TotalShares of the vault.
-	err := k.SetTotalShares(
+	// Increase total shares.
+	err = k.SetTotalShares(
 		ctx,
-		vaultId,
 		types.BigIntToNumShares(
 			existingTotalShares.Add(existingTotalShares, sharesToMint),
 		),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// Increase owner shares in the vault.
-	ownerShares, exists := k.GetOwnerShares(ctx, vaultId, owner)
+	// Increase owner shares.
+	ownerShares, exists := k.GetOwnerShares(ctx, owner)
 	if !exists {
 		// Set owner shares to be sharesToMint.
 		err := k.SetOwnerShares(
 			ctx,
-			vaultId,
 			owner,
 			types.BigIntToNumShares(sharesToMint),
 		)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	} else {
 		// Increase existing owner shares by sharesToMint.
 		existingOwnerShares := ownerShares.NumShares.BigInt()
 		err = k.SetOwnerShares(
 			ctx,
-			vaultId,
 			owner,
 			types.BigIntToNumShares(
 				existingOwnerShares.Add(existingOwnerShares, sharesToMint),
 			),
 		)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return sharesToMint, nil
 }

@@ -12,28 +12,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgDepositToVault_ValidateBasic(t *testing.T) {
+func TestMsgDepositToMegavault_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
-		msg         types.MsgDepositToVault
+		msg         types.MsgDepositToMegavault
 		expectedErr string
 	}{
 		"Success": {
-			msg: types.MsgDepositToVault{
-				VaultId:       &constants.Vault_Clob0,
+			msg: types.MsgDepositToMegavault{
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewInt(1),
 			},
 		},
 		"Success: max uint64 quote quantums": {
-			msg: types.MsgDepositToVault{
-				VaultId:       &constants.Vault_Clob0,
+			msg: types.MsgDepositToMegavault{
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewIntFromUint64(math.MaxUint64),
 			},
 		},
 		"Failure: quote quantums greater than max uint64": {
-			msg: types.MsgDepositToVault{
-				VaultId:      &constants.Vault_Clob0,
+			msg: types.MsgDepositToMegavault{
 				SubaccountId: &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewIntFromBigInt(
 					new(big.Int).Add(
@@ -45,24 +42,21 @@ func TestMsgDepositToVault_ValidateBasic(t *testing.T) {
 			expectedErr: "Deposit amount is invalid",
 		},
 		"Failure: zero quote quantums": {
-			msg: types.MsgDepositToVault{
-				VaultId:       &constants.Vault_Clob0,
+			msg: types.MsgDepositToMegavault{
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewInt(0),
 			},
 			expectedErr: "Deposit amount is invalid",
 		},
 		"Failure: negative quote quantums": {
-			msg: types.MsgDepositToVault{
-				VaultId:       &constants.Vault_Clob0,
+			msg: types.MsgDepositToMegavault{
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewInt(-1),
 			},
 			expectedErr: "Deposit amount is invalid",
 		},
 		"Failure: invalid subaccount owner": {
-			msg: types.MsgDepositToVault{
-				VaultId: &constants.Vault_Clob0,
+			msg: types.MsgDepositToMegavault{
 				SubaccountId: &satypes.SubaccountId{
 					Owner:  "invalid-owner",
 					Number: 0,

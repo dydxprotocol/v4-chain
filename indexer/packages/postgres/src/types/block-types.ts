@@ -3,8 +3,8 @@
 type IsoString = string;
 
 export interface BlockCreateObject {
-  blockHeight: string;
-  time: IsoString;
+  blockHeight: string,
+  time: IsoString,
 }
 
 export enum BlockColumns {

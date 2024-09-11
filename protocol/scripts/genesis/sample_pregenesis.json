@@ -2,6 +2,7 @@
   "app_hash": null,
   "app_name": "dydxprotocold",
   "app_state": {
+    "affiliates": {},
     "assets": {
       "assets": [
         {
@@ -2947,7 +2948,6 @@
     "perpetuals": {
       "liquidity_tiers": [
         {
-          "base_position_notional": 1000000000000,
           "id": 0,
           "impact_notional": 10000000000,
           "initial_margin_ppm": 50000,
@@ -2957,17 +2957,15 @@
           "open_interest_upper_cap": 0
         },
         {
-          "base_position_notional": 250000000000,
           "id": 1,
           "impact_notional": 5000000000,
           "initial_margin_ppm": 100000,
           "maintenance_fraction_ppm": 500000,
-          "name": "Mid-Cap",
+          "name": "Small-Cap",
           "open_interest_lower_cap": 20000000000000,
           "open_interest_upper_cap": 50000000000000
         },
         {
-          "base_position_notional": 100000000000,
           "id": 2,
           "impact_notional": 2500000000,
           "initial_margin_ppm": 200000,
@@ -2977,7 +2975,6 @@
           "open_interest_upper_cap": 10000000000000
         },
         {
-          "base_position_notional": 1000000000,
           "id": 3,
           "impact_notional": 2500000000,
           "initial_margin_ppm": 1000000,
@@ -2985,6 +2982,33 @@
           "name": "Safety",
           "open_interest_lower_cap": 2000000000000,
           "open_interest_upper_cap": 5000000000000
+        },
+        {
+          "id": 4,
+          "impact_notional": 2500000000,
+          "initial_margin_ppm": 50000,
+          "maintenance_fraction_ppm": 600000,
+          "name": "Isolated",
+          "open_interest_lower_cap": 500000000000,
+          "open_interest_upper_cap": 1000000000000
+        },
+        {
+          "id": 5,
+          "impact_notional": 5000000000,
+          "initial_margin_ppm": 50000,
+          "maintenance_fraction_ppm": 600000,
+          "name": "Mid-Cap",
+          "open_interest_lower_cap": 40000000000000,
+          "open_interest_upper_cap": 100000000000000
+        },
+        {
+          "id": 6,
+          "impact_notional": 2500000000,
+          "initial_margin_ppm": 10000,
+          "maintenance_fraction_ppm": 500000,
+          "name": "FX",
+          "open_interest_lower_cap": 500000000000,
+          "open_interest_upper_cap": 1000000000000
         }
       ],
       "params": {
@@ -3902,6 +3926,7 @@
     },
     "upgrade": {},
     "vault": {
+      "all_owner_share_unlocks": [],
       "default_quoting_params": {
         "activation_threshold_quote_quantums": "1000000000",
         "layers": 2,
@@ -3910,6 +3935,17 @@
         "skew_factor_ppm": 2000000,
         "spread_buffer_ppm": 1500,
         "spread_min_ppm": 3000
+      },
+      "owner_shares": [
+        {
+          "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
+          "shares": {
+            "num_shares": "0"
+          }
+        }
+      ],
+      "total_shares": {
+        "num_shares": "0"
       },
       "vaults": []
     },
@@ -3932,7 +3968,7 @@
       ]
     }
   },
-  "app_version": "5.0.0-dev0-404-gf14f3950",
+  "app_version": "5.2.1-19-g04197f43",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

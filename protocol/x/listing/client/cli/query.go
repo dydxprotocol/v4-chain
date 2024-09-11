@@ -20,5 +20,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
+	cmd.AddCommand(CmdQueryListingVaultDepositParams())
+
 	return cmd
 }

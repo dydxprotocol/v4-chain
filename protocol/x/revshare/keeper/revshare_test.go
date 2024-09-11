@@ -9,6 +9,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	"github.com/stretchr/testify/require"
 )
@@ -165,5 +166,98 @@ func TestGetMarketMapperRevenueShareForMarket(t *testing.T) {
 				}
 			},
 		)
+	}
+}
+
+func TestValidateRevShareSafety(t *testing.T) {
+	tests := map[string]struct {
+		affiliateTiers             affiliatetypes.AffiliateTiers
+		revShareConfig             types.UnconditionalRevShareConfig
+		marketMapperRevShareParams types.MarketMapperRevenueShareParams
+		expectedValid              bool
+	}{
+		"valid rev share config": {
+			affiliateTiers: affiliatetypes.DefaultAffiliateTiers,
+			revShareConfig: types.UnconditionalRevShareConfig{
+				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
+					{
+						Address:  constants.AliceAccAddress.String(),
+						SharePpm: 100_000, // 10%
+					},
+				},
+			},
+			marketMapperRevShareParams: types.MarketMapperRevenueShareParams{
+				Address:         constants.AliceAccAddress.String(),
+				RevenueSharePpm: 100_000, // 10%
+				ValidDays:       0,
+			},
+			expectedValid: true,
+		},
+		"invalid rev share config - sum of shares > 100%": {
+			affiliateTiers: affiliatetypes.DefaultAffiliateTiers,
+			revShareConfig: types.UnconditionalRevShareConfig{
+				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
+					{
+						Address:  constants.AliceAccAddress.String(),
+						SharePpm: 100_000, // 10%
+					},
+					{
+						Address:  constants.BobAccAddress.String(),
+						SharePpm: 810_000, // 81%
+					},
+				},
+			},
+			marketMapperRevShareParams: types.MarketMapperRevenueShareParams{
+				Address:         constants.AliceAccAddress.String(),
+				RevenueSharePpm: 100_000, // 10%
+				ValidDays:       0,
+			},
+			expectedValid: false,
+		},
+		"invalid rev share config - sum of shares + highest tier share > 100%": {
+			affiliateTiers: affiliatetypes.AffiliateTiers{
+				Tiers: []affiliatetypes.AffiliateTiers_Tier{
+					{
+						ReqReferredVolumeQuoteQuantums: 0,
+						ReqStakedWholeCoins:            0,
+						TakerFeeSharePpm:               50_000, // 5%
+					},
+					{
+						ReqReferredVolumeQuoteQuantums: 1_000_000_000_000, // 1 million USDC
+						ReqStakedWholeCoins:            200,               // 200 whole coins
+						TakerFeeSharePpm:               800_000,           // 80%
+					},
+				},
+			},
+			revShareConfig: types.UnconditionalRevShareConfig{
+				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
+					{
+						Address:  constants.AliceAccAddress.String(),
+						SharePpm: 100_000, // 10%
+					},
+					{
+						Address:  constants.BobAccAddress.String(),
+						SharePpm: 100_000, // 10%
+					},
+				},
+			},
+			marketMapperRevShareParams: types.MarketMapperRevenueShareParams{
+				Address:         constants.AliceAccAddress.String(),
+				RevenueSharePpm: 100_000, // 10%
+				ValidDays:       0,
+			},
+			expectedValid: false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			_ = tApp.InitChain()
+			k := tApp.App.RevShareKeeper
+
+			valid := k.ValidateRevShareSafety(tc.affiliateTiers, tc.revShareConfig, tc.marketMapperRevShareParams)
+			require.Equal(t, tc.expectedValid, valid)
+		})
 	}
 }

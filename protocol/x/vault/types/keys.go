@@ -11,12 +11,16 @@ const (
 
 // State.
 const (
-	// TotalSharesKeyPrefix is the prefix to retrieve all TotalShares.
-	TotalSharesKeyPrefix = "TotalShares:"
+	// TotalSharesKey is the key to retrieve total shares.
+	TotalSharesKey = "TotalShares"
 
 	// OwnerSharesKeyPrefix is the prefix to retrieve all OwnerShares.
-	// OwnerShares store: vaultId VaultId -> owner string -> shares NumShares.
+	// OwnerShares store: owner string -> shares NumShares.
 	OwnerSharesKeyPrefix = "OwnerShares:"
+
+	// OwnerShareUnlocksKeyPrefix is the prefix to retrieve all OwnerShareUnlocks.
+	// OwnerShareUnlocks store: owner string -> ownerShareUnlocks OwnerShareUnlocks.
+	OwnerShareUnlocksKeyPrefix = "OwnerShareUnlocks:"
 
 	// DefaultQuotingParams is the key to retrieve DefaultQuotingParams.
 	// A vault uses DefaultQuotingParams if it does not have its own QuotingParams.

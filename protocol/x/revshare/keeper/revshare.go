@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 )
 
@@ -100,4 +101,44 @@ func (k Keeper) GetMarketMapperRevenueShareForMarket(ctx sdk.Context, marketId u
 	}
 
 	return revShareAddr, revShareParams.RevenueSharePpm, nil
+}
+
+func (k Keeper) GetUnconditionalRevShareConfigParams(ctx sdk.Context) (types.UnconditionalRevShareConfig, error) {
+	store := ctx.KVStore(k.storeKey)
+	unconditionalRevShareConfigBytes := store.Get(
+		[]byte(types.UnconditionalRevShareConfigKey),
+	)
+	var unconditionalRevShareConfig types.UnconditionalRevShareConfig
+	k.cdc.MustUnmarshal(unconditionalRevShareConfigBytes, &unconditionalRevShareConfig)
+	return unconditionalRevShareConfig, nil
+}
+
+func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config types.UnconditionalRevShareConfig) {
+	store := ctx.KVStore(k.storeKey)
+	unconditionalRevShareConfigBytes := k.cdc.MustMarshal(&config)
+	store.Set([]byte(types.UnconditionalRevShareConfigKey), unconditionalRevShareConfigBytes)
+}
+
+// ValidateRevShareSafety roughly checks if the total rev share is valid using the formula below
+// highest_affiliate_taker_share + sum(unconditional_rev_shares) + market_mapper_rev_share < 100%
+// Note: this is just an estimate as affiliate rev share is based on taker fees, while
+// the rest of the rev share is based on net fees.
+// TODO(OTE-788): Revisit this formula to ensure accuracy.
+func (k Keeper) ValidateRevShareSafety(
+	affiliateTiers affiliatetypes.AffiliateTiers,
+	unconditionalRevShareConfig types.UnconditionalRevShareConfig,
+	marketMapperRevShareParams types.MarketMapperRevenueShareParams,
+) bool {
+	highestTierRevSharePpm := uint32(0)
+	if len(affiliateTiers.Tiers) > 0 {
+		highestTierRevSharePpm = affiliateTiers.Tiers[len(affiliateTiers.Tiers)-1].TakerFeeSharePpm
+	}
+	totalUnconditionalRevSharePpm := uint32(0)
+	for _, recipientConfig := range unconditionalRevShareConfig.Configs {
+		totalUnconditionalRevSharePpm += recipientConfig.SharePpm
+	}
+	totalMarketMapperRevSharePpm := marketMapperRevShareParams.RevenueSharePpm
+
+	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm + highestTierRevSharePpm
+	return totalRevSharePpm < lib.OneMillion
 }

@@ -240,6 +240,112 @@
         "type": "object",
         "additionalProperties": false
       },
+      "AffiliateReferralCodeResponse": {
+        "properties": {
+          "referralCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "referralCode"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "AffiliateAddressResponse": {
+        "properties": {
+          "address": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "address"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "AffiliateSnapshotResponseObject": {
+        "properties": {
+          "affiliateAddress": {
+            "type": "string"
+          },
+          "affiliateEarnings": {
+            "type": "number",
+            "format": "double"
+          },
+          "affiliateReferralCode": {
+            "type": "string"
+          },
+          "affiliateReferredTrades": {
+            "type": "number",
+            "format": "double"
+          },
+          "affiliateTotalReferredFees": {
+            "type": "number",
+            "format": "double"
+          },
+          "affiliateReferredUsers": {
+            "type": "number",
+            "format": "double"
+          },
+          "affiliateReferredNetProtocolEarnings": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "affiliateAddress",
+          "affiliateEarnings",
+          "affiliateReferralCode",
+          "affiliateReferredTrades",
+          "affiliateTotalReferredFees",
+          "affiliateReferredUsers",
+          "affiliateReferredNetProtocolEarnings"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "AffiliateSnapshotResponse": {
+        "properties": {
+          "affiliateList": {
+            "items": {
+              "$ref": "#/components/schemas/AffiliateSnapshotResponseObject"
+            },
+            "type": "array"
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          },
+          "currentOffset": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": [
+          "affiliateList",
+          "total",
+          "currentOffset"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "AffiliateTotalVolumeResponse": {
+        "properties": {
+          "totalVolume": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "required": [
+          "totalVolume"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "AssetPositionResponse": {
         "properties": {
           "positions": {
@@ -461,6 +567,9 @@
           "fee": {
             "type": "string"
           },
+          "affiliateRevShare": {
+            "type": "string"
+          },
           "createdAt": {
             "$ref": "#/components/schemas/IsoString"
           },
@@ -488,6 +597,7 @@
           "price",
           "size",
           "fee",
+          "affiliateRevShare",
           "createdAt",
           "createdAtHeight",
           "subaccountNumber"
@@ -1359,6 +1469,93 @@
         ],
         "type": "object",
         "additionalProperties": false
+      },
+      "MegavaultHistoricalPnlResponse": {
+        "properties": {
+          "megavaultPnl": {
+            "items": {
+              "$ref": "#/components/schemas/PnlTicksResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "megavaultPnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "VaultHistoricalPnl": {
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "historicalPnl": {
+            "items": {
+              "$ref": "#/components/schemas/PnlTicksResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "ticker",
+          "historicalPnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "VaultsHistoricalPnlResponse": {
+        "properties": {
+          "vaultsPnl": {
+            "items": {
+              "$ref": "#/components/schemas/VaultHistoricalPnl"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "vaultsPnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "VaultPosition": {
+        "properties": {
+          "ticker": {
+            "type": "string"
+          },
+          "assetPosition": {
+            "$ref": "#/components/schemas/AssetPositionResponseObject"
+          },
+          "perpetualPosition": {
+            "$ref": "#/components/schemas/PerpetualPositionResponseObject"
+          },
+          "equity": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticker",
+          "assetPosition",
+          "equity"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "MegavaultPositionResponse": {
+        "properties": {
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/VaultPosition"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "positions"
+        ],
+        "type": "object",
+        "additionalProperties": false
       }
     },
     "securitySchemes": {}
@@ -1466,6 +1663,136 @@
             "schema": {
               "format": "double",
               "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/affiliates/referral_code": {
+      "get": {
+        "operationId": "GetReferralCode",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliateReferralCodeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/affiliates/address": {
+      "get": {
+        "operationId": "GetAddress",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliateAddressResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "referralCode",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/affiliates/snapshot": {
+      "get": {
+        "operationId": "GetSnapshot",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliateSnapshotResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortByReferredFees",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ]
+      }
+    },
+    "/affiliates/total_volume": {
+      "get": {
+        "operationId": "GetTotalVolume",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AffiliateTotalVolumeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ]
@@ -3004,6 +3331,63 @@
             }
           }
         ]
+      }
+    },
+    "/vault/v1/megavault/historicalPnl": {
+      "get": {
+        "operationId": "GetMegavaultHistoricalPnl",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MegavaultHistoricalPnlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": []
+      }
+    },
+    "/vault/v1/vaults/historicalPnl": {
+      "get": {
+        "operationId": "GetVaultsHistoricalPnl",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultsHistoricalPnlResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": []
+      }
+    },
+    "/vault/v1/megavault/positions": {
+      "get": {
+        "operationId": "GetMegavaultPositions",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MegavaultPositionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": []
       }
     }
   },

@@ -20,4 +20,15 @@ var (
 		3,
 		"MarketMapperRevShareDetails not found for marketId",
 	)
+	ErrInvalidRevShareConfig = errorsmod.Register(
+		ModuleName,
+		4,
+		"invalid unconditional revshare config",
+	)
+
+	ErrRevShareSafetyViolation = errorsmod.Register(
+		ModuleName,
+		5,
+		"rev shares greater than or equal to 100%",
+	)
 )

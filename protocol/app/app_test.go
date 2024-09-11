@@ -34,6 +34,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
+	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates"
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	blocktimemodule "github.com/dydxprotocol/v4-chain/protocol/x/blocktime"
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
@@ -223,6 +224,7 @@ func TestModuleBasics(t *testing.T) {
 		listingmodule.AppModuleBasic{},
 		revsharemodule.AppModuleBasic{},
 		accountplusmodule.AppModuleBasic{},
+		affiliates.AppModuleBasic{},
 
 		// slinky marketmap
 		marketmapmodule.AppModuleBasic{},

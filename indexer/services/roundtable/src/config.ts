@@ -51,12 +51,13 @@ export const configSchema = {
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_DAILY: parseBoolean({ default: true }),
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_WEEKLY: parseBoolean({ default: true }),
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_MONTHLY: parseBoolean({ default: true }),
-  LOOPS_ENABLED_SUBACCOUNT_USERNAME_GENERATOR: parseBoolean({ default: true }),
+  LOOPS_ENABLED_SUBACCOUNT_USERNAME_GENERATOR: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_ALL_TIME: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_DAILY: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_WEEKLY: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_MONTHLY: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_YEARLY: parseBoolean({ default: false }),
+  LOOPS_ENABLED_UPDATE_WALLET_TOTAL_VOLUME: parseBoolean({ default: true }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -125,6 +126,9 @@ export const configSchema = {
   LOOPS_INTERVAL_MS_LEADERBOARD_PNL_YEARLY: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
+  LOOPS_INTERVAL_MS_UPDATE_WALLET_TOTAL_VOLUME: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
+  }),
 
   // Start delay
   START_DELAY_ENABLED: parseBoolean({ default: true }),
@@ -177,7 +181,8 @@ export const configSchema = {
   MAX_COMPLIANCE_DATA_AGE_SECONDS: parseInteger({ default: 2_630_000 }), // 1 month
   MAX_ACTIVE_COMPLIANCE_DATA_AGE_SECONDS: parseInteger({ default: 86_400 }), // 1 day
   MAX_COMPLIANCE_DATA_QUERY_PER_LOOP: parseInteger({ default: 100 }),
-  COMPLIANCE_PROVIDER_QUERY_BATCH_SIZE: parseInteger({ default: 100 }),
+  // v2/wallet/synchronous rate limit is 15/s https://developers.elliptic.co/docs/configuration
+  COMPLIANCE_PROVIDER_QUERY_BATCH_SIZE: parseInteger({ default: 15 }),
   COMPLIANCE_PROVIDER_QUERY_DELAY_MS: parseInteger({ default: ONE_SECOND_IN_MILLISECONDS }),
   CLOSE_ONLY_TO_BLOCKED_DAYS: parseInteger({ default: 7 }),
 
@@ -195,6 +200,7 @@ export const configSchema = {
 
   // Subaccount username generator
   SUBACCOUNT_USERNAME_NUM_RANDOM_DIGITS: parseInteger({ default: 3 }),
+  SUBACCOUNT_USERNAME_MAX_LENGTH: parseInteger({ default: 13 }),
 };
 
 export default parseSchema(configSchema);

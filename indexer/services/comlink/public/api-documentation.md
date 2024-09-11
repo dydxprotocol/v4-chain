@@ -30,7 +30,9 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://dydx-testnet.imperator.co/v4'
 
-r = requests.get(f'{baseURL}/addresses/{address}', headers = headers)
+r = requests.get(f'{baseURL}/affiliates/address', params={
+  'referralCode': 'string'
+}, headers = headers)
 
 print(r.json())
 
@@ -46,7 +48,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://dydx-testnet.imperator.co/v4';
 
-fetch(`${baseURL}/addresses/{address}`,
+fetch(`${baseURL}/affiliates/address?referralCode=string`,
 {
   method: 'GET',
 
@@ -60,13 +62,13 @@ fetch(`${baseURL}/addresses/{address}`,
 
 ```
 
-`GET /addresses/{address}`
+`GET /affiliates/address`
 
 ### Parameters
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|address|path|string|true|none|
+|referralCode|query|string|true|none|
 
 > Example responses
 
@@ -74,72 +76,7 @@ fetch(`${baseURL}/addresses/{address}`,
 
 ```json
 {
-  "subaccounts": [
-    {
-      "address": "string",
-      "subaccountNumber": 0,
-      "equity": "string",
-      "freeCollateral": "string",
-      "openPerpetualPositions": {
-        "property1": {
-          "market": "string",
-          "status": "OPEN",
-          "side": "LONG",
-          "size": "string",
-          "maxSize": "string",
-          "entryPrice": "string",
-          "realizedPnl": "string",
-          "createdAt": "string",
-          "createdAtHeight": "string",
-          "sumOpen": "string",
-          "sumClose": "string",
-          "netFunding": "string",
-          "unrealizedPnl": "string",
-          "closedAt": null,
-          "exitPrice": "string",
-          "subaccountNumber": 0
-        },
-        "property2": {
-          "market": "string",
-          "status": "OPEN",
-          "side": "LONG",
-          "size": "string",
-          "maxSize": "string",
-          "entryPrice": "string",
-          "realizedPnl": "string",
-          "createdAt": "string",
-          "createdAtHeight": "string",
-          "sumOpen": "string",
-          "sumClose": "string",
-          "netFunding": "string",
-          "unrealizedPnl": "string",
-          "closedAt": null,
-          "exitPrice": "string",
-          "subaccountNumber": 0
-        }
-      },
-      "assetPositions": {
-        "property1": {
-          "symbol": "string",
-          "side": "LONG",
-          "size": "string",
-          "assetId": "string",
-          "subaccountNumber": 0
-        },
-        "property2": {
-          "symbol": "string",
-          "side": "LONG",
-          "size": "string",
-          "assetId": "string",
-          "subaccountNumber": 0
-        }
-      },
-      "marginEnabled": true,
-      "updatedAtHeight": "string",
-      "latestProcessedBlockHeight": "string"
-    }
-  ],
-  "totalTradingRewards": "string"
+  "address": "string"
 }
 ```
 
@@ -147,7 +84,7 @@ fetch(`${baseURL}/addresses/{address}`,
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AddressResponse](#schemaaddressresponse)|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateAddressResponse](#schemaaffiliateaddressresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -426,6 +363,246 @@ fetch(`${baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNu
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[ParentSubaccountResponse](#schemaparentsubaccountresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetReferralCode
+
+<a id="opIdGetReferralCode"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/affiliates/referral_code', params={
+  'address': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/affiliates/referral_code?address=string`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /affiliates/referral_code`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "referralCode": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateReferralCodeResponse](#schemaaffiliatereferralcoderesponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetSnapshot
+
+<a id="opIdGetSnapshot"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/affiliates/snapshot', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/affiliates/snapshot`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /affiliates/snapshot`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|offset|query|number(double)|false|none|
+|limit|query|number(double)|false|none|
+|sortByReferredFees|query|boolean|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "affiliateList": [
+    {
+      "affiliateAddress": "string",
+      "affiliateEarnings": 0.1,
+      "affiliateReferralCode": "string",
+      "affiliateReferredTrades": 0.1,
+      "affiliateTotalReferredFees": 0.1,
+      "affiliateReferredUsers": 0.1,
+      "affiliateReferredNetProtocolEarnings": 0.1
+    }
+  ],
+  "total": 0.1,
+  "currentOffset": 0.1
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateSnapshotResponse](#schemaaffiliatesnapshotresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetTotalVolume
+
+<a id="opIdGetTotalVolume"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/affiliates/total_volume', params={
+  'address': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/affiliates/total_volume?address=string`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /affiliates/total_volume`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "totalVolume": 0.1
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateTotalVolumeResponse](#schemaaffiliatetotalvolumeresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -876,6 +1053,7 @@ fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
       "price": "string",
       "size": "string",
       "fee": "string",
+      "affiliateRevShare": "string",
       "createdAt": "string",
       "createdAtHeight": "string",
       "orderId": "string",
@@ -986,6 +1164,7 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
       "price": "string",
       "size": "string",
       "fee": "string",
+      "affiliateRevShare": "string",
       "createdAt": "string",
       "createdAtHeight": "string",
       "orderId": "string",
@@ -3076,6 +3255,267 @@ fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=
 This operation does not require authentication
 </aside>
 
+## GetMegavaultHistoricalPnl
+
+<a id="opIdGetMegavaultHistoricalPnl"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/vault/v1/megavault/historicalPnl', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/vault/v1/megavault/historicalPnl`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /vault/v1/megavault/historicalPnl`
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "megavaultPnl": [
+    {
+      "id": "string",
+      "subaccountId": "string",
+      "equity": "string",
+      "totalPnl": "string",
+      "netTransfers": "string",
+      "createdAt": "string",
+      "blockHeight": "string",
+      "blockTime": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[MegavaultHistoricalPnlResponse](#schemamegavaulthistoricalpnlresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetVaultsHistoricalPnl
+
+<a id="opIdGetVaultsHistoricalPnl"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/vault/v1/vaults/historicalPnl', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/vault/v1/vaults/historicalPnl`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /vault/v1/vaults/historicalPnl`
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "vaultsPnl": [
+    {
+      "ticker": "string",
+      "historicalPnl": [
+        {
+          "id": "string",
+          "subaccountId": "string",
+          "equity": "string",
+          "totalPnl": "string",
+          "netTransfers": "string",
+          "createdAt": "string",
+          "blockHeight": "string",
+          "blockTime": "string"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[VaultsHistoricalPnlResponse](#schemavaultshistoricalpnlresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetMegavaultPositions
+
+<a id="opIdGetMegavaultPositions"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://dydx-testnet.imperator.co/v4'
+
+r = requests.get(f'{baseURL}/vault/v1/megavault/positions', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://dydx-testnet.imperator.co/v4';
+
+fetch(`${baseURL}/vault/v1/megavault/positions`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /vault/v1/megavault/positions`
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "positions": [
+    {
+      "ticker": "string",
+      "assetPosition": {
+        "symbol": "string",
+        "side": "LONG",
+        "size": "string",
+        "assetId": "string",
+        "subaccountNumber": 0
+      },
+      "perpetualPosition": {
+        "market": "string",
+        "status": "OPEN",
+        "side": "LONG",
+        "size": "string",
+        "maxSize": "string",
+        "entryPrice": "string",
+        "realizedPnl": "string",
+        "createdAt": "string",
+        "createdAtHeight": "string",
+        "sumOpen": "string",
+        "sumClose": "string",
+        "netFunding": "string",
+        "unrealizedPnl": "string",
+        "closedAt": "string",
+        "exitPrice": "string",
+        "subaccountNumber": 0
+      },
+      "equity": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[MegavaultPositionResponse](#schemamegavaultpositionresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 # Schemas
 
 ## PerpetualPositionStatus
@@ -3579,6 +4019,132 @@ This operation does not require authentication
 |freeCollateral|string|true|none|none|
 |childSubaccounts|[[SubaccountResponseObject](#schemasubaccountresponseobject)]|true|none|none|
 
+## AffiliateReferralCodeResponse
+
+<a id="schemaaffiliatereferralcoderesponse"></a>
+<a id="schema_AffiliateReferralCodeResponse"></a>
+<a id="tocSaffiliatereferralcoderesponse"></a>
+<a id="tocsaffiliatereferralcoderesponse"></a>
+
+```json
+{
+  "referralCode": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|referralCode|string¦null|true|none|none|
+
+## AffiliateAddressResponse
+
+<a id="schemaaffiliateaddressresponse"></a>
+<a id="schema_AffiliateAddressResponse"></a>
+<a id="tocSaffiliateaddressresponse"></a>
+<a id="tocsaffiliateaddressresponse"></a>
+
+```json
+{
+  "address": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|address|string¦null|true|none|none|
+
+## AffiliateSnapshotResponseObject
+
+<a id="schemaaffiliatesnapshotresponseobject"></a>
+<a id="schema_AffiliateSnapshotResponseObject"></a>
+<a id="tocSaffiliatesnapshotresponseobject"></a>
+<a id="tocsaffiliatesnapshotresponseobject"></a>
+
+```json
+{
+  "affiliateAddress": "string",
+  "affiliateEarnings": 0.1,
+  "affiliateReferralCode": "string",
+  "affiliateReferredTrades": 0.1,
+  "affiliateTotalReferredFees": 0.1,
+  "affiliateReferredUsers": 0.1,
+  "affiliateReferredNetProtocolEarnings": 0.1
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|affiliateAddress|string|true|none|none|
+|affiliateEarnings|number(double)|true|none|none|
+|affiliateReferralCode|string|true|none|none|
+|affiliateReferredTrades|number(double)|true|none|none|
+|affiliateTotalReferredFees|number(double)|true|none|none|
+|affiliateReferredUsers|number(double)|true|none|none|
+|affiliateReferredNetProtocolEarnings|number(double)|true|none|none|
+
+## AffiliateSnapshotResponse
+
+<a id="schemaaffiliatesnapshotresponse"></a>
+<a id="schema_AffiliateSnapshotResponse"></a>
+<a id="tocSaffiliatesnapshotresponse"></a>
+<a id="tocsaffiliatesnapshotresponse"></a>
+
+```json
+{
+  "affiliateList": [
+    {
+      "affiliateAddress": "string",
+      "affiliateEarnings": 0.1,
+      "affiliateReferralCode": "string",
+      "affiliateReferredTrades": 0.1,
+      "affiliateTotalReferredFees": 0.1,
+      "affiliateReferredUsers": 0.1,
+      "affiliateReferredNetProtocolEarnings": 0.1
+    }
+  ],
+  "total": 0.1,
+  "currentOffset": 0.1
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|affiliateList|[[AffiliateSnapshotResponseObject](#schemaaffiliatesnapshotresponseobject)]|true|none|none|
+|total|number(double)|true|none|none|
+|currentOffset|number(double)|true|none|none|
+
+## AffiliateTotalVolumeResponse
+
+<a id="schemaaffiliatetotalvolumeresponse"></a>
+<a id="schema_AffiliateTotalVolumeResponse"></a>
+<a id="tocSaffiliatetotalvolumeresponse"></a>
+<a id="tocsaffiliatetotalvolumeresponse"></a>
+
+```json
+{
+  "totalVolume": 0.1
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|totalVolume|number(double)¦null|true|none|none|
+
 ## AssetPositionResponse
 
 <a id="schemaassetpositionresponse"></a>
@@ -3944,6 +4510,7 @@ This operation does not require authentication
   "price": "string",
   "size": "string",
   "fee": "string",
+  "affiliateRevShare": "string",
   "createdAt": "string",
   "createdAtHeight": "string",
   "orderId": "string",
@@ -3966,6 +4533,7 @@ This operation does not require authentication
 |price|string|true|none|none|
 |size|string|true|none|none|
 |fee|string|true|none|none|
+|affiliateRevShare|string|true|none|none|
 |createdAt|[IsoString](#schemaisostring)|true|none|none|
 |createdAtHeight|string|true|none|none|
 |orderId|string|false|none|none|
@@ -3995,6 +4563,7 @@ This operation does not require authentication
       "price": "string",
       "size": "string",
       "fee": "string",
+      "affiliateRevShare": "string",
       "createdAt": "string",
       "createdAtHeight": "string",
       "orderId": "string",
@@ -5195,4 +5764,203 @@ or
 |offset|integer(int32)|false|none|none|
 |transfersSubset|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 |totalNetTransfers|string|true|none|none|
+
+## MegavaultHistoricalPnlResponse
+
+<a id="schemamegavaulthistoricalpnlresponse"></a>
+<a id="schema_MegavaultHistoricalPnlResponse"></a>
+<a id="tocSmegavaulthistoricalpnlresponse"></a>
+<a id="tocsmegavaulthistoricalpnlresponse"></a>
+
+```json
+{
+  "megavaultPnl": [
+    {
+      "id": "string",
+      "subaccountId": "string",
+      "equity": "string",
+      "totalPnl": "string",
+      "netTransfers": "string",
+      "createdAt": "string",
+      "blockHeight": "string",
+      "blockTime": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|megavaultPnl|[[PnlTicksResponseObject](#schemapnlticksresponseobject)]|true|none|none|
+
+## VaultHistoricalPnl
+
+<a id="schemavaulthistoricalpnl"></a>
+<a id="schema_VaultHistoricalPnl"></a>
+<a id="tocSvaulthistoricalpnl"></a>
+<a id="tocsvaulthistoricalpnl"></a>
+
+```json
+{
+  "ticker": "string",
+  "historicalPnl": [
+    {
+      "id": "string",
+      "subaccountId": "string",
+      "equity": "string",
+      "totalPnl": "string",
+      "netTransfers": "string",
+      "createdAt": "string",
+      "blockHeight": "string",
+      "blockTime": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|ticker|string|true|none|none|
+|historicalPnl|[[PnlTicksResponseObject](#schemapnlticksresponseobject)]|true|none|none|
+
+## VaultsHistoricalPnlResponse
+
+<a id="schemavaultshistoricalpnlresponse"></a>
+<a id="schema_VaultsHistoricalPnlResponse"></a>
+<a id="tocSvaultshistoricalpnlresponse"></a>
+<a id="tocsvaultshistoricalpnlresponse"></a>
+
+```json
+{
+  "vaultsPnl": [
+    {
+      "ticker": "string",
+      "historicalPnl": [
+        {
+          "id": "string",
+          "subaccountId": "string",
+          "equity": "string",
+          "totalPnl": "string",
+          "netTransfers": "string",
+          "createdAt": "string",
+          "blockHeight": "string",
+          "blockTime": "string"
+        }
+      ]
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|vaultsPnl|[[VaultHistoricalPnl](#schemavaulthistoricalpnl)]|true|none|none|
+
+## VaultPosition
+
+<a id="schemavaultposition"></a>
+<a id="schema_VaultPosition"></a>
+<a id="tocSvaultposition"></a>
+<a id="tocsvaultposition"></a>
+
+```json
+{
+  "ticker": "string",
+  "assetPosition": {
+    "symbol": "string",
+    "side": "LONG",
+    "size": "string",
+    "assetId": "string",
+    "subaccountNumber": 0
+  },
+  "perpetualPosition": {
+    "market": "string",
+    "status": "OPEN",
+    "side": "LONG",
+    "size": "string",
+    "maxSize": "string",
+    "entryPrice": "string",
+    "realizedPnl": "string",
+    "createdAt": "string",
+    "createdAtHeight": "string",
+    "sumOpen": "string",
+    "sumClose": "string",
+    "netFunding": "string",
+    "unrealizedPnl": "string",
+    "closedAt": "string",
+    "exitPrice": "string",
+    "subaccountNumber": 0
+  },
+  "equity": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|ticker|string|true|none|none|
+|assetPosition|[AssetPositionResponseObject](#schemaassetpositionresponseobject)|true|none|none|
+|perpetualPosition|[PerpetualPositionResponseObject](#schemaperpetualpositionresponseobject)|false|none|none|
+|equity|string|true|none|none|
+
+## MegavaultPositionResponse
+
+<a id="schemamegavaultpositionresponse"></a>
+<a id="schema_MegavaultPositionResponse"></a>
+<a id="tocSmegavaultpositionresponse"></a>
+<a id="tocsmegavaultpositionresponse"></a>
+
+```json
+{
+  "positions": [
+    {
+      "ticker": "string",
+      "assetPosition": {
+        "symbol": "string",
+        "side": "LONG",
+        "size": "string",
+        "assetId": "string",
+        "subaccountNumber": 0
+      },
+      "perpetualPosition": {
+        "market": "string",
+        "status": "OPEN",
+        "side": "LONG",
+        "size": "string",
+        "maxSize": "string",
+        "entryPrice": "string",
+        "realizedPnl": "string",
+        "createdAt": "string",
+        "createdAtHeight": "string",
+        "sumOpen": "string",
+        "sumClose": "string",
+        "netFunding": "string",
+        "unrealizedPnl": "string",
+        "closedAt": "string",
+        "exitPrice": "string",
+        "subaccountNumber": 0
+      },
+      "equity": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|positions|[[VaultPosition](#schemavaultposition)]|true|none|none|
 

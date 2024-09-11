@@ -278,36 +278,37 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			},
 			ordersShouldRefresh: true,
 		},
-		"Success - Orders refresh due to order size increase": {
-			vaultId: constants.Vault_Clob0,
-			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
-				msgDepositToVault := vaulttypes.MsgDepositToVault{
-					VaultId:       &constants.Vault_Clob0,
-					SubaccountId:  &(constants.Alice_Num0),
-					QuoteQuantums: dtypes.NewInt(87_654_321),
-				}
-				CheckTx_MsgDepositToVault := testapp.MustMakeCheckTx(
-					ctx,
-					tApp.App,
-					testapp.MustMakeCheckTxOptions{
-						AccAddressForSigning: constants.Alice_Num0.Owner,
-						Gas:                  constants.TestGasLimit,
-						FeeAmt:               constants.TestFeeCoins_5Cents,
-					},
-					&msgDepositToVault,
-				)
-				checkTxResp := tApp.CheckTx(CheckTx_MsgDepositToVault)
-				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+		// TODO (TRA-551): Reenable this test after implementing MsgAllocateToVault.
+		// "Success - Orders refresh due to order size increase": {
+		// 	vaultId: constants.Vault_Clob0,
+		// 	advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+		// 		msgDepositToVault := vaulttypes.MsgDepositToVault{
+		// 			VaultId:       &constants.Vault_Clob0,
+		// 			SubaccountId:  &(constants.Alice_Num0),
+		// 			QuoteQuantums: dtypes.NewInt(87_654_321),
+		// 		}
+		// 		CheckTx_MsgDepositToVault := testapp.MustMakeCheckTx(
+		// 			ctx,
+		// 			tApp.App,
+		// 			testapp.MustMakeCheckTxOptions{
+		// 				AccAddressForSigning: constants.Alice_Num0.Owner,
+		// 				Gas:                  constants.TestGasLimit,
+		// 				FeeAmt:               constants.TestFeeCoins_5Cents,
+		// 			},
+		// 			&msgDepositToVault,
+		// 		)
+		// 		checkTxResp := tApp.CheckTx(CheckTx_MsgDepositToVault)
+		// 		require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 
-				return tApp.AdvanceToBlock(
-					uint32(tApp.GetBlockHeight())+1,
-					testapp.AdvanceToBlockOptions{
-						BlockTime: ctx.BlockTime().Add(time.Second * 2),
-					},
-				)
-			},
-			ordersShouldRefresh: true,
-		},
+		// 		return tApp.AdvanceToBlock(
+		// 			uint32(tApp.GetBlockHeight())+1,
+		// 			testapp.AdvanceToBlockOptions{
+		// 				BlockTime: ctx.BlockTime().Add(time.Second * 2),
+		// 			},
+		// 		)
+		// 	},
+		// 	ordersShouldRefresh: true,
+		// },
 		"Success - Vault for non-existent Clob Pair 4321": {
 			vaultId: vaulttypes.VaultId{
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
@@ -325,20 +326,9 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *vaulttypes.GenesisState) {
-						genesisState.Vaults = []*vaulttypes.Vault{
+						genesisState.Vaults = []vaulttypes.Vault{
 							{
-								VaultId: &tc.vaultId,
-								TotalShares: &vaulttypes.NumShares{
-									NumShares: dtypes.NewInt(100),
-								},
-								OwnerShares: []*vaulttypes.OwnerShare{
-									{
-										Owner: constants.AliceAccAddress.String(),
-										Shares: &vaulttypes.NumShares{
-											NumShares: dtypes.NewInt(100),
-										},
-									},
-								},
+								VaultId: tc.vaultId,
 								VaultParams: vaulttypes.VaultParams{
 									Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 								},

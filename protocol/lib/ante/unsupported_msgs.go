@@ -5,6 +5,7 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
 // IsUnsupportedMsg returns true if the msg is unsupported by the app.
@@ -18,7 +19,11 @@ func IsUnsupportedMsg(msg sdk.Msg) bool {
 		// ------- CosmosSDK default modules
 		// gov
 		*govbeta.MsgSubmitProposal,
-		*gov.MsgCancelProposal:
+		*gov.MsgCancelProposal,
+		// ------- dYdX custom modules
+		// vault
+		// nolint:staticcheck
+		*vaulttypes.MsgUpdateParams:
 		return true
 	}
 	return false
