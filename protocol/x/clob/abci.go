@@ -46,6 +46,17 @@ func BeginBlocker(
 	keeper.ResetAllDeliveredOrderIds(ctx)
 }
 
+// Precommit executes all ABCI Precommit logic respective to the clob module.
+func Precommit(
+	ctx sdk.Context,
+	keeper keeper.Keeper,
+) {
+	if streamingManager := keeper.GetFullNodeStreamingManager(); !streamingManager.Enabled() {
+		return
+	}
+	keeper.StreamStagedEventsAfterFinalizeBlock(ctx)
+}
+
 // EndBlocker executes all ABCI EndBlock logic respective to the clob module.
 func EndBlocker(
 	ctx sdk.Context,

@@ -202,6 +202,7 @@ const (
 	UpdateType                                              = "update_type"
 	ValidateMatches                                         = "validate_matches"
 	ValidateOrder                                           = "validate_order"
+	StreamStagedEventsAfterFinalizeBlock                    = "stream_staged_events_after_finalize_block"
 
 	// MemCLOB.
 	AddedToOrderBook                     = "added_to_orderbook"
