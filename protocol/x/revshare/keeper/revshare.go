@@ -194,7 +194,6 @@ func (k Keeper) getAffiliateRevShares(
 ) ([]types.RevShare, *big.Int, error) {
 	takerAddr := fill.TakerAddr()
 	takerFee := fill.TakerFeeQuoteQuantums()
-	feesShared := big.NewInt(0)
 	if fill.MonthlyRollingTakerVolumeQuantums() >= types.Max30dRefereeVolumeQuantums {
 		return nil, big.NewInt(0), nil
 	}
@@ -206,7 +205,7 @@ func (k Keeper) getAffiliateRevShares(
 	if !exists {
 		return nil, big.NewInt(0), nil
 	}
-	feesShared = lib.BigMulPpm(takerFee, lib.BigU(feeSharePpm), false)
+	feesShared := lib.BigMulPpm(takerFee, lib.BigU(feeSharePpm), false)
 	return []types.RevShare{
 		{
 			Recipient:         takerAffiliateAddr,
