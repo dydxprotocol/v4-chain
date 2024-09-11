@@ -271,12 +271,12 @@
           "affiliateAddress": {
             "type": "string"
           },
+          "affiliateReferralCode": {
+            "type": "string"
+          },
           "affiliateEarnings": {
             "type": "number",
             "format": "double"
-          },
-          "affiliateReferralCode": {
-            "type": "string"
           },
           "affiliateReferredTrades": {
             "type": "number",
@@ -293,16 +293,21 @@
           "affiliateReferredNetProtocolEarnings": {
             "type": "number",
             "format": "double"
+          },
+          "affiliateReferredTotalVolume": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
           "affiliateAddress",
-          "affiliateEarnings",
           "affiliateReferralCode",
+          "affiliateEarnings",
           "affiliateReferredTrades",
           "affiliateTotalReferredFees",
           "affiliateReferredUsers",
-          "affiliateReferredNetProtocolEarnings"
+          "affiliateReferredNetProtocolEarnings",
+          "affiliateReferredTotalVolume"
         ],
         "type": "object",
         "additionalProperties": false
@@ -1668,9 +1673,9 @@
         ]
       }
     },
-    "/affiliates/referral_code": {
+    "/affiliates/metadata": {
       "get": {
-        "operationId": "GetReferralCode",
+        "operationId": "GetMetadata",
         "responses": {
           "200": {
             "description": "Ok",

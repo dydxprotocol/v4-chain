@@ -29,8 +29,8 @@ const controllerName: string = 'affiliates-controller';
 // TODO(OTE-731): replace api stubs with real logic
 @Route('affiliates')
 class AffiliatesController extends Controller {
-  @Get('/referral_code')
-  async getReferralCode(
+  @Get('/metadata')
+  async getMetadata(
     @Query() address: string, // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<AffiliateReferralCodeResponse> {
     // simulate a delay
@@ -67,12 +67,13 @@ class AffiliatesController extends Controller {
 
     const snapshot: AffiliateSnapshotResponseObject = {
       affiliateAddress: 'some_address',
-      affiliateEarnings: 100,
       affiliateReferralCode: 'TempCode123',
+      affiliateEarnings: 100,
       affiliateReferredTrades: 1000,
       affiliateTotalReferredFees: 100,
       affiliateReferredUsers: 10,
       affiliateReferredNetProtocolEarnings: 1000,
+      affiliateReferredTotalVolume: 1000000,
     };
 
     const affiliateSnapshots: AffiliateSnapshotResponseObject[] = [];
@@ -102,7 +103,7 @@ class AffiliatesController extends Controller {
 }
 
 router.get(
-  '/referral_code',
+  '/metadata',
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
     address: {
@@ -121,11 +122,11 @@ router.get(
 
     try {
       const controller: AffiliatesController = new AffiliatesController();
-      const response: AffiliateReferralCodeResponse = await controller.getReferralCode(address);
+      const response: AffiliateReferralCodeResponse = await controller.getMetadata(address);
       return res.send(response);
     } catch (error) {
       return handleControllerError(
-        'AffiliatesController GET /referral_code',
+        'AffiliatesController GET /metadata',
         'Affiliates referral code error',
         error,
         req,
@@ -133,7 +134,7 @@ router.get(
       );
     } finally {
       stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.get_referral_code.timing`,
+        `${config.SERVICE_NAME}.${controllerName}.get_metadata.timing`,
         Date.now() - start,
       );
     }

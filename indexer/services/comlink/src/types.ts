@@ -703,12 +703,13 @@ export interface AffiliateSnapshotResponse {
 
 export interface AffiliateSnapshotResponseObject {
   affiliateAddress: string,
-  affiliateEarnings: number,
   affiliateReferralCode: string,
+  affiliateEarnings: number,
   affiliateReferredTrades: number,
   affiliateTotalReferredFees: number,
   affiliateReferredUsers: number,
   affiliateReferredNetProtocolEarnings: number,
+  affiliateReferredTotalVolume: number,
 }
 
 export interface AffiliateTotalVolumeResponse {
