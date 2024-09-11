@@ -4,7 +4,13 @@ import { checkSchema, matchedData } from 'express-validator';
 import {
   Controller, Get, Query, Route,
 } from 'tsoa';
-
+import {
+  WalletTable,
+  AffiliateReferredUsersTable,
+  SubaccountTable,
+  SubaccountUsernamesTable,
+} from '@dydxprotocol-indexer/postgres';
+import { NotFoundError, UnexpectedServerError } from '../../../lib/errors';
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { handleControllerError } from '../../../lib/helpers';
@@ -31,12 +37,47 @@ const controllerName: string = 'affiliates-controller';
 class AffiliatesController extends Controller {
   @Get('/metadata')
   async getMetadata(
-    @Query() address: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+    @Query() address: string,
   ): Promise<AffiliateReferralCodeResponse> {
-    // simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Check that the address exists
+    const walletRow = await WalletTable.findById(address);
+    if (!walletRow) {
+      throw new NotFoundError(`Wallet with address ${address} not found`);
+    }
+    const isVolumeEligible = Number(walletRow.totalVolume) >= config.VOLUME_ELIGIBILITY_THRESHOLD;
+
+    // Check if the address is an affiliate (has referred users)
+    const referredUserRows = await AffiliateReferredUsersTable.findByAffiliateAddress(address);
+    const isAffiliate = referredUserRows != undefined ? referredUserRows.length > 0 : false;
+
+    // Get referral code (subaccount 0 username)
+    const subaccountRows = await SubaccountTable.findAll(
+      {
+        address: address,
+        subaccountNumber: 0,
+      },
+      [],
+    )
+    // No need to check subaccountRows.length > 1 because subaccountNumber is unique for an address
+    if (subaccountRows.length === 0) {
+      throw new UnexpectedServerError(`Subaccount 0 not found for address ${address}`);
+    }
+    const subaccountId = subaccountRows[0].id;
+    const usernameRows = await SubaccountUsernamesTable.findAll(
+      {
+        subaccountId: [subaccountId],
+      },
+      [],
+    )
+    if (usernameRows.length === 0) {
+      throw new UnexpectedServerError(`Username not found for subaccount ${subaccountId}`);
+    } else if (usernameRows.length > 1) {
+      throw new UnexpectedServerError(`Found multiple usernames for subaccount ${subaccountId}`);
+    }
+    const referralCode = usernameRows[0].username;
+
     return {
-      referralCode: 'TempCode123',
+      referralCode: referralCode,
     };
   }
 
