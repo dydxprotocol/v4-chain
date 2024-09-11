@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgServer_RegisterAffiliateInvalidSigner(t *testing.T) {
+func TestRegisterAffiliateInvalidSigner(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
