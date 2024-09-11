@@ -14,6 +14,10 @@ type msgServer struct {
 }
 
 // RegisterAffiliate implements types.MsgServer.
+// This is only valid if a referee signs the message.
+// For example, if Alice is the referee and Bob is the affiliate,
+// then only Alice can register Bob as an affiliate. Any
+// other signer that sends this message will be rejected.
 func (k msgServer) RegisterAffiliate(ctx context.Context,
 	msg *types.MsgRegisterAffiliate) (*types.MsgRegisterAffiliateResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
