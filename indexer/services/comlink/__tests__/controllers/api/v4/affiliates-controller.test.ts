@@ -3,17 +3,19 @@ import request from 'supertest';
 import { sendRequest } from '../../../helpers/helpers';
 
 describe('affiliates-controller#V4', () => {
-  describe('GET /referral_code', () => {
+  describe('GET /metadata', () => {
     it('should return referral code for a valid address string', async () => {
       const address = 'some_address';
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: `/v4/affiliates/referral_code?address=${address}`,
+        path: `/v4/affiliates/metadata?address=${address}`,
       });
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
         referralCode: 'TempCode123',
+        isVolumeEligible: true,
+        isAffiliate: false,
       });
     });
   });

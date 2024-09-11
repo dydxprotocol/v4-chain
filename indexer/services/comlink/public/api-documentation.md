@@ -368,9 +368,9 @@ fetch(`${baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNu
 This operation does not require authentication
 </aside>
 
-## GetReferralCode
+## GetMetadata
 
-<a id="opIdGetReferralCode"></a>
+<a id="opIdGetMetadata"></a>
 
 > Code samples
 
@@ -384,7 +384,7 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://dydx-testnet.imperator.co/v4'
 
-r = requests.get(f'{baseURL}/affiliates/referral_code', params={
+r = requests.get(f'{baseURL}/affiliates/metadata', params={
   'address': 'string'
 }, headers = headers)
 
@@ -402,7 +402,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://dydx-testnet.imperator.co/v4';
 
-fetch(`${baseURL}/affiliates/referral_code?address=string`,
+fetch(`${baseURL}/affiliates/metadata?address=string`,
 {
   method: 'GET',
 
@@ -416,7 +416,7 @@ fetch(`${baseURL}/affiliates/referral_code?address=string`,
 
 ```
 
-`GET /affiliates/referral_code`
+`GET /affiliates/metadata`
 
 ### Parameters
 
@@ -430,7 +430,9 @@ fetch(`${baseURL}/affiliates/referral_code?address=string`,
 
 ```json
 {
-  "referralCode": "string"
+  "referralCode": "string",
+  "isVolumeEligible": true,
+  "isAffiliate": true
 }
 ```
 
@@ -438,7 +440,7 @@ fetch(`${baseURL}/affiliates/referral_code?address=string`,
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateReferralCodeResponse](#schemaaffiliatereferralcoderesponse)|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AffiliateMetadataResponse](#schemaaffiliatemetadataresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -509,12 +511,13 @@ fetch(`${baseURL}/affiliates/snapshot`,
   "affiliateList": [
     {
       "affiliateAddress": "string",
-      "affiliateEarnings": 0.1,
       "affiliateReferralCode": "string",
+      "affiliateEarnings": 0.1,
       "affiliateReferredTrades": 0.1,
       "affiliateTotalReferredFees": 0.1,
       "affiliateReferredUsers": 0.1,
-      "affiliateReferredNetProtocolEarnings": 0.1
+      "affiliateReferredNetProtocolEarnings": 0.1,
+      "affiliateReferredTotalVolume": 0.1
     }
   ],
   "total": 0.1,
@@ -4019,16 +4022,18 @@ This operation does not require authentication
 |freeCollateral|string|true|none|none|
 |childSubaccounts|[[SubaccountResponseObject](#schemasubaccountresponseobject)]|true|none|none|
 
-## AffiliateReferralCodeResponse
+## AffiliateMetadataResponse
 
-<a id="schemaaffiliatereferralcoderesponse"></a>
-<a id="schema_AffiliateReferralCodeResponse"></a>
-<a id="tocSaffiliatereferralcoderesponse"></a>
-<a id="tocsaffiliatereferralcoderesponse"></a>
+<a id="schemaaffiliatemetadataresponse"></a>
+<a id="schema_AffiliateMetadataResponse"></a>
+<a id="tocSaffiliatemetadataresponse"></a>
+<a id="tocsaffiliatemetadataresponse"></a>
 
 ```json
 {
-  "referralCode": "string"
+  "referralCode": "string",
+  "isVolumeEligible": true,
+  "isAffiliate": true
 }
 
 ```
@@ -4037,7 +4042,9 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|referralCode|string¦null|true|none|none|
+|referralCode|string|true|none|none|
+|isVolumeEligible|boolean|true|none|none|
+|isAffiliate|boolean|true|none|none|
 
 ## AffiliateAddressResponse
 
@@ -4057,7 +4064,7 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|address|string¦null|true|none|none|
+|address|string|true|none|none|
 
 ## AffiliateSnapshotResponseObject
 
@@ -4069,12 +4076,13 @@ This operation does not require authentication
 ```json
 {
   "affiliateAddress": "string",
-  "affiliateEarnings": 0.1,
   "affiliateReferralCode": "string",
+  "affiliateEarnings": 0.1,
   "affiliateReferredTrades": 0.1,
   "affiliateTotalReferredFees": 0.1,
   "affiliateReferredUsers": 0.1,
-  "affiliateReferredNetProtocolEarnings": 0.1
+  "affiliateReferredNetProtocolEarnings": 0.1,
+  "affiliateReferredTotalVolume": 0.1
 }
 
 ```
@@ -4084,12 +4092,13 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |affiliateAddress|string|true|none|none|
-|affiliateEarnings|number(double)|true|none|none|
 |affiliateReferralCode|string|true|none|none|
+|affiliateEarnings|number(double)|true|none|none|
 |affiliateReferredTrades|number(double)|true|none|none|
 |affiliateTotalReferredFees|number(double)|true|none|none|
 |affiliateReferredUsers|number(double)|true|none|none|
 |affiliateReferredNetProtocolEarnings|number(double)|true|none|none|
+|affiliateReferredTotalVolume|number(double)|true|none|none|
 
 ## AffiliateSnapshotResponse
 
@@ -4103,12 +4112,13 @@ This operation does not require authentication
   "affiliateList": [
     {
       "affiliateAddress": "string",
-      "affiliateEarnings": 0.1,
       "affiliateReferralCode": "string",
+      "affiliateEarnings": 0.1,
       "affiliateReferredTrades": 0.1,
       "affiliateTotalReferredFees": 0.1,
       "affiliateReferredUsers": 0.1,
-      "affiliateReferredNetProtocolEarnings": 0.1
+      "affiliateReferredNetProtocolEarnings": 0.1,
+      "affiliateReferredTotalVolume": 0.1
     }
   ],
   "total": 0.1,
