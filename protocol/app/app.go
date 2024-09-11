@@ -1604,7 +1604,7 @@ func (app *App) createProposalHandlers(
 			priceUpdateDecoder,
 		)
 	}
-	strategy := currencypair.NewDeltaCurrencyPairStrategy(app.PricesKeeper)
+	strategy := currencypair.NewDefaultCurrencyPairStrategy(app.PricesKeeper)
 	var priceUpdateGenerator prices.PriceUpdateGenerator = prices.NewDefaultPriceUpdateGenerator(app.PricesKeeper)
 
 	veCodec := compression.NewCompressionVoteExtensionCodec(
@@ -1682,7 +1682,7 @@ func (app *App) initOracle(pricesTxDecoder process.UpdateMarketPriceTxDecoder) {
 		app.Logger(),
 		vote_extensions.NewOraclePrices(app.PricesKeeper),
 		time.Second,
-		currencypair.NewDeltaCurrencyPairStrategy(app.PricesKeeper),
+		currencypair.NewDefaultCurrencyPairStrategy(app.PricesKeeper),
 		compression.NewCompressionVoteExtensionCodec(
 			compression.NewDefaultVoteExtensionCodec(),
 			compression.NewZLibCompressor(),

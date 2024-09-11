@@ -80,7 +80,6 @@ func (k Keeper) RemoveCurrencyPairFromStore(ctx sdk.Context, cp slinkytypes.Curr
 }
 
 func (k Keeper) GetPriceForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (oracletypes.QuotePrice, error) {
-	fmt.Println("GetPriceForCurrencyPair")
 	id, found := k.GetIDForCurrencyPair(ctx, cp)
 	if !found {
 		return oracletypes.QuotePrice{}, fmt.Errorf("currency pair %s not found", cp.String())
