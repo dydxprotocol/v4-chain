@@ -123,7 +123,7 @@ export function createNotification<T extends NotificationType>(
         bodyKey: LocalizationBodyKey.DEPOSIT_SUCCESS_BODY,
         topic: Topic.TRADING,
         dynamicValues: dynamicValues as DepositSuccessNotification['dynamicValues'],
-      };
+      } as DepositSuccessNotification;
     case NotificationType.ORDER_FILLED:
       return {
         type: NotificationType.ORDER_FILLED,
@@ -131,7 +131,7 @@ export function createNotification<T extends NotificationType>(
         bodyKey: LocalizationBodyKey.ORDER_FILLED_BODY,
         topic: Topic.TRADING,
         dynamicValues: dynamicValues as OrderFilledNotification['dynamicValues'],
-      };
+      } as OrderFilledNotification;
     case NotificationType.ORDER_TRIGGERED:
       return {
         type: NotificationType.ORDER_TRIGGERED,
@@ -139,7 +139,7 @@ export function createNotification<T extends NotificationType>(
         bodyKey: LocalizationBodyKey.ORDER_TRIGGERED_BODY,
         topic: Topic.TRADING,
         dynamicValues: dynamicValues as OrderTriggeredNotification['dynamicValues'],
-      };
+      } as OrderTriggeredNotification;
       // Add other cases for new notification types here
     default:
       throw new Error('Unknown notification type');
