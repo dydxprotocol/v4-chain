@@ -157,17 +157,17 @@ func (k Keeper) GetAllRevShares(
 	makerFees := fill.MakerFeeQuoteQuantums()
 	netFees := big.NewInt(0).Add(takerFees, makerFees)
 
-	affiliateRevShares, affiliateRevFeesShared, err := k.getAffiliateRevShares(ctx, fill)
+	affiliateRevShares, err := k.getAffiliateRevShares(ctx, fill)
 	if err != nil {
 		return nil, err
 	}
 
-	unconditionalRevShares, unconditionalRevFeesShared, err := k.getUnconditionalRevShares(ctx, netFees)
+	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFees)
 	if err != nil {
 		return nil, err
 	}
 
-	marketMapperRevShares, marketMapperRevFeesShared, err := k.getMarketMapperRevShare(ctx, fill.FillSourceId(), netFees)
+	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.ProductId(), netFees)
 	if err != nil {
 		return nil, err
 	}
@@ -176,10 +176,9 @@ func (k Keeper) GetAllRevShares(
 	revShares = append(revShares, unconditionalRevShares...)
 	revShares = append(revShares, marketMapperRevShares...)
 
-	totalFeesShared.Add(totalFeesShared, affiliateRevFeesShared)
-	totalFeesShared.Add(totalFeesShared, unconditionalRevFeesShared)
-	totalFeesShared.Add(totalFeesShared, marketMapperRevFeesShared)
-
+	for _, revShare := range revShares {
+		totalFeesShared.Add(totalFeesShared, revShare.QuoteQuantums)
+	}
 	//check total fees shared is less than or equal to net fees
 	if totalFeesShared.Cmp(netFees) > 0 {
 		return nil, errorsmod.Wrap(types.ErrTotalFeesSharedExceedsNetFees, "total fees shared exceeds net fees")
@@ -191,19 +190,19 @@ func (k Keeper) GetAllRevShares(
 func (k Keeper) getAffiliateRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
-) ([]types.RevShare, *big.Int, error) {
+) ([]types.RevShare, error) {
 	takerAddr := fill.TakerAddr()
 	takerFee := fill.TakerFeeQuoteQuantums()
 	if fill.MonthlyRollingTakerVolumeQuantums() >= types.Max30dRefereeVolumeQuantums {
-		return nil, big.NewInt(0), nil
+		return nil, nil
 	}
 
 	takerAffiliateAddr, feeSharePpm, exists, err := k.affiliatesKeeper.GetTakerFeeShare(ctx, takerAddr)
 	if err != nil {
-		return nil, big.NewInt(0), err
+		return nil, err
 	}
 	if !exists {
-		return nil, big.NewInt(0), nil
+		return nil, nil
 	}
 	feesShared := lib.BigMulPpm(takerFee, lib.BigU(feeSharePpm), false)
 	return []types.RevShare{
@@ -213,22 +212,20 @@ func (k Keeper) getAffiliateRevShares(
 			RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
 			QuoteQuantums:     feesShared,
 		},
-	}, feesShared, nil
+	}, nil
 }
 
 func (k Keeper) getUnconditionalRevShares(
 	ctx sdk.Context,
 	netFees *big.Int,
-) ([]types.RevShare, *big.Int, error) {
+) ([]types.RevShare, error) {
 	revShares := []types.RevShare{}
-	totalFeesShared := big.NewInt(0)
 	unconditionalRevShareConfig, err := k.GetUnconditionalRevShareConfigParams(ctx)
 	if err != nil {
-		return nil, big.NewInt(0), err
+		return nil, err
 	}
 	for _, revShare := range unconditionalRevShareConfig.Configs {
 		feeShared := lib.BigMulPpm(netFees, lib.BigU(revShare.SharePpm), false)
-		totalFeesShared.Add(totalFeesShared, feeShared)
 		revShare := types.RevShare{
 			Recipient:         revShare.Address,
 			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
@@ -237,26 +234,24 @@ func (k Keeper) getUnconditionalRevShares(
 		}
 		revShares = append(revShares, revShare)
 	}
-	return revShares, totalFeesShared, nil
+	return revShares, nil
 }
 
 func (k Keeper) getMarketMapperRevShare(
 	ctx sdk.Context,
 	marketId uint32,
 	netFees *big.Int,
-) ([]types.RevShare, *big.Int, error) {
+) ([]types.RevShare, error) {
 	revShares := []types.RevShare{}
-	feesShared := big.NewInt(0)
 	marketMapperRevshareAddress, revenueSharePpm, err := k.GetMarketMapperRevenueShareForMarket(ctx, marketId)
 	if err != nil {
-		return nil, big.NewInt(0), err
+		return nil, err
 	}
 	if revenueSharePpm == 0 {
-		return nil, big.NewInt(0), nil
+		return nil, nil
 	}
 
 	marketMapperRevshareAmount := lib.BigMulPpm(netFees, lib.BigU(revenueSharePpm), false)
-	feesShared.Add(feesShared, marketMapperRevshareAmount)
 	revShares = append(revShares, types.RevShare{
 		Recipient:         marketMapperRevshareAddress.String(),
 		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
@@ -264,5 +259,5 @@ func (k Keeper) getMarketMapperRevShare(
 		QuoteQuantums:     marketMapperRevshareAmount,
 	})
 
-	return revShares, feesShared, nil
+	return revShares, nil
 }

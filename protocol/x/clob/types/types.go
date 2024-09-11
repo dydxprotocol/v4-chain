@@ -8,7 +8,7 @@ type FillForProcess interface {
 	MakerAddr() string
 	MakerFeeQuoteQuantums() *big.Int
 	FillQuoteQuantums() *big.Int
-	FillSourceId() uint32
+	ProductId() uint32
 	MonthlyRollingTakerVolumeQuantums() uint64
 }
 
@@ -42,7 +42,7 @@ func (perpetualFillForProcess PerpetualFillForProcess) FillQuoteQuantums() *big.
 	return perpetualFillForProcess.fillQuoteQuantums
 }
 
-func (perpetualFillForProcess PerpetualFillForProcess) FillSourceId() uint32 {
+func (perpetualFillForProcess PerpetualFillForProcess) ProductId() uint32 {
 	return perpetualFillForProcess.perpetualId
 }
 

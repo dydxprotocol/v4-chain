@@ -272,16 +272,21 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 		name                              string
 		revenueSharePpmNetFees            uint32
 		revenueSharePpmTakerFees          uint32
-		expectedRevShares                 int
+		expectedAffiliateRevShares        int
+		expectedUnconditionalRevShares    int
+		expectedMarketMapperRevShares     int
 		monthlyRollingTakerVolumeQuantums uint64
 		setup                             func(tApp *testapp.TestApp, ctx sdk.Context,
 			keeper *keeper.Keeper, affiliatesKeeper *affiliateskeeper.Keeper)
 	}{
 		{
-			name:                              "Valid revenue share",
+			name: "Valid revenue share from affiliates, unconditional " +
+				"rev shares and market mapper rev share",
 			revenueSharePpmNetFees:            600_000, // 60%,
 			revenueSharePpmTakerFees:          150_000, // 15%
-			expectedRevShares:                 4,
+			expectedAffiliateRevShares:        1,
+			expectedUnconditionalRevShares:    2,
+			expectedMarketMapperRevShares:     1,
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -315,7 +320,9 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			name:                              "Valid revenue share with 30d volume greater than max 30d referral volume",
 			revenueSharePpmNetFees:            600_000, // 60%,
 			revenueSharePpmTakerFees:          0,       // 0%
-			expectedRevShares:                 3,
+			expectedAffiliateRevShares:        0,
+			expectedUnconditionalRevShares:    2,
+			expectedMarketMapperRevShares:     1,
 			monthlyRollingTakerVolumeQuantums: types.Max30dRefereeVolumeQuantums + 1,
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -348,7 +355,9 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			name:                              "Valid revenue share with no unconditional rev shares",
 			revenueSharePpmNetFees:            100_000, // 10%,
 			revenueSharePpmTakerFees:          150_000, // 15%
-			expectedRevShares:                 2,
+			expectedAffiliateRevShares:        1,
+			expectedUnconditionalRevShares:    0,
+			expectedMarketMapperRevShares:     1,
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -369,7 +378,9 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			name:                              "Valid revenue share with no market mapper rev share",
 			revenueSharePpmNetFees:            200_000, // 20%,
 			revenueSharePpmTakerFees:          150_000, // 15%
-			expectedRevShares:                 2,
+			expectedAffiliateRevShares:        1,
+			expectedUnconditionalRevShares:    1,
+			expectedMarketMapperRevShares:     0,
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -391,7 +402,9 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			name:                              "No rev shares",
 			revenueSharePpmNetFees:            0, // 0%,
 			revenueSharePpmTakerFees:          0, // 0%
-			expectedRevShares:                 0,
+			expectedAffiliateRevShares:        0,
+			expectedUnconditionalRevShares:    0,
+			expectedMarketMapperRevShares:     0,
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -426,9 +439,25 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			revShares, err := keeper.GetAllRevShares(ctx, fill)
 
 			require.NoError(t, err)
-			require.Len(t, revShares, tc.expectedRevShares)
+			affiliateRevShares := 0
+			unconditionalRevShares := 0
+			marketMapperRevShares := 0
+			for _, revShare := range revShares {
+				switch revShare.RevShareType {
+				case types.REV_SHARE_TYPE_AFFILIATE:
+					affiliateRevShares++
+				case types.REV_SHARE_TYPE_UNCONDITIONAL:
+					unconditionalRevShares++
+				case types.REV_SHARE_TYPE_MARKET_MAPPER:
+					marketMapperRevShares++
+				}
+			}
+			require.Equal(t, tc.expectedAffiliateRevShares, affiliateRevShares)
+			require.Equal(t, tc.expectedUnconditionalRevShares, unconditionalRevShares)
+			require.Equal(t, tc.expectedMarketMapperRevShares, marketMapperRevShares)
 
-			if tc.expectedRevShares > 0 {
+			if tc.expectedAffiliateRevShares > 0 || tc.expectedUnconditionalRevShares > 0 ||
+				tc.expectedMarketMapperRevShares > 0 {
 				totalFees := new(big.Int).Add(fill.TakerFeeQuoteQuantums(), fill.MakerFeeQuoteQuantums())
 				actualShare := new(big.Int)
 
