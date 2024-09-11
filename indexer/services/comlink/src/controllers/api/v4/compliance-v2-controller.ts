@@ -19,7 +19,9 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
-import { ComplianceAction, getGeoComplianceReason, validateSignature, validateSignatureKeplr } from '../../../helpers/compliance/compliance-utils';
+import {
+  ComplianceAction, getGeoComplianceReason, validateSignature, validateSignatureKeplr,
+} from '../../../helpers/compliance/compliance-utils';
 import { DYDX_ADDRESS_PREFIX } from '../../../lib/constants';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';

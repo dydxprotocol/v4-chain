@@ -17,6 +17,10 @@ export enum ComplianceAction {
   INVALID_SURVEY = 'INVALID_SURVEY',
 }
 
+export enum AccountVerificationRequiredAction {
+  REGISTER_TOKEN = 'REGISTER_TOKEN',
+}
+
 export function getGeoComplianceReason(
   headers: CountryHeaders,
 ): ComplianceReason | undefined {
@@ -48,7 +52,7 @@ function generateAddress(pubkeyArray: Uint8Array): string {
  */
 export async function validateSignature(
   res: express.Response,
-  action: ComplianceAction,
+  action: ComplianceAction | AccountVerificationRequiredAction,
   address: string,
   timestamp: number,
   message: string,
