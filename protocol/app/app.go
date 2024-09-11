@@ -131,6 +131,7 @@ import (
 
 	// Modules
 	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	accountplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	accountplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	affiliatesmodule "github.com/dydxprotocol/v4-chain/protocol/x/affiliates"
@@ -302,6 +303,7 @@ type App struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	GovPlusKeeper         govplusmodulekeeper.Keeper
 	AccountPlusKeeper     accountplusmodulekeeper.Keeper
+	AuthenticatorManager  *authenticator.AuthenticatorManager
 	AffiliatesKeeper      affiliatesmodulekeeper.Keeper
 
 	MarketMapKeeper marketmapmodulekeeper.Keeper
@@ -1191,9 +1193,15 @@ func New(
 		app.PerpetualsKeeper,
 	)
 
+	// Initialize authenticators
+	app.AuthenticatorManager = authenticator.NewAuthenticatorManager()
+	app.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
+		authenticator.NewSignatureVerification(app.AccountKeeper),
+	})
 	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
 		appCodec,
 		keys[accountplusmoduletypes.StoreKey],
+		app.AuthenticatorManager,
 	)
 	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 
