@@ -26,14 +26,6 @@ export async function onBatch(
   const startTime: number = Date.now();
   const firstMessageTimestamp: number = Number(batch.messages[0].timestamp);
   const batchTimeInQueue: number = startTime - firstMessageTimestamp;
-  const batchInfo = {
-    firstMessageTimestamp: new Date(firstMessageTimestamp).toISOString(),
-    batchTimeInQueue,
-    messagesInBatch: batch.messages.length,
-    firstOffset: batch.firstOffset(),
-    lastOffset: batch.lastOffset(),
-    ...metricTags,
-  };
   stats.timing(
     'vulcan.batch_time_in_queue',
     batchTimeInQueue,
