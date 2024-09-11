@@ -26,6 +26,13 @@ func (k Keeper) StreamStagedEventsAfterFinalizeBlock(
 	// Get onchain stream events stored in transient store.
 	stagedEvents := k.GetFullNodeStreamingManager().GetStagedFinalizeBlockEvents(ctx)
 
+	telemetry.SetGauge(
+		float32(len(stagedEvents)),
+		types.ModuleName,
+		metrics.GrpcStagedAllFinalizeBlockUpdates,
+		metrics.Count,
+	)
+
 	finalizedFillUpdates := []types.StreamOrderbookFill{}
 	finalizedSubaccountUpdates := []satypes.StreamSubaccountUpdate{}
 
@@ -43,9 +50,23 @@ func (k Keeper) StreamStagedEventsAfterFinalizeBlock(
 		finalizedFillUpdates,
 	)
 
+	telemetry.SetGauge(
+		float32(len(finalizedFillUpdates)),
+		types.ModuleName,
+		metrics.GrpcStagedFillFinalizeBlockUpdates,
+		metrics.Count,
+	)
+
 	k.GetFullNodeStreamingManager().SendFinalizedSubaccountUpdates(
 		finalizedSubaccountUpdates,
 		uint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
+	)
+
+	telemetry.SetGauge(
+		float32(len(finalizedSubaccountUpdates)),
+		types.ModuleName,
+		metrics.GrpcStagedSubaccountFinalizeBlockUpdates,
+		metrics.Count,
 	)
 }
