@@ -20,7 +20,6 @@ import {
 export async function findAll(
   {
     address,
-    isWhitelistAffiliate,
     limit,
   }: WalletQueryConfig,
   requiredFields: QueryableField[],
@@ -29,7 +28,6 @@ export async function findAll(
   verifyAllRequiredFields(
     {
       address,
-      isWhitelistAffiliate,
       limit,
     } as QueryConfig,
     requiredFields,
@@ -42,10 +40,6 @@ export async function findAll(
 
   if (address) {
     baseQuery = baseQuery.where(WalletColumns.address, address);
-  }
-
-  if (isWhitelistAffiliate !== undefined) {
-    baseQuery = baseQuery.where(WalletColumns.isWhitelistAffiliate, isWhitelistAffiliate);
   }
 
   if (options.orderBy !== undefined) {
