@@ -1,5 +1,4 @@
-import * as Knex from "knex";
-
+import * as Knex from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   return knex
@@ -16,4 +15,3 @@ export async function down(knex: Knex): Promise<void> {
       table.boolean('isWhitelistAffiliate').defaultTo(false).notNullable();
     });
 }
-
