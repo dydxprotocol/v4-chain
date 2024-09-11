@@ -198,6 +198,14 @@ message StreamUpdate {
   }
 }
 
+message StagedFinalizeBlockEvent {
+  // Contains one of StreamOrderbookFill, StreamSubaccountUpdate.
+  oneof event {
+    StreamOrderbookFill order_fill = 1;
+    dydxprotocol.subaccounts.StreamSubaccountUpdate subaccount_update = 2;
+  }
+}
+
 // StreamOrderbookUpdate provides information on an orderbook update. Used in
 // the full node GRPC stream.
 message StreamOrderbookUpdate {
