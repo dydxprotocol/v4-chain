@@ -268,15 +268,6 @@ func TestValidateRevShareSafety(t *testing.T) {
 }
 
 func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
-	marketId := uint32(1)
-	fill := clobtypes.CreatePerpetualFillForProcess(
-		constants.AliceAccAddress.String(),
-		big.NewInt(10_000_000),
-		constants.BobAccAddress.String(),
-		big.NewInt(2_000_000),
-		big.NewInt(100000),
-		marketId,
-	)
 	tests := []struct {
 		name                              string
 		revenueSharePpmNetFees            uint32
@@ -411,6 +402,17 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup
+			marketId := uint32(1)
+			fill := clobtypes.CreatePerpetualFillForProcess(
+				constants.AliceAccAddress.String(),
+				big.NewInt(10_000_000),
+				constants.BobAccAddress.String(),
+				big.NewInt(2_000_000),
+				big.NewInt(100000),
+				marketId,
+				tc.monthlyRollingTakerVolumeQuantums,
+			)
+
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			keeper := tApp.App.RevShareKeeper
@@ -421,7 +423,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 
-			revShares, err := keeper.GetAllRevShares(ctx, fill, tc.monthlyRollingTakerVolumeQuantums)
+			revShares, err := keeper.GetAllRevShares(ctx, fill)
 
 			require.NoError(t, err)
 			require.Len(t, revShares, tc.expectedRevShares)
@@ -445,15 +447,6 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 
 func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 	marketId := uint32(1)
-
-	fill := clobtypes.CreatePerpetualFillForProcess(
-		constants.AliceAccAddress.String(),
-		big.NewInt(10_000_000),
-		constants.BobAccAddress.String(),
-		big.NewInt(2_000_000),
-		big.NewInt(100000),
-		marketId,
-	)
 	tests := []struct {
 		name                              string
 		revenueSharePpmNetFees            uint32
@@ -565,6 +558,15 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup
+			fill := clobtypes.CreatePerpetualFillForProcess(
+				constants.AliceAccAddress.String(),
+				big.NewInt(10_000_000),
+				constants.BobAccAddress.String(),
+				big.NewInt(2_000_000),
+				big.NewInt(100000),
+				uint32(1),
+				tc.monthlyRollingTakerVolumeQuantums,
+			)
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			keeper := tApp.App.RevShareKeeper
@@ -575,7 +577,7 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 
-			_, err := keeper.GetAllRevShares(ctx, fill, tc.monthlyRollingTakerVolumeQuantums)
+			_, err := keeper.GetAllRevShares(ctx, fill)
 
 			require.ErrorIs(t, err, tc.expectedError)
 		})

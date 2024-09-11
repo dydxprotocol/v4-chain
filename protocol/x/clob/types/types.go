@@ -8,16 +8,18 @@ type FillForProcess interface {
 	MakerAddr() string
 	MakerFeeQuoteQuantums() *big.Int
 	FillQuoteQuantums() *big.Int
-	PerpetualId() uint32
+	FillSourceId() uint32
+	MonthlyRollingTakerVolumeQuantums() uint64
 }
 
 type PerpetualFillForProcess struct {
-	takerAddr             string
-	takerFeeQuoteQuantums *big.Int
-	makerAddr             string
-	makerFeeQuoteQuantums *big.Int
-	fillQuoteQuantums     *big.Int
-	perpetualId           uint32
+	takerAddr                         string
+	takerFeeQuoteQuantums             *big.Int
+	makerAddr                         string
+	makerFeeQuoteQuantums             *big.Int
+	fillQuoteQuantums                 *big.Int
+	perpetualId                       uint32
+	monthlyRollingTakerVolumeQuantums uint64
 }
 
 func (perpetualFillForProcess PerpetualFillForProcess) TakerAddr() string {
@@ -40,8 +42,12 @@ func (perpetualFillForProcess PerpetualFillForProcess) FillQuoteQuantums() *big.
 	return perpetualFillForProcess.fillQuoteQuantums
 }
 
-func (perpetualFillForProcess PerpetualFillForProcess) PerpetualId() uint32 {
+func (perpetualFillForProcess PerpetualFillForProcess) FillSourceId() uint32 {
 	return perpetualFillForProcess.perpetualId
+}
+
+func (perpetualFillForProcess PerpetualFillForProcess) MonthlyRollingTakerVolumeQuantums() uint64 {
+	return perpetualFillForProcess.monthlyRollingTakerVolumeQuantums
 }
 
 func CreatePerpetualFillForProcess(
@@ -51,13 +57,15 @@ func CreatePerpetualFillForProcess(
 	makerFeeQuoteQuantums *big.Int,
 	fillQuoteQuantums *big.Int,
 	perpetualId uint32,
+	monthlyRollingTakerVolumeQuantums uint64,
 ) PerpetualFillForProcess {
 	return PerpetualFillForProcess{
-		takerAddr:             takerAddr,
-		takerFeeQuoteQuantums: takerFeeQuoteQuantums,
-		makerAddr:             makerAddr,
-		makerFeeQuoteQuantums: makerFeeQuoteQuantums,
-		fillQuoteQuantums:     fillQuoteQuantums,
-		perpetualId:           perpetualId,
+		takerAddr:                         takerAddr,
+		takerFeeQuoteQuantums:             takerFeeQuoteQuantums,
+		makerAddr:                         makerAddr,
+		makerFeeQuoteQuantums:             makerFeeQuoteQuantums,
+		fillQuoteQuantums:                 fillQuoteQuantums,
+		perpetualId:                       perpetualId,
+		monthlyRollingTakerVolumeQuantums: monthlyRollingTakerVolumeQuantums,
 	}
 }
