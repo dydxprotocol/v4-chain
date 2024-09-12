@@ -25,7 +25,7 @@ describe('affiliates-controller#V4', () => {
       await testMocks.seedData();
       await SubaccountUsernamesTable.create(testConstants.defaultSubaccountUsername);
     });
-  
+
     afterEach(async () => {
       await dbHelpers.clearData();
     });
@@ -46,20 +46,20 @@ describe('affiliates-controller#V4', () => {
     });
 
     it('should fail if address does not exist', async () => {
-      const nonExistentAddress = 'adgsakhasgt'
-      const response: request.Response = await sendRequest({
+      const nonExistentAddress = 'adgsakhasgt';
+      await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/affiliates/metadata?address=${nonExistentAddress}`,
         expectedStatus: 404, // helper performs expect on status
       });
     });
 
-    it('should classify not volume eligible', async () => {      
+    it('should classify not volume eligible', async () => {
       await WalletTable.update(
-        { 
+        {
           address: testConstants.defaultWallet.address,
-          totalVolume: "0",
-          totalTradingRewards: "0",
+          totalVolume: '0',
+          totalTradingRewards: '0',
         },
       );
       const response: request.Response = await sendRequest({
@@ -74,12 +74,12 @@ describe('affiliates-controller#V4', () => {
       });
     });
 
-    it('should classify volume eligible', async () => {      
+    it('should classify volume eligible', async () => {
       await WalletTable.update(
-        { 
+        {
           address: testConstants.defaultWallet.address,
-          totalVolume: "100000",
-          totalTradingRewards: "0",
+          totalVolume: '100000',
+          totalTradingRewards: '0',
         },
       );
       const response: request.Response = await sendRequest({
@@ -92,7 +92,7 @@ describe('affiliates-controller#V4', () => {
         isVolumeEligible: true,
         isAffiliate: false,
       });
-    });  
+    });
 
     it('should classify is not affiliate', async () => {
       // AffiliateReferredUsersTable is empty
@@ -128,8 +128,8 @@ describe('affiliates-controller#V4', () => {
 
     it('should fail if subaccount username not found', async () => {
       // create defaultWallet2 without subaccount username
-      WalletTable.create(testConstants.defaultWallet2);
-      const response: request.Response = await sendRequest({
+      await WalletTable.create(testConstants.defaultWallet2);
+      await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/affiliates/metadata?address=${testConstants.defaultWallet2.address}`,
         expectedStatus: 500,  // helper performs expect on status
