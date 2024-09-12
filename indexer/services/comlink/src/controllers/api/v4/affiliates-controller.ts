@@ -37,9 +37,8 @@ const controllerName: string = 'affiliates-controller';
 class AffiliatesController extends Controller {
   @Get('/metadata')
   async getMetadata(
-<<<<<<< HEAD
     @Query() address: string,
-  ): Promise<AffiliateReferralCodeResponse> {
+  ): Promise<AffiliateMetadataResponse> {
     // Check that the address exists
     const walletRow = await WalletTable.findById(address);
     if (!walletRow) {
@@ -79,16 +78,8 @@ class AffiliatesController extends Controller {
 
     return {
       referralCode: referralCode,
-=======
-    @Query() address: string, // eslint-disable-line @typescript-eslint/no-unused-vars
-  ): Promise<AffiliateMetadataResponse> {
-    // simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    return {
-      referralCode: 'TempCode123',
-      isVolumeEligible: true,
-      isAffiliate: false,
->>>>>>> main
+      isVolumeEligible: isVolumeEligible,
+      isAffiliate: isAffiliate,
     };
   }
 
@@ -174,11 +165,7 @@ router.get(
 
     try {
       const controller: AffiliatesController = new AffiliatesController();
-<<<<<<< HEAD
-      const response: AffiliateReferralCodeResponse = await controller.getMetadata(address);
-=======
       const response: AffiliateMetadataResponse = await controller.getMetadata(address);
->>>>>>> main
       return res.send(response);
     } catch (error) {
       return handleControllerError(

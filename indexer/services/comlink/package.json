@@ -13,7 +13,7 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "test-comlink": "NODE_ENV=test jest --runInBand --forceExit",
     "swagger": "ts-node -r dotenv-flow/config src/scripts/generate-swagger.ts",
     "gen-markdown": "widdershins public/swagger.json -o public/api-documentation.md --omitHeader --language_tabs 'python:Python' 'javascript:Javascript'"
   },
