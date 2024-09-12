@@ -11,6 +11,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -470,6 +471,36 @@ func TestConvertToPerpetualMarketType(t *testing.T) {
 					v1.ConvertToPerpetualMarketType(tc.status),
 				)
 			}
+		})
+	}
+}
+
+func TestVaultStatusToVaultStatus(t *testing.T) {
+	tests := map[string]struct {
+		// Input
+		vaultStatus vaulttypes.VaultStatus
+
+		// Expectations
+		expectedVaultStatus v1types.VaultStatus
+	}{}
+	// Iterate through all the values for VaultStatus to create test cases.
+	for name, value := range vaulttypes.VaultStatus_value {
+		testName := fmt.Sprintf("Converts VaultStatus %s to IndexerVaultStatus", name)
+		tests[testName] = struct {
+			vaultStatus         vaulttypes.VaultStatus
+			expectedVaultStatus v1types.VaultStatus
+		}{
+			vaultStatus:         vaulttypes.VaultStatus(value),
+			expectedVaultStatus: v1types.VaultStatus(v1types.VaultStatus_value[name]),
+		}
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(
+				t,
+				tc.expectedVaultStatus,
+				v1.VaultStatusToIndexerVaultStatus(tc.vaultStatus),
+			)
 		})
 	}
 }
