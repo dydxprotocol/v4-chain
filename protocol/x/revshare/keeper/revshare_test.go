@@ -304,15 +304,81 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					QuoteQuantums:     big.NewInt(1_200_000),
 				},
 			},
-			fill: clobtypes.CreatePerpetualFillForProcess(
-				constants.AliceAccAddress.String(),
-				big.NewInt(10_000_000),
-				constants.BobAccAddress.String(),
-				big.NewInt(2_000_000),
-				big.NewInt(100000),
-				marketId,
-				1_000_000_000_000,
-			),
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         marketId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+			},
+			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
+				affiliatesKeeper *affiliateskeeper.Keeper) {
+				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
+					Address:         constants.AliceAccAddress.String(),
+					RevenueSharePpm: 100_000, // 10%
+					ValidDays:       1,
+				})
+				require.NoError(t, err)
+
+				keeper.SetUnconditionalRevShareConfigParams(ctx, types.UnconditionalRevShareConfig{
+					Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
+						{
+							Address:  constants.BobAccAddress.String(),
+							SharePpm: 200_000, // 20%
+						},
+						{
+							Address:  constants.AliceAccAddress.String(),
+							SharePpm: 300_000, // 30%
+						},
+					},
+				})
+
+				affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
+					constants.BobAccAddress.String())
+				require.NoError(t, err)
+			},
+		},
+		{
+			name: "Valid rev-share from affiliates, negative unconditional and market mapper",
+			expectedRevShares: []types.RevShare{
+
+				{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+					QuoteQuantums:     big.NewInt(1_500_000),
+				},
+				{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+					QuoteQuantums:     big.NewInt(1_600_000),
+				},
+				{
+					Recipient:         constants.AliceAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+					QuoteQuantums:     big.NewInt(2_400_000),
+				},
+				{
+					Recipient:         constants.AliceAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+					QuoteQuantums:     big.NewInt(800_000),
+				},
+			},
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(-2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         marketId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
@@ -343,15 +409,15 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 		},
 		{
 			name: "Valid revenue share with 30d volume greater than max 30d referral volume",
-			fill: clobtypes.CreatePerpetualFillForProcess(
-				constants.AliceAccAddress.String(),
-				big.NewInt(10_000_000),
-				constants.BobAccAddress.String(),
-				big.NewInt(2_000_000),
-				big.NewInt(100000),
-				marketId,
-				types.Max30dRefereeVolumeQuantums+1,
-			),
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         marketId,
+				MonthlyRollingTakerVolumeQuantums: types.Max30dRefereeVolumeQuantums + 1,
+			},
 			expectedRevShares: []types.RevShare{
 				{
 					Recipient:         constants.BobAccAddress.String(),
@@ -416,15 +482,15 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					QuoteQuantums:     big.NewInt(1_200_000),
 				},
 			},
-			fill: clobtypes.CreatePerpetualFillForProcess(
-				constants.AliceAccAddress.String(),
-				big.NewInt(10_000_000),
-				constants.BobAccAddress.String(),
-				big.NewInt(2_000_000),
-				big.NewInt(100000),
-				marketId,
-				1_000_000_000_000, // 1 million USDC
-			),
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         marketId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
@@ -457,15 +523,15 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					QuoteQuantums:     big.NewInt(2_400_000),
 				},
 			},
-			fill: clobtypes.CreatePerpetualFillForProcess(
-				constants.AliceAccAddress.String(),
-				big.NewInt(10_000_000),
-				constants.BobAccAddress.String(),
-				big.NewInt(2_000_000),
-				big.NewInt(100000),
-				marketId,
-				1_000_000_000_000, // 1 million USDC
-			),
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         marketId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				keeper.SetUnconditionalRevShareConfigParams(ctx, types.UnconditionalRevShareConfig{
@@ -485,15 +551,15 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 		{
 			name:              "No rev shares",
 			expectedRevShares: []types.RevShare{},
-			fill: clobtypes.CreatePerpetualFillForProcess(
-				constants.AliceAccAddress.String(),
-				big.NewInt(10_000_000),
-				constants.BobAccAddress.String(),
-				big.NewInt(2_000_000),
-				big.NewInt(100000),
-				marketId,
-				1_000_000_000_000, // 1 million USDC
-			),
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         marketId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 			},
@@ -635,15 +701,15 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup
-			fill := clobtypes.CreatePerpetualFillForProcess(
-				constants.AliceAccAddress.String(),
-				big.NewInt(10_000_000),
-				constants.BobAccAddress.String(),
-				big.NewInt(2_000_000),
-				big.NewInt(100000),
-				uint32(1),
-				tc.monthlyRollingTakerVolumeQuantums,
-			)
+			fill := clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         uint32(1),
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+			}
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			keeper := tApp.App.RevShareKeeper

@@ -153,8 +153,8 @@ func (k Keeper) GetAllRevShares(
 ) ([]types.RevShare, error) {
 	revShares := []types.RevShare{}
 	totalFeesShared := big.NewInt(0)
-	takerFees := fill.TakerFeeQuoteQuantums()
-	makerFees := fill.MakerFeeQuoteQuantums()
+	takerFees := fill.TakerFeeQuoteQuantums
+	makerFees := fill.MakerFeeQuoteQuantums
 	netFees := big.NewInt(0).Add(takerFees, makerFees)
 
 	affiliateRevShares, err := k.getAffiliateRevShares(ctx, fill)
@@ -167,7 +167,7 @@ func (k Keeper) GetAllRevShares(
 		return nil, err
 	}
 
-	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.ProductId(), netFees)
+	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.ProductId, netFees)
 	if err != nil {
 		return nil, err
 	}
@@ -191,9 +191,9 @@ func (k Keeper) getAffiliateRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
 ) ([]types.RevShare, error) {
-	takerAddr := fill.TakerAddr()
-	takerFee := fill.TakerFeeQuoteQuantums()
-	if fill.MonthlyRollingTakerVolumeQuantums() >= types.Max30dRefereeVolumeQuantums {
+	takerAddr := fill.TakerAddr
+	takerFee := fill.TakerFeeQuoteQuantums
+	if fill.MonthlyRollingTakerVolumeQuantums >= types.Max30dRefereeVolumeQuantums {
 		return nil, nil
 	}
 
