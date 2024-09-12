@@ -121,4 +121,9 @@ var (
 		23,
 		"Locked shares exceeds owner shares",
 	)
+	ErrInvalidSkewFactor = errorsmod.Register(
+		ModuleName,
+		24,
+		"Skew factor times order_size_pct must be less than 2 to avoid skewing over the spread",
+	)
 )

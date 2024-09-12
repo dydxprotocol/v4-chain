@@ -41,6 +41,10 @@ func (p QuotingParams) Validate() error {
 	if p.ActivationThresholdQuoteQuantums.Sign() < 0 {
 		return ErrInvalidActivationThresholdQuoteQuantums
 	}
+	// Skew factor times order_size_pct must be less than 2 to avoid skewing over the spread
+	if uint64(p.SkewFactorPpm)*uint64(p.OrderSizePctPpm) >= 2_000_000*1_000_000 {
+		return ErrInvalidSkewFactor
+	}
 
 	return nil
 }
