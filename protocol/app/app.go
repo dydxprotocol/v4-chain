@@ -751,9 +751,10 @@ func New(
 	// Ordering of `AddRoute` does not matter.
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
-	// TODO(cosmwasm feature branch): See if we need ibc route for wasm stack
-	// https://github.com/CosmWasm/wasmd/blob/main/app/app.go#L675-L678
 
+	// Seal the router.
+	// Note we have not added a route for wasm module, to disable wasmd module
+	// from receiving incoming IBC packets. This can be added in the future if needed.
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
@@ -1229,11 +1230,7 @@ func New(
 		app.BankKeeper,
 		app.StakingKeeper,
 		distrkeeper.NewQuerier(app.DistrKeeper),
-		// TODO(cosmwasm feature branch): this one was meant to be IBC Fee keeper, but I see that we also use this
-		// ics4Wrapper in other places, with a note saying that this may be replaced with
-		// middleware such as ics29 fee
-		// https://github.com/CosmWasm/wasmd/blob/main/app/app.go#L640
-		app.IBCKeeper.ChannelKeeper,
+		app.RatelimitKeeper, // ICS4Wrapper
 		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.PortKeeper,
 		scopedWasmKeeper,
@@ -1600,7 +1597,6 @@ func New(
 			tmos.Exit(err.Error())
 		}
 
-		// TODO(cosmwasm feature branch): we likely shuldn't initialized app modules here.
 		// Initialize pinned codes in wasmvm as they are not persisted there
 		uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
 		if err := app.WasmKeeper.InitializePinnedCodes(uncachedCtx); err != nil {
