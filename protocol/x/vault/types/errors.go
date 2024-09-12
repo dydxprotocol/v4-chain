@@ -10,7 +10,6 @@ var (
 		1,
 		"Shares are negative",
 	)
-	// Deprecated since v6.x
 	ErrClobPairNotFound = errorsmod.Register(
 		ModuleName,
 		2,
@@ -120,5 +119,10 @@ var (
 		ModuleName,
 		23,
 		"Locked shares exceeds owner shares",
+	)
+	ErrInvalidWithdrawalPortion = errorsmod.Register(
+		ModuleName,
+		24,
+		"Withdrawal portion must be between 0 (exclusive) and 1 (inclusive)",
 	)
 )
