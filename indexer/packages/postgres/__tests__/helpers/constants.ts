@@ -982,3 +982,12 @@ export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
   referredNetProtocolEarnings: '21.00',
   firstReferralBlockHeight: '11',
 };
+
+// ==============  Tokens  =============
+
+export const defaultFirebaseNotificationToken = {
+  token: 'DEFAULT_TOKEN',
+  address: defaultAddress,
+  language: 'en',
+  updatedAt: createdDateTime.toISO(),
+};
