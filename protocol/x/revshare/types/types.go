@@ -1,6 +1,10 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"math/big"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 type RevShareKeeper interface {
 	// MarketMapperRevenueShareParams
@@ -24,3 +28,27 @@ type RevShareKeeper interface {
 	) (params MarketMapperRevShareDetails, err error)
 	CreateNewMarketRevShare(ctx sdk.Context, marketId uint32)
 }
+
+type RevShare struct {
+	Recipient         string
+	RevShareFeeSource RevShareFeeSource
+	RevShareType      RevShareType
+	QuoteQuantums     *big.Int
+}
+
+type RevShareFeeSource int
+
+const (
+	REV_SHARE_FEE_SOURCE_UNSPECIFIED RevShareFeeSource = iota
+	REV_SHARE_FEE_SOURCE_NET_FEE
+	REV_SHARE_FEE_SOURCE_TAKER_FEE
+)
+
+type RevShareType int
+
+const (
+	REV_SHARE_TYPE_UNSPECIFIED RevShareType = iota
+	REV_SHARE_TYPE_MARKET_MAPPER
+	REV_SHARE_TYPE_UNCONDITIONAL
+	REV_SHARE_TYPE_AFFILIATE
+)
