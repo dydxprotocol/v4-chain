@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 	"time"
@@ -1253,11 +1252,7 @@ func (k Keeper) GetSubaccountMaxInsuranceLost(
 	bigCurrentInsuranceFundLost := new(big.Int).SetUint64(subaccountLiquidationInfo.QuantumsInsuranceLost)
 	bigInsuranceFundLostBlockLimit := new(big.Int).SetUint64(liquidationConfig.SubaccountBlockLimits.MaxQuantumsInsuranceLost)
 
-	fmt.Println("bigCurrentInsuranceFundLost", bigCurrentInsuranceFundLost)
-	fmt.Println("bigInsuranceFundLostBlockLimit", bigInsuranceFundLostBlockLimit)
-
 	if bigCurrentInsuranceFundLost.Cmp(bigInsuranceFundLostBlockLimit) > 0 {
-		fmt.Println("bigCurrentInsuranceFundLost.Cmp(bigInsuranceFundLostBlockLimit) > 0")
 		panic(
 			errorsmod.Wrapf(
 				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,

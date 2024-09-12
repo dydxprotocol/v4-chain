@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 	"testing"
@@ -4280,8 +4279,6 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 
 			// Run the test.
 			liquidationOrder, err := ks.ClobKeeper.MaybeGetLiquidationOrder(ctx, tc.liquidatableSubaccount)
-			fmt.Println("ERROR: ", err)
-			fmt.Println("liquidationOrder: ", liquidationOrder)
 
 			// Verify test expectations.
 			if tc.expectedErr != nil {

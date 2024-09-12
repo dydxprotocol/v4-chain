@@ -280,9 +280,6 @@ func PrepareCheckState(
 		keeper.GetSubaccountsWithPositionsInFinalSettlementMarkets(ctx)...,
 	)
 
-	fmt.Println("DELEVERAGE: ", subaccountsToDeleverage)
-	fmt.Println("NTNC: ", negativeTncSubaccountIds)
-
 	// 8. Deleverage subaccounts.
 	// TODO(CLOB-1052) - decouple steps 6 and 7 by using DaemonLiquidationInfo.NegativeTncSubaccounts
 	// as the input for this function.
