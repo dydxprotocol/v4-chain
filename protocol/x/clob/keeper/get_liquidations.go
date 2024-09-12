@@ -6,6 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/heap"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
@@ -46,7 +47,7 @@ func (k Keeper) FetchInformationForLiquidations(
 func (k Keeper) GetLiquidatableAndNegativeTncSubaccountIds(
 	ctx sdk.Context,
 ) (
-	liquidatableSubaccountIds *LiquidationPriorityHeap,
+	liquidatableSubaccountIds *heap.LiquidationPriorityHeap,
 	negativeTncSubaccountIds []satypes.SubaccountId,
 	err error,
 ) {
@@ -54,7 +55,7 @@ func (k Keeper) GetLiquidatableAndNegativeTncSubaccountIds(
 	subaccounts, marketPrices, perpetuals, liquidityTiers := k.FetchInformationForLiquidations(ctx)
 
 	negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
-	liquidatableSubaccountIds = NewLiquidationPriorityHeap()
+	liquidatableSubaccountIds = heap.NewLiquidationPriorityHeap()
 	for _, subaccount := range subaccounts {
 
 		if len(subaccount.PerpetualPositions) == 0 {
@@ -208,7 +209,7 @@ func finalizeCollateralizationInfo(
 ) {
 	isLiquidatable = CanLiquidateSubaccount(bigTotalNetCollateral, bigTotalMaintenanceMargin)
 	hasNegativeTnc = bigTotalNetCollateral.Sign() == -1
-	liquidationPriority = calculateLiquidationPriority(
+	liquidationPriority = CalculateLiquidationPriority(
 		bigTotalNetCollateral,
 		bigTotalMaintenanceMargin,
 		bigWeightedMaintenanceMargin,

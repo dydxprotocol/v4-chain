@@ -233,6 +233,34 @@ var (
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.ZeroInt(),
 	}
+	BtcUsd_SmallMarginRequirement_DangerIndex = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                0,
+			Ticker:            "BTC-USD small margin requirement",
+			MarketId:          uint32(0),
+			AtomicResolution:  int32(-8),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(8),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			DangerIndexPpm:    uint32(1),
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
+	}
+	BtcUsd_SmallMarginRequirement_Isolated = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                0,
+			Ticker:            "BTC-USD small margin requirement",
+			MarketId:          uint32(0),
+			AtomicResolution:  int32(-8),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(8),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
+			DangerIndexPpm:    uint32(0),
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
+	}
 	BtcUsd_100PercentMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
 			Id:                0,
@@ -368,6 +396,34 @@ var (
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(3),
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			DangerIndexPpm:    uint32(0),
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
+	}
+	EthUsd_20PercentInitial_10PercentMaintenance_DangerIndex = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                1,
+			Ticker:            "ETH-USD 20/10 margin requirements",
+			MarketId:          uint32(1),
+			AtomicResolution:  int32(-9),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			DangerIndexPpm:    uint32(1),
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
+	}
+	EthUsd_20PercentInitial_10PercentMaintenance_Isolated = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                1,
+			Ticker:            "ETH-USD 20/10 margin requirements",
+			MarketId:          uint32(1),
+			AtomicResolution:  int32(-9),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 			DangerIndexPpm:    uint32(0),
 		},
 		FundingIndex: dtypes.ZeroInt(),

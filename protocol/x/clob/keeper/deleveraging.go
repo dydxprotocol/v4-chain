@@ -17,6 +17,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	heap "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/heap"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -649,7 +650,7 @@ func (k Keeper) ProcessDeleveraging(
 // function is called in PrepareCheckState during the deleveraging step.
 func (k Keeper) GetSubaccountsWithPositionsInFinalSettlementMarkets(
 	ctx sdk.Context,
-) (subaccountsToDeleverage []subaccountToDeleverage) {
+) (subaccountsToDeleverage []heap.SubaccountToDeleverage) {
 	defer telemetry.MeasureSince(
 		time.Now(),
 		types.ModuleName,
@@ -667,7 +668,7 @@ func (k Keeper) GetSubaccountsWithPositionsInFinalSettlementMarkets(
 			finalSettlementPerpetualId,
 		)
 		for _, subaccountId := range subaccountsWithPosition {
-			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
+			subaccountsToDeleverage = append(subaccountsToDeleverage, heap.SubaccountToDeleverage{
 				SubaccountId: subaccountId,
 				PerpetualId:  finalSettlementPerpetualId,
 			})
@@ -686,7 +687,7 @@ func (k Keeper) GetSubaccountsWithPositionsInFinalSettlementMarkets(
 // Returns an error if a deleveraging attempt returns an error.
 func (k Keeper) DeleverageSubaccounts(
 	ctx sdk.Context,
-	subaccountsToDeleverage []subaccountToDeleverage,
+	subaccountsToDeleverage []heap.SubaccountToDeleverage,
 ) error {
 	defer telemetry.MeasureSince(
 		time.Now(),

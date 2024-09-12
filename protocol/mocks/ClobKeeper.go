@@ -5,8 +5,12 @@ package mocks
 import (
 	big "math/big"
 
-	indexer_manager "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
+	flags "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/flags"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+
+	heap "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/heap"
+
+	indexer_manager "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 
 	log "cosmossdk.io/log"
 
@@ -334,6 +338,24 @@ func (_m *ClobKeeper) GetFillablePrice(ctx types.Context, subaccountId subaccoun
 	return r0, r1
 }
 
+// GetFlags provides a mock function with given fields:
+func (_m *ClobKeeper) GetFlags() flags.ClobFlags {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFlags")
+	}
+
+	var r0 flags.ClobFlags
+	if rf, ok := ret.Get(0).(func() flags.ClobFlags); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(flags.ClobFlags)
+	}
+
+	return r0
+}
+
 // GetIndexerEventManager provides a mock function with given fields:
 func (_m *ClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	ret := _m.Called()
@@ -454,6 +476,36 @@ func (_m *ClobKeeper) GetLongTermOrderPlacement(ctx types.Context, orderId clobt
 		r1 = rf(ctx, orderId)
 	} else {
 		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// GetNextSubaccountToLiquidate provides a mock function with given fields: ctx, subaccountIds, isolatedPositionsPriorityHeap, numIsolatedLiquidations
+func (_m *ClobKeeper) GetNextSubaccountToLiquidate(ctx types.Context, subaccountIds *heap.LiquidationPriorityHeap, isolatedPositionsPriorityHeap *heap.LiquidationPriorityHeap, numIsolatedLiquidations *int) (subaccountstypes.Subaccount, *heap.LiquidationPriority) {
+	ret := _m.Called(ctx, subaccountIds, isolatedPositionsPriorityHeap, numIsolatedLiquidations)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetNextSubaccountToLiquidate")
+	}
+
+	var r0 subaccountstypes.Subaccount
+	var r1 *heap.LiquidationPriority
+	if rf, ok := ret.Get(0).(func(types.Context, *heap.LiquidationPriorityHeap, *heap.LiquidationPriorityHeap, *int) (subaccountstypes.Subaccount, *heap.LiquidationPriority)); ok {
+		return rf(ctx, subaccountIds, isolatedPositionsPriorityHeap, numIsolatedLiquidations)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, *heap.LiquidationPriorityHeap, *heap.LiquidationPriorityHeap, *int) subaccountstypes.Subaccount); ok {
+		r0 = rf(ctx, subaccountIds, isolatedPositionsPriorityHeap, numIsolatedLiquidations)
+	} else {
+		r0 = ret.Get(0).(subaccountstypes.Subaccount)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, *heap.LiquidationPriorityHeap, *heap.LiquidationPriorityHeap, *int) *heap.LiquidationPriority); ok {
+		r1 = rf(ctx, subaccountIds, isolatedPositionsPriorityHeap, numIsolatedLiquidations)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*heap.LiquidationPriority)
+		}
 	}
 
 	return r0, r1
@@ -658,6 +710,36 @@ func (_m *ClobKeeper) IsLiquidatable(ctx types.Context, subaccountId subaccounts
 
 	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
 		r1 = rf(ctx, subaccountId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// LiquidateSubaccountsAgainstOrderbookInternal provides a mock function with given fields: ctx, subaccountIds, isolatedPositionsPriorityHeap
+func (_m *ClobKeeper) LiquidateSubaccountsAgainstOrderbookInternal(ctx types.Context, subaccountIds *heap.LiquidationPriorityHeap, isolatedPositionsPriorityHeap *heap.LiquidationPriorityHeap) ([]heap.SubaccountToDeleverage, error) {
+	ret := _m.Called(ctx, subaccountIds, isolatedPositionsPriorityHeap)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LiquidateSubaccountsAgainstOrderbookInternal")
+	}
+
+	var r0 []heap.SubaccountToDeleverage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, *heap.LiquidationPriorityHeap, *heap.LiquidationPriorityHeap) ([]heap.SubaccountToDeleverage, error)); ok {
+		return rf(ctx, subaccountIds, isolatedPositionsPriorityHeap)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, *heap.LiquidationPriorityHeap, *heap.LiquidationPriorityHeap) []heap.SubaccountToDeleverage); ok {
+		r0 = rf(ctx, subaccountIds, isolatedPositionsPriorityHeap)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]heap.SubaccountToDeleverage)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, *heap.LiquidationPriorityHeap, *heap.LiquidationPriorityHeap) error); ok {
+		r1 = rf(ctx, subaccountIds, isolatedPositionsPriorityHeap)
 	} else {
 		r1 = ret.Error(1)
 	}

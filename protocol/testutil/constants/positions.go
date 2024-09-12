@@ -115,9 +115,17 @@ var (
 		AssetId:  0,
 		Quantums: dtypes.NewInt(-4_600_000_000), // -$4,600
 	}
+	Short_Usdc_Asset_2_900 = satypes.AssetPosition{
+		AssetId:  0,
+		Quantums: dtypes.NewInt(-2_900_000_000), // -$2,900
+	}
 	Short_Usdc_Asset_46_000 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(-46_000_000_000), // -$46,000
+	}
+	Short_Usdc_Asset_49_500 = satypes.AssetPosition{
+		AssetId:  0,
+		Quantums: dtypes.NewInt(-49_500_000_000), // -$49,500
 	}
 	Short_Usdc_Asset_9_900 = satypes.AssetPosition{
 		AssetId:  0,

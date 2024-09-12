@@ -70,6 +70,7 @@ require (
 	github.com/spf13/viper v1.18.2
 	google.golang.org/genproto/googleapis/api v0.0.0-20240723171418-e6d459c13d2a
 	google.golang.org/protobuf v1.34.2
+	gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 v3.5.1
 )
 

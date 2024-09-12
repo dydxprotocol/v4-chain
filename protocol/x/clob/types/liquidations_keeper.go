@@ -3,6 +3,7 @@ package types
 import (
 	"math/big"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/heap"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -10,6 +11,14 @@ import (
 // LiquidationsKeeper is an interface that encapsulates all reads and writes to the
 // in-memory data structures that store liquidation information.
 type LiquidationsKeeper interface {
+	LiquidateSubaccountsAgainstOrderbookInternal(
+		ctx sdk.Context,
+		subaccountIds *heap.LiquidationPriorityHeap,
+		isolatedPositionsPriorityHeap *heap.LiquidationPriorityHeap,
+	) (
+		subaccountsToDeleverage []heap.SubaccountToDeleverage,
+		err error,
+	)
 	PlacePerpetualLiquidation(
 		ctx sdk.Context,
 		liquidationOrder LiquidationOrder,
@@ -96,6 +105,15 @@ type LiquidationsKeeper interface {
 	) (
 		liquidationOrder *LiquidationOrder,
 		err error,
+	)
+	GetNextSubaccountToLiquidate(
+		ctx sdk.Context,
+		subaccountIds *heap.LiquidationPriorityHeap,
+		isolatedPositionsPriorityHeap *heap.LiquidationPriorityHeap,
+		numIsolatedLiquidations *int,
+	) (
+		subaccount satypes.Subaccount,
+		subaccountId *heap.LiquidationPriority,
 	)
 	GetSubaccountLiquidationInfo(
 		ctx sdk.Context,
