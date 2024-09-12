@@ -458,7 +458,7 @@ describe('PnlTicks store', () => {
     const createdTicks: PnlTicksFromDatabase[] = await setupIntervalPnlTicks();
     const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getPnlTicksAtIntervals(
       interval,
-      604800,
+      7 * 24 * 60 * 60, // 1 week
       [defaultSubaccountId, defaultSubaccountIdWithAlternateAddress],
     );
     // See setup function for created ticks.
