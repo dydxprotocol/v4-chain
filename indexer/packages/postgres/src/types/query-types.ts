@@ -342,4 +342,5 @@ export interface AffiliateInfoQueryConfig extends QueryConfig {
 export interface FirebaseNotificationTokenQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string,
   [QueryableField.TOKEN]?: string,
+  [QueryableField.UPDATED_BEFORE_OR_AT]?: IsoString,
 }

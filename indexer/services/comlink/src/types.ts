@@ -550,6 +550,12 @@ export interface HistoricalFundingRequest extends LimitAndEffectiveBeforeRequest
   ticker: string,
 }
 
+export interface RegisterTokenRequest {
+  address: string,
+  token: string,
+  language: string,
+}
+
 /* ------- COLLATERALIZATION TYPES ------- */
 
 export interface Risk {
