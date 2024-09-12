@@ -26,20 +26,6 @@ export async function onBatch(
   const startTime: number = Date.now();
   const firstMessageTimestamp: number = Number(batch.messages[0].timestamp);
   const batchTimeInQueue: number = startTime - firstMessageTimestamp;
-  const batchInfo = {
-    firstMessageTimestamp: new Date(firstMessageTimestamp).toISOString(),
-    batchTimeInQueue,
-    messagesInBatch: batch.messages.length,
-    firstOffset: batch.firstOffset(),
-    lastOffset: batch.lastOffset(),
-    ...metricTags,
-  };
-
-  logger.info({
-    at: 'on-batch#onBatch',
-    message: 'Received batch',
-    ...batchInfo,
-  });
   stats.timing(
     'vulcan.batch_time_in_queue',
     batchTimeInQueue,
@@ -54,12 +40,6 @@ export async function onBatch(
   }
 
   const batchProcessingTime: number = Date.now() - startTime;
-  logger.info({
-    at: 'on-batch#onBatch',
-    message: 'Finished Processing Batch',
-    batchProcessingTime,
-    ...batchInfo,
-  });
   stats.timing(
     'vulcan.batch_processing_time',
     batchProcessingTime,
