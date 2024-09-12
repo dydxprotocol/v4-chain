@@ -138,16 +138,34 @@ describe('affiliates-controller#V4', () => {
   });
 
   describe('GET /address', () => {
-    it('should return address for a valid referral code string', async () => {
-      const referralCode = 'TempCode123';
+    beforeEach(async () => {
+      await testMocks.seedData();
+      await SubaccountUsernamesTable.create(testConstants.defaultSubaccountUsername);
+    });
+
+    afterEach(async () => {
+      await dbHelpers.clearData();
+    });
+
+    it('should return address for a valid referral code', async () => {
+      const referralCode = testConstants.defaultSubaccountUsername.username;
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/affiliates/address?referralCode=${referralCode}`,
+        expectedStatus: 200,  // helper performs expect on status
       });
 
-      expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        address: 'some_address',
+        address: testConstants.defaultWallet.address,
+      });
+    });
+
+    it('should fail when referral code not found', async () => {
+      const nonExistentReferralCode = 'BadCode123';
+      await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/affiliates/address?referralCode=${nonExistentReferralCode}`,
+        expectedStatus: 404,  // helper performs expect on status
       });
     });
   });
@@ -157,11 +175,11 @@ describe('affiliates-controller#V4', () => {
       const req: AffiliateSnapshotRequest = {
         limit: 10,
         offset: 10,
-        sortByReferredFees: true,
+        sortByAffiliateEarning: true,
       };
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: `/v4/affiliates/snapshot?limit=${req.limit}&offset=${req.offset}&sortByReferredFees=${req.sortByReferredFees}`,
+        path: `/v4/affiliates/snapshot?limit=${req.limit}&offset=${req.offset}&sortByReferredFees=${req.sortByAffiliateEarning}`,
       });
 
       expect(response.status).toBe(200);
@@ -184,16 +202,39 @@ describe('affiliates-controller#V4', () => {
   });
 
   describe('GET /total_volume', () => {
-    it('should return total_volume for a valid address', async () => {
-      const address = 'some_address';
+    beforeEach(async () => {
+      await testMocks.seedData();
+      await WalletTable.update(
+        {
+          address: testConstants.defaultWallet.address,
+          totalVolume: '100000',
+          totalTradingRewards: '0',
+        },
+      );
+    });
+
+    afterEach(async () => {
+      await dbHelpers.clearData();
+    });
+
+    it('should return total volume for a valid address', async () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: `/v4/affiliates/total_volume?address=${address}`,
+        path: `/v4/affiliates/total_volume?address=${testConstants.defaultWallet.address}`,
+        expectedStatus: 200, // helper performs expect on status
       });
 
-      expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        totalVolume: 111.1,
+        totalVolume: 100000,
+      });
+    });
+
+    it('should fail if address does not exist', async () => {
+      const nonExistentAddress = 'adgsakhasgt';
+      await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/affiliates/metadata?address=${nonExistentAddress}`,
+        expectedStatus: 404, // helper performs expect on status
       });
     });
   });

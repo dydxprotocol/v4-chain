@@ -86,12 +86,24 @@ class AffiliatesController extends Controller {
 
   @Get('/address')
   async getAddress(
-    @Query() referralCode: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+    @Query() referralCode: string,
   ): Promise<AffiliateAddressResponse> {
-    // simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const usernameRow = await SubaccountUsernamesTable.findByUsername(referralCode);
+    if (!usernameRow) {
+      throw new NotFoundError(`Referral code ${referralCode} does not exist`);
+    }
+    const subAccountId = usernameRow.subaccountId;
+
+    const subaccountRow = await SubaccountTable.findById(subAccountId);
+    // subaccountRow should never be undefined because of foreign key constraint between subaccounts
+    // and subaccount_usernames tables
+    if (!subaccountRow) {
+      throw new UnexpectedServerError(`Subaccount ${subAccountId} not found`);
+    }
+    const address = subaccountRow.address;
+
     return {
-      address: 'some_address',
+      address,
     };
   }
 
@@ -136,12 +148,16 @@ class AffiliatesController extends Controller {
 
   @Get('/total_volume')
   public async getTotalVolume(
-    @Query() address: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+    @Query() address: string,
   ): Promise<AffiliateTotalVolumeResponse> {
-    // simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Check that the address exists
+    const walletRow = await WalletTable.findById(address);
+    if (!walletRow) {
+      throw new NotFoundError(`Wallet with address ${address} not found`);
+    }
+
     return {
-      totalVolume: 111.1,
+      totalVolume: Number(walletRow.totalVolume),
     };
   }
 }
@@ -257,7 +273,7 @@ router.get(
     const {
       offset,
       limit,
-      sortByReferredFees,
+      sortByAffiliateEarning: sortByReferredFees,
     }: AffiliateSnapshotRequest = matchedData(req) as AffiliateSnapshotRequest;
 
     try {
