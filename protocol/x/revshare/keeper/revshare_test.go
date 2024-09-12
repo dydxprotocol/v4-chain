@@ -9,7 +9,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
@@ -268,26 +267,52 @@ func TestValidateRevShareSafety(t *testing.T) {
 }
 
 func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
+	marketId := uint32(1)
 	tests := []struct {
-		name                                  string
-		expectedRevShares                     int
-		monthlyRollingTakerVolumeQuantums     uint64
-		expectedTakerFeeRevSharesPpmByAddress map[string]uint32
-		expectedNetFeeRevSharesPpmByAddress   map[string]uint32
-		setup                                 func(tApp *testapp.TestApp, ctx sdk.Context,
+		name              string
+		fill              clobtypes.FillForProcess
+		expectedRevShares []types.RevShare
+		setup             func(tApp *testapp.TestApp, ctx sdk.Context,
 			keeper *keeper.Keeper, affiliatesKeeper *affiliateskeeper.Keeper)
 	}{
 		{
-			name:                              "Valid revenue share from affiliates, unconditional and market mapper",
-			expectedRevShares:                 4,
-			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
-			expectedTakerFeeRevSharesPpmByAddress: map[string]uint32{
-				constants.BobAccAddress.String(): 150_000, // 15% of taker fees
+			name: "Valid revenue share from affiliates, unconditional and market mapper",
+			expectedRevShares: []types.RevShare{
+
+				{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+					QuoteQuantums:     big.NewInt(1_500_000),
+				},
+				{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+					QuoteQuantums:     big.NewInt(2_400_000),
+				},
+				{
+					Recipient:         constants.AliceAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+					QuoteQuantums:     big.NewInt(3_600_000),
+				},
+				{
+					Recipient:         constants.AliceAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+					QuoteQuantums:     big.NewInt(1_200_000),
+				},
 			},
-			expectedNetFeeRevSharesPpmByAddress: map[string]uint32{
-				constants.AliceAccAddress.String(): 400_000, // 40% of net fees
-				constants.BobAccAddress.String():   200_000, // 20% of net fees
-			},
+			fill: clobtypes.CreatePerpetualFillForProcess(
+				constants.AliceAccAddress.String(),
+				big.NewInt(10_000_000),
+				constants.BobAccAddress.String(),
+				big.NewInt(2_000_000),
+				big.NewInt(100000),
+				marketId,
+				1_000_000_000_000,
+			),
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
@@ -317,13 +342,35 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-			name:                                  "Valid revenue share with 30d volume greater than max 30d referral volume",
-			expectedRevShares:                     3,
-			monthlyRollingTakerVolumeQuantums:     types.Max30dRefereeVolumeQuantums + 1,
-			expectedTakerFeeRevSharesPpmByAddress: map[string]uint32{},
-			expectedNetFeeRevSharesPpmByAddress: map[string]uint32{
-				constants.AliceAccAddress.String(): 400_000, // 40% of net fees
-				constants.BobAccAddress.String():   200_000, // 20% of net fees
+			name: "Valid revenue share with 30d volume greater than max 30d referral volume",
+			fill: clobtypes.CreatePerpetualFillForProcess(
+				constants.AliceAccAddress.String(),
+				big.NewInt(10_000_000),
+				constants.BobAccAddress.String(),
+				big.NewInt(2_000_000),
+				big.NewInt(100000),
+				marketId,
+				types.Max30dRefereeVolumeQuantums+1,
+			),
+			expectedRevShares: []types.RevShare{
+				{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+					QuoteQuantums:     big.NewInt(2_400_000),
+				},
+				{
+					Recipient:         constants.AliceAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+					QuoteQuantums:     big.NewInt(3_600_000),
+				},
+				{
+					Recipient:         constants.AliceAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+					QuoteQuantums:     big.NewInt(1_200_000),
+				},
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -353,15 +400,31 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-			name:                              "Valid revenue share with no unconditional rev shares",
-			expectedRevShares:                 2,
-			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
-			expectedTakerFeeRevSharesPpmByAddress: map[string]uint32{
-				constants.BobAccAddress.String(): 150_000, // 15% of taker fees
+			name: "Valid revenue share with no unconditional rev shares",
+			expectedRevShares: []types.RevShare{
+
+				{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+					QuoteQuantums:     big.NewInt(1_500_000),
+				},
+				{
+					Recipient:         constants.AliceAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+					QuoteQuantums:     big.NewInt(1_200_000),
+				},
 			},
-			expectedNetFeeRevSharesPpmByAddress: map[string]uint32{
-				constants.AliceAccAddress.String(): 100_000, // 10% of net fees
-			},
+			fill: clobtypes.CreatePerpetualFillForProcess(
+				constants.AliceAccAddress.String(),
+				big.NewInt(10_000_000),
+				constants.BobAccAddress.String(),
+				big.NewInt(2_000_000),
+				big.NewInt(100000),
+				marketId,
+				1_000_000_000_000, // 1 million USDC
+			),
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
@@ -378,15 +441,31 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-			name:                              "Valid revenue share with no market mapper rev share",
-			expectedRevShares:                 2,
-			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
-			expectedTakerFeeRevSharesPpmByAddress: map[string]uint32{
-				constants.BobAccAddress.String(): 150_000, // 15% of taker fees
+			name: "Valid revenue share with no market mapper rev share",
+			expectedRevShares: []types.RevShare{
+
+				{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+					QuoteQuantums:     big.NewInt(1_500_000),
+				},
+				{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+					QuoteQuantums:     big.NewInt(2_400_000),
+				},
 			},
-			expectedNetFeeRevSharesPpmByAddress: map[string]uint32{
-				constants.BobAccAddress.String(): 200_000, // 20% of net fees
-			},
+			fill: clobtypes.CreatePerpetualFillForProcess(
+				constants.AliceAccAddress.String(),
+				big.NewInt(10_000_000),
+				constants.BobAccAddress.String(),
+				big.NewInt(2_000_000),
+				big.NewInt(100000),
+				marketId,
+				1_000_000_000_000, // 1 million USDC
+			),
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				keeper.SetUnconditionalRevShareConfigParams(ctx, types.UnconditionalRevShareConfig{
@@ -404,11 +483,17 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-			name:                                  "No rev shares",
-			expectedRevShares:                     0,
-			monthlyRollingTakerVolumeQuantums:     1_000_000_000_000, // 1 million USDC
-			expectedTakerFeeRevSharesPpmByAddress: map[string]uint32{},
-			expectedNetFeeRevSharesPpmByAddress:   map[string]uint32{},
+			name:              "No rev shares",
+			expectedRevShares: []types.RevShare{},
+			fill: clobtypes.CreatePerpetualFillForProcess(
+				constants.AliceAccAddress.String(),
+				big.NewInt(10_000_000),
+				constants.BobAccAddress.String(),
+				big.NewInt(2_000_000),
+				big.NewInt(100000),
+				marketId,
+				1_000_000_000_000, // 1 million USDC
+			),
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 			},
@@ -418,20 +503,6 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup
-			marketId := uint32(1)
-			fill := clobtypes.CreatePerpetualFillForProcess(
-				constants.AliceAccAddress.String(),
-				big.NewInt(10_000_000),
-				constants.BobAccAddress.String(),
-				big.NewInt(2_000_000),
-				big.NewInt(100000),
-				marketId,
-				tc.monthlyRollingTakerVolumeQuantums,
-			)
-
-			takerFeeQuoteQuantums := fill.TakerFeeQuoteQuantums()
-			netFeeQuoteQuantums := big.NewInt(0).Add(fill.TakerFeeQuoteQuantums(),
-				fill.MakerFeeQuoteQuantums())
 
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
@@ -443,51 +514,10 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 
-			revShares, err := keeper.GetAllRevShares(ctx, fill)
+			revShares, err := keeper.GetAllRevShares(ctx, tc.fill)
 
 			require.NoError(t, err)
-			require.Len(t, revShares, tc.expectedRevShares)
-
-			if tc.expectedRevShares > 0 {
-				actualTakerFeeRevSharesByAddress := make(map[string]*big.Int)
-				actualNetFeeRevSharesByAddress := make(map[string]*big.Int)
-
-				for _, revShare := range revShares {
-					if revShare.RevShareFeeSource == types.REV_SHARE_FEE_SOURCE_TAKER_FEE {
-						if _, exists := actualTakerFeeRevSharesByAddress[revShare.Recipient]; !exists {
-							actualTakerFeeRevSharesByAddress[revShare.Recipient] = big.NewInt(0)
-						}
-						actualTakerFeeRevSharesByAddress[revShare.Recipient].Add(
-							actualTakerFeeRevSharesByAddress[revShare.Recipient],
-							revShare.QuoteQuantums,
-						)
-					} else {
-						if _, exists := actualNetFeeRevSharesByAddress[revShare.Recipient]; !exists {
-							actualNetFeeRevSharesByAddress[revShare.Recipient] = big.NewInt(0)
-						}
-						actualNetFeeRevSharesByAddress[revShare.Recipient].Add(
-							actualNetFeeRevSharesByAddress[revShare.Recipient],
-							revShare.QuoteQuantums,
-						)
-					}
-				}
-
-				// Check taker fee rev shares
-				for address, expectedSharePpm := range tc.expectedTakerFeeRevSharesPpmByAddress {
-					expectedShare := lib.BigMulPpm(lib.BigU(expectedSharePpm), takerFeeQuoteQuantums, false)
-					actualShare, exists := actualTakerFeeRevSharesByAddress[address]
-					require.True(t, exists)
-					require.Equal(t, expectedShare, actualShare)
-				}
-
-				// Check net fee rev shares
-				for address, expectedSharePpm := range tc.expectedNetFeeRevSharesPpmByAddress {
-					expectedShare := lib.BigMulPpm(lib.BigU(expectedSharePpm), netFeeQuoteQuantums, false)
-					actualShare, exists := actualNetFeeRevSharesByAddress[address]
-					require.True(t, exists)
-					require.Equal(t, expectedShare, actualShare)
-				}
-			}
+			require.Equal(t, tc.expectedRevShares, revShares)
 		})
 	}
 }
