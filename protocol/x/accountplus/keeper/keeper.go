@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
@@ -18,18 +19,20 @@ type Keeper struct {
 	storeKey storetypes.StoreKey
 
 	authenticatorManager *authenticator.AuthenticatorManager
+	authorities          map[string]struct{}
 }
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	key storetypes.StoreKey,
 	authenticatorManager *authenticator.AuthenticatorManager,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:      cdc,
-		storeKey: key,
-
+		cdc:                  cdc,
+		storeKey:             key,
 		authenticatorManager: authenticatorManager,
+		authorities:          lib.UniqueSliceToSet(authorities),
 	}
 }
 
@@ -117,4 +120,9 @@ func (k Keeper) SetAccountState(
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&accountState)
 	store.Set(address.Bytes(), bz)
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }

@@ -16,6 +16,7 @@ import (
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
@@ -116,6 +117,9 @@ func SetupTestSuite(t testing.TB, isCheckTx bool) *AnteTestSuite {
 		suite.EncCfg.Codec,
 		keys[accountplustypes.StoreKey],
 		authenticator.NewAuthenticatorManager(),
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
 	)
 
 	// We're using TestMsg encoding in some tests, so register it here.
