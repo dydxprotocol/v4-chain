@@ -438,6 +438,10 @@ func (k Keeper) persistMatchedOrders(
 	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta, perpetualId); err != nil {
 		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+	}
 
 	fill := types.FillForProcess{
 		TakerAddr:             matchWithOrders.TakerOrder.GetSubaccountId().Owner,
@@ -446,6 +450,7 @@ func (k Keeper) persistMatchedOrders(
 		MakerFeeQuoteQuantums: bigMakerFeeQuoteQuantums,
 		FillQuoteQuantums:     bigFillQuoteQuantums,
 		ProductId:             perpetualId,
+		MarketId:              perpetual.Params.MarketId,
 		MonthlyRollingTakerVolumeQuantums: k.statsKeeper.GetUserStats(
 			ctx,
 			matchWithOrders.TakerOrder.GetSubaccountId().Owner,

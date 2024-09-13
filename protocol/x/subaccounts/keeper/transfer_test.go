@@ -1216,6 +1216,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(250),
 				FillQuoteQuantums:                 big.NewInt(500),
 				ProductId:                         uint32(0),
+				MarketId:                          uint32(0),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			collateralPoolAddr:                  types.ModuleAddress,
@@ -1242,6 +1243,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(250),
 				FillQuoteQuantums:                 big.NewInt(500),
 				ProductId:                         uint32(3),
+				MarketId:                          uint32(3),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			collateralPoolAddr: authtypes.NewModuleAddress(
@@ -1271,6 +1273,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(0),
 				FillQuoteQuantums:                 big.NewInt(500),
 				ProductId:                         uint32(3),
+				MarketId:                          uint32(3),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			collateralPoolAddr:                  types.ModuleAddress,
@@ -1298,6 +1301,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(250),
 				FillQuoteQuantums:                 big.NewInt(500),
 				ProductId:                         uint32(3),
+				MarketId:                          uint32(3),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			collateralPoolAddr:                  types.ModuleAddress,
@@ -1326,6 +1330,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(250),
 				FillQuoteQuantums:                 big.NewInt(500),
 				ProductId:                         uint32(3),
+				MarketId:                          uint32(3),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			collateralPoolAddr: authtypes.NewModuleAddress(
@@ -1357,6 +1362,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(250),
 				FillQuoteQuantums:                 big.NewInt(500),
 				ProductId:                         uint32(3),
+				MarketId:                          uint32(3),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			collateralPoolAddr:                  types.ModuleAddress,
@@ -1385,6 +1391,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(250),
 				FillQuoteQuantums:                 big.NewInt(500),
 				ProductId:                         uint32(3),
+				MarketId:                          uint32(3),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			collateralPoolAddr:                  types.ModuleAddress,
@@ -1414,6 +1421,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(250),
 				FillQuoteQuantums:                 big.NewInt(500),
 				ProductId:                         uint32(4),
+				MarketId:                          uint32(4),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			expectedSubaccountsModuleAccBalance:     big.NewInt(100),  // 600 - 500
@@ -1447,6 +1455,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(250),
 				FillQuoteQuantums:                 big.NewInt(500),
 				ProductId:                         uint32(4),
+				MarketId:                          uint32(4),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			affiliateRevShareAcctAddr:               "",
@@ -1481,6 +1490,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(4),
 				FillQuoteQuantums:                 big.NewInt(9),
 				ProductId:                         uint32(4),
+				MarketId:                          uint32(4),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			expectedSubaccountsModuleAccBalance:     big.NewInt(191), // 200 - 9
@@ -1514,6 +1524,7 @@ func TestDistributeFees(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(250),
 				FillQuoteQuantums:                 big.NewInt(500),
 				ProductId:                         uint32(4),
+				MarketId:                          uint32(4),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
 			expectedSubaccountsModuleAccBalance:     big.NewInt(100),  // 600 - 500
@@ -1636,7 +1647,7 @@ func TestDistributeFees(t *testing.T) {
 			if tc.setRevenueShare {
 				revShareKeeper.SetMarketMapperRevShareDetails(
 					ctx,
-					tc.fill.ProductId,
+					tc.fill.MarketId,
 					revsharetypes.MarketMapperRevShareDetails{
 						ExpirationTs: uint64(ctx.BlockTime().Unix() + tc.revShareExpiration),
 					},

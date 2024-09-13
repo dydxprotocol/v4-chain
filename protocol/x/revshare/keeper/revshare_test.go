@@ -267,6 +267,7 @@ func TestValidateRevShareSafety(t *testing.T) {
 }
 
 func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
+	perpetualId := uint32(1)
 	marketId := uint32(1)
 	tests := []struct {
 		name              string
@@ -313,8 +314,9 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+				MarketId:                          marketId,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -382,7 +384,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(-2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
@@ -421,8 +424,9 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
 				MonthlyRollingTakerVolumeQuantums: types.Max30dRefereeVolumeQuantums + 1,
+				MarketId:                          marketId,
 			},
 			expectedRevShares: []types.RevShare{
 				{
@@ -498,7 +502,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
@@ -540,7 +545,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
@@ -568,7 +574,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
@@ -600,6 +607,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 }
 
 func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
+	perpetualId := uint32(1)
 	marketId := uint32(1)
 	tests := []struct {
 		name                              string
@@ -718,7 +726,8 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         uint32(1),
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 			}
 			tApp := testapp.NewTestAppBuilder(t).Build()

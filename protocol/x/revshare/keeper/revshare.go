@@ -167,7 +167,7 @@ func (k Keeper) GetAllRevShares(
 		return nil, err
 	}
 
-	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.ProductId, netFees)
+	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFees)
 	if err != nil {
 		return nil, err
 	}
