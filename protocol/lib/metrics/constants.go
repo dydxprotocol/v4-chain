@@ -281,6 +281,8 @@ const (
 	StatefulPriceUpdateValidation           = "stateful_price_update_validation"
 	UpdateMarketParam                       = "update_market_param"
 	UpdateMarketPrices                      = "update_market_prices"
+	UpdateCachePrices                       = "update_cache_prices"
+	GetMedianPrices                         = "get_median_prices"
 
 	// Sending.
 	Account                       = "account"

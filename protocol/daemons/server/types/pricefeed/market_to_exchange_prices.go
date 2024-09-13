@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -40,7 +41,16 @@ func NewMarketToExchangePrices(maxPriceAge time.Duration) *MarketToExchangePrice
 func (mte *MarketToExchangePrices) UpdatePrices(
 	updates []*api.MarketPriceUpdate) {
 	mte.Lock()
-	defer mte.Unlock()
+	defer func() {
+		telemetry.ModuleMeasureSince(
+			types.ModuleName,
+			time.Now(),
+			metrics.UpdateCachePrices,
+			metrics.Latency,
+		)
+		fmt.Println("Unlocking mutex in UpdatePrices")
+		mte.Unlock()
+	}()
 	for _, marketPriceUpdate := range updates {
 		marketId := marketPriceUpdate.MarketId
 		exchangeToPrices, ok := mte.marketToExchangePrices[marketId]
@@ -67,7 +77,16 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 	marketIdToMedianPrice := make(map[uint32]uint64)
 
 	mte.Lock()
-	defer mte.Unlock()
+	defer func() {
+		telemetry.ModuleMeasureSince(
+			types.ModuleName,
+			time.Now(),
+			metrics.GetMedianPrices,
+			metrics.Latency,
+		)
+		fmt.Println("Unlocking mutex in GetValidMedianPrices")
+		mte.Unlock()
+	}()
 	for _, marketParam := range marketParams {
 		marketId := marketParam.Id
 		exchangeToPrice, ok := mte.marketToExchangePrices[marketId]
