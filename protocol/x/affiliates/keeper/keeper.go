@@ -235,11 +235,20 @@ func (k Keeper) GetTierForAffiliate(
 
 // UpdateAffiliateTiers updates the affiliate tiers.
 // Used primarily through governance.
-func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.AffiliateTiers) {
+func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.AffiliateTiers) error {
 	store := ctx.KVStore(k.storeKey)
-	// TODO(OTE-779): Check strictly increasing volume and
-	// staking requirements hold in UpdateAffiliateTiers
-	store.Set([]byte(types.AffiliateTiersKey), k.cdc.MustMarshal(&affiliateTiers))
+	affiliateTiersBytes := k.cdc.MustMarshal(&affiliateTiers)
+	tiers := affiliateTiers.GetTiers()
+	// start at 1, since 0 is the default tier.
+	for i := 1; i < len(tiers); i++ {
+		if tiers[i].ReqReferredVolumeQuoteQuantums <= tiers[i-1].ReqReferredVolumeQuoteQuantums ||
+			tiers[i].ReqStakedWholeCoins <= tiers[i-1].ReqStakedWholeCoins {
+			return errorsmod.Wrapf(types.ErrInvalidAffiliateTiers,
+				"tiers values must be strictly increasing")
+		}
+	}
+	store.Set([]byte(types.AffiliateTiersKey), affiliateTiersBytes)
+	return nil
 }
 
 func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
