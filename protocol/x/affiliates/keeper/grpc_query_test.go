@@ -99,7 +99,8 @@ func TestAffiliateInfo(t *testing.T) {
 
 			// Set up affiliate tiers
 			tiers := types.DefaultAffiliateTiers
-			k.UpdateAffiliateTiers(ctx, tiers)
+			err := k.UpdateAffiliateTiers(ctx, tiers)
+			require.NoError(t, err)
 
 			// Run the setup function
 			tc.setup(ctx, k, tApp)
@@ -174,7 +175,8 @@ func TestAllAffiliateTiers(t *testing.T) {
 	req := &types.AllAffiliateTiersRequest{}
 
 	tiers := types.DefaultAffiliateTiers
-	k.UpdateAffiliateTiers(ctx, tiers)
+	err := k.UpdateAffiliateTiers(ctx, tiers)
+	require.NoError(t, err)
 
 	res, err := k.AllAffiliateTiers(ctx, req)
 

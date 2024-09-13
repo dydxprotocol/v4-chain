@@ -40,31 +40,35 @@ class AffiliatesController extends Controller {
   async getMetadata(
     @Query() address: string,
   ): Promise<AffiliateMetadataResponse> {
+    const [walletRow, referredUserRows, subaccountRows] = await Promise.all([
+      WalletTable.findById(address),
+      AffiliateReferredUsersTable.findByAffiliateAddress(address),
+      SubaccountTable.findAll(
+        {
+          address,
+          subaccountNumber: 0,
+        },
+        [],
+      ),
+    ]);
+
     // Check that the address exists
-    const walletRow = await WalletTable.findById(address);
     if (!walletRow) {
       throw new NotFoundError(`Wallet with address ${address} not found`);
     }
-    const isVolumeEligible = Number(walletRow.totalVolume) >= config.VOLUME_ELIGIBILITY_THRESHOLD;
 
     // Check if the address is an affiliate (has referred users)
-    const referredUserRows = await AffiliateReferredUsersTable.findByAffiliateAddress(address);
+    const isVolumeEligible = Number(walletRow.totalVolume) >= config.VOLUME_ELIGIBILITY_THRESHOLD;
     const isAffiliate = referredUserRows !== undefined ? referredUserRows.length > 0 : false;
 
-    // Get referral code (subaccount 0 username)
-    const subaccountRows = await SubaccountTable.findAll(
-      {
-        address,
-        subaccountNumber: 0,
-      },
-      [],
-    );
     // No need to check subaccountRows.length > 1 as subaccountNumber is unique for an address
     if (subaccountRows.length === 0) {
+      // error logging will be performed by handleInternalServerError
       throw new UnexpectedServerError(`Subaccount 0 not found for address ${address}`);
     }
     const subaccountId = subaccountRows[0].id;
 
+    // Get subaccount0 username, which is the referral code
     const usernameRows = await SubaccountUsernamesTable.findAll(
       {
         subaccountId: [subaccountId],
@@ -72,7 +76,10 @@ class AffiliatesController extends Controller {
       [],
     );
     // No need to check usernameRows.length > 1 as subAccountId is unique (foreign key constraint)
+    // This error can happen if a user calls this endpoint before subaccount-username-generator
+    // has generated the username
     if (usernameRows.length === 0) {
+      stats.increment(`${config.SERVICE_NAME}.${controllerName}.get_metadata.subaccount_username_not_found`);
       throw new UnexpectedServerError(`Username not found for subaccount ${subaccountId}`);
     }
     const referralCode = usernameRows[0].username;
@@ -273,7 +280,7 @@ router.get(
     const {
       offset,
       limit,
-      sortByAffiliateEarning: sortByReferredFees,
+      sortByReferredFees,
     }: AffiliateSnapshotRequest = matchedData(req) as AffiliateSnapshotRequest;
 
     try {

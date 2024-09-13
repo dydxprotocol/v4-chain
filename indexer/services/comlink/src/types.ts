@@ -686,7 +686,7 @@ export interface AffiliateAddressRequest{
 export interface AffiliateSnapshotRequest{
   limit?: number,
   offset?: number,
-  sortByAffiliateEarning?: boolean,
+  sortByReferredFees?: boolean,
 }
 
 export interface AffiliateTotalVolumeRequest{

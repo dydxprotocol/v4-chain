@@ -175,11 +175,11 @@ describe('affiliates-controller#V4', () => {
       const req: AffiliateSnapshotRequest = {
         limit: 10,
         offset: 10,
-        sortByAffiliateEarning: true,
+        sortByReferredFees: true,
       };
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: `/v4/affiliates/snapshot?limit=${req.limit}&offset=${req.offset}&sortByReferredFees=${req.sortByAffiliateEarning}`,
+        path: `/v4/affiliates/snapshot?limit=${req.limit}&offset=${req.offset}&sortByReferredFees=${req.sortByReferredFees}`,
       });
 
       expect(response.status).toBe(200);
