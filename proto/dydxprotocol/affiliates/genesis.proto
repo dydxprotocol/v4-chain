@@ -1,7 +1,6 @@
 syntax = "proto3";
 package dydxprotocol.affiliates;
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 import "dydxprotocol/affiliates/affiliates.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types";
