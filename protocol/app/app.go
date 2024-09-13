@@ -941,6 +941,7 @@ func New(
 			lib.GovModuleAddress.String(),
 		},
 		app.StatsKeeper,
+		app.IndexerEventManager,
 	)
 	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 

@@ -51,7 +51,10 @@ func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
 		)
 	}
 
-	k.Keeper.UpdateAffiliateTiers(sdkCtx, msg.Tiers)
+	err = k.Keeper.UpdateAffiliateTiers(sdkCtx, msg.Tiers)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgUpdateAffiliateTiersResponse{}, nil
 }
