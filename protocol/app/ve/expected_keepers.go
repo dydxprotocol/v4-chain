@@ -44,7 +44,7 @@ type ExtendVotePerpetualsKeeper interface {
 	) (val perptypes.Perpetual, err error)
 }
 
-type ExtendVoteIndexPriceCache interface {
+type ExtendVoteDaemonPriceCache interface {
 	GetVEEncodedPrice(price *big.Int) ([]byte, error)
 }
 

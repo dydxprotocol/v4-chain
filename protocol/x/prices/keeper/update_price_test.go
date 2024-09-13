@@ -87,11 +87,11 @@ var (
 		},
 	}
 
-	invalidMarket0SmoothedPriceTrendsAwayFromIndexPrice = map[uint32][]uint64{
+	invalidMarket0SmoothedPriceTrendsAwayFromDaemonPrice = map[uint32][]uint64{
 		constants.MarketId0: {fiveBillionMinusFiveMillionAndOne},
 	}
 
-	invalidMarket2SmoothedPriceTrendsAwayFromIndexPrice = map[uint32][]uint64{
+	invalidMarket2SmoothedPriceTrendsAwayFromDaemonPrice = map[uint32][]uint64{
 		constants.MarketId2: {constants.FiveBillion - 2},
 	}
 
@@ -112,11 +112,11 @@ var (
 func TestGetValidMarketPriceUpdates(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		indexPrices []*api.MarketPriceUpdate
-		// historicalSmoothedIndexPrice prices for each market are expected to be ordered from most recent to least
+		daemonPrices []*api.MarketPriceUpdate
+		// historicalSmoothedDaemonPrice prices for each market are expected to be ordered from most recent to least
 		// recent.
-		historicalSmoothedIndexPrices map[uint32][]uint64
-		skipCreateMarketsAndExchanges bool
+		historicalSmoothedDaemonPrices map[uint32][]uint64
+		skipCreateMarketsAndExchanges  bool
 
 		// Expected.
 		expectedMsg []*types.MarketSpotPriceUpdate
@@ -125,70 +125,70 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			skipCreateMarketsAndExchanges: true,
 			expectedMsg:                   emptyResult,
 		},
-		"Empty result: no index prices": {
-			indexPrices: []*api.MarketPriceUpdate{},
-			expectedMsg: emptyResult,
+		"Empty result: no daemon prices": {
+			daemonPrices: []*api.MarketPriceUpdate{},
+			expectedMsg:  emptyResult,
 		},
 		"Empty result: price is zero": {
-			indexPrices: []*api.MarketPriceUpdate{invalidMarket1PriceIsZeroUpdate},
-			expectedMsg: emptyResult,
+			daemonPrices: []*api.MarketPriceUpdate{invalidMarket1PriceIsZeroUpdate},
+			expectedMsg:  emptyResult,
 		},
-		"Empty result: no overlap between markets and index prices": {
-			indexPrices: []*api.MarketPriceUpdate{invalidMarket9DoesNotExistUpdate},
-			expectedMsg: emptyResult,
+		"Empty result: no overlap between markets and daemon prices": {
+			daemonPrices: []*api.MarketPriceUpdate{invalidMarket9DoesNotExistUpdate},
+			expectedMsg:  emptyResult,
 		},
-		"Single result: index price used when no smoothed prices": {
-			indexPrices: []*api.MarketPriceUpdate{validMarket0Update},
-			expectedMsg: validMarket0UpdateResult,
+		"Single result: daemon price used when no smoothed prices": {
+			daemonPrices: []*api.MarketPriceUpdate{validMarket0Update},
+			expectedMsg:  validMarket0UpdateResult,
 		},
-		"Single result: no overlap between markets for index prices and smoothed prices": {
-			indexPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
-			historicalSmoothedIndexPrices: invalidMarket9DoesNotExistSmoothedPrice,
-			expectedMsg:                   validMarket0UpdateResult,
+		"Single result: no overlap between markets for daemon prices and smoothed prices": {
+			daemonPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
+			historicalSmoothedDaemonPrices: invalidMarket9DoesNotExistSmoothedPrice,
+			expectedMsg:                    validMarket0UpdateResult,
 		},
-		"Empty result: propose price is index price, does not meet min price change": {
-			indexPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
-			historicalSmoothedIndexPrices: market2SmoothedPriceNotProposed,
-			expectedMsg:                   emptyResult,
+		"Empty result: propose price is daemon price, does not meet min price change": {
+			daemonPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
+			historicalSmoothedDaemonPrices: market2SmoothedPriceNotProposed,
+			expectedMsg:                    emptyResult,
 		},
 		"Empty result: propose price is smoothed price, does not meet min price change": {
-			indexPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
-			historicalSmoothedIndexPrices: market2SmoothedPriceDoesNotMeetMinChangeUpdate,
-			expectedMsg:                   emptyResult,
+			daemonPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
+			historicalSmoothedDaemonPrices: market2SmoothedPriceDoesNotMeetMinChangeUpdate,
+			expectedMsg:                    emptyResult,
 		},
 		"Empty result: propose price is good, but historical smoothed price does not meet min price change": {
-			indexPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
-			historicalSmoothedIndexPrices: invalidMarket0HistoricalSmoothedPricesDoesNotMeetMinPriceChange,
-			expectedMsg:                   emptyResult,
+			daemonPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
+			historicalSmoothedDaemonPrices: invalidMarket0HistoricalSmoothedPricesDoesNotMeetMinPriceChange,
+			expectedMsg:                    emptyResult,
 		},
 		"Empty result: propose price is good, but historical smoothed price crosses oracle price": {
-			indexPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
-			historicalSmoothedIndexPrices: invalidMarket0HistoricalSmoothedPricesCrossesOraclePrice,
-			expectedMsg:                   emptyResult,
+			daemonPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
+			historicalSmoothedDaemonPrices: invalidMarket0HistoricalSmoothedPricesCrossesOraclePrice,
+			expectedMsg:                    emptyResult,
 		},
-		"Empty result: proposed price is smoothed price, meets min change but trends away from index price": {
-			indexPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
-			historicalSmoothedIndexPrices: invalidMarket0SmoothedPriceTrendsAwayFromIndexPrice,
-			expectedMsg:                   emptyResult,
+		"Empty result: proposed price is smoothed price, meets min change but trends away from daemon price": {
+			daemonPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
+			historicalSmoothedDaemonPrices: invalidMarket0SmoothedPriceTrendsAwayFromDaemonPrice,
+			expectedMsg:                    emptyResult,
 		},
 		"Empty result: proposed price does not meet min change and historical smoothed price crosses oracle price": {
-			indexPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
-			historicalSmoothedIndexPrices: invalidMarket2HistoricalSmoothedPricesCrossesOraclePrice,
-			expectedMsg:                   emptyResult,
+			daemonPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
+			historicalSmoothedDaemonPrices: invalidMarket2HistoricalSmoothedPricesCrossesOraclePrice,
+			expectedMsg:                    emptyResult,
 		},
-		"Empty result: proposed price does not meet min change and smoothed price is trending away from index price": {
-			indexPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
-			historicalSmoothedIndexPrices: invalidMarket2SmoothedPriceTrendsAwayFromIndexPrice,
-			expectedMsg:                   emptyResult,
+		"Empty result: proposed price does not meet min change and smoothed price is trending away from daemon price": {
+			daemonPrices:                   []*api.MarketPriceUpdate{invalidMarket2PriceDoesNotMeetMinChangeUpdate},
+			historicalSmoothedDaemonPrices: invalidMarket2SmoothedPriceTrendsAwayFromDaemonPrice,
+			expectedMsg:                    emptyResult,
 		},
 		"Single market price update": {
-			indexPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
-			historicalSmoothedIndexPrices: validMarket0SmoothedPrices,
-			expectedMsg:                   validMarket0UpdateResult,
+			daemonPrices:                   []*api.MarketPriceUpdate{validMarket0Update},
+			historicalSmoothedDaemonPrices: validMarket0SmoothedPrices,
+			expectedMsg:                    validMarket0UpdateResult,
 		},
-		"Multiple market price updates, some from smoothed price and some from index price": {
-			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
-			historicalSmoothedIndexPrices: map[uint32][]uint64{
+		"Multiple market price updates, some from smoothed price and some from daemon price": {
+			daemonPrices: constants.AtTimeTSingleExchangePriceUpdate,
+			historicalSmoothedDaemonPrices: map[uint32][]uint64{
 				constants.MarketId0: {constants.Price4 - 1},
 				constants.MarketId1: {constants.Price1 + 1},
 				constants.MarketId2: {constants.Price2},
@@ -201,14 +201,14 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 				types.NewMarketSpotPriceUpdate(constants.MarketId4, constants.Price3),
 			},
 		},
-		"Mix of valid and invalid index prices": {
-			indexPrices: []*api.MarketPriceUpdate{
+		"Mix of valid and invalid daemon prices": {
+			daemonPrices: []*api.MarketPriceUpdate{
 				validMarket0Update,
 				invalidMarket1PriceIsZeroUpdate,               // Price cannot be 0.
 				invalidMarket2PriceDoesNotMeetMinChangeUpdate, // Price does not meet min price change req.
 				invalidMarket9DoesNotExistUpdate,              // Market with id 9 does not exist.
 			},
-			historicalSmoothedIndexPrices: map[uint32][]uint64{
+			historicalSmoothedDaemonPrices: map[uint32][]uint64{
 				constants.MarketId0: {validMarket0Update.ExchangePrices[0].Price},
 				constants.MarketId1: {constants.Price4},
 				constants.MarketId2: {constants.Price2},
@@ -217,10 +217,10 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			expectedMsg: validMarket0UpdateResult,
 		},
 		"Mix of valid, invalid, and missing smoothed prices": {
-			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
-			historicalSmoothedIndexPrices: map[uint32][]uint64{
-				constants.MarketId0: {constants.Price4}, // Same as index price.
-				constants.MarketId1: {0},                // Invalid price, so index price is used.
+			daemonPrices: constants.AtTimeTSingleExchangePriceUpdate,
+			historicalSmoothedDaemonPrices: map[uint32][]uint64{
+				constants.MarketId0: {constants.Price4}, // Same as daemon price.
+				constants.MarketId1: {0},                // Invalid price, so daemon price is used.
 				constants.MarketId9: {constants.Price1}, // Invalid market.
 			},
 			expectedMsg: []*types.MarketSpotPriceUpdate{
@@ -232,13 +232,13 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 			},
 		},
 		"Mix of valid, invalid, and invalid historical smoothed prices": {
-			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
-			historicalSmoothedIndexPrices: map[uint32][]uint64{
+			daemonPrices: constants.AtTimeTSingleExchangePriceUpdate,
+			historicalSmoothedDaemonPrices: map[uint32][]uint64{
 				constants.MarketId0: {
-					constants.Price4,          // Same as index price.
+					constants.Price4,          // Same as daemon price.
 					fiveBillionAndFiveMillion, // Invalid: crosses oracle price.
 				},
-				constants.MarketId1: {constants.Price1}, // Valid: same as index price.
+				constants.MarketId1: {constants.Price1}, // Valid: same as daemon price.
 				constants.MarketId9: {constants.Price1}, // Invalid market.
 			},
 			expectedMsg: []*types.MarketSpotPriceUpdate{
@@ -252,17 +252,17 @@ func TestGetValidMarketPriceUpdates(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, marketSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, k, _, daemonPriceCache, marketSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			if !tc.skipCreateMarketsAndExchanges {
 				keepertest.CreateTestMarkets(t, ctx, k)
 			}
-			indexPriceCache.UpdatePrices(tc.indexPrices)
+			daemonPriceCache.UpdatePrices(tc.daemonPrices)
 
 			// Smoothed prices are listed in reverse chronological order for test case constant legibility.
 			// Therefore, add them in reverse order to the `marketSmoothedPrices` cache.
-			for market, historicalSmoothedPrices := range tc.historicalSmoothedIndexPrices {
+			for market, historicalSmoothedPrices := range tc.historicalSmoothedDaemonPrices {
 				for i := len(historicalSmoothedPrices) - 1; i >= 0; i-- {
 					marketSmoothedPrices.PushSmoothedSpotPrice(market, historicalSmoothedPrices[i])
 				}

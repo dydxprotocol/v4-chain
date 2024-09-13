@@ -20,7 +20,7 @@ type Keeper struct {
 	cdc                    codec.BinaryCodec
 	storeKey               storetypes.StoreKey
 	marketToSmoothedPrices types.MarketToSmoothedPrices
-	indexPriceCache        *pricefeedtypes.MarketToExchangePrices
+	daemonPriceCache       *pricefeedtypes.MarketToExchangePrices
 	timeProvider           libtime.TimeProvider
 	indexerEventManager    indexer_manager.IndexerEventManager
 	marketToCreatedAt      map[uint32]time.Time
@@ -32,7 +32,7 @@ var _ types.PricesKeeper = &Keeper{}
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
-	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
+	daemonPriceCache *pricefeedtypes.MarketToExchangePrices,
 	marketToSmoothedPrices types.MarketToSmoothedPrices,
 	timeProvider libtime.TimeProvider,
 	indexerEventManager indexer_manager.IndexerEventManager,
@@ -41,7 +41,7 @@ func NewKeeper(
 	return &Keeper{
 		cdc:                    cdc,
 		storeKey:               storeKey,
-		indexPriceCache:        indexPriceCache,
+		daemonPriceCache:       daemonPriceCache,
 		marketToSmoothedPrices: marketToSmoothedPrices,
 		timeProvider:           timeProvider,
 		indexerEventManager:    indexerEventManager,

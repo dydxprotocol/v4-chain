@@ -5,10 +5,8 @@ package mocks
 import (
 	big "math/big"
 
-	flags "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/flags"
-	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-
 	heap "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/heap"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 
 	indexer_manager "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 
@@ -336,24 +334,6 @@ func (_m *ClobKeeper) GetFillablePrice(ctx types.Context, subaccountId subaccoun
 	}
 
 	return r0, r1
-}
-
-// GetFlags provides a mock function with given fields:
-func (_m *ClobKeeper) GetFlags() flags.ClobFlags {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetFlags")
-	}
-
-	var r0 flags.ClobFlags
-	if rf, ok := ret.Get(0).(func() flags.ClobFlags); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(flags.ClobFlags)
-	}
-
-	return r0
 }
 
 // GetIndexerEventManager provides a mock function with given fields:

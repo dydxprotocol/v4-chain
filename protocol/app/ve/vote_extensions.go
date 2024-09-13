@@ -235,9 +235,9 @@ func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
 	ctx sdk.Context,
 ) map[uint32]VEPricePair {
 	vePrices := make(map[uint32]VEPricePair)
-	indexPrices := h.pricesKeeper.GetValidMarketSpotPriceUpdates(ctx)
+	daemonPrices := h.pricesKeeper.GetValidMarketSpotPriceUpdates(ctx)
 
-	for _, market := range indexPrices {
+	for _, market := range daemonPrices {
 		clobMidPrice, smoothedPrice, lastFundingRate, allExist := h.getPeripheryPnlPriceData(
 			ctx,
 			market,
@@ -309,12 +309,12 @@ func (h *VoteExtensionHandler) getPeripheryPnlPriceData(
 }
 
 func (h *VoteExtensionHandler) getMedianPnlPrice(
-	indexPrice *big.Int,
+	daemonPrice *big.Int,
 	clobMidPrice *big.Int,
 	smoothedPrice *big.Int,
 	lastFundingRate *big.Int,
 ) *big.Int {
-	fundingWeightedPrice := h.getFundingWeightedIndexPrice(indexPrice, lastFundingRate)
+	fundingWeightedPrice := h.getFundingWeightedDaemonPrice(daemonPrice, lastFundingRate)
 	prices := []*big.Int{clobMidPrice, smoothedPrice, fundingWeightedPrice}
 	sort.Slice(prices, func(i, j int) bool {
 		return prices[i].Cmp(prices[j]) < 0
@@ -323,12 +323,12 @@ func (h *VoteExtensionHandler) getMedianPnlPrice(
 	return prices[1]
 }
 
-func (h *VoteExtensionHandler) getFundingWeightedIndexPrice(
-	indexPrice *big.Int,
+func (h *VoteExtensionHandler) getFundingWeightedDaemonPrice(
+	daemonPrice *big.Int,
 	lastFundingRate *big.Int,
 ) *big.Int {
 	adjustedFundingRate := new(big.Int).Add(lastFundingRate, big.NewInt(ppmFactor))
-	fundingWeightedPrice := new(big.Int).Mul(indexPrice, adjustedFundingRate)
+	fundingWeightedPrice := new(big.Int).Mul(daemonPrice, adjustedFundingRate)
 	fundingWeightedPrice = fundingWeightedPrice.Div(fundingWeightedPrice, big.NewInt(ppmFactor))
 
 	return fundingWeightedPrice

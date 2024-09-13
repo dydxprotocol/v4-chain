@@ -3,11 +3,12 @@ package types_test
 import (
 	"errors"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/client"
-	"testing"
-	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/assert"
@@ -240,7 +241,7 @@ func TestNewExchangeToMarketPrices_UpdateIsInvalidForInvalidExchange(t *testing.
 	)
 }
 
-func TestGetIndexPrice_Mixed(t *testing.T) {
+func TestGetDaemonPrice_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		initialPrices []*client.ExchangeIdMarketPriceTimestamp
 		market        types.MarketId
@@ -313,7 +314,7 @@ func TestGetIndexPrice_Mixed(t *testing.T) {
 
 			// Execute.
 			resolver := lib.Median[uint64]
-			medianPrice, numPricesMedianized := etmp.GetIndexPrice(tc.market, tc.cutoffTime, resolver)
+			medianPrice, numPricesMedianized := etmp.GetDaemonPrice(tc.market, tc.cutoffTime, resolver)
 
 			// Assert.
 			require.Equal(t, tc.expectedMedianPrice, medianPrice)

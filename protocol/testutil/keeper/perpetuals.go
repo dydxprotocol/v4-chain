@@ -31,7 +31,7 @@ import (
 type PerpKeepersTestContext struct {
 	Ctx               sdk.Context
 	PricesKeeper      *priceskeeper.Keeper
-	IndexPriceCache   *pricefeedserver_types.MarketToExchangePrices
+	DaemonPriceCache  *pricefeedserver_types.MarketToExchangePrices
 	AssetsKeeper      *assetskeeper.Keeper
 	EpochsKeeper      *epochskeeper.Keeper
 	PerpetualsKeeper  *keeper.Keeper
@@ -63,7 +63,7 @@ func PerpetualsKeepersWithClobHelpers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pc.PricesKeeper, _, pc.IndexPriceCache, _, pc.MockTimeProvider = createPricesKeeper(
+		pc.PricesKeeper, _, pc.DaemonPriceCache, _, pc.MockTimeProvider = createPricesKeeper(
 			stateStore,
 			db,
 			cdc,

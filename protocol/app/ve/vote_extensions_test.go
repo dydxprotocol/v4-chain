@@ -556,7 +556,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 func TestGetVEBytesFromCurrPrices(t *testing.T) {
 	tests := map[string]struct {
 		markets        []uint32
-		indexPrices    []*pricestypes.MarketSpotPriceUpdate
+		daemonPrices   []*pricestypes.MarketSpotPriceUpdate
 		smoothedPrices map[uint32]uint64
 		midPrices      map[uint32]uint64
 		fundingRates   map[uint32]int64
@@ -565,7 +565,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 	}{
 		"throws error if no prices": {
 			markets:        []uint32{},
-			indexPrices:    []*pricestypes.MarketSpotPriceUpdate{},
+			daemonPrices:   []*pricestypes.MarketSpotPriceUpdate{},
 			smoothedPrices: nil,
 			midPrices:      nil,
 			fundingRates:   nil,
@@ -574,7 +574,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 		},
 		"valid single price, no funding-smooth-or-mid": {
 			markets: []uint32{constants.MarketId0},
-			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
+			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
 			},
 			smoothedPrices: map[uint32]uint64{
@@ -599,7 +599,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 		},
 		"valid single price with funding, no smooth or mid": {
 			markets: []uint32{constants.MarketId0},
-			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
+			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
 			},
 			smoothedPrices: map[uint32]uint64{
@@ -624,7 +624,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 		},
 		"valid multiple prices, no funding, smooth or mid": {
 			markets: []uint32{constants.MarketId0, constants.MarketId1},
-			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
+			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId1, constants.Price6),
 			},
@@ -658,7 +658,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 		},
 		"valid multiple prices with funding, no smooth or mid": {
 			markets: []uint32{constants.MarketId0, constants.MarketId1},
-			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
+			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId1, constants.Price6),
 			},
@@ -692,7 +692,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 		},
 		"valid multiple prices with funding and smooth, no mid": {
 			markets: []uint32{constants.MarketId0, constants.MarketId1},
-			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
+			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId1, constants.Price6),
 			},
@@ -726,7 +726,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 		},
 		"valid multiple prices with smooth and mid, no funding": {
 			markets: []uint32{constants.MarketId0, constants.MarketId1},
-			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
+			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId1, constants.Price6),
 			},
@@ -760,7 +760,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 		},
 		"valid multiple prices with smooth, no funding or mid": {
 			markets: []uint32{constants.MarketId0, constants.MarketId1},
-			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
+			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId1, constants.Price6),
 			},
@@ -794,7 +794,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 		},
 		"valid multiple prices with mid, no funding or smooth": {
 			markets: []uint32{constants.MarketId0, constants.MarketId1},
-			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
+			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId1, constants.Price6),
 			},
@@ -828,7 +828,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 		},
 		"single price with smooth, funding, and mid": {
 			markets: []uint32{constants.MarketId0},
-			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
+			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
 			},
 			smoothedPrices: map[uint32]uint64{
@@ -853,7 +853,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 		},
 		"multiple prices with smooth, funding, and mid": {
 			markets: []uint32{constants.MarketId0, constants.MarketId1},
-			indexPrices: []*pricestypes.MarketSpotPriceUpdate{
+			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId0, constants.Price5),
 				pricestypes.NewMarketSpotPriceUpdate(constants.MarketId1, constants.Price6),
 			},
@@ -895,7 +895,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 			mClobKeeper := &mocks.ExtendVoteClobKeeper{}
 			mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
 
-			mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Return(tc.indexPrices)
+			mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Return(tc.daemonPrices)
 
 			for _, market := range tc.markets {
 				mPricesKeeper.On("GetMarketParam", mock.Anything, market).Return(

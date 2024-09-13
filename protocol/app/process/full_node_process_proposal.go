@@ -27,7 +27,7 @@ func FullNodeProcessProposalHandler(
 
 		// Only validate the `ProposedOperationsTx` since full nodes don't have
 		// pricefeed enabled by default and therefore, stateful validation of `UpdateMarketPricesTx`
-		// would fail due to missing index prices.
+		// would fail due to missing daemon prices.
 		err = txs.ProposedOperationsTx.Validate()
 		if err != nil {
 			return response, nil

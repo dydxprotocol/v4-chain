@@ -116,10 +116,10 @@ var (
 		25,
 		"Attempting to get price premium with a non-perpetual CLOB pair",
 	)
-	ErrZeroIndexPriceForPremiumCalculation = errorsmod.Register(
+	ErrZeroDaemonPriceForPremiumCalculation = errorsmod.Register(
 		ModuleName,
 		26,
-		"Index price is zero when calculating price premium",
+		"daemon price is zero when calculating price premium",
 	)
 	ErrInvalidClobPairParameter = errorsmod.Register(
 		ModuleName,

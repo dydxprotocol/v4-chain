@@ -2,14 +2,15 @@ package client
 
 import (
 	"context"
+	"net/http"
+	"time"
+
 	"cosmossdk.io/errors"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_encoder"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	"net/http"
-	"time"
 
 	"cosmossdk.io/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
@@ -108,7 +109,7 @@ func (s *SubTaskRunnerImpl) StartPriceUpdater(
 
 // StartPriceEncoder continuously reads from a buffered channel, reading encoded API responses for exchange
 // requests and inserting them into an `ExchangeToMarketPrices` cache, performing currency conversions based
-// on the index price of other markets as necessary.
+// on the daemon price of other markets as necessary.
 // StartPriceEncoder reads price fetcher responses from a shared channel, and does not need a ticker or stop
 // signal from the daemon to exit. It marks itself as done in the daemon's wait group when the price fetcher
 // closes the shared channel.

@@ -27,7 +27,7 @@ type MarketConfig struct {
 	// If an adjust-by market is defined for this market, then the inversion strategy is applied with respect
 	// to the adjustment market. For example, say we use a "BTC-USDT" ticker for USDT-USD on this exchange, with
 	// an adjust-by market of BTC-USD, and an inversion value of true. In this case, we are describing that
-	// we will derive the BTC-USD price by multiplying the BTC-USD index price by the inverse of the BTC-USDT ticker
+	// we will derive the BTC-USD price by multiplying the BTC-USD daemon price by the inverse of the BTC-USDT ticker
 	// price:
 	//
 	// USDT-USD = BTC-USD / BTC-USDT

@@ -2419,23 +2419,23 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 		samplePremiumPpm                    int32
 		numPerpetuals                       int
 		// Should be <= `numPerpetuals`.
-		numPerpetualsWithValidIndexPrice int
-		expectedNumSamples               int
+		numPerpetualsWithValidDaemonPrice int
+		expectedNumSamples                int
 	}{
 		"Positive premium": {
 			currentFundingSampleEpochStartBlock: 23,
 			blockHeight:                         23,
 			samplePremiumPpm:                    100,
 			numPerpetuals:                       10,
-			numPerpetualsWithValidIndexPrice:    10,
+			numPerpetualsWithValidDaemonPrice:   10,
 			expectedNumSamples:                  10,
 		},
-		"Positive premium, only 1 perpetual has valid index price": {
+		"Positive premium, only 1 perpetual has valid daemon price": {
 			currentFundingSampleEpochStartBlock: 23,
 			blockHeight:                         23,
 			samplePremiumPpm:                    100,
 			numPerpetuals:                       10,
-			numPerpetualsWithValidIndexPrice:    1,
+			numPerpetualsWithValidDaemonPrice:   1,
 			expectedNumSamples:                  1,
 		},
 		"Negative premium": {
@@ -2443,7 +2443,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			blockHeight:                         24,
 			samplePremiumPpm:                    -150,
 			numPerpetuals:                       10,
-			numPerpetualsWithValidIndexPrice:    10,
+			numPerpetualsWithValidDaemonPrice:   10,
 			expectedNumSamples:                  10,
 		},
 		"Not start of new funding-sample epoch, still produce samples": {
@@ -2451,7 +2451,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			blockHeight:                         25,
 			samplePremiumPpm:                    100,
 			numPerpetuals:                       10,
-			numPerpetualsWithValidIndexPrice:    10,
+			numPerpetualsWithValidDaemonPrice:   10,
 			expectedNumSamples:                  10,
 		},
 		"Zero premiums": {
@@ -2459,7 +2459,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			blockHeight:                         24,
 			samplePremiumPpm:                    0,
 			numPerpetuals:                       10,
-			numPerpetualsWithValidIndexPrice:    10,
+			numPerpetualsWithValidDaemonPrice:   10,
 			expectedNumSamples:                  0,
 		},
 	}
@@ -2480,12 +2480,12 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 
 			pc := keepertest.PerpetualsKeepersWithClobHelpers(t, &mockPricePremiumGetter)
 
-			// MockTimeProvider needed for to use `constants.TimeT` as cutoff time of index price cache query.
+			// MockTimeProvider needed for to use `constants.TimeT` as cutoff time of daemon price cache query.
 			pc.MockTimeProvider.On("Now").Return(constants.TimeT)
 
-			pc.IndexPriceCache.UpdatePrices(
+			pc.DaemonPriceCache.UpdatePrices(
 				pricefeed_testutil.GetTestMarketPriceUpdates(
-					tc.numPerpetualsWithValidIndexPrice,
+					tc.numPerpetualsWithValidDaemonPrice,
 				),
 			)
 
@@ -2512,7 +2512,7 @@ func TestGetAddPremiumVotes_Success(t *testing.T) {
 			mockPricePremiumGetter.AssertNumberOfCalls(
 				t,
 				"GetPricePremiumForPerpetual",
-				tc.numPerpetualsWithValidIndexPrice,
+				tc.numPerpetualsWithValidDaemonPrice,
 			)
 
 			// Check that new premium votes are returned.

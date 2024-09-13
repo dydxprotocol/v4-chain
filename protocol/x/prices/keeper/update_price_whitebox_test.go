@@ -1,11 +1,12 @@
 package keeper
 
 import (
+	"testing"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const (
@@ -30,14 +31,14 @@ var (
 func TestShouldProposePrice(t *testing.T) {
 	tests := map[string]struct {
 		proposalPrice            uint64
-		indexPrice               uint64
+		daemonPrice              uint64
 		historicalSmoothedPrices []uint64
 		expectShouldPropose      bool
 		expectReasons            []proposeCancellationReason
 	}{
-		"Should not propose: proposal price is smoothed price, crosses index price": {
+		"Should not propose: proposal price is smoothed price, crosses daemon price": {
 			proposalPrice: testPriceCrossesOraclePrice,
-			indexPrice:    testPriceLargeValidUpdate,
+			daemonPrice:   testPriceLargeValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceCrossesOraclePrice,
 				testPriceValidUpdate,
@@ -65,7 +66,7 @@ func TestShouldProposePrice(t *testing.T) {
 		},
 		"Should not propose: proposal price is smoothed price, does not meet min price change": {
 			proposalPrice: testPriceDoesNotMeetMinPriceChange,
-			indexPrice:    testPriceLargeValidUpdate,
+			daemonPrice:   testPriceLargeValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceDoesNotMeetMinPriceChange,
 				testPriceValidUpdate,
@@ -90,9 +91,9 @@ func TestShouldProposePrice(t *testing.T) {
 				},
 			},
 		},
-		"Should not propose: proposal price is index price, does not meet min price change": {
+		"Should not propose: proposal price is daemon price, does not meet min price change": {
 			proposalPrice: testPriceDoesNotMeetMinPriceChange,
-			indexPrice:    testPriceDoesNotMeetMinPriceChange,
+			daemonPrice:   testPriceDoesNotMeetMinPriceChange,
 			historicalSmoothedPrices: []uint64{
 				testPriceLargeValidUpdate,
 				testPriceValidUpdate,
@@ -117,9 +118,9 @@ func TestShouldProposePrice(t *testing.T) {
 				},
 			},
 		},
-		"Should not propose: a historical smoothed price crosses index price": {
+		"Should not propose: a historical smoothed price crosses daemon price": {
 			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
+			daemonPrice:   testPriceValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceValidUpdate,
 				testPriceDoesNotMeetMinPriceChange,
@@ -144,9 +145,9 @@ func TestShouldProposePrice(t *testing.T) {
 				},
 			},
 		},
-		"Should not propose: multiple historical smoothed prices cross index price": {
+		"Should not propose: multiple historical smoothed prices cross daemon price": {
 			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
+			daemonPrice:   testPriceValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceValidUpdate,
 				testPriceCrossesOraclePrice,
@@ -174,7 +175,7 @@ func TestShouldProposePrice(t *testing.T) {
 		},
 		"Should not propose: a historical smoothed price does not meet min price change": {
 			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
+			daemonPrice:   testPriceValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceValidUpdate,
 				testPriceDoesNotMeetMinPriceChange,
@@ -201,7 +202,7 @@ func TestShouldProposePrice(t *testing.T) {
 		},
 		"Should not propose: multiple historical smoothed prices do not meet min price change": {
 			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
+			daemonPrice:   testPriceValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceValidUpdate,
 				testPriceDoesNotMeetMinPriceChange,
@@ -229,7 +230,7 @@ func TestShouldProposePrice(t *testing.T) {
 		},
 		"Should not propose: historical smoothed price crosses and does not meet min price change": {
 			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
+			daemonPrice:   testPriceValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceValidUpdate,
 				testPriceCrossesAndDoesNotMeetMinChange,
@@ -256,7 +257,7 @@ func TestShouldProposePrice(t *testing.T) {
 		},
 		"Should not propose: proposal price crosses and does not meet min price change": {
 			proposalPrice: testPriceCrossesAndDoesNotMeetMinChange,
-			indexPrice:    testPriceValidUpdate,
+			daemonPrice:   testPriceValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceValidUpdate,
 				testPriceLargeValidUpdate,
@@ -283,7 +284,7 @@ func TestShouldProposePrice(t *testing.T) {
 		},
 		"Should not propose: multiple historical smoothed prices issues": {
 			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceValidUpdate,
+			daemonPrice:   testPriceValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceValidUpdate,
 				testPriceDoesNotMeetMinPriceChange,
@@ -311,7 +312,7 @@ func TestShouldProposePrice(t *testing.T) {
 		},
 		"Should not propose: multiple issues": {
 			proposalPrice: testPriceDoesNotMeetMinPriceChange,
-			indexPrice:    testPriceValidUpdate,
+			daemonPrice:   testPriceValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceValidUpdate,
 				testPriceDoesNotMeetMinPriceChange,
@@ -339,7 +340,7 @@ func TestShouldProposePrice(t *testing.T) {
 		},
 		"Should propose": {
 			proposalPrice: testPriceValidUpdate,
-			indexPrice:    testPriceLargeValidUpdate,
+			daemonPrice:   testPriceLargeValidUpdate,
 			historicalSmoothedPrices: []uint64{
 				testPriceValidUpdate,
 				testPriceLargeValidUpdate,
@@ -371,7 +372,7 @@ func TestShouldProposePrice(t *testing.T) {
 			actualShouldPropose, actualReasons := shouldProposePrice(
 				tc.proposalPrice,
 				testMarketParamPrice,
-				tc.indexPrice,
+				tc.daemonPrice,
 				tc.historicalSmoothedPrices,
 			)
 			require.Equal(t, tc.expectShouldPropose, actualShouldPropose)

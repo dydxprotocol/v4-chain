@@ -701,8 +701,8 @@ func New(
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
 	// The in-memory data structure is shared by the x/prices module and PriceFeed daemon.
-	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
-	app.Server.WithPriceFeedMarketToExchangePrices(indexPriceCache)
+	daemonPriceCache := pricefeedtypes.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
+	app.Server.WithPriceFeedMarketToExchangePrices(daemonPriceCache)
 
 	// Setup server for deleveraging messages. The server will wait for gRPC messages containing
 	// subaccounts with open perp positions and then encode them into an in-memory slice shared by
@@ -796,7 +796,7 @@ func New(
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
-		indexPriceCache,
+		daemonPriceCache,
 		pricesmoduletypes.NewMarketToSmoothedSpotPrices(pricesmoduletypes.SmoothedPriceTrackingBlockHistoryLength),
 		timeProvider,
 		app.IndexerEventManager,
@@ -893,7 +893,7 @@ func New(
 
 	aggregator := veaggregator.NewVeAggregator(
 		logger,
-		indexPriceCache,
+		daemonPriceCache,
 		app.PricesKeeper,
 		aggregatorFn,
 	)

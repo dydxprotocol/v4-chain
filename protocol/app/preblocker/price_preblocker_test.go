@@ -34,7 +34,7 @@ type PreBlockTestSuite struct {
 	ctx               sdk.Context
 	marketParamPrices []pricestypes.MarketParamPrice
 	pricesKeeper      *pk.Keeper
-	indexPriceCache   *pricefeedtypes.MarketToExchangePrices
+	daemonPriceCache  *pricefeedtypes.MarketToExchangePrices
 	priceApplier      *priceapplier.PriceApplier
 	handler           *preblocker.PreBlockHandler
 	ccvStore          *mocks.CCValidatorStore
@@ -50,11 +50,11 @@ func TestPreBlockTestSuite(t *testing.T) {
 func (s *PreBlockTestSuite) SetupTest() {
 	s.validator = constants.AliceEthosConsAddress
 
-	ctx, pricesKeeper, _, indexPriceCahce, _, mockTimeProvider := keepertest.PricesKeepers(s.T())
+	ctx, pricesKeeper, _, daemonPriceCahce, _, mockTimeProvider := keepertest.PricesKeepers(s.T())
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	s.ctx = ctx
 	s.pricesKeeper = pricesKeeper
-	s.indexPriceCache = indexPriceCahce
+	s.daemonPriceCache = daemonPriceCahce
 
 	s.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
 	s.extCodec = vecodec.NewDefaultExtendedCommitCodec()
@@ -72,7 +72,7 @@ func (s *PreBlockTestSuite) SetupTest() {
 
 	aggregator := veaggregator.NewVeAggregator(
 		s.logger,
-		s.indexPriceCache,
+		s.daemonPriceCache,
 		*s.pricesKeeper,
 		aggregationFn,
 	)
@@ -97,7 +97,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			s.logger,
 			s.priceApplier,
 		)
-		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
 
 		prePrices := s.getAllMarketPrices()
 
@@ -115,7 +115,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			s.priceApplier,
 		)
 
-		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
 
 		prePrices := s.getAllMarketPrices()
 
@@ -133,7 +133,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			s.priceApplier,
 		)
 
-		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
 
 		priceBz, err := big.NewInt(1).GobEncode()
 		s.Require().NoError(err)
@@ -171,7 +171,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			s.priceApplier,
 		)
 
-		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
 
 		price1 := uint64(1)
 		price2 := uint64(2)
@@ -240,7 +240,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			s.priceApplier,
 		)
 
-		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
 
 		spotPrice1 := uint64(1)
 		pnlPrice1 := uint64(10)
@@ -318,7 +318,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			s.priceApplier,
 		)
 
-		s.indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
 
 		_, err := s.handler.PreBlocker(s.ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{},

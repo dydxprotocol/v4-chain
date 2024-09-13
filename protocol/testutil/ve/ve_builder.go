@@ -194,7 +194,7 @@ func GetEmptyProposedLastCommit() cometabci.CommitInfo {
 	}
 }
 
-func GetIndexPriceCacheEncodedPrice(price *big.Int) ([]byte, error) {
+func GetDaemonPriceCacheEncodedPrice(price *big.Int) ([]byte, error) {
 	if price.Sign() < 0 {
 		return nil, fmt.Errorf("price must be non-negative %v", price.String())
 	}
@@ -202,7 +202,7 @@ func GetIndexPriceCacheEncodedPrice(price *big.Int) ([]byte, error) {
 	return price.GobEncode()
 }
 
-func GetIndexPriceCacheDecodedPrice(priceBz []byte) (*big.Int, error) {
+func GetDaemonPriceCacheDecodedPrice(priceBz []byte) (*big.Int, error) {
 	var price big.Int
 	err := price.GobDecode(priceBz)
 	if err != nil {
@@ -271,12 +271,12 @@ func GetInjectedExtendedCommitInfoForTestApp(
 ) (cometabci.ExtendedCommitInfo, []byte, error) {
 	var pricesBz = make([]vetypes.PricePair, len(prices))
 	for marketId, price := range prices {
-		encodedSpotPrice, err := GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(price.SpotPrice))
+		encodedSpotPrice, err := GetDaemonPriceCacheEncodedPrice(new(big.Int).SetUint64(price.SpotPrice))
 		if err != nil {
 			return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to encode price: %w", err)
 		}
 
-		encodedPnlPrice, err := GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(price.PnlPrice))
+		encodedPnlPrice, err := GetDaemonPriceCacheEncodedPrice(new(big.Int).SetUint64(price.PnlPrice))
 		if err != nil {
 			return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to encode price: %w", err)
 		}

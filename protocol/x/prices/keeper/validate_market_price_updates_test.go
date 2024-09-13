@@ -32,24 +32,24 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 	tests := map[string]struct {
 		// Setup.
 		updateMarketPrice *types.MarketPriceUpdate
-		indexPrices       []*api.MarketPriceUpdate
+		daemonPrices      []*api.MarketPriceUpdate
 	}{
-		"Index price does not exist": {
+		"daemon price does not exist": {
 			updateMarketPrice: &types.MarketPriceUpdate{
 				MarketId:  constants.MarketId0,
 				SpotPrice: 11,
 				PnlPrice:  11,
 			},
-			// Skipping price cache update, so the index price does not exist.
+			// Skipping price cache update, so the daemon price does not exist.
 		},
-		"Index price crossing = true, old_ticks > 1, new_ticks <= sqrt(old_ticks) = false": {
+		"daemon price crossing = true, old_ticks > 1, new_ticks <= sqrt(old_ticks) = false": {
 			updateMarketPrice: &types.MarketPriceUpdate{
 				MarketId:  constants.MarketId0,
 				SpotPrice: price_5_015_000_000,
 				PnlPrice:  price_5_015_000_000,
 			},
 
-			indexPrices: []*api.MarketPriceUpdate{
+			daemonPrices: []*api.MarketPriceUpdate{
 				{
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
@@ -62,13 +62,13 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 				},
 			},
 		},
-		"Index price crossing = true, old_ticks <= 1, new_ticks <= old_ticks = false": {
+		"daemon price crossing = true, old_ticks <= 1, new_ticks <= old_ticks = false": {
 			updateMarketPrice: &types.MarketPriceUpdate{
 				MarketId:  constants.MarketId0,
 				SpotPrice: price_5_015_000_000,
 				PnlPrice:  price_5_015_000_000,
 			},
-			indexPrices: []*api.MarketPriceUpdate{
+			daemonPrices: []*api.MarketPriceUpdate{
 				{
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
@@ -81,13 +81,13 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 				},
 			},
 		},
-		"Index price trends in the opposite direction of update price from current price": {
+		"daemon price trends in the opposite direction of update price from current price": {
 			updateMarketPrice: &types.MarketPriceUpdate{
 				MarketId:  constants.MarketId0,
 				SpotPrice: price_5_005_000_000,
 				PnlPrice:  price_5_005_000_000,
 			},
-			indexPrices: []*api.MarketPriceUpdate{
+			daemonPrices: []*api.MarketPriceUpdate{
 				{
 					MarketId: constants.MarketId0,
 					ExchangePrices: []*api.ExchangePrice{
@@ -104,11 +104,11 @@ func TestPerformStatefulPriceUpdateValidation_SkipNonDeterministicCheck_Valid(t 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, k, _, daemonPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			keepertest.CreateTestMarkets(t, ctx, k)
-			indexPriceCache.UpdatePrices(tc.indexPrices)
+			daemonPriceCache.UpdatePrices(tc.daemonPrices)
 
 			// Run.
 			isSpotValid, isPnlValid := k.PerformStatefulPriceUpdateValidation(ctx, tc.updateMarketPrice) // skips non-deterministic checks.

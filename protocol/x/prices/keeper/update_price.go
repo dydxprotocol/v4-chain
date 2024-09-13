@@ -20,13 +20,13 @@ import (
 // GetValidMarketPriceUpdates returns a msg containing a list of "valid" price updates that should
 // be included in a block. A "valid" price update means:
 // 1) All values used to compute the valid price must exist and be valid:
-// - the index price exists and is nonzero.
+// - the daemon price exists and is nonzero.
 // - the smoothed price exists and is nonzero.
-// 2) The smoothed price and the index price must be on the same side compared to the oracle price.
-// 3) The proposed price is either the index price or the smoothed price, depending on which is closer to the
-// oracle price.
+// 2) The smoothed price and the daemon price must be on the same side compared to the oracle (spot) price.
+// 3) The proposed price is either the daemon price or the smoothed price, depending on which is closer to the
+// oracle (spot) price.
 // 4) The proposed price meets the minimum price change ppm requirement.
-// Note: the list of market price updates can be empty if there are no "valid" index prices, smoothed prices, and/or
+// Note: the list of market price updates can be empty if there are no "valid" daemon prices, smoothed prices, and/or
 // proposed prices for any market.
 func (k Keeper) GetValidMarketSpotPriceUpdates(
 	ctx sdk.Context,
@@ -55,27 +55,27 @@ func (k Keeper) GetValidMarketSpotPriceUpdates(
 		allMarketParams[i] = marketParamPrice.Param
 	}
 
-	// 2. Get all index prices from in-memory cache.
-	allIndexPrices := k.indexPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
+	// 2. Get all daemon prices from in-memory cache.
+	allDaemonPrices := k.daemonPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
 
 	// 3. Collect all "valid" price updates.
 	updates := make([]*types.MarketSpotPriceUpdate, 0, len(allMarketParamPrices))
 	for _, marketParamPrice := range allMarketParamPrices {
 		marketId := marketParamPrice.Param.Id
-		indexPrice, indexPriceExists := allIndexPrices[marketId]
+		daemonPrice, daemonPriceExists := allDaemonPrices[marketId]
 
 		marketMetricsLabel := pricefeedmetrics.GetLabelForMarketId(marketId)
 
 		// Skip proposal logic in the event of invalid inputs, which is only likely to occur around network genesis.
-		if !indexPriceExists {
-			metrics.IncrCountMetricWithLabels(types.ModuleName, metrics.IndexPriceDoesNotExist, marketMetricsLabel)
-			// Conditionally log missing index prices at least 20s after genesis/restart/market creation. We expect that
-			// there will be a delay in populating index prices after network genesis or a network restart, or when a
+		if !daemonPriceExists {
+			metrics.IncrCountMetricWithLabels(types.ModuleName, metrics.DaemonPriceDoesNotExist, marketMetricsLabel)
+			// Conditionally log missing daemon prices at least 20s after genesis/restart/market creation. We expect that
+			// there will be a delay in populating daemon prices after network genesis or a network restart, or when a
 			// market is created, it takes the daemon some time to warm up.
 			if !k.IsRecentlyAvailable(ctx, marketId) {
 				log.ErrorLog(
 					ctx,
-					"Index price for market does not exist",
+					"daemon price for market does not exist",
 					constants.MarketIdLogKey,
 					marketId,
 				)
@@ -83,13 +83,13 @@ func (k Keeper) GetValidMarketSpotPriceUpdates(
 			continue
 		}
 
-		// Index prices of 0 are unexpected. In this scenario, we skip the proposal logic for the market and report an
+		// daemon prices of 0 are unexpected. In this scenario, we skip the proposal logic for the market and report an
 		// error.
-		if indexPrice == 0 {
-			metrics.IncrCountMetricWithLabels(types.ModuleName, metrics.IndexPriceIsZero, marketMetricsLabel)
+		if daemonPrice == 0 {
+			metrics.IncrCountMetricWithLabels(types.ModuleName, metrics.DaemonPriceIsZero, marketMetricsLabel)
 			log.ErrorLog(
 				ctx,
-				"Unexpected error: index price for market is zero",
+				"Unexpected error: daemon price for market is zero",
 				constants.MarketIdLogKey,
 				marketId,
 			)
@@ -98,11 +98,11 @@ func (k Keeper) GetValidMarketSpotPriceUpdates(
 
 		historicalSmoothedPrices := k.marketToSmoothedPrices.GetHistoricalSmoothedSpotPrices(marketId)
 		// We generally expect to have a smoothed price history for each market, except during the first few blocks
-		// after network genesis or a network restart. In this scenario, we use the index price as the smoothed price.
+		// after network genesis or a network restart. In this scenario, we use the daemon price as the smoothed price.
 		if len(historicalSmoothedPrices) == 0 {
 			// Conditionally log missing smoothed prices at least 20s after genesis/restart/market creation. We expect
 			// that there will be a delay in populating historical smoothed prices after network genesis or a network
-			// restart, or when a market is created, because they depend on present index prices, and it takes the
+			// restart, or when a market is created, because they depend on present daemon prices, and it takes the
 			// daemon some time to warm up.
 			if !k.IsRecentlyAvailable(ctx, marketId) {
 				log.ErrorLog(
@@ -112,27 +112,27 @@ func (k Keeper) GetValidMarketSpotPriceUpdates(
 					marketId,
 				)
 			}
-			historicalSmoothedPrices = []uint64{indexPrice}
+			historicalSmoothedPrices = []uint64{daemonPrice}
 		}
 		smoothedPrice := historicalSmoothedPrices[0]
 
-		proposalPrice := getProposalPrice(smoothedPrice, indexPrice, marketParamPrice.Price.SpotPrice)
+		proposalPrice := getProposalPrice(smoothedPrice, daemonPrice, marketParamPrice.Price.SpotPrice)
 
 		shouldPropose, reasons := shouldProposePrice(
 			proposalPrice,
 			marketParamPrice,
-			indexPrice,
+			daemonPrice,
 			historicalSmoothedPrices,
 		)
 
-		// If the index price would have updated, track how the proposal price changes the update
+		// If the daemon price would have updated, track how the proposal price changes the update
 		// decision / amount.
-		if isAboveRequiredMinSpotPriceChange(marketParamPrice, indexPrice) {
+		if isAboveRequiredMinSpotPriceChange(marketParamPrice, daemonPrice) {
 			logPriceUpdateBehavior(
 				ctx,
 				marketParamPrice,
 				proposalPrice,
-				indexPrice,
+				daemonPrice,
 				marketMetricsLabel,
 				shouldPropose,
 				reasons,
@@ -161,7 +161,7 @@ func logPriceUpdateBehavior(
 	ctx sdk.Context,
 	marketParamPrice types.MarketParamPrice,
 	proposalPrice uint64,
-	indexPrice uint64,
+	daemonPrice uint64,
 	marketMetricsLabel gometrics.Label,
 	shouldPropose bool,
 	reasons []proposeCancellationReason,
@@ -187,11 +187,11 @@ func logPriceUpdateBehavior(
 	log.InfoLog(
 		ctx,
 		fmt.Sprintf(
-			"Proposal price (%v) %v for market (%v), index price (%v), oracle price (%v), min price change (%v)",
+			"Proposal price (%v) %v for market (%v), daemon price (%v), oracle price (%v), min price change (%v)",
 			proposalPrice,
 			loggingVerb,
 			marketParamPrice.Param.Id,
-			indexPrice,
+			daemonPrice,
 			marketParamPrice.Price.SpotPrice,
 			getMinPriceChangeAmountForSpotMarket(marketParamPrice),
 		),
@@ -210,7 +210,7 @@ type proposeCancellationReason struct {
 func shouldProposePrice(
 	proposalPrice uint64,
 	marketParamPrice types.MarketParamPrice,
-	indexPrice uint64,
+	daemonPrice uint64,
 	historicalSmoothedPrices []uint64,
 ) (
 	shouldPropose bool,
@@ -219,7 +219,7 @@ func shouldProposePrice(
 	reasons = make([]proposeCancellationReason, 0, 4)
 	shouldPropose = true
 
-	// If any smoothed price crosses the old price compared to the index price, do not update.
+	// If any smoothed price crosses the old price compared to the daemon price, do not update.
 	reasons = append(
 		reasons,
 		proposeCancellationReason{
@@ -229,9 +229,9 @@ func shouldProposePrice(
 	)
 	for _, smoothedPrice := range historicalSmoothedPrices {
 		if isCrossingOldPrice(PriceTuple{
-			OldPrice:   marketParamPrice.Price.SpotPrice,
-			IndexPrice: indexPrice,
-			NewPrice:   smoothedPrice,
+			OldPrice:    marketParamPrice.Price.SpotPrice,
+			DaemonPrice: daemonPrice,
+			NewPrice:    smoothedPrice,
 		}) {
 			shouldPropose = false
 			reasons[len(reasons)-1].Value = true
@@ -239,7 +239,7 @@ func shouldProposePrice(
 		}
 	}
 
-	// If the proposal price crosses the old price compared to the index price, do not update.
+	// If the proposal price crosses the old price compared to the daemon price, do not update.
 	reasons = append(
 		reasons,
 		proposeCancellationReason{
@@ -247,9 +247,9 @@ func shouldProposePrice(
 		},
 	)
 	if isCrossingOldPrice(PriceTuple{
-		OldPrice:   marketParamPrice.Price.SpotPrice,
-		IndexPrice: indexPrice,
-		NewPrice:   proposalPrice,
+		OldPrice:    marketParamPrice.Price.SpotPrice,
+		DaemonPrice: daemonPrice,
+		NewPrice:    proposalPrice,
 	}) {
 		shouldPropose = false
 		reasons[len(reasons)-1].Value = true

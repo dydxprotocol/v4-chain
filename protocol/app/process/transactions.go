@@ -99,7 +99,7 @@ func DecodeProcessProposalTxs(
 // Returns nil if all are valid. Otherwise, returns error.
 //
 // Exception: for UpdateMarketPricesTx, we perform "in-memory stateful" validation
-// to ensure that the new proposed prices are "valid" in comparison to index prices.
+// to ensure that the new proposed prices are "valid" in comparison to daemon prices.
 func (ppt *ProcessProposalTxs) Validate() error {
 	// Validate single msg txs.
 	singleTxs := []SingleMsgTx{

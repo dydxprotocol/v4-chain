@@ -19,7 +19,7 @@ type ExchangeToMarketPrices interface {
 		marketPriceTimestamp *MarketPriceTimestamp,
 	)
 	GetAllPrices() map[ExchangeId][]MarketPriceTimestamp
-	GetIndexPrice(
+	GetDaemonPrice(
 		marketId MarketId,
 		cutoffTime time.Time,
 		resolver types.Resolver,
@@ -107,9 +107,9 @@ func (exchangeToMarketPrices *ExchangeToMarketPricesImpl) GetAllPrices() map[Exc
 	return exchangeIdToPrices
 }
 
-// GetIndexPrice returns the index price for a given marketId, disallowing prices that are older than cutoffTime.
+// GetDaemonPrice returns the daemon price for a given marketId, disallowing prices that are older than cutoffTime.
 // If no valid prices are found, an error is returned.
-func (exchangeToMarketPrices *ExchangeToMarketPricesImpl) GetIndexPrice(
+func (exchangeToMarketPrices *ExchangeToMarketPricesImpl) GetDaemonPrice(
 	marketId MarketId,
 	cutoffTime time.Time,
 	resolver types.Resolver,

@@ -35,7 +35,7 @@ type PricesKeeper interface {
 
 	GetAllMarketParamPrices(ctx sdk.Context) (marketPramPrices []MarketParamPrice, err error)
 	GetMarketParam(ctx sdk.Context, id uint32) (marketParam MarketParam, exists bool)
-	GetMarketIdToValidIndexPrice(ctx sdk.Context) (marketIdToIndexPrice map[uint32]MarketSpotPrice)
+	GetMarketIdToValidDaemonPrice(ctx sdk.Context) (marketIdToDaemonPrice map[uint32]MarketSpotPrice)
 	GetAllMarketParams(ctx sdk.Context) (marketParams []MarketParam)
 	GetMarketPrice(ctx sdk.Context, id uint32) (marketPrice MarketPrice, err error)
 	GetAllMarketPrices(ctx sdk.Context) (marketPrices []MarketPrice)

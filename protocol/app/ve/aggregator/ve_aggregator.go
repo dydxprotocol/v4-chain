@@ -56,7 +56,7 @@ type MedianAggregator struct {
 
 func NewVeAggregator(
 	logger log.Logger,
-	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
+	daemonPriceCache *pricefeedtypes.MarketToExchangePrices,
 	pricekeeper pk.Keeper,
 	aggregateFn veaggregator.AggregateFn,
 ) VoteAggregator {

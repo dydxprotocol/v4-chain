@@ -30,7 +30,7 @@ func PricesKeepers(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 	storeKey storetypes.StoreKey,
-	indexPriceCache *pricefeedserver_types.MarketToExchangePrices,
+	daemonPriceCache *pricefeedserver_types.MarketToExchangePrices,
 	marketToSmoothedPrices types.MarketToSmoothedPrices,
 	mockTimeProvider *mocks.TimeProvider,
 ) {
@@ -42,13 +42,13 @@ func PricesKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		keeper, storeKey, indexPriceCache, marketToSmoothedPrices, mockTimeProvider =
+		keeper, storeKey, daemonPriceCache, marketToSmoothedPrices, mockTimeProvider =
 			createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 
 		return []GenesisInitializer{keeper}
 	})
 
-	return ctx, keeper, storeKey, indexPriceCache, marketToSmoothedPrices, mockTimeProvider
+	return ctx, keeper, storeKey, daemonPriceCache, marketToSmoothedPrices, mockTimeProvider
 }
 
 func createPricesKeeper(
@@ -67,7 +67,7 @@ func createPricesKeeper(
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
-	indexPriceCache := pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
+	daemonPriceCache := pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 
 	marketToSmoothedPrices := types.NewMarketToSmoothedSpotPrices(types.SmoothedPriceTrackingBlockHistoryLength)
 
@@ -83,7 +83,7 @@ func createPricesKeeper(
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
-		indexPriceCache,
+		daemonPriceCache,
 		marketToSmoothedPrices,
 		mockTimeProvider,
 		mockIndexerEventsManager,
@@ -93,7 +93,7 @@ func createPricesKeeper(
 		},
 	)
 
-	return k, storeKey, indexPriceCache, marketToSmoothedPrices, mockTimeProvider
+	return k, storeKey, daemonPriceCache, marketToSmoothedPrices, mockTimeProvider
 }
 
 // CreateTestMarkets creates a standard set of test markets for testing.

@@ -140,10 +140,10 @@ func getSubaccountUsdcBalance(subaccount satypes.Subaccount) int64 {
 
 func TestFunding(t *testing.T) {
 	tests := map[string]struct {
-		testHumanOrders   []clobtest.TestHumanOrder
-		initialIndexPrice map[uint32]string
-		// index price to be used in premium calculation
-		indexPriceForPremium map[uint32]string
+		testHumanOrders    []clobtest.TestHumanOrder
+		initialDaemonPrice map[uint32]string
+		// daemon price to be used in premium calculation
+		daemonPriceForPremium map[uint32]string
 		// oracle price for funding index calculation
 		oracelPriceForFundingIndex map[uint32]string
 		// address -> funding
@@ -151,7 +151,7 @@ func TestFunding(t *testing.T) {
 		expectedFundingPremiums       []perptypes.MarketPremiums
 		expectedFundingIndex          int64
 	}{
-		"Index price below impact bid, positive funding, longs pay shorts": {
+		"daemon price below impact bid, positive funding, longs pay shorts": {
 			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
@@ -181,10 +181,10 @@ func TestFunding(t *testing.T) {
 					HumanSize:  "0.2",
 				},
 			},
-			initialIndexPrice: map[uint32]string{
+			initialDaemonPrice: map[uint32]string{
 				TestMarketId: "28002",
 			},
-			indexPriceForPremium: map[uint32]string{
+			daemonPriceForPremium: map[uint32]string{
 				TestMarketId: "27960",
 			},
 			oracelPriceForFundingIndex: map[uint32]string{
@@ -223,7 +223,7 @@ func TestFunding(t *testing.T) {
 				},
 			},
 		},
-		"Index price above impact ask, negative funding, final funding rate clamped": {
+		"daemon price above impact ask, negative funding, final funding rate clamped": {
 			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
@@ -253,10 +253,10 @@ func TestFunding(t *testing.T) {
 					HumanSize:  "0.2",
 				},
 			},
-			initialIndexPrice: map[uint32]string{
+			initialDaemonPrice: map[uint32]string{
 				0: "28002",
 			},
-			indexPriceForPremium: map[uint32]string{
+			daemonPriceForPremium: map[uint32]string{
 				0: "34000",
 			},
 			oracelPriceForFundingIndex: map[uint32]string{
@@ -297,7 +297,7 @@ func TestFunding(t *testing.T) {
 				},
 			},
 		},
-		"Index price between impact bid and ask, zero funding": {
+		"daemon price between impact bid and ask, zero funding": {
 			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
@@ -327,10 +327,10 @@ func TestFunding(t *testing.T) {
 					HumanSize:  "0.2",
 				},
 			},
-			initialIndexPrice: map[uint32]string{
+			initialDaemonPrice: map[uint32]string{
 				0: "28002",
 			},
-			indexPriceForPremium: map[uint32]string{
+			daemonPriceForPremium: map[uint32]string{
 				0: "28003", // Between impact bid and ask
 			},
 			oracelPriceForFundingIndex: map[uint32]string{
@@ -358,7 +358,7 @@ func TestFunding(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).
-				// UpdateIndexPrice only contacts the tApp.App.Server causing non-determinism in the
+				// UpdateDaemonPrice only contacts the tApp.App.Server causing non-determinism in the
 				// other App instances in TestApp used for non-determinism checking.
 				WithNonDeterminismChecksEnabled(false).
 				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
@@ -383,15 +383,15 @@ func TestFunding(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
-			// Update initial index price. This price is meant to be within the impact price range,
+			// Update initial daemon price. This price is meant to be within the impact price range,
 			// leading to zero sampled premiums.
-			pricefeed_testutil.UpdateIndexPrice(
+			pricefeed_testutil.UpdateDaemonPrice(
 				t,
 				ctx,
 				tApp.App,
 				TestMarketId,
-				pricestest.MustHumanPriceToMarketPrice(tc.initialIndexPrice[TestMarketId], -5),
-				// Only index price past a certain threshold is used for premium calculation.
+				pricestest.MustHumanPriceToMarketPrice(tc.initialDaemonPrice[TestMarketId], -5),
+				// Only daemon price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
 			)
@@ -407,14 +407,14 @@ func TestFunding(t *testing.T) {
 			// Zero premium samples since we just entered a new `funding-tick` epoch.
 			require.Equal(t, uint32(0), premiumSamples.NumPremiums)
 
-			// Update index price for each validator so they use this price for premium calculation.
-			pricefeed_testutil.UpdateIndexPrice(
+			// Update daemon price for each validator so they use this price for premium calculation.
+			pricefeed_testutil.UpdateDaemonPrice(
 				t,
 				ctx,
 				tApp.App,
 				TestMarketId,
-				pricestest.MustHumanPriceToMarketPrice(tc.indexPriceForPremium[TestMarketId], -5),
-				// Only index price past a certain threshold is used for premium calculation.
+				pricestest.MustHumanPriceToMarketPrice(tc.daemonPriceForPremium[TestMarketId], -5),
+				// Only daemon price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
 			)

@@ -39,11 +39,11 @@ var (
 	btcTicker = `{"symbol":"BTCUSDT","bid1Price":"25920.44","bid1Size":"3.790133","ask1Price":"25920.45",
 		"ask1Size":"0.54281","lastPrice":"25922.39","prevPrice24h":"25899.68","price24hPcnt":"0.0009",
 		"highPrice24h":"26428.56","lowPrice24h":"25721.76","turnover24h":"151938440.056374",
-		"volume24h":"5833.570731","usdIndexPrice":"25918.96023518"}`
+		"volume24h":"5833.570731","usdDaemonPrice":"25918.96023518"}`
 	ethTicker = `{"symbol":"ETHUSDT","bid1Price":"1739.06","bid1Size":"39.30781","ask1Price":"1739.07",
 		"ask1Size":"30.25957","lastPrice":"1739.07","prevPrice24h":"1742.41","price24hPcnt":"-0.0019",
 		"highPrice24h":"1766.34","lowPrice24h":"1724.17","turnover24h":"92630762.1223188",
-		"volume24h":"53110.43746","usdIndexPrice":"1738.98142043"}`
+		"volume24h":"53110.43746","usdDaemonPrice":"1738.98142043"}`
 	ResponseStringTemplate  = `{"retCode":0,"result":{"list":[%s]}}`
 	BtcResponseString       = fmt.Sprintf(ResponseStringTemplate, btcTicker)
 	EthResponseString       = fmt.Sprintf(ResponseStringTemplate, ethTicker)

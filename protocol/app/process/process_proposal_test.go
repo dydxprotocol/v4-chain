@@ -122,7 +122,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, daemonPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
 			ctx = vetesting.GetVeEnabledCtx(ctx, 3)
 
 			ctx = ctx.WithCometInfo(
@@ -138,7 +138,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
-			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
+			daemonPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 
 			mockClobKeeper := &mocks.ProcessClobKeeper{}
 			mockClobKeeper.On("RecordMevMetricsIsEnabled").Return(true)

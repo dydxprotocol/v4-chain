@@ -12,10 +12,10 @@ import (
 	pricefeedapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 )
 
-func GetTestMarketPriceUpdates(n int) (indexPrices []*pricefeedapi.MarketPriceUpdate) {
+func GetTestMarketPriceUpdates(n int) (daemonPrices []*pricefeedapi.MarketPriceUpdate) {
 	for i := 0; i < n; i++ {
-		indexPrices = append(
-			indexPrices,
+		daemonPrices = append(
+			daemonPrices,
 			&pricefeedapi.MarketPriceUpdate{
 				MarketId: uint32(i),
 				ExchangePrices: []*pricefeedapi.ExchangePrice{
@@ -25,10 +25,10 @@ func GetTestMarketPriceUpdates(n int) (indexPrices []*pricefeedapi.MarketPriceUp
 			},
 		)
 	}
-	return indexPrices
+	return daemonPrices
 }
 
-func UpdateIndexPrice(
+func UpdateDaemonPrice(
 	t *testing.T,
 	ctx sdk.Context,
 	tApp *app.App,

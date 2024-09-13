@@ -1512,7 +1512,7 @@ function add_subaccount() {
 	dasel put -t int -f "$GEN_FILE" ".app_state.subaccounts.subaccounts.[$IDX].asset_positions.[0].index" -v '0'
 }
 
-# Modify the genesis file to use only the test exchange for computing index prices. The test exchange is configured
+# Modify the genesis file to use only the test exchange for computing daemon prices. The test exchange is configured
 # to serve prices for BTC, ETH and LINK. This must be called after edit_genesis to ensure all markets exist.
 function update_genesis_use_test_exchange() {
 	GENESIS=$1/genesis.json
@@ -1562,7 +1562,7 @@ function update_genesis_use_test_exchange() {
 
 	# All remaining markets can just use the LINK ticker so the daemon will start. All markets must have at least 1
 	# exchange. With only one exchange configured, there should not be enough prices to meet the minimum exchange
-	# count, and these markets will not have index prices.
+	# count, and these markets will not have daemon prices.
 	for market_idx in {3..34}
 	do
 		dasel put -t string -f "$GENESIS" ".app_state.prices.market_params.[$market_idx].exchange_config_json" -v "$link_exchange_config_json"

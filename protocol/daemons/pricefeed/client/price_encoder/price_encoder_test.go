@@ -2,9 +2,13 @@ package price_encoder
 
 import (
 	"context"
-	"cosmossdk.io/log"
 	"errors"
 	"fmt"
+	"syscall"
+	"testing"
+	"time"
+
+	"cosmossdk.io/log"
 	pf_constants "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_function"
@@ -15,9 +19,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"syscall"
-	"testing"
-	"time"
 )
 
 const (
@@ -106,19 +107,19 @@ func TestUpdateMutableExchangeConfig_Mixed(t *testing.T) {
 
 type MockExchangeToMarketPrices struct {
 	types.ExchangeToMarketPrices
-	indexPrice          uint64
+	daemonPrice         uint64
 	numPricesMedianized int
 }
 
-func (m *MockExchangeToMarketPrices) GetIndexPrice(types.MarketId, time.Time, pft.Resolver) (uint64, int) {
-	return m.indexPrice, m.numPricesMedianized
+func (m *MockExchangeToMarketPrices) GetDaemonPrice(types.MarketId, time.Time, pft.Resolver) (uint64, int) {
+	return m.daemonPrice, m.numPricesMedianized
 }
 
 func TestConvertPriceUpdate_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		mutableExchangeConfig               *types.MutableExchangeMarketConfig
 		mutableMarketConfigs                []*types.MutableMarketConfig
-		adjustmentMarketIndexPrice          uint64
+		adjustmentMarketDaemonPrice         uint64
 		adjustmentMarketNumPricesMedianized int
 		expectedPrice                       uint64
 		expectedErr                         error
@@ -187,7 +188,7 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 					MinExchanges: 1,
 				},
 			},
-			adjustmentMarketIndexPrice:          constants.FiveBillion * 15_000, // 1.5x price.
+			adjustmentMarketDaemonPrice:         constants.FiveBillion * 15_000, // 1.5x price.
 			adjustmentMarketNumPricesMedianized: 1,
 			expectedPrice:                       uint64(1_500_000), // Expect 1.5e6.
 		},
@@ -215,11 +216,11 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 					MinExchanges: 1,
 				},
 			},
-			adjustmentMarketIndexPrice:          uint64(990_000_000), // 0.99.
+			adjustmentMarketDaemonPrice:         uint64(990_000_000), // 0.99.
 			adjustmentMarketNumPricesMedianized: 1,
 			expectedPrice:                       uint64(4_950_000_000), // 5 billion * 99%.
 		},
-		"Failure - invalid index price": {
+		"Failure - invalid daemon price": {
 			mutableExchangeConfig: &types.MutableExchangeMarketConfig{
 				Id: constants.ExchangeId1,
 				MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
@@ -243,10 +244,10 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 					MinExchanges: 2,
 				},
 			},
-			adjustmentMarketIndexPrice:          uint64(990_000_000),
+			adjustmentMarketDaemonPrice:         uint64(990_000_000),
 			adjustmentMarketNumPricesMedianized: 1, // Should be at least 2.
 			expectedErr: fmt.Errorf(
-				"Could not retrieve index price for market 2: expected median price from 2 exchanges, but got " +
+				"Could not retrieve daemon price for market 2: expected median price from 2 exchanges, but got " +
 					"1 exchanges)",
 			),
 		},
@@ -254,7 +255,7 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			emtp := MockExchangeToMarketPrices{
-				indexPrice:          tc.adjustmentMarketIndexPrice,
+				daemonPrice:         tc.adjustmentMarketDaemonPrice,
 				numPricesMedianized: tc.adjustmentMarketNumPricesMedianized,
 			}
 			pe, err := NewPriceEncoder(

@@ -36,12 +36,12 @@ func (_m *ExchangeToMarketPrices) GetAllPrices() map[string][]types.MarketPriceT
 	return r0
 }
 
-// GetIndexPrice provides a mock function with given fields: marketId, cutoffTime, resolver
-func (_m *ExchangeToMarketPrices) GetIndexPrice(marketId uint32, cutoffTime time.Time, resolver pricefeedtypes.Resolver) (uint64, int) {
+// GetDaemonPrice provides a mock function with given fields: marketId, cutoffTime, resolver
+func (_m *ExchangeToMarketPrices) GetDaemonPrice(marketId uint32, cutoffTime time.Time, resolver pricefeedtypes.Resolver) (uint64, int) {
 	ret := _m.Called(marketId, cutoffTime, resolver)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetIndexPrice")
+		panic("no return value specified for GetDaemonPrice")
 	}
 
 	var r0 uint64

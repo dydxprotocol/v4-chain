@@ -141,9 +141,9 @@ func TestGetAllMarketPrices(t *testing.T) {
 	)
 }
 
-func TestGetMarketIdToValidIndexPrice(t *testing.T) {
-	ctx, keeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
-	// Now() is used by `GetMarketIdToValidIndexPrice` internally compare with the cutoff time
+func TestGetMarketIdToValidDaemonPrice(t *testing.T) {
+	ctx, keeper, _, daemonPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	// Now() is used by `GetMarketIdToValidDaemonPrice` internally compare with the cutoff time
 	// of each price.
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	keepertest.CreateTestPriceMarkets(t,
@@ -171,21 +171,21 @@ func TestGetMarketIdToValidIndexPrice(t *testing.T) {
 		},
 	)
 
-	// Set up index price cache values for market 7, 8, 9.
-	indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
-	marketIdToIndexPrice := keeper.GetMarketIdToValidIndexPrice(ctx)
-	// While there are 4 markets in state, only 7, 8, 9 have index prices,
-	// and only 8, 9 have valid median index prices.
+	// Set up daemon price cache values for market 7, 8, 9.
+	daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+	marketIdToDaemonPrice := keeper.GetMarketIdToValidDaemonPrice(ctx)
+	// While there are 4 markets in state, only 7, 8, 9 have daemon prices,
+	// and only 8, 9 have valid median daemon prices.
 	// Market7 only has 1 valid price due to update time constraint,
 	// but the min exchanges required is 2. Therefore, no median price.
-	require.Len(t, marketIdToIndexPrice, 2)
+	require.Len(t, marketIdToDaemonPrice, 2)
 	require.Equal(t,
 		types.MarketSpotPrice{
 			Id:        constants.MarketId9,
 			SpotPrice: uint64(2002),
 			Exponent:  constants.Exponent9,
 		},
-		marketIdToIndexPrice[constants.MarketId9],
+		marketIdToDaemonPrice[constants.MarketId9],
 	) // Median of 1001, 2002, 3003
 	require.Equal(t,
 		types.MarketSpotPrice{
@@ -193,6 +193,6 @@ func TestGetMarketIdToValidIndexPrice(t *testing.T) {
 			SpotPrice: uint64(2503),
 			Exponent:  constants.Exponent8,
 		},
-		marketIdToIndexPrice[constants.MarketId8],
+		marketIdToDaemonPrice[constants.MarketId8],
 	) // Median of 2002, 3003
 }

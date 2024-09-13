@@ -35,7 +35,7 @@ func PnlPriceToSubticks(
 		marketPrice.Exponent - clobPair.QuantumConversionExponent + baseAtomicResolution - quoteAtomicResolution,
 	)
 	return lib.BigMulPow10(
-		// TODO(DEC-1256): Use index price from the price daemon, instead of oracle price.
+		// TODO(DEC-1256): Use daemon price from the price daemon, instead of oracle price.
 		new(big.Int).SetUint64(marketPrice.PnlPrice),
 		exponent,
 	)
@@ -53,7 +53,7 @@ func SpotPriceToSubticks(
 		marketPrice.Exponent - clobPair.QuantumConversionExponent + baseAtomicResolution - quoteAtomicResolution,
 	)
 	return lib.BigMulPow10(
-		// TODO(DEC-1256): Use index price from the price daemon, instead of oracle price.
+		// TODO(DEC-1256): Use daemon price from the price daemon, instead of oracle price.
 		new(big.Int).SetUint64(marketPrice.SpotPrice),
 		exponent,
 	)
@@ -91,7 +91,7 @@ func SubticksToPrice(
 	)
 	return lib.BigRatRound(
 		lib.BigMulPow10(
-			// TODO(DEC-1256): Use index price from the price daemon, instead of oracle price.
+			// TODO(DEC-1256): Use daemon price from the price daemon, instead of oracle price.
 			new(big.Int).SetUint64(uint64(subticks)),
 			exponent,
 		),

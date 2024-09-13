@@ -317,29 +317,29 @@ func (k Keeper) GetAllMarketPrices(ctx sdk.Context) []types.MarketPrice {
 	return marketPrices
 }
 
-// GetMarketIdToValidIndexPrice returns a map of market id to valid index price.
-// An index price is valid iff:
+// GetMarketIdToValidDaemonPrice returns a map of market id to valid daemon price.
+// An daemon price is valid iff:
 // 1) the last update time is within a predefined threshold away from the given
 // read time.
 // 2) the number of prices that meet 1) are greater than the minimum number of
 // exchanges specified in the given input.
-// If a market does not have a valid index price, its `marketId` is not included
+// If a market does not have a valid daemon price, its `marketId` is not included
 // in returned map.
-func (k Keeper) GetMarketIdToValidIndexPrice(
+func (k Keeper) GetMarketIdToValidDaemonPrice(
 	ctx sdk.Context,
 ) map[uint32]types.MarketSpotPrice {
 	allMarketParams := k.GetAllMarketParams(ctx)
-	marketIdToValidIndexPrice := k.indexPriceCache.GetValidMedianPrices(
+	marketIdToValidDaemonPrice := k.daemonPriceCache.GetValidMedianPrices(
 		allMarketParams,
 		k.timeProvider.Now(),
 	)
 
 	ret := make(map[uint32]types.MarketSpotPrice)
 	for _, marketParam := range allMarketParams {
-		if indexPrice, exists := marketIdToValidIndexPrice[marketParam.Id]; exists {
+		if daemonPrice, exists := marketIdToValidDaemonPrice[marketParam.Id]; exists {
 			ret[marketParam.Id] = types.MarketSpotPrice{
 				Id:        marketParam.Id,
-				SpotPrice: indexPrice,
+				SpotPrice: daemonPrice,
 				Exponent:  marketParam.Exponent,
 			}
 		}

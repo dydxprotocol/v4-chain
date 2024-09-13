@@ -490,23 +490,23 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		metrics.Latency,
 	)
 
-	marketIdToIndexPrice := k.pricesKeeper.GetMarketIdToValidIndexPrice(ctx)
+	marketIdToDaemonPrice := k.pricesKeeper.GetMarketIdToValidDaemonPrice(ctx)
 
 	for _, perp := range allPerpetuals {
-		indexPrice, exists := marketIdToIndexPrice[perp.Params.MarketId]
-		// Valid index price is missing
+		daemonPrice, exists := marketIdToDaemonPrice[perp.Params.MarketId]
+		// Valid daemon price is missing
 		if !exists {
 			// Only log and increment stats if height is passed initialization period.
 			if ctx.BlockHeight() > pricestypes.PriceDaemonInitializationBlocks {
 				log.ErrorLog(
 					ctx,
-					"Perpetual does not have valid index price. Skipping premium",
+					"Perpetual does not have valid daemon price. Skipping premium",
 					constants.MarketIdLogKey, perp.Params.MarketId,
 				)
 				telemetry.IncrCounterWithLabels(
 					[]string{
 						types.ModuleName,
-						metrics.MissingIndexPriceForFunding,
+						metrics.MissingDaemonPriceForFunding,
 						metrics.Count,
 					},
 					1,
@@ -538,10 +538,10 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 			ctx,
 			perp.Params.Id,
 			types.GetPricePremiumParams{
-				IndexPrice: pricestypes.MarketPrice{
-					Id:        indexPrice.Id,
-					Exponent:  indexPrice.Exponent,
-					SpotPrice: indexPrice.SpotPrice,
+				DaemonPrice: pricestypes.MarketPrice{
+					Id:        daemonPrice.Id,
+					Exponent:  daemonPrice.Exponent,
+					SpotPrice: daemonPrice.SpotPrice,
 				},
 				BaseAtomicResolution:        perp.Params.AtomicResolution,
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
