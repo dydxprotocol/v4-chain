@@ -76,7 +76,7 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 			cdc,
 			stakingKeeper,
 		)
-		affiliatesKeeper, _ = createAffiliatesKeeper(stateStore, db, cdc, statsKeeper)
+		affiliatesKeeper, _ = createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
 		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 		affiliatesKeeper.SetRevShareKeeper(revShareKeeper)
 		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)

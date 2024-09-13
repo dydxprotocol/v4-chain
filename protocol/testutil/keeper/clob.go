@@ -105,7 +105,8 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			cdc,
 			stakingKeeper,
 		)
-		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, ks.StatsKeeper)
+		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, ks.StatsKeeper,
+			indexerEventsTransientStoreKey, true)
 		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 		ks.MarketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
