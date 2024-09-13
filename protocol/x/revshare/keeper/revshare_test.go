@@ -674,7 +674,7 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 				})
 
 				err := affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
-        require.NoError(t, err)
+				require.NoError(t, err)
 				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
 					constants.BobAccAddress.String())
 				require.NoError(t, err)
