@@ -40,9 +40,16 @@ class AffiliatesController extends Controller {
   async getMetadata(
     @Query() address: string,
   ): Promise<AffiliateMetadataResponse> {
-    const [walletRow, referredUserRows] = await Promise.all([
+    const [walletRow, referredUserRows, subaccountRows] = await Promise.all([
       WalletTable.findById(address),
       AffiliateReferredUsersTable.findByAffiliateAddress(address),
+      SubaccountTable.findAll(
+        {
+          address,
+          subaccountNumber: 0,
+        },
+        [],
+      ),
     ]);
 
     // Check that the address exists
@@ -54,14 +61,6 @@ class AffiliatesController extends Controller {
     const isVolumeEligible = Number(walletRow.totalVolume) >= config.VOLUME_ELIGIBILITY_THRESHOLD;
     const isAffiliate = referredUserRows !== undefined ? referredUserRows.length > 0 : false;
 
-    // Get referral code (subaccount 0 username)
-    const subaccountRows = await SubaccountTable.findAll(
-      {
-        address,
-        subaccountNumber: 0,
-      },
-      [],
-    );
     // No need to check subaccountRows.length > 1 as subaccountNumber is unique for an address
     if (subaccountRows.length === 0) {
       // error logging will be performed by handleInternalServerError
@@ -69,6 +68,7 @@ class AffiliatesController extends Controller {
     }
     const subaccountId = subaccountRows[0].id;
 
+    // Get subaccount0 username, which is the referral code
     const usernameRows = await SubaccountUsernamesTable.findAll(
       {
         subaccountId: [subaccountId],
