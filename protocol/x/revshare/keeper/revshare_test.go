@@ -340,7 +340,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					},
 				})
 
-				affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
 				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
 					constants.BobAccAddress.String())
 				require.NoError(t, err)
@@ -410,7 +411,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					},
 				})
 
-				affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
 				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
 					constants.BobAccAddress.String())
 				require.NoError(t, err)
@@ -472,7 +474,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					},
 				})
 
-				affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
 				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
 					constants.BobAccAddress.String())
 				require.NoError(t, err)
@@ -515,7 +518,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
 				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
 					constants.BobAccAddress.String())
 				require.NoError(t, err)
@@ -559,8 +563,9 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 						},
 					},
 				})
-				affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
-				err := affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
+				err := affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
+				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
 					constants.BobAccAddress.String())
 				require.NoError(t, err)
 			},
@@ -641,7 +646,8 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 						},
 					},
 				})
-				affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
 				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
 					constants.BobAccAddress.String())
 				require.NoError(t, err)
@@ -662,7 +668,8 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
 				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
 					constants.BobAccAddress.String())
 				require.NoError(t, err)
@@ -685,8 +692,9 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 					},
 				})
 
-				affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
-				err := affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
+				err := affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
+				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
 				require.NoError(t, err)
 			},
 		},

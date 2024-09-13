@@ -1658,7 +1658,8 @@ func TestDistributeFees(t *testing.T) {
 				require.NoError(t, err)
 			}
 			if tc.unconditionalRevShareAcctAddr != "" {
-				affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				err := affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
 				revShareKeeper.SetUnconditionalRevShareConfigParams(ctx,
 					revsharetypes.UnconditionalRevShareConfig{
 						Configs: []revsharetypes.UnconditionalRevShareConfig_RecipientConfig{
