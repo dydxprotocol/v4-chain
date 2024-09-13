@@ -1,4 +1,10 @@
 import { stats } from '@dydxprotocol-indexer/base';
+import {
+  WalletTable,
+  AffiliateReferredUsersTable,
+  SubaccountTable,
+  SubaccountUsernamesTable,
+} from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import {
@@ -7,6 +13,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { NotFoundError, UnexpectedServerError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -31,14 +38,56 @@ const controllerName: string = 'affiliates-controller';
 class AffiliatesController extends Controller {
   @Get('/metadata')
   async getMetadata(
-    @Query() address: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+    @Query() address: string,
   ): Promise<AffiliateMetadataResponse> {
-    // simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const [walletRow, referredUserRows, subaccountRows] = await Promise.all([
+      WalletTable.findById(address),
+      AffiliateReferredUsersTable.findByAffiliateAddress(address),
+      SubaccountTable.findAll(
+        {
+          address,
+          subaccountNumber: 0,
+        },
+        [],
+      ),
+    ]);
+
+    // Check that the address exists
+    if (!walletRow) {
+      throw new NotFoundError(`Wallet with address ${address} not found`);
+    }
+
+    // Check if the address is an affiliate (has referred users)
+    const isVolumeEligible = Number(walletRow.totalVolume) >= config.VOLUME_ELIGIBILITY_THRESHOLD;
+    const isAffiliate = referredUserRows !== undefined ? referredUserRows.length > 0 : false;
+
+    // No need to check subaccountRows.length > 1 as subaccountNumber is unique for an address
+    if (subaccountRows.length === 0) {
+      // error logging will be performed by handleInternalServerError
+      throw new UnexpectedServerError(`Subaccount 0 not found for address ${address}`);
+    }
+    const subaccountId = subaccountRows[0].id;
+
+    // Get subaccount0 username, which is the referral code
+    const usernameRows = await SubaccountUsernamesTable.findAll(
+      {
+        subaccountId: [subaccountId],
+      },
+      [],
+    );
+    // No need to check usernameRows.length > 1 as subAccountId is unique (foreign key constraint)
+    // This error can happen if a user calls this endpoint before subaccount-username-generator
+    // has generated the username
+    if (usernameRows.length === 0) {
+      stats.increment(`${config.SERVICE_NAME}.${controllerName}.get_metadata.subaccount_username_not_found`);
+      throw new UnexpectedServerError(`Username not found for subaccount ${subaccountId}`);
+    }
+    const referralCode = usernameRows[0].username;
+
     return {
-      referralCode: 'TempCode123',
-      isVolumeEligible: true,
-      isAffiliate: false,
+      referralCode,
+      isVolumeEligible,
+      isAffiliate,
     };
   }
 
