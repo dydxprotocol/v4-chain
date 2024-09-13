@@ -83,6 +83,9 @@ const (
 	GrpcStreamNumUpdatesBuffered              = "grpc_stream_num_updates_buffered"
 	GrpcFlushUpdatesLatency                   = "grpc_flush_updates_latency"
 	GrpcSubscriptionChannelLength             = "grpc_subscription_channel_length"
+	GrpcStagedAllFinalizeBlockUpdates         = "grpc_staged_all_finalize_block_updates"
+	GrpcStagedFillFinalizeBlockUpdates        = "grpc_staged_finalize_block_fill_updates"
+	GrpcStagedSubaccountFinalizeBlockUpdates  = "grpc_staged_finalize_block_subaccount_updates"
 
 	EndBlocker    = "end_blocker"
 	EndBlockerLag = "end_blocker_lag"
