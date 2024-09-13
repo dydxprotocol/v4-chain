@@ -3972,7 +3972,7 @@
       ]
     }
   },
-  "app_version": "5.2.1-102-g24bd6185",
+  "app_version": "5.2.1-103-g5c95dd72",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
