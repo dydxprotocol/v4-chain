@@ -475,7 +475,7 @@ func TestConvertToPerpetualMarketType(t *testing.T) {
 	}
 }
 
-func TestVaultStatusToVaultStatus(t *testing.T) {
+func TestVaultStatusToIndexerVaultStatus(t *testing.T) {
 	tests := map[string]struct {
 		// Input
 		vaultStatus vaulttypes.VaultStatus
