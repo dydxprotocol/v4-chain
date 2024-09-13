@@ -596,10 +596,10 @@ message RegisterAffiliateEventV1 {
 message UpsertVaultEventV1 {
   // Address of the vault.
   string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  
+
   // Clob pair Id associated with the vault.
   uint32 clob_pair_id = 2;
-  
+
   // Status of the vault.
   dydxprotocol.indexer.protocol.v1.VaultStatus status = 3;
 }
