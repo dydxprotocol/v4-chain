@@ -18,4 +18,9 @@ var (
 		3,
 		"Authenticator data exceeds maximum length",
 	)
+	ErrSmartAccountNotActive = errorsmod.Register(
+		ModuleName,
+		4,
+		"Smart account is not active",
+	)
 )

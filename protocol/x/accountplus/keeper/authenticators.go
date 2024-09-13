@@ -6,8 +6,13 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
@@ -105,4 +110,105 @@ func (k Keeper) SetNextAuthenticatorId(ctx sdk.Context, authenticatorId uint64) 
 
 	store := ctx.KVStore(k.storeKey)
 	store.Set([]byte(types.AuthenticatorIdKeyPrefix), b)
+}
+
+// GetAuthenticatorExtension unpacks the extension for the transaction, this is used with transactions specify
+// an authenticator to use
+func (k Keeper) GetAuthenticatorExtension(exts []*codectypes.Any) types.AuthenticatorTxOptions {
+	var authExtension types.AuthenticatorTxOptions
+	for _, ext := range exts {
+		err := k.cdc.UnpackAny(ext, &authExtension)
+		if err == nil {
+			return authExtension
+		}
+	}
+	return nil
+}
+
+// GetSelectedAuthenticatorData gets all authenticators from an account
+// from the store, the data is  prefixed by 2|<accAddr|<keyId>
+func (k Keeper) GetSelectedAuthenticatorData(
+	ctx sdk.Context,
+	account sdk.AccAddress,
+	selectedAuthenticator int,
+) (*types.AccountAuthenticator, error) {
+	store := prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.AuthenticatorKeyPrefix),
+	)
+	bz := store.Get(types.KeyAccountId(account, uint64(selectedAuthenticator)))
+	if bz == nil {
+		return &types.AccountAuthenticator{}, errors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			fmt.Sprintf("authenticator %d not found for account %s", selectedAuthenticator, account),
+		)
+	}
+	authenticatorFromStore, err := k.unmarshalAccountAuthenticator(bz)
+	if err != nil {
+		return &types.AccountAuthenticator{}, err
+	}
+
+	return authenticatorFromStore, nil
+}
+
+// GetInitializedAuthenticatorForAccount returns a single initialized authenticator for the account.
+// It fetches the authenticator data from the store, gets the authenticator struct from the manager,
+// then calls initialize on the authenticator data
+func (k Keeper) GetInitializedAuthenticatorForAccount(
+	ctx sdk.Context,
+	account sdk.AccAddress,
+	selectedAuthenticator int,
+) (authenticator.InitializedAuthenticator, error) {
+	// Get the authenticator data from the store
+	authenticatorFromStore, err := k.GetSelectedAuthenticatorData(ctx, account, selectedAuthenticator)
+	if err != nil {
+		return authenticator.InitializedAuthenticator{}, err
+	}
+
+	uninitializedAuthenticator := k.authenticatorManager.GetAuthenticatorByType(authenticatorFromStore.Type)
+	if uninitializedAuthenticator == nil {
+		// This should never happen, but if it does, it means that stored authenticator is not registered
+		// or somehow the registered authenticator was removed / malformed
+		telemetry.IncrCounter(1, metrics.MissingRegisteredAuthenticator)
+		k.Logger(ctx).Error(
+			"account asscoicated authenticator not registered in manager",
+			"type", authenticatorFromStore.Type,
+			"id", selectedAuthenticator,
+		)
+
+		return authenticator.InitializedAuthenticator{},
+			errors.Wrapf(
+				sdkerrors.ErrLogic,
+				"authenticator id %d failed to initialize, authenticator type %s not registered in manager",
+				selectedAuthenticator, authenticatorFromStore.Type,
+			)
+	}
+	// Ensure that initialization of each authenticator works as expected
+	// NOTE: Always return a concrete authenticator not a pointer, do not modify in place
+	// NOTE: The authenticator manager returns a struct that is reused
+	initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorFromStore.Config)
+	if err != nil || initializedAuthenticator == nil {
+		return authenticator.InitializedAuthenticator{},
+			errors.Wrapf(err,
+				"authenticator %d with type %s failed to initialize",
+				selectedAuthenticator, authenticatorFromStore.Type,
+			)
+	}
+
+	finalAuthenticator := authenticator.InitializedAuthenticator{
+		Id:            authenticatorFromStore.Id,
+		Authenticator: initializedAuthenticator,
+	}
+
+	return finalAuthenticator, nil
+}
+
+// unmarshalAccountAuthenticator is used to unmarshal the AccountAuthenticator from the store
+func (k Keeper) unmarshalAccountAuthenticator(bz []byte) (*types.AccountAuthenticator, error) {
+	var accountAuthenticator types.AccountAuthenticator
+	err := k.cdc.Unmarshal(bz, &accountAuthenticator)
+	if err != nil {
+		return &types.AccountAuthenticator{}, errors.Wrap(err, "failed to unmarshal account authenticator")
+	}
+	return &accountAuthenticator, nil
 }
