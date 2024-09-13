@@ -120,9 +120,9 @@ var (
 		23,
 		"Locked shares exceeds owner shares",
 	)
-	ErrInvalidWithdrawalPortion = errorsmod.Register(
+	ErrInvalidSharesToWithdraw = errorsmod.Register(
 		ModuleName,
 		24,
-		"Withdrawal portion must be between 0 (exclusive) and 1 (inclusive)",
+		"Shares to withdraw must be positive and less than or equal to total shares",
 	)
 )

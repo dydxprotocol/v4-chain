@@ -22,17 +22,20 @@ import (
 //   - integral = skew_antiderivative(skew_factor, posterior_leverage) -
 //     skew_antiderivative(skew_factor, leverage)
 //   - posterior_leverage = leverage / (1 - withdrawal_portion)
+//     = leverage / (1 - shares_to_withdraw / total_shares)
+//     = leverage * total_shares / (total_shares - shares_to_withdraw)
 func (k Keeper) GetVaultWithdrawalSlippagePpm(
 	ctx sdk.Context,
 	vaultId types.VaultId,
-	withdrawalPortionPpm *big.Int,
+	sharesToWithdraw *big.Int,
 ) (*big.Int, error) {
-	bigOneMillion := lib.BigIntOneMillion()
-	if withdrawalPortionPpm.Sign() <= 0 || withdrawalPortionPpm.Cmp(bigOneMillion) > 0 {
+	totalShares := k.GetTotalShares(ctx).NumShares.BigInt()
+	if sharesToWithdraw.Sign() <= 0 || sharesToWithdraw.Cmp(totalShares) > 0 {
 		return nil, errorsmod.Wrapf(
-			types.ErrInvalidWithdrawalPortion,
-			"withdrawalPortionPpm: %s",
-			withdrawalPortionPpm,
+			types.ErrInvalidSharesToWithdraw,
+			"sharesToWithdraw: %s, totalShares: %s",
+			sharesToWithdraw,
+			totalShares,
 		)
 	}
 
@@ -59,26 +62,31 @@ func (k Keeper) GetVaultWithdrawalSlippagePpm(
 	// Use absolute value of leverage.
 	leveragePpm.Abs(leveragePpm)
 
-	// Calculate simple_slippage = leverage * initial_margin.
+	// Calculate simple_slippage = leverage * initial_margin (round up if necessary).
 	lt, err := k.perpetualsKeeper.GetLiquidityTier(ctx, perpetual.Params.LiquidityTier)
 	if err != nil {
 		return nil, err
 	}
-	simpleSlippagePpm := lib.BigIntMulPpm(
+	bigOneMillion := lib.BigIntOneMillion()
+	simpleSlippagePpm := new(big.Int).Mul(
 		leveragePpm,
-		lt.InitialMarginPpm,
+		new(big.Int).SetUint64(uint64(lt.InitialMarginPpm)),
 	)
+	simpleSlippagePpm = lib.BigDivCeil(simpleSlippagePpm, bigOneMillion)
+
 	// Return simple slippage if withdrawing 100%.
-	if withdrawalPortionPpm.Cmp(bigOneMillion) == 0 {
+	if sharesToWithdraw.Cmp(totalShares) == 0 {
 		return simpleSlippagePpm, nil
 	}
 
 	// Estimate slippage.
-	// 1. Calculate leverage_after_withdrawal = leverage / (1 - withdrawal_portion)
-	posteriorLeveragePpm := new(big.Int).Mul(leveragePpm, bigOneMillion)
+	// 1. leverage_after_withdrawal
+	//    = leverage / (1 - withdrawal_portion)
+	//    = leverage * total_shares / (total_shares - shares_to_withdraw)
+	posteriorLeveragePpm := new(big.Int).Mul(leveragePpm, totalShares)
 	posteriorLeveragePpm = lib.BigDivCeil(
 		posteriorLeveragePpm,
-		new(big.Int).Sub(bigOneMillion, withdrawalPortionPpm),
+		new(big.Int).Sub(totalShares, sharesToWithdraw),
 	)
 
 	// 2. integral = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)

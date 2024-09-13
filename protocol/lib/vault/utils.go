@@ -28,8 +28,9 @@ func SkewAntiderivativePpm(
 	b.Mul(b, bigSkewFactorPpm)
 	b = lib.BigDivCeil(b, big.NewInt(3))
 
-	// normalize a and b.
+	// normalize `a` whose unit currently is ppm * ppm.
 	a = lib.BigDivCeil(a, bigOneTrillion)
+	// normalize `b` whose unit currently is ppm * ppm * ppm.
 	b = lib.BigDivCeil(b, bigOneTrillion)
 	b = lib.BigDivCeil(b, bigOneTrillion)
 
