@@ -53,7 +53,7 @@ func RevShareKeepers(t testing.TB) (
 				cdc,
 				stakingKeeper,
 			)
-			affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper)
+			affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
 			keeper, storeKey, mockTimeProvider =
 				createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 
