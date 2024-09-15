@@ -61,7 +61,12 @@ func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		panic(err)
+	}
+}
 
 // GetTxCmd returns the root Tx command for the module. The subcommands of this root command are used by end-users
 // to generate new transactions containing messages defined in the module
@@ -121,7 +126,8 @@ func (am AppModule) IsOnePerModuleType() {}
 
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	// accountplus does not have message and query
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 }
 
 // InitGenesis performs the module's genesis initialization. It returns no validator updates.

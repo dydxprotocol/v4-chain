@@ -122,9 +122,18 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			options.AccountKeeper,
 			*options.AccountplusKeeper,
 		),
-		sigVerification: customante.NewSigVerificationDecorator(
-			options.AccountKeeper,
-			options.SignModeHandler,
+		sigVerification: accountplusante.NewCircuitBreakerDecorator(
+			options.Codec,
+			accountplusante.NewAuthenticatorDecorator(
+				options.Codec,
+				options.AccountplusKeeper,
+				options.AccountKeeper,
+				options.SignModeHandler,
+			),
+			customante.NewSigVerificationDecorator(
+				options.AccountKeeper,
+				options.SignModeHandler,
+			),
 		),
 		consumeTxSizeGas: ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		deductFee: ante.NewDeductFeeDecorator(
@@ -163,7 +172,7 @@ type lockingAnteHandler struct {
 	validateSigCount         ante.ValidateSigCountDecorator
 	incrementSequence        ante.IncrementSequenceDecorator
 	replayProtection         customante.ReplayProtectionDecorator
-	sigVerification          customante.SigVerificationDecorator
+	sigVerification          accountplusante.CircuitBreakerDecorator
 	consumeTxSizeGas         ante.ConsumeTxSizeGasDecorator
 	deductFee                ante.DeductFeeDecorator
 	setPubKey                ante.SetPubKeyDecorator
