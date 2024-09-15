@@ -29,7 +29,6 @@ export interface WalletFromDatabase {
   address: string,
   totalTradingRewards: string,
   totalVolume: string,
-  isWhitelistAffiliate: boolean,
 }
 
 export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase {
@@ -114,7 +113,7 @@ export interface FillFromDatabase {
   orderId?: string,
   clientMetadata?: string,
   fee: string,
-  affiliateEarnedRevShare: string,
+  affiliateRevShare: string,
 }
 
 export interface BlockFromDatabase {
@@ -293,6 +292,13 @@ export interface AffiliateReferredUserFromDatabase {
   affiliateAddress: string,
   refereeAddress: string,
   referredAtBlock: string,
+}
+
+export interface FirebaseNotificationTokenFromDatabase {
+  address: string,
+  token: string,
+  updatedAt: IsoString,
+  language: string,
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:

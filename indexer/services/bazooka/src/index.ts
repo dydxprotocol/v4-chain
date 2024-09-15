@@ -27,7 +27,7 @@ const KAFKA_TOPICS_TO_PARTITIONS: { [key in KafkaTopics]: number } = {
   [KafkaTopics.TO_ENDER]: 1,
   [KafkaTopics.TO_VULCAN]: 60,
   [KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS]: 1,
-  [KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS]: 1,
+  [KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS]: 3,
   [KafkaTopics.TO_WEBSOCKETS_TRADES]: 1,
   [KafkaTopics.TO_WEBSOCKETS_MARKETS]: 1,
   [KafkaTopics.TO_WEBSOCKETS_CANDLES]: 1,
@@ -182,6 +182,7 @@ async function maybeClearAndCreateKafkaTopics(
 
   if (event.create_kafka_topics) {
     await createKafkaTopics(existingKafkaTopics);
+    await partitionKafkaTopics();
   }
 
   if (event.clear_kafka_topics) {
@@ -233,11 +234,38 @@ async function createKafkaTopics(
   });
 }
 
+async function partitionKafkaTopics(): Promise<void> {
+  for (const kafkaTopic of KAFKA_TOPICS) {
+    const topicMetadata: { topics: Array<ITopicMetadata> } = await admin.fetchTopicMetadata({
+      topics: [kafkaTopic],
+    });
+    if (topicMetadata.topics.length === 1) {
+      if (topicMetadata.topics[0].partitions.length !== KAFKA_TOPICS_TO_PARTITIONS[kafkaTopic]) {
+        logger.info({
+          at: 'index#partitionKafkaTopics',
+          message: `Setting topic ${kafkaTopic} to ${KAFKA_TOPICS_TO_PARTITIONS[kafkaTopic]} partitions`,
+        });
+        await admin.createPartitions({
+          validateOnly: false,
+          topicPartitions: [{
+            topic: kafkaTopic,
+            count: KAFKA_TOPICS_TO_PARTITIONS[kafkaTopic],
+          }],
+        });
+        logger.info({
+          at: 'index#partitionKafkaTopics',
+          message: `Successfully set topic ${kafkaTopic} to ${KAFKA_TOPICS_TO_PARTITIONS[kafkaTopic]} partitions`,
+        });
+      }
+    }
+  }
+}
+
 async function clearKafkaTopics(
   existingKafkaTopics: string[],
 ): Promise<void> {
   await Promise.all(
-    _.map(KAFKA_TOPICS_TO_PARTITIONS,
+    _.map(KAFKA_TOPICS,
       clearKafkaTopic.bind(null,
         1,
         config.CLEAR_KAFKA_TOPIC_RETRY_MS,
@@ -251,7 +279,6 @@ export async function clearKafkaTopic(
   retryMs: number = config.CLEAR_KAFKA_TOPIC_RETRY_MS,
   maxRetries: number = config.CLEAR_KAFKA_TOPIC_MAX_RETRIES,
   existingKafkaTopics: string[],
-  numPartitions: number,
   kafkaTopic: KafkaTopics,
 ): Promise<void> {
   const kafkaTopicExists: boolean = _.includes(existingKafkaTopics, kafkaTopic);
@@ -263,6 +290,20 @@ export async function clearKafkaTopic(
     });
     return;
   }
+
+  const topicMetadata: { topics: Array<ITopicMetadata> } = await admin.fetchTopicMetadata({
+    topics: [kafkaTopic],
+  });
+
+  if (topicMetadata.topics.length !== 1) {
+    logger.info({
+      at: 'index#clearKafkaTopics',
+      message: `Cannot clear kafka topic that does not exist: ${kafkaTopic}`,
+    });
+    return;
+  }
+
+  const numPartitions = topicMetadata.topics[0].partitions.length;
 
   logger.info({
     at: 'index#clearKafkaTopics',
@@ -281,10 +322,6 @@ export async function clearKafkaTopic(
       ),
     });
   } catch (error) {
-    const topicMetadata: { topics: Array<ITopicMetadata> } = await admin.fetchTopicMetadata({
-      topics: [kafkaTopic],
-    });
-
     logger.error({
       at: 'index#clearKafkaTopics',
       message: 'Failed to delete topic records',
@@ -322,7 +359,6 @@ export async function clearKafkaTopic(
       retryMs,
       maxRetries,
       existingKafkaTopics,
-      numPartitions,
       kafkaTopic,
     );
   }

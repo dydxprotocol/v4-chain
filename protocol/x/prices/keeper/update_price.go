@@ -123,8 +123,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 
 	if len(nonExistentMarkets) > 0 {
 		ctx.Logger().Warn(
-			"Index price for markets does not exist, marketIds: %v",
-			nonExistentMarkets,
+			fmt.Sprintf("Index price for markets does not exist, marketIds: %v", nonExistentMarkets),
 		)
 	}
 

@@ -48,7 +48,30 @@ func ListingKeepers(
 			// Define necessary keepers here for unit tests
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
-			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+			epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+
+			accountsKeeper, _ := createAccountKeeper(
+				stateStore,
+				db,
+				cdc,
+				registry)
+			bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountsKeeper)
+			stakingKeeper, _ := createStakingKeeper(
+				stateStore,
+				db,
+				cdc,
+				accountsKeeper,
+				bankKeeper,
+			)
+			statsKeeper, _ := createStatsKeeper(
+				stateStore,
+				epochsKeeper,
+				db,
+				cdc,
+				stakingKeeper,
+			)
+			affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
+			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 			marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 			pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 				stateStore,
@@ -60,7 +83,6 @@ func ListingKeepers(
 			)
 			// Mock time provider response for market creation.
 			mockTimeProvider.On("Now").Return(constants.TimeT)
-			epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 			perpetualsKeeper, _ = createPerpetualsKeeper(
 				stateStore,
 				db,
@@ -77,13 +99,8 @@ func ListingKeepers(
 				transientStoreKey,
 				true,
 			)
+
 			blockTimeKeeper, _ := createBlockTimeKeeper(stateStore, db, cdc)
-			statsKeeper, _ := createStatsKeeper(
-				stateStore,
-				epochsKeeper,
-				db,
-				cdc,
-			)
 			vaultKeeper, _ := createVaultKeeper(
 				stateStore,
 				db,

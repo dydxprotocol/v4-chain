@@ -76,12 +76,17 @@ import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
 const defaultTakerFeeQuantum: number = 2_000_000;
+const defaultAffiliateRevShareQuantum: number = 3_000_000;
 const defaultMakerFee: string = protocolTranslations.quantumsToHumanFixedString(
   defaultMakerFeeQuantum.toString(),
   testConstants.defaultAsset.atomicResolution,
 );
 const defaultTakerFee: string = protocolTranslations.quantumsToHumanFixedString(
   defaultTakerFeeQuantum.toString(),
+  testConstants.defaultAsset.atomicResolution,
+);
+const defaultAffiliateRevShare: string = protocolTranslations.quantumsToHumanFixedString(
+  defaultAffiliateRevShareQuantum.toString(),
   testConstants.defaultAsset.atomicResolution,
 );
 
@@ -336,6 +341,7 @@ describe('LiquidationHandler', () => {
         orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -354,6 +360,7 @@ describe('LiquidationHandler', () => {
         orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
         clientMetadata: null,
         fee: defaultTakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
         hasOrderId: false,
       });
 
@@ -567,6 +574,7 @@ describe('LiquidationHandler', () => {
         orderFlags: ORDER_FLAG_LONG_TERM.toString(),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -585,6 +593,7 @@ describe('LiquidationHandler', () => {
         orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
         clientMetadata: null,
         fee: defaultTakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
         hasOrderId: false,
       });
 
@@ -785,6 +794,7 @@ describe('LiquidationHandler', () => {
         orderFlags: ORDER_FLAG_LONG_TERM.toString(),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -803,6 +813,7 @@ describe('LiquidationHandler', () => {
         orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
         clientMetadata: null,
         fee: defaultTakerFee,
+        affiliateRevShare: defaultAffiliateRevShare,
         hasOrderId: false,
       });
 
@@ -943,6 +954,7 @@ describe('LiquidationHandler', () => {
       orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
       fee: defaultMakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
     });
     await expectFillInDatabase({
       subaccountId: testConstants.defaultSubaccountId2,
@@ -961,6 +973,7 @@ describe('LiquidationHandler', () => {
       orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
       clientMetadata: null,
       fee: defaultTakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
       hasOrderId: false,
     });
 
@@ -1179,7 +1192,6 @@ function createLiquidationOrderFillEvent(
   liquidationOrderProto: LiquidationOrderV1,
   fillAmount: number,
   totalFilledMaker: number,
-  affiliateRevShare: number = 0,
 ): OrderFillEventV1 {
   return {
     makerOrder: makerOrderProto,
@@ -1189,7 +1201,7 @@ function createLiquidationOrderFillEvent(
     takerFee: Long.fromValue(defaultTakerFeeQuantum, false),
     totalFilledMaker: Long.fromValue(totalFilledMaker, true),
     totalFilledTaker: Long.fromValue(fillAmount, true),
-    affiliateRevShare: Long.fromValue(affiliateRevShare, false),
+    affiliateRevShare: Long.fromValue(defaultAffiliateRevShareQuantum, false),
   } as OrderFillEventV1;
 }
 

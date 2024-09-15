@@ -10,6 +10,7 @@ import { FillSubaccountMessageContents, TradeMessageContents } from '@dydxprotoc
 import {
   BlockHeightMessage,
   CandleMessage,
+  IndexerSubaccountId,
   MarketMessage,
   OffChainUpdateV1,
   SubaccountMessage,
@@ -220,10 +221,15 @@ export class KafkaPublisher {
 
     if (this.subaccountMessages.length > 0) {
       this.aggregateFillEventsForSubaccountMessages();
+
       allTopicKafkaMessages.push({
         topic: KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS,
         messages: _.map(this.subaccountMessages, (message: SubaccountMessage) => {
           return {
+            key: message.subaccountId !== undefined
+              ? Buffer.from(Uint8Array.from(
+                IndexerSubaccountId.encode(message.subaccountId).finish(),
+              )) : undefined,
             value: Buffer.from(Uint8Array.from(SubaccountMessage.encode(message).finish())),
           };
         }),

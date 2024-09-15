@@ -17,6 +17,7 @@ import {
 import { getOrderIdHash, isStatefulOrder, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
+  IndexerSubaccountId,
   OffChainUpdateV1,
   OrderPlaceV1,
   OrderPlaceV1_OrderPlacementStatus,
@@ -116,6 +117,9 @@ export class OrderPlaceHandler extends Handler {
         await this.sendCachedOrderUpdate(orderUuid, headers);
       }
       const subaccountMessage: Message = {
+        key: Buffer.from(Uint8Array.from(
+          IndexerSubaccountId.encode(redisOrder.order!.orderId!.subaccountId!).finish(),
+        )),
         value: createSubaccountWebsocketMessage(
           redisOrder,
           dbOrder,

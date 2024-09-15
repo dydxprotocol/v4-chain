@@ -27,6 +27,8 @@ const (
 	ClobRateLimitPlaceOrderCount                       = "clob_rate_limit_place_order_count"
 	ClobRateLimitCancelOrderCount                      = "clob_rate_limit_cancel_order_count"
 	ClobRateLimitBatchCancelCount                      = "clob_rate_limit_batch_cancel_count"
+	StatsGetStakedAmountCacheHit                       = "stats_get_staked_amount_cache_hit"
+	StatsGetStakedAmountCacheMiss                      = "stats_get_staked_amount_cache_miss"
 
 	// Gauges
 	InsuranceFundBalance                      = "insurance_fund_balance"
@@ -36,6 +38,8 @@ const (
 	ClobSubaccountsRequiringDeleveragingCount = "clob_subaccounts_requiring_deleveraging_count"
 	SendingProcessDepositToSubaccount         = "sending_process_deposit_to_subaccount"
 	RateLimitInsufficientWithdrawalAmount     = "rate_limit_insufficient_withdrawal_amount"
+	StatsGetStakedAmountLatencyCacheHit       = "stats_get_staked_amount_latency_cache_hit"
+	StatsGetStakedAmountLatencyCacheMiss      = "stats_get_staked_amount_latency_cache_miss"
 
 	// Samples
 	ClobDeleverageSubaccountTotalQuoteQuantumsDistribution         = "clob_deleverage_subaccount_total_quote_quantums_distribution"
@@ -66,19 +70,19 @@ const (
 	GateWithdrawalsIfNegativeTncSubaccountSeenLatency = "gate_withdrawals_if_negative_tnc_subaccount_seen_latency"
 
 	// Full node grpc
-	FullNodeGrpc                      = "full_node_grpc"
-	GrpcSendOrderbookUpdatesLatency   = "grpc_send_orderbook_updates_latency"
-	GrpcSendOrderbookSnapshotLatency  = "grpc_send_orderbook_snapshot_latency"
-	GrpcSendSubaccountSnapshotLatency = "grpc_send_subaccount_snapshot_latency"
-	GrpcSendOrderbookFillsLatency     = "grpc_send_orderbook_fills_latency"
-	GrpcSendSubaccountUpdatesLatency  = "grpc_send_subaccount_updates_latency"
-	GrpcAddUpdateToBufferCount        = "grpc_add_update_to_buffer_count"
-	GrpcAddToSubscriptionChannelCount = "grpc_add_to_subscription_channel_count"
-	GrpcSendResponseToSubscriberCount = "grpc_send_response_to_subscriber_count"
-	GrpcStreamSubscriberCount         = "grpc_stream_subscriber_count"
-	GrpcStreamNumUpdatesBuffered      = "grpc_stream_num_updates_buffered"
-	GrpcFlushUpdatesLatency           = "grpc_flush_updates_latency"
-	GrpcSubscriptionChannelLength     = "grpc_subscription_channel_length"
+	FullNodeGrpc                              = "full_node_grpc"
+	GrpcSendOrderbookUpdatesLatency           = "grpc_send_orderbook_updates_latency"
+	GrpcSendOrderbookSnapshotLatency          = "grpc_send_orderbook_snapshot_latency"
+	GrpcSendSubaccountSnapshotLatency         = "grpc_send_subaccount_snapshot_latency"
+	GrpcSendOrderbookFillsLatency             = "grpc_send_orderbook_fills_latency"
+	GrpcSendFinalizedSubaccountUpdatesLatency = "grpc_send_finalized_subaccount_updates_latency"
+	GrpcAddUpdateToBufferCount                = "grpc_add_update_to_buffer_count"
+	GrpcAddToSubscriptionChannelCount         = "grpc_add_to_subscription_channel_count"
+	GrpcSendResponseToSubscriberCount         = "grpc_send_response_to_subscriber_count"
+	GrpcStreamSubscriberCount                 = "grpc_stream_subscriber_count"
+	GrpcStreamNumUpdatesBuffered              = "grpc_stream_num_updates_buffered"
+	GrpcFlushUpdatesLatency                   = "grpc_flush_updates_latency"
+	GrpcSubscriptionChannelLength             = "grpc_subscription_channel_length"
 
 	EndBlocker    = "end_blocker"
 	EndBlockerLag = "end_blocker_lag"

@@ -589,6 +589,4 @@ message RegisterAffiliateEventV1 {
   string referee = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   // Address of the affiliate associated with the referee.
   string affiliate = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  // Block number at which the affiliate was registered.
-  uint64 registered_at_block = 3;
 }

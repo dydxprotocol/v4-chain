@@ -27,6 +27,7 @@ import { AnnotatedSubaccountMessage, ConsolidatedKafkaEvent, SingleTradeMessage 
 import { KafkaPublisher } from '../../src/lib/kafka-publisher';
 import {
   defaultDateTime,
+  defaultSubaccountId,
   defaultSubaccountMessage,
   defaultTradeContent,
   defaultTradeKafkaEvent,
@@ -69,6 +70,9 @@ describe('kafka-publisher', () => {
     expect(producerSendMock).toHaveBeenCalledWith({
       topic: subaccountKafkaEvent.topic,
       messages: [{
+        key: Buffer.from(Uint8Array.from(
+          IndexerSubaccountId.encode(defaultSubaccountId).finish(),
+        )),
         value: Buffer.from(SubaccountMessage.encode(subaccountKafkaEvent.message).finish()),
       }],
     });
@@ -282,7 +286,7 @@ describe('kafka-publisher', () => {
       createdAtHeight: testConstants.createdHeight,
       clientMetadata: '0',
       fee: '1.1',
-      affiliateEarnedRevShare: '0',
+      affiliateRevShare: '0',
     };
     const order: OrderFromDatabase = {
       ...testConstants.defaultOrderGoodTilBlockTime,
@@ -421,6 +425,10 @@ describe('kafka-publisher', () => {
         topic: KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS,
         messages: _.map(expectedMsgs, (message: SubaccountMessage) => {
           return {
+            key: message.subaccountId !== undefined
+              ? Buffer.from(Uint8Array.from(
+                IndexerSubaccountId.encode(message.subaccountId).finish(),
+              )) : undefined,
             value: Buffer.from(Uint8Array.from(SubaccountMessage.encode(message).finish())),
           };
         }),
