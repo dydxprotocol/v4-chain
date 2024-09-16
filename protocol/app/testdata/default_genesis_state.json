@@ -13,7 +13,11 @@
       }
     ]
   },
-  "affiliates": {},
+  "affiliates": {
+    "affiliate_tiers": {
+      "tiers": []
+    }
+  },
   "auth": {
     "params": {
       "max_memo_characters": "256",
