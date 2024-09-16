@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 	"sort"
 	"time"
@@ -74,21 +73,11 @@ func (k Keeper) UpdateMarketPrices(
 		} else {
 			result, _ = new(big.Rat).SetInt(updatePrice.Mul(updatePrice, p10)).Float32()
 		}
-
-		// Get the market pair name for telemetry label
-		marketsParams, exists := k.GetMarketParam(ctx, marketPrice.Id)
-		var marketPair string
-		if exists {
-			marketPair = marketsParams.Pair
-		} else {
-			marketPair = fmt.Sprintf("invalid_id:%v", marketPrice.Id)
-		}
-
 		telemetry.SetGaugeWithLabels(
 			[]string{types.ModuleName, metrics.CurrentMarketPrices},
 			result,
 			[]gometrics.Label{ // To track per market, include the id as a label.
-				metrics.GetLabelForStringValue(metrics.MarketId, marketPair),
+				pricefeedmetrics.GetLabelForMarketId(marketPrice.Id),
 			},
 		)
 	}
