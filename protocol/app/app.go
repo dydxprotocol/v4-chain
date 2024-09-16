@@ -1042,6 +1042,7 @@ func New(
 	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
 		appCodec,
 		app.StatsKeeper,
+		app.AffiliatesKeeper,
 		keys[feetiersmoduletypes.StoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{

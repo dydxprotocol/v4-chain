@@ -146,6 +146,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			stateStore,
 			ks.StatsKeeper,
 			ks.VaultKeeper,
+			affiliatesKeeper,
 			db,
 			cdc,
 		)
