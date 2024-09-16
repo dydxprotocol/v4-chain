@@ -1,6 +1,7 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   WalletTable,
+  AffiliateInfoTable,
   AffiliateReferredUsersTable,
   SubaccountTable,
   SubaccountUsernamesTable,
@@ -116,38 +117,63 @@ class AffiliatesController extends Controller {
 
   @Get('/snapshot')
   async getSnapshot(
-    @Query() offset?: number,
+    @Query() addressFilter?: string[],
+      @Query() offset?: number,
       @Query() limit?: number,
-      @Query() sortByReferredFees?: boolean,
+      @Query() sortByAffiliateEarning?: boolean,
   ): Promise<AffiliateSnapshotResponse> {
+    const finalAddressFilter = addressFilter ?? [];
     const finalOffset = offset ?? 0;
     const finalLimit = limit ?? 1000;
-    // eslint-disable-next-line
-    const finalSortByReferredFees = sortByReferredFees ?? false;
+    const finalsortByAffiliateEarning = sortByAffiliateEarning ?? false;
 
-    // simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const infos = await AffiliateInfoTable.paginatedFindWithAddressFilter(
+      finalAddressFilter,
+      finalOffset,
+      finalLimit,
+      finalsortByAffiliateEarning,
+    );
 
-    const snapshot: AffiliateSnapshotResponseObject = {
-      affiliateAddress: 'some_address',
-      affiliateReferralCode: 'TempCode123',
-      affiliateEarnings: 100,
-      affiliateReferredTrades: 1000,
-      affiliateTotalReferredFees: 100,
-      affiliateReferredUsers: 10,
-      affiliateReferredNetProtocolEarnings: 1000,
-      affiliateReferredTotalVolume: 1000000,
-    };
-
-    const affiliateSnapshots: AffiliateSnapshotResponseObject[] = [];
-    for (let i = 0; i < finalLimit; i++) {
-      affiliateSnapshots.push(snapshot);
+    // No results found
+    if (infos === undefined) {
+      return {
+        affiliateList: [],
+        total: finalLimit,
+        currentOffset: finalOffset,
+      };
     }
+
+    // Get referral codes
+    const addressUsernames = await SubaccountUsernamesTable.findByAddress(
+      infos.map((info) => info.address),
+    );
+    const addressUsernameMap: Record<string, string> = {};
+    addressUsernames.forEach((addressUsername) => {
+      addressUsernameMap[addressUsername.address] = addressUsername.username;
+    });
+    if (addressUsernames.length !== infos.length) {
+      logger.warning({
+        at: 'affiliates-controller#snapshot',
+        message: `Could not find referral code for following addresses: ${infos.map((info) => info.address).filter((address) => !(address in addressUsernameMap)).join(', ')}`,
+      });
+    }
+
+    const affiliateSnapshots: AffiliateSnapshotResponseObject[] = infos.map((info) => ({
+      affiliateAddress: info.address,
+      affiliateReferralCode:
+        info.address in addressUsernameMap ? addressUsernameMap[info.address] : '',
+      affiliateEarnings: Number(info.affiliateEarnings),
+      affiliateReferredTrades: Number(info.referredMakerTrades) + Number(info.referredTakerTrades),
+      affiliateTotalReferredFees: Number(info.totalReferredFees),
+      affiliateReferredUsers: Number(info.totalReferredUsers),
+      affiliateReferredNetProtocolEarnings: Number(info.referredNetProtocolEarnings),
+      affiliateReferredTotalVolume: Number(info.referredTotalVolume),
+    }));
 
     const response: AffiliateSnapshotResponse = {
       affiliateList: affiliateSnapshots,
-      total: finalLimit,
       currentOffset: finalOffset,
+      total: affiliateSnapshots.length,
     };
 
     return response;
@@ -251,26 +277,46 @@ router.get(
   '/snapshot',
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
+    addressFilter: {
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: (value) => {
+          // Split the comma-separated string into an array
+          return typeof value === 'string' ? value.split(',') : value;
+        },
+      },
+      custom: {
+        options: (values) => {
+          return Array.isArray(values) && values.length > 0 && values.every((val) => typeof val === 'string');
+        },
+      },
+      errorMessage: 'addressFilter must be a non-empy array of comma separated strings',
+    },
     offset: {
       in: ['query'],
-      isInt: true,
+      optional: true, // Make sure this is the first rule
+      isInt: {
+        options: { min: 0 },
+      },
       toInt: true,
-      optional: true,
       errorMessage: 'offset must be a valid integer',
     },
     limit: {
       in: ['query'],
-      isInt: true,
+      optional: true, // Make sure this is the first rule
+      isInt: {
+        options: { min: 1 },
+      },
       toInt: true,
-      optional: true,
       errorMessage: 'limit must be a valid integer',
     },
-    sortByReferredFees: {
+    sortByAffiliateEarning: {
       in: ['query'],
       isBoolean: true,
       toBoolean: true,
       optional: true,
-      errorMessage: 'sortByReferredFees must be a boolean',
+      errorMessage: 'sortByAffiliateEarning must be a boolean',
     },
   }),
   handleValidationErrors,
@@ -278,17 +324,19 @@ router.get(
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     const {
+      addressFilter,
       offset,
       limit,
-      sortByReferredFees,
+      sortByAffiliateEarning,
     }: AffiliateSnapshotRequest = matchedData(req) as AffiliateSnapshotRequest;
 
     try {
       const controller: AffiliatesController = new AffiliatesController();
       const response: AffiliateSnapshotResponse = await controller.getSnapshot(
+        addressFilter,
         offset,
         limit,
-        sortByReferredFees,
+        sortByAffiliateEarning,
       );
       return res.send(response);
     } catch (error) {

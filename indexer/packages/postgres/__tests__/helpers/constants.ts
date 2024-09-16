@@ -75,6 +75,7 @@ export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvt
 export const vaultAddress: string = 'dydx1c0m5x87llaunl5sgv3q5vd7j5uha26d2q2r2q0';
 
 // ============== Subaccounts ==============
+export const defaultWalletAddress: string = 'defaultWalletAddress';
 
 export const defaultSubaccount: SubaccountCreateObject = {
   address: defaultAddress,
@@ -93,6 +94,14 @@ export const defaultSubaccount2: SubaccountCreateObject = {
 export const defaultSubaccount3: SubaccountCreateObject = {
   address: defaultAddress,
   subaccountNumber: 2,
+  updatedAt: createdDateTime.toISO(),
+  updatedAtHeight: createdHeight,
+};
+
+// defaultWalletAddress belongs to defaultWallet2 and is different from defaultAddress
+export const defaultSubaccountDefaultWalletAddress: SubaccountCreateObject = {
+  address: defaultWalletAddress,
+  subaccountNumber: 0,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
 };
@@ -125,8 +134,6 @@ export const isolatedSubaccount2: SubaccountCreateObject = {
   updatedAtHeight: createdHeight,
 };
 
-export const defaultWalletAddress: string = 'defaultWalletAddress';
-
 export const defaultSubaccountId: string = SubaccountTable.uuid(
   defaultAddress,
   defaultSubaccount.subaccountNumber,
@@ -138,6 +145,10 @@ export const defaultSubaccountId2: string = SubaccountTable.uuid(
 export const defaultSubaccountId3: string = SubaccountTable.uuid(
   defaultAddress,
   defaultSubaccount3.subaccountNumber,
+);
+export const defaultSubaccountIdDefaultWalletAddress: string = SubaccountTable.uuid(
+  defaultWalletAddress,
+  defaultSubaccountDefaultWalletAddress.subaccountNumber,
 );
 export const defaultSubaccountIdWithAlternateAddress: string = SubaccountTable.uuid(
   defaultAddress2,
@@ -906,6 +917,17 @@ export const duplicatedSubaccountUsername: SubaccountUsernamesCreateObject = {
   subaccountId: defaultSubaccountId3,
 };
 
+// defaultWalletAddress belongs to defaultWallet2 and is different from defaultAddress
+export const subaccountUsernameWithDefaultWalletAddress: SubaccountUsernamesCreateObject = {
+  username: 'EvilRaisin11',
+  subaccountId: defaultSubaccountIdDefaultWalletAddress,
+};
+
+export const subaccountUsernameWithAlternativeAddress: SubaccountUsernamesCreateObject = {
+  username: 'HonestRaisin32',
+  subaccountId: defaultSubaccountIdWithAlternateAddress,
+};
+
 // ============== Leaderboard pnl Data ==============
 
 export const defaultLeaderboardPnlOneDay: LeaderboardPnlCreateObject = {
@@ -963,24 +985,38 @@ export const defaultKV2: PersistentCacheCreateObject = {
 
 export const defaultAffiliateInfo: AffiliateInfoCreateObject = {
   address: defaultAddress,
-  affiliateEarnings: '10.00',
+  affiliateEarnings: '10',
   referredMakerTrades: 10,
   referredTakerTrades: 20,
-  totalReferredFees: '10.00',
+  totalReferredFees: '10',
   totalReferredUsers: 5,
-  referredNetProtocolEarnings: '20.00',
+  referredNetProtocolEarnings: '20',
   firstReferralBlockHeight: '1',
+  referredTotalVolume: '1000',
 };
 
-export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
-  address: defaultAddress2,
-  affiliateEarnings: '11.00',
+export const defaultAffiliateInfo2: AffiliateInfoCreateObject = {
+  address: defaultWalletAddress,
+  affiliateEarnings: '11',
   referredMakerTrades: 11,
   referredTakerTrades: 21,
-  totalReferredFees: '11.00',
+  totalReferredFees: '11',
   totalReferredUsers: 5,
-  referredNetProtocolEarnings: '21.00',
+  referredNetProtocolEarnings: '21',
   firstReferralBlockHeight: '11',
+  referredTotalVolume: '1000',
+};
+
+export const defaultAffiliateInfo3: AffiliateInfoCreateObject = {
+  address: defaultAddress2,
+  affiliateEarnings: '12',
+  referredMakerTrades: 12,
+  referredTakerTrades: 22,
+  totalReferredFees: '12',
+  totalReferredUsers: 10,
+  referredNetProtocolEarnings: '22',
+  firstReferralBlockHeight: '12',
+  referredTotalVolume: '1111111',
 };
 
 // ==============  Tokens  =============

@@ -2,14 +2,21 @@ import {
   dbHelpers,
   testConstants,
   testMocks,
+  SubaccountTable,
   SubaccountUsernamesTable,
   WalletTable,
   AffiliateReferredUsersTable,
+  AffiliateInfoTable,
+  AffiliateInfoCreateObject,
 } from '@dydxprotocol-indexer/postgres';
-import { AffiliateSnapshotRequest, RequestMethod } from '../../../../src/types';
+import {
+  AffiliateSnapshotRequest,
+  AffiliateSnapshotResponse,
+  RequestMethod,
+  AffiliateSnapshotResponseObject,
+} from '../../../../src/types';
 import request from 'supertest';
 import { sendRequest } from '../../../helpers/helpers';
-import { defaultWallet, defaultWallet2 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('affiliates-controller#V4', () => {
   beforeAll(async () => {
@@ -110,8 +117,8 @@ describe('affiliates-controller#V4', () => {
 
     it('should classify is affiliate', async () => {
       await AffiliateReferredUsersTable.create({
-        affiliateAddress: defaultWallet.address,
-        refereeAddress: defaultWallet2.address,
+        affiliateAddress: testConstants.defaultWallet.address,
+        refereeAddress: testConstants.defaultWallet2.address,
         referredAtBlock: '1',
       });
       const response: request.Response = await sendRequest({
@@ -171,21 +178,60 @@ describe('affiliates-controller#V4', () => {
   });
 
   describe('GET /snapshot', () => {
-    it('should return snapshots when all params specified', async () => {
+    const defaultInfo = testConstants.defaultAffiliateInfo;
+    const defaultInfo2 = testConstants.defaultAffiliateInfo2;
+    const defaultInfo3 = testConstants.defaultAffiliateInfo3;
+
+    beforeEach(async () => {
+      await testMocks.seedData();
+      // Create username for defaultWallet
+      await SubaccountUsernamesTable.create(testConstants.defaultSubaccountUsername);
+
+      // Create defaultWallet2, subaccount, and username
+      await WalletTable.create(testConstants.defaultWallet2);
+      await SubaccountTable.create(testConstants.defaultSubaccountDefaultWalletAddress);
+      await SubaccountUsernamesTable.create(
+        testConstants.subaccountUsernameWithDefaultWalletAddress,
+      );
+
+      // Create defaultWallet3, create subaccount, create username
+      await WalletTable.create(testConstants.defaultWallet3);
+      await SubaccountTable.create(testConstants.defaultSubaccountWithAlternateAddress);
+      await SubaccountUsernamesTable.create(testConstants.subaccountUsernameWithAlternativeAddress);
+
+      // Create affiliate infos
+      await AffiliateInfoTable.create(defaultInfo);
+      await AffiliateInfoTable.create(defaultInfo2);
+      await AffiliateInfoTable.create(defaultInfo3);
+    });
+
+    afterEach(async () => {
+      await dbHelpers.clearData();
+    });
+
+    it('should filter by address', async () => {
       const req: AffiliateSnapshotRequest = {
-        limit: 10,
-        offset: 10,
-        sortByReferredFees: true,
+        addressFilter: [testConstants.defaultWallet.address],
       };
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: `/v4/affiliates/snapshot?limit=${req.limit}&offset=${req.offset}&sortByReferredFees=${req.sortByReferredFees}`,
+        path: `/v4/affiliates/snapshot?addressFilter=${req.addressFilter!.join(',')}`,
+        expectedStatus: 200,  // helper performs expect on status,
       });
 
-      expect(response.status).toBe(200);
-      expect(response.body.affiliateList).toHaveLength(10);
-      expect(response.body.currentOffset).toBe(10);
-      expect(response.body.total).toBe(10);
+      const expectedResponse: AffiliateSnapshotResponse = {
+        affiliateList: [
+          affiliateInfoCreateToResponseObject(
+            defaultInfo, testConstants.defaultSubaccountUsername.username,
+          ),
+        ],
+        total: 1,
+        currentOffset: 0,
+      };
+      expect(response.body.affiliateList).toHaveLength(1);
+      expect(response.body.affiliateList[0]).toEqual(expectedResponse.affiliateList[0]);
+      expect(response.body.currentOffset).toEqual(expectedResponse.currentOffset);
+      expect(response.body.total).toEqual(expectedResponse.total);
     });
 
     it('should return snapshots when optional params not specified', async () => {
@@ -195,9 +241,39 @@ describe('affiliates-controller#V4', () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body.affiliateList).toHaveLength(1000);
-      expect(response.body.currentOffset).toBe(0);
-      expect(response.body.total).toBe(1000);
+      expect(response.body.affiliateList).toHaveLength(3);
+      expect(response.body.currentOffset).toEqual(0);
+      expect(response.body.total).toEqual(3);
+    });
+
+    it('should return snapshots when all params specified', async () => {
+      const req: AffiliateSnapshotRequest = {
+        addressFilter: [testConstants.defaultWallet.address, testConstants.defaultWallet2.address],
+        sortByAffiliateEarning: true,
+      };
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/affiliates/snapshot?${req.addressFilter!.map((address) => `addressFilter[]=${address}`).join('&')}&offset=1&limit=1&sortByAffiliateEarning=${req.sortByAffiliateEarning}`,
+        expectedStatus: 200,  // helper performs expect on status
+      });
+
+      // addressFilter removes defaultInfo3
+      // sortorder -> [defaultInfo2, defaultInfo]
+      // offset=1 -> defaultInfo
+      const expectedResponse: AffiliateSnapshotResponse = {
+        affiliateList: [
+          affiliateInfoCreateToResponseObject(
+            defaultInfo, testConstants.defaultSubaccountUsername.username,
+          ),
+        ],
+        total: 1,
+        currentOffset: 1,
+      };
+
+      expect(response.body.affiliateList).toHaveLength(1);
+      expect(response.body.currentOffset).toEqual(expectedResponse.currentOffset);
+      expect(response.body.total).toEqual(expectedResponse.total);
+      expect(response.body.affiliateList[0]).toEqual(expectedResponse.affiliateList[0]);
     });
   });
 
@@ -239,3 +315,20 @@ describe('affiliates-controller#V4', () => {
     });
   });
 });
+
+function affiliateInfoCreateToResponseObject(
+  info: AffiliateInfoCreateObject,
+  username: string,
+): AffiliateSnapshotResponseObject {
+  return {
+    affiliateAddress: info.address,
+    affiliateReferralCode: username,
+    affiliateEarnings: Number(info.affiliateEarnings),
+    affiliateReferredTrades:
+      Number(info.referredTakerTrades) + Number(info.referredMakerTrades),
+    affiliateTotalReferredFees: Number(info.totalReferredFees),
+    affiliateReferredUsers: Number(info.totalReferredUsers),
+    affiliateReferredNetProtocolEarnings: Number(info.referredNetProtocolEarnings),
+    affiliateReferredTotalVolume: Number(info.referredTotalVolume),
+  };
+}
