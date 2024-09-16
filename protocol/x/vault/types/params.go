@@ -60,3 +60,13 @@ func (v VaultParams) Validate() error {
 
 	return nil
 }
+
+// Validate validates OperatorParams.
+func (o OperatorParams) Validate() error {
+	// Validate that operator is non-empty.
+	if o.Operator == "" {
+		return ErrEmptyOperator
+	}
+
+	return nil
+}

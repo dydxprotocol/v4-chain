@@ -4580,6 +4580,7 @@ const GenesisState = `{
         "order_expiration_seconds": 60,
         "activation_threshold_quote_quantums": "1000000000"
       },
+      "operator_params": {},
       "owner_shares": [],
       "total_shares": {
         "num_shares": "0"

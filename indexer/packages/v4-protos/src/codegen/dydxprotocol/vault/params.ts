@@ -91,6 +91,16 @@ export interface VaultParamsSDKType {
 
   quoting_params?: QuotingParamsSDKType;
 }
+/** OperatorParams stores parameters regarding megavault operator. */
+
+export interface OperatorParams {
+  operator: string;
+}
+/** OperatorParams stores parameters regarding megavault operator. */
+
+export interface OperatorParamsSDKType {
+  operator: string;
+}
 /**
  * Deprecated: Params stores `x/vault` parameters.
  * Deprecated since v6.x as is replaced by QuotingParams.
@@ -325,6 +335,51 @@ export const VaultParams = {
     const message = createBaseVaultParams();
     message.status = object.status ?? 0;
     message.quotingParams = object.quotingParams !== undefined && object.quotingParams !== null ? QuotingParams.fromPartial(object.quotingParams) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseOperatorParams(): OperatorParams {
+  return {
+    operator: ""
+  };
+}
+
+export const OperatorParams = {
+  encode(message: OperatorParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.operator !== "") {
+      writer.uint32(10).string(message.operator);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OperatorParams {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOperatorParams();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.operator = reader.string();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<OperatorParams>): OperatorParams {
+    const message = createBaseOperatorParams();
+    message.operator = object.operator ?? "";
     return message;
   }
 

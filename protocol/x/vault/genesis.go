@@ -2,6 +2,7 @@ package vault
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
@@ -40,6 +41,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetMostRecentClientIds(ctx, vault.VaultId, vault.MostRecentClientIds)
 		k.AddVaultToAddressStore(ctx, vault.VaultId)
 	}
+
+	// Set operator, which defaults to gov module account.
+	if genState.OperatorParams.Operator == "" {
+		genState.OperatorParams.Operator = lib.GovModuleAddress.String()
+	}
+	if err := k.SetOperatorParams(ctx, genState.OperatorParams); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -53,6 +62,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	// Export params.
 	genesis.DefaultQuotingParams = k.GetDefaultQuotingParams(ctx)
+	genesis.OperatorParams = k.GetOperatorParams(ctx)
 
 	// Export vaults.
 	genesis.Vaults = k.GetAllVaults(ctx)
