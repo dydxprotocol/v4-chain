@@ -1,4 +1,10 @@
 import { stats } from '@dydxprotocol-indexer/base';
+import {
+  WalletTable,
+  AffiliateReferredUsersTable,
+  SubaccountTable,
+  SubaccountUsernamesTable,
+} from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import {
@@ -7,14 +13,15 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { NotFoundError, UnexpectedServerError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
   AffiliateAddressRequest,
-  AffiliateReferralCodeRequest,
-  AffiliateReferralCodeResponse,
+  AffiliateMetadataRequest,
+  AffiliateMetadataResponse,
   AffiliateAddressResponse,
   AffiliateSnapshotResponse,
   AffiliateSnapshotResponseObject,
@@ -29,25 +36,81 @@ const controllerName: string = 'affiliates-controller';
 // TODO(OTE-731): replace api stubs with real logic
 @Route('affiliates')
 class AffiliatesController extends Controller {
-  @Get('/referral_code')
-  async getReferralCode(
-    @Query() address: string, // eslint-disable-line @typescript-eslint/no-unused-vars
-  ): Promise<AffiliateReferralCodeResponse> {
-    // simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+  @Get('/metadata')
+  async getMetadata(
+    @Query() address: string,
+  ): Promise<AffiliateMetadataResponse> {
+    const [walletRow, referredUserRows, subaccountRows] = await Promise.all([
+      WalletTable.findById(address),
+      AffiliateReferredUsersTable.findByAffiliateAddress(address),
+      SubaccountTable.findAll(
+        {
+          address,
+          subaccountNumber: 0,
+        },
+        [],
+      ),
+    ]);
+
+    // Check that the address exists
+    if (!walletRow) {
+      throw new NotFoundError(`Wallet with address ${address} not found`);
+    }
+
+    // Check if the address is an affiliate (has referred users)
+    const isVolumeEligible = Number(walletRow.totalVolume) >= config.VOLUME_ELIGIBILITY_THRESHOLD;
+    const isAffiliate = referredUserRows !== undefined ? referredUserRows.length > 0 : false;
+
+    // No need to check subaccountRows.length > 1 as subaccountNumber is unique for an address
+    if (subaccountRows.length === 0) {
+      // error logging will be performed by handleInternalServerError
+      throw new UnexpectedServerError(`Subaccount 0 not found for address ${address}`);
+    }
+    const subaccountId = subaccountRows[0].id;
+
+    // Get subaccount0 username, which is the referral code
+    const usernameRows = await SubaccountUsernamesTable.findAll(
+      {
+        subaccountId: [subaccountId],
+      },
+      [],
+    );
+    // No need to check usernameRows.length > 1 as subAccountId is unique (foreign key constraint)
+    // This error can happen if a user calls this endpoint before subaccount-username-generator
+    // has generated the username
+    if (usernameRows.length === 0) {
+      stats.increment(`${config.SERVICE_NAME}.${controllerName}.get_metadata.subaccount_username_not_found`);
+      throw new UnexpectedServerError(`Username not found for subaccount ${subaccountId}`);
+    }
+    const referralCode = usernameRows[0].username;
+
     return {
-      referralCode: 'TempCode123',
+      referralCode,
+      isVolumeEligible,
+      isAffiliate,
     };
   }
 
   @Get('/address')
   async getAddress(
-    @Query() referralCode: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+    @Query() referralCode: string,
   ): Promise<AffiliateAddressResponse> {
-    // simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const usernameRow = await SubaccountUsernamesTable.findByUsername(referralCode);
+    if (!usernameRow) {
+      throw new NotFoundError(`Referral code ${referralCode} does not exist`);
+    }
+    const subAccountId = usernameRow.subaccountId;
+
+    const subaccountRow = await SubaccountTable.findById(subAccountId);
+    // subaccountRow should never be undefined because of foreign key constraint between subaccounts
+    // and subaccount_usernames tables
+    if (!subaccountRow) {
+      throw new UnexpectedServerError(`Subaccount ${subAccountId} not found`);
+    }
+    const address = subaccountRow.address;
+
     return {
-      address: 'some_address',
+      address,
     };
   }
 
@@ -67,12 +130,13 @@ class AffiliatesController extends Controller {
 
     const snapshot: AffiliateSnapshotResponseObject = {
       affiliateAddress: 'some_address',
-      affiliateEarnings: 100,
       affiliateReferralCode: 'TempCode123',
+      affiliateEarnings: 100,
       affiliateReferredTrades: 1000,
       affiliateTotalReferredFees: 100,
       affiliateReferredUsers: 10,
       affiliateReferredNetProtocolEarnings: 1000,
+      affiliateReferredTotalVolume: 1000000,
     };
 
     const affiliateSnapshots: AffiliateSnapshotResponseObject[] = [];
@@ -91,18 +155,22 @@ class AffiliatesController extends Controller {
 
   @Get('/total_volume')
   public async getTotalVolume(
-    @Query() address: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+    @Query() address: string,
   ): Promise<AffiliateTotalVolumeResponse> {
-    // simulate a delay
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Check that the address exists
+    const walletRow = await WalletTable.findById(address);
+    if (!walletRow) {
+      throw new NotFoundError(`Wallet with address ${address} not found`);
+    }
+
     return {
-      totalVolume: 111.1,
+      totalVolume: Number(walletRow.totalVolume),
     };
   }
 }
 
 router.get(
-  '/referral_code',
+  '/metadata',
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
     address: {
@@ -117,15 +185,15 @@ router.get(
     const start: number = Date.now();
     const {
       address,
-    }: AffiliateReferralCodeRequest = matchedData(req) as AffiliateReferralCodeRequest;
+    }: AffiliateMetadataRequest = matchedData(req) as AffiliateMetadataRequest;
 
     try {
       const controller: AffiliatesController = new AffiliatesController();
-      const response: AffiliateReferralCodeResponse = await controller.getReferralCode(address);
+      const response: AffiliateMetadataResponse = await controller.getMetadata(address);
       return res.send(response);
     } catch (error) {
       return handleControllerError(
-        'AffiliatesController GET /referral_code',
+        'AffiliatesController GET /metadata',
         'Affiliates referral code error',
         error,
         req,
@@ -133,7 +201,7 @@ router.get(
       );
     } finally {
       stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.get_referral_code.timing`,
+        `${config.SERVICE_NAME}.${controllerName}.get_metadata.timing`,
         Date.now() - start,
       );
     }
