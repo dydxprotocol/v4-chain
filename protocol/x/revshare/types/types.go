@@ -53,3 +53,10 @@ const (
 	REV_SHARE_TYPE_UNCONDITIONAL
 	REV_SHARE_TYPE_AFFILIATE
 )
+
+type RevSharesForFill struct {
+	AffiliateRevShare        *RevShare
+	FeeSourceToQuoteQuantums map[RevShareFeeSource]*big.Int
+	FeeSourceToRevSharePpm   map[RevShareFeeSource]uint32
+	AllRevShares             []RevShare
+}

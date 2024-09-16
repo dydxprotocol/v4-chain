@@ -151,7 +151,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 		prevTakerRewardShare *types.RewardShare
 		prevMakerRewardShare *types.RewardShare
 		fill                 clobtypes.FillForProcess
-		revshares            []revsharetypes.RevShare
+		revSharesForFill     revsharetypes.RevSharesForFill
 		feeTiers             []*feetierstypes.PerpetualFeeTier
 
 		expectedTakerShare types.RewardShare
@@ -170,7 +170,12 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				MarketId:                          uint32(1),
 				MonthlyRollingTakerVolumeQuantums: 0,
 			},
-			revshares: []revsharetypes.RevShare{},
+			revSharesForFill: revsharetypes.RevSharesForFill{
+				AllRevShares:             []revsharetypes.RevShare{},
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{},
+				FeeSourceToRevSharePpm:   map[revsharetypes.RevShareFeeSource]uint32{},
+				AffiliateRevShare:        nil,
+			},
 			feeTiers: []*feetierstypes.PerpetualFeeTier{
 				{
 					MakerFeePpm: -1_000, // -0.1%
@@ -199,7 +204,12 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				MarketId:                          uint32(1),
 				MonthlyRollingTakerVolumeQuantums: 0,
 			},
-			revshares: []revsharetypes.RevShare{},
+			revSharesForFill: revsharetypes.RevSharesForFill{
+				AllRevShares:             []revsharetypes.RevShare{},
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{},
+				FeeSourceToRevSharePpm:   map[revsharetypes.RevShareFeeSource]uint32{},
+				AffiliateRevShare:        nil,
+			},
 			feeTiers: []*feetierstypes.PerpetualFeeTier{
 				{
 					MakerFeePpm: -1_000, // -0.1%
@@ -228,7 +238,12 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				MarketId:                          uint32(1),
 				MonthlyRollingTakerVolumeQuantums: 0,
 			},
-			revshares: []revsharetypes.RevShare{},
+			revSharesForFill: revsharetypes.RevSharesForFill{
+				AllRevShares:             []revsharetypes.RevShare{},
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{},
+				FeeSourceToRevSharePpm:   map[revsharetypes.RevShareFeeSource]uint32{},
+				AffiliateRevShare:        nil,
+			},
 			feeTiers: []*feetierstypes.PerpetualFeeTier{
 				{
 					MakerFeePpm: -500,  // -0.05%
@@ -256,7 +271,12 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				MarketId:                          uint32(1),
 				MonthlyRollingTakerVolumeQuantums: 0,
 			},
-			revshares: []revsharetypes.RevShare{},
+			revSharesForFill: revsharetypes.RevSharesForFill{
+				AllRevShares:             []revsharetypes.RevShare{},
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{},
+				FeeSourceToRevSharePpm:   map[revsharetypes.RevShareFeeSource]uint32{},
+				AffiliateRevShare:        nil,
+			},
 			feeTiers: []*feetierstypes.PerpetualFeeTier{
 				{
 					MakerFeePpm: -1_000, // -0.1%
@@ -285,7 +305,12 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				MarketId:                          uint32(1),
 				MonthlyRollingTakerVolumeQuantums: 0,
 			},
-			revshares: []revsharetypes.RevShare{},
+			revSharesForFill: revsharetypes.RevSharesForFill{
+				AllRevShares:             []revsharetypes.RevShare{},
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{},
+				FeeSourceToRevSharePpm:   map[revsharetypes.RevShareFeeSource]uint32{},
+				AffiliateRevShare:        nil,
+			},
 			feeTiers: []*feetierstypes.PerpetualFeeTier{
 				{
 					MakerFeePpm: 1_000, // 0.1%
@@ -314,14 +339,25 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				MarketId:                          uint32(1),
 				MonthlyRollingTakerVolumeQuantums: 9,
 			},
-			revshares: []revsharetypes.RevShare{
-				{
-					Recipient:         constants.AliceAccAddress.String(),
-					RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(200_000),
-					RevSharePpm:       100_000, // 10%
+			revSharesForFill: revsharetypes.RevSharesForFill{
+				AllRevShares: []revsharetypes.RevShare{
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(200_000),
+						RevSharePpm:       100_000, // 10%
+					},
 				},
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(200_000),
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(0),
+				},
+				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   100_000, // 10%
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: 0,
+				},
+				AffiliateRevShare: nil,
 			},
 			feeTiers: []*feetierstypes.PerpetualFeeTier{
 				{
@@ -351,21 +387,32 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				MarketId:                          uint32(1),
 				MonthlyRollingTakerVolumeQuantums: 0,
 			},
-			revshares: []revsharetypes.RevShare{
-				{
-					Recipient:         constants.AliceAccAddress.String(),
-					RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(200_000),
-					RevSharePpm:       100_000, // 10%
+			revSharesForFill: revsharetypes.RevSharesForFill{
+				AllRevShares: []revsharetypes.RevShare{
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(200_000),
+						RevSharePpm:       100_000, // 10%
+					},
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(200_000),
+						RevSharePpm:       100_000, // 10%
+					},
 				},
-				{
-					Recipient:         constants.BobAccAddress.String(),
-					RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(200_000),
-					RevSharePpm:       100_000, // 10%
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(400_000),
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(0),
 				},
+				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   200_000, // 20%
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: 0,
+				},
+				AffiliateRevShare: nil,
 			},
 			feeTiers: []*feetierstypes.PerpetualFeeTier{
 				{
@@ -395,15 +442,32 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				MarketId:                          uint32(1),
 				MonthlyRollingTakerVolumeQuantums: 0,
 			},
-			revshares: []revsharetypes.RevShare{
-				{
-					Recipient:         constants.AliceAccAddress.String(),
-					RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(200_000),
-					RevSharePpm:       100_000, // 10%
+			revSharesForFill: revsharetypes.RevSharesForFill{
+				AllRevShares: []revsharetypes.RevShare{
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(200_000),
+						RevSharePpm:       100_000, // 10%
+					},
+					{
+						Recipient:         takerAddress,
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_AFFILIATE,
+						QuoteQuantums:     big.NewInt(200_000),
+						RevSharePpm:       100_000, // 10%
+					},
 				},
-				{
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(200_000),
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(200_000),
+				},
+				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   100_000, // 10%
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: 100_000, // 10%
+				},
+				AffiliateRevShare: &revsharetypes.RevShare{
 					Recipient:         takerAddress,
 					RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 					RevShareType:      revsharetypes.REV_SHARE_TYPE_AFFILIATE,
@@ -453,7 +517,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 			k.AddRewardSharesForFill(
 				ctx,
 				tc.fill,
-				tc.revshares,
+				tc.revSharesForFill,
 			)
 
 			// Check the new reward shares.

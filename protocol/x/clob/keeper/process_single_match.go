@@ -14,7 +14,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	gometrics "github.com/hashicorp/go-metrics"
 )
@@ -315,6 +314,7 @@ func (k Keeper) persistMatchedOrders(
 	err error,
 ) {
 	isTakerLiquidation := matchWithOrders.TakerOrder.IsLiquidation()
+	affiliateRevSharesQuoteQuantums = big.NewInt(0)
 
 	// Taker fees and maker fees/rebates are rounded towards positive infinity.
 	bigTakerFeeQuoteQuantums := lib.BigMulPpm(bigFillQuoteQuantums, lib.BigI(takerFeePpm), true)
@@ -460,21 +460,19 @@ func (k Keeper) persistMatchedOrders(
 
 	// Distribute the fee amount from subacounts module to fee collector and rev share accounts
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
-	revshares, err := k.revshareKeeper.GetAllRevShares(ctx, fillForProcess)
-	affiliateRevSharesQuoteQuantums = big.NewInt(0)
-	for _, revshare := range revshares {
-		if revshare.RevShareType == revsharetypes.REV_SHARE_TYPE_AFFILIATE {
-			affiliateRevSharesQuoteQuantums = revshare.QuoteQuantums
-			break
-		}
+	revSharesForFill, err := k.revshareKeeper.GetAllRevShares(ctx, fillForProcess)
+
+	if revSharesForFill.AffiliateRevShare != nil {
+		affiliateRevSharesQuoteQuantums = revSharesForFill.AffiliateRevShare.QuoteQuantums
 	}
+
 	if err != nil {
 		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 	if err := k.subaccountsKeeper.DistributeFees(
 		ctx,
 		assettypes.AssetUsdc.Id,
-		revshares,
+		revSharesForFill,
 		fillForProcess,
 	); err != nil {
 		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, errorsmod.Wrapf(
@@ -495,7 +493,7 @@ func (k Keeper) persistMatchedOrders(
 	k.rewardsKeeper.AddRewardSharesForFill(
 		ctx,
 		fillForProcess,
-		revshares,
+		revSharesForFill,
 	)
 
 	k.statsKeeper.RecordFill(

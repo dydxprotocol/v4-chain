@@ -218,7 +218,7 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 func (k Keeper) DistributeFees(
 	ctx sdk.Context,
 	assetId uint32,
-	revShares []revsharetypes.RevShare,
+	revSharesForFill revsharetypes.RevSharesForFill,
 	fill clobtypes.FillForProcess,
 ) error {
 	// get perpetual
@@ -233,33 +233,9 @@ func (k Keeper) DistributeFees(
 		return err
 	}
 
-	// calculate market mapper rev share
-	totalRevShareQuoteQuantums := big.NewInt(0)
-
-	for _, revShare := range revShares {
-		totalRevShareQuoteQuantums.Add(totalRevShareQuoteQuantums, revShare.QuoteQuantums)
-	}
-
-	// Remaining amount goes to the fee collector
-	feeCollectorShare := new(big.Int).Sub(totalFeeQuoteQuantums, totalRevShareQuoteQuantums)
-
-	// Emit a metric for the amount of fees transferred to the market mapper
-	labels := []metrics.Label{
-		metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)),
-	}
-
-	for _, revShare := range revShares {
-		if revShare.RevShareType == revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER {
-			metrics.AddSampleWithLabels(
-				metrics.MarketMapperRevenueDistribution,
-				metrics.GetMetricValueFromBigInt(revShare.QuoteQuantums),
-				labels...,
-			)
-		}
-	}
-
-	// Transfer fees to the market mapper
-	for _, revShare := range revShares {
+	// Transfer fees to rev share recipients
+	for _, revShare := range revSharesForFill.AllRevShares {
+		// transfer fees to the recipient
 		recipientAddress, err := sdk.AccAddressFromBech32(revShare.Recipient)
 		if err != nil {
 			return err
@@ -273,6 +249,34 @@ func (k Keeper) DistributeFees(
 		); err != nil {
 			return err
 		}
+
+		// emit a metric for the amount of fees transferred to the market mapper
+		if revShare.RevShareType == revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER {
+			labels := []metrics.Label{
+				metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)),
+			}
+			metrics.AddSampleWithLabels(
+				metrics.MarketMapperRevenueDistribution,
+				metrics.GetMetricValueFromBigInt(revShare.QuoteQuantums),
+				labels...,
+			)
+		}
+	}
+
+	totalRevShareQuoteQuantums := big.NewInt(0).Add(
+		revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE],
+		revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE],
+	)
+
+	// Remaining amount goes to the fee collector
+	feeCollectorShare := new(big.Int).Sub(
+		totalFeeQuoteQuantums,
+		totalRevShareQuoteQuantums,
+	)
+
+	// If Collector fee share is < 0, panic
+	if feeCollectorShare.Sign() < 0 {
+		panic("fee collector share is < 0")
 	}
 
 	// Transfer fees to the fee collector

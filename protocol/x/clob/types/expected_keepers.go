@@ -84,7 +84,7 @@ type SubaccountsKeeper interface {
 	DistributeFees(
 		ctx sdk.Context,
 		assetId uint32,
-		revShares []revsharetypes.RevShare,
+		revSharesForFill revsharetypes.RevSharesForFill,
 		fillForProcess FillForProcess,
 	) error
 	SendFinalizedSubaccountUpdates(
@@ -167,7 +167,7 @@ type RewardsKeeper interface {
 	AddRewardSharesForFill(
 		ctx sdk.Context,
 		fill FillForProcess,
-		revshares []revsharetypes.RevShare,
+		revSharesForFill revsharetypes.RevSharesForFill,
 	)
 }
 
@@ -175,5 +175,7 @@ type RevShareKeeper interface {
 	GetAllRevShares(
 		ctx sdk.Context,
 		fill FillForProcess,
-	) ([]revsharetypes.RevShare, error)
+	) (
+		revsharetypes.RevSharesForFill, error,
+	)
 }

@@ -123,43 +123,47 @@ func (k Keeper) GetRewardShare(
 //	reward_share_score = total_taker_fees_paid - max_possible_maker_rebate*taker_volume + total_positive_maker_fees
 //
 // Hence, for each fill, increment reward share score as follow:
-//   - For maker address, positive maker fees are added directly.
-//   - For taker address, positive taker fees are reduced by the largest possible maker rebate in x/fee-tiers multiplied
-//     by quote quantums of the fill.
+//   - Let F = sum(percentages of general rev-share) (excluding taker only rev share i.e. affiliate)
+//   - For maker address, positive_maker_fees * (1 - F) are added to reward share score.
+//   - For taker address, (positive_taker_fees - max_possible_maker_rebate
+//     					  * fill_quote_quantum - taker_fee_rev_share) * (1 - F)
+//     are added to reward share score.
+
 func (k Keeper) AddRewardSharesForFill(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
-	revshares []revsharetypes.RevShare,
+	revSharesForFill revsharetypes.RevSharesForFill,
 ) {
 	// Process reward weight for taker.
 	lowestMakerFee := k.feeTiersKeeper.GetLowestMakerFee(ctx)
 	maxMakerRebatePpm := lib.Min(int32(0), lowestMakerFee)
 
 	totalNetFeeRevSharePpm := uint32(0)
-	affiliateRevShareQuoteQuantums := big.NewInt(0)
-	for _, revshare := range revshares {
-		if revshare.RevShareFeeSource == revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE {
-			totalNetFeeRevSharePpm += revshare.RevSharePpm
-		}
-		if revshare.RevShareType == revsharetypes.REV_SHARE_TYPE_AFFILIATE {
-			affiliateRevShareQuoteQuantums = revshare.QuoteQuantums
-		}
+	if _, ok := revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]; ok {
+		totalNetFeeRevSharePpm = revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]
 	}
-	remainingRevSharePpm := lib.OneMillion - totalNetFeeRevSharePpm
+	totalTakerFeeRevShareQuantums := big.NewInt(0)
+	if _, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]; ok {
+		totalTakerFeeRevShareQuantums =
+			revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]
+	}
+
+	totalFeeSubNetRevSharePpm := lib.OneMillion - totalNetFeeRevSharePpm
 
 	// Calculate quote_quantums * max_maker_rebate. Result is non-positive.
 	makerRebateMulTakerVolume := lib.BigMulPpm(fill.FillQuoteQuantums, lib.BigI(maxMakerRebatePpm), false)
-	netTakerFeeWithoutAffiliateRevshare := new(big.Int).Add(
+
+	netTakerFee := new(big.Int).Add(
 		fill.TakerFeeQuoteQuantums,
 		makerRebateMulTakerVolume,
 	)
-	netTakerFee := new(big.Int).Sub(
-		netTakerFeeWithoutAffiliateRevshare,
-		affiliateRevShareQuoteQuantums,
+	netTakerFee = netTakerFee.Sub(
+		netTakerFee,
+		totalTakerFeeRevShareQuantums,
 	)
 	takerWeight := lib.BigMulPpm(
 		netTakerFee,
-		lib.BigU(remainingRevSharePpm),
+		lib.BigU(totalFeeSubNetRevSharePpm),
 		false,
 	)
 	if takerWeight.Sign() > 0 {
@@ -178,7 +182,7 @@ func (k Keeper) AddRewardSharesForFill(
 	}
 
 	// Process reward weight for maker.
-	makerWeight := new(big.Int).Set(lib.BigMulPpm(fill.MakerFeeQuoteQuantums, lib.BigU(remainingRevSharePpm), false))
+	makerWeight := new(big.Int).Set(lib.BigMulPpm(fill.MakerFeeQuoteQuantums, lib.BigU(totalFeeSubNetRevSharePpm), false))
 	if makerWeight.Sign() > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
 		if err := k.AddRewardShareToAddress(

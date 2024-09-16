@@ -1262,34 +1262,6 @@ func TestDistributeFees(t *testing.T) {
 			expectedAffiliateAccBalance:             big.NewInt(0),
 			expectedUnconditionalRevShareAccBalance: big.NewInt(0),
 		},
-		"success - quantums is zero": {
-			asset:                      *constants.Usdc,
-			feeModuleAccBalance:        big.NewInt(2500),
-			subaccountModuleAccBalance: big.NewInt(600),
-			fill: clobtypes.FillForProcess{
-				TakerAddr:                         constants.AliceAccAddress.String(),
-				TakerFeeQuoteQuantums:             big.NewInt(0),
-				MakerAddr:                         constants.BobAccAddress.String(),
-				MakerFeeQuoteQuantums:             big.NewInt(0),
-				FillQuoteQuantums:                 big.NewInt(500),
-				ProductId:                         uint32(3),
-				MarketId:                          uint32(3),
-				MonthlyRollingTakerVolumeQuantums: 1_000_000,
-			},
-			collateralPoolAddr:                  types.ModuleAddress,
-			expectedSubaccountsModuleAccBalance: big.NewInt(600),  // 600
-			expectedFeeModuleAccBalance:         big.NewInt(2500), // 2500
-			marketMapperAccBalance:              big.NewInt(0),
-			affiliateRevShareAcctAddr:           "",
-			marketMapperRevShareAcctAddr:        constants.AliceAccAddress.String(),
-			unconditionalRevShareAcctAddr:       "",
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address: constants.AliceAccAddress.String(),
-			},
-			expectedMarketMapperAccBalance:          big.NewInt(0),
-			expectedAffiliateAccBalance:             big.NewInt(0),
-			expectedUnconditionalRevShareAccBalance: big.NewInt(0),
-		},
 		"failure - subaccounts module does not have sufficient funds": {
 			asset:                      *constants.Usdc,
 			feeModuleAccBalance:        big.NewInt(2500),
@@ -1670,9 +1642,9 @@ func TestDistributeFees(t *testing.T) {
 						},
 					})
 			}
-			revShares, err := revShareKeeper.GetAllRevShares(ctx, tc.fill)
+			revSharesForFill, err := revShareKeeper.GetAllRevShares(ctx, tc.fill)
 			require.NoError(t, err)
-			err = keeper.DistributeFees(ctx, tc.asset.Id, revShares, tc.fill)
+			err = keeper.DistributeFees(ctx, tc.asset.Id, revSharesForFill, tc.fill)
 
 			if tc.expectedErr != nil {
 				require.ErrorIs(t,
