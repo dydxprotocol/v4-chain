@@ -33,8 +33,6 @@ type PricesKeeper interface {
 	GetAllMarketPrices(ctx sdk.Context) (marketPrices []MarketPrice)
 	HasAuthority(authority string) bool
 
-	InitializeCurrencyPairIdCache(ctx sdk.Context)
-
 	// Validation related.
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
@@ -48,6 +46,9 @@ type PricesKeeper interface {
 
 	// Misc.
 	Logger(ctx sdk.Context) log.Logger
+
+	// Currency Pair ID cache
+	AddCurrencyPairIDToStore(ctx sdk.Context, id uint32, cp slinkytypes.CurrencyPair)
 
 	// Slinky compat
 	GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool)

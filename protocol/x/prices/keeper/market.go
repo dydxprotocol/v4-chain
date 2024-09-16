@@ -75,7 +75,7 @@ func (k Keeper) CreateMarket(
 	marketPriceStore.Set(lib.Uint32ToKey(marketPrice.Id), priceBytes)
 
 	// add the pair to the currency-pair-id cache
-	k.currencyPairIDCache.AddCurrencyPair(uint64(marketParam.Id), currencyPairStr)
+	k.AddCurrencyPairIDToStore(ctx, marketParam.Id, currencyPair)
 
 	// Generate indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(

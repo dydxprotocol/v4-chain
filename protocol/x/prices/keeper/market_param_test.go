@@ -137,6 +137,14 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 			exchangeConfigJson: validExchangeConfigJson,
 			expectedErr:        errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgMarketPairCannotBeEmpty).Error(),
 		},
+		"Pair name invalid": {
+			targetId:           0,
+			pair:               "test", // pair must be in format {Base}-{Quote}
+			minExchanges:       uint32(2),
+			minPriceChangePpm:  uint32(50),
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr:        errorsmod.Wrap(types.ErrMarketPairConversionFailed, "test").Error(),
+		},
 		"Invalid min price change: zero": {
 			targetId:           0,
 			pair:               constants.BtcUsdPair,
