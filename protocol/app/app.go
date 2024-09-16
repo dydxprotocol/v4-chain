@@ -467,6 +467,7 @@ func New(
 		statsmoduletypes.TransientStoreKey,
 		rewardsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
+		streaming.StreamingManagerTransientStoreKey,
 		perpetualsmoduletypes.TransientStoreKey,
 	)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
@@ -762,6 +763,7 @@ func New(
 		appFlags,
 		appCodec,
 		logger,
+		tkeys[streaming.StreamingManagerTransientStoreKey],
 	)
 
 	timeProvider := &timelib.TimeProviderImpl{}
@@ -2029,6 +2031,7 @@ func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
 	cdc codec.Codec,
 	logger log.Logger,
+	streamingManagerTransientStoreKey storetypes.StoreKey,
 ) (manager streamingtypes.FullNodeStreamingManager, wsServer *ws.WebsocketServer) {
 	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	if appFlags.GrpcStreamingEnabled {
@@ -2042,6 +2045,7 @@ func getFullNodeStreamingManagerFromOptions(
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
 			appFlags.FullNodeStreamingSnapshotInterval,
+			streamingManagerTransientStoreKey,
 		)
 
 		// Start websocket server.
