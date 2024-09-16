@@ -155,7 +155,7 @@ describe('affiliates-controller#V4', () => {
     });
 
     it('should return address for a valid referral code', async () => {
-      const referralCode = testConstants.defaultSubaccountUsername.username;
+      const referralCode: string = testConstants.defaultSubaccountUsername.username;
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/affiliates/address?referralCode=${referralCode}`,
@@ -178,9 +178,9 @@ describe('affiliates-controller#V4', () => {
   });
 
   describe('GET /snapshot', () => {
-    const defaultInfo = testConstants.defaultAffiliateInfo;
-    const defaultInfo2 = testConstants.defaultAffiliateInfo2;
-    const defaultInfo3 = testConstants.defaultAffiliateInfo3;
+    const defaultInfo: AffiliateInfoCreateObject = testConstants.defaultAffiliateInfo;
+    const defaultInfo2: AffiliateInfoCreateObject = testConstants.defaultAffiliateInfo2;
+    const defaultInfo3: AffiliateInfoCreateObject = testConstants.defaultAffiliateInfo3;
 
     beforeEach(async () => {
       await testMocks.seedData();
@@ -209,6 +209,18 @@ describe('affiliates-controller#V4', () => {
       await dbHelpers.clearData();
     });
 
+    it('should return snapshots when optional params not specified', async () => {
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/affiliates/snapshot',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body.affiliateList).toHaveLength(3);
+      expect(response.body.currentOffset).toEqual(0);
+      expect(response.body.total).toEqual(3);
+    });
+
     it('should filter by address', async () => {
       const req: AffiliateSnapshotRequest = {
         addressFilter: [testConstants.defaultWallet.address],
@@ -234,16 +246,44 @@ describe('affiliates-controller#V4', () => {
       expect(response.body.total).toEqual(expectedResponse.total);
     });
 
-    it('should return snapshots when optional params not specified', async () => {
+    it('should handle no results when filter by address', async () => {
+      const req: AffiliateSnapshotRequest = {
+        addressFilter: ['nonexistentaddress'],
+      };
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: '/v4/affiliates/snapshot',
+        path: `/v4/affiliates/snapshot?addressFilter=${req.addressFilter!.join(',')}`,
+        expectedStatus: 200,  // helper performs expect on status,
       });
 
-      expect(response.status).toBe(200);
-      expect(response.body.affiliateList).toHaveLength(3);
-      expect(response.body.currentOffset).toEqual(0);
-      expect(response.body.total).toEqual(3);
+      const expectedResponse: AffiliateSnapshotResponse = {
+        affiliateList: [],
+        total: 0,
+        currentOffset: 0,
+      };
+      expect(response.body.affiliateList).toHaveLength(0);
+      expect(response.body.affiliateList[0]).toEqual(expectedResponse.affiliateList[0]);
+      expect(response.body.currentOffset).toEqual(expectedResponse.currentOffset);
+      expect(response.body.total).toEqual(expectedResponse.total);
+    });
+
+    it('should handle offset out of bounds', async () => {
+      const offset = 5;
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/affiliates/snapshot?offset=${offset}`,
+        expectedStatus: 200,  // helper performs expect on status,
+      });
+
+      const expectedResponse: AffiliateSnapshotResponse = {
+        affiliateList: [],
+        total: 0,
+        currentOffset: offset,
+      };
+      expect(response.body.affiliateList).toHaveLength(0);
+      expect(response.body.affiliateList[0]).toEqual(expectedResponse.affiliateList[0]);
+      expect(response.body.currentOffset).toEqual(expectedResponse.currentOffset);
+      expect(response.body.total).toEqual(expectedResponse.total);
     });
 
     it('should return snapshots when all params specified', async () => {
@@ -275,6 +315,7 @@ describe('affiliates-controller#V4', () => {
       expect(response.body.total).toEqual(expectedResponse.total);
       expect(response.body.affiliateList[0]).toEqual(expectedResponse.affiliateList[0]);
     });
+
   });
 
   describe('GET /total_volume', () => {

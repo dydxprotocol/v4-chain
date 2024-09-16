@@ -1,10 +1,12 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
+  AddressUsernameFromDatabase,
   WalletTable,
   AffiliateInfoTable,
   AffiliateReferredUsersTable,
   SubaccountTable,
   SubaccountUsernamesTable,
+  AffiliateInfoFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
@@ -122,12 +124,13 @@ class AffiliatesController extends Controller {
       @Query() limit?: number,
       @Query() sortByAffiliateEarning?: boolean,
   ): Promise<AffiliateSnapshotResponse> {
-    const finalAddressFilter = addressFilter ?? [];
-    const finalOffset = offset ?? 0;
-    const finalLimit = limit ?? 1000;
-    const finalsortByAffiliateEarning = sortByAffiliateEarning ?? false;
+    const finalAddressFilter: string[] = addressFilter ?? [];
+    const finalOffset: number = offset ?? 0;
+    const finalLimit: number = limit ?? 1000;
+    const finalsortByAffiliateEarning: boolean = sortByAffiliateEarning ?? false;
 
-    const infos = await AffiliateInfoTable.paginatedFindWithAddressFilter(
+    // eslint-disable-next-line max-len
+    const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
       finalAddressFilter,
       finalOffset,
       finalLimit,
@@ -138,13 +141,14 @@ class AffiliatesController extends Controller {
     if (infos === undefined) {
       return {
         affiliateList: [],
-        total: finalLimit,
+        total: 0,
         currentOffset: finalOffset,
       };
     }
 
     // Get referral codes
-    const addressUsernames = await SubaccountUsernamesTable.findByAddress(
+    // eslint-disable-next-line max-len
+    const addressUsernames: AddressUsernameFromDatabase[] = await SubaccountUsernamesTable.findByAddress(
       infos.map((info) => info.address),
     );
     const addressUsernameMap: Record<string, string> = {};
@@ -288,14 +292,16 @@ router.get(
       },
       custom: {
         options: (values) => {
-          return Array.isArray(values) && values.length > 0 && values.every((val) => typeof val === 'string');
+          return Array.isArray(values) &&
+            values.length > 0 &&
+            values.every((val) => typeof val === 'string');
         },
       },
       errorMessage: 'addressFilter must be a non-empy array of comma separated strings',
     },
     offset: {
       in: ['query'],
-      optional: true, // Make sure this is the first rule
+      optional: true,
       isInt: {
         options: { min: 0 },
       },
@@ -304,7 +310,7 @@ router.get(
     },
     limit: {
       in: ['query'],
-      optional: true, // Make sure this is the first rule
+      optional: true,
       isInt: {
         options: { min: 1 },
       },

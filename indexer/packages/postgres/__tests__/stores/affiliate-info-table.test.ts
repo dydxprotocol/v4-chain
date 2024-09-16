@@ -79,7 +79,8 @@ describe('Affiliate info store', () => {
     });
 
     it('Successfully filters by address', async () => {
-      const infos = await AffiliateInfoTable.paginatedFindWithAddressFilter(
+      // eslint-disable-next-line max-len
+      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
         ['address_0'],
         0,
         10,
@@ -95,7 +96,8 @@ describe('Affiliate info store', () => {
     });
 
     it('Successfully sorts by affiliate earning', async () => {
-      const infos = await AffiliateInfoTable.paginatedFindWithAddressFilter(
+      // eslint-disable-next-line max-len
+      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
         [],
         0,
         10,
@@ -116,7 +118,8 @@ describe('Affiliate info store', () => {
     });
 
     it('Successfully uses offset and limit', async () => {
-      const infos = await AffiliateInfoTable.paginatedFindWithAddressFilter(
+      // eslint-disable-next-line max-len
+      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
         [],
         5,
         2,
@@ -137,7 +140,8 @@ describe('Affiliate info store', () => {
     });
 
     it('Successfully filters, sorts, offsets, and limits', async () => {
-      const infos = await AffiliateInfoTable.paginatedFindWithAddressFilter(
+      // eslint-disable-next-line max-len
+      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
         [],
         3,
         2,

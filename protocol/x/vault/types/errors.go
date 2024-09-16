@@ -121,4 +121,9 @@ var (
 		23,
 		"Locked shares exceeds owner shares",
 	)
+	ErrEmptyOperator = errorsmod.Register(
+		ModuleName,
+		24,
+		"Empty operator address",
+	)
 )

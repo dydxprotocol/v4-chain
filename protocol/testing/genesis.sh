@@ -2255,6 +2255,8 @@ function edit_genesis() {
 	# Vaults
 	# Set default quoting params.
 	dasel put -t int -f "$GENESIS" ".app_state.vault.default_quoting_params.spread_min_ppm" -v '3000'
+	# Set operator params.
+	dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.operator" -v 'dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky'
 	# Set total shares and owner shares.
 	if [ -z "${INPUT_TEST_ACCOUNTS[0]}" ]; then
 		vault_owner_address='dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4' # alice as default vault owner
