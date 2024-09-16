@@ -403,8 +403,8 @@ func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockSubaccountUpdate(
 }
 
 // Stage a fill event in transient store, during `FinalizeBlock`.
-// Since `FinalizeBlock` code block can be called more than once with optimistc
-// execution (once optimistcally and optionally once on the canonical block),
+// Since `FinalizeBlock` code block can be called more than once with optimistic
+// execution (once optimistically and optionally once on the canonical block),
 // we need to stage the events in transient store and later emit them
 // during `Precommit`.
 func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockFill(
