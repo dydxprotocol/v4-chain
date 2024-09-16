@@ -50,7 +50,23 @@ type FullNodeStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	StageFinalizeBlockFill(
+		ctx sdk.Context,
+		fill clobtypes.StreamOrderbookFill,
+	)
+	StageFinalizeBlockSubaccountUpdate(
+		ctx sdk.Context,
+		subaccountUpdate satypes.StreamSubaccountUpdate,
+	)
+	GetStagedFinalizeBlockEvents(
+		ctx sdk.Context,
+	) []clobtypes.StagedFinalizeBlockEvent
 	TracksSubaccountId(id satypes.SubaccountId) bool
+	StreamBatchUpdatesAfterFinalizeBlock(
+		ctx sdk.Context,
+		orderBookUpdatesToSyncLocalOpsQueue *clobtypes.OffchainUpdates,
+		perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
+	)
 }
 
 type OutgoingMessageSender interface {

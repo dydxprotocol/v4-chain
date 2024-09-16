@@ -323,7 +323,6 @@ describe('Transfer store', () => {
       address: defaultWalletAddress,
       totalTradingRewards: '0',
       totalVolume: '0',
-      isWhitelistAffiliate: false,
     });
     const invalidDeposit: TransferCreateObject = {
       ...defaultDeposit,
@@ -356,7 +355,6 @@ describe('Transfer store', () => {
       address: defaultWalletAddress,
       totalTradingRewards: '0',
       totalVolume: '0',
-      isWhitelistAffiliate: false,
     });
     await Promise.all([
       TransferTable.create(defaultTransfer),

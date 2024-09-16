@@ -1,4 +1,4 @@
-import { AffiliateTiers, AffiliateTiersSDKType } from "./affiliates";
+import { AffiliateTiers, AffiliateTiersSDKType, AffiliateWhitelist, AffiliateWhitelistSDKType } from "./affiliates";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -23,9 +23,18 @@ export interface AffiliateInfoRequestSDKType {
  */
 
 export interface AffiliateInfoResponse {
-  /** The affiliate's tier. */
+  /** Whether the address is a whitelisted affiliate (VIP). */
+  isWhitelisted: boolean;
+  /**
+   * If `is_whiteslisted == false`, the affiliate's tier qualified through
+   * regular affiliate program.
+   */
+
   tier: number;
-  /** The affiliate's taker fee share in parts-per-million. */
+  /**
+   * The affiliate's taker fee share in parts-per-million (for both VIP and
+   * regular affiliate).
+   */
 
   feeSharePpm: number;
   /** The affiliate's all-time referred volume in quote quantums. */
@@ -41,9 +50,18 @@ export interface AffiliateInfoResponse {
  */
 
 export interface AffiliateInfoResponseSDKType {
-  /** The affiliate's tier. */
+  /** Whether the address is a whitelisted affiliate (VIP). */
+  is_whitelisted: boolean;
+  /**
+   * If `is_whiteslisted == false`, the affiliate's tier qualified through
+   * regular affiliate program.
+   */
+
   tier: number;
-  /** The affiliate's taker fee share in parts-per-million. */
+  /**
+   * The affiliate's taker fee share in parts-per-million (for both VIP and
+   * regular affiliate).
+   */
 
   fee_share_ppm: number;
   /** The affiliate's all-time referred volume in quote quantums. */
@@ -107,6 +125,34 @@ export interface AllAffiliateTiersResponseSDKType {
   /** All affiliate tiers information. */
   tiers?: AffiliateTiersSDKType;
 }
+/**
+ * AffiliateWhitelistRequest is the request type for the
+ * Query/AffiliateWhitelist RPC method.
+ */
+
+export interface AffiliateWhitelistRequest {}
+/**
+ * AffiliateWhitelistRequest is the request type for the
+ * Query/AffiliateWhitelist RPC method.
+ */
+
+export interface AffiliateWhitelistRequestSDKType {}
+/**
+ * AffiliateWhitelistResponse is the response type for the
+ * Query/AffiliateWhitelist RPC method.
+ */
+
+export interface AffiliateWhitelistResponse {
+  whitelist?: AffiliateWhitelist;
+}
+/**
+ * AffiliateWhitelistResponse is the response type for the
+ * Query/AffiliateWhitelist RPC method.
+ */
+
+export interface AffiliateWhitelistResponseSDKType {
+  whitelist?: AffiliateWhitelistSDKType;
+}
 
 function createBaseAffiliateInfoRequest(): AffiliateInfoRequest {
   return {
@@ -155,6 +201,7 @@ export const AffiliateInfoRequest = {
 
 function createBaseAffiliateInfoResponse(): AffiliateInfoResponse {
   return {
+    isWhitelisted: false,
     tier: 0,
     feeSharePpm: 0,
     referredVolume: new Uint8Array(),
@@ -164,20 +211,24 @@ function createBaseAffiliateInfoResponse(): AffiliateInfoResponse {
 
 export const AffiliateInfoResponse = {
   encode(message: AffiliateInfoResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.isWhitelisted === true) {
+      writer.uint32(8).bool(message.isWhitelisted);
+    }
+
     if (message.tier !== 0) {
-      writer.uint32(8).uint32(message.tier);
+      writer.uint32(16).uint32(message.tier);
     }
 
     if (message.feeSharePpm !== 0) {
-      writer.uint32(16).uint32(message.feeSharePpm);
+      writer.uint32(24).uint32(message.feeSharePpm);
     }
 
     if (message.referredVolume.length !== 0) {
-      writer.uint32(26).bytes(message.referredVolume);
+      writer.uint32(34).bytes(message.referredVolume);
     }
 
     if (message.stakedAmount.length !== 0) {
-      writer.uint32(34).bytes(message.stakedAmount);
+      writer.uint32(42).bytes(message.stakedAmount);
     }
 
     return writer;
@@ -193,18 +244,22 @@ export const AffiliateInfoResponse = {
 
       switch (tag >>> 3) {
         case 1:
-          message.tier = reader.uint32();
+          message.isWhitelisted = reader.bool();
           break;
 
         case 2:
-          message.feeSharePpm = reader.uint32();
+          message.tier = reader.uint32();
           break;
 
         case 3:
-          message.referredVolume = reader.bytes();
+          message.feeSharePpm = reader.uint32();
           break;
 
         case 4:
+          message.referredVolume = reader.bytes();
+          break;
+
+        case 5:
           message.stakedAmount = reader.bytes();
           break;
 
@@ -219,6 +274,7 @@ export const AffiliateInfoResponse = {
 
   fromPartial(object: DeepPartial<AffiliateInfoResponse>): AffiliateInfoResponse {
     const message = createBaseAffiliateInfoResponse();
+    message.isWhitelisted = object.isWhitelisted ?? false;
     message.tier = object.tier ?? 0;
     message.feeSharePpm = object.feeSharePpm ?? 0;
     message.referredVolume = object.referredVolume ?? new Uint8Array();
@@ -392,6 +448,85 @@ export const AllAffiliateTiersResponse = {
   fromPartial(object: DeepPartial<AllAffiliateTiersResponse>): AllAffiliateTiersResponse {
     const message = createBaseAllAffiliateTiersResponse();
     message.tiers = object.tiers !== undefined && object.tiers !== null ? AffiliateTiers.fromPartial(object.tiers) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseAffiliateWhitelistRequest(): AffiliateWhitelistRequest {
+  return {};
+}
+
+export const AffiliateWhitelistRequest = {
+  encode(_: AffiliateWhitelistRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateWhitelistRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAffiliateWhitelistRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<AffiliateWhitelistRequest>): AffiliateWhitelistRequest {
+    const message = createBaseAffiliateWhitelistRequest();
+    return message;
+  }
+
+};
+
+function createBaseAffiliateWhitelistResponse(): AffiliateWhitelistResponse {
+  return {
+    whitelist: undefined
+  };
+}
+
+export const AffiliateWhitelistResponse = {
+  encode(message: AffiliateWhitelistResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.whitelist !== undefined) {
+      AffiliateWhitelist.encode(message.whitelist, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AffiliateWhitelistResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAffiliateWhitelistResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.whitelist = AffiliateWhitelist.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AffiliateWhitelistResponse>): AffiliateWhitelistResponse {
+    const message = createBaseAffiliateWhitelistResponse();
+    message.whitelist = object.whitelist !== undefined && object.whitelist !== null ? AffiliateWhitelist.fromPartial(object.whitelist) : undefined;
     return message;
   }
 

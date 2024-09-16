@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	daemonlib "github.com/dydxprotocol/v4-chain/protocol/daemons/shared"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
@@ -101,6 +102,7 @@ func (m *MarketPairFetcherImpl) FetchIdMappings(ctx context.Context) error {
 		}
 		m.Logger.Debug("Mapped market to pair", "market id", mp.Id, "currency pair", cp.String())
 		compatMappings[cp] = mp.Id
+		pricefeedmetrics.SetMarketPairForTelemetry(mp.Id, mp.Pair)
 	}
 	m.compatMu.Lock()
 	defer m.compatMu.Unlock()

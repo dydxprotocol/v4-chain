@@ -8,10 +8,15 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/gogoproto/proto"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
+	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
 )
@@ -145,10 +150,11 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	k := tApp.App.AffiliatesKeeper
 	// Set up affiliate tiers
 	affiliateTiers := types.DefaultAffiliateTiers
-	k.UpdateAffiliateTiers(ctx, affiliateTiers)
+	err := k.UpdateAffiliateTiers(ctx, affiliateTiers)
+	require.NoError(t, err)
 	stakingKeeper := tApp.App.StakingKeeper
 
-	err := stakingKeeper.SetDelegation(ctx,
+	err = stakingKeeper.SetDelegation(ctx,
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(
 				new(big.Int).Mul(
@@ -194,13 +200,14 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Now())
 	// Set up affiliate tiers
 	affiliateTiers := types.DefaultAffiliateTiers
-	k.UpdateAffiliateTiers(ctx, affiliateTiers)
+	err := k.UpdateAffiliateTiers(ctx, affiliateTiers)
+	require.NoError(t, err)
 
 	// Register affiliate and referee
 	affiliate := constants.AliceAccAddress.String()
 	referee := constants.BobAccAddress.String()
 	stakingKeeper := tApp.App.StakingKeeper
-	err := stakingKeeper.SetDelegation(ctx,
+	err = stakingKeeper.SetDelegation(ctx,
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(
 				new(big.Int).Mul(
@@ -248,12 +255,13 @@ func TestGetTierForAffiliate_VolumeAndStake(t *testing.T) {
 	k := tApp.App.AffiliatesKeeper
 
 	affiliateTiers := types.DefaultAffiliateTiers
-	k.UpdateAffiliateTiers(ctx, affiliateTiers)
+	err := k.UpdateAffiliateTiers(ctx, affiliateTiers)
+	require.NoError(t, err)
 	affiliate := constants.AliceAccAddress.String()
 	referee := constants.BobAccAddress.String()
 	stakingKeeper := tApp.App.StakingKeeper
 
-	err := stakingKeeper.SetDelegation(ctx,
+	err = stakingKeeper.SetDelegation(ctx,
 		stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
 			constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(
 				new(big.Int).Mul(
@@ -296,12 +304,209 @@ func TestUpdateAffiliateTiers(t *testing.T) {
 	ctx := tApp.InitChain()
 	k := tApp.App.AffiliatesKeeper
 
-	// Set up valid affiliate tiers
-	validTiers := types.DefaultAffiliateTiers
-	k.UpdateAffiliateTiers(ctx, validTiers)
+	tests := []struct {
+		name           string
+		affiliateTiers types.AffiliateTiers
+		expectedError  error
+	}{
+		{
+			name:           "Valid tiers",
+			affiliateTiers: types.DefaultAffiliateTiers,
+			expectedError:  nil,
+		},
+		{
+			name: "Invalid tiers - decreasing volume requirement",
+			affiliateTiers: types.AffiliateTiers{
+				Tiers: []types.AffiliateTiers_Tier{
+					{ReqReferredVolumeQuoteQuantums: 1000, ReqStakedWholeCoins: 100, TakerFeeSharePpm: 100},
+					{ReqReferredVolumeQuoteQuantums: 500, ReqStakedWholeCoins: 200, TakerFeeSharePpm: 200},
+				},
+			},
+			expectedError: types.ErrInvalidAffiliateTiers,
+		},
+		{
+			name: "Invalid tiers - decreasing staking requirement",
+			affiliateTiers: types.AffiliateTiers{
+				Tiers: []types.AffiliateTiers_Tier{
+					{ReqReferredVolumeQuoteQuantums: 1000, ReqStakedWholeCoins: 200, TakerFeeSharePpm: 100},
+					{ReqReferredVolumeQuoteQuantums: 2000, ReqStakedWholeCoins: 100, TakerFeeSharePpm: 200},
+				},
+			},
+			expectedError: types.ErrInvalidAffiliateTiers,
+		},
+	}
 
-	// Retrieve and validate updated tiers
-	updatedTiers, err := k.GetAllAffiliateTiers(ctx)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := k.UpdateAffiliateTiers(ctx, tc.affiliateTiers)
+
+			if tc.expectedError != nil {
+				require.ErrorIs(t, err, tc.expectedError)
+			} else {
+				require.NoError(t, err)
+
+				// Retrieve and validate updated tiers
+				updatedTiers, err := k.GetAllAffiliateTiers(ctx)
+				require.NoError(t, err)
+				require.Equal(t, tc.affiliateTiers, updatedTiers)
+			}
+		})
+	}
+}
+
+func getRegisterAffiliateEventsFromIndexerBlock(
+	ctx sdk.Context,
+	affiliatesKeeper *keeper.Keeper,
+) []*indexerevents.RegisterAffiliateEventV1 {
+	block := affiliatesKeeper.GetIndexerEventManager().ProduceBlock(ctx)
+	var registerAffiliateEvents []*indexerevents.RegisterAffiliateEventV1
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeRegisterAffiliate {
+			continue
+		}
+		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
+			var registerAffiliateEvent indexerevents.RegisterAffiliateEventV1
+			err := proto.Unmarshal(event.DataBytes, &registerAffiliateEvent)
+			if err != nil {
+				panic(err)
+			}
+			registerAffiliateEvents = append(registerAffiliateEvents, &registerAffiliateEvent)
+		}
+	}
+	return registerAffiliateEvents
+}
+
+func TestRegisterAffiliateEmitEvent(t *testing.T) {
+	ctx, k, _, _ := keepertest.AffiliatesKeepers(t, true)
+
+	affiliate := constants.AliceAccAddress.String()
+	referee := constants.BobAccAddress.String()
+
+	err := k.RegisterAffiliate(ctx, referee, affiliate)
 	require.NoError(t, err)
-	require.Equal(t, validTiers, updatedTiers)
+	expectedEvent := &indexerevents.RegisterAffiliateEventV1{
+		Referee:   referee,
+		Affiliate: affiliate,
+	}
+
+	events := getRegisterAffiliateEventsFromIndexerBlock(ctx, k)
+	require.Equal(t, 1, len(events))
+	require.Equal(t, expectedEvent, events[0])
+}
+
+func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
+	affiliate := constants.AliceAccAddress.String()
+	referee1 := constants.BobAccAddress.String()
+	referee2 := constants.DaveAccAddress.String()
+	maker := constants.CarlAccAddress.String()
+	testCases := []struct {
+		name           string
+		referrals      int
+		expectedVolume *big.Int
+		setup          func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper)
+	}{
+		{
+			name:           "0 referrals",
+			expectedVolume: big.NewInt(0),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:    referee1,
+							Maker:    maker,
+							Notional: 100_000_000_000,
+						},
+					},
+				})
+			},
+		},
+		{
+			name:           "1 referral",
+			referrals:      1,
+			expectedVolume: big.NewInt(100_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:    referee1,
+							Maker:    maker,
+							Notional: 100_000_000_000,
+						},
+					},
+				})
+			},
+		},
+		{
+			name:           "2 referrals",
+			referrals:      2,
+			expectedVolume: big.NewInt(300_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:    referee1,
+							Maker:    maker,
+							Notional: 100_000_000_000,
+						},
+						{
+							Taker:    referee2,
+							Maker:    maker,
+							Notional: 200_000_000_000,
+						},
+					},
+				})
+			},
+		},
+		{
+			name:           "2 referrals, maker also referred",
+			referrals:      2,
+			expectedVolume: big.NewInt(600_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, referee1, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, referee2, affiliate)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, maker, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:    referee1,
+							Maker:    maker,
+							Notional: 100_000_000_000,
+						},
+						{
+							Taker:    referee2,
+							Maker:    maker,
+							Notional: 200_000_000_000,
+						},
+					},
+				})
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.AffiliatesKeeper
+			statsKeeper := tApp.App.StatsKeeper
+
+			tc.setup(t, ctx, &k, &statsKeeper)
+
+			err := k.AggregateAffiliateReferredVolumeForFills(ctx)
+			require.NoError(t, err)
+
+			referredVolume, err := k.GetReferredVolume(ctx, affiliate)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedVolume, referredVolume)
+		})
+	}
 }

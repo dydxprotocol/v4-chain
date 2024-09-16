@@ -11,7 +11,6 @@ import {
   defaultTendermintEventId4,
   defaultWallet,
   defaultWallet2,
-  defaultWallet3,
   isolatedMarketOrder,
   isolatedSubaccount,
 } from '../helpers/constants';
@@ -48,14 +47,12 @@ describe('Wallet store', () => {
     expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
     await WalletTable.upsert({
       ...defaultWallet2,
-      isWhitelistAffiliate: true,
       totalVolume: '100.1',
     });
     wallet = await WalletTable.findById(defaultWallet2.address);
 
     expect(wallet).toEqual(expect.objectContaining({
       ...defaultWallet2,
-      isWhitelistAffiliate: true,
       totalVolume: '100.1',
     }));
   });
@@ -67,7 +64,6 @@ describe('Wallet store', () => {
         address: 'fake_address',
         totalTradingRewards: '0',
         totalVolume: '0',
-        isWhitelistAffiliate: false,
       }),
     ]);
 
