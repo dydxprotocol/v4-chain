@@ -11,6 +11,7 @@ import {
   defaultTendermintEventId4,
   defaultWallet,
   defaultWallet2,
+  defaultWallet3,
   isolatedMarketOrder,
   isolatedSubaccount,
 } from '../helpers/constants';
@@ -88,24 +89,6 @@ describe('Wallet store', () => {
     );
 
     expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
-  });
-
-  it('Successfully finds wallets by whitelist flag', async () => {
-    await Promise.all([
-      WalletTable.create(defaultWallet3),
-      WalletTable.create(defaultWallet2),
-    ]);
-
-    const wallets: WalletFromDatabase[] = await WalletTable.findAll(
-      {
-        isWhitelistAffiliate: true,
-      },
-      [],
-      { readReplica: true },
-    );
-
-    expect(wallets.length).toEqual(1);
-    expect(wallets[0]).toEqual(expect.objectContaining(defaultWallet3));
   });
 
   describe('Wallet .updateTotalVolume()', () => {

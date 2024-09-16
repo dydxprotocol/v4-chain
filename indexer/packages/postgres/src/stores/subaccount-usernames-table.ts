@@ -1,6 +1,7 @@
 import { QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
+import { knexReadReplica } from '../helpers/knex';
 import {
   verifyAllRequiredFields,
   setupBaseQuery,
@@ -18,6 +19,7 @@ import {
   Options,
   Ordering,
   QueryableField,
+  AddressUsernameFromDatabase,
 } from '../types';
 
 export async function findAll(
@@ -110,6 +112,33 @@ export async function getSubaccountsWithoutUsernames(
   const result: {
     rows: SubaccountsWithoutUsernamesResult[],
   } = await rawQuery(queryString, options);
+
+  return result.rows;
+}
+
+export async function findByAddress(
+  addresses: string[],
+): Promise<AddressUsernameFromDatabase[]> {
+  if (addresses.length === 0) {
+    return [];
+  }
+
+  const result: { rows: AddressUsernameFromDatabase[] } = await knexReadReplica
+    .getConnection()
+    .raw(
+      `
+      WITH subaccountIds AS (
+        SELECT "id", "address"
+        FROM subaccounts
+        WHERE "address" = ANY(?)
+        AND "subaccountNumber" = 0
+      )
+      SELECT s."address", u."username"
+      FROM subaccountIds s
+      LEFT JOIN subaccount_usernames u ON u."subaccountId" = s."id"
+      `,
+      [addresses],
+    );
 
   return result.rows;
 }

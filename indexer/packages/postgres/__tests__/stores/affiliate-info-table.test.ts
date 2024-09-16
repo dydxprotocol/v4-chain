@@ -6,7 +6,7 @@ import {
   defaultFill,
   defaultWallet2,
   defaultAffiliateInfo,
-  defaultAffiliateInfo1,
+  defaultAffiliateInfo2,
   defaultTendermintEventId,
   defaultTendermintEventId2,
   defaultTendermintEventId3,
@@ -50,15 +50,15 @@ describe('Affiliate info store', () => {
     );
     expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo));
 
-    await AffiliateInfoTable.upsert(defaultAffiliateInfo1);
-    info = await AffiliateInfoTable.findById(defaultAffiliateInfo1.address);
-    expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo1));
+    await AffiliateInfoTable.upsert(defaultAffiliateInfo2);
+    info = await AffiliateInfoTable.findById(defaultAffiliateInfo2.address);
+    expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo2));
   });
 
   it('Successfully finds all affiliate infos', async () => {
     await Promise.all([
       AffiliateInfoTable.create(defaultAffiliateInfo),
-      AffiliateInfoTable.create(defaultAffiliateInfo1),
+      AffiliateInfoTable.create(defaultAffiliateInfo2),
     ]);
 
     const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable.findAll(
@@ -70,7 +70,7 @@ describe('Affiliate info store', () => {
     expect(infos.length).toEqual(2);
     expect(infos).toEqual(expect.arrayContaining([
       expect.objectContaining(defaultAffiliateInfo),
-      expect.objectContaining(defaultAffiliateInfo1),
+      expect.objectContaining(defaultAffiliateInfo2),
     ]));
   });
 
@@ -106,7 +106,7 @@ describe('Affiliate info store', () => {
         totalReferredUsers: 1,
         referredNetProtocolEarnings: '1000',
         firstReferralBlockHeight: '1',
-        totalReferredVolume: '2',
+        referredTotalVolume: '2',
       };
 
       expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
@@ -133,7 +133,7 @@ describe('Affiliate info store', () => {
         totalReferredUsers: 1,
         referredNetProtocolEarnings: '1000',
         firstReferralBlockHeight: '1',
-        totalReferredVolume: '2',
+        referredTotalVolume: '2',
       };
       expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
 
@@ -155,7 +155,7 @@ describe('Affiliate info store', () => {
         totalReferredUsers: 1,
         referredNetProtocolEarnings: '2000',
         firstReferralBlockHeight: '1',
-        totalReferredVolume: '4',
+        referredTotalVolume: '4',
       };
       expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
 
@@ -181,7 +181,7 @@ describe('Affiliate info store', () => {
         totalReferredUsers: 2,
         referredNetProtocolEarnings: '2000',
         firstReferralBlockHeight: '1',
-        totalReferredVolume: '4',
+        referredTotalVolume: '4',
       };
       expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
     });
@@ -264,6 +264,102 @@ describe('Affiliate info store', () => {
         totalReferredVolume: '0',
       };
       expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
+    });
+  });
+
+  describe('paginatedFindWithAddressFilter', () => {
+    beforeEach(async () => {
+      await migrate();
+      for (let i = 0; i < 10; i++) {
+        await AffiliateInfoTable.create({
+          ...defaultAffiliateInfo,
+          address: `address_${i}`,
+          affiliateEarnings: i.toString(),
+        });
+      }
+    });
+
+    it('Successfully filters by address', async () => {
+      // eslint-disable-next-line max-len
+      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
+        ['address_0'],
+        0,
+        10,
+        false,
+      );
+      expect(infos).toBeDefined();
+      expect(infos!.length).toEqual(1);
+      expect(infos![0]).toEqual(expect.objectContaining({
+        ...defaultAffiliateInfo,
+        address: 'address_0',
+        affiliateEarnings: '0',
+      }));
+    });
+
+    it('Successfully sorts by affiliate earning', async () => {
+      // eslint-disable-next-line max-len
+      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
+        [],
+        0,
+        10,
+        true,
+      );
+      expect(infos).toBeDefined();
+      expect(infos!.length).toEqual(10);
+      expect(infos![0]).toEqual(expect.objectContaining({
+        ...defaultAffiliateInfo,
+        address: 'address_9',
+        affiliateEarnings: '9',
+      }));
+      expect(infos![9]).toEqual(expect.objectContaining({
+        ...defaultAffiliateInfo,
+        address: 'address_0',
+        affiliateEarnings: '0',
+      }));
+    });
+
+    it('Successfully uses offset and limit', async () => {
+      // eslint-disable-next-line max-len
+      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
+        [],
+        5,
+        2,
+        false,
+      );
+      expect(infos).toBeDefined();
+      expect(infos!.length).toEqual(2);
+      expect(infos![0]).toEqual(expect.objectContaining({
+        ...defaultAffiliateInfo,
+        address: 'address_5',
+        affiliateEarnings: '5',
+      }));
+      expect(infos![1]).toEqual(expect.objectContaining({
+        ...defaultAffiliateInfo,
+        address: 'address_6',
+        affiliateEarnings: '6',
+      }));
+    });
+
+    it('Successfully filters, sorts, offsets, and limits', async () => {
+      // eslint-disable-next-line max-len
+      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
+        [],
+        3,
+        2,
+        true,
+      );
+      expect(infos).toBeDefined();
+      expect(infos!.length).toEqual(2);
+      expect(infos![0]).toEqual(expect.objectContaining({
+        ...defaultAffiliateInfo,
+        address: 'address_6',
+        affiliateEarnings: '6',
+      }));
+      expect(infos![1]).toEqual(expect.objectContaining({
+        ...defaultAffiliateInfo,
+        address: 'address_5',
+        affiliateEarnings: '5',
+      }));
     });
   });
 });

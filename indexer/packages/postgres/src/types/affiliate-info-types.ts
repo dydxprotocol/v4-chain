@@ -7,7 +7,7 @@ export interface AffiliateInfoCreateObject {
   totalReferredUsers: number,
   referredNetProtocolEarnings: string,
   firstReferralBlockHeight: string,
-  totalReferredVolume: string,
+  referredTotalVolume: string,
 }
 
 export enum AffiliateInfoColumns {
@@ -19,5 +19,5 @@ export enum AffiliateInfoColumns {
   totalReferredUsers = 'totalReferredUsers',
   referredNetProtocolEarnings = 'referredNetProtocolEarnings',
   firstReferralBlockHeight = 'firstReferralBlockHeight',
-  totalReferredVolume = 'totalReferredVolume',
+  referredTotalVolume = 'referredTotalVolume',
 }

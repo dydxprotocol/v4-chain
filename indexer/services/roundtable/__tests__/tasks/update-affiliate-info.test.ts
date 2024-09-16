@@ -64,7 +64,7 @@ describe('update-affiliate-info', () => {
       totalReferredUsers: 1,
       referredNetProtocolEarnings: '0',
       firstReferralBlockHeight: '1',
-      totalReferredVolume: '0',
+      referredTotalVolume: '0',
     };
     expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
 
@@ -106,7 +106,7 @@ describe('update-affiliate-info', () => {
       totalReferredUsers: 2,
       referredNetProtocolEarnings: '500',
       firstReferralBlockHeight: '1',
-      totalReferredVolume: '1',
+      referredTotalVolume: '1',
     };
     expect(updatedInfo).toEqual(expectedAffiliateInfo);
     const lastUpdateTime2 = await getAffiliateInfoUpdateTime();

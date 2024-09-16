@@ -633,9 +633,10 @@ fetch(`${baseURL}/affiliates/snapshot`,
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
+|addressFilter|query|array[string]|false|none|
 |offset|query|number(double)|false|none|
 |limit|query|number(double)|false|none|
-|sortByReferredFees|query|boolean|false|none|
+|sortByAffiliateEarning|query|boolean|false|none|
 
 > Example responses
 

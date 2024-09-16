@@ -83,6 +83,7 @@ export async function upsert(
   // should only ever be one AffiliateInfo
   return AffiliateInfos[0];
 }
+
 export async function findById(
   address: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
@@ -182,7 +183,7 @@ affiliate_stats AS (
       SUM(affiliate_fills."fee") - SUM(affiliate_fills."affiliateRevShare") AS "referredNetProtocolEarnings",
       COUNT(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.MAKER}' THEN 1 END) AS "referredMakerTrades",
       COUNT(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.TAKER}' THEN 1 END) AS "referredTakerTrades",
-      SUM(affiliate_fills."price" * affiliate_fills."size") AS "totalReferredVolume"
+      SUM(affiliate_fills."price" * affiliate_fills."size") AS "referredTotalVolume"
   FROM
       affiliate_fills
   GROUP BY
@@ -202,7 +203,7 @@ affiliate_info_update AS (
     COALESCE(affiliate_stats."referredNetProtocolEarnings", 0) AS "referredNetProtocolEarnings",
     COALESCE(affiliate_stats."referredMakerTrades", 0) AS "referredMakerTrades",
     COALESCE(affiliate_stats."referredTakerTrades", 0) AS "referredTakerTrades",
-    COALESCE(affiliate_stats."totalReferredVolume", 0) AS "totalReferredVolume"
+    COALESCE(affiliate_stats."referredTotalVolume", 0) AS "referredTotalVolume"
   FROM
     affiliate_metadata
   LEFT JOIN
@@ -220,7 +221,7 @@ INSERT INTO affiliate_info (
     "referredTakerTrades", 
     "totalReferredFees", 
     "referredNetProtocolEarnings",
-    "totalReferredVolume"
+    "referredTotalVolume"
 )
 SELECT
     "affiliateAddress",
@@ -231,7 +232,7 @@ SELECT
     "referredTakerTrades",
     "totalReferredFees",
     "referredNetProtocolEarnings",
-    "totalReferredVolume"
+    "referredTotalVolume"
 FROM 
     affiliate_info_update
 ON CONFLICT ("address")
@@ -243,7 +244,7 @@ DO UPDATE SET
     "referredTakerTrades" = affiliate_info."referredTakerTrades" + EXCLUDED."referredTakerTrades",
     "totalReferredFees" = affiliate_info."totalReferredFees" + EXCLUDED."totalReferredFees",
     "referredNetProtocolEarnings" = affiliate_info."referredNetProtocolEarnings" + EXCLUDED."referredNetProtocolEarnings",
-    "totalReferredVolume" = affiliate_info."totalReferredVolume" + EXCLUDED."totalReferredVolume";
+    "referredTotalVolume" = affiliate_info."referredTotalVolume" + EXCLUDED."referredTotalVolume";
 
 -- Step 5: Upsert new affiliateInfoLastUpdateTime to persistent_cache table
 INSERT INTO persistent_cache (key, value)
@@ -254,4 +255,32 @@ DO UPDATE SET value = EXCLUDED.value;
 COMMIT;
     `,
   );
+}
+export async function paginatedFindWithAddressFilter(
+  addressFilter: string[],
+  offset: number,
+  limit: number,
+  sortByAffiliateEarning: boolean,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<AffiliateInfoFromDatabase[] | undefined> {
+  let baseQuery: QueryBuilder<AffiliateInfoModel> = setupBaseQuery<AffiliateInfoModel>(
+    AffiliateInfoModel,
+    options,
+  );
+
+  // Apply address filter if provided
+  if (addressFilter.length > 0) {
+    baseQuery = baseQuery.whereIn(AffiliateInfoColumns.address, addressFilter);
+  }
+
+  // Sorting by affiliate earnings or default sorting by address
+  if (sortByAffiliateEarning) {
+    baseQuery = baseQuery.orderBy(AffiliateInfoColumns.affiliateEarnings, Ordering.DESC);
+  }
+
+  // Apply pagination using offset and limit
+  baseQuery = baseQuery.offset(offset).limit(limit);
+
+  // Returning all fields
+  return baseQuery.returning('*');
 }
