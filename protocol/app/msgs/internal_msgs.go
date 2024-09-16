@@ -108,8 +108,10 @@ var (
 	InternalMsgSamplesDydxCustom = map[string]sdk.Msg{
 
 		// affiliates
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":         &affiliates.MsgUpdateAffiliateTiers{},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse": nil,
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":             &affiliates.MsgUpdateAffiliateTiers{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":     nil,
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":         &affiliates.MsgUpdateAffiliateWhitelist{},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse": nil,
 
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         &blocktime.MsgUpdateDowntimeParams{},

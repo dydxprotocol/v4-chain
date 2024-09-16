@@ -41,6 +41,7 @@ import (
 func (k Keeper) ProcessSingleMatch(
 	ctx sdk.Context,
 	matchWithOrders *types.MatchWithOrders,
+	affiliatesWhitelistMap map[string]uint32,
 ) (
 	success bool,
 	takerUpdateResult satypes.UpdateResult,
@@ -221,6 +222,7 @@ func (k Keeper) ProcessSingleMatch(
 		makerFeePpm,
 		bigFillQuoteQuantums,
 		takerInsuranceFundDelta,
+		affiliatesWhitelistMap,
 	)
 
 	if err != nil {
@@ -304,6 +306,7 @@ func (k Keeper) persistMatchedOrders(
 	makerFeePpm int32,
 	bigFillQuoteQuantums *big.Int,
 	insuranceFundDelta *big.Int,
+	affiliatesWhitelistMap map[string]uint32, // nolint: unused
 ) (
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
@@ -434,6 +437,8 @@ func (k Keeper) persistMatchedOrders(
 	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta, perpetualId); err != nil {
 		return takerUpdateResult, makerUpdateResult, err
 	}
+
+	// TODO: Use whitelist map in getAllRevShares
 
 	// Distribute the fee amount from subacounts module to fee collector and rev share accounts
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)

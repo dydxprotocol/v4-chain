@@ -16,4 +16,6 @@ const (
 	ReferredVolumeKeyPrefix = "ReferredVolume:"
 
 	AffiliateTiersKey = "AffiliateTiers"
+
+	AffiliateWhitelistKey = "AffiliateWhitelist"
 )

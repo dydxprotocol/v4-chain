@@ -144,7 +144,8 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*ibcconn.MsgUpdateParams,
 
 		// affiliates
-		*affiliates.MsgUpdateAffiliateTiers:
+		*affiliates.MsgUpdateAffiliateTiers,
+		*affiliates.MsgUpdateAffiliateWhitelist:
 
 		return true
 

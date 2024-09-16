@@ -149,6 +149,7 @@ func ListingKeepers(
 				pricesKeeper,
 				statsKeeper,
 				rewardsKeeper,
+				affiliatesKeeper,
 				subaccountsKeeper,
 				indexerEventManager,
 				transientStoreKey,

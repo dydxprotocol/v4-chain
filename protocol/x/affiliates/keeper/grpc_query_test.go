@@ -29,6 +29,7 @@ func TestAffiliateInfo(t *testing.T) {
 				Address: constants.AliceAccAddress.String(),
 			},
 			res: &types.AffiliateInfoResponse{
+				IsWhitelisted:  false,
 				Tier:           0,
 				FeeSharePpm:    types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
 				ReferredVolume: dtypes.NewIntFromUint64(types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums),
@@ -58,6 +59,7 @@ func TestAffiliateInfo(t *testing.T) {
 				Address: constants.AliceAccAddress.String(),
 			},
 			res: &types.AffiliateInfoResponse{
+				IsWhitelisted:  false,
 				Tier:           0,
 				FeeSharePpm:    types.DefaultAffiliateTiers.Tiers[0].TakerFeeSharePpm,
 				ReferredVolume: dtypes.NewIntFromUint64(types.DefaultAffiliateTiers.Tiers[0].ReqReferredVolumeQuoteQuantums),
@@ -88,6 +90,44 @@ func TestAffiliateInfo(t *testing.T) {
 			res:         nil,
 			setup:       func(ctx sdk.Context, k keeper.Keeper, tApp *testapp.TestApp) {},
 			expectError: types.ErrInvalidAddress,
+		},
+		"Whitelisted": {
+			req: &types.AffiliateInfoRequest{
+				Address: constants.AliceAccAddress.String(),
+			},
+			res: &types.AffiliateInfoResponse{
+				IsWhitelisted:  true,
+				Tier:           0,
+				FeeSharePpm:    120_000,
+				ReferredVolume: dtypes.NewIntFromUint64(0),
+				StakedAmount:   dtypes.NewIntFromUint64(0),
+			},
+			setup: func(ctx sdk.Context, k keeper.Keeper, tApp *testapp.TestApp) {
+				err := k.RegisterAffiliate(ctx, constants.BobAccAddress.String(), constants.AliceAccAddress.String())
+				require.NoError(t, err)
+
+				stakingKeeper := tApp.App.StakingKeeper
+
+				err = stakingKeeper.SetDelegation(ctx,
+					stakingtypes.NewDelegation(constants.AliceAccAddress.String(),
+						constants.AliceValAddress.String(), math.LegacyNewDecFromBigInt(
+							big.NewInt(0),
+						),
+					),
+				)
+				require.NoError(t, err)
+
+				affiliatesWhitelist := types.AffiliateWhitelist{
+					Tiers: []types.AffiliateWhitelist_Tier{
+						{
+							Addresses:        []string{constants.AliceAccAddress.String()},
+							TakerFeeSharePpm: 120_000, // 12%
+						},
+					},
+				}
+				err = k.SetAffiliateWhitelist(ctx, affiliatesWhitelist)
+				require.NoError(t, err)
+			},
 		},
 	}
 
@@ -183,4 +223,27 @@ func TestAllAffiliateTiers(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, &types.AllAffiliateTiersResponse{Tiers: tiers}, res)
+}
+
+func TestAffiliateWhitelist(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+
+	req := &types.AffiliateWhitelistRequest{}
+	whitelist := types.AffiliateWhitelist{
+		Tiers: []types.AffiliateWhitelist_Tier{
+			{
+				Addresses:        []string{constants.AliceAccAddress.String()},
+				TakerFeeSharePpm: 1000000,
+			},
+		},
+	}
+	err := k.SetAffiliateWhitelist(ctx, whitelist)
+	require.NoError(t, err)
+
+	res, err := k.AffiliateWhitelist(ctx, req)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, &types.AffiliateWhitelistResponse{Whitelist: whitelist}, res)
 }

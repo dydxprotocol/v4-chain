@@ -42,6 +42,7 @@ type (
 		pricesKeeper      types.PricesKeeper
 		statsKeeper       types.StatsKeeper
 		rewardsKeeper     types.RewardsKeeper
+		affiliatesKeeper  types.AffiliatesKeeper
 
 		indexerEventManager indexer_manager.IndexerEventManager
 		streamingManager    streamingtypes.FullNodeStreamingManager
@@ -85,6 +86,7 @@ func NewKeeper(
 	pricesKeeper types.PricesKeeper,
 	statsKeeper types.StatsKeeper,
 	rewardsKeeper types.RewardsKeeper,
+	affiliatesKeeper types.AffiliatesKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	streamingManager streamingtypes.FullNodeStreamingManager,
 	txDecoder sdk.TxDecoder,
@@ -109,6 +111,7 @@ func NewKeeper(
 		pricesKeeper:            pricesKeeper,
 		statsKeeper:             statsKeeper,
 		rewardsKeeper:           rewardsKeeper,
+		affiliatesKeeper:        affiliatesKeeper,
 		indexerEventManager:     indexerEventManager,
 		streamingManager:        streamingManager,
 		memStoreInitialized:     &atomic.Bool{}, // False by default.

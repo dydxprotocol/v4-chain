@@ -554,6 +554,57 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
+			name: "Valid revenue share with whitelisted affiliate and no unconditional rev shares",
+			expectedRevShares: []types.RevShare{
+
+				{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+					QuoteQuantums:     big.NewInt(2_500_000),
+				},
+				{
+					Recipient:         constants.AliceAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+					QuoteQuantums:     big.NewInt(1_200_000),
+				},
+			},
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         marketId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+			},
+			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
+				affiliatesKeeper *affiliateskeeper.Keeper) {
+				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
+					Address:         constants.AliceAccAddress.String(),
+					RevenueSharePpm: 100_000, // 10%
+					ValidDays:       1,
+				})
+				require.NoError(t, err)
+
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
+				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
+					constants.BobAccAddress.String())
+				require.NoError(t, err)
+				err = affiliatesKeeper.SetAffiliateWhitelist(ctx, affiliatetypes.AffiliateWhitelist{
+					Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
+						{
+							Addresses:        []string{constants.BobAccAddress.String()},
+							TakerFeeSharePpm: 250_000, // 25%
+						},
+					},
+				})
+				require.NoError(t, err)
+			},
+		},
+		{
 			name:              "No rev shares",
 			expectedRevShares: []types.RevShare{},
 			fill: clobtypes.FillForProcess{
@@ -584,8 +635,10 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			}
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
+			affiliateWhitelistMap, err := affiliatesKeeper.GetAffiliateWhitelistMap(ctx)
+			require.NoError(t, err)
 
-			revShares, err := keeper.GetAllRevShares(ctx, tc.fill)
+			revShares, err := keeper.GetAllRevShares(ctx, tc.fill, affiliateWhitelistMap)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedRevShares, revShares)
@@ -728,7 +781,7 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 
-			_, err := keeper.GetAllRevShares(ctx, fill)
+			_, err := keeper.GetAllRevShares(ctx, fill, map[string]uint32{})
 
 			require.ErrorIs(t, err, tc.expectedError)
 		})

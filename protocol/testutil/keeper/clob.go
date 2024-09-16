@@ -17,6 +17,7 @@ import (
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
@@ -48,6 +49,7 @@ type ClobKeepersTestContext struct {
 	StatsKeeper       *statskeeper.Keeper
 	RewardsKeeper     *rewardskeeper.Keeper
 	SubaccountsKeeper *subkeeper.Keeper
+	AffiliatesKeeper  *affiliateskeeper.Keeper
 	VaultKeeper       *vaultkeeper.Keeper
 	StoreKey          storetypes.StoreKey
 	MemKey            storetypes.StoreKey
@@ -105,9 +107,9 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			cdc,
 			stakingKeeper,
 		)
-		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, ks.StatsKeeper,
+		ks.AffiliatesKeeper, _ = createAffiliatesKeeper(stateStore, db, cdc, ks.StatsKeeper,
 			indexerEventsTransientStoreKey, true)
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, ks.AffiliatesKeeper)
 		ks.MarketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
@@ -184,6 +186,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.PricesKeeper,
 			ks.StatsKeeper,
 			ks.RewardsKeeper,
+			ks.AffiliatesKeeper,
 			ks.SubaccountsKeeper,
 			indexerEventManager,
 			indexerEventsTransientStoreKey,
@@ -222,6 +225,7 @@ func createClobKeeper(
 	pricesKeeper *priceskeeper.Keeper,
 	statsKeeper *statskeeper.Keeper,
 	rewardsKeeper types.RewardsKeeper,
+	affiliatesKeeper types.AffiliatesKeeper,
 	saKeeper *subkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
@@ -253,6 +257,7 @@ func createClobKeeper(
 		pricesKeeper,
 		statsKeeper,
 		rewardsKeeper,
+		affiliatesKeeper,
 		indexerEventManager,
 		streaming.NewNoopGrpcStreamingManager(),
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),

@@ -1,4 +1,4 @@
-import { AffiliateTiers, AffiliateTiersSDKType } from "./affiliates";
+import { AffiliateTiers, AffiliateTiersSDKType, AffiliateWhitelist, AffiliateWhitelistSDKType } from "./affiliates";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** Message to register a referee-affiliate relationship */
@@ -49,6 +49,30 @@ export interface MsgUpdateAffiliateTiersResponse {}
 /** Response to MsgUpdateAffiliateTiers */
 
 export interface MsgUpdateAffiliateTiersResponseSDKType {}
+/** Message to update affiliate whitelist */
+
+export interface MsgUpdateAffiliateWhitelist {
+  /** Authority sending this message. Will be sent by gov */
+  authority: string;
+  /** Updated affiliate whitelist information */
+
+  whitelist?: AffiliateWhitelist;
+}
+/** Message to update affiliate whitelist */
+
+export interface MsgUpdateAffiliateWhitelistSDKType {
+  /** Authority sending this message. Will be sent by gov */
+  authority: string;
+  /** Updated affiliate whitelist information */
+
+  whitelist?: AffiliateWhitelistSDKType;
+}
+/** Response to MsgUpdateAffiliateWhitelist */
+
+export interface MsgUpdateAffiliateWhitelistResponse {}
+/** Response to MsgUpdateAffiliateWhitelist */
+
+export interface MsgUpdateAffiliateWhitelistResponseSDKType {}
 
 function createBaseMsgRegisterAffiliate(): MsgRegisterAffiliate {
   return {
@@ -223,6 +247,95 @@ export const MsgUpdateAffiliateTiersResponse = {
 
   fromPartial(_: DeepPartial<MsgUpdateAffiliateTiersResponse>): MsgUpdateAffiliateTiersResponse {
     const message = createBaseMsgUpdateAffiliateTiersResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateAffiliateWhitelist(): MsgUpdateAffiliateWhitelist {
+  return {
+    authority: "",
+    whitelist: undefined
+  };
+}
+
+export const MsgUpdateAffiliateWhitelist = {
+  encode(message: MsgUpdateAffiliateWhitelist, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.whitelist !== undefined) {
+      AffiliateWhitelist.encode(message.whitelist, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateAffiliateWhitelist {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateAffiliateWhitelist();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.whitelist = AffiliateWhitelist.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateAffiliateWhitelist>): MsgUpdateAffiliateWhitelist {
+    const message = createBaseMsgUpdateAffiliateWhitelist();
+    message.authority = object.authority ?? "";
+    message.whitelist = object.whitelist !== undefined && object.whitelist !== null ? AffiliateWhitelist.fromPartial(object.whitelist) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateAffiliateWhitelistResponse(): MsgUpdateAffiliateWhitelistResponse {
+  return {};
+}
+
+export const MsgUpdateAffiliateWhitelistResponse = {
+  encode(_: MsgUpdateAffiliateWhitelistResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateAffiliateWhitelistResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateAffiliateWhitelistResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateAffiliateWhitelistResponse>): MsgUpdateAffiliateWhitelistResponse {
+    const message = createBaseMsgUpdateAffiliateWhitelistResponse();
     return message;
   }
 

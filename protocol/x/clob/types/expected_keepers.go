@@ -170,3 +170,7 @@ type RewardsKeeper interface {
 		bigMakerFeeQuoteQuantums *big.Int,
 	)
 }
+
+type AffiliatesKeeper interface {
+	GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error)
+}

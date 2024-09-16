@@ -81,6 +81,7 @@ type ClobKeeper interface {
 	ProcessSingleMatch(
 		ctx sdk.Context,
 		matchWithOrders *MatchWithOrders,
+		affiliatesWhitelistMap map[string]uint32,
 	) (
 		success bool,
 		takerUpdateResult satypes.UpdateResult,

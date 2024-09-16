@@ -999,9 +999,9 @@ func (_m *ClobKeeper) ProcessProposerOperations(ctx types.Context, operations []
 	return r0
 }
 
-// ProcessSingleMatch provides a mock function with given fields: ctx, matchWithOrders
-func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, error) {
-	ret := _m.Called(ctx, matchWithOrders)
+// ProcessSingleMatch provides a mock function with given fields: ctx, matchWithOrders, affiliatesWhitelistMap
+func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders, affiliatesWhitelistMap map[string]uint32) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, error) {
+	ret := _m.Called(ctx, matchWithOrders, affiliatesWhitelistMap)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ProcessSingleMatch")
@@ -1011,29 +1011,29 @@ func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clo
 	var r1 subaccountstypes.UpdateResult
 	var r2 subaccountstypes.UpdateResult
 	var r3 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, error)); ok {
-		return rf(ctx, matchWithOrders)
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, error)); ok {
+		return rf(ctx, matchWithOrders, affiliatesWhitelistMap)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders) bool); ok {
-		r0 = rf(ctx, matchWithOrders)
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) bool); ok {
+		r0 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.MatchWithOrders) subaccountstypes.UpdateResult); ok {
-		r1 = rf(ctx, matchWithOrders)
+	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) subaccountstypes.UpdateResult); ok {
+		r1 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
 	} else {
 		r1 = ret.Get(1).(subaccountstypes.UpdateResult)
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.MatchWithOrders) subaccountstypes.UpdateResult); ok {
-		r2 = rf(ctx, matchWithOrders)
+	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) subaccountstypes.UpdateResult); ok {
+		r2 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
 	} else {
 		r2 = ret.Get(2).(subaccountstypes.UpdateResult)
 	}
 
-	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders) error); ok {
-		r3 = rf(ctx, matchWithOrders)
+	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) error); ok {
+		r3 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
 	} else {
 		r3 = ret.Error(3)
 	}

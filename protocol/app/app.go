@@ -1121,6 +1121,7 @@ func New(
 		app.PricesKeeper,
 		app.StatsKeeper,
 		app.RewardsKeeper,
+		app.AffiliatesKeeper,
 		app.IndexerEventManager,
 		app.FullNodeStreamingManager,
 		txConfig.TxDecoder(),

@@ -59,6 +59,20 @@ func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
 	return &types.MsgUpdateAffiliateTiersResponse{}, nil
 }
 
+func (k msgServer) UpdateAffiliateWhitelist(ctx context.Context,
+	msg *types.MsgUpdateAffiliateWhitelist) (*types.MsgUpdateAffiliateWhitelistResponse, error) {
+	if !k.Keeper.HasAuthority(msg.Authority) {
+		return nil, errors.New("invalid authority")
+	}
+
+	err := k.Keeper.SetAffiliateWhitelist(sdk.UnwrapSDKContext(ctx), msg.Whitelist)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateAffiliateWhitelistResponse{}, nil
+}
+
 // NewMsgServerImpl returns an implementation of the MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {

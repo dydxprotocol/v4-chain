@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,9 +22,21 @@ func (k Keeper) AffiliateInfo(c context.Context,
 			req.GetAddress(), err.Error())
 	}
 
-	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, addr.String())
+	affiliateWhitelistMap, err := k.GetAffiliateWhitelistMap(ctx)
 	if err != nil {
 		return nil, err
+	}
+	tierLevel := uint32(0)
+	feeSharePpm := uint32(0)
+	isWhitelisted := false
+	if _, exists := affiliateWhitelistMap[addr.String()]; exists {
+		feeSharePpm = affiliateWhitelistMap[addr.String()]
+		isWhitelisted = true
+	} else {
+		tierLevel, feeSharePpm, err = k.GetTierForAffiliate(ctx, addr.String())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	referredVolume, err := k.GetReferredVolume(ctx, req.GetAddress())
@@ -36,6 +47,7 @@ func (k Keeper) AffiliateInfo(c context.Context,
 	stakedAmount := k.statsKeeper.GetStakedAmount(ctx, req.GetAddress())
 
 	return &types.AffiliateInfoResponse{
+		IsWhitelisted:  isWhitelisted,
 		Tier:           tierLevel,
 		FeeSharePpm:    feeSharePpm,
 		ReferredVolume: dtypes.NewIntFromBigInt(referredVolume),
@@ -77,6 +89,14 @@ func (k Keeper) AllAffiliateTiers(c context.Context,
 
 func (k Keeper) AffiliateWhitelist(c context.Context,
 	req *types.AffiliateWhitelistRequest) (*types.AffiliateWhitelistResponse, error) {
-	// TODO(OTE-791): Implement `AffiliateWhitelist` RPC method.
-	return nil, errors.New("not implemented")
+	ctx := sdk.UnwrapSDKContext(c)
+
+	affiliateWhitelist, err := k.GetAffiliateWhitelist(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.AffiliateWhitelistResponse{
+		Whitelist: affiliateWhitelist,
+	}, nil
 }
