@@ -840,7 +840,12 @@ func (sm *FullNodeStreamingManagerImpl) GetSubaccountSnapshotsForInitStreams(
 	return ret
 }
 
-func (sm *FullNodeStreamingManagerImpl) addBatchUpdatesToCache(
+// addBatchUpdatesToCacheWithLock adds batched updates to the cache.
+// Used by `StreamBatchUpdatesAfterFinalizeBlock` to batch orderbook, fill
+// and subaccount updates in a single stream.
+// Note this method requires the lock and assumes that the lock has already been
+// acquired by the caller.
+func (sm *FullNodeStreamingManagerImpl) addBatchUpdatesToCacheWithLock(
 	orderbookStreamUpdates []clobtypes.StreamUpdate,
 	orderbookClobPairIds []uint32,
 	fillStreamUpdates []clobtypes.StreamUpdate,
@@ -911,7 +916,7 @@ func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
 	// Flush all pending updates, since we want the onchain updates to arrive in a batch.
 	sm.FlushStreamUpdatesWithLock()
 
-	sm.addBatchUpdatesToCache(
+	sm.addBatchUpdatesToCacheWithLock(
 		orderbookStreamUpdates,
 		orderbookClobPairIds,
 		fillStreamUpdates,
