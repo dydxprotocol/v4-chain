@@ -16,4 +16,5 @@ type FillForProcess struct {
 	// same block, this volume will not be included in the function
 	// below
 	MonthlyRollingTakerVolumeQuantums uint64
+	MarketId                          uint32
 }

@@ -1130,6 +1130,7 @@ func New(
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[sdk.Msg](),
 		daemonLiquidationInfo,
+		app.RevShareKeeper,
 	)
 	clobModule := clobmodule.NewAppModule(
 		appCodec,

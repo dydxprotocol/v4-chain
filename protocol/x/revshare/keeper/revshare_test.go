@@ -267,41 +267,62 @@ func TestValidateRevShareSafety(t *testing.T) {
 }
 
 func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
+	perpetualId := uint32(1)
 	marketId := uint32(1)
 	tests := []struct {
-		name              string
-		fill              clobtypes.FillForProcess
-		expectedRevShares []types.RevShare
-		setup             func(tApp *testapp.TestApp, ctx sdk.Context,
+		name                     string
+		fill                     clobtypes.FillForProcess
+		expectedRevSharesForFill types.RevSharesForFill
+		setup                    func(tApp *testapp.TestApp, ctx sdk.Context,
 			keeper *keeper.Keeper, affiliatesKeeper *affiliateskeeper.Keeper)
 	}{
 		{
 			name: "Valid revenue share from affiliates, unconditional and market mapper",
-			expectedRevShares: []types.RevShare{
-
-				{
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares: []types.RevShare{
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+						QuoteQuantums:     big.NewInt(1_500_000),
+						RevSharePpm:       150_000,
+					},
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(2_400_000),
+						RevSharePpm:       200_000,
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(3_600_000),
+						RevSharePpm:       300_000,
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+						QuoteQuantums:     big.NewInt(1_200_000),
+						RevSharePpm:       100_000,
+					},
+				},
+				AffiliateRevShare: &types.RevShare{
 					Recipient:         constants.BobAccAddress.String(),
 					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
 					QuoteQuantums:     big.NewInt(1_500_000),
+					RevSharePpm:       150_000,
 				},
-				{
-					Recipient:         constants.BobAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(2_400_000),
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(1_500_000),
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(7_200_000),
 				},
-				{
-					Recipient:         constants.AliceAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(3_600_000),
-				},
-				{
-					Recipient:         constants.AliceAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
-					QuoteQuantums:     big.NewInt(1_200_000),
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: 150_000,
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   600_000,
 				},
 			},
 			fill: clobtypes.FillForProcess{
@@ -310,8 +331,9 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+				MarketId:                          marketId,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -344,31 +366,51 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 		},
 		{
 			name: "Valid rev-share from affiliates, negative unconditional and market mapper",
-			expectedRevShares: []types.RevShare{
-
-				{
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares: []types.RevShare{
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+						QuoteQuantums:     big.NewInt(1_500_000),
+						RevSharePpm:       150_000,
+					},
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(1_600_000),
+						RevSharePpm:       200_000,
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(2_400_000),
+						RevSharePpm:       300_000,
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+						QuoteQuantums:     big.NewInt(800_000),
+						RevSharePpm:       100_000,
+					},
+				},
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(1_500_000),
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(4_800_000),
+				},
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: 150_000,
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   600_000,
+				},
+				AffiliateRevShare: &types.RevShare{
 					Recipient:         constants.BobAccAddress.String(),
 					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
 					QuoteQuantums:     big.NewInt(1_500_000),
-				},
-				{
-					Recipient:         constants.BobAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(1_600_000),
-				},
-				{
-					Recipient:         constants.AliceAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(2_400_000),
-				},
-				{
-					Recipient:         constants.AliceAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
-					QuoteQuantums:     big.NewInt(800_000),
+					RevSharePpm:       150_000,
 				},
 			},
 			fill: clobtypes.FillForProcess{
@@ -377,7 +419,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(-2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
@@ -417,27 +460,42 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
 				MonthlyRollingTakerVolumeQuantums: types.Max30dRefereeVolumeQuantums + 1,
+				MarketId:                          marketId,
 			},
-			expectedRevShares: []types.RevShare{
-				{
-					Recipient:         constants.BobAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(2_400_000),
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares: []types.RevShare{
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(2_400_000),
+						RevSharePpm:       200_000,
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(3_600_000),
+						RevSharePpm:       300_000,
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+						QuoteQuantums:     big.NewInt(1_200_000),
+						RevSharePpm:       100_000,
+					},
 				},
-				{
-					Recipient:         constants.AliceAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(3_600_000),
+				AffiliateRevShare: nil,
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(7_200_000),
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(0),
 				},
-				{
-					Recipient:         constants.AliceAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
-					QuoteQuantums:     big.NewInt(1_200_000),
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   600_000,
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: 0,
 				},
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
@@ -470,19 +528,37 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 		},
 		{
 			name: "Valid revenue share with no unconditional rev shares",
-			expectedRevShares: []types.RevShare{
-
-				{
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares: []types.RevShare{
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+						QuoteQuantums:     big.NewInt(1_500_000),
+						RevSharePpm:       150_000, // 15%
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+						QuoteQuantums:     big.NewInt(1_200_000),
+						RevSharePpm:       100_000, // 10%
+					},
+				},
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(1_200_000),
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(1_500_000),
+				},
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   100_000, // 10%
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: 150_000, // 15%
+				},
+				AffiliateRevShare: &types.RevShare{
 					Recipient:         constants.BobAccAddress.String(),
 					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
 					QuoteQuantums:     big.NewInt(1_500_000),
-				},
-				{
-					Recipient:         constants.AliceAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
-					QuoteQuantums:     big.NewInt(1_200_000),
+					RevSharePpm:       150_000, // 15%
 				},
 			},
 			fill: clobtypes.FillForProcess{
@@ -491,7 +567,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
@@ -512,19 +589,37 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 		},
 		{
 			name: "Valid revenue share with no market mapper rev share",
-			expectedRevShares: []types.RevShare{
-
-				{
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares: []types.RevShare{
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+						QuoteQuantums:     big.NewInt(1_500_000),
+						RevSharePpm:       150_000, // 15%
+					},
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(2_400_000),
+						RevSharePpm:       200_000, // 20%
+					},
+				},
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(2_400_000),
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(1_500_000),
+				},
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   200_000, // 20%
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: 150_000, // 15%
+				},
+				AffiliateRevShare: &types.RevShare{
 					Recipient:         constants.BobAccAddress.String(),
 					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
 					QuoteQuantums:     big.NewInt(1_500_000),
-				},
-				{
-					Recipient:         constants.BobAccAddress.String(),
-					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
-					RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
-					QuoteQuantums:     big.NewInt(2_400_000),
+					RevSharePpm:       150_000, // 15%
 				},
 			},
 			fill: clobtypes.FillForProcess{
@@ -533,7 +628,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
@@ -554,15 +650,27 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-			name:              "No rev shares",
-			expectedRevShares: []types.RevShare{},
+			name: "No rev shares",
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares:      []types.RevShare{},
+				AffiliateRevShare: nil,
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(0),
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(0),
+				},
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   0,
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: 0,
+				},
+			},
 			fill: clobtypes.FillForProcess{
 				TakerAddr:                         constants.AliceAccAddress.String(),
 				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         marketId,
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
@@ -570,7 +678,6 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 	}
-
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup
@@ -585,15 +692,16 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 
-			revShares, err := keeper.GetAllRevShares(ctx, tc.fill)
+			revSharesForFill, err := keeper.GetAllRevShares(ctx, tc.fill)
 
 			require.NoError(t, err)
-			require.Equal(t, tc.expectedRevShares, revShares)
+			require.Equal(t, tc.expectedRevSharesForFill, revSharesForFill)
 		})
 	}
 }
 
 func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
+	perpetualId := uint32(1)
 	marketId := uint32(1)
 	tests := []struct {
 		name                              string
@@ -716,7 +824,8 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 				MakerAddr:                         constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         uint32(1),
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 			}
 			tApp := testapp.NewTestAppBuilder(t).Build()

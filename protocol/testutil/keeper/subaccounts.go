@@ -5,6 +5,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/streaming"
 
+	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	revsharekeeper "github.com/dydxprotocol/v4-chain/protocol/x/revshare/keeper"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -41,6 +42,7 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 	assetsKeeper *asskeeper.Keeper,
 	blocktimeKeeper *blocktimekeeper.Keeper,
 	revShareKeeper *revsharekeeper.Keeper,
+	affiliatesKeeper *affiliateskeeper.Keeper,
 	storeKey storetypes.StoreKey,
 ) {
 	var mockTimeProvider *mocks.TimeProvider
@@ -74,8 +76,9 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 			cdc,
 			stakingKeeper,
 		)
-		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
+		affiliatesKeeper, _ = createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
 		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
+		affiliatesKeeper.SetRevShareKeeper(revShareKeeper)
 		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 		pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
@@ -102,7 +105,7 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 			msgSenderEnabled,
 		)
 
-		return []GenesisInitializer{pricesKeeper, perpetualsKeeper, assetsKeeper, revShareKeeper, keeper}
+		return []GenesisInitializer{pricesKeeper, perpetualsKeeper, assetsKeeper, revShareKeeper, affiliatesKeeper, keeper}
 	})
 
 	// Mock time provider response for market creation.
@@ -117,6 +120,7 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 		assetsKeeper,
 		blocktimeKeeper,
 		revShareKeeper,
+		affiliatesKeeper,
 		storeKey
 }
 
