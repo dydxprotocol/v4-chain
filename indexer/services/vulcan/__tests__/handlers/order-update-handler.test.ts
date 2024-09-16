@@ -343,6 +343,7 @@ describe('OrderUpdateHandler', () => {
         expect(stats.increment).toHaveBeenCalledWith(
           'vulcan.order_update_total_filled_exceeds_size',
           1,
+          { instance: '' },
         );
         expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
           at: 'OrderUpdateHandler#getCappedNewTotalFilledQuantums',
@@ -413,6 +414,7 @@ describe('OrderUpdateHandler', () => {
         expect(stats.increment).toHaveBeenCalledWith(
           'vulcan.order_update_old_total_filled_exceeds_size',
           1,
+          { instance: '' },
         );
         expectTimingStats();
       },
@@ -535,6 +537,7 @@ describe('OrderUpdateHandler', () => {
         1,
         {
           orderFlags: String(redisTestConstants.orderUpdate.orderUpdate.orderId!.orderFlags),
+          instance: '',
         },
       );
     });
@@ -571,6 +574,7 @@ describe('OrderUpdateHandler', () => {
         1,
         {
           orderFlags: String(statefulOrderUpdate.orderUpdate.orderId!.orderFlags),
+          instance: '',
         },
       );
     });
@@ -600,7 +604,7 @@ function expectTimingStat(fnName: string) {
   expect(stats.timing).toHaveBeenCalledWith(
     `vulcan.${STATS_FUNCTION_NAME}.timing`,
     expect.any(Number),
-    { className: 'OrderUpdateHandler', fnName },
+    { className: 'OrderUpdateHandler', fnName, instance: '' },
   );
 }
 
