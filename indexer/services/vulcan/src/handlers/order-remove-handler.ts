@@ -49,6 +49,7 @@ import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
 import { getStateRemainingQuantums } from './helpers';
+import { DateTime } from 'luxon';
 
 /**
  * Handler for OrderRemove messages.
@@ -493,6 +494,7 @@ export class OrderRemoveHandler extends Handler {
     return OrderTable.update({
       id: OrderTable.orderIdToUuid(orderRemove.removedOrderId!),
       status: this.orderRemovalStatusToOrderStatus(orderRemove.removalStatus),
+      updatedAt: DateTime.utc().toISO(),
     });
   }
 
