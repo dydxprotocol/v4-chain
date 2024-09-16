@@ -1,4 +1,6 @@
-import { logger, runFuncWithTimingStat, stats } from '@dydxprotocol-indexer/base';
+import {
+  logger, getInstanceId, runFuncWithTimingStat, stats,
+} from '@dydxprotocol-indexer/base';
 import { createSubaccountWebsocketMessage, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
   blockHeightRefresher,
@@ -108,6 +110,7 @@ export class OrderPlaceHandler extends Handler {
     // TODO(IND-68): Error on this case once replacements are done by first removing the order, then
     // placing a new order.
     if (placeOrderResult.replaced) {
+<<<<<<< HEAD
       // Replaced orders are no longer counted as resting on the book until an order update message
       // is received, so remove the order from the set of open orders when replaced.
       const clobPairId: string = order.orderId!.clobPairId.toString();
@@ -118,6 +121,13 @@ export class OrderPlaceHandler extends Handler {
       );
       // TODO(IND-172): Replace this with a logger.error call
       stats.increment(`${config.SERVICE_NAME}.place_order_handler.replaced_order`, 1);
+=======
+      stats.increment(
+        `${config.SERVICE_NAME}.place_order_handler.replaced_order`,
+        1,
+        { instance: getInstanceId() },
+      );
+>>>>>>> 46a1c88e (Add instance to vulcan metrics (#2265))
     }
 
     // TODO(CLOB-597): Remove this logic and log erorrs once best-effort-open is not sent for
