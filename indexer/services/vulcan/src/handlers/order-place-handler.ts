@@ -1,4 +1,6 @@
-import { logger, runFuncWithTimingStat, stats } from '@dydxprotocol-indexer/base';
+import {
+  logger, getInstanceId, runFuncWithTimingStat, stats,
+} from '@dydxprotocol-indexer/base';
 import { createSubaccountWebsocketMessage, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
   blockHeightRefresher,
@@ -89,7 +91,11 @@ export class OrderPlaceHandler extends Handler {
     });
 
     if (placeOrderResult.replaced) {
-      stats.increment(`${config.SERVICE_NAME}.place_order_handler.replaced_order`, 1);
+      stats.increment(
+        `${config.SERVICE_NAME}.place_order_handler.replaced_order`,
+        1,
+        { instance: getInstanceId() },
+      );
     }
 
     // TODO(CLOB-597): Remove this logic and log erorrs once best-effort-open is not sent for
