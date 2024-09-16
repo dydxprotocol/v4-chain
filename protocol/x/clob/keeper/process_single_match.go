@@ -129,6 +129,7 @@ func (k Keeper) ProcessSingleMatch(
 	}
 
 	// Retrieve the associated perpetual id for the `ClobPair`.
+	// TODO(OTE-805): call this outside of ProcessSingleMatch to avoid duplicate calls.
 	perpetualId, err := clobPair.GetPerpetualId()
 	if err != nil {
 		return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
@@ -443,7 +444,7 @@ func (k Keeper) persistMatchedOrders(
 		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 
-	fill := types.FillForProcess{
+	fillForProcess := types.FillForProcess{
 		TakerAddr:             matchWithOrders.TakerOrder.GetSubaccountId().Owner,
 		TakerFeeQuoteQuantums: bigTakerFeeQuoteQuantums,
 		MakerAddr:             matchWithOrders.MakerOrder.GetSubaccountId().Owner,
@@ -459,7 +460,7 @@ func (k Keeper) persistMatchedOrders(
 
 	// Distribute the fee amount from subacounts module to fee collector and rev share accounts
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
-	revshares, err := k.revshareKeeper.GetAllRevShares(ctx, fill)
+	revshares, err := k.revshareKeeper.GetAllRevShares(ctx, fillForProcess)
 	affiliateRevSharesQuoteQuantums = big.NewInt(0)
 	for _, revshare := range revshares {
 		if revshare.RevShareType == revsharetypes.REV_SHARE_TYPE_AFFILIATE {
@@ -474,7 +475,7 @@ func (k Keeper) persistMatchedOrders(
 		ctx,
 		assettypes.AssetUsdc.Id,
 		revshares,
-		fill,
+		fillForProcess,
 	); err != nil {
 		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, errorsmod.Wrapf(
 			types.ErrSubaccountFeeTransferFailed,
@@ -493,7 +494,7 @@ func (k Keeper) persistMatchedOrders(
 	// Process fill in x/stats and x/rewards.
 	k.rewardsKeeper.AddRewardSharesForFill(
 		ctx,
-		fill,
+		fillForProcess,
 		revshares,
 	)
 
