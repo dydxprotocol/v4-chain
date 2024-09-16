@@ -12,8 +12,7 @@ func EndBlocker(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 ) {
-	err := keeper.AggregateAffiliateVolumeForFills(ctx)
-	if err != nil {
+	if err := keeper.AggregateAffiliateReferredVolumeForFills(ctx); err != nil {
 		log.ErrorLog(ctx, "error aggregating affiliate volume for fills", "error",
 			err, "stack", string(debug.Stack()))
 	}

@@ -225,12 +225,13 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 	store.Set([]byte(types.AffiliateTiersKey), k.cdc.MustMarshal(&affiliateTiers))
 }
 
-func (k Keeper) AggregateAffiliateVolumeForFills(
+func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 	ctx sdk.Context,
 ) error {
 	blockStats := k.statsKeeper.GetBlockStats(ctx)
 	referredByCache := make(map[string]string)
 	for _, fill := range blockStats.Fills {
+		// Add taker's referred volume to the cache
 		if _, ok := referredByCache[fill.Taker]; !ok {
 			referredByAddrTaker, found := k.GetReferredBy(ctx, fill.Taker)
 			if !found {
@@ -238,13 +239,11 @@ func (k Keeper) AggregateAffiliateVolumeForFills(
 			}
 			referredByCache[fill.Taker] = referredByAddrTaker
 		}
-		err := k.AddReferredVolume(ctx, referredByCache[fill.Taker], lib.BigU(fill.Notional))
-		if err != nil {
+		if err := k.AddReferredVolume(ctx, referredByCache[fill.Taker], lib.BigU(fill.Notional)); err != nil {
 			return err
 		}
-	}
 
-	for _, fill := range blockStats.Fills {
+		// Add maker's referred volume to the cache
 		if _, ok := referredByCache[fill.Maker]; !ok {
 			referredByAddrMaker, found := k.GetReferredBy(ctx, fill.Maker)
 			if !found {
@@ -252,8 +251,7 @@ func (k Keeper) AggregateAffiliateVolumeForFills(
 			}
 			referredByCache[fill.Maker] = referredByAddrMaker
 		}
-		err := k.AddReferredVolume(ctx, referredByCache[fill.Maker], lib.BigU(fill.Notional))
-		if err != nil {
+		if err := k.AddReferredVolume(ctx, referredByCache[fill.Maker], lib.BigU(fill.Notional)); err != nil {
 			return err
 		}
 	}

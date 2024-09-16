@@ -307,7 +307,7 @@ func TestUpdateAffiliateTiers(t *testing.T) {
 	require.Equal(t, validTiers, updatedTiers)
 }
 
-func TestAggregateAffiliateVolumeForFills(t *testing.T) {
+func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 	affiliate := constants.AliceAccAddress.String()
 	referee1 := constants.BobAccAddress.String()
 	referee2 := constants.DaveAccAddress.String()
@@ -414,7 +414,7 @@ func TestAggregateAffiliateVolumeForFills(t *testing.T) {
 
 			tc.setup(t, ctx, &k, &statsKeeper)
 
-			err := k.AggregateAffiliateVolumeForFills(ctx)
+			err := k.AggregateAffiliateReferredVolumeForFills(ctx)
 			require.NoError(t, err)
 
 			referredVolume, err := k.GetReferredVolume(ctx, affiliate)
