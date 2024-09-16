@@ -12,6 +12,7 @@ CREATE OR REPLACE FUNCTION dydx_funding_handler(
   Returns: JSON object containing fields:
     - perpetual_markets: A mapping from perpetual market id to the associated perpetual market in perpetual-market-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-market-model.ts).
     - errors: An array containing an error string (or NULL if no error occurred) for each FundingEventUpdate.
+
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
 DECLARE
@@ -53,9 +54,6 @@ BEGIN
     -- Process each funding update
     FOR funding_update IN SELECT * FROM jsonb_array_elements(event_data->'updates') LOOP
         perpetual_market_id = (funding_update->'perpetualId')::bigint;
-
-        -- Retrieve perpetual market from map
-        PERFORM jsonb_populate_record(null::perpetual_markets, perpetual_market_map->(perpetual_market_id::text));
 
         IF perpetual_market_map->(perpetual_market_id::text) IS NULL THEN
             errors_response = array_append(errors_response, '"Received FundingUpdate with unknown perpetualId."'::jsonb);
