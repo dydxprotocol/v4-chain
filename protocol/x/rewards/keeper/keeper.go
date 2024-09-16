@@ -120,7 +120,8 @@ func (k Keeper) GetRewardShare(
 //
 // Within each block, total reward share score for an address is defined as:
 //
-//	reward_share_score = total_taker_fees_paid - max_possible_maker_rebate*taker_volume + total_positive_maker_fees
+//	reward_share_score = total_taker_fees_paid - total_rev_shared_taker_fee
+//   - max_possible_maker_rebate * taker_volume + total_positive_maker_fees - total_rev_shared_maker_fee
 //
 // Hence, for each fill, increment reward share score as follow:
 //   - Let F = sum(percentages of general rev-share) (excluding taker only rev share i.e. affiliate)
