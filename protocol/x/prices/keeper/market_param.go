@@ -61,7 +61,10 @@ func (k Keeper) ModifyMarketParam(
 		if err == nil {
 			k.RemoveCurrencyPairFromStore(ctx, oldCurrencyPair)
 		} else {
-			k.Logger(ctx).Error("failed to remove currency pair from cache", "pair", existingParam.Pair)
+			return types.MarketParam{}, errorsmod.Wrap(
+				types.ErrMarketPairConversionFailed,
+				existingParam.Pair,
+			)
 		}
 
 		// add the new cache entry
@@ -69,7 +72,10 @@ func (k Keeper) ModifyMarketParam(
 		if err == nil {
 			k.AddCurrencyPairIDToStore(ctx, updatedMarketParam.Id, newCurrencyPair)
 		} else {
-			k.Logger(ctx).Error("failed to add currency pair to cache", "pair", updatedMarketParam.Pair)
+			return types.MarketParam{}, errorsmod.Wrap(
+				types.ErrMarketPairConversionFailed,
+				updatedMarketParam.Pair,
+			)
 		}
 	}
 
