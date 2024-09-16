@@ -13,7 +13,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -404,6 +403,10 @@ func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockSubaccountUpdate(
 }
 
 // Stage a fill event in transient store, during `FinalizeBlock`.
+// Since `FinalizeBlock` code block can be called more than once with optimistc
+// execution (once optimistcally and optionally once on the canonical block),
+// we need to stage the events in transient store and later emit them
+// during `Precommit`.
 func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockFill(
 	ctx sdk.Context,
 	fill clobtypes.StreamOrderbookFill,
@@ -841,11 +844,9 @@ func (sm *FullNodeStreamingManagerImpl) getStagedEventsFromFinalizeBlock(
 	// Get onchain stream events stored in transient store.
 	stagedEvents := sm.GetStagedFinalizeBlockEvents(ctx)
 
-	telemetry.SetGauge(
+	metrics.SetGauge(
+		metrics.GrpcStagedAllFinalizeBlockUpdatesCount,
 		float32(len(stagedEvents)),
-		types.ModuleName,
-		metrics.GrpcStagedAllFinalizeBlockUpdates,
-		metrics.Count,
 	)
 
 	for _, stagedEvent := range stagedEvents {
@@ -857,17 +858,13 @@ func (sm *FullNodeStreamingManagerImpl) getStagedEventsFromFinalizeBlock(
 		}
 	}
 
-	telemetry.SetGauge(
+	metrics.SetGauge(
+		metrics.GrpcStagedSubaccountFinalizeBlockUpdatesCount,
 		float32(len(finalizedSubaccountUpdates)),
-		types.ModuleName,
-		metrics.GrpcStagedSubaccountFinalizeBlockUpdates,
-		metrics.Count,
 	)
-	telemetry.SetGauge(
+	metrics.SetGauge(
+		metrics.GrpcStagedFillFinalizeBlockUpdatesCount,
 		float32(len(finalizedFills)),
-		types.ModuleName,
-		metrics.GrpcStagedFillFinalizeBlockUpdates,
-		metrics.Count,
 	)
 
 	return finalizedFills, finalizedSubaccountUpdates

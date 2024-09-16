@@ -1,5 +1,6 @@
 package streaming
 
+// Constants for FullNodeStreamingManager.
 const (
 	// Transient store key for storing staged events.
 	StreamingManagerTransientStoreKey = "tmp_streaming"

@@ -11,6 +11,7 @@ import (
 
 // Returns the order updates needed to update the fill amount for the orders
 // from local ops queue, according to the latest onchain state (after FinalizeBlock).
+// Effectively reverts the optimistic fill amounts removed from the CheckTx to DeliverTx state transition.
 func (k Keeper) getUpdatesToSyncLocalOpsQueue(
 	ctx sdk.Context,
 ) *types.OffchainUpdates {
