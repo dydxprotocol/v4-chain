@@ -41,6 +41,8 @@ func NewMarketToExchangePrices(maxPriceAge time.Duration) *MarketToExchangePrice
 func (mte *MarketToExchangePrices) UpdatePrices(
 	updates []*api.MarketPriceUpdate) {
 	mte.Lock()
+	fmt.Println("Locked mutex in UpdatePrices")
+
 	defer func() {
 		telemetry.ModuleMeasureSince(
 			types.ModuleName,
@@ -77,6 +79,8 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 	marketIdToMedianPrice := make(map[uint32]uint64)
 
 	mte.Lock()
+	fmt.Println("Locked mutex in GetValidMedianPrices")
+
 	defer func() {
 		telemetry.ModuleMeasureSince(
 			types.ModuleName,
@@ -93,6 +97,7 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 		if !ok {
 			// No market price info yet, skip this market.
 			logger.Warn("No market price info", metrics.MarketId, marketId)
+			logger.Warn("State of marketToExchangePrices", mte.marketToExchangePrices)
 			telemetry.IncrCounterWithLabels(
 				[]string{
 					metrics.PricefeedServer,
