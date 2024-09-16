@@ -57,26 +57,6 @@ func (k Keeper) ProcessProposerOperations(
 		return errorsmod.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
 	}
 
-	// If grpc streams are on, send absolute fill amounts from local + proposed opqueue to the grpc stream.
-	// This effetively reverts the optimitic orderbook updates during CheckTx.
-	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
-		localValidatorOperationsQueue, _ := k.MemClob.GetOperationsToReplay(ctx)
-		orderIdsFromProposed := fetchOrdersInvolvedInOpQueue(
-			operations,
-		)
-		orderIdsFromLocal := fetchOrdersInvolvedInOpQueue(
-			localValidatorOperationsQueue,
-		)
-		orderIdSetToUpdate := lib.MergeMaps(orderIdsFromLocal, orderIdsFromProposed)
-
-		allUpdates := types.NewOffchainUpdates()
-		for orderId := range orderIdSetToUpdate {
-			orderbookUpdate := k.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
-			allUpdates.Append(orderbookUpdate)
-		}
-		k.SendOrderbookUpdates(ctx, allUpdates)
-	}
-
 	log.DebugLog(ctx, "Processing operations queue",
 		log.OperationsQueue, types.GetInternalOperationsQueueTextString(operations))
 
@@ -550,6 +530,7 @@ func (k Keeper) PersistMatchOrdersToState(
 
 	// if GRPC streaming is on, emit a generated clob match to stream.
 	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
+		// Note: GenerateStreamOrderbookFill doesn't rely on MemClob state.
 		streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
 			ctx,
 			types.ClobMatch{
@@ -560,11 +541,10 @@ func (k Keeper) PersistMatchOrdersToState(
 			&takerOrder,
 			makerOrders,
 		)
-		k.SendOrderbookFillUpdates(
+
+		k.GetFullNodeStreamingManager().StageFinalizeBlockFill(
 			ctx,
-			[]types.StreamOrderbookFill{
-				streamOrderbookFill,
-			},
+			streamOrderbookFill,
 		)
 	}
 
@@ -669,11 +649,9 @@ func (k Keeper) PersistMatchLiquidationToState(
 			takerOrder,
 			makerOrders,
 		)
-		k.SendOrderbookFillUpdates(
+		k.GetFullNodeStreamingManager().StageFinalizeBlockFill(
 			ctx,
-			[]types.StreamOrderbookFill{
-				streamOrderbookFill,
-			},
+			streamOrderbookFill,
 		)
 	}
 	return nil

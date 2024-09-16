@@ -1,5 +1,5 @@
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
-import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType, Params, ParamsSDKType } from "./params";
+import { QuotingParams, QuotingParamsSDKType, OperatorParams, OperatorParamsSDKType, VaultParams, VaultParamsSDKType, Params, ParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
 import { NumShares, NumSharesSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
@@ -156,6 +156,28 @@ export interface MsgUpdateParamsSDKType {
 
   params?: ParamsSDKType;
 }
+/** MsgUpdateOperatorParams is the Msg/UpdateOperatorParams request type. */
+
+export interface MsgUpdateOperatorParams {
+  authority: string;
+  /** Operator parameters to set. */
+
+  params?: OperatorParams;
+}
+/** MsgUpdateOperatorParams is the Msg/UpdateOperatorParams request type. */
+
+export interface MsgUpdateOperatorParamsSDKType {
+  authority: string;
+  /** Operator parameters to set. */
+
+  params?: OperatorParamsSDKType;
+}
+/** MsgUpdateVaultParamsResponse is the Msg/UpdateOperatorParams response type. */
+
+export interface MsgUpdateOperatorParamsResponse {}
+/** MsgUpdateVaultParamsResponse is the Msg/UpdateOperatorParams response type. */
+
+export interface MsgUpdateOperatorParamsResponseSDKType {}
 
 function createBaseMsgDepositToMegavault(): MsgDepositToMegavault {
   return {
@@ -595,6 +617,95 @@ export const MsgUpdateParams = {
     const message = createBaseMsgUpdateParams();
     message.authority = object.authority ?? "";
     message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateOperatorParams(): MsgUpdateOperatorParams {
+  return {
+    authority: "",
+    params: undefined
+  };
+}
+
+export const MsgUpdateOperatorParams = {
+  encode(message: MsgUpdateOperatorParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.params !== undefined) {
+      OperatorParams.encode(message.params, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateOperatorParams {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateOperatorParams();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.params = OperatorParams.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpdateOperatorParams>): MsgUpdateOperatorParams {
+    const message = createBaseMsgUpdateOperatorParams();
+    message.authority = object.authority ?? "";
+    message.params = object.params !== undefined && object.params !== null ? OperatorParams.fromPartial(object.params) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpdateOperatorParamsResponse(): MsgUpdateOperatorParamsResponse {
+  return {};
+}
+
+export const MsgUpdateOperatorParamsResponse = {
+  encode(_: MsgUpdateOperatorParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpdateOperatorParamsResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpdateOperatorParamsResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpdateOperatorParamsResponse>): MsgUpdateOperatorParamsResponse {
+    const message = createBaseMsgUpdateOperatorParamsResponse();
     return message;
   }
 

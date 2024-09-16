@@ -202,6 +202,7 @@ const (
 	UpdateType                                              = "update_type"
 	ValidateMatches                                         = "validate_matches"
 	ValidateOrder                                           = "validate_order"
+	StreamBatchUpdatesAfterFinalizeBlock                    = "stream_batch_updates_after_finalize_block"
 
 	// MemCLOB.
 	AddedToOrderBook                     = "added_to_orderbook"

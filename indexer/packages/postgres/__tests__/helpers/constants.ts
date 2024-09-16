@@ -162,28 +162,24 @@ export const defaultWallet: WalletCreateObject = {
   address: defaultAddress,
   totalTradingRewards: denomToHumanReadableConversion(0),
   totalVolume: '0',
-  isWhitelistAffiliate: false,
 };
 
 export const defaultWallet2: WalletCreateObject = {
   address: defaultWalletAddress,
   totalTradingRewards: denomToHumanReadableConversion(1),
   totalVolume: '0',
-  isWhitelistAffiliate: false,
 };
 
 export const vaultWallet: WalletCreateObject = {
   address: vaultAddress,
   totalTradingRewards: denomToHumanReadableConversion(0),
   totalVolume: '0',
-  isWhitelistAffiliate: false,
 };
 
 export const defaultWallet3: WalletCreateObject = {
   address: defaultAddress2,
   totalTradingRewards: denomToHumanReadableConversion(0),
   totalVolume: '0',
-  isWhitelistAffiliate: true,
 };
 
 // ============== Assets ==============
@@ -985,4 +981,13 @@ export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
   totalReferredUsers: 5,
   referredNetProtocolEarnings: '21.00',
   firstReferralBlockHeight: '11',
+};
+
+// ==============  Tokens  =============
+
+export const defaultFirebaseNotificationToken = {
+  token: 'DEFAULT_TOKEN',
+  address: defaultAddress,
+  language: 'en',
+  updatedAt: createdDateTime.toISO(),
 };

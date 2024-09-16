@@ -69,7 +69,7 @@ func PricesKeepers(t testing.TB) (
 			cdc,
 			stakingKeeper,
 		)
-		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper)
+		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
 		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 		marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		// Define necessary keepers here for unit tests
