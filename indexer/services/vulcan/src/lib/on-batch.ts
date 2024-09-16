@@ -1,4 +1,4 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { getInstanceId, logger, stats } from '@dydxprotocol-indexer/base';
 import {
   Batch,
   EachBatchPayload,
@@ -13,7 +13,7 @@ export async function onBatch(
   const batch: Batch = payload.batch;
   const topic: string = batch.topic;
   const partition: string = batch.partition.toString();
-  const metricTags: Record<string, string> = { topic, partition };
+  const metricTags: Record<string, string> = { topic, partition, instance: getInstanceId() };
   if (batch.isEmpty()) {
     logger.error({
       at: 'on-batch#onBatch',
