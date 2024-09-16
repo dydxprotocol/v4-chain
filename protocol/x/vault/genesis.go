@@ -2,7 +2,6 @@ package vault
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
@@ -42,10 +41,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.AddVaultToAddressStore(ctx, vault.VaultId)
 	}
 
-	// Set operator, which defaults to gov module account.
-	if genState.OperatorParams.Operator == "" {
-		genState.OperatorParams.Operator = lib.GovModuleAddress.String()
-	}
+	// Set operator params.
 	if err := k.SetOperatorParams(ctx, genState.OperatorParams); err != nil {
 		panic(err)
 	}
