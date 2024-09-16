@@ -884,9 +884,6 @@ func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
 	orderBookUpdatesToSyncLocalOpsQueue *clobtypes.OffchainUpdates,
 	perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
 ) {
-	// Flush all pending updates, since we want the onchain updates to arrive in a batch.
-	sm.FlushStreamUpdates()
-
 	finalizedFills, finalizedSubaccountUpdates := sm.getStagedEventsFromFinalizeBlock(ctx)
 
 	orderbookStreamUpdates, orderbookClobPairIds := getStreamUpdatesFromOffchainUpdates(
@@ -902,14 +899,17 @@ func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
 		perpetualIdToClobPairId,
 	)
 
-	sm.Lock()
-	defer sm.Unlock()
-
 	subaccountStreamUpdates, subaccountIds := getStreamUpdatesForSubaccountUpdates(
 		finalizedSubaccountUpdates,
 		uint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)
+
+	sm.Lock()
+	defer sm.Unlock()
+
+	// Flush all pending updates, since we want the onchain updates to arrive in a batch.
+	sm.FlushStreamUpdatesWithLock()
 
 	sm.addBatchUpdatesToCache(
 		orderbookStreamUpdates,
@@ -920,6 +920,8 @@ func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
 		subaccountIds,
 	)
 
+	// Emit all stream updates in a single batch.
+	// Note we still have the lock, which is released right before function returns.
 	sm.FlushStreamUpdatesWithLock()
 }
 
