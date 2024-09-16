@@ -84,12 +84,6 @@ func RewardsKeepers(
 			cdc,
 			transientStoreKey,
 		)
-		affiliatesKeeper, _ := createAffiliatesKeeper(
-			stateStore,
-			db,
-			cdc,
-			statsKeeper,
-		)
 		feetiersKeeper, _ = createFeeTiersKeeper(
 			stateStore,
 			statsKeeper,

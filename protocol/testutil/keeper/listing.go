@@ -107,12 +107,6 @@ func ListingKeepers(
 				cdc,
 				transientStoreKey,
 			)
-			affiliatesKeeper, _ := createAffiliatesKeeper(
-				stateStore,
-				db,
-				cdc,
-				statsKeeper,
-			)
 			feeTiersKeeper, _ := createFeeTiersKeeper(
 				stateStore,
 				statsKeeper,
