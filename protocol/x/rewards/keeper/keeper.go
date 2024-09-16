@@ -140,13 +140,12 @@ func (k Keeper) AddRewardSharesForFill(
 	maxMakerRebatePpm := lib.Min(int32(0), lowestMakerFee)
 
 	totalNetFeeRevSharePpm := uint32(0)
-	if _, ok := revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]; ok {
-		totalNetFeeRevSharePpm = revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]
+	if value, ok := revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]; ok {
+		totalNetFeeRevSharePpm = value
 	}
 	totalTakerFeeRevShareQuantums := big.NewInt(0)
-	if _, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]; ok {
-		totalTakerFeeRevShareQuantums =
-			revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]
+	if value, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]; ok {
+		totalTakerFeeRevShareQuantums = value
 	}
 
 	totalFeeSubNetRevSharePpm := lib.OneMillion - totalNetFeeRevSharePpm

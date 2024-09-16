@@ -263,9 +263,18 @@ func (k Keeper) DistributeFees(
 		}
 	}
 
+	totalTakerFeeRevShareQuantums := big.NewInt(0)
+	if value, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]; ok {
+		totalTakerFeeRevShareQuantums = value
+	}
+	totalNetFeeRevShareQuantums := big.NewInt(0)
+	if value, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]; ok {
+		totalNetFeeRevShareQuantums = value
+	}
+
 	totalRevShareQuoteQuantums := big.NewInt(0).Add(
-		revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE],
-		revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE],
+		totalTakerFeeRevShareQuantums,
+		totalNetFeeRevShareQuantums,
 	)
 
 	// Remaining amount goes to the fee collector
