@@ -258,3 +258,36 @@ func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
 func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
+
+func (k Keeper) AggregateAffiliateReferredVolumeForFills(
+	ctx sdk.Context,
+) error {
+	blockStats := k.statsKeeper.GetBlockStats(ctx)
+	referredByCache := make(map[string]string)
+	for _, fill := range blockStats.Fills {
+		// Add taker's referred volume to the cache
+		if _, ok := referredByCache[fill.Taker]; !ok {
+			referredByAddrTaker, found := k.GetReferredBy(ctx, fill.Taker)
+			if !found {
+				continue
+			}
+			referredByCache[fill.Taker] = referredByAddrTaker
+		}
+		if err := k.AddReferredVolume(ctx, referredByCache[fill.Taker], lib.BigU(fill.Notional)); err != nil {
+			return err
+		}
+
+		// Add maker's referred volume to the cache
+		if _, ok := referredByCache[fill.Maker]; !ok {
+			referredByAddrMaker, found := k.GetReferredBy(ctx, fill.Maker)
+			if !found {
+				continue
+			}
+			referredByCache[fill.Maker] = referredByAddrMaker
+		}
+		if err := k.AddReferredVolume(ctx, referredByCache[fill.Maker], lib.BigU(fill.Notional)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
