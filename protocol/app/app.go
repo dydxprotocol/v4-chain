@@ -469,6 +469,7 @@ func New(
 		statsmoduletypes.TransientStoreKey,
 		rewardsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
+		streaming.StreamingManagerTransientStoreKey,
 		perpetualsmoduletypes.TransientStoreKey,
 	)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
@@ -764,6 +765,7 @@ func New(
 		appFlags,
 		appCodec,
 		logger,
+		tkeys[streaming.StreamingManagerTransientStoreKey],
 	)
 
 	timeProvider := &timelib.TimeProviderImpl{}
@@ -920,6 +922,30 @@ func New(
 			)
 		}()
 	}
+	app.StatsKeeper = *statsmodulekeeper.NewKeeper(
+		appCodec,
+		app.EpochsKeeper,
+		keys[statsmoduletypes.StoreKey],
+		tkeys[statsmoduletypes.TransientStoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+		app.StakingKeeper,
+	)
+	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
+
+	app.AffiliatesKeeper = *affiliatesmodulekeeper.NewKeeper(
+		appCodec,
+		keys[affiliatesmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+		app.StatsKeeper,
+		app.IndexerEventManager,
+	)
+	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 
 	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
 		appCodec,
@@ -927,8 +953,12 @@ func New(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		app.AffiliatesKeeper,
 	)
 	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
+
+	// Set the revshare keeper in the affiliates keeper.
+	app.AffiliatesKeeper.SetRevShareKeeper(app.RevShareKeeper)
 
 	app.MarketMapKeeper = *marketmapmodulekeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[marketmapmoduletypes.StoreKey]),
@@ -1008,30 +1038,6 @@ func New(
 		tkeys[perpetualsmoduletypes.TransientStoreKey],
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper)
-
-	app.StatsKeeper = *statsmodulekeeper.NewKeeper(
-		appCodec,
-		app.EpochsKeeper,
-		keys[statsmoduletypes.StoreKey],
-		tkeys[statsmoduletypes.TransientStoreKey],
-		// set the governance and delaymsg module accounts as the authority for conducting upgrades
-		[]string{
-			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
-		},
-		app.StakingKeeper,
-	)
-	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
-
-	app.AffiliatesKeeper = *affiliatesmodulekeeper.NewKeeper(
-		appCodec,
-		keys[affiliatesmoduletypes.StoreKey],
-		[]string{
-			lib.GovModuleAddress.String(),
-		},
-		app.StatsKeeper,
-	)
-	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 
 	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
 		appCodec,
@@ -2056,6 +2062,7 @@ func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
 	cdc codec.Codec,
 	logger log.Logger,
+	streamingManagerTransientStoreKey storetypes.StoreKey,
 ) (manager streamingtypes.FullNodeStreamingManager, wsServer *ws.WebsocketServer) {
 	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	if appFlags.GrpcStreamingEnabled {
@@ -2069,6 +2076,7 @@ func getFullNodeStreamingManagerFromOptions(
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
 			appFlags.FullNodeStreamingSnapshotInterval,
+			streamingManagerTransientStoreKey,
 		)
 
 		// Start websocket server.

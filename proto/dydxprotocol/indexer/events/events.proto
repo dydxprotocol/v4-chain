@@ -7,6 +7,7 @@ import "dydxprotocol/indexer/shared/removal_reason.proto";
 import "dydxprotocol/indexer/protocol/v1/clob.proto";
 import "dydxprotocol/indexer/protocol/v1/perpetual.proto";
 import "dydxprotocol/indexer/protocol/v1/subaccount.proto";
+import "dydxprotocol/indexer/protocol/v1/vault.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/events";
 
@@ -589,4 +590,16 @@ message RegisterAffiliateEventV1 {
   string referee = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   // Address of the affiliate associated with the referee.
   string affiliate = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+// Event emitted when a vault is created / updated.
+message UpsertVaultEventV1 {
+  // Address of the vault.
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // Clob pair Id associated with the vault.
+  uint32 clob_pair_id = 2;
+
+  // Status of the vault.
+  dydxprotocol.indexer.protocol.v1.VaultStatus status = 3;
 }

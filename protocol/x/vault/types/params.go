@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 // DefaultQuotingParams returns a default set of `x/vault` parameters.
@@ -59,4 +60,21 @@ func (v VaultParams) Validate() error {
 	}
 
 	return nil
+}
+
+// Validate validates OperatorParams.
+func (o OperatorParams) Validate() error {
+	// Validate that operator is non-empty.
+	if o.Operator == "" {
+		return ErrEmptyOperator
+	}
+
+	return nil
+}
+
+// DefaultOperatorParams returns a default set of `x/vault` operator parameters.
+func DefaultOperatorParams() OperatorParams {
+	return OperatorParams{
+		Operator: lib.GovModuleAddress.String(),
+	}
 }

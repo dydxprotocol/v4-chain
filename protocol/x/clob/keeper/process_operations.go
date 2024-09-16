@@ -38,21 +38,6 @@ func fetchOrdersInvolvedInOpQueue(
 	return orderIdSet
 }
 
-// fetchSubaccountIdsInvolvedInOpQueue fetches all SubaccountIds involved in an operations
-// queue's matches and returns them as a set.
-func fetchSubaccountIdsInvolvedInOpQueue(
-	operations []types.InternalOperation,
-) (subaccountIdSet map[satypes.SubaccountId]struct{}) {
-	subaccountIdSet = make(map[satypes.SubaccountId]struct{})
-	for _, operation := range operations {
-		if clobMatch := operation.GetMatch(); clobMatch != nil {
-			subaccountIdSetForClobMatch := clobMatch.GetAllSubaccountIds()
-			subaccountIdSet = lib.MergeMaps(subaccountIdSet, subaccountIdSetForClobMatch)
-		}
-	}
-	return subaccountIdSet
-}
-
 // ProcessProposerOperations updates on-chain state given an []OperationRaw operations queue
 // representing matches that occurred in the previous block. It performs validation on an operations
 // queue. If all validation passes, the operations queue is written to state.
@@ -70,45 +55,6 @@ func (k Keeper) ProcessProposerOperations(
 	operations, err := types.ValidateAndTransformRawOperations(ctx, rawOperations, k.txDecoder, k.antehandler)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
-	}
-
-	// If grpc streams are on, send absolute fill amounts from local + proposed opqueue to the grpc stream.
-	// Also send subaccount snapshots for impacted subaccounts.
-	// An impacted subaccount is defined as:
-	// - A subaccount that was involved in any match in the local opqueue.
-	//   Only matches generate subaccount updates.
-	// This must be sent out to account for checkState being discarded and deliverState being used.
-	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
-		localValidatorOperationsQueue, _ := k.MemClob.GetOperationsToReplay(ctx)
-		orderIdsFromProposed := fetchOrdersInvolvedInOpQueue(
-			operations,
-		)
-		orderIdsFromLocal := fetchOrdersInvolvedInOpQueue(
-			localValidatorOperationsQueue,
-		)
-		orderIdSetToUpdate := lib.MergeMaps(orderIdsFromLocal, orderIdsFromProposed)
-
-		allUpdates := types.NewOffchainUpdates()
-		for orderId := range orderIdSetToUpdate {
-			orderbookUpdate := k.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
-			allUpdates.Append(orderbookUpdate)
-		}
-		k.SendOrderbookUpdates(ctx, allUpdates)
-
-		subaccountIdsFromProposed := fetchSubaccountIdsInvolvedInOpQueue(
-			operations,
-		)
-
-		subaccountIdsFromLocal := fetchSubaccountIdsInvolvedInOpQueue(
-			localValidatorOperationsQueue,
-		)
-		subaccountIdsToUpdate := lib.MergeMaps(subaccountIdsFromLocal, subaccountIdsFromProposed)
-		allSubaccountUpdates := make([]satypes.StreamSubaccountUpdate, 0)
-		for subaccountId := range subaccountIdsToUpdate {
-			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(ctx, subaccountId, false)
-			allSubaccountUpdates = append(allSubaccountUpdates, subaccountUpdate)
-		}
-		k.subaccountsKeeper.SendSubaccountUpdates(ctx, allSubaccountUpdates)
 	}
 
 	log.DebugLog(ctx, "Processing operations queue",
@@ -584,6 +530,7 @@ func (k Keeper) PersistMatchOrdersToState(
 
 	// if GRPC streaming is on, emit a generated clob match to stream.
 	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
+		// Note: GenerateStreamOrderbookFill doesn't rely on MemClob state.
 		streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
 			ctx,
 			types.ClobMatch{
@@ -594,11 +541,10 @@ func (k Keeper) PersistMatchOrdersToState(
 			&takerOrder,
 			makerOrders,
 		)
-		k.SendOrderbookFillUpdates(
+
+		k.GetFullNodeStreamingManager().StageFinalizeBlockFill(
 			ctx,
-			[]types.StreamOrderbookFill{
-				streamOrderbookFill,
-			},
+			streamOrderbookFill,
 		)
 	}
 
@@ -703,11 +649,9 @@ func (k Keeper) PersistMatchLiquidationToState(
 			takerOrder,
 			makerOrders,
 		)
-		k.SendOrderbookFillUpdates(
+		k.GetFullNodeStreamingManager().StageFinalizeBlockFill(
 			ctx,
-			[]types.StreamOrderbookFill{
-				streamOrderbookFill,
-			},
+			streamOrderbookFill,
 		)
 	}
 	return nil

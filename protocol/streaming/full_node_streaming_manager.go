@@ -1,14 +1,20 @@
 package streaming
 
 import (
+	"encoding/binary"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	streaming_util "github.com/dydxprotocol/v4-chain/protocol/streaming/util"
@@ -49,14 +55,17 @@ type FullNodeStreamingManagerImpl struct {
 	// Block interval in which snapshot info should be sent out in.
 	// Defaults to 0, which means only one snapshot will be sent out.
 	snapshotBlockInterval uint32
+
+	// stores the staged FinalizeBlock events for full node streaming.
+	streamingManagerTransientStoreKey storetypes.StoreKey
 }
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
 type OrderbookSubscription struct {
 	subscriptionId uint32
 
-	// Initialize the subscription with orderbook snapshots.
-	initialize *sync.Once
+	// Whether the subscription is initialized with snapshot.
+	initialized *atomic.Bool
 
 	// Clob pair ids to subscribe to.
 	clobPairIds []uint32
@@ -75,12 +84,17 @@ type OrderbookSubscription struct {
 	nextSnapshotBlock uint32
 }
 
+func (sub *OrderbookSubscription) IsInitialized() bool {
+	return sub.initialized.Load()
+}
+
 func NewFullNodeStreamingManager(
 	logger log.Logger,
 	flushIntervalMs uint32,
 	maxUpdatesInCache uint32,
 	maxSubscriptionChannelSize uint32,
 	snapshotBlockInterval uint32,
+	streamingManagerTransientStoreKey storetypes.StoreKey,
 ) *FullNodeStreamingManagerImpl {
 	fullNodeStreamingManager := &FullNodeStreamingManagerImpl{
 		logger:                 logger,
@@ -97,6 +111,8 @@ func NewFullNodeStreamingManager(
 		maxUpdatesInCache:          maxUpdatesInCache,
 		maxSubscriptionChannelSize: maxSubscriptionChannelSize,
 		snapshotBlockInterval:      snapshotBlockInterval,
+
+		streamingManagerTransientStoreKey: streamingManagerTransientStoreKey,
 	}
 
 	// Start the goroutine for pushing order updates through.
@@ -159,7 +175,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	}
 	subscription := &OrderbookSubscription{
 		subscriptionId: sm.nextSubscriptionId,
-		initialize:     &sync.Once{},
+		initialized:    &atomic.Bool{}, // False by default.
 		clobPairIds:    clobPairIds,
 		subaccountIds:  sIds,
 		messageSender:  messageSender,
@@ -362,6 +378,88 @@ func (sm *FullNodeStreamingManagerImpl) sendStreamUpdates(
 	}
 }
 
+func getStagedEventsCount(store storetypes.KVStore) uint32 {
+	countsBytes := store.Get([]byte(StagedEventsCountKey))
+	if countsBytes == nil {
+		return 0
+	}
+	return binary.BigEndian.Uint32(countsBytes)
+}
+
+// Stage a subaccount update event in transient store, during `FinalizeBlock`.
+func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockSubaccountUpdate(
+	ctx sdk.Context,
+	subaccountUpdate satypes.StreamSubaccountUpdate,
+) {
+	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
+		Event: &clobtypes.StagedFinalizeBlockEvent_SubaccountUpdate{
+			SubaccountUpdate: &subaccountUpdate,
+		},
+	}
+	sm.stageFinalizeBlockEvent(
+		ctx,
+		clobtypes.Amino.MustMarshal(stagedEvent),
+	)
+}
+
+// Stage a fill event in transient store, during `FinalizeBlock`.
+// Since `FinalizeBlock` code block can be called more than once with optimistic
+// execution (once optimistically and optionally once on the canonical block),
+// we need to stage the events in transient store and later emit them
+// during `Precommit`.
+func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockFill(
+	ctx sdk.Context,
+	fill clobtypes.StreamOrderbookFill,
+) {
+	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
+		Event: &clobtypes.StagedFinalizeBlockEvent_OrderFill{
+			OrderFill: &fill,
+		},
+	}
+	sm.stageFinalizeBlockEvent(
+		ctx,
+		clobtypes.Amino.MustMarshal(stagedEvent),
+	)
+}
+
+func getStagedFinalizeBlockEvents(store storetypes.KVStore) []clobtypes.StagedFinalizeBlockEvent {
+	count := getStagedEventsCount(store)
+	events := make([]clobtypes.StagedFinalizeBlockEvent, count)
+	store = prefix.NewStore(store, []byte(StagedEventsKeyPrefix))
+	for i := uint32(0); i < count; i++ {
+		var event clobtypes.StagedFinalizeBlockEvent
+		bytes := store.Get(lib.Uint32ToKey(i))
+		clobtypes.Amino.MustUnmarshal(bytes, &event)
+		events[i] = event
+	}
+	return events
+}
+
+// Retrieve all events staged during `FinalizeBlock`.
+func (sm *FullNodeStreamingManagerImpl) GetStagedFinalizeBlockEvents(
+	ctx sdk.Context,
+) []clobtypes.StagedFinalizeBlockEvent {
+	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
+	store := noGasCtx.TransientStore(sm.streamingManagerTransientStoreKey)
+	return getStagedFinalizeBlockEvents(store)
+}
+
+func (sm *FullNodeStreamingManagerImpl) stageFinalizeBlockEvent(
+	ctx sdk.Context,
+	eventBytes []byte,
+) {
+	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
+	store := noGasCtx.TransientStore(sm.streamingManagerTransientStoreKey)
+
+	// Increment events count.
+	count := getStagedEventsCount(store)
+	store.Set([]byte(StagedEventsCountKey), lib.Uint32ToKey(count+1))
+
+	// Store events keyed by index.
+	store = prefix.NewStore(store, []byte(StagedEventsKeyPrefix))
+	store.Set(lib.Uint32ToKey(count), eventBytes)
+}
+
 // SendCombinedSnapshot sends messages to a particular subscriber without buffering.
 // Note this method requires the lock and assumes that the lock has already been
 // acquired by the caller.
@@ -511,18 +609,22 @@ func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
 	)
 }
 
-// SendSubaccountUpdates groups subaccount updates by their subaccount ids and
+// SendFinalizedSubaccountUpdates groups subaccount updates by their subaccount ids and
 // sends messages to the subscribers.
-func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdates(
+func (sm *FullNodeStreamingManagerImpl) SendFinalizedSubaccountUpdates(
 	subaccountUpdates []satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
 	defer metrics.ModuleMeasureSince(
 		metrics.FullNodeGrpc,
-		metrics.GrpcSendSubaccountUpdatesLatency,
+		metrics.GrpcSendFinalizedSubaccountUpdatesLatency,
 		time.Now(),
 	)
+
+	if execMode != sdk.ExecModeFinalize {
+		panic("SendFinalizedSubaccountUpdates should only be called in ExecModeFinalize")
+	}
 
 	// Group subaccount updates by subaccount id.
 	streamUpdates := make([]clobtypes.StreamUpdate, 0)
@@ -670,9 +772,107 @@ func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 	sm.EmitMetrics()
 }
 
+func (sm *FullNodeStreamingManagerImpl) GetSubaccountSnapshotsForInitStreams(
+	getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+) map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate {
+	sm.Lock()
+	defer sm.Unlock()
+
+	ret := make(map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate)
+	for _, subscription := range sm.orderbookSubscriptions {
+		// If the subscription has been initialized, no need to grab the subaccount snapshot.
+		if alreadyInitialized := subscription.initialized.Load(); alreadyInitialized {
+			continue
+		}
+
+		for _, subaccountId := range subscription.subaccountIds {
+			if _, exists := ret[subaccountId]; exists {
+				continue
+			}
+
+			ret[subaccountId] = getSubaccountSnapshot(subaccountId)
+		}
+	}
+	return ret
+}
+
+// Grpc Streaming logic after consensus agrees on a block.
+// - Stream all events staged during `FinalizeBlock`.
+// - Stream orderbook updates to sync fills in local ops queue.
+func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
+	ctx sdk.Context,
+	orderBookUpdatesToSyncLocalOpsQueue *clobtypes.OffchainUpdates,
+	perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
+) {
+	// Flush all pending updates, since we want the onchain updates to arrive in a batch.
+	sm.FlushStreamUpdates()
+
+	finalizedFills, finalizedSubaccountUpdates := sm.getStagedEventsFromFinalizeBlock(ctx)
+
+	// TODO(CT-1190): Stream below in a single batch.
+	// Send orderbook updates to sync optimistic orderbook onchain state after FinalizeBlock.
+	sm.SendOrderbookUpdates(
+		orderBookUpdatesToSyncLocalOpsQueue,
+		uint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+	)
+
+	// Send finalized fills from FinalizeBlock.
+	sm.SendOrderbookFillUpdates(
+		finalizedFills,
+		uint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+		perpetualIdToClobPairId,
+	)
+
+	// Send finalized subaccount updates from FinalizeBlock.
+	sm.SendFinalizedSubaccountUpdates(
+		finalizedSubaccountUpdates,
+		uint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+	)
+}
+
+// getStagedEventsFromFinalizeBlock returns staged events from `FinalizeBlock`.
+// It should be called after the consensus agrees on a block (e.g. Precommitter).
+func (sm *FullNodeStreamingManagerImpl) getStagedEventsFromFinalizeBlock(
+	ctx sdk.Context,
+) (
+	finalizedFills []clobtypes.StreamOrderbookFill,
+	finalizedSubaccountUpdates []satypes.StreamSubaccountUpdate,
+) {
+	// Get onchain stream events stored in transient store.
+	stagedEvents := sm.GetStagedFinalizeBlockEvents(ctx)
+
+	metrics.SetGauge(
+		metrics.GrpcStagedAllFinalizeBlockUpdatesCount,
+		float32(len(stagedEvents)),
+	)
+
+	for _, stagedEvent := range stagedEvents {
+		switch event := stagedEvent.Event.(type) {
+		case *clobtypes.StagedFinalizeBlockEvent_OrderFill:
+			finalizedFills = append(finalizedFills, *event.OrderFill)
+		case *clobtypes.StagedFinalizeBlockEvent_SubaccountUpdate:
+			finalizedSubaccountUpdates = append(finalizedSubaccountUpdates, *event.SubaccountUpdate)
+		}
+	}
+
+	metrics.SetGauge(
+		metrics.GrpcStagedSubaccountFinalizeBlockUpdatesCount,
+		float32(len(finalizedSubaccountUpdates)),
+	)
+	metrics.SetGauge(
+		metrics.GrpcStagedFillFinalizeBlockUpdatesCount,
+		float32(len(finalizedFills)),
+	)
+
+	return finalizedFills, finalizedSubaccountUpdates
+}
+
 func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
-	getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
@@ -686,31 +886,40 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 	updatesByClobPairId := make(map[uint32]*clobtypes.OffchainUpdates)
 
 	for subscriptionId, subscription := range sm.orderbookSubscriptions {
-		// If the snapshot block interval is enabled, reset the sync.Once in order to
-		// re-send snapshots out.
-		if sm.snapshotBlockInterval > 0 &&
-			blockHeight == subscription.nextSnapshotBlock {
-			subscription.initialize = &sync.Once{}
+		if alreadyInitialized := subscription.initialized.Swap(true); !alreadyInitialized {
+			allUpdates := clobtypes.NewOffchainUpdates()
+			for _, clobPairId := range subscription.clobPairIds {
+				if _, ok := updatesByClobPairId[clobPairId]; !ok {
+					updatesByClobPairId[clobPairId] = getOrderbookSnapshot(clobtypes.ClobPairId(clobPairId))
+				}
+				allUpdates.Append(updatesByClobPairId[clobPairId])
+			}
+
+			saUpdates := []*satypes.StreamSubaccountUpdate{}
+			for _, subaccountId := range subscription.subaccountIds {
+				// The subaccount snapshot may not exist due to the following race condition
+				// 1. At beginning of PrepareCheckState we get snapshot for all subscribed subaccounts.
+				// 2. A new subaccount is subscribed to by a new subscription.
+				// 3. InitializeNewStreams is called.
+				// Then the new subaccount would not be included in the snapshot.
+				// We are okay with this behavior.
+				if saUpdate, ok := subaccountSnapshots[subaccountId]; ok {
+					saUpdates = append(saUpdates, saUpdate)
+				}
+			}
+
+			sm.SendCombinedSnapshot(allUpdates, saUpdates, subscriptionId, blockHeight, execMode)
+
+			if sm.snapshotBlockInterval != 0 {
+				subscription.nextSnapshotBlock = blockHeight + sm.snapshotBlockInterval
+			}
 		}
 
-		subscription.initialize.Do(
-			func() {
-				allUpdates := clobtypes.NewOffchainUpdates()
-				for _, clobPairId := range subscription.clobPairIds {
-					if _, ok := updatesByClobPairId[clobPairId]; !ok {
-						updatesByClobPairId[clobPairId] = getOrderbookSnapshot(clobtypes.ClobPairId(clobPairId))
-					}
-					allUpdates.Append(updatesByClobPairId[clobPairId])
-				}
-				saUpdates := []*satypes.StreamSubaccountUpdate{}
-				for _, subaccountId := range subscription.subaccountIds {
-					saUpdates = append(saUpdates, getSubaccountSnapshot(subaccountId))
-				}
-				sm.SendCombinedSnapshot(allUpdates, saUpdates, subscriptionId, blockHeight, execMode)
-				if sm.snapshotBlockInterval != 0 {
-					subscription.nextSnapshotBlock = blockHeight + sm.snapshotBlockInterval
-				}
-			},
-		)
+		// If the snapshot block interval is enabled and the next block is a snapshot block,
+		// reset the `atomic.Bool` so snapshots are sent for the next block.
+		if sm.snapshotBlockInterval > 0 &&
+			blockHeight+1 == subscription.nextSnapshotBlock {
+			subscription.initialized = &atomic.Bool{} // False by default.
+		}
 	}
 }

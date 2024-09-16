@@ -132,3 +132,38 @@ func TestValidateVaultParams(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateOperatorParams(t *testing.T) {
+	tests := map[string]struct {
+		// Params to validate.
+		params types.OperatorParams
+		// Expected error
+		expectedErr error
+	}{
+		"Success: Alice as operator": {
+			params: types.OperatorParams{
+				Operator: constants.AliceAccAddress.String(),
+			},
+			expectedErr: nil,
+		},
+		"Success: Gov module account as operator": {
+			params: types.OperatorParams{
+				Operator: constants.GovAuthority,
+			},
+			expectedErr: nil,
+		},
+		"Failure - empty operator": {
+			params: types.OperatorParams{
+				Operator: "",
+			},
+			expectedErr: types.ErrEmptyOperator,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := tc.params.Validate()
+			require.Equal(t, tc.expectedErr, err)
+		})
+	}
+}
