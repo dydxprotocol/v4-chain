@@ -265,6 +265,11 @@ export interface SubaccountUsernamesFromDatabase {
   subaccountId: string,
 }
 
+export interface AddressUsername {
+  address: string,
+  username: string,
+}
+
 export interface LeaderboardPnlFromDatabase {
   address: string,
   timeSpan: string,
@@ -287,6 +292,7 @@ export interface AffiliateInfoFromDatabase {
   totalReferredUsers: number,
   referredNetProtocolEarnings: string,
   firstReferralBlockHeight: string,
+  referredTotalVolume: string,
 }
 
 export interface AffiliateReferredUserFromDatabase {

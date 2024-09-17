@@ -20,6 +20,7 @@ export { default as SubaccountUsernamesModel } from './models/subaccount-usernam
 export { default as LeaderboardPnlModel } from './models/leaderboard-pnl-model';
 export { default as PersistentCacheModel } from './models/persistent-cache-model';
 export { default as AffiliateReferredUsersModel } from './models/affiliate-referred-users-model';
+export { default as AffiliateInfoModel } from './models/affiliate-info-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';
@@ -48,6 +49,7 @@ export * as SubaccountUsernamesTable from './stores/subaccount-usernames-table';
 export * as PersistentCacheTable from './stores/persistent-cache-table';
 export * as AffiliateReferredUsersTable from './stores/affiliate-referred-users-table';
 export * as FirebaseNotificationTokenTable from './stores/firebase-notification-token-table';
+export * as AffiliateInfoTable from './stores/affiliate-info-table';
 export * as VaultTable from './stores/vault-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
