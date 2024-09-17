@@ -48,6 +48,7 @@ func ListingKeepers(
 			// Define necessary keepers here for unit tests
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
+			memClob.On("CreateOrderbook", mock.Anything, mock.Anything).Return(nil)
 			epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 
 			accountsKeeper, _ := createAccountKeeper(

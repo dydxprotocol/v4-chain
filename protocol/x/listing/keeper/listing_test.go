@@ -4,6 +4,11 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	oracletypes "github.com/skip-mev/slinky/pkg/types"
 	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
@@ -176,6 +181,111 @@ func TestCreatePerpetual(t *testing.T) {
 						perpetual.Params.MarketType,
 					)
 				}
+			},
+		)
+	}
+}
+
+func TestCreateClobPair(t *testing.T) {
+	tests := map[string]struct {
+		ticker      string
+		isDeliverTx bool
+	}{
+		"deliverTx - true": {
+			ticker:      "TEST-USD",
+			isDeliverTx: true,
+		},
+		"deliverTx - false": {
+			ticker:      "TEST-USD",
+			isDeliverTx: false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(
+			name, func(t *testing.T) {
+				mockIndexerEventManager := &mocks.IndexerEventManager{}
+				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, clobKeeper, marketMapKeeper := keepertest.ListingKeepers(
+					t,
+					&mocks.BankKeeper{},
+					mockIndexerEventManager,
+				)
+				mockIndexerEventManager.On(
+					"AddTxnEvent",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return()
+				keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, perpetualsKeeper, pricesKeeper, 10)
+
+				// Set deliverTx mode
+				if tc.isDeliverTx {
+					ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
+					lib.AssertDeliverTxMode(ctx)
+				} else {
+					ctx = ctx.WithIsCheckTx(true)
+					lib.AssertCheckTxMode(ctx)
+				}
+
+				// Create a marketmap with a single market
+				dydxMetadata, err := tickermetadata.MarshalDyDx(
+					tickermetadata.DyDx{
+						ReferencePrice: 1000000000,
+						Liquidity:      0,
+						AggregateIDs:   nil,
+					},
+				)
+				require.NoError(t, err)
+
+				market := marketmaptypes.Market{
+					Ticker: marketmaptypes.Ticker{
+						CurrencyPair:     oracletypes.CurrencyPair{Base: "TEST", Quote: "USD"},
+						Decimals:         6,
+						MinProviderCount: 2,
+						Enabled:          false,
+						Metadata_JSON:    string(dydxMetadata),
+					},
+					ProviderConfigs: []marketmaptypes.ProviderConfig{
+						{
+							Name:           "binance_ws",
+							OffChainTicker: "TESTUSDT",
+						},
+					},
+				}
+				err = marketMapKeeper.CreateMarket(ctx, market)
+				require.NoError(t, err)
+
+				marketId, err := keeper.CreateMarket(ctx, tc.ticker)
+				require.NoError(t, err)
+
+				perpetualId, err := keeper.CreatePerpetual(ctx, marketId, tc.ticker)
+				require.NoError(t, err)
+
+				clobPairId, err := keeper.CreateClobPair(ctx, perpetualId)
+				require.NoError(t, err)
+
+				// Check if the clob pair was created only if we are in deliverTx mode
+				if tc.isDeliverTx {
+					clobPair, found := clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(clobPairId))
+					require.True(t, found)
+					require.Equal(t, clobtypes.ClobPair_STATUS_ACTIVE, clobPair.Status)
+					require.Equal(
+						t,
+						clobtypes.SubticksPerTick(types.SubticksPerTick_LongTail),
+						clobPair.GetClobPairSubticksPerTick(),
+					)
+					require.Equal(
+						t,
+						types.DefaultStepBaseQuantums,
+						clobPair.GetClobPairMinOrderBaseQuantums().ToUint64(),
+					)
+					require.Equal(t, perpetualId, clobPair.MustGetPerpetualId())
+				} else {
+					_, found := clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(clobPairId))
+					require.False(t, found)
+				}
+
 			},
 		)
 	}
