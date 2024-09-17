@@ -285,7 +285,6 @@ func TestCreateClobPair(t *testing.T) {
 					_, found := clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(clobPairId))
 					require.False(t, found)
 				}
-
 			},
 		)
 	}
