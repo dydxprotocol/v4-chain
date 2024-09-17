@@ -221,6 +221,36 @@ export const RegisterTokenValidationSchema = [
     .withMessage('Token must be a string')
     .notEmpty()
     .withMessage('Token cannot be empty'),
+  body('timestamp')
+    .exists().withMessage('timestamp is required')
+    .isNumeric()
+    .withMessage('timestamp must be a number')
+    .notEmpty()
+    .withMessage('timestamp cannot be empty'),
+  body('message')
+    .exists().withMessage('message is required')
+    .isString()
+    .withMessage('message must be a string')
+    .notEmpty()
+    .withMessage('message cannot be empty'),
+  body('signedMessage')
+    .exists().withMessage('signedMessage is required')
+    .isString()
+    .withMessage('signedMessage must be a string')
+    .notEmpty()
+    .withMessage('signedMessage cannot be empty'),
+  body('pubKey')
+    .exists().withMessage('pubKey is required')
+    .isString()
+    .withMessage('pubKey must be a string')
+    .notEmpty()
+    .withMessage('pubKey cannot be empty'),
+  body('walletIsKeplr')
+    .exists().withMessage('walletIsKeplr is required')
+    .isBoolean()
+    .withMessage('walletIsKeplr must be a boolean')
+    .notEmpty()
+    .withMessage('walletIsKeplr cannot be empty'),
   body('language')
     .optional()
     .isString()
