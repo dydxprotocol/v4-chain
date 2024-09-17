@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -206,7 +205,6 @@ func TestUpdateMarketParam(t *testing.T) {
 
 				// If pair name changed, verify that old pair is disabled in the marketmap and new pair is enabled
 				if initialMarketParam.Pair != updatedMarketParam.Pair {
-					fmt.Println("Inside test")
 					oldCp, err := slinky.MarketPairToCurrencyPair(initialMarketParam.Pair)
 					require.NoError(t, err)
 					oldMarket, err := marketMapKeeper.GetMarket(ctx, oldCp.String())
