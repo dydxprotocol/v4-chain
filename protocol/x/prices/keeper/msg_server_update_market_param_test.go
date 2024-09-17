@@ -1,14 +1,17 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
@@ -26,12 +29,25 @@ func TestUpdateMarketParam(t *testing.T) {
 		msg         *pricestypes.MsgUpdateMarketParam
 		expectedErr string
 	}{
-		"Succeeds: update all parameters except exponent": {
+		"Succeeds: update all parameters except exponent and pair": {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,
+					Exponent:           testMarketParam.Exponent,
+					MinExchanges:       72,
+					MinPriceChangePpm:  2_023,
+					ExchangeConfigJson: `{"exchanges":[{"exchangeName":"XYZ","ticker":"PIKACHU"}]}`,
+				},
+			},
+		},
+		"Succeeds: update pair name": {
+			msg: &pricestypes.MsgUpdateMarketParam{
+				Authority: lib.GovModuleAddress.String(),
+				MarketParam: pricestypes.MarketParam{
+					Id:                 testMarketParam.Id,
+					Pair:               "NEWMARKET-USD",
 					Exponent:           testMarketParam.Exponent,
 					MinExchanges:       72,
 					MinPriceChangePpm:  2_023,
@@ -122,6 +138,20 @@ func TestUpdateMarketParam(t *testing.T) {
 			},
 			expectedErr: "Market exponent cannot be updated",
 		},
+		"Failure: new pair name does not exist in marketmap": {
+			msg: &pricestypes.MsgUpdateMarketParam{
+				Authority: lib.GovModuleAddress.String(),
+				MarketParam: pricestypes.MarketParam{
+					Id:                 testMarketParam.Id,
+					Pair:               "nonexistent-pair",
+					Exponent:           testMarketParam.Exponent,
+					MinExchanges:       testMarketParam.MinExchanges,
+					MinPriceChangePpm:  testMarketParam.MinPriceChangePpm,
+					ExchangeConfigJson: "{}",
+				},
+			},
+			expectedErr: "NONEXISTENT/PAIR: Ticker not found in market map",
+		},
 		"Failure: empty authority": {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: "",
@@ -144,11 +174,21 @@ func TestUpdateMarketParam(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, pricesKeeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, _, mockTimeProvider, _, marketMapKeeper := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(pricesKeeper)
 			initialMarketParam, err := keepertest.CreateTestMarket(t, ctx, pricesKeeper, testMarketParam, testMarketPrice)
 			require.NoError(t, err)
+
+			// Create new pair in marketmap if test is expected to succeed
+			if (initialMarketParam.Pair != tc.msg.MarketParam.Pair) && tc.expectedErr == "" {
+				keepertest.CreateMarketsInMarketMapFromParams(
+					t,
+					ctx,
+					marketMapKeeper,
+					[]types.MarketParam{tc.msg.MarketParam},
+				)
+			}
 
 			_, err = msgServer.UpdateMarketParam(ctx, tc.msg)
 			if tc.expectedErr != "" {
@@ -163,6 +203,22 @@ func TestUpdateMarketParam(t *testing.T) {
 				updatedMarketParam, exists := pricesKeeper.GetMarketParam(ctx, tc.msg.MarketParam.Id)
 				require.True(t, exists)
 				require.Equal(t, tc.msg.MarketParam, updatedMarketParam)
+
+				// If pair name changed, verify that old pair is disabled in the marketmap and new pair is enabled
+				if initialMarketParam.Pair != updatedMarketParam.Pair {
+					fmt.Println("Inside test")
+					oldCp, err := slinky.MarketPairToCurrencyPair(initialMarketParam.Pair)
+					require.NoError(t, err)
+					oldMarket, err := marketMapKeeper.GetMarket(ctx, oldCp.String())
+					require.NoError(t, err)
+					require.False(t, oldMarket.Ticker.Enabled)
+
+					newCp, err := slinky.MarketPairToCurrencyPair(updatedMarketParam.Pair)
+					require.NoError(t, err)
+					market, err := marketMapKeeper.GetMarket(ctx, newCp.String())
+					require.NoError(t, err)
+					require.True(t, market.Ticker.Enabled)
+				}
 			}
 		})
 	}

@@ -67,6 +67,20 @@ func TestUpdateMarketParam(t *testing.T) {
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
 		},
+		"Failure: new pair name does not exist in marketmap": {
+			msg: &pricestypes.MsgUpdateMarketParam{
+				Authority: lib.GovModuleAddress.String(),
+				MarketParam: pricestypes.MarketParam{
+					Id:                 MODIFIED_MARKET_PARAM.Id,
+					Pair:               "nonexistent-pair",
+					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
+					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
+					MinPriceChangePpm:  MODIFIED_MARKET_PARAM.MinPriceChangePpm,
+					ExchangeConfigJson: MODIFIED_MARKET_PARAM.ExchangeConfigJson,
+				},
+			},
+			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+		},
 		"Failure: exponent is updated": {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
