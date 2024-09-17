@@ -6,14 +6,15 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// SetVaultParams sets the parameters of a specific vault.
-func (k msgServer) SetVaultParams(
+// AllocateToVault allocates funds from main vault to a vault.
+func (k msgServer) AllocateToVault(
 	goCtx context.Context,
-	msg *types.MsgSetVaultParams,
-) (*types.MsgSetVaultParamsResponse, error) {
+	msg *types.MsgAllocateToVault,
+) (*types.MsgAllocateToVaultResponse, error) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 	operator := k.GetOperatorParams(ctx).Operator
 
@@ -26,15 +27,16 @@ func (k msgServer) SetVaultParams(
 		)
 	}
 
-	// Validate parameters.
-	if err := msg.VaultParams.Validate(); err != nil {
+	// Transfer from main vault to the specified vault.
+	if err := k.Keeper.subaccountsKeeper.TransferFundsFromSubaccountToSubaccount(
+		ctx,
+		types.MegavaultMainSubaccount,
+		*msg.VaultId.ToSubaccountId(),
+		assetstypes.AssetUsdc.Id,
+		msg.QuoteQuantums.BigInt(),
+	); err != nil {
 		return nil, err
 	}
 
-	// Set parameters for specified vault.
-	if err := k.Keeper.SetVaultParams(ctx, msg.VaultId, msg.VaultParams); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgSetVaultParamsResponse{}, nil
+	return &types.MsgAllocateToVaultResponse{}, nil
 }
