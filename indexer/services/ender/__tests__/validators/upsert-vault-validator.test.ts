@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { ParseMessageError, logger } from '@dydxprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
@@ -52,6 +52,23 @@ describe('upsert-vault-validator', () => {
 
       validator.validate();
       expectDidntLogError();
+    });
+
+    it('throws error if address in event is empty', () => {
+      const event: UpsertVaultEventV1 = {
+        address: '',
+        clobPairId: 0,
+        status: VaultStatus.VAULT_STATUS_QUOTING,
+      };
+      const validator: UpsertVaultValidator = new UpsertVaultValidator(
+        event,
+        createBlock(event),
+        0,
+      );
+
+      expect(() => validator.validate()).toThrow(new ParseMessageError(
+        'UpsertVaultEvent address is not populated',
+      ));
     });
   });
 });
