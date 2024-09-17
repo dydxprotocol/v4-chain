@@ -18,6 +18,7 @@ import {
   PerpetualMarketType,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
+  PnlTickInterval,
   PositionSide,
   SubaccountFromDatabase,
   TradeType,
@@ -678,6 +679,12 @@ export interface VaultPosition {
 export interface MegavaultPositionResponse {
   positions: VaultPosition[],
 }
+
+export interface MegavaultHistoricalPnlRequest {
+  resolution: PnlTickInterval,
+}
+
+export interface VaultsHistoricalPnlRequest extends MegavaultHistoricalPnlRequest {}
 
 /* ------- Affiliates Types ------- */
 export interface AffiliateMetadataRequest{

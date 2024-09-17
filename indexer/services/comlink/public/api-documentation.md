@@ -3441,6 +3441,19 @@ fetch(`${baseURL}/vault/v1/megavault/historicalPnl`,
 
 `GET /vault/v1/megavault/historicalPnl`
 
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|resolution|query|[PnlTickInterval](#schemapnltickinterval)|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|resolution|hour|
+|resolution|day|
+
 > Example responses
 
 > 200 Response
@@ -3519,6 +3532,19 @@ fetch(`${baseURL}/vault/v1/vaults/historicalPnl`,
 ```
 
 `GET /vault/v1/vaults/historicalPnl`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|resolution|query|[PnlTickInterval](#schemapnltickinterval)|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|resolution|hour|
+|resolution|day|
 
 > Example responses
 
@@ -5940,6 +5966,31 @@ or
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |megavaultPnl|[[PnlTicksResponseObject](#schemapnlticksresponseobject)]|true|none|none|
+
+## PnlTickInterval
+
+<a id="schemapnltickinterval"></a>
+<a id="schema_PnlTickInterval"></a>
+<a id="tocSpnltickinterval"></a>
+<a id="tocspnltickinterval"></a>
+
+```json
+"hour"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|hour|
+|*anonymous*|day|
 
 ## VaultHistoricalPnl
 
