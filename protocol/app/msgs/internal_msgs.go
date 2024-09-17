@@ -196,8 +196,6 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": nil,
 
 		// vault
-		"/dydxprotocol.vault.MsgSetVaultParams":                     &vault.MsgSetVaultParams{},
-		"/dydxprotocol.vault.MsgSetVaultParamsResponse":             nil,
 		"/dydxprotocol.vault.MsgUnlockShares":                       &vault.MsgUnlockShares{},
 		"/dydxprotocol.vault.MsgUnlockSharesResponse":               nil,
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         &vault.MsgUpdateDefaultQuotingParams{},
