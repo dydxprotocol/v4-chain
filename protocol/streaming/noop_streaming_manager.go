@@ -78,3 +78,28 @@ func (sm *NoopGrpcStreamingManager) InitializeNewStreams(
 
 func (sm *NoopGrpcStreamingManager) Stop() {
 }
+
+func (sm *NoopGrpcStreamingManager) StageFinalizeBlockFill(
+	ctx sdk.Context,
+	fill clobtypes.StreamOrderbookFill,
+) {
+}
+
+func (sm *NoopGrpcStreamingManager) GetStagedFinalizeBlockEvents(
+	ctx sdk.Context,
+) []clobtypes.StagedFinalizeBlockEvent {
+	return nil
+}
+
+func (sm *NoopGrpcStreamingManager) StageFinalizeBlockSubaccountUpdate(
+	ctx sdk.Context,
+	subaccountUpdate satypes.StreamSubaccountUpdate,
+) {
+}
+
+func (sm *NoopGrpcStreamingManager) StreamBatchUpdatesAfterFinalizeBlock(
+	ctx sdk.Context,
+	orderBookUpdatesToSyncLocalOpsQueue *clobtypes.OffchainUpdates,
+	perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
+) {
+}

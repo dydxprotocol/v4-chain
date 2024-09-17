@@ -61,11 +61,7 @@ func (k Keeper) ReferredBy(ctx context.Context,
 
 	affiliateAddr, exists := k.GetReferredBy(sdkCtx, req.GetAddress())
 	if !exists {
-		return &types.ReferredByResponse{}, errorsmod.Wrapf(
-			types.ErrAffiliateNotFound,
-			"affiliate not found for address: %s",
-			req.GetAddress(),
-		)
+		return &types.ReferredByResponse{}, nil
 	}
 
 	return &types.ReferredByResponse{

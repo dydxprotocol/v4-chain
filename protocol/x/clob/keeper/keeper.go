@@ -43,6 +43,7 @@ type (
 		statsKeeper       types.StatsKeeper
 		rewardsKeeper     types.RewardsKeeper
 		affiliatesKeeper  types.AffiliatesKeeper
+		revshareKeeper    types.RevShareKeeper
 
 		indexerEventManager indexer_manager.IndexerEventManager
 		streamingManager    streamingtypes.FullNodeStreamingManager
@@ -93,6 +94,7 @@ func NewKeeper(
 	clobFlags flags.ClobFlags,
 	placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg],
 	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
+	revshareKeeper types.RevShareKeeper,
 ) *Keeper {
 	keeper := &Keeper{
 		cdc:                     cdc,
@@ -125,6 +127,7 @@ func NewKeeper(
 		Flags:                       clobFlags,
 		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
 		DaemonLiquidationInfo:       daemonLiquidationInfo,
+		revshareKeeper:              revshareKeeper,
 	}
 
 	// Provide the keeper to the MemClob.

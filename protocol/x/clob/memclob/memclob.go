@@ -1697,7 +1697,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		}
 
 		affiliatesWhitelistMap := make(map[string]uint32)
-		success, takerUpdateResult, makerUpdateResult, err := m.clobKeeper.ProcessSingleMatch(
+		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(
 			ctx, &matchWithOrders, affiliatesWhitelistMap)
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
 			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxInsuranceLost) {

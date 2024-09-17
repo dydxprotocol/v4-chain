@@ -2,6 +2,7 @@ import { IndexerSubaccountId, IndexerSubaccountIdSDKType, IndexerPerpetualPositi
 import { IndexerOrder, IndexerOrderSDKType, IndexerOrderId, IndexerOrderIdSDKType, ClobPairStatus, ClobPairStatusSDKType } from "../protocol/v1/clob";
 import { OrderRemovalReason, OrderRemovalReasonSDKType } from "../shared/removal_reason";
 import { PerpetualMarketType, PerpetualMarketTypeSDKType } from "../protocol/v1/perpetual";
+import { VaultStatus, VaultStatusSDKType } from "../protocol/v1/vault";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../../helpers";
 /** Type is the type for funding values. */
@@ -1502,6 +1503,30 @@ export interface RegisterAffiliateEventV1SDKType {
   /** Address of the affiliate associated with the referee. */
 
   affiliate: string;
+}
+/** Event emitted when a vault is created / updated. */
+
+export interface UpsertVaultEventV1 {
+  /** Address of the vault. */
+  address: string;
+  /** Clob pair Id associated with the vault. */
+
+  clobPairId: number;
+  /** Status of the vault. */
+
+  status: VaultStatus;
+}
+/** Event emitted when a vault is created / updated. */
+
+export interface UpsertVaultEventV1SDKType {
+  /** Address of the vault. */
+  address: string;
+  /** Clob pair Id associated with the vault. */
+
+  clob_pair_id: number;
+  /** Status of the vault. */
+
+  status: VaultStatusSDKType;
 }
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
@@ -3799,6 +3824,71 @@ export const RegisterAffiliateEventV1 = {
     const message = createBaseRegisterAffiliateEventV1();
     message.referee = object.referee ?? "";
     message.affiliate = object.affiliate ?? "";
+    return message;
+  }
+
+};
+
+function createBaseUpsertVaultEventV1(): UpsertVaultEventV1 {
+  return {
+    address: "",
+    clobPairId: 0,
+    status: 0
+  };
+}
+
+export const UpsertVaultEventV1 = {
+  encode(message: UpsertVaultEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.address !== "") {
+      writer.uint32(10).string(message.address);
+    }
+
+    if (message.clobPairId !== 0) {
+      writer.uint32(16).uint32(message.clobPairId);
+    }
+
+    if (message.status !== 0) {
+      writer.uint32(24).int32(message.status);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpsertVaultEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpsertVaultEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.address = reader.string();
+          break;
+
+        case 2:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 3:
+          message.status = (reader.int32() as any);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<UpsertVaultEventV1>): UpsertVaultEventV1 {
+    const message = createBaseUpsertVaultEventV1();
+    message.address = object.address ?? "";
+    message.clobPairId = object.clobPairId ?? 0;
+    message.status = object.status ?? 0;
     return message;
   }
 

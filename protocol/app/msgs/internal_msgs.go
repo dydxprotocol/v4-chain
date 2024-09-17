@@ -204,6 +204,8 @@ var (
 		"/dydxprotocol.vault.MsgUnlockSharesResponse":               nil,
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         &vault.MsgUpdateDefaultQuotingParams{},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": nil,
+		"/dydxprotocol.vault.MsgUpdateOperatorParams":               &vault.MsgUpdateOperatorParams{},
+		"/dydxprotocol.vault.MsgUpdateOperatorParamsResponse":       nil,
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            &vest.MsgSetVestEntry{},

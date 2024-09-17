@@ -148,6 +148,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			stateStore,
 			ks.StatsKeeper,
 			ks.VaultKeeper,
+			ks.AffiliatesKeeper,
 			db,
 			cdc,
 		)
@@ -188,6 +189,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.RewardsKeeper,
 			ks.AffiliatesKeeper,
 			ks.SubaccountsKeeper,
+			revShareKeeper,
 			indexerEventManager,
 			indexerEventsTransientStoreKey,
 		)
@@ -227,6 +229,7 @@ func createClobKeeper(
 	rewardsKeeper types.RewardsKeeper,
 	affiliatesKeeper types.AffiliatesKeeper,
 	saKeeper *subkeeper.Keeper,
+	revShareKeeper types.RevShareKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey, storetypes.StoreKey) {
@@ -264,6 +267,7 @@ func createClobKeeper(
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[sdk.Msg](),
 		liquidationtypes.NewDaemonLiquidationInfo(),
+		revShareKeeper,
 	)
 	k.SetAnteHandler(constants.EmptyAnteHandler)
 

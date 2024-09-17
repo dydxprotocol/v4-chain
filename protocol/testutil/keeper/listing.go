@@ -111,6 +111,7 @@ func ListingKeepers(
 				stateStore,
 				statsKeeper,
 				vaultKeeper,
+				affiliatesKeeper,
 				db,
 				cdc,
 			)
@@ -151,6 +152,7 @@ func ListingKeepers(
 				rewardsKeeper,
 				affiliatesKeeper,
 				subaccountsKeeper,
+				revShareKeeper,
 				indexerEventManager,
 				transientStoreKey,
 			)

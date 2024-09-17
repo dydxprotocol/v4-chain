@@ -1000,7 +1000,7 @@ func (_m *ClobKeeper) ProcessProposerOperations(ctx types.Context, operations []
 }
 
 // ProcessSingleMatch provides a mock function with given fields: ctx, matchWithOrders, affiliatesWhitelistMap
-func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders, affiliatesWhitelistMap map[string]uint32) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, error) {
+func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clobtypes.MatchWithOrders, affiliatesWhitelistMap map[string]uint32) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *big.Int, error) {
 	ret := _m.Called(ctx, matchWithOrders, affiliatesWhitelistMap)
 
 	if len(ret) == 0 {
@@ -1010,8 +1010,9 @@ func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clo
 	var r0 bool
 	var r1 subaccountstypes.UpdateResult
 	var r2 subaccountstypes.UpdateResult
-	var r3 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, error)); ok {
+	var r3 *big.Int
+	var r4 error
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) (bool, subaccountstypes.UpdateResult, subaccountstypes.UpdateResult, *big.Int, error)); ok {
 		return rf(ctx, matchWithOrders, affiliatesWhitelistMap)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) bool); ok {
@@ -1032,13 +1033,21 @@ func (_m *ClobKeeper) ProcessSingleMatch(ctx types.Context, matchWithOrders *clo
 		r2 = ret.Get(2).(subaccountstypes.UpdateResult)
 	}
 
-	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) error); ok {
+	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) *big.Int); ok {
 		r3 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
 	} else {
-		r3 = ret.Error(3)
+		if ret.Get(3) != nil {
+			r3 = ret.Get(3).(*big.Int)
+		}
 	}
 
-	return r0, r1, r2, r3
+	if rf, ok := ret.Get(4).(func(types.Context, *clobtypes.MatchWithOrders, map[string]uint32) error); ok {
+		r4 = rf(ctx, matchWithOrders, affiliatesWhitelistMap)
+	} else {
+		r4 = ret.Error(4)
+	}
+
+	return r0, r1, r2, r3, r4
 }
 
 // PruneStateFillAmountsForShortTermOrders provides a mock function with given fields: ctx

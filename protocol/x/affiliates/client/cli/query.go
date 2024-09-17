@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -20,5 +21,76 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
+	cmd.AddCommand(
+		GetCmdQueryAffiliateTiers(),
+		GetCmdQueryAffiliateInfo(),
+		GetCmdQueryReferredBy(),
+	)
+	return cmd
+}
+
+func GetCmdQueryAffiliateTiers() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "affiliate-tiers",
+		Short: "Query affiliate tiers",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AllAffiliateTiers(context.Background(), &types.AllAffiliateTiersRequest{})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	return cmd
+}
+
+func GetCmdQueryAffiliateInfo() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "affiliate-info [affiliate-address]",
+		Short: "Query affiliate info",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AffiliateInfo(context.Background(), &types.AffiliateInfoRequest{
+				Address: args[0],
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	return cmd
+}
+
+func GetCmdQueryReferredBy() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "referred-by [address]",
+		Short: "Query the referee that referred the given addresss",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.ReferredBy(context.Background(), &types.ReferredByRequest{
+				Address: args[0],
+			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
 	return cmd
 }

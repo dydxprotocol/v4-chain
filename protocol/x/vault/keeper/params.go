@@ -122,3 +122,32 @@ func (k Keeper) UnsafeDeleteParams(
 	store := ctx.KVStore(k.storeKey)
 	store.Delete([]byte("Params"))
 }
+
+// GetOperatorParams returns `OperatorParams` in state.
+func (k Keeper) GetOperatorParams(
+	ctx sdk.Context,
+) (
+	params types.OperatorParams,
+) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get([]byte(types.OperatorParamsKey))
+	k.cdc.MustUnmarshal(b, &params)
+	return params
+}
+
+// SetOperatorParams sets `OperatorParams` in state.
+// Returns an error if validation fails.
+func (k Keeper) SetOperatorParams(
+	ctx sdk.Context,
+	params types.OperatorParams,
+) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshal(&params)
+	store.Set([]byte(types.OperatorParamsKey), b)
+
+	return nil
+}

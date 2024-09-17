@@ -469,6 +469,7 @@ func New(
 		statsmoduletypes.TransientStoreKey,
 		rewardsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
+		streaming.StreamingManagerTransientStoreKey,
 		perpetualsmoduletypes.TransientStoreKey,
 	)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
@@ -764,6 +765,7 @@ func New(
 		appFlags,
 		appCodec,
 		logger,
+		tkeys[streaming.StreamingManagerTransientStoreKey],
 	)
 
 	timeProvider := &timelib.TimeProviderImpl{}
@@ -1040,6 +1042,7 @@ func New(
 	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
 		appCodec,
 		app.StatsKeeper,
+		app.AffiliatesKeeper,
 		keys[feetiersmoduletypes.StoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
@@ -1128,6 +1131,7 @@ func New(
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[sdk.Msg](),
 		daemonLiquidationInfo,
+		app.RevShareKeeper,
 	)
 	clobModule := clobmodule.NewAppModule(
 		appCodec,
@@ -2060,6 +2064,7 @@ func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
 	cdc codec.Codec,
 	logger log.Logger,
+	streamingManagerTransientStoreKey storetypes.StoreKey,
 ) (manager streamingtypes.FullNodeStreamingManager, wsServer *ws.WebsocketServer) {
 	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	if appFlags.GrpcStreamingEnabled {
@@ -2073,6 +2078,7 @@ func getFullNodeStreamingManagerFromOptions(
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
 			appFlags.FullNodeStreamingSnapshotInterval,
+			streamingManagerTransientStoreKey,
 		)
 
 		// Start websocket server.

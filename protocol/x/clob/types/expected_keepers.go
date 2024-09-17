@@ -11,6 +11,8 @@ import (
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -82,8 +84,8 @@ type SubaccountsKeeper interface {
 	DistributeFees(
 		ctx sdk.Context,
 		assetId uint32,
-		quantums *big.Int,
-		perpetualId uint32,
+		revSharesForFill revsharetypes.RevSharesForFill,
+		fillForProcess FillForProcess,
 	) error
 	SendFinalizedSubaccountUpdates(
 		ctx sdk.Context,
@@ -147,6 +149,7 @@ type PricesKeeper interface {
 
 type StatsKeeper interface {
 	RecordFill(ctx sdk.Context, takerAddress string, makerAddress string, notional *big.Int)
+	GetUserStats(ctx sdk.Context, address string) *stattypes.UserStats
 }
 
 // AccountKeeper defines the expected account keeper used for simulations.
@@ -163,11 +166,18 @@ type BankKeeper interface {
 type RewardsKeeper interface {
 	AddRewardSharesForFill(
 		ctx sdk.Context,
-		takerAddress string,
-		makerAddress string,
-		bigFillQuoteQuantums *big.Int,
-		bigTakerFeeQuoteQuantums *big.Int,
-		bigMakerFeeQuoteQuantums *big.Int,
+		fill FillForProcess,
+		revSharesForFill revsharetypes.RevSharesForFill,
+	)
+}
+
+type RevShareKeeper interface {
+	GetAllRevShares(
+		ctx sdk.Context,
+		fill FillForProcess,
+		affiliateWhitelistMap map[string]uint32,
+	) (
+		revsharetypes.RevSharesForFill, error,
 	)
 }
 

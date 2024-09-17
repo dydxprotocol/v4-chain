@@ -182,13 +182,13 @@ func TestReferredBy(t *testing.T) {
 				AffiliateAddress: constants.BobAccAddress.String(),
 			},
 		},
-		"Affiliate not found": {
+		"Affiliate not registered": {
 			req: &types.ReferredByRequest{
 				Address: constants.DaveAccAddress.String(),
 			},
 			setup:       func(ctx sdk.Context, k keeper.Keeper) {},
 			expected:    nil,
-			expectError: types.ErrAffiliateNotFound,
+			expectError: nil,
 		},
 	}
 

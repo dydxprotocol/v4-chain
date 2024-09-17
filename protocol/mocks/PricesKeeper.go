@@ -19,6 +19,11 @@ type PricesKeeper struct {
 	mock.Mock
 }
 
+// AddCurrencyPairIDToStore provides a mock function with given fields: ctx, id, cp
+func (_m *PricesKeeper) AddCurrencyPairIDToStore(ctx types.Context, id uint32, cp pkgtypes.CurrencyPair) {
+	_m.Called(ctx, id, cp)
+}
+
 // CreateMarket provides a mock function with given fields: ctx, param, price
 func (_m *PricesKeeper) CreateMarket(ctx types.Context, param pricestypes.MarketParam, price pricestypes.MarketPrice) (pricestypes.MarketParam, error) {
 	ret := _m.Called(ctx, param, price)
@@ -313,11 +318,6 @@ func (_m *PricesKeeper) HasAuthority(authority string) bool {
 	}
 
 	return r0
-}
-
-// InitializeCurrencyPairIdCache provides a mock function with given fields: ctx
-func (_m *PricesKeeper) InitializeCurrencyPairIdCache(ctx types.Context) {
-	_m.Called(ctx)
 }
 
 // Logger provides a mock function with given fields: ctx

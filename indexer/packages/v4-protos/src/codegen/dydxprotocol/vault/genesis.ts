@@ -1,5 +1,5 @@
 import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType, OwnerShareUnlocks, OwnerShareUnlocksSDKType } from "./share";
-import { QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
+import { QuotingParams, QuotingParamsSDKType, OperatorParams, OperatorParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
@@ -20,6 +20,9 @@ export interface GenesisState {
   /** All owner share unlocks. */
 
   allOwnerShareUnlocks: OwnerShareUnlocks[];
+  /** The parameters regarding megavault operator. */
+
+  operatorParams?: OperatorParams;
 }
 /** GenesisState defines `x/vault`'s genesis state. */
 
@@ -38,6 +41,9 @@ export interface GenesisStateSDKType {
   /** All owner share unlocks. */
 
   all_owner_share_unlocks: OwnerShareUnlocksSDKType[];
+  /** The parameters regarding megavault operator. */
+
+  operator_params?: OperatorParamsSDKType;
 }
 /** Vault defines the state of a vault. */
 
@@ -136,7 +142,8 @@ function createBaseGenesisState(): GenesisState {
     ownerShares: [],
     vaults: [],
     defaultQuotingParams: undefined,
-    allOwnerShareUnlocks: []
+    allOwnerShareUnlocks: [],
+    operatorParams: undefined
   };
 }
 
@@ -160,6 +167,10 @@ export const GenesisState = {
 
     for (const v of message.allOwnerShareUnlocks) {
       OwnerShareUnlocks.encode(v!, writer.uint32(42).fork()).ldelim();
+    }
+
+    if (message.operatorParams !== undefined) {
+      OperatorParams.encode(message.operatorParams, writer.uint32(50).fork()).ldelim();
     }
 
     return writer;
@@ -194,6 +205,10 @@ export const GenesisState = {
           message.allOwnerShareUnlocks.push(OwnerShareUnlocks.decode(reader, reader.uint32()));
           break;
 
+        case 6:
+          message.operatorParams = OperatorParams.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -210,6 +225,7 @@ export const GenesisState = {
     message.vaults = object.vaults?.map(e => Vault.fromPartial(e)) || [];
     message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
     message.allOwnerShareUnlocks = object.allOwnerShareUnlocks?.map(e => OwnerShareUnlocks.fromPartial(e)) || [];
+    message.operatorParams = object.operatorParams !== undefined && object.operatorParams !== null ? OperatorParams.fromPartial(object.operatorParams) : undefined;
     return message;
   }
 
