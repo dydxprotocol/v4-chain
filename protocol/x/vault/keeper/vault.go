@@ -69,7 +69,7 @@ func (k Keeper) GetVaultLeverageAndEquity(
 	perpetual perptypes.Perpetual,
 	marketPrice pricestypes.MarketPrice,
 ) (
-	leveragePpm *big.Int,
+	leverage *big.Rat,
 	equity *big.Int,
 	err error,
 ) {
@@ -91,10 +91,12 @@ func (k Keeper) GetVaultLeverageAndEquity(
 		marketPrice.GetPrice(),
 		marketPrice.GetExponent(),
 	)
-	leveragePpm = new(big.Int).Mul(openNotional, lib.BigIntOneMillion())
-	leveragePpm.Quo(leveragePpm, equity)
+	leverage = new(big.Rat).SetFrac(
+		openNotional,
+		equity,
+	)
 
-	return leveragePpm, equity, nil
+	return leverage, equity, nil
 }
 
 // GetSubaccountEquity returns the equity of a subaccount (in quote quantums).

@@ -8,31 +8,31 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// SkewAntiderivativePpm returns the antiderivative of skew given a vault's skew
+// SkewAntiderivative returns the antiderivative of skew given a vault's skew
 // factor and leverage.
-// skew_antiderivative_ppm = skew_factor * leverage^2 + skew_factor^2 * leverage^3 / 3
-func SkewAntiderivativePpm(
+// skew_antiderivative = skew_factor * leverage^2 + skew_factor^2 * leverage^3 / 3
+func SkewAntiderivative(
 	skewFactorPpm uint32,
-	leveragePpm *big.Int,
-) *big.Int {
-	bigSkewFactorPpm := new(big.Int).SetUint64(uint64(skewFactorPpm))
-	bigOneTrillion := lib.BigIntOneTrillion()
+	leverage *big.Rat,
+) *big.Rat {
+	bigSkewFactorPpm := new(big.Rat).SetUint64(uint64(skewFactorPpm))
+	bigOneMillion := lib.BigRatOneMillion()
 
 	// a = skew_factor * leverage^2.
-	a := new(big.Int).Mul(leveragePpm, leveragePpm)
+	a := new(big.Rat).Mul(leverage, leverage)
 	a.Mul(a, bigSkewFactorPpm)
 
 	// b = skew_factor^2 * leverage^3 / 3.
-	b := new(big.Int).Set(a)
-	b.Mul(b, leveragePpm)
+	b := new(big.Rat).Set(a)
+	b.Mul(b, leverage)
 	b.Mul(b, bigSkewFactorPpm)
-	b = lib.BigDivCeil(b, big.NewInt(3))
+	b.Quo(b, big.NewRat(3, 1))
 
-	// normalize `a` whose unit currently is ppm * ppm.
-	a = lib.BigDivCeil(a, bigOneTrillion)
-	// normalize `b` whose unit currently is ppm * ppm * ppm.
-	b = lib.BigDivCeil(b, bigOneTrillion)
-	b = lib.BigDivCeil(b, bigOneTrillion)
+	// normalize `a` whose unit currently is ppm.
+	a.Quo(a, bigOneMillion)
+	// normalize `b` whose unit currently is ppm * ppm.
+	b.Quo(b, bigOneMillion)
+	b.Quo(b, bigOneMillion)
 
 	// return a + b.
 	return a.Add(a, b)

@@ -10,10 +10,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// GetVaultWithdrawalSlippagePpm returns the slippage (in ppm) that should be incurred
-// on withdrawing `withdrawalPortionPpm` of a vault's ownership.
-// For example, if `withdrawalPortionPpm = 100_000` and `200_000` is returned,
-// it means that withdrawing 10% has a 20% slippage for the specified vault.
+// GetVaultWithdrawalSlippagePpm returns the slippage that should be incurred from the specified
+// vault on withdrawing `sharesToWithdraw` shares.
+// For example, if `sharesToWithdraw = 100` and `0.2` is returned, it means that withdrawing
+// 100 shares has a 20% slippage for the given `vaultId`.
 //
 // Slippage is calculated as `min(simple_slippage, estimated_slippage)` where:
 // - simple_slippage = leverage * initial_margin
@@ -24,11 +24,19 @@ import (
 //   - posterior_leverage = leverage / (1 - withdrawal_portion)
 //     = leverage / (1 - shares_to_withdraw / total_shares)
 //     = leverage * total_shares / (total_shares - shares_to_withdraw)
-func (k Keeper) GetVaultWithdrawalSlippagePpm(
+//
+// To simplify above formula, let l = leverage, n = total_shares, m = shares_to_withdraw
+//
+//	estimated_slippage
+//	= spread * (1 + integral / (posterior_leverage - leverage)) * leverage
+//	= spread * (1 + integral * (n - m) / (ln - l(n - m))) * l
+//	= spread * (1 + integral * (n - m) / lm) * l
+//	= spread * (l + integral * (n - m) / m)
+func (k Keeper) GetVaultWithdrawalSlippage(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 	sharesToWithdraw *big.Int,
-) (*big.Int, error) {
+) (*big.Rat, error) {
 	totalShares := k.GetTotalShares(ctx).NumShares.BigInt()
 	if sharesToWithdraw.Sign() <= 0 || sharesToWithdraw.Cmp(totalShares) > 0 {
 		return nil, errorsmod.Wrapf(
@@ -50,68 +58,62 @@ func (k Keeper) GetVaultWithdrawalSlippagePpm(
 	}
 
 	// Get vault leverage.
-	leveragePpm, _, err := k.GetVaultLeverageAndEquity(ctx, vaultId, perpetual, marketPrice)
+	leverage, _, err := k.GetVaultLeverageAndEquity(ctx, vaultId, perpetual, marketPrice)
 	if err != nil {
 		return nil, err
 	}
 	// No leverage, no slippage.
-	if leveragePpm.Sign() == 0 {
-		return big.NewInt(0), nil
+	if leverage.Sign() == 0 {
+		return lib.BigRat0(), nil
 	}
 
 	// Use absolute value of leverage.
-	leveragePpm.Abs(leveragePpm)
+	leverage.Abs(leverage)
 
-	// Calculate simple_slippage = leverage * initial_margin (round up if necessary).
+	// Calculate simple_slippage = leverage * initial_margin.
 	lt, err := k.perpetualsKeeper.GetLiquidityTier(ctx, perpetual.Params.LiquidityTier)
 	if err != nil {
 		return nil, err
 	}
-	bigOneMillion := lib.BigIntOneMillion()
-	simpleSlippagePpm := new(big.Int).Mul(
-		leveragePpm,
-		new(big.Int).SetUint64(uint64(lt.InitialMarginPpm)),
-	)
-	simpleSlippagePpm = lib.BigDivCeil(simpleSlippagePpm, bigOneMillion)
+	simpleSlippage := lib.BigRatMulPpm(leverage, lt.InitialMarginPpm)
 
 	// Return simple slippage if withdrawing 100%.
 	if sharesToWithdraw.Cmp(totalShares) == 0 {
-		return simpleSlippagePpm, nil
+		return simpleSlippage, nil
 	}
 
-	// Estimate slippage.
+	// Calculate estimated_slippage.
 	// 1. leverage_after_withdrawal
 	//    = leverage / (1 - withdrawal_portion)
 	//    = leverage * total_shares / (total_shares - shares_to_withdraw)
-	posteriorLeveragePpm := new(big.Int).Mul(leveragePpm, totalShares)
-	posteriorLeveragePpm = lib.BigDivCeil(
-		posteriorLeveragePpm,
-		new(big.Int).Sub(totalShares, sharesToWithdraw),
+	remainingShares := new(big.Int).Sub(totalShares, sharesToWithdraw)
+	posteriorLeverage := new(big.Rat).Mul(
+		leverage,
+		new(big.Rat).SetFrac(totalShares, remainingShares),
 	)
 
 	// 2. integral = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
-	estimatedSlippagePpm := vault.SkewAntiderivativePpm(quotingParams.SkewFactorPpm, posteriorLeveragePpm)
-	estimatedSlippagePpm.Sub(estimatedSlippagePpm, vault.SkewAntiderivativePpm(quotingParams.SkewFactorPpm, leveragePpm))
+	integral := vault.SkewAntiderivative(quotingParams.SkewFactorPpm, posteriorLeverage)
+	integral.Sub(integral, vault.SkewAntiderivative(quotingParams.SkewFactorPpm, leverage))
 
-	// 3. average_skew = integral / (posterior_leverage - leverage)
-	estimatedSlippagePpm.Mul(estimatedSlippagePpm, bigOneMillion)
-	estimatedSlippagePpm = lib.BigDivCeil(
-		estimatedSlippagePpm,
-		posteriorLeveragePpm.Sub(posteriorLeveragePpm, leveragePpm),
+	// 3. estimated_slippage
+	//    = spread * (l + integral * (n - m) / m)
+	estimatedSlippage := new(big.Rat).Mul(
+		integral,
+		new(big.Rat).SetFrac(remainingShares, sharesToWithdraw),
 	)
-
-	// 4. slippage = spread * (1 + average_skew) * leverage
-	estimatedSlippagePpm.Add(estimatedSlippagePpm, bigOneMillion)
-	estimatedSlippagePpm.Mul(estimatedSlippagePpm, leveragePpm)
-	estimatedSlippagePpm = lib.BigIntMulPpm(
-		estimatedSlippagePpm,
+	estimatedSlippage.Add(
+		estimatedSlippage,
+		leverage,
+	)
+	estimatedSlippage = lib.BigRatMulPpm(
+		estimatedSlippage,
 		vault.SpreadPpm(&quotingParams, &marketParam),
 	)
-	estimatedSlippagePpm = lib.BigDivCeil(estimatedSlippagePpm, bigOneMillion)
 
 	// Return min(simple_slippage, estimated_slippage).
-	return lib.BigMin(
-		simpleSlippagePpm,
-		estimatedSlippagePpm,
+	return lib.BigRatMin(
+		simpleSlippage,
+		estimatedSlippage,
 	), nil
 }

@@ -170,10 +170,11 @@ func (k Keeper) GetVaultClobOrders(
 	}
 
 	// Get vault leverage and equity.
-	leveragePpm, equity, err := k.GetVaultLeverageAndEquity(ctx, vaultId, perpetual, marketPrice)
+	leverage, equity, err := k.GetVaultLeverageAndEquity(ctx, vaultId, perpetual, marketPrice)
 	if err != nil {
 		return orders, err
 	}
+	leveragePpm := lib.BigDivCeil(leverage.Num(), leverage.Denom())
 
 	// Get vault parameters.
 	quotingParams, exists := k.GetVaultQuotingParams(ctx, vaultId)

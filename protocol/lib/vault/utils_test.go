@@ -14,55 +14,53 @@ import (
 func TestSkewAntiderivativePpm(t *testing.T) {
 	tests := map[string]struct {
 		skewFactorPpm uint32
-		leveragePpm   *big.Int
-		expected      *big.Int
+		leverage      *big.Rat
+		expected      *big.Rat
 	}{
 		"Zero skew factor and leverage": {
 			skewFactorPpm: 0,
-			leveragePpm:   big.NewInt(0),
-			expected:      big.NewInt(0),
+			leverage:      big.NewRat(0, 1),
+			expected:      big.NewRat(0, 1),
 		},
 		"Non-zero skew factor, zero leverage": {
 			skewFactorPpm: 1_000_000,
-			leveragePpm:   big.NewInt(0),
-			expected:      big.NewInt(0),
+			leverage:      big.NewRat(0, 1),
+			expected:      big.NewRat(0, 1),
 		},
 		"Zero skew factor, non-zero leverage": {
 			skewFactorPpm: 0,
-			leveragePpm:   big.NewInt(1_000_000),
-			expected:      big.NewInt(0),
+			leverage:      big.NewRat(1_000_000, 1),
+			expected:      big.NewRat(0, 1),
 		},
 		"Small skew factor and small positive leverage": {
-			skewFactorPpm: 500_000,             // 0.5
-			leveragePpm:   big.NewInt(800_000), // 0.8
-			// 0.5 * 0.8^2 + 0.5^2 * 0.8^3 / 3 ~= 0.362666
-			// round up to 0.362667
-			expected: big.NewInt(362_667),
+			skewFactorPpm: 500_000,          // 0.5
+			leverage:      big.NewRat(4, 5), // 0.8
+			// 0.5 * 0.8^2 + 0.5^2 * 0.8^3 / 3 = 136/375
+			expected: big.NewRat(136, 375),
 		},
 		"Small skew factor and small negative leverage": {
-			skewFactorPpm: 500_000,              // 0.5
-			leveragePpm:   big.NewInt(-800_000), // -0.8
-			// 0.5 * (-0.8)^2 + 0.5^2 * (-0.8)^3 / 3 ~= 0.277333
-			// round up to 0.277334
-			expected: big.NewInt(277_334),
+			skewFactorPpm: 500_000,           // 0.5
+			leverage:      big.NewRat(-4, 5), // -0.8
+			// 0.5 * (-0.8)^2 + 0.5^2 * (-0.8)^3 / 3 = 104/375
+			expected: big.NewRat(104, 375),
 		},
 		"Large skew factor and large positive leverage": {
-			skewFactorPpm: 5_000_000,             // 5
-			leveragePpm:   big.NewInt(8_700_000), // 8.7
-			// 5 * (8.7)^2 + 5^2 * (8.7)^3 / 3 = 5865.975
-			expected: big.NewInt(5_865_975_000),
+			skewFactorPpm: 5_000_000,          // 5
+			leverage:      big.NewRat(87, 10), // 8.7
+			// 5 * (8.7)^2 + 5^2 * (8.7)^3 / 3 = 234639/40
+			expected: big.NewRat(234_639, 40),
 		},
 		"Large skew factor and large negative leverage": {
-			skewFactorPpm: 5_000_000,              // 5
-			leveragePpm:   big.NewInt(-8_700_000), // -8.7
-			// 5 * (-8.7)^2 + 5^2 * (-8.7)^3 / 3 = -5109.075
-			expected: big.NewInt(-5_109_075_000),
+			skewFactorPpm: 5_000_000,           // 5
+			leverage:      big.NewRat(-87, 10), // -8.7
+			// 5 * (-8.7)^2 + 5^2 * (-8.7)^3 / 3 = -204363/40
+			expected: big.NewRat(-204_363, 40),
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := vault.SkewAntiderivativePpm(tc.skewFactorPpm, tc.leveragePpm)
+			actual := vault.SkewAntiderivative(tc.skewFactorPpm, tc.leverage)
 			require.Equal(t, tc.expected, actual)
 		})
 	}
