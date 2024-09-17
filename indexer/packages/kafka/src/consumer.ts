@@ -1,4 +1,5 @@
 import {
+  getAvailabilityZoneId,
   logger,
 } from '@dydxprotocol-indexer/base';
 import {
@@ -21,6 +22,7 @@ export const consumer: Consumer = kafka.consumer({
   maxWaitTimeInMs: config.KAFKA_WAIT_MAX_TIME_MS,
   readUncommitted: false,
   maxBytes: 4194304, // 4MB
+  rackId: getAvailabilityZoneId(),
 });
 
 // List of functions to run per message consumed.
