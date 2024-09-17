@@ -19,7 +19,7 @@ import {
   Options,
   Ordering,
   QueryableField,
-  AddressUsernameFromDatabase,
+  AddressUsername,
 } from '../types';
 
 export async function findAll(
@@ -118,12 +118,12 @@ export async function getSubaccountsWithoutUsernames(
 
 export async function findByAddress(
   addresses: string[],
-): Promise<AddressUsernameFromDatabase[]> {
+): Promise<AddressUsername[]> {
   if (addresses.length === 0) {
     return [];
   }
 
-  const result: { rows: AddressUsernameFromDatabase[] } = await knexReadReplica
+  const result: { rows: AddressUsername[] } = await knexReadReplica
     .getConnection()
     .raw(
       `

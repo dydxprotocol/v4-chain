@@ -20,6 +20,7 @@ const (
 	SubtypeTradingReward      = "trading_reward"
 	SubtypeOpenInterestUpdate = "open_interest_update"
 	SubtypeRegisterAffiliate  = "register_affiliate"
+	SubtypeUpsertVault        = "upsert_vault"
 )
 
 const (
@@ -39,6 +40,7 @@ const (
 	TradingRewardVersion          uint32 = 1
 	OpenInterestUpdateVersion     uint32 = 1
 	RegisterAffiliateEventVersion uint32 = 1
+	UpsertVaultEventVersion       uint32 = 1
 )
 
 var OnChainEventSubtypes = []string{
@@ -56,4 +58,5 @@ var OnChainEventSubtypes = []string{
 	SubtypeDeleveraging,
 	SubtypeTradingReward,
 	SubtypeRegisterAffiliate,
+	SubtypeUpsertVault,
 }

@@ -11,6 +11,7 @@ import { PerpetualMarketStatus, PerpetualMarketType } from './perpetual-market-t
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
 import { TradingRewardAggregationPeriod } from './trading-reward-aggregation-types';
+import { VaultStatus } from './vault-types';
 
 type IsoString = string;
 
@@ -264,7 +265,7 @@ export interface SubaccountUsernamesFromDatabase {
   subaccountId: string,
 }
 
-export interface AddressUsernameFromDatabase {
+export interface AddressUsername {
   address: string,
   username: string,
 }
@@ -305,6 +306,14 @@ export interface FirebaseNotificationTokenFromDatabase {
   token: string,
   updatedAt: IsoString,
   language: string,
+}
+
+export interface VaultFromDatabase {
+  address: string,
+  clobPairId: string,
+  status: VaultStatus,
+  createdAt: IsoString,
+  updatedAt: IsoString,
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:

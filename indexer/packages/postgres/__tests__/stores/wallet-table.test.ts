@@ -11,7 +11,6 @@ import {
   defaultTendermintEventId4,
   defaultWallet,
   defaultWallet2,
-  defaultWallet3,
   isolatedMarketOrder,
   isolatedSubaccount,
 } from '../helpers/constants';

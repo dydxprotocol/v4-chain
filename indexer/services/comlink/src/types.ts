@@ -554,6 +554,11 @@ export interface RegisterTokenRequest {
   address: string,
   token: string,
   language: string,
+  message: string,
+  timestamp: number,
+  signedMessage: string,
+  pubKey: string,
+  walletIsKeplr: boolean,
 }
 
 /* ------- COLLATERALIZATION TYPES ------- */

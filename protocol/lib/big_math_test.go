@@ -304,6 +304,56 @@ func TestBigMin(t *testing.T) {
 	}
 }
 
+func TestBigRatMin(t *testing.T) {
+	tests := map[string]struct {
+		a        *big.Rat
+		b        *big.Rat
+		expected *big.Rat
+	}{
+		"a is smaller than b": {
+			a:        big.NewRat(5, 2),
+			b:        big.NewRat(6, 2),
+			expected: big.NewRat(5, 2),
+		},
+		"b is smaller than a": {
+			a:        big.NewRat(7, 1),
+			b:        big.NewRat(4, 1),
+			expected: big.NewRat(4, 1),
+		},
+		"a is equal to b": {
+			a:        big.NewRat(8, 7),
+			b:        big.NewRat(8, 7),
+			expected: big.NewRat(8, 7),
+		},
+		"a and b are negative, a is less than b": {
+			a:        big.NewRat(-8, 3),
+			b:        big.NewRat(-7, 3),
+			expected: big.NewRat(-8, 3),
+		},
+		"a and b are negative, b is less than a": {
+			a:        big.NewRat(-9, 5),
+			b:        big.NewRat(-10, 5),
+			expected: big.NewRat(-10, 5),
+		},
+		"a is positive, b is negative, and abs(a) is less than abs(b)": {
+			a:        big.NewRat(4, 3),
+			b:        big.NewRat(-7, 2),
+			expected: big.NewRat(-7, 2),
+		},
+		"a is positive, b is negative, and abs(a) is greater than abs(b)": {
+			a:        big.NewRat(7, 2),
+			b:        big.NewRat(-4, 3),
+			expected: big.NewRat(-4, 3),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := lib.BigRatMin(tc.a, tc.b)
+			require.Equal(t, tc.expected, result)
+		})
+	}
+}
+
 func TestBigMax(t *testing.T) {
 	tests := map[string]struct {
 		a              *big.Int

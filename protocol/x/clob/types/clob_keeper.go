@@ -85,6 +85,7 @@ type ClobKeeper interface {
 		success bool,
 		takerUpdateResult satypes.UpdateResult,
 		makerUpdateResult satypes.UpdateResult,
+		affiliateRevSharesQuoteQuantums *big.Int,
 		err error,
 	)
 	SetLongTermOrderPlacement(

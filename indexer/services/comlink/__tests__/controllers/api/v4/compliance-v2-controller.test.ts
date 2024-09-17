@@ -16,15 +16,20 @@ import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { ComplianceControllerHelper } from '../../../../src/controllers/api/v4/compliance-controller';
 import config from '../../../../src/config';
 import { DateTime } from 'luxon';
-import { ComplianceAction } from '../../../../src/controllers/api/v4/compliance-v2-controller';
 import { ExtendedSecp256k1Signature, Secp256k1 } from '@cosmjs/crypto';
 import { verifyADR36Amino } from '@keplr-wallet/cosmos';
-import { getGeoComplianceReason } from '../../../../src/helpers/compliance/compliance-utils';
+import { getGeoComplianceReason, ComplianceAction } from '../../../../src/helpers/compliance/compliance-utils';
 import { isRestrictedCountryHeaders, isWhitelistedAddress } from '@dydxprotocol-indexer/compliance';
 import { toBech32 } from '@cosmjs/encoding';
 
 jest.mock('@dydxprotocol-indexer/compliance');
-jest.mock('../../../../src/helpers/compliance/compliance-utils');
+jest.mock('../../../../src/helpers/compliance/compliance-utils', () => {
+  const actualModule = jest.requireActual('../../../../src/helpers/compliance/compliance-utils');
+  return {
+    ...actualModule,
+    getGeoComplianceReason: jest.fn(),
+  };
+});
 
 jest.mock('../../../../src/lib/utils', () => ({
   ...jest.requireActual('../../../../src/lib/utils'),

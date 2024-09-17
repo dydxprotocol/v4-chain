@@ -1,6 +1,6 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
-  AddressUsernameFromDatabase,
+  AddressUsername,
   WalletTable,
   AffiliateInfoTable,
   AffiliateReferredUsersTable,
@@ -129,26 +129,17 @@ class AffiliatesController extends Controller {
     const finalLimit: number = limit ?? 1000;
     const finalsortByAffiliateEarning: boolean = sortByAffiliateEarning ?? false;
 
-    // eslint-disable-next-line max-len
-    const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
-      finalAddressFilter,
-      finalOffset,
-      finalLimit,
-      finalsortByAffiliateEarning,
-    );
-
-    // No results found
-    if (infos === undefined) {
-      return {
-        affiliateList: [],
-        total: 0,
-        currentOffset: finalOffset,
-      };
-    }
+    const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable
+      .paginatedFindWithAddressFilter(
+        finalAddressFilter,
+        finalOffset,
+        finalLimit,
+        finalsortByAffiliateEarning,
+      );
 
     // Get referral codes
-    // eslint-disable-next-line max-len
-    const addressUsernames: AddressUsernameFromDatabase[] = await SubaccountUsernamesTable.findByAddress(
+    const addressUsernames:
+    AddressUsername[] = await SubaccountUsernamesTable.findByAddress(
       infos.map((info) => info.address),
     );
     const addressUsernameMap: Record<string, string> = {};
@@ -156,9 +147,14 @@ class AffiliatesController extends Controller {
       addressUsernameMap[addressUsername.address] = addressUsername.username;
     });
     if (addressUsernames.length !== infos.length) {
+      const addressesNotFound: string = infos
+        .map((info) => info.address)
+        .filter((address) => !(address in addressUsernameMap))
+        .join(', ');
+
       logger.warning({
         at: 'affiliates-controller#snapshot',
-        message: `Could not find referral code for following addresses: ${infos.map((info) => info.address).filter((address) => !(address in addressUsernameMap)).join(', ')}`,
+        message: `Could not find referral code for the following addresses: ${addressesNotFound}`,
       });
     }
 

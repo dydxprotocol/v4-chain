@@ -17,6 +17,30 @@ import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
 import { stats } from '@dydxprotocol-indexer/base';
 import config from '../../../../src/config';
+import * as complianceUtils from '../../../../src/helpers/compliance/compliance-utils';
+import { Secp256k1 } from '@cosmjs/crypto';
+import { toBech32 } from '@cosmjs/encoding';
+import { DateTime } from 'luxon';
+import { verifyADR36Amino } from '@keplr-wallet/cosmos';
+
+jest.mock('@cosmjs/crypto', () => ({
+  ...jest.requireActual('@cosmjs/crypto'),
+  Secp256k1: {
+    verifySignature: jest.fn(),
+  },
+  ExtendedSecp256k1Signature: {
+    fromFixedLength: jest.fn(),
+  },
+}));
+
+jest.mock('@cosmjs/encoding', () => ({
+  toBech32: jest.fn(),
+}));
+
+jest.mock('@keplr-wallet/cosmos', () => ({
+  ...jest.requireActual('@keplr-wallet/cosmos'),
+  verifyADR36Amino: jest.fn(),
+}));
 
 describe('addresses-controller#V4', () => {
   const latestHeight: string = '3';
@@ -596,18 +620,48 @@ describe('addresses-controller#V4', () => {
   });
 
   describe('/:address/registerToken', () => {
+    const validToken = 'validToken';
+    const validLanguage = 'en';
+    const validTimestamp = 1726076825;
+    const validMessage = 'Valid message';
+    const validSignedMessage = 'Valid signed message';
+    const validPubKey = 'Valid public key';
+
+    const verifySignatureMock = Secp256k1.verifySignature as jest.Mock;
+    const verifyADR36AminoMock = verifyADR36Amino as jest.Mock;
+    const toBech32Mock = toBech32 as jest.Mock;
+    let statsSpy = jest.spyOn(stats, 'increment');
+
+    beforeEach(() => {
+      verifySignatureMock.mockResolvedValue(true);
+      toBech32Mock.mockReturnValue(testConstants.defaultAddress);
+      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(validTimestamp)); // Mock current time
+      statsSpy = jest.spyOn(stats, 'increment');
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+      jest.restoreAllMocks();
+    });
+
     it('Post /:address/registerToken with valid params returns 200', async () => {
-      const token = 'validToken';
-      const language = 'en';
       const response: request.Response = await sendRequest({
         type: RequestMethod.POST,
         path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token, language },
+        body: {
+          token: validToken,
+          language: validLanguage,
+          timestamp: validTimestamp,
+          message: validMessage,
+          signedMessage: validSignedMessage,
+          pubKey: validPubKey,
+          walletIsKeplr: false,
+        },
         expectedStatus: 200,
       });
 
       expect(response.body).toEqual({});
-      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1, {
+      expect(statsSpy).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1, {
         path: '/:address/registerToken',
         method: 'POST',
       });
@@ -616,11 +670,18 @@ describe('addresses-controller#V4', () => {
     it('should register a new token', async () => {
       // Register a new token
       const newToken = 'newToken';
-      const language = 'en';
       await sendRequest({
         type: RequestMethod.POST,
         path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token: newToken, language },
+        body: {
+          token: newToken,
+          language: validLanguage,
+          timestamp: validTimestamp,
+          message: validMessage,
+          signedMessage: validSignedMessage,
+          pubKey: validPubKey,
+          walletIsKeplr: false,
+        },
         expectedStatus: 200,
       });
 
@@ -630,41 +691,57 @@ describe('addresses-controller#V4', () => {
     });
 
     it('Post /:address/registerToken with valid params calls TokenTable registerToken', async () => {
-      jest.spyOn(FirebaseNotificationTokenTable, 'registerToken');
+      const registerTokenSpy = jest.spyOn(FirebaseNotificationTokenTable, 'registerToken');
       const token = 'validToken';
       const language = 'en';
       await sendRequest({
         type: RequestMethod.POST,
         path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token, language },
+        body: {
+          token: validToken,
+          language: validLanguage,
+          timestamp: validTimestamp,
+          message: validMessage,
+          signedMessage: validSignedMessage,
+          pubKey: validPubKey,
+          walletIsKeplr: false,
+        },
         expectedStatus: 200,
       });
-      expect(FirebaseNotificationTokenTable.registerToken).toHaveBeenCalledWith(
+      expect(registerTokenSpy).toHaveBeenCalledWith(
         token, testConstants.defaultAddress, language,
       );
-      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1, {
+      expect(statsSpy).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1, {
         path: '/:address/registerToken',
         method: 'POST',
       });
     });
 
-    it('Post /:address/registerToken with invalid address returns 404', async () => {
-      const token = 'validToken';
+    it('Post /:address/registerToken with invalid address returns 400', async () => {
+      toBech32Mock.mockReturnValue('InvalidAddress');
       const response: request.Response = await sendRequest({
         type: RequestMethod.POST,
         path: `/v4/addresses/${invalidAddress}/registerToken`,
-        body: { token },
-        expectedStatus: 404,
+        body: {
+          token: validToken,
+          language: validLanguage,
+          timestamp: validTimestamp,
+          message: validMessage,
+          signedMessage: validSignedMessage,
+          pubKey: validPubKey,
+          walletIsKeplr: false,
+        },
+        expectedStatus: 400,
       });
 
       expect(response.body).toEqual({
         errors: [
           {
-            msg: 'No wallet found with address: invalidAddress',
+            msg: 'Address invalidAddress is not a valid dYdX V4 address',
           },
         ],
       });
-      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.404', 1, {
+      expect(statsSpy).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.400', 1, {
         path: '/:address/registerToken',
         method: 'POST',
       });
@@ -677,7 +754,15 @@ describe('addresses-controller#V4', () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.POST,
         path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token, language },
+        body: {
+          token,
+          language,
+          timestamp: validTimestamp,
+          message: validMessage,
+          signedMessage: validSignedMessage,
+          pubKey: validPubKey,
+          walletIsKeplr: false,
+        },
         expectedStatus: 400,
       });
 
@@ -699,7 +784,15 @@ describe('addresses-controller#V4', () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.POST,
         path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
-        body: { token, language },
+        body: {
+          token: '',
+          language,
+          timestamp: validTimestamp,
+          message: validMessage,
+          signedMessage: validSignedMessage,
+          pubKey: validPubKey,
+          walletIsKeplr: false,
+        },
         expectedStatus: 400,
       });
 
@@ -713,6 +806,85 @@ describe('addresses-controller#V4', () => {
           },
         ],
       });
+    });
+
+    it('Post /:address/registerToken with invalid signature returns 400', async () => {
+      verifySignatureMock.mockResolvedValue(false);
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
+        body: {
+          token: validToken,
+          language: validLanguage,
+          timestamp: validTimestamp,
+          message: validMessage,
+          signedMessage: 'Invalid signature',
+          pubKey: validPubKey,
+          walletIsKeplr: false,
+        },
+        expectedStatus: 400,
+      });
+
+      expect(response.body).toEqual({
+        errors: [{ msg: 'Signature verification failed' }],
+      });
+    });
+
+    it('Post /:address/registerToken with Keplr wallet calls validateSignatureKeplr', async () => {
+      verifyADR36AminoMock.mockReturnValue(true);
+      const validateSignatureKeplr = jest.spyOn(complianceUtils, 'validateSignatureKeplr');
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
+        body: {
+          token: validToken,
+          language: validLanguage,
+          timestamp: validTimestamp,
+          message: validMessage,
+          signedMessage: validSignedMessage,
+          pubKey: validPubKey,
+          walletIsKeplr: true,
+        },
+        expectedStatus: 200,
+      });
+
+      expect(validateSignatureKeplr).toHaveBeenCalledWith(
+        expect.anything(),
+        testConstants.defaultAddress,
+        validMessage,
+        validSignedMessage,
+        validPubKey,
+      );
+    });
+
+    it('Post /:address/registerToken with non-Keplr wallet calls validateSignature', async () => {
+      const validateSignature = jest.spyOn(complianceUtils, 'validateSignature');
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: `/v4/addresses/${testConstants.defaultAddress}/registerToken`,
+        body: {
+          token: validToken,
+          language: validLanguage,
+          timestamp: validTimestamp,
+          message: validMessage,
+          signedMessage: validSignedMessage,
+          pubKey: validPubKey,
+          walletIsKeplr: false,
+        },
+        expectedStatus: 200,
+      });
+
+      expect(validateSignature).toHaveBeenCalledWith(
+        expect.anything(),
+        complianceUtils.AccountVerificationRequiredAction.REGISTER_TOKEN,
+        testConstants.defaultAddress,
+        validTimestamp,
+        validMessage,
+        validSignedMessage,
+        validPubKey,
+        '',
+      );
     });
   });
 });

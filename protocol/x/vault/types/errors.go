@@ -10,7 +10,6 @@ var (
 		1,
 		"Shares are negative",
 	)
-	// Deprecated since v6.x
 	ErrClobPairNotFound = errorsmod.Register(
 		ModuleName,
 		2,
@@ -125,5 +124,10 @@ var (
 		ModuleName,
 		24,
 		"Empty operator address",
+	)
+	ErrInvalidSharesToWithdraw = errorsmod.Register(
+		ModuleName,
+		25,
+		"Shares to withdraw must be positive and less than or equal to total shares",
 	)
 )

@@ -38,6 +38,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { AccountVerificationRequiredAction, validateSignature, validateSignatureKeplr } from '../../../helpers/compliance/compliance-utils';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { DatabaseError, NotFoundError } from '../../../lib/errors';
 import {
@@ -499,9 +500,29 @@ router.post(
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
-    const { address, token, language = 'en' } = matchedData(req) as RegisterTokenRequest;
+    const {
+      address, token, language = 'en', timestamp, message, signedMessage, pubKey, walletIsKeplr,
+    } = matchedData(req) as RegisterTokenRequest;
 
     try {
+      const failedValidationResponse = walletIsKeplr
+        ? validateSignatureKeplr(
+          res, address, message, signedMessage, pubKey,
+        )
+        : await validateSignature(
+          res,
+          AccountVerificationRequiredAction.REGISTER_TOKEN,
+          address,
+          timestamp,
+          message,
+          signedMessage,
+          pubKey,
+          '',
+        );
+      if (failedValidationResponse) {
+        return failedValidationResponse;
+      }
+
       const controller: AddressesController = new AddressesController();
       await controller.registerToken(address, { token, language });
       return res.status(200).send({});

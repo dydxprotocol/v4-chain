@@ -87,7 +87,7 @@ export async function upsert(
 export async function findById(
   address: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<AffiliateInfoFromDatabase | undefined> {
+): Promise<AffiliateInfoFromDatabase> {
   const baseQuery: QueryBuilder<AffiliateInfoModel> = setupBaseQuery<AffiliateInfoModel>(
     AffiliateInfoModel,
     options,
@@ -262,7 +262,7 @@ export async function paginatedFindWithAddressFilter(
   limit: number,
   sortByAffiliateEarning: boolean,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<AffiliateInfoFromDatabase[] | undefined> {
+): Promise<AffiliateInfoFromDatabase[]> {
   let baseQuery: QueryBuilder<AffiliateInfoModel> = setupBaseQuery<AffiliateInfoModel>(
     AffiliateInfoModel,
     options,
@@ -281,6 +281,5 @@ export async function paginatedFindWithAddressFilter(
   // Apply pagination using offset and limit
   baseQuery = baseQuery.offset(offset).limit(limit);
 
-  // Returning all fields
   return baseQuery.returning('*');
 }

@@ -45,7 +45,7 @@ describe('Affiliate info store', () => {
 
   it('Can upsert affiliate info multiple times', async () => {
     await AffiliateInfoTable.upsert(defaultAffiliateInfo);
-    let info: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
+    let info: AffiliateInfoFromDatabase = await AffiliateInfoTable.findById(
       defaultAffiliateInfo.address,
     );
     expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo));
@@ -76,7 +76,8 @@ describe('Affiliate info store', () => {
 
   it('Successfully finds affiliate info by Id', async () => {
     await AffiliateInfoTable.create(defaultAffiliateInfo);
-    const info: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
+
+    const info: AffiliateInfoFromDatabase = await AffiliateInfoTable.findById(
       defaultAffiliateInfo.address,
     );
     expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo));
@@ -297,13 +298,13 @@ describe('Affiliate info store', () => {
     });
 
     it('Successfully sorts by affiliate earning', async () => {
-      // eslint-disable-next-line max-len
-      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
-        [],
-        0,
-        10,
-        true,
-      );
+      const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable
+        .paginatedFindWithAddressFilter(
+          [],
+          0,
+          10,
+          true,
+        );
       expect(infos).toBeDefined();
       expect(infos!.length).toEqual(10);
       expect(infos![0]).toEqual(expect.objectContaining({
@@ -319,13 +320,13 @@ describe('Affiliate info store', () => {
     });
 
     it('Successfully uses offset and limit', async () => {
-      // eslint-disable-next-line max-len
-      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
-        [],
-        5,
-        2,
-        false,
-      );
+      const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable
+        .paginatedFindWithAddressFilter(
+          [],
+          5,
+          2,
+          false,
+        );
       expect(infos).toBeDefined();
       expect(infos!.length).toEqual(2);
       expect(infos![0]).toEqual(expect.objectContaining({
@@ -341,13 +342,13 @@ describe('Affiliate info store', () => {
     });
 
     it('Successfully filters, sorts, offsets, and limits', async () => {
-      // eslint-disable-next-line max-len
-      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
-        [],
-        3,
-        2,
-        true,
-      );
+      const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable
+        .paginatedFindWithAddressFilter(
+          [],
+          3,
+          2,
+          true,
+        );
       expect(infos).toBeDefined();
       expect(infos!.length).toEqual(2);
       expect(infos![0]).toEqual(expect.objectContaining({
@@ -360,6 +361,18 @@ describe('Affiliate info store', () => {
         address: 'address_5',
         affiliateEarnings: '5',
       }));
+    });
+
+    it('Returns empty array if no results', async () => {
+      const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable
+        .paginatedFindWithAddressFilter(
+          ['address_11'],
+          0,
+          10,
+          false,
+        );
+      expect(infos).toBeDefined();
+      expect(infos!.length).toEqual(0);
     });
   });
 });

@@ -66,11 +66,39 @@ func (k Keeper) ModifyMarketParam(
 
 	// if the market pair has been changed, we need to update the in-memory market pair cache
 	if existingParam.Pair != updatedMarketParam.Pair {
-		// remove the old cache entry
-		k.currencyPairIDCache.Remove(uint64(existingParam.Id))
+		// remove the old cache entry and disable the old market
+		oldCurrencyPair, err := slinky.MarketPairToCurrencyPair(existingParam.Pair)
+		if err != nil {
+			return types.MarketParam{}, errorsmod.Wrap(
+				types.ErrMarketPairConversionFailed,
+				existingParam.Pair,
+			)
+		}
 
-		// add the new cache entry
-		k.currencyPairIDCache.AddCurrencyPair(uint64(updatedMarketParam.Id), cp.String())
+		k.RemoveCurrencyPairFromStore(ctx, oldCurrencyPair)
+		if err = k.MarketMapKeeper.DisableMarket(ctx, oldCurrencyPair.String()); err != nil {
+			return types.MarketParam{}, errorsmod.Wrap(
+				types.ErrMarketCouldNotBeDisabled,
+				existingParam.Pair,
+			)
+		}
+
+		// add the new cache entry and enable the new market
+		newCurrencyPair, err := slinky.MarketPairToCurrencyPair(updatedMarketParam.Pair)
+		if err != nil {
+			return types.MarketParam{}, errorsmod.Wrap(
+				types.ErrMarketPairConversionFailed,
+				updatedMarketParam.Pair,
+			)
+		}
+
+		k.AddCurrencyPairIDToStore(ctx, updatedMarketParam.Id, newCurrencyPair)
+		if err = k.MarketMapKeeper.EnableMarket(ctx, newCurrencyPair.String()); err != nil {
+			return types.MarketParam{}, errorsmod.Wrap(
+				types.ErrMarketCouldNotBeEnabled,
+				existingParam.Pair,
+			)
+		}
 	}
 
 	// Generate indexer event.
@@ -109,26 +137,6 @@ func (k Keeper) GetMarketParam(
 
 	k.cdc.MustUnmarshal(b, &market)
 	return market, true
-}
-
-// LoadCurrencyPairIDCache loads the currency pair id cache from the store.
-func (k Keeper) LoadCurrencyPairIDCache(ctx sdk.Context) {
-	marketParamStore := k.getMarketParamStore(ctx)
-
-	iterator := marketParamStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		marketParam := types.MarketParam{}
-		k.cdc.MustUnmarshal(iterator.Value(), &marketParam)
-
-		cp, err := slinky.MarketPairToCurrencyPair(marketParam.Pair)
-		if err == nil {
-			k.currencyPairIDCache.AddCurrencyPair(uint64(marketParam.Id), cp.String())
-		} else {
-			k.Logger(ctx).Error("failed to add currency pair to cache", "pair", marketParam.Pair)
-		}
-	}
 }
 
 // GetAllMarketParams returns all market params.
