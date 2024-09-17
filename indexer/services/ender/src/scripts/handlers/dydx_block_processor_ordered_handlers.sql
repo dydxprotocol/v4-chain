@@ -64,6 +64,8 @@ BEGIN
                 rval[i] = dydx_funding_handler(block_height, block_time, event_data, event_index, transaction_index);
             WHEN '"open_interest_update"'::jsonb THEN
                 rval[i] = dydx_open_interest_update_handler(event_data);
+            WHEN '"upsert_vault"'::jsonb THEN
+                rval[i] = dydx_vault_upsert_handler(block_time, event_data);
             ELSE
                 NULL;
             END CASE;

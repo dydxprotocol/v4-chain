@@ -22,6 +22,7 @@ import {
   PerpetualMarketStatus,
   TimeInForce,
 } from './types';
+import VaultModel from './models/vault-model';
 
 export const BUFFER_ENCODING_UTF_8: BufferEncoding = 'utf-8';
 
@@ -103,6 +104,7 @@ export const SQL_TO_JSON_DEFINED_MODELS = [
   SubaccountModel,
   TransferModel,
   TradingRewardModel,
+  VaultModel,
 ];
 
 export type SpecifiedClobPairStatus =

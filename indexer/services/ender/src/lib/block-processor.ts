@@ -30,6 +30,7 @@ import { TradingRewardsValidator } from '../validators/trading-rewards-validator
 import { TransferValidator } from '../validators/transfer-validator';
 import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
 import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
+import { UpsertVaultValidator } from '../validators/upsert-vault-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
 import { BatchedHandlers } from './batched-handlers';
 import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
@@ -55,6 +56,7 @@ const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorIn
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.DELEVERAGING.toString(), 1)]: DeleveragingValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.LIQUIDITY_TIER.toString(), 2)]: LiquidityTierValidatorV2,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.REGISTER_AFFILIATE.toString(), 1)]: RegisterAffiliateValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPSERT_VAULT.toString(), 1)]: UpsertVaultValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
@@ -62,6 +64,7 @@ const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, Validator
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.TRADING_REWARD.toString(), 1)]: TradingRewardsValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.STATEFUL_ORDER.toString(), 1)]: StatefulOrderValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.OPEN_INTEREST_UPDATE.toString(), 1)]: OpenInterestUpdateValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPSERT_VAULT.toString(), 1)]: UpsertVaultValidator,
 };
 
 function serializeSubtypeAndVersion(

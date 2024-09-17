@@ -32,6 +32,22 @@ export default class VaultModel extends BaseModel {
     };
   }
 
+   /**
+   * A mapping from column name to JSON conversion expected.
+   * See getSqlConversionForDydxModelTypes for valid conversions.
+   *
+   * TODO(IND-239): Ensure that jsonSchema() / sqlToJsonConversions() / model fields match.
+   */
+   static get sqlToJsonConversions() {
+    return {
+      address: 'string',
+      clobPairId: 'string',
+      status: 'string',
+      createdAt: 'date-time',
+      updatedAt: 'date-time',
+    };
+  }
+
   address!: string;
 
   clobPairId!: string;
