@@ -174,7 +174,8 @@ func (k Keeper) GetVaultClobOrders(
 	if err != nil {
 		return orders, err
 	}
-	leveragePpm := lib.BigDivCeil(leverage.Num(), leverage.Denom())
+	leveragePpm := new(big.Int).Mul(leverage.Num(), lib.BigIntOneMillion())
+	leveragePpm = lib.BigDivCeil(leveragePpm, leverage.Denom())
 
 	// Get vault parameters.
 	quotingParams, exists := k.GetVaultQuotingParams(ctx, vaultId)
