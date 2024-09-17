@@ -1974,7 +1974,7 @@ describe('OrderRemoveHandler', () => {
         );
 
         expect(producerSendSpy).not.toHaveBeenCalled();
-        expect(stats.increment).toHaveBeenCalledWith('vulcan.indexer_expired_order_not_found', 1);
+        expect(stats.increment).toHaveBeenCalledWith('vulcan.indexer_expired_order_not_found', 1, { instance: '' });
 
         await Promise.all([
           expectOrderStatus(expectedOrderUuid, OrderStatus.OPEN),
@@ -2117,7 +2117,7 @@ describe('OrderRemoveHandler', () => {
       expect(producerSendSpy).not.toHaveBeenCalled();
       expect(
         stats.increment,
-      ).toHaveBeenCalledWith('vulcan.indexer_expired_order_is_not_expired', 1);
+      ).toHaveBeenCalledWith('vulcan.indexer_expired_order_is_not_expired', 1, { instance: '' });
 
       await Promise.all([
         expectOrderStatus(expectedOrderUuid, OrderStatus.OPEN),
@@ -2282,6 +2282,6 @@ function expectTimingStat(fnName: string) {
   expect(stats.timing).toHaveBeenCalledWith(
     `vulcan.${STATS_FUNCTION_NAME}.timing`,
     expect.any(Number),
-    { className: 'OrderRemoveHandler', fnName },
+    { className: 'OrderRemoveHandler', fnName, instance: '' },
   );
 }

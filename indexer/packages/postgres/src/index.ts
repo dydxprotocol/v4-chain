@@ -50,6 +50,7 @@ export * as PersistentCacheTable from './stores/persistent-cache-table';
 export * as AffiliateReferredUsersTable from './stores/affiliate-referred-users-table';
 export * as FirebaseNotificationTokenTable from './stores/firebase-notification-token-table';
 export * as AffiliateInfoTable from './stores/affiliate-info-table';
+export * as VaultTable from './stores/vault-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';

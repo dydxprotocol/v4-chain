@@ -1,4 +1,4 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { getInstanceId, logger, ParseMessageError } from '@dydxprotocol-indexer/base';
 import {
   ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
@@ -65,6 +65,7 @@ export abstract class Handler {
     return {
       className: this.constructor.name,
       fnName,
+      instance: getInstanceId(),
     };
   }
 }

@@ -88,6 +88,7 @@ func RewardsKeepers(
 			stateStore,
 			statsKeeper,
 			vaultKeeper,
+			affiliatesKeeper,
 			db,
 			cdc,
 		)
