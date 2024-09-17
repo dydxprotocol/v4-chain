@@ -29,7 +29,7 @@ type ClobKeeper interface {
 		status clobtypes.ClobPair_Status,
 	) (clobtypes.ClobPair, error)
 	AcquireNextClobPairID(ctx sdk.Context) uint32
-	ValidateClobPair(ctx sdk.Context, clobPair *clobtypes.ClobPair) error
+	ValidateClobPairCreation(ctx sdk.Context, clobPair *clobtypes.ClobPair) error
 	CreateClobPair(ctx sdk.Context, clobPair clobtypes.ClobPair) error
 }
 

@@ -97,7 +97,7 @@ func (k Keeper) CreateClobPair(
 		SubticksPerTick:           types.SubticksPerTick_LongTail,
 		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
 	}
-	if err := k.ClobKeeper.ValidateClobPair(ctx, &clobPair); err != nil {
+	if err := k.ClobKeeper.ValidateClobPairCreation(ctx, &clobPair); err != nil {
 		return 0, err
 	}
 

@@ -62,7 +62,7 @@ func (k Keeper) CreatePerpetualClobPair(
 		SubticksPerTick:           subticksPerTick,
 		Status:                    status,
 	}
-	if err := k.ValidateClobPair(ctx, &clobPair); err != nil {
+	if err := k.ValidateClobPairCreation(ctx, &clobPair); err != nil {
 		return clobPair, err
 	}
 
@@ -74,18 +74,9 @@ func (k Keeper) CreatePerpetualClobPair(
 	return clobPair, nil
 }
 
-// ValidateClobPair validates a CLOB pair's fields are suitable for CLOB pair creation.
-//
-// Stateful Validation:
-//   - Must be a perpetual CLOB pair with a perpetualId matching a perpetual in the store.
-//
-// Stateless Validation
-//   - `clobPair.Validate()` returns no error.
-func (k Keeper) ValidateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
-	if err := clobPair.Validate(); err != nil {
-		return err
-	}
-
+// ValidateClobPairCreation validates a CLOB pair's fields are suitable for CLOB pair creation
+// and that the perpetual ID is associated with an existing perpetual.
+func (k Keeper) ValidateClobPairCreation(ctx sdk.Context, clobPair *types.ClobPair) error {
 	// If the desired CLOB pair ID is already in use, return an error.
 	if clobPair, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
 		return errorsmod.Wrapf(
@@ -112,6 +103,21 @@ func (k Keeper) ValidateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 			perpetualId,
 			clobPairId,
 		)
+	}
+
+	return k.validateClobPair(ctx, clobPair)
+}
+
+// validateClobPair validates a CLOB pair's fields are suitable for CLOB pair creation.
+//
+// Stateful Validation:
+//   - Must be a perpetual CLOB pair with a perpetualId matching a perpetual in the store.
+//
+// Stateless Validation
+//   - `clobPair.Validate()` returns no error.
+func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
+	if err := clobPair.Validate(); err != nil {
+		return err
 	}
 
 	// TODO(DEC-1535): update this validation when we implement "spot"/"asset" clob pairs.
@@ -557,7 +563,7 @@ func (k Keeper) UpdateClobPair(
 		)
 	}
 
-	if err := k.ValidateClobPair(ctx, &clobPair); err != nil {
+	if err := k.validateClobPair(ctx, &clobPair); err != nil {
 		return err
 	}
 
