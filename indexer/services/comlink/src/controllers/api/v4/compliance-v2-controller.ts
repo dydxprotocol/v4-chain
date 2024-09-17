@@ -1,7 +1,3 @@
-import {
-  ExtendedSecp256k1Signature, Secp256k1, ripemd160, sha256,
-} from '@cosmjs/crypto';
-import { toBech32 } from '@cosmjs/encoding';
 import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
 import { CountryHeaders, isRestrictedCountryHeaders, isWhitelistedAddress } from '@dydxprotocol-indexer/compliance';
 import {
@@ -12,7 +8,6 @@ import {
   WalletFromDatabase,
   WalletTable,
 } from '@dydxprotocol-indexer/postgres';
-import { verifyADR36Amino } from '@keplr-wallet/cosmos';
 import express from 'express';
 import { matchedData } from 'express-validator';
 import _ from 'lodash';
@@ -24,8 +19,10 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
-import { getGeoComplianceReason } from '../../../helpers/compliance/compliance-utils';
-import { DYDX_ADDRESS_PREFIX, GEOBLOCK_REQUEST_TTL_SECONDS } from '../../../lib/constants';
+import {
+  ComplianceAction, getGeoComplianceReason, validateSignature, validateSignatureKeplr,
+} from '../../../helpers/compliance/compliance-utils';
+import { DYDX_ADDRESS_PREFIX } from '../../../lib/constants';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { getIpAddr } from '../../../lib/utils';
@@ -39,12 +36,6 @@ import { ComplianceControllerHelper } from './compliance-controller';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'compliance-v2-controller';
-
-export enum ComplianceAction {
-  CONNECT = 'CONNECT',
-  VALID_SURVEY = 'VALID_SURVEY',
-  INVALID_SURVEY = 'INVALID_SURVEY',
-}
 
 const COMPLIANCE_PROGRESSION: Partial<Record<ComplianceStatus, ComplianceStatus>> = {
   [ComplianceStatus.COMPLIANT]: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
@@ -271,106 +262,6 @@ router.post(
     }
   },
 );
-
-function generateAddress(pubkeyArray: Uint8Array): string {
-  return toBech32('dydx', ripemd160(sha256(pubkeyArray)));
-}
-
-/**
- * Validates a signature by performing various checks including address format,
- * public key correspondence, timestamp validity, and signature verification.
- *
- * @returns {Promise<express.Response | undefined>} Returns undefined if validation
- * is successful. Returns an HTTP response with an error message if validation fails.
- */
-async function validateSignature(
-  res: express.Response,
-  action: ComplianceAction,
-  address: string,
-  timestamp: number,
-  message: string,
-  signedMessage: string,
-  pubkey: string,
-  currentStatus?: string,
-): Promise<express.Response| undefined> {
-  if (!address.startsWith(DYDX_ADDRESS_PREFIX)) {
-    return create4xxResponse(
-      res,
-      `Address ${address} is not a valid dYdX V4 address`,
-    );
-  }
-
-  const pubkeyArray: Uint8Array = new Uint8Array(Buffer.from(pubkey, 'base64'));
-  if (address !== generateAddress(pubkeyArray)) {
-    return create4xxResponse(
-      res,
-      `Address ${address} does not correspond to the pubkey provided ${pubkey}`,
-    );
-  }
-
-  // Verify the timestamp is within GEOBLOCK_REQUEST_TTL_SECONDS seconds of the current time
-  const now = DateTime.now().toSeconds();
-  if (Math.abs(now - timestamp) > GEOBLOCK_REQUEST_TTL_SECONDS) {
-    return create4xxResponse(
-      res,
-      `Timestamp is not within the valid range of ${GEOBLOCK_REQUEST_TTL_SECONDS} seconds`,
-    );
-  }
-
-  // Prepare the message for verification
-  const messageToSign: string = `${message}:${action}"${currentStatus || ''}:${timestamp}`;
-  const messageHash: Uint8Array = sha256(Buffer.from(messageToSign));
-  const signedMessageArray: Uint8Array = new Uint8Array(Buffer.from(signedMessage, 'base64'));
-  const signature: ExtendedSecp256k1Signature = ExtendedSecp256k1Signature
-    .fromFixedLength(signedMessageArray);
-
-  // Verify the signature
-  const isValidSignature: boolean = await Secp256k1.verifySignature(
-    signature,
-    messageHash,
-    pubkeyArray,
-  );
-  if (!isValidSignature) {
-    return create4xxResponse(
-      res,
-      'Signature verification failed',
-    );
-  }
-
-  return undefined;
-}
-
-/**
- * Validates a signature using verifyADR36Amino provided by keplr package.
- *
- * @returns {Promise<express.Response | undefined>} Returns undefined if validation
- * is successful. Returns an HTTP response with an error message if validation fails.
- */
-function validateSignatureKeplr(
-  res:express.Response,
-  address: string,
-  message: string,
-  signedMessage: string,
-  pubkey: string,
-): express.Response | undefined {
-  const messageToSign: string = message;
-
-  const pubKeyUint = new Uint8Array(Buffer.from(pubkey, 'base64'));
-  const signedMessageUint = new Uint8Array(Buffer.from(signedMessage, 'base64'));
-
-  const isVerified = verifyADR36Amino(
-    'dydx', address, messageToSign, pubKeyUint, signedMessageUint, 'secp256k1',
-  );
-
-  if (!isVerified) {
-    return create4xxResponse(
-      res,
-      'Keplr signature verification failed',
-    );
-  }
-
-  return undefined;
-}
 
 async function checkCompliance(
   req: express.Request,

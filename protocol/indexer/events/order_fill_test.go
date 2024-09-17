@@ -1,6 +1,7 @@
 package events_test
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -20,6 +21,7 @@ var (
 	fillAmount            = satypes.BaseQuantums(5)
 	makerFee              = int64(-2)
 	takerFee              = int64(5)
+	affiliateRevShare     = big.NewInt(0)
 )
 
 func TestNewOrderFillEvent_Success(t *testing.T) {
@@ -31,6 +33,7 @@ func TestNewOrderFillEvent_Success(t *testing.T) {
 		takerFee,
 		fillAmount,
 		fillAmount,
+		affiliateRevShare,
 	)
 
 	expectedOrderFillEventProto := &events.OrderFillEventV1{
@@ -38,11 +41,12 @@ func TestNewOrderFillEvent_Success(t *testing.T) {
 		TakerOrder: &events.OrderFillEventV1_Order{
 			Order: &indexerTakerOrder,
 		},
-		FillAmount:       fillAmount.ToUint64(),
-		MakerFee:         makerFee,
-		TakerFee:         takerFee,
-		TotalFilledMaker: fillAmount.ToUint64(),
-		TotalFilledTaker: fillAmount.ToUint64(),
+		FillAmount:        fillAmount.ToUint64(),
+		MakerFee:          makerFee,
+		TakerFee:          takerFee,
+		TotalFilledMaker:  fillAmount.ToUint64(),
+		TotalFilledTaker:  fillAmount.ToUint64(),
+		AffiliateRevShare: affiliateRevShare.Uint64(),
 	}
 	require.Equal(t, expectedOrderFillEventProto, orderFillEvent)
 }
@@ -56,6 +60,7 @@ func TestNewLiquidationOrderFillEvent_Success(t *testing.T) {
 		makerFee,
 		takerFee,
 		fillAmount,
+		affiliateRevShare,
 	)
 
 	expectedLiquidationOrder := events.LiquidationOrderV1{
@@ -71,11 +76,12 @@ func TestNewLiquidationOrderFillEvent_Success(t *testing.T) {
 		TakerOrder: &events.OrderFillEventV1_LiquidationOrder{
 			LiquidationOrder: &expectedLiquidationOrder,
 		},
-		FillAmount:       fillAmount.ToUint64(),
-		MakerFee:         makerFee,
-		TakerFee:         takerFee,
-		TotalFilledMaker: fillAmount.ToUint64(),
-		TotalFilledTaker: fillAmount.ToUint64(),
+		FillAmount:        fillAmount.ToUint64(),
+		MakerFee:          makerFee,
+		TakerFee:          takerFee,
+		TotalFilledMaker:  fillAmount.ToUint64(),
+		TotalFilledTaker:  fillAmount.ToUint64(),
+		AffiliateRevShare: affiliateRevShare.Uint64(),
 	}
 	require.Equal(t, expectedOrderFillEventProto, liquidationOrderFillEvent)
 }

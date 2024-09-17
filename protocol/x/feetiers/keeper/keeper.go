@@ -15,25 +15,28 @@ import (
 
 type (
 	Keeper struct {
-		cdc         codec.BinaryCodec
-		statsKeeper types.StatsKeeper
-		vaultKeeper types.VaultKeeper
-		storeKey    storetypes.StoreKey
-		authorities map[string]struct{}
+		cdc              codec.BinaryCodec
+		statsKeeper      types.StatsKeeper
+		vaultKeeper      types.VaultKeeper
+		storeKey         storetypes.StoreKey
+		authorities      map[string]struct{}
+		affiliatesKeeper types.AffiliatesKeeper
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	statsKeeper types.StatsKeeper,
+	affiliatesKeeper types.AffiliatesKeeper,
 	storeKey storetypes.StoreKey,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:         cdc,
-		statsKeeper: statsKeeper,
-		storeKey:    storeKey,
-		authorities: lib.UniqueSliceToSet(authorities),
+		cdc:              cdc,
+		statsKeeper:      statsKeeper,
+		storeKey:         storeKey,
+		authorities:      lib.UniqueSliceToSet(authorities),
+		affiliatesKeeper: affiliatesKeeper,
 	}
 }
 
@@ -95,6 +98,13 @@ func (k Keeper) getUserFeeTier(ctx sdk.Context, address string) (uint32, *types.
 			break
 		}
 		idx = uint32(i)
+	}
+
+	if idx < types.RefereeStartingFeeTier {
+		_, hasReferree := k.affiliatesKeeper.GetReferredBy(ctx, address)
+		if hasReferree {
+			idx = types.RefereeStartingFeeTier
+		}
 	}
 
 	return idx, tiers[idx]

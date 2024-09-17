@@ -70,7 +70,7 @@ func ListingKeepers(
 				cdc,
 				stakingKeeper,
 			)
-			affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper)
+			affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
 			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 			marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 			pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
@@ -111,6 +111,7 @@ func ListingKeepers(
 				stateStore,
 				statsKeeper,
 				vaultKeeper,
+				affiliatesKeeper,
 				db,
 				cdc,
 			)
@@ -150,6 +151,7 @@ func ListingKeepers(
 				statsKeeper,
 				rewardsKeeper,
 				subaccountsKeeper,
+				revShareKeeper,
 				indexerEventManager,
 				transientStoreKey,
 			)

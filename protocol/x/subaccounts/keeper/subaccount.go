@@ -445,11 +445,9 @@ func (k Keeper) UpdateSubaccounts(
 		if lib.IsDeliverTxMode(ctx) && k.GetFullNodeStreamingManager().Enabled() {
 			if k.GetFullNodeStreamingManager().TracksSubaccountId(*u.SettledSubaccount.Id) {
 				subaccountUpdate := GenerateStreamSubaccountUpdate(u, fundingPayments)
-				k.SendFinalizedSubaccountUpdates(
+				k.GetFullNodeStreamingManager().StageFinalizeBlockSubaccountUpdate(
 					ctx,
-					[]types.StreamSubaccountUpdate{
-						subaccountUpdate,
-					},
+					subaccountUpdate,
 				)
 			}
 		}

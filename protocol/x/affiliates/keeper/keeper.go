@@ -11,17 +11,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 )
 
 type (
 	Keeper struct {
-		cdc            codec.BinaryCodec
-		storeKey       storetypes.StoreKey
-		authorities    map[string]struct{}
-		statsKeeper    types.StatsKeeper
-		revShareKeeper types.RevShareKeeper
+		cdc                 codec.BinaryCodec
+		storeKey            storetypes.StoreKey
+		authorities         map[string]struct{}
+		statsKeeper         types.StatsKeeper
+		revShareKeeper      types.RevShareKeeper
+		indexerEventManager indexer_manager.IndexerEventManager
 	}
 )
 
@@ -30,12 +33,14 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	authorities []string,
 	statsKeeper types.StatsKeeper,
+	indexerEventManager indexer_manager.IndexerEventManager,
 ) *Keeper {
 	return &Keeper{
-		cdc:         cdc,
-		storeKey:    storeKey,
-		authorities: lib.UniqueSliceToSet(authorities),
-		statsKeeper: statsKeeper,
+		cdc:                 cdc,
+		storeKey:            storeKey,
+		authorities:         lib.UniqueSliceToSet(authorities),
+		statsKeeper:         statsKeeper,
+		indexerEventManager: indexerEventManager,
 	}
 }
 
@@ -67,7 +72,17 @@ func (k Keeper) RegisterAffiliate(
 			referee, affiliateAddr)
 	}
 	prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredByKeyPrefix)).Set([]byte(referee), []byte(affiliateAddr))
-	// TODO(OTE-696): Emit indexer event.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeRegisterAffiliate,
+		indexerevents.RegisterAffiliateEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewRegisterAffiliateEventV1(
+				referee,
+				affiliateAddr,
+			),
+		),
+	)
 	return nil
 }
 
@@ -220,13 +235,59 @@ func (k Keeper) GetTierForAffiliate(
 
 // UpdateAffiliateTiers updates the affiliate tiers.
 // Used primarily through governance.
-func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.AffiliateTiers) {
+func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.AffiliateTiers) error {
 	store := ctx.KVStore(k.storeKey)
-	// TODO(OTE-779): Check strictly increasing volume and
-	// staking requirements hold in UpdateAffiliateTiers
-	store.Set([]byte(types.AffiliateTiersKey), k.cdc.MustMarshal(&affiliateTiers))
+	affiliateTiersBytes := k.cdc.MustMarshal(&affiliateTiers)
+	tiers := affiliateTiers.GetTiers()
+	// start at 1, since 0 is the default tier.
+	for i := 1; i < len(tiers); i++ {
+		if tiers[i].ReqReferredVolumeQuoteQuantums <= tiers[i-1].ReqReferredVolumeQuoteQuantums ||
+			tiers[i].ReqStakedWholeCoins <= tiers[i-1].ReqStakedWholeCoins {
+			return errorsmod.Wrapf(types.ErrInvalidAffiliateTiers,
+				"tiers values must be strictly increasing")
+		}
+	}
+	store.Set([]byte(types.AffiliateTiersKey), affiliateTiersBytes)
+	return nil
 }
 
 func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
 	k.revShareKeeper = revShareKeeper
+}
+
+func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
+	return k.indexerEventManager
+}
+
+func (k Keeper) AggregateAffiliateReferredVolumeForFills(
+	ctx sdk.Context,
+) error {
+	blockStats := k.statsKeeper.GetBlockStats(ctx)
+	referredByCache := make(map[string]string)
+	for _, fill := range blockStats.Fills {
+		// Add taker's referred volume to the cache
+		if _, ok := referredByCache[fill.Taker]; !ok {
+			referredByAddrTaker, found := k.GetReferredBy(ctx, fill.Taker)
+			if !found {
+				continue
+			}
+			referredByCache[fill.Taker] = referredByAddrTaker
+		}
+		if err := k.AddReferredVolume(ctx, referredByCache[fill.Taker], lib.BigU(fill.Notional)); err != nil {
+			return err
+		}
+
+		// Add maker's referred volume to the cache
+		if _, ok := referredByCache[fill.Maker]; !ok {
+			referredByAddrMaker, found := k.GetReferredBy(ctx, fill.Maker)
+			if !found {
+				continue
+			}
+			referredByCache[fill.Maker] = referredByAddrMaker
+		}
+		if err := k.AddReferredVolume(ctx, referredByCache[fill.Maker], lib.BigU(fill.Notional)); err != nil {
+			return err
+		}
+	}
+	return nil
 }

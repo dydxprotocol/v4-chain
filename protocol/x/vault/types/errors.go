@@ -120,9 +120,14 @@ var (
 		23,
 		"Locked shares exceeds owner shares",
 	)
-	ErrInvalidSharesToWithdraw = errorsmod.Register(
+	ErrEmptyOperator = errorsmod.Register(
 		ModuleName,
 		24,
+		"Empty operator address",
+	)
+	ErrInvalidSharesToWithdraw = errorsmod.Register(
+		ModuleName,
+		25,
 		"Shares to withdraw must be positive and less than or equal to total shares",
 	)
 )

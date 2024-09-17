@@ -165,3 +165,35 @@ func TestGetVaultQuotingParams(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSetOperatorParams(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.VaultKeeper
+
+	// At genesis, operator defaults to gov module account.
+	params := k.GetOperatorParams(ctx)
+	require.Equal(
+		t,
+		types.OperatorParams{
+			Operator: constants.GovAuthority,
+		},
+		params,
+	)
+
+	// Set operator to Alice.
+	newParams := types.OperatorParams{
+		Operator: constants.AliceAccAddress.String(),
+	}
+	err := k.SetOperatorParams(ctx, newParams)
+	require.NoError(t, err)
+	require.Equal(t, newParams, k.GetOperatorParams(ctx))
+
+	// Set invalid operator and get.
+	invalidParams := types.OperatorParams{
+		Operator: "",
+	}
+	err = k.SetOperatorParams(ctx, invalidParams)
+	require.Error(t, err)
+	require.Equal(t, newParams, k.GetOperatorParams(ctx))
+}

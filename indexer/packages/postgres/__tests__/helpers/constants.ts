@@ -60,6 +60,8 @@ import {
   TransferCreateObject,
   WalletCreateObject,
   PersistentCacheCreateObject,
+  VaultCreateObject,
+  VaultStatus,
 } from '../../src/types';
 import { denomToHumanReadableConversion } from './conversion-helpers';
 
@@ -981,4 +983,25 @@ export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
   totalReferredUsers: 5,
   referredNetProtocolEarnings: '21.00',
   firstReferralBlockHeight: '11',
+};
+
+// ==============  Tokens  =============
+
+export const defaultFirebaseNotificationToken = {
+  token: 'DEFAULT_TOKEN',
+  address: defaultAddress,
+  language: 'en',
+  updatedAt: createdDateTime.toISO(),
+};
+
+// ==============  Vaults  =============
+
+export const defaultVaultAddress: string = 'dydx1pzaql7h3tkt9uet8yht80me5td6gh0aprf58yk';
+
+export const defaultVault: VaultCreateObject = {
+  address: defaultVaultAddress,
+  clobPairId: '0',
+  status: VaultStatus.QUOTING,
+  createdAt: createdDateTime.toISO(),
+  updatedAt: createdDateTime.toISO(),
 };

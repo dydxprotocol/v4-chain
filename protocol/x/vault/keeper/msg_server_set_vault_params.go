@@ -15,16 +15,17 @@ func (k msgServer) SetVaultParams(
 	goCtx context.Context,
 	msg *types.MsgSetVaultParams,
 ) (*types.MsgSetVaultParamsResponse, error) {
-	// Check if authority is valid.
-	if !k.HasAuthority(msg.Authority) {
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+	operator := k.GetOperatorParams(ctx).Operator
+
+	// Check if authority is valid (must be a module authority or operator).
+	if !k.HasAuthority(msg.Authority) && msg.Authority != operator {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
 			"invalid authority %s",
 			msg.Authority,
 		)
 	}
-
-	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	// Validate parameters.
 	if err := msg.VaultParams.Validate(); err != nil {

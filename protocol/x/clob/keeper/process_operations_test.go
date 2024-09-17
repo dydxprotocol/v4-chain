@@ -2635,6 +2635,7 @@ func setupNewMockEventManager(
 						match.MakerFee,
 						match.TakerFee,
 						match.TotalFilledTaker,
+						big.NewInt(0),
 					),
 				),
 			).Return()
@@ -2654,6 +2655,7 @@ func setupNewMockEventManager(
 						match.TakerFee,
 						match.TotalFilledMaker,
 						match.TotalFilledTaker,
+						big.NewInt(0),
 					),
 				),
 			).Return()
