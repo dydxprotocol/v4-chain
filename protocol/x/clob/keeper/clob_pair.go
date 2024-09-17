@@ -90,27 +90,31 @@ func (k Keeper) CreatePerpetualClobPair(
 		return clobPair, err
 	}
 
-	k.createClobPair(ctx, clobPair)
-	k.GetIndexerEventManager().AddTxnEvent(
-		ctx,
-		indexerevents.SubtypePerpetualMarket,
-		indexerevents.PerpetualMarketEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				perpetualId,
-				clobPairId,
-				perpetual.Params.Ticker,
-				perpetual.Params.MarketId,
-				status,
-				quantumConversionExponent,
-				perpetual.Params.AtomicResolution,
-				subticksPerTick,
-				stepSizeBaseQuantums.ToUint64(),
-				perpetual.Params.LiquidityTier,
-				perpetual.Params.MarketType,
+	// Only persist the CLOB pair if we are in deliverTx. This is needed so that all
+	// in memory data structures don't get populated during simulation
+	if lib.IsDeliverTxMode(ctx) {
+		k.createClobPair(ctx, clobPair)
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypePerpetualMarket,
+			indexerevents.PerpetualMarketEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewPerpetualMarketCreateEvent(
+					perpetualId,
+					clobPairId,
+					perpetual.Params.Ticker,
+					perpetual.Params.MarketId,
+					status,
+					quantumConversionExponent,
+					perpetual.Params.AtomicResolution,
+					subticksPerTick,
+					stepSizeBaseQuantums.ToUint64(),
+					perpetual.Params.LiquidityTier,
+					perpetual.Params.MarketType,
+				),
 			),
-		),
-	)
+		)
+	}
 
 	return clobPair, nil
 }

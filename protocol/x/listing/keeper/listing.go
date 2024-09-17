@@ -118,11 +118,11 @@ func (k Keeper) CreatePerpetual(
 	}
 	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, marketMapPair.String())
 	if err != nil {
-		return 0, err
+		return 0, types.ErrMarketNotFound
 	}
 	metadata, err := tickermetadata.DyDxFromJSONString(marketMapDetails.Ticker.Metadata_JSON)
 	if err != nil {
-		return 0, err
+		return 0, types.ErrInvalidMarketMapTickerMetadata
 	}
 	if metadata.ReferencePrice == 0 {
 		return 0, types.ErrReferencePriceZero
