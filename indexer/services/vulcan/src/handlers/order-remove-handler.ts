@@ -1,4 +1,6 @@
-import { logger, runFuncWithTimingStat, stats } from '@dydxprotocol-indexer/base';
+import {
+  logger, getInstanceId, runFuncWithTimingStat, stats,
+} from '@dydxprotocol-indexer/base';
 import { KafkaTopics, SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION, getTriggerPrice } from '@dydxprotocol-indexer/kafka';
 import {
   blockHeightRefresher,
@@ -34,6 +36,7 @@ import {
 import {
   OffChainUpdateV1,
   IndexerOrder,
+  IndexerSubaccountId,
   OrderRemoveV1,
   OrderRemovalReason,
   OrderRemoveV1_OrderRemovalStatus,
@@ -89,7 +92,11 @@ export class OrderRemoveHandler extends Handler {
       reason === OrderRemovalReason.ORDER_REMOVAL_REASON_INDEXER_EXPIRED &&
       !(await this.isOrderExpired(orderRemove))
     ) {
-      stats.increment(`${config.SERVICE_NAME}.order_remove_reason_indexer_temp_expired`, 1);
+      stats.increment(
+        `${config.SERVICE_NAME}.order_remove_reason_indexer_temp_expired`,
+        1,
+        { instance: getInstanceId() },
+      );
       logger.info({
         at: 'OrderRemoveHandler#handle',
         message: 'Order was expired by Indexer but is no longer expired. Ignoring.',
@@ -115,7 +122,11 @@ export class OrderRemoveHandler extends Handler {
     if (
       orderRemove.reason === OrderRemovalReason.ORDER_REMOVAL_REASON_INDEXER_EXPIRED
     ) {
-      stats.increment(`${config.SERVICE_NAME}.order_remove_reason_indexer_expired`, 1);
+      stats.increment(
+        `${config.SERVICE_NAME}.order_remove_reason_indexer_expired`,
+        1,
+        { instance: getInstanceId() },
+      );
       logger.info({
         at: 'OrderRemoveHandler#handle',
         message: 'Order was expired by Indexer',
@@ -220,6 +231,9 @@ export class OrderRemoveHandler extends Handler {
     }
 
     const subaccountMessage: Message = {
+      key: Buffer.from(Uint8Array.from(
+        IndexerSubaccountId.encode(orderRemove.removedOrderId!.subaccountId!).finish(),
+      )),
       value: this.createSubaccountWebsocketMessageFromPostgresOrder(
         order,
         orderRemove,
@@ -282,6 +296,9 @@ export class OrderRemoveHandler extends Handler {
           this.generateTimingStatsOptions('find_order'),
         );
         const subaccountMessage: Message = {
+          key: Buffer.from(Uint8Array.from(
+            IndexerSubaccountId.encode(orderRemove.removedOrderId!.subaccountId!).finish(),
+          )),
           value: this.createSubaccountWebsocketMessageFromOrderRemoveMessage(
             canceledOrder,
             orderRemove,
@@ -321,6 +338,9 @@ export class OrderRemoveHandler extends Handler {
     }
 
     const subaccountMessage: Message = {
+      key: Buffer.from(Uint8Array.from(
+        IndexerSubaccountId.encode(orderRemove.removedOrderId!.subaccountId!).finish(),
+      )),
       value: this.createSubaccountWebsocketMessageFromRemoveOrderResult(
         removeOrderResult,
         canceledOrder,
@@ -439,7 +459,11 @@ export class OrderRemoveHandler extends Handler {
       this.generateTimingStatsOptions('find_order_for_indexer_expired_expiry_verification'),
     );
     if (redisOrder === null) {
-      stats.increment(`${config.SERVICE_NAME}.indexer_expired_order_not_found`, 1);
+      stats.increment(
+        `${config.SERVICE_NAME}.indexer_expired_order_not_found`,
+        1,
+        { instance: getInstanceId() },
+      );
       logger.info({
         at: 'orderRemoveHandler#isOrderExpired',
         message: 'Could not find order for Indexer-expired expiry verification',
@@ -463,7 +487,11 @@ export class OrderRemoveHandler extends Handler {
 
     // We know the order is short-term, so the goodTilBlock must exist.
     if (order.goodTilBlock! >= +block.blockHeight) {
-      stats.increment(`${config.SERVICE_NAME}.indexer_expired_order_is_not_expired`, 1);
+      stats.increment(
+        `${config.SERVICE_NAME}.indexer_expired_order_is_not_expired`,
+        1,
+        { instance: getInstanceId() },
+      );
       logger.info({
         at: 'orderRemoveHandler#isOrderExpired',
         message: 'Indexer marked order that is not yet expired as expired',

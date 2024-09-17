@@ -1,4 +1,6 @@
-import { logger, runFuncWithTimingStat, stats } from '@dydxprotocol-indexer/base';
+import {
+  logger, getInstanceId, runFuncWithTimingStat, stats,
+} from '@dydxprotocol-indexer/base';
 import { createSubaccountWebsocketMessage, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
   blockHeightRefresher,
@@ -17,6 +19,7 @@ import {
 import { getOrderIdHash, isStatefulOrder, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
+  IndexerSubaccountId,
   OffChainUpdateV1,
   OrderPlaceV1,
   OrderPlaceV1_OrderPlacementStatus,
@@ -88,7 +91,11 @@ export class OrderPlaceHandler extends Handler {
     });
 
     if (placeOrderResult.replaced) {
-      stats.increment(`${config.SERVICE_NAME}.place_order_handler.replaced_order`, 1);
+      stats.increment(
+        `${config.SERVICE_NAME}.place_order_handler.replaced_order`,
+        1,
+        { instance: getInstanceId() },
+      );
     }
 
     // TODO(CLOB-597): Remove this logic and log erorrs once best-effort-open is not sent for
@@ -116,6 +123,9 @@ export class OrderPlaceHandler extends Handler {
         await this.sendCachedOrderUpdate(orderUuid, headers);
       }
       const subaccountMessage: Message = {
+        key: Buffer.from(Uint8Array.from(
+          IndexerSubaccountId.encode(redisOrder.order!.orderId!.subaccountId!).finish(),
+        )),
         value: createSubaccountWebsocketMessage(
           redisOrder,
           dbOrder,

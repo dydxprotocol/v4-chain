@@ -11,6 +11,7 @@ import { PerpetualMarketStatus, PerpetualMarketType } from './perpetual-market-t
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
 import { TradingRewardAggregationPeriod } from './trading-reward-aggregation-types';
+import { VaultStatus } from './vault-types';
 
 type IsoString = string;
 
@@ -29,7 +30,6 @@ export interface WalletFromDatabase {
   address: string,
   totalTradingRewards: string,
   totalVolume: string,
-  isWhitelistAffiliate: boolean,
 }
 
 export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase {
@@ -114,7 +114,7 @@ export interface FillFromDatabase {
   orderId?: string,
   clientMetadata?: string,
   fee: string,
-  affiliateEarnedRevShare: string,
+  affiliateRevShare: string,
 }
 
 export interface BlockFromDatabase {
@@ -293,6 +293,21 @@ export interface AffiliateReferredUserFromDatabase {
   affiliateAddress: string,
   refereeAddress: string,
   referredAtBlock: string,
+}
+
+export interface FirebaseNotificationTokenFromDatabase {
+  address: string,
+  token: string,
+  updatedAt: IsoString,
+  language: string,
+}
+
+export interface VaultFromDatabase {
+  address: string,
+  clobPairId: string,
+  status: VaultStatus,
+  createdAt: IsoString,
+  updatedAt: IsoString,
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:

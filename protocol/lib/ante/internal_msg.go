@@ -117,6 +117,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		// revshare
 		*revshare.MsgSetMarketMapperRevenueShare,
 		*revshare.MsgSetMarketMapperRevShareDetailsForMarket,
+		*revshare.MsgUpdateUnconditionalRevShareConfig,
 
 		// rewards
 		*rewards.MsgUpdateParams,
@@ -128,9 +129,9 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*stats.MsgUpdateParams,
 
 		// vault
-		*vault.MsgSetVaultParams,
 		*vault.MsgUnlockShares,
 		*vault.MsgUpdateDefaultQuotingParams,
+		*vault.MsgUpdateOperatorParams,
 
 		// vest
 		*vest.MsgDeleteVestEntry,

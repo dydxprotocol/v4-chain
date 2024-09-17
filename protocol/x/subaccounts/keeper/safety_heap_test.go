@@ -50,7 +50,7 @@ func TestSafetyHeapInsertRemoveMin(t *testing.T) {
 
 	for iter := 0; iter < 100; iter++ {
 		// Setup keeper state and test parameters.
-		ctx, subaccountsKeeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
+		ctx, subaccountsKeeper, _, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
 
 		// Shuffle the subaccounts so that insertion order is random.
 		slices.Shuffle(allSubaccounts)
@@ -136,7 +136,7 @@ func TestSafetyHeapInsertRemoveIndex(t *testing.T) {
 
 	for iter := 0; iter < 100; iter++ {
 		// Setup keeper state and test parameters.
-		ctx, subaccountsKeeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
+		ctx, subaccountsKeeper, _, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
 
 		// Shuffle the subaccounts so that insertion order is random.
 		slices.Shuffle(allSubaccounts)

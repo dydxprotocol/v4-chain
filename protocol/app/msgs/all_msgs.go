@@ -257,6 +257,8 @@ var (
 		"/dydxprotocol.vault.MsgUnlockSharesResponse":               {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": {},
+		"/dydxprotocol.vault.MsgUpdateOperatorParams":               {},
+		"/dydxprotocol.vault.MsgUpdateOperatorParamsResponse":       {},
 		"/dydxprotocol.vault.MsgUpdateParams":                       {},
 
 		// vest
@@ -270,6 +272,8 @@ var (
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse":             {},
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarket":         {},
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse": {},
+		"/dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfig":               {},
+		"/dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfigResponse":       {},
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         {},

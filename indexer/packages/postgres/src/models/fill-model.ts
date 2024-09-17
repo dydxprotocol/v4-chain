@@ -69,7 +69,7 @@ export default class FillModel extends Model {
         'createdAt',
         'createdAtHeight',
         'fee',
-        'affiliateEarnedRevShare',
+        'affiliateRevShare',
       ],
       properties: {
         id: { type: 'string', format: 'uuid' },
@@ -87,7 +87,7 @@ export default class FillModel extends Model {
         createdAtHeight: { type: 'string', pattern: IntegerPattern },
         clientMetadata: { type: ['string', 'null'], pattern: IntegerPattern },
         fee: { type: 'string', pattern: NumericPattern },
-        affiliateEarnedRevShare: { type: 'string', pattern: NonNegativeNumericPattern },
+        affiliateRevShare: { type: 'string', pattern: NonNegativeNumericPattern },
       },
     };
   }
@@ -116,7 +116,7 @@ export default class FillModel extends Model {
       createdAtHeight: 'string',
       clientMetadata: 'string',
       fee: 'string',
-      affiliateEarnedRevShare: 'string',
+      affiliateRevShare: 'string',
     };
   }
 
@@ -152,5 +152,5 @@ export default class FillModel extends Model {
 
   fee!: string;
 
-  affiliateEarnedRevShare!: string;
+  affiliateRevShare!: string;
 }

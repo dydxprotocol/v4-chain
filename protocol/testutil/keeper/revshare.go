@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 
 	storetypes "cosmossdk.io/store/types"
@@ -30,8 +31,31 @@ func RevShareKeepers(t testing.TB) (
 			transientStoreKey storetypes.StoreKey,
 		) []GenesisInitializer {
 			// Define necessary keepers here for unit tests
+			epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+
+			accountsKeeper, _ := createAccountKeeper(
+				stateStore,
+				db,
+				cdc,
+				registry)
+			bankKeeper, _ := createBankKeeper(stateStore, db, cdc, accountsKeeper)
+			stakingKeeper, _ := createStakingKeeper(
+				stateStore,
+				db,
+				cdc,
+				accountsKeeper,
+				bankKeeper,
+			)
+			statsKeeper, _ := createStatsKeeper(
+				stateStore,
+				epochsKeeper,
+				db,
+				cdc,
+				stakingKeeper,
+			)
+			affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
 			keeper, storeKey, mockTimeProvider =
-				createRevShareKeeper(stateStore, db, cdc)
+				createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 
 			return []GenesisInitializer{keeper}
 		},
@@ -44,6 +68,7 @@ func createRevShareKeeper(
 	stateStore storetypes.CommitMultiStore,
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
+	affiliatesKeeper *affiliateskeeper.Keeper,
 ) (
 	*keeper.Keeper,
 	storetypes.StoreKey,
@@ -57,6 +82,7 @@ func createRevShareKeeper(
 		cdc, storeKey, []string{
 			lib.GovModuleAddress.String(),
 		},
+		*affiliatesKeeper,
 	)
 
 	return k, storeKey, mockTimeProvider

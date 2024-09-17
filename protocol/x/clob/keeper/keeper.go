@@ -3,8 +3,9 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"sync/atomic"
+
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
@@ -41,6 +42,7 @@ type (
 		pricesKeeper      types.PricesKeeper
 		statsKeeper       types.StatsKeeper
 		rewardsKeeper     types.RewardsKeeper
+		revshareKeeper    types.RevShareKeeper
 
 		indexerEventManager indexer_manager.IndexerEventManager
 		streamingManager    streamingtypes.FullNodeStreamingManager
@@ -90,6 +92,7 @@ func NewKeeper(
 	clobFlags flags.ClobFlags,
 	placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg],
 	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
+	revshareKeeper types.RevShareKeeper,
 ) *Keeper {
 	keeper := &Keeper{
 		cdc:                     cdc,
@@ -121,6 +124,7 @@ func NewKeeper(
 		Flags:                       clobFlags,
 		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
 		DaemonLiquidationInfo:       daemonLiquidationInfo,
+		revshareKeeper:              revshareKeeper,
 	}
 
 	// Provide the keeper to the MemClob.
@@ -251,9 +255,31 @@ func (k *Keeper) SetAnteHandler(anteHandler sdk.AnteHandler) {
 	k.antehandler = anteHandler
 }
 
+func (k Keeper) GetSubaccountSnapshotsForInitStreams(
+	ctx sdk.Context,
+) (
+	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
+) {
+	lib.AssertCheckTxMode(ctx)
+
+	return k.GetFullNodeStreamingManager().GetSubaccountSnapshotsForInitStreams(
+		func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate {
+			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(
+				ctx,
+				subaccountId,
+				true,
+			)
+			return &subaccountUpdate
+		},
+	)
+}
+
 // InitializeNewStreams initializes new streams for all uninitialized clob pairs
 // by sending the corresponding orderbook snapshots.
-func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
+func (k Keeper) InitializeNewStreams(
+	ctx sdk.Context,
+	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
+) {
 	streamingManager := k.GetFullNodeStreamingManager()
 
 	streamingManager.InitializeNewStreams(
@@ -263,14 +289,7 @@ func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
 				clobPairId,
 			)
 		},
-		func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate {
-			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(
-				ctx,
-				subaccountId,
-				true,
-			)
-			return &subaccountUpdate
-		},
+		subaccountSnapshots,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)

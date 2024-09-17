@@ -60,6 +60,8 @@ import {
   TransferCreateObject,
   WalletCreateObject,
   PersistentCacheCreateObject,
+  VaultCreateObject,
+  VaultStatus,
 } from '../../src/types';
 import { denomToHumanReadableConversion } from './conversion-helpers';
 
@@ -162,28 +164,24 @@ export const defaultWallet: WalletCreateObject = {
   address: defaultAddress,
   totalTradingRewards: denomToHumanReadableConversion(0),
   totalVolume: '0',
-  isWhitelistAffiliate: false,
 };
 
 export const defaultWallet2: WalletCreateObject = {
   address: defaultWalletAddress,
   totalTradingRewards: denomToHumanReadableConversion(1),
   totalVolume: '0',
-  isWhitelistAffiliate: false,
 };
 
 export const vaultWallet: WalletCreateObject = {
   address: vaultAddress,
   totalTradingRewards: denomToHumanReadableConversion(0),
   totalVolume: '0',
-  isWhitelistAffiliate: false,
 };
 
 export const defaultWallet3: WalletCreateObject = {
   address: defaultAddress2,
   totalTradingRewards: denomToHumanReadableConversion(0),
   totalVolume: '0',
-  isWhitelistAffiliate: true,
 };
 
 // ============== Assets ==============
@@ -556,7 +554,7 @@ export const defaultFill: FillCreateObject = {
   createdAtHeight: createdHeight,
   clientMetadata: '0',
   fee: '1.1',
-  affiliateEarnedRevShare: '1.1',
+  affiliateRevShare: '1.1',
 };
 
 export const isolatedMarketFill: FillCreateObject = {
@@ -575,7 +573,7 @@ export const isolatedMarketFill: FillCreateObject = {
   createdAtHeight: createdHeight,
   clientMetadata: '0',
   fee: '1.1',
-  affiliateEarnedRevShare: '0',
+  affiliateRevShare: '0',
 };
 
 export const isolatedMarketFill2: FillCreateObject = {
@@ -594,7 +592,7 @@ export const isolatedMarketFill2: FillCreateObject = {
   createdAtHeight: createdHeight,
   clientMetadata: '0',
   fee: '1.1',
-  affiliateEarnedRevShare: '0',
+  affiliateRevShare: '0',
 };
 
 // ============== Transfers ==============
@@ -985,4 +983,25 @@ export const defaultAffiliateInfo1: AffiliateInfoCreateObject = {
   totalReferredUsers: 5,
   referredNetProtocolEarnings: '21.00',
   firstReferralBlockHeight: '11',
+};
+
+// ==============  Tokens  =============
+
+export const defaultFirebaseNotificationToken = {
+  token: 'DEFAULT_TOKEN',
+  address: defaultAddress,
+  language: 'en',
+  updatedAt: createdDateTime.toISO(),
+};
+
+// ==============  Vaults  =============
+
+export const defaultVaultAddress: string = 'dydx1pzaql7h3tkt9uet8yht80me5td6gh0aprf58yk';
+
+export const defaultVault: VaultCreateObject = {
+  address: defaultVaultAddress,
+  clobPairId: '0',
+  status: VaultStatus.QUOTING,
+  createdAt: createdDateTime.toISO(),
+  updatedAt: createdDateTime.toISO(),
 };

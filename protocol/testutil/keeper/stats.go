@@ -8,6 +8,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	epochskeeper "github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -18,6 +19,7 @@ func createStatsKeeper(
 	epochsKeeper *epochskeeper.Keeper,
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
+	stakingKeeper *stakingkeeper.Keeper,
 ) (*keeper.Keeper, storetypes.StoreKey) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	transientStoreKey := storetypes.NewTransientStoreKey(types.TransientStoreKey)
@@ -38,6 +40,7 @@ func createStatsKeeper(
 		storeKey,
 		transientStoreKey,
 		authorities,
+		stakingKeeper,
 	)
 
 	return k, storeKey
