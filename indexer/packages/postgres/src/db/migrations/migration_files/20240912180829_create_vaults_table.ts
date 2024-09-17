@@ -6,7 +6,7 @@ export async function up(knex: Knex): Promise<void> {
     table.bigInteger('clobPairId').notNullable(); // clob pair id for vault
     table.enum('status', [
       'DEACTIVATED',
-      'STANDBY',
+      'STAND_BY',
       'QUOTING',
       'CLOSE_ONLY',
     ]).notNullable(); // quoting status of vault
