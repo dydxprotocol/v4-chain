@@ -658,12 +658,14 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 						RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
 						QuoteQuantums:     big.NewInt(2_500_000),
+						RevSharePpm:       250_000, // 25%
 					},
 					{
 						Recipient:         constants.AliceAccAddress.String(),
 						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
 						RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
 						QuoteQuantums:     big.NewInt(1_200_000),
+						RevSharePpm:       100_000, // 10%
 					},
 				},
 				AffiliateRevShare: &types.RevShare{
@@ -671,6 +673,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
 					QuoteQuantums:     big.NewInt(2_500_000),
+					RevSharePpm:       250_000, // 25%
 				},
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
 					types.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(1_200_000),
