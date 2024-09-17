@@ -15,6 +15,7 @@ import PerpetualPositionModel from './models/perpetual-position-model';
 import SubaccountModel from './models/subaccount-model';
 import TradingRewardModel from './models/trading-reward-model';
 import TransferModel from './models/transfer-model';
+import VaultModel from './models/vault-model';
 import {
   APITimeInForce,
   CandleResolution,
@@ -22,7 +23,6 @@ import {
   PerpetualMarketStatus,
   TimeInForce,
 } from './types';
-import VaultModel from './models/vault-model';
 
 export const BUFFER_ENCODING_UTF_8: BufferEncoding = 'utf-8';
 
