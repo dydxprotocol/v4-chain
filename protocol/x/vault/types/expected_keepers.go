@@ -46,6 +46,10 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		id uint32,
 	) (val perptypes.Perpetual, err error)
+	GetLiquidityTier(
+		ctx sdk.Context,
+		id uint32,
+	) (val perptypes.LiquidityTier, err error)
 }
 
 type PricesKeeper interface {

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -11,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/vault"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
@@ -154,31 +156,11 @@ func (k Keeper) GetVaultClobOrders(
 	vaultId types.VaultId,
 ) (orders []*clobtypes.Order, err error) {
 	// Get clob pair, perpetual, market parameter, and market price that correspond to this vault.
-	clobPair, exists := k.clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(vaultId.Number))
-	if !exists || clobPair.Status == clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT {
+	clobPair, perpetual, marketParam, marketPrice, err := k.GetVaultClobPerpAndMarket(ctx, vaultId)
+	if errors.Is(err, types.ErrClobPairNotFound) || clobPair.Status == clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT {
 		return []*clobtypes.Order{}, nil
-	}
-	perpId := clobPair.Metadata.(*clobtypes.ClobPair_PerpetualClobMetadata).PerpetualClobMetadata.PerpetualId
-	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpId)
-	if err != nil {
-		return orders, errorsmod.Wrap(
-			err,
-			fmt.Sprintf("VaultId: %v", vaultId),
-		)
-	}
-	marketParam, exists := k.pricesKeeper.GetMarketParam(ctx, perpetual.Params.MarketId)
-	if !exists {
-		return orders, errorsmod.Wrap(
-			types.ErrMarketParamNotFound,
-			fmt.Sprintf("VaultId: %v", vaultId),
-		)
-	}
-	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId)
-	if err != nil {
-		return orders, errorsmod.Wrap(
-			err,
-			fmt.Sprintf("VaultId: %v", vaultId),
-		)
+	} else if err != nil {
+		return orders, err
 	} else if marketPrice.Price == 0 {
 		// Market price can be zero upon market initialization or due to invalid exchange config.
 		return orders, errorsmod.Wrap(
@@ -187,26 +169,13 @@ func (k Keeper) GetVaultClobOrders(
 		)
 	}
 
-	// Calculate leverage = open notional / equity.
-	equity, err := k.GetVaultEquity(ctx, vaultId)
+	// Get vault leverage and equity.
+	leverage, equity, err := k.GetVaultLeverageAndEquity(ctx, vaultId, perpetual, marketPrice)
 	if err != nil {
 		return orders, err
 	}
-	if equity.Sign() <= 0 {
-		return orders, errorsmod.Wrap(
-			types.ErrNonPositiveEquity,
-			fmt.Sprintf("VaultId: %v", vaultId),
-		)
-	}
-	inventory := k.GetVaultInventoryInPerpetual(ctx, vaultId, perpId)
-	openNotional := lib.BaseToQuoteQuantums(
-		inventory,
-		perpetual.Params.AtomicResolution,
-		marketPrice.GetPrice(),
-		marketPrice.GetExponent(),
-	)
-	leveragePpm := new(big.Int).Mul(openNotional, lib.BigIntOneMillion())
-	leveragePpm.Quo(leveragePpm, equity)
+	leveragePpm := new(big.Int).Mul(leverage.Num(), lib.BigIntOneMillion())
+	leveragePpm = lib.BigDivCeil(leveragePpm, leverage.Denom())
 
 	// Get vault parameters.
 	quotingParams, exists := k.GetVaultQuotingParams(ctx, vaultId)
@@ -247,10 +216,7 @@ func (k Keeper) GetVaultClobOrders(
 	}
 
 	// Calculate spread.
-	spreadPpm := lib.BigU(lib.Max(
-		quotingParams.SpreadMinPpm,
-		quotingParams.SpreadBufferPpm+marketParam.MinPriceChangePpm,
-	))
+	spreadPpm := lib.BigU(vault.SpreadPpm(&quotingParams, &marketParam))
 	// Get oracle price in subticks.
 	oracleSubticks := clobtypes.PriceToSubticks(
 		marketPrice,

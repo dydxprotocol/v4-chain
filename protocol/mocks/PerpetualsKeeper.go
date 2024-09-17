@@ -122,6 +122,34 @@ func (_m *PerpetualsKeeper) GetAllPerpetuals(ctx types.Context) []perpetualstype
 	return r0
 }
 
+// GetLiquidityTier provides a mock function with given fields: ctx, id
+func (_m *PerpetualsKeeper) GetLiquidityTier(ctx types.Context, id uint32) (perpetualstypes.LiquidityTier, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLiquidityTier")
+	}
+
+	var r0 perpetualstypes.LiquidityTier
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) (perpetualstypes.LiquidityTier, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) perpetualstypes.LiquidityTier); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(perpetualstypes.LiquidityTier)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetNetCollateral provides a mock function with given fields: ctx, id, bigQuantums
 func (_m *PerpetualsKeeper) GetNetCollateral(ctx types.Context, id uint32, bigQuantums *big.Int) (*big.Int, error) {
 	ret := _m.Called(ctx, id, bigQuantums)

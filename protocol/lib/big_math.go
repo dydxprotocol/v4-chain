@@ -88,6 +88,19 @@ func BigMin(a, b *big.Int) *big.Int {
 	return result
 }
 
+// BigRatMin takes two `big.Rat` as parameters and returns the smaller one.
+func BigRatMin(a, b *big.Rat) *big.Rat {
+	result := new(big.Rat)
+	// If `a` is greater than `b`, return `b` since it is smaller.
+	// Else, return `a` since it is smaller than or equal to `b`.
+	if a.Cmp(b) > 0 {
+		result.Set(b)
+	} else {
+		result.Set(a)
+	}
+	return result
+}
+
 // BigMax takes two `big.Int` as parameters and returns the larger one.
 func BigMax(a, b *big.Int) *big.Int {
 	result := new(big.Int)

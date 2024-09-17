@@ -1,12 +1,17 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
@@ -56,6 +61,44 @@ func (k Keeper) GetVaultEquity(
 	return k.GetSubaccountEquity(ctx, *vaultId.ToSubaccountId())
 }
 
+// GetVaultLeverageAndEquity returns a vault's leverage and equity.
+// - leverage = open notional / equity.
+func (k Keeper) GetVaultLeverageAndEquity(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	perpetual perptypes.Perpetual,
+	marketPrice pricestypes.MarketPrice,
+) (
+	leverage *big.Rat,
+	equity *big.Int,
+	err error,
+) {
+	equity, err = k.GetVaultEquity(ctx, vaultId)
+	if err != nil {
+		return nil, nil, err
+	}
+	if equity.Sign() <= 0 {
+		return nil, equity, errorsmod.Wrap(
+			types.ErrNonPositiveEquity,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
+	}
+
+	inventory := k.GetVaultInventoryInPerpetual(ctx, vaultId, perpetual.GetId())
+	openNotional := lib.BaseToQuoteQuantums(
+		inventory,
+		perpetual.Params.AtomicResolution,
+		marketPrice.GetPrice(),
+		marketPrice.GetExponent(),
+	)
+	leverage = new(big.Rat).SetFrac(
+		openNotional,
+		equity,
+	)
+
+	return leverage, equity, nil
+}
+
 // GetSubaccountEquity returns the equity of a subaccount (in quote quantums).
 func (k Keeper) GetSubaccountEquity(
 	ctx sdk.Context,
@@ -90,6 +133,51 @@ func (k Keeper) GetVaultInventoryInPerpetual(
 		}
 	}
 	return inventory
+}
+
+// GetVaultClobPerpAndMarket returns the clob pair, perpetual, market param, and market price
+// that correspond to a vault.
+func (k Keeper) GetVaultClobPerpAndMarket(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+) (
+	clobPair clobtypes.ClobPair,
+	perpetual perptypes.Perpetual,
+	marketParam pricestypes.MarketParam,
+	marketPrice pricestypes.MarketPrice,
+	err error,
+) {
+	clobPair, exists := k.clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(vaultId.Number))
+	if !exists {
+		return clobPair, perpetual, marketParam, marketPrice, errorsmod.Wrap(
+			types.ErrClobPairNotFound,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
+	}
+	perpId := clobPair.Metadata.(*clobtypes.ClobPair_PerpetualClobMetadata).PerpetualClobMetadata.PerpetualId
+	perpetual, err = k.perpetualsKeeper.GetPerpetual(ctx, perpId)
+	if err != nil {
+		return clobPair, perpetual, marketParam, marketPrice, errorsmod.Wrap(
+			err,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
+	}
+	marketParam, exists = k.pricesKeeper.GetMarketParam(ctx, perpetual.Params.MarketId)
+	if !exists {
+		return clobPair, perpetual, marketParam, marketPrice, errorsmod.Wrap(
+			types.ErrMarketParamNotFound,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
+	}
+	marketPrice, err = k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId)
+	if err != nil {
+		return clobPair, perpetual, marketParam, marketPrice, errorsmod.Wrap(
+			err,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
+	}
+
+	return clobPair, perpetual, marketParam, marketPrice, nil
 }
 
 // DecommissionVaults decommissions all deactivated vaults that have non-positive equities.
