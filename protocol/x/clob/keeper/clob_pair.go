@@ -36,7 +36,7 @@ func clobPairKey(
 // CreatePerpetualClobPair creates a new perpetual CLOB pair in the store.
 // Additionally, it creates an order book matching the ID of the newly created CLOB pair.
 //
-// An error will occur if any of the fields fail validation (see validateClobPair for details),
+// An error will occur if any of the fields fail validation (see ValidateClobPair for details),
 // or if the `perpetualId` cannot be found.
 // In the event of an error, the store will not be updated nor will a matching order book be created.
 //
@@ -50,26 +50,6 @@ func (k Keeper) CreatePerpetualClobPair(
 	subticksPerTick uint32,
 	status types.ClobPair_Status,
 ) (types.ClobPair, error) {
-	// If the desired CLOB pair ID is already in use, return an error.
-	if clobPair, exists := k.GetClobPair(ctx, types.ClobPairId(clobPairId)); exists {
-		return types.ClobPair{}, errorsmod.Wrapf(
-			types.ErrClobPairAlreadyExists,
-			"id=%v, existing clob pair=%v",
-			clobPairId,
-			clobPair,
-		)
-	}
-
-	// Verify the perpetual ID is not already associated with an existing CLOB pair.
-	if clobPairId, found := k.PerpetualIdToClobPairId[perpetualId]; found {
-		return types.ClobPair{}, errorsmod.Wrapf(
-			types.ErrPerpetualAssociatedWithExistingClobPair,
-			"perpetual id=%v, existing clob pair id=%v",
-			perpetualId,
-			clobPairId,
-		)
-	}
-
 	clobPair := types.ClobPair{
 		Metadata: &types.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &types.PerpetualClobMetadata{
@@ -82,53 +62,56 @@ func (k Keeper) CreatePerpetualClobPair(
 		SubticksPerTick:           subticksPerTick,
 		Status:                    status,
 	}
-	if err := k.validateClobPair(ctx, &clobPair); err != nil {
-		return clobPair, err
-	}
-	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
-	if err != nil {
+	if err := k.ValidateClobPair(ctx, &clobPair); err != nil {
 		return clobPair, err
 	}
 
-	// Only persist the CLOB pair if we are in deliverTx. This is needed so that all
-	// in memory data structures don't get populated during simulation
-	if lib.IsDeliverTxMode(ctx) {
-		k.createClobPair(ctx, clobPair)
-		k.GetIndexerEventManager().AddTxnEvent(
-			ctx,
-			indexerevents.SubtypePerpetualMarket,
-			indexerevents.PerpetualMarketEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewPerpetualMarketCreateEvent(
-					perpetualId,
-					clobPairId,
-					perpetual.Params.Ticker,
-					perpetual.Params.MarketId,
-					status,
-					quantumConversionExponent,
-					perpetual.Params.AtomicResolution,
-					subticksPerTick,
-					stepSizeBaseQuantums.ToUint64(),
-					perpetual.Params.LiquidityTier,
-					perpetual.Params.MarketType,
-				),
-			),
-		)
+	err := k.CreateClobPair(ctx, clobPair)
+	if err != nil {
+		return clobPair, err
 	}
 
 	return clobPair, nil
 }
 
-// validateClobPair validates a CLOB pair's fields are suitable for CLOB pair creation.
+// ValidateClobPair validates a CLOB pair's fields are suitable for CLOB pair creation.
 //
 // Stateful Validation:
 //   - Must be a perpetual CLOB pair with a perpetualId matching a perpetual in the store.
 //
 // Stateless Validation
 //   - `clobPair.Validate()` returns no error.
-func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
+func (k Keeper) ValidateClobPair(ctx sdk.Context, clobPair *types.ClobPair) error {
 	if err := clobPair.Validate(); err != nil {
 		return err
+	}
+
+	// If the desired CLOB pair ID is already in use, return an error.
+	if clobPair, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
+		return errorsmod.Wrapf(
+			types.ErrClobPairAlreadyExists,
+			"id=%v, existing clob pair=%v",
+			clobPair.Id,
+			clobPair,
+		)
+	}
+
+	perpetualId, err := clobPair.GetPerpetualId()
+	if err != nil {
+		return errorsmod.Wrap(
+			types.ErrInvalidClobPairParameter,
+			err.Error(),
+		)
+	}
+
+	// Verify the perpetual ID is not already associated with an existing CLOB pair.
+	if clobPairId, found := k.PerpetualIdToClobPairId[perpetualId]; found {
+		return errorsmod.Wrapf(
+			types.ErrPerpetualAssociatedWithExistingClobPair,
+			"perpetual id=%v, existing clob pair id=%v",
+			perpetualId,
+			clobPairId,
+		)
 	}
 
 	// TODO(DEC-1535): update this validation when we implement "spot"/"asset" clob pairs.
@@ -173,9 +156,9 @@ func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 	k.MemClob.CreateOrderbook(clobPair)
 }
 
-// createClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.
+// CreateClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.
 // This function returns an error if a value for the ClobPair's id already exists in state.
-func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) {
+func (k Keeper) CreateClobPair(ctx sdk.Context, clobPair types.ClobPair) error {
 	// Validate the given clob pair id is not already in use.
 	if _, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
 		panic(
@@ -194,6 +177,38 @@ func (k Keeper) createClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 
 	// Create the mapping between clob pair and perpetual.
 	k.SetClobPairIdForPerpetual(ctx, clobPair)
+
+	perpetualId, err := clobPair.GetPerpetualId()
+	if err != nil {
+		panic(err)
+	}
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypePerpetualMarket,
+		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				perpetualId,
+				clobPair.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				clobPair.Status,
+				clobPair.QuantumConversionExponent,
+				perpetual.Params.AtomicResolution,
+				clobPair.SubticksPerTick,
+				clobPair.StepBaseQuantums,
+				perpetual.Params.LiquidityTier,
+				perpetual.Params.MarketType,
+			),
+		),
+	)
+
+	return nil
 }
 
 // setClobPair sets a specific `ClobPair` in the store from its index.
@@ -542,7 +557,7 @@ func (k Keeper) UpdateClobPair(
 		)
 	}
 
-	if err := k.validateClobPair(ctx, &clobPair); err != nil {
+	if err := k.ValidateClobPair(ctx, &clobPair); err != nil {
 		return err
 	}
 
