@@ -35,4 +35,5 @@ type MarketMapKeeper interface {
 	GetAllMarkets(ctx sdk.Context) (map[string]marketmaptypes.Market, error)
 	GetMarket(ctx sdk.Context, tickerStr string) (marketmaptypes.Market, error)
 	EnableMarket(ctx sdk.Context, tickerStr string) error
+	DisableMarket(ctx sdk.Context, tickerStr string) error
 }

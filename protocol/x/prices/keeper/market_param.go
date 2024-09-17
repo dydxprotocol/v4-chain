@@ -66,24 +66,37 @@ func (k Keeper) ModifyMarketParam(
 
 	// if the market pair has been changed, we need to update the in-memory market pair cache
 	if existingParam.Pair != updatedMarketParam.Pair {
+		// remove the old cache entry and disable the old market
 		oldCurrencyPair, err := slinky.MarketPairToCurrencyPair(existingParam.Pair)
-		if err == nil {
-			k.RemoveCurrencyPairFromStore(ctx, oldCurrencyPair)
-		} else {
+		if err != nil {
 			return types.MarketParam{}, errorsmod.Wrap(
 				types.ErrMarketPairConversionFailed,
 				existingParam.Pair,
 			)
 		}
 
-		// add the new cache entry
+		k.RemoveCurrencyPairFromStore(ctx, oldCurrencyPair)
+		if err = k.MarketMapKeeper.DisableMarket(ctx, oldCurrencyPair.String()); err != nil {
+			return types.MarketParam{}, errorsmod.Wrap(
+				types.ErrMarketCouldNotBeDisabled,
+				existingParam.Pair,
+			)
+		}
+
+		// add the new cache entry and enable the new market
 		newCurrencyPair, err := slinky.MarketPairToCurrencyPair(updatedMarketParam.Pair)
-		if err == nil {
-			k.AddCurrencyPairIDToStore(ctx, updatedMarketParam.Id, newCurrencyPair)
-		} else {
+		if err != nil {
 			return types.MarketParam{}, errorsmod.Wrap(
 				types.ErrMarketPairConversionFailed,
 				updatedMarketParam.Pair,
+			)
+		}
+
+		k.AddCurrencyPairIDToStore(ctx, updatedMarketParam.Id, newCurrencyPair)
+		if err = k.MarketMapKeeper.EnableMarket(ctx, newCurrencyPair.String()); err != nil {
+			return types.MarketParam{}, errorsmod.Wrap(
+				types.ErrMarketCouldNotBeEnabled,
+				existingParam.Pair,
 			)
 		}
 	}
