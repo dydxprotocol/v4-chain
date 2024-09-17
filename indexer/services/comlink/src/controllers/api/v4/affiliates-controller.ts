@@ -129,22 +129,13 @@ class AffiliatesController extends Controller {
     const finalLimit: number = limit ?? 1000;
     const finalsortByAffiliateEarning: boolean = sortByAffiliateEarning ?? false;
 
-    const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable
+    const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable
       .paginatedFindWithAddressFilter(
         finalAddressFilter,
         finalOffset,
         finalLimit,
         finalsortByAffiliateEarning,
       );
-
-    // No results found
-    if (infos === undefined) {
-      return {
-        affiliateList: [],
-        total: 0,
-        currentOffset: finalOffset,
-      };
-    }
 
     // Get referral codes
     const addressUsernames:
@@ -156,7 +147,7 @@ class AffiliatesController extends Controller {
       addressUsernameMap[addressUsername.address] = addressUsername.username;
     });
     if (addressUsernames.length !== infos.length) {
-      const addressesNotFound = infos
+      const addressesNotFound: string = infos
         .map((info) => info.address)
         .filter((address) => !(address in addressUsernameMap))
         .join(', ');
