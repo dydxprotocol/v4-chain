@@ -149,6 +149,30 @@ func (o *OperationsToPropose) RemoveShortTermOrderTxBytes(
 	delete(o.ShortTermOrderHashToTxBytes, orderHash)
 }
 
+// MustGetShortTermOrderTxBytes returns the `ShortTermOrderHashToTxBytes` for a short term order.
+// This function will panic for any of the following:
+// - the order is not a short term order.
+// - the order hash is not present in `ShortTermOrderHashToTxBytes`
+func (o *OperationsToPropose) MustGetShortTermOrderTxBytes(
+	order Order,
+) (txBytes []byte) {
+	order.OrderId.MustBeShortTermOrder()
+
+	orderHash := order.GetOrderHash()
+	bytes, exists := o.ShortTermOrderHashToTxBytes[orderHash]
+	if !exists {
+		panic(
+			fmt.Sprintf(
+				"MustGetShortTermOrderTxBytes: Order (%s) does not exist in "+
+					"`ShortTermOrderHashToTxBytes`.",
+				order.GetOrderTextString(),
+			),
+		)
+	}
+
+	return bytes
+}
+
 // MustAddStatefulOrderPlacementToOperationsQueue adds a stateful order placement operation to the
 // operations queue.
 // This function will panic if this stateful order already exists in `OrderHashesInOperationsQueue`,

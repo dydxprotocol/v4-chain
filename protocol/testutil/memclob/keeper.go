@@ -527,3 +527,7 @@ func (f *FakeMemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 ) satypes.UpdateResult {
 	return satypes.Success
 }
+
+func (f *FakeMemClobKeeper) IsTxAuthenticated(ctx sdk.Context, txBytes []byte) error {
+	return nil
+}

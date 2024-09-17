@@ -1624,6 +1624,20 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			continue
 		}
 
+		if makerOrder.Order.IsShortTermOrder() {
+			txBytes := m.operationsToPropose.MustGetShortTermOrderTxBytes(makerOrder.Order)
+			if err := m.clobKeeper.IsTxAuthenticated(ctx, txBytes); err != nil {
+				makerOrdersToRemove = append(
+					makerOrdersToRemove,
+					OrderWithRemovalReason{
+						Order:         makerOrder.Order,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
+					},
+				)
+				continue
+			}
+		}
+
 		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder.Order)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("mustPerformTakerOrderMatching: maker order has no remaining amount %v", makerOrder.Order))
