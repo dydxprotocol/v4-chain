@@ -10,7 +10,6 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
@@ -185,7 +184,7 @@ func TestUpdateMarketParam(t *testing.T) {
 					t,
 					ctx,
 					marketMapKeeper,
-					[]types.MarketParam{tc.msg.MarketParam},
+					[]pricestypes.MarketParam{tc.msg.MarketParam},
 				)
 			}
 
