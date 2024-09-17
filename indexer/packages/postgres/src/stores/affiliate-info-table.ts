@@ -119,6 +119,5 @@ export async function paginatedFindWithAddressFilter(
   // Apply pagination using offset and limit
   baseQuery = baseQuery.offset(offset).limit(limit);
 
-  // Returning all fields
   return baseQuery.returning('*');
 }

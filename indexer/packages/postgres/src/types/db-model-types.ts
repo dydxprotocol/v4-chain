@@ -264,7 +264,7 @@ export interface SubaccountUsernamesFromDatabase {
   subaccountId: string,
 }
 
-export interface AddressUsernameFromDatabase {
+export interface AddressUsername {
   address: string,
   username: string,
 }

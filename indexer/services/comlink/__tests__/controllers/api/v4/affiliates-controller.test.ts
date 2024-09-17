@@ -200,9 +200,11 @@ describe('affiliates-controller#V4', () => {
       await SubaccountUsernamesTable.create(testConstants.subaccountUsernameWithAlternativeAddress);
 
       // Create affiliate infos
-      await AffiliateInfoTable.create(defaultInfo);
-      await AffiliateInfoTable.create(defaultInfo2);
-      await AffiliateInfoTable.create(defaultInfo3);
+      await Promise.all([
+        AffiliateInfoTable.create(defaultInfo),
+        AffiliateInfoTable.create(defaultInfo2),
+        AffiliateInfoTable.create(defaultInfo3),
+      ]);
     });
 
     afterEach(async () => {
@@ -246,7 +248,7 @@ describe('affiliates-controller#V4', () => {
       expect(response.body.total).toEqual(expectedResponse.total);
     });
 
-    it('should handle no results when filter by address', async () => {
+    it('should handle no results', async () => {
       const req: AffiliateSnapshotRequest = {
         addressFilter: ['nonexistentaddress'],
       };
