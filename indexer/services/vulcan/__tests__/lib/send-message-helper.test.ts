@@ -228,6 +228,7 @@ function expectStats(
   const tags: {[name: string]: string} = {
     topic,
     success: success.toString(),
+    instance: '',
   };
   expect(timingSpy).toHaveBeenCalledWith(timingStat, expect.any(Number), STATS_NO_SAMPLING, tags);
   expect(histogramSpy).toHaveBeenCalledWith(sizeStat, size, STATS_NO_SAMPLING, tags);

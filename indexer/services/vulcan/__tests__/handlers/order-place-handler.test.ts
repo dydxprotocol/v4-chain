@@ -1147,15 +1147,16 @@ function expectStats(orderWasReplaced: boolean = false): void {
   expect(stats.timing).toHaveBeenCalledWith(
     `vulcan.${STATS_FUNCTION_NAME}.timing`,
     expect.any(Number),
-    { className: 'OrderPlaceHandler', fnName: 'place_order_cache_update' },
+    { className: 'OrderPlaceHandler', fnName: 'place_order_cache_update', instance: '' },
   );
 
   if (orderWasReplaced) {
-    expect(stats.increment).toHaveBeenCalledWith('vulcan.place_order_handler.replaced_order', 1);
+    expect(stats.increment).toHaveBeenCalledWith('vulcan.place_order_handler.replaced_order', 1, { instance: '' });
   } else {
     expect(stats.increment).not.toHaveBeenCalledWith(
       'vulcan.place_order_handler.replaced_order',
       expect.any(Number),
+      { instance: '' },
     );
   }
 }
