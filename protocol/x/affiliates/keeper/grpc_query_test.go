@@ -235,7 +235,7 @@ func TestAffiliateWhitelist(t *testing.T) {
 		Tiers: []types.AffiliateWhitelist_Tier{
 			{
 				Addresses:        []string{constants.AliceAccAddress.String()},
-				TakerFeeSharePpm: 1000000,
+				TakerFeeSharePpm: 100_000,
 			},
 		},
 	}
