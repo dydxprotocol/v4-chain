@@ -1696,12 +1696,10 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			FillAmount: matchedAmount,
 		}
 
-		// affiliate revshare doesnt affect subaccount balance, we can pass an empty map
-		// as we dont need to process affiliate revshare during checkTx and only during deliverTx
-		// The main reason is that passing in this map requires reading and unmarshalling the object
-		// AffiliateWhitelist from state, which can be unbounded in size. For DeliverTx, we can read
-		// and unmarshal one for all operations queue up front, but this is hard to do for individual
-		// CheckTx that can result in matching.
+		// Pass in empty map to avoid reading `AffiliateWhitelist` from state in every `CheckTx`. This deviates
+		// from `DeliverTx` which accounts for affiliate whitelist correctly. This deviation is ok becasue rev
+		// shares/fees are distributed to the recipient’s bank balance and not settled at the subaccount level,
+		// and won’t affect the collateralization of future operations in the operations queue.
 		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(
 			ctx, &matchWithOrders, map[string]uint32{})
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
