@@ -13,6 +13,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.SetParams(ctx, genState.Params); err != nil {
 		panic(err)
 	}
+
+	for _, addressToUserStats := range genState.AddressToUserStats {
+		k.SetUserStats(ctx, addressToUserStats.Address, addressToUserStats.UserStats)
+	}
 }
 
 // ExportGenesis returns the stat module's exported genesis.

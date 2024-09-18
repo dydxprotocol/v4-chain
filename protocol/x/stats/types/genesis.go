@@ -8,6 +8,7 @@ func DefaultGenesis() *GenesisState {
 		Params: Params{
 			WindowDuration: time.Duration(30 * 24 * time.Hour),
 		},
+		AddressToUserStats: []*AddressToUserStats{},
 	}
 }
 

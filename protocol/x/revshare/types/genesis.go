@@ -4,6 +4,9 @@ package types
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params: DefaultParams(),
+		UnconditionalRevShareConfig: UnconditionalRevShareConfig{
+			Configs: []UnconditionalRevShareConfig_RecipientConfig{},
+		},
 	}
 }
 

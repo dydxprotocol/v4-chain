@@ -2,7 +2,9 @@ syntax = "proto3";
 package dydxprotocol.stats;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "dydxprotocol/stats/params.proto";
+import "dydxprotocol/stats/stats.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/stats/types";
 
@@ -10,4 +12,13 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/stats/types";
 message GenesisState {
   // The parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated AddressToUserStats address_to_user_stats = 2;
+}
+
+// AddressToUserStats is a struct that contains the user stats for an address.
+message AddressToUserStats {
+  // The address of the user.
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // The user stats for the address.
+  UserStats user_stats = 2;
 }

@@ -3876,6 +3876,9 @@
         "address": "dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2",
         "revenue_share_ppm": 0,
         "valid_days": 0
+      },
+      "unconditional_rev_share_config": {
+        "configs": []
       }
     },
     "rewards": {
@@ -3917,6 +3920,7 @@
       "validators": []
     },
     "stats": {
+      "address_to_user_stats": [],
       "params": {
         "window_duration": "2592000s"
       }
@@ -3980,7 +3984,7 @@
       ]
     }
   },
-  "app_version": "5.2.1-103-g5c95dd72",
+  "app_version": "5.2.1-119-g77487f61",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

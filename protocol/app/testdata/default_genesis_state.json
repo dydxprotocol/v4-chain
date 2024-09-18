@@ -432,6 +432,9 @@
       "address": "dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2",
       "revenue_share_ppm": 0,
       "valid_days": 0
+    },
+    "unconditional_rev_share_config": {
+      "configs": []
     }
   },
   "rewards": {
@@ -475,7 +478,8 @@
   "stats": {
     "params": {
       "window_duration": "2592000s"
-    }
+    },
+    "address_to_user_stats": []
   },
   "subaccounts": {
     "subaccounts": []
