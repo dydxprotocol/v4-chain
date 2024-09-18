@@ -136,6 +136,13 @@ func (k Keeper) ProcessInternalOperations(
 	// All short term orders in this map have passed validation.
 	placedShortTermOrders := make(map[types.OrderId]types.Order, 0)
 
+	affiliatesWhitelistMap, err := k.affiliatesKeeper.GetAffiliateWhitelistMap(ctx)
+	if err != nil {
+		return errorsmod.Wrapf(
+			err,
+			"ProcessInternalOperations: Failed to get affiliates whitelist map",
+		)
+	}
 	// Write the matches to state if all stateful validation passes.
 	for _, operation := range operations {
 		if err := k.validateInternalOperationAgainstClobPairStatus(ctx, operation); err != nil {
@@ -144,13 +151,6 @@ func (k Keeper) ProcessInternalOperations(
 
 		switch castedOperation := operation.Operation.(type) {
 		case *types.InternalOperation_Match:
-			affiliatesWhitelistMap, err := k.affiliatesKeeper.GetAffiliateWhitelistMap(ctx)
-			if err != nil {
-				return errorsmod.Wrapf(
-					err,
-					"ProcessInternalOperations: Failed to get affiliates whitelist map",
-				)
-			}
 			clobMatch := castedOperation.Match
 			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders, affiliatesWhitelistMap); err != nil {
 				return errorsmod.Wrapf(

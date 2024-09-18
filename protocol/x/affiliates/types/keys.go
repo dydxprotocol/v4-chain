@@ -11,11 +11,11 @@ const (
 
 // State
 const (
-	ReferredByKeyPrefix = "ReferredBy:"
+	ReferredByKeyPrefix = "RB:"
 
-	ReferredVolumeKeyPrefix = "ReferredVolume:"
+	ReferredVolumeKeyPrefix = "RV:"
 
-	AffiliateTiersKey = "AffiliateTiers"
+	AffiliateTiersKey = "AT"
 
-	AffiliateWhitelistKey = "AffiliateWhitelist"
+	AffiliateWhitelistKey = "AW"
 )

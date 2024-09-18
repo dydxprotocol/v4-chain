@@ -309,7 +309,7 @@ func (k Keeper) persistMatchedOrders(
 	makerFeePpm int32,
 	bigFillQuoteQuantums *big.Int,
 	insuranceFundDelta *big.Int,
-	affiliatesWhitelistMap map[string]uint32, // nolint: unused
+	affiliatesWhitelistMap map[string]uint32,
 ) (
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
