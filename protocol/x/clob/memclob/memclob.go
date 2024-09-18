@@ -1697,7 +1697,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		}
 
 		// Pass in empty map to avoid reading `AffiliateWhitelist` from state in every `CheckTx`. This deviates
-		// from `DeliverTx` which accounts for affiliate whitelist correctly. This deviation is ok becasue rev
+		// from `DeliverTx` which accounts for affiliate whitelist correctly. This deviation is ok because rev
 		// shares/fees are distributed to the recipient’s bank balance and not settled at the subaccount level,
 		// and won’t affect the collateralization of future operations in the operations queue.
 		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(
