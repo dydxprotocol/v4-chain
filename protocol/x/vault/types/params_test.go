@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"math"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -99,6 +100,18 @@ func TestValidateQuotingParams(t *testing.T) {
 				SpreadBufferPpm:                  1_500,
 				SkewFactorPpm:                    2_000_000,
 				OrderSizePctPpm:                  1_000_000,
+				OrderExpirationSeconds:           5,
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1),
+			},
+			expectedErr: types.ErrInvalidSkewFactor,
+		},
+		"Failure - Both OrderSizePctPpm and SkewFactorPpm are MaxUint8. Product of SkewFactorPpm and OrderSizePctPpm is above threshold.": {
+			params: types.QuotingParams{
+				Layers:                           2,
+				SpreadMinPpm:                     3_000,
+				SpreadBufferPpm:                  1_500,
+				SkewFactorPpm:                    math.MaxUint32,
+				OrderSizePctPpm:                  math.MaxUint32,
 				OrderExpirationSeconds:           5,
 				ActivationThresholdQuoteQuantums: dtypes.NewInt(1),
 			},
