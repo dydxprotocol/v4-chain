@@ -257,10 +257,10 @@ func TestValidateRevShareSafety(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
-			_ = tApp.InitChain()
+			ctx := tApp.InitChain()
 			k := tApp.App.RevShareKeeper
 
-			valid := k.ValidateRevShareSafety(tc.affiliateTiers, tc.revShareConfig, tc.marketMapperRevShareParams)
+			valid := k.ValidateRevShareSafety(ctx, tc.affiliateTiers, tc.revShareConfig, tc.marketMapperRevShareParams)
 			require.Equal(t, tc.expectedValid, valid)
 		})
 	}

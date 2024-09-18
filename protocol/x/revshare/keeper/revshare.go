@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"math"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -129,10 +130,13 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 // the rest of the rev share is based on net fees.
 // TODO(OTE-788): Revisit this formula to ensure accuracy.
 func (k Keeper) ValidateRevShareSafety(
+	ctx sdk.Context,
 	affiliateTiers affiliatetypes.AffiliateTiers,
 	unconditionalRevShareConfig types.UnconditionalRevShareConfig,
 	marketMapperRevShareParams types.MarketMapperRevenueShareParams,
 ) bool {
+	highestTakerFeeSharePpm := k.feetiersKeeper.GetHighestTakerFee(ctx)
+	lowestMakerFeeSharePpm := k.feetiersKeeper.GetLowestMakerFee(ctx)
 	highestTierRevSharePpm := uint32(0)
 	if len(affiliateTiers.Tiers) > 0 {
 		highestTierRevSharePpm = affiliateTiers.Tiers[len(affiliateTiers.Tiers)-1].TakerFeeSharePpm
@@ -143,7 +147,7 @@ func (k Keeper) ValidateRevShareSafety(
 	}
 	totalMarketMapperRevSharePpm := marketMapperRevShareParams.RevenueSharePpm
 
-	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm + highestTierRevSharePpm
+	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm + uint32(math.Ceil(float64(highestTierRevSharePpm)*(float64(highestTakerFeeSharePpm)/float64(lowestMakerFeeSharePpm+highestTakerFeeSharePpm))))
 	return totalRevSharePpm < lib.OneMillion
 }
 

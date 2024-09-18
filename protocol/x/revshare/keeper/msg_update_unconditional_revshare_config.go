@@ -35,7 +35,7 @@ func (k msgServer) UpdateUnconditionalRevShareConfig(
 	}
 
 	marketMapperRevShareParams := k.GetMarketMapperRevenueShareParams(ctx)
-	if !k.ValidateRevShareSafety(affiliateTiers, msg.Config, marketMapperRevShareParams) {
+	if !k.ValidateRevShareSafety(ctx, affiliateTiers, msg.Config, marketMapperRevShareParams) {
 		return nil, errorsmod.Wrapf(
 			types.ErrRevShareSafetyViolation,
 			"rev share safety violation",

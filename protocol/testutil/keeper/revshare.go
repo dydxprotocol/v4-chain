@@ -8,6 +8,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
+	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 
 	storetypes "cosmossdk.io/store/types"
@@ -54,8 +55,10 @@ func RevShareKeepers(t testing.TB) (
 				stakingKeeper,
 			)
 			affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
+			vaultKeeper, _ := createVaultKeeper(stateStore, db, cdc, transientStoreKey)
+			feetiersKeeper, _ := createFeeTiersKeeper(stateStore, statsKeeper, vaultKeeper, affiliatesKeeper, db, cdc)
 			keeper, storeKey, mockTimeProvider =
-				createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
+				createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feetiersKeeper)
 
 			return []GenesisInitializer{keeper}
 		},
@@ -69,6 +72,7 @@ func createRevShareKeeper(
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	affiliatesKeeper *affiliateskeeper.Keeper,
+	feetiersKeeper *feetierskeeper.Keeper,
 ) (
 	*keeper.Keeper,
 	storetypes.StoreKey,
@@ -83,6 +87,7 @@ func createRevShareKeeper(
 			lib.GovModuleAddress.String(),
 		},
 		*affiliatesKeeper,
+		*feetiersKeeper,
 	)
 
 	return k, storeKey, mockTimeProvider

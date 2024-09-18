@@ -107,7 +107,21 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 		)
 		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, ks.StatsKeeper,
 			indexerEventsTransientStoreKey, true)
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
+		ks.VaultKeeper, _ = createVaultKeeper(
+			stateStore,
+			db,
+			cdc,
+			indexerEventsTransientStoreKey,
+		)
+		ks.FeeTiersKeeper, _ = createFeeTiersKeeper(
+			stateStore,
+			ks.StatsKeeper,
+			ks.VaultKeeper,
+			affiliatesKeeper,
+			db,
+			cdc,
+		)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, ks.FeeTiersKeeper)
 		ks.MarketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
@@ -136,20 +150,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			true,
 		)
 		ks.BlockTimeKeeper, _ = createBlockTimeKeeper(stateStore, db, cdc)
-		ks.VaultKeeper, _ = createVaultKeeper(
-			stateStore,
-			db,
-			cdc,
-			indexerEventsTransientStoreKey,
-		)
-		ks.FeeTiersKeeper, _ = createFeeTiersKeeper(
-			stateStore,
-			ks.StatsKeeper,
-			ks.VaultKeeper,
-			affiliatesKeeper,
-			db,
-			cdc,
-		)
 		ks.RewardsKeeper, _ = createRewardsKeeper(
 			stateStore,
 			ks.AssetsKeeper,

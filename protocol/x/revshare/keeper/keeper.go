@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
+	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 )
 
@@ -18,6 +19,7 @@ type (
 		storeKey         storetypes.StoreKey
 		authorities      map[string]struct{}
 		affiliatesKeeper affiliateskeeper.Keeper
+		feetiersKeeper   feetierskeeper.Keeper
 	}
 )
 
@@ -26,12 +28,14 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	authorities []string,
 	affiliatesKeeper affiliateskeeper.Keeper,
+	feetiersKeeper feetierskeeper.Keeper,
 ) *Keeper {
 	return &Keeper{
 		cdc:              cdc,
 		storeKey:         storeKey,
 		authorities:      lib.UniqueSliceToSet(authorities),
 		affiliatesKeeper: affiliatesKeeper,
+		feetiersKeeper:   feetiersKeeper,
 	}
 }
 

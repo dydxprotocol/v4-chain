@@ -19,6 +19,7 @@ type RevShareKeeper interface {
 		ctx sdk.Context,
 	) revsharetypes.MarketMapperRevenueShareParams
 	ValidateRevShareSafety(
+		ctx sdk.Context,
 		affiliateTiers AffiliateTiers,
 		unconditionalRevShareConfig revsharetypes.UnconditionalRevShareConfig,
 		marketMapperRevShareParams revsharetypes.MarketMapperRevenueShareParams,

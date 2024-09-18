@@ -131,3 +131,16 @@ func (k Keeper) GetLowestMakerFee(ctx sdk.Context) int32 {
 
 	return lowestMakerFee
 }
+
+func (k Keeper) GetHighestTakerFee(ctx sdk.Context) int32 {
+	feeParams := k.GetPerpetualFeeParams(ctx)
+
+	highestTakerFee := int32(math.MinInt32)
+	for _, tier := range feeParams.Tiers {
+		if tier.TakerFeePpm > highestTakerFee {
+			highestTakerFee = tier.TakerFeePpm
+		}
+	}
+
+	return highestTakerFee
+}

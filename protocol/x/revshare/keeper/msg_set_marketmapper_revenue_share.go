@@ -33,7 +33,7 @@ func (k msgServer) SetMarketMapperRevenueShare(
 	if err != nil {
 		return nil, err
 	}
-	if !k.ValidateRevShareSafety(affiliateTiers, unconditionalRevShareConfig, msg.Params) {
+	if !k.ValidateRevShareSafety(ctx, affiliateTiers, unconditionalRevShareConfig, msg.Params) {
 		return nil, errorsmod.Wrapf(
 			types.ErrRevShareSafetyViolation,
 			"rev share safety violation",

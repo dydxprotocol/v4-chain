@@ -66,18 +66,6 @@ func RewardsKeepers(
 			stakingKeeper,
 		)
 		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
-		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
-		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper, marketMapKeeper)
-		// Mock time provider response for market creation.
-		assetsKeeper, _ = createAssetsKeeper(
-			stateStore,
-			db,
-			cdc,
-			pricesKeeper,
-			transientStoreKey,
-			true,
-		)
 		vaultKeeper, _ := createVaultKeeper(
 			stateStore,
 			db,
@@ -91,6 +79,18 @@ func RewardsKeepers(
 			affiliatesKeeper,
 			db,
 			cdc,
+		)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feetiersKeeper)
+		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
+		pricesKeeper, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey, revShareKeeper, marketMapKeeper)
+		// Mock time provider response for market creation.
+		assetsKeeper, _ = createAssetsKeeper(
+			stateStore,
+			db,
+			cdc,
+			pricesKeeper,
+			transientStoreKey,
+			true,
 		)
 		rewardsKeeper, storeKey = createRewardsKeeper(
 			stateStore,
