@@ -9,7 +9,7 @@ export async function up(knex: Knex): Promise<void> {
     table.decimal('totalReferredFees', null).notNullable().defaultTo(0).alter();
     table.decimal('referredNetProtocolEarnings', null).notNullable().defaultTo(0).alter();
 
-    table.decimal('totalReferredVolume', null).notNullable().defaultTo(0);
+    table.decimal('referredTotalVolume', null).notNullable().defaultTo(0);
   });
 }
 
@@ -19,6 +19,6 @@ export async function down(knex: Knex): Promise<void> {
     table.decimal('totalReferredFees').notNullable().defaultTo(0).alter();
     table.decimal('referredNetProtocolEarnings').notNullable().defaultTo(0).alter();
 
-    table.dropColumn('totalReferredVolume');
+    table.dropColumn('referredTotalVolume');
   });
 }

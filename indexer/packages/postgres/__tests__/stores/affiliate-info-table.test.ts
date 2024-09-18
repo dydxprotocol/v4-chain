@@ -1,4 +1,4 @@
-import { PersistentCacheKeys, AffiliateInfoFromDatabase, Liquidity } from '../../src/types';
+import { PersistentCacheKeys, AffiliateInfoFromDatabase, Liquidity, PersistentCacheFromDatabase } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import {
   defaultOrder,
@@ -45,7 +45,7 @@ describe('Affiliate info store', () => {
 
   it('Can upsert affiliate info multiple times', async () => {
     await AffiliateInfoTable.upsert(defaultAffiliateInfo);
-    let info: AffiliateInfoFromDatabase = await AffiliateInfoTable.findById(
+    let info: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
       defaultAffiliateInfo.address,
     );
     expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo));
@@ -77,7 +77,7 @@ describe('Affiliate info store', () => {
   it('Successfully finds affiliate info by Id', async () => {
     await AffiliateInfoTable.create(defaultAffiliateInfo);
 
-    const info: AffiliateInfoFromDatabase = await AffiliateInfoTable.findById(
+    const info: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
       defaultAffiliateInfo.address,
     );
     expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo));
@@ -85,7 +85,7 @@ describe('Affiliate info store', () => {
 
   describe('Affiliate info .updateInfo()', () => {
     it('Successfully creates new affiliate info', async () => {
-      const referenceDt = await populateFillsAndReferrals();
+      const referenceDt: DateTime = await populateFillsAndReferrals();
 
       // Perform update
       await AffiliateInfoTable.updateInfo(
@@ -110,11 +110,11 @@ describe('Affiliate info store', () => {
         referredTotalVolume: '2',
       };
 
-      expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
+      expect(updatedInfo).toEqual(expectedAffiliateInfo);
     });
 
-    it('Successfully updates/increments affiliate info, both stats and metadata', async () => {
-      const referenceDt = await populateFillsAndReferrals();
+    it('Successfully updates/increments affiliate info for stats and new referrals', async () => {
+      const referenceDt: DateTime = await populateFillsAndReferrals();
 
       // Perform update: catches first 2 fills
       await AffiliateInfoTable.updateInfo(
@@ -136,7 +136,7 @@ describe('Affiliate info store', () => {
         firstReferralBlockHeight: '1',
         referredTotalVolume: '2',
       };
-      expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
+      expect(updatedInfo).toEqual(expectedAffiliateInfo);
 
       // Perform update: catches next 2 fills
       await AffiliateInfoTable.updateInfo(
@@ -158,7 +158,7 @@ describe('Affiliate info store', () => {
         firstReferralBlockHeight: '1',
         referredTotalVolume: '4',
       };
-      expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
+      expect(updatedInfo).toEqual(expectedAffiliateInfo);
 
       // Perform update: catches no fills but new affiliate referral
       await AffiliateReferredUsersTable.create({
@@ -184,21 +184,20 @@ describe('Affiliate info store', () => {
         firstReferralBlockHeight: '1',
         referredTotalVolume: '4',
       };
-      expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
+      expect(updatedInfo).toEqual(expectedAffiliateInfo);
     });
 
     it('Successfully upserts persistent cache', async () => {
-      const referenceDt = await populateFillsAndReferrals();
+      const referenceDt: DateTime = await populateFillsAndReferrals();
 
       // First update sets persistent cache
       await AffiliateInfoTable.updateInfo(
         referenceDt.minus({ minutes: 2 }).toISO(),
         referenceDt.minus({ minutes: 1 }).toISO(),
       );
-      let persistentCache = await PersistentCacheTable.findById(
-        PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-      );
-      let lastUpdateTime = persistentCache?.value;
+      let persistentCache: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
+        .findById(PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME);
+      let lastUpdateTime: string | undefined = persistentCache?.value;
       expect(lastUpdateTime).not.toBeUndefined();
       if (lastUpdateTime !== undefined) {
         expect(lastUpdateTime).toEqual(referenceDt.minus({ minutes: 1 }).toISO());
@@ -220,7 +219,7 @@ describe('Affiliate info store', () => {
     });
 
     it('Does not use fills from before referal block height', async () => {
-      const referenceDt = DateTime.utc();
+      const referenceDt: DateTime = DateTime.utc();
 
       await seedData();
       await OrderTable.create(defaultOrder);
@@ -249,11 +248,11 @@ describe('Affiliate info store', () => {
         referenceDt.toISO(),
       );
 
-      const updatedInfo = await AffiliateInfoTable.findById(
+      const updatedInfo: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
         defaultWallet2.address,
       );
       // expect one referred user but no fill stats
-      const expectedAffiliateInfo = {
+      const expectedAffiliateInfo: AffiliateInfoFromDatabase = {
         address: defaultWallet2.address,
         affiliateEarnings: '0',
         referredMakerTrades: 0,
@@ -262,9 +261,9 @@ describe('Affiliate info store', () => {
         totalReferredUsers: 1,
         referredNetProtocolEarnings: '0',
         firstReferralBlockHeight: '2',
-        totalReferredVolume: '0',
+        referredTotalVolume: '0',
       };
-      expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
+      expect(updatedInfo).toEqual(expectedAffiliateInfo);
     });
   });
 

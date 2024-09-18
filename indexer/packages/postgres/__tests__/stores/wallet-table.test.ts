@@ -1,4 +1,4 @@
-import { WalletFromDatabase, PersistentCacheKeys } from '../../src/types';
+import { WalletFromDatabase, PersistentCacheKeys, PersistentCacheFromDatabase } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { DateTime } from 'luxon';
 import {
@@ -92,14 +92,14 @@ describe('Wallet store', () => {
 
   describe('Wallet .updateTotalVolume()', () => {
     it('Successfully updates totalVolume for time window multiple times', async () => {
-      const firstFillTime = await populateWalletSubaccountFill();
+      const firstFillTime: DateTime = await populateWalletSubaccountFill();
 
       // Update totalVolume for a time window that covers all fills
       await WalletTable.updateTotalVolume(
         firstFillTime.minus({ hours: 1 }).toISO(), // need to minus because left bound is exclusive
         firstFillTime.plus({ hours: 1 }).toISO(),
       );
-      let wallet = await WalletTable.findById(defaultWallet.address);
+      let wallet: WalletFromDatabase | undefined = await WalletTable.findById(defaultWallet.address);
       expect(wallet).toEqual(expect.objectContaining({
         ...defaultWallet,
         totalVolume: '103',
@@ -123,15 +123,14 @@ describe('Wallet store', () => {
       const referenceDt = DateTime.utc();
 
       // Sets initial persistent cache value
-      let leftBound = referenceDt.minus({ hours: 2 });
-      let rightBound = referenceDt.minus({ hours: 1 });
+      let leftBound: DateTime = referenceDt.minus({ hours: 2 });
+      let rightBound: DateTime = referenceDt.minus({ hours: 1 });
 
       await WalletTable.updateTotalVolume(leftBound.toISO(), rightBound.toISO());
 
-      let persistentCache = await PersistentCacheTable.findById(
-        PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
-      );
-      let lastUpdateTime = persistentCache?.value;
+      let persistentCache: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
+      .findById(PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME);
+      let lastUpdateTime: string | undefined = persistentCache?.value;
       expect(lastUpdateTime).not.toBeUndefined();
       if (lastUpdateTime !== undefined) {
         expect(lastUpdateTime).toEqual(rightBound.toISO());

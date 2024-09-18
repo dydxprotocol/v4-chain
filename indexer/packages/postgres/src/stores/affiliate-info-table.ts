@@ -1,7 +1,7 @@
 import { QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
-import { knexReadReplica } from '../helpers/knex';
+import { knexPrimary } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import AffiliateInfoModel from '../models/affiliate-info-model';
@@ -87,7 +87,7 @@ export async function upsert(
 export async function findById(
   address: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<AffiliateInfoFromDatabase> {
+): Promise<AffiliateInfoFromDatabase | undefined> {
   const baseQuery: QueryBuilder<AffiliateInfoModel> = setupBaseQuery<AffiliateInfoModel>(
     AffiliateInfoModel,
     options,
@@ -102,7 +102,7 @@ export async function updateInfo(
   windowEndTs: string, // inclusive
 ) : Promise<void> {
 
-  await knexReadReplica.getConnection().raw(
+  await knexPrimary.raw(
     `
 BEGIN;
 

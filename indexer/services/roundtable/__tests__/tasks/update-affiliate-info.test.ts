@@ -66,7 +66,7 @@ describe('update-affiliate-info', () => {
       firstReferralBlockHeight: '1',
       referredTotalVolume: '0',
     };
-    expect(updatedInfo).toEqual(expect.objectContaining(expectedAffiliateInfo));
+    expect(updatedInfo).toEqual(expectedAffiliateInfo);
 
     // Check that persistent cache updated
     const lastUpdateTime1 = await getAffiliateInfoUpdateTime();
@@ -155,13 +155,13 @@ describe('update-affiliate-info', () => {
     });
 
     // Simulate backfill
-    let backfillTime = await getAffiliateInfoUpdateTime();
+    let backfillTime: DateTime | undefined = await getAffiliateInfoUpdateTime();
     while (backfillTime !== undefined && DateTime.fromISO(backfillTime.toISO()) < currentDt) {
       await affiliateInfoUpdateTask();
       backfillTime = await getAffiliateInfoUpdateTime();
     }
 
-    const expectedAffiliateInfo = {
+    const expectedAffiliateInfo: AffiliateInfoFromDatabase = {
       address: testConstants.defaultWallet2.address,
       affiliateEarnings: '1000',
       referredMakerTrades: 0,
@@ -170,9 +170,10 @@ describe('update-affiliate-info', () => {
       totalReferredUsers: 1,
       referredNetProtocolEarnings: '1000',
       firstReferralBlockHeight: '1',
-      totalReferredVolume: '2',
+      referredTotalVolume: '2',
     };
-    const updatedInfo = await AffiliateInfoTable.findById(testConstants.defaultWallet2.address);
+    const updatedInfo: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable
+      .findById(testConstants.defaultWallet2.address);
     expect(updatedInfo).toEqual(expectedAffiliateInfo);
   });
 
@@ -181,7 +182,7 @@ describe('update-affiliate-info', () => {
     // `defaultLastUpdateTime` value to emulate backfilling from very beginning
     expect(await getAffiliateInfoUpdateTime()).toBeUndefined();
 
-    const referenceDt = DateTime.fromISO('2020-01-01T00:00:00Z');
+    const referenceDt = DateTime.fromISO('2023-10-26T00:00:00Z');
 
     // defaultWallet2 will be affiliate and defaultWallet will be referee
     await AffiliateReferredUsersTable.create({
@@ -217,7 +218,7 @@ describe('update-affiliate-info', () => {
       await affiliateInfoUpdateTask();
     }
 
-    const expectedAffiliateInfo = {
+    const expectedAffiliateInfo: AffiliateInfoFromDatabase = {
       address: testConstants.defaultWallet2.address,
       affiliateEarnings: '1000',
       referredMakerTrades: 0,
@@ -226,7 +227,7 @@ describe('update-affiliate-info', () => {
       totalReferredUsers: 1,
       referredNetProtocolEarnings: '1000',
       firstReferralBlockHeight: '1',
-      totalReferredVolume: '2',
+      referredTotalVolume: '2',
     };
     const updatedInfo = await AffiliateInfoTable.findById(testConstants.defaultWallet2.address);
     expect(updatedInfo).toEqual(expectedAffiliateInfo);

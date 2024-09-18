@@ -1,10 +1,10 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { PersistentCacheTable, AffiliateInfoTable, PersistentCacheKeys } from '@dydxprotocol-indexer/postgres';
+import { PersistentCacheTable, AffiliateInfoTable, PersistentCacheKeys, PersistentCacheFromDatabase } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 
 import config from '../config';
 
-const defaultLastUpdateTime: string = '2020-01-01T00:00:00Z';
+const defaultLastUpdateTime: string = '2023-10-26T00:00:00Z';
 
 /**
  * Update the affiliate info for all affiliate addresses.
@@ -12,9 +12,8 @@ const defaultLastUpdateTime: string = '2020-01-01T00:00:00Z';
 export default async function runTask(): Promise<void> {
   try {
     const start = Date.now();
-    const persistentCacheEntry = await PersistentCacheTable.findById(
-      PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-    );
+    const persistentCacheEntry: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
+      .findById(PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME);
 
     if (!persistentCacheEntry) {
       logger.info({
@@ -23,7 +22,7 @@ export default async function runTask(): Promise<void> {
       });
     }
 
-    const lastUpdateTime = DateTime.fromISO(persistentCacheEntry
+    const lastUpdateTime: DateTime = DateTime.fromISO(persistentCacheEntry
       ? persistentCacheEntry.value
       : defaultLastUpdateTime);
     let windowEndTime = DateTime.utc();

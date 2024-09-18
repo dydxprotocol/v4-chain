@@ -1,7 +1,7 @@
 import { PartialModelObject, QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
-import { knexReadReplica } from '../helpers/knex';
+import { knexPrimary } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import WalletModel from '../models/wallet-model';
@@ -124,7 +124,7 @@ export async function updateTotalVolume(
   windowEndTs: string,
 ) : Promise<void> {
 
-  await knexReadReplica.getConnection().raw(
+  await knexPrimary.raw(
     `
     BEGIN;
 
