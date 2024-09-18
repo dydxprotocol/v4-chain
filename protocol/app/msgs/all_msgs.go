@@ -253,6 +253,8 @@ var (
 		"/dydxprotocol.vault.MsgAllocateToVaultResponse":            {},
 		"/dydxprotocol.vault.MsgDepositToMegavault":                 {},
 		"/dydxprotocol.vault.MsgDepositToMegavaultResponse":         {},
+		"/dydxprotocol.vault.MsgRetrieveFromVault":                  {},
+		"/dydxprotocol.vault.MsgRetrieveFromVaultResponse":          {},
 		"/dydxprotocol.vault.MsgSetVaultParams":                     {},
 		"/dydxprotocol.vault.MsgSetVaultParamsResponse":             {},
 		"/dydxprotocol.vault.MsgUnlockShares":                       {},

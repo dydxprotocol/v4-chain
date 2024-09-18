@@ -1184,6 +1184,7 @@ func New(
 		app.PricesKeeper,
 		app.SendingKeeper,
 		app.SubaccountsKeeper,
+		app.IndexerEventManager,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
@@ -1943,6 +1944,11 @@ func (app *App) RegisterNodeService(clientCtx client.Context, cfg config.Config)
 // SimulationManager always returns nil.
 func (app *App) SimulationManager() *module.SimulationManager {
 	return nil
+}
+
+// GetKVStoreKey gets KV Store keys.
+func (app *App) GetKVStoreKey() map[string]*storetypes.KVStoreKey {
+	return app.keys
 }
 
 // buildAnteHandler builds an AnteHandler object configured for the app.

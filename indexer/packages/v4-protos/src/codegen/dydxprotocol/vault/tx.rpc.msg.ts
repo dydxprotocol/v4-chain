@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgDepositToMegavault, MsgDepositToMegavaultResponse, MsgWithdrawFromMegavault, MsgWithdrawFromMegavaultResponse, MsgUpdateDefaultQuotingParams, MsgUpdateDefaultQuotingParamsResponse, MsgUpdateOperatorParams, MsgUpdateOperatorParamsResponse, MsgSetVaultParams, MsgSetVaultParamsResponse, MsgUnlockShares, MsgUnlockSharesResponse, MsgAllocateToVault, MsgAllocateToVaultResponse } from "./tx";
+import { MsgDepositToMegavault, MsgDepositToMegavaultResponse, MsgWithdrawFromMegavault, MsgWithdrawFromMegavaultResponse, MsgUpdateDefaultQuotingParams, MsgUpdateDefaultQuotingParamsResponse, MsgUpdateOperatorParams, MsgUpdateOperatorParamsResponse, MsgSetVaultParams, MsgSetVaultParamsResponse, MsgUnlockShares, MsgUnlockSharesResponse, MsgAllocateToVault, MsgAllocateToVaultResponse, MsgRetrieveFromVault, MsgRetrieveFromVaultResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -27,6 +27,9 @@ export interface Msg {
   /** AllocateToVault allocates funds from main vault to a vault. */
 
   allocateToVault(request: MsgAllocateToVault): Promise<MsgAllocateToVaultResponse>;
+  /** RetrieveFromVault retrieves funds from a vault to main vault. */
+
+  retrieveFromVault(request: MsgRetrieveFromVault): Promise<MsgRetrieveFromVaultResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -40,6 +43,7 @@ export class MsgClientImpl implements Msg {
     this.setVaultParams = this.setVaultParams.bind(this);
     this.unlockShares = this.unlockShares.bind(this);
     this.allocateToVault = this.allocateToVault.bind(this);
+    this.retrieveFromVault = this.retrieveFromVault.bind(this);
   }
 
   depositToMegavault(request: MsgDepositToMegavault): Promise<MsgDepositToMegavaultResponse> {
@@ -82,6 +86,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgAllocateToVault.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.vault.Msg", "AllocateToVault", data);
     return promise.then(data => MsgAllocateToVaultResponse.decode(new _m0.Reader(data)));
+  }
+
+  retrieveFromVault(request: MsgRetrieveFromVault): Promise<MsgRetrieveFromVaultResponse> {
+    const data = MsgRetrieveFromVault.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Msg", "RetrieveFromVault", data);
+    return promise.then(data => MsgRetrieveFromVaultResponse.decode(new _m0.Reader(data)));
   }
 
 }

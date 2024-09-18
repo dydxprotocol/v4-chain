@@ -4,6 +4,8 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -69,6 +71,19 @@ func (k Keeper) SetVaultParams(
 	b := k.cdc.MustMarshal(&vaultParams)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
 	store.Set(vaultId.ToStateKey(), b)
+
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpsertVault,
+		indexerevents.UpsertVaultEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewUpsertVaultEvent(
+				vaultId.ToModuleAccountAddress(),
+				vaultId.Number,
+				vaultParams.Status,
+			),
+		),
+	)
 
 	return nil
 }

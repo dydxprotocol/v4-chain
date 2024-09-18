@@ -260,6 +260,34 @@ export interface MsgAllocateToVaultResponse {}
 /** MsgAllocateToVaultResponse is the Msg/AllocateToVault response type. */
 
 export interface MsgAllocateToVaultResponseSDKType {}
+/** MsgRetrieveFromVault is the Msg/RetrieveFromVault request type. */
+
+export interface MsgRetrieveFromVault {
+  authority: string;
+  /** The vault to retrieve from. */
+
+  vaultId?: VaultId;
+  /** Number of quote quantums to retrieve. */
+
+  quoteQuantums: Uint8Array;
+}
+/** MsgRetrieveFromVault is the Msg/RetrieveFromVault request type. */
+
+export interface MsgRetrieveFromVaultSDKType {
+  authority: string;
+  /** The vault to retrieve from. */
+
+  vault_id?: VaultIdSDKType;
+  /** Number of quote quantums to retrieve. */
+
+  quote_quantums: Uint8Array;
+}
+/** MsgRetrieveFromVaultResponse is the Msg/RetrieveFromVault response type. */
+
+export interface MsgRetrieveFromVaultResponse {}
+/** MsgRetrieveFromVaultResponse is the Msg/RetrieveFromVault response type. */
+
+export interface MsgRetrieveFromVaultResponseSDKType {}
 
 function createBaseMsgDepositToMegavault(): MsgDepositToMegavault {
   return {
@@ -997,6 +1025,105 @@ export const MsgAllocateToVaultResponse = {
 
   fromPartial(_: DeepPartial<MsgAllocateToVaultResponse>): MsgAllocateToVaultResponse {
     const message = createBaseMsgAllocateToVaultResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgRetrieveFromVault(): MsgRetrieveFromVault {
+  return {
+    authority: "",
+    vaultId: undefined,
+    quoteQuantums: new Uint8Array()
+  };
+}
+
+export const MsgRetrieveFromVault = {
+  encode(message: MsgRetrieveFromVault, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.vaultId !== undefined) {
+      VaultId.encode(message.vaultId, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.quoteQuantums.length !== 0) {
+      writer.uint32(26).bytes(message.quoteQuantums);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgRetrieveFromVault {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgRetrieveFromVault();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.vaultId = VaultId.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.quoteQuantums = reader.bytes();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgRetrieveFromVault>): MsgRetrieveFromVault {
+    const message = createBaseMsgRetrieveFromVault();
+    message.authority = object.authority ?? "";
+    message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
+    message.quoteQuantums = object.quoteQuantums ?? new Uint8Array();
+    return message;
+  }
+
+};
+
+function createBaseMsgRetrieveFromVaultResponse(): MsgRetrieveFromVaultResponse {
+  return {};
+}
+
+export const MsgRetrieveFromVaultResponse = {
+  encode(_: MsgRetrieveFromVaultResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgRetrieveFromVaultResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgRetrieveFromVaultResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgRetrieveFromVaultResponse>): MsgRetrieveFromVaultResponse {
+    const message = createBaseMsgRetrieveFromVaultResponse();
     return message;
   }
 
