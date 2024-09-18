@@ -346,3 +346,29 @@ func TestGetMaxMakerRebate(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAffiliateRefereeLowestTakerFee(t *testing.T) {
+	tests := map[string]struct {
+		expectedLowestTakerFee int32
+		feeTiers               types.PerpetualFeeParams
+	}{
+		"tiers are ordered by absolute volume requirement": {
+			feeTiers:               types.StandardParams(),
+			expectedLowestTakerFee: 350,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.FeeTiersKeeper
+			err := k.SetPerpetualFeeParams(
+				ctx,
+				tc.feeTiers,
+			)
+			require.NoError(t, err)
+
+		})
+	}
+}
