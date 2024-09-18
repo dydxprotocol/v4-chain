@@ -22,5 +22,6 @@ type RevShareKeeper interface {
 		affiliateTiers AffiliateTiers,
 		unconditionalRevShareConfig revsharetypes.UnconditionalRevShareConfig,
 		marketMapperRevShareParams revsharetypes.MarketMapperRevenueShareParams,
+		affiliateWhitelist AffiliateWhitelist,
 	) bool
 }

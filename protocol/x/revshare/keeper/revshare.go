@@ -132,10 +132,16 @@ func (k Keeper) ValidateRevShareSafety(
 	affiliateTiers affiliatetypes.AffiliateTiers,
 	unconditionalRevShareConfig types.UnconditionalRevShareConfig,
 	marketMapperRevShareParams types.MarketMapperRevenueShareParams,
+	affiliateWhitelist affiliatetypes.AffiliateWhitelist,
 ) bool {
-	highestTierRevSharePpm := uint32(0)
+	highestAffilliateTierRevSharePpm := uint32(0)
 	if len(affiliateTiers.Tiers) > 0 {
-		highestTierRevSharePpm = affiliateTiers.Tiers[len(affiliateTiers.Tiers)-1].TakerFeeSharePpm
+		highestAffilliateTierRevSharePpm = affiliateTiers.Tiers[len(affiliateTiers.Tiers)-1].TakerFeeSharePpm
+	}
+	for _, tier := range affiliateWhitelist.Tiers {
+		if tier.TakerFeeSharePpm > highestAffilliateTierRevSharePpm {
+			highestAffilliateTierRevSharePpm = tier.TakerFeeSharePpm
+		}
 	}
 	totalUnconditionalRevSharePpm := uint32(0)
 	for _, recipientConfig := range unconditionalRevShareConfig.Configs {
@@ -143,7 +149,7 @@ func (k Keeper) ValidateRevShareSafety(
 	}
 	totalMarketMapperRevSharePpm := marketMapperRevShareParams.RevenueSharePpm
 
-	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm + highestTierRevSharePpm
+	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm + highestAffilliateTierRevSharePpm
 	return totalRevSharePpm < lib.OneMillion
 }
 
