@@ -1,4 +1,6 @@
-import { PersistentCacheKeys, AffiliateInfoFromDatabase, Liquidity, PersistentCacheFromDatabase } from '../../src/types';
+import {
+  PersistentCacheKeys, AffiliateInfoFromDatabase, Liquidity, PersistentCacheFromDatabase,
+} from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import {
   defaultOrder,
@@ -81,6 +83,15 @@ describe('Affiliate info store', () => {
       defaultAffiliateInfo.address,
     );
     expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo));
+  });
+
+  it('Returns undefined if affiliate info not found by Id', async () => {
+    await AffiliateInfoTable.create(defaultAffiliateInfo);
+
+    const info: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
+      'non_existent_address',
+    );
+    expect(info).toBeUndefined();
   });
 
   describe('Affiliate info .updateInfo()', () => {
@@ -270,23 +281,24 @@ describe('Affiliate info store', () => {
   describe('paginatedFindWithAddressFilter', () => {
     beforeEach(async () => {
       await migrate();
-      for (let i = 0; i < 10; i++) {
-        await AffiliateInfoTable.create({
+      await Promise.all(
+        Array.from({ length: 10 }, (_, i) => AffiliateInfoTable.create({
           ...defaultAffiliateInfo,
           address: `address_${i}`,
           affiliateEarnings: i.toString(),
-        });
-      }
+        }),
+        ),
+      );
     });
 
     it('Successfully filters by address', async () => {
-      // eslint-disable-next-line max-len
-      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable.paginatedFindWithAddressFilter(
-        ['address_0'],
-        0,
-        10,
-        false,
-      );
+      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable
+        .paginatedFindWithAddressFilter(
+          ['address_0'],
+          0,
+          10,
+          false,
+        );
       expect(infos).toBeDefined();
       expect(infos!.length).toEqual(1);
       expect(infos![0]).toEqual(expect.objectContaining({

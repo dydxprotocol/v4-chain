@@ -1,5 +1,7 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { PersistentCacheTable, WalletTable, PersistentCacheKeys, PersistentCacheFromDatabase } from '@dydxprotocol-indexer/postgres';
+import {
+  PersistentCacheTable, WalletTable, PersistentCacheKeys, PersistentCacheFromDatabase,
+} from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 
 import config from '../config';
@@ -13,7 +15,7 @@ export default async function runTask(): Promise<void> {
   try {
     const start = Date.now();
     const persistentCacheEntry: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
-    .findById(PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME);
+      .findById(PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME);
 
     if (!persistentCacheEntry) {
       logger.info({

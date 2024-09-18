@@ -1,5 +1,7 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { PersistentCacheTable, AffiliateInfoTable, PersistentCacheKeys, PersistentCacheFromDatabase } from '@dydxprotocol-indexer/postgres';
+import {
+  PersistentCacheTable, AffiliateInfoTable, PersistentCacheKeys, PersistentCacheFromDatabase,
+} from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 
 import config from '../config';

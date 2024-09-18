@@ -99,7 +99,8 @@ describe('Wallet store', () => {
         firstFillTime.minus({ hours: 1 }).toISO(), // need to minus because left bound is exclusive
         firstFillTime.plus({ hours: 1 }).toISO(),
       );
-      let wallet: WalletFromDatabase | undefined = await WalletTable.findById(defaultWallet.address);
+      let wallet: WalletFromDatabase | undefined = await WalletTable
+        .findById(defaultWallet.address);
       expect(wallet).toEqual(expect.objectContaining({
         ...defaultWallet,
         totalVolume: '103',
@@ -129,7 +130,7 @@ describe('Wallet store', () => {
       await WalletTable.updateTotalVolume(leftBound.toISO(), rightBound.toISO());
 
       let persistentCache: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
-      .findById(PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME);
+        .findById(PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME);
       let lastUpdateTime: string | undefined = persistentCache?.value;
       expect(lastUpdateTime).not.toBeUndefined();
       if (lastUpdateTime !== undefined) {
