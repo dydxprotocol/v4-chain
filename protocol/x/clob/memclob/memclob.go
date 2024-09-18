@@ -1699,7 +1699,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		// affiliate revshare doesnt affect subaccount balance, we can pass an empty map
 		// as we dont need to process affiliate revshare during checkTx and only during deliverTx
 		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(
-			ctx, &matchWithOrders, make(map[string]uint32))
+			ctx, &matchWithOrders, map[string]uint32{})
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
 			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxInsuranceLost) {
 				// Subaccount has reached max insurance lost block limit. Stop matching.

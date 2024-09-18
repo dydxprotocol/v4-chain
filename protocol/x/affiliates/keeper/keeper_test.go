@@ -334,6 +334,16 @@ func TestUpdateAffiliateTiers(t *testing.T) {
 			},
 			expectedError: types.ErrInvalidAffiliateTiers,
 		},
+		{
+			name: "Taker fee share ppm greater than cap",
+			affiliateTiers: types.AffiliateTiers{
+				Tiers: []types.AffiliateTiers_Tier{
+					{ReqReferredVolumeQuoteQuantums: 1000, ReqStakedWholeCoins: 100, TakerFeeSharePpm: 100},
+					{ReqReferredVolumeQuoteQuantums: 2000, ReqStakedWholeCoins: 200, TakerFeeSharePpm: 550_000}, // 55%
+				},
+			},
+			expectedError: types.ErrRevShareSafetyViolation,
+		},
 	}
 
 	for _, tc := range tests {
@@ -445,6 +455,18 @@ func TestSetAffiliateWhitelist(t *testing.T) {
 				},
 			},
 			expectedError: types.ErrDuplicateAffiliateAddressForWhitelist,
+		},
+		{
+			name: "Taker fee share ppm greater than cap",
+			whitelist: types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses:        []string{constants.AliceAccAddress.String()},
+						TakerFeeSharePpm: 550_000, // 55%
+					},
+				},
+			},
+			expectedError: types.ErrRevShareSafetyViolation,
 		},
 	}
 

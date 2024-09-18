@@ -249,6 +249,13 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 	tiers := affiliateTiers.GetTiers()
 	// start at 1, since 0 is the default tier.
 	for i := 1; i < len(tiers); i++ {
+		// Check if the taker fee share ppm is greater than the cap.
+		if tiers[i].TakerFeeSharePpm > types.AffiliatesRevSharePpmCap {
+			return errorsmod.Wrapf(types.ErrRevShareSafetyViolation,
+				"taker fee share ppm %d is greater than the cap %d",
+				tiers[i].TakerFeeSharePpm, types.AffiliatesRevSharePpmCap)
+		}
+		// Check if the tiers are strictly increasing.
 		if tiers[i].ReqReferredVolumeQuoteQuantums <= tiers[i-1].ReqReferredVolumeQuoteQuantums ||
 			tiers[i].ReqStakedWholeCoins <= tiers[i-1].ReqStakedWholeCoins {
 			return errorsmod.Wrapf(types.ErrInvalidAffiliateTiers,
@@ -285,6 +292,13 @@ func (k Keeper) SetAffiliateWhitelist(ctx sdk.Context, whitelist types.Affiliate
 	store := ctx.KVStore(k.storeKey)
 	addressSet := make(map[string]bool)
 	for _, tier := range whitelist.Tiers {
+		// Check if the taker fee share ppm is greater than the cap.
+		if tier.TakerFeeSharePpm > types.AffiliatesRevSharePpmCap {
+			return errorsmod.Wrapf(types.ErrRevShareSafetyViolation,
+				"taker fee share ppm %d is greater than the cap %d",
+				tier.TakerFeeSharePpm, types.AffiliatesRevSharePpmCap)
+		}
+		// Check for duplicate addresses.
 		for _, address := range tier.Addresses {
 			if addressSet[address] {
 				return errorsmod.Wrapf(types.ErrDuplicateAffiliateAddressForWhitelist,
