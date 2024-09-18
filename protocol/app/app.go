@@ -1945,6 +1945,11 @@ func (app *App) SimulationManager() *module.SimulationManager {
 	return nil
 }
 
+// GetKVStoreKey gets KV Store keys.
+func (app *App) GetKVStoreKey() map[string]*storetypes.KVStoreKey {
+	return app.keys
+}
+
 // buildAnteHandler builds an AnteHandler object configured for the app.
 func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 	anteHandler, err := NewAnteHandler(

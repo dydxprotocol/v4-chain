@@ -178,6 +178,34 @@ export interface MsgUpdateOperatorParamsResponse {}
 /** MsgUpdateVaultParamsResponse is the Msg/UpdateOperatorParams response type. */
 
 export interface MsgUpdateOperatorParamsResponseSDKType {}
+/** MsgAllocateToVault is the Msg/AllocateToVault request type. */
+
+export interface MsgAllocateToVault {
+  authority: string;
+  /** The vault to allocate to. */
+
+  vaultId?: VaultId;
+  /** Number of quote quantums to allocate. */
+
+  quoteQuantums: Uint8Array;
+}
+/** MsgAllocateToVault is the Msg/AllocateToVault request type. */
+
+export interface MsgAllocateToVaultSDKType {
+  authority: string;
+  /** The vault to allocate to. */
+
+  vault_id?: VaultIdSDKType;
+  /** Number of quote quantums to allocate. */
+
+  quote_quantums: Uint8Array;
+}
+/** MsgAllocateToVaultResponse is the Msg/AllocateToVault response type. */
+
+export interface MsgAllocateToVaultResponse {}
+/** MsgAllocateToVaultResponse is the Msg/AllocateToVault response type. */
+
+export interface MsgAllocateToVaultResponseSDKType {}
 
 function createBaseMsgDepositToMegavault(): MsgDepositToMegavault {
   return {
@@ -706,6 +734,105 @@ export const MsgUpdateOperatorParamsResponse = {
 
   fromPartial(_: DeepPartial<MsgUpdateOperatorParamsResponse>): MsgUpdateOperatorParamsResponse {
     const message = createBaseMsgUpdateOperatorParamsResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgAllocateToVault(): MsgAllocateToVault {
+  return {
+    authority: "",
+    vaultId: undefined,
+    quoteQuantums: new Uint8Array()
+  };
+}
+
+export const MsgAllocateToVault = {
+  encode(message: MsgAllocateToVault, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.vaultId !== undefined) {
+      VaultId.encode(message.vaultId, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.quoteQuantums.length !== 0) {
+      writer.uint32(26).bytes(message.quoteQuantums);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgAllocateToVault {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgAllocateToVault();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.vaultId = VaultId.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.quoteQuantums = reader.bytes();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgAllocateToVault>): MsgAllocateToVault {
+    const message = createBaseMsgAllocateToVault();
+    message.authority = object.authority ?? "";
+    message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
+    message.quoteQuantums = object.quoteQuantums ?? new Uint8Array();
+    return message;
+  }
+
+};
+
+function createBaseMsgAllocateToVaultResponse(): MsgAllocateToVaultResponse {
+  return {};
+}
+
+export const MsgAllocateToVaultResponse = {
+  encode(_: MsgAllocateToVaultResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgAllocateToVaultResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgAllocateToVaultResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgAllocateToVaultResponse>): MsgAllocateToVaultResponse {
+    const message = createBaseMsgAllocateToVaultResponse();
     return message;
   }
 

@@ -21,16 +21,19 @@ func (k msgServer) CreateMarketPermissionless(
 
 	marketId, err := k.Keeper.CreateMarket(ctx, msg.Ticker)
 	if err != nil {
+		k.Logger(ctx).Error("failed to create PML market", "error", err)
 		return nil, err
 	}
 
 	perpetualId, err := k.Keeper.CreatePerpetual(ctx, marketId, msg.Ticker)
 	if err != nil {
+		k.Logger(ctx).Error("failed to create perpetual for PML market", "error", err)
 		return nil, err
 	}
 
 	_, err = k.Keeper.CreateClobPair(ctx, perpetualId)
 	if err != nil {
+		k.Logger(ctx).Error("failed to create clob pair for PML market", "error", err)
 		return nil, err
 	}
 

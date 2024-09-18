@@ -130,4 +130,9 @@ var (
 		25,
 		"Shares to withdraw must be positive and less than or equal to total shares",
 	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		26,
+		"Authority must be a module authority or operator",
+	)
 )

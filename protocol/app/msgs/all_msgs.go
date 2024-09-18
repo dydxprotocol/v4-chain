@@ -249,6 +249,8 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
 		// vault
+		"/dydxprotocol.vault.MsgAllocateToVault":                    {},
+		"/dydxprotocol.vault.MsgAllocateToVaultResponse":            {},
 		"/dydxprotocol.vault.MsgDepositToMegavault":                 {},
 		"/dydxprotocol.vault.MsgDepositToMegavaultResponse":         {},
 		"/dydxprotocol.vault.MsgSetVaultParams":                     {},
