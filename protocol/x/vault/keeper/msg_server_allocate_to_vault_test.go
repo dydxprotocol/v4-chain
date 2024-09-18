@@ -24,22 +24,27 @@ func TestMsgAllocateToVault(t *testing.T) {
 		mainVaultQuantums uint64
 		// Number of quote quantums sub vault has.
 		subVaultQuantums uint64
+		// Existing vault params, if any.
+		vaultParams *vaulttypes.VaultParams
 		// Msg.
 		msg *vaulttypes.MsgAllocateToVault
 		// Expected error.
 		expectedErr string
 	}{
-		"Success - Gov Authority, Allocate 50 to Vault Clob 0": {
+		"Success - Gov Authority, Allocate 50 to Vault Clob 0, Existing vault params": {
 			operator:          constants.AliceAccAddress.String(),
 			mainVaultQuantums: 100,
 			subVaultQuantums:  0,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+			},
 			msg: &vaulttypes.MsgAllocateToVault{
 				Authority:     lib.GovModuleAddress.String(),
 				VaultId:       constants.Vault_Clob0,
 				QuoteQuantums: dtypes.NewInt(50),
 			},
 		},
-		"Success - Gov Authority, Allocate 77 to Vault Clob 1": {
+		"Success - Gov Authority, Allocate 77 to Vault Clob 1, Non-existent Vault Params": {
 			operator:          constants.AliceAccAddress.String(),
 			mainVaultQuantums: 100,
 			subVaultQuantums:  15,
@@ -49,20 +54,26 @@ func TestMsgAllocateToVault(t *testing.T) {
 				QuoteQuantums: dtypes.NewInt(77),
 			},
 		},
-		"Success - Operator Authority, Allocate all to Vault Clob 1": {
+		"Success - Operator Authority, Allocate all to Vault Clob 1, Existing vault params": {
 			operator:          constants.AliceAccAddress.String(),
 			mainVaultQuantums: 100,
 			subVaultQuantums:  15,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			},
 			msg: &vaulttypes.MsgAllocateToVault{
 				Authority:     constants.AliceAccAddress.String(),
 				VaultId:       constants.Vault_Clob1,
 				QuoteQuantums: dtypes.NewInt(100),
 			},
 		},
-		"Failure - Operator Authority, Insufficient quantums to allocate to Vault Clob 0": {
+		"Failure - Operator Authority, Insufficient quantums to allocate to Vault Clob 0, Existing vault params": {
 			operator:          constants.AliceAccAddress.String(),
 			mainVaultQuantums: 100,
 			subVaultQuantums:  15,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+			},
 			msg: &vaulttypes.MsgAllocateToVault{
 				Authority:     constants.AliceAccAddress.String(),
 				VaultId:       constants.Vault_Clob0,
@@ -70,7 +81,21 @@ func TestMsgAllocateToVault(t *testing.T) {
 			},
 			expectedErr: "failed to apply subaccount updates",
 		},
-		"Failure - Invalid Authority": {
+		"Failure - Operator Authority, No corresponding clob pair": {
+			operator:          constants.AliceAccAddress.String(),
+			mainVaultQuantums: 100,
+			subVaultQuantums:  0,
+			msg: &vaulttypes.MsgAllocateToVault{
+				Authority: constants.AliceAccAddress.String(),
+				VaultId: vaulttypes.VaultId{
+					Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+					Number: 727,
+				},
+				QuoteQuantums: dtypes.NewInt(1),
+			},
+			expectedErr: vaulttypes.ErrClobPairNotFound.Error(),
+		},
+		"Failure - Invalid Authority, Non-existent Vault Params": {
 			operator:          constants.BobAccAddress.String(),
 			mainVaultQuantums: 100,
 			subVaultQuantums:  15,
@@ -81,7 +106,7 @@ func TestMsgAllocateToVault(t *testing.T) {
 			},
 			expectedErr: vaulttypes.ErrInvalidAuthority.Error(),
 		},
-		"Failure - Empty Authority": {
+		"Failure - Empty Authority, Existing vault params": {
 			operator:          constants.BobAccAddress.String(),
 			mainVaultQuantums: 100,
 			subVaultQuantums:  15,
@@ -104,6 +129,14 @@ func TestMsgAllocateToVault(t *testing.T) {
 					func(genesisState *vaulttypes.GenesisState) {
 						genesisState.OperatorParams = vaulttypes.OperatorParams{
 							Operator: tc.operator,
+						}
+						if tc.vaultParams != nil {
+							genesisState.Vaults = []vaulttypes.Vault{
+								{
+									VaultId:     tc.msg.VaultId,
+									VaultParams: *tc.vaultParams,
+								},
+							}
 						}
 					},
 				)
@@ -139,7 +172,10 @@ func TestMsgAllocateToVault(t *testing.T) {
 			k := tApp.App.VaultKeeper
 			ms := keeper.NewMsgServerImpl(k)
 
+			// Allocate to vault.
 			_, err := ms.AllocateToVault(ctx, tc.msg)
+
+			// Check expectations.
 			mainVault := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, vaulttypes.MegavaultMainSubaccount)
 			subVault := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *tc.msg.VaultId.ToSubaccountId())
 			require.Len(t, subVault.AssetPositions, 1)
@@ -158,6 +194,15 @@ func TestMsgAllocateToVault(t *testing.T) {
 					tc.subVaultQuantums,
 					subVault.AssetPositions[0].Quantums.BigInt().Uint64(),
 				)
+
+				// Verify that vault params is unchanged.
+				vaultParams, exists := k.GetVaultParams(ctx, tc.msg.VaultId)
+				if tc.vaultParams != nil {
+					require.True(t, exists)
+					require.Equal(t, *tc.vaultParams, vaultParams)
+				} else {
+					require.False(t, exists)
+				}
 			} else {
 				require.NoError(t, err)
 
@@ -178,6 +223,21 @@ func TestMsgAllocateToVault(t *testing.T) {
 					tc.subVaultQuantums+tc.msg.QuoteQuantums.BigInt().Uint64(),
 					subVault.AssetPositions[0].Quantums.BigInt().Uint64(),
 				)
+
+				// Verify that vault params is initialized if didn't exist before.
+				vaultParams, exists := k.GetVaultParams(ctx, tc.msg.VaultId)
+				require.True(t, exists)
+				if tc.vaultParams != nil {
+					require.Equal(t, *tc.vaultParams, vaultParams)
+				} else {
+					require.Equal(
+						t,
+						vaulttypes.VaultParams{
+							Status: vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+						},
+						vaultParams,
+					)
+				}
 			}
 		})
 	}
