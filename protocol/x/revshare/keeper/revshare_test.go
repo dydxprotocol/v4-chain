@@ -178,6 +178,8 @@ func TestValidateRevShareSafety(t *testing.T) {
 		affiliateTiers             affiliatetypes.AffiliateTiers
 		revShareConfig             types.UnconditionalRevShareConfig
 		marketMapperRevShareParams types.MarketMapperRevenueShareParams
+		lowestTakerFee             int32
+		lowestMakerFee             int32
 		expectedValid              bool
 	}{
 		"valid rev share config": {
@@ -195,7 +197,9 @@ func TestValidateRevShareSafety(t *testing.T) {
 				RevenueSharePpm: 100_000, // 10%
 				ValidDays:       0,
 			},
-			expectedValid: true,
+			lowestTakerFee: 350,
+			lowestMakerFee: -110,
+			expectedValid:  true,
 		},
 		"invalid rev share config - sum of shares > 100%": {
 			affiliateTiers: affiliatetypes.DefaultAffiliateTiers,
@@ -216,7 +220,9 @@ func TestValidateRevShareSafety(t *testing.T) {
 				RevenueSharePpm: 100_000, // 10%
 				ValidDays:       0,
 			},
-			expectedValid: false,
+			lowestTakerFee: 350,
+			lowestMakerFee: -110,
+			expectedValid:  false,
 		},
 		"invalid rev share config - sum of shares + highest tier share > 100%": {
 			affiliateTiers: affiliatetypes.AffiliateTiers{
@@ -250,7 +256,40 @@ func TestValidateRevShareSafety(t *testing.T) {
 				RevenueSharePpm: 100_000, // 10%
 				ValidDays:       0,
 			},
-			expectedValid: false,
+			lowestTakerFee: 350,
+			lowestMakerFee: -110,
+			expectedValid:  false,
+		},
+		"invalid rev share config - violates safety condition": {
+			affiliateTiers: affiliatetypes.AffiliateTiers{
+				Tiers: []affiliatetypes.AffiliateTiers_Tier{
+					{
+						ReqReferredVolumeQuoteQuantums: 0,
+						ReqStakedWholeCoins:            0,
+						TakerFeeSharePpm:               450_000, // 45%
+					},
+				},
+			},
+			revShareConfig: types.UnconditionalRevShareConfig{
+				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
+					{
+						Address:  constants.AliceAccAddress.String(),
+						SharePpm: 100_000, // 10%
+					},
+					{
+						Address:  constants.BobAccAddress.String(),
+						SharePpm: 150_000, // 15%
+					},
+				},
+			},
+			marketMapperRevShareParams: types.MarketMapperRevenueShareParams{
+				Address:         constants.AliceAccAddress.String(),
+				RevenueSharePpm: 100_000, // 10%
+				ValidDays:       0,
+			},
+			lowestTakerFee: 350,
+			lowestMakerFee: -110,
+			expectedValid:  false,
 		},
 	}
 
@@ -260,7 +299,14 @@ func TestValidateRevShareSafety(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.RevShareKeeper
 
-			valid := k.ValidateRevShareSafety(ctx, tc.affiliateTiers, tc.revShareConfig, tc.marketMapperRevShareParams)
+			valid := k.ValidateRevShareSafety(
+				ctx,
+				tc.affiliateTiers,
+				tc.revShareConfig,
+				tc.marketMapperRevShareParams,
+				tc.lowestTakerFee,
+				tc.lowestMakerFee,
+			)
 			require.Equal(t, tc.expectedValid, valid)
 		})
 	}

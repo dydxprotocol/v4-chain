@@ -43,9 +43,11 @@ func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
 		return nil, err
 	}
 	marketMapperRevShareParams := k.revShareKeeper.GetMarketMapperRevenueShareParams(sdkCtx)
+	lowestTakerFee := k.feetiersKeeper.GetAffiliateRefereeLowestTakerFee(sdkCtx)
+	lowestMakerFee := k.feetiersKeeper.GetLowestMakerFee(sdkCtx)
 
 	if !k.revShareKeeper.ValidateRevShareSafety(sdkCtx, msg.Tiers,
-		unconditionalRevShareConfig, marketMapperRevShareParams) {
+		unconditionalRevShareConfig, marketMapperRevShareParams, lowestTakerFee, lowestMakerFee) {
 		return nil, errorsmod.Wrapf(
 			types.ErrRevShareSafetyViolation,
 			"rev share safety violation",

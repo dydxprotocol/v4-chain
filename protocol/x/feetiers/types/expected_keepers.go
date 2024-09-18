@@ -2,13 +2,15 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
 // StatsKeeper defines the expected stats keeper
 type StatsKeeper interface {
-	GetUserStats(ctx sdk.Context, address string) *types.UserStats
-	GetGlobalStats(ctx sdk.Context) *types.GlobalStats
+	GetUserStats(ctx sdk.Context, address string) *statstypes.UserStats
+	GetGlobalStats(ctx sdk.Context) *statstypes.GlobalStats
 }
 
 // VaultKeeper defines the expected vault keeper.
@@ -19,4 +21,21 @@ type VaultKeeper interface {
 // AffiliatesKeeper defines the expected affiliates keeper.
 type AffiliatesKeeper interface {
 	GetReferredBy(ctx sdk.Context, referee string) (string, bool)
+	GetAllAffiliateTiers(ctx sdk.Context) (affiliatetypes.AffiliateTiers, error)
+}
+
+// RevShareKeeper defines the expected revshare keeper.
+type RevShareKeeper interface {
+	GetUnconditionalRevShareConfigParams(ctx sdk.Context) (revsharetypes.UnconditionalRevShareConfig, error)
+	GetMarketMapperRevenueShareParams(
+		ctx sdk.Context,
+	) revsharetypes.MarketMapperRevenueShareParams
+	ValidateRevShareSafety(
+		ctx sdk.Context,
+		affiliateTiers affiliatetypes.AffiliateTiers,
+		unconditionalRevShareConfig revsharetypes.UnconditionalRevShareConfig,
+		marketMapperRevShareParams revsharetypes.MarketMapperRevenueShareParams,
+		lowestTakerFee int32,
+		lowestMakerFee int32,
+	) bool
 }

@@ -970,6 +970,8 @@ func New(
 	)
 	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
 
+	app.AffiliatesKeeper.SetFeetiersKeeper(app.FeeTiersKeeper)
+
 	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
 		appCodec,
 		keys[revsharemoduletypes.StoreKey],
@@ -983,6 +985,7 @@ func New(
 
 	// Set the revshare keeper in the affiliates keeper.
 	app.AffiliatesKeeper.SetRevShareKeeper(app.RevShareKeeper)
+	app.FeeTiersKeeper.SetRevShareKeeper(app.RevShareKeeper)
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,

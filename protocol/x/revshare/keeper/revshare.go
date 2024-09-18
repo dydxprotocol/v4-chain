@@ -124,18 +124,18 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 	store.Set([]byte(types.UnconditionalRevShareConfigKey), unconditionalRevShareConfigBytes)
 }
 
-// ValidateRevShareSafety roughly checks if the total rev share is valid using the formula below
-// highest_affiliate_taker_share * (highest_taker_fee_share_ppm /
-// (lowest_maker_fee_share_ppm + highest_taker_fee_share_ppm))
+// ValidateRevShareSafety roughly checks if the total rev share is valid using the formula below:
+// highest_affiliate_taker_share * (lowest_taker_fee_ppm /
+// (lowest_maker_ppm + lowest_taker_fee_ppm))
 // + sum(unconditional_rev_shares) + market_mapper_rev_share < 100%
 func (k Keeper) ValidateRevShareSafety(
 	ctx sdk.Context,
 	affiliateTiers affiliatetypes.AffiliateTiers,
 	unconditionalRevShareConfig types.UnconditionalRevShareConfig,
 	marketMapperRevShareParams types.MarketMapperRevenueShareParams,
+	lowestTakerFeePpm int32,
+	lowestMakerFeePpm int32,
 ) bool {
-	highestTakerFeeSharePpm := k.feetiersKeeper.GetHighestTakerFee(ctx)
-	lowestMakerFeeSharePpm := k.feetiersKeeper.GetLowestMakerFee(ctx)
 	highestTierRevSharePpm := uint32(0)
 	if len(affiliateTiers.Tiers) > 0 {
 		highestTierRevSharePpm = affiliateTiers.Tiers[len(affiliateTiers.Tiers)-1].TakerFeeSharePpm
@@ -148,7 +148,7 @@ func (k Keeper) ValidateRevShareSafety(
 
 	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm +
 		uint32(math.Ceil(float64(highestTierRevSharePpm)*(float64(
-			highestTakerFeeSharePpm)/float64(lowestMakerFeeSharePpm+highestTakerFeeSharePpm))))
+			lowestTakerFeePpm)/float64(lowestMakerFeePpm+lowestTakerFeePpm))))
 	return totalRevSharePpm < lib.OneMillion
 }
 

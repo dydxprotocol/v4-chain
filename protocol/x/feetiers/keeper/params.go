@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"math"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 )
@@ -25,6 +28,40 @@ func (k Keeper) SetPerpetualFeeParams(
 ) error {
 	if err := params.Validate(); err != nil {
 		return err
+	}
+
+	lowestMakerFee := int32(math.MaxInt32)
+	lowestTakerFee := int32(math.MaxInt32)
+	for _, tier := range params.Tiers {
+		if tier.MakerFeePpm < lowestMakerFee {
+			lowestMakerFee = tier.MakerFeePpm
+		}
+		if tier.TakerFeePpm < lowestTakerFee {
+			lowestTakerFee = tier.TakerFeePpm
+		}
+	}
+	affiliateTiers, err := k.affiliatesKeeper.GetAllAffiliateTiers(ctx)
+	if err != nil {
+		return err
+	}
+
+	unconditionalRevShareConfig, err := k.revShareKeeper.GetUnconditionalRevShareConfigParams(ctx)
+	if err != nil {
+		return err
+	}
+
+	marketMapperRevShareParams := k.revShareKeeper.GetMarketMapperRevenueShareParams(ctx)
+	if err != nil {
+		return err
+	}
+
+	valid := k.revShareKeeper.ValidateRevShareSafety(ctx, affiliateTiers, unconditionalRevShareConfig,
+		marketMapperRevShareParams, lowestTakerFee, lowestMakerFee)
+	if !valid {
+		return errorsmod.Wrapf(
+			types.ErrRevShareSafetyViolation,
+			"rev share safety violation",
+		)
 	}
 
 	store := ctx.KVStore(k.storeKey)

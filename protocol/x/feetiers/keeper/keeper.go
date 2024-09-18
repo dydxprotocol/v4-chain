@@ -21,6 +21,7 @@ type (
 		storeKey         storetypes.StoreKey
 		authorities      map[string]struct{}
 		affiliatesKeeper types.AffiliatesKeeper
+		revShareKeeper   types.RevShareKeeper
 	}
 )
 
@@ -132,15 +133,16 @@ func (k Keeper) GetLowestMakerFee(ctx sdk.Context) int32 {
 	return lowestMakerFee
 }
 
-func (k Keeper) GetHighestTakerFee(ctx sdk.Context) int32 {
+// GetAffiliateRefereeLowestTakerFee returns the lowest taker fee among any tiers.
+func (k Keeper) GetAffiliateRefereeLowestTakerFee(ctx sdk.Context) int32 {
 	feeParams := k.GetPerpetualFeeParams(ctx)
-
-	highestTakerFee := int32(math.MinInt32)
-	for _, tier := range feeParams.Tiers {
-		if tier.TakerFeePpm > highestTakerFee {
-			highestTakerFee = tier.TakerFeePpm
-		}
+	if len(feeParams.Tiers) < int(types.RefereeStartingFeeTier) {
+		panic("fee tiers does not have required number of tiers")
 	}
 
-	return highestTakerFee
+	return feeParams.Tiers[types.RefereeStartingFeeTier].TakerFeePpm
+}
+
+func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
+	k.revShareKeeper = revShareKeeper
 }

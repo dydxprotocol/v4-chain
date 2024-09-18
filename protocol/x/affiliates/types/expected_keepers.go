@@ -23,5 +23,12 @@ type RevShareKeeper interface {
 		affiliateTiers AffiliateTiers,
 		unconditionalRevShareConfig revsharetypes.UnconditionalRevShareConfig,
 		marketMapperRevShareParams revsharetypes.MarketMapperRevenueShareParams,
+		lowestTakerFee int32,
+		lowestMakerFee int32,
 	) bool
+}
+
+type FeetiersKeeper interface {
+	GetAffiliateRefereeLowestTakerFee(ctx sdk.Context) int32
+	GetLowestMakerFee(ctx sdk.Context) int32
 }
