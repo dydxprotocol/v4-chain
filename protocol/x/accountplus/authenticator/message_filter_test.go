@@ -52,8 +52,30 @@ func (s *MessageFilterTest) TestBankSend() {
 			},
 			match: true,
 		},
+		"bank send - multiple types": {
+			msgType: "/cosmos.bank.v1beta1.MsgMultiSend,/cosmos.bank.v1beta1.MsgSend",
+			msg: &bank.MsgSend{
+				FromAddress: s.TestAccAddress[0].String(),
+				ToAddress:   "to",
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
+			},
+			match: true,
+		},
 		"bank send. fail on different message type": {
 			msgType: "/cosmos.bank.v1beta1.MsgSend",
+			msg: &clobtypes.MsgPlaceOrder{
+				Order: clobtypes.Order{
+					OrderId: clobtypes.OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner: s.TestAccAddress[0].String(),
+						},
+					},
+				},
+			},
+			match: false,
+		},
+		"bank send - multiple types. fail on different message type": {
+			msgType: "/cosmos.bank.v1beta1.MsgMultiSend,/cosmos.bank.v1beta1.MsgSend",
 			msg: &clobtypes.MsgPlaceOrder{
 				Order: clobtypes.Order{
 					OrderId: clobtypes.OrderId{
