@@ -9,55 +9,71 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
+	"github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMsgSetVaultParams(t *testing.T) {
 	tests := map[string]struct {
+		// Operator.
+		operator string
 		// Msg.
-		msg *types.MsgSetVaultParams
+		msg *vaulttypes.MsgSetVaultParams
 		// Expected error
 		expectedErr string
 	}{
-		"Success - Vault Clob 0": {
-			msg: &types.MsgSetVaultParams{
+		"Success - Gov Authority, Vault Clob 0": {
+			operator: constants.AliceAccAddress.String(),
+			msg: &vaulttypes.MsgSetVaultParams{
 				Authority:   lib.GovModuleAddress.String(),
 				VaultId:     constants.Vault_Clob0,
 				VaultParams: constants.VaultParams,
 			},
 		},
-		"Success - Vault Clob 1": {
-			msg: &types.MsgSetVaultParams{
+		"Success - Gov Authority, Vault Clob 1": {
+			operator: constants.AliceAccAddress.String(),
+			msg: &vaulttypes.MsgSetVaultParams{
 				Authority:   lib.GovModuleAddress.String(),
 				VaultId:     constants.Vault_Clob1,
 				VaultParams: constants.VaultParams,
 			},
 		},
-		"Failure - Invalid Authority": {
-			msg: &types.MsgSetVaultParams{
+		"Success - Operator Authority, Vault Clob 1": {
+			operator: constants.AliceAccAddress.String(),
+			msg: &vaulttypes.MsgSetVaultParams{
 				Authority:   constants.AliceAccAddress.String(),
+				VaultId:     constants.Vault_Clob1,
+				VaultParams: constants.VaultParams,
+			},
+		},
+		"Failure - Invalid Authority": {
+			operator: constants.AliceAccAddress.String(),
+			msg: &vaulttypes.MsgSetVaultParams{
+				Authority:   constants.BobAccAddress.String(), // not a module authority or operator.
 				VaultId:     constants.Vault_Clob0,
 				VaultParams: constants.VaultParams,
 			},
-			expectedErr: "invalid authority",
+			expectedErr: vaulttypes.ErrInvalidAuthority.Error(),
 		},
 		"Failure - Empty Authority": {
-			msg: &types.MsgSetVaultParams{
+			operator: constants.AliceAccAddress.String(),
+			msg: &vaulttypes.MsgSetVaultParams{
 				Authority:   "",
 				VaultId:     constants.Vault_Clob0,
 				VaultParams: constants.VaultParams,
 			},
-			expectedErr: "invalid authority",
+			expectedErr: vaulttypes.ErrInvalidAuthority.Error(),
 		},
 		"Failure - Vault Clob 0. Invalid Quoting Params": {
-			msg: &types.MsgSetVaultParams{
+			operator: constants.AliceAccAddress.String(),
+			msg: &vaulttypes.MsgSetVaultParams{
 				Authority: lib.GovModuleAddress.String(),
 				VaultId:   constants.Vault_Clob0,
-				VaultParams: types.VaultParams{
-					Status: types.VaultStatus_VAULT_STATUS_STAND_BY,
-					QuotingParams: &types.QuotingParams{
+				VaultParams: vaulttypes.VaultParams{
+					Status: vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+					QuotingParams: &vaulttypes.QuotingParams{
 						Layers:                           3,
 						SpreadMinPpm:                     4_000,
 						SpreadBufferPpm:                  2_000,
@@ -68,23 +84,36 @@ func TestMsgSetVaultParams(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: types.ErrInvalidActivationThresholdQuoteQuantums.Error(),
+			expectedErr: vaulttypes.ErrInvalidActivationThresholdQuoteQuantums.Error(),
 		},
 		"Failure - Vault Clob 1. Unspecified status": {
-			msg: &types.MsgSetVaultParams{
+			operator: constants.AliceAccAddress.String(),
+			msg: &vaulttypes.MsgSetVaultParams{
 				Authority: lib.GovModuleAddress.String(),
 				VaultId:   constants.Vault_Clob0,
-				VaultParams: types.VaultParams{
+				VaultParams: vaulttypes.VaultParams{
 					QuotingParams: &constants.QuotingParams,
 				},
 			},
-			expectedErr: types.ErrUnspecifiedVaultStatus.Error(),
+			expectedErr: vaulttypes.ErrUnspecifiedVaultStatus.Error(),
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				// Set megavault operator.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *vaulttypes.GenesisState) {
+						genesisState.OperatorParams = vaulttypes.OperatorParams{
+							Operator: tc.operator,
+						}
+					},
+				)
+				return genesis
+			}).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 			ms := keeper.NewMsgServerImpl(k)

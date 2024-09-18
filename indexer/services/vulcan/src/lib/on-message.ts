@@ -1,4 +1,5 @@
 import {
+  getInstanceId,
   logger,
   stats,
   ParseMessageError,
@@ -42,9 +43,17 @@ function getMessageType(update: OffChainUpdateV1): string {
 }
 
 export async function onMessage(message: KafkaMessage): Promise<void> {
-  stats.increment(`${config.SERVICE_NAME}.received_kafka_message`, 1);
+  stats.increment(
+    `${config.SERVICE_NAME}.received_kafka_message`,
+    1,
+    { instance: getInstanceId() },
+  );
   if (!message || !message.value || !message.timestamp) {
-    stats.increment(`${config.SERVICE_NAME}.empty_kafka_message`, 1);
+    stats.increment(
+      `${config.SERVICE_NAME}.empty_kafka_message`,
+      1,
+      { instance: getInstanceId() },
+    );
     logger.error({
       at: 'onMessage#onMessage',
       message: 'Empty message',
@@ -59,6 +68,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     STATS_NO_SAMPLING,
     {
       topic: KafkaTopics.TO_VULCAN,
+      instance: getInstanceId(),
     },
   );
 
@@ -71,6 +81,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
       {
         topic: KafkaTopics.TO_VULCAN,
         event_type: String(message.headers?.event_type),
+        instance: getInstanceId(),
       },
     );
   }
@@ -122,14 +133,15 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     await handler.handleUpdate(update, headers);
 
     const postProcessingTime: number = Date.now();
-    if (originalMessageTimestamp !== undefined) {
+    if (headers.message_received_timestamp !== undefined) {
       stats.timing(
         `${config.SERVICE_NAME}.message_time_since_received_post_processing`,
-        postProcessingTime - Number(originalMessageTimestamp),
+        postProcessingTime - Number(headers.message_received_timestamp),
         STATS_NO_SAMPLING,
         {
           topic: KafkaTopics.TO_VULCAN,
           event_type: String(headers?.event_type),
+          instance: getInstanceId(),
         },
       );
     }
@@ -164,6 +176,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
       {
         success: success.toString(),
         messageType: getMessageType(update),
+        instance: getInstanceId(),
       },
     );
   }

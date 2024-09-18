@@ -21,12 +21,19 @@ service Msg {
   rpc UpdateDefaultQuotingParams(MsgUpdateDefaultQuotingParams)
       returns (MsgUpdateDefaultQuotingParamsResponse);
 
+  // UpdateOperatorParams sets the parameters regarding megavault operator.
+  rpc UpdateOperatorParams(MsgUpdateOperatorParams)
+      returns (MsgUpdateOperatorParamsResponse);
+
   // SetVaultParams sets the parameters of a specific vault.
   rpc SetVaultParams(MsgSetVaultParams) returns (MsgSetVaultParamsResponse);
 
   // UnlockShares unlocks an owner's shares that are due to unlock by the block
   // height that this transaction is included in.
   rpc UnlockShares(MsgUnlockShares) returns (MsgUnlockSharesResponse);
+
+  // AllocateToVault allocates funds from main vault to a vault.
+  rpc AllocateToVault(MsgAllocateToVault) returns (MsgAllocateToVaultResponse);
 }
 
 // MsgDepositToMegavault deposits the specified asset from the subaccount to
@@ -112,3 +119,36 @@ message MsgUpdateParams {
   // The parameters to update. Each field must be set.
   Params params = 2 [ (gogoproto.nullable) = false ];
 }
+
+// MsgUpdateOperatorParams is the Msg/UpdateOperatorParams request type.
+message MsgUpdateOperatorParams {
+  // Authority is the address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // Operator parameters to set.
+  OperatorParams params = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateVaultParamsResponse is the Msg/UpdateOperatorParams response type.
+message MsgUpdateOperatorParamsResponse {}
+
+// MsgAllocateToVault is the Msg/AllocateToVault request type.
+message MsgAllocateToVault {
+  // The address that has the authority to allocate to a vault.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The vault to allocate to.
+  VaultId vault_id = 2 [ (gogoproto.nullable) = false ];
+
+  // Number of quote quantums to allocate.
+  bytes quote_quantums = 3 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// MsgAllocateToVaultResponse is the Msg/AllocateToVault response type.
+message MsgAllocateToVaultResponse {}

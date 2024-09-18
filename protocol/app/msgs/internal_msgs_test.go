@@ -152,12 +152,12 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.stats.MsgUpdateParamsResponse",
 
 		// vault
-		"/dydxprotocol.vault.MsgSetVaultParams",
-		"/dydxprotocol.vault.MsgSetVaultParamsResponse",
 		"/dydxprotocol.vault.MsgUnlockShares",
 		"/dydxprotocol.vault.MsgUnlockSharesResponse",
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams",
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse",
+		"/dydxprotocol.vault.MsgUpdateOperatorParams",
+		"/dydxprotocol.vault.MsgUpdateOperatorParamsResponse",
 
 		// vest
 		"/dydxprotocol.vest.MsgDeleteVestEntry",

@@ -31,4 +31,9 @@ var (
 		5,
 		"rev shares greater than or equal to 100%",
 	)
+	ErrTotalFeesSharedExceedsNetFees = errorsmod.Register(
+		ModuleName,
+		6,
+		"total fees shared exceeds net fees",
+	)
 )

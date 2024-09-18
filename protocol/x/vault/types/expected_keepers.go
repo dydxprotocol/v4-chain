@@ -1,6 +1,8 @@
 package types
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -46,6 +48,10 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		id uint32,
 	) (val perptypes.Perpetual, err error)
+	GetLiquidityTier(
+		ctx sdk.Context,
+		id uint32,
+	) (val perptypes.LiquidityTier, err error)
 }
 
 type PricesKeeper interface {
@@ -78,4 +84,11 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		id satypes.SubaccountId,
 	) satypes.Subaccount
+	TransferFundsFromSubaccountToSubaccount(
+		ctx sdk.Context,
+		senderSubaccountId satypes.SubaccountId,
+		recipientSubaccountId satypes.SubaccountId,
+		assetId uint32,
+		quantums *big.Int,
+	) error
 }

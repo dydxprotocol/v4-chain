@@ -15,6 +15,7 @@ import PerpetualPositionModel from './models/perpetual-position-model';
 import SubaccountModel from './models/subaccount-model';
 import TradingRewardModel from './models/trading-reward-model';
 import TransferModel from './models/transfer-model';
+import VaultModel from './models/vault-model';
 import {
   APITimeInForce,
   CandleResolution,
@@ -103,6 +104,7 @@ export const SQL_TO_JSON_DEFINED_MODELS = [
   SubaccountModel,
   TransferModel,
   TradingRewardModel,
+  VaultModel,
 ];
 
 export type SpecifiedClobPairStatus =

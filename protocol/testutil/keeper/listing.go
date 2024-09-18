@@ -48,6 +48,7 @@ func ListingKeepers(
 			// Define necessary keepers here for unit tests
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
+			memClob.On("CreateOrderbook", mock.Anything, mock.Anything).Return(nil)
 			epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 
 			accountsKeeper, _ := createAccountKeeper(
@@ -70,7 +71,7 @@ func ListingKeepers(
 				cdc,
 				stakingKeeper,
 			)
-			affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper)
+			affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
 			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 			marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 			pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
@@ -111,6 +112,7 @@ func ListingKeepers(
 				stateStore,
 				statsKeeper,
 				vaultKeeper,
+				affiliatesKeeper,
 				db,
 				cdc,
 			)
@@ -150,6 +152,7 @@ func ListingKeepers(
 				statsKeeper,
 				rewardsKeeper,
 				subaccountsKeeper,
+				revShareKeeper,
 				indexerEventManager,
 				transientStoreKey,
 			)

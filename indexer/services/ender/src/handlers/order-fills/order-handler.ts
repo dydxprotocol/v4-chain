@@ -18,12 +18,15 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
-import { IndexerOrder, IndexerOrderId, IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
+import {
+  IndexerOrder, IndexerOrderId, IndexerSubaccountId,
+} from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import * as pg from 'pg';
 
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
+import { sendOrderFilledNotification } from '../../helpers/notifications/notifications-functions';
 import { redisClient } from '../../helpers/redis/redis-controller';
 import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/translation-helper';
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
@@ -112,6 +115,11 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       this.getTotalFilled(castedOrderFillEventMessage).toString(),
       redisClient,
     );
+
+    // If order is filled, send a notification to firebase
+    if (order.status === OrderStatus.FILLED) {
+      await sendOrderFilledNotification(order, perpetualMarket);
+    }
 
     // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
     // for stateful orders as we are guaranteed a stateful order cannot be replaced until the next

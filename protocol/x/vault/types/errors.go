@@ -10,7 +10,6 @@ var (
 		1,
 		"Shares are negative",
 	)
-	// Deprecated since v6.x
 	ErrClobPairNotFound = errorsmod.Register(
 		ModuleName,
 		2,
@@ -121,9 +120,23 @@ var (
 		23,
 		"Locked shares exceeds owner shares",
 	)
-	ErrInvalidSkewFactor = errorsmod.Register(
+	ErrEmptyOperator = errorsmod.Register(
 		ModuleName,
 		24,
-		"Skew factor times order_size_pct must be less than 2 to avoid skewing over the spread",
+		"Empty operator address",
 	)
+	ErrInvalidSharesToWithdraw = errorsmod.Register(
+		ModuleName,
+		25,
+		"Shares to withdraw must be positive and less than or equal to total shares",
+	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		26,
+		"Authority must be a module authority or operator",
+	)
+  ErrInvalidSkewFactor = errorsmod.Register(
+		ModuleName,
+		27,
+		"Skew factor times order_size_pct must be less than 2 to avoid skewing over the spread",
 )

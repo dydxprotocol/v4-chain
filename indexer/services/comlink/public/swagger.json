@@ -240,15 +240,22 @@
         "type": "object",
         "additionalProperties": false
       },
-      "AffiliateReferralCodeResponse": {
+      "AffiliateMetadataResponse": {
         "properties": {
           "referralCode": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
+          },
+          "isVolumeEligible": {
+            "type": "boolean"
+          },
+          "isAffiliate": {
+            "type": "boolean"
           }
         },
         "required": [
-          "referralCode"
+          "referralCode",
+          "isVolumeEligible",
+          "isAffiliate"
         ],
         "type": "object",
         "additionalProperties": false
@@ -256,8 +263,7 @@
       "AffiliateAddressResponse": {
         "properties": {
           "address": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         },
         "required": [
@@ -271,12 +277,12 @@
           "affiliateAddress": {
             "type": "string"
           },
+          "affiliateReferralCode": {
+            "type": "string"
+          },
           "affiliateEarnings": {
             "type": "number",
             "format": "double"
-          },
-          "affiliateReferralCode": {
-            "type": "string"
           },
           "affiliateReferredTrades": {
             "type": "number",
@@ -293,16 +299,21 @@
           "affiliateReferredNetProtocolEarnings": {
             "type": "number",
             "format": "double"
+          },
+          "affiliateReferredTotalVolume": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
           "affiliateAddress",
-          "affiliateEarnings",
           "affiliateReferralCode",
+          "affiliateEarnings",
           "affiliateReferredTrades",
           "affiliateTotalReferredFees",
           "affiliateReferredUsers",
-          "affiliateReferredNetProtocolEarnings"
+          "affiliateReferredNetProtocolEarnings",
+          "affiliateReferredTotalVolume"
         ],
         "type": "object",
         "additionalProperties": false
@@ -1668,16 +1679,80 @@
         ]
       }
     },
-    "/affiliates/referral_code": {
+    "/addresses/{address}/registerToken": {
+      "post": {
+        "operationId": "RegisterToken",
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "language": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "language",
+                  "token"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/addresses/{address}/testNotification": {
+      "post": {
+        "operationId": "TestNotification",
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/affiliates/metadata": {
       "get": {
-        "operationId": "GetReferralCode",
+        "operationId": "GetMetadata",
         "responses": {
           "200": {
             "description": "Ok",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AffiliateReferralCodeResponse"
+                  "$ref": "#/components/schemas/AffiliateMetadataResponse"
                 }
               }
             }
@@ -1743,6 +1818,17 @@
         "parameters": [
           {
             "in": "query",
+            "name": "addressFilter",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
@@ -1761,7 +1847,7 @@
           },
           {
             "in": "query",
-            "name": "sortByReferredFees",
+            "name": "sortByAffiliateEarning",
             "required": false,
             "schema": {
               "type": "boolean"

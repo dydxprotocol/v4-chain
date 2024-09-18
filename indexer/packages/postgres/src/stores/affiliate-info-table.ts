@@ -80,10 +80,11 @@ export async function upsert(
   // should only ever be one AffiliateInfo
   return AffiliateInfos[0];
 }
+
 export async function findById(
   address: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<AffiliateInfoFromDatabase | undefined> {
+): Promise<AffiliateInfoFromDatabase> {
   const baseQuery: QueryBuilder<AffiliateInfoModel> = setupBaseQuery<AffiliateInfoModel>(
     AffiliateInfoModel,
     options,
@@ -91,4 +92,32 @@ export async function findById(
   return baseQuery
     .findById(address)
     .returning('*');
+}
+
+export async function paginatedFindWithAddressFilter(
+  addressFilter: string[],
+  offset: number,
+  limit: number,
+  sortByAffiliateEarning: boolean,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<AffiliateInfoFromDatabase[]> {
+  let baseQuery: QueryBuilder<AffiliateInfoModel> = setupBaseQuery<AffiliateInfoModel>(
+    AffiliateInfoModel,
+    options,
+  );
+
+  // Apply address filter if provided
+  if (addressFilter.length > 0) {
+    baseQuery = baseQuery.whereIn(AffiliateInfoColumns.address, addressFilter);
+  }
+
+  // Sorting by affiliate earnings or default sorting by address
+  if (sortByAffiliateEarning) {
+    baseQuery = baseQuery.orderBy(AffiliateInfoColumns.affiliateEarnings, Ordering.DESC);
+  }
+
+  // Apply pagination using offset and limit
+  baseQuery = baseQuery.offset(offset).limit(limit);
+
+  return baseQuery.returning('*');
 }

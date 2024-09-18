@@ -46,6 +46,7 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_transfer_handler.sql',
   'dydx_update_clob_pair_handler.sql',
   'dydx_update_perpetual_handler.sql',
+  'dydx_vault_upsert_handler.sql',
 ];
 
 const DB_SETUP_SCRIPTS: string[] = [
@@ -91,6 +92,7 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_uuid_from_transaction_parts.sql',
   'dydx_uuid_from_transfer_parts.sql',
   'dydx_protocol_market_type_to_perpetual_market_type.sql',
+  'dydx_protocol_vault_status_to_vault_status.sql',
 ];
 
 const MAIN_SCRIPTS: string[] = [

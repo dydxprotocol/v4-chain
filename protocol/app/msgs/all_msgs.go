@@ -249,6 +249,8 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
 		// vault
+		"/dydxprotocol.vault.MsgAllocateToVault":                    {},
+		"/dydxprotocol.vault.MsgAllocateToVaultResponse":            {},
 		"/dydxprotocol.vault.MsgDepositToMegavault":                 {},
 		"/dydxprotocol.vault.MsgDepositToMegavaultResponse":         {},
 		"/dydxprotocol.vault.MsgSetVaultParams":                     {},
@@ -257,6 +259,8 @@ var (
 		"/dydxprotocol.vault.MsgUnlockSharesResponse":               {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": {},
+		"/dydxprotocol.vault.MsgUpdateOperatorParams":               {},
+		"/dydxprotocol.vault.MsgUpdateOperatorParamsResponse":       {},
 		"/dydxprotocol.vault.MsgUpdateParams":                       {},
 
 		// vest

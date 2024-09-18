@@ -60,6 +60,9 @@ export const configSchema = {
   // vaults table is added.
   EXPERIMENT_VAULTS: parseString({ default: '' }),
   EXPERIMENT_VAULT_MARKETS: parseString({ default: '' }),
+
+  // Affiliates config
+  VOLUME_ELIGIBILITY_THRESHOLD: parseInteger({ default: 10_000 }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////
