@@ -146,7 +146,7 @@ func (k Keeper) WithdrawFromMegavault(
 	totalShares := k.GetTotalShares(ctx).NumShares.BigInt()
 	redeemedQuoteQuantums, err = k.GetSubaccountEquity(ctx, types.MegavaultMainSubaccount)
 	if err != nil {
-		log.ErrorLogWithError(ctx, "Failed to get megavault main vault equity", err)
+		log.ErrorLogWithError(ctx, "Megavault withdrawal: failed to get megavault main vault equity", err)
 		return nil, err
 	}
 	redeemedQuoteQuantums.Mul(redeemedQuoteQuantums, sharesToWithdraw)
@@ -158,7 +158,7 @@ func (k Keeper) WithdrawFromMegavault(
 	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
 		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
-			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
+			log.ErrorLogWithError(ctx, "Megavault withdrawal: failed to get vault ID from state key", err)
 			continue
 		}
 		var vaultParams types.VaultParams
@@ -166,12 +166,12 @@ func (k Keeper) WithdrawFromMegavault(
 
 		_, perpetual, marketParam, marketPrice, err := k.GetVaultClobPerpAndMarket(ctx, *vaultId)
 		if err != nil {
-			log.ErrorLogWithError(ctx, "Failed to get perpetual and market", err, "Vault ID", vaultId)
+			log.ErrorLogWithError(ctx, "Megavault withdrawal: failed to get perpetual and market", err, "Vault ID", vaultId)
 			continue
 		}
 		leverage, equity, err := k.GetVaultLeverageAndEquity(ctx, *vaultId, &perpetual, &marketPrice)
 		if err != nil {
-			log.ErrorLogWithError(ctx, "Failed to get vault leverage and equity", err, "Vault ID", vaultId)
+			log.ErrorLogWithError(ctx, "Megavault withdrawal: failed to get vault leverage and equity", err, "Vault ID", vaultId)
 			continue
 		}
 
@@ -187,7 +187,7 @@ func (k Keeper) WithdrawFromMegavault(
 		if err != nil {
 			log.ErrorLogWithError(
 				ctx,
-				"Failed to get vault withdrawal slippage",
+				"Megavault withdrawal: failed to get vault withdrawal slippage",
 				err,
 				"Vault ID",
 				vaultId,
@@ -211,7 +211,7 @@ func (k Keeper) WithdrawFromMegavault(
 		if err != nil {
 			log.ErrorLogWithError(
 				ctx,
-				"Failed to transfer from sub vault to main vault",
+				"Megavault withdrawal: failed to transfer from sub vault to main vault",
 				err,
 				"Vault ID",
 				vaultId,
@@ -246,7 +246,7 @@ func (k Keeper) WithdrawFromMegavault(
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
-			"Failed to transfer from main vault to subaccount",
+			"Megavault withdrawal: failed to transfer from main vault to subaccount",
 			err,
 			"Subaccount",
 			toSubaccount,
@@ -273,6 +273,15 @@ func (k Keeper) WithdrawFromMegavault(
 			return nil, err
 		}
 	}
+
+	ctx.EventManager().EmitEvent(
+		types.NewWithdrawFromMegavaultEvent(
+			toSubaccount.Owner,
+			sharesToWithdraw.Uint64(),
+			totalShares.Uint64(),
+			redeemedQuoteQuantums.Uint64(),
+		),
+	)
 
 	return redeemedQuoteQuantums, nil
 }

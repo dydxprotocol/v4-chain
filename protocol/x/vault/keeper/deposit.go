@@ -44,6 +44,14 @@ func (k Keeper) DepositToMegavault(
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		types.NewDepositToMegavaultEvent(
+			fromSubaccount.Owner,
+			quoteQuantums.Uint64(),
+			mintedShares.Uint64(),
+		),
+	)
+
 	return mintedShares, nil
 }
 

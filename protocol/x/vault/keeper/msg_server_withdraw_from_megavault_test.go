@@ -101,6 +101,18 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 			expectedTotalShares:   0,
 			expectedOwnerShares:   0,
 		},
+		"Failure: Withdraw more than locked shares": {
+			mainVaultBalance:    100,
+			totalShares:         500,
+			owner:               constants.AliceAccAddress.String(),
+			ownerTotalShares:    100,
+			ownerLockedShares:   20,
+			sharesToWithdraw:    81,
+			minQuoteQuantums:    1,
+			deliverTxFails:      true,
+			expectedTotalShares: 500, // unchanged
+			expectedOwnerShares: 100, // unchanged
+		},
 		"Failure: Withdraw some unlocked shares (8% of total), one sub-vault, Redeemed quantums < Min quantums": {
 			mainVaultBalance:  1_234,
 			totalShares:       500,
