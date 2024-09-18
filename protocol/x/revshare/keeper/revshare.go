@@ -125,7 +125,8 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 }
 
 // ValidateRevShareSafety roughly checks if the total rev share is valid using the formula below
-// highest_affiliate_taker_share * (highest_taker_fee_share_ppm / (lowest_maker_fee_share_ppm + highest_taker_fee_share_ppm))
+// highest_affiliate_taker_share * (highest_taker_fee_share_ppm /
+// (lowest_maker_fee_share_ppm + highest_taker_fee_share_ppm))
 // + sum(unconditional_rev_shares) + market_mapper_rev_share < 100%
 func (k Keeper) ValidateRevShareSafety(
 	ctx sdk.Context,
