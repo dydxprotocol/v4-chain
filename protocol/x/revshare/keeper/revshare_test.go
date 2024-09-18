@@ -298,7 +298,12 @@ func TestValidateRevShareSafety(t *testing.T) {
 			_ = tApp.InitChain()
 			k := tApp.App.RevShareKeeper
 
-			valid := k.ValidateRevShareSafety(tc.affiliateTiers, tc.revShareConfig, tc.marketMapperRevShareParams, tc.affiliateWhitelist)
+			valid := k.ValidateRevShareSafety(
+				tc.affiliateTiers,
+				tc.revShareConfig,
+				tc.marketMapperRevShareParams,
+				tc.affiliateWhitelist,
+			)
 			require.Equal(t, tc.expectedValid, valid)
 		})
 	}
