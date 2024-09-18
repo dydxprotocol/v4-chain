@@ -3,6 +3,8 @@ package keeper
 import (
 	"math"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +13,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
 )
 
@@ -84,18 +85,29 @@ func (k Keeper) CreateClobPair(
 ) (clobPairId uint32, err error) {
 	clobPairId = k.ClobKeeper.AcquireNextClobPairID(ctx)
 
-	// Create a new clob pair
-	clobPair, err := k.ClobKeeper.CreatePerpetualClobPair(
-		ctx,
-		clobPairId,
-		perpetualId,
-		satypes.BaseQuantums(types.DefaultStepBaseQuantums),
-		types.DefaultQuantumConversionExponent,
-		types.SubticksPerTick_LongTail,
-		clobtypes.ClobPair_STATUS_ACTIVE,
-	)
-	if err != nil {
+	clobPair := clobtypes.ClobPair{
+		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
+			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
+				PerpetualId: perpetualId,
+			},
+		},
+		Id:                        clobPairId,
+		StepBaseQuantums:          types.DefaultStepBaseQuantums,
+		QuantumConversionExponent: types.DefaultQuantumConversionExponent,
+		SubticksPerTick:           types.SubticksPerTick_LongTail,
+		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
+	}
+	if err := k.ClobKeeper.ValidateClobPairCreation(ctx, &clobPair); err != nil {
 		return 0, err
+	}
+
+	// Only create the clob pair if we are in deliver tx mode. This is to prevent populating
+	// in memory data structures in the CLOB during simulation mode.
+	if lib.IsDeliverTxMode(ctx) {
+		err := k.ClobKeeper.CreateClobPair(ctx, clobPair)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	return clobPair.Id, nil
@@ -118,11 +130,11 @@ func (k Keeper) CreatePerpetual(
 	}
 	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, marketMapPair.String())
 	if err != nil {
-		return 0, err
+		return 0, types.ErrMarketNotFound
 	}
 	metadata, err := tickermetadata.DyDxFromJSONString(marketMapDetails.Ticker.Metadata_JSON)
 	if err != nil {
-		return 0, err
+		return 0, types.ErrInvalidMarketMapTickerMetadata
 	}
 	if metadata.ReferencePrice == 0 {
 		return 0, types.ErrReferencePriceZero
