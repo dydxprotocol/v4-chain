@@ -173,7 +173,7 @@ func (s *KeeperTestSuite) TestMsgServer_SmartAccountsNotActive() {
 
 	_, err := msgServer.AddAuthenticator(ctx, msg)
 	s.Require().Error(err)
-	s.Require().Equal(err.Error(), "smartaccount module is not active: unauthorized")
+	s.Require().Equal(err.Error(), "smart account authentication flow is not active: unauthorized")
 
 	removeMsg := &types.MsgRemoveAuthenticator{
 		Sender: "",
@@ -182,5 +182,5 @@ func (s *KeeperTestSuite) TestMsgServer_SmartAccountsNotActive() {
 
 	_, err = msgServer.RemoveAuthenticator(ctx, removeMsg)
 	s.Require().Error(err)
-	s.Require().Equal(err.Error(), "smartaccount module is not active: unauthorized")
+	s.Require().Equal(err.Error(), "smart account authentication flow is not active: unauthorized")
 }
