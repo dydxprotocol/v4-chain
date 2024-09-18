@@ -246,6 +246,8 @@ var (
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 
 		// vault
+		"/dydxprotocol.vault.MsgAllocateToVault":            &vault.MsgAllocateToVault{},
+		"/dydxprotocol.vault.MsgAllocateToVaultResponse":    nil,
 		"/dydxprotocol.vault.MsgDepositToMegavault":         &vault.MsgDepositToMegavault{},
 		"/dydxprotocol.vault.MsgDepositToMegavaultResponse": nil,
 		"/dydxprotocol.vault.MsgSetVaultParams":             &vault.MsgSetVaultParams{},

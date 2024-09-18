@@ -55,7 +55,7 @@ func TestMsgSetVaultParams(t *testing.T) {
 				VaultId:     constants.Vault_Clob0,
 				VaultParams: constants.VaultParams,
 			},
-			expectedErr: "invalid authority",
+			expectedErr: vaulttypes.ErrInvalidAuthority.Error(),
 		},
 		"Failure - Empty Authority": {
 			operator: constants.AliceAccAddress.String(),
@@ -64,7 +64,7 @@ func TestMsgSetVaultParams(t *testing.T) {
 				VaultId:     constants.Vault_Clob0,
 				VaultParams: constants.VaultParams,
 			},
-			expectedErr: "invalid authority",
+			expectedErr: vaulttypes.ErrInvalidAuthority.Error(),
 		},
 		"Failure - Vault Clob 0. Invalid Quoting Params": {
 			operator: constants.AliceAccAddress.String(),
