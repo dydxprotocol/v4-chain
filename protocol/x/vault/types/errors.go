@@ -135,8 +135,9 @@ var (
 		26,
 		"Authority must be a module authority or operator",
 	)
-  ErrInvalidSkewFactor = errorsmod.Register(
+	ErrInvalidSkewFactor = errorsmod.Register(
 		ModuleName,
 		27,
 		"Skew factor times order_size_pct must be less than 2 to avoid skewing over the spread",
+	)
 )
