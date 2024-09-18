@@ -105,7 +105,7 @@ func TestValidateQuotingParams(t *testing.T) {
 			},
 			expectedErr: types.ErrInvalidSkewFactor,
 		},
-		"Failure - Both OrderSizePctPpm and SkewFactorPpm are MaxUint8. Product of SkewFactorPpm and OrderSizePctPpm is above threshold.": {
+		"Failure - Both OrderSizePctPpm and SkewFactorPpm are MaxUint32. Product of SkewFactorPpm and OrderSizePctPpm is above threshold.": {
 			params: types.QuotingParams{
 				Layers:                           2,
 				SpreadMinPpm:                     3_000,
