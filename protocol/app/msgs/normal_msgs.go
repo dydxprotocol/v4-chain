@@ -250,6 +250,8 @@ var (
 		"/dydxprotocol.vault.MsgAllocateToVaultResponse":    nil,
 		"/dydxprotocol.vault.MsgDepositToMegavault":         &vault.MsgDepositToMegavault{},
 		"/dydxprotocol.vault.MsgDepositToMegavaultResponse": nil,
+		"/dydxprotocol.vault.MsgRetrieveFromVault":          &vault.MsgRetrieveFromVault{},
+		"/dydxprotocol.vault.MsgRetrieveFromVaultResponse":  nil,
 		"/dydxprotocol.vault.MsgSetVaultParams":             &vault.MsgSetVaultParams{},
 		"/dydxprotocol.vault.MsgSetVaultParamsResponse":     nil,
 	}
