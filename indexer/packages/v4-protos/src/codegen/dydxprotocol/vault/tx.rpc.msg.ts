@@ -1,11 +1,14 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgDepositToMegavault, MsgDepositToMegavaultResponse, MsgUpdateDefaultQuotingParams, MsgUpdateDefaultQuotingParamsResponse, MsgUpdateOperatorParams, MsgUpdateOperatorParamsResponse, MsgSetVaultParams, MsgSetVaultParamsResponse, MsgUnlockShares, MsgUnlockSharesResponse, MsgAllocateToVault, MsgAllocateToVaultResponse } from "./tx";
+import { MsgDepositToMegavault, MsgDepositToMegavaultResponse, MsgWithdrawFromMegavault, MsgWithdrawFromMegavaultResponse, MsgUpdateDefaultQuotingParams, MsgUpdateDefaultQuotingParamsResponse, MsgUpdateOperatorParams, MsgUpdateOperatorParamsResponse, MsgSetVaultParams, MsgSetVaultParamsResponse, MsgUnlockShares, MsgUnlockSharesResponse, MsgAllocateToVault, MsgAllocateToVaultResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
   /** DepositToMegavault deposits funds into megavault. */
   depositToMegavault(request: MsgDepositToMegavault): Promise<MsgDepositToMegavaultResponse>;
+  /** WithdrawFromMegavault withdraws shares from megavault. */
+
+  withdrawFromMegavault(request: MsgWithdrawFromMegavault): Promise<MsgWithdrawFromMegavaultResponse>;
   /** UpdateDefaultQuotingParams updates the default quoting params in state. */
 
   updateDefaultQuotingParams(request: MsgUpdateDefaultQuotingParams): Promise<MsgUpdateDefaultQuotingParamsResponse>;
@@ -31,6 +34,7 @@ export class MsgClientImpl implements Msg {
   constructor(rpc: Rpc) {
     this.rpc = rpc;
     this.depositToMegavault = this.depositToMegavault.bind(this);
+    this.withdrawFromMegavault = this.withdrawFromMegavault.bind(this);
     this.updateDefaultQuotingParams = this.updateDefaultQuotingParams.bind(this);
     this.updateOperatorParams = this.updateOperatorParams.bind(this);
     this.setVaultParams = this.setVaultParams.bind(this);
@@ -42,6 +46,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgDepositToMegavault.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.vault.Msg", "DepositToMegavault", data);
     return promise.then(data => MsgDepositToMegavaultResponse.decode(new _m0.Reader(data)));
+  }
+
+  withdrawFromMegavault(request: MsgWithdrawFromMegavault): Promise<MsgWithdrawFromMegavaultResponse> {
+    const data = MsgWithdrawFromMegavault.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Msg", "WithdrawFromMegavault", data);
+    return promise.then(data => MsgWithdrawFromMegavaultResponse.decode(new _m0.Reader(data)));
   }
 
   updateDefaultQuotingParams(request: MsgUpdateDefaultQuotingParams): Promise<MsgUpdateDefaultQuotingParamsResponse> {

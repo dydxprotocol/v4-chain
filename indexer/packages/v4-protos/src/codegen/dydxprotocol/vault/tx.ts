@@ -1,7 +1,7 @@
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
+import { NumShares, NumSharesSDKType } from "./share";
 import { QuotingParams, QuotingParamsSDKType, OperatorParams, OperatorParamsSDKType, VaultParams, VaultParamsSDKType, Params, ParamsSDKType } from "./params";
 import { VaultId, VaultIdSDKType } from "./vault";
-import { NumShares, NumSharesSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /**
@@ -39,6 +39,60 @@ export interface MsgDepositToMegavaultResponse {
 export interface MsgDepositToMegavaultResponseSDKType {
   /** The number of shares minted from the deposit. */
   minted_shares?: NumSharesSDKType;
+}
+/**
+ * MsgWithdrawFromMegavault withdraws the specified shares from megavault to
+ * a subaccount.
+ */
+
+export interface MsgWithdrawFromMegavault {
+  /** The subaccount to withdraw to. */
+  subaccountId?: SubaccountId;
+  /** Number of shares to withdraw. */
+
+  shares?: NumShares;
+  /**
+   * The minimum number of quote quantums above shares should redeem, i.e.
+   * transaction fails if above shares redeem less than min_quote_quantums.
+   */
+
+  minQuoteQuantums: Uint8Array;
+}
+/**
+ * MsgWithdrawFromMegavault withdraws the specified shares from megavault to
+ * a subaccount.
+ */
+
+export interface MsgWithdrawFromMegavaultSDKType {
+  /** The subaccount to withdraw to. */
+  subaccount_id?: SubaccountIdSDKType;
+  /** Number of shares to withdraw. */
+
+  shares?: NumSharesSDKType;
+  /**
+   * The minimum number of quote quantums above shares should redeem, i.e.
+   * transaction fails if above shares redeem less than min_quote_quantums.
+   */
+
+  min_quote_quantums: Uint8Array;
+}
+/**
+ * MsgWithdrawFromMegavaultResponse is the Msg/WithdrawFromMegavault response
+ * type.
+ */
+
+export interface MsgWithdrawFromMegavaultResponse {
+  /** The number of quote quantums redeemed from the withdrawal. */
+  quoteQuantums: Uint8Array;
+}
+/**
+ * MsgWithdrawFromMegavaultResponse is the Msg/WithdrawFromMegavault response
+ * type.
+ */
+
+export interface MsgWithdrawFromMegavaultResponseSDKType {
+  /** The number of quote quantums redeemed from the withdrawal. */
+  quote_quantums: Uint8Array;
 }
 /**
  * MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
@@ -302,6 +356,116 @@ export const MsgDepositToMegavaultResponse = {
   fromPartial(object: DeepPartial<MsgDepositToMegavaultResponse>): MsgDepositToMegavaultResponse {
     const message = createBaseMsgDepositToMegavaultResponse();
     message.mintedShares = object.mintedShares !== undefined && object.mintedShares !== null ? NumShares.fromPartial(object.mintedShares) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgWithdrawFromMegavault(): MsgWithdrawFromMegavault {
+  return {
+    subaccountId: undefined,
+    shares: undefined,
+    minQuoteQuantums: new Uint8Array()
+  };
+}
+
+export const MsgWithdrawFromMegavault = {
+  encode(message: MsgWithdrawFromMegavault, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.subaccountId !== undefined) {
+      SubaccountId.encode(message.subaccountId, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.shares !== undefined) {
+      NumShares.encode(message.shares, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.minQuoteQuantums.length !== 0) {
+      writer.uint32(26).bytes(message.minQuoteQuantums);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgWithdrawFromMegavault {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgWithdrawFromMegavault();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.subaccountId = SubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.shares = NumShares.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.minQuoteQuantums = reader.bytes();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgWithdrawFromMegavault>): MsgWithdrawFromMegavault {
+    const message = createBaseMsgWithdrawFromMegavault();
+    message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
+    message.shares = object.shares !== undefined && object.shares !== null ? NumShares.fromPartial(object.shares) : undefined;
+    message.minQuoteQuantums = object.minQuoteQuantums ?? new Uint8Array();
+    return message;
+  }
+
+};
+
+function createBaseMsgWithdrawFromMegavaultResponse(): MsgWithdrawFromMegavaultResponse {
+  return {
+    quoteQuantums: new Uint8Array()
+  };
+}
+
+export const MsgWithdrawFromMegavaultResponse = {
+  encode(message: MsgWithdrawFromMegavaultResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.quoteQuantums.length !== 0) {
+      writer.uint32(10).bytes(message.quoteQuantums);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgWithdrawFromMegavaultResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgWithdrawFromMegavaultResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.quoteQuantums = reader.bytes();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgWithdrawFromMegavaultResponse>): MsgWithdrawFromMegavaultResponse {
+    const message = createBaseMsgWithdrawFromMegavaultResponse();
+    message.quoteQuantums = object.quoteQuantums ?? new Uint8Array();
     return message;
   }
 
