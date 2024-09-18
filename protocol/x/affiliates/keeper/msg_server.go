@@ -48,7 +48,8 @@ func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
 		return nil, err
 	}
 
-	if !k.revShareKeeper.ValidateRevShareSafety(msg.Tiers, unconditionalRevShareConfig, marketMapperRevShareParams, affiliateWhitelist) {
+	if !k.revShareKeeper.ValidateRevShareSafety(msg.Tiers,
+		unconditionalRevShareConfig, marketMapperRevShareParams, affiliateWhitelist) {
 		return nil, errorsmod.Wrapf(
 			types.ErrRevShareSafetyViolation,
 			"rev share safety violation",
@@ -81,7 +82,8 @@ func (k msgServer) UpdateAffiliateWhitelist(ctx context.Context,
 		return nil, err
 	}
 
-	if !k.revShareKeeper.ValidateRevShareSafety(affiliateTiers, unconditionalRevShareConfig, marketMapperRevShareParams, msg.Whitelist) {
+	if !k.revShareKeeper.ValidateRevShareSafety(affiliateTiers,
+		unconditionalRevShareConfig, marketMapperRevShareParams, msg.Whitelist) {
 		return nil, errorsmod.Wrapf(
 			types.ErrRevShareSafetyViolation,
 			"rev share safety violation",
