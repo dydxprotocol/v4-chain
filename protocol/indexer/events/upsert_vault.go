@@ -2,7 +2,6 @@ package events
 
 import (
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -10,12 +9,12 @@ import (
 // representing an create / update of a vault.
 func NewUpsertVaultEvent(
 	vaultAddress string,
-	clobPairId clobtypes.ClobPairId,
+	clobPairId uint32,
 	status types.VaultStatus,
 ) *UpsertVaultEventV1 {
 	return &UpsertVaultEventV1{
 		Address:    vaultAddress,
-		ClobPairId: uint32(clobPairId),
+		ClobPairId: clobPairId,
 		Status:     v1.VaultStatusToIndexerVaultStatus(status),
 	}
 }

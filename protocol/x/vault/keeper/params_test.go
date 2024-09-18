@@ -3,9 +3,17 @@ package keeper_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
@@ -54,16 +62,32 @@ func TestGetSetVaultParams(t *testing.T) {
 		vaultId types.VaultId
 		// Vault params to set.
 		vaultParams *types.VaultParams
+		// Expected on-chain indexer events
+		expectedIndexerEvents []*indexerevents.UpsertVaultEventV1
 		// Expected error.
 		expectedErr error
 	}{
 		"Success - Vault Clob 0": {
 			vaultId:     constants.Vault_Clob0,
 			vaultParams: &constants.VaultParams,
+			expectedIndexerEvents: []*indexerevents.UpsertVaultEventV1{
+				{
+					Address:    constants.Vault_Clob0.ToModuleAccountAddress(),
+					ClobPairId: constants.Vault_Clob0.Number,
+					Status:     v1.VaultStatusToIndexerVaultStatus(constants.VaultParams.Status),
+				},
+			},
 		},
 		"Success - Vault Clob 1": {
 			vaultId:     constants.Vault_Clob1,
 			vaultParams: &constants.VaultParams,
+			expectedIndexerEvents: []*indexerevents.UpsertVaultEventV1{
+				{
+					Address:    constants.Vault_Clob1.ToModuleAccountAddress(),
+					ClobPairId: constants.Vault_Clob1.Number,
+					Status:     v1.VaultStatusToIndexerVaultStatus(constants.VaultParams.Status),
+				},
+			},
 		},
 		"Success - Non-existent Vault Params": {
 			vaultId:     constants.Vault_Clob1,
@@ -88,7 +112,11 @@ func TestGetSetVaultParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).Build()
+			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+			appOpts := map[string]interface{}{
+				indexer.MsgSenderInstanceForTest: msgSender,
+			}
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 
@@ -108,6 +136,11 @@ func TestGetSetVaultParams(t *testing.T) {
 				p, exists := k.GetVaultParams(ctx, tc.vaultId)
 				require.True(t, exists)
 				require.Equal(t, *tc.vaultParams, p)
+			}
+
+			if tc.expectedErr == nil && tc.vaultParams != nil {
+				upsertVaultEventsInBlock := getUpsertVaultEventsFromIndexerBlock(ctx, &k)
+				require.ElementsMatch(t, tc.expectedIndexerEvents, upsertVaultEventsInBlock)
 			}
 		})
 	}
@@ -196,4 +229,26 @@ func TestGetSetOperatorParams(t *testing.T) {
 	err = k.SetOperatorParams(ctx, invalidParams)
 	require.Error(t, err)
 	require.Equal(t, newParams, k.GetOperatorParams(ctx))
+}
+
+func getUpsertVaultEventsFromIndexerBlock(
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+) []*indexerevents.UpsertVaultEventV1 {
+	block := keeper.GetIndexerEventManager().ProduceBlock(ctx)
+	var upsertVaultEvents []*indexerevents.UpsertVaultEventV1
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeUpsertVault {
+			continue
+		}
+		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
+			var upsertVaultEvent indexerevents.UpsertVaultEventV1
+			err := proto.Unmarshal(event.DataBytes, &upsertVaultEvent)
+			if err != nil {
+				panic(err)
+			}
+			upsertVaultEvents = append(upsertVaultEvents, &upsertVaultEvent)
+		}
+	}
+	return upsertVaultEvents
 }
