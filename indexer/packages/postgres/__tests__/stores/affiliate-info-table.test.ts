@@ -85,6 +85,15 @@ describe('Affiliate info store', () => {
     expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo));
   });
 
+  it('Returns undefined if affiliate info not found by Id', async () => {
+    await AffiliateInfoTable.create(defaultAffiliateInfo);
+
+    const info: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
+      'non_existent_address',
+    );
+    expect(info).toBeUndefined();
+  });
+
   describe('Affiliate info .updateInfo()', () => {
     it('Successfully creates new affiliate info', async () => {
       const referenceDt: DateTime = await populateFillsAndReferrals();
