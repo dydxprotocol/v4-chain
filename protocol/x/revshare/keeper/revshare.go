@@ -125,10 +125,8 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 }
 
 // ValidateRevShareSafety roughly checks if the total rev share is valid using the formula below
-// highest_affiliate_taker_share + sum(unconditional_rev_shares) + market_mapper_rev_share < 100%
-// Note: this is just an estimate as affiliate rev share is based on taker fees, while
-// the rest of the rev share is based on net fees.
-// TODO(OTE-788): Revisit this formula to ensure accuracy.
+// highest_affiliate_taker_share * (highest_taker_fee_share_ppm / (lowest_maker_fee_share_ppm + highest_taker_fee_share_ppm))
+// + sum(unconditional_rev_shares) + market_mapper_rev_share < 100%
 func (k Keeper) ValidateRevShareSafety(
 	ctx sdk.Context,
 	affiliateTiers affiliatetypes.AffiliateTiers,
@@ -147,7 +145,9 @@ func (k Keeper) ValidateRevShareSafety(
 	}
 	totalMarketMapperRevSharePpm := marketMapperRevShareParams.RevenueSharePpm
 
-	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm + uint32(math.Ceil(float64(highestTierRevSharePpm)*(float64(highestTakerFeeSharePpm)/float64(lowestMakerFeeSharePpm+highestTakerFeeSharePpm))))
+	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm +
+		uint32(math.Ceil(float64(highestTierRevSharePpm)*(float64(
+			highestTakerFeeSharePpm)/float64(lowestMakerFeeSharePpm+highestTakerFeeSharePpm))))
 	return totalRevSharePpm < lib.OneMillion
 }
 
