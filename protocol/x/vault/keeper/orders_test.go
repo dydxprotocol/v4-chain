@@ -168,6 +168,8 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+			// Clear events from setting vault params
+			tApp.App.IndexerEventManager.ClearEvents(ctx)
 
 			// Check that there's no stateful orders yet.
 			allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
