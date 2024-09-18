@@ -12,5 +12,6 @@ message GenesisState {
   // params is the market mapper revenue share params.
   MarketMapperRevenueShareParams params = 1 [ (gogoproto.nullable) = false ];
   // unconditional_rev_share_config is the unconditional rev share config.
-  UnconditionalRevShareConfig unconditional_rev_share_config = 2 [ (gogoproto.nullable) = false ];
+  UnconditionalRevShareConfig unconditional_rev_share_config = 2
+      [ (gogoproto.nullable) = false ];
 }
