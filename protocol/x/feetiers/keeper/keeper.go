@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 )
 
 type (
@@ -133,11 +134,17 @@ func (k Keeper) GetLowestMakerFee(ctx sdk.Context) int32 {
 	return lowestMakerFee
 }
 
-// GetAffiliateRefereeLowestTakerFee returns the lowest taker fee among any tiers.
+// GetAffiliateRefxereeLowestTakerFee returns the lowest taker fee
+// for volume under Max30dRefereeVolumeQuantums.
 func (k Keeper) GetAffiliateRefereeLowestTakerFee(ctx sdk.Context) int32 {
 	feeParams := k.GetPerpetualFeeParams(ctx)
-	if len(feeParams.Tiers) < int(types.RefereeStartingFeeTier) {
-		panic("fee tiers does not have required number of tiers")
+	for _, tier := range feeParams.Tiers {
+		// assumes tiers are ordered by absolute volume requirement
+		if tier.AbsoluteVolumeRequirement < revsharetypes.Max30dRefereeVolumeQuantums {
+			return tier.TakerFeePpm
+		} else {
+			break
+		}
 	}
 
 	return feeParams.Tiers[types.RefereeStartingFeeTier].TakerFeePpm
