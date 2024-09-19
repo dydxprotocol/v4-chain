@@ -149,11 +149,12 @@ var (
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal":       {},
 
 		// affiliates
-		"/dydxprotocol.affiliates.MsgRegisterAffiliate":            {},
-		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse":    {},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":         {},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse": {},
-
+		"/dydxprotocol.affiliates.MsgRegisterAffiliate":                {},
+		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse":        {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":             {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":     {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":         {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse": {},
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         {},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},

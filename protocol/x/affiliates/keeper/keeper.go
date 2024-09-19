@@ -161,10 +161,12 @@ func (k Keeper) GetAllAffiliateTiers(ctx sdk.Context) (types.AffiliateTiers, err
 	return affiliateTiers, nil
 }
 
-// GetTakerFeeShare returns the taker fee share for an address.
+// GetTakerFeeShare returns the taker fee share for an address based on the affiliate tiers.
+// If the address is in the whitelist, the fee share ppm is overridden.
 func (k Keeper) GetTakerFeeShare(
 	ctx sdk.Context,
 	address string,
+	affiliatesWhitelistMap map[string]uint32,
 ) (
 	affiliateAddress string,
 	feeSharePpm uint32,
@@ -175,6 +177,12 @@ func (k Keeper) GetTakerFeeShare(
 	if !exists {
 		return "", 0, false, nil
 	}
+	// Override fee share ppm if the address is in the whitelist.
+	if _, exists := affiliatesWhitelistMap[affiliateAddress]; exists {
+		feeSharePpm = affiliatesWhitelistMap[affiliateAddress]
+		return affiliateAddress, feeSharePpm, true, nil
+	}
+
 	_, feeSharePpm, err = k.GetTierForAffiliate(ctx, affiliateAddress)
 	if err != nil {
 		return "", 0, false, err
@@ -241,6 +249,13 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 	tiers := affiliateTiers.GetTiers()
 	// start at 1, since 0 is the default tier.
 	for i := 1; i < len(tiers); i++ {
+		// Check if the taker fee share ppm is greater than the cap.
+		if tiers[i].TakerFeeSharePpm > types.AffiliatesRevSharePpmCap {
+			return errorsmod.Wrapf(types.ErrRevShareSafetyViolation,
+				"taker fee share ppm %d is greater than the cap %d",
+				tiers[i].TakerFeeSharePpm, types.AffiliatesRevSharePpmCap)
+		}
+		// Check if the tiers are strictly increasing.
 		if tiers[i].ReqReferredVolumeQuoteQuantums <= tiers[i-1].ReqReferredVolumeQuoteQuantums ||
 			tiers[i].ReqStakedWholeCoins <= tiers[i-1].ReqStakedWholeCoins {
 			return errorsmod.Wrapf(types.ErrInvalidAffiliateTiers,
@@ -259,6 +274,59 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
 
+func (k Keeper) GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error) {
+	affiliateWhitelist, err := k.GetAffiliateWhitelist(ctx)
+	if err != nil {
+		return nil, err
+	}
+	affiliateWhitelistMap := make(map[string]uint32)
+	for _, tier := range affiliateWhitelist.GetTiers() {
+		for _, address := range tier.GetAddresses() {
+			affiliateWhitelistMap[address] = tier.GetTakerFeeSharePpm()
+		}
+	}
+	return affiliateWhitelistMap, nil
+}
+
+func (k Keeper) SetAffiliateWhitelist(ctx sdk.Context, whitelist types.AffiliateWhitelist) error {
+	store := ctx.KVStore(k.storeKey)
+	addressSet := make(map[string]bool)
+	for _, tier := range whitelist.Tiers {
+		// Check if the taker fee share ppm is greater than the cap.
+		if tier.TakerFeeSharePpm > types.AffiliatesRevSharePpmCap {
+			return errorsmod.Wrapf(types.ErrRevShareSafetyViolation,
+				"taker fee share ppm %d is greater than the cap %d",
+				tier.TakerFeeSharePpm, types.AffiliatesRevSharePpmCap)
+		}
+		// Check for duplicate addresses.
+		for _, address := range tier.Addresses {
+			if addressSet[address] {
+				return errorsmod.Wrapf(types.ErrDuplicateAffiliateAddressForWhitelist,
+					"address %s is duplicated in affiliate whitelist", address)
+			}
+			addressSet[address] = true
+		}
+	}
+	affiliateWhitelistBytes := k.cdc.MustMarshal(&whitelist)
+	store.Set([]byte(types.AffiliateWhitelistKey), affiliateWhitelistBytes)
+	return nil
+}
+
+func (k Keeper) GetAffiliateWhitelist(ctx sdk.Context) (types.AffiliateWhitelist, error) {
+	store := ctx.KVStore(k.storeKey)
+	affiliateWhitelistBytes := store.Get([]byte(types.AffiliateWhitelistKey))
+	if affiliateWhitelistBytes == nil {
+		return types.AffiliateWhitelist{
+			Tiers: []types.AffiliateWhitelist_Tier{},
+		}, nil
+	}
+	affiliateWhitelist := types.AffiliateWhitelist{}
+	err := k.cdc.Unmarshal(affiliateWhitelistBytes, &affiliateWhitelist)
+	if err != nil {
+		return types.AffiliateWhitelist{}, err
+	}
+	return affiliateWhitelist, nil
+}
 func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 	ctx sdk.Context,
 ) error {

@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgRegisterAffiliate, MsgRegisterAffiliateResponse, MsgUpdateAffiliateTiers, MsgUpdateAffiliateTiersResponse } from "./tx";
+import { MsgRegisterAffiliate, MsgRegisterAffiliateResponse, MsgUpdateAffiliateTiers, MsgUpdateAffiliateTiersResponse, MsgUpdateAffiliateWhitelist, MsgUpdateAffiliateWhitelistResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -9,6 +9,9 @@ export interface Msg {
   /** UpdateAffiliateTiers updates affiliate tiers */
 
   updateAffiliateTiers(request: MsgUpdateAffiliateTiers): Promise<MsgUpdateAffiliateTiersResponse>;
+  /** UpdateAffiliateWhitelist updates affiliate whitelist */
+
+  updateAffiliateWhitelist(request: MsgUpdateAffiliateWhitelist): Promise<MsgUpdateAffiliateWhitelistResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -17,6 +20,7 @@ export class MsgClientImpl implements Msg {
     this.rpc = rpc;
     this.registerAffiliate = this.registerAffiliate.bind(this);
     this.updateAffiliateTiers = this.updateAffiliateTiers.bind(this);
+    this.updateAffiliateWhitelist = this.updateAffiliateWhitelist.bind(this);
   }
 
   registerAffiliate(request: MsgRegisterAffiliate): Promise<MsgRegisterAffiliateResponse> {
@@ -29,6 +33,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgUpdateAffiliateTiers.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.affiliates.Msg", "UpdateAffiliateTiers", data);
     return promise.then(data => MsgUpdateAffiliateTiersResponse.decode(new _m0.Reader(data)));
+  }
+
+  updateAffiliateWhitelist(request: MsgUpdateAffiliateWhitelist): Promise<MsgUpdateAffiliateWhitelistResponse> {
+    const data = MsgUpdateAffiliateWhitelist.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.affiliates.Msg", "UpdateAffiliateWhitelist", data);
+    return promise.then(data => MsgUpdateAffiliateWhitelistResponse.decode(new _m0.Reader(data)));
   }
 
 }

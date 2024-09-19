@@ -43,8 +43,13 @@ func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
 		return nil, err
 	}
 	marketMapperRevShareParams := k.revShareKeeper.GetMarketMapperRevenueShareParams(sdkCtx)
+	affiliateWhitelist, err := k.GetAffiliateWhitelist(sdkCtx)
+	if err != nil {
+		return nil, err
+	}
 
-	if !k.revShareKeeper.ValidateRevShareSafety(msg.Tiers, unconditionalRevShareConfig, marketMapperRevShareParams) {
+	if !k.revShareKeeper.ValidateRevShareSafety(msg.Tiers,
+		unconditionalRevShareConfig, marketMapperRevShareParams, affiliateWhitelist) {
 		return nil, errorsmod.Wrapf(
 			types.ErrRevShareSafetyViolation,
 			"rev share safety violation",
@@ -57,6 +62,40 @@ func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
 	}
 
 	return &types.MsgUpdateAffiliateTiersResponse{}, nil
+}
+
+func (k msgServer) UpdateAffiliateWhitelist(ctx context.Context,
+	msg *types.MsgUpdateAffiliateWhitelist) (*types.MsgUpdateAffiliateWhitelistResponse, error) {
+	if !k.Keeper.HasAuthority(msg.Authority) {
+		return nil, errors.New("invalid authority")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	unconditionalRevShareConfig, err := k.revShareKeeper.GetUnconditionalRevShareConfigParams(sdkCtx)
+	if err != nil {
+		return nil, err
+	}
+	marketMapperRevShareParams := k.revShareKeeper.GetMarketMapperRevenueShareParams(sdkCtx)
+
+	affiliateTiers, err := k.Keeper.GetAllAffiliateTiers(sdkCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	if !k.revShareKeeper.ValidateRevShareSafety(affiliateTiers,
+		unconditionalRevShareConfig, marketMapperRevShareParams, msg.Whitelist) {
+		return nil, errorsmod.Wrapf(
+			types.ErrRevShareSafetyViolation,
+			"rev share safety violation",
+		)
+	}
+
+	err = k.Keeper.SetAffiliateWhitelist(sdk.UnwrapSDKContext(ctx), msg.Whitelist)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateAffiliateWhitelistResponse{}, nil
 }
 
 // NewMsgServerImpl returns an implementation of the MsgServer interface
