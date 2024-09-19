@@ -343,19 +343,19 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				AllRevShares: []revsharetypes.RevShare{
 					{
 						Recipient:         constants.AliceAccAddress.String(),
-						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
 						QuoteQuantums:     big.NewInt(200_000),
 						RevSharePpm:       100_000, // 10%
 					},
 				},
 				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
-					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(200_000),
-					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(0),
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(200_000),
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
 				},
 				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
-					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   100_000, // 10%
-					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: 0,
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 100_000, // 10%
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0,
 				},
 				AffiliateRevShare: nil,
 			},
@@ -391,26 +391,26 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				AllRevShares: []revsharetypes.RevShare{
 					{
 						Recipient:         constants.AliceAccAddress.String(),
-						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
 						QuoteQuantums:     big.NewInt(200_000),
 						RevSharePpm:       100_000, // 10%
 					},
 					{
 						Recipient:         constants.BobAccAddress.String(),
-						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
 						QuoteQuantums:     big.NewInt(200_000),
 						RevSharePpm:       100_000, // 10%
 					},
 				},
 				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
-					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(400_000),
-					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(0),
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(400_000),
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
 				},
 				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
-					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   200_000, // 20%
-					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: 0,
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 200_000, // 20%
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0,
 				},
 				AffiliateRevShare: nil,
 			},
@@ -446,7 +446,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				AllRevShares: []revsharetypes.RevShare{
 					{
 						Recipient:         constants.AliceAccAddress.String(),
-						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
 						QuoteQuantums:     big.NewInt(200_000),
 						RevSharePpm:       100_000, // 10%
@@ -460,12 +460,12 @@ func TestAddRewardSharesForFill(t *testing.T) {
 					},
 				},
 				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
-					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(200_000),
-					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(200_000),
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(200_000),
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(200_000),
 				},
 				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
-					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   100_000, // 10%
-					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: 100_000, // 10%
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 100_000, // 10%
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            100_000, // 10%
 				},
 				AffiliateRevShare: &revsharetypes.RevShare{
 					Recipient:         takerAddress,

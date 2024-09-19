@@ -163,8 +163,8 @@ func (k Keeper) GetAllRevShares(
 	feeSourceToRevSharePpm := make(map[types.RevShareFeeSource]uint32)
 	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = big.NewInt(0)
 	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = 0
-	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_FEE] = big.NewInt(0)
-	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_FEE] = 0
+	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = big.NewInt(0)
+	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = 0
 
 	totalFeesShared := big.NewInt(0)
 	takerFees := fill.TakerFeeQuoteQuantums
@@ -264,7 +264,7 @@ func (k Keeper) getUnconditionalRevShares(
 		feeShared := lib.BigMulPpm(netFees, lib.BigU(revShare.SharePpm), false)
 		revShare := types.RevShare{
 			Recipient:         revShare.Address,
-			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 			RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
 			QuoteQuantums:     feeShared,
 			RevSharePpm:       revShare.SharePpm,
@@ -291,7 +291,7 @@ func (k Keeper) getMarketMapperRevShare(
 	marketMapperRevshareAmount := lib.BigMulPpm(netFees, lib.BigU(revenueSharePpm), false)
 	revShares = append(revShares, types.RevShare{
 		Recipient:         marketMapperRevshareAddress.String(),
-		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 		RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
 		QuoteQuantums:     marketMapperRevshareAmount,
 		RevSharePpm:       revenueSharePpm,
