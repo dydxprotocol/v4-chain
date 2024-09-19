@@ -14,5 +14,5 @@ var (
 		ModuleName, 7, "Rev share safety violation")
 	ErrDuplicateAffiliateAddressForWhitelist = errorsmod.Register(
 		ModuleName, 8, "Duplicate affiliate address for whitelist")
-	ErrAffiliateTiersNotSet = errorsmod.Register(ModuleName, 9, "Affiliate tiers not set")
+	ErrAffiliateTiersNotSet = errorsmod.Register(ModuleName, 9, "Affiliate tiers not set (affiliate program is not active)")
 )
