@@ -264,6 +264,8 @@ var (
 		"/dydxprotocol.vault.MsgUpdateOperatorParams":               {},
 		"/dydxprotocol.vault.MsgUpdateOperatorParamsResponse":       {},
 		"/dydxprotocol.vault.MsgUpdateParams":                       {},
+		"/dydxprotocol.vault.MsgWithdrawFromMegavault":              {},
+		"/dydxprotocol.vault.MsgWithdrawFromMegavaultResponse":      {},
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            {},
