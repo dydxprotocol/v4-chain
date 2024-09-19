@@ -68,6 +68,13 @@ func (k Keeper) SetVaultParams(
 		return err
 	}
 
+	if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED {
+		vault := k.subaccountsKeeper.GetSubaccount(ctx, *vaultId.ToSubaccountId())
+		if vault.GetUsdcPosition().Sign() != 0 {
+			return types.ErrVaultDeactivation
+		}
+	}
+
 	b := k.cdc.MustMarshal(&vaultParams)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
 	store.Set(vaultId.ToStateKey(), b)

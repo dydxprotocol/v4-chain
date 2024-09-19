@@ -145,4 +145,9 @@ var (
 		28,
 		"Insufficient redeemed quote quantums",
 	)
+	ErrVaultDeactivation = errorsmod.Register(
+		ModuleName,
+		29,
+		"Can only deactivate vaults with zero usdc",
+	)
 )

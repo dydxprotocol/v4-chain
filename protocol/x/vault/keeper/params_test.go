@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -13,8 +14,9 @@ import (
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,10 +27,10 @@ func TestGetSetDefaultQuotingParams(t *testing.T) {
 
 	// Params should have default values at genesis.
 	params := k.GetDefaultQuotingParams(ctx)
-	require.Equal(t, types.DefaultQuotingParams(), params)
+	require.Equal(t, vaulttypes.DefaultQuotingParams(), params)
 
 	// Set new params and get.
-	newParams := types.QuotingParams{
+	newParams := vaulttypes.QuotingParams{
 		Layers:                           3,
 		SpreadMinPpm:                     4_000,
 		SpreadBufferPpm:                  2_000,
@@ -42,7 +44,7 @@ func TestGetSetDefaultQuotingParams(t *testing.T) {
 	require.Equal(t, newParams, k.GetDefaultQuotingParams(ctx))
 
 	// Set invalid params and get.
-	invalidParams := types.QuotingParams{
+	invalidParams := vaulttypes.QuotingParams{
 		Layers:                           3,
 		SpreadMinPpm:                     4_000,
 		SpreadBufferPpm:                  2_000,
@@ -59,9 +61,13 @@ func TestGetSetDefaultQuotingParams(t *testing.T) {
 func TestGetSetVaultParams(t *testing.T) {
 	tests := map[string]struct {
 		// Vault id.
-		vaultId types.VaultId
+		vaultId vaulttypes.VaultId
+		// Existing vault params, if any.
+		existingVaultParams *vaulttypes.VaultParams
+		// Asset quote quantums that vault has.
+		assetQuoteQuantums uint64
 		// Vault params to set.
-		vaultParams *types.VaultParams
+		vaultParams *vaulttypes.VaultParams
 		// Expected on-chain indexer events
 		expectedIndexerEvents []*indexerevents.UpsertVaultEventV1
 		// Expected error.
@@ -89,24 +95,54 @@ func TestGetSetVaultParams(t *testing.T) {
 				},
 			},
 		},
-		"Success - Non-existent Vault Params": {
-			vaultId:     constants.Vault_Clob1,
-			vaultParams: nil,
+		"Success - Deactivate a vault with no quote quantums": {
+			vaultId:             constants.Vault_Clob1,
+			existingVaultParams: &constants.VaultParams,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+			},
+			expectedIndexerEvents: []*indexerevents.UpsertVaultEventV1{
+				{
+					Address:    constants.Vault_Clob1.ToModuleAccountAddress(),
+					ClobPairId: constants.Vault_Clob1.Number,
+					Status: v1.VaultStatusToIndexerVaultStatus(
+						vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+					),
+				},
+			},
+		},
+		"Failure - Deactivate a vault with non-zero quote quantums": {
+			vaultId:             constants.Vault_Clob1,
+			existingVaultParams: &constants.VaultParams,
+			assetQuoteQuantums:  1,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+			},
+			expectedIndexerEvents: []*indexerevents.UpsertVaultEventV1{
+				{
+					Address:    constants.Vault_Clob1.ToModuleAccountAddress(),
+					ClobPairId: constants.Vault_Clob1.Number,
+					Status: v1.VaultStatusToIndexerVaultStatus(
+						vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+					),
+				},
+			},
+			expectedErr: vaulttypes.ErrVaultDeactivation,
 		},
 		"Failure - Unspecified Status": {
 			vaultId: constants.Vault_Clob0,
-			vaultParams: &types.VaultParams{
+			vaultParams: &vaulttypes.VaultParams{
 				QuotingParams: &constants.QuotingParams,
 			},
-			expectedErr: types.ErrUnspecifiedVaultStatus,
+			expectedErr: vaulttypes.ErrUnspecifiedVaultStatus,
 		},
 		"Failure - Invalid Quoting Params": {
 			vaultId: constants.Vault_Clob0,
-			vaultParams: &types.VaultParams{
-				Status:        types.VaultStatus_VAULT_STATUS_STAND_BY,
+			vaultParams: &vaulttypes.VaultParams{
+				Status:        vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
 				QuotingParams: &constants.InvalidQuotingParams,
 			},
-			expectedErr: types.ErrInvalidOrderExpirationSeconds,
+			expectedErr: vaulttypes.ErrInvalidOrderExpirationSeconds,
 		},
 	}
 
@@ -116,21 +152,60 @@ func TestGetSetVaultParams(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *vaulttypes.GenesisState) {
+							if tc.existingVaultParams != nil {
+								genesisState.Vaults = []vaulttypes.Vault{
+									{
+										VaultId:     tc.vaultId,
+										VaultParams: *tc.existingVaultParams,
+									},
+								}
+							}
+						},
+					)
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *satypes.GenesisState) {
+							if tc.assetQuoteQuantums != 0 {
+								genesisState.Subaccounts = []satypes.Subaccount{
+									{
+										Id: tc.vaultId.ToSubaccountId(),
+										AssetPositions: []*satypes.AssetPosition{
+											{
+												AssetId:  constants.Usdc.GetId(),
+												Quantums: dtypes.NewIntFromUint64(tc.assetQuoteQuantums),
+											},
+										},
+									},
+								}
+							}
+						},
+					)
+					return genesis
+				}).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 
-			if tc.vaultParams == nil {
+			if tc.existingVaultParams == nil {
 				_, exists := k.GetVaultParams(ctx, tc.vaultId)
 				require.False(t, exists)
-				return
 			}
 
 			err := k.SetVaultParams(ctx, tc.vaultId, *tc.vaultParams)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, err, tc.expectedErr)
-				_, exists := k.GetVaultParams(ctx, tc.vaultId)
-				require.False(t, exists)
+				v, exists := k.GetVaultParams(ctx, tc.vaultId)
+				if tc.existingVaultParams == nil {
+					require.False(t, exists)
+				} else {
+					require.True(t, exists)
+					require.Equal(t, *tc.existingVaultParams, v)
+				}
 			} else {
 				require.NoError(t, err)
 				p, exists := k.GetVaultParams(ctx, tc.vaultId)
@@ -150,17 +225,17 @@ func TestGetVaultQuotingParams(t *testing.T) {
 	tests := map[string]struct {
 		/* Setup */
 		// Vault id.
-		vaultId types.VaultId
+		vaultId vaulttypes.VaultId
 		// Vault params to set.
-		vaultParams *types.VaultParams
+		vaultParams *vaulttypes.VaultParams
 		/* Expectations */
 		// Whether quoting params should be default.
 		shouldBeDefault bool
 	}{
 		"Default Quoting Params": {
 			vaultId: constants.Vault_Clob0,
-			vaultParams: &types.VaultParams{
-				Status: types.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
 			},
 			shouldBeDefault: true,
 		},
@@ -187,7 +262,7 @@ func TestGetVaultQuotingParams(t *testing.T) {
 				p, exists := k.GetVaultQuotingParams(ctx, tc.vaultId)
 				require.True(t, exists)
 				if tc.shouldBeDefault {
-					require.Equal(t, types.DefaultQuotingParams(), p)
+					require.Equal(t, vaulttypes.DefaultQuotingParams(), p)
 				} else {
 					require.Equal(t, *tc.vaultParams.QuotingParams, p)
 				}
@@ -208,14 +283,14 @@ func TestGetSetOperatorParams(t *testing.T) {
 	params := k.GetOperatorParams(ctx)
 	require.Equal(
 		t,
-		types.OperatorParams{
+		vaulttypes.OperatorParams{
 			Operator: constants.GovAuthority,
 		},
 		params,
 	)
 
 	// Set operator to Alice.
-	newParams := types.OperatorParams{
+	newParams := vaulttypes.OperatorParams{
 		Operator: constants.AliceAccAddress.String(),
 	}
 	err := k.SetOperatorParams(ctx, newParams)
@@ -223,7 +298,7 @@ func TestGetSetOperatorParams(t *testing.T) {
 	require.Equal(t, newParams, k.GetOperatorParams(ctx))
 
 	// Set invalid operator and get.
-	invalidParams := types.OperatorParams{
+	invalidParams := vaulttypes.OperatorParams{
 		Operator: "",
 	}
 	err = k.SetOperatorParams(ctx, invalidParams)
