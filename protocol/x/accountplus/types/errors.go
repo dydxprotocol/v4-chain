@@ -8,4 +8,14 @@ var (
 		1,
 		"Authenticator is not found",
 	)
+	ErrInvalidAccountAddress = errorsmod.Register(
+		ModuleName,
+		2,
+		"Invalid account address",
+	)
+	ErrAuthenticatorDataExceedsMaximumLength = errorsmod.Register(
+		ModuleName,
+		3,
+		"Authenticator data exceeds maximum length",
+	)
 )
