@@ -235,7 +235,7 @@ func (k Keeper) WithdrawFromMegavault(
 		if err != nil {
 			log.ErrorLogWithError(
 				ctx,
-				"Megavault withdrawal: error when transfering from sub vault to main vault. Skipping this vault",
+				"Megavault withdrawal: error when transferring from sub vault to main vault. Skipping this vault",
 				err,
 				"Vault ID",
 				vaultId,
