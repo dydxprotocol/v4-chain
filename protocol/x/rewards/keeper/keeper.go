@@ -19,6 +19,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -144,8 +145,9 @@ func (k Keeper) AddRewardSharesForFill(
 		totalNetFeeRevSharePpm = value
 	}
 	totalTakerFeeRevShareQuantums := big.NewInt(0)
-	if value, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]; ok {
-		totalTakerFeeRevShareQuantums = value
+
+	if value, ok := revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]; ok && value > 0 {
+		totalTakerFeeRevShareQuantums = lib.BigMulPpm(fill.TakerFeeQuoteQuantums, lib.BigU(affiliatetypes.AffiliatesRevSharePpmCap), false)
 	}
 
 	totalFeeSubNetRevSharePpm := lib.OneMillion - totalNetFeeRevSharePpm

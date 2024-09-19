@@ -483,7 +483,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 			},
 			expectedTakerShare: types.RewardShare{
 				Address: takerAddress,
-				Weight:  dtypes.NewInt(900_000), // (2 - 0.1% * 800 - 0.2) * (1 - 0.1)
+				Weight:  dtypes.NewInt(180_000), // (2 - 0.1% * 800 - 1) * (1 - 0.1)
 			},
 			expectedMakerShare: types.RewardShare{
 				Address: makerAddress,
