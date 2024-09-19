@@ -175,7 +175,12 @@ type RevShareKeeper interface {
 	GetAllRevShares(
 		ctx sdk.Context,
 		fill FillForProcess,
+		affiliateWhitelistMap map[string]uint32,
 	) (
 		revsharetypes.RevSharesForFill, error,
 	)
+}
+
+type AffiliatesKeeper interface {
+	GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error)
 }
