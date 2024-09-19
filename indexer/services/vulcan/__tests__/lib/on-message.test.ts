@@ -67,13 +67,14 @@ describe('onMessage', () => {
     expect(handleUpdateMock).toHaveBeenCalledWith(update, message.headers ?? {});
     expect(handleUpdateMock).toHaveBeenCalledTimes(1);
 
-    expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1);
+    expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1, { instance: '' });
     expect(stats.timing).toHaveBeenCalledWith(
       'vulcan.message_time_in_queue',
       expect.any(Number),
       1,
       {
         topic: KafkaTopics.TO_VULCAN,
+        instance: '',
       },
     );
     expect(stats.timing).toHaveBeenCalledWith(
@@ -83,6 +84,7 @@ describe('onMessage', () => {
       {
         success: 'true',
         messageType,
+        instance: '',
       },
     );
 
@@ -104,13 +106,14 @@ describe('onMessage', () => {
       expect(mockHandler).not.toHaveBeenCalled();
     });
 
-    expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1);
+    expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1, { instance: '' });
     expect(stats.timing).toHaveBeenCalledWith(
       'vulcan.message_time_in_queue',
       expect.any(Number),
       1,
       {
         topic: KafkaTopics.TO_VULCAN,
+        instance: '',
       },
     );
     expect(logger.crit).toHaveBeenCalledWith(
@@ -131,13 +134,14 @@ describe('onMessage', () => {
       expect(mockHandler).not.toHaveBeenCalled();
     });
 
-    expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1);
+    expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1, { instance: '' });
     expect(stats.timing).toHaveBeenCalledWith(
       'vulcan.message_time_in_queue',
       expect.any(Number),
       1,
       {
         topic: KafkaTopics.TO_VULCAN,
+        instance: '',
       },
     );
     expect(stats.timing).toHaveBeenCalledWith(
@@ -147,6 +151,7 @@ describe('onMessage', () => {
       {
         success: 'false',
         messageType: 'unknown',
+        instance: '',
       },
     );
     expect(logger.crit).toHaveBeenCalledWith(
@@ -164,13 +169,14 @@ describe('onMessage', () => {
     );
 
     await expect(onMessage(message)).rejects.toEqual(unexpectedError);
-    expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1);
+    expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1, { instance: '' });
     expect(stats.timing).toHaveBeenCalledWith(
       'vulcan.message_time_in_queue',
       expect.any(Number),
       1,
       {
         topic: KafkaTopics.TO_VULCAN,
+        instance: '',
       },
     );
     expect(stats.timing).toHaveBeenCalledWith(
@@ -180,6 +186,7 @@ describe('onMessage', () => {
       {
         success: 'false',
         messageType: 'orderPlace',
+        instance: '',
       },
     );
     expect(logger.error).toHaveBeenCalledWith(
@@ -192,8 +199,8 @@ describe('onMessage', () => {
   it('logs error and does not process message if message is empty', async () => {
     await onMessage(undefined as any as KafkaMessage);
 
-    expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1);
-    expect(stats.increment).toHaveBeenCalledWith('vulcan.empty_kafka_message', 1);
+    expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1, { instance: '' });
+    expect(stats.increment).toHaveBeenCalledWith('vulcan.empty_kafka_message', 1, { instance: '' });
     expect(logger.error).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Empty message',

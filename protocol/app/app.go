@@ -131,6 +131,7 @@ import (
 
 	// Modules
 	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	accountplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	accountplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	affiliatesmodule "github.com/dydxprotocol/v4-chain/protocol/x/affiliates"
@@ -302,6 +303,7 @@ type App struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	GovPlusKeeper         govplusmodulekeeper.Keeper
 	AccountPlusKeeper     accountplusmodulekeeper.Keeper
+	AuthenticatorManager  *authenticator.AuthenticatorManager
 	AffiliatesKeeper      affiliatesmodulekeeper.Keeper
 
 	MarketMapKeeper marketmapmodulekeeper.Keeper
@@ -469,6 +471,7 @@ func New(
 		statsmoduletypes.TransientStoreKey,
 		rewardsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
+		streaming.StreamingManagerTransientStoreKey,
 		perpetualsmoduletypes.TransientStoreKey,
 	)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
@@ -764,6 +767,7 @@ func New(
 		appFlags,
 		appCodec,
 		logger,
+		tkeys[streaming.StreamingManagerTransientStoreKey],
 	)
 
 	timeProvider := &timelib.TimeProviderImpl{}
@@ -920,6 +924,30 @@ func New(
 			)
 		}()
 	}
+	app.StatsKeeper = *statsmodulekeeper.NewKeeper(
+		appCodec,
+		app.EpochsKeeper,
+		keys[statsmoduletypes.StoreKey],
+		tkeys[statsmoduletypes.TransientStoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+		app.StakingKeeper,
+	)
+	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
+
+	app.AffiliatesKeeper = *affiliatesmodulekeeper.NewKeeper(
+		appCodec,
+		keys[affiliatesmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+		app.StatsKeeper,
+		app.IndexerEventManager,
+	)
+	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 
 	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
 		appCodec,
@@ -927,8 +955,12 @@ func New(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		app.AffiliatesKeeper,
 	)
 	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
+
+	// Set the revshare keeper in the affiliates keeper.
+	app.AffiliatesKeeper.SetRevShareKeeper(app.RevShareKeeper)
 
 	app.MarketMapKeeper = *marketmapmodulekeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[marketmapmoduletypes.StoreKey]),
@@ -1009,22 +1041,10 @@ func New(
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper)
 
-	app.StatsKeeper = *statsmodulekeeper.NewKeeper(
-		appCodec,
-		app.EpochsKeeper,
-		keys[statsmoduletypes.StoreKey],
-		tkeys[statsmoduletypes.TransientStoreKey],
-		// set the governance and delaymsg module accounts as the authority for conducting upgrades
-		[]string{
-			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
-		},
-	)
-	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
-
 	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
 		appCodec,
 		app.StatsKeeper,
+		app.AffiliatesKeeper,
 		keys[feetiersmoduletypes.StoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
@@ -1106,12 +1126,14 @@ func New(
 		app.PricesKeeper,
 		app.StatsKeeper,
 		app.RewardsKeeper,
+		app.AffiliatesKeeper,
 		app.IndexerEventManager,
 		app.FullNodeStreamingManager,
 		txConfig.TxDecoder(),
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[sdk.Msg](),
 		daemonLiquidationInfo,
+		app.RevShareKeeper,
 	)
 	clobModule := clobmodule.NewAppModule(
 		appCodec,
@@ -1157,12 +1179,15 @@ func New(
 	app.VaultKeeper = *vaultmodulekeeper.NewKeeper(
 		appCodec,
 		keys[vaultmoduletypes.StoreKey],
+		app.AssetsKeeper,
+		app.BankKeeper,
 		app.ClobKeeper,
 		app.DelayMsgKeeper,
 		app.PerpetualsKeeper,
 		app.PricesKeeper,
 		app.SendingKeeper,
 		app.SubaccountsKeeper,
+		app.IndexerEventManager,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
@@ -1191,20 +1216,17 @@ func New(
 		app.PerpetualsKeeper,
 	)
 
+	// Initialize authenticators
+	app.AuthenticatorManager = authenticator.NewAuthenticatorManager()
+	app.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
+		authenticator.NewSignatureVerification(app.AccountKeeper),
+	})
 	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
 		appCodec,
 		keys[accountplusmoduletypes.StoreKey],
+		app.AuthenticatorManager,
 	)
 	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
-
-	app.AffiliatesKeeper = *affiliatesmodulekeeper.NewKeeper(
-		appCodec,
-		keys[affiliatesmoduletypes.StoreKey],
-		[]string{
-			lib.GovModuleAddress.String(),
-		},
-	)
-	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 
 	/****  Module Options ****/
 
@@ -1927,6 +1949,11 @@ func (app *App) SimulationManager() *module.SimulationManager {
 	return nil
 }
 
+// GetKVStoreKey gets KV Store keys.
+func (app *App) GetKVStoreKey() map[string]*storetypes.KVStoreKey {
+	return app.keys
+}
+
 // buildAnteHandler builds an AnteHandler object configured for the app.
 func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 	anteHandler, err := NewAnteHandler(
@@ -2053,6 +2080,7 @@ func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
 	cdc codec.Codec,
 	logger log.Logger,
+	streamingManagerTransientStoreKey storetypes.StoreKey,
 ) (manager streamingtypes.FullNodeStreamingManager, wsServer *ws.WebsocketServer) {
 	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	if appFlags.GrpcStreamingEnabled {
@@ -2066,6 +2094,7 @@ func getFullNodeStreamingManagerFromOptions(
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
 			appFlags.FullNodeStreamingSnapshotInterval,
+			streamingManagerTransientStoreKey,
 		)
 
 		// Start websocket server.

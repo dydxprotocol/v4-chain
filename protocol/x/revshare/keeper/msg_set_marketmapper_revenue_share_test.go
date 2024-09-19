@@ -71,7 +71,7 @@ func TestSetMarketMapperRevenueShareParams(t *testing.T) {
 					ValidDays:       240,
 				},
 			},
-			expectedErr: "invalid revenue share ppm",
+			expectedErr: "rev share safety violation: rev shares greater than or equal to 100%",
 		},
 	}
 

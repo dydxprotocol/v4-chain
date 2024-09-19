@@ -33,4 +33,10 @@ var (
 		5,
 		"invalid number of blocks to lock shares",
 	)
+
+	ErrInvalidMarketMapTickerMetadata = errorsmod.Register(
+		ModuleName,
+		6,
+		"invalid market map ticker metadata",
+	)
 )

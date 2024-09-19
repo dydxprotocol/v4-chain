@@ -4,6 +4,8 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -70,6 +72,19 @@ func (k Keeper) SetVaultParams(
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
 	store.Set(vaultId.ToStateKey(), b)
 
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpsertVault,
+		indexerevents.UpsertVaultEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewUpsertVaultEvent(
+				vaultId.ToModuleAccountAddress(),
+				vaultId.Number,
+				vaultParams.Status,
+			),
+		),
+	)
+
 	return nil
 }
 
@@ -121,4 +136,33 @@ func (k Keeper) UnsafeDeleteParams(
 ) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete([]byte("Params"))
+}
+
+// GetOperatorParams returns `OperatorParams` in state.
+func (k Keeper) GetOperatorParams(
+	ctx sdk.Context,
+) (
+	params types.OperatorParams,
+) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get([]byte(types.OperatorParamsKey))
+	k.cdc.MustUnmarshal(b, &params)
+	return params
+}
+
+// SetOperatorParams sets `OperatorParams` in state.
+// Returns an error if validation fails.
+func (k Keeper) SetOperatorParams(
+	ctx sdk.Context,
+	params types.OperatorParams,
+) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshal(&params)
+	store.Set([]byte(types.OperatorParamsKey), b)
+
+	return nil
 }

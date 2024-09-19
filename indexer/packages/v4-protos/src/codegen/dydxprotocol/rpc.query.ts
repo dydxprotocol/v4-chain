@@ -9,6 +9,7 @@ export const createRPCQueryClient = async ({
   const client = new QueryClient(tmClient);
   return {
     dydxprotocol: {
+      accountplus: (await import("./accountplus/query.rpc.Query")).createRpcQueryExtension(client),
       affiliates: (await import("./affiliates/query.rpc.Query")).createRpcQueryExtension(client),
       assets: (await import("./assets/query.rpc.Query")).createRpcQueryExtension(client),
       blocktime: (await import("./blocktime/query.rpc.Query")).createRpcQueryExtension(client),

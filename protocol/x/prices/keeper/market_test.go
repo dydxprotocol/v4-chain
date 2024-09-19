@@ -51,6 +51,10 @@ func TestCreateMarket(t *testing.T) {
 	mmMarket, _ := marketMapKeeper.GetMarket(ctx, currencyPair.String())
 	require.False(t, mmMarket.Ticker.Enabled)
 
+	// Verify that currency pair is not in the CurrencyPairToID cache
+	_, found := keeper.GetIDForCurrencyPair(ctx, currencyPair)
+	require.False(t, found)
+
 	marketParam, err := keeper.CreateMarket(
 		ctx,
 		testMarketParams,
@@ -73,6 +77,11 @@ func TestCreateMarket(t *testing.T) {
 	require.Equal(t, `{"test_config_placeholder":{}}`, marketParam.ExchangeConfigJson)
 	require.Equal(t, uint32(2), marketParam.MinExchanges)
 	require.Equal(t, uint32(9999), marketParam.MinPriceChangePpm)
+
+	// Verify that currency pair is in the CurrencyPairToID cache
+	cpID, found := keeper.GetIDForCurrencyPair(ctx, currencyPair)
+	require.True(t, found)
+	require.Equal(t, uint64(marketParam.Id), cpID)
 
 	// Verify expected price of 0 created.
 	require.Equal(t, uint32(0), marketPrice.Id)

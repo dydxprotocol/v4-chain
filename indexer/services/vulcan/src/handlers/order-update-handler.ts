@@ -1,5 +1,6 @@
 import {
   logger,
+  getInstanceId,
   runFuncWithTimingStat,
   stats,
 } from '@dydxprotocol-indexer/base';
@@ -102,6 +103,7 @@ export class OrderUpdateHandler extends Handler {
         1,
         {
           orderFlags: String(orderFlags),
+          instance: getInstanceId(),
         },
       );
       return;
@@ -110,7 +112,11 @@ export class OrderUpdateHandler extends Handler {
     const sizeDeltaInQuantums: Big = this.getSizeDeltaInQuantums(updateResult, orderUpdate);
 
     if (sizeDeltaInQuantums.eq(0)) {
-      stats.increment(`${config.SERVICE_NAME}.order_update_with_zero_delta.count`, 1);
+      stats.increment(
+        `${config.SERVICE_NAME}.order_update_with_zero_delta.count`,
+        1,
+        { instance: getInstanceId() },
+      );
       return;
     }
 
@@ -192,7 +198,11 @@ export class OrderUpdateHandler extends Handler {
       message: 'Old total filled quantums of order exceeds order size in quantums.',
       updateResult,
     });
-    stats.increment(`${config.SERVICE_NAME}.order_update_old_total_filled_exceeds_size`, 1);
+    stats.increment(
+      `${config.SERVICE_NAME}.order_update_old_total_filled_exceeds_size`,
+      1,
+      { instance: getInstanceId() },
+    );
     return Big(updateResult.order!.order!.quantums.toNumber().toString());
   }
 
@@ -219,7 +229,11 @@ export class OrderUpdateHandler extends Handler {
       orderUpdate,
       updateResult,
     });
-    stats.increment(`${config.SERVICE_NAME}.order_update_total_filled_exceeds_size`, 1);
+    stats.increment(
+      `${config.SERVICE_NAME}.order_update_total_filled_exceeds_size`,
+      1,
+      { instance: getInstanceId() },
+    );
 
     return Big(updateResult.order!.order!.quantums.toNumber().toString());
   }

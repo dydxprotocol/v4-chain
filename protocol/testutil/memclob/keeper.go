@@ -327,10 +327,12 @@ func (f *FakeMemClobKeeper) addFakeFillAmount(
 func (f *FakeMemClobKeeper) ProcessSingleMatch(
 	ctx sdk.Context,
 	matchWithOrders *types.MatchWithOrders,
+	affiliatesWhitelistMap map[string]uint32,
 ) (
 	success bool,
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
+	affiliateRevSharesQuoteQuantums *big.Int,
 	err error,
 ) {
 	makerOrder := matchWithOrders.MakerOrder
@@ -363,7 +365,7 @@ func (f *FakeMemClobKeeper) ProcessSingleMatch(
 			)
 		}
 
-		return true, satypes.Success, satypes.Success, nil
+		return true, satypes.Success, satypes.Success, big.NewInt(0), nil
 	}
 
 	subaccountMatchedOrders := make(map[satypes.SubaccountId][]types.PendingOpenOrder)
@@ -410,7 +412,7 @@ func (f *FakeMemClobKeeper) ProcessSingleMatch(
 		}
 	}
 
-	return success, takerUpdateResult, makerUpdateResult, nil
+	return success, takerUpdateResult, makerUpdateResult, big.NewInt(0), nil
 }
 
 func (f *FakeMemClobKeeper) GetStatePosition(

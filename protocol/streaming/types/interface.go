@@ -22,10 +22,13 @@ type FullNodeStreamingManager interface {
 	// L3+ Orderbook updates.
 	InitializeNewStreams(
 		getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
-		getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+		subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	GetSubaccountSnapshotsForInitStreams(
+		getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
+	) map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate
 	SendOrderbookUpdates(
 		offchainUpdates *clobtypes.OffchainUpdates,
 		blockHeight uint32,
@@ -42,12 +45,28 @@ type FullNodeStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
-	SendSubaccountUpdates(
+	SendFinalizedSubaccountUpdates(
 		subaccountUpdates []satypes.StreamSubaccountUpdate,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	StageFinalizeBlockFill(
+		ctx sdk.Context,
+		fill clobtypes.StreamOrderbookFill,
+	)
+	StageFinalizeBlockSubaccountUpdate(
+		ctx sdk.Context,
+		subaccountUpdate satypes.StreamSubaccountUpdate,
+	)
+	GetStagedFinalizeBlockEvents(
+		ctx sdk.Context,
+	) []clobtypes.StagedFinalizeBlockEvent
 	TracksSubaccountId(id satypes.SubaccountId) bool
+	StreamBatchUpdatesAfterFinalizeBlock(
+		ctx sdk.Context,
+		orderBookUpdatesToSyncLocalOpsQueue *clobtypes.OffchainUpdates,
+		perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
+	)
 }
 
 type OutgoingMessageSender interface {

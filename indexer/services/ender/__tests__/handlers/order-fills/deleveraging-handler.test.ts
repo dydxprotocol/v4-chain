@@ -256,6 +256,7 @@ describe('DeleveragingHandler', () => {
         clientMetadata: null,
         hasOrderId: false,
         fee: '0',
+        affiliateRevShare: '0',
       }),
       expectFillInDatabase({
         subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.liquidated!),
@@ -275,6 +276,7 @@ describe('DeleveragingHandler', () => {
         clientMetadata: null,
         hasOrderId: false,
         fee: '0',
+        affiliateRevShare: '0',
       }),
       expectPerpetualPosition(
         PerpetualPositionTable.uuid(

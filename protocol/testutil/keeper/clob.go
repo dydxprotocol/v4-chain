@@ -17,6 +17,7 @@ import (
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
@@ -48,6 +49,7 @@ type ClobKeepersTestContext struct {
 	StatsKeeper       *statskeeper.Keeper
 	RewardsKeeper     *rewardskeeper.Keeper
 	SubaccountsKeeper *subkeeper.Keeper
+	AffiliatesKeeper  *affiliateskeeper.Keeper
 	VaultKeeper       *vaultkeeper.Keeper
 	StoreKey          storetypes.StoreKey
 	MemKey            storetypes.StoreKey
@@ -83,7 +85,31 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 		indexerEventsTransientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc)
+
+		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+		accountsKeeper, _ := createAccountKeeper(
+			stateStore,
+			db,
+			cdc,
+			registry)
+
+		stakingKeeper, _ := createStakingKeeper(
+			stateStore,
+			db,
+			cdc,
+			accountsKeeper,
+			bankKeeper,
+		)
+		ks.StatsKeeper, _ = createStatsKeeper(
+			stateStore,
+			epochsKeeper,
+			db,
+			cdc,
+			stakingKeeper,
+		)
+		ks.AffiliatesKeeper, _ = createAffiliatesKeeper(stateStore, db, cdc, ks.StatsKeeper,
+			indexerEventsTransientStoreKey, true)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, ks.AffiliatesKeeper)
 		ks.MarketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
@@ -95,7 +121,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 		)
 		// Mock time provider response for market creation.
 		mockTimeProvider.On("Now").Return(constants.TimeT)
-		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		ks.PerpetualsKeeper, _ = createPerpetualsKeeper(
 			stateStore,
 			db,
@@ -113,12 +138,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			true,
 		)
 		ks.BlockTimeKeeper, _ = createBlockTimeKeeper(stateStore, db, cdc)
-		ks.StatsKeeper, _ = createStatsKeeper(
-			stateStore,
-			epochsKeeper,
-			db,
-			cdc,
-		)
 		ks.VaultKeeper, _ = createVaultKeeper(
 			stateStore,
 			db,
@@ -129,6 +148,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			stateStore,
 			ks.StatsKeeper,
 			ks.VaultKeeper,
+			ks.AffiliatesKeeper,
 			db,
 			cdc,
 		)
@@ -167,7 +187,9 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.PricesKeeper,
 			ks.StatsKeeper,
 			ks.RewardsKeeper,
+			ks.AffiliatesKeeper,
 			ks.SubaccountsKeeper,
+			revShareKeeper,
 			indexerEventManager,
 			indexerEventsTransientStoreKey,
 		)
@@ -205,7 +227,9 @@ func createClobKeeper(
 	pricesKeeper *priceskeeper.Keeper,
 	statsKeeper *statskeeper.Keeper,
 	rewardsKeeper types.RewardsKeeper,
+	affiliatesKeeper types.AffiliatesKeeper,
 	saKeeper *subkeeper.Keeper,
+	revShareKeeper types.RevShareKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey, storetypes.StoreKey) {
@@ -236,12 +260,14 @@ func createClobKeeper(
 		pricesKeeper,
 		statsKeeper,
 		rewardsKeeper,
+		affiliatesKeeper,
 		indexerEventManager,
 		streaming.NewNoopGrpcStreamingManager(),
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[sdk.Msg](),
 		liquidationtypes.NewDaemonLiquidationInfo(),
+		revShareKeeper,
 	)
 	k.SetAnteHandler(constants.EmptyAnteHandler)
 

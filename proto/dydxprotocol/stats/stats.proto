@@ -61,3 +61,16 @@ message UserStats {
   // Maker USDC in quantums
   uint64 maker_notional = 2;
 }
+
+// CachedStakeAmount stores the last calculated total staked amount for address
+message CachedStakeAmount {
+  // Last calculated total staked amount by the delegator (in coin amount).
+  bytes staked_amount = 1 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // Block time at which the calculation is cached (in Unix Epoch seconds)
+  // Rounded down to nearest second.
+  int64 cached_at = 2;
+}

@@ -16,6 +16,7 @@ import (
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 
@@ -111,7 +112,11 @@ func SetupTestSuite(t testing.TB, isCheckTx bool) *AnteTestSuite {
 	require.NoError(t, err)
 
 	// Initialize accountplus keeper
-	suite.AccountplusKeeper = *accountpluskeeper.NewKeeper(suite.EncCfg.Codec, keys[accountplustypes.StoreKey])
+	suite.AccountplusKeeper = *accountpluskeeper.NewKeeper(
+		suite.EncCfg.Codec,
+		keys[accountplustypes.StoreKey],
+		authenticator.NewAuthenticatorManager(),
+	)
 
 	// We're using TestMsg encoding in some tests, so register it here.
 	suite.EncCfg.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)

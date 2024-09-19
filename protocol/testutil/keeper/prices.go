@@ -47,7 +47,30 @@ func PricesKeepers(t testing.TB) (
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Necessary keeper for testing
-		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc)
+		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+
+		accountsKeeper, _ := createAccountKeeper(
+			stateStore,
+			db,
+			cdc,
+			registry)
+		bankKeeper, _ := createBankKeeper(stateStore, db, cdc, accountsKeeper)
+		stakingKeeper, _ := createStakingKeeper(
+			stateStore,
+			db,
+			cdc,
+			accountsKeeper,
+			bankKeeper,
+		)
+		statsKeeper, _ := createStatsKeeper(
+			stateStore,
+			epochsKeeper,
+			db,
+			cdc,
+			stakingKeeper,
+		)
+		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
+		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
 		marketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		// Define necessary keepers here for unit tests
 		keeper, storeKey, indexPriceCache, mockTimeProvider =

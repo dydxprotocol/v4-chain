@@ -16,7 +16,11 @@ service Query {
   // Query AllAffiliateTiers returns all affiliate tiers.
   rpc AllAffiliateTiers(AllAffiliateTiersRequest)
       returns (AllAffiliateTiersResponse);
+  // Query AffiliateWhitelist returns the affiliate whitelist.
+  rpc AffiliateWhitelist(AffiliateWhitelistRequest)
+      returns (AffiliateWhitelistResponse);
 }
+
 // AffiliateInfoRequest is the request type for the Query/AffiliateInfo RPC
 // method.
 message AffiliateInfoRequest {
@@ -26,18 +30,22 @@ message AffiliateInfoRequest {
 // AffiliateInfoResponse is the response type for the Query/AffiliateInfo RPC
 // method.
 message AffiliateInfoResponse {
-  // The affiliate's tier.
-  uint32 tier = 1;
-  // The affiliate's taker fee share in parts-per-million.
-  uint32 fee_share_ppm = 2;
+  // Whether the address is a whitelisted affiliate (VIP).
+  bool is_whitelisted = 1;
+  // If `is_whiteslisted == false`, the affiliate's tier qualified through
+  // regular affiliate program.
+  uint32 tier = 2;
+  // The affiliate's taker fee share in parts-per-million (for both VIP and
+  // regular affiliate).
+  uint32 fee_share_ppm = 3;
   // The affiliate's all-time referred volume in quote quantums.
-  bytes referred_volume = 3 [
+  bytes referred_volume = 4 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
   // The affiliate's currently staked native tokens (in whole coins).
-  bytes staked_amount = 4 [
+  bytes staked_amount = 5 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
@@ -59,10 +67,18 @@ message ReferredByResponse {
 // AllAffiliateTiersRequest is the request type for the Query/AllAffiliateTiers
 // RPC method.
 message AllAffiliateTiersRequest {}
-
 // AllAffiliateTiersResponse is the response type for the
 // Query/AllAffiliateTiers RPC method.
 message AllAffiliateTiersResponse {
   // All affiliate tiers information.
   AffiliateTiers tiers = 1 [ (gogoproto.nullable) = false ];
+}
+
+// AffiliateWhitelistRequest is the request type for the
+// Query/AffiliateWhitelist RPC method.
+message AffiliateWhitelistRequest {}
+// AffiliateWhitelistResponse is the response type for the
+// Query/AffiliateWhitelist RPC method.
+message AffiliateWhitelistResponse {
+  AffiliateWhitelist whitelist = 1 [ (gogoproto.nullable) = false ];
 }

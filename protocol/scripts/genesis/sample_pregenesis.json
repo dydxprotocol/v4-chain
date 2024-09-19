@@ -2,7 +2,11 @@
   "app_hash": null,
   "app_name": "dydxprotocold",
   "app_state": {
-    "affiliates": {},
+    "affiliates": {
+      "affiliate_tiers": {
+        "tiers": []
+      }
+    },
     "assets": {
       "assets": [
         {
@@ -638,7 +642,12 @@
       "validator_slash_events": []
     },
     "dydxaccountplus": {
-      "accounts": []
+      "accounts": [],
+      "authenticator_data": [],
+      "next_authenticator_id": "0",
+      "params": {
+        "is_smart_account_active": false
+      }
     },
     "epochs": {
       "epoch_info_list": [
@@ -3913,7 +3922,22 @@
       }
     },
     "subaccounts": {
-      "subaccounts": []
+      "subaccounts": [
+        {
+          "asset_positions": [
+            {
+              "asset_id": 0,
+              "index": 0,
+              "quantums": "1000000000000"
+            }
+          ],
+          "id": {
+            "number": 0,
+            "owner": "dydx18tkxrnrkqc2t0lr3zxr5g6a4hdvqksylxqje4r"
+          },
+          "margin_enabled": true
+        }
+      ]
     },
     "transfer": {
       "denom_traces": [],
@@ -3935,6 +3959,9 @@
         "skew_factor_ppm": 2000000,
         "spread_buffer_ppm": 1500,
         "spread_min_ppm": 3000
+      },
+      "operator_params": {
+        "operator": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
       },
       "owner_shares": [
         {
@@ -3968,7 +3995,7 @@
       ]
     }
   },
-  "app_version": "5.2.1-19-g04197f43",
+  "app_version": "5.2.1-103-g5c95dd72",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

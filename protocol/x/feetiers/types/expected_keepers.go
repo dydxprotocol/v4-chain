@@ -15,3 +15,8 @@ type StatsKeeper interface {
 type VaultKeeper interface {
 	IsVault(ctx sdk.Context, address string) bool
 }
+
+// AffiliatesKeeper defines the expected affiliates keeper.
+type AffiliatesKeeper interface {
+	GetReferredBy(ctx sdk.Context, referee string) (string, bool)
+}

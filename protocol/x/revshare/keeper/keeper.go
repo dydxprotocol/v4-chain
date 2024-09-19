@@ -8,14 +8,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 )
 
 type (
 	Keeper struct {
-		cdc         codec.BinaryCodec
-		storeKey    storetypes.StoreKey
-		authorities map[string]struct{}
+		cdc              codec.BinaryCodec
+		storeKey         storetypes.StoreKey
+		authorities      map[string]struct{}
+		affiliatesKeeper affiliateskeeper.Keeper
 	}
 )
 
@@ -23,11 +25,13 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	authorities []string,
+	affiliatesKeeper affiliateskeeper.Keeper,
 ) *Keeper {
 	return &Keeper{
-		cdc:         cdc,
-		storeKey:    storeKey,
-		authorities: lib.UniqueSliceToSet(authorities),
+		cdc:              cdc,
+		storeKey:         storeKey,
+		authorities:      lib.UniqueSliceToSet(authorities),
+		affiliatesKeeper: affiliatesKeeper,
 	}
 }
 

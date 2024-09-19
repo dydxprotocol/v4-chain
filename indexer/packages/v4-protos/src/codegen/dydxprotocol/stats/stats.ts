@@ -115,6 +115,30 @@ export interface UserStatsSDKType {
 
   maker_notional: Long;
 }
+/** CachedStakeAmount stores the last calculated total staked amount for address */
+
+export interface CachedStakeAmount {
+  /** Last calculated total staked amount by the delegator (in coin amount). */
+  stakedAmount: Uint8Array;
+  /**
+   * Block time at which the calculation is cached (in Unix Epoch seconds)
+   * Rounded down to nearest second.
+   */
+
+  cachedAt: Long;
+}
+/** CachedStakeAmount stores the last calculated total staked amount for address */
+
+export interface CachedStakeAmountSDKType {
+  /** Last calculated total staked amount by the delegator (in coin amount). */
+  staked_amount: Uint8Array;
+  /**
+   * Block time at which the calculation is cached (in Unix Epoch seconds)
+   * Rounded down to nearest second.
+   */
+
+  cached_at: Long;
+}
 
 function createBaseBlockStats(): BlockStats {
   return {
@@ -476,6 +500,61 @@ export const UserStats = {
     const message = createBaseUserStats();
     message.takerNotional = object.takerNotional !== undefined && object.takerNotional !== null ? Long.fromValue(object.takerNotional) : Long.UZERO;
     message.makerNotional = object.makerNotional !== undefined && object.makerNotional !== null ? Long.fromValue(object.makerNotional) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseCachedStakeAmount(): CachedStakeAmount {
+  return {
+    stakedAmount: new Uint8Array(),
+    cachedAt: Long.ZERO
+  };
+}
+
+export const CachedStakeAmount = {
+  encode(message: CachedStakeAmount, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.stakedAmount.length !== 0) {
+      writer.uint32(10).bytes(message.stakedAmount);
+    }
+
+    if (!message.cachedAt.isZero()) {
+      writer.uint32(16).int64(message.cachedAt);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): CachedStakeAmount {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCachedStakeAmount();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.stakedAmount = reader.bytes();
+          break;
+
+        case 2:
+          message.cachedAt = (reader.int64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<CachedStakeAmount>): CachedStakeAmount {
+    const message = createBaseCachedStakeAmount();
+    message.stakedAmount = object.stakedAmount ?? new Uint8Array();
+    message.cachedAt = object.cachedAt !== undefined && object.cachedAt !== null ? Long.fromValue(object.cachedAt) : Long.ZERO;
     return message;
   }
 

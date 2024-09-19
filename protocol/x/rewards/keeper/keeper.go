@@ -19,6 +19,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
 
@@ -118,34 +120,57 @@ func (k Keeper) GetRewardShare(
 //
 // Within each block, total reward share score for an address is defined as:
 //
-//	reward_share_score = total_taker_fees_paid - max_possible_maker_rebate*taker_volume + total_positive_maker_fees
+//	reward_share_score = total_taker_fees_paid - total_rev_shared_taker_fee
+//   - max_possible_maker_rebate * taker_volume + total_positive_maker_fees - total_rev_shared_maker_fee
 //
 // Hence, for each fill, increment reward share score as follow:
-//   - For maker address, positive maker fees are added directly.
-//   - For taker address, positive taker fees are reduced by the largest possible maker rebate in x/fee-tiers multiplied
-//     by quote quantums of the fill.
+//   - Let F = sum(percentages of general rev-share) (excluding taker only rev share i.e. affiliate)
+//   - For maker address, positive_maker_fees * (1 - F) are added to reward share score.
+//   - For taker address, (positive_taker_fees - max_possible_maker_rebate
+//     					  * fill_quote_quantum - taker_fee_rev_share) * (1 - F)
+//     are added to reward share score.
+
 func (k Keeper) AddRewardSharesForFill(
 	ctx sdk.Context,
-	takerAddress string,
-	makerAddress string,
-	bigFillQuoteQuantums *big.Int,
-	bigTakerFeeQuoteQuantums *big.Int,
-	bigMakerFeeQuoteQuantums *big.Int,
+	fill clobtypes.FillForProcess,
+	revSharesForFill revsharetypes.RevSharesForFill,
 ) {
 	// Process reward weight for taker.
 	lowestMakerFee := k.feeTiersKeeper.GetLowestMakerFee(ctx)
 	maxMakerRebatePpm := lib.Min(int32(0), lowestMakerFee)
+
+	totalNetFeeRevSharePpm := uint32(0)
+	if value, ok := revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]; ok {
+		totalNetFeeRevSharePpm = value
+	}
+	totalTakerFeeRevShareQuantums := big.NewInt(0)
+	if value, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]; ok {
+		totalTakerFeeRevShareQuantums = value
+	}
+
+	totalFeeSubNetRevSharePpm := lib.OneMillion - totalNetFeeRevSharePpm
+
 	// Calculate quote_quantums * max_maker_rebate. Result is non-positive.
-	makerRebateMulTakerVolume := lib.BigMulPpm(bigFillQuoteQuantums, lib.BigI(maxMakerRebatePpm), false)
-	takerWeight := new(big.Int).Add(
-		bigTakerFeeQuoteQuantums,
+	makerRebateMulTakerVolume := lib.BigMulPpm(fill.FillQuoteQuantums, lib.BigI(maxMakerRebatePpm), false)
+
+	netTakerFee := new(big.Int).Add(
+		fill.TakerFeeQuoteQuantums,
 		makerRebateMulTakerVolume,
+	)
+	netTakerFee = netTakerFee.Sub(
+		netTakerFee,
+		totalTakerFeeRevShareQuantums,
+	)
+	takerWeight := lib.BigMulPpm(
+		netTakerFee,
+		lib.BigU(totalFeeSubNetRevSharePpm),
+		false,
 	)
 	if takerWeight.Sign() > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
 		if err := k.AddRewardShareToAddress(
 			ctx,
-			takerAddress,
+			fill.TakerAddr,
 			takerWeight,
 		); err != nil {
 			log.ErrorLogWithError(
@@ -157,12 +182,12 @@ func (k Keeper) AddRewardSharesForFill(
 	}
 
 	// Process reward weight for maker.
-	makerWeight := new(big.Int).Set(bigMakerFeeQuoteQuantums)
+	makerWeight := new(big.Int).Set(lib.BigMulPpm(fill.MakerFeeQuoteQuantums, lib.BigU(totalFeeSubNetRevSharePpm), false))
 	if makerWeight.Sign() > 0 {
 		// We aren't concerned with errors here because we've already validated the weight is positive.
 		if err := k.AddRewardShareToAddress(
 			ctx,
-			makerAddress,
+			fill.MakerAddr,
 			makerWeight,
 		); err != nil {
 			log.ErrorLogWithError(

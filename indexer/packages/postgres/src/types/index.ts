@@ -31,4 +31,6 @@ export * from './leaderboard-pnl-types';
 export * from './affiliate-referred-users-types';
 export * from './persistent-cache-types';
 export * from './affiliate-info-types';
+export * from './firebase-notification-token-types';
+export * from './vault-types';
 export { PositionSide } from './position-types';

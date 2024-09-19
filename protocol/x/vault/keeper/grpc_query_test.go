@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -24,6 +25,9 @@ func TestQueryParams(t *testing.T) {
 			req: &types.QueryParamsRequest{},
 			res: &types.QueryParamsResponse{
 				DefaultQuotingParams: types.DefaultQuotingParams(),
+				OperatorParams: types.OperatorParams{
+					Operator: constants.GovAuthority,
+				},
 			},
 			err: nil,
 		},

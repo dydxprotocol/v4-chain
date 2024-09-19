@@ -18,6 +18,7 @@ import {
   PerpetualMarketType,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
+  PnlTickInterval,
   PositionSide,
   SubaccountFromDatabase,
   TradeType,
@@ -166,7 +167,7 @@ export interface FillResponseObject {
   price: string,
   size: string,
   fee: string,
-  affiliateEarnedRevShare: string,
+  affiliateRevShare: string,
   createdAt: IsoString,
   createdAtHeight: string,
   orderId?: string,
@@ -550,6 +551,17 @@ export interface HistoricalFundingRequest extends LimitAndEffectiveBeforeRequest
   ticker: string,
 }
 
+export interface RegisterTokenRequest {
+  address: string,
+  token: string,
+  language: string,
+  message: string,
+  timestamp: number,
+  signedMessage: string,
+  pubKey: string,
+  walletIsKeplr: boolean,
+}
+
 /* ------- COLLATERALIZATION TYPES ------- */
 
 export interface Risk {
@@ -668,8 +680,14 @@ export interface MegavaultPositionResponse {
   positions: VaultPosition[],
 }
 
+export interface MegavaultHistoricalPnlRequest {
+  resolution: PnlTickInterval,
+}
+
+export interface VaultsHistoricalPnlRequest extends MegavaultHistoricalPnlRequest {}
+
 /* ------- Affiliates Types ------- */
-export interface AffiliateReferralCodeRequest{
+export interface AffiliateMetadataRequest{
   address: string,
 }
 
@@ -678,21 +696,24 @@ export interface AffiliateAddressRequest{
 }
 
 export interface AffiliateSnapshotRequest{
+  addressFilter?: string[],
   limit?: number,
   offset?: number,
-  sortByReferredFees?: boolean,
+  sortByAffiliateEarning?: boolean,
 }
 
 export interface AffiliateTotalVolumeRequest{
   address: string,
 }
 
-export interface AffiliateReferralCodeResponse {
-  referralCode: string | null,
+export interface AffiliateMetadataResponse {
+  referralCode: string,
+  isVolumeEligible: boolean,
+  isAffiliate: boolean,
 }
 
 export interface AffiliateAddressResponse {
-  address: string | null,
+  address: string,
 }
 
 export interface AffiliateSnapshotResponse {
@@ -703,12 +724,13 @@ export interface AffiliateSnapshotResponse {
 
 export interface AffiliateSnapshotResponseObject {
   affiliateAddress: string,
-  affiliateEarnings: number,
   affiliateReferralCode: string,
+  affiliateEarnings: number,
   affiliateReferredTrades: number,
   affiliateTotalReferredFees: number,
   affiliateReferredUsers: number,
   affiliateReferredNetProtocolEarnings: number,
+  affiliateReferredTotalVolume: number,
 }
 
 export interface AffiliateTotalVolumeResponse {

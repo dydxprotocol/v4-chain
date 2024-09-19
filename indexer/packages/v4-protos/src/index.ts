@@ -16,4 +16,5 @@ export * from './codegen/google/protobuf/timestamp';
 export * from './codegen/dydxprotocol/indexer/protocol/v1/clob';
 export * from './codegen/dydxprotocol/indexer/protocol/v1/subaccount';
 export * from './codegen/dydxprotocol/indexer/shared/removal_reason';
+export * from './codegen/dydxprotocol/vault/vault';
 export * from './utils';

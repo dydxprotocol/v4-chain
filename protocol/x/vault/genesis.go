@@ -40,6 +40,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetMostRecentClientIds(ctx, vault.VaultId, vault.MostRecentClientIds)
 		k.AddVaultToAddressStore(ctx, vault.VaultId)
 	}
+
+	// Set operator params.
+	if err := k.SetOperatorParams(ctx, genState.OperatorParams); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -53,6 +58,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	// Export params.
 	genesis.DefaultQuotingParams = k.GetDefaultQuotingParams(ctx)
+	genesis.OperatorParams = k.GetOperatorParams(ctx)
 
 	// Export vaults.
 	genesis.Vaults = k.GetAllVaults(ctx)

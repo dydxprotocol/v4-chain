@@ -1,9 +1,10 @@
+import { isValidLanguageCode } from '@dydxprotocol-indexer/notifications';
 import {
   perpetualMarketRefresher,
   MAX_PARENT_SUBACCOUNTS,
   CHILD_SUBACCOUNT_MULTIPLIER,
 } from '@dydxprotocol-indexer/postgres';
-import { checkSchema, ParamSchema } from 'express-validator';
+import { body, checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
 
@@ -212,3 +213,52 @@ export const CheckHistoricalBlockTradingRewardsSchema = checkSchema({
 });
 
 export const CheckTransferBetweenSchema = checkSchema(transferBetweenSchemaRecord);
+
+export const RegisterTokenValidationSchema = [
+  body('token')
+    .exists().withMessage('Token is required')
+    .isString()
+    .withMessage('Token must be a string')
+    .notEmpty()
+    .withMessage('Token cannot be empty'),
+  body('timestamp')
+    .exists().withMessage('timestamp is required')
+    .isNumeric()
+    .withMessage('timestamp must be a number')
+    .notEmpty()
+    .withMessage('timestamp cannot be empty'),
+  body('message')
+    .exists().withMessage('message is required')
+    .isString()
+    .withMessage('message must be a string')
+    .notEmpty()
+    .withMessage('message cannot be empty'),
+  body('signedMessage')
+    .exists().withMessage('signedMessage is required')
+    .isString()
+    .withMessage('signedMessage must be a string')
+    .notEmpty()
+    .withMessage('signedMessage cannot be empty'),
+  body('pubKey')
+    .exists().withMessage('pubKey is required')
+    .isString()
+    .withMessage('pubKey must be a string')
+    .notEmpty()
+    .withMessage('pubKey cannot be empty'),
+  body('walletIsKeplr')
+    .exists().withMessage('walletIsKeplr is required')
+    .isBoolean()
+    .withMessage('walletIsKeplr must be a boolean')
+    .notEmpty()
+    .withMessage('walletIsKeplr cannot be empty'),
+  body('language')
+    .optional()
+    .isString()
+    .withMessage('Language must be a string')
+    .custom((value: string) => {
+      if (!isValidLanguageCode(value)) {
+        throw new Error('Invalid language code');
+      }
+      return true;
+    }),
+];

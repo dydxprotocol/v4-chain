@@ -7,6 +7,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -18,6 +19,7 @@ func createFeeTiersKeeper(
 	stateStore storetypes.CommitMultiStore,
 	statsKeeper *statskeeper.Keeper,
 	vaultKeeper *vaultkeeper.Keeper,
+	affiliatesKeeper *affiliateskeeper.Keeper,
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 ) (*keeper.Keeper, storetypes.StoreKey) {
@@ -34,6 +36,7 @@ func createFeeTiersKeeper(
 	k := keeper.NewKeeper(
 		cdc,
 		statsKeeper,
+		affiliatesKeeper,
 		storeKey,
 		authorities,
 	)

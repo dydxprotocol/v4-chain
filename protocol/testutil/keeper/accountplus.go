@@ -11,6 +11,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	keeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 )
 
@@ -52,7 +53,11 @@ func createTimestampNonceKeeper(
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	mockTimeProvider := &mocks.TimeProvider{}
 
-	k := keeper.NewKeeper(cdc, storeKey)
+	k := keeper.NewKeeper(
+		cdc,
+		storeKey,
+		authenticator.NewAuthenticatorManager(),
+	)
 
 	return k, storeKey, mockTimeProvider
 }

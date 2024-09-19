@@ -1,5 +1,5 @@
 import {
-  logger, stats, STATS_NO_SAMPLING, wrapBackgroundTask,
+  getInstanceId, logger, stats, STATS_NO_SAMPLING, wrapBackgroundTask,
 } from '@dydxprotocol-indexer/base';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { Message } from 'kafkajs';
@@ -77,7 +77,7 @@ async function sendMessages(topic: string): Promise<void> {
 
   const messages: Message[] = queuedMessages[topic];
   if (messages === undefined || messages.length === 0) {
-    stats.histogram(sizeStat, 0, STATS_NO_SAMPLING, { topic, success: 'true' });
+    stats.histogram(sizeStat, 0, STATS_NO_SAMPLING, { topic, success: 'true', instance: getInstanceId() });
     return;
   }
   queuedMessages[topic] = [];
@@ -107,6 +107,7 @@ async function sendMessages(topic: string): Promise<void> {
     const tags: {[name: string]: string} = {
       topic,
       success: success.toString(),
+      instance: getInstanceId(),
     };
     stats.histogram(sizeStat, messages.length, STATS_NO_SAMPLING, tags);
     stats.timing(timingStat, Date.now() - start, STATS_NO_SAMPLING, tags);

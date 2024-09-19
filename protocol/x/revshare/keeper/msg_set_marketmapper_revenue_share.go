@@ -25,6 +25,26 @@ func (k msgServer) SetMarketMapperRevenueShare(
 		)
 	}
 
+	unconditionalRevShareConfig, err := k.GetUnconditionalRevShareConfigParams(ctx)
+	if err != nil {
+		return nil, err
+	}
+	affiliateTiers, err := k.affiliatesKeeper.GetAllAffiliateTiers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	affiliateWhitelist, err := k.affiliatesKeeper.GetAffiliateWhitelist(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if !k.ValidateRevShareSafety(affiliateTiers, unconditionalRevShareConfig, msg.Params, affiliateWhitelist) {
+		return nil, errorsmod.Wrapf(
+			types.ErrRevShareSafetyViolation,
+			"rev share safety violation",
+		)
+	}
+
 	// Set market mapper revenue share
 	if err := k.SetMarketMapperRevenueShareParams(ctx, msg.Params); err != nil {
 		return nil, err

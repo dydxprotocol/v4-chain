@@ -1,6 +1,6 @@
 import { VaultType, VaultTypeSDKType, VaultId, VaultIdSDKType } from "./vault";
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
-import { Params, ParamsSDKType, QuotingParams, QuotingParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
+import { Params, ParamsSDKType, QuotingParams, QuotingParamsSDKType, OperatorParams, OperatorParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
@@ -19,6 +19,7 @@ export interface QueryParamsResponse {
   /** @deprecated */
   params?: Params;
   defaultQuotingParams?: QuotingParams;
+  operatorParams?: OperatorParams;
 }
 /** QueryParamsResponse is a response type for the Params RPC method. */
 
@@ -28,6 +29,7 @@ export interface QueryParamsResponseSDKType {
   /** @deprecated */
   params?: ParamsSDKType;
   default_quoting_params?: QuotingParamsSDKType;
+  operator_params?: OperatorParamsSDKType;
 }
 /** QueryVaultRequest is a request type for the Vault RPC method. */
 
@@ -189,7 +191,8 @@ export const QueryParamsRequest = {
 function createBaseQueryParamsResponse(): QueryParamsResponse {
   return {
     params: undefined,
-    defaultQuotingParams: undefined
+    defaultQuotingParams: undefined,
+    operatorParams: undefined
   };
 }
 
@@ -201,6 +204,10 @@ export const QueryParamsResponse = {
 
     if (message.defaultQuotingParams !== undefined) {
       QuotingParams.encode(message.defaultQuotingParams, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.operatorParams !== undefined) {
+      OperatorParams.encode(message.operatorParams, writer.uint32(26).fork()).ldelim();
     }
 
     return writer;
@@ -223,6 +230,10 @@ export const QueryParamsResponse = {
           message.defaultQuotingParams = QuotingParams.decode(reader, reader.uint32());
           break;
 
+        case 3:
+          message.operatorParams = OperatorParams.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -236,6 +247,7 @@ export const QueryParamsResponse = {
     const message = createBaseQueryParamsResponse();
     message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
     message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
+    message.operatorParams = object.operatorParams !== undefined && object.operatorParams !== null ? OperatorParams.fromPartial(object.operatorParams) : undefined;
     return message;
   }
 

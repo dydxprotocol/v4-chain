@@ -8,6 +8,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
 func SubaccountIdToIndexerSubaccountId(
@@ -204,4 +205,8 @@ func ConvertToPerpetualMarketType(marketType perptypes.PerpetualMarketType) v1ty
 			),
 		)
 	}
+}
+
+func VaultStatusToIndexerVaultStatus(vaultStatus vaulttypes.VaultStatus) v1types.VaultStatus {
+	return v1types.VaultStatus(vaultStatus)
 }

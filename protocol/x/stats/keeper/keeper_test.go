@@ -5,7 +5,12 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/assert"
@@ -289,4 +294,100 @@ func TestExpireOldStats(t *testing.T) {
 	k.ExpireOldStats(ctx)
 	k.ExpireOldStats(ctx)
 	require.NotNil(t, k.GetEpochStatsOrNil(ctx, uint32(12)))
+}
+
+func TestGetStakedAmount(t *testing.T) {
+	testCases := []struct {
+		name              string
+		wholeCoinsToStake uint32
+	}{
+		{
+			name:              "100 whole coins staked",
+			wholeCoinsToStake: 100,
+		},
+		{
+			name:              "100,000 whole coins staked",
+			wholeCoinsToStake: 100_000,
+		},
+		{
+			name:              "0 coins staked",
+			wholeCoinsToStake: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			statsKeeper := tApp.App.StatsKeeper
+			stakingKeeper := tApp.App.StakingKeeper
+			expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
+			coinsToStakeQuantums := new(big.Int).Mul(
+				lib.BigU(tc.wholeCoinsToStake),
+				expMultiplier,
+			)
+			delegation := stakingtypes.NewDelegation(
+				constants.AliceAccAddress.String(), constants.AliceValAddress.String(),
+				math.LegacyNewDecFromBigInt(coinsToStakeQuantums))
+			err := stakingKeeper.SetDelegation(ctx, delegation)
+			require.NoError(t, err)
+
+			receivedCoins := statsKeeper.GetStakedAmount(ctx, constants.AliceAccAddress.String())
+			require.Equal(t, coinsToStakeQuantums, receivedCoins)
+		})
+	}
+}
+
+func TestGetStakedAmount_Cache_Hit(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	statsKeeper := tApp.App.StatsKeeper
+	expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
+	coinsToStakeQuantums := new(big.Int).Mul(
+		lib.BigI(100),
+		expMultiplier,
+	)
+	statsKeeper.UnsafeSetCachedStakedAmount(ctx, constants.AliceAccAddress.String(), &types.CachedStakeAmount{
+		StakedAmount: dtypes.NewIntFromBigInt(coinsToStakeQuantums),
+		CachedAt:     ctx.BlockTime().Unix(),
+	})
+
+	receivedCoins := statsKeeper.GetStakedAmount(ctx, constants.AliceAccAddress.String())
+	require.Equal(t, coinsToStakeQuantums, receivedCoins)
+}
+
+func TestGetStakedAmount_Cache_Miss(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	statsKeeper := tApp.App.StatsKeeper
+	stakingKeeper := tApp.App.StakingKeeper
+
+	expMultiplier, _ := lib.BigPow10(-lib.BaseDenomExponent)
+	expiredWholeCoinsToStake := 100
+	latestWholeCoinsToStake := 200
+	expiredCoinsToStakeQuantums := new(big.Int).Mul(
+		lib.BigI(expiredWholeCoinsToStake),
+		expMultiplier,
+	)
+	latestCoinsToStakeQuantums := new(big.Int).Mul(
+		lib.BigI(latestWholeCoinsToStake),
+		expMultiplier,
+	)
+
+	// set expired delegation
+	statsKeeper.UnsafeSetCachedStakedAmount(ctx, constants.AliceAccAddress.String(), &types.CachedStakeAmount{
+		StakedAmount: dtypes.NewIntFromBigInt(expiredCoinsToStakeQuantums),
+		CachedAt:     ctx.BlockTime().Unix(),
+	})
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Duration(epochstypes.StatsEpochDuration+1) * time.Second))
+
+	delegation := stakingtypes.NewDelegation(
+		constants.AliceAccAddress.String(), constants.AliceValAddress.String(),
+		math.LegacyNewDecFromBigInt(latestCoinsToStakeQuantums))
+	err := stakingKeeper.SetDelegation(ctx, delegation)
+	require.NoError(t, err)
+
+	receivedCoins := statsKeeper.GetStakedAmount(ctx, constants.AliceAccAddress.String())
+	require.Equal(t, latestCoinsToStakeQuantums, receivedCoins)
 }

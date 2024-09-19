@@ -22,3 +22,8 @@ export enum PnlTicksColumns {
   blockHeight = 'blockHeight',
   blockTime = 'blockTime',
 }
+
+export enum PnlTickInterval {
+  hour = 'hour',
+  day = 'day',
+}

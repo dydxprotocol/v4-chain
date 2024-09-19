@@ -36,6 +36,7 @@ export const kafkaConfigSchema = {
   KAFKA_MAX_BATCH_WEBSOCKET_MESSAGE_SIZE_BYTES: parseInteger({
     default: 900000, // ~900 kB, 100 kB smaller than the 1 MB default max size of messages in Kafka
   }),
+  KAFKA_WAIT_MAX_TIME_MS: parseInteger({ default: 5_000 }),
 };
 
 export default parseSchema(kafkaConfigSchema);

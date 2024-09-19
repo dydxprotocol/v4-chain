@@ -9,18 +9,27 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
 type Keeper struct {
 	cdc      codec.BinaryCodec
 	storeKey storetypes.StoreKey
+
+	authenticatorManager *authenticator.AuthenticatorManager
 }
 
-func NewKeeper(cdc codec.BinaryCodec, key storetypes.StoreKey) *Keeper {
+func NewKeeper(
+	cdc codec.BinaryCodec,
+	key storetypes.StoreKey,
+	authenticatorManager *authenticator.AuthenticatorManager,
+) *Keeper {
 	return &Keeper{
 		cdc:      cdc,
 		storeKey: key,
+
+		authenticatorManager: authenticatorManager,
 	}
 }
 

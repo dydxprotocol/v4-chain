@@ -11,7 +11,7 @@ import (
 
 func TestGetSetSubaccountAtIndex(t *testing.T) {
 	// Setup keeper state and test parameters.
-	ctx, subaccountsKeeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
+	ctx, subaccountsKeeper, _, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
 
 	// Write a couple of subaccounts to the store.
 	store := subaccountsKeeper.GetSafetyHeapStore(ctx, 0, types.Long)
@@ -60,7 +60,7 @@ func TestGetSetSubaccountAtIndex(t *testing.T) {
 
 func TestGetSetSubaccountHeapIndex(t *testing.T) {
 	// Setup keeper state and test parameters.
-	ctx, subaccountsKeeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
+	ctx, subaccountsKeeper, _, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
 
 	// Write a couple of subaccounts to the store.
 	store := subaccountsKeeper.GetSafetyHeapStore(ctx, 0, types.Long)
@@ -109,7 +109,7 @@ func TestGetSetSubaccountHeapIndex(t *testing.T) {
 
 func TestGetSetSafetyHeapLength(t *testing.T) {
 	// Setup keeper state and test parameters.
-	ctx, subaccountsKeeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
+	ctx, subaccountsKeeper, _, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, false)
 
 	// Write a couple of subaccounts to the store.
 	store := subaccountsKeeper.GetSafetyHeapStore(ctx, 0, types.Long)

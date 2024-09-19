@@ -38,21 +38,6 @@ func fetchOrdersInvolvedInOpQueue(
 	return orderIdSet
 }
 
-// fetchSubaccountIdsInvolvedInOpQueue fetches all SubaccountIds involved in an operations
-// queue's matches and returns them as a set.
-func fetchSubaccountIdsInvolvedInOpQueue(
-	operations []types.InternalOperation,
-) (subaccountIdSet map[satypes.SubaccountId]struct{}) {
-	subaccountIdSet = make(map[satypes.SubaccountId]struct{})
-	for _, operation := range operations {
-		if clobMatch := operation.GetMatch(); clobMatch != nil {
-			subaccountIdSetForClobMatch := clobMatch.GetAllSubaccountIds()
-			subaccountIdSet = lib.MergeMaps(subaccountIdSet, subaccountIdSetForClobMatch)
-		}
-	}
-	return subaccountIdSet
-}
-
 // ProcessProposerOperations updates on-chain state given an []OperationRaw operations queue
 // representing matches that occurred in the previous block. It performs validation on an operations
 // queue. If all validation passes, the operations queue is written to state.
@@ -70,45 +55,6 @@ func (k Keeper) ProcessProposerOperations(
 	operations, err := types.ValidateAndTransformRawOperations(ctx, rawOperations, k.txDecoder, k.antehandler)
 	if err != nil {
 		return errorsmod.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
-	}
-
-	// If grpc streams are on, send absolute fill amounts from local + proposed opqueue to the grpc stream.
-	// Also send subaccount snapshots for impacted subaccounts.
-	// An impacted subaccount is defined as:
-	// - A subaccount that was involved in any match in the local opqueue.
-	//   Only matches generate subaccount updates.
-	// This must be sent out to account for checkState being discarded and deliverState being used.
-	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
-		localValidatorOperationsQueue, _ := k.MemClob.GetOperationsToReplay(ctx)
-		orderIdsFromProposed := fetchOrdersInvolvedInOpQueue(
-			operations,
-		)
-		orderIdsFromLocal := fetchOrdersInvolvedInOpQueue(
-			localValidatorOperationsQueue,
-		)
-		orderIdSetToUpdate := lib.MergeMaps(orderIdsFromLocal, orderIdsFromProposed)
-
-		allUpdates := types.NewOffchainUpdates()
-		for orderId := range orderIdSetToUpdate {
-			orderbookUpdate := k.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
-			allUpdates.Append(orderbookUpdate)
-		}
-		k.SendOrderbookUpdates(ctx, allUpdates)
-
-		subaccountIdsFromProposed := fetchSubaccountIdsInvolvedInOpQueue(
-			operations,
-		)
-
-		subaccountIdsFromLocal := fetchSubaccountIdsInvolvedInOpQueue(
-			localValidatorOperationsQueue,
-		)
-		subaccountIdsToUpdate := lib.MergeMaps(subaccountIdsFromLocal, subaccountIdsFromProposed)
-		allSubaccountUpdates := make([]satypes.StreamSubaccountUpdate, 0)
-		for subaccountId := range subaccountIdsToUpdate {
-			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(ctx, subaccountId, false)
-			allSubaccountUpdates = append(allSubaccountUpdates, subaccountUpdate)
-		}
-		k.subaccountsKeeper.SendSubaccountUpdates(ctx, allSubaccountUpdates)
 	}
 
 	log.DebugLog(ctx, "Processing operations queue",
@@ -190,6 +136,7 @@ func (k Keeper) ProcessInternalOperations(
 	// All short term orders in this map have passed validation.
 	placedShortTermOrders := make(map[types.OrderId]types.Order, 0)
 
+	var affiliatesWhitelistMap map[string]uint32 = nil
 	// Write the matches to state if all stateful validation passes.
 	for _, operation := range operations {
 		if err := k.validateInternalOperationAgainstClobPairStatus(ctx, operation); err != nil {
@@ -198,8 +145,21 @@ func (k Keeper) ProcessInternalOperations(
 
 		switch castedOperation := operation.Operation.(type) {
 		case *types.InternalOperation_Match:
+			// check if affiliate whitelist map is nil and initialize it if it is.
+			// This is done to avoid getting whitelist map on list of operations
+			// where there are no matches.
+			if affiliatesWhitelistMap == nil {
+				var err error
+				affiliatesWhitelistMap, err = k.affiliatesKeeper.GetAffiliateWhitelistMap(ctx)
+				if err != nil {
+					return errorsmod.Wrapf(
+						err,
+						"ProcessInternalOperations: Failed to get affiliates whitelist map",
+					)
+				}
+			}
 			clobMatch := castedOperation.Match
-			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
+			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders, affiliatesWhitelistMap); err != nil {
 				return errorsmod.Wrapf(
 					err,
 					"ProcessInternalOperations: Failed to process clobMatch: %+v",
@@ -255,10 +215,11 @@ func (k Keeper) PersistMatchToState(
 	ctx sdk.Context,
 	clobMatch *types.ClobMatch,
 	ordersMap map[types.OrderId]types.Order,
+	affiliatesWhitelistMap map[string]uint32,
 ) error {
 	switch castedMatch := clobMatch.Match.(type) {
 	case *types.ClobMatch_MatchOrders:
-		if err := k.PersistMatchOrdersToState(ctx, castedMatch.MatchOrders, ordersMap); err != nil {
+		if err := k.PersistMatchOrdersToState(ctx, castedMatch.MatchOrders, ordersMap, affiliatesWhitelistMap); err != nil {
 			return err
 		}
 	case *types.ClobMatch_MatchPerpetualLiquidation:
@@ -266,6 +227,7 @@ func (k Keeper) PersistMatchToState(
 			ctx,
 			castedMatch.MatchPerpetualLiquidation,
 			ordersMap,
+			affiliatesWhitelistMap,
 		); err != nil {
 			return err
 		}
@@ -496,6 +458,7 @@ func (k Keeper) PersistMatchOrdersToState(
 	ctx sdk.Context,
 	matchOrders *types.MatchOrders,
 	ordersMap map[types.OrderId]types.Order,
+	affiliatesWhitelistMap map[string]uint32,
 ) error {
 	takerOrderId := matchOrders.GetTakerOrderId()
 	// Fetch the taker order from either short term orders or state
@@ -540,7 +503,7 @@ func (k Keeper) PersistMatchOrdersToState(
 		}
 		makerOrders = append(makerOrders, makerOrder)
 
-		_, _, _, err = k.ProcessSingleMatch(ctx, &matchWithOrders)
+		_, _, _, affiliateRevSharesQuoteQuantums, err := k.ProcessSingleMatch(ctx, &matchWithOrders, affiliatesWhitelistMap)
 		if err != nil {
 			return err
 		}
@@ -577,6 +540,7 @@ func (k Keeper) PersistMatchOrdersToState(
 					matchWithOrders.TakerFee,
 					totalFilledMaker,
 					totalFilledTaker,
+					affiliateRevSharesQuoteQuantums,
 				),
 			),
 		)
@@ -584,6 +548,7 @@ func (k Keeper) PersistMatchOrdersToState(
 
 	// if GRPC streaming is on, emit a generated clob match to stream.
 	if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
+		// Note: GenerateStreamOrderbookFill doesn't rely on MemClob state.
 		streamOrderbookFill := k.MemClob.GenerateStreamOrderbookFill(
 			ctx,
 			types.ClobMatch{
@@ -594,11 +559,10 @@ func (k Keeper) PersistMatchOrdersToState(
 			&takerOrder,
 			makerOrders,
 		)
-		k.SendOrderbookFillUpdates(
+
+		k.GetFullNodeStreamingManager().StageFinalizeBlockFill(
 			ctx,
-			[]types.StreamOrderbookFill{
-				streamOrderbookFill,
-			},
+			streamOrderbookFill,
 		)
 	}
 
@@ -611,6 +575,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 	ctx sdk.Context,
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
+	affiliatesWhitelistMap map[string]uint32,
 ) error {
 	// If the subaccount is not liquidatable, do nothing.
 	if err := k.EnsureIsLiquidatable(ctx, matchLiquidation.Liquidated); err != nil {
@@ -648,9 +613,10 @@ func (k Keeper) PersistMatchLiquidationToState(
 
 		// Write the position updates and state fill amounts for this match.
 		// Note stateless validation on the constructed `matchWithOrders` is performed within this function.
-		_, _, _, err = k.ProcessSingleMatch(
+		_, _, _, affiliateRevSharesQuoteQuantums, err := k.ProcessSingleMatch(
 			ctx,
 			&matchWithOrders,
+			affiliatesWhitelistMap,
 		)
 		if err != nil {
 			return err
@@ -679,6 +645,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 					matchWithOrders.MakerFee,
 					matchWithOrders.TakerFee,
 					totalFilledMaker,
+					affiliateRevSharesQuoteQuantums,
 				),
 			),
 		)
@@ -703,11 +670,9 @@ func (k Keeper) PersistMatchLiquidationToState(
 			takerOrder,
 			makerOrders,
 		)
-		k.SendOrderbookFillUpdates(
+		k.GetFullNodeStreamingManager().StageFinalizeBlockFill(
 			ctx,
-			[]types.StreamOrderbookFill{
-				streamOrderbookFill,
-			},
+			streamOrderbookFill,
 		)
 	}
 	return nil

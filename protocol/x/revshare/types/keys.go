@@ -16,4 +16,6 @@ const (
 
 	// Key prefix for storing MarketMapperRevShareDetails per market
 	MarketMapperRevSharePrefix = "MarketMapperRevShare:"
+
+	UnconditionalRevShareConfigKey = "UnconditionalRevShareConfig"
 )

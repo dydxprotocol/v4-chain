@@ -91,7 +91,7 @@ export enum QueryableField {
   AFFILIATE_ADDRESS = 'affiliateAddress',
   REFEREE_ADDRESS = 'refereeAddress',
   KEY = 'key',
-  IS_WHITELIST_AFFILIATE = 'isWhitelistAffiliate',
+  TOKEN = 'token',
 }
 
 export interface QueryConfig {
@@ -114,7 +114,6 @@ export interface SubaccountUsernamesQueryConfig extends QueryConfig {
 
 export interface WalletQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string,
-  [QueryableField.IS_WHITELIST_AFFILIATE]?: boolean,
 }
 
 export interface PerpetualPositionQueryConfig extends QueryConfig {
@@ -338,4 +337,16 @@ export interface PersistentCacheQueryConfig extends QueryConfig {
 
 export interface AffiliateInfoQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string,
+}
+
+export interface FirebaseNotificationTokenQueryConfig extends QueryConfig {
+  [QueryableField.ADDRESS]?: string,
+  [QueryableField.TOKEN]?: string,
+  [QueryableField.UPDATED_BEFORE_OR_AT]?: IsoString,
+}
+
+export interface VaultQueryConfig extends QueryConfig {
+  [QueryableField.ADDRESS]?: string[],
+  [QueryableField.CLOB_PAIR_ID]?: string[],
+  [QueryableField.STATUS]?: string[],
 }

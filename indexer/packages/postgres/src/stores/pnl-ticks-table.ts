@@ -22,6 +22,7 @@ import {
   PaginationFromDatabase,
   LeaderboardPnlCreateObject,
   LeaderboardPnlTimeSpan,
+  PnlTickInterval,
 } from '../types';
 
 export function uuid(
@@ -445,6 +446,62 @@ async function getAllTimeRankedPnlTicks(): Promise<LeaderboardPnlCreateObject[]>
       aggregated_results;
     `,
   ) as { rows: LeaderboardPnlCreateObject[] };
+
+  return result.rows;
+}
+
+/**
+ * Constructs a query to get pnl ticks at a specific interval for a set of subaccounts
+ * within a time range.
+ * Uses a windowing function in the raw query to get the first row of each window of the specific
+ * interval time.
+ * Currently only supports hourly / daily as the interval.
+ * @param interval 'day' or 'hour'.
+ * @param timeWindowSeconds Window of time to get pnl ticks for at the specified interval.
+ * @param subaccountIds Set of subaccounts to get pnl ticks for.
+ * @returns
+ */
+export async function getPnlTicksAtIntervals(
+  interval: PnlTickInterval,
+  timeWindowSeconds: number,
+  subaccountIds: string[],
+): Promise <PnlTicksFromDatabase[]> {
+  const result: {
+    rows: PnlTicksFromDatabase[],
+  } = await knexReadReplica.getConnection().raw(
+    `
+    SELECT
+      "id",
+      "subaccountId",
+      "equity",
+      "totalPnl",
+      "netTransfers",
+      "createdAt",
+      "blockHeight",
+      "blockTime"
+    FROM (
+      SELECT
+        pnl_ticks.*,
+        ROW_NUMBER() OVER (
+          PARTITION BY
+            "subaccountId", 
+            DATE_TRUNC(
+              '${interval}',
+              "blockTime"
+            ) ORDER BY "blockTime"
+        ) AS r
+      FROM pnl_ticks
+      WHERE
+        "subaccountId" IN (${subaccountIds.map((id: string) => { return `'${id}'`; }).join(',')}) AND
+        "blockTime" > NOW() - INTERVAL '${timeWindowSeconds} second'
+    ) AS pnl_intervals
+    WHERE
+      r = 1
+    ORDER BY "subaccountId";
+    `,
+  ) as unknown as {
+    rows: PnlTicksFromDatabase[],
+  };
 
   return result.rows;
 }

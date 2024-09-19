@@ -12,6 +12,31 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
+func TestCurrencyPairIDStoreFunctions(t *testing.T) {
+	ctx, keeper, _, _, _, _, _ := keepertest.PricesKeepers(t)
+
+	currencyPair := oracletypes.CurrencyPair{
+		Base:  "BTC",
+		Quote: "USD",
+	}
+
+	// Add the currency pair ID to the store
+	marketID := uint32(1)
+	keeper.AddCurrencyPairIDToStore(ctx, marketID, currencyPair)
+
+	// Retrieve the currency pair ID from the store
+	storedMarketID, found := keeper.GetCurrencyPairIDFromStore(ctx, currencyPair)
+
+	require.True(t, found)
+	require.Equal(t, uint64(marketID), storedMarketID)
+
+	// Remove the currency pair ID from the store
+	keeper.RemoveCurrencyPairFromStore(ctx, currencyPair)
+
+	_, found = keeper.GetCurrencyPairIDFromStore(ctx, currencyPair)
+	require.False(t, found)
+}
+
 func TestGetCurrencyPairFromID(t *testing.T) {
 	ctx, keeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -26,7 +51,7 @@ func TestGetCurrencyPairFromID(t *testing.T) {
 		require.True(t, found)
 	}
 	_, found := keeper.GetCurrencyPairFromID(ctx, uint64(marketNumber+1))
-	require.True(t, !found)
+	require.False(t, found)
 }
 
 func TestIDForCurrencyPair(t *testing.T) {
@@ -50,7 +75,7 @@ func TestIDForCurrencyPair(t *testing.T) {
 		Base:  fmt.Sprint(marketNumber + 1),
 		Quote: fmt.Sprint(marketNumber + 1),
 	})
-	require.True(t, !found)
+	require.False(t, found)
 }
 
 func TestGetPriceForCurrencyPair(t *testing.T) {

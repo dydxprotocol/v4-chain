@@ -542,6 +542,7 @@ export async function expectFillInDatabase({
   orderFlags,
   clientMetadata,
   fee,
+  affiliateRevShare,
   hasOrderId = true,
 }: {
   subaccountId: string,
@@ -560,6 +561,7 @@ export async function expectFillInDatabase({
   orderFlags: string,
   clientMetadata: string | null,
   fee: string,
+  affiliateRevShare: string,
   hasOrderId?: boolean,
 }): Promise<void> {
   const fillId: string = FillTable.uuid(eventId, liquidity);
@@ -582,6 +584,7 @@ export async function expectFillInDatabase({
     createdAtHeight,
     clientMetadata,
     fee,
+    affiliateRevShare,
   }));
 }
 

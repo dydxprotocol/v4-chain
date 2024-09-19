@@ -6,6 +6,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 )
 
@@ -18,5 +20,27 @@ func GetTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
+	cmd.AddCommand(CmdRegisterAffiliate())
+	return cmd
+}
+
+func CmdRegisterAffiliate() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "register-affiliate [affiliate] [referee]",
+		Short: "Register an affiliate",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			msg := types.MsgRegisterAffiliate{
+				Affiliate: args[0],
+				Referee:   args[1],
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

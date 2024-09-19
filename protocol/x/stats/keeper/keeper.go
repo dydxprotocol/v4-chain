@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 	"sort"
 	"time"
@@ -10,8 +11,11 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
@@ -22,6 +26,7 @@ type (
 		storeKey          storetypes.StoreKey
 		transientStoreKey storetypes.StoreKey
 		authorities       map[string]struct{}
+		stakingKeeper     types.StakingKeeper
 	}
 )
 
@@ -31,6 +36,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	transientStoreKey storetypes.StoreKey,
 	authorities []string,
+	stakingKeeper types.StakingKeeper,
 ) *Keeper {
 	return &Keeper{
 		cdc:               cdc,
@@ -38,6 +44,7 @@ func NewKeeper(
 		storeKey:          storeKey,
 		transientStoreKey: transientStoreKey,
 		authorities:       lib.UniqueSliceToSet(authorities),
+		stakingKeeper:     stakingKeeper,
 	}
 }
 
@@ -273,4 +280,84 @@ func (k Keeper) ExpireOldStats(ctx sdk.Context) {
 	k.deleteEpochStats(ctx, metadata.TrailingEpoch)
 	metadata.TrailingEpoch += 1
 	k.SetStatsMetadata(ctx, metadata)
+}
+
+// GetStakedAmount returns the total staked amount for a delegator address.
+// It maintains a cache to optimize performance. The function first checks
+// if there's a cached value that hasn't expired. If found, it returns the
+// cached amount. Otherwise, it calculates the staked amount by querying
+// the staking keeper, caches the result, and returns the calculated amount
+func (k Keeper) GetStakedAmount(ctx sdk.Context,
+	delegatorAddr string) *big.Int {
+	startTime := time.Now()
+	stakedAmount := big.NewInt(0)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CachedStakeAmountKeyPrefix))
+	bytes := store.Get([]byte(delegatorAddr))
+
+	// return cached value if it's not expired
+	if bytes != nil {
+		var cachedStakedAmount types.CachedStakeAmount
+		k.cdc.MustUnmarshal(bytes, &cachedStakedAmount)
+		// sanity checks
+		if cachedStakedAmount.CachedAt < 0 {
+			panic("cachedStakedAmount.CachedAt is negative")
+		}
+		if ctx.BlockTime().Unix() < 0 {
+			panic("Invariant violation: ctx.BlockTime().Unix() is negative")
+		}
+		if cachedStakedAmount.CachedAt < 0 {
+			panic("Invariant violation: cachedStakedAmount.CachedAt is negative")
+		}
+		if cachedStakedAmount.CachedAt > ctx.BlockTime().Unix() {
+			panic("Invariant violation: cachedStakedAmount.CachedAt is greater than blocktime")
+		}
+		if ctx.BlockTime().Unix()-cachedStakedAmount.CachedAt <= types.StakedAmountCacheDurationSeconds {
+			stakedAmount.Set(cachedStakedAmount.StakedAmount.BigInt())
+			metrics.IncrCounterWithLabels(metrics.StatsGetStakedAmountCacheHit, 1)
+			telemetry.MeasureSince(
+				startTime,
+				types.ModuleName,
+				metrics.StatsGetStakedAmountLatencyCacheHit,
+				metrics.Latency,
+			)
+			return stakedAmount
+		}
+	}
+
+	metrics.IncrCounterWithLabels(metrics.StatsGetStakedAmountCacheMiss, 1)
+
+	// calculate staked amount
+	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
+	if err != nil {
+		panic(err)
+	}
+	// use math.MaxUint16 to get all delegations
+	delegations, err := k.stakingKeeper.GetDelegatorDelegations(ctx, delegator, math.MaxUint16)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, delegation := range delegations {
+		stakedAmount.Add(stakedAmount, delegation.GetShares().RoundInt().BigInt())
+	}
+
+	// update cache
+	cachedStakedAmount := types.CachedStakeAmount{
+		StakedAmount: dtypes.NewIntFromBigInt(stakedAmount),
+		CachedAt:     ctx.BlockTime().Unix(),
+	}
+	store.Set([]byte(delegatorAddr), k.cdc.MustMarshal(&cachedStakedAmount))
+	telemetry.MeasureSince(
+		startTime,
+		types.ModuleName,
+		metrics.StatsGetStakedAmountLatencyCacheMiss,
+		metrics.Latency,
+	)
+	return stakedAmount
+}
+
+func (k Keeper) UnsafeSetCachedStakedAmount(ctx sdk.Context, delegatorAddr string,
+	cachedStakedAmount *types.CachedStakeAmount) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CachedStakeAmountKeyPrefix))
+	store.Set([]byte(delegatorAddr), k.cdc.MustMarshal(cachedStakedAmount))
 }

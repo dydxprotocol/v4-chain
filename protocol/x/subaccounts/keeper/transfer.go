@@ -3,16 +3,15 @@ package keeper
 import (
 	"math/big"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-
-	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
-
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -219,70 +218,74 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 func (k Keeper) DistributeFees(
 	ctx sdk.Context,
 	assetId uint32,
-	quantums *big.Int,
-	perpetualId uint32,
+	revSharesForFill revsharetypes.RevSharesForFill,
+	fill clobtypes.FillForProcess,
 ) error {
 	// get perpetual
-	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	totalFeeQuoteQuantums := new(big.Int).Add(fill.TakerFeeQuoteQuantums, fill.MakerFeeQuoteQuantums)
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, fill.ProductId)
 	if err != nil {
 		return err
 	}
 
-	collateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, perpetualId)
+	collateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, fill.ProductId)
 	if err != nil {
 		return err
 	}
 
-	// calculate market mapper rev share
-	marketMapperShare := big.NewInt(0)
-	revShareAddr, revSharePpm, err := k.revShareKeeper.GetMarketMapperRevenueShareForMarket(
-		ctx,
-		perpetual.Params.MarketId,
-	)
-	// Note: The likelihood of this error is very low, and not getting the rev share should not
-	// prevent the trade from going through. Therefore, we log the error and continue
-	if err != nil {
-		log.ErrorLog(ctx, "DistributeFees: failed to get market mapper revenue share", "err", err)
-	}
-	if err == nil && revShareAddr != nil {
-		if revSharePpm >= 1e6 {
-			log.ErrorLog(
-				ctx,
-				"DistributeFees: revSharePpm is greater than or equal to 100%",
-				"revSharePpm",
-				revSharePpm,
-			)
-		} else {
-			// marketMapperShare = quantums * revSharePpm / 1e6
-			marketMapperShare.Div(
-				new(big.Int).Mul(quantums, big.NewInt(int64(revSharePpm))),
-				big.NewInt(1e6),
+	// Transfer fees to rev share recipients
+	for _, revShare := range revSharesForFill.AllRevShares {
+		// transfer fees to the recipient
+		recipientAddress, err := sdk.AccAddressFromBech32(revShare.Recipient)
+		if err != nil {
+			return err
+		}
+		if err := k.TransferFees(
+			ctx,
+			assetId,
+			collateralPoolAddr,
+			recipientAddress,
+			revShare.QuoteQuantums,
+		); err != nil {
+			return err
+		}
+
+		// emit a metric for the amount of fees transferred to the market mapper
+		if revShare.RevShareType == revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER {
+			labels := []metrics.Label{
+				metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)),
+			}
+			metrics.AddSampleWithLabels(
+				metrics.MarketMapperRevenueDistribution,
+				metrics.GetMetricValueFromBigInt(revShare.QuoteQuantums),
+				labels...,
 			)
 		}
 	}
 
-	// Remaining amount goes to the fee collector
-	feeCollectorShare := new(big.Int).Sub(quantums, marketMapperShare)
-
-	// Emit a metric for the amount of fees transferred to the market mapper
-	labels := []metrics.Label{
-		metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)),
+	totalTakerFeeRevShareQuantums := big.NewInt(0)
+	if value, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]; ok {
+		totalTakerFeeRevShareQuantums = value
 	}
-	metrics.AddSampleWithLabels(
-		metrics.MarketMapperRevenueDistribution,
-		metrics.GetMetricValueFromBigInt(marketMapperShare),
-		labels...,
+	totalNetFeeRevShareQuantums := big.NewInt(0)
+	if value, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]; ok {
+		totalNetFeeRevShareQuantums = value
+	}
+
+	totalRevShareQuoteQuantums := big.NewInt(0).Add(
+		totalTakerFeeRevShareQuantums,
+		totalNetFeeRevShareQuantums,
 	)
 
-	// Transfer fees to the market mapper
-	if err := k.TransferFees(
-		ctx,
-		assetId,
-		collateralPoolAddr,
-		revShareAddr,
-		marketMapperShare,
-	); err != nil {
-		return err
+	// Remaining amount goes to the fee collector
+	feeCollectorShare := new(big.Int).Sub(
+		totalFeeQuoteQuantums,
+		totalRevShareQuoteQuantums,
+	)
+
+	// If Collector fee share is < 0, panic
+	if feeCollectorShare.Sign() < 0 {
+		panic("fee collector share is < 0")
 	}
 
 	// Transfer fees to the fee collector

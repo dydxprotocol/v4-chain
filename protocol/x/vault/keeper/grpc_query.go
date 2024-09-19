@@ -19,5 +19,6 @@ func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*t
 
 	return &types.QueryParamsResponse{
 		DefaultQuotingParams: k.GetDefaultQuotingParams(ctx),
+		OperatorParams:       k.GetOperatorParams(ctx),
 	}, nil
 }

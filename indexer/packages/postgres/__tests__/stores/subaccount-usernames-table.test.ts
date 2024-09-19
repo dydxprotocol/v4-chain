@@ -1,11 +1,16 @@
 import { SubaccountFromDatabase, SubaccountUsernamesFromDatabase, SubaccountsWithoutUsernamesResult } from '../../src/types';
 import * as SubaccountUsernamesTable from '../../src/stores/subaccount-usernames-table';
+import * as WalletTable from '../../src/stores/wallet-table';
 import * as SubaccountsTable from '../../src/stores/subaccount-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import {
   defaultSubaccountUsername,
   defaultSubaccountUsername2,
+  defaultSubaccountWithAlternateAddress,
+  defaultWallet,
+  defaultWallet2,
   duplicatedSubaccountUsername,
+  subaccountUsernameWithAlternativeAddress,
 } from '../helpers/constants';
 import { seedData } from '../helpers/mock-generators';
 
@@ -79,5 +84,25 @@ describe('SubaccountUsernames store', () => {
     const subaccountIds: SubaccountsWithoutUsernamesResult[] = await
     SubaccountUsernamesTable.getSubaccountsWithoutUsernames();
     expect(subaccountIds.length).toEqual(subaccountLength - 1);
+  });
+
+  it('Get username using address', async () => {
+    await Promise.all([
+      // Add two usernames for defaultWallet
+      SubaccountUsernamesTable.create(defaultSubaccountUsername),
+      SubaccountUsernamesTable.create(defaultSubaccountUsername2),
+      // Add one username for alternativeWallet
+      WalletTable.create(defaultWallet2),
+      SubaccountsTable.create(defaultSubaccountWithAlternateAddress),
+      SubaccountUsernamesTable.create(subaccountUsernameWithAlternativeAddress),
+    ]);
+
+    // Should only get username for defaultWallet's subaccount 0
+    const usernames = await SubaccountUsernamesTable.findByAddress([defaultWallet.address]);
+    expect(usernames.length).toEqual(1);
+    expect(usernames[0]).toEqual(expect.objectContaining({
+      address: defaultWallet.address,
+      username: defaultSubaccountUsername.username,
+    }));
   });
 });

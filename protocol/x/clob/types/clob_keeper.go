@@ -81,10 +81,12 @@ type ClobKeeper interface {
 	ProcessSingleMatch(
 		ctx sdk.Context,
 		matchWithOrders *MatchWithOrders,
+		affiliatesWhitelistMap map[string]uint32,
 	) (
 		success bool,
 		takerUpdateResult satypes.UpdateResult,
 		makerUpdateResult satypes.UpdateResult,
+		affiliateRevSharesQuoteQuantums *big.Int,
 		err error,
 	)
 	SetLongTermOrderPlacement(
@@ -137,7 +139,10 @@ type ClobKeeper interface {
 	) error
 	UpdateLiquidationsConfig(ctx sdk.Context, config LiquidationsConfig) error
 	// full node streaming
-	InitializeNewStreams(ctx sdk.Context)
+	InitializeNewStreams(
+		ctx sdk.Context,
+		subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
+	)
 	SendOrderbookUpdates(
 		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,

@@ -10,7 +10,6 @@ var (
 		1,
 		"Shares are negative",
 	)
-	// Deprecated since v6.x
 	ErrClobPairNotFound = errorsmod.Register(
 		ModuleName,
 		2,
@@ -120,5 +119,30 @@ var (
 		ModuleName,
 		23,
 		"Locked shares exceeds owner shares",
+	)
+	ErrEmptyOperator = errorsmod.Register(
+		ModuleName,
+		24,
+		"Empty operator address",
+	)
+	ErrInvalidSharesToWithdraw = errorsmod.Register(
+		ModuleName,
+		25,
+		"Shares to withdraw must be positive and less than or equal to total shares",
+	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		26,
+		"Authority must be a module authority or operator",
+	)
+	ErrInsufficientWithdrawableShares = errorsmod.Register(
+		ModuleName,
+		27,
+		"Insufficient withdrawable shares",
+	)
+	ErrInsufficientRedeemedQuoteQuantums = errorsmod.Register(
+		ModuleName,
+		28,
+		"Insufficient redeemed quote quantums",
 	)
 )

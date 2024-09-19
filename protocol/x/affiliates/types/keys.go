@@ -8,3 +8,14 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 )
+
+// State
+const (
+	ReferredByKeyPrefix = "RB:"
+
+	ReferredVolumeKeyPrefix = "RV:"
+
+	AffiliateTiersKey = "AT"
+
+	AffiliateWhitelistKey = "AW"
+)

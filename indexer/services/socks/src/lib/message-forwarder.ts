@@ -124,12 +124,6 @@ export class MessageForwarder {
       lastOffset: batch.lastOffset(),
       ...metricTags,
     };
-
-    logger.info({
-      at: 'on-batch#onBatch',
-      message: 'Received batch',
-      ...batchInfo,
-    });
     stats.timing(
       'socks.batch_time_in_queue',
       batchTimeInQueue,
@@ -163,12 +157,6 @@ export class MessageForwarder {
     }
 
     const batchProcessingTime: number = Date.now() - startTime;
-    logger.info({
-      at: 'on-batch#onBatch',
-      message: 'Finished Processing Batch',
-      batchProcessingTime,
-      ...batchInfo,
-    });
     stats.timing(
       'socks.batch_processing_time',
       batchProcessingTime,

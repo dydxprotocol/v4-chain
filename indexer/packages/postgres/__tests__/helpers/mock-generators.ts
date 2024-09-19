@@ -1,5 +1,6 @@
 import * as AssetTable from '../../src/stores/asset-table';
 import * as BlockTable from '../../src/stores/block-table';
+import * as FirebaseNotificationTokenTable from '../../src/stores/firebase-notification-token-table';
 import * as LiquidityTiersTable from '../../src/stores/liquidity-tiers-table';
 import * as MarketTable from '../../src/stores/market-table';
 import * as PerpetualMarketTable from '../../src/stores/perpetual-market-table';
@@ -26,6 +27,7 @@ import {
   defaultTendermintEvent2,
   defaultTendermintEvent3,
   defaultTendermintEvent4,
+  defaultFirebaseNotificationToken,
   defaultWallet,
   isolatedMarket,
   isolatedMarket2,
@@ -77,5 +79,8 @@ export async function seedData() {
   ]);
   await Promise.all([
     WalletTable.create(defaultWallet),
+  ]);
+  await Promise.all([
+    FirebaseNotificationTokenTable.create(defaultFirebaseNotificationToken),
   ]);
 }
