@@ -16,6 +16,7 @@ type (
 	Keeper struct {
 		cdc                 codec.BinaryCodec
 		storeKey            storetypes.StoreKey
+		assetsKeeper        types.AssetsKeeper
 		bankKeeper          types.BankKeeper
 		clobKeeper          types.ClobKeeper
 		delayMsgKeeper      types.DelayMsgKeeper
@@ -31,6 +32,7 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	assetsKeeper types.AssetsKeeper,
 	bankKeeper types.BankKeeper,
 	clobKeeper types.ClobKeeper,
 	delayMsgKeeper types.DelayMsgKeeper,
@@ -44,6 +46,7 @@ func NewKeeper(
 	return &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
+		assetsKeeper:        assetsKeeper,
 		bankKeeper:          bankKeeper,
 		clobKeeper:          clobKeeper,
 		delayMsgKeeper:      delayMsgKeeper,

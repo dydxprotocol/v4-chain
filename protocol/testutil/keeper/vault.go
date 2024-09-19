@@ -62,6 +62,7 @@ func createVaultKeeper(
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
+		&mocks.AssetsKeeper{},
 		&mocks.BankKeeper{},
 		&mocks.ClobKeeper{},
 		&mocks.DelayMsgKeeper{},

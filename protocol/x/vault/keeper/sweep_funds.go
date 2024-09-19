@@ -12,10 +12,18 @@ import (
 func (k Keeper) SweepMainVaultBankBalance(
 	ctx sdk.Context,
 ) {
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		log.ErrorLog(
+			ctx,
+			"SweepMainVaultBankBalance: Usdc asset not found in state",
+		)
+		return
+	}
 	mainVaultBalance := k.bankKeeper.GetBalance(
 		ctx,
 		types.MegavaultMainAddress,
-		assettypes.AssetUsdc.Denom,
+		usdcAsset.Denom,
 	)
 	// No funds to sweep
 	if mainVaultBalance.Amount.BigInt().Sign() <= 0 {
@@ -26,7 +34,7 @@ func (k Keeper) SweepMainVaultBankBalance(
 		ctx,
 		types.MegavaultMainAddress,
 		types.MegavaultMainSubaccount,
-		assettypes.AssetUsdc.Id,
+		usdcAsset.Id,
 		mainVaultBalance.Amount.BigInt(),
 	)
 	if err != nil {
