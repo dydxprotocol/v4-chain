@@ -43,7 +43,8 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 			affiliate:   constants.BobAccAddress.String(),
 			expectError: nil,
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				// No setup needed for this test case
+				err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+				require.NoError(t, err)
 			},
 		},
 		{
@@ -52,7 +53,9 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 			affiliate:   constants.CarlAccAddress.String(),
 			expectError: types.ErrAffiliateAlreadyExistsForReferee,
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				err := k.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
+				err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
 				require.NoError(t, err)
 			},
 		},
@@ -62,7 +65,8 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 			affiliate:   constants.BobAccAddress.String(),
 			expectError: types.ErrInvalidAddress,
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				// No setup needed for this test case
+				err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+				require.NoError(t, err)
 			},
 		},
 		{
@@ -70,6 +74,16 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 			referee:     constants.AliceAccAddress.String(),
 			affiliate:   "invalid_address",
 			expectError: types.ErrInvalidAddress,
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+				err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+				require.NoError(t, err)
+			},
+		},
+		{
+			name:        "No tiers set",
+			referee:     constants.AliceAccAddress.String(),
+			affiliate:   constants.BobAccAddress.String(),
+			expectError: types.ErrAffiliateTiersNotSet,
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				// No setup needed for this test case
 			},
@@ -754,4 +768,15 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			require.Equal(t, tc.expectedVolume, referredVolume)
 		})
 	}
+}
+
+func TestGetTierForAffiliateEmptyTiers(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+
+	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String())
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), tierLevel)
+	require.Equal(t, uint32(0), feeSharePpm)
 }
