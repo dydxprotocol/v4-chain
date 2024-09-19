@@ -316,8 +316,8 @@ func (k Keeper) GetVaultClobOrders(
 
 		// If the side would increase the vault's inventory, make the order post-only.
 		timeInForceType := clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED
-		if (side == clobtypes.Order_SIDE_SELL && inventory.Sign() <= 0) ||
-			(side == clobtypes.Order_SIDE_BUY && inventory.Sign() >= 0) {
+		if (side == clobtypes.Order_SIDE_SELL && leveragePpm.Sign() <= 0) ||
+			(side == clobtypes.Order_SIDE_BUY && leveragePpm.Sign() >= 0) {
 			timeInForceType = clobtypes.Order_TIME_IN_FORCE_POST_ONLY
 		}
 
