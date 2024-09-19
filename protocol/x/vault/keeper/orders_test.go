@@ -280,37 +280,66 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			},
 			ordersShouldRefresh: true,
 		},
-		// TODO (TRA-551): Reenable this test after implementing MsgAllocateToVault.
-		// "Success - Orders refresh due to order size increase": {
-		// 	vaultId: constants.Vault_Clob0,
-		// 	advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
-		// 		msgDepositToVault := vaulttypes.MsgDepositToVault{
-		// 			VaultId:       &constants.Vault_Clob0,
-		// 			SubaccountId:  &(constants.Alice_Num0),
-		// 			QuoteQuantums: dtypes.NewInt(87_654_321),
-		// 		}
-		// 		CheckTx_MsgDepositToVault := testapp.MustMakeCheckTx(
-		// 			ctx,
-		// 			tApp.App,
-		// 			testapp.MustMakeCheckTxOptions{
-		// 				AccAddressForSigning: constants.Alice_Num0.Owner,
-		// 				Gas:                  constants.TestGasLimit,
-		// 				FeeAmt:               constants.TestFeeCoins_5Cents,
-		// 			},
-		// 			&msgDepositToVault,
-		// 		)
-		// 		checkTxResp := tApp.CheckTx(CheckTx_MsgDepositToVault)
-		// 		require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+		"Success - Orders refresh due to order size increase": {
+			vaultId: constants.Vault_Clob0,
+			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+				msgAllocateToVault := vaulttypes.MsgAllocateToVault{
+					Authority:     constants.AliceAccAddress.String(), // operator
+					VaultId:       constants.Vault_Clob0,
+					QuoteQuantums: dtypes.NewInt(500_000_000),
+				}
+				CheckTx_MsgAllocateToVault := testapp.MustMakeCheckTx(
+					ctx,
+					tApp.App,
+					testapp.MustMakeCheckTxOptions{
+						AccAddressForSigning: constants.AliceAccAddress.String(),
+						Gas:                  constants.TestGasLimit,
+						FeeAmt:               constants.TestFeeCoins_5Cents,
+					},
+					&msgAllocateToVault,
+				)
+				checkTxResp := tApp.CheckTx(CheckTx_MsgAllocateToVault)
+				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 
-		// 		return tApp.AdvanceToBlock(
-		// 			uint32(tApp.GetBlockHeight())+1,
-		// 			testapp.AdvanceToBlockOptions{
-		// 				BlockTime: ctx.BlockTime().Add(time.Second * 2),
-		// 			},
-		// 		)
-		// 	},
-		// 	ordersShouldRefresh: true,
-		// },
+				return tApp.AdvanceToBlock(
+					uint32(tApp.GetBlockHeight())+1,
+					testapp.AdvanceToBlockOptions{
+						BlockTime: ctx.BlockTime().Add(time.Second * 2),
+					},
+				)
+			},
+			ordersShouldRefresh: true,
+		},
+		"Success - Orders refresh due to order size decrease": {
+			vaultId: constants.Vault_Clob0,
+			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+				msgRetrieveFromVault := vaulttypes.MsgRetrieveFromVault{
+					Authority:     constants.AliceAccAddress.String(), // operator
+					VaultId:       constants.Vault_Clob0,
+					QuoteQuantums: dtypes.NewInt(500_000_000),
+				}
+				CheckTx_MsgRetrieveFromVault := testapp.MustMakeCheckTx(
+					ctx,
+					tApp.App,
+					testapp.MustMakeCheckTxOptions{
+						AccAddressForSigning: constants.AliceAccAddress.String(),
+						Gas:                  constants.TestGasLimit,
+						FeeAmt:               constants.TestFeeCoins_5Cents,
+					},
+					&msgRetrieveFromVault,
+				)
+				checkTxResp := tApp.CheckTx(CheckTx_MsgRetrieveFromVault)
+				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+				return tApp.AdvanceToBlock(
+					uint32(tApp.GetBlockHeight())+1,
+					testapp.AdvanceToBlockOptions{
+						BlockTime: ctx.BlockTime().Add(time.Second * 2),
+					},
+				)
+			},
+			ordersShouldRefresh: true,
+		},
 		"Success - Vault for non-existent Clob Pair 4321": {
 			vaultId: vaulttypes.VaultId{
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
@@ -336,28 +365,31 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 								},
 							},
 						}
+						genesisState.OperatorParams = vaulttypes.OperatorParams{
+							Operator: constants.AliceAccAddress.String(),
+						}
 					},
 				)
-				// Initialize vault with enough quote quantums to be actively quoting.
+				// Initialize main vault with some balance and vault with enough quote quantums to be actively quoting.
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *satypes.GenesisState) {
 						genesisState.Subaccounts = []satypes.Subaccount{
 							{
-								Id: tc.vaultId.ToSubaccountId(),
+								Id: &vaulttypes.MegavaultMainSubaccount,
 								AssetPositions: []*satypes.AssetPosition{
 									testutil.CreateSingleAssetPosition(
 										assettypes.AssetUsdc.Id,
-										defaultQuotingParams.ActivationThresholdQuoteQuantums.BigInt(),
+										big.NewInt(1_000_000_000),
 									),
 								},
 							},
 							{
-								Id: &constants.Alice_Num0,
+								Id: tc.vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
 									testutil.CreateSingleAssetPosition(
 										assettypes.AssetUsdc.Id,
-										defaultQuotingParams.ActivationThresholdQuoteQuantums.BigInt(),
+										big.NewInt(2_000_000_000),
 									),
 								},
 							},
