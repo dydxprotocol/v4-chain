@@ -1,10 +1,10 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   PersistentCacheTable, WalletTable, PersistentCacheKeys, PersistentCacheFromDatabase,
-  BlockFromDatabase,
-  BlockTable,
 } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
+
+import config from '../config';
 
 const defaultLastUpdateTime: string = '2020-01-01T00:00:00Z';
 
@@ -13,6 +13,7 @@ const defaultLastUpdateTime: string = '2020-01-01T00:00:00Z';
  */
 export default async function runTask(): Promise<void> {
   try {
+    const start = Date.now();
     const persistentCacheEntry: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
       .findById(PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME);
 
@@ -27,11 +28,7 @@ export default async function runTask(): Promise<void> {
       ? persistentCacheEntry.value
       : defaultLastUpdateTime);
 
-    const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
-    if (latestBlock.time === null) {
-      throw Error('Failed to get latest block time');
-    }
-    let windowEndTime = DateTime.fromISO(latestBlock.time);
+    let windowEndTime = DateTime.utc();
 
     // During backfilling, we process one day at a time to reduce roundtable runtime.
     if (windowEndTime > lastUpdateTime.plus({ days: 1 })) {
@@ -40,6 +37,10 @@ export default async function runTask(): Promise<void> {
 
     await WalletTable.updateTotalVolume(lastUpdateTime.toISO(), windowEndTime.toISO());
 
+    stats.timing(
+      `${config.SERVICE_NAME}.update_wallet_total_volume_timing`,
+      Date.now() - start,
+    );
   } catch (error) {
     logger.error({
       at: 'update-wallet-total-volume#runTask',

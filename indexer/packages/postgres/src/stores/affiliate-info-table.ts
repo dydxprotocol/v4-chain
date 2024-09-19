@@ -15,8 +15,8 @@ import {
   AffiliateInfoFromDatabase,
   AffiliateInfoQueryConfig,
   Liquidity,
-  PersistentCacheKeys,
 } from '../types';
+import Knex from 'knex';
 
 export async function findAll(
   {
@@ -97,15 +97,27 @@ export async function findById(
     .returning('*');
 }
 
+/**
+ * Updates affiliate information in the database based on the provided time window.
+ *
+ * This function aggregates affiliate-related metadata and fill statistics
+ * from various tables. Then it upserts the aggregated data into the `affiliate_info` table.
+ *
+ * @async
+ * @function updateInfo
+ * @param {string} windowStartTs - The exclusive start timestamp for filtering fills.
+ * @param {string} windowEndTs - The inclusive end timestamp for filtering fill.
+ * @param {Options} [options={ txId: undefined }] - Optional transaction ID or additional options.
+ * @returns {Promise<void>}
+ */
 export async function updateInfo(
   windowStartTs: string, // exclusive
   windowEndTs: string, // inclusive
+  options: Options = { txId: undefined },
 ) : Promise<void> {
-
-  await knexPrimary.raw(
-    `
-BEGIN;
-
+  const transaction: Knex.Transaction | undefined = Transaction.get(options.txId);
+    
+  const query = `
 -- Get metadata for all affiliates
 -- STEP 1: Aggregate affiliate_referred_users
 WITH affiliate_metadata AS (
@@ -245,17 +257,26 @@ DO UPDATE SET
     "totalReferredFees" = affiliate_info."totalReferredFees" + EXCLUDED."totalReferredFees",
     "referredNetProtocolEarnings" = affiliate_info."referredNetProtocolEarnings" + EXCLUDED."referredNetProtocolEarnings",
     "referredTotalVolume" = affiliate_info."referredTotalVolume" + EXCLUDED."referredTotalVolume";
+    `
 
--- Step 5: Upsert new affiliateInfoLastUpdateTime to persistent_cache table
-INSERT INTO persistent_cache (key, value)
-VALUES ('${PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME}', '${windowEndTs}')
-ON CONFLICT (key) 
-DO UPDATE SET value = EXCLUDED.value;
-
-COMMIT;
-    `,
-  );
+    return transaction
+    ? knexPrimary.raw(query).transacting(transaction)
+    : knexPrimary.raw(query);
 }
+
+/**
+ * Finds affiliate information from the database with optional address filtering, sorting,
+ * and offset based pagination.
+ *
+ * @async
+ * @function paginatedFindWithAddressFilter
+ * @param {string[]} addressFilter - An array of affiliate addresses to filter by.
+ * @param {number} offset - The offset for pagination.
+ * @param {number} limit - The maximum number of records to return.
+ * @param {boolean} sortByAffiliateEarning - Sort the results by affiliate earnings in desc order.
+ * @param {Options} [options=DEFAULT_POSTGRES_OPTIONS] - Optional config for database interaction.
+ * @returns {Promise<AffiliateInfoFromDatabase[]>}
+ */
 export async function paginatedFindWithAddressFilter(
   addressFilter: string[],
   offset: number,

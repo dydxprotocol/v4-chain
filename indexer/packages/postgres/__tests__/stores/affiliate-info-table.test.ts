@@ -1,5 +1,5 @@
 import {
-  PersistentCacheKeys, AffiliateInfoFromDatabase, Liquidity, PersistentCacheFromDatabase,
+  AffiliateInfoFromDatabase, Liquidity,
 } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import {
@@ -19,7 +19,6 @@ import * as AffiliateInfoTable from '../../src/stores/affiliate-info-table';
 import * as OrderTable from '../../src/stores/order-table';
 import * as AffiliateReferredUsersTable from '../../src/stores/affiliate-referred-users-table';
 import * as FillTable from '../../src/stores/fill-table';
-import * as PersistentCacheTable from '../../src/stores/persistent-cache-table';
 import { seedData } from '../helpers/mock-generators';
 import { DateTime } from 'luxon';
 
@@ -196,37 +195,6 @@ describe('Affiliate info store', () => {
         referredTotalVolume: '4',
       };
       expect(updatedInfo).toEqual(expectedAffiliateInfo);
-    });
-
-    it('Successfully upserts persistent cache', async () => {
-      const referenceDt: DateTime = await populateFillsAndReferrals();
-
-      // First update sets persistent cache
-      await AffiliateInfoTable.updateInfo(
-        referenceDt.minus({ minutes: 2 }).toISO(),
-        referenceDt.minus({ minutes: 1 }).toISO(),
-      );
-      let persistentCache: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
-        .findById(PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME);
-      let lastUpdateTime: string | undefined = persistentCache?.value;
-      expect(lastUpdateTime).not.toBeUndefined();
-      if (lastUpdateTime !== undefined) {
-        expect(lastUpdateTime).toEqual(referenceDt.minus({ minutes: 1 }).toISO());
-      }
-
-      // Second update upserts persistent cache
-      await AffiliateInfoTable.updateInfo(
-        referenceDt.minus({ minutes: 1 }).toISO(),
-        referenceDt.toISO(),
-      );
-      persistentCache = await PersistentCacheTable.findById(
-        PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-      );
-      lastUpdateTime = persistentCache?.value;
-      expect(lastUpdateTime).not.toBeUndefined();
-      if (lastUpdateTime !== undefined) {
-        expect(lastUpdateTime).toEqual(referenceDt.toISO());
-      }
     });
 
     it('Does not use fills from before referal block height', async () => {
