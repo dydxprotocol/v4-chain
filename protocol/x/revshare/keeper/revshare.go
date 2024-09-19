@@ -164,17 +164,17 @@ func (k Keeper) GetAllRevShares(
 	makerFees := fill.MakerFeeQuoteQuantums
 	netFees := big.NewInt(0).Add(takerFees, makerFees)
 
-	affiliateRevShares, err := k.getAffiliateRevShares(ctx, fill)
+	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill)
+	if err != nil {
+		return types.RevSharesForFill{}, err
+	}
+	netFeesSubAffiliateFeesShared := big.NewInt(0).Sub(netFees, affiliateFeesShared)
+	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
 
-	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFees)
-	if err != nil {
-		return types.RevSharesForFill{}, err
-	}
-
-	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFees)
+	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
@@ -216,19 +216,19 @@ func (k Keeper) GetAllRevShares(
 func (k Keeper) getAffiliateRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
-) ([]types.RevShare, error) {
+) ([]types.RevShare, *big.Int, error) {
 	takerAddr := fill.TakerAddr
 	takerFee := fill.TakerFeeQuoteQuantums
 	if fill.MonthlyRollingTakerVolumeQuantums >= types.Max30dRefereeVolumeQuantums {
-		return nil, nil
+		return nil, big.NewInt(0), nil
 	}
 
 	takerAffiliateAddr, feeSharePpm, exists, err := k.affiliatesKeeper.GetTakerFeeShare(ctx, takerAddr)
 	if err != nil {
-		return nil, err
+		return nil, big.NewInt(0), err
 	}
 	if !exists {
-		return nil, nil
+		return nil, big.NewInt(0), nil
 	}
 	feesShared := lib.BigMulPpm(takerFee, lib.BigU(feeSharePpm), false)
 	return []types.RevShare{
@@ -239,7 +239,7 @@ func (k Keeper) getAffiliateRevShares(
 			QuoteQuantums:     feesShared,
 			RevSharePpm:       feeSharePpm,
 		},
-	}, nil
+	}, feesShared, nil
 }
 
 func (k Keeper) getUnconditionalRevShares(
