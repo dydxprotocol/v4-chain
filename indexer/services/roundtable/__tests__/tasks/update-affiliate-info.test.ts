@@ -109,7 +109,7 @@ describe('update-affiliate-info', () => {
       referredTotalVolume: '1',
     };
     expect(updatedInfo).toEqual(expectedAffiliateInfo);
-    const lastUpdateTime2 = await getAffiliateInfoUpdateTime();
+    const lastUpdateTime2: DateTime | undefined = await getAffiliateInfoUpdateTime();
     if (lastUpdateTime2 !== undefined && lastUpdateTime1 !== undefined) {
       expect(lastUpdateTime2.toMillis())
         .toBeGreaterThan(lastUpdateTime1.toMillis());
@@ -117,7 +117,7 @@ describe('update-affiliate-info', () => {
   });
 
   it('Successfully backfills from past date', async () => {
-    const currentDt = DateTime.utc();
+    const currentDt: DateTime = DateTime.utc();
 
     // Set persistent cache to 3 weeks ago to emulate backfill from 3 weeks.
     await PersistentCacheTable.create({
