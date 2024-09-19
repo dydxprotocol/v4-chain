@@ -33,6 +33,8 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 		vaultStatuses []vaulttypes.VaultStatus
 		// Asset quantums of each vault ID above.
 		assetQuantums []*big.Int
+		// Position quantums of each vault ID above.
+		positionQuantums []*big.Int
 		// Activation threshold (quote quantums) of vaults.
 		activationThresholdQuoteQuantums *big.Int
 	}{
@@ -49,6 +51,10 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				big.NewInt(1_000_000_000), // 1,000 USDC
 				big.NewInt(1_000_000_001),
 			},
+			positionQuantums: []*big.Int{
+				big.NewInt(0),
+				big.NewInt(0),
+			},
 			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
 		"Two Vaults, One Quoting, One Stand-By, Both Above Activation Threshold": {
@@ -63,6 +69,10 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			assetQuantums: []*big.Int{
 				big.NewInt(1_000_000_000), // 1,000 USDC
 				big.NewInt(1_000_000_001),
+			},
+			positionQuantums: []*big.Int{
+				big.NewInt(0),
+				big.NewInt(0),
 			},
 			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
@@ -79,6 +89,10 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				big.NewInt(1_000_000_000), // 1,000 USDC
 				big.NewInt(1_000_000_001),
 			},
+			positionQuantums: []*big.Int{
+				big.NewInt(0),
+				big.NewInt(0),
+			},
 			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
 		"Two Vaults, Both Quoting, Only One above Activation Threshold": {
@@ -94,6 +108,10 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				big.NewInt(1_000_000_000),
 				big.NewInt(999_999_999),
 			},
+			positionQuantums: []*big.Int{
+				big.NewInt(0),
+				big.NewInt(0),
+			},
 			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
 		"Two Vaults, Both Quoting, Both below Activation Threshold": {
@@ -108,6 +126,44 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			assetQuantums: []*big.Int{
 				big.NewInt(123_456_788),
 				big.NewInt(123_456_787),
+			},
+			positionQuantums: []*big.Int{
+				big.NewInt(0),
+				big.NewInt(0),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(123_456_789),
+		},
+		"Four Vaults, One stand-by, One close-only and short, One close-only and neutral, " +
+			"One close-only and long, All above Activation Threshold": {
+			vaultIds: []vaulttypes.VaultId{
+				constants.Vault_Clob0,
+				constants.Vault_Clob1,
+				{
+					Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+					Number: 2,
+				},
+				{
+					Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+					Number: 5,
+				},
+			},
+			vaultStatuses: []vaulttypes.VaultStatus{
+				vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+				vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+				vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+				vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			},
+			assetQuantums: []*big.Int{
+				big.NewInt(123_456_789),
+				big.NewInt(123_456_790),
+				big.NewInt(123_456_791),
+				big.NewInt(123_456_792),
+			},
+			positionQuantums: []*big.Int{
+				big.NewInt(-100_000),
+				big.NewInt(0),
+				big.NewInt(-100_000),
+				big.NewInt(100_000),
 			},
 			activationThresholdQuoteQuantums: big.NewInt(123_456_789),
 		},
@@ -130,6 +186,16 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 					func(genesisState *satypes.GenesisState) {
 						subaccounts := make([]satypes.Subaccount, len(tc.vaultIds))
 						for i, vaultId := range tc.vaultIds {
+							perpetualPositions := []*satypes.PerpetualPosition{}
+							if tc.positionQuantums[i].Sign() != 0 {
+								perpetualPositions = append(
+									perpetualPositions,
+									&satypes.PerpetualPosition{
+										PerpetualId: vaultId.Number,
+										Quantums:    dtypes.NewIntFromBigInt(tc.positionQuantums[i]),
+									},
+								)
+							}
 							subaccounts[i] = satypes.Subaccount{
 								Id: vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
@@ -138,6 +204,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 										tc.assetQuantums[i],
 									),
 								},
+								PerpetualPositions: perpetualPositions,
 							}
 						}
 						genesisState.Subaccounts = subaccounts
@@ -183,9 +250,10 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			expectedIndexerEvents := []*indexer_manager.IndexerTendermintEvent{}
 			indexerEventIndex := 0
 			for i, vaultId := range tc.vaultIds {
-				// TODO (TRA-547): consider close-only orders.
-				if tc.vaultStatuses[i] == vaulttypes.VaultStatus_VAULT_STATUS_QUOTING &&
-					tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
+				if tc.vaultStatuses[i] == vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY &&
+					tc.positionQuantums[i].Sign() != 0 ||
+					tc.vaultStatuses[i] == vaulttypes.VaultStatus_VAULT_STATUS_QUOTING &&
+						tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, vaultId)
 					require.NoError(t, err)
 
@@ -218,127 +286,464 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 }
 
 func TestRefreshVaultClobOrders(t *testing.T) {
-	tests := map[string]struct {
-		/* --- Setup --- */
-		// Vault ID.
-		vaultId      vaulttypes.VaultId
+	type Instance struct {
 		advanceBlock func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context
 
 		/* --- Expectations --- */
-		ordersShouldRefresh bool
-		expectedErr         error
+		// Whether each order refreshes.
+		ordersRefreshed []bool
+		// Sides of orders after `advanceBlock` is called.
+		orderSides []clobtypes.Order_Side
+		// Whether client IDs are canonical or flipped after `advanceBlock` is called.
+		clientIdIsCanonical []bool
+	}
+
+	tests := map[string]struct {
+		// Vault ID.
+		vaultId                   vaulttypes.VaultId
+		vaultPositionBaseQuantums *big.Int
+
+		instances []Instance
 	}{
 		"Success - Orders do not refresh": {
 			vaultId: constants.Vault_Clob0,
-			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
-				return tApp.AdvanceToBlock(
-					uint32(tApp.GetBlockHeight())+1,
-					testapp.AdvanceToBlockOptions{
-						BlockTime: ctx.BlockTime().Add(time.Second),
+			instances: []Instance{
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second),
+							},
+						)
 					},
-				)
+					ordersRefreshed: []bool{
+						false,
+						false,
+						false,
+						false,
+					},
+					orderSides: []clobtypes.Order_Side{
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+					},
+					clientIdIsCanonical: []bool{
+						true,
+						true,
+						true,
+						true,
+					},
+				},
 			},
-			ordersShouldRefresh: false,
 		},
 		"Success - Orders refresh due to expiration": {
 			vaultId: constants.Vault_Clob0,
-			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
-				orderExpirationSeconds := vaulttypes.DefaultQuotingParams().OrderExpirationSeconds
-				return tApp.AdvanceToBlock(
-					uint32(tApp.GetBlockHeight())+5,
-					testapp.AdvanceToBlockOptions{
-						BlockTime: ctx.BlockTime().Add(
-							time.Second * time.Duration(orderExpirationSeconds),
-						),
+			instances: []Instance{
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						orderExpirationSeconds := vaulttypes.DefaultQuotingParams().OrderExpirationSeconds
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+5,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(
+									time.Second * time.Duration(orderExpirationSeconds),
+								),
+							},
+						)
 					},
-				)
+					ordersRefreshed: []bool{
+						true,
+						true,
+						true,
+						true,
+					},
+					orderSides: []clobtypes.Order_Side{
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+					},
+					clientIdIsCanonical: []bool{
+						false,
+						false,
+						false,
+						false,
+					},
+				},
 			},
-			ordersShouldRefresh: true,
 		},
 		"Success - Orders refresh due to price updates": {
 			vaultId: constants.Vault_Clob0,
-			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
-				marketPrice, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, constants.Vault_Clob0.Number)
-				require.NoError(t, err)
-				msgUpdateMarketPrices := &pricestypes.MsgUpdateMarketPrices{
-					MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-						{
-							MarketId: constants.Vault_Clob0.Number,
-							Price:    marketPrice.Price * 2,
-						},
+			instances: []Instance{
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						marketPrice, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, constants.Vault_Clob0.Number)
+						require.NoError(t, err)
+						msgUpdateMarketPrices := &pricestypes.MsgUpdateMarketPrices{
+							MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+								{
+									MarketId: constants.Vault_Clob0.Number,
+									Price:    marketPrice.Price * 2,
+								},
+							},
+						}
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second),
+								DeliverTxsOverride: [][]byte{
+									testtx.MustGetTxBytes(msgUpdateMarketPrices),
+								},
+							},
+						)
 					},
-				}
-				return tApp.AdvanceToBlock(
-					uint32(tApp.GetBlockHeight())+1,
-					testapp.AdvanceToBlockOptions{
-						BlockTime: ctx.BlockTime().Add(time.Second),
-						DeliverTxsOverride: [][]byte{
-							testtx.MustGetTxBytes(msgUpdateMarketPrices),
-						},
+					ordersRefreshed: []bool{
+						true,
+						true,
+						true,
+						true,
 					},
-				)
+					orderSides: []clobtypes.Order_Side{
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+					},
+					clientIdIsCanonical: []bool{
+						false,
+						false,
+						false,
+						false,
+					},
+				},
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						marketPrice, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, constants.Vault_Clob0.Number)
+						require.NoError(t, err)
+						msgUpdateMarketPrices := &pricestypes.MsgUpdateMarketPrices{
+							MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+								{
+									MarketId: constants.Vault_Clob0.Number,
+									Price:    marketPrice.Price / 2,
+								},
+							},
+						}
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second),
+								DeliverTxsOverride: [][]byte{
+									testtx.MustGetTxBytes(msgUpdateMarketPrices),
+								},
+							},
+						)
+					},
+					ordersRefreshed: []bool{
+						true,
+						true,
+						true,
+						true,
+					},
+					orderSides: []clobtypes.Order_Side{
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+					},
+					clientIdIsCanonical: []bool{
+						true,
+						true,
+						true,
+						true,
+					},
+				},
 			},
-			ordersShouldRefresh: true,
 		},
 		"Success - Orders refresh due to order size increase": {
 			vaultId: constants.Vault_Clob0,
-			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
-				msgAllocateToVault := vaulttypes.MsgAllocateToVault{
-					Authority:     constants.AliceAccAddress.String(), // operator
-					VaultId:       constants.Vault_Clob0,
-					QuoteQuantums: dtypes.NewInt(500_000_000),
-				}
-				CheckTx_MsgAllocateToVault := testapp.MustMakeCheckTx(
-					ctx,
-					tApp.App,
-					testapp.MustMakeCheckTxOptions{
-						AccAddressForSigning: constants.AliceAccAddress.String(),
-						Gas:                  constants.TestGasLimit,
-						FeeAmt:               constants.TestFeeCoins_5Cents,
-					},
-					&msgAllocateToVault,
-				)
-				checkTxResp := tApp.CheckTx(CheckTx_MsgAllocateToVault)
-				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+			instances: []Instance{
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						msgAllocateToVault := vaulttypes.MsgAllocateToVault{
+							Authority:     constants.AliceAccAddress.String(), // operator
+							VaultId:       constants.Vault_Clob0,
+							QuoteQuantums: dtypes.NewInt(500_000_000),
+						}
+						CheckTx_MsgAllocateToVault := testapp.MustMakeCheckTx(
+							ctx,
+							tApp.App,
+							testapp.MustMakeCheckTxOptions{
+								AccAddressForSigning: constants.AliceAccAddress.String(),
+								Gas:                  constants.TestGasLimit,
+								FeeAmt:               constants.TestFeeCoins_5Cents,
+							},
+							&msgAllocateToVault,
+						)
+						checkTxResp := tApp.CheckTx(CheckTx_MsgAllocateToVault)
+						require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 
-				return tApp.AdvanceToBlock(
-					uint32(tApp.GetBlockHeight())+1,
-					testapp.AdvanceToBlockOptions{
-						BlockTime: ctx.BlockTime().Add(time.Second * 2),
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second * 2),
+							},
+						)
 					},
-				)
+					ordersRefreshed: []bool{
+						true,
+						true,
+						true,
+						true,
+					},
+					orderSides: []clobtypes.Order_Side{
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+					},
+					clientIdIsCanonical: []bool{
+						false,
+						false,
+						false,
+						false,
+					},
+				},
 			},
-			ordersShouldRefresh: true,
 		},
 		"Success - Orders refresh due to order size decrease": {
 			vaultId: constants.Vault_Clob0,
-			advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
-				msgRetrieveFromVault := vaulttypes.MsgRetrieveFromVault{
-					Authority:     constants.AliceAccAddress.String(), // operator
-					VaultId:       constants.Vault_Clob0,
-					QuoteQuantums: dtypes.NewInt(500_000_000),
-				}
-				CheckTx_MsgRetrieveFromVault := testapp.MustMakeCheckTx(
-					ctx,
-					tApp.App,
-					testapp.MustMakeCheckTxOptions{
-						AccAddressForSigning: constants.AliceAccAddress.String(),
-						Gas:                  constants.TestGasLimit,
-						FeeAmt:               constants.TestFeeCoins_5Cents,
-					},
-					&msgRetrieveFromVault,
-				)
-				checkTxResp := tApp.CheckTx(CheckTx_MsgRetrieveFromVault)
-				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+			instances: []Instance{
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						msgRetrieveFromVault := vaulttypes.MsgRetrieveFromVault{
+							Authority:     constants.AliceAccAddress.String(), // operator
+							VaultId:       constants.Vault_Clob0,
+							QuoteQuantums: dtypes.NewInt(500_000_000),
+						}
+						CheckTx_MsgRetrieveFromVault := testapp.MustMakeCheckTx(
+							ctx,
+							tApp.App,
+							testapp.MustMakeCheckTxOptions{
+								AccAddressForSigning: constants.AliceAccAddress.String(),
+								Gas:                  constants.TestGasLimit,
+								FeeAmt:               constants.TestFeeCoins_5Cents,
+							},
+							&msgRetrieveFromVault,
+						)
+						checkTxResp := tApp.CheckTx(CheckTx_MsgRetrieveFromVault)
+						require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 
-				return tApp.AdvanceToBlock(
-					uint32(tApp.GetBlockHeight())+1,
-					testapp.AdvanceToBlockOptions{
-						BlockTime: ctx.BlockTime().Add(time.Second * 2),
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second * 2),
+							},
+						)
 					},
-				)
+					ordersRefreshed: []bool{
+						true,
+						true,
+						true,
+						true,
+					},
+					orderSides: []clobtypes.Order_Side{
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+					},
+					clientIdIsCanonical: []bool{
+						false,
+						false,
+						false,
+						false,
+					},
+				},
 			},
-			ordersShouldRefresh: true,
+		},
+		"Success - Orders refresh due to status changing to close-only. No more orders": {
+			vaultId: constants.Vault_Clob0,
+			instances: []Instance{
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						msgSetVaultParams := vaulttypes.MsgSetVaultParams{
+							Authority: constants.AliceAccAddress.String(), // operator
+							VaultId:   constants.Vault_Clob0,
+							VaultParams: vaulttypes.VaultParams{
+								Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+							},
+						}
+						CheckTx_MsgSetVaultParams := testapp.MustMakeCheckTx(
+							ctx,
+							tApp.App,
+							testapp.MustMakeCheckTxOptions{
+								AccAddressForSigning: constants.AliceAccAddress.String(),
+								Gas:                  constants.TestGasLimit,
+								FeeAmt:               constants.TestFeeCoins_5Cents,
+							},
+							&msgSetVaultParams,
+						)
+						checkTxResp := tApp.CheckTx(CheckTx_MsgSetVaultParams)
+						require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second * 2),
+							},
+						)
+					},
+					ordersRefreshed:     []bool{}, // no orders
+					orderSides:          []clobtypes.Order_Side{},
+					clientIdIsCanonical: []bool{},
+				},
+			},
+		},
+		"Success - Orders refresh due to status changing to close-only. Sell orders only": {
+			vaultId:                   constants.Vault_Clob1,
+			vaultPositionBaseQuantums: big.NewInt(250_000_000),
+			instances: []Instance{
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						msgSetVaultParams := vaulttypes.MsgSetVaultParams{
+							Authority: constants.AliceAccAddress.String(), // operator
+							VaultId:   constants.Vault_Clob1,
+							VaultParams: vaulttypes.VaultParams{
+								Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+							},
+						}
+						CheckTx_MsgSetVaultParams := testapp.MustMakeCheckTx(
+							ctx,
+							tApp.App,
+							testapp.MustMakeCheckTxOptions{
+								AccAddressForSigning: constants.AliceAccAddress.String(),
+								Gas:                  constants.TestGasLimit,
+								FeeAmt:               constants.TestFeeCoins_5Cents,
+							},
+							&msgSetVaultParams,
+						)
+						checkTxResp := tApp.CheckTx(CheckTx_MsgSetVaultParams)
+						require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second * 2),
+							},
+						)
+					},
+					ordersRefreshed: []bool{
+						false, // this sell order doesn't refresh as it's already desired.
+						true,
+					},
+					orderSides: []clobtypes.Order_Side{
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_SELL,
+					}, // Two sell orders only as vault is long.
+					clientIdIsCanonical: []bool{
+						true,
+						false, // flipped as it's refreshed.
+					},
+				},
+			},
+		},
+		"Success - Orders refresh due to status changing to close-only and back to quoting": {
+			vaultId:                   constants.Vault_Clob1,
+			vaultPositionBaseQuantums: big.NewInt(-250_000_000),
+			instances: []Instance{
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						msgSetVaultParams := vaulttypes.MsgSetVaultParams{
+							Authority: constants.AliceAccAddress.String(), // operator
+							VaultId:   constants.Vault_Clob1,
+							VaultParams: vaulttypes.VaultParams{
+								Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+							},
+						}
+						CheckTx_MsgSetVaultParams := testapp.MustMakeCheckTx(
+							ctx,
+							tApp.App,
+							testapp.MustMakeCheckTxOptions{
+								AccAddressForSigning: constants.AliceAccAddress.String(),
+								Gas:                  constants.TestGasLimit,
+								FeeAmt:               constants.TestFeeCoins_5Cents,
+							},
+							&msgSetVaultParams,
+						)
+						checkTxResp := tApp.CheckTx(CheckTx_MsgSetVaultParams)
+						require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second * 2),
+							},
+						)
+					},
+					ordersRefreshed: []bool{
+						true,
+						true,
+					},
+					orderSides: []clobtypes.Order_Side{
+						clobtypes.Order_SIDE_BUY,
+						clobtypes.Order_SIDE_BUY,
+					}, // Two buy orders only as vault is short.
+					clientIdIsCanonical: []bool{
+						false,
+						false,
+					},
+				},
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						msgSetVaultParams := vaulttypes.MsgSetVaultParams{
+							Authority: constants.AliceAccAddress.String(), // operator
+							VaultId:   constants.Vault_Clob1,
+							VaultParams: vaulttypes.VaultParams{
+								Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+							},
+						}
+						CheckTx_MsgSetVaultParams := testapp.MustMakeCheckTx(
+							ctx,
+							tApp.App,
+							testapp.MustMakeCheckTxOptions{
+								AccAddressForSigning: constants.AliceAccAddress.String(),
+								Gas:                  constants.TestGasLimit,
+								FeeAmt:               constants.TestFeeCoins_5Cents,
+							},
+							&msgSetVaultParams,
+						)
+						checkTxResp := tApp.CheckTx(CheckTx_MsgSetVaultParams)
+						require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second * 2),
+							},
+						)
+					},
+					ordersRefreshed: []bool{
+						true,
+						true,
+						true,
+						true,
+					},
+					orderSides: []clobtypes.Order_Side{
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+						clobtypes.Order_SIDE_SELL,
+						clobtypes.Order_SIDE_BUY,
+					},
+					clientIdIsCanonical: []bool{
+						true,
+						true,
+						true,
+						true,
+					},
+				},
+			},
 		},
 		"Success - Vault for non-existent Clob Pair 4321": {
 			vaultId: vaulttypes.VaultId{
@@ -392,6 +797,12 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 										big.NewInt(2_000_000_000),
 									),
 								},
+								PerpetualPositions: []*satypes.PerpetualPosition{
+									{
+										PerpetualId: tc.vaultId.Number,
+										Quantums:    dtypes.NewIntFromBigInt(tc.vaultPositionBaseQuantums),
+									},
+								},
 							},
 						}
 					},
@@ -400,32 +811,6 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
-			if tc.expectedErr != nil {
-				// Verify that no order is placed and chain doesn't halt.
-				require.Empty(t, tApp.App.ClobKeeper.GetAllStatefulOrders(ctx))
-				tApp.AdvanceToBlock(uint32(tApp.GetBlockHeight())+12, testapp.AdvanceToBlockOptions{})
-				return
-			}
-
-			// Helper function that verifies that vault orders are as expected.
-			verifyVaultOrders := func(expectedGTBT uint32, expectedClientIds []uint32) {
-				allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
-				// Verify that number of vault orders is `layers * 2`.
-				require.Len(t, allStatefulOrders, int(defaultQuotingParams.Layers*2))
-				// Verify that GTBT of orders is as expected.
-				for _, order := range allStatefulOrders {
-					require.Equal(t, expectedGTBT, order.GetGoodTilBlockTime())
-				}
-
-				// Verify that stateful order IDs have expected client IDs.
-				for i, order := range allStatefulOrders {
-					require.Equal(t, expectedClientIds[i], order.OrderId.ClientId)
-				}
-
-				// Verify that most recent client IDs are as expected.
-				mostRecentClientIds := tApp.App.VaultKeeper.GetMostRecentClientIds(ctx, tc.vaultId)
-				require.Equal(t, expectedClientIds, mostRecentClientIds)
-			}
 			// Get canonical and flipped client IDs of this vault's orders.
 			orderIds := tApp.App.VaultKeeper.GetVaultClobOrderIds(ctx, tc.vaultId)
 			canonicalClientIds := make([]uint32, len(orderIds))
@@ -435,6 +820,47 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				flippedClientIds[i] = orderId.ClientId ^ 1
 			}
 
+			// Helper function that verifies that vault orders are as expected.
+			verifyVaultOrders := func(
+				ordersRefreshed []bool,
+				oldGTBT uint32,
+				newGTBT uint32,
+				clientIdIsCanonical []bool,
+				expectedSides []clobtypes.Order_Side,
+			) {
+				allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+				// Verify the number of vault orders.
+				require.Len(t, allStatefulOrders, len(ordersRefreshed))
+				// Verify that GTBT of orders is as expected.
+				for i, order := range allStatefulOrders {
+					if ordersRefreshed[i] {
+						require.Equal(t, newGTBT, order.GetGoodTilBlockTime())
+					} else {
+						require.Equal(t, oldGTBT, order.GetGoodTilBlockTime())
+					}
+				}
+
+				// Verify that
+				// 1. stateful orders have expected client IDs.
+				// 2. most recent client IDs are as expected.
+				mostRecentClientIds := tApp.App.VaultKeeper.GetMostRecentClientIds(ctx, tc.vaultId)
+				require.Len(t, mostRecentClientIds, len(ordersRefreshed))
+				for i, order := range allStatefulOrders {
+					if clientIdIsCanonical[i] {
+						require.Equal(t, canonicalClientIds[i], order.OrderId.ClientId)
+						require.Equal(t, canonicalClientIds[i], mostRecentClientIds[i])
+					} else {
+						require.Equal(t, flippedClientIds[i], order.OrderId.ClientId)
+						require.Equal(t, flippedClientIds[i], mostRecentClientIds[i])
+					}
+				}
+
+				// Verify order sides.
+				for i, order := range allStatefulOrders {
+					require.Equal(t, expectedSides[i], order.Side)
+				}
+			}
+
 			// If corresponding clob pair doesn't exist, the vault should not place any orders.
 			_, found := tApp.App.ClobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(tc.vaultId.Number))
 			if !found {
@@ -442,28 +868,36 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				return
 			}
 			// Vault should place its initial orders (client IDs should be canonical).
+			initialOrderSides := make([]clobtypes.Order_Side, defaultQuotingParams.Layers*2)
+			for i := uint32(0); i < defaultQuotingParams.Layers; i++ {
+				initialOrderSides[2*i] = clobtypes.Order_SIDE_SELL
+				initialOrderSides[2*i+1] = clobtypes.Order_SIDE_BUY
+			}
+			initialOrdersRefreshed := make([]bool, defaultQuotingParams.Layers*2)
+			for i := range initialOrdersRefreshed {
+				initialOrdersRefreshed[i] = true
+			}
+			clientIdIsCanonical := make([]bool, defaultQuotingParams.Layers*2)
+			for i := range clientIdIsCanonical {
+				clientIdIsCanonical[i] = true
+			}
 			verifyVaultOrders(
+				initialOrdersRefreshed,
+				0,
 				uint32(ctx.BlockTime().Unix())+defaultQuotingParams.OrderExpirationSeconds,
-				canonicalClientIds,
+				clientIdIsCanonical,
+				initialOrderSides,
 			)
 
-			if tc.ordersShouldRefresh {
-				ctx = tc.advanceBlock(ctx, tApp)
-				verifyVaultOrders(
-					uint32(ctx.BlockTime().Unix())+defaultQuotingParams.OrderExpirationSeconds,
-					flippedClientIds, // Client IDs should be flipped.
-				)
-				ctx = tc.advanceBlock(ctx, tApp)
-				verifyVaultOrders(
-					uint32(ctx.BlockTime().Unix())+defaultQuotingParams.OrderExpirationSeconds,
-					canonicalClientIds, // Client IDs should be back to canonical.
-				)
-			} else {
+			for _, instance := range tc.instances {
 				oldBlockTime := uint32(ctx.BlockTime().Unix())
-				ctx = tc.advanceBlock(ctx, tApp)
+				ctx = instance.advanceBlock(ctx, tApp)
 				verifyVaultOrders(
+					instance.ordersRefreshed,
 					oldBlockTime+defaultQuotingParams.OrderExpirationSeconds,
-					canonicalClientIds,
+					uint32(ctx.BlockTime().Unix())+defaultQuotingParams.OrderExpirationSeconds,
+					instance.clientIdIsCanonical,
+					instance.orderSides,
 				)
 			}
 		})
@@ -473,6 +907,8 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 func TestGetVaultClobOrders(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */
+		// Vault status.
+		vaultStatus vaulttypes.VaultStatus
 		// Vault quoting params.
 		vaultQuotingParams vaulttypes.QuotingParams
 		// Vault ID.
@@ -491,11 +927,14 @@ func TestGetVaultClobOrders(t *testing.T) {
 		perpetual perptypes.Perpetual
 
 		/* --- Expectations --- */
+		expectedOrderLayers   []uint8
+		expectedOrderSides    []clobtypes.Order_Side
 		expectedOrderSubticks []uint64
 		expectedOrderQuantums []uint64
 		expectedErr           error
 	}{
-		"Success - Vault Clob 0, 2 layers, leverage 0, doesn't cross oracle price": {
+		"Success - Vault Clob 0, quoting status, 2 layers, leverage 0, doesn't cross oracle price": {
+			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			vaultQuotingParams: vaulttypes.QuotingParams{
 				Layers:                           2,       // 2 layers
 				SpreadMinPpm:                     3_123,   // 31.23 bps
@@ -515,7 +954,14 @@ func TestGetVaultClobOrders(t *testing.T) {
 				Exponent: -5,
 				Price:    5_000_000, // $50
 			},
-			perpetual: constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			perpetual:           constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			expectedOrderLayers: []uint8{0, 0, 1, 1},
+			expectedOrderSides: []clobtypes.Order_Side{
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_BUY,
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_BUY,
+			},
 			// To calculate order subticks:
 			// 1. spread = max(spread_min, spread_buffer + min_price_change)
 			// 2. leverage = open_notional / equity
@@ -569,7 +1015,8 @@ func TestGetVaultClobOrders(t *testing.T) {
 				20_000_000_000,
 			},
 		},
-		"Success - Vault Clob 1, 3 layers, leverage -0.6, doesn't cross oracle price": {
+		"Success - Vault Clob 1, quoting status, 3 layers, leverage -0.6, doesn't cross oracle price": {
+			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			vaultQuotingParams: vaulttypes.QuotingParams{
 				Layers:                           3,         // 3 layers
 				SpreadMinPpm:                     7_654,     // 76.54 bps
@@ -586,6 +1033,15 @@ func TestGetVaultClobOrders(t *testing.T) {
 			marketParam:                constants.TestMarketParams[1],
 			marketPrice:                constants.TestMarketPrices[1],
 			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			expectedOrderLayers:        []uint8{0, 0, 1, 1, 2, 2},
+			expectedOrderSides: []clobtypes.Order_Side{
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_BUY,
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_BUY,
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_BUY,
+			},
 			// To calculate order subticks:
 			// 1. spread = max(spread_min, spread_buffer + min_price_change)
 			// 2. leverage = open_notional / equity
@@ -649,7 +1105,8 @@ func TestGetVaultClobOrders(t *testing.T) {
 				41_666_000,
 			},
 		},
-		"Success - Vault Clob 1, 3 layers, leverage -3, crosses oracle price": {
+		"Success - Vault Clob 1, quoting status, 3 layers, leverage -3, crosses oracle price": {
+			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			vaultQuotingParams: vaulttypes.QuotingParams{
 				Layers:                           3,       // 3 layers
 				SpreadMinPpm:                     3_000,   // 30 bps
@@ -666,6 +1123,15 @@ func TestGetVaultClobOrders(t *testing.T) {
 			marketParam:                constants.TestMarketParams[1],
 			marketPrice:                constants.TestMarketPrices[1],
 			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			expectedOrderLayers:        []uint8{0, 0, 1, 1, 2, 2},
+			expectedOrderSides: []clobtypes.Order_Side{
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_BUY,
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_BUY,
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_BUY,
+			},
 			// To calculate order subticks:
 			// 1. spread = max(spread_min, spread_buffer + min_price_change)
 			// 2. leverage = open_notional / equity
@@ -729,7 +1195,8 @@ func TestGetVaultClobOrders(t *testing.T) {
 				33_333_000,
 			},
 		},
-		"Success - Vault Clob 1, 2 layers, leverage 3, crosses oracle price": {
+		"Success - Vault Clob 1, quoting status, 2 layers, leverage 3, crosses oracle price": {
+			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			vaultQuotingParams: vaulttypes.QuotingParams{
 				Layers:                           2,         // 2 layers
 				SpreadMinPpm:                     3_000,     // 30 bps
@@ -746,6 +1213,13 @@ func TestGetVaultClobOrders(t *testing.T) {
 			marketParam:                constants.TestMarketParams[1],
 			marketPrice:                constants.TestMarketPrices[1],
 			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			expectedOrderLayers:        []uint8{0, 0, 1, 1},
+			expectedOrderSides: []clobtypes.Order_Side{
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_BUY,
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_BUY,
+			},
 			// To calculate order subticks:
 			// 1. spread = max(spread_min, spread_buffer + min_price_change)
 			// 2. leverage = open_notional / equity
@@ -797,7 +1271,143 @@ func TestGetVaultClobOrders(t *testing.T) {
 				333_333_000,
 			},
 		},
+		"Success - Vault Clob 1, close-only status, 3 layers, leverage -0.6, buy orders only": {
+			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			vaultQuotingParams: vaulttypes.QuotingParams{
+				Layers:                           3,         // 3 layers
+				SpreadMinPpm:                     7_654,     // 76.54 bps
+				SpreadBufferPpm:                  2_900,     // 29 bps
+				SkewFactorPpm:                    1_234_000, // 1.234
+				OrderSizePctPpm:                  100_000,   // 10%
+				OrderExpirationSeconds:           4,         // 4 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
+			},
+			vaultId:                    constants.Vault_Clob1,
+			vaultAssetQuoteQuantums:    big.NewInt(2_000_000_000), // 2,000 USDC
+			vaultInventoryBaseQuantums: big.NewInt(-250_000_000),  // -0.25 ETH
+			clobPair:                   constants.ClobPair_Eth,
+			marketParam:                constants.TestMarketParams[1],
+			marketPrice:                constants.TestMarketPrices[1],
+			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			expectedOrderLayers:        []uint8{0, 1, 2},
+			expectedOrderSides: []clobtypes.Order_Side{
+				clobtypes.Order_SIDE_BUY,
+				clobtypes.Order_SIDE_BUY,
+				clobtypes.Order_SIDE_BUY,
+			},
+			// To calculate order subticks:
+			// 1. spread = max(spread_min, spread_buffer + min_price_change)
+			// 2. leverage = open_notional / equity
+			// 3. leverage_i = leverage +/- i * order_size_pct (- for ask and + for bid)
+			// 4. skew_i
+			//    * for ask when long / bid when short: -skew_factor * leverage_i
+			//    * for ask when short: (skew_factor * leverage_i - 1)^2 - 1
+			//    * for bid when long: -((skew_factor * leverage_i + 1)^2 - 1)
+			// 5. ask_spread_i = (1 + skew_i) * spread
+			//    bid_spread_i = (1 - skew_i) * spread
+			// 6. a_i = oraclePrice * (1 + ask_spread_i)
+			//    b_i = oraclePrice * (1 - bid_spread_i)
+			// 7. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
+			// To calculate size of each order
+			// 1. `order_size_pct_ppm * equity / oracle_price`.
+			expectedOrderSubticks: []uint64{
+				// spreadPpm = max(7_654, 2_900 + 50) = 7_654
+				// spread = 0.007654
+				// open_notional = -250_000_000 * 10^-9 * 3_000 * 10^6 = -750_000_000
+				// leverage = -750_000_000 / (2_000_000_000 - 750_000_000) = -0.6
+				// oracleSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3e9
+				// leverage_0 = leverage - 0 * 0.1 = -0.6
+				// skew_bid_0 = -1.234 * -0.6 = 0.7404
+				// bid_spread_0 = (1 - 0.7404) * 0.007654 = 0.0019869784
+				// b_0 = 3e9 * (1 - 0.0019869784) = 2_994_039_064.8 ~= 2_994_039_000 (round down to 1000)
+				2_994_039_000,
+				// leverage_1 = leverage + 1 * 0.1 = -0.5
+				// skew_bid_1 = -1.234 * -0.5 = 0.617
+				// bid_spread_1 = (1 - 0.617) * 0.007654 = 0.002931482
+				// b_1 = 3e9 * (1 - 0.002931482) = 2_991_205_554 ~= 2_991_205_000 (round down to 1000)
+				2_991_205_000,
+				// leverage_2 = leverage + 2 * 0.1 = -0.4
+				// skew_bid_2 = -1.234 * -0.4 = 0.4936
+				// bid_spread_2 = (1 - 0.4936) * 0.007654 = 0.0038759856
+				// b_2 = 3e9 * (1 - 0.0038759856) = 2_988_372_043.2 ~= 2_988_372_000 (round down to 1000)
+				2_988_372_000,
+			},
+			// order_size = 10% * 1250 / 3000 ~= 0.04166666667
+			// order_size_base_quantums = 0.04166666667e9 ~= 41_666_667
+			// round down to nearest multiple of step_base_quantums=1_000.
+			expectedOrderQuantums: []uint64{
+				41_666_000,
+				41_666_000,
+				41_666_000,
+			},
+		},
+		"Success - Vault Clob 1, close-only status, 2 layers, leverage 0.6, sell orders only, order size": {
+			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			vaultQuotingParams: vaulttypes.QuotingParams{
+				Layers:                           2,         // 2 layers
+				SpreadMinPpm:                     7_654,     // 76.54 bps
+				SpreadBufferPpm:                  2_900,     // 29 bps
+				SkewFactorPpm:                    1_234_000, // 1.234
+				OrderSizePctPpm:                  1_000_000, // 100%
+				OrderExpirationSeconds:           4,         // 4 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
+			},
+			vaultId:                    constants.Vault_Clob1,
+			vaultAssetQuoteQuantums:    big.NewInt(500_000_000), // 500 USDC
+			vaultInventoryBaseQuantums: big.NewInt(250_000_000), // 0.25 ETH
+			clobPair:                   constants.ClobPair_Eth,
+			marketParam:                constants.TestMarketParams[1],
+			marketPrice:                constants.TestMarketPrices[1],
+			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			expectedOrderLayers:        []uint8{0, 1},
+			expectedOrderSides: []clobtypes.Order_Side{
+				clobtypes.Order_SIDE_SELL,
+				clobtypes.Order_SIDE_SELL,
+			},
+			// To calculate order subticks:
+			// 1. spread = max(spread_min, spread_buffer + min_price_change)
+			// 2. leverage = open_notional / equity
+			// 3. leverage_i = leverage +/- i * order_size_pct (- for ask and + for bid)
+			// 4. skew_i
+			//    * for ask when long / bid when short: -skew_factor * leverage_i
+			//    * for ask when short: (skew_factor * leverage_i - 1)^2 - 1
+			//    * for bid when long: -((skew_factor * leverage_i + 1)^2 - 1)
+			// 5. ask_spread_i = (1 + skew_i) * spread
+			//    bid_spread_i = (1 - skew_i) * spread
+			// 6. a_i = oraclePrice * (1 + ask_spread_i)
+			//    b_i = oraclePrice * (1 - bid_spread_i)
+			// 7. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
+			// To calculate size of each order
+			// 1. `order_size_pct_ppm * equity / oracle_price`.
+			expectedOrderSubticks: []uint64{
+				// spreadPpm = max(7_654, 2_900 + 50) = 7_654
+				// spread = 0.007654
+				// open_notional = 250_000_000 * 10^-9 * 3_000 * 10^6 = 750_000_000
+				// leverage = 750_000_000 / (500_000_000 + 750_000_000) = 0.6
+				// oracleSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3e9
+				// leverage_0 = leverage - 0 * 1 = 0.6
+				// skew_ask_0 = -1.234 * 0.6 = -0.7404
+				// ask_spread_0 = (1 - 0.7404) * 0.007654 = 0.0019869784
+				// a_0 = 3e9 * (1 + 0.0019869784) = 3_005_960_935.2 ~= 3_005_961_000 (round up to 1000)
+				3_005_961_000,
+				// leverage_1 = leverage - 1 * 1 = -0.4
+				// skew_ask_0 = -1.234 * -0.4 = 0.4936
+				// ask_spread_0 = (1 + 0.4936) * 0.007654 = 0.0114320144
+				// a_0 = 3e9 * (1 + 0.0114320144) = 3_034_296_043.2 ~= 3_034_297_000 (round up to 1000)
+				3_034_297_000,
+			},
+			// order_size = 100% * 1250 / 3000 ~= 0.4166666667
+			// order_size_base_quantums = 0.4166666667e9 ~= 416_666_667
+			// order_size_base_quantums = min(416_666_667, inventory)
+			// = min(416_666_667, 250_000_000) = 250_000_000
+			// round down to nearest multiple of step_base_quantums=1_000.
+			expectedOrderQuantums: []uint64{
+				250_000_000,
+				250_000_000,
+			},
+		},
 		"Success - Get orders from Vault for Clob Pair 1, No Orders due to Zero Order Size": {
+			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			vaultQuotingParams: vaulttypes.QuotingParams{
 				Layers:                           2,       // 2 layers
 				SpreadMinPpm:                     3_000,   // 30 bps
@@ -814,6 +1424,8 @@ func TestGetVaultClobOrders(t *testing.T) {
 			marketParam:                constants.TestMarketParams[1],
 			marketPrice:                constants.TestMarketPrices[1],
 			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			expectedOrderLayers:        []uint8{},
+			expectedOrderSides:         []clobtypes.Order_Side{},
 			expectedOrderSubticks:      []uint64{},
 			// order_size = 0.1% * 1 / 3_000 ~= 0.00000033333
 			// order_size_base_quantums = 0.000033333e9 = 333
@@ -822,16 +1434,20 @@ func TestGetVaultClobOrders(t *testing.T) {
 			expectedOrderQuantums: []uint64{},
 		},
 		"Success - Clob Pair doesn't exist, Empty orders": {
+			vaultStatus:           vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			vaultQuotingParams:    vaulttypes.DefaultQuotingParams(),
 			vaultId:               constants.Vault_Clob0,
 			clobPair:              constants.ClobPair_Eth,
 			marketParam:           constants.TestMarketParams[1],
 			marketPrice:           constants.TestMarketPrices[1],
 			perpetual:             constants.EthUsd_NoMarginRequirement,
+			expectedOrderLayers:   []uint8{},
+			expectedOrderSides:    []clobtypes.Order_Side{},
 			expectedOrderSubticks: []uint64{},
 			expectedOrderQuantums: []uint64{},
 		},
 		"Success - Clob Pair in status final settlement, Empty orders": {
+			vaultStatus:        vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			vaultQuotingParams: vaulttypes.DefaultQuotingParams(),
 			vaultId:            constants.Vault_Clob1,
 			clobPair: clobtypes.ClobPair{
@@ -849,10 +1465,70 @@ func TestGetVaultClobOrders(t *testing.T) {
 			marketParam:           constants.TestMarketParams[1],
 			marketPrice:           constants.TestMarketPrices[1],
 			perpetual:             constants.EthUsd_NoMarginRequirement,
+			expectedOrderLayers:   []uint8{},
+			expectedOrderSides:    []clobtypes.Order_Side{},
+			expectedOrderSubticks: []uint64{},
+			expectedOrderQuantums: []uint64{},
+		},
+		"Success - Vault Clob 1, stand-by status, 3 layers, leverage -3, Empty orders": {
+			vaultStatus:                vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+			vaultQuotingParams:         vaulttypes.DefaultQuotingParams(),
+			vaultId:                    constants.Vault_Clob1,
+			vaultAssetQuoteQuantums:    big.NewInt(2_000_000_000), // 2,000 USDC
+			vaultInventoryBaseQuantums: big.NewInt(-500_000_000),  // -0.5 ETH
+			clobPair:                   constants.ClobPair_Eth,
+			marketParam:                constants.TestMarketParams[1],
+			marketPrice:                constants.TestMarketPrices[1],
+			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			expectedOrderLayers:        []uint8{},
+			expectedOrderSides:         []clobtypes.Order_Side{},
+			expectedOrderSubticks:      []uint64{},
+			expectedOrderQuantums:      []uint64{},
+		},
+		"Success - Vault Clob 1, deactivated status, 3 layers, leverage -3, Empty orders": {
+			vaultStatus:                vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+			vaultQuotingParams:         vaulttypes.DefaultQuotingParams(),
+			vaultId:                    constants.Vault_Clob1,
+			vaultAssetQuoteQuantums:    big.NewInt(2_000_000_000), // 2,000 USDC
+			vaultInventoryBaseQuantums: big.NewInt(-500_000_000),  // -0.5 ETH
+			clobPair:                   constants.ClobPair_Eth,
+			marketParam:                constants.TestMarketParams[1],
+			marketPrice:                constants.TestMarketPrices[1],
+			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			expectedOrderLayers:        []uint8{},
+			expectedOrderSides:         []clobtypes.Order_Side{},
+			expectedOrderSubticks:      []uint64{},
+			expectedOrderQuantums:      []uint64{},
+		},
+		"Success - Vault Clob 0, close-only status, 2 layers, leverage 0, Empty orders": {
+			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			vaultQuotingParams: vaulttypes.QuotingParams{
+				Layers:                           2,       // 2 layers
+				SpreadMinPpm:                     3_123,   // 31.23 bps
+				SpreadBufferPpm:                  1_500,   // 15 bps
+				SkewFactorPpm:                    554_321, // 0.554321
+				OrderSizePctPpm:                  100_000, // 10%
+				OrderExpirationSeconds:           2,       // 2 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
+			},
+			vaultId:                    constants.Vault_Clob0,
+			vaultAssetQuoteQuantums:    big.NewInt(1_000_000_000), // 1,000 USDC
+			vaultInventoryBaseQuantums: big.NewInt(0),
+			clobPair:                   constants.ClobPair_Btc,
+			marketParam:                constants.TestMarketParams[0],
+			marketPrice: pricestypes.MarketPrice{
+				Id:       0,
+				Exponent: -5,
+				Price:    5_000_000, // $50
+			},
+			perpetual:             constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			expectedOrderLayers:   []uint8{},
+			expectedOrderSides:    []clobtypes.Order_Side{},
 			expectedOrderSubticks: []uint64{},
 			expectedOrderQuantums: []uint64{},
 		},
 		"Error - Vault equity is zero": {
+			vaultStatus:                vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			vaultQuotingParams:         vaulttypes.DefaultQuotingParams(),
 			vaultId:                    constants.Vault_Clob0,
 			vaultAssetQuoteQuantums:    big.NewInt(0),
@@ -864,6 +1540,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			expectedErr:                vaulttypes.ErrNonPositiveEquity,
 		},
 		"Error - Vault equity is negative": {
+			vaultStatus:                vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			vaultQuotingParams:         vaulttypes.DefaultQuotingParams(),
 			vaultId:                    constants.Vault_Clob0,
 			vaultAssetQuoteQuantums:    big.NewInt(5_000_000), // 5 USDC
@@ -875,6 +1552,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			expectedErr:                vaulttypes.ErrNonPositiveEquity,
 		},
 		"Error - Market price is zero": {
+			vaultStatus:                vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			vaultQuotingParams:         vaulttypes.DefaultQuotingParams(),
 			vaultId:                    constants.Vault_Clob0,
 			vaultAssetQuoteQuantums:    big.NewInt(1_000_000_000), // 1,000 USDC
@@ -954,16 +1632,24 @@ func TestGetVaultClobOrders(t *testing.T) {
 						}
 					},
 				)
+				// Initialize vault module with vault's parameters.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *vaulttypes.GenesisState) {
+						genesisState.Vaults = []vaulttypes.Vault{
+							{
+								VaultId: tc.vaultId,
+								VaultParams: vaulttypes.VaultParams{
+									Status:        tc.vaultStatus,
+									QuotingParams: &tc.vaultQuotingParams,
+								},
+							},
+						}
+					},
+				)
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
-
-			// Set vault quoting parameters.
-			err := tApp.App.VaultKeeper.SetVaultParams(ctx, tc.vaultId, vaulttypes.VaultParams{
-				Status:        vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
-				QuotingParams: &tc.vaultQuotingParams,
-			})
-			require.NoError(t, err)
 
 			// Get vault orders.
 			orders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, tc.vaultId)
@@ -996,22 +1682,14 @@ func TestGetVaultClobOrders(t *testing.T) {
 				}
 			}
 			expectedOrders := make([]*clobtypes.Order, 0)
-			for i := 0; i < len(tc.expectedOrderQuantums); i += 2 {
+			for i := 0; i < len(tc.expectedOrderQuantums); i++ {
 				expectedOrders = append(
 					expectedOrders,
-					// ask.
 					buildVaultClobOrder(
-						uint8(i/2),
-						clobtypes.Order_SIDE_SELL,
+						tc.expectedOrderLayers[i],
+						tc.expectedOrderSides[i],
 						tc.expectedOrderQuantums[i],
 						tc.expectedOrderSubticks[i],
-					),
-					// bid.
-					buildVaultClobOrder(
-						uint8(i/2),
-						clobtypes.Order_SIDE_BUY,
-						tc.expectedOrderQuantums[i+1],
-						tc.expectedOrderSubticks[i+1],
 					),
 				)
 			}

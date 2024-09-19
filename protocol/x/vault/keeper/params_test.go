@@ -146,7 +146,7 @@ func TestGetSetVaultParams(t *testing.T) {
 	}
 }
 
-func TestGetVaultQuotingParams(t *testing.T) {
+func TestGetVaultAndQuotingParams(t *testing.T) {
 	tests := map[string]struct {
 		/* Setup */
 		// Vault id.
@@ -184,15 +184,16 @@ func TestGetVaultQuotingParams(t *testing.T) {
 			if tc.vaultParams != nil {
 				err := k.SetVaultParams(ctx, tc.vaultId, *tc.vaultParams)
 				require.NoError(t, err)
-				p, exists := k.GetVaultQuotingParams(ctx, tc.vaultId)
+				v, q, exists := k.GetVaultAndQuotingParams(ctx, tc.vaultId)
 				require.True(t, exists)
+				require.Equal(t, *tc.vaultParams, v)
 				if tc.shouldBeDefault {
-					require.Equal(t, types.DefaultQuotingParams(), p)
+					require.Equal(t, types.DefaultQuotingParams(), q)
 				} else {
-					require.Equal(t, *tc.vaultParams.QuotingParams, p)
+					require.Equal(t, *tc.vaultParams.QuotingParams, q)
 				}
 			} else {
-				_, exists := k.GetVaultQuotingParams(ctx, tc.vaultId)
+				_, _, exists := k.GetVaultAndQuotingParams(ctx, tc.vaultId)
 				require.False(t, exists)
 			}
 		})

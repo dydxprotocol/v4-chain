@@ -94,25 +94,27 @@ func (k Keeper) getVaultParamsIterator(ctx sdk.Context) storetypes.Iterator {
 	return storetypes.KVStorePrefixIterator(store, []byte{})
 }
 
-// GetVaultQuotingParams returns quoting parameters for a given vault, which is
+// GetVaultAndQuotingParams returns vault params and quoting parameters for a given vault.
+// Quoting parameters is
 // - `VaultParams.QuotingParams` if set
 // - `DefaultQuotingParams` otherwise
 // `exists` is false if `VaultParams` does not exist for the given vault.
-func (k Keeper) GetVaultQuotingParams(
+func (k Keeper) GetVaultAndQuotingParams(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 ) (
-	params types.QuotingParams,
+	vaultParams types.VaultParams,
+	quotingParams types.QuotingParams,
 	exists bool,
 ) {
-	vaultParams, exists := k.GetVaultParams(ctx, vaultId)
+	vaultParams, exists = k.GetVaultParams(ctx, vaultId)
 	if !exists {
-		return params, false
+		return vaultParams, quotingParams, false
 	}
 	if vaultParams.QuotingParams == nil {
-		return k.GetDefaultQuotingParams(ctx), true
+		return vaultParams, k.GetDefaultQuotingParams(ctx), true
 	} else {
-		return *vaultParams.QuotingParams, true
+		return vaultParams, *vaultParams.QuotingParams, true
 	}
 }
 
