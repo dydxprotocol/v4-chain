@@ -53,19 +53,19 @@ describe('update-affiliate-info', () => {
     });
 
     // Create block to simulate time passing
-    let updatedDt: DateTime = DateTime.utc();
+    const updatedDt1: DateTime = DateTime.utc();
     await BlockTable.create({
       blockHeight: '3',
-      time: updatedDt.toISO(),
+      time: updatedDt1.toISO(),
     });
 
     // Run task
     await affiliateInfoUpdateTask();
 
-    let updatedInfo: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
+    const updatedInfo1: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
       testConstants.defaultWallet2.address,
     );
-    let expectedAffiliateInfo: AffiliateInfoFromDatabase = {
+    const expectedAffiliateInfo1: AffiliateInfoFromDatabase = {
       address: testConstants.defaultWallet2.address,
       affiliateEarnings: '0',
       referredMakerTrades: 0,
@@ -76,12 +76,12 @@ describe('update-affiliate-info', () => {
       firstReferralBlockHeight: '1',
       referredTotalVolume: '0',
     };
-    expect(updatedInfo).toEqual(expectedAffiliateInfo);
+    expect(updatedInfo1).toEqual(expectedAffiliateInfo1);
 
     // Check that persistent cache updated
-    let lastUpdateTime: DateTime | undefined = await getAffiliateInfoUpdateTime();
-    if (lastUpdateTime !== undefined) {
-      expect(lastUpdateTime.toMillis()).toEqual(updatedDt.toMillis());
+    const lastUpdateTime1: DateTime | undefined = await getAffiliateInfoUpdateTime();
+    if (lastUpdateTime1 !== undefined) {
+      expect(lastUpdateTime1.toMillis()).toEqual(updatedDt1.toMillis());
     }
 
     // Second task run: one new fill and one new referral
@@ -103,18 +103,18 @@ describe('update-affiliate-info', () => {
       }),
     ]);
 
-    updatedDt = DateTime.utc();
+    const updatedDt2: DateTime = DateTime.utc();
     await BlockTable.create({
       blockHeight: '4',
-      time: updatedDt.toISO(),
+      time: updatedDt2.toISO(),
     });
 
     await affiliateInfoUpdateTask();
 
-    updatedInfo = await AffiliateInfoTable.findById(
+    const updatedInfo2: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
       testConstants.defaultWallet2.address,
     );
-    expectedAffiliateInfo = {
+    const expectedAffiliateInfo2: AffiliateInfoFromDatabase = {
       address: testConstants.defaultWallet2.address,
       affiliateEarnings: '500',
       referredMakerTrades: 0,
@@ -125,10 +125,10 @@ describe('update-affiliate-info', () => {
       firstReferralBlockHeight: '1',
       referredTotalVolume: '1',
     };
-    expect(updatedInfo).toEqual(expectedAffiliateInfo);
-    lastUpdateTime = await getAffiliateInfoUpdateTime();
-    if (lastUpdateTime !== undefined) {
-      expect(lastUpdateTime.toMillis()).toEqual(updatedDt.toMillis());
+    expect(updatedInfo2).toEqual(expectedAffiliateInfo2);
+    const lastUpdateTime2: DateTime | undefined = await getAffiliateInfoUpdateTime();
+    if (lastUpdateTime2 !== undefined) {
+      expect(lastUpdateTime2.toMillis()).toEqual(updatedDt2.toMillis());
     }
   });
 
@@ -141,40 +141,40 @@ describe('update-affiliate-info', () => {
       value: currentDt.minus({ weeks: 3 }).toISO(),
     });
 
-    // defaultWallet2 will be affiliate and defaultWallet will be referee
-    await AffiliateReferredUsersTable.create({
-      affiliateAddress: testConstants.defaultWallet2.address,
-      refereeAddress: testConstants.defaultWallet.address,
-      referredAtBlock: '1',
-    });
-
-    // Fills spannings 2 weeks
-    await FillTable.create({
-      ...testConstants.defaultFill,
-      liquidity: Liquidity.TAKER,
-      createdAt: currentDt.minus({ weeks: 1 }).toISO(),
-      eventId: testConstants.defaultTendermintEventId,
-      price: '1',
-      size: '1',
-      fee: '1000',
-      affiliateRevShare: '500',
-    });
-    await FillTable.create({
-      ...testConstants.defaultFill,
-      liquidity: Liquidity.TAKER,
-      createdAt: currentDt.minus({ weeks: 2 }).toISO(),
-      eventId: testConstants.defaultTendermintEventId2,
-      price: '1',
-      size: '1',
-      fee: '1000',
-      affiliateRevShare: '500',
-    });
-
-    // Create block at current time
-    await BlockTable.create({
-      blockHeight: '3',
-      time: DateTime.utc().toISO(),
-    });
+    await Promise.all([
+      // defaultWallet2 will be affiliate and defaultWallet will be referee
+      AffiliateReferredUsersTable.create({
+        affiliateAddress: testConstants.defaultWallet2.address,
+        refereeAddress: testConstants.defaultWallet.address,
+        referredAtBlock: '1',
+      }),
+      // Fills spannings 2 weeks
+      FillTable.create({
+        ...testConstants.defaultFill,
+        liquidity: Liquidity.TAKER,
+        createdAt: currentDt.minus({ weeks: 1 }).toISO(),
+        eventId: testConstants.defaultTendermintEventId,
+        price: '1',
+        size: '1',
+        fee: '1000',
+        affiliateRevShare: '500',
+      }),
+      FillTable.create({
+        ...testConstants.defaultFill,
+        liquidity: Liquidity.TAKER,
+        createdAt: currentDt.minus({ weeks: 2 }).toISO(),
+        eventId: testConstants.defaultTendermintEventId2,
+        price: '1',
+        size: '1',
+        fee: '1000',
+        affiliateRevShare: '500',
+      }),
+      // Create block at current time
+      await BlockTable.create({
+        blockHeight: '3',
+        time: DateTime.utc().toISO(),
+      }),
+    ]);
 
     // Simulate backfill
     let backfillTime: DateTime | undefined = await getAffiliateInfoUpdateTime();

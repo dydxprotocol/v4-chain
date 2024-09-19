@@ -260,7 +260,7 @@ describe('Affiliate info store', () => {
     });
 
     it('Successfully filters by address', async () => {
-      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable
+      const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable
         .paginatedFindWithAddressFilter(
           ['address_0'],
           0,
@@ -371,50 +371,52 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
   // Create order and fils for defaultWallet (referee)
   await OrderTable.create(defaultOrder);
 
-  await FillTable.create({
-    ...defaultFill,
-    liquidity: Liquidity.TAKER,
-    subaccountId: defaultOrder.subaccountId,
-    createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
-    eventId: defaultTendermintEventId,
-    price: '1',
-    size: '1',
-    fee: '1000',
-    affiliateRevShare: '500',
-  });
-  await FillTable.create({
-    ...defaultFill,
-    liquidity: Liquidity.MAKER,
-    subaccountId: defaultOrder.subaccountId,
-    createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
-    eventId: defaultTendermintEventId2,
-    price: '1',
-    size: '1',
-    fee: '1000',
-    affiliateRevShare: '500',
-  });
-  await FillTable.create({
-    ...defaultFill,
-    liquidity: Liquidity.MAKER, // use uneven number of maker/taker
-    subaccountId: defaultOrder.subaccountId,
-    createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
-    eventId: defaultTendermintEventId3,
-    price: '1',
-    size: '1',
-    fee: '1000',
-    affiliateRevShare: '500',
-  });
-  await FillTable.create({
-    ...defaultFill,
-    liquidity: Liquidity.MAKER,
-    subaccountId: defaultOrder.subaccountId,
-    createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
-    eventId: defaultTendermintEventId4,
-    price: '1',
-    size: '1',
-    fee: '1000',
-    affiliateRevShare: '500',
-  });
+  await Promise.all([
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.TAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
+      eventId: defaultTendermintEventId,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.MAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
+      eventId: defaultTendermintEventId2,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.MAKER, // use uneven number of maker/taker
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      eventId: defaultTendermintEventId3,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.MAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      eventId: defaultTendermintEventId4,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+  ]);
 
   return referenceDt;
 }

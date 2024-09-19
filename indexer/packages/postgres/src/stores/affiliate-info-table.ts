@@ -1,3 +1,4 @@
+import Knex from 'knex';
 import { QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
@@ -16,7 +17,6 @@ import {
   AffiliateInfoQueryConfig,
   Liquidity,
 } from '../types';
-import Knex from 'knex';
 
 export async function findAll(
   {
@@ -116,7 +116,7 @@ export async function updateInfo(
   options: Options = { txId: undefined },
 ) : Promise<void> {
   const transaction: Knex.Transaction | undefined = Transaction.get(options.txId);
-    
+
   const query = `
 -- Get metadata for all affiliates
 -- STEP 1: Aggregate affiliate_referred_users
@@ -257,9 +257,9 @@ DO UPDATE SET
     "totalReferredFees" = affiliate_info."totalReferredFees" + EXCLUDED."totalReferredFees",
     "referredNetProtocolEarnings" = affiliate_info."referredNetProtocolEarnings" + EXCLUDED."referredNetProtocolEarnings",
     "referredTotalVolume" = affiliate_info."referredTotalVolume" + EXCLUDED."referredTotalVolume";
-    `
+    `;
 
-    return transaction
+  return transaction
     ? knexPrimary.raw(query).transacting(transaction)
     : knexPrimary.raw(query);
 }
