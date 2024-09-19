@@ -1178,6 +1178,8 @@ func New(
 	app.VaultKeeper = *vaultmodulekeeper.NewKeeper(
 		appCodec,
 		keys[vaultmoduletypes.StoreKey],
+		app.AssetsKeeper,
+		app.BankKeeper,
 		app.ClobKeeper,
 		app.DelayMsgKeeper,
 		app.PerpetualsKeeper,
