@@ -39,21 +39,21 @@ func TestMsgDepositToMegavault_ValidateBasic(t *testing.T) {
 					),
 				),
 			},
-			expectedErr: "Deposit amount is invalid",
+			expectedErr: types.ErrInvalidQuoteQuantums.Error(),
 		},
 		"Failure: zero quote quantums": {
 			msg: types.MsgDepositToMegavault{
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewInt(0),
 			},
-			expectedErr: "Deposit amount is invalid",
+			expectedErr: types.ErrInvalidQuoteQuantums.Error(),
 		},
 		"Failure: negative quote quantums": {
 			msg: types.MsgDepositToMegavault{
 				SubaccountId:  &constants.Alice_Num0,
 				QuoteQuantums: dtypes.NewInt(-1),
 			},
-			expectedErr: "Deposit amount is invalid",
+			expectedErr: types.ErrInvalidQuoteQuantums.Error(),
 		},
 		"Failure: invalid subaccount owner": {
 			msg: types.MsgDepositToMegavault{

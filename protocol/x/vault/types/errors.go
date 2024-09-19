@@ -20,10 +20,10 @@ var (
 		3,
 		"MarketParam not found",
 	)
-	ErrInvalidDepositAmount = errorsmod.Register(
+	ErrInvalidQuoteQuantums = errorsmod.Register(
 		ModuleName,
 		4,
-		"Deposit amount is invalid",
+		"QuoteQuantums must be positive and less than 2^64",
 	)
 	ErrNonPositiveEquity = errorsmod.Register(
 		ModuleName,
@@ -149,5 +149,10 @@ var (
 		ModuleName,
 		29,
 		"Cannot deactivate vaults with positive equity",
+	)
+	ErrNonPositiveShares = errorsmod.Register(
+		ModuleName,
+		30,
+		"Shares must be positive",
 	)
 )

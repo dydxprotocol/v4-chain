@@ -123,14 +123,14 @@ func TestMintShares(t *testing.T) {
 			totalShares:       big.NewInt(1),
 			owner:             constants.AliceAccAddress.String(),
 			quantumsToDeposit: big.NewInt(0),
-			expectedErr:       vaulttypes.ErrInvalidDepositAmount,
+			expectedErr:       vaulttypes.ErrInvalidQuoteQuantums,
 		},
 		"Equity 0, TotalShares 0, Deposit -1": {
 			equity:            big.NewInt(0),
 			totalShares:       big.NewInt(0),
 			owner:             constants.AliceAccAddress.String(),
 			quantumsToDeposit: big.NewInt(-1),
-			expectedErr:       vaulttypes.ErrInvalidDepositAmount,
+			expectedErr:       vaulttypes.ErrInvalidQuoteQuantums,
 		},
 		"Equity 1000, TotalShares 1, Deposit 100": {
 			equity:            big.NewInt(1_000),
