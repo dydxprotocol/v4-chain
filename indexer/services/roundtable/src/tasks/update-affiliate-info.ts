@@ -1,19 +1,18 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger } from '@dydxprotocol-indexer/base';
 import {
   PersistentCacheTable, AffiliateInfoTable, PersistentCacheKeys, PersistentCacheFromDatabase,
+  BlockFromDatabase,
+  BlockTable,
 } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 
-import config from '../config';
-
-const defaultLastUpdateTime: string = '2023-10-26T00:00:00Z';
+const defaultLastUpdateTime: string = '2024-09-16T00:00:00Z';
 
 /**
  * Update the affiliate info for all affiliate addresses.
  */
 export default async function runTask(): Promise<void> {
   try {
-    const start = Date.now();
     const persistentCacheEntry: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
       .findById(PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME);
 
@@ -27,7 +26,12 @@ export default async function runTask(): Promise<void> {
     const lastUpdateTime: DateTime = DateTime.fromISO(persistentCacheEntry
       ? persistentCacheEntry.value
       : defaultLastUpdateTime);
-    let windowEndTime = DateTime.utc();
+
+    const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
+    if (latestBlock.time === null) {
+      throw Error('Failed to get latest block time');
+    }
+    let windowEndTime = DateTime.fromISO(latestBlock.time);
 
     // During backfilling, we process one day at a time to reduce roundtable runtime.
     if (windowEndTime > lastUpdateTime.plus({ days: 1 })) {
@@ -36,10 +40,6 @@ export default async function runTask(): Promise<void> {
 
     await AffiliateInfoTable.updateInfo(lastUpdateTime.toISO(), windowEndTime.toISO());
 
-    stats.timing(
-      `${config.SERVICE_NAME}.update_affiliate_info_timing`,
-      Date.now() - start,
-    );
   } catch (error) {
     logger.error({
       at: 'update-affiliate-info#runTask',

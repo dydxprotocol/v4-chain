@@ -7,6 +7,7 @@ import {
   FillTable,
   OrderTable,
   PersistentCacheKeys,
+  PersistentCacheFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import walletTotalVolumeUpdateTask from '../../src/tasks/update-wallet-total-volume';
 import { DateTime } from 'luxon';
@@ -189,9 +190,10 @@ describe('update-wallet-total-volume', () => {
 });
 
 async function getTotalVolumeUpdateTime(): Promise<DateTime | undefined> {
-  const persistentCache = await PersistentCacheTable.findById(
-    PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
-  );
+  const persistentCache: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
+    .findById(
+      PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
+    );
   const lastUpdateTime = persistentCache?.value
     ? DateTime.fromISO(persistentCache.value)
     : undefined;

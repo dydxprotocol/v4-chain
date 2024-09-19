@@ -10,6 +10,7 @@ import {
   AffiliateInfoFromDatabase,
   AffiliateInfoTable,
   Liquidity,
+  PersistentCacheFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import affiliateInfoUpdateTask from '../../src/tasks/update-affiliate-info';
 import { DateTime } from 'luxon';
@@ -37,19 +38,22 @@ describe('update-affiliate-info', () => {
   it('Successfully updates affiliate info and persistent cache multiple times', async () => {
     const startDt = DateTime.utc();
 
-    // Set persistent cache affiliateInfoUpdateTIme so task does not use backfill windows
-    await PersistentCacheTable.create({
-      key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-      value: startDt.toISO(),
-    });
+    await Promise.all([
+      // Set persistent cache affiliateInfoUpdateTime so task does not use backfill windows
+      PersistentCacheTable.create({
+        key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
+        value: startDt.toISO(),
+      }),
 
-    // First task run: add refereal w/o any fills
-    // defaultWallet2 will be affiliate and defaultWallet will be referee
-    await AffiliateReferredUsersTable.create({
-      affiliateAddress: testConstants.defaultWallet2.address,
-      refereeAddress: testConstants.defaultWallet.address,
-      referredAtBlock: '1',
-    });
+      // First task run: add referral w/o any fills
+      // defaultWallet2 will be affiliate and defaultWallet will be referee
+      AffiliateReferredUsersTable.create({
+        affiliateAddress: testConstants.defaultWallet2.address,
+        refereeAddress: testConstants.defaultWallet.address,
+        referredAtBlock: '1',
+      }),
+    ]);
+
     await affiliateInfoUpdateTask();
 
     let updatedInfo: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
@@ -182,7 +186,7 @@ describe('update-affiliate-info', () => {
     // `defaultLastUpdateTime` value to emulate backfilling from very beginning
     expect(await getAffiliateInfoUpdateTime()).toBeUndefined();
 
-    const referenceDt = DateTime.fromISO('2023-10-26T00:00:00Z');
+    const referenceDt: DateTime = DateTime.fromISO('2024-09-16T00:00:00Z');
 
     // defaultWallet2 will be affiliate and defaultWallet will be referee
     await AffiliateReferredUsersTable.create({
@@ -235,10 +239,11 @@ describe('update-affiliate-info', () => {
 });
 
 async function getAffiliateInfoUpdateTime(): Promise<DateTime | undefined> {
-  const persistentCache = await PersistentCacheTable.findById(
-    PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-  );
-  const lastUpdateTime = persistentCache?.value
+  const persistentCache: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
+    .findById(
+      PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
+    );
+  const lastUpdateTime: DateTime | undefined = persistentCache?.value
     ? DateTime.fromISO(persistentCache.value)
     : undefined;
   return lastUpdateTime;
