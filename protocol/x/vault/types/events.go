@@ -17,6 +17,7 @@ const (
 	AttributeKeyWithdrawer            = "withdrawer"
 	AttributeKeySharesToWithdraw      = "shares_to_withdraw"
 	AttributeKeyTotalShares           = "total_shares"
+	AttributeKeyMegavaultEquity       = "megavault_equity"
 	AttributeKeyRedeemedQuoteQuantums = "redeemed_quote_quantums"
 )
 
@@ -39,6 +40,7 @@ func NewWithdrawFromMegavaultEvent(
 	withdrawerAddress string,
 	sharesToWithdraw uint64,
 	totalShares uint64,
+	megavaultEquity uint64,
 	redeemedQuoteQuantums uint64,
 ) sdk.Event {
 	return sdk.NewEvent(
@@ -46,6 +48,7 @@ func NewWithdrawFromMegavaultEvent(
 		sdk.NewAttribute(AttributeKeyWithdrawer, withdrawerAddress),
 		sdk.NewAttribute(AttributeKeySharesToWithdraw, fmt.Sprintf("%d", sharesToWithdraw)),
 		sdk.NewAttribute(AttributeKeyTotalShares, fmt.Sprintf("%d", totalShares)),
+		sdk.NewAttribute(AttributeKeyMegavaultEquity, fmt.Sprintf("%d", megavaultEquity)),
 		sdk.NewAttribute(AttributeKeyRedeemedQuoteQuantums, fmt.Sprintf("%d", redeemedQuoteQuantums)),
 	)
 }
