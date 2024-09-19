@@ -368,7 +368,6 @@ func TestGetAffiliateRefereeLowestTakerFee(t *testing.T) {
 				tc.feeTiers,
 			)
 			require.NoError(t, err)
-
 		})
 	}
 }
