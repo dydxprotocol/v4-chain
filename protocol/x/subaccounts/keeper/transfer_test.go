@@ -1501,9 +1501,9 @@ func TestDistributeFees(t *testing.T) {
 			},
 			expectedSubaccountsModuleAccBalance:     big.NewInt(100),  // 600 - 500
 			expectedFeeModuleAccBalance:             big.NewInt(2892), // 2500 + 500 - 108
-			expectedMarketMapperAccBalance:          big.NewInt(48),   // 10% of 500
+			expectedMarketMapperAccBalance:          big.NewInt(48),   // 10% of 488
 			expectedAffiliateAccBalance:             big.NewInt(12),   // 5%  of 250
-			expectedUnconditionalRevShareAccBalance: big.NewInt(48),   // 10%  of 500
+			expectedUnconditionalRevShareAccBalance: big.NewInt(48),   // 10%  of 488
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.IntToString(4),
 			),
