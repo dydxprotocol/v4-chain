@@ -65,7 +65,9 @@ func TestGetSetVaultParams(t *testing.T) {
 		// Existing vault params, if any.
 		existingVaultParams *vaulttypes.VaultParams
 		// Asset quote quantums that vault has.
-		assetQuoteQuantums uint64
+		assetQuoteQuantums int64
+		// Position base quantums that vault has.
+		positionBaseQuantums int64
 		// Vault params to set.
 		vaultParams *vaulttypes.VaultParams
 		// Expected on-chain indexer events
@@ -95,7 +97,7 @@ func TestGetSetVaultParams(t *testing.T) {
 				},
 			},
 		},
-		"Success - Deactivate a vault with no quote quantums": {
+		"Success - Deactivate a vault with zero equity": {
 			vaultId:             constants.Vault_Clob1,
 			existingVaultParams: &constants.VaultParams,
 			vaultParams: &vaulttypes.VaultParams{
@@ -111,10 +113,11 @@ func TestGetSetVaultParams(t *testing.T) {
 				},
 			},
 		},
-		"Failure - Deactivate a vault with non-zero quote quantums": {
-			vaultId:             constants.Vault_Clob1,
-			existingVaultParams: &constants.VaultParams,
-			assetQuoteQuantums:  1,
+		"Success - Deactivate a vault with negative equity": {
+			vaultId:              constants.Vault_Clob1,
+			existingVaultParams:  &constants.VaultParams,
+			assetQuoteQuantums:   0,
+			positionBaseQuantums: -1,
 			vaultParams: &vaulttypes.VaultParams{
 				Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
 			},
@@ -127,7 +130,16 @@ func TestGetSetVaultParams(t *testing.T) {
 					),
 				},
 			},
-			expectedErr: vaulttypes.ErrVaultDeactivation,
+		},
+		"Failure - Deactivate a vault with positive equity": {
+			vaultId:              constants.Vault_Clob1,
+			existingVaultParams:  &constants.VaultParams,
+			assetQuoteQuantums:   0,
+			positionBaseQuantums: 1,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+			},
+			expectedErr: vaulttypes.ErrDeactivatePositiveEquityVault,
 		},
 		"Failure - Unspecified Status": {
 			vaultId: constants.Vault_Clob0,
@@ -171,18 +183,26 @@ func TestGetSetVaultParams(t *testing.T) {
 					testapp.UpdateGenesisDocWithAppStateForModule(
 						&genesis,
 						func(genesisState *satypes.GenesisState) {
+							assetPositions := []*satypes.AssetPosition{}
 							if tc.assetQuoteQuantums != 0 {
-								genesisState.Subaccounts = []satypes.Subaccount{
-									{
-										Id: tc.vaultId.ToSubaccountId(),
-										AssetPositions: []*satypes.AssetPosition{
-											{
-												AssetId:  constants.Usdc.GetId(),
-												Quantums: dtypes.NewIntFromUint64(tc.assetQuoteQuantums),
-											},
-										},
-									},
-								}
+								assetPositions = append(assetPositions, &satypes.AssetPosition{
+									AssetId:  constants.Usdc.GetId(),
+									Quantums: dtypes.NewInt(tc.assetQuoteQuantums),
+								})
+							}
+							perpPositions := []*satypes.PerpetualPosition{}
+							if tc.positionBaseQuantums != 0 {
+								perpPositions = append(perpPositions, &satypes.PerpetualPosition{
+									PerpetualId: tc.vaultId.Number,
+									Quantums:    dtypes.NewInt(tc.positionBaseQuantums),
+								})
+							}
+							genesisState.Subaccounts = []satypes.Subaccount{
+								{
+									Id:                 tc.vaultId.ToSubaccountId(),
+									AssetPositions:     assetPositions,
+									PerpetualPositions: perpPositions,
+								},
 							}
 						},
 					)

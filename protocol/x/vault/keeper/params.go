@@ -69,9 +69,12 @@ func (k Keeper) SetVaultParams(
 	}
 
 	if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED {
-		vault := k.subaccountsKeeper.GetSubaccount(ctx, *vaultId.ToSubaccountId())
-		if vault.GetUsdcPosition().Sign() != 0 {
-			return types.ErrVaultDeactivation
+		vaultEquity, err := k.GetVaultEquity(ctx, vaultId)
+		if err != nil {
+			return err
+		}
+		if vaultEquity.Sign() > 0 {
+			return types.ErrDeactivatePositiveEquityVault
 		}
 	}
 
