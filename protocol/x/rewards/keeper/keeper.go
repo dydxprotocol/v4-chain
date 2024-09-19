@@ -121,15 +121,19 @@ func (k Keeper) GetRewardShare(
 //
 // Within each block, total reward share score for an address is defined as:
 //
-//	reward_share_score = total_taker_fees_paid - total_rev_shared_taker_fee
+//	reward_share_score = total_taker_fees_paid - max_possible_taker_fee_rev_share
 //   - max_possible_maker_rebate * taker_volume + total_positive_maker_fees - total_rev_shared_maker_fee
 //
 // Hence, for each fill, increment reward share score as follow:
 //   - Let F = sum(percentages of general rev-share) (excluding taker only rev share i.e. affiliate)
 //   - For maker address, positive_maker_fees * (1 - F) are added to reward share score.
 //   - For taker address, (positive_taker_fees - max_possible_maker_rebate
-//     					  * fill_quote_quantum - taker_fee_rev_share) * (1 - F)
+//     					  * fill_quote_quantum - max_possible_taker_fee_rev_share) * (1 - F)
 //     are added to reward share score.
+// max_possible_taker_fee_rev_share is 0 when taker trailing volume is > MaxReferee30dVolumeForAffiliateShareQuantums,
+// since taker trailing volume is only affiliate at the moment, and they don’t generate affiliate rev share.
+// When taker volume ≤ MaxReferee30dVolumeForAffiliateShareQuantums,
+// max_possible_taker_fee_rev_share = max_vip_affiliate_share * taker_fee
 
 func (k Keeper) AddRewardSharesForFill(
 	ctx sdk.Context,
