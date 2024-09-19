@@ -160,7 +160,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 				{
 					id: constants.Vault_Clob0,
 					params: vaulttypes.VaultParams{
-						Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
 					},
 					assetQuoteQuantums:   big.NewInt(400),
 					positionBaseQuantums: big.NewInt(0),
