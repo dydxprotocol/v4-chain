@@ -17,6 +17,10 @@ service Msg {
   rpc DepositToMegavault(MsgDepositToMegavault)
       returns (MsgDepositToMegavaultResponse);
 
+  // WithdrawFromMegavault withdraws shares from megavault.
+  rpc WithdrawFromMegavault(MsgWithdrawFromMegavault)
+      returns (MsgWithdrawFromMegavaultResponse);
+
   // UpdateDefaultQuotingParams updates the default quoting params in state.
   rpc UpdateDefaultQuotingParams(MsgUpdateDefaultQuotingParams)
       returns (MsgUpdateDefaultQuotingParamsResponse);
@@ -63,6 +67,40 @@ message MsgDepositToMegavault {
 message MsgDepositToMegavaultResponse {
   // The number of shares minted from the deposit.
   NumShares minted_shares = 1 [ (gogoproto.nullable) = false ];
+}
+
+// MsgWithdrawFromMegavault withdraws the specified shares from megavault to
+// a subaccount.
+message MsgWithdrawFromMegavault {
+  // This annotation enforces that the tx signer is the owner specified in
+  // `subaccount_id`.
+  option (cosmos.msg.v1.signer) = "subaccount_id";
+
+  // The subaccount to withdraw to.
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 1
+      [ (gogoproto.nullable) = false ];
+
+  // Number of shares to withdraw.
+  NumShares shares = 2 [ (gogoproto.nullable) = false ];
+
+  // The minimum number of quote quantums above shares should redeem, i.e.
+  // transaction fails if above shares redeem less than min_quote_quantums.
+  bytes min_quote_quantums = 3 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// MsgWithdrawFromMegavaultResponse is the Msg/WithdrawFromMegavault response
+// type.
+message MsgWithdrawFromMegavaultResponse {
+  // The number of quote quantums redeemed from the withdrawal.
+  bytes quote_quantums = 1 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request

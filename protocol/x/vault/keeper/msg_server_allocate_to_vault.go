@@ -34,7 +34,9 @@ func (k msgServer) AllocateToVault(
 		return nil, types.ErrClobPairNotFound
 	}
 
-	// If vault doesn't exist, initialize it with `STAND_BY` status and add to vault address store.
+	// If vault doesn't exist:
+	// 1. initialize params with `STAND_BY` status.
+	// 2. add vault to address store.
 	_, exists = k.Keeper.GetVaultParams(ctx, msg.VaultId)
 	if !exists {
 		err := k.Keeper.SetVaultParams(

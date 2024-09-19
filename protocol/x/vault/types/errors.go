@@ -135,4 +135,14 @@ var (
 		26,
 		"Authority must be a module authority or operator",
 	)
+	ErrInsufficientWithdrawableShares = errorsmod.Register(
+		ModuleName,
+		27,
+		"Insufficient withdrawable shares",
+	)
+	ErrInsufficientRedeemedQuoteQuantums = errorsmod.Register(
+		ModuleName,
+		28,
+		"Insufficient redeemed quote quantums",
+	)
 )
