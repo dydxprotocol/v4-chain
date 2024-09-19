@@ -44,12 +44,17 @@ func (k msgServer) CreateOracleMarket(
 
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
+	exponent, err := k.Keeper.GetExponent(ctx, msg.Params.Pair)
+	if err != nil {
+		return nil, err
+	}
+
 	// Use zero oracle price to create the new market.
 	// Note that valid oracle price updates cannot be zero (checked in MsgUpdateMarketPrices.ValidateBasic),
 	// so a zero oracle price indicates that the oracle price has never been updated.
 	zeroMarketPrice := types.MarketPrice{
 		Id:       msg.Params.Id,
-		Exponent: msg.Params.Exponent,
+		Exponent: exponent,
 		Price:    0,
 	}
 	if _, err = k.Keeper.CreateMarket(ctx, msg.Params, zeroMarketPrice); err != nil {

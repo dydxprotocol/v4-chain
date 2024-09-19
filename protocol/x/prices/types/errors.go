@@ -30,9 +30,14 @@ var (
 		206,
 		"Market pair conversion to currency pair failed",
 	)
-	ErrTickerNotFoundInMarketMap = errorsmod.Register(ModuleName, 207, "Ticker not found in market map")
-	ErrMarketCouldNotBeDisabled  = errorsmod.Register(ModuleName, 208, "Market could not be disabled")
-	ErrMarketCouldNotBeEnabled   = errorsmod.Register(ModuleName, 209, "Market could not be enabled")
+	ErrTickerNotFoundInMarketMap  = errorsmod.Register(ModuleName, 207, "Ticker not found in market map")
+	ErrMarketCouldNotBeDisabled   = errorsmod.Register(ModuleName, 208, "Market could not be disabled")
+	ErrMarketCouldNotBeEnabled    = errorsmod.Register(ModuleName, 209, "Market could not be enabled")
+	ErrInvalidMarketPriceExponent = errorsmod.Register(
+		ModuleName,
+		210,
+		"Market price exponent does not match the negation of the Decimals value in the market map",
+	)
 
 	// 300 - 399: Price related errors.
 	ErrIndexPriceNotAvailable = errorsmod.Register(ModuleName, 300, "Index price is not available")

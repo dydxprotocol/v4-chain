@@ -31,6 +31,7 @@ type PricesKeeper interface {
 	GetAllMarketParams(ctx sdk.Context) (marketParams []MarketParam)
 	GetMarketPrice(ctx sdk.Context, id uint32) (marketPrice MarketPrice, err error)
 	GetAllMarketPrices(ctx sdk.Context) (marketPrices []MarketPrice)
+	GetExponent(ctx sdk.Context, ticker string) (exponent int32, err error)
 	HasAuthority(authority string) bool
 
 	// Validation related.

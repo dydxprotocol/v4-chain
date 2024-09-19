@@ -146,7 +146,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx, pricesKeeper, _, _, mockTimeProvider, _, _ := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
-			msgServer := keeper.NewMsgServerImpl(pricesKeeper)
+			msgServer := keeper.NewMsgServerImpl(*pricesKeeper)
 			initialMarketParam, err := keepertest.CreateTestMarket(t, ctx, pricesKeeper, testMarketParam, testMarketPrice)
 			require.NoError(t, err)
 

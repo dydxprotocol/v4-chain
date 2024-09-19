@@ -57,10 +57,18 @@ func (k Keeper) CreateMarket(
 		)
 	}
 	currencyPairStr := currencyPair.String()
-	_, err = k.MarketMapKeeper.GetMarket(ctx, currencyPairStr)
+	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, currencyPairStr)
 	if err != nil {
 		return types.MarketParam{}, errorsmod.Wrapf(
 			types.ErrTickerNotFoundInMarketMap,
+			currencyPairStr,
+		)
+	}
+
+	// Check that the exponent of market price is the negation of the decimals value in the market map
+	if marketPrice.Exponent != int32(marketMapDetails.Ticker.Decimals)*-1 {
+		return types.MarketParam{}, errorsmod.Wrapf(
+			types.ErrInvalidMarketPriceExponent,
 			currencyPairStr,
 		)
 	}
@@ -87,7 +95,7 @@ func (k Keeper) CreateMarket(
 				marketParam.Id,
 				marketParam.Pair,
 				marketParam.MinPriceChangePpm,
-				marketParam.Exponent,
+				marketPrice.Exponent, // The exponent of the market price is the source of truth, the exponent of the param is deprecated as of v7.1.x
 			),
 		),
 	)
@@ -109,6 +117,24 @@ func (k Keeper) CreateMarket(
 		)
 	}
 	return marketParam, nil
+}
+
+// Get the exponent for a market as the negation of the decimals value in the market map
+func (k Keeper) GetExponent(ctx sdk.Context, ticker string) (int32, error) {
+	currencyPair, err := slinky.MarketPairToCurrencyPair(ticker)
+	if err != nil {
+		k.Logger(ctx).Error("Could not convert market pair to currency pair", "error", err)
+		return 0, err
+	}
+
+	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
+	if err != nil {
+		return 0, errorsmod.Wrapf(
+			types.ErrTickerNotFoundInMarketMap,
+			ticker,
+		)
+	}
+	return int32(marketMapDetails.Ticker.Decimals) * -1, nil
 }
 
 // GetAllMarketParamPrices returns a slice of MarketParam, MarketPrice tuples for all markets.
