@@ -314,12 +314,20 @@ func (k Keeper) GetVaultClobOrders(
 			maxSubticks,
 		)
 
+		// If the side would increase the vault's inventory, make the order post-only.
+		timeInForceType := clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED
+		if (side == clobtypes.Order_SIDE_SELL && inventory.Sign() <= 0) ||
+			(side == clobtypes.Order_SIDE_BUY && inventory.Sign() >= 0) {
+			timeInForceType = clobtypes.Order_TIME_IN_FORCE_POST_ONLY
+		}
+
 		return &clobtypes.Order{
 			OrderId:      *orderId,
 			Side:         side,
 			Quantums:     orderSize.Uint64(), // Validated to be a uint64 above.
 			Subticks:     subticksRounded,
 			GoodTilOneof: goodTilBlockTime,
+			TimeInForce:  timeInForceType,
 		}
 	}
 
