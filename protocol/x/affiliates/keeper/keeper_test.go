@@ -405,8 +405,10 @@ func TestRegisterAffiliateEmitEvent(t *testing.T) {
 
 	affiliate := constants.AliceAccAddress.String()
 	referee := constants.BobAccAddress.String()
+	err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+	require.NoError(t, err)
 
-	err := k.RegisterAffiliate(ctx, referee, affiliate)
+	err = k.RegisterAffiliate(ctx, referee, affiliate)
 	require.NoError(t, err)
 	expectedEvent := &indexerevents.RegisterAffiliateEventV1{
 		Referee:   referee,
@@ -758,9 +760,12 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			k := tApp.App.AffiliatesKeeper
 			statsKeeper := tApp.App.StatsKeeper
 
+			err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+			require.NoError(t, err)
+
 			tc.setup(t, ctx, &k, &statsKeeper)
 
-			err := k.AggregateAffiliateReferredVolumeForFills(ctx)
+			err = k.AggregateAffiliateReferredVolumeForFills(ctx)
 			require.NoError(t, err)
 
 			referredVolume, err := k.GetReferredVolume(ctx, affiliate)

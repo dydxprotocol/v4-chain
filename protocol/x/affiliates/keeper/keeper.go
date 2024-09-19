@@ -214,7 +214,7 @@ func (k Keeper) GetTierForAffiliate(
 	tiers := affiliateTiers.GetTiers()
 	// Return 0 tier if no tiers are set.
 	if len(tiers) == 0 {
-		return 0, 0, errorsmod.Wrapf(types.ErrAffiliateTiersNotSet, "affiliate tiers are not set")
+		return 0, 0, nil
 	}
 	numTiers := uint32(len(tiers))
 	maxTierLevel := numTiers - 1
