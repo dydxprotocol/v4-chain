@@ -123,7 +123,14 @@ func (k Keeper) WithdrawFromMegavault(
 	sharesToWithdraw *big.Int,
 	minQuoteQuantums *big.Int,
 ) (redeemedQuoteQuantums *big.Int, err error) {
-	// 1. Check that the owner is withdrawing less that or equal to their unlocked shares.
+	// 1. Check that shares to withdraw is positive and not more than unlocked shares.
+	if sharesToWithdraw.Sign() <= 0 {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidSharesToWithdraw,
+			"sharesToWithdraw: %s",
+			sharesToWithdraw,
+		)
+	}
 	ownerShares, exists := k.GetOwnerShares(ctx, toSubaccount.Owner)
 	if !exists {
 		return nil, types.ErrOwnerNotFound
@@ -161,7 +168,7 @@ func (k Keeper) WithdrawFromMegavault(
 		if err != nil {
 			log.ErrorLogWithError(
 				ctx,
-				"Megavault withdrawal: failed to get vault ID from state key. Skipping this vault",
+				"Megavault withdrawal: error when getting vault ID from state key. Skipping this vault",
 				err,
 			)
 			continue
@@ -173,7 +180,7 @@ func (k Keeper) WithdrawFromMegavault(
 		if err != nil {
 			log.ErrorLogWithError(
 				ctx,
-				"Megavault withdrawal: failed to get perpetual and market. Skipping this vault",
+				"Megavault withdrawal: error when getting perpetual and market. Skipping this vault",
 				err,
 				"Vault ID",
 				vaultId,
@@ -184,7 +191,7 @@ func (k Keeper) WithdrawFromMegavault(
 		if err != nil {
 			log.ErrorLogWithError(
 				ctx,
-				"Megavault withdrawal: failed to get vault leverage and equity. Skipping this vault",
+				"Megavault withdrawal: error when getting vault leverage and equity. Skipping this vault",
 				err,
 				"Vault ID",
 				vaultId,
@@ -204,7 +211,7 @@ func (k Keeper) WithdrawFromMegavault(
 		if err != nil {
 			log.ErrorLogWithError(
 				ctx,
-				"Megavault withdrawal: failed to get vault withdrawal slippage. Skipping this vault",
+				"Megavault withdrawal: error when getting vault withdrawal slippage. Skipping this vault",
 				err,
 				"Vault ID",
 				vaultId,
@@ -228,7 +235,7 @@ func (k Keeper) WithdrawFromMegavault(
 		if err != nil {
 			log.ErrorLogWithError(
 				ctx,
-				"Megavault withdrawal: failed to transfer from sub vault to main vault. Skipping this vault",
+				"Megavault withdrawal: error when transfering from sub vault to main vault. Skipping this vault",
 				err,
 				"Vault ID",
 				vaultId,
@@ -243,8 +250,8 @@ func (k Keeper) WithdrawFromMegavault(
 		megavaultEquity.Add(megavaultEquity, equity)
 	}
 
-	// 4. Return error if less than min quote quantums are redeemed.
-	if redeemedQuoteQuantums.Cmp(minQuoteQuantums) < 0 {
+	// 4. Return error if redeemed quantums are non-positive or less than min quantums.
+	if redeemedQuoteQuantums.Sign() <= 0 || redeemedQuoteQuantums.Cmp(minQuoteQuantums) < 0 {
 		return nil, errorsmod.Wrapf(
 			types.ErrInsufficientRedeemedQuoteQuantums,
 			"redeemed quote quantums: %s, min quote quantums: %s",
@@ -275,11 +282,10 @@ func (k Keeper) WithdrawFromMegavault(
 	}
 
 	// 6. Decrement total and owner shares.
-	err = k.SetTotalShares(
+	if err = k.SetTotalShares(
 		ctx,
 		types.BigIntToNumShares(new(big.Int).Sub(totalShares, sharesToWithdraw)),
-	)
-	if err != nil {
+	); err != nil {
 		return nil, err
 	}
 	if ownerSharesAfterWithdrawal.Sign() == 0 {

@@ -48,9 +48,9 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 		// Vaults.
 		vaults []VaultSetup
 		// Shares to withdraw.
-		sharesToWithdraw uint64
+		sharesToWithdraw int64
 		// Minimum quote quantums to redeem.
-		minQuoteQuantums uint64
+		minQuoteQuantums int64
 
 		/* --- Expectations --- */
 		// Whether DeliverTx should fail.
@@ -101,6 +101,19 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 			expectedTotalShares:   0,
 			expectedOwnerShares:   0,
 		},
+		"Success: Withdraw some unlocked shares (1% of total), No sub-vaults, Redeemed quantums rounds down to 0": {
+			mainVaultBalance:      99,
+			totalShares:           200,
+			owner:                 constants.AliceAccAddress.String(),
+			ownerTotalShares:      10,
+			ownerLockedShares:     5,
+			sharesToWithdraw:      2,
+			minQuoteQuantums:      -1,
+			deliverTxFails:        true,
+			redeemedQuoteQuantums: 0,   // 99 * 2 / 200 = 0.99 ~= 0 (rounded down)
+			expectedTotalShares:   200, // unchanged
+			expectedOwnerShares:   10,  // unchanged
+		},
 		"Failure: Withdraw more than locked shares": {
 			mainVaultBalance:    100,
 			totalShares:         500,
@@ -108,6 +121,30 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 			ownerTotalShares:    100,
 			ownerLockedShares:   20,
 			sharesToWithdraw:    81,
+			minQuoteQuantums:    1,
+			deliverTxFails:      true,
+			expectedTotalShares: 500, // unchanged
+			expectedOwnerShares: 100, // unchanged
+		},
+		"Failure: Withdraw zero shares": {
+			mainVaultBalance:    100,
+			totalShares:         500,
+			owner:               constants.AliceAccAddress.String(),
+			ownerTotalShares:    100,
+			ownerLockedShares:   20,
+			sharesToWithdraw:    0,
+			minQuoteQuantums:    1,
+			deliverTxFails:      true,
+			expectedTotalShares: 500, // unchanged
+			expectedOwnerShares: 100, // unchanged
+		},
+		"Failure: Withdraw negative shares": {
+			mainVaultBalance:    100,
+			totalShares:         500,
+			owner:               constants.AliceAccAddress.String(),
+			ownerTotalShares:    100,
+			ownerLockedShares:   20,
+			sharesToWithdraw:    -1,
 			minQuoteQuantums:    1,
 			deliverTxFails:      true,
 			expectedTotalShares: 500, // unchanged
@@ -164,7 +201,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 				},
 			},
 			sharesToWithdraw:      4444,
-			minQuoteQuantums:      0,
+			minQuoteQuantums:      -1,
 			deliverTxFails:        false,
 			redeemedQuoteQuantums: 3_950,   // 888_888 * 4444 / 1_000_000 ~= 3950 (sub-vault is skipped)
 			expectedTotalShares:   995_556, // 1_000_000 - 4444
@@ -420,9 +457,9 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 					Number: 0,
 				},
 				Shares: vaulttypes.NumShares{
-					NumShares: dtypes.NewIntFromUint64(tc.sharesToWithdraw),
+					NumShares: dtypes.NewInt(tc.sharesToWithdraw),
 				},
-				MinQuoteQuantums: dtypes.NewIntFromUint64(tc.minQuoteQuantums),
+				MinQuoteQuantums: dtypes.NewInt(tc.minQuoteQuantums),
 			}
 
 			preMegavaultEquity, err := tApp.App.VaultKeeper.GetMegavaultEquity(ctx)
