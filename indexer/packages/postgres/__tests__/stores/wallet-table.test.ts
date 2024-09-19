@@ -90,7 +90,7 @@ describe('Wallet store', () => {
     expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
   });
 
-  describe('Wallet .updateTotalVolume()', () => {
+  describe('updateTotalVolume', () => {
     it('Successfully updates totalVolume for time window multiple times', async () => {
       const firstFillTime: DateTime = await populateWalletSubaccountFill();
 

@@ -93,7 +93,7 @@ describe('Affiliate info store', () => {
     expect(info).toBeUndefined();
   });
 
-  describe('Affiliate info .updateInfo()', () => {
+  describe('updateInfo', () => {
     it('Successfully creates new affiliate info', async () => {
       const referenceDt: DateTime = await populateFillsAndReferrals();
 
@@ -132,10 +132,10 @@ describe('Affiliate info store', () => {
         referenceDt.minus({ minutes: 2 }).toISO(),
       );
 
-      let updatedInfo: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
+      const updatedInfo1: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
         defaultWallet2.address,
       );
-      let expectedAffiliateInfo: AffiliateInfoFromDatabase = {
+      const expectedAffiliateInfo1: AffiliateInfoFromDatabase = {
         address: defaultWallet2.address,
         affiliateEarnings: '1000',
         referredMakerTrades: 2,
@@ -146,7 +146,7 @@ describe('Affiliate info store', () => {
         firstReferralBlockHeight: '1',
         referredTotalVolume: '2',
       };
-      expect(updatedInfo).toEqual(expectedAffiliateInfo);
+      expect(updatedInfo1).toEqual(expectedAffiliateInfo1);
 
       // Perform update: catches next 2 fills
       await AffiliateInfoTable.updateInfo(
@@ -154,10 +154,10 @@ describe('Affiliate info store', () => {
         referenceDt.minus({ minutes: 1 }).toISO(),
       );
 
-      updatedInfo = await AffiliateInfoTable.findById(
+      const updatedInfo2 = await AffiliateInfoTable.findById(
         defaultWallet2.address,
       );
-      expectedAffiliateInfo = {
+      const expectedAffiliateInfo2 = {
         address: defaultWallet2.address,
         affiliateEarnings: '2000',
         referredMakerTrades: 3,
@@ -168,7 +168,7 @@ describe('Affiliate info store', () => {
         firstReferralBlockHeight: '1',
         referredTotalVolume: '4',
       };
-      expect(updatedInfo).toEqual(expectedAffiliateInfo);
+      expect(updatedInfo2).toEqual(expectedAffiliateInfo2);
 
       // Perform update: catches no fills but new affiliate referral
       await AffiliateReferredUsersTable.create({
@@ -180,10 +180,10 @@ describe('Affiliate info store', () => {
         referenceDt.minus({ minutes: 1 }).toISO(),
         referenceDt.toISO(),
       );
-      updatedInfo = await AffiliateInfoTable.findById(
+      const updatedInfo3 = await AffiliateInfoTable.findById(
         defaultWallet2.address,
       );
-      expectedAffiliateInfo = {
+      const expectedAffiliateInfo3 = {
         address: defaultWallet2.address,
         affiliateEarnings: '2000',
         referredMakerTrades: 3,
@@ -194,7 +194,7 @@ describe('Affiliate info store', () => {
         firstReferralBlockHeight: '1',
         referredTotalVolume: '4',
       };
-      expect(updatedInfo).toEqual(expectedAffiliateInfo);
+      expect(updatedInfo3).toEqual(expectedAffiliateInfo3);
     });
 
     it('Does not use fills from before referal block height', async () => {
@@ -260,7 +260,7 @@ describe('Affiliate info store', () => {
     });
 
     it('Successfully filters by address', async () => {
-      const infos: AffiliateInfoFromDatabase[] | undefined = await AffiliateInfoTable
+      const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable
         .paginatedFindWithAddressFilter(
           ['address_0'],
           0,
@@ -371,50 +371,52 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
   // Create order and fils for defaultWallet (referee)
   await OrderTable.create(defaultOrder);
 
-  await FillTable.create({
-    ...defaultFill,
-    liquidity: Liquidity.TAKER,
-    subaccountId: defaultOrder.subaccountId,
-    createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
-    eventId: defaultTendermintEventId,
-    price: '1',
-    size: '1',
-    fee: '1000',
-    affiliateRevShare: '500',
-  });
-  await FillTable.create({
-    ...defaultFill,
-    liquidity: Liquidity.MAKER,
-    subaccountId: defaultOrder.subaccountId,
-    createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
-    eventId: defaultTendermintEventId2,
-    price: '1',
-    size: '1',
-    fee: '1000',
-    affiliateRevShare: '500',
-  });
-  await FillTable.create({
-    ...defaultFill,
-    liquidity: Liquidity.MAKER, // use uneven number of maker/taker
-    subaccountId: defaultOrder.subaccountId,
-    createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
-    eventId: defaultTendermintEventId3,
-    price: '1',
-    size: '1',
-    fee: '1000',
-    affiliateRevShare: '500',
-  });
-  await FillTable.create({
-    ...defaultFill,
-    liquidity: Liquidity.MAKER,
-    subaccountId: defaultOrder.subaccountId,
-    createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
-    eventId: defaultTendermintEventId4,
-    price: '1',
-    size: '1',
-    fee: '1000',
-    affiliateRevShare: '500',
-  });
+  await Promise.all([
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.TAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
+      eventId: defaultTendermintEventId,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.MAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
+      eventId: defaultTendermintEventId2,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.MAKER, // use uneven number of maker/taker
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      eventId: defaultTendermintEventId3,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.MAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      eventId: defaultTendermintEventId4,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+  ]);
 
   return referenceDt;
 }

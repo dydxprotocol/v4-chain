@@ -7,7 +7,6 @@ import {
   BlockFromDatabase,
   BlockTable,
   Transaction,
-  IsolationLevel,
 } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 
@@ -17,16 +16,14 @@ const defaultLastUpdateTime: string = '2024-09-16T00:00:00Z';
  * Update the affiliate info for all affiliate addresses.
  */
 export default async function runTask(): Promise<void> {
-  const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
-  if (latestBlock.time === null) {
-    throw Error('Failed to get latest block time');
-  }
-
-  // Wrap getting cache, updating info, and setting cache in one transaction with row locking to
-  // prevent race condition on persistent cache rows between read and write.
+  // Wrap getting cache, updating info, and setting cache in one transaction so that persistent
+  // cache and affilitate info table are in sync.
   const txId: number = await Transaction.start();
-  await Transaction.setIsolationLevel(txId, IsolationLevel.REPEATABLE_READ);
   try {
+    const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
+    if (latestBlock.time === null) {
+      throw Error('Failed to get latest block time');
+    }
     const persistentCacheEntry: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
       .findById(PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME, { txId });
     if (!persistentCacheEntry) {
