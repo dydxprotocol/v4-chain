@@ -24,7 +24,6 @@ const (
 
 // v5.x state, used for v6.x upgrade.
 
-// Deprecated: Only used to get vault params as they were in v5.x.
 // UnsafeGetParams returns `Params` in state.
 // Used for v6.x upgrade handler.
 func (k Keeper) UnsafeGetParams(
@@ -38,7 +37,6 @@ func (k Keeper) UnsafeGetParams(
 	return params
 }
 
-// Deprecated: Only used to delete params as they were in v5.x.
 // UnsafeDeleteParams deletes `Params` in state.
 // Used for v6.x upgrade handler.
 func (k Keeper) UnsafeDeleteParams(
@@ -50,7 +48,6 @@ func (k Keeper) UnsafeDeleteParams(
 
 // v6.x state, used for v7.x upgrade
 
-// Deprecated: Only used to set quoting params as they were in v6.x.
 // UnsafeSetQuotingParams sets quoting parameters for a given vault from state.
 // Used for v7.x upgrade handler
 func (k Keeper) UnsafeSetQuotingParams(
@@ -69,7 +66,6 @@ func (k Keeper) UnsafeSetQuotingParams(
 	return nil
 }
 
-// Deprecated: Only used to get quoting params as they were in v6.x.
 // UnsafeGetQuotingParams returns quoting parameters for a given vault from state.
 // Used for v7.x upgrade handler
 func (k Keeper) UnsafeGetQuotingParams(
@@ -90,7 +86,6 @@ func (k Keeper) UnsafeGetQuotingParams(
 	return quotingParams, true
 }
 
-// Deprecated: Only used to set quoting params as they were in v6.x.
 // UnsafeDeleteQuotingParams deletes quoting parameters for a given vault from state.
 // Used for v7.x upgrade handler
 func (k Keeper) UnsafeDeleteQuotingParams(
@@ -105,7 +100,6 @@ func (k Keeper) UnsafeDeleteQuotingParams(
 	store.Delete(vaultId.ToStateKey())
 }
 
-// Deprecated: Only used to fetch vault ids as they were in v6.x
 // UnsafeGetAllVaultIds returns all vault ids from state using the deprecated total shares
 // state.
 func (k Keeper) UnsafeGetAllVaultIds(ctx sdk.Context) []types.VaultId {

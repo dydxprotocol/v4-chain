@@ -36,7 +36,17 @@ func migrateVaultQuotingParamsToVaultParams(ctx sdk.Context, k vaultkeeper.Keepe
 		if exists {
 			vaultParams.QuotingParams = &quotingParams
 		}
-		k.SetVaultParams(ctx, vaultId, vaultParams)
+		err := k.SetVaultParams(ctx, vaultId, vaultParams)
+		if er != ni {
+			panic(
+				fmt.Sprintf(
+					"failed to set vault params for vault %+v with params %+v: %s",
+					vaultId,
+					vaultParams,
+					err,
+				)
+			)
+		}
 		k.UnsafeDeleteQuotingParams(ctx, vaultId)
 		ctx.Logger().Info(fmt.Sprintf(
 			"Successfully migrated vault %+v",
