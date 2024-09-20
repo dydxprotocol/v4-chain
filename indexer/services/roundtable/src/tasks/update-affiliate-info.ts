@@ -1,4 +1,4 @@
-import { logger, stats} from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   PersistentCacheTable,
   AffiliateInfoTable,
@@ -9,6 +9,7 @@ import {
   Transaction,
 } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
+
 import config from '../config';
 
 const defaultLastUpdateTime: string = '2024-09-16T00:00:00Z';
@@ -36,7 +37,7 @@ export default async function runTask(): Promise<void> {
     const windowStartTime: DateTime = DateTime.fromISO(persistentCacheEntry
       ? persistentCacheEntry.value
       : defaultLastUpdateTime);
-    
+
     // Track how long ago the last update time (windowStartTime) in persistent cache was
     stats.gauge(
       `${config.SERVICE_NAME}.persistent_cache_${PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME}_lag_seconds`,

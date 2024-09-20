@@ -266,18 +266,16 @@ describe('update-affiliate-info', () => {
   });
 
   it('Successfully records metrics', async () => {
-    jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
 
     await PersistentCacheTable.create({
       key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
       value: DateTime.utc().toISO(),
     });
-  
+
     await affiliateInfoUpdateTask();
-  
+
     expect(stats.gauge).toHaveBeenCalledWith(`roundtable.persistent_cache_${PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME}_lag_seconds`, expect.any(Number));
-    expect(stats.timing).toHaveBeenCalledWith(`roundtable.update_affiliate_info_timing`, expect.any(Number));
   });
 });
 

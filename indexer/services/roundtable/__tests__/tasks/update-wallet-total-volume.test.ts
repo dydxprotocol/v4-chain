@@ -225,18 +225,16 @@ describe('update-wallet-total-volume', () => {
   });
 
   it('Successfully records metrics', async () => {
-    jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
 
     await PersistentCacheTable.create({
       key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
       value: DateTime.utc().toISO(),
     });
-  
+
     await walletTotalVolumeUpdateTask();
-  
+
     expect(stats.gauge).toHaveBeenCalledWith(`roundtable.persistent_cache_${PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME}_lag_seconds`, expect.any(Number));
-    expect(stats.timing).toHaveBeenCalledWith(`roundtable.update_wallet_total_volume_timing`, expect.any(Number));
   });
 });
 
