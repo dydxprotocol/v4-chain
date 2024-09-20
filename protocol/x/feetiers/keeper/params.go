@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"math"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -30,16 +28,9 @@ func (k Keeper) SetPerpetualFeeParams(
 		return err
 	}
 
-	lowestMakerFee := int32(math.MaxInt32)
-	lowestTakerFee := int32(math.MaxInt32)
-	for _, tier := range params.Tiers {
-		if tier.MakerFeePpm < lowestMakerFee {
-			lowestMakerFee = tier.MakerFeePpm
-		}
-		if tier.TakerFeePpm < lowestTakerFee {
-			lowestTakerFee = tier.TakerFeePpm
-		}
-	}
+	lowestMakerFee := GetLowestMakerFeeFromTiers(params.Tiers)
+	lowestTakerFee := GetAffiliateRefereeLowestTakerFeeFromTiers(params.Tiers)
+
 	affiliateTiers, err := k.affiliatesKeeper.GetAllAffiliateTiers(ctx)
 	if err != nil {
 		return err

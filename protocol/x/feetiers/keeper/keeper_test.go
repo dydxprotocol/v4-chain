@@ -7,6 +7,7 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
+	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -368,6 +369,9 @@ func TestGetAffiliateRefereeLowestTakerFee(t *testing.T) {
 				tc.feeTiers,
 			)
 			require.NoError(t, err)
+
+			feeTiers := k.GetPerpetualFeeParams(ctx).Tiers
+			require.Equal(t, tc.expectedLowestTakerFee, feetierskeeper.GetAffiliateRefereeLowestTakerFeeFromTiers(feeTiers))
 		})
 	}
 }

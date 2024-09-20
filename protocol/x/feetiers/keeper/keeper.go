@@ -124,21 +124,33 @@ func (k Keeper) GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool
 func (k Keeper) GetLowestMakerFee(ctx sdk.Context) int32 {
 	feeParams := k.GetPerpetualFeeParams(ctx)
 
+	return GetLowestMakerFeeFromTiers(feeParams.Tiers)
+}
+
+func (k Keeper) GetAffiliateRefereeLowestTakerFee(ctx sdk.Context) int32 {
+	feeParams := k.GetPerpetualFeeParams(ctx)
+
+	return GetAffiliateRefereeLowestTakerFeeFromTiers(feeParams.Tiers)
+}
+
+func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
+	k.revShareKeeper = revShareKeeper
+}
+
+func GetLowestMakerFeeFromTiers(tiers []*types.PerpetualFeeTier) int32 {
 	lowestMakerFee := int32(math.MaxInt32)
-	for _, tier := range feeParams.Tiers {
+	for _, tier := range tiers {
 		if tier.MakerFeePpm < lowestMakerFee {
 			lowestMakerFee = tier.MakerFeePpm
 		}
 	}
-
 	return lowestMakerFee
 }
 
-// GetAffiliateRefxereeLowestTakerFee returns the lowest taker fee
+// GetAffiliateRefereeLowestTakerFeeFromTiers returns the lowest taker fee
 // for volume under Max30dRefereeVolumeQuantums.
-func (k Keeper) GetAffiliateRefereeLowestTakerFee(ctx sdk.Context) int32 {
-	feeParams := k.GetPerpetualFeeParams(ctx)
-	for _, tier := range feeParams.Tiers {
+func GetAffiliateRefereeLowestTakerFeeFromTiers(tiers []*types.PerpetualFeeTier) int32 {
+	for _, tier := range tiers {
 		// assumes tiers are ordered by absolute volume requirement
 		if tier.AbsoluteVolumeRequirement < revsharetypes.Max30dRefereeVolumeQuantums {
 			return tier.TakerFeePpm
@@ -147,9 +159,5 @@ func (k Keeper) GetAffiliateRefereeLowestTakerFee(ctx sdk.Context) int32 {
 		}
 	}
 
-	return feeParams.Tiers[types.RefereeStartingFeeTier].TakerFeePpm
-}
-
-func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
-	k.revShareKeeper = revShareKeeper
+	return tiers[types.RefereeStartingFeeTier].TakerFeePpm
 }
