@@ -127,6 +127,105 @@ func (m *MsgDepositToMegavaultResponse) GetMintedShares() NumShares {
 	return NumShares{}
 }
 
+// MsgWithdrawFromMegavault withdraws the specified shares from megavault to
+// a subaccount.
+type MsgWithdrawFromMegavault struct {
+	// The subaccount to withdraw to.
+	SubaccountId types.SubaccountId `protobuf:"bytes,1,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id"`
+	// Number of shares to withdraw.
+	Shares NumShares `protobuf:"bytes,2,opt,name=shares,proto3" json:"shares"`
+	// The minimum number of quote quantums above shares should redeem, i.e.
+	// transaction fails if above shares redeem less than min_quote_quantums.
+	MinQuoteQuantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=min_quote_quantums,json=minQuoteQuantums,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"min_quote_quantums"`
+}
+
+func (m *MsgWithdrawFromMegavault) Reset()         { *m = MsgWithdrawFromMegavault{} }
+func (m *MsgWithdrawFromMegavault) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawFromMegavault) ProtoMessage()    {}
+func (*MsgWithdrawFromMegavault) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ced574c6017ce006, []int{2}
+}
+func (m *MsgWithdrawFromMegavault) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawFromMegavault) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawFromMegavault.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawFromMegavault) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawFromMegavault.Merge(m, src)
+}
+func (m *MsgWithdrawFromMegavault) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawFromMegavault) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawFromMegavault.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawFromMegavault proto.InternalMessageInfo
+
+func (m *MsgWithdrawFromMegavault) GetSubaccountId() types.SubaccountId {
+	if m != nil {
+		return m.SubaccountId
+	}
+	return types.SubaccountId{}
+}
+
+func (m *MsgWithdrawFromMegavault) GetShares() NumShares {
+	if m != nil {
+		return m.Shares
+	}
+	return NumShares{}
+}
+
+// MsgWithdrawFromMegavaultResponse is the Msg/WithdrawFromMegavault response
+// type.
+type MsgWithdrawFromMegavaultResponse struct {
+	// The number of quote quantums redeemed from the withdrawal.
+	QuoteQuantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,1,opt,name=quote_quantums,json=quoteQuantums,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"quote_quantums"`
+}
+
+func (m *MsgWithdrawFromMegavaultResponse) Reset()         { *m = MsgWithdrawFromMegavaultResponse{} }
+func (m *MsgWithdrawFromMegavaultResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawFromMegavaultResponse) ProtoMessage()    {}
+func (*MsgWithdrawFromMegavaultResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ced574c6017ce006, []int{3}
+}
+func (m *MsgWithdrawFromMegavaultResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawFromMegavaultResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawFromMegavaultResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawFromMegavaultResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawFromMegavaultResponse.Merge(m, src)
+}
+func (m *MsgWithdrawFromMegavaultResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawFromMegavaultResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawFromMegavaultResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawFromMegavaultResponse proto.InternalMessageInfo
+
 // MsgUpdateDefaultQuotingParams is the Msg/UpdateDefaultQuotingParams request
 // type.
 type MsgUpdateDefaultQuotingParams struct {
@@ -139,7 +238,7 @@ func (m *MsgUpdateDefaultQuotingParams) Reset()         { *m = MsgUpdateDefaultQ
 func (m *MsgUpdateDefaultQuotingParams) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateDefaultQuotingParams) ProtoMessage()    {}
 func (*MsgUpdateDefaultQuotingParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{2}
+	return fileDescriptor_ced574c6017ce006, []int{4}
 }
 func (m *MsgUpdateDefaultQuotingParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -191,7 +290,7 @@ func (m *MsgUpdateDefaultQuotingParamsResponse) Reset()         { *m = MsgUpdate
 func (m *MsgUpdateDefaultQuotingParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateDefaultQuotingParamsResponse) ProtoMessage()    {}
 func (*MsgUpdateDefaultQuotingParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{3}
+	return fileDescriptor_ced574c6017ce006, []int{5}
 }
 func (m *MsgUpdateDefaultQuotingParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -233,7 +332,7 @@ func (m *MsgSetVaultParams) Reset()         { *m = MsgSetVaultParams{} }
 func (m *MsgSetVaultParams) String() string { return proto.CompactTextString(m) }
 func (*MsgSetVaultParams) ProtoMessage()    {}
 func (*MsgSetVaultParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{4}
+	return fileDescriptor_ced574c6017ce006, []int{6}
 }
 func (m *MsgSetVaultParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -291,7 +390,7 @@ func (m *MsgSetVaultParamsResponse) Reset()         { *m = MsgSetVaultParamsResp
 func (m *MsgSetVaultParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSetVaultParamsResponse) ProtoMessage()    {}
 func (*MsgSetVaultParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{5}
+	return fileDescriptor_ced574c6017ce006, []int{7}
 }
 func (m *MsgSetVaultParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -331,7 +430,7 @@ func (m *MsgUnlockShares) Reset()         { *m = MsgUnlockShares{} }
 func (m *MsgUnlockShares) String() string { return proto.CompactTextString(m) }
 func (*MsgUnlockShares) ProtoMessage()    {}
 func (*MsgUnlockShares) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{6}
+	return fileDescriptor_ced574c6017ce006, []int{8}
 }
 func (m *MsgUnlockShares) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -384,7 +483,7 @@ func (m *MsgUnlockSharesResponse) Reset()         { *m = MsgUnlockSharesResponse
 func (m *MsgUnlockSharesResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUnlockSharesResponse) ProtoMessage()    {}
 func (*MsgUnlockSharesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{7}
+	return fileDescriptor_ced574c6017ce006, []int{9}
 }
 func (m *MsgUnlockSharesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -434,7 +533,7 @@ func (m *MsgUpdateParams) Reset()         { *m = MsgUpdateParams{} }
 func (m *MsgUpdateParams) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateParams) ProtoMessage()    {}
 func (*MsgUpdateParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{8}
+	return fileDescriptor_ced574c6017ce006, []int{10}
 }
 func (m *MsgUpdateParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -488,7 +587,7 @@ func (m *MsgUpdateOperatorParams) Reset()         { *m = MsgUpdateOperatorParams
 func (m *MsgUpdateOperatorParams) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateOperatorParams) ProtoMessage()    {}
 func (*MsgUpdateOperatorParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{9}
+	return fileDescriptor_ced574c6017ce006, []int{11}
 }
 func (m *MsgUpdateOperatorParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -539,7 +638,7 @@ func (m *MsgUpdateOperatorParamsResponse) Reset()         { *m = MsgUpdateOperat
 func (m *MsgUpdateOperatorParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateOperatorParamsResponse) ProtoMessage()    {}
 func (*MsgUpdateOperatorParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{10}
+	return fileDescriptor_ced574c6017ce006, []int{12}
 }
 func (m *MsgUpdateOperatorParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -581,7 +680,7 @@ func (m *MsgAllocateToVault) Reset()         { *m = MsgAllocateToVault{} }
 func (m *MsgAllocateToVault) String() string { return proto.CompactTextString(m) }
 func (*MsgAllocateToVault) ProtoMessage()    {}
 func (*MsgAllocateToVault) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{11}
+	return fileDescriptor_ced574c6017ce006, []int{13}
 }
 func (m *MsgAllocateToVault) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -632,7 +731,7 @@ func (m *MsgAllocateToVaultResponse) Reset()         { *m = MsgAllocateToVaultRe
 func (m *MsgAllocateToVaultResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAllocateToVaultResponse) ProtoMessage()    {}
 func (*MsgAllocateToVaultResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ced574c6017ce006, []int{12}
+	return fileDescriptor_ced574c6017ce006, []int{14}
 }
 func (m *MsgAllocateToVaultResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -661,9 +760,104 @@ func (m *MsgAllocateToVaultResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAllocateToVaultResponse proto.InternalMessageInfo
 
+// MsgRetrieveFromVault is the Msg/RetrieveFromVault request type.
+type MsgRetrieveFromVault struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// The vault to retrieve from.
+	VaultId VaultId `protobuf:"bytes,2,opt,name=vault_id,json=vaultId,proto3" json:"vault_id"`
+	// Number of quote quantums to retrieve.
+	QuoteQuantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=quote_quantums,json=quoteQuantums,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"quote_quantums"`
+}
+
+func (m *MsgRetrieveFromVault) Reset()         { *m = MsgRetrieveFromVault{} }
+func (m *MsgRetrieveFromVault) String() string { return proto.CompactTextString(m) }
+func (*MsgRetrieveFromVault) ProtoMessage()    {}
+func (*MsgRetrieveFromVault) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ced574c6017ce006, []int{15}
+}
+func (m *MsgRetrieveFromVault) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRetrieveFromVault) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRetrieveFromVault.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRetrieveFromVault) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRetrieveFromVault.Merge(m, src)
+}
+func (m *MsgRetrieveFromVault) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRetrieveFromVault) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRetrieveFromVault.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRetrieveFromVault proto.InternalMessageInfo
+
+func (m *MsgRetrieveFromVault) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgRetrieveFromVault) GetVaultId() VaultId {
+	if m != nil {
+		return m.VaultId
+	}
+	return VaultId{}
+}
+
+// MsgRetrieveFromVaultResponse is the Msg/RetrieveFromVault response type.
+type MsgRetrieveFromVaultResponse struct {
+}
+
+func (m *MsgRetrieveFromVaultResponse) Reset()         { *m = MsgRetrieveFromVaultResponse{} }
+func (m *MsgRetrieveFromVaultResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRetrieveFromVaultResponse) ProtoMessage()    {}
+func (*MsgRetrieveFromVaultResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ced574c6017ce006, []int{16}
+}
+func (m *MsgRetrieveFromVaultResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRetrieveFromVaultResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRetrieveFromVaultResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRetrieveFromVaultResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRetrieveFromVaultResponse.Merge(m, src)
+}
+func (m *MsgRetrieveFromVaultResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRetrieveFromVaultResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRetrieveFromVaultResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRetrieveFromVaultResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgDepositToMegavault)(nil), "dydxprotocol.vault.MsgDepositToMegavault")
 	proto.RegisterType((*MsgDepositToMegavaultResponse)(nil), "dydxprotocol.vault.MsgDepositToMegavaultResponse")
+	proto.RegisterType((*MsgWithdrawFromMegavault)(nil), "dydxprotocol.vault.MsgWithdrawFromMegavault")
+	proto.RegisterType((*MsgWithdrawFromMegavaultResponse)(nil), "dydxprotocol.vault.MsgWithdrawFromMegavaultResponse")
 	proto.RegisterType((*MsgUpdateDefaultQuotingParams)(nil), "dydxprotocol.vault.MsgUpdateDefaultQuotingParams")
 	proto.RegisterType((*MsgUpdateDefaultQuotingParamsResponse)(nil), "dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse")
 	proto.RegisterType((*MsgSetVaultParams)(nil), "dydxprotocol.vault.MsgSetVaultParams")
@@ -675,65 +869,75 @@ func init() {
 	proto.RegisterType((*MsgUpdateOperatorParamsResponse)(nil), "dydxprotocol.vault.MsgUpdateOperatorParamsResponse")
 	proto.RegisterType((*MsgAllocateToVault)(nil), "dydxprotocol.vault.MsgAllocateToVault")
 	proto.RegisterType((*MsgAllocateToVaultResponse)(nil), "dydxprotocol.vault.MsgAllocateToVaultResponse")
+	proto.RegisterType((*MsgRetrieveFromVault)(nil), "dydxprotocol.vault.MsgRetrieveFromVault")
+	proto.RegisterType((*MsgRetrieveFromVaultResponse)(nil), "dydxprotocol.vault.MsgRetrieveFromVaultResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/vault/tx.proto", fileDescriptor_ced574c6017ce006) }
 
 var fileDescriptor_ced574c6017ce006 = []byte{
-	// 834 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0x4f, 0x4f, 0x13, 0x4d,
-	0x18, 0xef, 0xc2, 0xfb, 0xf2, 0xbe, 0x0c, 0x6d, 0xd1, 0x4d, 0x95, 0xb2, 0x48, 0x0b, 0x25, 0x20,
-	0x48, 0xd8, 0x06, 0x30, 0xfe, 0x21, 0x1e, 0xa0, 0xe1, 0x00, 0xd1, 0xaa, 0xb4, 0xe8, 0xc1, 0xc4,
-	0xd4, 0xe9, 0xee, 0xb0, 0xdd, 0xd8, 0xee, 0x94, 0x9d, 0xd9, 0x5a, 0x3c, 0x78, 0xf0, 0xa8, 0x17,
-	0x2f, 0x7e, 0x02, 0xbf, 0x80, 0x07, 0xfd, 0x0a, 0x86, 0x23, 0xf1, 0x64, 0x3c, 0x10, 0x43, 0x0f,
-	0xc6, 0x6f, 0x61, 0x76, 0x66, 0xbb, 0xed, 0x6e, 0xb7, 0x4d, 0x81, 0x18, 0x2f, 0xb0, 0xfb, 0xcc,
-	0xef, 0x79, 0x9e, 0xdf, 0xef, 0x37, 0xcf, 0xcc, 0x16, 0x4c, 0xa8, 0x07, 0x6a, 0xbd, 0x6a, 0x62,
-	0x8a, 0x15, 0x5c, 0x4e, 0xd7, 0xa0, 0x55, 0xa6, 0x69, 0x5a, 0x97, 0x59, 0x44, 0x14, 0xdb, 0x17,
-	0x65, 0xb6, 0x28, 0x8d, 0x2b, 0x98, 0x54, 0x30, 0x29, 0xb0, 0x70, 0x9a, 0xbf, 0x70, 0xb8, 0x34,
-	0xc6, 0xdf, 0xd2, 0x15, 0xa2, 0xa5, 0x6b, 0xcb, 0xf6, 0x3f, 0x67, 0x61, 0xc1, 0xd3, 0x84, 0x58,
-	0x45, 0xa8, 0x28, 0xd8, 0x32, 0x28, 0x69, 0x7b, 0x76, 0xa0, 0xc9, 0x00, 0x3e, 0x55, 0x68, 0xc2,
-	0x4a, 0xb3, 0x49, 0x22, 0x00, 0x40, 0x4a, 0xd0, 0x44, 0x3d, 0xd6, 0xd9, 0x5f, 0x67, 0x3d, 0xa6,
-	0x61, 0x0d, 0x73, 0xf2, 0xf6, 0x13, 0x8f, 0xa6, 0x7e, 0x09, 0xe0, 0x52, 0x96, 0x68, 0x9b, 0xa8,
-	0x8a, 0x89, 0x4e, 0x77, 0x71, 0x16, 0x69, 0x90, 0x65, 0x89, 0x77, 0x41, 0xa4, 0x45, 0xb2, 0xa0,
-	0xab, 0x71, 0x61, 0x4a, 0x98, 0x1f, 0x59, 0x99, 0x93, 0x3d, 0xde, 0xb4, 0x69, 0x92, 0xf3, 0xee,
-	0xf3, 0xb6, 0x9a, 0x0b, 0x93, 0xb6, 0x37, 0x11, 0x83, 0xe8, 0xbe, 0x85, 0x29, 0x2a, 0xec, 0x5b,
-	0xd0, 0xa0, 0x56, 0x85, 0xc4, 0x07, 0xa6, 0x84, 0xf9, 0x70, 0x66, 0xeb, 0xf0, 0x38, 0x19, 0xfa,
-	0x7e, 0x9c, 0x5c, 0xd7, 0x74, 0x5a, 0xb2, 0x8a, 0xb2, 0x82, 0x2b, 0x69, 0xaf, 0x8e, 0xeb, 0x4b,
-	0x4a, 0x09, 0xea, 0x46, 0xda, 0x8d, 0xa8, 0xf4, 0xa0, 0x8a, 0x88, 0x9c, 0x47, 0xa6, 0x0e, 0xcb,
-	0xfa, 0x4b, 0x58, 0x2c, 0xa3, 0x6d, 0x83, 0xe6, 0x22, 0xac, 0xfe, 0x8e, 0x53, 0x7e, 0x4d, 0x7c,
-	0xfd, 0xf3, 0xe3, 0x35, 0xaf, 0x80, 0x94, 0x0e, 0x26, 0x03, 0xa5, 0xe6, 0x10, 0xa9, 0x62, 0x83,
-	0x20, 0x71, 0x0b, 0x44, 0x2a, 0xba, 0x41, 0x91, 0x5a, 0x60, 0xc6, 0x12, 0x47, 0xf2, 0xa4, 0xdc,
-	0x39, 0x0e, 0xf2, 0x7d, 0xab, 0x92, 0x67, 0xa0, 0xcc, 0x3f, 0xb6, 0x86, 0x5c, 0x98, 0x67, 0xf2,
-	0x58, 0xea, 0x8b, 0xc0, 0x7a, 0x3d, 0xaa, 0xaa, 0x90, 0xa2, 0x4d, 0xb4, 0x67, 0xa7, 0xec, 0x58,
-	0x98, 0xea, 0x86, 0xf6, 0x90, 0x6d, 0xaa, 0x78, 0x03, 0x0c, 0x43, 0x8b, 0x96, 0xb0, 0xa9, 0xd3,
-	0x03, 0xd6, 0x67, 0x38, 0x13, 0xff, 0xfa, 0x69, 0x29, 0xe6, 0x0c, 0xd6, 0x86, 0xaa, 0x9a, 0x88,
-	0x90, 0x3c, 0x35, 0x75, 0x43, 0xcb, 0xb5, 0xa0, 0xe2, 0x53, 0x70, 0x59, 0xe5, 0xf5, 0x0a, 0xfb,
-	0xbc, 0x60, 0x81, 0x8f, 0x09, 0x73, 0x74, 0x64, 0x65, 0x3a, 0x88, 0xac, 0xa7, 0xb5, 0x43, 0x38,
-	0xa6, 0x06, 0xd0, 0x5a, 0x8b, 0xda, 0xbe, 0xb5, 0xda, 0xa5, 0xae, 0x82, 0xd9, 0x9e, 0x3a, 0x9a,
-	0xde, 0xa5, 0x1a, 0x02, 0xb8, 0x98, 0x25, 0x5a, 0x1e, 0xd1, 0xc7, 0x36, 0xe8, 0x9c, 0x2a, 0xef,
-	0x80, 0xff, 0x19, 0x73, 0x7b, 0xee, 0xb8, 0xae, 0x89, 0x20, 0x5d, 0xac, 0xd5, 0xb6, 0xea, 0x28,
-	0xfa, 0xaf, 0xc6, 0x5f, 0xc5, 0x2d, 0x10, 0xe6, 0xd9, 0x8e, 0x33, 0x83, 0xac, 0x42, 0xb2, 0x6b,
-	0x05, 0x8f, 0x2f, 0x23, 0xb5, 0x56, 0xa8, 0xc3, 0x8e, 0x09, 0x30, 0xde, 0x21, 0xd2, 0xb5, 0xe0,
-	0x15, 0x18, 0xb5, 0xbd, 0x32, 0xca, 0x58, 0x79, 0xce, 0xe7, 0xe0, 0xcc, 0xfa, 0x67, 0x40, 0x04,
-	0xbf, 0x30, 0x90, 0x59, 0x80, 0x1c, 0xc1, 0x4c, 0x18, 0xce, 0x85, 0x59, 0xd0, 0xc9, 0xea, 0x20,
-	0xa7, 0x81, 0x31, 0x5f, 0x7f, 0x77, 0xb2, 0xef, 0x81, 0x51, 0x8b, 0xc5, 0xcf, 0x34, 0xdb, 0xd1,
-	0x66, 0xae, 0x33, 0xdd, 0xef, 0x05, 0xae, 0x94, 0x4d, 0xc5, 0x39, 0x77, 0xfa, 0x16, 0x18, 0xf2,
-	0xcc, 0xaf, 0x14, 0x44, 0xc8, 0xb3, 0x41, 0x0e, 0x7e, 0xed, 0x82, 0x57, 0x7e, 0x5c, 0x48, 0x7d,
-	0x10, 0xb8, 0x03, 0x8c, 0xd7, 0x83, 0x2a, 0x32, 0x21, 0xc5, 0xe6, 0x39, 0xf9, 0xad, 0xfb, 0xf8,
-	0xa5, 0x82, 0xf8, 0x79, 0x7b, 0xf9, 0x78, 0xfa, 0xb7, 0x69, 0x1a, 0x24, 0xbb, 0x90, 0x74, 0x27,
-	0xe9, 0xed, 0x00, 0x10, 0xb3, 0x44, 0xdb, 0x28, 0x97, 0xb1, 0x02, 0x29, 0xda, 0xc5, 0x6c, 0xdc,
-	0xfe, 0xd2, 0x69, 0xea, 0xbc, 0xbb, 0x07, 0xff, 0xec, 0xdd, 0xed, 0x37, 0xec, 0x0a, 0x90, 0x3a,
-	0xcd, 0x68, 0x7a, 0xb5, 0xf2, 0xf9, 0x5f, 0x30, 0x98, 0x25, 0x9a, 0x68, 0x02, 0x31, 0xe0, 0x2b,
-	0xb6, 0x10, 0x24, 0x34, 0xf0, 0x2b, 0x20, 0x2d, 0xf7, 0x0d, 0x75, 0x8f, 0xd5, 0x1b, 0x01, 0x48,
-	0x3d, 0xee, 0xf8, 0x6e, 0x15, 0xbb, 0xa7, 0x48, 0xb7, 0x4f, 0x9d, 0xe2, 0x92, 0xa9, 0x83, 0x58,
-	0xe0, 0xe4, 0x2f, 0xf6, 0x2c, 0xe9, 0x05, 0x4b, 0xab, 0xa7, 0x00, 0xbb, 0x9d, 0xf7, 0x40, 0xd4,
-	0x77, 0xef, 0xcf, 0x76, 0x29, 0xe3, 0x85, 0x49, 0x4b, 0x7d, 0xc1, 0xdc, 0x3e, 0xcf, 0x40, 0xd8,
-	0x73, 0xbb, 0xce, 0x74, 0x23, 0xdb, 0x06, 0x92, 0x16, 0xfb, 0x00, 0xb9, 0x1d, 0x74, 0x30, 0xea,
-	0x3f, 0x74, 0x73, 0x5d, 0xf2, 0x7d, 0x38, 0x49, 0xee, 0x0f, 0xd7, 0x6c, 0x95, 0xd9, 0x39, 0x3c,
-	0x49, 0x08, 0x47, 0x27, 0x09, 0xe1, 0xc7, 0x49, 0x42, 0x78, 0xd7, 0x48, 0x84, 0x8e, 0x1a, 0x89,
-	0xd0, 0xb7, 0x46, 0x22, 0xf4, 0xe4, 0x66, 0xff, 0x07, 0xaa, 0xde, 0xfc, 0xe5, 0x6a, 0x9f, 0xab,
-	0xe2, 0x10, 0x8b, 0xaf, 0xfe, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x36, 0x56, 0xc3, 0xbf, 0xdc, 0x0a,
-	0x00, 0x00,
+	// 971 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x57, 0x4f, 0x6f, 0x1b, 0x45,
+	0x14, 0xcf, 0x3a, 0x28, 0x25, 0xaf, 0x4e, 0xd2, 0xae, 0x5c, 0xea, 0x6e, 0xda, 0x75, 0xba, 0x55,
+	0x4b, 0x4a, 0xc9, 0x9a, 0xfe, 0x11, 0x7f, 0x02, 0x87, 0x36, 0xaa, 0x50, 0x2a, 0x30, 0x10, 0xbb,
+	0x80, 0x84, 0x84, 0xcc, 0x64, 0x77, 0xba, 0x1e, 0xe1, 0xdd, 0x71, 0x77, 0x66, 0xdd, 0x04, 0x24,
+	0x0e, 0x1c, 0x41, 0x48, 0x48, 0x88, 0x4f, 0xd0, 0x2f, 0xc0, 0x01, 0xf1, 0x11, 0x50, 0x8f, 0x15,
+	0x27, 0xc4, 0xa1, 0x42, 0xf1, 0x01, 0xf1, 0x2d, 0xd0, 0xce, 0xac, 0xd7, 0xde, 0x7f, 0xc6, 0xa9,
+	0x89, 0x38, 0xf4, 0x92, 0xec, 0xce, 0xfc, 0xde, 0x7b, 0xbf, 0xf7, 0x7b, 0x6f, 0xde, 0xac, 0x61,
+	0xd5, 0xde, 0xb7, 0xf7, 0x7a, 0x3e, 0xe5, 0xd4, 0xa2, 0xdd, 0x7a, 0x1f, 0x05, 0x5d, 0x5e, 0xe7,
+	0x7b, 0xa6, 0x58, 0x51, 0xd5, 0xf1, 0x4d, 0x53, 0x6c, 0x6a, 0x67, 0x2c, 0xca, 0x5c, 0xca, 0xda,
+	0x62, 0xb9, 0x2e, 0x5f, 0x24, 0x5c, 0x3b, 0x2d, 0xdf, 0xea, 0x2e, 0x73, 0xea, 0xfd, 0xab, 0xe1,
+	0xbf, 0x68, 0xe3, 0x72, 0x22, 0x08, 0x0b, 0x76, 0x91, 0x65, 0xd1, 0xc0, 0xe3, 0x6c, 0xec, 0x39,
+	0x82, 0xd6, 0x72, 0xf8, 0xf4, 0x90, 0x8f, 0xdc, 0x61, 0x10, 0x3d, 0x07, 0xc0, 0x3a, 0xc8, 0xc7,
+	0x13, 0xf6, 0xc5, 0xdf, 0x68, 0xbf, 0xe2, 0x50, 0x87, 0x4a, 0xf2, 0xe1, 0x93, 0x5c, 0x35, 0xfe,
+	0x56, 0xe0, 0x54, 0x83, 0x39, 0xb7, 0x71, 0x8f, 0x32, 0xc2, 0xef, 0xd2, 0x06, 0x76, 0x90, 0xb0,
+	0x52, 0xdf, 0x81, 0xa5, 0x11, 0xc9, 0x36, 0xb1, 0xab, 0xca, 0x9a, 0xb2, 0x7e, 0xfc, 0xda, 0x25,
+	0x33, 0xa1, 0xcd, 0x58, 0x4e, 0x66, 0x2b, 0x7e, 0xbe, 0x63, 0x37, 0xcb, 0x6c, 0xec, 0x4d, 0xa5,
+	0xb0, 0x7c, 0x3f, 0xa0, 0x1c, 0xb7, 0xef, 0x07, 0xc8, 0xe3, 0x81, 0xcb, 0xaa, 0xa5, 0x35, 0x65,
+	0xbd, 0xbc, 0xb5, 0xfd, 0xe8, 0x49, 0x6d, 0xee, 0x8f, 0x27, 0xb5, 0x9b, 0x0e, 0xe1, 0x9d, 0x60,
+	0xd7, 0xb4, 0xa8, 0x5b, 0x4f, 0xe6, 0x71, 0x63, 0xc3, 0xea, 0x20, 0xe2, 0xd5, 0xe3, 0x15, 0x9b,
+	0xef, 0xf7, 0x30, 0x33, 0x5b, 0xd8, 0x27, 0xa8, 0x4b, 0xbe, 0x40, 0xbb, 0x5d, 0x7c, 0xc7, 0xe3,
+	0xcd, 0x25, 0xe1, 0x7f, 0x27, 0x72, 0xbf, 0xa9, 0x7e, 0xfd, 0xd7, 0x4f, 0x2f, 0x25, 0x13, 0x30,
+	0x08, 0x9c, 0xcb, 0x4d, 0xb5, 0x89, 0x59, 0x8f, 0x7a, 0x0c, 0xab, 0xdb, 0xb0, 0xe4, 0x12, 0x8f,
+	0x63, 0xbb, 0x2d, 0x84, 0x65, 0x51, 0xca, 0xe7, 0xcc, 0x6c, 0x3b, 0x98, 0xef, 0x05, 0x6e, 0x4b,
+	0x80, 0xb6, 0x9e, 0x0b, 0x73, 0x68, 0x96, 0xa5, 0xa5, 0x5c, 0x33, 0x7e, 0x29, 0x41, 0xb5, 0xc1,
+	0x9c, 0x8f, 0x09, 0xef, 0xd8, 0x3e, 0x7a, 0xf0, 0xb6, 0x4f, 0xdd, 0x91, 0xb2, 0x3b, 0x33, 0x29,
+	0x3b, 0x8c, 0x97, 0xd0, 0xf7, 0x4d, 0x58, 0x88, 0x28, 0x97, 0xa6, 0xa7, 0x1c, 0x99, 0xa8, 0x7d,
+	0x50, 0x5d, 0xe2, 0xb5, 0x53, 0x05, 0x9a, 0xff, 0x8f, 0x0b, 0x74, 0xc2, 0x25, 0xde, 0xce, 0xbf,
+	0xd6, 0xe8, 0x07, 0x05, 0xd6, 0x8a, 0x84, 0x8b, 0xeb, 0x94, 0xed, 0x26, 0xe5, 0x48, 0xbb, 0xc9,
+	0xf8, 0x55, 0x11, 0xad, 0xf3, 0x61, 0xcf, 0x46, 0x1c, 0xdf, 0xc6, 0xf7, 0x42, 0x36, 0x61, 0x2e,
+	0xc4, 0x73, 0x3e, 0x10, 0x67, 0x54, 0x7d, 0x15, 0x16, 0x51, 0xc0, 0x3b, 0xd4, 0x27, 0x7c, 0x5f,
+	0xb0, 0x59, 0xdc, 0xaa, 0xfe, 0xf6, 0xf3, 0x46, 0x25, 0x9a, 0x13, 0xb7, 0x6c, 0xdb, 0xc7, 0x8c,
+	0xb5, 0xb8, 0x4f, 0x3c, 0xa7, 0x39, 0x82, 0xaa, 0x9f, 0xc2, 0x0b, 0xb6, 0xf4, 0x27, 0xf4, 0x27,
+	0x9e, 0xd3, 0x96, 0xa7, 0x3e, 0x2a, 0xe4, 0xf9, 0xbc, 0x42, 0x26, 0x42, 0x47, 0xc5, 0xac, 0xd8,
+	0x39, 0xb4, 0x36, 0x97, 0x43, 0x89, 0x47, 0xe1, 0x8c, 0x17, 0xe1, 0xe2, 0xc4, 0x3c, 0x86, 0x12,
+	0x1b, 0x03, 0x05, 0x4e, 0x36, 0x98, 0xd3, 0xc2, 0xfc, 0xa3, 0x10, 0x34, 0x63, 0x96, 0x6f, 0xc1,
+	0xf3, 0x82, 0x79, 0xd8, 0xec, 0x32, 0xaf, 0xd5, 0xbc, 0xbc, 0x44, 0xa8, 0xb8, 0xc3, 0x8f, 0xf5,
+	0xe5, 0xab, 0xba, 0x0d, 0x65, 0x69, 0x1d, 0x29, 0x33, 0x2f, 0x3c, 0xd4, 0x0a, 0x3d, 0x24, 0x74,
+	0x39, 0xde, 0x1f, 0x2d, 0x65, 0xe4, 0x58, 0x85, 0x33, 0x99, 0x24, 0x63, 0x09, 0xbe, 0x82, 0x95,
+	0x50, 0x2b, 0xaf, 0x4b, 0xad, 0xcf, 0xe5, 0xb9, 0x79, 0xea, 0xfc, 0x2f, 0xc0, 0x12, 0x7d, 0xe0,
+	0x61, 0xbf, 0x8d, 0x24, 0x42, 0x88, 0xb0, 0xd8, 0x2c, 0x8b, 0xc5, 0xc8, 0x2a, 0x43, 0xce, 0x81,
+	0xd3, 0xa9, 0xf8, 0xf1, 0x01, 0x78, 0x17, 0x56, 0x02, 0xb1, 0xfe, 0x54, 0xa3, 0x6a, 0x79, 0x68,
+	0x1b, 0x0d, 0xab, 0x1f, 0x15, 0x99, 0xa9, 0xe8, 0x8a, 0x19, 0x2b, 0xfd, 0x3a, 0x2c, 0x24, 0xfa,
+	0x57, 0xcb, 0x23, 0x94, 0x28, 0x50, 0x84, 0xdf, 0x3c, 0x91, 0x4c, 0xbf, 0xaa, 0x18, 0x0f, 0x15,
+	0xa9, 0x80, 0xe0, 0xf5, 0x7e, 0x0f, 0xfb, 0x88, 0x53, 0x7f, 0x46, 0x7e, 0x37, 0x53, 0xfc, 0x8c,
+	0x3c, 0x7e, 0xc9, 0x58, 0x29, 0x9e, 0xe9, 0x32, 0x9d, 0x87, 0x5a, 0x01, 0xc9, 0xb8, 0x93, 0xbe,
+	0x2d, 0x81, 0xda, 0x60, 0xce, 0xad, 0x6e, 0x97, 0x5a, 0x88, 0xe3, 0xbb, 0x54, 0xb4, 0xdb, 0xff,
+	0x74, 0x9a, 0xb2, 0xc3, 0x73, 0xfe, 0x68, 0xaf, 0xe2, 0xb4, 0x60, 0x67, 0x41, 0xcb, 0x8a, 0x11,
+	0x6b, 0xf5, 0x5d, 0x09, 0x2a, 0x0d, 0xe6, 0x34, 0x31, 0xf7, 0x09, 0xee, 0xe3, 0xf0, 0x02, 0x78,
+	0xa6, 0xd5, 0xd2, 0xe1, 0x6c, 0x9e, 0x1c, 0x43, 0xbd, 0xae, 0x3d, 0x3c, 0x06, 0xf3, 0x0d, 0xe6,
+	0xa8, 0x3e, 0xa8, 0x39, 0x1f, 0x71, 0x97, 0xf3, 0x52, 0xcd, 0xfd, 0x08, 0xd2, 0xae, 0x4e, 0x0d,
+	0x8d, 0xc7, 0xd0, 0x97, 0x70, 0x2a, 0xff, 0x0b, 0xe7, 0xe5, 0x02, 0x5f, 0xb9, 0x68, 0xed, 0xc6,
+	0x61, 0xd0, 0x71, 0xf0, 0x6f, 0x14, 0xd0, 0x26, 0x5c, 0xc8, 0x45, 0xe9, 0x14, 0x9b, 0x68, 0x6f,
+	0x1c, 0xda, 0x24, 0x26, 0xb3, 0x07, 0x95, 0xdc, 0x31, 0x75, 0x65, 0xa2, 0xcb, 0x24, 0x58, 0xbb,
+	0x7e, 0x08, 0x70, 0x1c, 0xf9, 0x1e, 0x2c, 0xa7, 0x2e, 0xe9, 0x8b, 0x05, 0x6e, 0x92, 0x30, 0x6d,
+	0x63, 0x2a, 0x58, 0x1c, 0xe7, 0x33, 0x28, 0x27, 0xae, 0xc2, 0x0b, 0x45, 0x64, 0xc7, 0x40, 0xda,
+	0x95, 0x29, 0x40, 0x71, 0x04, 0x02, 0x2b, 0xe9, 0x09, 0x79, 0xa9, 0xc0, 0x3e, 0x85, 0xd3, 0xcc,
+	0xe9, 0x70, 0x63, 0x1f, 0x90, 0x27, 0xb3, 0x03, 0x66, 0xbd, 0xc0, 0x49, 0x06, 0xa9, 0xbd, 0x32,
+	0x2d, 0x72, 0x18, 0x70, 0x6b, 0xe7, 0xd1, 0x81, 0xae, 0x3c, 0x3e, 0xd0, 0x95, 0x3f, 0x0f, 0x74,
+	0xe5, 0xfb, 0x81, 0x3e, 0xf7, 0x78, 0xa0, 0xcf, 0xfd, 0x3e, 0xd0, 0xe7, 0x3e, 0x79, 0x6d, 0xfa,
+	0x01, 0xb2, 0x37, 0xfc, 0x99, 0x1a, 0xce, 0x91, 0xdd, 0x05, 0xb1, 0x7e, 0xfd, 0x9f, 0x00, 0x00,
+	0x00, 0xff, 0xff, 0x2c, 0x21, 0xa9, 0x27, 0xc9, 0x0e, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -750,6 +954,8 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// DepositToMegavault deposits funds into megavault.
 	DepositToMegavault(ctx context.Context, in *MsgDepositToMegavault, opts ...grpc.CallOption) (*MsgDepositToMegavaultResponse, error)
+	// WithdrawFromMegavault withdraws shares from megavault.
+	WithdrawFromMegavault(ctx context.Context, in *MsgWithdrawFromMegavault, opts ...grpc.CallOption) (*MsgWithdrawFromMegavaultResponse, error)
 	// UpdateDefaultQuotingParams updates the default quoting params in state.
 	UpdateDefaultQuotingParams(ctx context.Context, in *MsgUpdateDefaultQuotingParams, opts ...grpc.CallOption) (*MsgUpdateDefaultQuotingParamsResponse, error)
 	// UpdateOperatorParams sets the parameters regarding megavault operator.
@@ -761,6 +967,8 @@ type MsgClient interface {
 	UnlockShares(ctx context.Context, in *MsgUnlockShares, opts ...grpc.CallOption) (*MsgUnlockSharesResponse, error)
 	// AllocateToVault allocates funds from main vault to a vault.
 	AllocateToVault(ctx context.Context, in *MsgAllocateToVault, opts ...grpc.CallOption) (*MsgAllocateToVaultResponse, error)
+	// RetrieveFromVault retrieves funds from a vault to main vault.
+	RetrieveFromVault(ctx context.Context, in *MsgRetrieveFromVault, opts ...grpc.CallOption) (*MsgRetrieveFromVaultResponse, error)
 }
 
 type msgClient struct {
@@ -774,6 +982,15 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 func (c *msgClient) DepositToMegavault(ctx context.Context, in *MsgDepositToMegavault, opts ...grpc.CallOption) (*MsgDepositToMegavaultResponse, error) {
 	out := new(MsgDepositToMegavaultResponse)
 	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Msg/DepositToMegavault", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawFromMegavault(ctx context.Context, in *MsgWithdrawFromMegavault, opts ...grpc.CallOption) (*MsgWithdrawFromMegavaultResponse, error) {
+	out := new(MsgWithdrawFromMegavaultResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Msg/WithdrawFromMegavault", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -825,10 +1042,21 @@ func (c *msgClient) AllocateToVault(ctx context.Context, in *MsgAllocateToVault,
 	return out, nil
 }
 
+func (c *msgClient) RetrieveFromVault(ctx context.Context, in *MsgRetrieveFromVault, opts ...grpc.CallOption) (*MsgRetrieveFromVaultResponse, error) {
+	out := new(MsgRetrieveFromVaultResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Msg/RetrieveFromVault", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// DepositToMegavault deposits funds into megavault.
 	DepositToMegavault(context.Context, *MsgDepositToMegavault) (*MsgDepositToMegavaultResponse, error)
+	// WithdrawFromMegavault withdraws shares from megavault.
+	WithdrawFromMegavault(context.Context, *MsgWithdrawFromMegavault) (*MsgWithdrawFromMegavaultResponse, error)
 	// UpdateDefaultQuotingParams updates the default quoting params in state.
 	UpdateDefaultQuotingParams(context.Context, *MsgUpdateDefaultQuotingParams) (*MsgUpdateDefaultQuotingParamsResponse, error)
 	// UpdateOperatorParams sets the parameters regarding megavault operator.
@@ -840,6 +1068,8 @@ type MsgServer interface {
 	UnlockShares(context.Context, *MsgUnlockShares) (*MsgUnlockSharesResponse, error)
 	// AllocateToVault allocates funds from main vault to a vault.
 	AllocateToVault(context.Context, *MsgAllocateToVault) (*MsgAllocateToVaultResponse, error)
+	// RetrieveFromVault retrieves funds from a vault to main vault.
+	RetrieveFromVault(context.Context, *MsgRetrieveFromVault) (*MsgRetrieveFromVaultResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -848,6 +1078,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) DepositToMegavault(ctx context.Context, req *MsgDepositToMegavault) (*MsgDepositToMegavaultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DepositToMegavault not implemented")
+}
+func (*UnimplementedMsgServer) WithdrawFromMegavault(ctx context.Context, req *MsgWithdrawFromMegavault) (*MsgWithdrawFromMegavaultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawFromMegavault not implemented")
 }
 func (*UnimplementedMsgServer) UpdateDefaultQuotingParams(ctx context.Context, req *MsgUpdateDefaultQuotingParams) (*MsgUpdateDefaultQuotingParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDefaultQuotingParams not implemented")
@@ -863,6 +1096,9 @@ func (*UnimplementedMsgServer) UnlockShares(ctx context.Context, req *MsgUnlockS
 }
 func (*UnimplementedMsgServer) AllocateToVault(ctx context.Context, req *MsgAllocateToVault) (*MsgAllocateToVaultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllocateToVault not implemented")
+}
+func (*UnimplementedMsgServer) RetrieveFromVault(ctx context.Context, req *MsgRetrieveFromVault) (*MsgRetrieveFromVaultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetrieveFromVault not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -883,6 +1119,24 @@ func _Msg_DepositToMegavault_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).DepositToMegavault(ctx, req.(*MsgDepositToMegavault))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawFromMegavault_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawFromMegavault)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawFromMegavault(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.vault.Msg/WithdrawFromMegavault",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawFromMegavault(ctx, req.(*MsgWithdrawFromMegavault))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -977,6 +1231,24 @@ func _Msg_AllocateToVault_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RetrieveFromVault_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRetrieveFromVault)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RetrieveFromVault(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.vault.Msg/RetrieveFromVault",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RetrieveFromVault(ctx, req.(*MsgRetrieveFromVault))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.vault.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -984,6 +1256,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DepositToMegavault",
 			Handler:    _Msg_DepositToMegavault_Handler,
+		},
+		{
+			MethodName: "WithdrawFromMegavault",
+			Handler:    _Msg_WithdrawFromMegavault_Handler,
 		},
 		{
 			MethodName: "UpdateDefaultQuotingParams",
@@ -1004,6 +1280,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllocateToVault",
 			Handler:    _Msg_AllocateToVault_Handler,
+		},
+		{
+			MethodName: "RetrieveFromVault",
+			Handler:    _Msg_RetrieveFromVault_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1081,6 +1361,92 @@ func (m *MsgDepositToMegavaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 			return 0, err
 		}
 		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawFromMegavault) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawFromMegavault) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawFromMegavault) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.MinQuoteQuantums.Size()
+		i -= size
+		if _, err := m.MinQuoteQuantums.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size, err := m.Shares.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.SubaccountId.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawFromMegavaultResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawFromMegavaultResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawFromMegavaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.QuoteQuantums.Size()
+		i -= size
+		if _, err := m.QuoteQuantums.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
@@ -1470,6 +1836,79 @@ func (m *MsgAllocateToVaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgRetrieveFromVault) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRetrieveFromVault) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRetrieveFromVault) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.QuoteQuantums.Size()
+		i -= size
+		if _, err := m.QuoteQuantums.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size, err := m.VaultId.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRetrieveFromVaultResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRetrieveFromVaultResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRetrieveFromVaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1503,6 +1942,32 @@ func (m *MsgDepositToMegavaultResponse) Size() (n int) {
 	var l int
 	_ = l
 	l = m.MintedShares.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgWithdrawFromMegavault) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.SubaccountId.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.Shares.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.MinQuoteQuantums.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgWithdrawFromMegavaultResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.QuoteQuantums.Size()
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
@@ -1642,6 +2107,32 @@ func (m *MsgAllocateToVault) Size() (n int) {
 }
 
 func (m *MsgAllocateToVaultResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRetrieveFromVault) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.VaultId.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.QuoteQuantums.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgRetrieveFromVaultResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1834,6 +2325,238 @@ func (m *MsgDepositToMegavaultResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.MintedShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawFromMegavault) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawFromMegavault: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawFromMegavault: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubaccountId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SubaccountId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Shares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Shares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinQuoteQuantums", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MinQuoteQuantums.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawFromMegavaultResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawFromMegavaultResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawFromMegavaultResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QuoteQuantums", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.QuoteQuantums.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2873,6 +3596,204 @@ func (m *MsgAllocateToVaultResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgAllocateToVaultResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRetrieveFromVault) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRetrieveFromVault: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRetrieveFromVault: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.VaultId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QuoteQuantums", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.QuoteQuantums.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRetrieveFromVaultResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRetrieveFromVaultResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRetrieveFromVaultResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

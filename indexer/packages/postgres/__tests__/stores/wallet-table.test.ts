@@ -4,7 +4,6 @@ import { DateTime } from 'luxon';
 import {
   defaultFill,
   defaultOrder,
-  defaultSubaccount,
   defaultTendermintEventId,
   defaultTendermintEventId2,
   defaultTendermintEventId3,
@@ -12,13 +11,12 @@ import {
   defaultWallet,
   defaultWallet2,
   isolatedMarketOrder,
-  isolatedSubaccount,
+  defaultSubaccountId,
+  isolatedSubaccountId,
 } from '../helpers/constants';
 import * as FillTable from '../../src/stores/fill-table';
 import * as OrderTable from '../../src/stores/order-table';
 import * as WalletTable from '../../src/stores/wallet-table';
-import * as SubaccountTable from '../../src/stores/subaccount-table';
-import * as PersistentCacheTable from '../../src/stores/persistent-cache-table';
 import { seedData } from '../helpers/mock-generators';
 
 describe('Wallet store', () => {
@@ -90,48 +88,35 @@ describe('Wallet store', () => {
     expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
   });
 
-  it('Successfully updates totalVolume for time window multiple times', async () => {
-    const firstFillTime = await populateWalletSubaccountFill();
+  describe('updateTotalVolume', () => {
+    it('Successfully updates totalVolume for time window multiple times', async () => {
+      const firstFillTime: DateTime = await populateWalletSubaccountFill();
 
-    // Update totalVolume for a time window that covers all fills
-    await WalletTable.updateTotalVolume(
-      firstFillTime.minus({ hours: 1 }).toISO(), // need to minus because left bound is exclusive
-      firstFillTime.plus({ hours: 1 }).toISO(),
-    );
-    let wallet = await WalletTable.findById(defaultWallet.address);
-    expect(wallet).toEqual(expect.objectContaining({
-      ...defaultWallet,
-      totalVolume: '103',
-    }));
+      // Update totalVolume for a time window that covers all fills
+      await WalletTable.updateTotalVolume(
+        firstFillTime.minus({ hours: 1 }).toISO(), // need to minus because left bound is exclusive
+        firstFillTime.plus({ hours: 1 }).toISO(),
+      );
+      const wallet1: WalletFromDatabase | undefined = await WalletTable
+        .findById(defaultWallet.address);
+      expect(wallet1).toEqual(expect.objectContaining({
+        ...defaultWallet,
+        totalVolume: '103',
+      }));
 
-    // Update totalVolume for a time window that excludes some fills
-    // For convenience, we will reuse the existing fills data. The total volume calculated in this
-    // window should be added to the total volume above.
-    await WalletTable.updateTotalVolume(
-      firstFillTime.toISO(), // exclusive -> filters out first fill from each subaccount
-      firstFillTime.plus({ minutes: 2 }).toISO(),
-    );
-    wallet = await WalletTable.findById(defaultWallet.address);
-    expect(wallet).toEqual(expect.objectContaining({
-      ...defaultWallet,
-      totalVolume: '105', // 103 + 2
-    }));
-  });
-
-  it('Successfully updates totalVolumeUpdateTime in persistent cache', async () => {
-    const leftBound = DateTime.utc().minus({ hours: 1 });
-    const rightBound = DateTime.utc();
-    await WalletTable.updateTotalVolume(leftBound.toISO(), rightBound.toISO());
-
-    const persistentCache = await PersistentCacheTable.findById('totalVolumeUpdateTime');
-    const lastUpdateTime = persistentCache?.value
-      ? DateTime.fromISO(persistentCache.value)
-      : undefined;
-
-    expect(lastUpdateTime).not.toBeUndefined();
-    if (lastUpdateTime?.toMillis() !== undefined) {
-      expect(lastUpdateTime.toMillis()).toEqual(rightBound.toMillis());
-    }
+      // Update totalVolume for a time window that excludes some fills
+      // For convenience, we will reuse the existing fills data. The total volume calculated in this
+      // window should be added to the total volume above.
+      await WalletTable.updateTotalVolume(
+        firstFillTime.toISO(), // exclusive -> filters out first fill from each subaccount
+        firstFillTime.plus({ minutes: 2 }).toISO(),
+      );
+      const wallet2 = await WalletTable.findById(defaultWallet.address);
+      expect(wallet2).toEqual(expect.objectContaining({
+        ...defaultWallet,
+        totalVolume: '105', // 103 + 2
+      }));
+    });
   });
 });
 
@@ -144,22 +129,12 @@ describe('Wallet store', () => {
  */
 async function populateWalletSubaccountFill(): Promise<DateTime> {
   await seedData();
-  await OrderTable.create(defaultOrder);
-  await OrderTable.create(isolatedMarketOrder);
+  await Promise.all([
+    OrderTable.create(defaultOrder),
+    OrderTable.create(isolatedMarketOrder),
+  ]);
 
-  // seedData() creates defaultWallet with defaultSubaccount and isolatedSubaccount
-  const defaultSubaccountId = await SubaccountTable.findAll(
-    { subaccountNumber: defaultSubaccount.subaccountNumber },
-    [],
-    {},
-  );
-  const isolatedSubaccountId = await SubaccountTable.findAll(
-    { subaccountNumber: isolatedSubaccount.subaccountNumber },
-    [],
-    {},
-  );
-
-  const referenceDt = DateTime.utc().minus({ hours: 1 });
+  const referenceDt: DateTime = DateTime.utc().minus({ hours: 1 });
   const eventIds = [
     defaultTendermintEventId,
     defaultTendermintEventId2,
@@ -168,27 +143,33 @@ async function populateWalletSubaccountFill(): Promise<DateTime> {
   ];
   let eventIdx = 0;
 
+  const fillPromises: Promise<any>[] = [];
   // Create 3 fills with 1 min increments for defaultSubaccount
   for (let i = 0; i < 3; i++) {
-    await FillTable.create({
-      ...defaultFill,
-      subaccountId: defaultSubaccountId[0].id,
-      createdAt: referenceDt.plus({ minutes: i }).toISO(),
-      eventId: eventIds[eventIdx],
-      price: '1',
-      size: '1',
-    });
+    fillPromises.push(
+      FillTable.create({
+        ...defaultFill,
+        subaccountId: defaultSubaccountId,
+        createdAt: referenceDt.plus({ minutes: i }).toISO(),
+        eventId: eventIds[eventIdx],
+        price: '1',
+        size: '1',
+      }),
+    );
     eventIdx += 1;
   }
   // Create 1 fill at referenceDt for isolatedSubaccount
-  await FillTable.create({
-    ...defaultFill,
-    subaccountId: isolatedSubaccountId[0].id,
-    createdAt: referenceDt.toISO(),
-    eventId: eventIds[eventIdx],
-    price: '10',
-    size: '10',
-  });
+  fillPromises.push(
+    FillTable.create({
+      ...defaultFill,
+      subaccountId: isolatedSubaccountId,
+      createdAt: referenceDt.toISO(),
+      eventId: eventIds[eventIdx],
+      price: '10',
+      size: '10',
+    }),
+  );
+  await Promise.all(fillPromises);
 
   return referenceDt;
 }

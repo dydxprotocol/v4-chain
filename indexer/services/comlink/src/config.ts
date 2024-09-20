@@ -63,6 +63,9 @@ export const configSchema = {
 
   // Affiliates config
   VOLUME_ELIGIBILITY_THRESHOLD: parseInteger({ default: 10_000 }),
+
+  // Vaults config
+  VAULT_PNL_HISTORY_DAYS: parseInteger({ default: 90 }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////

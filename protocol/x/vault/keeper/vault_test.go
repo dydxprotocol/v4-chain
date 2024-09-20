@@ -37,7 +37,7 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 			},
 			statuses: []vaulttypes.VaultStatus{
 				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
-				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+				vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
 			},
 			equities: []*big.Int{
 				big.NewInt(1),
@@ -264,6 +264,9 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 						},
 					},
 				}
+				genesisState.OperatorParams = vaulttypes.OperatorParams{
+					Operator: constants.AliceAccAddress.String(),
+				}
 			},
 		)
 		testapp.UpdateGenesisDocWithAppStateForModule(
@@ -280,7 +283,7 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 						},
 					},
 					{
-						Id: &constants.Alice_Num0,
+						Id: &vaulttypes.MegavaultMainSubaccount,
 						AssetPositions: []*satypes.AssetPosition{
 							{
 								AssetId:  assettypes.AssetUsdc.Id,
@@ -323,7 +326,7 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 	ctx := tApp.InitChain()
 
 	vaultClob0Address := constants.Vault_Clob0.ToModuleAccountAddress()
-	// vaultClob1Address := constants.Vault_Clob1.ToModuleAccountAddress()
+	vaultClob1Address := constants.Vault_Clob1.ToModuleAccountAddress()
 	aliceAddress := constants.AliceAccAddress.String()
 
 	// Vault in genesis state should be in best fee tier.
@@ -338,33 +341,32 @@ func TestVaultIsBestFeeTier(t *testing.T) {
 	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, aliceAddress, false)
 	require.Equal(t, int32(3), makerFee)
 
-	// TODO (TRA-551): Reenable below after implementing MsgAllocateToVault.
-	// A newly created vault should be in best fee tier.
-	// checkTx_DepositToVault := testapp.MustMakeCheckTx(
-	// 	ctx,
-	// 	tApp.App,
-	// 	testapp.MustMakeCheckTxOptions{
-	// 		AccAddressForSigning: constants.Alice_Num0.Owner,
-	// 		Gas:                  constants.TestGasLimit,
-	// 		FeeAmt:               constants.TestFeeCoins_5Cents,
-	// 	},
-	// 	&vaulttypes.MsgDepositToVault{
-	// 		VaultId:       &constants.Vault_Clob1,
-	// 		SubaccountId:  &constants.Alice_Num0,
-	// 		QuoteQuantums: dtypes.NewInt(1),
-	// 	},
-	// )
-	// checkTxResp := tApp.CheckTx(checkTx_DepositToVault)
-	// require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+	// A newly allocated-to vault should be in best fee tier.
+	checkTx_AllocateToVault := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: constants.AliceAccAddress.String(),
+			Gas:                  constants.TestGasLimit,
+			FeeAmt:               constants.TestFeeCoins_5Cents,
+		},
+		&vaulttypes.MsgAllocateToVault{
+			Authority:     constants.AliceAccAddress.String(),
+			VaultId:       constants.Vault_Clob1,
+			QuoteQuantums: dtypes.NewInt(1),
+		},
+	)
+	checkTxResp := tApp.CheckTx(checkTx_AllocateToVault)
+	require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 
-	// ctx = tApp.AdvanceToBlock(
-	// 	uint32(ctx.BlockHeight())+1,
-	// 	testapp.AdvanceToBlockOptions{},
-	// )
-	// takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, true)
-	// require.Equal(t, int32(11), takerFee)
-	// makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, false)
-	// require.Equal(t, int32(1), makerFee)
+	ctx = tApp.AdvanceToBlock(
+		uint32(ctx.BlockHeight())+1,
+		testapp.AdvanceToBlockOptions{},
+	)
+	takerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, true)
+	require.Equal(t, int32(11), takerFee)
+	makerFee = tApp.App.FeeTiersKeeper.GetPerpetualFeePpm(ctx, vaultClob1Address, false)
+	require.Equal(t, int32(1), makerFee)
 }
 
 func TestGetMegavaultEquity(t *testing.T) {
@@ -462,7 +464,7 @@ func TestGetMegavaultEquity(t *testing.T) {
 			},
 			expectedMegavaultEquity: big.NewInt(1_345),
 		},
-		"Megavault subaccount with 1000 equity, One quoting vault with 345 equity, One deactivated vault with 5 equity,": {
+		"Megavault subaccount with 1000 equity, One quoting vault with 345 equity, One deactivated vault with -5 equity,": {
 			megavaultSaEquity: big.NewInt(1_000),
 			vaults: []vaulttypes.Vault{
 				{
@@ -480,9 +482,9 @@ func TestGetMegavaultEquity(t *testing.T) {
 			},
 			vaultEquities: []*big.Int{
 				big.NewInt(345),
-				big.NewInt(5),
+				big.NewInt(-5),
 			},
-			expectedMegavaultEquity: big.NewInt(1_350),
+			expectedMegavaultEquity: big.NewInt(1_345), // deactivated vault is not counted.
 		},
 	}
 	for name, tc := range tests {

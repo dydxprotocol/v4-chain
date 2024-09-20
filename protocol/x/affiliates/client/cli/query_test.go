@@ -72,3 +72,13 @@ func TestQueryReferredBy(t *testing.T) {
 	var resp types.ReferredByResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 }
+
+func TestQueryAffiliateWhitelist(t *testing.T) {
+	net, ctx := setupNetwork(t)
+
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.GetCmdQueryAffiliateWhitelist(), []string{})
+	require.NoError(t, err)
+
+	var resp types.AffiliateWhitelistResponse
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+}

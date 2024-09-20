@@ -136,6 +136,7 @@ func (k Keeper) ProcessInternalOperations(
 	// All short term orders in this map have passed validation.
 	placedShortTermOrders := make(map[types.OrderId]types.Order, 0)
 
+	var affiliatesWhitelistMap map[string]uint32 = nil
 	// Write the matches to state if all stateful validation passes.
 	for _, operation := range operations {
 		if err := k.validateInternalOperationAgainstClobPairStatus(ctx, operation); err != nil {
@@ -144,8 +145,21 @@ func (k Keeper) ProcessInternalOperations(
 
 		switch castedOperation := operation.Operation.(type) {
 		case *types.InternalOperation_Match:
+			// check if affiliate whitelist map is nil and initialize it if it is.
+			// This is done to avoid getting whitelist map on list of operations
+			// where there are no matches.
+			if affiliatesWhitelistMap == nil {
+				var err error
+				affiliatesWhitelistMap, err = k.affiliatesKeeper.GetAffiliateWhitelistMap(ctx)
+				if err != nil {
+					return errorsmod.Wrapf(
+						err,
+						"ProcessInternalOperations: Failed to get affiliates whitelist map",
+					)
+				}
+			}
 			clobMatch := castedOperation.Match
-			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
+			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders, affiliatesWhitelistMap); err != nil {
 				return errorsmod.Wrapf(
 					err,
 					"ProcessInternalOperations: Failed to process clobMatch: %+v",
@@ -201,10 +215,11 @@ func (k Keeper) PersistMatchToState(
 	ctx sdk.Context,
 	clobMatch *types.ClobMatch,
 	ordersMap map[types.OrderId]types.Order,
+	affiliatesWhitelistMap map[string]uint32,
 ) error {
 	switch castedMatch := clobMatch.Match.(type) {
 	case *types.ClobMatch_MatchOrders:
-		if err := k.PersistMatchOrdersToState(ctx, castedMatch.MatchOrders, ordersMap); err != nil {
+		if err := k.PersistMatchOrdersToState(ctx, castedMatch.MatchOrders, ordersMap, affiliatesWhitelistMap); err != nil {
 			return err
 		}
 	case *types.ClobMatch_MatchPerpetualLiquidation:
@@ -212,6 +227,7 @@ func (k Keeper) PersistMatchToState(
 			ctx,
 			castedMatch.MatchPerpetualLiquidation,
 			ordersMap,
+			affiliatesWhitelistMap,
 		); err != nil {
 			return err
 		}
@@ -442,6 +458,7 @@ func (k Keeper) PersistMatchOrdersToState(
 	ctx sdk.Context,
 	matchOrders *types.MatchOrders,
 	ordersMap map[types.OrderId]types.Order,
+	affiliatesWhitelistMap map[string]uint32,
 ) error {
 	takerOrderId := matchOrders.GetTakerOrderId()
 	// Fetch the taker order from either short term orders or state
@@ -486,7 +503,7 @@ func (k Keeper) PersistMatchOrdersToState(
 		}
 		makerOrders = append(makerOrders, makerOrder)
 
-		_, _, _, affiliateRevSharesQuoteQuantums, err := k.ProcessSingleMatch(ctx, &matchWithOrders)
+		_, _, _, affiliateRevSharesQuoteQuantums, err := k.ProcessSingleMatch(ctx, &matchWithOrders, affiliatesWhitelistMap)
 		if err != nil {
 			return err
 		}
@@ -558,6 +575,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 	ctx sdk.Context,
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
+	affiliatesWhitelistMap map[string]uint32,
 ) error {
 	// If the subaccount is not liquidatable, do nothing.
 	if err := k.EnsureIsLiquidatable(ctx, matchLiquidation.Liquidated); err != nil {
@@ -598,6 +616,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 		_, _, _, affiliateRevSharesQuoteQuantums, err := k.ProcessSingleMatch(
 			ctx,
 			&matchWithOrders,
+			affiliatesWhitelistMap,
 		)
 		if err != nil {
 			return err

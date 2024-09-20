@@ -1,18 +1,21 @@
 package keeper_test
 
 import (
+	"bytes"
+	"math"
+	"math/big"
 	"testing"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -28,10 +31,16 @@ func TestMsgAllocateToVault(t *testing.T) {
 		vaultParams *vaulttypes.VaultParams
 		// Msg.
 		msg *vaulttypes.MsgAllocateToVault
-		// Expected error.
-		expectedErr string
+		// Signer of above msg.
+		signer string
+		// A string that CheckTx response should contain, if any.
+		checkTxResponseContains string
+		// Whether CheckTx fails.
+		checkTxFails bool
+		// Whether DeliverTx fails.
+		deliverTxFails bool
 	}{
-		"Success - Gov Authority, Allocate 50 to Vault Clob 0, Existing vault params": {
+		"Success - Allocate 50 to Vault Clob 0, Existing vault params": {
 			operator:          constants.AliceAccAddress.String(),
 			mainVaultQuantums: 100,
 			subVaultQuantums:  0,
@@ -39,33 +48,66 @@ func TestMsgAllocateToVault(t *testing.T) {
 				Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			},
 			msg: &vaulttypes.MsgAllocateToVault{
-				Authority:     lib.GovModuleAddress.String(),
+				Authority:     constants.AliceAccAddress.String(),
 				VaultId:       constants.Vault_Clob0,
 				QuoteQuantums: dtypes.NewInt(50),
 			},
+			signer: constants.AliceAccAddress.String(),
 		},
-		"Success - Gov Authority, Allocate 77 to Vault Clob 1, Non-existent Vault Params": {
-			operator:          constants.AliceAccAddress.String(),
+		"Success - Allocate 77 to Vault Clob 1, Non-existent Vault Params": {
+			operator:          constants.BobAccAddress.String(),
 			mainVaultQuantums: 100,
 			subVaultQuantums:  15,
 			msg: &vaulttypes.MsgAllocateToVault{
-				Authority:     lib.GovModuleAddress.String(),
+				Authority:     constants.BobAccAddress.String(),
 				VaultId:       constants.Vault_Clob1,
 				QuoteQuantums: dtypes.NewInt(77),
 			},
+			signer: constants.BobAccAddress.String(),
 		},
-		"Success - Operator Authority, Allocate all to Vault Clob 1, Existing vault params": {
+		"Failure - Operator Authority, allocating more than max uint64 quantums": {
+			operator:          constants.CarlAccAddress.String(),
+			mainVaultQuantums: 100,
+			subVaultQuantums:  15,
+			msg: &vaulttypes.MsgAllocateToVault{
+				Authority: constants.CarlAccAddress.String(),
+				VaultId:   constants.Vault_Clob0,
+				QuoteQuantums: dtypes.NewIntFromBigInt(
+					new(big.Int).Add(
+						new(big.Int).SetUint64(math.MaxUint64),
+						new(big.Int).SetUint64(1),
+					),
+				),
+			},
+			checkTxResponseContains: "QuoteQuantums must be positive and less than 2^64",
+			checkTxFails:            true,
+			signer:                  constants.CarlAccAddress.String(),
+		},
+		"Failure - Operator Authority, allocating zero quantums": {
 			operator:          constants.AliceAccAddress.String(),
 			mainVaultQuantums: 100,
 			subVaultQuantums:  15,
-			vaultParams: &vaulttypes.VaultParams{
-				Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
-			},
 			msg: &vaulttypes.MsgAllocateToVault{
 				Authority:     constants.AliceAccAddress.String(),
-				VaultId:       constants.Vault_Clob1,
-				QuoteQuantums: dtypes.NewInt(100),
+				VaultId:       constants.Vault_Clob0,
+				QuoteQuantums: dtypes.NewInt(0),
 			},
+			checkTxResponseContains: "QuoteQuantums must be positive",
+			checkTxFails:            true,
+			signer:                  constants.AliceAccAddress.String(),
+		},
+		"Failure - Operator Authority, allocating negative quantums": {
+			operator:          constants.AliceAccAddress.String(),
+			mainVaultQuantums: 100,
+			subVaultQuantums:  15,
+			msg: &vaulttypes.MsgAllocateToVault{
+				Authority:     constants.AliceAccAddress.String(),
+				VaultId:       constants.Vault_Clob0,
+				QuoteQuantums: dtypes.NewInt(-1),
+			},
+			checkTxResponseContains: "QuoteQuantums must be positive",
+			checkTxFails:            true,
+			signer:                  constants.AliceAccAddress.String(),
 		},
 		"Failure - Operator Authority, Insufficient quantums to allocate to Vault Clob 0, Existing vault params": {
 			operator:          constants.AliceAccAddress.String(),
@@ -79,7 +121,9 @@ func TestMsgAllocateToVault(t *testing.T) {
 				VaultId:       constants.Vault_Clob0,
 				QuoteQuantums: dtypes.NewInt(101),
 			},
-			expectedErr: "failed to apply subaccount updates",
+			signer:         constants.AliceAccAddress.String(),
+			checkTxFails:   false,
+			deliverTxFails: true,
 		},
 		"Failure - Operator Authority, No corresponding clob pair": {
 			operator:          constants.AliceAccAddress.String(),
@@ -93,7 +137,9 @@ func TestMsgAllocateToVault(t *testing.T) {
 				},
 				QuoteQuantums: dtypes.NewInt(1),
 			},
-			expectedErr: vaulttypes.ErrClobPairNotFound.Error(),
+			signer:         constants.AliceAccAddress.String(),
+			checkTxFails:   false,
+			deliverTxFails: true,
 		},
 		"Failure - Invalid Authority, Non-existent Vault Params": {
 			operator:          constants.BobAccAddress.String(),
@@ -104,7 +150,9 @@ func TestMsgAllocateToVault(t *testing.T) {
 				VaultId:       constants.Vault_Clob1,
 				QuoteQuantums: dtypes.NewInt(77),
 			},
-			expectedErr: vaulttypes.ErrInvalidAuthority.Error(),
+			signer:         constants.AliceAccAddress.String(),
+			checkTxFails:   false,
+			deliverTxFails: true,
 		},
 		"Failure - Empty Authority, Existing vault params": {
 			operator:          constants.BobAccAddress.String(),
@@ -115,7 +163,9 @@ func TestMsgAllocateToVault(t *testing.T) {
 				VaultId:       constants.Vault_Clob1,
 				QuoteQuantums: dtypes.NewInt(77),
 			},
-			expectedErr: vaulttypes.ErrInvalidAuthority.Error(),
+			signer:                  constants.BobAccAddress.String(),
+			checkTxResponseContains: vaulttypes.ErrInvalidAuthority.Error(),
+			checkTxFails:            true,
 		},
 	}
 
@@ -170,18 +220,60 @@ func TestMsgAllocateToVault(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
-			ms := keeper.NewMsgServerImpl(k)
 
-			// Allocate to vault.
-			_, err := ms.AllocateToVault(ctx, tc.msg)
+			// Invoke CheckTx.
+			CheckTx_MsgAllocateToVault := testapp.MustMakeCheckTx(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: tc.signer,
+					Gas:                  constants.TestGasLimit,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				tc.msg,
+			)
+			checkTxResp := tApp.CheckTx(CheckTx_MsgAllocateToVault)
+
+			// Check that CheckTx response log contains expected string, if any.
+			if tc.checkTxResponseContains != "" {
+				require.Contains(t, checkTxResp.Log, tc.checkTxResponseContains)
+			}
+			// Check that CheckTx succeeds or errors out as expected.
+			if tc.checkTxFails {
+				require.Conditionf(t, checkTxResp.IsErr, "Expected CheckTx to error. Response: %+v", checkTxResp)
+				return
+			}
+			require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+			// Advance to next block (and check that DeliverTx is as expected).
+			nextBlock := uint32(ctx.BlockHeight()) + 1
+			if tc.deliverTxFails {
+				// Check that DeliverTx fails on `msgDepositToMegavault`.
+				ctx = tApp.AdvanceToBlock(nextBlock, testapp.AdvanceToBlockOptions{
+					ValidateFinalizeBlock: func(
+						context sdktypes.Context,
+						request abcitypes.RequestFinalizeBlock,
+						response abcitypes.ResponseFinalizeBlock,
+					) (haltChain bool) {
+						for i, tx := range request.Txs {
+							if bytes.Equal(tx, CheckTx_MsgAllocateToVault.Tx) {
+								require.True(t, response.TxResults[i].IsErr())
+							} else {
+								require.True(t, response.TxResults[i].IsOK())
+							}
+						}
+						return false
+					},
+				})
+			} else {
+				ctx = tApp.AdvanceToBlock(nextBlock, testapp.AdvanceToBlockOptions{})
+			}
 
 			// Check expectations.
 			mainVault := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, vaulttypes.MegavaultMainSubaccount)
 			subVault := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *tc.msg.VaultId.ToSubaccountId())
 			require.Len(t, subVault.AssetPositions, 1)
-			if tc.expectedErr != "" {
-				require.ErrorContains(t, err, tc.expectedErr)
-
+			if tc.deliverTxFails {
 				// Verify that main vault and sub vault balances are unchanged.
 				require.Len(t, mainVault.AssetPositions, 1)
 				require.Equal(
@@ -204,8 +296,6 @@ func TestMsgAllocateToVault(t *testing.T) {
 					require.False(t, exists)
 				}
 			} else {
-				require.NoError(t, err)
-
 				// Verify that main vault and sub vault balances are updated.
 				expectedMainVaultQuantums := tc.mainVaultQuantums - tc.msg.QuoteQuantums.BigInt().Uint64()
 				if expectedMainVaultQuantums == 0 {

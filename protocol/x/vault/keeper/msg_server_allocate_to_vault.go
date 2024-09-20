@@ -8,6 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -34,7 +35,9 @@ func (k msgServer) AllocateToVault(
 		return nil, types.ErrClobPairNotFound
 	}
 
-	// If vault params doesn't exist, initialize params with `STAND_BY` status.
+	// If vault doesn't exist:
+	// 1. initialize params with `STAND_BY` status.
+	// 2. add vault to address store.
 	_, exists = k.Keeper.GetVaultParams(ctx, msg.VaultId)
 	if !exists {
 		err := k.Keeper.SetVaultParams(
@@ -47,15 +50,18 @@ func (k msgServer) AllocateToVault(
 		if err != nil {
 			return nil, err
 		}
+		k.Keeper.AddVaultToAddressStore(ctx, msg.VaultId)
 	}
 
 	// Transfer from main vault to the specified vault.
-	if err := k.Keeper.subaccountsKeeper.TransferFundsFromSubaccountToSubaccount(
+	if err := k.Keeper.sendingKeeper.ProcessTransfer(
 		ctx,
-		types.MegavaultMainSubaccount,
-		*msg.VaultId.ToSubaccountId(),
-		assetstypes.AssetUsdc.Id,
-		msg.QuoteQuantums.BigInt(),
+		&sendingtypes.Transfer{
+			Sender:    types.MegavaultMainSubaccount,
+			Recipient: *msg.VaultId.ToSubaccountId(),
+			AssetId:   assetstypes.AssetUsdc.Id,
+			Amount:    msg.QuoteQuantums.BigInt().Uint64(), // validated to be positive above.
+		},
 	); err != nil {
 		return nil, err
 	}
