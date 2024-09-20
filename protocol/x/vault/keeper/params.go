@@ -116,28 +116,6 @@ func (k Keeper) GetVaultQuotingParams(
 	}
 }
 
-// UnsafeGetParams returns `Params` in state.
-// Used for v6.x upgrade handler.
-func (k Keeper) UnsafeGetParams(
-	ctx sdk.Context,
-) (
-	params types.QuotingParams,
-) {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte("Params"))
-	k.cdc.MustUnmarshal(b, &params)
-	return params
-}
-
-// UnsafeDeleteParams deletes `Params` in state.
-// Used for v6.x upgrade handler.
-func (k Keeper) UnsafeDeleteParams(
-	ctx sdk.Context,
-) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete([]byte("Params"))
-}
-
 // GetOperatorParams returns `OperatorParams` in state.
 func (k Keeper) GetOperatorParams(
 	ctx sdk.Context,

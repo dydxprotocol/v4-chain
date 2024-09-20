@@ -214,3 +214,27 @@ message MsgRetrieveFromVault {
 
 // MsgRetrieveFromVaultResponse is the Msg/RetrieveFromVault response type.
 message MsgRetrieveFromVaultResponse {}
+
+// Deprecated: Only used for v7.x upgrade handler. Not included in message server.
+// MsgDepositToVault deposits the specified asset from the subaccount to the
+// vault.
+message MsgDepositToVault {
+  option deprecated = true;
+  // This annotation enforces that the tx signer is the owner specified in
+  // subaccount_id. Therefore, this enforces that only the owner of the
+  // subaccount can deposit into the vault using that subaccount.
+  option (cosmos.msg.v1.signer) = "subaccount_id";
+
+  // The vault to deposit into.
+  VaultId vault_id = 1;
+
+  // The subaccount to deposit from.
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 2;
+
+  // Number of quote quantums to deposit.
+  bytes quote_quantums = 3 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
