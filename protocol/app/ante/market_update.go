@@ -76,11 +76,13 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 		markets = msg.UpdateMarkets
 	case *mmtypes.MsgUpsertMarkets:
 		markets = msg.Markets
+	case *mmtypes.MsgCreateMarkets:
+		markets = msg.CreateMarkets
 	default:
 		return ctx, fmt.Errorf("unrecognized message type: %T", msg)
 	}
 
-	if contains := d.doMarketsContainCrossMarket(ctx, markets); contains {
+	if contains := d.doMarketsContainRestrictedMarket(ctx, markets); contains {
 		return ctx, ErrNoCrossMarketUpdates
 	}
 
@@ -92,7 +94,7 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 	return next(ctx, tx, simulate)
 }
 
-func (d ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Context, markets []mmtypes.Market) bool {
+func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(ctx sdk.Context, markets []mmtypes.Market) bool {
 	// Grab all the perpetuals markets
 	perps := d.perpKeeper.GetAllPerpetuals(ctx)
 	perpsMap := make(map[string]perpetualstypes.PerpetualMarketType)
@@ -109,6 +111,8 @@ func (d ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Conte
 		}
 		perpsMap[cp.String()] = perp.Params.MarketType
 	}
+
+	// add usdt/usd market
 
 	// Look in the mapped currency pairs to see if we have invalid updates
 	for _, market := range markets {
