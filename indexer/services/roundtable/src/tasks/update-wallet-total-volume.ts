@@ -6,13 +6,13 @@ import { DateTime } from 'luxon';
 
 import config from '../config';
 
-const defaultLastUpdateTime: string = '2020-01-01T00:00:00Z';
+const defaultLastUpdateTime: string = '2023-10-26T00:00:00Z';
 
 /**
  * Update the total volume for each addresses in the wallet table who filled recently.
  */
 export default async function runTask(): Promise<void> {
-  try {
+  try {    
     const start = Date.now();
     const persistentCacheEntry: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
       .findById(PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME);
@@ -27,6 +27,12 @@ export default async function runTask(): Promise<void> {
     const lastUpdateTime: DateTime = DateTime.fromISO(persistentCacheEntry
       ? persistentCacheEntry.value
       : defaultLastUpdateTime);
+    
+    stats.gauge(
+      `${config.SERVICE_NAME}.persistent_cache_${PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME}_lag_seconds`,
+      Math.floor(start / 1000) - lastUpdateTime.toUnixInteger(),
+    );
+
     let windowEndTime = DateTime.utc();
 
     // During backfilling, we process one day at a time to reduce roundtable runtime.

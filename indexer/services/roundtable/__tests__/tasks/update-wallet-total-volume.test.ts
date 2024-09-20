@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   dbHelpers,
   testConstants,
@@ -151,7 +152,7 @@ describe('update-wallet-total-volume', () => {
     // `defaultLastUpdateTime` value to emulate backfilling from very beginning
     expect(await getTotalVolumeUpdateTime()).toBeUndefined();
 
-    const referenceDt = DateTime.fromISO('2020-01-01T00:00:00Z');
+    const referenceDt = DateTime.fromISO('2023-10-26T00:00:00Z');
 
     await FillTable.create({
       ...testConstants.defaultFill,
@@ -185,6 +186,21 @@ describe('update-wallet-total-volume', () => {
       ...testConstants.defaultWallet,
       totalVolume: '14', // 1 + 4 + 9
     }));
+  });
+
+  it('Successfully records metrics', async () => {
+    jest.spyOn(stats, 'timing');
+    jest.spyOn(stats, 'gauge');
+
+    await PersistentCacheTable.create({
+      key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
+      value: DateTime.utc().toISO(),
+    });
+  
+    await walletTotalVolumeUpdateTask();
+  
+    expect(stats.gauge).toHaveBeenCalledWith(`roundtable.persistent_cache_${PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME}_lag_seconds`, expect.any(Number));
+    expect(stats.timing).toHaveBeenCalledWith(`roundtable.update_wallet_total_volume_timing`, expect.any(Number));
   });
 });
 

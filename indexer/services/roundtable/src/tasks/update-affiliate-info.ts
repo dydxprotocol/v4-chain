@@ -27,6 +27,13 @@ export default async function runTask(): Promise<void> {
     const lastUpdateTime: DateTime = DateTime.fromISO(persistentCacheEntry
       ? persistentCacheEntry.value
       : defaultLastUpdateTime);
+    
+    // Track how long ago the last update time in persistent cache was.
+    stats.gauge(
+      `${config.SERVICE_NAME}.persistent_cache_${PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME}_lag_seconds`,
+      Math.floor(start / 1000) - lastUpdateTime.toUnixInteger(),
+    );
+
     let windowEndTime = DateTime.utc();
 
     // During backfilling, we process one day at a time to reduce roundtable runtime.

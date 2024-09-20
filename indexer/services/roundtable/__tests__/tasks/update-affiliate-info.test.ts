@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   dbHelpers,
   testConstants,
@@ -109,7 +110,7 @@ describe('update-affiliate-info', () => {
       referredTotalVolume: '1',
     };
     expect(updatedInfo).toEqual(expectedAffiliateInfo);
-    const lastUpdateTime2 = await getAffiliateInfoUpdateTime();
+    const lastUpdateTime2: DateTime | undefined = await getAffiliateInfoUpdateTime();
     if (lastUpdateTime2 !== undefined && lastUpdateTime1 !== undefined) {
       expect(lastUpdateTime2.toMillis())
         .toBeGreaterThan(lastUpdateTime1.toMillis());
@@ -117,7 +118,7 @@ describe('update-affiliate-info', () => {
   });
 
   it('Successfully backfills from past date', async () => {
-    const currentDt = DateTime.utc();
+    const currentDt: DateTime = DateTime.utc();
 
     // Set persistent cache to 3 weeks ago to emulate backfill from 3 weeks.
     await PersistentCacheTable.create({
@@ -231,6 +232,21 @@ describe('update-affiliate-info', () => {
     };
     const updatedInfo = await AffiliateInfoTable.findById(testConstants.defaultWallet2.address);
     expect(updatedInfo).toEqual(expectedAffiliateInfo);
+  });
+
+  it('Successfully records metrics', async () => {
+    jest.spyOn(stats, 'timing');
+    jest.spyOn(stats, 'gauge');
+
+    await PersistentCacheTable.create({
+      key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
+      value: DateTime.utc().toISO(),
+    });
+  
+    await affiliateInfoUpdateTask();
+  
+    expect(stats.gauge).toHaveBeenCalledWith(`roundtable.persistent_cache_${PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME}_lag_seconds`, expect.any(Number));
+    expect(stats.timing).toHaveBeenCalledWith(`roundtable.update_affiliate_info_timing`, expect.any(Number));
   });
 });
 
