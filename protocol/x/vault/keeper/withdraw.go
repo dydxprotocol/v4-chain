@@ -11,6 +11,7 @@ import (
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
@@ -225,12 +226,25 @@ func (k Keeper) WithdrawFromMegavault(
 		redeemedFromSubVault.Mul(redeemedFromSubVault, new(big.Rat).Sub(lib.BigRat1(), slippage))
 		quantumsToTransfer := new(big.Int).Quo(redeemedFromSubVault.Num(), redeemedFromSubVault.Denom())
 
-		err = k.subaccountsKeeper.TransferFundsFromSubaccountToSubaccount(
+		if quantumsToTransfer.Sign() <= 0 || !quantumsToTransfer.IsUint64() {
+			log.InfoLog(
+				ctx,
+				"Megavault withdrawal: quantums to transfer is invalid. Skipping this vault",
+				"Vault ID",
+				vaultId,
+				"Quantums",
+				quantumsToTransfer,
+			)
+			continue
+		}
+		err = k.sendingKeeper.ProcessTransfer(
 			ctx,
-			*vaultId.ToSubaccountId(),
-			types.MegavaultMainSubaccount,
-			assetstypes.AssetUsdc.Id,
-			quantumsToTransfer,
+			&sendingtypes.Transfer{
+				Sender:    *vaultId.ToSubaccountId(),
+				Recipient: types.MegavaultMainSubaccount,
+				AssetId:   assetstypes.AssetUsdc.Id,
+				Amount:    quantumsToTransfer.Uint64(), // validated above.
+			},
 		)
 		if err != nil {
 			log.ErrorLogWithError(
@@ -250,8 +264,9 @@ func (k Keeper) WithdrawFromMegavault(
 		megavaultEquity.Add(megavaultEquity, equity)
 	}
 
-	// 4. Return error if redeemed quantums are non-positive or less than min quantums.
-	if redeemedQuoteQuantums.Sign() <= 0 || redeemedQuoteQuantums.Cmp(minQuoteQuantums) < 0 {
+	// 4. Return error if redeemed quantums is invalid.
+	if redeemedQuoteQuantums.Sign() <= 0 || !redeemedQuoteQuantums.IsUint64() ||
+		redeemedQuoteQuantums.Cmp(minQuoteQuantums) < 0 {
 		return nil, errorsmod.Wrapf(
 			types.ErrInsufficientRedeemedQuoteQuantums,
 			"redeemed quote quantums: %s, min quote quantums: %s",
@@ -261,12 +276,14 @@ func (k Keeper) WithdrawFromMegavault(
 	}
 
 	// 5. Transfer from main vault to destination subaccount.
-	err = k.subaccountsKeeper.TransferFundsFromSubaccountToSubaccount(
+	err = k.sendingKeeper.ProcessTransfer(
 		ctx,
-		types.MegavaultMainSubaccount,
-		toSubaccount,
-		assetstypes.AssetUsdc.Id,
-		redeemedQuoteQuantums,
+		&sendingtypes.Transfer{
+			Sender:    types.MegavaultMainSubaccount,
+			Recipient: toSubaccount,
+			AssetId:   assetstypes.AssetUsdc.Id,
+			Amount:    redeemedQuoteQuantums.Uint64(), // validated above.
+		},
 	)
 	if err != nil {
 		log.ErrorLogWithError(

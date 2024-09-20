@@ -7,6 +7,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -33,12 +34,14 @@ func (k msgServer) RetrieveFromVault(
 	}
 
 	// Transfer from specified vault to main vault.
-	if err := k.Keeper.subaccountsKeeper.TransferFundsFromSubaccountToSubaccount(
+	if err := k.Keeper.sendingKeeper.ProcessTransfer(
 		ctx,
-		*msg.VaultId.ToSubaccountId(),
-		types.MegavaultMainSubaccount,
-		assetstypes.AssetUsdc.Id,
-		msg.QuoteQuantums.BigInt(),
+		&sendingtypes.Transfer{
+			Sender:    *msg.VaultId.ToSubaccountId(),
+			Recipient: types.MegavaultMainSubaccount,
+			AssetId:   assetstypes.AssetUsdc.Id,
+			Amount:    msg.QuoteQuantums.BigInt().Uint64(), // validated to be positive above.
+		},
 	); err != nil {
 		return nil, err
 	}
