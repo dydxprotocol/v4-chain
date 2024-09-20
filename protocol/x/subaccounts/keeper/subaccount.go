@@ -3,11 +3,10 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	"math/big"
 	"math/rand"
 	"time"
-
-	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -442,11 +441,11 @@ func (k Keeper) UpdateSubaccounts(
 			),
 		)
 
-		// If DeliverTx and GRPC streaming is on, emit a generated subaccount update to stream.
-		if lib.IsDeliverTxMode(ctx) && k.GetFullNodeStreamingManager().Enabled() {
+		// if GRPC streaming is on, emit a generated subaccount update to stream.
+		if streamingManager := k.GetFullNodeStreamingManager(); streamingManager.Enabled() {
 			if k.GetFullNodeStreamingManager().TracksSubaccountId(*u.SettledSubaccount.Id) {
 				subaccountUpdate := GenerateStreamSubaccountUpdate(u, fundingPayments)
-				k.SendFinalizedSubaccountUpdates(
+				k.SendSubaccountUpdates(
 					ctx,
 					[]types.StreamSubaccountUpdate{
 						subaccountUpdate,
@@ -953,16 +952,15 @@ func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingMa
 	return k.streamingManager
 }
 
-// SendFinalizedSubaccountUpdates sends the subaccount updates to the gRPC streaming manager.
-func (k Keeper) SendFinalizedSubaccountUpdates(
+// SendSubaccountUpdates sends the subaccount updates to the gRPC streaming manager.
+func (k Keeper) SendSubaccountUpdates(
 	ctx sdk.Context,
 	subaccountUpdates []types.StreamSubaccountUpdate,
 ) {
-	lib.AssertDeliverTxMode(ctx)
 	if len(subaccountUpdates) == 0 {
 		return
 	}
-	k.GetFullNodeStreamingManager().SendFinalizedSubaccountUpdates(
+	k.GetFullNodeStreamingManager().SendSubaccountUpdates(
 		subaccountUpdates,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),

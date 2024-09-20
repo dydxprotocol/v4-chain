@@ -3,9 +3,8 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"sync/atomic"
-
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"sync/atomic"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
@@ -257,31 +256,9 @@ func (k *Keeper) SetAnteHandler(anteHandler sdk.AnteHandler) {
 	k.antehandler = anteHandler
 }
 
-func (k Keeper) GetSubaccountSnapshotsForInitStreams(
-	ctx sdk.Context,
-) (
-	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
-) {
-	lib.AssertCheckTxMode(ctx)
-
-	return k.GetFullNodeStreamingManager().GetSubaccountSnapshotsForInitStreams(
-		func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate {
-			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(
-				ctx,
-				subaccountId,
-				true,
-			)
-			return &subaccountUpdate
-		},
-	)
-}
-
 // InitializeNewStreams initializes new streams for all uninitialized clob pairs
 // by sending the corresponding orderbook snapshots.
-func (k Keeper) InitializeNewStreams(
-	ctx sdk.Context,
-	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
-) {
+func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
 	streamingManager := k.GetFullNodeStreamingManager()
 
 	streamingManager.InitializeNewStreams(
@@ -291,7 +268,14 @@ func (k Keeper) InitializeNewStreams(
 				clobPairId,
 			)
 		},
-		subaccountSnapshots,
+		func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate {
+			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(
+				ctx,
+				subaccountId,
+				true,
+			)
+			return &subaccountUpdate
+		},
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)
