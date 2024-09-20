@@ -211,6 +211,25 @@ var (
 		},
 	}
 
+	testUSDTUSDMarket = mmtypes.Market{
+		Ticker: mmtypes.Ticker{
+			CurrencyPair: types.CurrencyPair{
+				Base:  "USDT",
+				Quote: "USD",
+			},
+			Decimals:         1,
+			MinProviderCount: 1,
+			Enabled:          true,
+			Metadata_JSON:    "",
+		},
+		ProviderConfigs: []mmtypes.ProviderConfig{
+			{
+				Name:           "test_provider",
+				OffChainTicker: "USDT/USD",
+			},
+		},
+	}
+
 	enabledTestMarketWithProviderConfig = mmtypes.Market{
 		Ticker: mmtypes.Ticker{
 			CurrencyPair: types.CurrencyPair{
@@ -724,6 +743,36 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 				marketMapMarkets: []mmtypes.Market{testMarket},
 			},
 			wantErr: false,
+		},
+		{
+			name: "always reject USDT/USD - simulate",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							testUSDTUSDMarket,
+						},
+					},
+				},
+				simulate: true,
+			},
+			wantErr: true,
+		},
+		{
+			name: "always reject USDT/USD",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpdateMarkets{
+						Authority: constants.BobAccAddress.String(),
+						UpdateMarkets: []mmtypes.Market{
+							testUSDTUSDMarket,
+						},
+					},
+				},
+				simulate: false,
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

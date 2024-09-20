@@ -80,8 +80,8 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 		return ctx, fmt.Errorf("unrecognized message type: %T", msg)
 	}
 
-	if contains := d.doMarketsContainRestrictedMarket(ctx, markets); contains {
-		return ctx, ErrNoCrossMarketUpdates
+	if contains, ticker := d.doMarketsContainRestrictedMarket(ctx, markets); contains {
+		return ctx, fmt.Errorf("%w: %s", ErrNoCrossMarketUpdates, ticker)
 	}
 
 	// check if the market updates are safe
@@ -95,7 +95,7 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(
 	ctx sdk.Context,
 	markets []mmtypes.Market,
-) bool {
+) (bool, string) {
 	// Grab all the perpetuals markets
 	perps := d.perpKeeper.GetAllPerpetuals(ctx)
 	restrictedMap := make(map[string]bool, len(perps))
@@ -123,11 +123,11 @@ func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(
 
 		restricted, found := restrictedMap[ticker]
 		if found && restricted {
-			return true
+			return true, ticker
 		}
 	}
 
-	return false
+	return false, ""
 }
 
 // doMarketsUpdateEnabledValues checks if the given markets updates are safe, specifically:
