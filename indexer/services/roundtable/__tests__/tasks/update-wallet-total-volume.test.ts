@@ -234,7 +234,11 @@ describe('update-wallet-total-volume', () => {
 
     await walletTotalVolumeUpdateTask();
 
-    expect(stats.gauge).toHaveBeenCalledWith(`roundtable.persistent_cache_${PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME}_lag_seconds`, expect.any(Number));
+    expect(stats.gauge).toHaveBeenCalledWith(
+      `roundtable.persistent_cache_${PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME}_lag_seconds`,
+      expect.any(Number),
+      { cache: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME },
+    );
   });
 });
 

@@ -275,7 +275,11 @@ describe('update-affiliate-info', () => {
 
     await affiliateInfoUpdateTask();
 
-    expect(stats.gauge).toHaveBeenCalledWith(`roundtable.persistent_cache_${PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME}_lag_seconds`, expect.any(Number));
+    expect(stats.gauge).toHaveBeenCalledWith(
+      `roundtable.persistent_cache_${PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME}_lag_seconds`,
+      expect.any(Number),
+      { cache: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME },
+    );
   });
 });
 

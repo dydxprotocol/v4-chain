@@ -42,6 +42,7 @@ export default async function runTask(): Promise<void> {
     stats.gauge(
       `${config.SERVICE_NAME}.persistent_cache_${PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME}_lag_seconds`,
       DateTime.utc().diff(windowStartTime).as('seconds'),
+      { cache: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME },
     );
 
     let windowEndTime = DateTime.fromISO(latestBlock.time);
