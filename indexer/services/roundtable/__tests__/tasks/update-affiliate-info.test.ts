@@ -37,27 +37,28 @@ describe('update-affiliate-info', () => {
   });
 
   it('Successfully updates affiliate info and persistent cache multiple times', async () => {
-    const startDt: DateTime = DateTime.utc();
-    // Set persistent cache affiliateInfoUpdateTime to now so task does not backfill
+    // Set persistent cache affiliateInfoUpdateTime to slightly in past so task does not backfill
     await PersistentCacheTable.create({
       key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-      value: startDt.toISO(),
+      value: DateTime.utc().toISO(),
     });
 
-    // First task run: add referral w/o any fills
-    // defaultWallet2 will be affiliate and defaultWallet will be referee
-    await AffiliateReferredUsersTable.create({
-      affiliateAddress: testConstants.defaultWallet2.address,
-      refereeAddress: testConstants.defaultWallet.address,
-      referredAtBlock: '1',
-    });
-
-    // Create block to simulate time passing
     const updatedDt1: DateTime = DateTime.utc();
-    await BlockTable.create({
-      blockHeight: '3',
-      time: updatedDt1.toISO(),
-    });
+    await Promise.all([
+      // First task run: add referral w/o any fills
+      // defaultWallet2 will be affiliate and defaultWallet will be referee
+      AffiliateReferredUsersTable.create({
+        affiliateAddress: testConstants.defaultWallet2.address,
+        refereeAddress: testConstants.defaultWallet.address,
+        referredAtBlock: '1',
+      }),
+
+      // Create block to simulate time passing
+      BlockTable.create({
+        blockHeight: '3',
+        time: updatedDt1.toISO(),
+      }),
+    ]);
 
     // Run task
     await affiliateInfoUpdateTask();
@@ -135,13 +136,12 @@ describe('update-affiliate-info', () => {
   it('Successfully backfills from past date', async () => {
     const currentDt: DateTime = DateTime.utc();
 
-    // Set persistent cache to 3 weeks ago to emulate backfill from 3 weeks.
-    await PersistentCacheTable.create({
-      key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
-      value: currentDt.minus({ weeks: 3 }).toISO(),
-    });
-
     await Promise.all([
+      // Set persistent cache to 3 weeks ago to emulate backfill from 3 weeks.
+      PersistentCacheTable.create({
+        key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
+        value: currentDt.minus({ weeks: 3 }).toISO(),
+      }),
       // defaultWallet2 will be affiliate and defaultWallet will be referee
       AffiliateReferredUsersTable.create({
         affiliateAddress: testConstants.defaultWallet2.address,
@@ -170,7 +170,7 @@ describe('update-affiliate-info', () => {
         affiliateRevShare: '500',
       }),
       // Create block at current time
-      await BlockTable.create({
+      BlockTable.create({
         blockHeight: '3',
         time: DateTime.utc().toISO(),
       }),
@@ -215,33 +215,34 @@ describe('update-affiliate-info', () => {
       referredAtBlock: '1',
     });
 
-    // Fills spannings 7 days after referenceDt
-    await FillTable.create({
-      ...testConstants.defaultFill,
-      liquidity: Liquidity.TAKER,
-      createdAt: referenceDt.plus({ days: 1 }).toISO(),
-      eventId: testConstants.defaultTendermintEventId,
-      price: '1',
-      size: '1',
-      fee: '1000',
-      affiliateRevShare: '500',
-    });
-    await FillTable.create({
-      ...testConstants.defaultFill,
-      liquidity: Liquidity.TAKER,
-      createdAt: referenceDt.plus({ days: 7 }).toISO(),
-      eventId: testConstants.defaultTendermintEventId2,
-      price: '1',
-      size: '1',
-      fee: '1000',
-      affiliateRevShare: '500',
-    });
-
-    // Create block in the future relative to referenceDt
-    await BlockTable.create({
-      blockHeight: '3',
-      time: referenceDt.plus({ days: 7 }).toISO(),
-    });
+    await Promise.all([
+      // Fills spannings 7 days after referenceDt
+      FillTable.create({
+        ...testConstants.defaultFill,
+        liquidity: Liquidity.TAKER,
+        createdAt: referenceDt.plus({ days: 1 }).toISO(),
+        eventId: testConstants.defaultTendermintEventId,
+        price: '1',
+        size: '1',
+        fee: '1000',
+        affiliateRevShare: '500',
+      }),
+      FillTable.create({
+        ...testConstants.defaultFill,
+        liquidity: Liquidity.TAKER,
+        createdAt: referenceDt.plus({ days: 7 }).toISO(),
+        eventId: testConstants.defaultTendermintEventId2,
+        price: '1',
+        size: '1',
+        fee: '1000',
+        affiliateRevShare: '500',
+      }),
+      // Create block in the future relative to referenceDt
+      BlockTable.create({
+        blockHeight: '3',
+        time: referenceDt.plus({ days: 7 }).toISO(),
+      }),
+    ]);
 
     // Simulate roundtable runs
     for (let i = 0; i < 7; i++) {

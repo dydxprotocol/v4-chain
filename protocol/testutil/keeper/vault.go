@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	"github.com/stretchr/testify/mock"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -50,15 +52,25 @@ func createVaultKeeper(
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
+	mockMsgSender := &mocks.IndexerMessageSender{}
+	mockMsgSender.On("Enabled").Return(true)
+	mockMsgSender.On("SendOnchainData", mock.Anything).Return()
+	mockMsgSender.On("SendOffchainData", mock.Anything).Return()
+
+	mockIndexerEventsManager := indexer_manager.NewIndexerEventManager(mockMsgSender, transientStoreKey, true)
+
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
+		&mocks.AssetsKeeper{},
+		&mocks.BankKeeper{},
 		&mocks.ClobKeeper{},
 		&mocks.DelayMsgKeeper{},
 		&mocks.PerpetualsKeeper{},
 		&mocks.PricesKeeper{},
 		&mocks.SendingKeeper{},
 		&mocks.SubaccountsKeeper{},
+		mockIndexerEventsManager,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgtypes.ModuleAddress.String(),

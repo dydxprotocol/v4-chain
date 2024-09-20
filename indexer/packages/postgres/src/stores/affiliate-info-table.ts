@@ -111,11 +111,11 @@ export async function findById(
  * @returns {Promise<void>}
  */
 export async function updateInfo(
-  windowStartTs: string,
-  windowEndTs: string,
-  options: Options = { txId: undefined },
+  windowStartTs: string, // exclusive
+  windowEndTs: string, // inclusive
+  txId: number | undefined = undefined,
 ) : Promise<void> {
-  const transaction: Knex.Transaction | undefined = Transaction.get(options.txId);
+  const transaction: Knex.Transaction | undefined = Transaction.get(txId);
 
   const query = `
 -- Get metadata for all affiliates

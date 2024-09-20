@@ -25,4 +25,6 @@ var (
 			},
 		},
 	}
+
+	AffiliatesRevSharePpmCap = uint32(500_000) // 50%
 )

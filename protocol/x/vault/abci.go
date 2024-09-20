@@ -36,6 +36,7 @@ func EndBlocker(
 	// halting the chain.
 	if err := abci.RunCached(ctx, func(ctx sdk.Context) error {
 		keeper.RefreshAllVaultOrders(ctx)
+		keeper.SweepMainVaultBankBalance(ctx)
 		return nil
 	}); err != nil {
 		log.ErrorLog(

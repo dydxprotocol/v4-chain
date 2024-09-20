@@ -16,15 +16,14 @@ const defaultLastUpdateTime: string = '2024-09-16T00:00:00Z';
  * Update the affiliate info for all affiliate addresses.
  */
 export default async function runTask(): Promise<void> {
-  const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
-  if (latestBlock.time === null) {
-    throw Error('Failed to get latest block time');
-  }
-
   // Wrap getting cache, updating info, and setting cache in one transaction so that persistent
   // cache and affilitate info table are in sync.
   const txId: number = await Transaction.start();
   try {
+    const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
+    if (latestBlock.time === null) {
+      throw Error('Failed to get latest block time');
+    }
     const persistentCacheEntry: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
       .findById(PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME, { txId });
     if (!persistentCacheEntry) {
@@ -43,7 +42,11 @@ export default async function runTask(): Promise<void> {
       windowEndTime = windowStartTime.plus({ days: 1 });
     }
 
-    await AffiliateInfoTable.updateInfo(windowStartTime.toISO(), windowEndTime.toISO(), { txId });
+    logger.info({
+      at: 'update-affiliate-info#runTask',
+      message: `Updating affiliate info from ${windowStartTime.toISO()} to ${windowEndTime.toISO()}`,
+    });
+    await AffiliateInfoTable.updateInfo(windowStartTime.toISO(), windowEndTime.toISO(), txId);
     await PersistentCacheTable.upsert({
       key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
       value: windowEndTime.toISO(),

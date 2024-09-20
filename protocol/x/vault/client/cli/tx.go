@@ -29,6 +29,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdDepositToMegavault())
 	cmd.AddCommand(CmdSetVaultParams())
 	cmd.AddCommand(CmdAllocateToVault())
+	cmd.AddCommand(CmdRetrieveFromVault())
 
 	return cmd
 }
@@ -174,6 +175,56 @@ func CmdAllocateToVault() *cobra.Command {
 
 			// Create MsgAllocateToVault.
 			msg := &types.MsgAllocateToVault{
+				Authority: args[0],
+				VaultId: types.VaultId{
+					Type:   vaultType,
+					Number: uint32(vaultNumber),
+				},
+				QuoteQuantums: dtypes.NewIntFromUint64(quantums),
+			}
+
+			// Broadcast or generate the transaction.
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	// Add the necessary flags.
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdRetrieveFromVault() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "retrieve-from-vault [authority] [vault_type] [vault_number] [quote_quantums]",
+		Short: "Broadcast message RetrieveFromVault",
+		Args:  cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			// Parse vault type.
+			vaultType, err := GetVaultTypeFromString(args[1])
+			if err != nil {
+				return err
+			}
+
+			// Parse vault number.
+			vaultNumber, err := strconv.ParseUint(args[2], 10, 32)
+			if err != nil {
+				return err
+			}
+
+			// Parse quantums.
+			quantums, err := cast.ToUint64E(args[3])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// Create MsgRetrieveFromVault.
+			msg := &types.MsgRetrieveFromVault{
 				Authority: args[0],
 				VaultId: types.VaultId{
 					Type:   vaultType,
