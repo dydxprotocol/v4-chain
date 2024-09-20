@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   PersistentCacheTable,
   WalletTable,
@@ -9,6 +9,8 @@ import {
   BlockTable,
 } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
+
+import config from '../config';
 
 const defaultLastUpdateTime: string = '2023-10-26T00:00:00Z';
 
@@ -38,6 +40,13 @@ export default async function runTask(): Promise<void> {
     const windowStartTime: DateTime = DateTime.fromISO(persistentCacheEntry
       ? persistentCacheEntry.value
       : defaultLastUpdateTime);
+
+    // Track how long ago the last update time (windowStartTime) in persistent cache was
+    stats.gauge(
+      `${config.SERVICE_NAME}.persistent_cache_${PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME}_lag_seconds`,
+      DateTime.utc().diff(windowStartTime).as('seconds'),
+      { cache: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME },
+    );
 
     let windowEndTime = DateTime.fromISO(latestBlock.time);
     // During backfilling, we process one day at a time to reduce roundtable runtime.

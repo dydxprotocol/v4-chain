@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   dbHelpers,
   testConstants,
@@ -262,6 +263,23 @@ describe('update-affiliate-info', () => {
     };
     const updatedInfo = await AffiliateInfoTable.findById(testConstants.defaultWallet2.address);
     expect(updatedInfo).toEqual(expectedAffiliateInfo);
+  });
+
+  it('Successfully records metrics', async () => {
+    jest.spyOn(stats, 'gauge');
+
+    await PersistentCacheTable.create({
+      key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
+      value: DateTime.utc().toISO(),
+    });
+
+    await affiliateInfoUpdateTask();
+
+    expect(stats.gauge).toHaveBeenCalledWith(
+      `roundtable.persistent_cache_${PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME}_lag_seconds`,
+      expect.any(Number),
+      { cache: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME },
+    );
   });
 });
 
