@@ -68,6 +68,16 @@ func (k Keeper) SetVaultParams(
 		return err
 	}
 
+	if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED {
+		vaultEquity, err := k.GetVaultEquity(ctx, vaultId)
+		if err != nil {
+			return err
+		}
+		if vaultEquity.Sign() > 0 {
+			return types.ErrDeactivatePositiveEquityVault
+		}
+	}
+
 	b := k.cdc.MustMarshal(&vaultParams)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
 	store.Set(vaultId.ToStateKey(), b)
