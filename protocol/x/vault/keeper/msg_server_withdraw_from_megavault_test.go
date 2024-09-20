@@ -185,6 +185,34 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 			expectedTotalShares:   500, // unchanged
 			expectedOwnerShares:   47,  // unchanged
 		},
+		"Success: Withdraw some unlocked shares (8% of total), one deactivated sub-vault is excluded": {
+			mainVaultBalance:  big.NewInt(1_234),
+			totalShares:       500,
+			owner:             constants.DaveAccAddress.String(),
+			ownerTotalShares:  47,
+			ownerLockedShares: 7,
+			vaults: []VaultSetup{
+				{
+					id: constants.Vault_Clob0,
+					params: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+					},
+					assetQuoteQuantums:   big.NewInt(-400),
+					positionBaseQuantums: big.NewInt(0),
+					clobPair:             constants.ClobPair_Btc,
+					perpetual:            constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+					marketParam:          constants.TestMarketParams[0],
+					marketPrice:          constants.TestMarketPrices[0],
+					postWithdrawalEquity: big.NewInt(-400), // unchanged
+				},
+			},
+			sharesToWithdraw:      40,
+			minQuoteQuantums:      50,
+			deliverTxFails:        false,
+			redeemedQuoteQuantums: 98,  // 1234 * 0.08 = 98.72 ~= 98 (rounded down)
+			expectedTotalShares:   460, // 500 - 40
+			expectedOwnerShares:   7,   // 47 - 40
+		},
 		"Success: Withdraw some unlocked shares (0.4444% of total), 888_888 quantums in main vault, " +
 			"one quoting sub-vault with negative equity": {
 			mainVaultBalance:  big.NewInt(888_888),
