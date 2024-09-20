@@ -95,7 +95,7 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(ctx sdk.Context, markets []mmtypes.Market) bool {
 	// Grab all the perpetuals markets
 	perps := d.perpKeeper.GetAllPerpetuals(ctx)
-	perpsMap := make(map[string]perpetualstypes.PerpetualMarketType)
+	restrictedMap := make(map[string]bool, len(perps))
 
 	// Attempt to fetch the corresponding Prices market and map it to a currency pair
 	for _, perp := range perps {
@@ -107,17 +107,18 @@ func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(ctx sdk.
 		if err != nil {
 			continue
 		}
-		perpsMap[cp.String()] = perp.Params.MarketType
+		restrictedMap[cp.String()] = perp.Params.MarketType == perpetualstypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
 	}
 
-	// add usdt/usd market
+	// add usdt/usd market to be restricted
+	restrictedMap["USDT/USD"] = true
 
 	// Look in the mapped currency pairs to see if we have invalid updates
 	for _, market := range markets {
 		ticker := market.Ticker.CurrencyPair.String()
 
-		marketType, found := perpsMap[ticker]
-		if found && marketType == perpetualstypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS {
+		restricted, found := restrictedMap[ticker]
+		if found && restricted {
 			return true
 		}
 	}
