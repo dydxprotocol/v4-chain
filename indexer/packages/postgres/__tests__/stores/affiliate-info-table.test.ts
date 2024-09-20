@@ -1,7 +1,26 @@
-import { AffiliateInfoFromDatabase } from '../../src/types';
+import {
+  AffiliateInfoFromDatabase, Liquidity,
+} from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
-import { defaultAffiliateInfo, defaultAffiliateInfo2 } from '../helpers/constants';
+import {
+  defaultOrder,
+  defaultWallet,
+  defaultFill,
+  defaultWallet2,
+  defaultAffiliateInfo,
+  defaultAffiliateInfo2,
+  defaultTendermintEventId,
+  defaultTendermintEventId2,
+  defaultTendermintEventId3,
+  defaultTendermintEventId4,
+  vaultAddress,
+} from '../helpers/constants';
 import * as AffiliateInfoTable from '../../src/stores/affiliate-info-table';
+import * as OrderTable from '../../src/stores/order-table';
+import * as AffiliateReferredUsersTable from '../../src/stores/affiliate-referred-users-table';
+import * as FillTable from '../../src/stores/fill-table';
+import { seedData } from '../helpers/mock-generators';
+import { DateTime } from 'luxon';
 
 describe('Affiliate info store', () => {
   beforeAll(async () => {
@@ -27,7 +46,7 @@ describe('Affiliate info store', () => {
 
   it('Can upsert affiliate info multiple times', async () => {
     await AffiliateInfoTable.upsert(defaultAffiliateInfo);
-    let info: AffiliateInfoFromDatabase = await AffiliateInfoTable.findById(
+    let info: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
       defaultAffiliateInfo.address,
     );
     expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo));
@@ -56,14 +75,175 @@ describe('Affiliate info store', () => {
     ]));
   });
 
-  it('Successfully finds an affiliate info', async () => {
+  it('Successfully finds affiliate info by Id', async () => {
     await AffiliateInfoTable.create(defaultAffiliateInfo);
 
-    const info: AffiliateInfoFromDatabase = await AffiliateInfoTable.findById(
+    const info: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
       defaultAffiliateInfo.address,
     );
-
     expect(info).toEqual(expect.objectContaining(defaultAffiliateInfo));
+  });
+
+  it('Returns undefined if affiliate info not found by Id', async () => {
+    await AffiliateInfoTable.create(defaultAffiliateInfo);
+
+    const info: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
+      'non_existent_address',
+    );
+    expect(info).toBeUndefined();
+  });
+
+  describe('updateInfo', () => {
+    it('Successfully creates new affiliate info', async () => {
+      const referenceDt: DateTime = await populateFillsAndReferrals();
+
+      // Perform update
+      await AffiliateInfoTable.updateInfo(
+        referenceDt.minus({ minutes: 2 }).toISO(),
+        referenceDt.toISO(),
+      );
+
+      // Get affiliate info (wallet2 is affiliate)
+      const updatedInfo: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
+        defaultWallet2.address,
+      );
+
+      const expectedAffiliateInfo: AffiliateInfoFromDatabase = {
+        address: defaultWallet2.address,
+        affiliateEarnings: '1000',
+        referredMakerTrades: 1,
+        referredTakerTrades: 1,
+        totalReferredFees: '2000',
+        totalReferredUsers: 1,
+        referredNetProtocolEarnings: '1000',
+        firstReferralBlockHeight: '1',
+        referredTotalVolume: '2',
+      };
+
+      expect(updatedInfo).toEqual(expectedAffiliateInfo);
+    });
+
+    it('Successfully updates/increments affiliate info for stats and new referrals', async () => {
+      const referenceDt: DateTime = await populateFillsAndReferrals();
+
+      // Perform update: catches first 2 fills
+      await AffiliateInfoTable.updateInfo(
+        referenceDt.minus({ minutes: 3 }).toISO(),
+        referenceDt.minus({ minutes: 2 }).toISO(),
+      );
+
+      const updatedInfo1: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
+        defaultWallet2.address,
+      );
+      const expectedAffiliateInfo1: AffiliateInfoFromDatabase = {
+        address: defaultWallet2.address,
+        affiliateEarnings: '1000',
+        referredMakerTrades: 2,
+        referredTakerTrades: 0,
+        totalReferredFees: '2000',
+        totalReferredUsers: 1,
+        referredNetProtocolEarnings: '1000',
+        firstReferralBlockHeight: '1',
+        referredTotalVolume: '2',
+      };
+      expect(updatedInfo1).toEqual(expectedAffiliateInfo1);
+
+      // Perform update: catches next 2 fills
+      await AffiliateInfoTable.updateInfo(
+        referenceDt.minus({ minutes: 2 }).toISO(),
+        referenceDt.minus({ minutes: 1 }).toISO(),
+      );
+
+      const updatedInfo2 = await AffiliateInfoTable.findById(
+        defaultWallet2.address,
+      );
+      const expectedAffiliateInfo2 = {
+        address: defaultWallet2.address,
+        affiliateEarnings: '2000',
+        referredMakerTrades: 3,
+        referredTakerTrades: 1,
+        totalReferredFees: '4000',
+        totalReferredUsers: 1,
+        referredNetProtocolEarnings: '2000',
+        firstReferralBlockHeight: '1',
+        referredTotalVolume: '4',
+      };
+      expect(updatedInfo2).toEqual(expectedAffiliateInfo2);
+
+      // Perform update: catches no fills but new affiliate referral
+      await AffiliateReferredUsersTable.create({
+        affiliateAddress: defaultWallet2.address,
+        refereeAddress: vaultAddress,
+        referredAtBlock: '2',
+      });
+      await AffiliateInfoTable.updateInfo(
+        referenceDt.minus({ minutes: 1 }).toISO(),
+        referenceDt.toISO(),
+      );
+      const updatedInfo3 = await AffiliateInfoTable.findById(
+        defaultWallet2.address,
+      );
+      const expectedAffiliateInfo3 = {
+        address: defaultWallet2.address,
+        affiliateEarnings: '2000',
+        referredMakerTrades: 3,
+        referredTakerTrades: 1,
+        totalReferredFees: '4000',
+        totalReferredUsers: 2,
+        referredNetProtocolEarnings: '2000',
+        firstReferralBlockHeight: '1',
+        referredTotalVolume: '4',
+      };
+      expect(updatedInfo3).toEqual(expectedAffiliateInfo3);
+    });
+
+    it('Does not use fills from before referal block height', async () => {
+      const referenceDt: DateTime = DateTime.utc();
+
+      await seedData();
+      await OrderTable.create(defaultOrder);
+
+      // Referal at block 2 but fill is at block 1
+      await AffiliateReferredUsersTable.create({
+        affiliateAddress: defaultWallet2.address,
+        refereeAddress: defaultWallet.address,
+        referredAtBlock: '2',
+      });
+      await FillTable.create({
+        ...defaultFill,
+        liquidity: Liquidity.TAKER,
+        subaccountId: defaultOrder.subaccountId,
+        createdAt: referenceDt.toISO(),
+        createdAtHeight: '1',
+        eventId: defaultTendermintEventId,
+        price: '1',
+        size: '1',
+        fee: '1000',
+        affiliateRevShare: '500',
+      });
+
+      await AffiliateInfoTable.updateInfo(
+        referenceDt.minus({ minutes: 1 }).toISO(),
+        referenceDt.toISO(),
+      );
+
+      const updatedInfo: AffiliateInfoFromDatabase | undefined = await AffiliateInfoTable.findById(
+        defaultWallet2.address,
+      );
+      // expect one referred user but no fill stats
+      const expectedAffiliateInfo: AffiliateInfoFromDatabase = {
+        address: defaultWallet2.address,
+        affiliateEarnings: '0',
+        referredMakerTrades: 0,
+        referredTakerTrades: 0,
+        totalReferredFees: '0',
+        totalReferredUsers: 1,
+        referredNetProtocolEarnings: '0',
+        firstReferralBlockHeight: '2',
+        referredTotalVolume: '0',
+      };
+      expect(updatedInfo).toEqual(expectedAffiliateInfo);
+    });
   });
 
   describe('paginatedFindWithAddressFilter', () => {
@@ -175,3 +355,68 @@ describe('Affiliate info store', () => {
     });
   });
 });
+
+async function populateFillsAndReferrals(): Promise<DateTime> {
+  const referenceDt = DateTime.utc();
+
+  await seedData();
+
+  // defaultWallet2 will be affiliate and defaultWallet will be referee
+  await AffiliateReferredUsersTable.create({
+    affiliateAddress: defaultWallet2.address,
+    refereeAddress: defaultWallet.address,
+    referredAtBlock: '1',
+  });
+
+  // Create order and fils for defaultWallet (referee)
+  await OrderTable.create(defaultOrder);
+
+  await Promise.all([
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.TAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
+      eventId: defaultTendermintEventId,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.MAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 1 }).toISO(),
+      eventId: defaultTendermintEventId2,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.MAKER, // use uneven number of maker/taker
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      eventId: defaultTendermintEventId3,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.MAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      eventId: defaultTendermintEventId4,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '500',
+    }),
+  ]);
+
+  return referenceDt;
+}

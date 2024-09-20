@@ -58,6 +58,7 @@ export const configSchema = {
   LOOPS_ENABLED_LEADERBOARD_PNL_MONTHLY: parseBoolean({ default: false }),
   LOOPS_ENABLED_LEADERBOARD_PNL_YEARLY: parseBoolean({ default: false }),
   LOOPS_ENABLED_UPDATE_WALLET_TOTAL_VOLUME: parseBoolean({ default: true }),
+  LOOPS_ENABLED_UPDATE_AFFILIATE_INFO: parseBoolean({ default: true }),
   LOOPS_ENABLED_DELETE_OLD_FIREBASE_NOTIFICATION_TOKENS: parseBoolean({ default: true }),
 
   // Loop Timing
@@ -128,6 +129,9 @@ export const configSchema = {
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_UPDATE_WALLET_TOTAL_VOLUME: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_UPDATE_AFFILIATE_INFO: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_DELETE_FIREBASE_NOTIFICATION_TOKENS_MONTHLY: parseInteger({
