@@ -116,8 +116,8 @@ func (k Keeper) SetNextAuthenticatorId(ctx sdk.Context, authenticatorId uint64) 
 // GetAuthenticatorExtension unpacks the extension for the transaction, this is used with transactions specify
 // an authenticator to use
 func (k Keeper) GetAuthenticatorExtension(exts []*codectypes.Any) types.AuthenticatorTxOptions {
-	var authExtension types.AuthenticatorTxOptions
 	for _, ext := range exts {
+		var authExtension types.AuthenticatorTxOptions
 		err := k.cdc.UnpackAny(ext, &authExtension)
 		if err == nil {
 			return authExtension
@@ -131,16 +131,16 @@ func (k Keeper) GetAuthenticatorExtension(exts []*codectypes.Any) types.Authenti
 func (k Keeper) GetSelectedAuthenticatorData(
 	ctx sdk.Context,
 	account sdk.AccAddress,
-	selectedAuthenticator int,
+	selectedAuthenticator uint64,
 ) (*types.AccountAuthenticator, error) {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
 		[]byte(types.AuthenticatorKeyPrefix),
 	)
-	bz := store.Get(types.KeyAccountId(account, uint64(selectedAuthenticator)))
+	bz := store.Get(types.KeyAccountId(account, selectedAuthenticator))
 	if bz == nil {
 		return &types.AccountAuthenticator{}, errors.Wrap(
-			sdkerrors.ErrInvalidRequest,
+			types.ErrAuthenticatorNotFound,
 			fmt.Sprintf("authenticator %d not found for account %s", selectedAuthenticator, account),
 		)
 	}
@@ -158,7 +158,7 @@ func (k Keeper) GetSelectedAuthenticatorData(
 func (k Keeper) GetInitializedAuthenticatorForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,
-	selectedAuthenticator int,
+	selectedAuthenticator uint64,
 ) (authenticator.InitializedAuthenticator, error) {
 	// Get the authenticator data from the store
 	authenticatorFromStore, err := k.GetSelectedAuthenticatorData(ctx, account, selectedAuthenticator)
@@ -188,10 +188,19 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	// NOTE: Always return a concrete authenticator not a pointer, do not modify in place
 	// NOTE: The authenticator manager returns a struct that is reused
 	initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorFromStore.Config)
-	if err != nil || initializedAuthenticator == nil {
+	if err != nil {
 		return authenticator.InitializedAuthenticator{},
-			errors.Wrapf(err,
+			errors.Wrapf(
+				err,
 				"authenticator %d with type %s failed to initialize",
+				selectedAuthenticator, authenticatorFromStore.Type,
+			)
+	}
+	if initializedAuthenticator == nil {
+		return authenticator.InitializedAuthenticator{},
+			errors.Wrapf(
+				types.ErrInitializingAuthenticator,
+				"authenticator.Initialize returned nil for %d with type %s",
 				selectedAuthenticator, authenticatorFromStore.Type,
 			)
 	}

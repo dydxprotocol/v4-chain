@@ -50,7 +50,7 @@ func (k Keeper) GetAuthenticator(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	authenticator, err := k.GetSelectedAuthenticatorData(sdkCtx, acc, int(request.AuthenticatorId))
+	authenticator, err := k.GetSelectedAuthenticatorData(sdkCtx, acc, request.AuthenticatorId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
