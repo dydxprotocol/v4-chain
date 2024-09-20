@@ -70,6 +70,10 @@ func TestGetSetVaultParams(t *testing.T) {
 		positionBaseQuantums int64
 		// Vault params to set.
 		vaultParams *vaulttypes.VaultParams
+		// Number of vault orders before setting vault params.
+		numVaultOrdersPreSet uint32
+		// Number of vault orders after setting vault params.
+		numVaultOrdersPostSet uint32
 		// Expected on-chain indexer events
 		expectedIndexerEvents []*indexerevents.UpsertVaultEventV1
 		// Expected error.
@@ -94,6 +98,32 @@ func TestGetSetVaultParams(t *testing.T) {
 					Address:    constants.Vault_Clob1.ToModuleAccountAddress(),
 					ClobPairId: constants.Vault_Clob1.Number,
 					Status:     v1.VaultStatusToIndexerVaultStatus(constants.VaultParams.Status),
+				},
+			},
+		},
+		"Success - Create a stand-by vault": {
+			vaultId: constants.Vault_Clob1,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+			},
+			expectedIndexerEvents: []*indexerevents.UpsertVaultEventV1{
+				{
+					Address:    constants.Vault_Clob1.ToModuleAccountAddress(),
+					ClobPairId: constants.Vault_Clob1.Number,
+					Status:     v1.VaultStatusToIndexerVaultStatus(vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY),
+				},
+			},
+		},
+		"Success - Create a deactivated vault": {
+			vaultId: constants.Vault_Clob1,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+			},
+			expectedIndexerEvents: []*indexerevents.UpsertVaultEventV1{
+				{
+					Address:    constants.Vault_Clob1.ToModuleAccountAddress(),
+					ClobPairId: constants.Vault_Clob1.Number,
+					Status:     v1.VaultStatusToIndexerVaultStatus(vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED),
 				},
 			},
 		},
@@ -127,6 +157,27 @@ func TestGetSetVaultParams(t *testing.T) {
 					ClobPairId: constants.Vault_Clob1.Number,
 					Status: v1.VaultStatusToIndexerVaultStatus(
 						vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+					),
+				},
+			},
+		},
+		"Success - Put a quoting vault to stand-by should cancel all existing orders": {
+			vaultId: constants.Vault_Clob1,
+			existingVaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+			},
+			assetQuoteQuantums: 1_000_000_000,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+			},
+			numVaultOrdersPreSet:  4,
+			numVaultOrdersPostSet: 0,
+			expectedIndexerEvents: []*indexerevents.UpsertVaultEventV1{
+				{
+					Address:    constants.Vault_Clob1.ToModuleAccountAddress(),
+					ClobPairId: constants.Vault_Clob1.Number,
+					Status: v1.VaultStatusToIndexerVaultStatus(
+						vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
 					),
 				},
 			},
@@ -215,8 +266,18 @@ func TestGetSetVaultParams(t *testing.T) {
 				_, exists := k.GetVaultParams(ctx, tc.vaultId)
 				require.False(t, exists)
 			}
+			require.Len(
+				t,
+				tApp.App.ClobKeeper.GetAllStatefulOrders(ctx),
+				int(tc.numVaultOrdersPreSet),
+			)
+			require.Len(
+				t,
+				k.GetMostRecentClientIds(ctx, tc.vaultId),
+				int(tc.numVaultOrdersPreSet),
+			)
 
-			err := k.SetVaultParams(ctx, tc.vaultId, *tc.vaultParams)
+			err := k.SetVaultParams(ctx.WithIsCheckTx(false), tc.vaultId, *tc.vaultParams)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, err, tc.expectedErr)
 				v, exists := k.GetVaultParams(ctx, tc.vaultId)
@@ -226,11 +287,33 @@ func TestGetSetVaultParams(t *testing.T) {
 					require.True(t, exists)
 					require.Equal(t, *tc.existingVaultParams, v)
 				}
+
+				require.Len(
+					t,
+					tApp.App.ClobKeeper.GetAllStatefulOrders(ctx),
+					int(tc.numVaultOrdersPreSet),
+				)
+				require.Len(
+					t,
+					k.GetMostRecentClientIds(ctx, tc.vaultId),
+					int(tc.numVaultOrdersPreSet),
+				)
 			} else {
 				require.NoError(t, err)
 				p, exists := k.GetVaultParams(ctx, tc.vaultId)
 				require.True(t, exists)
 				require.Equal(t, *tc.vaultParams, p)
+
+				require.Len(
+					t,
+					tApp.App.ClobKeeper.GetAllStatefulOrders(ctx),
+					int(tc.numVaultOrdersPostSet),
+				)
+				require.Len(
+					t,
+					k.GetMostRecentClientIds(ctx, tc.vaultId),
+					int(tc.numVaultOrdersPostSet),
+				)
 			}
 
 			if tc.expectedErr == nil && tc.vaultParams != nil {

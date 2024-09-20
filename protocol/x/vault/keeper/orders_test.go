@@ -745,6 +745,100 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				},
 			},
 		},
+		"Success - Orders refresh due to status changing to stand-by. No more orders": {
+			vaultId: constants.Vault_Clob0,
+			instances: []Instance{
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						msgSetVaultParams := vaulttypes.MsgSetVaultParams{
+							Authority: constants.AliceAccAddress.String(), // operator
+							VaultId:   constants.Vault_Clob0,
+							VaultParams: vaulttypes.VaultParams{
+								Status: vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
+							},
+						}
+						CheckTx_MsgSetVaultParams := testapp.MustMakeCheckTx(
+							ctx,
+							tApp.App,
+							testapp.MustMakeCheckTxOptions{
+								AccAddressForSigning: constants.AliceAccAddress.String(),
+								Gas:                  constants.TestGasLimit,
+								FeeAmt:               constants.TestFeeCoins_5Cents,
+							},
+							&msgSetVaultParams,
+						)
+						checkTxResp := tApp.CheckTx(CheckTx_MsgSetVaultParams)
+						require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second * 2),
+							},
+						)
+					},
+					ordersRefreshed:     []bool{}, // no orders
+					orderSides:          []clobtypes.Order_Side{},
+					clientIdIsCanonical: []bool{},
+				},
+			},
+		},
+		"Success - Orders refresh due to retrieving to 0 equity and status changing to deactivated. No more orders": {
+			vaultId: constants.Vault_Clob0,
+			instances: []Instance{
+				{
+					advanceBlock: func(ctx sdk.Context, tApp *testapp.TestApp) sdk.Context {
+						msgRetrieveFromVault := vaulttypes.MsgRetrieveFromVault{
+							Authority:     constants.AliceAccAddress.String(), // operator
+							VaultId:       constants.Vault_Clob0,
+							QuoteQuantums: dtypes.NewInt(2_000_000_000), // retrieve all quote quantums the vault has.
+						}
+						CheckTx_MsgRetrieveFromVault := testapp.MustMakeCheckTx(
+							ctx,
+							tApp.App,
+							testapp.MustMakeCheckTxOptions{
+								AccAddressForSigning: constants.AliceAccAddress.String(),
+								Gas:                  constants.TestGasLimit,
+								FeeAmt:               constants.TestFeeCoins_5Cents,
+							},
+							&msgRetrieveFromVault,
+						)
+						checkTxResp := tApp.CheckTx(CheckTx_MsgRetrieveFromVault)
+						require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+						msgSetVaultParams := vaulttypes.MsgSetVaultParams{
+							Authority: constants.AliceAccAddress.String(), // operator
+							VaultId:   constants.Vault_Clob0,
+							VaultParams: vaulttypes.VaultParams{
+								Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+							},
+						}
+						CheckTx_MsgSetVaultParams := testapp.MustMakeCheckTx(
+							ctx,
+							tApp.App,
+							testapp.MustMakeCheckTxOptions{
+								AccAddressForSigning: constants.AliceAccAddress.String(),
+								Gas:                  constants.TestGasLimit,
+								FeeAmt:               constants.TestFeeCoins_5Cents,
+							},
+							&msgSetVaultParams,
+						)
+						checkTxResp = tApp.CheckTx(CheckTx_MsgSetVaultParams)
+						require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+						return tApp.AdvanceToBlock(
+							uint32(tApp.GetBlockHeight())+1,
+							testapp.AdvanceToBlockOptions{
+								BlockTime: ctx.BlockTime().Add(time.Second * 2),
+							},
+						)
+					},
+					ordersRefreshed:     []bool{}, // no orders
+					orderSides:          []clobtypes.Order_Side{},
+					clientIdIsCanonical: []bool{},
+				},
+			},
+		},
 		"Success - Vault for non-existent Clob Pair 4321": {
 			vaultId: vaulttypes.VaultId{
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
