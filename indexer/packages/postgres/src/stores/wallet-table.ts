@@ -1,3 +1,4 @@
+import Knex from 'knex';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
@@ -15,9 +16,7 @@ import {
   WalletFromDatabase,
   WalletQueryConfig,
   WalletUpdateObject,
-  PersistentCacheKeys,
 } from '../types';
-import Knex from 'knex';
 
 export async function findAll(
   {
@@ -118,18 +117,18 @@ export async function findById(
  * existing totalVolume values.
  *
  * @async
- * @function updateInfo
+ * @function updateTotalVolume
  * @param {string} windowStartTs - The exclusive start timestamp for filtering fills.
  * @param {string} windowEndTs - The inclusive end timestamp for filtering fill.
- * @param {Options} [options={ txId: undefined }] - Optional transaction ID or additional options.
+ * @param {number} [txId] - Optional transaction ID.
  * @returns {Promise<void>}
  */
 export async function updateTotalVolume(
   windowStartTs: string,
   windowEndTs: string,
-  options: Options = { txId: undefined },
+  txId: number | undefined = undefined,
 ) : Promise<void> {
-  const transaction: Knex.Transaction | undefined = Transaction.get(options.txId);
+  const transaction: Knex.Transaction | undefined = Transaction.get(txId);
 
   const query = `
     WITH fills_total AS (
@@ -157,14 +156,6 @@ export async function updateTotalVolume(
     SET "totalVolume" = COALESCE(wallets."totalVolume", 0) + av."totalVolume"
     FROM address_volume av
     WHERE wallets."address" = av."address";
-
-    -- Step 5: Upsert new totalVolumeUpdateTime to persistent_cache table
-    INSERT INTO persistent_cache (key, value)
-    VALUES ('${PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME}', '${windowEndTs}')
-    ON CONFLICT (key) 
-    DO UPDATE SET value = EXCLUDED.value;
-
-    COMMIT;
     `;
 
   return transaction

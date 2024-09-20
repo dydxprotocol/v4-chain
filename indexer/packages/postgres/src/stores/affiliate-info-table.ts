@@ -107,7 +107,7 @@ export async function findById(
  * @function updateInfo
  * @param {string} windowStartTs - The exclusive start timestamp for filtering fills.
  * @param {string} windowEndTs - The inclusive end timestamp for filtering fill.
- * @param {Options} [options={ txId: undefined }] - Optional transaction ID or additional options.
+ * @param {number} [txId] - Optional transaction ID.
  * @returns {Promise<void>}
  */
 export async function updateInfo(

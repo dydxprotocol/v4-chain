@@ -1,8 +1,8 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger } from '@dydxprotocol-indexer/base';
 import {
-  PersistentCacheTable, 
-  WalletTable, 
-  PersistentCacheKeys, 
+  PersistentCacheTable,
+  WalletTable,
+  PersistentCacheKeys,
   PersistentCacheFromDatabase,
   Transaction,
   BlockFromDatabase,
@@ -45,7 +45,11 @@ export default async function runTask(): Promise<void> {
       windowEndTime = windowStartTime.plus({ days: 1 });
     }
 
-    await WalletTable.updateTotalVolume(windowStartTime.toISO(), windowEndTime.toISO(), { txId });
+    logger.info({
+      at: 'update-wallet-total-volume#runTask',
+      message: `Updating wallet total volume from ${windowStartTime.toISO()} to ${windowEndTime.toISO()}`,
+    });
+    await WalletTable.updateTotalVolume(windowStartTime.toISO(), windowEndTime.toISO(), txId);
     await PersistentCacheTable.upsert({
       key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
       value: windowEndTime.toISO(),

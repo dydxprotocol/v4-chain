@@ -182,7 +182,7 @@ describe('update-wallet-total-volume', () => {
 
     const referenceDt = DateTime.fromISO('2023-10-26T00:00:00Z');
 
-    Promise.all([
+    await Promise.all([
       FillTable.create({
         ...testConstants.defaultFill,
         createdAt: referenceDt.plus({ days: 1 }).toISO(),

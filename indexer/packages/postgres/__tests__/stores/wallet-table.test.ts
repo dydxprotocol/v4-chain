@@ -1,4 +1,4 @@
-import { WalletFromDatabase, PersistentCacheKeys, PersistentCacheFromDatabase } from '../../src/types';
+import { WalletFromDatabase } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { DateTime } from 'luxon';
 import {
@@ -18,7 +18,6 @@ import * as FillTable from '../../src/stores/fill-table';
 import * as OrderTable from '../../src/stores/order-table';
 import * as WalletTable from '../../src/stores/wallet-table';
 import { seedData } from '../helpers/mock-generators';
-import { testConstants } from 'packages/postgres/src';
 
 describe('Wallet store', () => {
   beforeAll(async () => {
@@ -155,7 +154,7 @@ async function populateWalletSubaccountFill(): Promise<DateTime> {
         eventId: eventIds[eventIdx],
         price: '1',
         size: '1',
-      })
+      }),
     );
     eventIdx += 1;
   }
@@ -168,7 +167,7 @@ async function populateWalletSubaccountFill(): Promise<DateTime> {
       eventId: eventIds[eventIdx],
       price: '10',
       size: '10',
-    })
+    }),
   );
   await Promise.all(fillPromises);
 
