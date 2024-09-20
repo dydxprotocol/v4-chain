@@ -165,6 +165,13 @@ func (k Keeper) WithdrawFromMegavault(
 	vaultParamsIterator := k.getVaultParamsIterator(ctx)
 	defer vaultParamsIterator.Close()
 	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
+		var vaultParams types.VaultParams
+		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
+		// Skip deactivated vaults.
+		if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED {
+			continue
+		}
+
 		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
 			log.ErrorLogWithError(
@@ -174,8 +181,6 @@ func (k Keeper) WithdrawFromMegavault(
 			)
 			continue
 		}
-		var vaultParams types.VaultParams
-		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
 
 		_, perpetual, marketParam, marketPrice, err := k.GetVaultClobPerpAndMarket(ctx, *vaultId)
 		if err != nil {
