@@ -563,7 +563,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				},
 			},
 		},
-		"Success - Orders refresh due to status changing to close-only. No more orders": {
+		"Success - Orders refresh due to status changing to close-only and zero leverage. No more orders": {
 			vaultId: constants.Vault_Clob0,
 			instances: []Instance{
 				{
@@ -1341,7 +1341,38 @@ func TestGetVaultClobOrders(t *testing.T) {
 				41_666_000,
 			},
 		},
-		"Success - Vault Clob 1, close-only status, 2 layers, leverage 0.6, sell orders only, order size": {
+		"Success - Vault Clob 1, close-only status, 3 layers, leverage -0.6, no orders as size is rounded to 0": {
+			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			vaultQuotingParams: vaulttypes.QuotingParams{
+				Layers:                           3,         // 3 layers
+				SpreadMinPpm:                     7_654,     // 76.54 bps
+				SpreadBufferPpm:                  2_900,     // 29 bps
+				SkewFactorPpm:                    1_234_000, // 1.234
+				OrderSizePctPpm:                  100,       // 0.01%
+				OrderExpirationSeconds:           4,         // 4 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
+			},
+			vaultId:                    constants.Vault_Clob1,
+			vaultAssetQuoteQuantums:    big.NewInt(760_000_000),  // 1,000 USDC
+			vaultInventoryBaseQuantums: big.NewInt(-250_000_000), // -0.25 ETH
+			clobPair:                   constants.ClobPair_Eth,
+			marketParam:                constants.TestMarketParams[1],
+			marketPrice:                constants.TestMarketPrices[1],
+			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			expectedOrderLayers:        []uint8{},
+			expectedOrderSides:         []clobtypes.Order_Side{},
+			expectedOrderSubticks:      []uint64{},
+			// open_notional = -250_000_000 * 10^-9 * 3_000 * 10^6 = -750_000_000
+			// equity = 760_000_000 - 750_000_000 = 10_000_000
+			// order_size = `order_size_pct_ppm * equity / oracle_price`
+			// = 0.01% * 10 / 3000 ~= 3.3333e-7
+			// order_size_base_quantums = 3.3333e-7 * 10^-9 ~= 333 ~= 0 after rounding
+			// down to nearest multiple of step_base_quantums=1_000.
+			// Thus no orders.
+			expectedOrderQuantums: []uint64{},
+		},
+		"Success - Vault Clob 1, close-only status, 2 layers, leverage 0.6, sell orders only, " +
+			"order size capped to position size": {
 			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
 			vaultQuotingParams: vaulttypes.QuotingParams{
 				Layers:                           2,         // 2 layers
@@ -1472,21 +1503,6 @@ func TestGetVaultClobOrders(t *testing.T) {
 		},
 		"Success - Vault Clob 1, stand-by status, 3 layers, leverage -3, Empty orders": {
 			vaultStatus:                vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
-			vaultQuotingParams:         vaulttypes.DefaultQuotingParams(),
-			vaultId:                    constants.Vault_Clob1,
-			vaultAssetQuoteQuantums:    big.NewInt(2_000_000_000), // 2,000 USDC
-			vaultInventoryBaseQuantums: big.NewInt(-500_000_000),  // -0.5 ETH
-			clobPair:                   constants.ClobPair_Eth,
-			marketParam:                constants.TestMarketParams[1],
-			marketPrice:                constants.TestMarketPrices[1],
-			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
-			expectedOrderLayers:        []uint8{},
-			expectedOrderSides:         []clobtypes.Order_Side{},
-			expectedOrderSubticks:      []uint64{},
-			expectedOrderQuantums:      []uint64{},
-		},
-		"Success - Vault Clob 1, deactivated status, 3 layers, leverage -3, Empty orders": {
-			vaultStatus:                vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
 			vaultQuotingParams:         vaulttypes.DefaultQuotingParams(),
 			vaultId:                    constants.Vault_Clob1,
 			vaultAssetQuoteQuantums:    big.NewInt(2_000_000_000), // 2,000 USDC

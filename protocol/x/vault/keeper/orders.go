@@ -369,20 +369,26 @@ func (k Keeper) GetVaultClobOrders(
 
 	if vaultParams.Status == types.VaultStatus_VAULT_STATUS_CLOSE_ONLY {
 		// In close-only mode with non-zero leverage.
-		reduceOnlyOrders := make([]*clobtypes.Order, quotingParams.Layers)
 		reduceOnlyMaxOrderSize := k.GetVaultInventoryInPerpetual(ctx, vaultId, perpetual.Params.Id)
 		stepSize := lib.BigU(clobPair.StepBaseQuantums)
 		reduceOnlyMaxOrderSize.Quo(reduceOnlyMaxOrderSize, stepSize)
 		reduceOnlyMaxOrderSize.Mul(reduceOnlyMaxOrderSize, stepSize)
-		// If vault is long, only need sell orders (even indices).
-		i := 0
-		if leverage.Sign() < 0 {
-			// If vault is short, only need buy orders (odd indices).
-			i = 1
+		if reduceOnlyMaxOrderSize.Sign() == 0 {
+			return []*clobtypes.Order{}, nil
 		}
-		for ; i < len(orders); i += 2 {
-			reduceOnlyOrders[i/2] = orders[i]
-			reduceOnlyOrders[i/2].Quantums = lib.Min(reduceOnlyOrders[i/2].Quantums, reduceOnlyMaxOrderSize.Uint64())
+
+		// If vault is long, only need sell orders.
+		reduceOnlySide := clobtypes.Order_SIDE_SELL
+		if leverage.Sign() < 0 {
+			// If vault is short, only need buy orders.
+			reduceOnlySide = clobtypes.Order_SIDE_BUY
+		}
+		reduceOnlyOrders := make([]*clobtypes.Order, 0, len(orders))
+		for _, order := range orders {
+			if order.Side == reduceOnlySide {
+				order.Quantums = lib.Min(order.Quantums, reduceOnlyMaxOrderSize.Uint64())
+				reduceOnlyOrders = append(reduceOnlyOrders, order)
+			}
 		}
 		return reduceOnlyOrders, nil
 	}
