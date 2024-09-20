@@ -130,4 +130,24 @@ var (
 		25,
 		"Shares to withdraw must be positive and less than or equal to total shares",
 	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		26,
+		"Authority must be a module authority or operator",
+	)
+	ErrInsufficientWithdrawableShares = errorsmod.Register(
+		ModuleName,
+		27,
+		"Insufficient withdrawable shares",
+	)
+	ErrInsufficientRedeemedQuoteQuantums = errorsmod.Register(
+		ModuleName,
+		28,
+		"Insufficient redeemed quote quantums",
+	)
+	ErrDeactivatePositiveEquityVault = errorsmod.Register(
+		ModuleName,
+		29,
+		"Cannot deactivate vaults with positive equity",
+	)
 )

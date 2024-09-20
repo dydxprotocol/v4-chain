@@ -151,6 +151,7 @@ func ListingKeepers(
 				pricesKeeper,
 				statsKeeper,
 				rewardsKeeper,
+				affiliatesKeeper,
 				subaccountsKeeper,
 				revShareKeeper,
 				indexerEventManager,

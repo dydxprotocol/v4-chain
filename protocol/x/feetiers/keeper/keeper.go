@@ -147,17 +147,19 @@ func GetLowestMakerFeeFromTiers(tiers []*types.PerpetualFeeTier) int32 {
 	return lowestMakerFee
 }
 
-// GetAffiliateRefereeLowestTakerFeeFromTiers returns the lowest taker fee
-// for volume under Max30dRefereeVolumeQuantums.
+// GetAffiliateRefereeLowestTakerFeeFromTiers returns the minimum of
+// - the taker fee of the tier that has the max absolute volume requirement
+// - the taker fee of the referee starting fee tier
 func GetAffiliateRefereeLowestTakerFeeFromTiers(tiers []*types.PerpetualFeeTier) int32 {
+	takerFeePpm := int32(math.MaxInt32)
 	for _, tier := range tiers {
 		// assumes tiers are ordered by absolute volume requirement
 		if tier.AbsoluteVolumeRequirement < revsharetypes.Max30dRefereeVolumeQuantums {
-			return tier.TakerFeePpm
+			takerFeePpm = tier.TakerFeePpm
 		} else {
 			break
 		}
 	}
 
-	return tiers[types.RefereeStartingFeeTier].TakerFeePpm
+	return min(takerFeePpm, tiers[types.RefereeStartingFeeTier].TakerFeePpm)
 }

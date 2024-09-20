@@ -149,11 +149,12 @@ var (
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal":       {},
 
 		// affiliates
-		"/dydxprotocol.affiliates.MsgRegisterAffiliate":            {},
-		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse":    {},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":         {},
-		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse": {},
-
+		"/dydxprotocol.affiliates.MsgRegisterAffiliate":                {},
+		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse":        {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":             {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":     {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":         {},
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse": {},
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         {},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},
@@ -249,8 +250,12 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
 		// vault
+		"/dydxprotocol.vault.MsgAllocateToVault":                    {},
+		"/dydxprotocol.vault.MsgAllocateToVaultResponse":            {},
 		"/dydxprotocol.vault.MsgDepositToMegavault":                 {},
 		"/dydxprotocol.vault.MsgDepositToMegavaultResponse":         {},
+		"/dydxprotocol.vault.MsgRetrieveFromVault":                  {},
+		"/dydxprotocol.vault.MsgRetrieveFromVaultResponse":          {},
 		"/dydxprotocol.vault.MsgSetVaultParams":                     {},
 		"/dydxprotocol.vault.MsgSetVaultParamsResponse":             {},
 		"/dydxprotocol.vault.MsgUnlockShares":                       {},
@@ -260,6 +265,8 @@ var (
 		"/dydxprotocol.vault.MsgUpdateOperatorParams":               {},
 		"/dydxprotocol.vault.MsgUpdateOperatorParamsResponse":       {},
 		"/dydxprotocol.vault.MsgUpdateParams":                       {},
+		"/dydxprotocol.vault.MsgWithdrawFromMegavault":              {},
+		"/dydxprotocol.vault.MsgWithdrawFromMegavaultResponse":      {},
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            {},

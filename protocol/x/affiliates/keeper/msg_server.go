@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 )
@@ -38,29 +37,27 @@ func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	unconditionalRevShareConfig, err := k.revShareKeeper.GetUnconditionalRevShareConfigParams(sdkCtx)
-	if err != nil {
-		return nil, err
-	}
-	marketMapperRevShareParams := k.revShareKeeper.GetMarketMapperRevenueShareParams(sdkCtx)
 
-	lowestTakerFee := k.feetiersKeeper.GetAffiliateRefereeLowestTakerFee(sdkCtx)
-	lowestMakerFee := k.feetiersKeeper.GetLowestMakerFee(sdkCtx)
-
-	if !k.revShareKeeper.ValidateRevShareSafety(sdkCtx, msg.Tiers,
-		unconditionalRevShareConfig, marketMapperRevShareParams, lowestTakerFee, lowestMakerFee) {
-		return nil, errorsmod.Wrapf(
-			types.ErrRevShareSafetyViolation,
-			"rev share safety violation",
-		)
-	}
-
-	err = k.Keeper.UpdateAffiliateTiers(sdkCtx, msg.Tiers)
+	err := k.Keeper.UpdateAffiliateTiers(sdkCtx, msg.Tiers)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.MsgUpdateAffiliateTiersResponse{}, nil
+}
+
+func (k msgServer) UpdateAffiliateWhitelist(ctx context.Context,
+	msg *types.MsgUpdateAffiliateWhitelist) (*types.MsgUpdateAffiliateWhitelistResponse, error) {
+	if !k.Keeper.HasAuthority(msg.Authority) {
+		return nil, errors.New("invalid authority")
+	}
+
+	err := k.Keeper.SetAffiliateWhitelist(sdk.UnwrapSDKContext(ctx), msg.Whitelist)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateAffiliateWhitelistResponse{}, nil
 }
 
 // NewMsgServerImpl returns an implementation of the MsgServer interface

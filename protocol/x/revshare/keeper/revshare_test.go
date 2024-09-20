@@ -175,7 +175,6 @@ func TestGetMarketMapperRevenueShareForMarket(t *testing.T) {
 
 func TestValidateRevShareSafety(t *testing.T) {
 	tests := map[string]struct {
-		affiliateTiers             affiliatetypes.AffiliateTiers
 		revShareConfig             types.UnconditionalRevShareConfig
 		marketMapperRevShareParams types.MarketMapperRevenueShareParams
 		lowestTakerFee             int32
@@ -183,7 +182,6 @@ func TestValidateRevShareSafety(t *testing.T) {
 		expectedValid              bool
 	}{
 		"valid rev share config": {
-			affiliateTiers: affiliatetypes.DefaultAffiliateTiers,
 			revShareConfig: types.UnconditionalRevShareConfig{
 				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
 					{
@@ -201,94 +199,27 @@ func TestValidateRevShareSafety(t *testing.T) {
 			lowestMakerFee: -110,
 			expectedValid:  true,
 		},
-		"invalid rev share config - sum of shares > 100%": {
-			affiliateTiers: affiliatetypes.DefaultAffiliateTiers,
+		"rev share safety violation: unconditional + marketmapper > 100%": {
 			revShareConfig: types.UnconditionalRevShareConfig{
 				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
 					{
 						Address:  constants.AliceAccAddress.String(),
-						SharePpm: 100_000, // 10%
-					},
-					{
-						Address:  constants.BobAccAddress.String(),
-						SharePpm: 810_000, // 81%
+						SharePpm: 600_000, // 60%
 					},
 				},
 			},
 			marketMapperRevShareParams: types.MarketMapperRevenueShareParams{
 				Address:         constants.AliceAccAddress.String(),
-				RevenueSharePpm: 100_000, // 10%
+				RevenueSharePpm: 500_000, // 50%
 				ValidDays:       0,
 			},
 			lowestTakerFee: 350,
 			lowestMakerFee: -110,
 			expectedValid:  false,
 		},
-		"invalid rev share config - sum of shares + highest tier share > 100%": {
-			affiliateTiers: affiliatetypes.AffiliateTiers{
-				Tiers: []affiliatetypes.AffiliateTiers_Tier{
-					{
-						ReqReferredVolumeQuoteQuantums: 0,
-						ReqStakedWholeCoins:            0,
-						TakerFeeSharePpm:               50_000, // 5%
-					},
-					{
-						ReqReferredVolumeQuoteQuantums: 1_000_000_000_000, // 1 million USDC
-						ReqStakedWholeCoins:            200,               // 200 whole coins
-						TakerFeeSharePpm:               800_000,           // 80%
-					},
-				},
-			},
-			revShareConfig: types.UnconditionalRevShareConfig{
-				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
-					{
-						Address:  constants.AliceAccAddress.String(),
-						SharePpm: 100_000, // 10%
-					},
-					{
-						Address:  constants.BobAccAddress.String(),
-						SharePpm: 100_000, // 10%
-					},
-				},
-			},
-			marketMapperRevShareParams: types.MarketMapperRevenueShareParams{
-				Address:         constants.AliceAccAddress.String(),
-				RevenueSharePpm: 100_000, // 10%
-				ValidDays:       0,
-			},
+		"rev share safety violation: affiliate and fees": {
 			lowestTakerFee: 350,
-			lowestMakerFee: -110,
-			expectedValid:  false,
-		},
-		"invalid rev share config - violates safety condition": {
-			affiliateTiers: affiliatetypes.AffiliateTiers{
-				Tiers: []affiliatetypes.AffiliateTiers_Tier{
-					{
-						ReqReferredVolumeQuoteQuantums: 0,
-						ReqStakedWholeCoins:            0,
-						TakerFeeSharePpm:               450_000, // 45%
-					},
-				},
-			},
-			revShareConfig: types.UnconditionalRevShareConfig{
-				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
-					{
-						Address:  constants.AliceAccAddress.String(),
-						SharePpm: 100_000, // 10%
-					},
-					{
-						Address:  constants.BobAccAddress.String(),
-						SharePpm: 150_000, // 15%
-					},
-				},
-			},
-			marketMapperRevShareParams: types.MarketMapperRevenueShareParams{
-				Address:         constants.AliceAccAddress.String(),
-				RevenueSharePpm: 100_000, // 10%
-				ValidDays:       0,
-			},
-			lowestTakerFee: 350,
-			lowestMakerFee: -110,
+			lowestMakerFee: -220,
 			expectedValid:  false,
 		},
 	}
@@ -301,7 +232,6 @@ func TestValidateRevShareSafety(t *testing.T) {
 
 			valid := k.ValidateRevShareSafety(
 				ctx,
-				tc.affiliateTiers,
 				tc.revShareConfig,
 				tc.marketMapperRevShareParams,
 				tc.lowestTakerFee,
@@ -696,6 +626,75 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
+			name: "Valid revenue share with whitelisted affiliate and no unconditional rev shares",
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares: []types.RevShare{
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+						QuoteQuantums:     big.NewInt(2_500_000),
+						RevSharePpm:       250_000, // 25%
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+						QuoteQuantums:     big.NewInt(1_200_000),
+						RevSharePpm:       100_000, // 10%
+					},
+				},
+				AffiliateRevShare: &types.RevShare{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+					QuoteQuantums:     big.NewInt(2_500_000),
+					RevSharePpm:       250_000, // 25%
+				},
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(1_200_000),
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(2_500_000),
+				},
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_NET_FEE:   100_000, // 10%
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: 250_000, // 25%
+				},
+			},
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         marketId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+			},
+			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
+				affiliatesKeeper *affiliateskeeper.Keeper) {
+				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
+					Address:         constants.AliceAccAddress.String(),
+					RevenueSharePpm: 100_000, // 10%
+					ValidDays:       1,
+				})
+				require.NoError(t, err)
+
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
+				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
+					constants.BobAccAddress.String())
+				require.NoError(t, err)
+				err = affiliatesKeeper.SetAffiliateWhitelist(ctx, affiliatetypes.AffiliateWhitelist{
+					Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
+						{
+							Addresses:        []string{constants.BobAccAddress.String()},
+							TakerFeeSharePpm: 250_000, // 25%
+						},
+					},
+				})
+				require.NoError(t, err)
+			},
+		},
+		{
 			name: "No rev shares",
 			expectedRevSharesForFill: types.RevSharesForFill{
 				AllRevShares:      []types.RevShare{},
@@ -737,8 +736,10 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			}
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
+			affiliateWhitelistMap, err := affiliatesKeeper.GetAffiliateWhitelistMap(ctx)
+			require.NoError(t, err)
 
-			revSharesForFill, err := keeper.GetAllRevShares(ctx, tc.fill)
+			revSharesForFill, err := keeper.GetAllRevShares(ctx, tc.fill, affiliateWhitelistMap)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedRevSharesForFill, revSharesForFill)
@@ -884,7 +885,7 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 
-			_, err := keeper.GetAllRevShares(ctx, fill)
+			_, err := keeper.GetAllRevShares(ctx, fill, map[string]uint32{})
 
 			require.ErrorIs(t, err, tc.expectedError)
 		})

@@ -31,11 +31,6 @@ func (k Keeper) SetPerpetualFeeParams(
 	lowestMakerFee := GetLowestMakerFeeFromTiers(params.Tiers)
 	lowestTakerFee := GetAffiliateRefereeLowestTakerFeeFromTiers(params.Tiers)
 
-	affiliateTiers, err := k.affiliatesKeeper.GetAllAffiliateTiers(ctx)
-	if err != nil {
-		return err
-	}
-
 	unconditionalRevShareConfig, err := k.revShareKeeper.GetUnconditionalRevShareConfigParams(ctx)
 	if err != nil {
 		return err
@@ -46,7 +41,7 @@ func (k Keeper) SetPerpetualFeeParams(
 		return err
 	}
 
-	valid := k.revShareKeeper.ValidateRevShareSafety(ctx, affiliateTiers, unconditionalRevShareConfig,
+	valid := k.revShareKeeper.ValidateRevShareSafety(ctx, unconditionalRevShareConfig,
 		marketMapperRevShareParams, lowestTakerFee, lowestMakerFee)
 	if !valid {
 		return errorsmod.Wrapf(

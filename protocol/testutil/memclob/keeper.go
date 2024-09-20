@@ -327,6 +327,7 @@ func (f *FakeMemClobKeeper) addFakeFillAmount(
 func (f *FakeMemClobKeeper) ProcessSingleMatch(
 	ctx sdk.Context,
 	matchWithOrders *types.MatchWithOrders,
+	affiliatesWhitelistMap map[string]uint32,
 ) (
 	success bool,
 	takerUpdateResult satypes.UpdateResult,

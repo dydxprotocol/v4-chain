@@ -1130,6 +1130,7 @@ func New(
 		app.PricesKeeper,
 		app.StatsKeeper,
 		app.RewardsKeeper,
+		app.AffiliatesKeeper,
 		app.IndexerEventManager,
 		app.FullNodeStreamingManager,
 		txConfig.TxDecoder(),
@@ -1182,12 +1183,15 @@ func New(
 	app.VaultKeeper = *vaultmodulekeeper.NewKeeper(
 		appCodec,
 		keys[vaultmoduletypes.StoreKey],
+		app.AssetsKeeper,
+		app.BankKeeper,
 		app.ClobKeeper,
 		app.DelayMsgKeeper,
 		app.PerpetualsKeeper,
 		app.PricesKeeper,
 		app.SendingKeeper,
 		app.SubaccountsKeeper,
+		app.IndexerEventManager,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
@@ -1947,6 +1951,11 @@ func (app *App) RegisterNodeService(clientCtx client.Context, cfg config.Config)
 // SimulationManager always returns nil.
 func (app *App) SimulationManager() *module.SimulationManager {
 	return nil
+}
+
+// GetKVStoreKey gets KV Store keys.
+func (app *App) GetKVStoreKey() map[string]*storetypes.KVStoreKey {
+	return app.keys
 }
 
 // buildAnteHandler builds an AnteHandler object configured for the app.

@@ -20,7 +20,6 @@ type RevShareKeeper interface {
 	) revsharetypes.MarketMapperRevenueShareParams
 	ValidateRevShareSafety(
 		ctx sdk.Context,
-		affiliateTiers AffiliateTiers,
 		unconditionalRevShareConfig revsharetypes.UnconditionalRevShareConfig,
 		marketMapperRevShareParams revsharetypes.MarketMapperRevenueShareParams,
 		lowestTakerFee int32,
