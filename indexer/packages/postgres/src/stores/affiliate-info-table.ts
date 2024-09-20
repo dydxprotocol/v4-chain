@@ -111,8 +111,8 @@ export async function findById(
  * @returns {Promise<void>}
  */
 export async function updateInfo(
-  windowStartTs: string, // exclusive
-  windowEndTs: string, // inclusive
+  windowStartTs: string,
+  windowEndTs: string,
   options: Options = { txId: undefined },
 ) : Promise<void> {
   const transaction: Knex.Transaction | undefined = Transaction.get(options.txId);

@@ -17,6 +17,7 @@ import {
   WalletUpdateObject,
   PersistentCacheKeys,
 } from '../types';
+import Knex from 'knex';
 
 export async function findAll(
   {
@@ -116,18 +117,21 @@ export async function findById(
  * Calculates the total volume in a given time window for each address and adds the values to the
  * existing totalVolume values.
  *
- * @param windowStartTs - The start timestamp of the time window (exclusive).
- * @param windowEndTs - The end timestamp of the time window (inclusive).
+ * @async
+ * @function updateInfo
+ * @param {string} windowStartTs - The exclusive start timestamp for filtering fills.
+ * @param {string} windowEndTs - The inclusive end timestamp for filtering fill.
+ * @param {Options} [options={ txId: undefined }] - Optional transaction ID or additional options.
+ * @returns {Promise<void>}
  */
 export async function updateTotalVolume(
   windowStartTs: string,
   windowEndTs: string,
+  options: Options = { txId: undefined },
 ) : Promise<void> {
+  const transaction: Knex.Transaction | undefined = Transaction.get(options.txId);
 
-  await knexPrimary.raw(
-    `
-    BEGIN;
-
+  const query = `
     WITH fills_total AS (
       -- Step 1: Calculate total volume for each subaccountId
       SELECT "subaccountId", SUM("price" * "size") AS "totalVolume"
@@ -161,6 +165,9 @@ export async function updateTotalVolume(
     DO UPDATE SET value = EXCLUDED.value;
 
     COMMIT;
-    `,
-  );
+    `;
+
+  return transaction
+    ? knexPrimary.raw(query).transacting(transaction)
+    : knexPrimary.raw(query);
 }

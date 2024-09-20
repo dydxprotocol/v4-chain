@@ -1,21 +1,32 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
-  PersistentCacheTable, WalletTable, PersistentCacheKeys, PersistentCacheFromDatabase,
+  PersistentCacheTable, 
+  WalletTable, 
+  PersistentCacheKeys, 
+  PersistentCacheFromDatabase,
+  Transaction,
+  BlockFromDatabase,
+  BlockTable,
 } from '@dydxprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 
-import config from '../config';
-
-const defaultLastUpdateTime: string = '2020-01-01T00:00:00Z';
+const defaultLastUpdateTime: string = '2023-10-26T00:00:00Z';
 
 /**
  * Update the total volume for each addresses in the wallet table who filled recently.
  */
 export default async function runTask(): Promise<void> {
+  // Wrap getting cache, updating info, and setting cache in one transaction so that persistent
+  // cache and affilitate info table are in sync.
+  const txId: number = await Transaction.start();
   try {
-    const start = Date.now();
+    const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
+    if (latestBlock.time === null) {
+      throw Error('Failed to get latest block time');
+    }
+
     const persistentCacheEntry: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
-      .findById(PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME);
+      .findById(PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME, { txId });
 
     if (!persistentCacheEntry) {
       logger.info({
@@ -24,24 +35,25 @@ export default async function runTask(): Promise<void> {
       });
     }
 
-    const lastUpdateTime: DateTime = DateTime.fromISO(persistentCacheEntry
+    const windowStartTime: DateTime = DateTime.fromISO(persistentCacheEntry
       ? persistentCacheEntry.value
       : defaultLastUpdateTime);
 
-    let windowEndTime = DateTime.utc();
-
+    let windowEndTime = DateTime.fromISO(latestBlock.time);
     // During backfilling, we process one day at a time to reduce roundtable runtime.
-    if (windowEndTime > lastUpdateTime.plus({ days: 1 })) {
-      windowEndTime = lastUpdateTime.plus({ days: 1 });
+    if (windowEndTime > windowStartTime.plus({ days: 1 })) {
+      windowEndTime = windowStartTime.plus({ days: 1 });
     }
 
-    await WalletTable.updateTotalVolume(lastUpdateTime.toISO(), windowEndTime.toISO());
+    await WalletTable.updateTotalVolume(windowStartTime.toISO(), windowEndTime.toISO(), { txId });
+    await PersistentCacheTable.upsert({
+      key: PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
+      value: windowEndTime.toISO(),
+    }, { txId });
 
-    stats.timing(
-      `${config.SERVICE_NAME}.update_wallet_total_volume_timing`,
-      Date.now() - start,
-    );
+    await Transaction.commit(txId);
   } catch (error) {
+    await Transaction.rollback(txId);
     logger.error({
       at: 'update-wallet-total-volume#runTask',
       message: 'Error when updating totalVolume in wallets table',
