@@ -738,6 +738,7 @@ type QueryClient interface {
 	MegavaultTotalShares(ctx context.Context, in *QueryMegavaultTotalSharesRequest, opts ...grpc.CallOption) (*QueryMegavaultTotalSharesResponse, error)
 	// Queries owner shares of megavault.
 	MegavaultOwnerShares(ctx context.Context, in *QueryMegavaultOwnerSharesRequest, opts ...grpc.CallOption) (*QueryMegavaultOwnerSharesResponse, error)
+	// Queries vault params of a vault.
 	VaultParams(ctx context.Context, in *QueryVaultParamsRequest, opts ...grpc.CallOption) (*QueryVaultParamsResponse, error)
 }
 
@@ -815,6 +816,7 @@ type QueryServer interface {
 	MegavaultTotalShares(context.Context, *QueryMegavaultTotalSharesRequest) (*QueryMegavaultTotalSharesResponse, error)
 	// Queries owner shares of megavault.
 	MegavaultOwnerShares(context.Context, *QueryMegavaultOwnerSharesRequest) (*QueryMegavaultOwnerSharesResponse, error)
+	// Queries vault params of a vault.
 	VaultParams(context.Context, *QueryVaultParamsRequest) (*QueryVaultParamsResponse, error)
 }
 

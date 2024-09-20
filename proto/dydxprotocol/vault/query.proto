@@ -35,7 +35,7 @@ service Query {
       returns (QueryMegavaultOwnerSharesResponse) {
     option (google.api.http).get = "/dydxprotocol/vault/megavault/owner_shares";
   }
-
+  // Queries vault params of a vault.
   rpc VaultParams(QueryVaultParamsRequest) returns (QueryVaultParamsResponse) {
     option (google.api.http).get = "/dydxprotocol/vault/params/{type}/{number}";
   }
