@@ -44,6 +44,14 @@ func (k Keeper) DepositToMegavault(
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		types.NewDepositToMegavaultEvent(
+			fromSubaccount.Owner,
+			quoteQuantums.Uint64(),
+			mintedShares.Uint64(),
+		),
+	)
+
 	return mintedShares, nil
 }
 
@@ -57,7 +65,7 @@ func (k Keeper) MintShares(
 ) (mintedShares *big.Int, err error) {
 	// Quantums to deposit should be positive.
 	if quantumsToDeposit.Sign() <= 0 {
-		return nil, types.ErrInvalidDepositAmount
+		return nil, types.ErrInvalidQuoteQuantums
 	}
 	// Get existing TotalShares of the vault.
 	existingTotalShares := k.GetTotalShares(ctx).NumShares.BigInt()

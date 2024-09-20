@@ -63,11 +63,12 @@ func (k Keeper) GetVaultEquity(
 
 // GetVaultLeverageAndEquity returns a vault's leverage and equity.
 // - leverage = open notional / equity.
+// Note that an error is returned if equity is non-positive.
 func (k Keeper) GetVaultLeverageAndEquity(
 	ctx sdk.Context,
 	vaultId types.VaultId,
-	perpetual perptypes.Perpetual,
-	marketPrice pricestypes.MarketPrice,
+	perpetual *perptypes.Perpetual,
+	marketPrice *pricestypes.MarketPrice,
 ) (
 	leverage *big.Rat,
 	equity *big.Int,

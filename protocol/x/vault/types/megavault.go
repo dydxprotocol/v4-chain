@@ -6,9 +6,10 @@ import (
 )
 
 var (
+	MegavaultMainAddress = authtypes.NewModuleAddress(MegavaultAccountName)
 	// MegavaultMainSubaccount is subaccount 0 of the module account derived from string "megavault".
 	MegavaultMainSubaccount = satypes.SubaccountId{
-		Owner:  authtypes.NewModuleAddress(MegavaultAccountName).String(),
+		Owner:  MegavaultMainAddress.String(),
 		Number: 0,
 	}
 )

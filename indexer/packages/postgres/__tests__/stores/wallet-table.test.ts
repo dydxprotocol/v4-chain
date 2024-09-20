@@ -1,10 +1,9 @@
-import { WalletFromDatabase, PersistentCacheKeys, PersistentCacheFromDatabase } from '../../src/types';
+import { WalletFromDatabase } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { DateTime } from 'luxon';
 import {
   defaultFill,
   defaultOrder,
-  defaultSubaccount,
   defaultTendermintEventId,
   defaultTendermintEventId2,
   defaultTendermintEventId3,
@@ -12,13 +11,12 @@ import {
   defaultWallet,
   defaultWallet2,
   isolatedMarketOrder,
-  isolatedSubaccount,
+  defaultSubaccountId,
+  isolatedSubaccountId,
 } from '../helpers/constants';
 import * as FillTable from '../../src/stores/fill-table';
 import * as OrderTable from '../../src/stores/order-table';
 import * as WalletTable from '../../src/stores/wallet-table';
-import * as SubaccountTable from '../../src/stores/subaccount-table';
-import * as PersistentCacheTable from '../../src/stores/persistent-cache-table';
 import { seedData } from '../helpers/mock-generators';
 
 describe('Wallet store', () => {
@@ -90,7 +88,7 @@ describe('Wallet store', () => {
     expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
   });
 
-  describe('Wallet .updateTotalVolume()', () => {
+  describe('updateTotalVolume', () => {
     it('Successfully updates totalVolume for time window multiple times', async () => {
       const firstFillTime: DateTime = await populateWalletSubaccountFill();
 
@@ -99,9 +97,9 @@ describe('Wallet store', () => {
         firstFillTime.minus({ hours: 1 }).toISO(), // need to minus because left bound is exclusive
         firstFillTime.plus({ hours: 1 }).toISO(),
       );
-      let wallet: WalletFromDatabase | undefined = await WalletTable
+      const wallet1: WalletFromDatabase | undefined = await WalletTable
         .findById(defaultWallet.address);
-      expect(wallet).toEqual(expect.objectContaining({
+      expect(wallet1).toEqual(expect.objectContaining({
         ...defaultWallet,
         totalVolume: '103',
       }));
@@ -113,44 +111,11 @@ describe('Wallet store', () => {
         firstFillTime.toISO(), // exclusive -> filters out first fill from each subaccount
         firstFillTime.plus({ minutes: 2 }).toISO(),
       );
-      wallet = await WalletTable.findById(defaultWallet.address);
-      expect(wallet).toEqual(expect.objectContaining({
+      const wallet2 = await WalletTable.findById(defaultWallet.address);
+      expect(wallet2).toEqual(expect.objectContaining({
         ...defaultWallet,
         totalVolume: '105', // 103 + 2
       }));
-    });
-
-    it('Successfully upserts persistent cache', async () => {
-      const referenceDt = DateTime.utc();
-
-      // Sets initial persistent cache value
-      let leftBound: DateTime = referenceDt.minus({ hours: 2 });
-      let rightBound: DateTime = referenceDt.minus({ hours: 1 });
-
-      await WalletTable.updateTotalVolume(leftBound.toISO(), rightBound.toISO());
-
-      let persistentCache: PersistentCacheFromDatabase | undefined = await PersistentCacheTable
-        .findById(PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME);
-      let lastUpdateTime: string | undefined = persistentCache?.value;
-      expect(lastUpdateTime).not.toBeUndefined();
-      if (lastUpdateTime !== undefined) {
-        expect(lastUpdateTime).toEqual(rightBound.toISO());
-      }
-
-      // Updates persistent cache value
-      leftBound = referenceDt.minus({ hours: 1 });
-      rightBound = referenceDt;
-
-      await WalletTable.updateTotalVolume(leftBound.toISO(), rightBound.toISO());
-
-      persistentCache = await PersistentCacheTable.findById(
-        PersistentCacheKeys.TOTAL_VOLUME_UPDATE_TIME,
-      );
-      lastUpdateTime = persistentCache?.value;
-      expect(lastUpdateTime).not.toBeUndefined();
-      if (lastUpdateTime !== undefined) {
-        expect(lastUpdateTime).toEqual(rightBound.toISO());
-      }
     });
   });
 });
@@ -164,22 +129,12 @@ describe('Wallet store', () => {
  */
 async function populateWalletSubaccountFill(): Promise<DateTime> {
   await seedData();
-  await OrderTable.create(defaultOrder);
-  await OrderTable.create(isolatedMarketOrder);
+  await Promise.all([
+    OrderTable.create(defaultOrder),
+    OrderTable.create(isolatedMarketOrder),
+  ]);
 
-  // seedData() creates defaultWallet with defaultSubaccount and isolatedSubaccount
-  const defaultSubaccountId = await SubaccountTable.findAll(
-    { subaccountNumber: defaultSubaccount.subaccountNumber },
-    [],
-    {},
-  );
-  const isolatedSubaccountId = await SubaccountTable.findAll(
-    { subaccountNumber: isolatedSubaccount.subaccountNumber },
-    [],
-    {},
-  );
-
-  const referenceDt = DateTime.utc().minus({ hours: 1 });
+  const referenceDt: DateTime = DateTime.utc().minus({ hours: 1 });
   const eventIds = [
     defaultTendermintEventId,
     defaultTendermintEventId2,
@@ -188,27 +143,33 @@ async function populateWalletSubaccountFill(): Promise<DateTime> {
   ];
   let eventIdx = 0;
 
+  const fillPromises: Promise<any>[] = [];
   // Create 3 fills with 1 min increments for defaultSubaccount
   for (let i = 0; i < 3; i++) {
-    await FillTable.create({
-      ...defaultFill,
-      subaccountId: defaultSubaccountId[0].id,
-      createdAt: referenceDt.plus({ minutes: i }).toISO(),
-      eventId: eventIds[eventIdx],
-      price: '1',
-      size: '1',
-    });
+    fillPromises.push(
+      FillTable.create({
+        ...defaultFill,
+        subaccountId: defaultSubaccountId,
+        createdAt: referenceDt.plus({ minutes: i }).toISO(),
+        eventId: eventIds[eventIdx],
+        price: '1',
+        size: '1',
+      }),
+    );
     eventIdx += 1;
   }
   // Create 1 fill at referenceDt for isolatedSubaccount
-  await FillTable.create({
-    ...defaultFill,
-    subaccountId: isolatedSubaccountId[0].id,
-    createdAt: referenceDt.toISO(),
-    eventId: eventIds[eventIdx],
-    price: '10',
-    size: '10',
-  });
+  fillPromises.push(
+    FillTable.create({
+      ...defaultFill,
+      subaccountId: isolatedSubaccountId,
+      createdAt: referenceDt.toISO(),
+      eventId: eventIds[eventIdx],
+      price: '10',
+      size: '10',
+    }),
+  );
+  await Promise.all(fillPromises);
 
   return referenceDt;
 }

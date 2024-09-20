@@ -1,10 +1,7 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
-  DEFAULT_POSTGRES_OPTIONS,
-  Ordering, PaginationFromDatabase,
   PnlTicksFromDatabase,
   PnlTicksTable,
-  QueryableField,
   perpetualMarketRefresher,
   PerpetualMarketFromDatabase,
   USDC_ASSET_ID,
@@ -24,11 +21,13 @@ import {
   MarketFromDatabase,
   BlockFromDatabase,
   FundingIndexUpdatesTable,
+  PnlTickInterval,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
+import { checkSchema, matchedData } from 'express-validator';
 import _ from 'lodash';
 import {
-  Controller, Get, Route,
+  Controller, Get, Query, Route,
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
@@ -39,6 +38,7 @@ import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { pnlTicksToResponseObject } from '../../../request-helpers/request-transformer';
 import {
@@ -49,6 +49,8 @@ import {
   AssetById,
   MegavaultPositionResponse,
   SubaccountResponseObject,
+  MegavaultHistoricalPnlRequest,
+  VaultsHistoricalPnlRequest,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -63,8 +65,10 @@ interface VaultMapping {
 @Route('vault/v1')
 class VaultController extends Controller {
   @Get('/megavault/historicalPnl')
-  async getMegavaultHistoricalPnl(): Promise<MegavaultHistoricalPnlResponse> {
-    const vaultPnlTicks: PnlTicksFromDatabase[] = await getVaultSubaccountPnlTicks();
+  async getMegavaultHistoricalPnl(
+    @Query() resolution?: PnlTickInterval,
+  ): Promise<MegavaultHistoricalPnlResponse> {
+    const vaultPnlTicks: PnlTicksFromDatabase[] = await getVaultSubaccountPnlTicks(resolution);
 
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
     const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = aggregatePnlTicks(vaultPnlTicks);
@@ -78,9 +82,11 @@ class VaultController extends Controller {
   }
 
   @Get('/vaults/historicalPnl')
-  async getVaultsHistoricalPnl(): Promise<VaultsHistoricalPnlResponse> {
+  async getVaultsHistoricalPnl(
+    @Query() resolution?: PnlTickInterval,
+  ): Promise<VaultsHistoricalPnlResponse> {
     const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
-    const vaultPnlTicks: PnlTicksFromDatabase[] = await getVaultSubaccountPnlTicks();
+    const vaultPnlTicks: PnlTicksFromDatabase[] = await getVaultSubaccountPnlTicks(resolution);
 
     const groupedVaultPnlTicks: VaultHistoricalPnl[] = _(vaultPnlTicks)
       .groupBy('subaccountId')
@@ -232,15 +238,29 @@ class VaultController extends Controller {
 
 router.get(
   '/v1/megavault/historicalPnl',
+  ...checkSchema({
+    resolution: {
+      in: 'query',
+      isIn: {
+        options: [Object.values(PnlTickInterval)],
+        errorMessage: `type must be one of ${Object.values(PnlTickInterval)}`,
+      },
+      optional: true,
+    },
+  }),
+  handleValidationErrors,
   rateLimiterMiddleware(getReqRateLimiter),
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
+    const {
+      resolution,
+    }: MegavaultHistoricalPnlRequest = matchedData(req) as MegavaultHistoricalPnlRequest;
 
     try {
       const controllers: VaultController = new VaultController();
       const response: MegavaultHistoricalPnlResponse = await controllers
-        .getMegavaultHistoricalPnl();
+        .getMegavaultHistoricalPnl(resolution);
       return res.send(response);
     } catch (error) {
       return handleControllerError(
@@ -261,14 +281,29 @@ router.get(
 
 router.get(
   '/v1/vaults/historicalPnl',
+  ...checkSchema({
+    resolution: {
+      in: 'query',
+      isIn: {
+        options: [Object.values(PnlTickInterval)],
+        errorMessage: `type must be one of ${Object.values(PnlTickInterval)}`,
+      },
+      optional: true,
+    },
+  }),
+  handleValidationErrors,
   rateLimiterMiddleware(getReqRateLimiter),
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
+    const {
+      resolution,
+    }: VaultsHistoricalPnlRequest = matchedData(req) as VaultsHistoricalPnlRequest;
 
     try {
       const controllers: VaultController = new VaultController();
-      const response: VaultsHistoricalPnlResponse = await controllers.getVaultsHistoricalPnl();
+      const response: VaultsHistoricalPnlResponse = await controllers
+        .getVaultsHistoricalPnl(resolution);
       return res.send(response);
     } catch (error) {
       return handleControllerError(
@@ -313,26 +348,26 @@ router.get(
     }
   });
 
-async function getVaultSubaccountPnlTicks(): Promise<PnlTicksFromDatabase[]> {
+async function getVaultSubaccountPnlTicks(
+  resolution?: PnlTickInterval,
+): Promise<PnlTicksFromDatabase[]> {
   const vaultSubaccountIds: string[] = _.keys(getVaultSubaccountsFromConfig());
   if (vaultSubaccountIds.length === 0) {
     return [];
   }
-  const {
-    results: pnlTicks,
-  }: PaginationFromDatabase<PnlTicksFromDatabase> = await
-  PnlTicksTable.findAll(
-    {
-      subaccountId: vaultSubaccountIds,
-      // TODO(TRA-571): Configure limits based on hourly vs daily resolution and # of vaults.
-      limit: config.API_LIMIT_V4,
-    },
-    [QueryableField.LIMIT],
-    {
-      ...DEFAULT_POSTGRES_OPTIONS,
-      orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
-    },
+  let pnlTickInterval: PnlTickInterval;
+  if (resolution === undefined) {
+    pnlTickInterval = PnlTickInterval.day;
+  } else {
+    pnlTickInterval = resolution;
+  }
+
+  const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getPnlTicksAtIntervals(
+    pnlTickInterval,
+    config.VAULT_PNL_HISTORY_DAYS * 24 * 60 * 60,
+    vaultSubaccountIds,
   );
+
   return pnlTicks;
 }
 

@@ -5,15 +5,11 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
@@ -34,8 +30,7 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 		spreadBufferPpm   uint32
 		minPriceChangePpm uint32
 		// leverage.
-		assetQuoteQuantums   *big.Int
-		positionBaseQuantums *big.Int
+		leverage *big.Rat
 		// total shares.
 		totalShares *big.Int
 		// function input.
@@ -46,30 +41,26 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 		expectedErr      string
 	}{
 		"Success: leverage 0, skew 2, spread 0.003, withdraw 10%": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(1_000_000_000), // 1,000 USDC
-			positionBaseQuantums: big.NewInt(0),
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(10),
-			totalShares:          big.NewInt(100),
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(0, 1),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(10),
+			totalShares:       big.NewInt(100),
 			// no slippage when leverage is 0.
 			expectedSlippage: big.NewRat(0, 1),
 		},
 		"Success: leverage 0.00003, skew 3, spread 0.005, withdraw 9_999_999 out of 10_000_000 shares": {
-			skewFactorPpm:        3_000_000,
-			spreadMinPpm:         5_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(999_970_000),
-			positionBaseQuantums: big.NewInt(10_000), // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(9_999_999),
-			totalShares:          big.NewInt(10_000_000),
-			// open_notional = 10_000 * 10^-9 * 3_000 * 10^6 = 30_000
-			// leverage = 30_000 / (999_700_000 + 3_000_000) = 0.00003
+			skewFactorPpm:     3_000_000,
+			spreadMinPpm:      5_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(3, 100_000),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(9_999_999),
+			totalShares:       big.NewInt(10_000_000),
 			// posterior_leverage = 0.00003 * 10_000_000 / (10_000_000 - 9_999_999) = 300
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -84,17 +75,14 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(6, 1_000_000),
 		},
 		"Success: leverage 0.000003, skew 3, spread 0.005, withdraw 9_999_999 out of 10_000_000 shares": {
-			skewFactorPpm:        3_000_000,
-			spreadMinPpm:         5_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(999_997_000),
-			positionBaseQuantums: big.NewInt(1_000), // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(9_999_999),
-			totalShares:          big.NewInt(10_000_000),
-			// open_notional = 1_000 * 10^-9 * 3_000 * 10^6 = 3_000
-			// leverage = 3_000 / (999_997_000 + 3_000) = 0.000003
+			skewFactorPpm:     3_000_000,
+			spreadMinPpm:      5_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(3, 1_000_000),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(9_999_999),
+			totalShares:       big.NewInt(10_000_000),
 			// posterior_leverage = 0.000003 * 10_000_000 / (10_000_000 - 9_999_999) = 30
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -110,17 +98,14 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(3, 5_000_000),
 		},
 		"Success: leverage 0.5, skew 2, spread 0.003, withdraw 10%": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(3_000_000_000), // 3,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000), // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(100_000),
-			totalShares:          big.NewInt(1_000_000),
-			// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
-			// leverage = 3_000_000_000 / (3_000_000_000 + 3_000_000_000) = 0.5
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(1, 2),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(100_000),
+			totalShares:       big.NewInt(1_000_000),
 			// posterior_leverage = 0.5 * 1_000_000 / (1_000_000 - 100_000) = 5 / 9
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -135,17 +120,14 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(1_027, 162_000),
 		},
 		"Success: leverage 1.5, skew 2, spread 0.003, withdraw 0.0001%": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-1_000_000_000), // -1,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(1),
-			totalShares:          big.NewInt(1_000_000),
-			// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
-			// leverage = 3_000_000_000 / (-1_000_000_000 + 3_000_000_000) = 1.5
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(3, 2),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(1),
+			totalShares:       big.NewInt(1_000_000),
 			// posterior_leverage = 1.5 * 1_000_000 / (1_000_000 - 1) = 500_000/333_333
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -161,17 +143,14 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(5333326666669, 74073925926000),
 		},
 		"Success: leverage 1.5, skew 3, spread 0.003, withdraw 10%": {
-			skewFactorPpm:        3_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-1_000_000_000), // -1,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(100_000),
-			totalShares:          big.NewInt(1_000_000),
-			// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
-			// leverage = 3_000_000_000 / (-1_000_000_000 + 3_000_000_000) = 1.5
+			skewFactorPpm:     3_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(3, 2),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(100_000),
+			totalShares:       big.NewInt(1_000_000),
 			// posterior_leverage = 1.5 * 1_000_000 / (1_000_000 - 100_000) = 5/3
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -187,17 +166,14 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(1_191, 8_000),
 		},
 		"Success: leverage 1.5, skew 3, spread 0.003, withdraw 50%": {
-			skewFactorPpm:        3_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-1_000_000_000), // -1,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(500_000),
-			totalShares:          big.NewInt(1_000_000),
-			// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
-			// leverage = 3_000_000_000 / (-1_000_000_000 + 3_000_000_000) = 1.5
+			skewFactorPpm:     3_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(3, 2),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(500_000),
+			totalShares:       big.NewInt(1_000_000),
 			// posterior_leverage = 1.5 * 1_000_000 / (1_000_000 - 500_000) = 3
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -213,17 +189,15 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(2_223, 8_000),
 		},
 		"Success: leverage -1.5, skew 3, spread 0.003, withdraw 50%, slippage is same as when leverage is 1.5": {
-			skewFactorPpm:        3_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(5_000_000_000),  // 5,000 USDC
-			positionBaseQuantums: big.NewInt(-1_000_000_000), // -1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(1_111),
-			totalShares:          big.NewInt(2_222),
-			// open_notional = -1_000_000_000 * 10^-9 * 3_000 * 10^6 = -3_000_000_000
-			// |leverage| = |-3_000_000_000 / (5_000_000_000 + -3_000_000_000)| = |-1.5| = 1.5
+			skewFactorPpm:     3_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(-3, 2),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(1_111),
+			totalShares:       big.NewInt(2_222),
+			// |leverage| = |-1.5| = 1.5
 			// posterior_leverage = 1.5 * 2_222 / (2_222 - 1_111) = 3
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -239,17 +213,14 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(2_223, 8_000),
 		},
 		"Success: leverage 1.5, skew 3, spread 0.005, withdraw 50%": {
-			skewFactorPpm:        3_000_000,
-			spreadMinPpm:         5_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-1_000_000_000), // -1,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(2_345_678),
-			totalShares:          big.NewInt(4_691_356),
-			// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
-			// leverage = 3_000_000_000 / (-1_000_000_000 + 3_000_000_000) = 1.5
+			skewFactorPpm:     3_000_000,
+			spreadMinPpm:      5_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(3, 2),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(2_345_678),
+			totalShares:       big.NewInt(4_691_356),
 			// posterior_leverage = 1.5 * 4_691_356 / (4_691_356 - 2_345_678) = 3
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -264,32 +235,26 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(3, 10),
 		},
 		"Success: leverage 1.5, skew 3, spread 0.005, withdraw 100%": {
-			skewFactorPpm:        3_000_000,
-			spreadMinPpm:         5_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-1_000_000_000), // -1,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(2_345_678),
-			totalShares:          big.NewInt(2_345_678),
-			// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
-			// leverage = 3_000_000_000 / (-1_000_000_000 + 3_000_000_000) = 1.5
+			skewFactorPpm:     3_000_000,
+			spreadMinPpm:      5_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(3, 2),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(2_345_678),
+			totalShares:       big.NewInt(2_345_678),
 			// slippage = leverage * imf = 1.5 * 0.2 = 0.3
 			expectedSlippage: big.NewRat(3, 10),
 		},
 		"Success: leverage 3, skew 2, spread 0.003, withdraw 1 out of 10 million shares": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-2_000_000_000), // -2,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(1),
-			totalShares:          big.NewInt(10_000_000),
-			// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
-			// leverage = 3_000_000_000 / (-2_000_000_000 + 3_000_000_000) = 3
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(3, 1),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(1),
+			totalShares:       big.NewInt(10_000_000),
 			// posterior_leverage = 3 * 10_000_000 / (10_000_000 - 1) = 3.0000003
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -305,17 +270,14 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(1_633_333_146_666_673, 3_703_702_962_963_000),
 		},
 		"Success: leverage 3, skew 2, spread 0.003, withdraw 1234 out of 12345 shares": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         3_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_000,
-			assetQuoteQuantums:   big.NewInt(-2_000_000_000), // -2,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(1_234),
-			totalShares:          big.NewInt(12_345),
-			// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
-			// leverage = 3_000_000_000 / (-2_000_000_000 + 3_000_000_000) = 3
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      3_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_000,
+			leverage:          big.NewRat(3, 1),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(1_234),
+			totalShares:       big.NewInt(12_345),
 			// posterior_leverage = 3 * 12345 / (12345 - 1234) = 37035/11111
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -332,17 +294,14 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(59_790_561_381, 123_454_321_000),
 		},
 		"Success: leverage 3, skew 2, spread 0.003, withdraw 50%": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-2_000_000_000), // -2,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(222_222),
-			totalShares:          big.NewInt(444_444),
-			// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
-			// leverage = 3_000_000_000 / (-2_000_000_000 + 3_000_000_000) = 3
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(3, 1),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(222_222),
+			totalShares:       big.NewInt(444_444),
 			// posterior_leverage = 3 * 444_444 / (444_444 - 222_222) = 6
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -359,17 +318,14 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(3, 5),
 		},
 		"Success: leverage 3, skew 2, spread 0.003, withdraw 99.9999%": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-2_000_000_000), // -2,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(999_999),
-			totalShares:          big.NewInt(1_000_000),
-			// open_notional = 1_000_000_000 * 10^-9 * 3_000 * 10^6 = 3_000_000_000
-			// leverage = 3_000_000_000 / (-2_000_000_000 + 3_000_000_000) = 3
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(3, 1),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(999_999),
+			totalShares:       big.NewInt(1_000_000),
 			// posterior_leverage = 3 * 1_000_000 / (1_000_000 - 999_999) = 3_000_000
 			// integral
 			// = skew_antiderivative(skew_factor, posterior_leverage) - skew_antiderivative(skew_factor, leverage)
@@ -385,52 +341,48 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 			expectedSlippage: big.NewRat(3, 5),
 		},
 		"Error: vault not found": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-2_000_000_000), // -2,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              constants.Vault_Clob0,      // non-existent vault
-			sharesToWithdraw:     big.NewInt(10),
-			totalShares:          big.NewInt(100),
-			expectedErr:          vaulttypes.ErrVaultParamsNotFound.Error(),
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(1, 1),
+			vaultId:           constants.Vault_Clob0, // non-existent vault
+			sharesToWithdraw:  big.NewInt(10),
+			totalShares:       big.NewInt(100),
+			expectedErr:       vaulttypes.ErrVaultParamsNotFound.Error(),
 		},
 		"Error: negative shares to withdraw": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-2_000_000_000), // -2,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(-1),
-			totalShares:          big.NewInt(100),
-			expectedErr:          vaulttypes.ErrInvalidSharesToWithdraw.Error(),
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(1, 1),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(-1),
+			totalShares:       big.NewInt(100),
+			expectedErr:       vaulttypes.ErrInvalidSharesToWithdraw.Error(),
 		},
 		"Error: zero shares to withdraw": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-2_000_000_000), // -2,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(0),
-			totalShares:          big.NewInt(100),
-			expectedErr:          vaulttypes.ErrInvalidSharesToWithdraw.Error(),
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(1, 1),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(0),
+			totalShares:       big.NewInt(100),
+			expectedErr:       vaulttypes.ErrInvalidSharesToWithdraw.Error(),
 		},
 		"Error: shares to withdraw greater than total shares": {
-			skewFactorPpm:        2_000_000,
-			spreadMinPpm:         2_000,
-			spreadBufferPpm:      1_500,
-			minPriceChangePpm:    1_500,
-			assetQuoteQuantums:   big.NewInt(-2_000_000_000), // -2,000 USDC
-			positionBaseQuantums: big.NewInt(1_000_000_000),  // 1 ETH
-			vaultId:              testVaultId,
-			sharesToWithdraw:     big.NewInt(1_000_001),
-			totalShares:          big.NewInt(1_000_000),
-			expectedErr:          vaulttypes.ErrInvalidSharesToWithdraw.Error(),
+			skewFactorPpm:     2_000_000,
+			spreadMinPpm:      2_000,
+			spreadBufferPpm:   1_500,
+			minPriceChangePpm: 1_500,
+			leverage:          big.NewRat(-1, 1),
+			vaultId:           testVaultId,
+			sharesToWithdraw:  big.NewInt(1_000_001),
+			totalShares:       big.NewInt(1_000_000),
+			expectedErr:       vaulttypes.ErrInvalidSharesToWithdraw.Error(),
 		},
 	}
 	for name, tc := range tests {
@@ -481,37 +433,20 @@ func TestGetVaultWithdrawalSlippage(t *testing.T) {
 						genesisState.ClobPairs = []clobtypes.ClobPair{testClobPair}
 					},
 				)
-				// Set up vault asset and perpetual positions.
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *satypes.GenesisState) {
-						genesisState.Subaccounts = []satypes.Subaccount{
-							{
-								Id: tc.vaultId.ToSubaccountId(),
-								AssetPositions: []*satypes.AssetPosition{
-									{
-										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewIntFromBigInt(tc.assetQuoteQuantums),
-									},
-								},
-								PerpetualPositions: []*satypes.PerpetualPosition{
-									testutil.CreateSinglePerpetualPosition(
-										testPerpetual.Params.Id,
-										tc.positionBaseQuantums,
-										big.NewInt(0),
-										big.NewInt(0),
-									),
-								},
-							},
-						}
-					},
-				)
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 
-			slippage, err := k.GetVaultWithdrawalSlippage(ctx, tc.vaultId, tc.sharesToWithdraw)
+			slippage, err := k.GetVaultWithdrawalSlippage(
+				ctx,
+				tc.vaultId,
+				tc.sharesToWithdraw,
+				tc.totalShares,
+				tc.leverage,
+				&testPerpetual,
+				&testMarketParam,
+			)
 
 			if tc.expectedErr == "" {
 				require.NoError(t, err)
