@@ -51,21 +51,6 @@ func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 func postUpgradeVaultParamsCheck(node *containertest.Node, t *testing.T) {
 	// Check that a vault with quoting params is successfully migrated and the quoting params are
 	// successfully migrated to the vault params.
-	resp, err := containertest.Query(
-		node,
-		vaulttypes.NewQueryClient,
-		vaulttypes.QueryClient.VaultParams,
-		&vaulttypes.QueryVaultParamsRequest{
-			Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
-			Number: 0,
-		},
-	)
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	vaultParamsResp := vaulttypes.QueryVaultParamsResponse{}
-	err = proto.UnmarshalText(resp.String(), &vaultParamsResp)
-	require.NoError(t, err)
-
 	expectedQuotingParams := &vaulttypes.QuotingParams{
 		Layers:                           3,
 		SpreadMinPpm:                     1500,
@@ -76,26 +61,30 @@ func postUpgradeVaultParamsCheck(node *containertest.Node, t *testing.T) {
 		ActivationThresholdQuoteQuantums: dtypes.NewIntFromUint64(500_000_000),
 	}
 
-	require.Equal(t, vaulttypes.VaultStatus_VAULT_STATUS_QUOTING, vaultParamsResp.VaultParams.Status)
-	require.Equal(t, expectedQuotingParams, vaultParamsResp.VaultParams.QuotingParams)
+	checkVaultParams(node, t, 0, vaulttypes.VaultStatus_VAULT_STATUS_QUOTING, expectedQuotingParams)
 
 	// Check that a vault without quoting params is successfully migrated and the quoting params are
 	// not set in the migrated vault params.
-	resp, err = containertest.Query(
+	checkVaultParams(node, t, 1, vaulttypes.VaultStatus_VAULT_STATUS_QUOTING, nil)
+}
+
+func checkVaultParams(node *containertest.Node, t *testing.T, vaultNumber uint64, expectedStatus vaulttypes.VaultStatus, expectedQuotingParams *vaulttypes.QuotingParams) {
+	resp, err := containertest.Query(
 		node,
 		vaulttypes.NewQueryClient,
 		vaulttypes.QueryClient.VaultParams,
 		&vaulttypes.QueryVaultParamsRequest{
 			Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
-			Number: 1,
+			Number: vaultNumber,
 		},
 	)
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	vaultParamsResp = vaulttypes.QueryVaultParamsResponse{}
+
+	vaultParamsResp := vaulttypes.QueryVaultParamsResponse{}
 	err = proto.UnmarshalText(resp.String(), &vaultParamsResp)
 	require.NoError(t, err)
 
-	require.Equal(t, vaulttypes.VaultStatus_VAULT_STATUS_QUOTING, vaultParamsResp.VaultParams.Status)
-	require.Equal(t, (*vaulttypes.QuotingParams)(nil), vaultParamsResp.VaultParams.QuotingParams)
+	require.Equal(t, expectedStatus, vaultParamsResp.VaultParams.Status)
+	require.Equal(t, expectedQuotingParams, vaultParamsResp.VaultParams.QuotingParams)
 }
