@@ -68,7 +68,13 @@ func postUpgradeVaultParamsCheck(node *containertest.Node, t *testing.T) {
 	checkVaultParams(node, t, 1, vaulttypes.VaultStatus_VAULT_STATUS_QUOTING, nil)
 }
 
-func checkVaultParams(node *containertest.Node, t *testing.T, vaultNumber uint64, expectedStatus vaulttypes.VaultStatus, expectedQuotingParams *vaulttypes.QuotingParams) {
+func checkVaultParams(
+	node *containertest.Node,
+	t *testing.T,
+	vaultNumber uint32,
+	expectedStatus vaulttypes.VaultStatus,
+	expectedQuotingParams *vaulttypes.QuotingParams,
+) {
 	resp, err := containertest.Query(
 		node,
 		vaulttypes.NewQueryClient,
