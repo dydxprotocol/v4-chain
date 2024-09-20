@@ -76,8 +76,6 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 		markets = msg.UpdateMarkets
 	case *mmtypes.MsgUpsertMarkets:
 		markets = msg.Markets
-	case *mmtypes.MsgCreateMarkets:
-		markets = msg.CreateMarkets
 	default:
 		return ctx, fmt.Errorf("unrecognized message type: %T", msg)
 	}
