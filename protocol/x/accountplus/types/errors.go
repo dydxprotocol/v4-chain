@@ -21,6 +21,6 @@ var (
 	ErrInitializingAuthenticator = errorsmod.Register(
 		ModuleName,
 		4,
-		"Erorr initializing authenticator",
+		"Error initializing authenticator",
 	)
 )
