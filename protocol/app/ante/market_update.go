@@ -92,7 +92,10 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 	return next(ctx, tx, simulate)
 }
 
-func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(ctx sdk.Context, markets []mmtypes.Market) bool {
+func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(
+	ctx sdk.Context,
+	markets []mmtypes.Market,
+) bool {
 	// Grab all the perpetuals markets
 	perps := d.perpKeeper.GetAllPerpetuals(ctx)
 	restrictedMap := make(map[string]bool, len(perps))
@@ -107,7 +110,8 @@ func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(ctx sdk.
 		if err != nil {
 			continue
 		}
-		restrictedMap[cp.String()] = perp.Params.MarketType == perpetualstypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+		restrictedMap[cp.String()] = perp.Params.MarketType == perpetualstypes.
+			PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
 	}
 
 	// add usdt/usd market to be restricted

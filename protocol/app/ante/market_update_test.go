@@ -1,32 +1,31 @@
 package ante_test
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"math/rand"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/skip-mev/slinky/pkg/types"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
-
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/skip-mev/slinky/pkg/types"
+	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	slinkylib "github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 func TestIsMarketUpdateTx(t *testing.T) {
