@@ -145,4 +145,9 @@ var (
 		28,
 		"Insufficient redeemed quote quantums",
 	)
+	ErrDeactivatePositiveEquityVault = errorsmod.Register(
+		ModuleName,
+		29,
+		"Cannot deactivate vaults with positive equity",
+	)
 )

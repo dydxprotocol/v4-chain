@@ -76,7 +76,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			},
 			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
-		"Two Vaults, One Stand-By, One Deactivated, Both Above Activation Threshold": {
+		"Two Vaults, One Stand-By, One Deactivated, One Above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob0,
 				constants.Vault_Clob1,
@@ -87,7 +87,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			},
 			assetQuantums: []*big.Int{
 				big.NewInt(1_000_000_000), // 1,000 USDC
-				big.NewInt(1_000_000_001),
+				big.NewInt(0),
 			},
 			positionQuantums: []*big.Int{
 				big.NewInt(0),
