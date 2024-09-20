@@ -390,6 +390,8 @@ func New(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
+	panic("this commit is purposely broken. used as a placeholder for the release.")
+
 	assertAppPreconditions()
 
 	// dYdX specific command-line flags.
