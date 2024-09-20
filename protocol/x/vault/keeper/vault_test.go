@@ -484,7 +484,7 @@ func TestGetMegavaultEquity(t *testing.T) {
 				big.NewInt(345),
 				big.NewInt(-5),
 			},
-			expectedMegavaultEquity: big.NewInt(1_345),
+			expectedMegavaultEquity: big.NewInt(1_345), // deactivated vault is not counted.
 		},
 	}
 	for name, tc := range tests {

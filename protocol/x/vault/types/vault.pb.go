@@ -57,6 +57,7 @@ const (
 	// Default value, invalid and unused.
 	VaultStatus_VAULT_STATUS_UNSPECIFIED VaultStatus = 0
 	// Don’t place orders. Does not count toward global vault balances.
+	// A vault can only be set to this status if its equity is non-positive.
 	VaultStatus_VAULT_STATUS_DEACTIVATED VaultStatus = 1
 	// Don’t place orders. Does count towards global vault balances.
 	VaultStatus_VAULT_STATUS_STAND_BY VaultStatus = 2

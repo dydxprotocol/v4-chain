@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryParamsRequest, QueryParamsResponse, QueryVaultRequest, QueryVaultResponse, QueryAllVaultsRequest, QueryAllVaultsResponse, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponse, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponse } from "./query";
+import { QueryParamsRequest, QueryParamsResponse, QueryVaultRequest, QueryVaultResponse, QueryAllVaultsRequest, QueryAllVaultsResponse, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponse, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponse, QueryVaultParamsRequest, QueryVaultParamsResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -19,6 +19,9 @@ export interface Query {
   /** Queries owner shares of megavault. */
 
   megavaultOwnerShares(request?: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponse>;
+  /** Queries vault params of a vault. */
+
+  vaultParams(request: QueryVaultParamsRequest): Promise<QueryVaultParamsResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -30,6 +33,7 @@ export class QueryClientImpl implements Query {
     this.allVaults = this.allVaults.bind(this);
     this.megavaultTotalShares = this.megavaultTotalShares.bind(this);
     this.megavaultOwnerShares = this.megavaultOwnerShares.bind(this);
+    this.vaultParams = this.vaultParams.bind(this);
   }
 
   params(request: QueryParamsRequest = {}): Promise<QueryParamsResponse> {
@@ -66,6 +70,12 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryMegavaultOwnerSharesResponse.decode(new _m0.Reader(data)));
   }
 
+  vaultParams(request: QueryVaultParamsRequest): Promise<QueryVaultParamsResponse> {
+    const data = QueryVaultParamsRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Query", "VaultParams", data);
+    return promise.then(data => QueryVaultParamsResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -89,6 +99,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     megavaultOwnerShares(request?: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponse> {
       return queryService.megavaultOwnerShares(request);
+    },
+
+    vaultParams(request: QueryVaultParamsRequest): Promise<QueryVaultParamsResponse> {
+      return queryService.vaultParams(request);
     }
 
   };
