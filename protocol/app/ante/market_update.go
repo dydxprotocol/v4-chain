@@ -3,6 +3,7 @@ package ante
 import (
 	"errors"
 	"fmt"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,6 +21,13 @@ var ErrNoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUps
 type MarketMapKeeper interface {
 	GetAllMarkets(ctx sdk.Context) (map[string]mmtypes.Market, error)
 }
+
+var (
+	cpUSDTUSD = slinkytypes.CurrencyPair{
+		Base:  "USDT",
+		Quote: "USD",
+	}
+)
 
 type ValidateMarketUpdateDecorator struct {
 	perpKeeper      perpetualstypes.PerpetualsKeeper
@@ -92,6 +100,9 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 	return next(ctx, tx, simulate)
 }
 
+// doMarketsContainRestrictedMarket checks if any of the given markets are restricted:
+// 1. markets listed as CROSS perpetuals are restricted
+// 2. the USDT/USD market is always restricted
 func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(
 	ctx sdk.Context,
 	markets []mmtypes.Market,
@@ -115,7 +126,7 @@ func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(
 	}
 
 	// add usdt/usd market to be restricted
-	restrictedMap["USDT/USD"] = true
+	restrictedMap[cpUSDTUSD.String()] = true
 
 	// Look in the mapped currency pairs to see if we have invalid updates
 	for _, market := range markets {
