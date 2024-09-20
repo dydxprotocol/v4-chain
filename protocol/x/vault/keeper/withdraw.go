@@ -56,7 +56,7 @@ func (k Keeper) GetVaultWithdrawalSlippage(
 		)
 	}
 
-	quotingParams, exists := k.GetVaultQuotingParams(ctx, vaultId)
+	_, quotingParams, exists := k.GetVaultAndQuotingParams(ctx, vaultId)
 	if !exists {
 		return nil, types.ErrVaultParamsNotFound
 	}

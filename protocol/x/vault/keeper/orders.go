@@ -34,11 +34,10 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 		var vaultParams types.VaultParams
 		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
 
-		if vaultParams.Status != types.VaultStatus_VAULT_STATUS_QUOTING {
-			// TODO (TRA-546): cancel any existing orders and don't place new orders.
+		if vaultParams.Status != types.VaultStatus_VAULT_STATUS_QUOTING &&
+			vaultParams.Status != types.VaultStatus_VAULT_STATUS_CLOSE_ONLY {
 			continue
 		}
-		// TODO (TRA-547): implement close-only mode.
 
 		// Skip if vault has no perpetual positions and strictly less than `activation_threshold_quote_quantums` USDC.
 		if vaultParams.QuotingParams == nil {
@@ -108,7 +107,8 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 				orderToPlace.OrderId.ClientId = oldClientId ^ 1
 				err = k.PlaceVaultClobOrder(ctx, vaultId, orderToPlace)
 			} else if oldOrderPlacement.Order.Quantums != orderToPlace.Quantums ||
-				oldOrderPlacement.Order.Subticks != orderToPlace.Subticks {
+				oldOrderPlacement.Order.Subticks != orderToPlace.Subticks ||
+				oldOrderPlacement.Order.Side != orderToPlace.Side {
 				// Replace old order with new order.
 				// Flip last bit of old client ID to get new client ID to make sure they are different
 				// as order placement fails if the same order ID is already marked for cancellation.
@@ -126,6 +126,22 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		clientIds[i] = orderToPlace.OrderId.ClientId
 	}
 	k.SetMostRecentClientIds(ctx, vaultId, clientIds)
+
+	// Cancel any orders that are no longer needed.
+	_, quotingParams, exists := k.GetVaultAndQuotingParams(ctx, vaultId)
+	if !exists {
+		return types.ErrVaultParamsNotFound
+	}
+	for i := len(ordersToPlace); i < len(mostRecentClientIds); i++ {
+		orderId := vaultId.GetClobOrderId(mostRecentClientIds[i])
+		_, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, *orderId)
+		if exists {
+			err := k.CancelVaultClobOrder(ctx, vaultId, orderId, quotingParams.OrderExpirationSeconds)
+			if err != nil {
+				log.ErrorLogWithError(ctx, "Failed to cancel vault clob order", err, "vaultId", vaultId)
+			}
+		}
+	}
 
 	return nil
 }
@@ -179,12 +195,19 @@ func (k Keeper) GetVaultClobOrders(
 	leveragePpm = lib.BigDivCeil(leveragePpm, leverage.Denom())
 
 	// Get vault parameters.
-	quotingParams, exists := k.GetVaultQuotingParams(ctx, vaultId)
+	vaultParams, quotingParams, exists := k.GetVaultAndQuotingParams(ctx, vaultId)
 	if !exists {
 		return orders, errorsmod.Wrap(
 			types.ErrVaultParamsNotFound,
 			fmt.Sprintf("VaultId: %v", vaultId),
 		)
+	}
+
+	// No orders if vault is deactivated, stand-by, or close-only with zero leverage.
+	if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED ||
+		vaultParams.Status == types.VaultStatus_VAULT_STATUS_STAND_BY ||
+		vaultParams.Status == types.VaultStatus_VAULT_STATUS_CLOSE_ONLY && leverage.Sign() == 0 {
+		return []*clobtypes.Order{}, nil
 	}
 
 	// Calculate order size (in base quantums).
@@ -344,6 +367,32 @@ func (k Keeper) GetVaultClobOrders(
 		orders[2*i+1] = constructOrder(clobtypes.Order_SIDE_BUY, i, orderIds[2*i+1])
 	}
 
+	if vaultParams.Status == types.VaultStatus_VAULT_STATUS_CLOSE_ONLY {
+		// In close-only mode with non-zero leverage.
+		reduceOnlyMaxOrderSize := k.GetVaultInventoryInPerpetual(ctx, vaultId, perpetual.Params.Id)
+		stepSize := lib.BigU(clobPair.StepBaseQuantums)
+		reduceOnlyMaxOrderSize.Quo(reduceOnlyMaxOrderSize, stepSize)
+		reduceOnlyMaxOrderSize.Mul(reduceOnlyMaxOrderSize, stepSize)
+		if reduceOnlyMaxOrderSize.Sign() == 0 {
+			return []*clobtypes.Order{}, nil
+		}
+
+		// If vault is long, only need sell orders.
+		reduceOnlySide := clobtypes.Order_SIDE_SELL
+		if leverage.Sign() < 0 {
+			// If vault is short, only need buy orders.
+			reduceOnlySide = clobtypes.Order_SIDE_BUY
+		}
+		reduceOnlyOrders := make([]*clobtypes.Order, 0, len(orders))
+		for _, order := range orders {
+			if order.Side == reduceOnlySide {
+				order.Quantums = lib.Min(order.Quantums, reduceOnlyMaxOrderSize.Uint64())
+				reduceOnlyOrders = append(reduceOnlyOrders, order)
+			}
+		}
+		return reduceOnlyOrders, nil
+	}
+
 	return orders, nil
 }
 
@@ -368,7 +417,7 @@ func (k Keeper) GetVaultClobOrderIds(
 		}
 	}
 
-	quotingParams, exists := k.GetVaultQuotingParams(ctx, vaultId)
+	_, quotingParams, exists := k.GetVaultAndQuotingParams(ctx, vaultId)
 	if !exists {
 		return []*clobtypes.OrderId{}
 	}
@@ -403,6 +452,27 @@ func (k Keeper) PlaceVaultClobOrder(
 	return err
 }
 
+// CancelVaultClobOrder cancels a vault CLOB order.
+func (k Keeper) CancelVaultClobOrder(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	orderId *clobtypes.OrderId,
+	orderExpirationSeconds uint32,
+) error {
+	err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
+		*orderId,
+		uint32(ctx.BlockTime().Unix())+orderExpirationSeconds,
+	))
+	if err != nil {
+		log.ErrorLogWithError(ctx, "Failed to cancel order", err, "orderId", orderId, "vaultId", vaultId)
+	}
+	vaultId.IncrCounterWithLabels(
+		metrics.VaultCancelOrder,
+		metrics.GetLabelForBoolValue(metrics.Success, err == nil),
+	)
+	return err
+}
+
 // ReplaceVaultClobOrder replaces a vault CLOB order internal to the protocol and
 // emits order replacement indexer event.
 func (k Keeper) ReplaceVaultClobOrder(
@@ -411,7 +481,7 @@ func (k Keeper) ReplaceVaultClobOrder(
 	oldOrderId *clobtypes.OrderId,
 	newOrder *clobtypes.Order,
 ) error {
-	quotingParams, exists := k.GetVaultQuotingParams(ctx, vaultId)
+	_, quotingParams, exists := k.GetVaultAndQuotingParams(ctx, vaultId)
 	if !exists {
 		return errorsmod.Wrap(
 			types.ErrVaultParamsNotFound,
@@ -419,16 +489,8 @@ func (k Keeper) ReplaceVaultClobOrder(
 		)
 	}
 	// Cancel old order.
-	err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
-		*oldOrderId,
-		uint32(ctx.BlockTime().Unix())+quotingParams.OrderExpirationSeconds,
-	))
-	vaultId.IncrCounterWithLabels(
-		metrics.VaultCancelOrder,
-		metrics.GetLabelForBoolValue(metrics.Success, err == nil),
-	)
+	err := k.CancelVaultClobOrder(ctx, vaultId, oldOrderId, quotingParams.OrderExpirationSeconds)
 	if err != nil {
-		log.ErrorLogWithError(ctx, "Failed to cancel order", err, "orderId", oldOrderId, "vaultId", vaultId)
 		return err
 	}
 
