@@ -1,3 +1,5 @@
+//go:build all || container_test
+
 package v_7_0_0_test
 
 import (
