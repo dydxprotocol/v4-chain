@@ -1642,7 +1642,9 @@ func TestDistributeFees(t *testing.T) {
 						},
 					})
 			}
-			revSharesForFill, err := revShareKeeper.GetAllRevShares(ctx, tc.fill)
+			affiliateWhitelistMap, err := affiliatesKeeper.GetAffiliateWhitelistMap(ctx)
+			require.NoError(t, err)
+			revSharesForFill, err := revShareKeeper.GetAllRevShares(ctx, tc.fill, affiliateWhitelistMap)
 			require.NoError(t, err)
 			err = keeper.DistributeFees(ctx, tc.asset.Id, revSharesForFill, tc.fill)
 

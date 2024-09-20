@@ -26,6 +26,7 @@ import subaccountUsernameGeneratorTask from './tasks/subaccount-username-generat
 import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
 import trackLag from './tasks/track-lag';
 import uncrossOrderbookTask from './tasks/uncross-orderbook';
+import updateAffiliateInfoTask from './tasks/update-affiliate-info';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
 import updateWalletTotalVolumeTask from './tasks/update-wallet-total-volume';
@@ -256,7 +257,13 @@ async function start(): Promise<void> {
       config.LOOPS_INTERVAL_MS_UPDATE_WALLET_TOTAL_VOLUME,
     );
   }
-
+  if (config.LOOPS_ENABLED_UPDATE_AFFILIATE_INFO) {
+    startLoop(
+      updateAffiliateInfoTask,
+      'update_affiliate_info',
+      config.LOOPS_INTERVAL_MS_UPDATE_AFFILIATE_INFO,
+    );
+  }
   if (config.LOOPS_ENABLED_DELETE_OLD_FIREBASE_NOTIFICATION_TOKENS) {
     startLoop(
       deleteOldFirebaseNotificationTokensTask,

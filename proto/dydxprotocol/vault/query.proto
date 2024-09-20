@@ -35,6 +35,10 @@ service Query {
       returns (QueryMegavaultOwnerSharesResponse) {
     option (google.api.http).get = "/dydxprotocol/vault/megavault/owner_shares";
   }
+  // Queries vault params of a vault.
+  rpc VaultParams(QueryVaultParamsRequest) returns (QueryVaultParamsResponse) {
+    option (google.api.http).get = "/dydxprotocol/vault/params/{type}/{number}";
+  }
 }
 
 // QueryParamsRequest is a request type for the Params RPC method.
@@ -102,4 +106,16 @@ message QueryMegavaultOwnerSharesRequest {
 message QueryMegavaultOwnerSharesResponse {
   repeated OwnerShare owner_shares = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryVaultParamsRequest is a request for the VaultParams RPC method.
+message QueryVaultParamsRequest {
+  VaultType type = 1;
+  uint32 number = 2;
+}
+
+// QueryVaultParamsResponse is a response for the VaultParams RPC method.
+message QueryVaultParamsResponse {
+  VaultId vault_id = 1 [ (gogoproto.nullable) = false ];
+  VaultParams vault_params = 2 [ (gogoproto.nullable) = false ];
 }

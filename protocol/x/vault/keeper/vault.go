@@ -18,7 +18,7 @@ import (
 
 // GetMegavaultEquity returns the equity of the megavault (in quote quantums), which consists of
 // - equity of the megavault main subaccount
-// - equity of all vaults (if positive)
+// - equity of all vaults (if not-deactivated and positive)
 func (k Keeper) GetMegavaultEquity(ctx sdk.Context) (*big.Int, error) {
 	megavaultEquity, err := k.GetSubaccountEquity(ctx, types.MegavaultMainSubaccount)
 	if err != nil {
@@ -31,6 +31,10 @@ func (k Keeper) GetMegavaultEquity(ctx sdk.Context) (*big.Int, error) {
 	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
 		var vaultParams types.VaultParams
 		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
+
+		if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED {
+			continue
+		}
 
 		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
@@ -63,11 +67,12 @@ func (k Keeper) GetVaultEquity(
 
 // GetVaultLeverageAndEquity returns a vault's leverage and equity.
 // - leverage = open notional / equity.
+// Note that an error is returned if equity is non-positive.
 func (k Keeper) GetVaultLeverageAndEquity(
 	ctx sdk.Context,
 	vaultId types.VaultId,
-	perpetual perptypes.Perpetual,
-	marketPrice pricestypes.MarketPrice,
+	perpetual *perptypes.Perpetual,
+	marketPrice *pricestypes.MarketPrice,
 ) (
 	leverage *big.Rat,
 	equity *big.Int,

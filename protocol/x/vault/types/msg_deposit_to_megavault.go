@@ -21,7 +21,10 @@ func (msg *MsgDepositToMegavault) ValidateBasic() error {
 	// Validate that quote quantums is positive and an uint64.
 	quoteQuantums := msg.QuoteQuantums.BigInt()
 	if quoteQuantums.Sign() <= 0 || !quoteQuantums.IsUint64() {
-		return errors.Wrap(ErrInvalidDepositAmount, "quote quantums must be strictly positive and less than 2^64")
+		return errors.Wrap(
+			ErrInvalidQuoteQuantums,
+			"quote quantums must be strictly positive and less than 2^64",
+		)
 	}
 
 	return nil

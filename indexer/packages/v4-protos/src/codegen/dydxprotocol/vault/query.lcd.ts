@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryParamsRequest, QueryParamsResponseSDKType, QueryVaultRequest, QueryVaultResponseSDKType, QueryAllVaultsRequest, QueryAllVaultsResponseSDKType, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponseSDKType, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponseSDKType } from "./query";
+import { QueryParamsRequest, QueryParamsResponseSDKType, QueryVaultRequest, QueryVaultResponseSDKType, QueryAllVaultsRequest, QueryAllVaultsResponseSDKType, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponseSDKType, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponseSDKType, QueryVaultParamsRequest, QueryVaultParamsResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -15,6 +15,7 @@ export class LCDQueryClient {
     this.allVaults = this.allVaults.bind(this);
     this.megavaultTotalShares = this.megavaultTotalShares.bind(this);
     this.megavaultOwnerShares = this.megavaultOwnerShares.bind(this);
+    this.vaultParams = this.vaultParams.bind(this);
   }
   /* Queries the Params. */
 
@@ -70,6 +71,13 @@ export class LCDQueryClient {
 
     const endpoint = `dydxprotocol/vault/megavault/owner_shares`;
     return await this.req.get<QueryMegavaultOwnerSharesResponseSDKType>(endpoint, options);
+  }
+  /* Queries vault params of a vault. */
+
+
+  async vaultParams(params: QueryVaultParamsRequest): Promise<QueryVaultParamsResponseSDKType> {
+    const endpoint = `dydxprotocol/vault/params/${params.type}/${params.number}`;
+    return await this.req.get<QueryVaultParamsResponseSDKType>(endpoint);
   }
 
 }

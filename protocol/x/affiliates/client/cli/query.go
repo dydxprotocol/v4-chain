@@ -25,6 +25,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdQueryAffiliateTiers(),
 		GetCmdQueryAffiliateInfo(),
 		GetCmdQueryReferredBy(),
+		GetCmdQueryAffiliateWhitelist(),
 	)
 	return cmd
 }
@@ -86,6 +87,26 @@ func GetCmdQueryReferredBy() *cobra.Command {
 			res, err := queryClient.ReferredBy(context.Background(), &types.ReferredByRequest{
 				Address: args[0],
 			})
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	return cmd
+}
+
+func GetCmdQueryAffiliateWhitelist() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "affiliate-whitelist",
+		Short: "Query affiliate whitelist",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AffiliateWhitelist(context.Background(), &types.AffiliateWhitelistRequest{})
 			if err != nil {
 				return err
 			}

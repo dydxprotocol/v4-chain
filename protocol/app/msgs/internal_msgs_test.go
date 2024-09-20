@@ -66,6 +66,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// affiliates
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers",
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse",
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist",
+		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse",
 
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams",

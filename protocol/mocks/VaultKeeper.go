@@ -36,32 +36,22 @@ func (_m *VaultKeeper) GetDefaultQuotingParams(ctx types.Context) vaulttypes.Quo
 	return r0
 }
 
-// GetTotalShares provides a mock function with given fields: ctx, vaultId
-func (_m *VaultKeeper) GetTotalShares(ctx types.Context, vaultId vaulttypes.VaultId) (vaulttypes.NumShares, bool) {
-	ret := _m.Called(ctx, vaultId)
+// GetTotalShares provides a mock function with given fields: ctx
+func (_m *VaultKeeper) GetTotalShares(ctx types.Context) vaulttypes.NumShares {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTotalShares")
 	}
 
 	var r0 vaulttypes.NumShares
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, vaulttypes.VaultId) (vaulttypes.NumShares, bool)); ok {
-		return rf(ctx, vaultId)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, vaulttypes.VaultId) vaulttypes.NumShares); ok {
-		r0 = rf(ctx, vaultId)
+	if rf, ok := ret.Get(0).(func(types.Context) vaulttypes.NumShares); ok {
+		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(vaulttypes.NumShares)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, vaulttypes.VaultId) bool); ok {
-		r1 = rf(ctx, vaultId)
-	} else {
-		r1 = ret.Get(1).(bool)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // GetVaultClobOrders provides a mock function with given fields: ctx, vaultId
@@ -124,22 +114,34 @@ func (_m *VaultKeeper) GetVaultEquity(ctx types.Context, vaultId vaulttypes.Vaul
 	return r0, r1
 }
 
-// MintShares provides a mock function with given fields: ctx, vaultId, owner, quantumsToDeposit
-func (_m *VaultKeeper) MintShares(ctx types.Context, vaultId vaulttypes.VaultId, owner string, quantumsToDeposit *big.Int) error {
-	ret := _m.Called(ctx, vaultId, owner, quantumsToDeposit)
+// MintShares provides a mock function with given fields: ctx, owner, quantumsToDeposit
+func (_m *VaultKeeper) MintShares(ctx types.Context, owner string, quantumsToDeposit *big.Int) (*big.Int, error) {
+	ret := _m.Called(ctx, owner, quantumsToDeposit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for MintShares")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, vaulttypes.VaultId, string, *big.Int) error); ok {
-		r0 = rf(ctx, vaultId, owner, quantumsToDeposit)
+	var r0 *big.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, string, *big.Int) (*big.Int, error)); ok {
+		return rf(ctx, owner, quantumsToDeposit)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string, *big.Int) *big.Int); ok {
+		r0 = rf(ctx, owner, quantumsToDeposit)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(types.Context, string, *big.Int) error); ok {
+		r1 = rf(ctx, owner, quantumsToDeposit)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // RefreshAllVaultOrders provides a mock function with given fields: ctx
@@ -183,17 +185,17 @@ func (_m *VaultKeeper) SetDefaultQuotingParams(ctx types.Context, params vaultty
 	return r0
 }
 
-// SetTotalShares provides a mock function with given fields: ctx, vaultId, totalShares
-func (_m *VaultKeeper) SetTotalShares(ctx types.Context, vaultId vaulttypes.VaultId, totalShares vaulttypes.NumShares) error {
-	ret := _m.Called(ctx, vaultId, totalShares)
+// SetTotalShares provides a mock function with given fields: ctx, totalShares
+func (_m *VaultKeeper) SetTotalShares(ctx types.Context, totalShares vaulttypes.NumShares) error {
+	ret := _m.Called(ctx, totalShares)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SetTotalShares")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, vaulttypes.VaultId, vaulttypes.NumShares) error); ok {
-		r0 = rf(ctx, vaultId, totalShares)
+	if rf, ok := ret.Get(0).(func(types.Context, vaulttypes.NumShares) error); ok {
+		r0 = rf(ctx, totalShares)
 	} else {
 		r0 = ret.Error(0)
 	}
