@@ -6,7 +6,7 @@ DECLARE
     maker_order jsonb;
     clob_pair_id bigint;
     subaccount_uuid uuid;
-    perpetual_market_record perpetual_markets%ROWTYPE;
+    perpetual_market_record perpetual_market_filtered;
     market_record markets%ROWTYPE;
     order_record orders%ROWTYPE;
     fill_record fills%ROWTYPE;

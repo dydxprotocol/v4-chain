@@ -1,7 +1,7 @@
 import {
   FillFromDatabase,
   FillType,
-  fillTypeToTradeType,
+  fillTypeToTradeType, FilteredPerpetualMarketFromDatabase,
   Liquidity,
   OrderFromDatabase,
   OrderSide,
@@ -61,7 +61,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
     order: OrderFromDatabase | undefined,
     position: UpdatedPerpetualPositionSubaccountKafkaObject | undefined,
     fill: FillFromDatabase,
-    perpetualMarket: PerpetualMarketFromDatabase,
+    perpetualMarket: FilteredPerpetualMarketFromDatabase | PerpetualMarketFromDatabase,
   ): ConsolidatedKafkaEvent {
     const message: SubaccountMessageContents = {
       fills: [

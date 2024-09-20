@@ -24,7 +24,7 @@ DECLARE
     TYPE_FUNDING_RATE_AND_INDEX constant jsonb = '2';
 
     perpetual_market_id bigint;
-    perpetual_market_record perpetual_markets%ROWTYPE;
+    perpetual_market_record perpetual_market_filtered;
     funding_index_updates_record funding_index_updates%ROWTYPE;
     oracle_prices_record oracle_prices%ROWTYPE;
 
@@ -36,7 +36,7 @@ DECLARE
 BEGIN
     FOR funding_update IN SELECT * FROM jsonb_array_elements(event_data->'updates') LOOP
         perpetual_market_id = (funding_update->'perpetualId')::bigint;
-        SELECT * INTO perpetual_market_record FROM perpetual_markets WHERE "id" = perpetual_market_id;
+        perpetual_market_record = dydx_get_perpetual_market_for_id(perpetual_market_id);
         IF NOT FOUND THEN
             errors_response = array_append(errors_response, '"Received FundingUpdate with unknown perpetualId."'::jsonb);
             CONTINUE;

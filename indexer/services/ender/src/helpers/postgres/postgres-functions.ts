@@ -97,8 +97,8 @@ const MAIN_SCRIPTS: string[] = [
 ];
 
 const SCRIPTS: string[] = [
-  ...HANDLER_SCRIPTS.map((script: string) => `handlers/${script}`),
   ...HELPER_SCRIPTS.map((script: string) => `helpers/${script}`),
+  ...HANDLER_SCRIPTS.map((script: string) => `handlers/${script}`),
   ...DB_SETUP_SCRIPTS.map((script: string) => `setup/${script}`),
   ...MAIN_SCRIPTS,
 ];

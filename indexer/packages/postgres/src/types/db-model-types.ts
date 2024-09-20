@@ -95,6 +95,20 @@ export interface PerpetualMarketFromDatabase {
   baseOpenInterest: string;
 }
 
+export interface FilteredPerpetualMarketFromDatabase {
+  id: string;
+  clobPairId: string;
+  ticker: string;
+  marketId: number;
+  status: PerpetualMarketStatus;
+  quantumConversionExponent: number;
+  atomicResolution: number;
+  subticksPerTick: number;
+  stepBaseQuantums: number;
+  liquidityTierId: number;
+  marketType: PerpetualMarketType;
+}
+
 export interface FillFromDatabase {
   id: string;
   subaccountId: string;

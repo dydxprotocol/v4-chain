@@ -27,7 +27,7 @@ DECLARE
     clob_pair_id bigint;
     liquidated_subaccount_uuid uuid;
     offsetting_subaccount_uuid uuid;
-    perpetual_market_record perpetual_markets%ROWTYPE;
+    perpetual_market_record perpetual_market_filtered;
     market_record markets%ROWTYPE;
     liquidated_fill_record fills%ROWTYPE;
     offsetting_fill_record fills%ROWTYPE;
@@ -42,7 +42,7 @@ DECLARE
 BEGIN
     perpetual_id = (event_data->'perpetualId')::bigint;
     BEGIN
-        SELECT * INTO STRICT perpetual_market_record FROM perpetual_markets WHERE "id" = perpetual_id;
+        perpetual_market_record = dydx_get_perpetual_market_for_id(perpetual_id);
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
             RAISE EXCEPTION 'Unable to find perpetual market with perpetualId %', perpetual_id;

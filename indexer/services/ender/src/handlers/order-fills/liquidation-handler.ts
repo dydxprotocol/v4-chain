@@ -1,6 +1,6 @@
 import {
   FillFromDatabase,
-  FillModel,
+  FillModel, FilteredPerpetualMarketFromDatabase,
   Liquidity,
   MarketFromDatabase,
   MarketModel,
@@ -87,8 +87,8 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
 
     const fill: FillFromDatabase = FillModel.fromJson(
       resultRow[field].fill) as FillFromDatabase;
-    const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
-      resultRow[field].perpetual_market) as PerpetualMarketFromDatabase;
+    const perpetualMarket: FilteredPerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
+      resultRow[field].perpetual_market) as FilteredPerpetualMarketFromDatabase;
     const market: MarketFromDatabase = MarketModel.fromJson(
       resultRow[field].market) as MarketFromDatabase;
     const position: PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
