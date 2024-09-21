@@ -50,6 +50,7 @@ type AssetsKeeper interface {
 		coin sdk.Coin,
 		err error,
 	)
+	ConvertCoinToAsset(ctx sdk.Context, assetId uint32, coin sdk.Coin) (quantums *big.Int, err error)
 	ConvertAssetToFullCoin(
 		ctx sdk.Context,
 		assetId uint32,
@@ -102,6 +103,7 @@ type BankKeeper interface {
 	) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
 type BlocktimeKeeper interface {

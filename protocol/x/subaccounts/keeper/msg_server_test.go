@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"testing"
 
-	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
@@ -21,7 +20,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 )
@@ -736,7 +734,7 @@ func TestClaimYieldForSubaccount(t *testing.T) {
 				types.ModuleAddress.String(): 100_000_000_000,
 			},
 		},
-		"Fails yield claim: not enough yield in tdai pool": {
+		"Succesfull yield claim: not enough yield in tdai pool so we take available": {
 			assetPositions:            testutil.CreateTDaiAssetPosition(big.NewInt(100_000_000_000)), // $100,000
 			subaccountAssetYieldIndex: constants.AssetYieldIndex_Zero,
 			globalAssetYieldIndex:     big.NewRat(0, 1),
@@ -761,28 +759,24 @@ func TestClaimYieldForSubaccount(t *testing.T) {
 				},
 			},
 			msgClaimYieldForSubaccount: types.MsgClaimYieldForSubaccount{Id: &defaultSubaccountId},
-			expectedErr: errorsmod.Wrapf(
-				sdkerrors.ErrInsufficientFunds,
-				"spendable balance 1utdai is smaller than 50000000utdai: insufficient funds",
-			),
-			expectedAssetYieldIndex: big.NewRat(0, 2).String(),
+			expectedAssetYieldIndex:    big.NewRat(1, 1).String(),
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId:  uint32(0),
 					Quantums:     dtypes.NewInt(100_000_000),
 					FundingIndex: dtypes.NewInt(0),
-					YieldIndex:   big.NewRat(0, 1).String(),
+					YieldIndex:   big.NewRat(1, 2).String(),
 				},
 			},
 			expectedAssetPositions: []*types.AssetPosition{
 				{
 					AssetId:  uint32(0),
-					Quantums: dtypes.NewInt(100_000_000_000),
+					Quantums: dtypes.NewInt(100_000_000_001),
 				},
 			},
-			expectedTDaiYieldPoolBalance: big.NewInt(1),
+			expectedTDaiYieldPoolBalance: big.NewInt(0),
 			expectedCollateralPoolTDaiBalances: map[string]int64{
-				types.ModuleAddress.String(): 100_000_000_000,
+				types.ModuleAddress.String(): 100_000_000_001,
 			},
 		},
 		"Fails yield claim: no open positions": {

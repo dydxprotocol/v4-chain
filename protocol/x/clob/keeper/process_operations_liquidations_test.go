@@ -19,6 +19,7 @@ import (
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -207,6 +208,12 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					// Subaccount pays $250 to insurance fund for liquidating 1 BTC.
 					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(250_000_000)),
 				).Return(nil).Once()
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -283,6 +290,12 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(math.MaxUint64)))
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 				bk.On(
 					"SendCoins",
 					mock.Anything,
@@ -363,6 +376,12 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(2_500_000)),
 				).Return(nil)
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 				bk.On(
 					"SendCoins",
 					mock.Anything,
@@ -463,6 +482,12 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(2_525_000)),
 				).Return(nil)
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 				bk.On(
 					"GetBalance",
 					mock.Anything,
@@ -573,6 +598,12 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				bk.On(
 					"GetBalance",
 					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
+				bk.On(
+					"GetBalance",
+					mock.Anything,
 					mock.Anything,
 					mock.Anything,
 				).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(math.MaxUint64)))
@@ -674,6 +705,12 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.Anything,
 				).Return(nil)
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 				bk.On(
 					"GetBalance",
 					mock.Anything,
@@ -787,6 +824,12 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(5_000_000)),
 				).Return(nil)
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 				bk.On(
 					"SendCoins",
 					mock.Anything,
@@ -902,6 +945,12 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchTDaiOfAmount(1)),
 				).Return(nil)
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 				bk.On(
 					"SendCoins",
 					mock.Anything,
@@ -1277,6 +1326,12 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.Anything,
 				).Return(fmt.Errorf("transfer failed"))
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 				bk.On(
 					"SendCoins",
 					mock.Anything,

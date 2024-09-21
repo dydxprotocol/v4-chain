@@ -51,7 +51,6 @@ func NewKeeper(
 	ics4Wrapper types.ICS4Wrapper,
 	authorities []string,
 ) *Keeper {
-	fmt.Println("CREATING NEW KEEPER. INDEXER EVENT MANAGER IS ", indexerEventsManager)
 	return &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,

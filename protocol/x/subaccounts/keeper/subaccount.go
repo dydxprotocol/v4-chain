@@ -20,8 +20,10 @@ import (
 	indexer_manager "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -272,20 +274,27 @@ func (k Keeper) fetchParamsToSettleSubaccount(
 ) (
 	perpIdToPerp map[uint32]perptypes.Perpetual,
 	assetYieldIndex *big.Rat,
+	availableYield *big.Int,
 	err error,
 ) {
 
 	assetYieldIndex, found := k.ratelimitKeeper.GetAssetYieldIndex(ctx)
 	if !found {
-		return nil, nil, errors.New("could not find asset yield index")
+		return nil, nil, nil, errors.New("could not find asset yield index")
 	}
 
 	perpIdToPerp, err = k.getPerpIdToPerpMapForSubaccount(ctx, subaccount)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return perpIdToPerp, assetYieldIndex, nil
+	availableYieldCoin := k.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount), assettypes.AssetTDai.Denom)
+	availableYield, err = k.assetsKeeper.ConvertCoinToAsset(ctx, assettypes.AssetTDai.Id, availableYieldCoin)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return perpIdToPerp, assetYieldIndex, availableYield, nil
 }
 
 func (k Keeper) getPerpIdToPerpMapForSubaccount(
@@ -518,12 +527,12 @@ func (k Keeper) getSettledSubaccount(
 	yieldForSubaccount *big.Int,
 	err error,
 ) {
-	perpIdToPerp, assetYieldIndex, err := k.fetchParamsToSettleSubaccount(ctx, subaccount)
+	perpIdToPerp, assetYieldIndex, availableYield, err := k.fetchParamsToSettleSubaccount(ctx, subaccount)
 	if err != nil {
 		return types.Subaccount{}, nil, nil, err
 	}
 
-	return GetSettledSubaccountWithPerpetuals(subaccount, perpIdToPerp, assetYieldIndex)
+	return GetSettledSubaccountWithPerpetuals(subaccount, perpIdToPerp, assetYieldIndex, availableYield)
 }
 
 // GetSettledSubaccountWithPerpetuals returns 1. a new settled subaccount given an unsettled subaccount,
@@ -536,6 +545,7 @@ func GetSettledSubaccountWithPerpetuals(
 	subaccount types.Subaccount,
 	perpetuals map[uint32]perptypes.Perpetual,
 	assetYieldIndex *big.Rat,
+	availableYield *big.Int,
 ) (
 	settledSubaccount types.Subaccount,
 	fundingPayments map[uint32]dtypes.SerializableInt,
@@ -547,7 +557,7 @@ func GetSettledSubaccountWithPerpetuals(
 	fundingPayments = make(map[uint32]dtypes.SerializableInt)
 
 	// TODO [YBCP-86]: Optimize yield addition if no yield to be claimed
-	subaccountWithYield, totalNewYield, err := AddYieldToSubaccount(subaccount, perpetuals, assetYieldIndex)
+	subaccountWithYield, totalNewYield, err := AddYieldToSubaccount(subaccount, perpetuals, assetYieldIndex, availableYield)
 	if err != nil {
 		return types.Subaccount{}, nil, nil, err
 	}

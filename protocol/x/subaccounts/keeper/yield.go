@@ -29,12 +29,12 @@ func (k Keeper) ClaimYieldForSubaccountFromIdAndSetNewState(
 		return types.ErrNoYieldToClaim
 	}
 
-	perpIdToPerp, assetYieldIndex, err := k.fetchParamsToSettleSubaccount(ctx, subaccount)
+	perpIdToPerp, assetYieldIndex, availableYield, err := k.fetchParamsToSettleSubaccount(ctx, subaccount)
 	if err != nil {
 		return err
 	}
 
-	settledSubaccount, totalYield, err := AddYieldToSubaccount(subaccount, perpIdToPerp, assetYieldIndex)
+	settledSubaccount, totalYield, err := AddYieldToSubaccount(subaccount, perpIdToPerp, assetYieldIndex, availableYield)
 	if err != nil {
 		return err
 	}
@@ -53,6 +53,7 @@ func AddYieldToSubaccount(
 	subaccount types.Subaccount,
 	perpIdToPerp map[uint32]perptypes.Perpetual,
 	assetYieldIndex *big.Rat,
+	availableYield *big.Int,
 ) (
 	settledSubaccount types.Subaccount,
 	totalNewYield *big.Int,
@@ -69,6 +70,8 @@ func AddYieldToSubaccount(
 	}
 
 	totalNewYield = new(big.Int).Add(assetYield, totalNewPerpYield)
+
+	totalNewYield = HandleInsufficientYieldDueToNegativeTNC(totalNewYield, availableYield)
 
 	stringIndex := assetYieldIndex.String()
 	newSubaccount := types.Subaccount{
@@ -88,6 +91,22 @@ func AddYieldToSubaccount(
 	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
 	newSubaccount.SetTDaiAssetPosition(newTDaiPosition)
 	return newSubaccount, totalNewYield, nil
+}
+
+func HandleInsufficientYieldDueToNegativeTNC(
+	totalNewYield *big.Int,
+	availableYield *big.Int,
+) (
+	yieldToTransfer *big.Int,
+) {
+
+	// Get the minimum of totalNewYield and availableYield
+	yieldToTransfer = new(big.Int).Set(totalNewYield)
+	if availableYield.Cmp(totalNewYield) < 0 {
+		yieldToTransfer.Set(availableYield)
+	}
+
+	return yieldToTransfer
 }
 
 // -------------------ASSET YIELD --------------------------

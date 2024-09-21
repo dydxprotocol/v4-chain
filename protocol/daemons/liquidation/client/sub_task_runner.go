@@ -179,6 +179,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 	perpetuals map[uint32]perptypes.Perpetual,
 	liquidityTiers map[uint32]perptypes.LiquidityTier,
 	assetYieldIndex *big.Rat,
+
 ) (
 	liquidatableSubaccountIds []satypes.SubaccountId,
 	negativeTncSubaccountIds []satypes.SubaccountId,
@@ -206,6 +207,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 			perpetuals,
 			liquidityTiers,
 			assetYieldIndex,
+			big.NewInt(1_000_000_000_000_000_000), // TODO SOLAL fix this when we merge with liquidation daemon change
 		)
 		if err != nil {
 			c.logger.Error("Error checking collateralization status", "error", err)
@@ -293,6 +295,7 @@ func (c *Client) CheckSubaccountCollateralization(
 	perpetuals map[uint32]perptypes.Perpetual,
 	liquidityTiers map[uint32]perptypes.LiquidityTier,
 	assetYieldIndex *big.Rat,
+	availableYield *big.Int,
 ) (
 	isLiquidatable bool,
 	hasNegativeTnc bool,
@@ -311,6 +314,7 @@ func (c *Client) CheckSubaccountCollateralization(
 		unsettledSubaccount,
 		perpetuals,
 		assetYieldIndex,
+		availableYield,
 	)
 	if err != nil {
 		return false, false, err

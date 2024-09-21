@@ -26,6 +26,7 @@ import (
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -287,6 +288,12 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					sdkmath.NewIntFromBigInt(big.NewInt(1_000_000_000_000)),
 				),
 			)
+			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+				constants.TDai.Denom,
+			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
 			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
@@ -846,6 +853,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				bk.On(
 					"GetBalance",
 					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
+				bk.On(
+					"GetBalance",
+					mock.Anything,
 					mock.Anything,
 					mock.Anything,
 				).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(0))) // Insurance fund is empty.
@@ -893,6 +906,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				bk.On(
 					"GetBalance",
 					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
+				bk.On(
+					"GetBalance",
+					mock.Anything,
 					mock.Anything,
 					mock.Anything,
 				).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(0))) // Insurance fund is empty.
@@ -937,6 +956,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				).Return(nil)
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 				bk.On(
 					"GetBalance",
 					mock.Anything,
@@ -1025,6 +1050,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				).Return(nil)
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 				bk.On(
 					"GetBalance",
 					mock.Anything,
@@ -1160,9 +1191,16 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				bankKeeper.On(
 					"GetBalance",
 					mock.Anything,
+					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+					constants.TDai.Denom,
+				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
+				bankKeeper.On(
+					"GetBalance",
+					mock.Anything,
 					mock.Anything,
 					mock.Anything,
 				).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(math.MaxUint64)))
+
 			}
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
@@ -2113,6 +2151,12 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			bankKeeper.On(
 				"GetBalance",
 				mock.Anything,
+				authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+				constants.TDai.Denom,
+			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
+			bankKeeper.On(
+				"GetBalance",
+				mock.Anything,
 				mock.Anything,
 				mock.Anything,
 			).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(tc.insuranceFundBalance))).Twice()
@@ -2296,7 +2340,15 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+	bankMock := &mocks.BankKeeper{}
+	bankMock.On(
+		"GetBalance",
+		mock.Anything,
+		authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+		constants.TDai.Denom,
+	).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
+
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, indexerEventManager)
 	ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 
 	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
@@ -2433,14 +2485,26 @@ func TestIsLiquidatable(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			bankMock := &mocks.BankKeeper{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
 			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
+
+			bankMock.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+				constants.TDai.Denom,
+			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+			// Set up TDAI asset in assets module.
+			err := keepertest.CreateTDaiAsset(ks.Ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
@@ -2853,8 +2917,16 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			bankMock := &mocks.BankKeeper{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
 			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
+
+			bankMock.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+				constants.TDai.Denom,
+			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -3385,8 +3457,16 @@ func TestGetFillablePrice(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			bankMock := &mocks.BankKeeper{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
 			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
+
+			bankMock.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+				constants.TDai.Denom,
+			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
 			// Initialize the liquidations config.
 			if tc.liquidationConfig != nil {
@@ -3404,6 +3484,10 @@ func TestGetFillablePrice(t *testing.T) {
 
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+			// Set up TDAI asset in assets module.
+			err := keepertest.CreateTDaiAsset(ks.Ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
@@ -3823,14 +3907,26 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			bankMock := &mocks.BankKeeper{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, mockIndexerEventManager)
 			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
+
+			bankMock.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+				constants.TDai.Denom,
+			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+			// Set up TDAI asset in assets module.
+			err := keepertest.CreateTDaiAsset(ks.Ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
 
 			// Create all perpetuals.
 			for _, p := range tc.perpetuals {
@@ -3869,7 +3965,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -4786,6 +4882,12 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(nil)
+			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+				constants.TDai.Denom,
+			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 			mockBankKeeper.On(
 				"SendCoinsFromModuleToModule",
 				mock.Anything,

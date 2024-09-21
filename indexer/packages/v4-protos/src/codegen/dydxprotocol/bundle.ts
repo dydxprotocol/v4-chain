@@ -152,7 +152,7 @@ export namespace dydxprotocol {
     };
     export const pricefeed = { ..._29
     };
-    export const sDAI = { ..._30
+    export const sdai = { ..._30
     };
   }
   export const delaymsg = { ..._31,

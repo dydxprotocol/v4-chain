@@ -319,6 +319,61 @@ func (k Keeper) ConvertAssetToCoin(
 	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(bigConvertedDenomAmount)), nil
 }
 
+// ConvertCoinToAsset converts the given `sdk.Coin` used in `x/bank` to
+// the corresponding `quantums` used in `x/asset` for the given `assetId`.
+// The conversion is done with the inverse formula of ConvertAssetToCoin:
+//
+//	quantums = coin_amount * 10^(denom_exponent - atomic_resolution)
+//
+// If the resulting `quantums` is not an integer, it is rounded down.
+// This ensures consistency with ConvertAssetToCoin and prevents
+// creation of assets from rounding up.
+func (k Keeper) ConvertCoinToAsset(
+	ctx sdk.Context,
+	assetId uint32,
+	coin sdk.Coin,
+) (
+	quantums *big.Int,
+	err error,
+) {
+	asset, exists := k.GetAsset(ctx, assetId)
+	if !exists {
+		return nil, errorsmod.Wrap(
+			types.ErrAssetDoesNotExist, lib.UintToString(assetId))
+	}
+
+	if lib.AbsInt32(asset.AtomicResolution) > types.MaxAssetUnitExponentAbs {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidAssetAtomicResolution,
+			"asset: %+v",
+			asset,
+		)
+	}
+
+	if lib.AbsInt32(asset.DenomExponent) > types.MaxAssetUnitExponentAbs {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidDenomExponent,
+			"asset: %+v",
+			asset,
+		)
+	}
+
+	bigRatQuantums := lib.BigMulPow10(
+		coin.Amount.BigInt(),
+		asset.DenomExponent-asset.AtomicResolution,
+	)
+
+	// Convert to big.Int without rounding
+	quantums = bigRatQuantums.Num()
+
+	// If the result is zero, return a true zero for backwards compatibility
+	if quantums.Sign() == 0 {
+		return new(big.Int), nil
+	}
+
+	return quantums, nil
+}
+
 // ConvertAssetToFullCoin converts the given `assetId` and `quantums`
 // to the amount of full coins given by the atomic resolution.
 // fullCointAmount = quantums * 10^(atomic_resolution)

@@ -147,14 +147,19 @@ func (k Keeper) GetInsuranceFundBalance(
 	if err != nil {
 		return nil
 	}
-	insuranceFundBalance := k.bankKeeper.GetBalance(
+	insuranceFundBalanceCoin := k.bankKeeper.GetBalance(
 		ctx,
 		insuranceFundAddr,
 		tdaiAsset.Denom,
 	)
 
-	// Return as big.Int.
-	return insuranceFundBalance.Amount.BigInt()
+	balance, err = k.assetsKeeper.ConvertCoinToAsset(ctx, tdaiAsset.Id, insuranceFundBalanceCoin)
+
+	if err != nil {
+		return nil
+	}
+
+	return balance
 }
 
 func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
@@ -162,14 +167,18 @@ func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int)
 	if !exists {
 		panic("GetCrossInsuranceFundBalance: TDai asset not found in state")
 	}
-	insuranceFundBalance := k.bankKeeper.GetBalance(
+	insuranceFundBalanceCoin := k.bankKeeper.GetBalance(
 		ctx,
 		perptypes.InsuranceFundModuleAddress,
 		tdaiAsset.Denom,
 	)
 
-	// Return as big.Int.
-	return insuranceFundBalance.Amount.BigInt()
+	balance, err := k.assetsKeeper.ConvertCoinToAsset(ctx, tdaiAsset.Id, insuranceFundBalanceCoin)
+	if err != nil {
+		return nil
+	}
+
+	return balance
 }
 
 // CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
