@@ -77,7 +77,7 @@ func (k Keeper) AcknowledgeIBCTransferPacket(
 // Middleware implementation for OnAckPacket
 // It is called on the sender chain when a relayer relays back the acknowledgement from the receiver chain.
 // On the dYdX chain, this includes the “response” of the receiver chain for outbound transfer from dYdX.
-func (k Keeper) UndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(
+func (k Keeper) RedoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	acknowledgement []byte,

@@ -174,7 +174,7 @@ func (im IBCMiddleware) OnAcknowledgementPacket(
 		return err
 	}
 
-	return im.keeper.UndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(ctx, packet, acknowledgement)
+	return im.keeper.RedoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(ctx, packet, acknowledgement)
 }
 
 // OnTimeoutPacket implements the IBCMiddleware interface

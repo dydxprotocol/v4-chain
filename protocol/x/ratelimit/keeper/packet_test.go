@@ -368,7 +368,7 @@ func TestUndoSendPacket(t *testing.T) {
 	}
 }
 
-func TestUndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(t *testing.T) {
+func TestRedoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(t *testing.T) {
 	testCases := map[string]struct {
 		packet             channeltypes.Packet
 		packetData         ibctransfertypes.FungibleTokenPacketData
@@ -501,7 +501,7 @@ func TestUndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(t *testing.T) {
 			ackBz, err := ibctransfertypes.ModuleCdc.MarshalJSON(&tc.ack)
 			require.NoError(t, err, "no error expected when marshalling ack")
 			initialTDaiBalance := tApp.App.BankKeeper.GetBalance(ctx, accountAddr, assettypes.TDaiDenom)
-			err = k.UndoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(ctx, testPacket, ackBz)
+			err = k.RedoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(ctx, testPacket, ackBz)
 			postMintTDaiBalance := tApp.App.BankKeeper.GetBalance(ctx, accountAddr, assettypes.TDaiDenom)
 
 			balanceDiff := postMintTDaiBalance.Amount.Sub(initialTDaiBalance.Amount)
