@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -15,6 +16,11 @@ import (
 func (k Keeper) ProcessNewTDaiConversionRateUpdate(ctx sdk.Context) error {
 
 	tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted, err := k.MintNewTDaiYield(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = k.ClaimInsuranceFundYields(ctx, tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted)
 	if err != nil {
 		return err
 	}
@@ -56,6 +62,54 @@ func (k Keeper) ProcessNewTDaiConversionRateUpdate(ctx sdk.Context) error {
 			),
 		),
 	)
+
+	return nil
+}
+
+func (k Keeper) ClaimInsuranceFundYields(ctx sdk.Context, tradingDaiSupplyBeforeNewEpoch *big.Int, tradingDaiMinted *big.Int) error {
+
+	perps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
+	insuranceFundsSeen := make(map[string]bool)
+
+	for _, perpetual := range perps {
+		insuranceFund, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetual.Params.Id)
+		if err != nil {
+			return err
+		}
+
+		if _, ok := insuranceFundsSeen[insuranceFund.String()]; ok {
+			continue
+		}
+
+		insuranceFundsSeen[insuranceFund.String()] = true
+
+		insuranceFundBalance := k.bankKeeper.GetBalance(ctx, insuranceFund, types.TDaiDenom)
+		if insuranceFundBalance.IsZero() {
+			continue
+		}
+
+		insuranceFundBalanceBigInt, err := k.assetsKeeper.ConvertCoinToAsset(ctx, assettypes.AssetTDai.Id, insuranceFundBalance)
+		if err != nil {
+			return err
+		}
+
+		insuranceFundYieldToMint := new(big.Int).Mul(insuranceFundBalanceBigInt, tradingDaiMinted)
+		insuranceFundYieldToMint.Div(insuranceFundYieldToMint, tradingDaiSupplyBeforeNewEpoch)
+
+		// Ensure the insurance fund yield to mint is non-negative
+		if insuranceFundYieldToMint.Sign() <= 0 {
+			continue
+		}
+
+		_, coinsToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(ctx, assettypes.AssetTDai.Id, insuranceFundYieldToMint)
+		if err != nil {
+			return err
+		}
+
+		if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.TDaiPoolAccount, insuranceFund, []sdk.Coin{coinsToTransfer}); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

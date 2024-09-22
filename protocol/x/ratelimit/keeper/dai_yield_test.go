@@ -300,6 +300,64 @@ func TestProcessNewTDaiConversionRateUpdate(t *testing.T) {
 	}
 }
 
+func TestClaimInsuranceFundYields(t *testing.T) {
+	ctx, _, pricesKeeper, perpetualsKeeper, _, bankKeeper, assetsKeeper, ratelimitKeeper, _, _ := testkeeper.SubaccountsKeepers(t, true)
+
+	// Setup
+	testkeeper.CreateTestMarkets(t, ctx, pricesKeeper)
+	testkeeper.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+	testkeeper.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+	err := testkeeper.CreateTDaiAsset(ctx, assetsKeeper)
+	require.NoError(t, err)
+
+	// Mint initial tDAI supply
+	initialTDaiSupply := big.NewInt(1_000_000_000_000) // 1,000,000 tDAI
+	tDaiCoin := sdk.NewCoin(types.TDaiDenom, sdkmath.NewIntFromBigInt(initialTDaiSupply))
+	err = bankKeeper.MintCoins(ctx, types.TDaiPoolAccount, sdk.NewCoins(tDaiCoin))
+	require.NoError(t, err)
+
+	// Set up insurance fund balances
+	crossInsuranceFund, err := perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, 0) // Same for perpetuals 0, 1, 2
+	require.NoError(t, err)
+	isolatedInsuranceFund1, err := perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, 3)
+	require.NoError(t, err)
+	isolatedInsuranceFund2, err := perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, 4)
+	require.NoError(t, err)
+
+	// Distribute tDAI to insurance funds
+	crossFundBalance := sdk.NewCoin(types.TDaiDenom, sdkmath.NewInt(100_000_000_000))    // 100,000 tDAI
+	isolatedFund1Balance := sdk.NewCoin(types.TDaiDenom, sdkmath.NewInt(50_000_000_000)) // 50,000 tDAI
+	isolatedFund2Balance := sdk.NewCoin(types.TDaiDenom, sdkmath.NewInt(25_000_000_000)) // 25,000 tDAI
+
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, types.TDaiPoolAccount, crossInsuranceFund, sdk.NewCoins(crossFundBalance))
+	require.NoError(t, err)
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, types.TDaiPoolAccount, isolatedInsuranceFund1, sdk.NewCoins(isolatedFund1Balance))
+	require.NoError(t, err)
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, types.TDaiPoolAccount, isolatedInsuranceFund2, sdk.NewCoins(isolatedFund2Balance))
+	require.NoError(t, err)
+
+	// Set up test parameters
+	tradingDaiSupplyBeforeNewEpoch := big.NewInt(1_000_000_000_000) // 1,000,000 tDAI
+	tradingDaiMinted := big.NewInt(10_000_000_000)                  // 10,000 tDAI (1% yield)
+
+	// Call the function
+	err = ratelimitKeeper.ClaimInsuranceFundYields(ctx, tradingDaiSupplyBeforeNewEpoch, tradingDaiMinted)
+	require.NoError(t, err)
+
+	// Check results
+	expectedCrossFundYield := big.NewInt(1_000_000_000)   // 1% of 100,000 tDAI
+	expectedIsolatedFund1Yield := big.NewInt(500_000_000) // 1% of 50,000 tDAI
+	expectedIsolatedFund2Yield := big.NewInt(250_000_000) // 1% of 25,000 tDAI
+
+	crossFundBalanceAfter := bankKeeper.GetBalance(ctx, crossInsuranceFund, types.TDaiDenom)
+	isolatedFund1BalanceAfter := bankKeeper.GetBalance(ctx, isolatedInsuranceFund1, types.TDaiDenom)
+	isolatedFund2BalanceAfter := bankKeeper.GetBalance(ctx, isolatedInsuranceFund2, types.TDaiDenom)
+
+	require.Equal(t, 0, crossFundBalanceAfter.Amount.BigInt().Cmp(new(big.Int).Add(crossFundBalance.Amount.BigInt(), expectedCrossFundYield)))
+	require.Equal(t, 0, isolatedFund1BalanceAfter.Amount.BigInt().Cmp(new(big.Int).Add(isolatedFund1Balance.Amount.BigInt(), expectedIsolatedFund1Yield)))
+	require.Equal(t, 0, isolatedFund2BalanceAfter.Amount.BigInt().Cmp(new(big.Int).Add(isolatedFund2Balance.Amount.BigInt(), expectedIsolatedFund2Yield)))
+}
+
 func TestSetNewYieldIndex(t *testing.T) {
 	testCases := []struct {
 		name                    string

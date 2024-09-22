@@ -6,6 +6,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	assetskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/keeper"
 	blocktimekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/keeper"
 	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	perpskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
@@ -27,6 +28,7 @@ func createRatelimitKeeper(
 	btk *blocktimekeeper.Keeper,
 	bk bankkeeper.Keeper,
 	perpk *perpskeeper.Keeper,
+	assetsk *assetskeeper.Keeper,
 	transientStoreKey storetypes.StoreKey,
 	msgSenderEnabled bool,
 ) (*ratelimitkeeper.Keeper, storetypes.StoreKey) {
@@ -56,6 +58,7 @@ func createRatelimitKeeper(
 		bk,
 		*btk,
 		*perpk,
+		*assetsk,
 		&ics4wrapper, // this is a pointer, since the mock has pointer receiver
 		authorities,
 	)

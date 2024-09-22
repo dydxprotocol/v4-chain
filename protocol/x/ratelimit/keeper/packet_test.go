@@ -894,6 +894,7 @@ func TestSendPacket(t *testing.T) {
 				tApp.App.BankKeeper,
 				tApp.App.BlockTimeKeeper,
 				&tApp.App.PerpetualsKeeper,
+				&tApp.App.AssetsKeeper,
 				mockICS4Wrapper,
 				[]string{
 					lib.GovModuleAddress.String(),
