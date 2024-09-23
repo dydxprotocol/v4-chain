@@ -1,8 +1,8 @@
 import { VaultType, VaultTypeSDKType, VaultId, VaultIdSDKType } from "./vault";
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
+import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
 import { Params, ParamsSDKType, QuotingParams, QuotingParamsSDKType, OperatorParams, OperatorParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
-import { NumShares, NumSharesSDKType, OwnerShare, OwnerShareSDKType } from "./share";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** QueryParamsRequest is a request type for the Params RPC method. */
@@ -176,6 +176,70 @@ export interface QueryVaultParamsResponse {
 export interface QueryVaultParamsResponseSDKType {
   vault_id?: VaultIdSDKType;
   vault_params?: VaultParamsSDKType;
+}
+/**
+ * QueryMegavaultWithdrawalInfoRequest is a request type for the
+ * MegavaultWithdrawalInfo RPC method.
+ */
+
+export interface QueryMegavaultWithdrawalInfoRequest {
+  /** Number of shares to withdraw. */
+  sharesToWithdraw?: NumShares;
+}
+/**
+ * QueryMegavaultWithdrawalInfoRequest is a request type for the
+ * MegavaultWithdrawalInfo RPC method.
+ */
+
+export interface QueryMegavaultWithdrawalInfoRequestSDKType {
+  /** Number of shares to withdraw. */
+  shares_to_withdraw?: NumSharesSDKType;
+}
+/**
+ * QueryMegavaultWithdrawalInfoResponse is a response type for the
+ * MegavaultWithdrawalInfo RPC method.
+ */
+
+export interface QueryMegavaultWithdrawalInfoResponse {
+  /** Number of shares to withdraw. */
+  sharesToWithdraw?: NumShares;
+  /**
+   * Number of quote quantums above `shares` are expected to redeem.
+   * Withdrawl slippage can be calculated by comparing
+   * `expected_quote_quantums` with
+   * `megavault_equity * shares_to_withdraw / total_shares`
+   */
+
+  expectedQuoteQuantums: Uint8Array;
+  /** Equity of megavault (in quote quantums). */
+
+  megavaultEquity: Uint8Array;
+  /** Total shares in megavault. */
+
+  totalShares?: NumShares;
+}
+/**
+ * QueryMegavaultWithdrawalInfoResponse is a response type for the
+ * MegavaultWithdrawalInfo RPC method.
+ */
+
+export interface QueryMegavaultWithdrawalInfoResponseSDKType {
+  /** Number of shares to withdraw. */
+  shares_to_withdraw?: NumSharesSDKType;
+  /**
+   * Number of quote quantums above `shares` are expected to redeem.
+   * Withdrawl slippage can be calculated by comparing
+   * `expected_quote_quantums` with
+   * `megavault_equity * shares_to_withdraw / total_shares`
+   */
+
+  expected_quote_quantums: Uint8Array;
+  /** Equity of megavault (in quote quantums). */
+
+  megavault_equity: Uint8Array;
+  /** Total shares in megavault. */
+
+  total_shares?: NumSharesSDKType;
 }
 
 function createBaseQueryParamsRequest(): QueryParamsRequest {
@@ -801,6 +865,126 @@ export const QueryVaultParamsResponse = {
     const message = createBaseQueryVaultParamsResponse();
     message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
     message.vaultParams = object.vaultParams !== undefined && object.vaultParams !== null ? VaultParams.fromPartial(object.vaultParams) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryMegavaultWithdrawalInfoRequest(): QueryMegavaultWithdrawalInfoRequest {
+  return {
+    sharesToWithdraw: undefined
+  };
+}
+
+export const QueryMegavaultWithdrawalInfoRequest = {
+  encode(message: QueryMegavaultWithdrawalInfoRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.sharesToWithdraw !== undefined) {
+      NumShares.encode(message.sharesToWithdraw, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryMegavaultWithdrawalInfoRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryMegavaultWithdrawalInfoRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.sharesToWithdraw = NumShares.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryMegavaultWithdrawalInfoRequest>): QueryMegavaultWithdrawalInfoRequest {
+    const message = createBaseQueryMegavaultWithdrawalInfoRequest();
+    message.sharesToWithdraw = object.sharesToWithdraw !== undefined && object.sharesToWithdraw !== null ? NumShares.fromPartial(object.sharesToWithdraw) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryMegavaultWithdrawalInfoResponse(): QueryMegavaultWithdrawalInfoResponse {
+  return {
+    sharesToWithdraw: undefined,
+    expectedQuoteQuantums: new Uint8Array(),
+    megavaultEquity: new Uint8Array(),
+    totalShares: undefined
+  };
+}
+
+export const QueryMegavaultWithdrawalInfoResponse = {
+  encode(message: QueryMegavaultWithdrawalInfoResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.sharesToWithdraw !== undefined) {
+      NumShares.encode(message.sharesToWithdraw, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.expectedQuoteQuantums.length !== 0) {
+      writer.uint32(18).bytes(message.expectedQuoteQuantums);
+    }
+
+    if (message.megavaultEquity.length !== 0) {
+      writer.uint32(26).bytes(message.megavaultEquity);
+    }
+
+    if (message.totalShares !== undefined) {
+      NumShares.encode(message.totalShares, writer.uint32(34).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryMegavaultWithdrawalInfoResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryMegavaultWithdrawalInfoResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.sharesToWithdraw = NumShares.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.expectedQuoteQuantums = reader.bytes();
+          break;
+
+        case 3:
+          message.megavaultEquity = reader.bytes();
+          break;
+
+        case 4:
+          message.totalShares = NumShares.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryMegavaultWithdrawalInfoResponse>): QueryMegavaultWithdrawalInfoResponse {
+    const message = createBaseQueryMegavaultWithdrawalInfoResponse();
+    message.sharesToWithdraw = object.sharesToWithdraw !== undefined && object.sharesToWithdraw !== null ? NumShares.fromPartial(object.sharesToWithdraw) : undefined;
+    message.expectedQuoteQuantums = object.expectedQuoteQuantums ?? new Uint8Array();
+    message.megavaultEquity = object.megavaultEquity ?? new Uint8Array();
+    message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? NumShares.fromPartial(object.totalShares) : undefined;
     return message;
   }
 
