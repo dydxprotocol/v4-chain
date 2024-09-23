@@ -1,7 +1,7 @@
 import {
   STATS_NO_SAMPLING, delay, logger, stats,
 } from '@dydxprotocol-indexer/base';
-import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
+import { ComplianceClientResponse, NOT_IN_BLOCKCHAIN_RISK_SCORE } from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceDataColumns,
   ComplianceDataCreateObject,
@@ -151,6 +151,7 @@ export default async function runTask(
         blocked: false,
         provider: complianceProvider.provider,
         updatedBeforeOrAt: ageThreshold,
+        onlyAddressInWalletsTable: true,
       },
       [],
       { readReplica: true },
@@ -318,10 +319,18 @@ async function getComplianceData(
         return result.value;
       },
     ));
+    const responses404:
+    PromiseFulfilledResult<ComplianceClientResponse>[] = successResponses.filter(
+      (result: PromiseSettledResult<ComplianceClientResponse>):
+      result is PromiseFulfilledResult<ComplianceClientResponse> => {
+        return result.status === 'fulfilled' && result.value.riskScore === NOT_IN_BLOCKCHAIN_RISK_SCORE.toString();
+      },
+    );
 
     if (failedResponses.length > 0) {
       const addressesWithoutResponses: string[] = _.without(
         addresses,
+        // complianceResponses includes 404 responses
         ..._.map(complianceResponses, 'address'),
       );
       stats.increment(
@@ -335,6 +344,22 @@ async function getComplianceData(
         message: 'Failed to retrieve compliance data for the addresses',
         addresses: addressesWithoutResponses,
         errors: failedResponses,
+      });
+    }
+
+    if (responses404.length > 0) {
+      const addresses404 = responses404.map((result) => result.value.address);
+
+      stats.increment(
+        `${config.SERVICE_NAME}.${taskName}.get_compliance_data_404`,
+        1,
+        undefined,
+        { provider: complianceProvider.provider },
+      );
+      logger.error({
+        at: 'updated-compliance-data#getComplianceData',
+        message: 'Failed to retrieve compliance data for the addresses due to elliptic 404',
+        addresses: addresses404,
       });
     }
     stats.timing(

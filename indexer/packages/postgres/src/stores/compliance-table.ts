@@ -13,6 +13,7 @@ import {
 } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import ComplianceDataModel from '../models/compliance-data-model';
+import WalletModel from '../models/wallet-model';
 import {
   ComplianceDataFromDatabase,
   ComplianceDataQueryConfig,
@@ -34,6 +35,7 @@ export async function findAll(
     provider,
     blocked,
     limit,
+    onlyAddressInWalletsTable,
   }: ComplianceDataQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
@@ -45,6 +47,7 @@ export async function findAll(
       provider,
       blocked,
       limit,
+      onlyAddressInWalletsTable,
     } as QueryConfig,
     requiredFields,
   );
@@ -68,6 +71,14 @@ export async function findAll(
 
   if (blocked !== undefined) {
     baseQuery = baseQuery.where(ComplianceDataColumns.blocked, blocked);
+  }
+
+  if (onlyAddressInWalletsTable === true) {
+    baseQuery = baseQuery.innerJoin(
+      WalletModel.tableName,
+      `${ComplianceDataModel.tableName}.${ComplianceDataColumns.address}`,
+      '=',
+      `${WalletModel.tableName}.${WalletModel.idColumn}`);
   }
 
   if (options.orderBy !== undefined) {
