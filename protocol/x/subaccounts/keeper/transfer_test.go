@@ -20,7 +20,6 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	sample_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
-	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
@@ -1172,8 +1171,6 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 }
 
 func TestDistributeFees(t *testing.T) {
-	refereeAccAddr := constants.AliceAccAddress.String()
-	defaultUnconditionalRevSharePpm := uint32(100_000)
 	tests := map[string]struct {
 		skipSetUpUsdc bool
 
@@ -1190,11 +1187,8 @@ func TestDistributeFees(t *testing.T) {
 		affiliateRevShareAcctAddr     string
 		marketMapperRevShareAcctAddr  string
 		unconditionalRevShareAcctAddr string
-
-		// Revenue share details
-		revshareParams     revsharetypes.MarketMapperRevenueShareParams
-		setRevenueShare    bool
-		revShareExpiration int64
+		revShare                      revsharetypes.RevSharesForFill
+		revShareExpiration            int64
 
 		// Expectations.
 		expectedErr                             error
@@ -1219,15 +1213,13 @@ func TestDistributeFees(t *testing.T) {
 				MarketId:                          uint32(0),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
-			collateralPoolAddr:                  types.ModuleAddress,
-			affiliateRevShareAcctAddr:           "",
-			marketMapperRevShareAcctAddr:        constants.AliceAccAddress.String(),
-			unconditionalRevShareAcctAddr:       "",
-			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
-			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address: constants.AliceAccAddress.String(),
-			},
+			collateralPoolAddr:                      types.ModuleAddress,
+			affiliateRevShareAcctAddr:               "",
+			marketMapperRevShareAcctAddr:            constants.AliceAccAddress.String(),
+			unconditionalRevShareAcctAddr:           "",
+			expectedSubaccountsModuleAccBalance:     big.NewInt(100),  // 600 - 500
+			expectedFeeModuleAccBalance:             big.NewInt(3000), // 500 + 2500
+			revShare:                                revsharetypes.RevSharesForFill{},
 			expectedMarketMapperAccBalance:          big.NewInt(0),
 			expectedAffiliateAccBalance:             big.NewInt(0),
 			expectedUnconditionalRevShareAccBalance: big.NewInt(0),
@@ -1249,15 +1241,13 @@ func TestDistributeFees(t *testing.T) {
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.IntToString(3),
 			),
-			affiliateRevShareAcctAddr:           "",
-			marketMapperRevShareAcctAddr:        constants.AliceAccAddress.String(),
-			unconditionalRevShareAcctAddr:       "",
-			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
-			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
-			marketMapperAccBalance:              big.NewInt(0),
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address: constants.AliceAccAddress.String(),
-			},
+			affiliateRevShareAcctAddr:               "",
+			marketMapperRevShareAcctAddr:            constants.AliceAccAddress.String(),
+			unconditionalRevShareAcctAddr:           "",
+			expectedSubaccountsModuleAccBalance:     big.NewInt(100),  // 600 - 500
+			expectedFeeModuleAccBalance:             big.NewInt(3000), // 500 + 2500
+			marketMapperAccBalance:                  big.NewInt(0),
+			revShare:                                revsharetypes.RevSharesForFill{},
 			expectedMarketMapperAccBalance:          big.NewInt(0),
 			expectedAffiliateAccBalance:             big.NewInt(0),
 			expectedUnconditionalRevShareAccBalance: big.NewInt(0),
@@ -1276,17 +1266,15 @@ func TestDistributeFees(t *testing.T) {
 				MarketId:                          uint32(3),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
-			collateralPoolAddr:                  types.ModuleAddress,
-			affiliateRevShareAcctAddr:           "",
-			marketMapperRevShareAcctAddr:        constants.AliceAccAddress.String(),
-			unconditionalRevShareAcctAddr:       "",
-			expectedSubaccountsModuleAccBalance: big.NewInt(300),
-			expectedFeeModuleAccBalance:         big.NewInt(2500),
-			expectedErr:                         sdkerrors.ErrInsufficientFunds,
-			marketMapperAccBalance:              big.NewInt(0),
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address: constants.AliceAccAddress.String(),
-			},
+			collateralPoolAddr:                      types.ModuleAddress,
+			affiliateRevShareAcctAddr:               "",
+			marketMapperRevShareAcctAddr:            constants.AliceAccAddress.String(),
+			unconditionalRevShareAcctAddr:           "",
+			expectedSubaccountsModuleAccBalance:     big.NewInt(300),
+			expectedFeeModuleAccBalance:             big.NewInt(2500),
+			expectedErr:                             sdkerrors.ErrInsufficientFunds,
+			marketMapperAccBalance:                  big.NewInt(0),
+			revShare:                                revsharetypes.RevSharesForFill{},
 			expectedMarketMapperAccBalance:          big.NewInt(0),
 			expectedAffiliateAccBalance:             big.NewInt(0),
 			expectedUnconditionalRevShareAccBalance: big.NewInt(0),
@@ -1308,16 +1296,14 @@ func TestDistributeFees(t *testing.T) {
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.IntToString(3),
 			),
-			affiliateRevShareAcctAddr:           "",
-			marketMapperRevShareAcctAddr:        constants.AliceAccAddress.String(),
-			unconditionalRevShareAcctAddr:       "",
-			expectedSubaccountsModuleAccBalance: big.NewInt(300),
-			expectedFeeModuleAccBalance:         big.NewInt(2500),
-			expectedErr:                         sdkerrors.ErrInsufficientFunds,
-			marketMapperAccBalance:              big.NewInt(0),
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address: constants.AliceAccAddress.String(),
-			},
+			affiliateRevShareAcctAddr:               "",
+			marketMapperRevShareAcctAddr:            constants.AliceAccAddress.String(),
+			unconditionalRevShareAcctAddr:           "",
+			expectedSubaccountsModuleAccBalance:     big.NewInt(300),
+			expectedFeeModuleAccBalance:             big.NewInt(2500),
+			expectedErr:                             sdkerrors.ErrInsufficientFunds,
+			marketMapperAccBalance:                  big.NewInt(0),
+			revShare:                                revsharetypes.RevSharesForFill{},
 			expectedMarketMapperAccBalance:          big.NewInt(0),
 			expectedAffiliateAccBalance:             big.NewInt(0),
 			expectedUnconditionalRevShareAccBalance: big.NewInt(0),
@@ -1337,17 +1323,15 @@ func TestDistributeFees(t *testing.T) {
 				MarketId:                          uint32(3),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
-			collateralPoolAddr:                  types.ModuleAddress,
-			affiliateRevShareAcctAddr:           "",
-			marketMapperRevShareAcctAddr:        constants.AliceAccAddress.String(),
-			unconditionalRevShareAcctAddr:       "",
-			expectedErr:                         asstypes.ErrAssetDoesNotExist,
-			expectedSubaccountsModuleAccBalance: big.NewInt(500),
-			expectedFeeModuleAccBalance:         big.NewInt(1500),
-			marketMapperAccBalance:              big.NewInt(0),
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address: constants.AliceAccAddress.String(),
-			},
+			collateralPoolAddr:                      types.ModuleAddress,
+			affiliateRevShareAcctAddr:               "",
+			marketMapperRevShareAcctAddr:            constants.AliceAccAddress.String(),
+			unconditionalRevShareAcctAddr:           "",
+			expectedErr:                             asstypes.ErrAssetDoesNotExist,
+			expectedSubaccountsModuleAccBalance:     big.NewInt(500),
+			expectedFeeModuleAccBalance:             big.NewInt(1500),
+			marketMapperAccBalance:                  big.NewInt(0),
+			revShare:                                revsharetypes.RevSharesForFill{},
 			expectedMarketMapperAccBalance:          big.NewInt(0),
 			expectedAffiliateAccBalance:             big.NewInt(0),
 			expectedUnconditionalRevShareAccBalance: big.NewInt(0),
@@ -1366,17 +1350,15 @@ func TestDistributeFees(t *testing.T) {
 				MarketId:                          uint32(3),
 				MonthlyRollingTakerVolumeQuantums: 1_000_000,
 			},
-			collateralPoolAddr:                  types.ModuleAddress,
-			affiliateRevShareAcctAddr:           "",
-			marketMapperRevShareAcctAddr:        constants.AliceAccAddress.String(),
-			unconditionalRevShareAcctAddr:       "",
-			expectedErr:                         types.ErrAssetTransferThroughBankNotImplemented,
-			expectedSubaccountsModuleAccBalance: big.NewInt(500),
-			expectedFeeModuleAccBalance:         big.NewInt(1500),
-			marketMapperAccBalance:              big.NewInt(0),
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address: constants.AliceAccAddress.String(),
-			},
+			collateralPoolAddr:                      types.ModuleAddress,
+			affiliateRevShareAcctAddr:               "",
+			marketMapperRevShareAcctAddr:            constants.AliceAccAddress.String(),
+			unconditionalRevShareAcctAddr:           "",
+			expectedErr:                             types.ErrAssetTransferThroughBankNotImplemented,
+			expectedSubaccountsModuleAccBalance:     big.NewInt(500),
+			expectedFeeModuleAccBalance:             big.NewInt(1500),
+			marketMapperAccBalance:                  big.NewInt(0),
+			revShare:                                revsharetypes.RevSharesForFill{},
 			expectedMarketMapperAccBalance:          big.NewInt(0),
 			expectedAffiliateAccBalance:             big.NewInt(0),
 			expectedUnconditionalRevShareAccBalance: big.NewInt(0),
@@ -1407,12 +1389,26 @@ func TestDistributeFees(t *testing.T) {
 			affiliateRevShareAcctAddr:     "",
 			marketMapperRevShareAcctAddr:  constants.AliceAccAddress.String(),
 			unconditionalRevShareAcctAddr: "",
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address:         constants.AliceAccAddress.String(),
-				RevenueSharePpm: 100_000, // 10%
-				ValidDays:       240,
+			revShare: revsharetypes.RevSharesForFill{
+				AffiliateRevShare: nil,
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(50),
+				},
+				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0,       // 0%
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 100_000, // 10%
+				},
+				AllRevShares: []revsharetypes.RevShare{
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER,
+						QuoteQuantums:     big.NewInt(50),
+						RevSharePpm:       100_000, // 10%
+					},
+				},
 			},
-			setRevenueShare:    true,
 			revShareExpiration: 100,
 		},
 		"success - market mapper rev share expired": {
@@ -1441,13 +1437,18 @@ func TestDistributeFees(t *testing.T) {
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.IntToString(4),
 			),
-
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address:         constants.AliceAccAddress.String(),
-				RevenueSharePpm: 100_000, // 10%
-				ValidDays:       240,
+			revShare: revsharetypes.RevSharesForFill{
+				AffiliateRevShare: nil,
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(0),
+				},
+				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0, // 0%
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 0, // 0%
+				},
+				AllRevShares: []revsharetypes.RevShare{},
 			},
-			setRevenueShare:    true,
 			revShareExpiration: -10,
 		},
 		"success - market mapper rev share rounded down to 0": {
@@ -1476,12 +1477,18 @@ func TestDistributeFees(t *testing.T) {
 			affiliateRevShareAcctAddr:     "",
 			marketMapperRevShareAcctAddr:  constants.AliceAccAddress.String(),
 			unconditionalRevShareAcctAddr: "",
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address:         constants.AliceAccAddress.String(),
-				RevenueSharePpm: 100_000, // 10%
-				ValidDays:       240,
+			revShare: revsharetypes.RevSharesForFill{
+				AffiliateRevShare: nil,
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(0),
+				},
+				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0, // 0%
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 0, // 0%
+				},
+				AllRevShares: []revsharetypes.RevShare{},
 			},
-			setRevenueShare:    true,
 			revShareExpiration: 100,
 		},
 		"success - distribute fees to market mapper, unconditional rev share, affiliate and fee collector": {
@@ -1510,12 +1517,46 @@ func TestDistributeFees(t *testing.T) {
 			affiliateRevShareAcctAddr:     constants.BobAccAddress.String(),
 			marketMapperRevShareAcctAddr:  constants.AliceAccAddress.String(),
 			unconditionalRevShareAcctAddr: constants.CarlAccAddress.String(),
-			revshareParams: revsharetypes.MarketMapperRevenueShareParams{
-				Address:         constants.AliceAccAddress.String(),
-				RevenueSharePpm: 100_000, // 10%
-				ValidDays:       240,
+			revShare: revsharetypes.RevSharesForFill{
+				AffiliateRevShare: &revsharetypes.RevShare{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+					RevShareType:      revsharetypes.REV_SHARE_TYPE_AFFILIATE,
+					QuoteQuantums:     big.NewInt(12),
+					RevSharePpm:       50_000, // 5%
+				},
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(12),
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(96),
+				},
+				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            50_000,  // 5%
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 200_000, // 20%
+				},
+				AllRevShares: []revsharetypes.RevShare{
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_AFFILIATE,
+						QuoteQuantums:     big.NewInt(12),
+						RevSharePpm:       50_000, // 5%
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER,
+						QuoteQuantums:     big.NewInt(48),
+						RevSharePpm:       100_000, // 10%
+					},
+					{
+						Recipient:         constants.CarlAccAddress.String(),
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(48),
+						RevSharePpm:       100_000, // 10%
+					},
+				},
 			},
-			setRevenueShare:    true,
 			revShareExpiration: 100,
 		},
 		// TODO(DEC-715): Add more test for non-USDC assets, after asset update
@@ -1525,7 +1566,7 @@ func TestDistributeFees(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper,
-				bankKeeper, assetsKeeper, _, revShareKeeper, affiliatesKeeper, _ :=
+				bankKeeper, assetsKeeper, _, _, _, _ :=
 				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
@@ -1609,44 +1650,7 @@ func TestDistributeFees(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			// Set market mapper revenue share
-			err = revShareKeeper.SetMarketMapperRevenueShareParams(
-				ctx,
-				tc.revshareParams,
-			)
-			require.NoError(t, err)
-
-			if tc.setRevenueShare {
-				revShareKeeper.SetMarketMapperRevShareDetails(
-					ctx,
-					tc.fill.MarketId,
-					revsharetypes.MarketMapperRevShareDetails{
-						ExpirationTs: uint64(ctx.BlockTime().Unix() + tc.revShareExpiration),
-					},
-				)
-			}
-			if tc.affiliateRevShareAcctAddr != "" {
-				err := affiliatesKeeper.RegisterAffiliate(ctx, refereeAccAddr, tc.affiliateRevShareAcctAddr)
-				require.NoError(t, err)
-			}
-			if tc.unconditionalRevShareAcctAddr != "" {
-				err := affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
-				require.NoError(t, err)
-				revShareKeeper.SetUnconditionalRevShareConfigParams(ctx,
-					revsharetypes.UnconditionalRevShareConfig{
-						Configs: []revsharetypes.UnconditionalRevShareConfig_RecipientConfig{
-							{
-								Address:  tc.unconditionalRevShareAcctAddr,
-								SharePpm: defaultUnconditionalRevSharePpm,
-							},
-						},
-					})
-			}
-			affiliateWhitelistMap, err := affiliatesKeeper.GetAffiliateWhitelistMap(ctx)
-			require.NoError(t, err)
-			revSharesForFill, err := revShareKeeper.GetAllRevShares(ctx, tc.fill, affiliateWhitelistMap)
-			require.NoError(t, err)
-			err = keeper.DistributeFees(ctx, tc.asset.Id, revSharesForFill, tc.fill)
+			err = keeper.DistributeFees(ctx, tc.asset.Id, tc.revShare, tc.fill)
 
 			if tc.expectedErr != nil {
 				require.ErrorIs(t,

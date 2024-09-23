@@ -3,10 +3,10 @@ package keeper
 import (
 	"math/big"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
@@ -173,17 +173,25 @@ func (k Keeper) GetAllRevShares(
 
 	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
 	if err != nil {
-		return types.RevSharesForFill{}, err
+		log.ErrorLogWithError(ctx, "error getting affiliate rev shares", err)
+		return types.RevSharesForFill{}, nil
 	}
-	netFeesSubAffiliateFeesShared := big.NewInt(0).Sub(netFees, affiliateFeesShared)
+	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
 	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
 	if err != nil {
-		return types.RevSharesForFill{}, err
+		log.ErrorLogWithError(ctx, "error getting unconditional rev shares", err)
+		return types.RevSharesForFill{}, nil
+	}
+
+	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
+		log.ErrorLog(ctx, "net fees sub affiliate fees shared is less than or equal to 0")
+		return types.RevSharesForFill{}, nil
 	}
 
 	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
 	if err != nil {
-		return types.RevSharesForFill{}, err
+		log.ErrorLogWithError(ctx, "error getting market mapper rev shares", err)
+		return types.RevSharesForFill{}, nil
 	}
 
 	revShares = append(revShares, affiliateRevShares...)
@@ -208,8 +216,8 @@ func (k Keeper) GetAllRevShares(
 	}
 	//check total fees shared is less than or equal to net fees
 	if totalFeesShared.Cmp(netFees) > 0 {
-		return types.RevSharesForFill{}, errorsmod.Wrap(
-			types.ErrTotalFeesSharedExceedsNetFees, "total fees shared exceeds net fees")
+		log.ErrorLog(ctx, "total fees shared exceeds net fees")
+		return types.RevSharesForFill{}, nil
 	}
 
 	return types.RevSharesForFill{
@@ -253,7 +261,7 @@ func (k Keeper) getAffiliateRevShares(
 
 func (k Keeper) getUnconditionalRevShares(
 	ctx sdk.Context,
-	netFees *big.Int,
+	netFeesSubAffiliateFeesShared *big.Int,
 ) ([]types.RevShare, error) {
 	revShares := []types.RevShare{}
 	unconditionalRevShareConfig, err := k.GetUnconditionalRevShareConfigParams(ctx)
@@ -261,7 +269,7 @@ func (k Keeper) getUnconditionalRevShares(
 		return nil, err
 	}
 	for _, revShare := range unconditionalRevShareConfig.Configs {
-		feeShared := lib.BigMulPpm(netFees, lib.BigU(revShare.SharePpm), false)
+		feeShared := lib.BigMulPpm(netFeesSubAffiliateFeesShared, lib.BigU(revShare.SharePpm), false)
 		revShare := types.RevShare{
 			Recipient:         revShare.Address,
 			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
@@ -277,7 +285,7 @@ func (k Keeper) getUnconditionalRevShares(
 func (k Keeper) getMarketMapperRevShare(
 	ctx sdk.Context,
 	marketId uint32,
-	netFees *big.Int,
+	netFeesSubAffiliateFeesShared *big.Int,
 ) ([]types.RevShare, error) {
 	revShares := []types.RevShare{}
 	marketMapperRevshareAddress, revenueSharePpm, err := k.GetMarketMapperRevenueShareForMarket(ctx, marketId)
@@ -288,7 +296,7 @@ func (k Keeper) getMarketMapperRevShare(
 		return nil, nil
 	}
 
-	marketMapperRevshareAmount := lib.BigMulPpm(netFees, lib.BigU(revenueSharePpm), false)
+	marketMapperRevshareAmount := lib.BigMulPpm(netFeesSubAffiliateFeesShared, lib.BigU(revenueSharePpm), false)
 	revShares = append(revShares, types.RevShare{
 		Recipient:         marketMapperRevshareAddress.String(),
 		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
