@@ -95,7 +95,8 @@ func (k Keeper) CreateMarket(
 				marketParam.Id,
 				marketParam.Pair,
 				marketParam.MinPriceChangePpm,
-				marketPrice.Exponent, // The exponent of the market price is the source of truth, the exponent of the param is deprecated as of v7.1.x
+				// The exponent in market price is the source of truth, the exponent of the param is deprecated as of v7.1.x
+				marketPrice.Exponent,
 			),
 		),
 	)
