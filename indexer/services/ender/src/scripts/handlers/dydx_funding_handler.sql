@@ -36,15 +36,18 @@ DECLARE
 BEGIN
     FOR funding_update IN SELECT * FROM jsonb_array_elements(event_data->'updates') LOOP
         perpetual_id = (funding_update->'perpetualId')::bigint;
-        perpetual_market_record = dydx_get_perpetual_market_for_id(perpetual_id);
-        RAISE NOTICE 'perpetual_id: %, perpetual_market_record: %', perpetual_id, perpetual_market_record;
-
-        IF NOT FOUND THEN
-            errors_response = array_append(errors_response, '"Received FundingUpdate with unknown perpetualId."'::jsonb);
-            CONTINUE;
-        END IF;
-
-        perpetual_markets_response = jsonb_set(perpetual_markets_response, ARRAY[(perpetual_market_record."id")::text], dydx_to_jsonb(perpetual_market_record));
+        BEGIN
+            perpetual_market_record = dydx_get_perpetual_market_for_id(perpetual_id);
+            perpetual_markets_response = jsonb_set(perpetual_markets_response, ARRAY[(perpetual_market_record."id")::text], dydx_to_jsonb(perpetual_market_record));
+        EXCEPTION
+            WHEN OTHERS THEN
+                IF SQLERRM LIKE 'Unable to find perpetual market with id%' THEN
+                    errors_response = array_append(errors_response, '"Received FundingUpdate with unknown perpetualId."'::jsonb);
+                    CONTINUE;
+                ELSE
+                    RAISE;
+                END IF;
+        END;
 
         CASE event_data->'type'
             WHEN TYPE_PREMIUM_SAMPLE THEN

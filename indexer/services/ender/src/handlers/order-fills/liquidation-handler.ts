@@ -1,6 +1,7 @@
 import {
   FillFromDatabase,
-  FillModel, FilteredPerpetualMarketFromDatabase,
+  FillModel,
+  FilteredPerpetualMarketFromDatabase,
   Liquidity,
   MarketFromDatabase,
   MarketModel,
@@ -8,7 +9,6 @@ import {
   OrderModel,
   OrderStatus,
   OrderTable,
-  PerpetualMarketFromDatabase,
   PerpetualMarketModel,
   perpetualMarketRefresher,
   PerpetualPositionFromDatabase,

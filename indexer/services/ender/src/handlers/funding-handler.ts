@@ -1,7 +1,6 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   FundingIndexUpdatesTable,
-  PerpetualMarketFromDatabase,
   TendermintEventTable,
   protocolTranslations,
   PerpetualMarketModel,
@@ -52,18 +51,17 @@ export class FundingHandler extends Handler<FundingEventMessage> {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
-    console.log('handle yo');
-    console.log(`resultRow.perpetual_markets: ${JSON.stringify(resultRow.perpetual_markets)}`);
-
     const perpetualMarkets:
-    Map<string, FilteredPerpetualMarketFromDatabase> = new Map<string, FilteredPerpetualMarketFromDatabase>();
+    Map<string, FilteredPerpetualMarketFromDatabase> = new
+    Map<string, FilteredPerpetualMarketFromDatabase>();
     for (const [key, perpetualMarket] of Object.entries(resultRow.perpetual_markets)) {
       perpetualMarkets.set(
         key,
-        PerpetualMarketModel.fromJson(perpetualMarket as object) as FilteredPerpetualMarketFromDatabase,
+        PerpetualMarketModel.fromJson(
+          perpetualMarket as object,
+        ) as FilteredPerpetualMarketFromDatabase,
       );
     }
-    console.log('perpetualMarkets', perpetualMarkets);
     const fundingIndices:
     Map<string, FundingIndexUpdatesFromDatabase> = new
     Map<string, FundingIndexUpdatesFromDatabase>();
@@ -91,7 +89,9 @@ export class FundingHandler extends Handler<FundingEventMessage> {
       }
 
       const perpetualMarket:
-        FilteredPerpetualMarketFromDatabase | undefined = perpetualMarkets.get(update.perpetualId.toString());
+      FilteredPerpetualMarketFromDatabase | undefined = perpetualMarkets.get(
+        update.perpetualId.toString(),
+      );
       logger.info({
         at: 'FundingHandler#handleFundingSample',
         message: 'processing funding update',

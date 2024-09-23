@@ -1,7 +1,8 @@
 import {
   FillFromDatabase,
   FillType,
-  fillTypeToTradeType, FilteredPerpetualMarketFromDatabase,
+  fillTypeToTradeType,
+  FilteredPerpetualMarketFromDatabase,
   Liquidity,
   OrderFromDatabase,
   OrderSide,

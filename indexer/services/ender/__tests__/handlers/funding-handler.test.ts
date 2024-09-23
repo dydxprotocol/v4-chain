@@ -19,7 +19,6 @@ import {
   TendermintEventTable,
   testConstants,
   testMocks,
-  PerpetualMarketTable, PerpetualMarketFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { DydxIndexerSubtypes, FundingEventMessage } from '../../src/lib/types';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
@@ -119,15 +118,6 @@ describe('fundingHandler', () => {
   });
 
   it('successfully processes single premium sample event', async () => {
-    // get and print perpetual markets
-    // const perpetualMarkets = await PerpetualMarketTable.findA
-
-    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
-      {},
-      [],
-      { readReplica: true },
-    );
-    console.log('perpetualMarkets before', perpetualMarkets);
     const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
       fundingEvents: [defaultFundingUpdateSampleEvent],
       height: defaultHeight,
