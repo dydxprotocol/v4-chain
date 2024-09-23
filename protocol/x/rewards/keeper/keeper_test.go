@@ -184,7 +184,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 			},
 			expectedTakerShare: types.RewardShare{
 				Address: takerAddress,
-				Weight:  dtypes.NewInt(1_200_000), // 2 - 0.1% * 800
+				Weight:  dtypes.NewInt(200_000), // 2 - 0.1% * 800 -(2 * 0.5)
 			},
 			expectedMakerShare: types.RewardShare{
 				Address: makerAddress,
@@ -218,7 +218,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 			},
 			expectedTakerShare: types.RewardShare{
 				Address: takerAddress,
-				Weight:  dtypes.NewInt(1_250_000), // 2 - 0.1% * 750
+				Weight:  dtypes.NewInt(250_000), // 2 - 0.1% * 750 - (2 * 0.5)
 			},
 			expectedMakerShare: types.RewardShare{
 				Address: makerAddress,
@@ -252,7 +252,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 			},
 			expectedTakerShare: types.RewardShare{
 				Address: takerAddress,
-				Weight:  dtypes.NewInt(1_625_000), // 2 - 0.05% * 750
+				Weight:  dtypes.NewInt(625_000), // 2 - 0.05% * 750 - (2 * 0.5)
 			},
 			expectedMakerShare: types.RewardShare{
 				Address: makerAddress,
@@ -319,7 +319,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 			},
 			expectedTakerShare: types.RewardShare{
 				Address: takerAddress,
-				Weight:  dtypes.NewInt(700_000),
+				Weight:  dtypes.NewInt(350_000), // 0.7 - (0.7 * 0.5)
 			},
 			expectedMakerShare: types.RewardShare{
 				Address: makerAddress,
@@ -367,7 +367,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 			},
 			expectedTakerShare: types.RewardShare{
 				Address: takerAddress,
-				Weight:  dtypes.NewInt(1_080_000), // (2 - 0.1% * 800 - 0) * (1 - 0.1)
+				Weight:  dtypes.NewInt(180_000), // (2 - 0.1% * 800 - 0.5*2) * (1 - 0.1)
 			},
 			expectedMakerShare: types.RewardShare{
 				Address: makerAddress,
@@ -422,7 +422,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 			},
 			expectedTakerShare: types.RewardShare{
 				Address: takerAddress,
-				Weight:  dtypes.NewInt(960_000), // (2 - 0.1% * 800 - 0) * (1 - 0.2)
+				Weight:  dtypes.NewInt(160_000), // (2 - 0.1% * 800 - 0.5*2) * (1 - 0.2)
 			},
 			expectedMakerShare: types.RewardShare{
 				Address: makerAddress,
