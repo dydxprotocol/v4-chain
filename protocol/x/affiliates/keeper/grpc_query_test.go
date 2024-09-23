@@ -194,6 +194,8 @@ func TestReferredBy(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+			require.NoError(t, err)
 			tc.setup(ctx, k)
 			res, err := k.ReferredBy(ctx, tc.req)
 

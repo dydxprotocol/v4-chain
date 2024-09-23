@@ -55,7 +55,10 @@ export enum VaultStatus {
   /** VAULT_STATUS_UNSPECIFIED - Default value, invalid and unused. */
   VAULT_STATUS_UNSPECIFIED = 0,
 
-  /** VAULT_STATUS_DEACTIVATED - Don’t place orders. Does not count toward global vault balances. */
+  /**
+   * VAULT_STATUS_DEACTIVATED - Don’t place orders. Does not count toward global vault balances.
+   * A vault can only be set to this status if its equity is non-positive.
+   */
   VAULT_STATUS_DEACTIVATED = 1,
 
   /** VAULT_STATUS_STAND_BY - Don’t place orders. Does count towards global vault balances. */
@@ -74,7 +77,10 @@ export enum VaultStatusSDKType {
   /** VAULT_STATUS_UNSPECIFIED - Default value, invalid and unused. */
   VAULT_STATUS_UNSPECIFIED = 0,
 
-  /** VAULT_STATUS_DEACTIVATED - Don’t place orders. Does not count toward global vault balances. */
+  /**
+   * VAULT_STATUS_DEACTIVATED - Don’t place orders. Does not count toward global vault balances.
+   * A vault can only be set to this status if its equity is non-positive.
+   */
   VAULT_STATUS_DEACTIVATED = 1,
 
   /** VAULT_STATUS_STAND_BY - Don’t place orders. Does count towards global vault balances. */

@@ -211,7 +211,7 @@ func TestMsgDepositToMegavault(t *testing.T) {
 					depositAmount:           big.NewInt(0),
 					msgSigner:               constants.Alice_Num0.Owner,
 					checkTxFails:            true,
-					checkTxResponseContains: "Deposit amount is invalid",
+					checkTxResponseContains: vaulttypes.ErrInvalidQuoteQuantums.Error(),
 					expectedOwnerShares:     nil,
 				},
 				{
@@ -219,7 +219,7 @@ func TestMsgDepositToMegavault(t *testing.T) {
 					depositAmount:           big.NewInt(-1),
 					msgSigner:               constants.Bob_Num0.Owner,
 					checkTxFails:            true,
-					checkTxResponseContains: "Deposit amount is invalid",
+					checkTxResponseContains: vaulttypes.ErrInvalidQuoteQuantums.Error(),
 					expectedOwnerShares:     nil,
 				},
 				{
@@ -230,7 +230,7 @@ func TestMsgDepositToMegavault(t *testing.T) {
 					),
 					msgSigner:               constants.Bob_Num0.Owner,
 					checkTxFails:            true,
-					checkTxResponseContains: "Deposit amount is invalid",
+					checkTxResponseContains: vaulttypes.ErrInvalidQuoteQuantums.Error(),
 					expectedOwnerShares:     nil,
 				},
 			},

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
+	"math"
 	"math/big"
 	"testing"
 
@@ -36,7 +37,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */
 		// Quote quantums that main vault has.
-		mainVaultBalance uint64
+		mainVaultBalance *big.Int
 		// Total shares before withdrawal.
 		totalShares uint64
 		// Owner address.
@@ -53,6 +54,10 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 		minQuoteQuantums int64
 
 		/* --- Expectations --- */
+		// A string that CheckTx response contains, if any.
+		checkTxResponseContains string
+		// Whether CheckTx should fail.
+		checkTxFails bool
 		// Whether DeliverTx should fail.
 		deliverTxFails bool
 		// Quote quantums that should be redeemed.
@@ -63,7 +68,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 		expectedOwnerShares uint64
 	}{
 		"Success: Withdraw some unlocked shares (5% of total), No sub-vaults, Redeemed quantums = Min quantums": {
-			mainVaultBalance:      100,
+			mainVaultBalance:      big.NewInt(100),
 			totalShares:           200,
 			owner:                 constants.AliceAccAddress.String(),
 			ownerTotalShares:      50,
@@ -76,7 +81,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 			expectedOwnerShares:   40,  // 50 - 10
 		},
 		"Success: Withdraw all unlocked shares (8% of total), No sub-vaults, Redeemed quantums > Min quantums": {
-			mainVaultBalance:      1_234,
+			mainVaultBalance:      big.NewInt(1_234),
 			totalShares:           500,
 			owner:                 constants.BobAccAddress.String(),
 			ownerTotalShares:      47,
@@ -89,7 +94,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 			expectedOwnerShares:   7,   // 47 - 40
 		},
 		"Success: Withdraw all shares (100% of total), No sub-vaults, Redeemed quantums = Min quantums": {
-			mainVaultBalance:      654_321,
+			mainVaultBalance:      big.NewInt(654_321),
 			totalShares:           787_565,
 			owner:                 constants.CarlAccAddress.String(),
 			ownerTotalShares:      787_565,
@@ -101,21 +106,21 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 			expectedTotalShares:   0,
 			expectedOwnerShares:   0,
 		},
-		"Success: Withdraw some unlocked shares (1% of total), No sub-vaults, Redeemed quantums rounds down to 0": {
-			mainVaultBalance:      99,
+		"Failure: Withdraw some unlocked shares (1% of total), No sub-vaults, Redeemed quantums rounds down to 0": {
+			mainVaultBalance:      big.NewInt(99),
 			totalShares:           200,
 			owner:                 constants.AliceAccAddress.String(),
 			ownerTotalShares:      10,
 			ownerLockedShares:     5,
 			sharesToWithdraw:      2,
-			minQuoteQuantums:      -1,
+			minQuoteQuantums:      0,
 			deliverTxFails:        true,
 			redeemedQuoteQuantums: 0,   // 99 * 2 / 200 = 0.99 ~= 0 (rounded down)
 			expectedTotalShares:   200, // unchanged
 			expectedOwnerShares:   10,  // unchanged
 		},
 		"Failure: Withdraw more than locked shares": {
-			mainVaultBalance:    100,
+			mainVaultBalance:    big.NewInt(100),
 			totalShares:         500,
 			owner:               constants.AliceAccAddress.String(),
 			ownerTotalShares:    100,
@@ -127,31 +132,33 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 			expectedOwnerShares: 100, // unchanged
 		},
 		"Failure: Withdraw zero shares": {
-			mainVaultBalance:    100,
-			totalShares:         500,
-			owner:               constants.AliceAccAddress.String(),
-			ownerTotalShares:    100,
-			ownerLockedShares:   20,
-			sharesToWithdraw:    0,
-			minQuoteQuantums:    1,
-			deliverTxFails:      true,
-			expectedTotalShares: 500, // unchanged
-			expectedOwnerShares: 100, // unchanged
+			mainVaultBalance:        big.NewInt(100),
+			totalShares:             500,
+			owner:                   constants.AliceAccAddress.String(),
+			ownerTotalShares:        100,
+			ownerLockedShares:       20,
+			sharesToWithdraw:        0,
+			minQuoteQuantums:        1,
+			checkTxResponseContains: vaulttypes.ErrNonPositiveShares.Error(),
+			checkTxFails:            true,
+			expectedTotalShares:     500, // unchanged
+			expectedOwnerShares:     100, // unchanged
 		},
 		"Failure: Withdraw negative shares": {
-			mainVaultBalance:    100,
-			totalShares:         500,
-			owner:               constants.AliceAccAddress.String(),
-			ownerTotalShares:    100,
-			ownerLockedShares:   20,
-			sharesToWithdraw:    -1,
-			minQuoteQuantums:    1,
-			deliverTxFails:      true,
-			expectedTotalShares: 500, // unchanged
-			expectedOwnerShares: 100, // unchanged
+			mainVaultBalance:        big.NewInt(100),
+			totalShares:             500,
+			owner:                   constants.AliceAccAddress.String(),
+			ownerTotalShares:        100,
+			ownerLockedShares:       20,
+			sharesToWithdraw:        -1,
+			minQuoteQuantums:        1,
+			checkTxResponseContains: vaulttypes.ErrNonPositiveShares.Error(),
+			checkTxFails:            true,
+			expectedTotalShares:     500, // unchanged
+			expectedOwnerShares:     100, // unchanged
 		},
 		"Failure: Withdraw some unlocked shares (8% of total), one sub-vault, Redeemed quantums < Min quantums": {
-			mainVaultBalance:  1_234,
+			mainVaultBalance:  big.NewInt(1_234),
 			totalShares:       500,
 			owner:             constants.BobAccAddress.String(),
 			ownerTotalShares:  47,
@@ -160,7 +167,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 				{
 					id: constants.Vault_Clob0,
 					params: vaulttypes.VaultParams{
-						Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
 					},
 					assetQuoteQuantums:   big.NewInt(400),
 					positionBaseQuantums: big.NewInt(0),
@@ -178,9 +185,37 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 			expectedTotalShares:   500, // unchanged
 			expectedOwnerShares:   47,  // unchanged
 		},
+		"Success: Withdraw some unlocked shares (8% of total), one deactivated sub-vault is excluded": {
+			mainVaultBalance:  big.NewInt(1_234),
+			totalShares:       500,
+			owner:             constants.DaveAccAddress.String(),
+			ownerTotalShares:  47,
+			ownerLockedShares: 7,
+			vaults: []VaultSetup{
+				{
+					id: constants.Vault_Clob0,
+					params: vaulttypes.VaultParams{
+						Status: vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+					},
+					assetQuoteQuantums:   big.NewInt(-400),
+					positionBaseQuantums: big.NewInt(0),
+					clobPair:             constants.ClobPair_Btc,
+					perpetual:            constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+					marketParam:          constants.TestMarketParams[0],
+					marketPrice:          constants.TestMarketPrices[0],
+					postWithdrawalEquity: big.NewInt(-400), // unchanged
+				},
+			},
+			sharesToWithdraw:      40,
+			minQuoteQuantums:      50,
+			deliverTxFails:        false,
+			redeemedQuoteQuantums: 98,  // 1234 * 0.08 = 98.72 ~= 98 (rounded down)
+			expectedTotalShares:   460, // 500 - 40
+			expectedOwnerShares:   7,   // 47 - 40
+		},
 		"Success: Withdraw some unlocked shares (0.4444% of total), 888_888 quantums in main vault, " +
 			"one quoting sub-vault with negative equity": {
-			mainVaultBalance:  888_888,
+			mainVaultBalance:  big.NewInt(888_888),
 			totalShares:       1_000_000,
 			owner:             constants.AliceAccAddress.String(),
 			ownerTotalShares:  9999,
@@ -201,7 +236,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 				},
 			},
 			sharesToWithdraw:      4444,
-			minQuoteQuantums:      -1,
+			minQuoteQuantums:      123,
 			deliverTxFails:        false,
 			redeemedQuoteQuantums: 3_950,   // 888_888 * 4444 / 1_000_000 ~= 3950 (sub-vault is skipped)
 			expectedTotalShares:   995_556, // 1_000_000 - 4444
@@ -209,7 +244,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 		},
 		"Success: Withdraw some unlocked shares (~0.67% of total), 0 quantums in main vault, " +
 			"one quoting sub-vault with 0 leverage": {
-			mainVaultBalance:  0,
+			mainVaultBalance:  big.NewInt(0),
 			totalShares:       987_654,
 			owner:             constants.AliceAccAddress.String(),
 			ownerTotalShares:  9999,
@@ -238,7 +273,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 		},
 		"Success: Withdraw some unlocked shares (10% of total), 500 quantums in main vault, " +
 			"one stand-by sub-vault with 0 leverage, one close-only sub-vault with 1.5 leverage": {
-			mainVaultBalance:  500,
+			mainVaultBalance:  big.NewInt(500),
 			totalShares:       1_000,
 			owner:             constants.AliceAccAddress.String(),
 			ownerTotalShares:  120,
@@ -295,7 +330,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 		},
 		"Success: Withdraw all shares (100% of total), 500 quantums in main vault, " +
 			"one close-only sub-vault with 1.5 leverage": {
-			mainVaultBalance:  500,
+			mainVaultBalance:  big.NewInt(500),
 			totalShares:       1_000,
 			owner:             constants.AliceAccAddress.String(),
 			ownerTotalShares:  1_000,
@@ -327,6 +362,22 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 			expectedTotalShares:   0,
 			expectedOwnerShares:   0,
 		},
+		"Failure: Withdraw more than max uint64": {
+			mainVaultBalance: new(big.Int).Add(
+				new(big.Int).SetUint64(math.MaxUint64),
+				new(big.Int).SetUint64(1),
+			),
+			totalShares:       155,
+			owner:             constants.CarlAccAddress.String(),
+			ownerTotalShares:  155,
+			ownerLockedShares: 0,
+			sharesToWithdraw:  155,
+			minQuoteQuantums:  1,
+			// fails as owner redeems more than max uint64 quote quantums.
+			deliverTxFails:      true,
+			expectedTotalShares: 155, // unchanged
+			expectedOwnerShares: 155, // unchanged
+		},
 	}
 
 	for name, tc := range tests {
@@ -343,7 +394,7 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 								AssetPositions: []*satypes.AssetPosition{
 									{
 										AssetId:  assetstypes.AssetUsdc.Id,
-										Quantums: dtypes.NewIntFromUint64(tc.mainVaultBalance),
+										Quantums: dtypes.NewIntFromBigInt(tc.mainVaultBalance),
 									},
 								},
 							},
@@ -479,6 +530,15 @@ func TestMsgWithdrawFromMegavault(t *testing.T) {
 				&msgWithdrawFromMegavault,
 			)
 			checkTxResp := tApp.CheckTx(CheckTx_MsgWithdrawFromMegavault)
+			// Check that CheckTx response log contains expected string, if any.
+			if tc.checkTxResponseContains != "" {
+				require.Contains(t, checkTxResp.Log, tc.checkTxResponseContains)
+			}
+			// Check that CheckTx succeeds or errors out as expected.
+			if tc.checkTxFails {
+				require.Conditionf(t, checkTxResp.IsErr, "Expected CheckTx to error. Response: %+v", checkTxResp)
+				return
+			}
 			require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 
 			// Advance to next block (and check that DeliverTx is as expected).

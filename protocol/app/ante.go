@@ -103,6 +103,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "prices keeper is required for ante builder")
 	}
 
+	if options.MarketMapKeeper == nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "market map keeper is required for ante builder")
+	}
+
 	h := &lockingAnteHandler{
 		authStoreKey:             options.AuthStoreKey,
 		setupContextDecorator:    ante.NewSetUpContextDecorator(),
@@ -114,9 +118,12 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		validateBasic:            ante.NewValidateBasicDecorator(),
 		validateSigCount:         ante.NewValidateSigCountDecorator(options.AccountKeeper),
 		incrementSequence:        ante.NewIncrementSequenceDecorator(options.AccountKeeper),
-		sigVerification: customante.NewSigVerificationDecorator(
+		replayProtection: customante.NewReplayProtectionDecorator(
 			options.AccountKeeper,
 			*options.AccountplusKeeper,
+		),
+		sigVerification: customante.NewSigVerificationDecorator(
+			options.AccountKeeper,
 			options.SignModeHandler,
 		),
 		consumeTxSizeGas: ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
@@ -155,6 +162,7 @@ type lockingAnteHandler struct {
 	validateBasic            ante.ValidateBasicDecorator
 	validateSigCount         ante.ValidateSigCountDecorator
 	incrementSequence        ante.IncrementSequenceDecorator
+	replayProtection         customante.ReplayProtectionDecorator
 	sigVerification          customante.SigVerificationDecorator
 	consumeTxSizeGas         ante.ConsumeTxSizeGasDecorator
 	deductFee                ante.DeductFeeDecorator
@@ -242,6 +250,9 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		return ctx, err
 	}
 	if ctx, err = h.sigGasConsume.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
+		return ctx, err
+	}
+	if ctx, err = h.replayProtection.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
 	if ctx, err = h.sigVerification.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
@@ -409,6 +420,9 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		return ctx, err
 	}
 	if ctx, err = h.sigGasConsume.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
+		return ctx, err
+	}
+	if ctx, err = h.replayProtection.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
 	if ctx, err = h.sigVerification.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {

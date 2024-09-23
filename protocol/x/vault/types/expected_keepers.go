@@ -111,11 +111,4 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		id satypes.SubaccountId,
 	) satypes.Subaccount
-	TransferFundsFromSubaccountToSubaccount(
-		ctx sdk.Context,
-		senderSubaccountId satypes.SubaccountId,
-		recipientSubaccountId satypes.SubaccountId,
-		assetId uint32,
-		quantums *big.Int,
-	) error
 }
