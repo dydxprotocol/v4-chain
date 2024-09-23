@@ -15,8 +15,8 @@ import (
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-var ErrNoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets " +
-	"on a market listed as cross margin")
+var ErrRestrictedMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets " +
+	"on a restricted market")
 
 type MarketMapKeeper interface {
 	GetAllMarkets(ctx sdk.Context) (map[string]mmtypes.Market, error)
@@ -89,7 +89,7 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 	}
 
 	if contains, ticker := d.doMarketsContainRestrictedMarket(ctx, markets); contains {
-		return ctx, fmt.Errorf("%w: %s", ErrNoCrossMarketUpdates, ticker)
+		return ctx, fmt.Errorf("%w: %s", ErrRestrictedMarketUpdates, ticker)
 	}
 
 	// check if the market updates are safe
