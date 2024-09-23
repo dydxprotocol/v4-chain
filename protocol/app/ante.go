@@ -103,10 +103,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "prices keeper is required for ante builder")
 	}
 
-	if options.MarketMapKeeper == nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "market map keeper is required for ante builder")
-	}
-
 	h := &lockingAnteHandler{
 		authStoreKey:             options.AuthStoreKey,
 		setupContextDecorator:    ante.NewSetUpContextDecorator(),

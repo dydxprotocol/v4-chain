@@ -1,31 +1,32 @@
 package ante_test
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"math/rand"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/skip-mev/slinky/pkg/types"
+	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/skip-mev/slinky/pkg/types"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	slinkylib "github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 func TestIsMarketUpdateTx(t *testing.T) {
@@ -207,25 +208,6 @@ var (
 			{
 				Name:           "test_provider",
 				OffChainTicker: "TEST/USD",
-			},
-		},
-	}
-
-	testUSDTUSDMarket = mmtypes.Market{
-		Ticker: mmtypes.Ticker{
-			CurrencyPair: types.CurrencyPair{
-				Base:  "USDT",
-				Quote: "USD",
-			},
-			Decimals:         1,
-			MinProviderCount: 1,
-			Enabled:          true,
-			Metadata_JSON:    "",
-		},
-		ProviderConfigs: []mmtypes.ProviderConfig{
-			{
-				Name:           "test_provider",
-				OffChainTicker: "USDT/USD",
 			},
 		},
 	}
@@ -743,66 +725,6 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 				marketMapMarkets: []mmtypes.Market{testMarket},
 			},
 			wantErr: false,
-		},
-		{
-			name: "always reject USDT/USD - simulate - upsert",
-			args: args{
-				msgs: []sdk.Msg{
-					&mmtypes.MsgUpsertMarkets{
-						Authority: constants.BobAccAddress.String(),
-						Markets: []mmtypes.Market{
-							testUSDTUSDMarket,
-						},
-					},
-				},
-				simulate: true,
-			},
-			wantErr: true,
-		},
-		{
-			name: "always reject USDT/USD - upsert",
-			args: args{
-				msgs: []sdk.Msg{
-					&mmtypes.MsgUpsertMarkets{
-						Authority: constants.BobAccAddress.String(),
-						Markets: []mmtypes.Market{
-							testUSDTUSDMarket,
-						},
-					},
-				},
-				simulate: false,
-			},
-			wantErr: true,
-		},
-		{
-			name: "always reject USDT/USD - simulate - update",
-			args: args{
-				msgs: []sdk.Msg{
-					&mmtypes.MsgUpdateMarkets{
-						Authority: constants.BobAccAddress.String(),
-						UpdateMarkets: []mmtypes.Market{
-							testUSDTUSDMarket,
-						},
-					},
-				},
-				simulate: true,
-			},
-			wantErr: true,
-		},
-		{
-			name: "always reject USDT/USD - update",
-			args: args{
-				msgs: []sdk.Msg{
-					&mmtypes.MsgUpdateMarkets{
-						Authority: constants.BobAccAddress.String(),
-						UpdateMarkets: []mmtypes.Market{
-							testUSDTUSDMarket,
-						},
-					},
-				},
-				simulate: false,
-			},
-			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
