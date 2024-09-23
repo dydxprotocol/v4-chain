@@ -1188,7 +1188,6 @@ func TestDistributeFees(t *testing.T) {
 		marketMapperRevShareAcctAddr  string
 		unconditionalRevShareAcctAddr string
 		revShare                      revsharetypes.RevSharesForFill
-		revShareExpiration            int64
 
 		// Expectations.
 		expectedErr                             error
@@ -1409,7 +1408,6 @@ func TestDistributeFees(t *testing.T) {
 					},
 				},
 			},
-			revShareExpiration: 100,
 		},
 		"success - market mapper rev share rounded down to 0": {
 			asset:                      *constants.Usdc,
@@ -1449,7 +1447,6 @@ func TestDistributeFees(t *testing.T) {
 				},
 				AllRevShares: []revsharetypes.RevShare{},
 			},
-			revShareExpiration: 100,
 		},
 		"success - distribute fees to market mapper, unconditional rev share, affiliate and fee collector": {
 			asset:                      *constants.Usdc,
@@ -1517,7 +1514,6 @@ func TestDistributeFees(t *testing.T) {
 					},
 				},
 			},
-			revShareExpiration: 100,
 		},
 		// TODO(DEC-715): Add more test for non-USDC assets, after asset update
 		// is implemented.
