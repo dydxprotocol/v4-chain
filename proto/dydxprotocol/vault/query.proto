@@ -35,6 +35,17 @@ service Query {
       returns (QueryMegavaultOwnerSharesResponse) {
     option (google.api.http).get = "/dydxprotocol/vault/megavault/owner_shares";
   }
+  // Queries vault params of a vault.
+  rpc VaultParams(QueryVaultParamsRequest) returns (QueryVaultParamsResponse) {
+    option (google.api.http).get = "/dydxprotocol/vault/params/{type}/{number}";
+  }
+
+  // Queries withdrawal info for megavault.
+  rpc MegavaultWithdrawalInfo(QueryMegavaultWithdrawalInfoRequest)
+      returns (QueryMegavaultWithdrawalInfoResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/vault/megavault/withdrawal_info";
+  }
 }
 
 // QueryParamsRequest is a request type for the Params RPC method.
@@ -102,4 +113,47 @@ message QueryMegavaultOwnerSharesRequest {
 message QueryMegavaultOwnerSharesResponse {
   repeated OwnerShare owner_shares = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryVaultParamsRequest is a request for the VaultParams RPC method.
+message QueryVaultParamsRequest {
+  VaultType type = 1;
+  uint32 number = 2;
+}
+
+// QueryVaultParamsResponse is a response for the VaultParams RPC method.
+message QueryVaultParamsResponse {
+  VaultId vault_id = 1 [ (gogoproto.nullable) = false ];
+  VaultParams vault_params = 2 [ (gogoproto.nullable) = false ];
+}
+
+// QueryMegavaultWithdrawalInfoRequest is a request type for the
+// MegavaultWithdrawalInfo RPC method.
+message QueryMegavaultWithdrawalInfoRequest {
+  // Number of shares to withdraw.
+  NumShares shares_to_withdraw = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryMegavaultWithdrawalInfoResponse is a response type for the
+// MegavaultWithdrawalInfo RPC method.
+message QueryMegavaultWithdrawalInfoResponse {
+  // Number of shares to withdraw.
+  NumShares shares_to_withdraw = 1 [ (gogoproto.nullable) = false ];
+  // Number of quote quantums above `shares` are expected to redeem.
+  // Withdrawl slippage can be calculated by comparing
+  // `expected_quote_quantums` with
+  // `megavault_equity * shares_to_withdraw / total_shares`
+  bytes expected_quote_quantums = 2 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // Equity of megavault (in quote quantums).
+  bytes megavault_equity = 3 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // Total shares in megavault.
+  NumShares total_shares = 4 [ (gogoproto.nullable) = false ];
 }

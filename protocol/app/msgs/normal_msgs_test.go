@@ -151,8 +151,12 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/dydxprotocol.vault.MsgAllocateToVaultResponse",
 		"/dydxprotocol.vault.MsgDepositToMegavault",
 		"/dydxprotocol.vault.MsgDepositToMegavaultResponse",
+		"/dydxprotocol.vault.MsgRetrieveFromVault",
+		"/dydxprotocol.vault.MsgRetrieveFromVaultResponse",
 		"/dydxprotocol.vault.MsgSetVaultParams",
 		"/dydxprotocol.vault.MsgSetVaultParamsResponse",
+		"/dydxprotocol.vault.MsgWithdrawFromMegavault",
+		"/dydxprotocol.vault.MsgWithdrawFromMegavaultResponse",
 
 		// ibc application module: ICA
 		"/ibc.applications.interchain_accounts.v1.InterchainAccount",

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/big"
 
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -20,7 +22,7 @@ import (
 
 // GetMegavaultEquity returns the equity of the megavault (in quote quantums), which consists of
 // - equity of the megavault main subaccount
-// - equity of all vaults (if positive)
+// - equity of all vaults (if not-deactivated and positive)
 func (k Keeper) GetMegavaultEquity(ctx sdk.Context) (*big.Int, error) {
 	megavaultEquity, err := k.GetSubaccountEquity(ctx, types.MegavaultMainSubaccount)
 	if err != nil {
@@ -33,6 +35,10 @@ func (k Keeper) GetMegavaultEquity(ctx sdk.Context) (*big.Int, error) {
 	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
 		var vaultParams types.VaultParams
 		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
+
+		if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED {
+			continue
+		}
 
 		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
@@ -65,11 +71,12 @@ func (k Keeper) GetVaultEquity(
 
 // GetVaultLeverageAndEquity returns a vault's leverage and equity.
 // - leverage = open notional / equity.
+// Note that an error is returned if equity is non-positive.
 func (k Keeper) GetVaultLeverageAndEquity(
 	ctx sdk.Context,
 	vaultId types.VaultId,
-	perpetual perptypes.Perpetual,
-	marketPrice pricestypes.MarketPrice,
+	perpetual *perptypes.Perpetual,
+	marketPrice *pricestypes.MarketPrice,
 ) (
 	leverage *big.Rat,
 	equity *big.Int,
@@ -307,15 +314,16 @@ func (k Keeper) TransferToVault(
 	}
 
 	// Transfer from main vault to the specified vault.
-	if err := k.subaccountsKeeper.TransferFundsFromSubaccountToSubaccount(
+	if err := k.sendingKeeper.ProcessTransfer(
 		ctx,
-		types.MegavaultMainSubaccount,
-		*vaultId.ToSubaccountId(),
-		assetstypes.AssetUsdc.Id,
-		quantums,
+		&sendingtypes.Transfer{
+			Sender:    types.MegavaultMainSubaccount,
+			Recipient: *vaultId.ToSubaccountId(),
+			AssetId:   assetstypes.AssetUsdc.Id,
+			Amount:    quantums.Uint64(), // validated to be positive above.
+		},
 	); err != nil {
 		return err
 	}
-
 	return nil
 }

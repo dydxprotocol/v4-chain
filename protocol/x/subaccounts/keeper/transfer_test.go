@@ -1625,6 +1625,8 @@ func TestDistributeFees(t *testing.T) {
 					},
 				)
 			}
+			err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+			require.NoError(t, err)
 			if tc.affiliateRevShareAcctAddr != "" {
 				err := affiliatesKeeper.RegisterAffiliate(ctx, refereeAccAddr, tc.affiliateRevShareAcctAddr)
 				require.NoError(t, err)
@@ -1642,7 +1644,9 @@ func TestDistributeFees(t *testing.T) {
 						},
 					})
 			}
-			revSharesForFill, err := revShareKeeper.GetAllRevShares(ctx, tc.fill)
+			affiliateWhitelistMap, err := affiliatesKeeper.GetAffiliateWhitelistMap(ctx)
+			require.NoError(t, err)
+			revSharesForFill, err := revShareKeeper.GetAllRevShares(ctx, tc.fill, affiliateWhitelistMap)
 			require.NoError(t, err)
 			err = keeper.DistributeFees(ctx, tc.asset.Id, revSharesForFill, tc.fill)
 

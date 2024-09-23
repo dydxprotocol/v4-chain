@@ -43,7 +43,8 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 			affiliate:   constants.BobAccAddress.String(),
 			expectError: nil,
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				// No setup needed for this test case
+				err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+				require.NoError(t, err)
 			},
 		},
 		{
@@ -52,7 +53,9 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 			affiliate:   constants.CarlAccAddress.String(),
 			expectError: types.ErrAffiliateAlreadyExistsForReferee,
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				err := k.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
+				err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+				require.NoError(t, err)
+				err = k.RegisterAffiliate(ctx, constants.AliceAccAddress.String(), constants.BobAccAddress.String())
 				require.NoError(t, err)
 			},
 		},
@@ -62,7 +65,8 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 			affiliate:   constants.BobAccAddress.String(),
 			expectError: types.ErrInvalidAddress,
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
-				// No setup needed for this test case
+				err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+				require.NoError(t, err)
 			},
 		},
 		{
@@ -70,6 +74,16 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 			referee:     constants.AliceAccAddress.String(),
 			affiliate:   "invalid_address",
 			expectError: types.ErrInvalidAddress,
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+				err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+				require.NoError(t, err)
+			},
+		},
+		{
+			name:        "No tiers set",
+			referee:     constants.AliceAccAddress.String(),
+			affiliate:   constants.BobAccAddress.String(),
+			expectError: types.ErrAffiliateTiersNotSet,
 			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 				// No setup needed for this test case
 			},
@@ -173,7 +187,7 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get taker fee share for referee
-	affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, referee)
+	affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, referee, map[string]uint32{})
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
@@ -186,7 +200,7 @@ func TestGetTakerFeeShareViaReferredVolume(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get updated taker fee share for referee
-	affiliateAddr, feeSharePpm, exists, err = k.GetTakerFeeShare(ctx, referee)
+	affiliateAddr, feeSharePpm, exists, err = k.GetTakerFeeShare(ctx, referee, map[string]uint32{})
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
@@ -222,7 +236,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get taker fee share for referee
-	affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, referee)
+	affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, referee, map[string]uint32{})
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
@@ -240,7 +254,7 @@ func TestGetTakerFeeShareViaStakedAmount(t *testing.T) {
 			))))
 	require.NoError(t, err)
 	// Get updated taker fee share for referee
-	affiliateAddr, feeSharePpm, exists, err = k.GetTakerFeeShare(ctx, referee)
+	affiliateAddr, feeSharePpm, exists, err = k.GetTakerFeeShare(ctx, referee, map[string]uint32{})
 	require.NoError(t, err)
 	require.True(t, exists)
 	require.Equal(t, affiliate, affiliateAddr)
@@ -334,6 +348,16 @@ func TestUpdateAffiliateTiers(t *testing.T) {
 			},
 			expectedError: types.ErrInvalidAffiliateTiers,
 		},
+		{
+			name: "Taker fee share ppm greater than cap",
+			affiliateTiers: types.AffiliateTiers{
+				Tiers: []types.AffiliateTiers_Tier{
+					{ReqReferredVolumeQuoteQuantums: 1000, ReqStakedWholeCoins: 100, TakerFeeSharePpm: 100},
+					{ReqReferredVolumeQuoteQuantums: 2000, ReqStakedWholeCoins: 200, TakerFeeSharePpm: 550_000}, // 55%
+				},
+			},
+			expectedError: types.ErrRevShareSafetyViolation,
+		},
 	}
 
 	for _, tc := range tests {
@@ -381,8 +405,10 @@ func TestRegisterAffiliateEmitEvent(t *testing.T) {
 
 	affiliate := constants.AliceAccAddress.String()
 	referee := constants.BobAccAddress.String()
+	err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+	require.NoError(t, err)
 
-	err := k.RegisterAffiliate(ctx, referee, affiliate)
+	err = k.RegisterAffiliate(ctx, referee, affiliate)
 	require.NoError(t, err)
 	expectedEvent := &indexerevents.RegisterAffiliateEventV1{
 		Referee:   referee,
@@ -392,6 +418,241 @@ func TestRegisterAffiliateEmitEvent(t *testing.T) {
 	events := getRegisterAffiliateEventsFromIndexerBlock(ctx, k)
 	require.Equal(t, 1, len(events))
 	require.Equal(t, expectedEvent, events[0])
+}
+
+func TestSetAffiliateWhitelist(t *testing.T) {
+	ctx, k, _, _ := keepertest.AffiliatesKeepers(t, true)
+
+	testCases := []struct {
+		name          string
+		whitelist     types.AffiliateWhitelist
+		expectedError error
+	}{
+		{
+			name: "Single tier with single address",
+			whitelist: types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses:        []string{constants.AliceAccAddress.String()},
+						TakerFeeSharePpm: 100_000, // 10%
+					},
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "Multiple tiers with multiple addresses",
+			whitelist: types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses:        []string{constants.AliceAccAddress.String(), constants.BobAccAddress.String()},
+						TakerFeeSharePpm: 200_000, // 20%
+					},
+					{
+						Addresses:        []string{constants.CarlAccAddress.String()},
+						TakerFeeSharePpm: 300_000, // 30%
+					},
+				},
+			},
+			expectedError: nil,
+		},
+		{
+			name: "Duplicate address across tiers",
+			whitelist: types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses:        []string{constants.AliceAccAddress.String()},
+						TakerFeeSharePpm: 250_000, // 25%
+					},
+					{
+						Addresses:        []string{constants.AliceAccAddress.String()},
+						TakerFeeSharePpm: 350_000, // 35%
+					},
+				},
+			},
+			expectedError: types.ErrDuplicateAffiliateAddressForWhitelist,
+		},
+		{
+			name: "Taker fee share ppm greater than cap",
+			whitelist: types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses:        []string{constants.AliceAccAddress.String()},
+						TakerFeeSharePpm: 550_000, // 55%
+					},
+				},
+			},
+			expectedError: types.ErrRevShareSafetyViolation,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := k.SetAffiliateWhitelist(ctx, tc.whitelist)
+			if tc.expectedError != nil {
+				require.ErrorIs(t, err, tc.expectedError)
+			} else {
+				require.NoError(t, err)
+
+				storedWhitelist, err := k.GetAffiliateWhitelist(ctx)
+				require.NoError(t, err)
+				require.Equal(t, tc.whitelist, storedWhitelist)
+			}
+		})
+	}
+}
+
+func TestGetAffiliateWhiteListMap(t *testing.T) {
+	testCases := []struct {
+		name           string
+		whitelist      *types.AffiliateWhitelist
+		expectedLength int
+		expectedMap    map[string]uint32
+	}{
+		{
+			name: "Multiple tiers with multiple addresses",
+			whitelist: &types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses:        []string{constants.AliceAccAddress.String(), constants.CarlAccAddress.String()},
+						TakerFeeSharePpm: 100_000, // 10%
+					},
+					{
+						Addresses:        []string{constants.BobAccAddress.String()},
+						TakerFeeSharePpm: 200_000, // 20%
+					},
+				},
+			},
+			expectedLength: 3,
+			expectedMap: map[string]uint32{
+				constants.AliceAccAddress.String(): 100_000, // 10%
+				constants.CarlAccAddress.String():  100_000, // 10%
+				constants.BobAccAddress.String():   200_000, // 20%
+			},
+		},
+		{
+			name: "Single tier with single address",
+			whitelist: &types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses:        []string{constants.AliceAccAddress.String()},
+						TakerFeeSharePpm: 150_000, // 15%
+					},
+				},
+			},
+			expectedLength: 1,
+			expectedMap: map[string]uint32{
+				constants.AliceAccAddress.String(): 150_000, // 15%
+			},
+		},
+		{
+			name: "Empty tiers",
+			whitelist: &types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{},
+			},
+			expectedLength: 0,
+			expectedMap:    map[string]uint32{},
+		},
+		{
+			name:           "tiers not set",
+			whitelist:      nil,
+			expectedLength: 0,
+			expectedMap:    map[string]uint32{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, k, _, _ := keepertest.AffiliatesKeepers(t, true)
+
+			if tc.whitelist != nil {
+				err := k.SetAffiliateWhitelist(ctx, *tc.whitelist)
+				require.NoError(t, err)
+			}
+
+			whitelistMap, err := k.GetAffiliateWhitelistMap(ctx)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedLength, len(whitelistMap))
+			require.Equal(t, tc.expectedMap, whitelistMap)
+		})
+	}
+}
+
+func TestGetTakerFeeShareViaWhitelist(t *testing.T) {
+	tiers := types.DefaultAffiliateTiers
+
+	testCases := []struct {
+		name                string
+		affiliateAddr       string
+		refereeAddr         string
+		whitelist           *types.AffiliateWhitelist
+		expectedFeeSharePpm uint32
+		expectedExists      bool
+	}{
+		{
+			name:          "Affiliate in whitelist",
+			affiliateAddr: constants.AliceAccAddress.String(),
+			refereeAddr:   constants.BobAccAddress.String(),
+			whitelist: &types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses:        []string{constants.AliceAccAddress.String()},
+						TakerFeeSharePpm: 400_000, // 40%
+					},
+				},
+			},
+			expectedFeeSharePpm: 400_000, // 40%
+			expectedExists:      true,
+		},
+		{
+			name:                "Affiliate not in whitelist",
+			affiliateAddr:       constants.AliceAccAddress.String(),
+			refereeAddr:         constants.BobAccAddress.String(),
+			whitelist:           &types.AffiliateWhitelist{},
+			expectedFeeSharePpm: tiers.Tiers[0].TakerFeeSharePpm,
+			expectedExists:      true,
+		},
+		{
+			name:          "Referee not registered",
+			affiliateAddr: "",
+			refereeAddr:   constants.BobAccAddress.String(),
+			whitelist: &types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses:        []string{constants.AliceAccAddress.String()},
+						TakerFeeSharePpm: 400_000, // 40%
+					},
+				},
+			},
+			expectedFeeSharePpm: 0,
+			expectedExists:      false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, k, _, _ := keepertest.AffiliatesKeepers(t, true)
+			err := k.UpdateAffiliateTiers(ctx, tiers)
+			require.NoError(t, err)
+
+			if tc.whitelist != nil {
+				err := k.SetAffiliateWhitelist(ctx, *tc.whitelist)
+				require.NoError(t, err)
+			}
+			if tc.affiliateAddr != "" {
+				err := k.RegisterAffiliate(ctx, tc.refereeAddr, tc.affiliateAddr)
+				require.NoError(t, err)
+			}
+			affiliateWhitelistMap, err := k.GetAffiliateWhitelistMap(ctx)
+			require.NoError(t, err)
+
+			affiliateAddr, feeSharePpm, exists, err := k.GetTakerFeeShare(ctx, tc.refereeAddr, affiliateWhitelistMap)
+			require.NoError(t, err)
+			require.Equal(t, tc.affiliateAddr, affiliateAddr)
+			require.Equal(t, tc.expectedFeeSharePpm, feeSharePpm)
+			require.Equal(t, tc.expectedExists, exists)
+		})
+	}
 }
 
 func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
@@ -499,9 +760,12 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			k := tApp.App.AffiliatesKeeper
 			statsKeeper := tApp.App.StatsKeeper
 
+			err := k.UpdateAffiliateTiers(ctx, types.DefaultAffiliateTiers)
+			require.NoError(t, err)
+
 			tc.setup(t, ctx, &k, &statsKeeper)
 
-			err := k.AggregateAffiliateReferredVolumeForFills(ctx)
+			err = k.AggregateAffiliateReferredVolumeForFills(ctx)
 			require.NoError(t, err)
 
 			referredVolume, err := k.GetReferredVolume(ctx, affiliate)
@@ -509,4 +773,15 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 			require.Equal(t, tc.expectedVolume, referredVolume)
 		})
 	}
+}
+
+func TestGetTierForAffiliateEmptyTiers(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.AffiliatesKeeper
+
+	tierLevel, feeSharePpm, err := k.GetTierForAffiliate(ctx, constants.AliceAccAddress.String())
+	require.NoError(t, err)
+	require.Equal(t, uint32(0), tierLevel)
+	require.Equal(t, uint32(0), feeSharePpm)
 }
