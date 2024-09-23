@@ -490,7 +490,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				Weight:  dtypes.NewInt(900_000), // 1 * (1 - 0.1)
 			},
 		},
-		"positive maker + taker fees reduced by maker rebate, taker + net fee revshare, monthly rolling taker volume > 50 mil": {
+		"positive maker + taker fees reduced by maker rebate, taker + net fee revshare,rolling taker volume > 50 mil": {
 			prevTakerRewardShare: nil,
 			prevMakerRewardShare: nil,
 			fill: clobtypes.FillForProcess{
