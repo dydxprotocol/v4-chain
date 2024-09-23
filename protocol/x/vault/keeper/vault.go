@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/big"
 
+	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -275,4 +277,45 @@ func (k Keeper) GetAllVaults(ctx sdk.Context) []types.Vault {
 		})
 	}
 	return vaults
+}
+
+// TransferToVault transfers funds from main vault to a specified vault.
+func (k Keeper) TransferToVault(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	quantums *big.Int,
+) error {
+	// Check if vault has a corresponding clob pair.
+	_, exists := k.clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(vaultId.Number))
+	if !exists {
+		return types.ErrClobPairNotFound
+	}
+
+	// If vault params doesn't exist, initialize params with `STAND_BY` status.
+	_, exists = k.GetVaultParams(ctx, vaultId)
+	if !exists {
+		err := k.SetVaultParams(
+			ctx,
+			vaultId,
+			types.VaultParams{
+				Status: types.VaultStatus_VAULT_STATUS_STAND_BY,
+			},
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Transfer from main vault to the specified vault.
+	if err := k.subaccountsKeeper.TransferFundsFromSubaccountToSubaccount(
+		ctx,
+		types.MegavaultMainSubaccount,
+		*vaultId.ToSubaccountId(),
+		assetstypes.AssetUsdc.Id,
+		quantums,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
