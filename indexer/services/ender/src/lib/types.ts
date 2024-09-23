@@ -55,12 +55,6 @@ export enum DydxIndexerSubtypes {
   UPDATE_CLOB_PAIR = 'update_clob_pair',
   DELEVERAGING = 'deleveraging',
   TRADING_REWARD = 'trading_reward',
-<<<<<<< HEAD
-  OPEN_INTEREST_UPDATE = 'open_interest_update',
-=======
-  REGISTER_AFFILIATE = 'register_affiliate',
-  UPSERT_VAULT = 'upsert_vault',
->>>>>>> 06eeb778 (Remove open interest handler (#2319))
 }
 
 // Generic interface used for creating the Handler objects
@@ -160,23 +154,6 @@ export type EventProtoWithTypeAndVersion = {
 } | {
   type: DydxIndexerSubtypes.TRADING_REWARD,
   eventProto: TradingRewardsEventV1,
-  indexerTendermintEvent: IndexerTendermintEvent,
-  version: number,
-  blockEventIndex: number,
-} | {
-<<<<<<< HEAD
-  type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
-  eventProto: OpenInterestUpdateEventV1,
-=======
-  type: DydxIndexerSubtypes.REGISTER_AFFILIATE,
-  eventProto: RegisterAffiliateEventV1,
-  indexerTendermintEvent: IndexerTendermintEvent,
-  version: number,
-  blockEventIndex: number,
-} | {
-  type: DydxIndexerSubtypes.UPSERT_VAULT,
-  eventProto: UpsertVaultEventV1,
->>>>>>> 06eeb778 (Remove open interest handler (#2319))
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
