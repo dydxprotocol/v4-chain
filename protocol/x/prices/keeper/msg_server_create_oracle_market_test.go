@@ -54,20 +54,16 @@ func TestCreateOracleMarket(t *testing.T) {
 				).Param,
 			},
 			expectedMarkets: []pricestypes.MarketParamPrice{},
-			expectedErr:     "Pair cannot be empty",
+			expectedErr:     "incorrectly formatted CurrencyPair",
 		},
-		"Failure: typo in exchange config json": {
+		"Failure: market not found in MarketMap": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
 			msg: &pricestypes.MsgCreateOracleMarket{
 				Authority: lib.GovModuleAddress.String(),
-				Params: pricestest.GenerateMarketParamPrice(
-					pricestest.WithPair("BTC-USD"),
-					pricestest.WithExponent(-8), // for both Param and Price
-					pricestest.WithExchangeConfigJson(`{"exchanges":[{"exchangeName":"Binance"""}]}`),
-				).Param,
+				Params:    testMarket1.Param,
 			},
+			expectedErr:     "Ticker not found in market map",
 			expectedMarkets: []pricestypes.MarketParamPrice{},
-			expectedErr:     "ExchangeConfigJson string is not valid",
 		},
 		"Failure: oracle market id already exists": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {
@@ -76,6 +72,14 @@ func TestCreateOracleMarket(t *testing.T) {
 					ctx,
 					pricesKeeper,
 					[]pricestypes.MarketParamPrice{testMarket1},
+				)
+				keepertest.CreateMarketsInMarketMapFromParams(
+					t,
+					ctx,
+					pricesKeeper.MarketMapKeeper.(*marketmapkeeper.Keeper),
+					[]pricestypes.MarketParam{pricestest.GenerateMarketParamPrice(
+						pricestest.WithId(1), // same id as testMarket1
+					).Param},
 				)
 			},
 			msg: &pricestypes.MsgCreateOracleMarket{
