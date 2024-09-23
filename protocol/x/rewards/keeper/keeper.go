@@ -149,12 +149,11 @@ func (k Keeper) AddRewardSharesForFill(
 	if value, ok := revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]; ok {
 		totalNetFeeRevSharePpm = value
 	}
-	totalTakerFeeRevShareQuantums := big.NewInt(0)
+	maxPossibleTakerFeeRevShare := big.NewInt(0)
 
 	// taker revshare is not returned if taker volume is greater than Max30dTakerVolumeQuantums
-	if value, ok := revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]; ok &&
-		value > 0 && fill.MonthlyRollingTakerVolumeQuantums < revsharetypes.MaxReferee30dVolumeForAffiliateShareQuantums {
-		totalTakerFeeRevShareQuantums = lib.BigMulPpm(fill.TakerFeeQuoteQuantums,
+	if fill.MonthlyRollingTakerVolumeQuantums < revsharetypes.MaxReferee30dVolumeForAffiliateShareQuantums {
+		maxPossibleTakerFeeRevShare = lib.BigMulPpm(fill.TakerFeeQuoteQuantums,
 			lib.BigU(affiliatetypes.AffiliatesRevSharePpmCap),
 			false,
 		)
@@ -171,7 +170,7 @@ func (k Keeper) AddRewardSharesForFill(
 	)
 	netTakerFee = netTakerFee.Sub(
 		netTakerFee,
-		totalTakerFeeRevShareQuantums,
+		maxPossibleTakerFeeRevShare,
 	)
 	takerWeight := lib.BigMulPpm(
 		netTakerFee,
