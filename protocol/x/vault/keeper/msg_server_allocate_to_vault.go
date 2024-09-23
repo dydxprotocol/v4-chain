@@ -26,7 +26,7 @@ func (k msgServer) AllocateToVault(
 		)
 	}
 
-	err := k.Keeper.TransferToVault(ctx, msg.VaultId, msg.QuoteQuantums.BigInt())
+	err := k.Keeper.AllocateToVault(ctx, msg.VaultId, msg.QuoteQuantums.BigInt())
 	if err != nil {
 		return nil, err
 	}

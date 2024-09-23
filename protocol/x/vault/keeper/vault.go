@@ -286,8 +286,8 @@ func (k Keeper) GetAllVaults(ctx sdk.Context) []types.Vault {
 	return vaults
 }
 
-// TransferToVault transfers funds from main vault to a specified vault.
-func (k Keeper) TransferToVault(
+// AllocateToVault transfers funds from main vault to a specified vault.
+func (k Keeper) AllocateToVault(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 	quantums *big.Int,
