@@ -153,7 +153,7 @@ func (k Keeper) WithdrawFromMegavault(
 	// 2. Redeem from main and sub vaults.
 	// Note that in below function, quote quantums redeemed from each sub vault are transferred to the main vault.
 	redeemedQuoteQuantums, megavaultEquity, totalShares, err :=
-		k.RedeemFromMainAndSubVaults(ctx, sharesToWithdraw, true)
+		k.RedeemFromMainAndSubVaults(ctx, sharesToWithdraw, false) // set `simulate` to false.
 	if err != nil {
 		return nil, err
 	}
@@ -223,12 +223,12 @@ func (k Keeper) WithdrawFromMegavault(
 }
 
 // RedeemFromMainAndSubVaults redeems `shares` number of shares from main and sub vaults.
-// If and only if `txMode` is true, logs are enabled and quote quantums redeemed from each
+// If and only if `simulate` is false, logs are enabled and quote quantums redeemed from each
 // sub vault are transferred to the main vault.
 func (k Keeper) RedeemFromMainAndSubVaults(
 	ctx sdk.Context,
 	shares *big.Int,
-	txMode bool,
+	simulate bool,
 ) (
 	redeemedQuoteQuantums *big.Int,
 	megavaultEquity *big.Int,
@@ -247,7 +247,9 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 	}
 	megavaultEquity, err = k.GetSubaccountEquity(ctx, types.MegavaultMainSubaccount)
 	if err != nil {
-		if txMode {
+		if simulate {
+			log.DebugLog(ctx, "Megavault withdrawal: failed to get megavault main vault equity", "error", err)
+		} else {
 			log.ErrorLogWithError(ctx, "Megavault withdrawal: failed to get megavault main vault equity", err)
 		}
 		return nil, nil, totalShares, err
@@ -269,7 +271,14 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 
 		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
-			if txMode {
+			if simulate {
+				log.DebugLog(
+					ctx,
+					"Megavault withdrawal: failed to get vault ID from state key. Skipping this vault",
+					"error",
+					err,
+				)
+			} else {
 				log.ErrorLogWithError(
 					ctx,
 					"Megavault withdrawal: error when getting vault ID from state key. Skipping this vault",
@@ -281,7 +290,16 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 
 		_, perpetual, marketParam, marketPrice, err := k.GetVaultClobPerpAndMarket(ctx, *vaultId)
 		if err != nil {
-			if txMode {
+			if simulate {
+				log.DebugLog(
+					ctx,
+					"Megavault withdrawal: failed to get perpetual and market. Skipping this vault",
+					"Vault ID",
+					vaultId,
+					"Error",
+					err,
+				)
+			} else {
 				log.ErrorLogWithError(
 					ctx,
 					"Megavault withdrawal: error when getting perpetual and market. Skipping this vault",
@@ -294,7 +312,16 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 		}
 		leverage, equity, err := k.GetVaultLeverageAndEquity(ctx, *vaultId, &perpetual, &marketPrice)
 		if err != nil {
-			if txMode {
+			if simulate {
+				log.DebugLog(
+					ctx,
+					"Megavault withdrawal: failed to get vault leverage and equity. Skipping this vault",
+					"Vault ID",
+					vaultId,
+					"Error",
+					err,
+				)
+			} else {
 				log.ErrorLogWithError(
 					ctx,
 					"Megavault withdrawal: error when getting vault leverage and equity. Skipping this vault",
@@ -316,7 +343,16 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 			&marketParam,
 		)
 		if err != nil {
-			if txMode {
+			if simulate {
+				log.DebugLog(
+					ctx,
+					"Megavault withdrawal: failed to get vault withdrawal slippage. Skipping this vault",
+					"Vault ID",
+					vaultId,
+					"Error",
+					err,
+				)
+			} else {
 				log.ErrorLogWithError(
 					ctx,
 					"Megavault withdrawal: error when getting vault withdrawal slippage. Skipping this vault",
@@ -335,8 +371,17 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 		quantumsToTransfer := new(big.Int).Quo(redeemedFromSubVault.Num(), redeemedFromSubVault.Denom())
 
 		if quantumsToTransfer.Sign() <= 0 || !quantumsToTransfer.IsUint64() {
-			if txMode {
-				log.InfoLog(
+			if simulate {
+				log.DebugLog(
+					ctx,
+					"Megavault withdrawal: quantums to transfer is invalid. Skipping this vault",
+					"Vault ID",
+					vaultId,
+					"Quantums",
+					quantumsToTransfer,
+				)
+			} else {
+				log.ErrorLog(
 					ctx,
 					"Megavault withdrawal: quantums to transfer is invalid. Skipping this vault",
 					"Vault ID",
@@ -347,7 +392,7 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 			}
 			continue
 		}
-		if txMode {
+		if !simulate {
 			// Transfer from sub vault to main vault.
 			err = k.sendingKeeper.ProcessTransfer(
 				ctx,

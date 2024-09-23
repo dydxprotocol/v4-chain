@@ -23,7 +23,7 @@ func (k Keeper) MegavaultWithdrawalInfo(
 	redeemedQuoteQuantums, megavaultEquity, totalShares, err := k.RedeemFromMainAndSubVaults(
 		ctx,
 		req.SharesToWithdraw.NumShares.BigInt(),
-		false,
+		true, // simulate the redemption (even though queries do execute on branched contexts).
 	)
 	if err != nil {
 		return nil, err
