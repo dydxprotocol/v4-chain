@@ -77,7 +77,7 @@ func (k Keeper) RegisterAffiliate(
 	}
 	// Return error if no tiers are set.
 	if len(affiliateTiers.GetTiers()) == 0 {
-		return errorsmod.Wrapf(types.ErrAffiliateTiersNotSet, "affiliate tiers are not set")
+		return types.ErrAffiliateTiersNotSet
 	}
 	prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredByKeyPrefix)).Set([]byte(referee), []byte(affiliateAddr))
 	k.GetIndexerEventManager().AddTxnEvent(
