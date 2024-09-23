@@ -3,6 +3,7 @@ package ante
 import (
 	"errors"
 	"fmt"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,12 +15,19 @@ import (
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-var ErrNoCrossMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets " +
-	"on a market listed as cross margin")
+var ErrRestrictedMarketUpdates = errors.New("cannot call MsgUpdateMarkets or MsgUpsertMarkets " +
+	"on a restricted market")
 
 type MarketMapKeeper interface {
 	GetAllMarkets(ctx sdk.Context) (map[string]mmtypes.Market, error)
 }
+
+var (
+	cpUSDTUSD = slinkytypes.CurrencyPair{
+		Base:  "USDT",
+		Quote: "USD",
+	}
+)
 
 type ValidateMarketUpdateDecorator struct {
 	perpKeeper      perpetualstypes.PerpetualsKeeper
@@ -80,8 +88,8 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 		return ctx, fmt.Errorf("unrecognized message type: %T", msg)
 	}
 
-	if contains := d.doMarketsContainCrossMarket(ctx, markets); contains {
-		return ctx, ErrNoCrossMarketUpdates
+	if contains, ticker := d.doMarketsContainRestrictedMarket(ctx, markets); contains {
+		return ctx, fmt.Errorf("%w: %s", ErrRestrictedMarketUpdates, ticker)
 	}
 
 	// check if the market updates are safe
@@ -92,10 +100,16 @@ func (d ValidateMarketUpdateDecorator) AnteHandle(
 	return next(ctx, tx, simulate)
 }
 
-func (d ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Context, markets []mmtypes.Market) bool {
+// doMarketsContainRestrictedMarket checks if any of the given markets are restricted:
+// 1. markets listed as CROSS perpetuals are restricted
+// 2. the USDT/USD market is always restricted
+func (d ValidateMarketUpdateDecorator) doMarketsContainRestrictedMarket(
+	ctx sdk.Context,
+	markets []mmtypes.Market,
+) (bool, string) {
 	// Grab all the perpetuals markets
 	perps := d.perpKeeper.GetAllPerpetuals(ctx)
-	perpsMap := make(map[string]perpetualstypes.PerpetualMarketType)
+	restrictedMap := make(map[string]bool, len(perps))
 
 	// Attempt to fetch the corresponding Prices market and map it to a currency pair
 	for _, perp := range perps {
@@ -107,20 +121,24 @@ func (d ValidateMarketUpdateDecorator) doMarketsContainCrossMarket(ctx sdk.Conte
 		if err != nil {
 			continue
 		}
-		perpsMap[cp.String()] = perp.Params.MarketType
+		restrictedMap[cp.String()] = perp.Params.MarketType == perpetualstypes.
+			PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
 	}
+
+	// add usdt/usd market to be restricted
+	restrictedMap[cpUSDTUSD.String()] = true
 
 	// Look in the mapped currency pairs to see if we have invalid updates
 	for _, market := range markets {
 		ticker := market.Ticker.CurrencyPair.String()
 
-		marketType, found := perpsMap[ticker]
-		if found && marketType == perpetualstypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS {
-			return true
+		restricted, found := restrictedMap[ticker]
+		if found && restricted {
+			return true, ticker
 		}
 	}
 
-	return false
+	return false, ""
 }
 
 // doMarketsUpdateEnabledValues checks if the given markets updates are safe, specifically:
