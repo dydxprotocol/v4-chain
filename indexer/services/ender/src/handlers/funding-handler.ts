@@ -6,7 +6,7 @@ import {
   protocolTranslations,
   PerpetualMarketModel,
   FundingIndexUpdatesFromDatabase,
-  FundingIndexUpdatesModel,
+  FundingIndexUpdatesModel, FilteredPerpetualMarketFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { NextFundingCache } from '@dydxprotocol-indexer/redis';
 import { bytesToBigInt } from '@dydxprotocol-indexer/v4-proto-parser';
@@ -52,14 +52,18 @@ export class FundingHandler extends Handler<FundingEventMessage> {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+    console.log('handle yo');
+    console.log(`resultRow.perpetual_markets: ${JSON.stringify(resultRow.perpetual_markets)}`);
+
     const perpetualMarkets:
-    Map<string, PerpetualMarketFromDatabase> = new Map<string, PerpetualMarketFromDatabase>();
+    Map<string, FilteredPerpetualMarketFromDatabase> = new Map<string, FilteredPerpetualMarketFromDatabase>();
     for (const [key, perpetualMarket] of Object.entries(resultRow.perpetual_markets)) {
       perpetualMarkets.set(
         key,
-        PerpetualMarketModel.fromJson(perpetualMarket as object) as PerpetualMarketFromDatabase,
+        PerpetualMarketModel.fromJson(perpetualMarket as object) as FilteredPerpetualMarketFromDatabase,
       );
     }
+    console.log('perpetualMarkets', perpetualMarkets);
     const fundingIndices:
     Map<string, FundingIndexUpdatesFromDatabase> = new
     Map<string, FundingIndexUpdatesFromDatabase>();
@@ -87,7 +91,13 @@ export class FundingHandler extends Handler<FundingEventMessage> {
       }
 
       const perpetualMarket:
-      PerpetualMarketFromDatabase | undefined = perpetualMarkets.get(update.perpetualId.toString());
+        FilteredPerpetualMarketFromDatabase | undefined = perpetualMarkets.get(update.perpetualId.toString());
+      logger.info({
+        at: 'FundingHandler#handleFundingSample',
+        message: 'processing funding update',
+        perpetualMarket,
+      });
+
       if (perpetualMarket === undefined) {
         logger.error({
           at: 'FundingHandler#handleFundingSample',

@@ -16,6 +16,7 @@ import {
   QUOTE_CURRENCY_ATOMIC_RESOLUTION,
 } from '../constants';
 import {
+  FilteredPerpetualMarketFromDatabase,
   IsoString, OrderSide, OrderType, PerpetualMarketFromDatabase, PerpetualMarketStatus, TimeInForce,
 } from '../types';
 import { InvalidClobPairStatusError } from './errors';
@@ -151,7 +152,7 @@ export function getTickSize(
  */
 export function fundingIndexToHumanFixedString(
   fundingIndex: string,
-  perpetualMarket: PerpetualMarketFromDatabase,
+  perpetualMarket: FilteredPerpetualMarketFromDatabase | PerpetualMarketFromDatabase,
 ): string {
   return Big(fundingIndex)
     .times(Big(10).pow(PPM_EXPONENT)) // PPM = parts-per-million

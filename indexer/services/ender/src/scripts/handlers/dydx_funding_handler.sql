@@ -23,7 +23,7 @@ DECLARE
     TYPE_PREMIUM_SAMPLE constant jsonb = '1';
     TYPE_FUNDING_RATE_AND_INDEX constant jsonb = '2';
 
-    perpetual_market_id bigint;
+    perpetual_id bigint;
     perpetual_market_record perpetual_market_filtered;
     funding_index_updates_record funding_index_updates%ROWTYPE;
     oracle_prices_record oracle_prices%ROWTYPE;
@@ -35,8 +35,10 @@ DECLARE
     event_id bytea;
 BEGIN
     FOR funding_update IN SELECT * FROM jsonb_array_elements(event_data->'updates') LOOP
-        perpetual_market_id = (funding_update->'perpetualId')::bigint;
-        perpetual_market_record = dydx_get_perpetual_market_for_id(perpetual_market_id);
+        perpetual_id = (funding_update->'perpetualId')::bigint;
+        perpetual_market_record = dydx_get_perpetual_market_for_id(perpetual_id);
+        RAISE NOTICE 'perpetual_id: %, perpetual_market_record: %', perpetual_id, perpetual_market_record;
+
         IF NOT FOUND THEN
             errors_response = array_append(errors_response, '"Received FundingUpdate with unknown perpetualId."'::jsonb);
             CONTINUE;
@@ -65,7 +67,7 @@ BEGIN
                     block_height,
                     event_id,
                     perpetual_market_record."id");
-                funding_index_updates_record."perpetualId" = perpetual_market_id;
+                funding_index_updates_record."perpetualId" = perpetual_id;
                 funding_index_updates_record."eventId" = event_id;
                 funding_index_updates_record."effectiveAt" = block_time;
                 funding_index_updates_record."rate" = dydx_trim_scale(
