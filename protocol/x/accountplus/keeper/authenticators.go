@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -113,21 +112,7 @@ func (k Keeper) SetNextAuthenticatorId(ctx sdk.Context, authenticatorId uint64) 
 	store.Set([]byte(types.AuthenticatorIdKeyPrefix), b)
 }
 
-// GetAuthenticatorExtension unpacks the extension for the transaction, this is used with transactions specify
-// an authenticator to use
-func (k Keeper) GetAuthenticatorExtension(exts []*codectypes.Any) types.AuthenticatorTxOptions {
-	for _, ext := range exts {
-		var authExtension types.AuthenticatorTxOptions
-		err := k.cdc.UnpackAny(ext, &authExtension)
-		if err == nil {
-			return authExtension
-		}
-	}
-	return nil
-}
-
-// GetSelectedAuthenticatorData gets all authenticators from an account
-// from the store, the data is  prefixed by 2|<accAddr|<keyId>
+// GetSelectedAuthenticatorData gets a single authenticator for the account from the store.
 func (k Keeper) GetSelectedAuthenticatorData(
 	ctx sdk.Context,
 	account sdk.AccAddress,
