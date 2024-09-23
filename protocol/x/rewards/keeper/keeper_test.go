@@ -490,6 +490,67 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				Weight:  dtypes.NewInt(900_000), // 1 * (1 - 0.1)
 			},
 		},
+		"positive maker + taker fees reduced by maker rebate, taker + net fee revshare, monthly rolling taker volume > 50 mil": {
+			prevTakerRewardShare: nil,
+			prevMakerRewardShare: nil,
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         takerAddress,
+				TakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				MakerAddr:                         makerAddress,
+				MakerFeeQuoteQuantums:             big.NewInt(1_000_000),
+				FillQuoteQuantums:                 big.NewInt(800_000_000),
+				ProductId:                         uint32(1),
+				MarketId:                          uint32(1),
+				MonthlyRollingTakerVolumeQuantums: 50_000_000_000,
+			},
+			revSharesForFill: revsharetypes.RevSharesForFill{
+				AllRevShares: []revsharetypes.RevShare{
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL,
+						QuoteQuantums:     big.NewInt(200_000),
+						RevSharePpm:       100_000, // 10%
+					},
+					{
+						Recipient:         takerAddress,
+						RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      revsharetypes.REV_SHARE_TYPE_AFFILIATE,
+						QuoteQuantums:     big.NewInt(200_000),
+						RevSharePpm:       100_000, // 10%
+					},
+				},
+				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   big.NewInt(200_000),
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(200_000),
+				},
+				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
+					revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE:   100_000, // 10%
+					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE: 100_000, // 10%
+				},
+				AffiliateRevShare: &revsharetypes.RevShare{
+					Recipient:         takerAddress,
+					RevShareFeeSource: revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+					RevShareType:      revsharetypes.REV_SHARE_TYPE_AFFILIATE,
+					QuoteQuantums:     big.NewInt(200_000),
+					RevSharePpm:       100_000, // 10%
+				},
+			},
+			feeTiers: []*feetierstypes.PerpetualFeeTier{
+				{
+					MakerFeePpm: -1_000, // -0.1%
+					TakerFeePpm: 2_000,  // 0.2%
+				},
+			},
+			expectedTakerShare: types.RewardShare{
+				Address: takerAddress,
+				Weight:  dtypes.NewInt(1_080_000), // (2 - 0.1% * 800 - 0) * (1 - 0.1)
+			},
+			expectedMakerShare: types.RewardShare{
+				Address: makerAddress,
+				Weight:  dtypes.NewInt(900_000), // 1 * (1 - 0.1)
+			},
+		},
 	}
 
 	// Run tests.
