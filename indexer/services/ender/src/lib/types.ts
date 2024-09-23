@@ -34,7 +34,6 @@ import {
   UpdateClobPairEventV1,
   DeleveragingEventV1,
   TradingRewardsEventV1,
-  OpenInterestUpdateEventV1,
   BlockHeightMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import { IHeaders } from 'kafkajs';
@@ -56,7 +55,6 @@ export enum DydxIndexerSubtypes {
   UPDATE_CLOB_PAIR = 'update_clob_pair',
   DELEVERAGING = 'deleveraging',
   TRADING_REWARD = 'trading_reward',
-  OPEN_INTEREST_UPDATE = 'open_interest_update',
 }
 
 // Generic interface used for creating the Handler objects
@@ -156,12 +154,6 @@ export type EventProtoWithTypeAndVersion = {
 } | {
   type: DydxIndexerSubtypes.TRADING_REWARD,
   eventProto: TradingRewardsEventV1,
-  indexerTendermintEvent: IndexerTendermintEvent,
-  version: number,
-  blockEventIndex: number,
-} | {
-  type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
-  eventProto: OpenInterestUpdateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
