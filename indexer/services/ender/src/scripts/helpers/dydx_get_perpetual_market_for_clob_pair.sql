@@ -32,6 +32,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
 
+DROP FUNCTION IF EXISTS dydx_get_perpetual_market_for_clob_pair;
+
 
 CREATE OR REPLACE FUNCTION dydx_get_perpetual_market_for_clob_pair(
     clob_pair_id bigint
