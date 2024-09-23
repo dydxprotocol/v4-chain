@@ -57,6 +57,7 @@ var (
 	ErrAssetPositionNotSupported      = errorsmod.Register(ModuleName, 302, "asset position is not supported")
 	ErrMultAssetPositionsNotSupported = errorsmod.Register(
 		ModuleName, 303, "having multiple asset positions is not supported")
+	ErrNegativeAssetYieldIndexNotSupported = errorsmod.Register(ModuleName, 304, "negative asset yield index not supported")
 
 	// 400 - 499: perpetual position related.
 	ErrPerpPositionsOutOfOrder = errorsmod.Register(ModuleName, 400, "perpetual positions are out of order")

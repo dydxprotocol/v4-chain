@@ -1,6 +1,9 @@
 package types
 
 import (
+	"errors"
+	"math/big"
+
 	errorsmod "cosmossdk.io/errors"
 )
 
@@ -25,6 +28,18 @@ func (gs GenesisState) Validate() error {
 				"duplicate subaccount id %+v found within genesis state", subaccountId)
 		}
 		includedAccounts[*subaccountId] = true
+
+		// Validate Asset Yield Index
+		if sa.AssetYieldIndex != "" {
+			yieldIndexRat, ok := new(big.Rat).SetString(sa.AssetYieldIndex)
+			if !ok {
+				return errors.New("could not convert string to big.Rat")
+			}
+
+			if yieldIndexRat.Cmp(big.NewRat(0, 1)) == -1 {
+				return ErrNegativeAssetYieldIndexNotSupported
+			}
+		}
 
 		// Validate AssetPositions.
 		// TODO(DEC-582): once we support different assets, remove this validation.
