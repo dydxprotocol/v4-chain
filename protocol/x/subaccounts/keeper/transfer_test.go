@@ -1411,46 +1411,6 @@ func TestDistributeFees(t *testing.T) {
 			},
 			revShareExpiration: 100,
 		},
-		"success - market mapper rev share expired": {
-			asset:                      *constants.Usdc,
-			feeModuleAccBalance:        big.NewInt(2500),
-			subaccountModuleAccBalance: big.NewInt(600),
-			marketMapperAccBalance:     big.NewInt(0),
-			fill: clobtypes.FillForProcess{
-				TakerAddr:                         constants.AliceAccAddress.String(),
-				TakerFeeQuoteQuantums:             big.NewInt(250),
-				MakerAddr:                         constants.BobAccAddress.String(),
-				MakerFeeQuoteQuantums:             big.NewInt(250),
-				FillQuoteQuantums:                 big.NewInt(500),
-				ProductId:                         uint32(4),
-				MarketId:                          uint32(4),
-				MonthlyRollingTakerVolumeQuantums: 1_000_000,
-			},
-			affiliateRevShareAcctAddr:               "",
-			marketMapperRevShareAcctAddr:            constants.AliceAccAddress.String(),
-			unconditionalRevShareAcctAddr:           "",
-			expectedSubaccountsModuleAccBalance:     big.NewInt(100),  // 600 - 500
-			expectedFeeModuleAccBalance:             big.NewInt(3000), // 500 + 2500
-			expectedMarketMapperAccBalance:          big.NewInt(0),
-			expectedAffiliateAccBalance:             big.NewInt(0),
-			expectedUnconditionalRevShareAccBalance: big.NewInt(0),
-			collateralPoolAddr: authtypes.NewModuleAddress(
-				types.ModuleName + ":" + lib.IntToString(4),
-			),
-			revShare: revsharetypes.RevSharesForFill{
-				AffiliateRevShare: nil,
-				FeeSourceToQuoteQuantums: map[revsharetypes.RevShareFeeSource]*big.Int{
-					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
-					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(0),
-				},
-				FeeSourceToRevSharePpm: map[revsharetypes.RevShareFeeSource]uint32{
-					revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0, // 0%
-					revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 0, // 0%
-				},
-				AllRevShares: []revsharetypes.RevShare{},
-			},
-			revShareExpiration: -10,
-		},
 		"success - market mapper rev share rounded down to 0": {
 			asset:                      *constants.Usdc,
 			feeModuleAccBalance:        big.NewInt(100),

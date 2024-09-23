@@ -360,8 +360,9 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					RevSharePpm:       150_000,
 				},
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
-					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(1_500_000), // affiliate rev share fees
-					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(6_300_000), // unconditional + market mapper rev shares fees
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(1_500_000), // affiliate rev share fees
+					// unconditional + market mapper rev shares fees
+					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(6_300_000),
 				},
 				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            150_000, // affiliate rev share fee ppm
@@ -616,6 +617,49 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
+				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
+					Address:         constants.AliceAccAddress.String(),
+					RevenueSharePpm: 100_000, // 10%
+					ValidDays:       1,
+				})
+				require.NoError(t, err)
+
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
+				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
+					constants.BobAccAddress.String())
+				require.NoError(t, err)
+			},
+		},
+		{
+			name: "Market mapper rev shares expired",
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares: []types.RevShare{},
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(0),
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
+				},
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 0, // 0%
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0, // 0%
+				},
+				AffiliateRevShare: nil,
+			},
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         perpetualId,
+				MarketId:                          marketId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+			},
+			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
+				affiliatesKeeper *affiliateskeeper.Keeper) {
+				keeper.SetMarketMapperRevShareDetails(ctx, marketId, types.MarketMapperRevShareDetails{
+					ExpirationTs: uint64(ctx.BlockTime().Unix() + -1),
+				})
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
 					Address:         constants.AliceAccAddress.String(),
 					RevenueSharePpm: 100_000, // 10%
