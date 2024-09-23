@@ -33,6 +33,8 @@ var (
 		// insurance fund account manages insurance fund for liquidations.
 		perpetualsmoduletypes.InsuranceFundName: nil,
 		ratelimittypes.SDaiPoolAccount:          nil,
+		// liquidity fee module account holds tokens for liquidity fee.
+		satypes.LiquidityFeeModuleAddress: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all non-custom modules (except for gov) are blocked. This prevents

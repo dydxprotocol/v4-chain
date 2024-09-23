@@ -70,10 +70,12 @@ func GeneratePerpetual(optionalModifications ...PerpetualModifierOption) *perpty
 			DefaultFundingPpm: 0,
 			LiquidityTier:     0,
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			DangerIndexPpm:    uint32(0),
 		},
-		FundingIndex: dtypes.ZeroInt(),
-		OpenInterest: dtypes.ZeroInt(),
-		YieldIndex:   "0/1",
+		FundingIndex:    dtypes.ZeroInt(),
+		OpenInterest:    dtypes.ZeroInt(),
+		YieldIndex:      "0/1",
+		LastFundingRate: dtypes.ZeroInt(),
 	}
 
 	for _, opt := range optionalModifications {

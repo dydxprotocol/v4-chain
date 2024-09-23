@@ -4,22 +4,23 @@ import (
 	"testing"
 	"time"
 
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	pricefeed_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/prices"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cometbft/cometbft/types"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -141,10 +142,10 @@ func getSubaccountTDaiBalance(subaccount satypes.Subaccount) int64 {
 
 func TestFunding(t *testing.T) {
 	tests := map[string]struct {
-		testHumanOrders   []clobtest.TestHumanOrder
-		initialIndexPrice map[uint32]string
-		// index price to be used in premium calculation
-		indexPriceForPremium map[uint32]string
+		testHumanOrders    []clobtest.TestHumanOrder
+		initialDaemonPrice map[uint32]string
+		// daemon price to be used in premium calculation
+		daemonPriceForPremium map[uint32]string
 		// oracle price for funding index calculation
 		oracelPriceForFundingIndex map[uint32]string
 		// address -> funding
@@ -152,7 +153,7 @@ func TestFunding(t *testing.T) {
 		expectedFundingPremiums       []perptypes.MarketPremiums
 		expectedFundingIndex          int64
 	}{
-		"Index price below impact bid, positive funding, longs pay shorts": {
+		"daemon price below impact bid, positive funding, longs pay shorts": {
 			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
@@ -182,10 +183,10 @@ func TestFunding(t *testing.T) {
 					HumanSize:  "0.2",
 				},
 			},
-			initialIndexPrice: map[uint32]string{
+			initialDaemonPrice: map[uint32]string{
 				TestMarketId: "28002",
 			},
-			indexPriceForPremium: map[uint32]string{
+			daemonPriceForPremium: map[uint32]string{
 				TestMarketId: "27960",
 			},
 			oracelPriceForFundingIndex: map[uint32]string{
@@ -224,7 +225,7 @@ func TestFunding(t *testing.T) {
 				},
 			},
 		},
-		"Index price above impact ask, negative funding, final funding rate clamped": {
+		"daemon price above impact ask, negative funding, final funding rate clamped": {
 			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
@@ -254,10 +255,10 @@ func TestFunding(t *testing.T) {
 					HumanSize:  "0.2",
 				},
 			},
-			initialIndexPrice: map[uint32]string{
+			initialDaemonPrice: map[uint32]string{
 				0: "28002",
 			},
-			indexPriceForPremium: map[uint32]string{
+			daemonPriceForPremium: map[uint32]string{
 				0: "34000",
 			},
 			oracelPriceForFundingIndex: map[uint32]string{
@@ -298,7 +299,7 @@ func TestFunding(t *testing.T) {
 				},
 			},
 		},
-		"Index price between impact bid and ask, zero funding": {
+		"daemon price between impact bid and ask, zero funding": {
 			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
@@ -328,10 +329,10 @@ func TestFunding(t *testing.T) {
 					HumanSize:  "0.2",
 				},
 			},
-			initialIndexPrice: map[uint32]string{
+			initialDaemonPrice: map[uint32]string{
 				0: "28002",
 			},
-			indexPriceForPremium: map[uint32]string{
+			daemonPriceForPremium: map[uint32]string{
 				0: "28003", // Between impact bid and ask
 			},
 			oracelPriceForFundingIndex: map[uint32]string{
@@ -359,7 +360,7 @@ func TestFunding(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).
-				// UpdateIndexPrice only contacts the tApp.App.Server causing non-determinism in the
+				// UpdateDaemonPrice only contacts the tApp.App.Server causing non-determinism in the
 				// other App instances in TestApp used for non-determinism checking.
 				WithNonDeterminismChecksEnabled(false).
 				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
@@ -407,15 +408,15 @@ func TestFunding(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
-			// Update initial index price. This price is meant to be within the impact price range,
+			// Update initial daemon price. This price is meant to be within the impact price range,
 			// leading to zero sampled premiums.
-			pricefeed_testutil.UpdateIndexPrice(
+			pricefeed_testutil.UpdateDaemonPrice(
 				t,
 				ctx,
 				tApp.App,
 				TestMarketId,
-				pricestest.MustHumanPriceToMarketPrice(tc.initialIndexPrice[TestMarketId], -5),
-				// Only index price past a certain threshold is used for premium calculation.
+				pricestest.MustHumanPriceToMarketPrice(tc.initialDaemonPrice[TestMarketId], -5),
+				// Only daemon price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
 			)
@@ -431,14 +432,14 @@ func TestFunding(t *testing.T) {
 			// Zero premium samples since we just entered a new `funding-tick` epoch.
 			require.Equal(t, uint32(0), premiumSamples.NumPremiums)
 
-			// Update index price for each validator so they use this price for premium calculation.
-			pricefeed_testutil.UpdateIndexPrice(
+			// Update daemon price for each validator so they use this price for premium calculation.
+			pricefeed_testutil.UpdateDaemonPrice(
 				t,
 				ctx,
 				tApp.App,
 				TestMarketId,
-				pricestest.MustHumanPriceToMarketPrice(tc.indexPriceForPremium[TestMarketId], -5),
-				// Only index price past a certain threshold is used for premium calculation.
+				pricestest.MustHumanPriceToMarketPrice(tc.daemonPriceForPremium[TestMarketId], -5),
+				// Only daemon price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
 			)
@@ -463,20 +464,27 @@ func TestFunding(t *testing.T) {
 				BlockTime: SecondFundingTick.Add(-BlockTimeDuration),
 			})
 
-			// Build a DeliverTx override with MsgUpdateMarketPrices to update oracle price for funding index.
-			msgPriceUpdate := &pricestypes.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-					pricestypes.NewMarketPriceUpdate(0, pricestest.MustHumanPriceToMarketPrice(tc.oracelPriceForFundingIndex[0], -5)),
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{
+					0: {
+						SpotPrice: pricestest.MustHumanPriceToMarketPrice(
+							tc.oracelPriceForFundingIndex[0],
+							-5,
+						),
+						PnlPrice: pricestest.MustHumanPriceToMarketPrice(
+							tc.oracelPriceForFundingIndex[0],
+							-5,
+						),
+					},
 				},
-			}
-			txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
-			require.NoError(t, txBuilder.SetMsgs(msgPriceUpdate))
-			priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+				tApp.GetHeader().Height,
+			)
 			require.NoError(t, err)
 
-			// Update oracle price for funding index, using the DeliverTx override.
 			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+1, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: [][]byte{priceUpdateTxBytes},
+				DeliverTxsOverride: [][]byte{extCommitBz},
 				BlockTime:          SecondFundingTick,
 			})
 
@@ -486,6 +494,7 @@ func TestFunding(t *testing.T) {
 
 			// Check that the funding index is correctly updated.
 			btcPerp, err := tApp.App.PerpetualsKeeper.GetPerpetual(ctx, 0)
+
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedFundingIndex, btcPerp.FundingIndex.BigInt().Int64())
 
@@ -508,7 +517,7 @@ func TestFunding(t *testing.T) {
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
 						AccAddressForSigning: transfer.Transfer.Sender.Owner,
-						Gas:                  140_000,
+						Gas:                  130_000,
 						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
 					&transfer,

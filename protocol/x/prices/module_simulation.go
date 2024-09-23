@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	_ module.AppModuleSimulation = AppModule{}
-	_ module.HasProposalMsgs     = AppModule{}
+	// _ module.AppModuleSimulation = AppModule{}
+	_ module.HasProposalMsgs = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -25,15 +25,15 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // RegisterStoreDecoder registers a decoder
 func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
-// WeightedOperations returns the all the prices module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return pricessimulation.WeightedOperations(
-		simState.AppParams,
-		am.keeper,
-		am.accountKeeper,
-		am.bankKeeper,
-	)
-}
+// // WeightedOperations returns the all the prices module operations with their respective weights.
+// func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+// 	return pricessimulation.WeightedOperations(
+// 		simState.AppParams,
+// 		am.keeper,
+// 		am.accountKeeper,
+// 		am.bankKeeper,
+// 	)
+// }
 
 // TODO(DEC-906): implement simulated gov proposal.
 // ProposalMsgs doesn't return any content functions for governance proposals

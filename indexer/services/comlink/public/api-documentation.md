@@ -1833,7 +1833,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "oraclePrice": "string",
+      "spotPrice": "string",
+      "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
       "trades24H": 0,
@@ -1842,6 +1843,7 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
       "atomicResolution": 0,
+      "dangerIndexPpm": 0,
       "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
@@ -1857,7 +1859,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "oraclePrice": "string",
+      "spotPrice": "string",
+      "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
       "trades24H": 0,
@@ -1866,6 +1869,7 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
       "atomicResolution": 0,
+      "dangerIndexPpm": 0,
       "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
@@ -3837,7 +3841,8 @@ or
   "clobPairId": "string",
   "ticker": "string",
   "status": "ACTIVE",
-  "oraclePrice": "string",
+  "spotPrice": "string",
+  "pnlPrice": "string",
   "priceChange24H": "string",
   "volume24H": "string",
   "trades24H": 0,
@@ -3846,6 +3851,7 @@ or
   "maintenanceMarginFraction": "string",
   "openInterest": "string",
   "atomicResolution": 0,
+  "dangerIndexPpm": 0,
   "quantumConversionExponent": 0,
   "tickSize": "string",
   "stepSize": "string",
@@ -3867,7 +3873,8 @@ or
 |clobPairId|string|true|none|none|
 |ticker|string|true|none|none|
 |status|[PerpetualMarketStatus](#schemaperpetualmarketstatus)|true|none|none|
-|oraclePrice|string|true|none|none|
+|spotPrice|string|true|none|none|
+|pnlPrice|string|true|none|none|
 |priceChange24H|string|true|none|none|
 |volume24H|string|true|none|none|
 |trades24H|number(double)|true|none|none|
@@ -3876,6 +3883,7 @@ or
 |maintenanceMarginFraction|string|true|none|none|
 |openInterest|string|true|none|none|
 |atomicResolution|number(double)|true|none|none|
+|dangerIndexPpm|number(double)|true|none|none|
 |quantumConversionExponent|number(double)|true|none|none|
 |tickSize|string|true|none|none|
 |stepSize|string|true|none|none|
@@ -3901,7 +3909,8 @@ or
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "oraclePrice": "string",
+      "spotPrice": "string",
+      "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
       "trades24H": 0,
@@ -3910,6 +3919,7 @@ or
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
       "atomicResolution": 0,
+      "dangerIndexPpm": 0,
       "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
@@ -3925,7 +3935,8 @@ or
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "oraclePrice": "string",
+      "spotPrice": "string",
+      "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
       "trades24H": 0,
@@ -3934,6 +3945,7 @@ or
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
       "atomicResolution": 0,
+      "dangerIndexPpm": 0,
       "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",

@@ -12,6 +12,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	abcicomet "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -136,6 +137,7 @@ func EndBlocker(
 func PrepareCheckState(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
+	req *abcicomet.RequestCommit,
 ) {
 	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Handler, log.PrepareCheckState,
@@ -214,7 +216,13 @@ func PrepareCheckState(
 		keeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
-	// 3. Place all stateful order placements included in the last block on the memclob.
+	// 3. Update the prices to reflect next block's prices.
+	err := keeper.SetNextBlocksPricesFromExtendedCommitInfo(ctx, req.ExtendedCommitInfo)
+	if err != nil {
+		panic(err)
+	}
+
+	// 4. Place all stateful order placements included in the last block on the memclob.
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
 	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.
 	startPlaceLongTermOrders := time.Now()
@@ -236,14 +244,14 @@ func PrepareCheckState(
 		metrics.Count,
 	)
 
-	// 4. Place all conditional orders triggered in EndBlocker of last block on the memclob.
+	// 5. Place all conditional orders triggered in EndBlocker of last block on the memclob.
 	offchainUpdates = keeper.PlaceConditionalOrdersTriggeredInLastBlock(
 		ctx,
 		processProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock,
 		offchainUpdates,
 	)
 
-	// 5. Replay the local validator’s operations onto the book.
+	// 6. Replay the local validator’s operations onto the book.
 	replayUpdates := keeper.MemClob.ReplayOperations(
 		ctx,
 		localValidatorOperationsQueue,
@@ -256,8 +264,11 @@ func PrepareCheckState(
 		offchainUpdates = replayUpdates
 	}
 
-	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
-	liquidatableSubaccountIds := keeper.DaemonLiquidationInfo.GetLiquidatableSubaccountIds()
+	// 7. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
+	liquidatableSubaccountIds, negativeTncSubaccountIds, err := keeper.GetLiquidatableAndNegativeTncSubaccountIds(ctx)
+	if err != nil {
+		panic(err)
+	}
 	subaccountsToDeleverage, err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, liquidatableSubaccountIds)
 	if err != nil {
 		panic(err)
@@ -269,16 +280,15 @@ func PrepareCheckState(
 		keeper.GetSubaccountsWithPositionsInFinalSettlementMarkets(ctx)...,
 	)
 
-	// 7. Deleverage subaccounts.
+	// 8. Deleverage subaccounts.
 	// TODO(CLOB-1052) - decouple steps 6 and 7 by using DaemonLiquidationInfo.NegativeTncSubaccounts
 	// as the input for this function.
 	if err := keeper.DeleverageSubaccounts(ctx, subaccountsToDeleverage); err != nil {
 		panic(err)
 	}
 
-	// 8. Gate withdrawals by inserting a zero-fill deleveraging operation into the operations queue if any
+	// 9. Gate withdrawals by inserting a zero-fill deleveraging operation into the operations queue if any
 	// of the negative TNC subaccounts still have negative TNC after liquidations and deleveraging steps.
-	negativeTncSubaccountIds := keeper.DaemonLiquidationInfo.GetNegativeTncSubaccountIds()
 	if err := keeper.GateWithdrawalsIfNegativeTncSubaccountSeen(ctx, negativeTncSubaccountIds); err != nil {
 		panic(err)
 	}

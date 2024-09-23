@@ -2,9 +2,10 @@ package server
 
 import (
 	"context"
+	"time"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
-	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"

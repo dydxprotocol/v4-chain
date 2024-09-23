@@ -1,38 +1,28 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 export enum PerpetualMarketType {
-  /** PERPETUAL_MARKET_TYPE_UNSPECIFIED - Unspecified market type. */
-  PERPETUAL_MARKET_TYPE_UNSPECIFIED = 0,
-
   /** PERPETUAL_MARKET_TYPE_CROSS - Market type for cross margin perpetual markets. */
-  PERPETUAL_MARKET_TYPE_CROSS = 1,
+  PERPETUAL_MARKET_TYPE_CROSS = 0,
 
   /** PERPETUAL_MARKET_TYPE_ISOLATED - Market type for isolated margin perpetual markets. */
-  PERPETUAL_MARKET_TYPE_ISOLATED = 2,
+  PERPETUAL_MARKET_TYPE_ISOLATED = 1,
   UNRECOGNIZED = -1,
 }
 export enum PerpetualMarketTypeSDKType {
-  /** PERPETUAL_MARKET_TYPE_UNSPECIFIED - Unspecified market type. */
-  PERPETUAL_MARKET_TYPE_UNSPECIFIED = 0,
-
   /** PERPETUAL_MARKET_TYPE_CROSS - Market type for cross margin perpetual markets. */
-  PERPETUAL_MARKET_TYPE_CROSS = 1,
+  PERPETUAL_MARKET_TYPE_CROSS = 0,
 
   /** PERPETUAL_MARKET_TYPE_ISOLATED - Market type for isolated margin perpetual markets. */
-  PERPETUAL_MARKET_TYPE_ISOLATED = 2,
+  PERPETUAL_MARKET_TYPE_ISOLATED = 1,
   UNRECOGNIZED = -1,
 }
 export function perpetualMarketTypeFromJSON(object: any): PerpetualMarketType {
   switch (object) {
     case 0:
-    case "PERPETUAL_MARKET_TYPE_UNSPECIFIED":
-      return PerpetualMarketType.PERPETUAL_MARKET_TYPE_UNSPECIFIED;
-
-    case 1:
     case "PERPETUAL_MARKET_TYPE_CROSS":
       return PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS;
 
-    case 2:
+    case 1:
     case "PERPETUAL_MARKET_TYPE_ISOLATED":
       return PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED;
 
@@ -44,9 +34,6 @@ export function perpetualMarketTypeFromJSON(object: any): PerpetualMarketType {
 }
 export function perpetualMarketTypeToJSON(object: PerpetualMarketType): string {
   switch (object) {
-    case PerpetualMarketType.PERPETUAL_MARKET_TYPE_UNSPECIFIED:
-      return "PERPETUAL_MARKET_TYPE_UNSPECIFIED";
-
     case PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS:
       return "PERPETUAL_MARKET_TYPE_CROSS";
 
@@ -72,6 +59,7 @@ export interface Perpetual {
   /** Total size of open long contracts, measured in base_quantums. */
 
   openInterest: Uint8Array;
+  lastFundingRate: Uint8Array;
   /**
    * The current yield index is determined by the cumulative
    * all-time history of the yield mechanism. Starts at 0.
@@ -94,6 +82,7 @@ export interface PerpetualSDKType {
   /** Total size of open long contracts, measured in base_quantums. */
 
   open_interest: Uint8Array;
+  last_funding_rate: Uint8Array;
   /**
    * The current yield index is determined by the cumulative
    * all-time history of the yield mechanism. Starts at 0.
@@ -140,6 +129,9 @@ export interface PerpetualParams {
   /** The market type specifying if this perpetual is cross or isolated */
 
   marketType: PerpetualMarketType;
+  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+
+  dangerIndexPpm: number;
 }
 /**
  * PerpetualParams represents the parameters of a perpetual on the dYdX
@@ -179,6 +171,9 @@ export interface PerpetualParamsSDKType {
   /** The market type specifying if this perpetual is cross or isolated */
 
   market_type: PerpetualMarketTypeSDKType;
+  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+
+  danger_index_ppm: number;
 }
 /** MarketPremiums stores a list of premiums for a single perpetual market. */
 
@@ -376,6 +371,7 @@ function createBasePerpetual(): Perpetual {
     params: undefined,
     fundingIndex: new Uint8Array(),
     openInterest: new Uint8Array(),
+    lastFundingRate: new Uint8Array(),
     yieldIndex: ""
   };
 }
@@ -394,8 +390,12 @@ export const Perpetual = {
       writer.uint32(26).bytes(message.openInterest);
     }
 
+    if (message.lastFundingRate.length !== 0) {
+      writer.uint32(34).bytes(message.lastFundingRate);
+    }
+
     if (message.yieldIndex !== "") {
-      writer.uint32(34).string(message.yieldIndex);
+      writer.uint32(42).string(message.yieldIndex);
     }
 
     return writer;
@@ -423,6 +423,10 @@ export const Perpetual = {
           break;
 
         case 4:
+          message.lastFundingRate = reader.bytes();
+          break;
+
+        case 5:
           message.yieldIndex = reader.string();
           break;
 
@@ -440,6 +444,7 @@ export const Perpetual = {
     message.params = object.params !== undefined && object.params !== null ? PerpetualParams.fromPartial(object.params) : undefined;
     message.fundingIndex = object.fundingIndex ?? new Uint8Array();
     message.openInterest = object.openInterest ?? new Uint8Array();
+    message.lastFundingRate = object.lastFundingRate ?? new Uint8Array();
     message.yieldIndex = object.yieldIndex ?? "";
     return message;
   }
@@ -454,7 +459,8 @@ function createBasePerpetualParams(): PerpetualParams {
     atomicResolution: 0,
     defaultFundingPpm: 0,
     liquidityTier: 0,
-    marketType: 0
+    marketType: 0,
+    dangerIndexPpm: 0
   };
 }
 
@@ -486,6 +492,10 @@ export const PerpetualParams = {
 
     if (message.marketType !== 0) {
       writer.uint32(56).int32(message.marketType);
+    }
+
+    if (message.dangerIndexPpm !== 0) {
+      writer.uint32(64).uint32(message.dangerIndexPpm);
     }
 
     return writer;
@@ -528,6 +538,10 @@ export const PerpetualParams = {
           message.marketType = (reader.int32() as any);
           break;
 
+        case 8:
+          message.dangerIndexPpm = reader.uint32();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -546,6 +560,7 @@ export const PerpetualParams = {
     message.defaultFundingPpm = object.defaultFundingPpm ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
     message.marketType = object.marketType ?? 0;
+    message.dangerIndexPpm = object.dangerIndexPpm ?? 0;
     return message;
   }
 

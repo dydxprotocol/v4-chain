@@ -33,10 +33,10 @@ func TestDecodeOtherMsgsTx(t *testing.T) {
 			expectedErr: errorsmod.Wrap(process.ErrUnexpectedNumMsgs, "OtherMsgs len cannot be zero"),
 		},
 		"Error: app-injected msg type is not allowed": {
-			txBytes: constants.ValidMsgUpdateMarketPricesTxBytes,
+			txBytes: constants.ValidMsgAddPremiumVotesTxBytes,
 			expectedErr: errorsmod.Wrap(
 				process.ErrUnexpectedMsgType,
-				"Invalid msg type or content in OtherTxs *types.MsgUpdateMarketPrices",
+				"Invalid msg type or content in OtherTxs *types.MsgAddPremiumVotes",
 			),
 		},
 		"Error: internal msg type is not allowed": {

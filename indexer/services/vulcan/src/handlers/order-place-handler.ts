@@ -293,7 +293,7 @@ export class OrderPlaceHandler extends Handler {
     ) {
       return false;
     }
-    
+
     const orderFlags: number = orderPlace.order!.orderId!.orderFlags;
     const status: OrderPlaceV1_OrderPlacementStatus = orderPlace.placementStatus;
     // Best-effort-opened status should only be sent for short-term orders

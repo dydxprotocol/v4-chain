@@ -3,10 +3,8 @@ package msgs
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
 var (
@@ -26,13 +24,5 @@ var (
 			},
 		},
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse": nil,
-
-		// prices
-		"/dydxprotocol.prices.MsgUpdateMarketPrices": &pricestypes.MsgUpdateMarketPrices{
-			MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-				pricestypes.NewMarketPriceUpdate(constants.MarketId0, 123_000),
-			},
-		},
-		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse": nil,
 	}
 )

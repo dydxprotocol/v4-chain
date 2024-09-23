@@ -3,18 +3,18 @@
 package mocks
 
 import (
-	api "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	api "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 
 	context "context"
+
+	deleveragingapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 
 	grpc "google.golang.org/grpc"
 
 	mock "github.com/stretchr/testify/mock"
 
 	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-
-	pricefeedapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 
@@ -622,43 +622,6 @@ func (_m *QueryClient) GetWithdrawalAndTransfersBlockedInfo(ctx context.Context,
 	return r0, r1
 }
 
-// LiquidateSubaccounts provides a mock function with given fields: ctx, in, opts
-func (_m *QueryClient) LiquidateSubaccounts(ctx context.Context, in *api.LiquidateSubaccountsRequest, opts ...grpc.CallOption) (*api.LiquidateSubaccountsResponse, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, in)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	if len(ret) == 0 {
-		panic("no return value specified for LiquidateSubaccounts")
-	}
-
-	var r0 *api.LiquidateSubaccountsResponse
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) (*api.LiquidateSubaccountsResponse, error)); ok {
-		return rf(ctx, in, opts...)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) *api.LiquidateSubaccountsResponse); ok {
-		r0 = rf(ctx, in, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*api.LiquidateSubaccountsResponse)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) error); ok {
-		r1 = rf(ctx, in, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // LiquidationsConfiguration provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) LiquidationsConfiguration(ctx context.Context, in *clobtypes.QueryLiquidationsConfigurationRequest, opts ...grpc.CallOption) (*clobtypes.QueryLiquidationsConfigurationResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -1141,7 +1104,7 @@ func (_m *QueryClient) SubaccountAll(ctx context.Context, in *subaccountstypes.Q
 }
 
 // UpdateMarketPrices provides a mock function with given fields: ctx, in, opts
-func (_m *QueryClient) UpdateMarketPrices(ctx context.Context, in *pricefeedapi.UpdateMarketPricesRequest, opts ...grpc.CallOption) (*pricefeedapi.UpdateMarketPricesResponse, error) {
+func (_m *QueryClient) UpdateMarketPrices(ctx context.Context, in *api.UpdateMarketPricesRequest, opts ...grpc.CallOption) (*api.UpdateMarketPricesResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -1155,20 +1118,57 @@ func (_m *QueryClient) UpdateMarketPrices(ctx context.Context, in *pricefeedapi.
 		panic("no return value specified for UpdateMarketPrices")
 	}
 
-	var r0 *pricefeedapi.UpdateMarketPricesResponse
+	var r0 *api.UpdateMarketPricesResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *pricefeedapi.UpdateMarketPricesRequest, ...grpc.CallOption) (*pricefeedapi.UpdateMarketPricesResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *api.UpdateMarketPricesRequest, ...grpc.CallOption) (*api.UpdateMarketPricesResponse, error)); ok {
 		return rf(ctx, in, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *pricefeedapi.UpdateMarketPricesRequest, ...grpc.CallOption) *pricefeedapi.UpdateMarketPricesResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *api.UpdateMarketPricesRequest, ...grpc.CallOption) *api.UpdateMarketPricesResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*pricefeedapi.UpdateMarketPricesResponse)
+			r0 = ret.Get(0).(*api.UpdateMarketPricesResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *pricefeedapi.UpdateMarketPricesRequest, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *api.UpdateMarketPricesRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateSubaccountsListForDeleveragingDaemon provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) UpdateSubaccountsListForDeleveragingDaemon(ctx context.Context, in *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonRequest, opts ...grpc.CallOption) (*deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateSubaccountsListForDeleveragingDaemon")
+	}
+
+	var r0 *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonRequest, ...grpc.CallOption) (*deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonRequest, ...grpc.CallOption) *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

@@ -64,6 +64,7 @@ func TestCreateClobPair(t *testing.T) {
 							testClobPair1.StepBaseQuantums,
 							testPerp1.Params.LiquidityTier,
 							testPerp1.Params.MarketType,
+							testPerp1.Params.DangerIndexPpm,
 						),
 					),
 				).Return()

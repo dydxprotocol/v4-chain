@@ -3,10 +3,12 @@ package events
 // NewMarketPriceUpdateEvent creates a MarketEvent representing an update in the priceWithExponent of a market.
 func NewMarketPriceUpdateEvent(
 	marketId uint32,
-	priceWithExponent uint64,
+	spotPriceWithExponent uint64,
+	pnlPriceWithExponent uint64,
 ) *MarketEventV1 {
 	priceUpdateEventProto := MarketPriceUpdateEventV1{
-		PriceWithExponent: priceWithExponent,
+		SpotPriceWithExponent: spotPriceWithExponent,
+		PnlPriceWithExponent:  pnlPriceWithExponent,
 	}
 	return &MarketEventV1{
 		MarketId: marketId,

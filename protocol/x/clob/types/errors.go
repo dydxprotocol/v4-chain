@@ -116,10 +116,10 @@ var (
 		25,
 		"Attempting to get price premium with a non-perpetual CLOB pair",
 	)
-	ErrZeroIndexPriceForPremiumCalculation = errorsmod.Register(
+	ErrZeroDaemonPriceForPremiumCalculation = errorsmod.Register(
 		ModuleName,
 		26,
-		"Index price is zero when calculating price premium",
+		"daemon price is zero when calculating price premium",
 	)
 	ErrInvalidClobPairParameter = errorsmod.Register(
 		ModuleName,
@@ -278,11 +278,6 @@ var (
 		ModuleName,
 		1010,
 		"Liquidation order has size greater than max position notional specified in the liquidation config",
-	)
-	ErrLiquidationExceedsSubaccountMaxNotionalLiquidated = errorsmod.Register(
-		ModuleName,
-		1011,
-		"Liquidation exceeds the maximum notional amount that a single subaccount can have liquidated per block",
 	)
 	ErrLiquidationExceedsSubaccountMaxInsuranceLost = errorsmod.Register(
 		ModuleName,

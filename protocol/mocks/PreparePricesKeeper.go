@@ -15,21 +15,49 @@ type PreparePricesKeeper struct {
 	mock.Mock
 }
 
+// GetAllMarketParams provides a mock function with given fields: ctx
+func (_m *PreparePricesKeeper) GetAllMarketParams(ctx types.Context) []pricestypes.MarketParam {
+	ret := _m.Called(ctx)
+
+	var r0 []pricestypes.MarketParam
+	if rf, ok := ret.Get(0).(func(types.Context) []pricestypes.MarketParam); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]pricestypes.MarketParam)
+		}
+	}
+
+	return r0
+}
+
 // GetValidMarketPriceUpdates provides a mock function with given fields: ctx
-func (_m *PreparePricesKeeper) GetValidMarketPriceUpdates(ctx types.Context) *pricestypes.MsgUpdateMarketPrices {
+func (_m *PreparePricesKeeper) GetValidMarketPriceUpdates(ctx types.Context) *pricestypes.MarketPriceUpdates {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetValidMarketPriceUpdates")
 	}
-
-	var r0 *pricestypes.MsgUpdateMarketPrices
-	if rf, ok := ret.Get(0).(func(types.Context) *pricestypes.MsgUpdateMarketPrices); ok {
+	var r0 *pricestypes.MarketPriceUpdates
+	if rf, ok := ret.Get(0).(func(types.Context) *pricestypes.MarketPriceUpdates); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*pricestypes.MsgUpdateMarketPrices)
+			r0 = ret.Get(0).(*pricestypes.MarketPriceUpdates)
 		}
+	}
+
+	return r0
+}
+
+// PerformStatefulPriceUpdateValidation provides a mock function with given fields: ctx, marketPriceUpdates, performNonDeterministicValidation
+func (_m *PreparePricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, marketPriceUpdates *pricestypes.MarketPriceUpdates, performNonDeterministicValidation bool) error {
+	ret := _m.Called(ctx, marketPriceUpdates, performNonDeterministicValidation)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *pricestypes.MarketPriceUpdates, bool) error); ok {
+		r0 = rf(ctx, marketPriceUpdates, performNonDeterministicValidation)
+	} else {
+		r0 = ret.Error(0)
 	}
 
 	return r0

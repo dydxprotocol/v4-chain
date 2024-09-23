@@ -4,14 +4,14 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cometbft/cometbft/types"
@@ -24,8 +24,8 @@ func TestReduceOnlyOrders(t *testing.T) {
 		ordersForFirstBlock  []clobtypes.Order
 		ordersForSecondBlock []clobtypes.Order
 
-		priceUpdateForFirstBlock  *prices.MsgUpdateMarketPrices
-		priceUpdateForSecondBlock *prices.MsgUpdateMarketPrices
+		priceUpdateForFirstBlock  map[uint32]ve.VEPricePair
+		priceUpdateForSecondBlock map[uint32]ve.VEPricePair
 
 		crashingAppCheckTxNonDeterminismChecksDisabled bool
 
@@ -51,6 +51,9 @@ func TestReduceOnlyOrders(t *testing.T) {
 				),
 			},
 			ordersForSecondBlock: []clobtypes.Order{},
+
+			priceUpdateForFirstBlock:  map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
 				constants.Order_Carl_Num0_Id0_Clob0_Buy10_Price500000_GTB20.OrderId:          false,
@@ -117,6 +120,9 @@ func TestReduceOnlyOrders(t *testing.T) {
 				),
 			},
 
+			priceUpdateForFirstBlock:  map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
+
 			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
 				constants.Order_Carl_Num0_Id0_Clob0_Buy10_Price500000_GTB20.OrderId:          false,
 				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO.OrderId: false,
@@ -182,6 +188,9 @@ func TestReduceOnlyOrders(t *testing.T) {
 				),
 			},
 
+			priceUpdateForFirstBlock:  map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
+
 			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
 				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId:          true,
 				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO.OrderId: false,
@@ -246,6 +255,9 @@ func TestReduceOnlyOrders(t *testing.T) {
 					testapp.DefaultGenesis(),
 				),
 			},
+
+			priceUpdateForFirstBlock:  map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			// Crashing app checks have to be disabled because the FOK order will not match
 			// with an empty orderbook and fail to be placed.
@@ -314,6 +326,9 @@ func TestReduceOnlyOrders(t *testing.T) {
 			},
 			ordersForSecondBlock: []clobtypes.Order{},
 
+			priceUpdateForFirstBlock:  map[uint32]ve.VEPricePair{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
+
 			// Crashing app checks don't need to be disabled since matches occur in same block.
 			crashingAppCheckTxNonDeterminismChecksDisabled: false,
 
@@ -374,12 +389,13 @@ func TestReduceOnlyOrders(t *testing.T) {
 			},
 			ordersForSecondBlock: []clobtypes.Order{},
 
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
 				},
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {
@@ -447,13 +463,13 @@ func TestReduceOnlyOrders(t *testing.T) {
 				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10,
 			},
 			ordersForSecondBlock: []clobtypes.Order{},
-
-			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
-				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
-					prices.NewMarketPriceUpdate(0, 5_000_300_000),
+			priceUpdateForFirstBlock: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_300_000,
+					PnlPrice:  5_000_300_000,
 				},
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			priceUpdateForSecondBlock: map[uint32]ve.VEPricePair{},
 
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {
@@ -589,13 +605,19 @@ func TestReduceOnlyOrders(t *testing.T) {
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
 			// Add the price update.
-			if tc.priceUpdateForFirstBlock != nil {
-				txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
-				require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForFirstBlock))
-				priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
-				require.NoError(t, err)
-				deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
-			}
+
+			// txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
+			// require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForFirstBlock))
+			// priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+			// require.NoError(t, err)
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				tc.priceUpdateForFirstBlock,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
 			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
@@ -634,13 +656,20 @@ func TestReduceOnlyOrders(t *testing.T) {
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
 			// Add the price update.
-			if tc.priceUpdateForSecondBlock != nil {
-				txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
-				require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForSecondBlock))
-				priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
-				require.NoError(t, err)
-				deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
-			}
+
+			// txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
+			// require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForSecondBlock))
+			// priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+			// require.NoError(t, err)
+
+			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				tc.priceUpdateForFirstBlock,
+				tApp.GetHeader().Height+1,
+			)
+			require.NoError(t, err)
+			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
 			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,

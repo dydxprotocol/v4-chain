@@ -49,11 +49,11 @@ This channel provides realtime information about orders, fills, transfers, perpe
 
 ### Subscribe
 
-| Field | Type | Description |
-| --- | --- | --- |
-| type | string | Set to subscribe |
-| channel | string | Set to v4_subaccounts |
-| id | string | Set to the address and subaccount number in the format {address}/{subaccount_number} |
+| Field   | Type   | Description                                                                          |
+| ------- | ------ | ------------------------------------------------------------------------------------ |
+| type    | string | Set to subscribe                                                                     |
+| channel | string | Set to v4_subaccounts                                                                |
+| id      | string | Set to the address and subaccount number in the format {address}/{subaccount_number} |
 
 ### Initial Response
 
@@ -374,11 +374,11 @@ export enum TransferType {
 
 ### Subscribe
 
-| Field | Type | Description |
-| --- | --- | --- |
-| type | string | Set to subscribe |
-| channel | string | Set to v4_orderbook |
-| id | string | Set to the ticker of the market you would like to subscribe to. For example, BTC-USD |
+| Field   | Type   | Description                                                                          |
+| ------- | ------ | ------------------------------------------------------------------------------------ |
+| type    | string | Set to subscribe                                                                     |
+| channel | string | Set to v4_orderbook                                                                  |
+| id      | string | Set to the ticker of the market you would like to subscribe to. For example, BTC-USD |
 
 ### Initial Response
 
@@ -517,11 +517,11 @@ type PriceLevel = [string, string];
 
 ### Subscribe
 
-| Field | Type | Description |
-| --- | --- | --- |
-| type | string | Set to subscribe |
-| channel | string | Set to v4_trades |
-| id | string | Set to the ticker of the market you would like to subscribe to. For example, BTC-USD |
+| Field   | Type   | Description                                                                          |
+| ------- | ------ | ------------------------------------------------------------------------------------ |
+| type    | string | Set to subscribe                                                                     |
+| channel | string | Set to v4_trades                                                                     |
+| id      | string | Set to the ticker of the market you would like to subscribe to. For example, BTC-USD |
 
 ### Initial Response
 
@@ -779,9 +779,9 @@ interface TradeContent {
 
 ### Subscribe
 
-| Field | Type | Description |
-| --- | --- | --- |
-| type | string | Set to subscribe |
+| Field   | Type   | Description       |
+| ------- | ------ | ----------------- |
+| type    | string | Set to subscribe  |
 | channel | string | Set to v4_markets |
 
 ### Initial Response
@@ -816,6 +816,7 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "maxPositionSize": "0",
         "openInterest": "1891.473716288",
         "atomicResolution": -10,
+        "dangerIndexPpm": 1000000,
         "quantumConversionExponent": -8,
         "tickSize": "1",
         "stepSize": "0.000000001",
@@ -840,6 +841,7 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "maxPositionSize": "0",
         "openInterest": "44027.853711",
         "atomicResolution": -9,
+        "dangerIndexPpm": 1000000,
         "quantumConversionExponent": -9,
         "tickSize": "0.01",
         "stepSize": "0.000001",
@@ -887,6 +889,7 @@ interface TradingPerpetualMarketMessage {
   openInterest?: string;
   quantumConversionExponent?: number;
   atomicResolution?: number;
+  dangerIndexPpm?: number;
   subticksPerTick?: number;
   stepBaseQuantums?: number;
   priceChange24H?: string;
@@ -900,7 +903,8 @@ type OraclePriceMarketMessageContentsMapping = {
 };
 
 interface OraclePriceMarket {
-  oraclePrice: string,
+  spotPrice: string,
+  pnlPrice: string,
   effectiveAt: IsoString,
   effectiveAtHeight: string,
   marketId: number,

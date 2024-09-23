@@ -12,3 +12,6 @@ v4-proto-js/src
 .idea
 **/.DS_Store
 protocol/ethos/
+
+node_modules/
+

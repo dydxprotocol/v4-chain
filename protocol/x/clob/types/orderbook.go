@@ -176,9 +176,6 @@ const (
 	// because the insurance fund did not have enough funds to cover the losses from performing
 	// the liquidation.
 	LiquidationRequiresDeleveraging
-	// LiquidationExceededSubaccountMaxNotionalLiquidated indicates that the liquidation order
-	// could not be matched because it exceeded the max notional liquidated in this block.
-	LiquidationExceededSubaccountMaxNotionalLiquidated
 	// LiquidationExceededSubaccountMaxInsuranceLost indicates that the liquidation order could not
 	// be matched because it exceeded the maximum funds lost for the insurance fund in this block.
 	LiquidationExceededSubaccountMaxInsuranceLost
@@ -204,8 +201,6 @@ func (os OrderStatus) String() string {
 		return "ReduceOnlyResized"
 	case LiquidationRequiresDeleveraging:
 		return "LiquidationRequiresDeleveraging"
-	case LiquidationExceededSubaccountMaxNotionalLiquidated:
-		return "LiquidationExceededSubaccountMaxNotionalLiquidated"
 	case LiquidationExceededSubaccountMaxInsuranceLost:
 		return "LiquidationExceededSubaccountMaxInsuranceLost"
 	case ViolatesIsolatedSubaccountConstraints:

@@ -5,14 +5,16 @@ export interface MarketCreateObject {
   pair: string,
   exponent: number,
   minPriceChangePpm: number,
-  oraclePrice?: string,
+  spotPrice?: string,
+  pnlPrice?: string,
 }
 
 export interface MarketUpdateObject {
   id: number,
   pair?: string,
   minPriceChangePpm?: number,
-  oraclePrice?: string;
+  spotPrice?: string;
+  pnlPrice?: string;
 }
 
 export enum MarketColumns {
@@ -20,5 +22,6 @@ export enum MarketColumns {
   pair = 'pair',
   exponent = 'exponent',
   minPriceChangePpm = 'minPriceChangePpm',
-  oraclePrice = 'oraclePrice',
+  spotPrice = 'spotPrice',
+  pnlPrice = 'pnlPrice',
 }

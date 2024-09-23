@@ -131,7 +131,6 @@ func (r *placeAndCancelOrderRateLimiter) RateLimitCancelOrder(
 	ctx sdk.Context,
 	msg types.MsgCancelOrder,
 ) (err error) {
-
 	lib.AssertCheckTxMode(ctx)
 
 	if msg.OrderId.IsShortTermOrder() {

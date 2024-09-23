@@ -12,7 +12,6 @@ import (
 )
 
 func TestParams(t *testing.T) {
-
 	cfg := network.DefaultConfig(nil)
 
 	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd query perpetuals get-params"

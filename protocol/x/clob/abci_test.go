@@ -10,7 +10,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
@@ -34,6 +33,7 @@ import (
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/mock"
@@ -348,32 +348,44 @@ func TestEndBlocker_Success(t *testing.T) {
 			blockTime: unixTimeTen,
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext, m *mocks.MemClob) {
 				// Update perpetual prices
-				err := ks.PricesKeeper.UpdateMarketPrices(ctx, []*prices.MsgUpdateMarketPrices_MarketPrice{
-					{
-						MarketId: constants.ClobPair_Btc.Id,
-						Price: types.SubticksToPrice(
-							types.Subticks(10),
-							constants.BtcUsdExponent,
-							constants.ClobPair_Btc,
-							constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
-							lib.QuoteCurrencyAtomicResolution,
-						),
-					},
+				err := ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(ctx, &prices.MarketPriceUpdate{
+					MarketId: constants.ClobPair_Btc.Id,
+					SpotPrice: types.SubticksToPrice(
+						types.Subticks(10),
+						constants.BtcUsdExponent,
+						constants.ClobPair_Btc,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						lib.QuoteCurrencyAtomicResolution,
+					),
+					PnlPrice: types.SubticksToPrice(
+						types.Subticks(10),
+						constants.BtcUsdExponent,
+						constants.ClobPair_Btc,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						lib.QuoteCurrencyAtomicResolution,
+					),
 				})
+
 				require.NoError(t, err)
 
-				err = ks.PricesKeeper.UpdateMarketPrices(ctx, []*prices.MsgUpdateMarketPrices_MarketPrice{
-					{
-						MarketId: constants.ClobPair_Eth.Id,
-						Price: types.SubticksToPrice(
-							types.Subticks(35),
-							constants.EthUsdExponent,
-							constants.ClobPair_Eth,
-							constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
-							lib.QuoteCurrencyAtomicResolution,
-						),
-					},
+				err = ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(ctx, &prices.MarketPriceUpdate{
+					MarketId: constants.ClobPair_Eth.Id,
+					SpotPrice: types.SubticksToPrice(
+						types.Subticks(35),
+						constants.EthUsdExponent,
+						constants.ClobPair_Eth,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						lib.QuoteCurrencyAtomicResolution,
+					),
+					PnlPrice: types.SubticksToPrice(
+						types.Subticks(35),
+						constants.EthUsdExponent,
+						constants.ClobPair_Eth,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
+						lib.QuoteCurrencyAtomicResolution,
+					),
 				})
+
 				require.NoError(t, err)
 
 				ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
@@ -670,6 +682,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -698,6 +711,7 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.MarketType,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.DangerIndexPpm,
 					),
 				),
 			).Once().Return()
@@ -731,6 +745,7 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.ClobPair_Eth.StepBaseQuantums,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.MarketType,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.DangerIndexPpm,
 					),
 				),
 			).Once().Return()
@@ -1072,12 +1087,6 @@ func TestLiquidateSubaccounts(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
-			// Update the liquidatable subaccount IDs.
-			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				LiquidatableSubaccountIds: tc.liquidatableSubaccounts,
-			})
-			require.NoError(t, err)
-
 			// TODO(DEC-1971): Replace these test assertions with new verifications on operations queue.
 			// Verify test expectations.
 			// ctx, app = tApp.AdvanceToBlock(3)
@@ -1110,6 +1119,7 @@ func TestPrepareCheckState_WithProcessProposerMatchesEventsWithBadBlockHeight(t 
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
 			ks.ClobKeeper,
+			&cometabci.RequestCommit{},
 		)
 	})
 }
@@ -1136,6 +1146,7 @@ func TestCommitBlocker_WithProcessProposerMatchesEventsWithBadBlockHeight(t *tes
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
 			ks.ClobKeeper,
+			&cometabci.RequestCommit{},
 		)
 	})
 }
@@ -1247,9 +1258,8 @@ func TestPrepareCheckState(t *testing.T) {
 		processProposerMatchesEvents types.ProcessProposerMatchesEvents
 		// Memclob state.
 		placedOperations []types.Operation
-
-		// Parameters.
-		liquidatableSubaccounts []satypes.SubaccountId
+		// VE
+		extendCommitInfo *cometabci.RequestCommit
 
 		// Expectations.
 		expectedOperationsQueue []types.InternalOperation
@@ -1265,8 +1275,26 @@ func TestPrepareCheckState(t *testing.T) {
 				BlockHeight: 4,
 			},
 			placedOperations: []types.Operation{},
+			extendCommitInfo: &cometabci.RequestCommit{},
 
-			liquidatableSubaccounts: []satypes.SubaccountId{},
+			expectedOperationsQueue: []types.InternalOperation{},
+			expectedBids:            []memclob.OrderWithRemainingSize{},
+			expectedAsks:            []memclob.OrderWithRemainingSize{},
+		},
+		"Test VE price change": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_50PercentInitial_40PercentMaintenance,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			clobs:                     []types.ClobPair{constants.ClobPair_Btc},
+			preExistingStatefulOrders: []types.Order{},
+			processProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: 4,
+			},
+			placedOperations: []types.Operation{},
+			extendCommitInfo: &cometabci.RequestCommit{},
 
 			expectedOperationsQueue: []types.InternalOperation{},
 			expectedBids:            []memclob.OrderWithRemainingSize{},
@@ -1302,7 +1330,7 @@ func TestPrepareCheckState(t *testing.T) {
 					constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16.MustGetOrder(),
 				),
 			},
-			liquidatableSubaccounts: []satypes.SubaccountId{},
+			extendCommitInfo: &cometabci.RequestCommit{},
 
 			expectedOperationsQueue: []types.InternalOperation{
 				types.NewShortTermOrderPlacementInternalOperation(
@@ -1392,6 +1420,7 @@ func TestPrepareCheckState(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -1498,13 +1527,11 @@ func TestPrepareCheckState(t *testing.T) {
 				}
 			}
 
-			// Set the liquidatable subaccount IDs.
-			ks.ClobKeeper.DaemonLiquidationInfo.UpdateLiquidatableSubaccountIds(tc.liquidatableSubaccounts)
-
 			// Run the test.
 			clob.PrepareCheckState(
 				ctx,
 				ks.ClobKeeper,
+				tc.extendCommitInfo,
 			)
 
 			// Verify test expectations.

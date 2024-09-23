@@ -180,15 +180,25 @@ describe('market-updater', () => {
 
   it('getPriceChange', () => {
     const latestPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '2',
-      [testConstants.defaultOraclePrice2.marketId]: '3',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '2',
+        pnlPrice: '2',
+      },
+      [testConstants.defaultOraclePrice2.marketId]: {
+        spotPrice: '3',
+        pnlPrice: '3',
+      },
     };
     const previousPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '1',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '1',
+        pnlPrice: '1',
+      },
     };
     expect(
       getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
-    ).toEqual('1');
+    ).toEqual({ pnlPrice: '1', spotPrice: '1' });
+
     expect(
       getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),
     ).toEqual(undefined);
@@ -196,15 +206,24 @@ describe('market-updater', () => {
 
   it('getPriceChange with prices < 1e-6', () => {
     const latestPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '0.00000008',
-      [testConstants.defaultOraclePrice2.marketId]: '0.00000009',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '0.00000008',
+        pnlPrice: '0.00000008',
+      },
+      [testConstants.defaultOraclePrice2.marketId]: {
+        spotPrice: '0.00000009',
+        pnlPrice: '0.00000009',
+      },
     };
     const previousPrices: PriceMap = {
-      [testConstants.defaultOraclePrice.marketId]: '0.00000007',
+      [testConstants.defaultOraclePrice.marketId]: {
+        spotPrice: '0.00000007',
+        pnlPrice: '0.00000007',
+      },
     };
     expect(
       getPriceChange(testConstants.defaultOraclePrice.marketId, latestPrices, previousPrices),
-    ).toEqual('0.00000001');
+    ).toEqual({ pnlPrice: '0.00000001', spotPrice: '0.00000001' });
     expect(
       getPriceChange(testConstants.defaultOraclePrice2.marketId, latestPrices, previousPrices),
     ).toEqual(undefined);
@@ -230,19 +249,22 @@ describe('market-updater', () => {
 
     const oraclePrice3: OraclePriceCreateObject = {
       ...testConstants.defaultOraclePrice,
-      price: '3',
+      spotPrice: '3',
+      pnlPrice: '3',
       effectiveAtHeight: '3',
       effectiveAt: lessThan24HAgo,
     };
     const oraclePrice4: OraclePriceCreateObject = {
       ...testConstants.defaultOraclePrice,
-      price: '4',
+      spotPrice: '4',
+      pnlPrice: '4',
       effectiveAtHeight: '4',
       effectiveAt: moreThan24HAgo,
     };
     const oraclePrice6: OraclePriceCreateObject = {
       ...testConstants.defaultOraclePrice,
-      price: '6',
+      spotPrice: '6',
+      pnlPrice: '6',
       effectiveAtHeight: '6',
       effectiveAt: now,
     };

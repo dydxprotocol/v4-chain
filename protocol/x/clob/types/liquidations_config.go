@@ -7,16 +7,50 @@ import (
 
 // Validate validates each individual field of the liquidations config for validity.
 // It returns an error if any of the liquidation config fields fail the following validation:
-// - `maxLiquidationFee == 0 || maxLiquidationFee > 1_000_000`.
+// - `InsuranceFundFeePpm == 0 || InsuranceFundFeePpm > 1_000_000`.
+// - `ValidatorFeePpm > 1_000_000`.
+// - `LiquidityFeePpm > 1_000_000`.
 // - `bankruptcyAdjustmentPpm < 1_000_000`.
 // - `spreadToMaintenanceMarginRatioPpm == 0.
-// - `maxPositionPortionLiquidatedPpm == 0 || maxPositionPortionLiquidatedPpm > 1_000_000`.
-// - `maxNotionalLiquidated == 0`.
 // - `maxQuantumsInsuranceLost == 0`.
-//
-// Note that `minPositionNotionalLiquidated` is intentionally not validated.
 
 func (lc *LiquidationsConfig) Validate() error {
+
+	// Validate the InsuranceFundFeePpm.
+	if lc.InsuranceFundFeePpm == 0 || lc.InsuranceFundFeePpm > lib.OneMillion {
+		return errorsmod.Wrapf(
+			ErrInvalidLiquidationsConfig,
+			"%v is not a valid InsuranceFundFeePpm",
+			lc.InsuranceFundFeePpm,
+		)
+	}
+
+	// Validate the ValidatorFeePpm.
+	if lc.ValidatorFeePpm > lib.OneMillion {
+		return errorsmod.Wrapf(
+			ErrInvalidLiquidationsConfig,
+			"%v is not a valid ValidatorFeePpm",
+			lc.ValidatorFeePpm,
+		)
+	}
+
+	// Validate the LiquidityFeePpm.
+	if lc.LiquidityFeePpm > lib.OneMillion {
+		return errorsmod.Wrapf(
+			ErrInvalidLiquidationsConfig,
+			"%v is not a valid LiquidityFeePpm",
+			lc.LiquidityFeePpm,
+		)
+	}
+
+	if lc.ValidatorFeePpm+lc.LiquidityFeePpm > lib.OneMillion {
+		return errorsmod.Wrapf(
+			ErrInvalidLiquidationsConfig,
+			"%v is not a valid sum of ValidatorFeePpm and LiquidityFeePpm",
+			lc.ValidatorFeePpm+lc.LiquidityFeePpm,
+		)
+	}
+
 	// Validate the BankruptcyAdjustmentPpm.
 	bankruptcyAdjustmentPpm := lc.FillablePriceConfig.BankruptcyAdjustmentPpm
 	if bankruptcyAdjustmentPpm < lib.OneMillion {
@@ -34,35 +68,6 @@ func (lc *LiquidationsConfig) Validate() error {
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid SpreadToMaintenanceMarginRatioPpm",
 			spreadToMaintenanceMarginRatioPpm,
-		)
-	}
-
-	// Validate the MaxLiquidationFeePpm.
-	if lc.MaxLiquidationFeePpm == 0 || lc.MaxLiquidationFeePpm > lib.OneMillion {
-		return errorsmod.Wrapf(
-			ErrInvalidLiquidationsConfig,
-			"%v is not a valid MaxLiquidationFeePpm",
-			lc.MaxLiquidationFeePpm,
-		)
-	}
-
-	// Validate the MaxPositionPortionLiquidatedPpm.
-	maxPositionPortionLiquidatedPpm := lc.PositionBlockLimits.MaxPositionPortionLiquidatedPpm
-	if maxPositionPortionLiquidatedPpm == 0 || maxPositionPortionLiquidatedPpm > lib.OneMillion {
-		return errorsmod.Wrapf(
-			ErrInvalidLiquidationsConfig,
-			"%v is not a valid MaxPositionPortionLiquidatedPpm",
-			maxPositionPortionLiquidatedPpm,
-		)
-	}
-
-	// Validate the MaxNotionalLiquidated.
-	maxNotionalLiquidated := lc.SubaccountBlockLimits.MaxNotionalLiquidated
-	if maxNotionalLiquidated == 0 {
-		return errorsmod.Wrapf(
-			ErrInvalidLiquidationsConfig,
-			"%v is not a valid MaxNotionalLiquidated",
-			maxNotionalLiquidated,
 		)
 	}
 

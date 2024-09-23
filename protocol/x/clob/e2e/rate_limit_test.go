@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
@@ -18,6 +19,7 @@ import (
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	testtx "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/tx"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
@@ -605,8 +607,15 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 
 			if tc.advanceAfterCancelOrder {
 				// Don't deliver the transactions ensuring that it is re-added via Recheck
+				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+					&tApp.App.ConsumerKeeper,
+					ctx,
+					map[uint32]ve.VEPricePair{},
+					tApp.GetHeader().Height,
+				)
+				require.NoError(t, err)
 				ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
-					DeliverTxsOverride: make([][]byte, 0),
+					DeliverTxsOverride: [][]byte{extCommitBz},
 				})
 			}
 
@@ -622,8 +631,15 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 
 			if tc.advanceAfterCancelOrder {
 				// Don't deliver the transactions ensuring that it is re-added via Recheck
+				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+					&tApp.App.ConsumerKeeper,
+					ctx,
+					map[uint32]ve.VEPricePair{},
+					tApp.GetHeader().Height,
+				)
+				require.NoError(t, err)
 				ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
-					DeliverTxsOverride: make([][]byte, 0),
+					DeliverTxsOverride: [][]byte{extCommitBz},
 				})
 			}
 
@@ -715,8 +731,15 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 
 			if tc.advanceBlock {
 				// Don't deliver the transaction ensuring that it is re-added via Recheck
+				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+					&tApp.App.ConsumerKeeper,
+					ctx,
+					map[uint32]ve.VEPricePair{},
+					tApp.GetHeader().Height,
+				)
+				require.NoError(t, err)
 				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-					DeliverTxsOverride: make([][]byte, 0),
+					DeliverTxsOverride: [][]byte{extCommitBz},
 				})
 			}
 
@@ -730,8 +753,15 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 
 			if tc.advanceBlock {
 				// Don't deliver the transaction ensuring that it is re-added via Recheck
+				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+					&tApp.App.ConsumerKeeper,
+					ctx,
+					map[uint32]ve.VEPricePair{},
+					tApp.GetHeader().Height,
+				)
+				require.NoError(t, err)
 				ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
-					DeliverTxsOverride: make([][]byte, 0),
+					DeliverTxsOverride: [][]byte{extCommitBz},
 				})
 			}
 
@@ -798,10 +828,16 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *te
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5,
 	)
-
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
+		ctx,
+		map[uint32]ve.VEPricePair{},
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
 	// We expect both to be accepted even though the rate limit is 1.
 	tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
-		DeliverTxsOverride: [][]byte{firstMarketCheckTx.Tx, secondMarketCheckTx.Tx},
+		DeliverTxsOverride: [][]byte{extCommitBz, firstMarketCheckTx.Tx, secondMarketCheckTx.Tx},
 	})
 }
 

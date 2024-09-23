@@ -25,6 +25,8 @@ export enum QueryableField {
   SIZE = 'size',
   TOTAL_FILLED = 'totalFilled',
   PRICE = 'price',
+  SPOT_PRICE = 'spotPrice',
+  PNL_PRICE = 'pnlPrice',
   TYPE = 'type',
   STATUS = 'status',
   STATUSES = 'statuses',
@@ -241,7 +243,8 @@ export interface ToAndFromSubaccountTransferQueryConfig extends QueryConfig {
 export interface OraclePriceQueryConfig extends QueryConfig {
   [QueryableField.ID]?: string[];
   [QueryableField.MARKET_ID]?: number[];
-  [QueryableField.PRICE]?: string[];
+  [QueryableField.SPOT_PRICE]?: string[];
+  [QueryableField.PNL_PRICE]?: string[];
   [QueryableField.EFFECTIVE_AT]?: string;
   [QueryableField.EFFECTIVE_AT_HEIGHT]?: string;
   [QueryableField.EFFECTIVE_BEFORE_OR_AT]?: string;

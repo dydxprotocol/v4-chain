@@ -10,27 +10,48 @@ import (
 )
 
 // getProposalPrice returns the proposed price update for the next block, which is either the smoothed price or the
-// index price - whichever is closer to the current market price. In cases where the smoothed price and the index price
+// daemon price - whichever is closer to the current market price. In cases where the smoothed price and the daemon price
 // are equidistant from the current market price, the smoothed price is chosen.
-func getProposalPrice(smoothedPrice uint64, indexPrice uint64, marketPrice uint64) uint64 {
-	if lib.AbsDiffUint64(smoothedPrice, marketPrice) > lib.AbsDiffUint64(indexPrice, marketPrice) {
-		return indexPrice
+func getProposalPrice(smoothedPrice uint64, daemonPrice uint64, marketPrice uint64) uint64 {
+	if lib.AbsDiffUint64(smoothedPrice, marketPrice) > lib.AbsDiffUint64(daemonPrice, marketPrice) {
+		return daemonPrice
 	}
 	return smoothedPrice
 }
 
 // isAboveRequiredMinPriceChange returns true if the new price meets the required min price change
 // for the market. Otherwise, returns false.
-func isAboveRequiredMinPriceChange(marketParamPrice types.MarketParamPrice, newPrice uint64) bool {
-	minChangeAmt := getMinPriceChangeAmountForMarket(marketParamPrice)
-	return lib.AbsDiffUint64(marketParamPrice.Price.Price, newPrice) >= minChangeAmt
+func isAboveRequiredMinSpotPriceChange(marketParamPrice types.MarketParamPrice, newPrice uint64) bool {
+	minSpotChangeAmt := getMinPriceChangeAmountForSpotMarket(marketParamPrice)
+	return lib.AbsDiffUint64(marketParamPrice.Price.SpotPrice, newPrice) >= minSpotChangeAmt
+}
+
+func isAboveRequiredMinPnlPriceChange(marketParamPrice types.MarketParamPrice, newPrice uint64) bool {
+	minPnlChangeAmt := getMinPriceChangeAmountForPnlMarket(marketParamPrice)
+	return lib.AbsDiffUint64(marketParamPrice.Price.PnlPrice, newPrice) >= minPnlChangeAmt
 }
 
 // getMinPriceChangeAmountForMarket returns the amount of price change that is needed to trigger
 // a price update in accordance with the min price change parts-per-million value. This method always rounds down,
 // which slightly biases towards price updates.
-func getMinPriceChangeAmountForMarket(marketParamPrice types.MarketParamPrice) uint64 {
-	bigPrice := new(big.Int).SetUint64(marketParamPrice.Price.Price)
+func getMinPriceChangeAmountForSpotMarket(marketParamPrice types.MarketParamPrice) uint64 {
+	bigPrice := new(big.Int).SetUint64(marketParamPrice.Price.SpotPrice)
+	// There's no need to multiply this by the market's exponent, because `Price` comparisons are
+	// done without the market's exponent.
+	bigMinChangeAmt := lib.BigIntMulPpm(bigPrice, marketParamPrice.Param.MinPriceChangePpm)
+
+	if !bigMinChangeAmt.IsUint64() {
+		// This means that the min change amount is greater than the max uint64. This can only
+		// happen if the `MinPriceChangePpm` > 1,000,000 and there's a validation when
+		// creating/modifying the `Market`.
+		panic(errors.New("getMinPriceChangeAmountForMarket: min price change amount is greater than max uint64 value"))
+	}
+
+	return bigMinChangeAmt.Uint64()
+}
+
+func getMinPriceChangeAmountForPnlMarket(marketParamPrice types.MarketParamPrice) uint64 {
+	bigPrice := new(big.Int).SetUint64(marketParamPrice.Price.PnlPrice)
 	// There's no need to multiply this by the market's exponent, because `Price` comparisons are
 	// done without the market's exponent.
 	bigMinChangeAmt := lib.BigIntMulPpm(bigPrice, marketParamPrice.Param.MinPriceChangePpm)
@@ -47,34 +68,34 @@ func getMinPriceChangeAmountForMarket(marketParamPrice types.MarketParamPrice) u
 
 // PriceTuple labels and encapsulates the set of prices used for various price computations.
 type PriceTuple struct {
-	OldPrice   uint64
-	IndexPrice uint64
-	NewPrice   uint64
+	OldPrice    uint64
+	DaemonPrice uint64
+	NewPrice    uint64
 }
 
-// isTowardsIndexPrice returns true if the new price is between the current price and the index
+// isTowardsDaemonPrice returns true if the new price is between the current price and the daemon
 // price, inclusive. Otherwise, it returns false.
-func isTowardsIndexPrice(
+func isTowardsDaemonPrice(
 	priceTuple PriceTuple,
 ) bool {
-	return priceTuple.NewPrice <= lib.Max(priceTuple.OldPrice, priceTuple.IndexPrice) &&
-		priceTuple.NewPrice >= lib.Min(priceTuple.OldPrice, priceTuple.IndexPrice)
+	return priceTuple.NewPrice <= lib.Max(priceTuple.OldPrice, priceTuple.DaemonPrice) &&
+		priceTuple.NewPrice >= lib.Min(priceTuple.OldPrice, priceTuple.DaemonPrice)
 }
 
-// isCrossingIndexPrice returns true if index price is between the current and the new price,
+// isCrossingDaemonPrice returns true if daemon price is between the current and the new price,
 // noninclusive. Otherwise, returns false.
-func isCrossingIndexPrice(
+func isCrossingDaemonPrice(
 	priceTuple PriceTuple,
 ) bool {
-	return isCrossingReferencePrice(priceTuple.OldPrice, priceTuple.IndexPrice, priceTuple.NewPrice)
+	return isCrossingReferencePrice(priceTuple.OldPrice, priceTuple.DaemonPrice, priceTuple.NewPrice)
 }
 
-// isCrossingOldPrice returns true if the old price is between the index price and the new
+// isCrossingOldPrice returns true if the old price is between the daemon price and the new
 // price, noninclusive. Otherwise, returns false.
 func isCrossingOldPrice(
 	priceTuple PriceTuple,
 ) bool {
-	return isCrossingReferencePrice(priceTuple.IndexPrice, priceTuple.OldPrice, priceTuple.NewPrice)
+	return isCrossingReferencePrice(priceTuple.DaemonPrice, priceTuple.OldPrice, priceTuple.NewPrice)
 }
 
 // isCrossingReferencePrice returns true if the reference price is between the base price and the
@@ -105,8 +126,8 @@ func priceDeltaIsWithinOneTick(priceDelta *big.Int, tickSizePpm *big.Int) bool {
 	return priceDeltaPpm.Cmp(tickSizePpm) <= 0
 }
 
-// newPriceMeetsSqrtCondition calculates the price acceptance condition when the new price crosses the index
-// price and the price change from the current price to the index price, or old_ticks, is > 1 tick.
+// newPriceMeetsSqrtCondition calculates the price acceptance condition when the new price crosses the daemon
+// price and the price change from the current price to the daemon price, or old_ticks, is > 1 tick.
 //
 // Ticks are computed at the currency's current price.
 //
@@ -126,10 +147,10 @@ func newPriceMeetsSqrtCondition(oldDelta *big.Int, newDelta *big.Int, tickSizePp
 }
 
 // maximumAllowedPriceDelta computes the maximum allowable value of new_delta under the conditions
-// that the proposed price is crossing in the index price, and old_ticks > 1. This method uses potentially
+// that the proposed price is crossing in the daemon price, and old_ticks > 1. This method uses potentially
 // lossy arithmetic and is only for logging purposes.
 func maximumAllowedPriceDelta(oldDelta *big.Int, tickSizePpm *big.Int) *big.Int {
-	// Compute maximum allowable new_delta, or price difference between the index price
+	// Compute maximum allowable new_delta, or price difference between the daemon price
 	// and the proposed price:
 	// max_allowed = sqrt(old_delta * tick_size_ppm / 1_000_000)
 	maxAllowed := new(big.Int).Mul(oldDelta, tickSizePpm)

@@ -1,0 +1,26 @@
+syntax = "proto3";
+package dydxprotocol.daemons.deleveraging;
+
+import "gogoproto/gogo.proto";
+import "dydxprotocol/clob/liquidations.proto";
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api";
+
+// DeleveragingService defines the gRPC service used by deleveraging daemon.
+service DeleveragingService {
+  // Sends a list of subaccount ids that can be deleveraged against
+  rpc UpdateSubaccountsListForDeleveragingDaemon(UpdateSubaccountsListForDeleveragingDaemonRequest)
+      returns (UpdateSubaccountsListForDeleveragingDaemonResponse);
+}
+
+// UpdateSubaccountsListForDeleveragingDaemonRequest is a request message that contains a list of
+// perpetuals with the associated subaccounts that have open long and short positions
+message UpdateSubaccountsListForDeleveragingDaemonRequest {
+  // A map of perpetual id to subaccount open position info.
+  repeated dydxprotocol.clob.SubaccountOpenPositionInfo
+      subaccount_open_position_info = 1 [ (gogoproto.nullable) = false ];
+}
+
+// UpdateSubaccountsListForDeleveragingDaemonResponse is a response message for
+// UpdateSubaccountsListForDeleveragingDaemonRequest.
+message UpdateSubaccountsListForDeleveragingDaemonResponse {}

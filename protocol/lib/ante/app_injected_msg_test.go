@@ -11,7 +11,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
 	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 )
 
 var (
@@ -32,7 +32,7 @@ func TestIsSingleAppInjectedMsg(t *testing.T) {
 		},
 		"single msg: app-injected msg": {
 			msgs: []sdk.Msg{
-				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
+				&perptypes.MsgAddPremiumVotes{}, // app-injected.
 			},
 			expectedResult: true,
 		},
@@ -42,15 +42,15 @@ func TestIsSingleAppInjectedMsg(t *testing.T) {
 		},
 		"mult msg: all app-injected msgs": {
 			msgs: []sdk.Msg{
-				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
-				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
+				&perptypes.MsgAddPremiumVotes{},
+				&perptypes.MsgAddPremiumVotes{}, // app-injected.
 			},
 			expectedResult: false,
 		},
 		"mult msg: mixed": {
 			msgs: []sdk.Msg{
 				testMsg,
-				&pricestypes.MsgUpdateMarketPrices{}, // app-injected.
+				&perptypes.MsgAddPremiumVotes{}, // app-injected.
 			},
 			expectedResult: false,
 		},

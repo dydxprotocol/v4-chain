@@ -6,7 +6,6 @@ import { KafkaMessage } from 'kafkajs';
 
 import config from '../../config';
 import { onBatch } from '../../lib/on-batch';
-
 import { onMessage } from '../../lib/on-message';
 
 export async function connect(): Promise<void> {
@@ -22,7 +21,6 @@ export async function connect(): Promise<void> {
     // rather than ignoring the messages in queue that were produced before ender was started.
     fromBeginning: true,
   });
-
 
   if (config.BATCH_PROCESSING_ENABLED) {
     logger.info({

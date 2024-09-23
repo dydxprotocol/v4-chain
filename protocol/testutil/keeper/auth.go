@@ -43,6 +43,7 @@ func createAccountKeeper(
 		perpetualstypes.InsuranceFundName: nil,
 		ratelimittypes.SDaiPoolAccount:    nil,
 		ibctransfertypes.ModuleName:       {types.Minter, types.Burner},
+		satypes.LiquidityFeeModuleAddress: nil,
 	}
 
 	k := keeper.NewAccountKeeper(

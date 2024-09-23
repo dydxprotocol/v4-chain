@@ -83,7 +83,11 @@ message MarketPriceUpdateEventV1 {
   // price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
   // price in dollars. For example if `Exponent == -5` then a `exponent_price`
   // of `1,000,000,000` represents “$10,000`.
-  uint64 price_with_exponent = 1;
+  uint64 spot_price_with_exponent = 1;
+  // pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
+  // price in dollars. For example if `Exponent == -5` then a `exponent_price`
+  // of `1,000,000,000` represents “$10,000`.
+  uint64 pnl_price_with_exponent = 2;
 }
 
 // shared fields between MarketCreateEvent and MarketModifyEvent
@@ -408,6 +412,9 @@ message PerpetualMarketCreateEventV2 {
 
   // Market type of the perpetual.
   dydxprotocol.indexer.protocol.v1.PerpetualMarketType market_type = 11;
+
+  // The danger index is used to prioritze certain accounts and positions in liquidations
+  uint32 danger_index_ppm = 12;
 }
 
 // LiquidityTierUpsertEventV1 message contains all the information to
@@ -546,8 +553,11 @@ message UpdatePerpetualEventV1 {
   // Defined in perpetuals.perpetual
   uint32 liquidity_tier = 5;
 
+  // The danger index is used to prioritze certain accounts and positions in liquidations
+  uint32 danger_index_ppm = 6;
+
   // The perp yield index of this perpetual market 
-  string perp_yield_index = 6;
+  string perp_yield_index = 7;
 }
 
 // UpdateYieldParamsV1 message contains all the information about an update

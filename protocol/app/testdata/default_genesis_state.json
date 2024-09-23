@@ -54,7 +54,7 @@
       "transfer_timeout_period": "3600s",
       "consumer_redistribution_fraction": "0.75",
       "historical_entries": "10000",
-      "unbonding_period": "1209600s",
+      "unbonding_period": "604800s",
       "reward_denoms": [],
       "provider_reward_denoms": [],
       "retry_delay_period": "3600s"
@@ -73,13 +73,10 @@
   "clob": {
     "clob_pairs": [],
     "liquidations_config": {
-      "max_liquidation_fee_ppm": 5000,
-      "position_block_limits": {
-        "min_position_notional_liquidated": "1000",
-        "max_position_portion_liquidated_ppm": 1000000
-      },
+      "insurance_fund_fee_ppm": 5000,
+      "validator_fee_ppm": 200000,
+      "liquidity_fee_ppm": 800000,
       "subaccount_block_limits": {
-        "max_notional_liquidated": "100000000000000",
         "max_quantums_insurance_lost": "100000000000000"
       },
       "fillable_price_config": {
@@ -322,12 +319,14 @@
       {
         "exponent": -5,
         "id": 0,
-        "price": "2000000000"
+        "spot_price": "2000000000",
+        "pnl_price": "2000000000"
       },
       {
         "exponent": -6,
         "id": 1,
-        "price": "1500000000"
+        "spot_price": "1500000000",
+        "pnl_price": "1500000000"
       }
     ]
   },

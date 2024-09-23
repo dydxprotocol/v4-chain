@@ -50,7 +50,8 @@ describe('marketModifyHandler', () => {
       const marketEvent: MarketEventV1 = {
         marketId: 0,
         priceUpdate: {
-          priceWithExponent: Long.fromValue(1, true),
+          spotPriceWithExponent: Long.fromValue(1, true),
+          pnlPriceWithExponent: Long.fromValue(1, true),
         },
       };
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(

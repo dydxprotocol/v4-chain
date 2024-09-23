@@ -25,7 +25,7 @@ func TestDecodeProposedOperationsTx(t *testing.T) {
 	duplicateMsgTxBytes, _ := encodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 
 	// Incorrect type.
-	incorrectMsgTxBytes := constants.ValidMsgUpdateMarketPricesTxBytes
+	incorrectMsgTxBytes := constants.ValidMsgAddPremiumVotesTxBytes
 
 	tests := map[string]struct {
 		txBytes []byte
@@ -51,7 +51,7 @@ func TestDecodeProposedOperationsTx(t *testing.T) {
 			txBytes: incorrectMsgTxBytes,
 			expectedErr: errors.New(
 				"Expected MsgType types.MsgProposedOperations, but " +
-					"got *types.MsgUpdateMarketPrices: Unexpected msg type",
+					"got *types.MsgAddPremiumVotes: Unexpected msg type",
 			),
 		},
 		"Valid": {

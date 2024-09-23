@@ -779,7 +779,10 @@
           "status": {
             "$ref": "#/components/schemas/PerpetualMarketStatus"
           },
-          "oraclePrice": {
+          "spotPrice": {
+            "type": "string"
+          },
+          "pnlPrice": {
             "type": "string"
           },
           "priceChange24H": {
@@ -805,6 +808,10 @@
             "type": "string"
           },
           "atomicResolution": {
+            "type": "number",
+            "format": "double"
+          },
+          "dangerIndexPpm": {
             "type": "number",
             "format": "double"
           },
@@ -846,7 +853,8 @@
           "clobPairId",
           "ticker",
           "status",
-          "oraclePrice",
+          "spotPrice",
+          "pnlPrice",
           "priceChange24H",
           "volume24H",
           "trades24H",
@@ -855,6 +863,7 @@
           "maintenanceMarginFraction",
           "openInterest",
           "atomicResolution",
+          "dangerIndexPpm",
           "quantumConversionExponent",
           "tickSize",
           "stepSize",

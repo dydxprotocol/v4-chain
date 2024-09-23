@@ -3,6 +3,7 @@ package types
 import (
 	"math/big"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/heap"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -10,6 +11,14 @@ import (
 // LiquidationsKeeper is an interface that encapsulates all reads and writes to the
 // in-memory data structures that store liquidation information.
 type LiquidationsKeeper interface {
+	LiquidateSubaccountsAgainstOrderbookInternal(
+		ctx sdk.Context,
+		subaccountIds *heap.LiquidationPriorityHeap,
+		isolatedPositionsPriorityHeap *heap.LiquidationPriorityHeap,
+	) (
+		subaccountsToDeleverage []heap.SubaccountToDeleverage,
+		err error,
+	)
 	PlacePerpetualLiquidation(
 		ctx sdk.Context,
 		liquidationOrder LiquidationOrder,
@@ -39,25 +48,24 @@ type LiquidationsKeeper interface {
 		perpetualId uint32,
 		deltaQuantums *big.Int,
 	) (
-		quoteQuantums *big.Int,
+		bankruptcyPriceQuoteQuantumsBig *big.Int,
 		err error,
 	)
 	GetFillablePrice(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
-		deltaQuantums *big.Int,
 	) (
 		fillablePrice *big.Rat,
 		err error,
 	)
-	GetInsuranceFundBalance(
+	GetInsuranceFundBalanceInQuoteQuantums(
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (
 		balance *big.Int,
 	)
-	GetLiquidationInsuranceFundDelta(
+	GetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
@@ -65,30 +73,23 @@ type LiquidationsKeeper interface {
 		fillAmount uint64,
 		subticks Subticks,
 	) (
-		insuranceFundDeltaQuoteQuantums *big.Int,
+		remainingQuoteQuantumsBig *big.Int,
+		insuranceFundFeeQuoteQuantums *big.Int,
 		err error,
 	)
-	ConvertFillablePriceToSubticks(
+	ConvertLiquidationPriceToSubticks(
 		ctx sdk.Context,
-		fillablePrice *big.Rat,
+		liquidationPrice *big.Rat,
 		isLiquidatingLong bool,
 		clobPair ClobPair,
 	) (
 		subticks Subticks,
 	)
-	GetPerpetualPositionToLiquidate(
+	GetBestPerpetualPositionToLiquidate(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 	) (
 		perpetualId uint32,
-		err error,
-	)
-	GetSubaccountMaxNotionalLiquidatable(
-		ctx sdk.Context,
-		subaccountId satypes.SubaccountId,
-		perpetualId uint32,
-	) (
-		bigMaxNotionalLiquidatable *big.Int,
 		err error,
 	)
 	GetSubaccountMaxInsuranceLost(
@@ -97,15 +98,6 @@ type LiquidationsKeeper interface {
 		perpetualId uint32,
 	) (
 		bigMaxQuantumsInsuranceLost *big.Int,
-		err error,
-	)
-	GetMaxAndMinPositionNotionalLiquidatable(
-		ctx sdk.Context,
-		positionToLiquidate *satypes.PerpetualPosition,
-	) (
-		bigMinNotionalLiquidatable *big.Int,
-		bigMaxNotionalLiquidatable *big.Int,
-		err error,
 	)
 	MaybeGetLiquidationOrder(
 		ctx sdk.Context,
@@ -113,6 +105,15 @@ type LiquidationsKeeper interface {
 	) (
 		liquidationOrder *LiquidationOrder,
 		err error,
+	)
+	GetNextSubaccountToLiquidate(
+		ctx sdk.Context,
+		subaccountIds *heap.LiquidationPriorityHeap,
+		isolatedPositionsPriorityHeap *heap.LiquidationPriorityHeap,
+		numIsolatedLiquidations *int,
+	) (
+		subaccount satypes.Subaccount,
+		subaccountId *heap.LiquidationPriority,
 	)
 	GetSubaccountLiquidationInfo(
 		ctx sdk.Context,
@@ -128,7 +129,6 @@ type LiquidationsKeeper interface {
 	UpdateSubaccountLiquidationInfo(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
-		notionalLiquidatedQuoteQuantums *big.Int,
 		insuranceFundDeltaQuoteQuantums *big.Int,
 	)
 }

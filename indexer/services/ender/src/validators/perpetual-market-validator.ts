@@ -6,7 +6,9 @@ import { Handler } from '../handlers/handler';
 import { PerpetualMarketCreationHandler } from '../handlers/perpetual-market-handler';
 import { Validator } from './validator';
 
-export class PerpetualMarketValidator extends Validator<PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2> {
+export class PerpetualMarketValidator extends Validator<
+  PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2
+> {
   public validate(): void {
     if (perpetualMarketRefresher.getPerpetualMarketFromId(this.event.id.toString()) !== undefined) {
       return this.logAndThrowParseMessageError(

@@ -104,7 +104,7 @@ func NotionalToCoinAmount(
 	marketPrice pricestypes.MarketPrice,
 ) *big.Rat {
 	fullCoinPrice := lib.BigMulPow10(
-		new(big.Int).SetUint64(marketPrice.Price),
+		new(big.Int).SetUint64(marketPrice.PnlPrice),
 		marketPrice.Exponent,
 	)
 	ret := lib.BigMulPow10(notionalQuoteQuantums, quoteAtomicResolution-denomExp)

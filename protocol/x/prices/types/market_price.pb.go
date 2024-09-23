@@ -22,16 +22,19 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MarketPrice is used by the application to store/retrieve oracle price.
+// MarketPrice is used by the application to store/retrieve oracle prices.
 type MarketPrice struct {
 	// Unique, sequentially-generated value that matches `MarketParam`.
 	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Static value. The exponent of the price. See the comment on the duplicate
 	// MarketParam field for more information.
 	Exponent int32 `protobuf:"zigzag32,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
-	// The variable value that is updated by oracle price updates. `0` if it has
+	// The spot price value that is updated by oracle price updates. `0` if it has
 	// never been updated, `>0` otherwise.
-	Price uint64 `protobuf:"varint,3,opt,name=price,proto3" json:"price,omitempty"`
+	SpotPrice uint64 `protobuf:"varint,3,opt,name=spot_price,json=spotPrice,proto3" json:"spot_price,omitempty"`
+	// The pnl price value that is updated by oracle price updates. `0` if it has
+	// never been updated, `>0` otherwise.
+	PnlPrice uint64 `protobuf:"varint,4,opt,name=pnl_price,json=pnlPrice,proto3" json:"pnl_price,omitempty"`
 }
 
 func (m *MarketPrice) Reset()         { *m = MarketPrice{} }
@@ -81,15 +84,312 @@ func (m *MarketPrice) GetExponent() int32 {
 	return 0
 }
 
-func (m *MarketPrice) GetPrice() uint64 {
+func (m *MarketPrice) GetSpotPrice() uint64 {
 	if m != nil {
-		return m.Price
+		return m.SpotPrice
 	}
 	return 0
 }
 
+func (m *MarketPrice) GetPnlPrice() uint64 {
+	if m != nil {
+		return m.PnlPrice
+	}
+	return 0
+}
+
+// MarketSpotPrice is used by the application to store/retrieve spot prices.
+type MarketSpotPrice struct {
+	// Unique, sequentially-generated value that matches `MarketParam`.
+	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Static value. The exponent of the price. See the comment on the duplicate
+	// MarketParam field for more information.
+	Exponent int32 `protobuf:"zigzag32,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
+	// The spot price value that is updated by oracle price updates. `0` if it has
+	// never been updated, `>0` otherwise.
+	SpotPrice uint64 `protobuf:"varint,3,opt,name=spot_price,json=spotPrice,proto3" json:"spot_price,omitempty"`
+}
+
+func (m *MarketSpotPrice) Reset()         { *m = MarketSpotPrice{} }
+func (m *MarketSpotPrice) String() string { return proto.CompactTextString(m) }
+func (*MarketSpotPrice) ProtoMessage()    {}
+func (*MarketSpotPrice) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dfe320bc057cd5ae, []int{1}
+}
+func (m *MarketSpotPrice) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MarketSpotPrice) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MarketSpotPrice.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MarketSpotPrice) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MarketSpotPrice.Merge(m, src)
+}
+func (m *MarketSpotPrice) XXX_Size() int {
+	return m.Size()
+}
+func (m *MarketSpotPrice) XXX_DiscardUnknown() {
+	xxx_messageInfo_MarketSpotPrice.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MarketSpotPrice proto.InternalMessageInfo
+
+func (m *MarketSpotPrice) GetId() uint32 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+func (m *MarketSpotPrice) GetExponent() int32 {
+	if m != nil {
+		return m.Exponent
+	}
+	return 0
+}
+
+func (m *MarketSpotPrice) GetSpotPrice() uint64 {
+	if m != nil {
+		return m.SpotPrice
+	}
+	return 0
+}
+
+// MarketPriceUpdate is used to update the price of a single market.
+type MarketPriceUpdate struct {
+	// The id of market to update
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// The updated spot price
+	SpotPrice uint64 `protobuf:"varint,2,opt,name=spot_price,json=spotPrice,proto3" json:"spot_price,omitempty"`
+	// The updated pnl price
+	PnlPrice uint64 `protobuf:"varint,3,opt,name=pnl_price,json=pnlPrice,proto3" json:"pnl_price,omitempty"`
+}
+
+func (m *MarketPriceUpdate) Reset()         { *m = MarketPriceUpdate{} }
+func (m *MarketPriceUpdate) String() string { return proto.CompactTextString(m) }
+func (*MarketPriceUpdate) ProtoMessage()    {}
+func (*MarketPriceUpdate) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dfe320bc057cd5ae, []int{2}
+}
+func (m *MarketPriceUpdate) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MarketPriceUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MarketPriceUpdate.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MarketPriceUpdate) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MarketPriceUpdate.Merge(m, src)
+}
+func (m *MarketPriceUpdate) XXX_Size() int {
+	return m.Size()
+}
+func (m *MarketPriceUpdate) XXX_DiscardUnknown() {
+	xxx_messageInfo_MarketPriceUpdate.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MarketPriceUpdate proto.InternalMessageInfo
+
+func (m *MarketPriceUpdate) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *MarketPriceUpdate) GetSpotPrice() uint64 {
+	if m != nil {
+		return m.SpotPrice
+	}
+	return 0
+}
+
+func (m *MarketPriceUpdate) GetPnlPrice() uint64 {
+	if m != nil {
+		return m.PnlPrice
+	}
+	return 0
+}
+
+// MarketSpotPriceUpdate is used to update the spot price of a single market.
+type MarketSpotPriceUpdate struct {
+	// The id of market to update
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// The updated spot price
+	SpotPrice uint64 `protobuf:"varint,2,opt,name=spot_price,json=spotPrice,proto3" json:"spot_price,omitempty"`
+}
+
+func (m *MarketSpotPriceUpdate) Reset()         { *m = MarketSpotPriceUpdate{} }
+func (m *MarketSpotPriceUpdate) String() string { return proto.CompactTextString(m) }
+func (*MarketSpotPriceUpdate) ProtoMessage()    {}
+func (*MarketSpotPriceUpdate) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dfe320bc057cd5ae, []int{3}
+}
+func (m *MarketSpotPriceUpdate) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MarketSpotPriceUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MarketSpotPriceUpdate.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MarketSpotPriceUpdate) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MarketSpotPriceUpdate.Merge(m, src)
+}
+func (m *MarketSpotPriceUpdate) XXX_Size() int {
+	return m.Size()
+}
+func (m *MarketSpotPriceUpdate) XXX_DiscardUnknown() {
+	xxx_messageInfo_MarketSpotPriceUpdate.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MarketSpotPriceUpdate proto.InternalMessageInfo
+
+func (m *MarketSpotPriceUpdate) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *MarketSpotPriceUpdate) GetSpotPrice() uint64 {
+	if m != nil {
+		return m.SpotPrice
+	}
+	return 0
+}
+
+// MarketPnlPriceUpdate is used to update the pnl price of a single market.
+type MarketPnlPriceUpdate struct {
+	// The id of market to update
+	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// The updated pnl price
+	PnlPrice uint64 `protobuf:"varint,2,opt,name=pnl_price,json=pnlPrice,proto3" json:"pnl_price,omitempty"`
+}
+
+func (m *MarketPnlPriceUpdate) Reset()         { *m = MarketPnlPriceUpdate{} }
+func (m *MarketPnlPriceUpdate) String() string { return proto.CompactTextString(m) }
+func (*MarketPnlPriceUpdate) ProtoMessage()    {}
+func (*MarketPnlPriceUpdate) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dfe320bc057cd5ae, []int{4}
+}
+func (m *MarketPnlPriceUpdate) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MarketPnlPriceUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MarketPnlPriceUpdate.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MarketPnlPriceUpdate) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MarketPnlPriceUpdate.Merge(m, src)
+}
+func (m *MarketPnlPriceUpdate) XXX_Size() int {
+	return m.Size()
+}
+func (m *MarketPnlPriceUpdate) XXX_DiscardUnknown() {
+	xxx_messageInfo_MarketPnlPriceUpdate.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MarketPnlPriceUpdate proto.InternalMessageInfo
+
+func (m *MarketPnlPriceUpdate) GetMarketId() uint32 {
+	if m != nil {
+		return m.MarketId
+	}
+	return 0
+}
+
+func (m *MarketPnlPriceUpdate) GetPnlPrice() uint64 {
+	if m != nil {
+		return m.PnlPrice
+	}
+	return 0
+}
+
+// MarketPriceUpdates is a collection of MarketPriceUpdate messages.
+type MarketPriceUpdates struct {
+	MarketPriceUpdates []*MarketPriceUpdate `protobuf:"bytes,1,rep,name=market_price_updates,json=marketPriceUpdates,proto3" json:"market_price_updates,omitempty"`
+}
+
+func (m *MarketPriceUpdates) Reset()         { *m = MarketPriceUpdates{} }
+func (m *MarketPriceUpdates) String() string { return proto.CompactTextString(m) }
+func (*MarketPriceUpdates) ProtoMessage()    {}
+func (*MarketPriceUpdates) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dfe320bc057cd5ae, []int{5}
+}
+func (m *MarketPriceUpdates) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MarketPriceUpdates) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MarketPriceUpdates.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MarketPriceUpdates) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MarketPriceUpdates.Merge(m, src)
+}
+func (m *MarketPriceUpdates) XXX_Size() int {
+	return m.Size()
+}
+func (m *MarketPriceUpdates) XXX_DiscardUnknown() {
+	xxx_messageInfo_MarketPriceUpdates.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MarketPriceUpdates proto.InternalMessageInfo
+
+func (m *MarketPriceUpdates) GetMarketPriceUpdates() []*MarketPriceUpdate {
+	if m != nil {
+		return m.MarketPriceUpdates
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*MarketPrice)(nil), "dydxprotocol.prices.MarketPrice")
+	proto.RegisterType((*MarketSpotPrice)(nil), "dydxprotocol.prices.MarketSpotPrice")
+	proto.RegisterType((*MarketPriceUpdate)(nil), "dydxprotocol.prices.MarketPriceUpdate")
+	proto.RegisterType((*MarketSpotPriceUpdate)(nil), "dydxprotocol.prices.MarketSpotPriceUpdate")
+	proto.RegisterType((*MarketPnlPriceUpdate)(nil), "dydxprotocol.prices.MarketPnlPriceUpdate")
+	proto.RegisterType((*MarketPriceUpdates)(nil), "dydxprotocol.prices.MarketPriceUpdates")
 }
 
 func init() {
@@ -97,20 +397,28 @@ func init() {
 }
 
 var fileDescriptor_dfe320bc057cd5ae = []byte{
-	// 209 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4b, 0xa9, 0x4c, 0xa9,
-	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x2f, 0x28, 0xca, 0x4c, 0x4e, 0x2d, 0xd6,
-	0xcf, 0x4d, 0x2c, 0xca, 0x4e, 0x2d, 0x89, 0x07, 0xf3, 0xf4, 0xc0, 0x92, 0x42, 0xc2, 0xc8, 0xea,
-	0xf4, 0x20, 0xea, 0x94, 0xfc, 0xb9, 0xb8, 0x7d, 0xc1, 0x4a, 0x03, 0x40, 0x7c, 0x21, 0x3e, 0x2e,
-	0xa6, 0xcc, 0x14, 0x09, 0x46, 0x05, 0x46, 0x0d, 0xde, 0x20, 0xa6, 0xcc, 0x14, 0x21, 0x29, 0x2e,
-	0x8e, 0xd4, 0x8a, 0x82, 0xfc, 0xbc, 0xd4, 0xbc, 0x12, 0x09, 0x26, 0x05, 0x46, 0x0d, 0xc1, 0x20,
-	0x38, 0x5f, 0x48, 0x84, 0x8b, 0x15, 0x6c, 0x88, 0x04, 0xb3, 0x02, 0xa3, 0x06, 0x4b, 0x10, 0x84,
-	0xe3, 0x94, 0x70, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e,
-	0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x6e, 0xe9, 0x99,
-	0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0xc1, 0x25, 0x45, 0xa9, 0x89, 0xb9, 0x6e,
-	0x99, 0x79, 0x89, 0x79, 0xc9, 0xa9, 0xba, 0x01, 0x30, 0xc7, 0x17, 0x83, 0x85, 0x75, 0x93, 0x33,
-	0x12, 0x33, 0xf3, 0xf4, 0xe1, 0x5e, 0xaa, 0x80, 0x79, 0xaa, 0xa4, 0xb2, 0x20, 0xb5, 0x38, 0x89,
-	0x0d, 0x2c, 0x61, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0xbd, 0x0f, 0x5d, 0x9e, 0xf8, 0x00, 0x00,
+	// 337 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x52, 0xc1, 0x4a, 0xc3, 0x40,
+	0x14, 0xec, 0xa6, 0x45, 0xda, 0x57, 0x54, 0xba, 0x56, 0x08, 0x8a, 0x21, 0xe4, 0x50, 0x72, 0x69,
+	0x02, 0xfa, 0x07, 0x1e, 0x0a, 0x1e, 0x84, 0x92, 0x22, 0x88, 0x08, 0x35, 0xcd, 0x2e, 0x76, 0x31,
+	0xd9, 0x5d, 0x92, 0x2d, 0xb4, 0x7f, 0xe1, 0x67, 0x79, 0xec, 0xd1, 0xa3, 0xb4, 0x3f, 0x22, 0xdd,
+	0xa4, 0xa1, 0xa6, 0x22, 0x82, 0x1e, 0xdf, 0x9b, 0x61, 0xe6, 0xcd, 0x63, 0xa0, 0x47, 0x16, 0x64,
+	0x2e, 0x53, 0xa1, 0x44, 0x24, 0x62, 0x5f, 0xa6, 0x2c, 0xa2, 0x99, 0x9f, 0x84, 0xe9, 0x0b, 0x55,
+	0x63, 0x3d, 0x79, 0x1a, 0xc4, 0x27, 0xbb, 0x3c, 0x2f, 0xe7, 0x39, 0x33, 0x68, 0xdf, 0x6a, 0xea,
+	0x70, 0x33, 0xe3, 0x23, 0x30, 0x18, 0x31, 0x91, 0x8d, 0xdc, 0xc3, 0xc0, 0x60, 0x04, 0x9f, 0x41,
+	0x93, 0xce, 0xa5, 0xe0, 0x94, 0x2b, 0xd3, 0xb0, 0x91, 0xdb, 0x09, 0xca, 0x19, 0x5f, 0x00, 0x64,
+	0x52, 0x14, 0x1e, 0x66, 0xdd, 0x46, 0x6e, 0x23, 0x68, 0x6d, 0x36, 0xb9, 0xd4, 0x39, 0xb4, 0x24,
+	0x8f, 0x0b, 0xb4, 0xa1, 0xd1, 0xa6, 0xe4, 0xb1, 0x06, 0x9d, 0x47, 0x38, 0xce, 0x6d, 0x47, 0x25,
+	0xff, 0xff, 0xac, 0x9d, 0x18, 0x3a, 0x3b, 0xa1, 0xee, 0x24, 0x09, 0x95, 0xbe, 0xa7, 0x78, 0x4a,
+	0x69, 0xd3, 0xcc, 0x17, 0x37, 0xa4, 0x22, 0x68, 0xfc, 0x98, 0xa5, 0x5e, 0xc9, 0x32, 0x82, 0xd3,
+	0x4a, 0x96, 0xbf, 0x3b, 0x3a, 0x43, 0xe8, 0x16, 0x11, 0x0a, 0x9b, 0xdf, 0x68, 0x7e, 0x39, 0xd3,
+	0xa8, 0x9c, 0xc9, 0x01, 0xef, 0x3d, 0x25, 0xc3, 0xf7, 0xd0, 0xdd, 0xad, 0xca, 0x78, 0x96, 0xef,
+	0x4d, 0x64, 0xd7, 0xdd, 0xf6, 0x65, 0xcf, 0xfb, 0xa6, 0x33, 0xde, 0x9e, 0x4c, 0x80, 0x93, 0x3d,
+	0xe5, 0xeb, 0xa7, 0xb7, 0x95, 0x85, 0x96, 0x2b, 0x0b, 0x7d, 0xac, 0x2c, 0xf4, 0xba, 0xb6, 0x6a,
+	0xcb, 0xb5, 0x55, 0x7b, 0x5f, 0x5b, 0xb5, 0x87, 0xc1, 0x33, 0x53, 0xd3, 0xd9, 0xc4, 0x8b, 0x44,
+	0xe2, 0x8f, 0x54, 0x4a, 0xc3, 0x64, 0xc0, 0x78, 0xc8, 0x23, 0xda, 0x1f, 0x6e, 0x5b, 0x9c, 0xe9,
+	0x75, 0x3f, 0x9a, 0x86, 0x8c, 0xfb, 0x65, 0xb7, 0xe7, 0xdb, 0x76, 0xab, 0x85, 0xa4, 0xd9, 0xe4,
+	0x40, 0x03, 0x57, 0x9f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xb6, 0xf1, 0x94, 0xe0, 0x01, 0x03, 0x00,
 	0x00,
 }
 
@@ -134,8 +442,13 @@ func (m *MarketPrice) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Price != 0 {
-		i = encodeVarintMarketPrice(dAtA, i, uint64(m.Price))
+	if m.PnlPrice != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.PnlPrice))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.SpotPrice != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.SpotPrice))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -148,6 +461,185 @@ func (m *MarketPrice) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintMarketPrice(dAtA, i, uint64(m.Id))
 		i--
 		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MarketSpotPrice) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MarketSpotPrice) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MarketSpotPrice) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.SpotPrice != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.SpotPrice))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Exponent != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64((uint32(m.Exponent)<<1)^uint32((m.Exponent>>31))))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Id != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MarketPriceUpdate) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MarketPriceUpdate) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MarketPriceUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PnlPrice != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.PnlPrice))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.SpotPrice != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.SpotPrice))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MarketSpotPriceUpdate) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MarketSpotPriceUpdate) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MarketSpotPriceUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.SpotPrice != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.SpotPrice))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MarketPnlPriceUpdate) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MarketPnlPriceUpdate) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MarketPnlPriceUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PnlPrice != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.PnlPrice))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.MarketId != 0 {
+		i = encodeVarintMarketPrice(dAtA, i, uint64(m.MarketId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MarketPriceUpdates) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MarketPriceUpdates) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MarketPriceUpdates) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MarketPriceUpdates) > 0 {
+		for iNdEx := len(m.MarketPriceUpdates) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MarketPriceUpdates[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintMarketPrice(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -175,8 +667,92 @@ func (m *MarketPrice) Size() (n int) {
 	if m.Exponent != 0 {
 		n += 1 + sozMarketPrice(uint64(m.Exponent))
 	}
-	if m.Price != 0 {
-		n += 1 + sovMarketPrice(uint64(m.Price))
+	if m.SpotPrice != 0 {
+		n += 1 + sovMarketPrice(uint64(m.SpotPrice))
+	}
+	if m.PnlPrice != 0 {
+		n += 1 + sovMarketPrice(uint64(m.PnlPrice))
+	}
+	return n
+}
+
+func (m *MarketSpotPrice) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 1 + sovMarketPrice(uint64(m.Id))
+	}
+	if m.Exponent != 0 {
+		n += 1 + sozMarketPrice(uint64(m.Exponent))
+	}
+	if m.SpotPrice != 0 {
+		n += 1 + sovMarketPrice(uint64(m.SpotPrice))
+	}
+	return n
+}
+
+func (m *MarketPriceUpdate) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovMarketPrice(uint64(m.MarketId))
+	}
+	if m.SpotPrice != 0 {
+		n += 1 + sovMarketPrice(uint64(m.SpotPrice))
+	}
+	if m.PnlPrice != 0 {
+		n += 1 + sovMarketPrice(uint64(m.PnlPrice))
+	}
+	return n
+}
+
+func (m *MarketSpotPriceUpdate) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovMarketPrice(uint64(m.MarketId))
+	}
+	if m.SpotPrice != 0 {
+		n += 1 + sovMarketPrice(uint64(m.SpotPrice))
+	}
+	return n
+}
+
+func (m *MarketPnlPriceUpdate) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketId != 0 {
+		n += 1 + sovMarketPrice(uint64(m.MarketId))
+	}
+	if m.PnlPrice != 0 {
+		n += 1 + sovMarketPrice(uint64(m.PnlPrice))
+	}
+	return n
+}
+
+func (m *MarketPriceUpdates) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.MarketPriceUpdates) > 0 {
+		for _, e := range m.MarketPriceUpdates {
+			l = e.Size()
+			n += 1 + l + sovMarketPrice(uint64(l))
+		}
 	}
 	return n
 }
@@ -258,9 +834,9 @@ func (m *MarketPrice) Unmarshal(dAtA []byte) error {
 			m.Exponent = v
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SpotPrice", wireType)
 			}
-			m.Price = 0
+			m.SpotPrice = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowMarketPrice
@@ -270,11 +846,506 @@ func (m *MarketPrice) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Price |= uint64(b&0x7F) << shift
+				m.SpotPrice |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PnlPrice", wireType)
+			}
+			m.PnlPrice = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PnlPrice |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMarketPrice(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMarketPrice
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MarketSpotPrice) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMarketPrice
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MarketSpotPrice: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MarketSpotPrice: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Exponent", wireType)
+			}
+			var v int32
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			v = int32((uint32(v) >> 1) ^ uint32(((v&1)<<31)>>31))
+			m.Exponent = v
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpotPrice", wireType)
+			}
+			m.SpotPrice = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SpotPrice |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMarketPrice(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMarketPrice
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MarketPriceUpdate) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMarketPrice
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MarketPriceUpdate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MarketPriceUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpotPrice", wireType)
+			}
+			m.SpotPrice = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SpotPrice |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PnlPrice", wireType)
+			}
+			m.PnlPrice = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PnlPrice |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMarketPrice(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMarketPrice
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MarketSpotPriceUpdate) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMarketPrice
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MarketSpotPriceUpdate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MarketSpotPriceUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpotPrice", wireType)
+			}
+			m.SpotPrice = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SpotPrice |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMarketPrice(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMarketPrice
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MarketPnlPriceUpdate) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMarketPrice
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MarketPnlPriceUpdate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MarketPnlPriceUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			m.MarketId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MarketId |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PnlPrice", wireType)
+			}
+			m.PnlPrice = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PnlPrice |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMarketPrice(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMarketPrice
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MarketPriceUpdates) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMarketPrice
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MarketPriceUpdates: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MarketPriceUpdates: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketPriceUpdates", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMarketPrice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMarketPrice
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthMarketPrice
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MarketPriceUpdates = append(m.MarketPriceUpdates, &MarketPriceUpdate{})
+			if err := m.MarketPriceUpdates[len(m.MarketPriceUpdates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMarketPrice(dAtA[iNdEx:])

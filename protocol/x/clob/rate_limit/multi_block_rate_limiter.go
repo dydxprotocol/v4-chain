@@ -48,7 +48,6 @@ type multiBlockRateLimiter[K comparable] struct {
 // If invoked during `EndBlocker` then you can pass in the `ctx` as is but if invoked during `PrepareCheckState`
 // one must supply a `ctx` with the previous block height via `ctx.WithBlockHeight(ctx.BlockHeight()-1)`.
 func NewMultiBlockRateLimiter[K comparable](context string, config []types.MaxPerNBlocksRateLimit) RateLimiter[K] {
-
 	// Ensure that we sort the number of blocks so that we are checking the lowest block number rate limits first.
 	sort.Slice(config, func(i, j int) bool {
 		return config[i].NumBlocks < config[j].NumBlocks

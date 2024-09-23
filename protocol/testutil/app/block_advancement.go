@@ -1,15 +1,17 @@
 package app
 
 import (
-	abcitypes "github.com/cometbft/cometbft/abci/types"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	testtx "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/tx"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 // BlockAdvancement holds orders and matches to be placed in a block. Using this struct and building
@@ -53,6 +55,9 @@ func (b BlockAdvancementWithErrors) AdvanceToBlock(
 					require.True(t, txResult.IsErr(), "Expected CheckTx to error. Response: %+v", response)
 					require.Contains(t, txResult.Log, expectedError)
 				} else {
+					if i == 0 {
+						continue // skip the first tx, which is the vote extensions
+					}
 					require.True(t, txResult.IsOK(), "Expected CheckTx to succeed. Response: %+v", response)
 				}
 			}
@@ -62,7 +67,14 @@ func (b BlockAdvancementWithErrors) AdvanceToBlock(
 
 	deliverTxsOverride := b.BlockAdvancement.getDeliverTxs(ctx, tApp.App)
 	if len(deliverTxsOverride) > 0 {
-		advanceToBlockOptions.DeliverTxsOverride = deliverTxsOverride
+		_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+			&tApp.App.ConsumerKeeper,
+			ctx,
+			map[uint32]ve.VEPricePair{},
+			int64(blockHeight),
+		)
+		require.NoError(t, err)
+		advanceToBlockOptions.DeliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 	}
 
 	return tApp.AdvanceToBlock(blockHeight, advanceToBlockOptions)

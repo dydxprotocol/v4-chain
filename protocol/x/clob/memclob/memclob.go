@@ -774,6 +774,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	makerOrdersToRemove []OrderWithRemovalReason,
 	err error,
 ) {
+
 	offchainUpdates = types.NewOffchainUpdates()
 
 	// Branch the state. State will be wrote to only if matching does not return an error.
@@ -1754,12 +1755,6 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 				takerOrderStatus.OrderStatus = types.LiquidationExceededSubaccountMaxInsuranceLost
 				break
 			}
-			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxNotionalLiquidated) {
-				// Subaccount has reached max notional liquidated block limit. Stop matching.
-				telemetry.IncrCounter(1, types.ModuleName, metrics.SubaccountMaxNotionalLiquidated, metrics.Count)
-				takerOrderStatus.OrderStatus = types.LiquidationExceededSubaccountMaxNotionalLiquidated
-				break
-			}
 			if errors.Is(err, types.ErrInsuranceFundHasInsufficientFunds) {
 				// Deleveraging is required. Stop matching.
 				telemetry.IncrCounter(1, types.ModuleName, metrics.LiquidationRequiresDeleveraging, metrics.Count)
@@ -2284,7 +2279,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 }
 
 // GetPricePremium calculates the premium for a perpetual market, using the equation
-// `P = (Max(0, Impact Bid - Index Price) - Max(0, Index Price - Impact Ask)) / Index Price`.
+// `P = (Max(0, Impact Bid - daemon price) - Max(0, daemon price - Impact Ask)) / daemon price`.
 // This is equivalent to the following piece-wise function:
 //
 //		If Index < Impact Bid:
@@ -2321,18 +2316,18 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 	}
 	orderbook := m.openOrders.mustGetOrderbook(ctx, clobPair.GetClobPairId())
 
-	// Get index price represented in subticks.
-	indexPriceSubticks := types.PriceToSubticks(
-		params.IndexPrice,
+	// Get daemon price represented in subticks.
+	daemonPriceSubticks := types.SpotPriceToSubticks(
+		params.DaemonPrice,
 		clobPair,
 		params.BaseAtomicResolution,
 		params.QuoteAtomicResolution,
 	)
 
-	// Check `indexPriceSubticks` is non-zero.
-	if indexPriceSubticks.Sign() == 0 {
+	// Check `daemonPriceSubticks` is non-zero.
+	if daemonPriceSubticks.Sign() == 0 {
 		return 0, errorsmod.Wrapf(
-			types.ErrZeroIndexPriceForPremiumCalculation,
+			types.ErrZeroDaemonPriceForPremiumCalculation,
 			"market = %+v, clobPair = %+v, baseAtomicResolution = %d, quoteAtomicResolution = %d",
 			params,
 			clobPair,
@@ -2364,7 +2359,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 		))
 	}
 
-	if hasBid && indexPriceSubticks.Cmp(
+	if hasBid && daemonPriceSubticks.Cmp(
 		new(big.Rat).SetInt(bestBid.Value.Order.GetOrderSubticks().ToBigInt()),
 	) < 0 {
 		// Index < Best Bid, need to calculate Impact Bid
@@ -2374,11 +2369,11 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 			orderbook,
 			true, // isBid
 			params.ImpactNotionalQuoteQuantums,
-			indexPriceSubticks,
+			daemonPriceSubticks,
 			minPremiumPpm,
 			maxPremiumPpm,
 		), nil
-	} else if hasAsk && indexPriceSubticks.Cmp(
+	} else if hasAsk && daemonPriceSubticks.Cmp(
 		new(big.Rat).SetInt(bestAsk.Value.Order.GetOrderSubticks().ToBigInt()),
 	) > 0 {
 		// Best Ask < Index, need to calculate Impact Ask
@@ -2388,7 +2383,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 			orderbook,
 			false, // isBid
 			params.ImpactNotionalQuoteQuantums,
-			indexPriceSubticks,
+			daemonPriceSubticks,
 			minPremiumPpm,
 			maxPremiumPpm,
 		), nil
@@ -2399,7 +2394,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 }
 
 // getPricePremiumFromSide returns the price premium given
-// which side (bid/ask) the index price is on.
+// which side (bid/ask) the daemon price is on.
 // `isBid == true` means Index < Best Bid; `isBid == false` means
 // Index > Best Ask.
 //
@@ -2421,7 +2416,7 @@ func (m *MemClobPriceTimePriority) getPricePremiumFromSide(
 	orderbook *types.Orderbook,
 	isBid bool,
 	impactNotionalQuoteQuantums *big.Int,
-	indexPriceSubticks *big.Rat,
+	daemonPriceSubticks *big.Rat,
 	minPremiumPpm int32,
 	maxPremiumPpm int32,
 ) (
@@ -2440,7 +2435,7 @@ func (m *MemClobPriceTimePriority) getPricePremiumFromSide(
 		return 0
 	}
 
-	cmp := indexPriceSubticks.Cmp(impactPriceSubticks)
+	cmp := daemonPriceSubticks.Cmp(impactPriceSubticks)
 	if (!isBid && cmp <= 0) || (isBid && cmp >= 0) {
 		// Best Ask < Index <= Impact Ask
 		// or
@@ -2457,7 +2452,7 @@ func (m *MemClobPriceTimePriority) getPricePremiumFromSide(
 		result, lib.BigRatOneMillion(),
 	).Quo(
 		result,
-		indexPriceSubticks,
+		daemonPriceSubticks,
 	).Sub(
 		result,
 		lib.BigRatOneMillion(),

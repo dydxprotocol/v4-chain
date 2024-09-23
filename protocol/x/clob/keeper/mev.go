@@ -19,20 +19,6 @@ import (
 
 var MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE = new(big.Rat).SetFrac64(1, 100)
 
-type MevTelemetryConfig struct {
-	Enabled    bool
-	Hosts      []string
-	Identifier string
-}
-
-type ClobMetadata struct {
-	ClobPair    types.ClobPair
-	MidPrice    types.Subticks
-	OraclePrice types.Subticks
-	BestBid     types.Order
-	BestAsk     types.Order
-}
-
 // CumulativePnL keeps track of the cumulative PnL for each subaccount per market.
 type CumulativePnL struct {
 	// PnL calculations.
@@ -45,7 +31,7 @@ type CumulativePnL struct {
 
 	// Cached fields used in the calculation of PnL.
 	// These should not be modified after initialization.
-	Metadata              ClobMetadata
+	Metadata              types.ClobMetadata
 	PerpetualFundingIndex *big.Int
 }
 
@@ -371,9 +357,9 @@ func (k Keeper) RecordMevMetrics(
 func (k Keeper) GetClobMetadata(
 	ctx sdk.Context,
 ) (
-	clobMetadata map[types.ClobPairId]ClobMetadata,
+	clobMetadata map[types.ClobPairId]types.ClobMetadata,
 ) {
-	clobMetadata = make(map[types.ClobPairId]ClobMetadata)
+	clobMetadata = make(map[types.ClobPairId]types.ClobMetadata)
 
 	for _, clobPair := range k.GetAllClobPairs(ctx) {
 		clobPairId := clobPair.GetClobPairId()
@@ -408,7 +394,7 @@ func (k Keeper) GetClobMetadata(
 		}
 
 		// Set the CLOB metadata.
-		clobMetadata[clobPairId] = ClobMetadata{
+		clobMetadata[clobPairId] = types.ClobMetadata{
 			ClobPair:    clobPair,
 			MidPrice:    midPriceSubticks,
 			OraclePrice: oraclePriceSubticks,
@@ -420,12 +406,54 @@ func (k Keeper) GetClobMetadata(
 	return clobMetadata
 }
 
+func (k Keeper) GetSingleMarketClobMetadata(
+	ctx sdk.Context,
+	clobPair types.ClobPair,
+) types.ClobMetadata {
+	midPriceSubticks, bestBid, bestAsk, exist := k.MemClob.GetMidPrice(ctx, clobPair.GetClobPairId())
+	oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+	// Consistently round down here.
+	oraclePriceSubticksInt := lib.BigRatRound(oraclePriceSubticksRat, false)
+	if !oraclePriceSubticksInt.IsUint64() {
+		panic(
+			fmt.Sprintf(
+				"GetAllMidPrices: invalid oracle price %+v for clob pair %+v",
+				oraclePriceSubticksInt,
+				clobPair,
+			),
+		)
+	}
+	oraclePriceSubticks := types.Subticks(oraclePriceSubticksInt.Uint64())
+
+	// Use the oracle price instead of the mid price if the mid price doesn't exist or
+	// the spread is greater-than-or-equal-to the max spread.
+	if !exist || new(big.Rat).SetFrac(
+		new(big.Int).SetUint64(uint64(bestAsk.Subticks-bestBid.Subticks)),
+		new(big.Int).SetUint64(uint64(bestBid.Subticks)), // Note that bestBid cannot be 0 if exist is true.
+	).Cmp(MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE) >= 0 {
+		metrics.IncrCounterWithLabels(
+			metrics.MevFallbackToOracle,
+			1,
+			metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPair.GetClobPairId().ToUint32())),
+		)
+		midPriceSubticks = oraclePriceSubticks
+	}
+
+	return types.ClobMetadata{
+		ClobPair:    clobPair,
+		MidPrice:    midPriceSubticks,
+		OraclePrice: oraclePriceSubticks,
+		BestBid:     bestBid,
+		BestAsk:     bestAsk,
+	}
+}
+
 // InitializeCumulativePnLs initializes the cumulative PnLs for the block proposer and the
 // current validator.
 func (k Keeper) InitializeCumulativePnLs(
 	ctx sdk.Context,
 	perpetualKeeper process.ProcessPerpetualKeeper,
-	clobMetadata map[types.ClobPairId]ClobMetadata,
+	clobMetadata map[types.ClobPairId]types.ClobMetadata,
 ) (
 	blockProposerPnL map[types.ClobPairId]*CumulativePnL,
 	validatorPnL map[types.ClobPairId]*CumulativePnL,
@@ -528,7 +556,7 @@ func (k Keeper) GetMEVDataFromOperations(
 
 					// Calculate the insurance fund delta for this trade.
 					liquidationIsBuy := !makerOrder.IsBuy()
-					insuranceFundDelta, err := k.GetLiquidationInsuranceFundDelta(
+					remainingQuoteQuantumsBig, insuranceFundDelta, err := k.GetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(
 						ctx,
 						matchLiquidation.Liquidated,
 						matchLiquidation.PerpetualId,
@@ -547,10 +575,20 @@ func (k Keeper) GetMEVDataFromOperations(
 						panic(fmt.Sprintf("insurance fund delta (%v) is not an int64", insuranceFundDelta.String()))
 					}
 
+					validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, err := k.GetValidatorAndLiquidityFee(
+						ctx,
+						remainingQuoteQuantumsBig,
+					)
+					if err != nil {
+						return nil, err
+					}
+
 					mevLiquidationMatch := types.MEVLiquidationMatch{
 						LiquidatedSubaccountId: matchLiquidation.Liquidated,
 						// TODO(CLOB-957): Use `SerializableInt` for insurance fund delta
 						InsuranceFundDeltaQuoteQuantums: insuranceFundDelta.Int64(),
+						ValidatorFeeQuoteQuantums:       validatorFeeQuoteQuantums.Int64(),
+						LiquidityFeeQuoteQuantums:       liquidityFeeQuoteQuantums.Int64(),
 
 						MakerOrderSubaccountId: makerOrder.OrderId.SubaccountId,
 						MakerOrderSubticks:     makerOrder.Subticks,
@@ -660,6 +698,21 @@ func (k Keeper) CalculateSubaccountPnLForMevMatches(
 		// Note that negative insurance fund delta (insurance fund covers losses) will
 		// improve the subaccount's PnL.
 		insuranceFundDelta := big.NewInt(mevLiquidation.InsuranceFundDeltaQuoteQuantums)
+		validatorFeeQuoteQuantums := big.NewInt(mevLiquidation.ValidatorFeeQuoteQuantums)
+		liquidityFeeQuoteQuantums := big.NewInt(mevLiquidation.LiquidityFeeQuoteQuantums)
+
+		// Add validator fee to the cumulative PnL.
+		cumulativePnL.AddDeltaToSubaccount(
+			mevLiquidation.LiquidatedSubaccountId,
+			new(big.Int).Neg(validatorFeeQuoteQuantums),
+		)
+
+		// Add liquidity fee to the cumulative PnL.
+		cumulativePnL.AddDeltaToSubaccount(
+			mevLiquidation.LiquidatedSubaccountId,
+			new(big.Int).Neg(liquidityFeeQuoteQuantums),
+		)
+
 		cumulativePnL.AddDeltaToSubaccount(
 			mevLiquidation.LiquidatedSubaccountId,
 			new(big.Int).Neg(insuranceFundDelta),

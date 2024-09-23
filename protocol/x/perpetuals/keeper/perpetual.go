@@ -79,6 +79,7 @@ func (k Keeper) CreatePerpetual(
 	defaultFundingPpm int32,
 	liquidityTier uint32,
 	marketType types.PerpetualMarketType,
+	dangerIndexPpm uint32,
 	yieldIndex string,
 ) (types.Perpetual, error) {
 	// Check if perpetual exists.
@@ -99,10 +100,12 @@ func (k Keeper) CreatePerpetual(
 			DefaultFundingPpm: defaultFundingPpm,
 			LiquidityTier:     liquidityTier,
 			MarketType:        marketType,
+			DangerIndexPpm:    dangerIndexPpm,
 		},
-		FundingIndex: dtypes.ZeroInt(),
-		OpenInterest: dtypes.ZeroInt(),
-		YieldIndex:   yieldIndex,
+		FundingIndex:    dtypes.ZeroInt(),
+		OpenInterest:    dtypes.ZeroInt(),
+		YieldIndex:      yieldIndex,
+		LastFundingRate: dtypes.ZeroInt(),
 	}
 
 	// Store the new perpetual.
@@ -140,6 +143,7 @@ func (k Keeper) ModifyPerpetual(
 	marketId uint32,
 	defaultFundingPpm int32,
 	liquidityTier uint32,
+	dangerIndexPpm uint32,
 ) (types.Perpetual, error) {
 	// Get perpetual.
 	perpetual, err := k.GetPerpetual(ctx, id)
@@ -152,6 +156,7 @@ func (k Keeper) ModifyPerpetual(
 	perpetual.Params.MarketId = marketId
 	perpetual.Params.DefaultFundingPpm = defaultFundingPpm
 	perpetual.Params.LiquidityTier = liquidityTier
+	perpetual.Params.DangerIndexPpm = dangerIndexPpm
 
 	// Store the modified perpetual.
 	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
@@ -170,46 +175,11 @@ func (k Keeper) ModifyPerpetual(
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.LiquidityTier,
+				perpetual.Params.DangerIndexPpm,
 				perpetual.YieldIndex,
 			),
 		),
 	)
-
-	return perpetual, nil
-}
-
-func (k Keeper) SetPerpetualMarketType(
-	ctx sdk.Context,
-	perpetualId uint32,
-	marketType types.PerpetualMarketType,
-) (types.Perpetual, error) {
-	if marketType == types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
-		return types.Perpetual{}, errorsmod.Wrap(
-			types.ErrInvalidMarketType,
-			fmt.Sprintf("invalid market type %v for perpetual %d", marketType, perpetualId),
-		)
-	}
-
-	// Get perpetual.
-	perpetual, err := k.GetPerpetual(ctx, perpetualId)
-	if err != nil {
-		return perpetual, err
-	}
-
-	if perpetual.Params.MarketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
-		return types.Perpetual{}, errorsmod.Wrap(
-			types.ErrInvalidMarketType,
-			fmt.Sprintf("perpetual %d already has market type %v", perpetualId, perpetual.Params.MarketType),
-		)
-	}
-
-	// Modify perpetual.
-	perpetual.Params.MarketType = marketType
-
-	// Store the modified perpetual.
-	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
-		return types.Perpetual{}, err
-	}
 
 	return perpetual, nil
 }
@@ -467,7 +437,7 @@ func (k Keeper) getFundingIndexDelta(
 	bigFundingIndexDelta := lib.FundingRateToIndex(
 		proratedFundingRate,
 		perp.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.SpotPrice,
 		marketPrice.Exponent,
 	)
 
@@ -523,23 +493,23 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		metrics.Latency,
 	)
 
-	marketIdToIndexPrice := k.pricesKeeper.GetMarketIdToValidIndexPrice(ctx)
+	marketIdToDaemonPrice := k.pricesKeeper.GetMarketIdToValidDaemonPrice(ctx)
 
 	for _, perp := range allPerpetuals {
-		indexPrice, exists := marketIdToIndexPrice[perp.Params.MarketId]
-		// Valid index price is missing
+		daemonPrice, exists := marketIdToDaemonPrice[perp.Params.MarketId]
+		// Valid daemon price is missing
 		if !exists {
 			// Only log and increment stats if height is passed initialization period.
 			if ctx.BlockHeight() > pricestypes.PriceDaemonInitializationBlocks {
 				log.ErrorLog(
 					ctx,
-					"Perpetual does not have valid index price. Skipping premium",
+					"Perpetual does not have valid daemon price. Skipping premium",
 					constants.MarketIdLogKey, perp.Params.MarketId,
 				)
 				telemetry.IncrCounterWithLabels(
 					[]string{
 						types.ModuleName,
-						metrics.MissingIndexPriceForFunding,
+						metrics.MissingDaemonPriceForFunding,
 						metrics.Count,
 					},
 					1,
@@ -571,7 +541,11 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 			ctx,
 			perp.Params.Id,
 			types.GetPricePremiumParams{
-				IndexPrice:                  indexPrice,
+				DaemonPrice: pricestypes.MarketPrice{
+					Id:        daemonPrice.Id,
+					Exponent:  daemonPrice.Exponent,
+					SpotPrice: daemonPrice.SpotPrice,
+				},
 				BaseAtomicResolution:        perp.Params.AtomicResolution,
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
 				ImpactNotionalQuoteQuantums: bigImpactNotionalQuoteQuantums,
@@ -901,6 +875,11 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			))
 		}
 
+		err = k.ModifyLastFundingRate(ctx, perp.Params.Id, bigFundingRatePpm)
+		if err != nil {
+			panic(err)
+		}
+
 		if bigFundingRatePpm.Sign() != 0 {
 			fundingIndexDelta, err := k.getFundingIndexDelta(
 				ctx,
@@ -1001,7 +980,7 @@ func GetNetNotionalInQuoteQuantums(
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
 		bigQuantums,
 		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.PnlPrice,
 		marketPrice.Exponent,
 	)
 
@@ -1037,7 +1016,7 @@ func (k Keeper) GetNotionalInBaseQuantums(
 	bigBaseQuantums = lib.QuoteToBaseQuantums(
 		bigQuoteQuantums,
 		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.PnlPrice,
 		marketPrice.Exponent,
 	)
 	return bigBaseQuantums, nil
@@ -1139,7 +1118,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
 		bigAbsQuantums,
 		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.PnlPrice,
 		marketPrice.Exponent,
 	)
 
@@ -1147,7 +1126,7 @@ func GetMarginRequirementsInQuoteQuantums(
 	openInterestQuoteQuantums := lib.BaseToQuoteQuantums(
 		perpetual.OpenInterest.BigInt(), // OpenInterest is represented as base quantums.
 		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.PnlPrice,
 		marketPrice.Exponent,
 	)
 
@@ -1364,6 +1343,24 @@ func (k Keeper) ModifyFundingIndex(
 	return nil
 }
 
+func (k Keeper) ModifyLastFundingRate(
+	ctx sdk.Context,
+	perpetualId uint32,
+	lastFundingRate *big.Int,
+) (
+	err error,
+) {
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	perpetual.LastFundingRate = dtypes.NewIntFromBigInt(lastFundingRate)
+	k.setPerpetual(ctx, perpetual)
+
+	return nil
+}
+
 // Modify the open interest of a perpetual in state.
 func (k Keeper) ModifyOpenInterest(
 	ctx sdk.Context,
@@ -1372,7 +1369,6 @@ func (k Keeper) ModifyOpenInterest(
 ) (
 	err error,
 ) {
-
 	// No-op if delta is zero.
 	if openInterestDeltaBaseQuantums.Sign() == 0 {
 		return nil
@@ -1434,13 +1430,6 @@ func (k Keeper) SetEmptyPremiumVotes(
 		types.PremiumStore{},
 		types.PremiumVotesKey,
 	)
-}
-
-func (k Keeper) SetPerpetualForTest(
-	ctx sdk.Context,
-	perpetual types.Perpetual,
-) {
-	k.setPerpetual(ctx, perpetual)
 }
 
 func (k Keeper) setPerpetual(
@@ -1825,7 +1814,7 @@ func (k Keeper) IsPositionUpdatable(
 	}
 
 	// If perpetual has zero oracle price, it is considered not updatable.
-	if oraclePrice.Price == 0 {
+	if oraclePrice.PnlPrice == 0 {
 		return false, nil
 	}
 	return true, nil

@@ -6,10 +6,8 @@ option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/ind
 // Market type of perpetual.
 // Defined in perpetual.
 enum PerpetualMarketType {
-  // Unspecified market type.
-  PERPETUAL_MARKET_TYPE_UNSPECIFIED = 0;
   // Market type for cross margin perpetual markets.
-  PERPETUAL_MARKET_TYPE_CROSS = 1;
+  PERPETUAL_MARKET_TYPE_CROSS = 0;
   // Market type for isolated margin perpetual markets.
-  PERPETUAL_MARKET_TYPE_ISOLATED = 2;
+  PERPETUAL_MARKET_TYPE_ISOLATED = 1;
 }

@@ -48,7 +48,6 @@ import {
   TransferCreateObject,
   YieldParamsCreateObject,
 } from '../../src/types';
-import { denomToHumanReadableConversion } from './conversion-helpers';
 
 export const createdDateTime: DateTime = DateTime.utc();
 export const createdHeight: string = '2';
@@ -127,7 +126,6 @@ export const isolatedSubaccountId2: string = SubaccountTable.uuid(
   isolatedSubaccount2.subaccountNumber,
 );
 
-
 // ============== Assets ==============
 
 export const defaultAsset: AssetCreateObject = {
@@ -198,6 +196,7 @@ export const defaultPerpetualMarket: PerpetualMarketCreateObject = {
   openInterest: '400000',
   quantumConversionExponent: -8,
   atomicResolution: -10,
+  dangerIndexPpm: 1000000,
   subticksPerTick: 100,
   stepBaseQuantums: 10,
   liquidityTierId: 0,
@@ -218,6 +217,7 @@ export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   openInterest: '40000',
   quantumConversionExponent: -6,
   atomicResolution: -18,
+  dangerIndexPpm: 1000000,
   subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
@@ -238,6 +238,7 @@ export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
   openInterest: '40000',
   quantumConversionExponent: -16,
   atomicResolution: -2,
+  dangerIndexPpm: 1000000,
   subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
@@ -259,6 +260,7 @@ export const isolatedPerpetualMarket: PerpetualMarketCreateObject = {
   openInterest: '40000',
   quantumConversionExponent: -16,
   atomicResolution: -2,
+  dangerIndexPpm: 1000000,
   subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
@@ -280,6 +282,7 @@ export const isolatedPerpetualMarket2: PerpetualMarketCreateObject = {
   openInterest: '40000',
   quantumConversionExponent: -16,
   atomicResolution: -2,
+  dangerIndexPpm: 1000000,
   subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
@@ -623,7 +626,8 @@ export const defaultMarket: MarketCreateObject = {
   pair: 'BTC-USD',
   exponent: -5,
   minPriceChangePpm: 50,
-  oraclePrice: '15000',
+  spotPrice: '15000',
+  pnlPrice: '15000',
 };
 
 export const defaultMarket2: MarketCreateObject = {
@@ -631,7 +635,8 @@ export const defaultMarket2: MarketCreateObject = {
   pair: 'ETH-USD',
   exponent: -6,
   minPriceChangePpm: 50,
-  oraclePrice: '1000',
+  spotPrice: '1000',
+  pnlPrice: '1000',
 };
 
 export const defaultMarket3: MarketCreateObject = {
@@ -639,7 +644,8 @@ export const defaultMarket3: MarketCreateObject = {
   pair: 'SHIB-USD',
   exponent: -12,
   minPriceChangePpm: 50,
-  oraclePrice: '0.000000065',
+  spotPrice: '0.000000065',
+  pnlPrice: '0.000000065',
 };
 
 export const isolatedMarket: MarketCreateObject = {
@@ -647,7 +653,8 @@ export const isolatedMarket: MarketCreateObject = {
   pair: 'ISO-USD',
   exponent: -12,
   minPriceChangePpm: 50,
-  oraclePrice: '0.000000075',
+  spotPrice: '0.000000075',
+  pnlPrice: '0.000000075',
 };
 
 export const isolatedMarket2: MarketCreateObject = {
@@ -655,7 +662,8 @@ export const isolatedMarket2: MarketCreateObject = {
   pair: 'ISO2-USD',
   exponent: -12,
   minPriceChangePpm: 50,
-  oraclePrice: '0.000000085',
+  spotPrice: '0.000000085',
+  pnlPrice: '0.000000085',
 };
 
 // ============== LiquidityTiers ==============
@@ -680,7 +688,8 @@ export const defaultLiquidityTier2: LiquidityTiersCreateObject = {
 
 export const defaultOraclePrice: OraclePriceCreateObject = {
   marketId: defaultMarket.id,
-  price: '10000',
+  spotPrice: '10000',
+  pnlPrice: '10000',
   effectiveAt: createdDateTime.toISO(),
   effectiveAtHeight: createdHeight,
 };
@@ -692,7 +701,8 @@ export const defaultOraclePriceId: string = OraclePriceTable.uuid(
 
 export const defaultOraclePrice2: OraclePriceCreateObject = {
   marketId: defaultMarket2.id,
-  price: '500',
+  spotPrice: '500',
+  pnlPrice: '500',
   effectiveAt: createdDateTime.toISO(),
   effectiveAtHeight: createdHeight,
 };

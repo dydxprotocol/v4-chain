@@ -11,7 +11,7 @@ import (
 // `ClobKeeper.GetPricePremiumForPerpetual` and
 // `MemClob.GetPricePremium` to get the price premium.
 type GetPricePremiumParams struct {
-	IndexPrice                  pricestypes.MarketPrice
+	DaemonPrice                 pricestypes.MarketPrice
 	BaseAtomicResolution        int32
 	QuoteAtomicResolution       int32
 	ImpactNotionalQuoteQuantums *big.Int
@@ -77,6 +77,7 @@ type PerpetualsKeeper interface {
 		defaultFundingPpm int32,
 		liquidityTier uint32,
 		marketType PerpetualMarketType,
+		dangerIndexPpm uint32,
 		yieldIndex string,
 	) (Perpetual, error)
 	ModifyPerpetual(
@@ -86,6 +87,7 @@ type PerpetualsKeeper interface {
 		marketId uint32,
 		defaultFundingPpm int32,
 		liquidityTier uint32,
+		dangerIndexPpm uint32,
 	) (Perpetual, error)
 	ModifyOpenInterest(
 		ctx sdk.Context,
@@ -111,11 +113,6 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		params Params,
 	) error
-	SetPerpetualMarketType(
-		ctx sdk.Context,
-		id uint32,
-		marketType PerpetualMarketType,
-	) (Perpetual, error)
 	GetAllPerpetuals(
 		ctx sdk.Context,
 	) []Perpetual

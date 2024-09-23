@@ -6,14 +6,13 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
+	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-
-	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 
 	"github.com/stretchr/testify/require"
 )
@@ -42,8 +41,14 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 
 			expectedErr: nil,
 		},
+		"valid ValidateBasic: single msg, NO AppInjected msg": {
+			msgOne:         &testdata.TestMsg{Signers: []string{constants.AliceAccAddress.String()}},
+			txHasSignature: true, // this should allow ValidateBasic to pass.
+
+			expectedErr: nil,
+		},
 		"fails ValidateBasic: mult msgs, AppInjected msg": {
-			msgOne:         &pricestypes.MsgUpdateMarketPrices{}, // AppInjected.
+			msgOne:         &perptypes.MsgAddPremiumVotes{}, // AppInjected.
 			msgTwo:         &testdata.TestMsg{Signers: []string{constants.AliceAccAddress.String()}},
 			txHasSignature: true,
 
@@ -57,7 +62,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 			expectedErr: nil,
 		},
 		"skip ValidateBasic: recheck": {
-			msgOne:         &pricestypes.MsgUpdateMarketPrices{}, // AppInjected.
+			msgOne:         &perptypes.MsgAddPremiumVotes{}, // AppInjected.
 			msgTwo:         &testdata.TestMsg{Signers: []string{constants.AliceAccAddress.String()}},
 			isRecheck:      true,
 			txHasSignature: false, // this should cause ValidateBasic to fail, but this is skipped.

@@ -537,7 +537,7 @@ var (
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_USDT_USD: {
-					Ticker:         "ethusdt", // Adjusted with ETH index price.
+					Ticker:         "ethusdt", // Adjusted with ETH daemon price.
 					AdjustByMarket: newMarketIdWithValue(MARKET_ETH_USD),
 					Invert:         true,
 				},
@@ -659,7 +659,7 @@ var (
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_USDT_USD: {
-					Ticker:         "BTC-USDT", // Adjusted with BTC index price.
+					Ticker:         "BTC-USDT", // Adjusted with BTC daemon price.
 					AdjustByMarket: newMarketIdWithValue(MARKET_BTC_USD),
 					Invert:         true,
 				},

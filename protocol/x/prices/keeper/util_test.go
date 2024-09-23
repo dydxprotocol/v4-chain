@@ -18,74 +18,74 @@ const (
 func TestGetProposalPrice(t *testing.T) {
 	tests := map[string]struct {
 		smoothedPrice uint64
-		indexPrice    uint64
+		daemonPrice   uint64
 		marketPrice   uint64
 		expectedPrice uint64
 	}{
-		"smoothedPrice: marketPrice < smoothedPrice < indexPrice": {
+		"smoothedPrice: marketPrice < smoothedPrice < daemonPrice": {
 			smoothedPrice: uint64(1_000_000),
-			indexPrice:    uint64(1_000_005),
+			daemonPrice:   uint64(1_000_005),
 			marketPrice:   uint64(900_000),
 			expectedPrice: uint64(1_000_000),
 		},
-		"smoothedPrice: indexPrice < smoothedPrice < marketPrice": {
+		"smoothedPrice: daemonPrice < smoothedPrice < marketPrice": {
 			smoothedPrice: uint64(800_500),
-			indexPrice:    uint64(800_000),
+			daemonPrice:   uint64(800_000),
 			marketPrice:   uint64(900_000),
 			expectedPrice: uint64(800_500),
 		},
-		"indexPrice: marketPrice < indexPrice < smoothedPrice": {
+		"daemonPrice: marketPrice < daemonPrice < smoothedPrice": {
 			smoothedPrice: uint64(1_000_000),
-			indexPrice:    uint64(900_000),
+			daemonPrice:   uint64(900_000),
 			marketPrice:   uint64(800_000),
 			expectedPrice: uint64(900_000),
 		},
-		"indexPrice: smoothedPrice < indexPrice < marketPrice": {
+		"daemonPrice: smoothedPrice < daemonPrice < marketPrice": {
 			smoothedPrice: uint64(800_000),
-			indexPrice:    uint64(900_000),
+			daemonPrice:   uint64(900_000),
 			marketPrice:   uint64(1_000_000),
 			expectedPrice: uint64(900_000),
 		},
-		"indexPrice: smoothedPrice << marketPrice < indexPrice": {
+		"daemonPrice: smoothedPrice << marketPrice < daemonPrice": {
 			smoothedPrice: uint64(500_000),
-			indexPrice:    uint64(1_100_000),
+			daemonPrice:   uint64(1_100_000),
 			marketPrice:   uint64(1_000_000),
 			expectedPrice: uint64(1_100_000),
 		},
-		"smoothedPrice: smoothedPrice < marketPrice << indexPrice": {
+		"smoothedPrice: smoothedPrice < marketPrice << daemonPrice": {
 			smoothedPrice: uint64(900_000),
-			indexPrice:    uint64(1_500_000),
+			daemonPrice:   uint64(1_500_000),
 			marketPrice:   uint64(1_000_000),
 			expectedPrice: uint64(900_000),
 		},
-		"smoothedPrice: smoothedPrice < marketPrice < indexPrice": {
+		"smoothedPrice: smoothedPrice < marketPrice < daemonPrice": {
 			smoothedPrice: uint64(900_000),
-			indexPrice:    uint64(1_100_000),
+			daemonPrice:   uint64(1_100_000),
 			marketPrice:   uint64(1_000_000),
 			expectedPrice: uint64(900_000),
 		},
-		"indexPrice: indexPrice < marketPrice << smoothedPrice": {
+		"daemonPrice: daemonPrice < marketPrice << smoothedPrice": {
 			smoothedPrice: uint64(1_500_000),
-			indexPrice:    uint64(900_000),
+			daemonPrice:   uint64(900_000),
 			marketPrice:   uint64(1_000_000),
 			expectedPrice: uint64(900_000),
 		},
-		"smoothedPrice: indexPrice << marketPrice < smoothedPrice": {
+		"smoothedPrice: daemonPrice << marketPrice < smoothedPrice": {
 			smoothedPrice: uint64(1_100_000),
-			indexPrice:    uint64(500_000),
+			daemonPrice:   uint64(500_000),
 			marketPrice:   uint64(1_000_000),
 			expectedPrice: uint64(1_100_000),
 		},
-		"smoothedPrice: indexPrice < marketPrice < smoothedPrice": {
+		"smoothedPrice: daemonPrice < marketPrice < smoothedPrice": {
 			smoothedPrice: uint64(1_100_000),
-			indexPrice:    uint64(900_000),
+			daemonPrice:   uint64(900_000),
 			marketPrice:   uint64(1_000_000),
 			expectedPrice: uint64(1_100_000),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			price := getProposalPrice(tc.smoothedPrice, tc.indexPrice, tc.marketPrice)
+			price := getProposalPrice(tc.smoothedPrice, tc.daemonPrice, tc.marketPrice)
 			require.Equal(t, tc.expectedPrice, price)
 		})
 	}
@@ -103,7 +103,8 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 		"Valid": {
 			marketParamPrice: types.MarketParamPrice{
 				Price: types.MarketPrice{
-					Price: uint64(123_000),
+					SpotPrice: uint64(123_000),
+					PnlPrice:  uint64(123_000),
 				},
 				Param: types.MarketParam{
 					MinPriceChangePpm: uint32(1_000), // 0.1%
@@ -114,7 +115,8 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 		"Valid: discards decimal": {
 			marketParamPrice: types.MarketParamPrice{
 				Price: types.MarketPrice{
-					Price: uint64(1_234),
+					SpotPrice: uint64(1_234),
+					PnlPrice:  uint64(1_234),
 				},
 				Param: types.MarketParam{
 					MinPriceChangePpm: uint32(1_000), // 0.1%
@@ -125,7 +127,8 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 		"Zero": {
 			marketParamPrice: types.MarketParamPrice{
 				Price: types.MarketPrice{
-					Price: uint64(0),
+					SpotPrice: uint64(0),
+					PnlPrice:  uint64(0),
 				},
 				Param: types.MarketParam{
 					MinPriceChangePpm: uint32(1_000), // 0.1%
@@ -136,7 +139,8 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 		"Result exceeds max uint64": {
 			marketParamPrice: types.MarketParamPrice{
 				Price: types.MarketPrice{
-					Price: math.MaxUint64,
+					SpotPrice: math.MaxUint64,
+					PnlPrice:  math.MaxUint64,
 				},
 				Param: types.MarketParam{
 					MinPriceChangePpm: uint32(1_000_001), // must be <= 1,000,000
@@ -152,22 +156,30 @@ func TestGetMinPriceChangeAmountForMarket(t *testing.T) {
 				require.PanicsWithError(
 					t,
 					tc.expectedPanic.Error(),
-					func() { getMinPriceChangeAmountForMarket(tc.marketParamPrice) })
+					func() { getMinPriceChangeAmountForSpotMarket(tc.marketParamPrice) })
+
+				require.PanicsWithError(
+					t,
+					tc.expectedPanic.Error(),
+					func() { getMinPriceChangeAmountForPnlMarket(tc.marketParamPrice) })
 				return
 			}
 
-			result := getMinPriceChangeAmountForMarket(tc.marketParamPrice)
-			require.Equal(t, tc.expectedResult, result)
+			spotResult := getMinPriceChangeAmountForSpotMarket(tc.marketParamPrice)
+			pnlResult := getMinPriceChangeAmountForPnlMarket(tc.marketParamPrice)
+
+			require.Equal(t, tc.expectedResult, spotResult)
+			require.Equal(t, tc.expectedResult, pnlResult)
 		})
 	}
 }
 
-func TestIsTowardsIndexPrice(t *testing.T) {
+func TestIsTowardsDaemonPrice(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		oldPrice   uint64
-		newPrice   uint64
-		indexPrice uint64
+		oldPrice    uint64
+		newPrice    uint64
+		daemonPrice uint64
 
 		// Expected.
 		expectedResult bool
@@ -175,189 +187,189 @@ func TestIsTowardsIndexPrice(t *testing.T) {
 		"Towards: curr < new < idx": {
 			oldPrice:       1,
 			newPrice:       2,
-			indexPrice:     3,
+			daemonPrice:    3,
 			expectedResult: true,
 		},
 		"Towards: idx < new < curr": {
 			oldPrice:       3,
 			newPrice:       2,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: true,
 		},
 		"Towards: curr == new < idx": {
 			oldPrice:       1,
 			newPrice:       1,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: true,
 		},
 		"Towards: idx < new == curr": {
 			oldPrice:       2,
 			newPrice:       2,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: true,
 		},
 		"Towards: curr < new == idx": {
 			oldPrice:       1,
 			newPrice:       2,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: true,
 		},
 		"Towards: idx == new < curr": {
 			oldPrice:       2,
 			newPrice:       1,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: true,
 		},
 		"Towards: new == idx == curr": {
 			oldPrice:       1,
 			newPrice:       1,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: true,
 		},
 		"Not Towards: new < curr < idx": {
 			oldPrice:       2,
 			newPrice:       1,
-			indexPrice:     3,
+			daemonPrice:    3,
 			expectedResult: false,
 		},
 		"Not Towards: new < idx < curr": {
 			oldPrice:       3,
 			newPrice:       1,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: false,
 		},
 		"Not Towards: new < idx == curr": {
 			oldPrice:       2,
 			newPrice:       1,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: false,
 		},
 		"Not Towards: curr < idx < new": {
 			oldPrice:       1,
 			newPrice:       3,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: false,
 		},
 		"Not Towards: idx < curr < new": {
 			oldPrice:       2,
 			newPrice:       3,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
 		"Not Towards: curr == idx < new": {
 			oldPrice:       1,
 			newPrice:       2,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := isTowardsIndexPrice(PriceTuple{
-				OldPrice:   tc.oldPrice,
-				IndexPrice: tc.indexPrice,
-				NewPrice:   tc.newPrice,
+			result := isTowardsDaemonPrice(PriceTuple{
+				OldPrice:    tc.oldPrice,
+				DaemonPrice: tc.daemonPrice,
+				NewPrice:    tc.newPrice,
 			})
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
 }
 
-func TestIsCrossingIndexPrice(t *testing.T) {
+func TestIsCrossingDaemonPrice(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		oldPrice   uint64
-		newPrice   uint64
-		indexPrice uint64
+		oldPrice    uint64
+		newPrice    uint64
+		daemonPrice uint64
 
 		// Expected.
 		expectedResult bool
 	}{
-		"Crossing: curr < index < new": {
+		"Crossing: curr < daemon < new": {
 			oldPrice:       1,
 			newPrice:       3,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: true,
 		},
-		"Crossing: new < index < curr": {
+		"Crossing: new < daemon < curr": {
 			oldPrice:       3,
 			newPrice:       1,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: true,
 		},
-		"Not Crossing: curr < new < index": {
+		"Not Crossing: curr < new < daemon": {
 			oldPrice:       1,
 			newPrice:       2,
-			indexPrice:     3,
+			daemonPrice:    3,
 			expectedResult: false,
 		},
-		"Not Crossing: new < curr < index": {
+		"Not Crossing: new < curr < daemon": {
 			oldPrice:       2,
 			newPrice:       1,
-			indexPrice:     3,
+			daemonPrice:    3,
 			expectedResult: false,
 		},
-		"Not Crossing: new = curr < index": {
+		"Not Crossing: new = curr < daemon": {
 			oldPrice:       1,
 			newPrice:       1,
-			indexPrice:     3,
+			daemonPrice:    3,
 			expectedResult: false,
 		},
-		"Not Crossing: curr < new = index": {
+		"Not Crossing: curr < new = daemon": {
 			oldPrice:       1,
 			newPrice:       2,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: false,
 		},
-		"Not Crossing: new < curr = index": {
+		"Not Crossing: new < curr = daemon": {
 			oldPrice:       2,
 			newPrice:       1,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: false,
 		},
-		"Not Crossing: new = curr = index": {
+		"Not Crossing: new = curr = daemon": {
 			oldPrice:       1,
 			newPrice:       1,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
-		"Not Crossing: index < curr < new": {
+		"Not Crossing: daemon < curr < new": {
 			oldPrice:       2,
 			newPrice:       3,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
-		"Not Crossing: index < new < curr": {
+		"Not Crossing: daemon < new < curr": {
 			oldPrice:       3,
 			newPrice:       2,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
-		"Not Crossing: index < new = curr": {
+		"Not Crossing: daemon < new = curr": {
 			oldPrice:       2,
 			newPrice:       2,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
-		"Not Crossing: index = new < curr": {
+		"Not Crossing: daemon = new < curr": {
 			oldPrice:       2,
 			newPrice:       1,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
-		"Not Crossing: index = curr < new": {
+		"Not Crossing: daemon = curr < new": {
 			oldPrice:       1,
 			newPrice:       2,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := isCrossingIndexPrice(PriceTuple{
-				OldPrice:   tc.oldPrice,
-				IndexPrice: tc.indexPrice,
-				NewPrice:   tc.newPrice,
+			result := isCrossingDaemonPrice(PriceTuple{
+				OldPrice:    tc.oldPrice,
+				DaemonPrice: tc.daemonPrice,
+				NewPrice:    tc.newPrice,
 			})
 			require.Equal(t, tc.expectedResult, result)
 		})
@@ -367,98 +379,98 @@ func TestIsCrossingIndexPrice(t *testing.T) {
 func TestIsCrossingOldPrice(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
-		oldPrice   uint64
-		newPrice   uint64
-		indexPrice uint64
+		oldPrice    uint64
+		newPrice    uint64
+		daemonPrice uint64
 
 		// Expected.
 		expectedResult bool
 	}{
-		"False: oldPrice < indexPrice < newPrice": {
+		"False: oldPrice < daemonPrice < newPrice": {
 			oldPrice:       1,
 			newPrice:       3,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: false,
 		},
-		"False: oldPrice < newPrice < indexPrice": {
+		"False: oldPrice < newPrice < daemonPrice": {
 			oldPrice:       1,
 			newPrice:       2,
-			indexPrice:     3,
+			daemonPrice:    3,
 			expectedResult: false,
 		},
-		"True: indexPrice < oldPrice < newPrice": {
+		"True: daemonPrice < oldPrice < newPrice": {
 			oldPrice:       2,
 			newPrice:       3,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: true,
 		},
-		"True: newPrice < oldPrice < indexPrice": {
+		"True: newPrice < oldPrice < daemonPrice": {
 			oldPrice:       2,
 			newPrice:       1,
-			indexPrice:     3,
+			daemonPrice:    3,
 			expectedResult: true,
 		},
-		"False: indexPrice < newPrice < oldPrice": {
+		"False: daemonPrice < newPrice < oldPrice": {
 			oldPrice:       3,
 			newPrice:       2,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
-		"False: newPrice < indexPrice < oldPrice": {
+		"False: newPrice < daemonPrice < oldPrice": {
 			oldPrice:       3,
 			newPrice:       1,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: false,
 		},
-		"False: newPrice == oldPrice < indexPrice": {
+		"False: newPrice == oldPrice < daemonPrice": {
 			oldPrice:       1,
 			newPrice:       1,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: false,
 		},
-		"False: newPrice < oldPrice == indexPrice": {
+		"False: newPrice < oldPrice == daemonPrice": {
 			oldPrice:       2,
 			newPrice:       1,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: false,
 		},
-		"False: newPrice == oldPrice == indexPrice": {
+		"False: newPrice == oldPrice == daemonPrice": {
 			oldPrice:       1,
 			newPrice:       1,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
-		"False: indexPrice == oldPrice < newPrice": {
+		"False: daemonPrice == oldPrice < newPrice": {
 			oldPrice:       1,
 			newPrice:       2,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
-		"False: indexPrice < oldPrice == newPrice": {
+		"False: daemonPrice < oldPrice == newPrice": {
 			oldPrice:       2,
 			newPrice:       2,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
-		"False: oldPrice < indexPrice == newPrice": {
+		"False: oldPrice < daemonPrice == newPrice": {
 			oldPrice:       1,
 			newPrice:       2,
-			indexPrice:     2,
+			daemonPrice:    2,
 			expectedResult: false,
 		},
-		"False: indexPrice == newPrice < oldPrice": {
+		"False: daemonPrice == newPrice < oldPrice": {
 			oldPrice:       2,
 			newPrice:       1,
-			indexPrice:     1,
+			daemonPrice:    1,
 			expectedResult: false,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			result := isCrossingOldPrice(PriceTuple{
-				OldPrice:   tc.oldPrice,
-				IndexPrice: tc.indexPrice,
-				NewPrice:   tc.newPrice,
+				OldPrice:    tc.oldPrice,
+				DaemonPrice: tc.daemonPrice,
+				NewPrice:    tc.newPrice,
 			})
 			require.Equal(t, tc.expectedResult, result)
 		})

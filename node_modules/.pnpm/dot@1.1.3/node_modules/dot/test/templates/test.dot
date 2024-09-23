@@ -1,2 +1,0 @@
-{{=it && it.data}}
-{{#def.test}}

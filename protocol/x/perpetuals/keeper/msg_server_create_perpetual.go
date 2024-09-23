@@ -33,6 +33,7 @@ func (k msgServer) CreatePerpetual(
 		msg.Params.DefaultFundingPpm,
 		msg.Params.LiquidityTier,
 		msg.Params.MarketType,
+		msg.Params.DangerIndexPpm,
 		"0/1", // yield index should be initialised at 0 to start increment
 	)
 	if err != nil {

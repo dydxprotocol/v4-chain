@@ -249,7 +249,8 @@ describe('helpers', () => {
     };
     const market: MarketFromDatabase = {
       ...defaultMarket,
-      oraclePrice: '10000',
+      spotPrice: '10000',
+      pnlPrice: '10000',
     };
     const bigSize: Big = Big('20');
     expect(

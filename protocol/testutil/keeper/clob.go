@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
-	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
+	deleveragingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/deleveraging"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -218,7 +218,8 @@ func createClobKeeper(
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[sdk.Msg](),
-		liquidationtypes.NewDaemonLiquidationInfo(),
+		deleveragingtypes.NewDaemonDeleveragingInfo(),
+		nil,
 	)
 	k.SetAnteHandler(constants.EmptyAnteHandler)
 
@@ -287,6 +288,7 @@ func CreateNClobPair(
 					items[i].StepBaseQuantums,
 					perps[i].Params.LiquidityTier,
 					perps[i].Params.MarketType,
+					perps[i].Params.DangerIndexPpm,
 				),
 			),
 		).Return()

@@ -77,12 +77,13 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: 100_00,
+					InsuranceFundFeePpm: 100_00,
+					ValidatorFeePpm:     200_000,
+					LiquidityFeePpm:     800_000,
 					FillablePriceConfig: types.FillablePriceConfig{
 						BankruptcyAdjustmentPpm:           lib.OneMillion + 1,
 						SpreadToMaintenanceMarginRatioPpm: 1,
 					},
-					PositionBlockLimits:   constants.PositionBlockLimits_Default,
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
@@ -117,12 +118,13 @@ func TestGenesisState_Validate(t *testing.T) {
 		"spread to maintenance margin ratio of 0 is invalid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: 100_00,
+					InsuranceFundFeePpm: 100_00,
+					ValidatorFeePpm:     200_000,
+					LiquidityFeePpm:     800_000,
 					FillablePriceConfig: types.FillablePriceConfig{
 						BankruptcyAdjustmentPpm:           lib.OneMillion,
 						SpreadToMaintenanceMarginRatioPpm: 0,
 					},
-					PositionBlockLimits:   constants.PositionBlockLimits_Default,
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
@@ -132,12 +134,13 @@ func TestGenesisState_Validate(t *testing.T) {
 		"spread to maintenance margin ratio of greater than one million is valid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: 100_00,
+					InsuranceFundFeePpm: 100_00,
+					ValidatorFeePpm:     200_000,
+					LiquidityFeePpm:     800_000,
 					FillablePriceConfig: types.FillablePriceConfig{
 						BankruptcyAdjustmentPpm:           lib.OneMillion,
 						SpreadToMaintenanceMarginRatioPpm: lib.OneMillion + 1,
 					},
-					PositionBlockLimits:   constants.PositionBlockLimits_Default,
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
@@ -145,12 +148,13 @@ func TestGenesisState_Validate(t *testing.T) {
 		"bankruptcy adjustment ppm of 0 is invalid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: 100_00,
+					InsuranceFundFeePpm: 100_00,
+					ValidatorFeePpm:     200_000,
+					LiquidityFeePpm:     800_000,
 					FillablePriceConfig: types.FillablePriceConfig{
 						BankruptcyAdjustmentPpm:           0,
 						SpreadToMaintenanceMarginRatioPpm: lib.OneMillion,
 					},
-					PositionBlockLimits:   constants.PositionBlockLimits_Default,
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
@@ -160,12 +164,13 @@ func TestGenesisState_Validate(t *testing.T) {
 		"bankruptcy adjustment ppm of less than one million is invalid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: 100_00,
+					InsuranceFundFeePpm: 100_00,
+					ValidatorFeePpm:     200_000,
+					LiquidityFeePpm:     800_000,
 					FillablePriceConfig: types.FillablePriceConfig{
 						BankruptcyAdjustmentPpm:           lib.OneMillion - 1,
 						SpreadToMaintenanceMarginRatioPpm: lib.OneMillion,
 					},
-					PositionBlockLimits:   constants.PositionBlockLimits_Default,
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
@@ -175,80 +180,37 @@ func TestGenesisState_Validate(t *testing.T) {
 		"max liquidation fee ppm of zero is invalid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm:  0,
+					InsuranceFundFeePpm:   0,
+					ValidatorFeePpm:       200_000,
+					LiquidityFeePpm:       800_000,
 					FillablePriceConfig:   constants.FillablePriceConfig_Default,
-					PositionBlockLimits:   constants.PositionBlockLimits_Default,
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
 			expectedError: errors.New(
-				"0 is not a valid MaxLiquidationFeePpm: Proposed LiquidationsConfig is invalid"),
+				"0 is not a valid InsuranceFundFeePpm: Proposed LiquidationsConfig is invalid"),
 		},
 		"max liquidation fee ppm of greater than one million is invalid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm:  lib.OneMillion + 1,
+					InsuranceFundFeePpm:   lib.OneMillion + 1,
+					ValidatorFeePpm:       200_000,
+					LiquidityFeePpm:       800_000,
 					FillablePriceConfig:   constants.FillablePriceConfig_Default,
-					PositionBlockLimits:   constants.PositionBlockLimits_Default,
 					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
 				},
 			},
 			expectedError: errors.New(
-				"1000001 is not a valid MaxLiquidationFeePpm: Proposed LiquidationsConfig is invalid"),
-		},
-		"max position portion liquidated ppm of 0 is invalid": {
-			genState: &types.GenesisState{
-				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: lib.OneMillion,
-					FillablePriceConfig:  constants.FillablePriceConfig_Default,
-					PositionBlockLimits: types.PositionBlockLimits{
-						MinPositionNotionalLiquidated:   1_000,
-						MaxPositionPortionLiquidatedPpm: 0,
-					},
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
-				},
-			},
-			expectedError: errors.New(
-				"0 is not a valid MaxPositionPortionLiquidatedPpm: Proposed LiquidationsConfig is invalid"),
-		},
-		"max position portion liquidated ppm of greater than one million is invalid": {
-			genState: &types.GenesisState{
-				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: lib.OneMillion,
-					FillablePriceConfig:  constants.FillablePriceConfig_Default,
-					PositionBlockLimits: types.PositionBlockLimits{
-						MinPositionNotionalLiquidated:   1_000,
-						MaxPositionPortionLiquidatedPpm: lib.OneMillion + 1,
-					},
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
-				},
-			},
-			expectedError: errors.New(
-				"1000001 is not a valid MaxPositionPortionLiquidatedPpm: Proposed LiquidationsConfig is invalid"),
-		},
-		"max notional liquidated of 0 is invalid": {
-			genState: &types.GenesisState{
-				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: lib.OneMillion,
-					FillablePriceConfig:  constants.FillablePriceConfig_Default,
-					PositionBlockLimits:  constants.PositionBlockLimits_Default,
-					SubaccountBlockLimits: types.SubaccountBlockLimits{
-						MaxNotionalLiquidated:    0,
-						MaxQuantumsInsuranceLost: 100_000_000_000_000,
-					},
-				},
-			},
-			expectedError: errors.New(
-				"0 is not a valid MaxNotionalLiquidated: Proposed LiquidationsConfig is invalid"),
+				"1000001 is not a valid InsuranceFundFeePpm: Proposed LiquidationsConfig is invalid"),
 		},
 		"max quantums insurance lost of 0 is invalid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: lib.OneMillion,
-					FillablePriceConfig:  constants.FillablePriceConfig_Default,
-					PositionBlockLimits:  constants.PositionBlockLimits_Default,
+					InsuranceFundFeePpm: lib.OneMillion,
+					ValidatorFeePpm:     200_000,
+					LiquidityFeePpm:     800_000,
+					FillablePriceConfig: constants.FillablePriceConfig_Default,
 					SubaccountBlockLimits: types.SubaccountBlockLimits{
-						MaxNotionalLiquidated:    100_000_000_000_000,
 						MaxQuantumsInsuranceLost: 0,
 					},
 				},

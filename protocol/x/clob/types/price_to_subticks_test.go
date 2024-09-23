@@ -18,8 +18,9 @@ func TestPriceToSubticks(t *testing.T) {
 	}{
 		"typical BTC configuration, at $10_000": {
 			marketPrice: pricestypes.MarketPrice{
-				Price:    1_000_000_000, // $10_000
-				Exponent: -5,
+				SpotPrice: 1_000_000_000, // $10_000
+				PnlPrice:  1_000_000_000, // $10_000
+				Exponent:  -5,
 			},
 			clobPair: types.ClobPair{
 				QuantumConversionExponent: -8,
@@ -30,8 +31,9 @@ func TestPriceToSubticks(t *testing.T) {
 		},
 		"typical ETH configuration, at $1_200": {
 			marketPrice: pricestypes.MarketPrice{
-				Price:    1_200_000_000, // $1_200
-				Exponent: -6,
+				SpotPrice: 1_200_000_000, // $1_200
+				PnlPrice:  1_200_000_000, // $1_200
+				Exponent:  -6,
 			},
 			clobPair: types.ClobPair{
 				QuantumConversionExponent: -9,
@@ -42,8 +44,9 @@ func TestPriceToSubticks(t *testing.T) {
 		},
 		"retains digits if not divisible": {
 			marketPrice: pricestypes.MarketPrice{
-				Price:    1_200_000_000, // $1_200
-				Exponent: -6,
+				SpotPrice: 1_200_000_000, // $1_200
+				PnlPrice:  1_200_000_000, // $1_200
+				Exponent:  -6,
 			},
 			clobPair: types.ClobPair{
 				QuantumConversionExponent: -9,
@@ -55,18 +58,86 @@ func TestPriceToSubticks(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			subticks := types.PriceToSubticks(
+			spotSubticks := types.SpotPriceToSubticks(
 				tc.marketPrice,
 				tc.clobPair,
 				tc.baseAtomicResolution,
 				tc.quoteAtomicResolution,
 			)
-			if tc.bigExpectedSubticks.Cmp(subticks) != 0 {
+			if tc.bigExpectedSubticks.Cmp(spotSubticks) != 0 {
 				t.Fatalf(
 					"%s: bigExpectedSubticks: %s, subticks: %s",
 					name,
 					tc.bigExpectedSubticks.String(),
-					subticks.String(),
+					spotSubticks.String(),
+				)
+			}
+		})
+	}
+}
+
+func TestPnlPriceToSubticks(t *testing.T) {
+	tests := map[string]struct {
+		marketPrice           pricestypes.MarketPrice
+		clobPair              types.ClobPair
+		baseAtomicResolution  int32
+		quoteAtomicResolution int32
+		bigExpectedSubticks   *big.Rat
+	}{
+		"typical BTC configuration, at $10_000": {
+			marketPrice: pricestypes.MarketPrice{
+				SpotPrice: 1_000_000_000, // $10_000
+				PnlPrice:  1_000_000_000, // $10_000
+				Exponent:  -5,
+			},
+			clobPair: types.ClobPair{
+				QuantumConversionExponent: -8,
+			},
+			baseAtomicResolution:  -10,
+			quoteAtomicResolution: -6,
+			bigExpectedSubticks:   big.NewRat(100_000_000, 1),
+		},
+		"typical ETH configuration, at $1_200": {
+			marketPrice: pricestypes.MarketPrice{
+				SpotPrice: 1_200_000_000, // $1_200
+				PnlPrice:  1_200_000_000, // $1_200
+				Exponent:  -6,
+			},
+			clobPair: types.ClobPair{
+				QuantumConversionExponent: -9,
+			},
+			baseAtomicResolution:  -9,
+			quoteAtomicResolution: -6,
+			bigExpectedSubticks:   big.NewRat(1_200_000_000, 1),
+		},
+		"retains digits if not divisible": {
+			marketPrice: pricestypes.MarketPrice{
+				SpotPrice: 1_200_000_000, // $1_200
+				PnlPrice:  1_200_000_000, // $1_200
+				Exponent:  -6,
+			},
+			clobPair: types.ClobPair{
+				QuantumConversionExponent: -9,
+			},
+			baseAtomicResolution:  -18,
+			quoteAtomicResolution: -6,
+			bigExpectedSubticks:   big.NewRat(12, 10),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			pnlSubticks := types.PnlPriceToSubticks(
+				tc.marketPrice,
+				tc.clobPair,
+				tc.baseAtomicResolution,
+				tc.quoteAtomicResolution,
+			)
+			if tc.bigExpectedSubticks.Cmp(pnlSubticks) != 0 {
+				t.Fatalf(
+					"%s: bigExpectedSubticks: %s, subticks: %s",
+					name,
+					tc.bigExpectedSubticks.String(),
+					pnlSubticks.String(),
 				)
 			}
 		})
@@ -89,8 +160,9 @@ func TestSubticksToPrice(t *testing.T) {
 			baseAtomicResolution:  -10,
 			quoteAtomicResolution: -6,
 			expectedMarketPrice: pricestypes.MarketPrice{
-				Price:    1_000_000_000, // $10_000
-				Exponent: -5,
+				SpotPrice: 1_000_000_000, // $10_000
+				PnlPrice:  1_000_000_000, // $10_000
+				Exponent:  -5,
 			},
 		},
 		"typical ETH configuration, at $1_200": {
@@ -101,8 +173,9 @@ func TestSubticksToPrice(t *testing.T) {
 			baseAtomicResolution:  -9,
 			quoteAtomicResolution: -6,
 			expectedMarketPrice: pricestypes.MarketPrice{
-				Price:    1_200_000_000, // $1_200
-				Exponent: -6,
+				SpotPrice: 1_200_000_000, // $1_200
+				PnlPrice:  1_200_000_000, // $1_200
+				Exponent:  -6,
 			},
 		},
 		"high base atomic resolution, at $1000": {
@@ -113,8 +186,9 @@ func TestSubticksToPrice(t *testing.T) {
 			baseAtomicResolution:  -18,
 			quoteAtomicResolution: -6,
 			expectedMarketPrice: pricestypes.MarketPrice{
-				Price:    1_000_000_000, // $1_000
-				Exponent: -6,
+				SpotPrice: 1_000_000_000, // $1_000
+				PnlPrice:  1_000_000_000, // $1_000
+				Exponent:  -6,
 			},
 		},
 	}
@@ -127,11 +201,11 @@ func TestSubticksToPrice(t *testing.T) {
 				tc.baseAtomicResolution,
 				tc.quoteAtomicResolution,
 			)
-			if tc.expectedMarketPrice.Price != price {
+			if tc.expectedMarketPrice.SpotPrice != price {
 				t.Fatalf(
 					"%s: expected market price: %+v, price: %+v",
 					name,
-					tc.expectedMarketPrice.Price,
+					tc.expectedMarketPrice.SpotPrice,
 					price,
 				)
 			}

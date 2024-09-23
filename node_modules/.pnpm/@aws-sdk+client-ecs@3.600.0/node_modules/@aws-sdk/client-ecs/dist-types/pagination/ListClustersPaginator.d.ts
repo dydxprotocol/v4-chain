@@ -1,7 +1,0 @@
-import { Paginator } from "@smithy/types";
-import { ListClustersCommandInput, ListClustersCommandOutput } from "../commands/ListClustersCommand";
-import { ECSPaginationConfiguration } from "./Interfaces";
-/**
- * @public
- */
-export declare const paginateListClusters: (config: ECSPaginationConfiguration, input: ListClustersCommandInput, ...rest: any[]) => Paginator<ListClustersCommandOutput>;

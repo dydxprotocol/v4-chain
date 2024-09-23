@@ -866,13 +866,13 @@ func TestRecordMevMetrics(t *testing.T) {
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
-			err := ks.PricesKeeper.UpdateMarketPrices(
+			err := ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 				ctx,
-				[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-					{
-						MarketId: 0,
-						Price:    10_000_000, // $100
-					},
+				&pricestypes.MarketPriceUpdate{
+					MarketId:  0,
+					SpotPrice: 10_000_000, // $100
+					PnlPrice:  10_000_000, // $100
+
 				},
 			)
 			require.NoError(t, err)
@@ -897,6 +897,7 @@ func TestRecordMevMetrics(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -1290,6 +1291,7 @@ func TestGetMidPrices(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)

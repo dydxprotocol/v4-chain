@@ -29,12 +29,12 @@ export class FundingValidator extends Validator<FundingEventV1> {
         perpetualMarketRefresher.getPerpetualMarketFromId(
           perpetualId.toString(),
         ) === undefined) {
-          logger.error({
-            at: `${this.constructor.name}#validate`,
-            message: 'Invalid FundingEvent, perpetualId does not exist',
-            blockHeight: this.block.height,
-            event: this.event,
-          });
+        logger.error({
+          at: `${this.constructor.name}#validate`,
+          message: 'Invalid FundingEvent, perpetualId does not exist',
+          blockHeight: this.block.height,
+          event: this.event,
+        });
       }
     });
   }

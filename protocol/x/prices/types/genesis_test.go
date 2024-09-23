@@ -2,8 +2,9 @@ package types_test
 
 import (
 	"errors"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -41,12 +42,14 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 				MarketPrices: []types.MarketPrice{
 					{
-						Id:    0,
-						Price: constants.FiveBillion,
+						Id:        0,
+						SpotPrice: constants.FiveBillion,
+						PnlPrice:  constants.FiveBillion,
 					},
 					{
-						Id:    1,
-						Price: constants.FiveBillion,
+						Id:        1,
+						SpotPrice: constants.FiveBillion,
+						PnlPrice:  constants.FiveBillion,
 					},
 				},
 			},
@@ -65,8 +68,9 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 				MarketPrices: []types.MarketPrice{
 					{
-						Id:    0,
-						Price: constants.FiveBillion,
+						Id:        0,
+						SpotPrice: constants.FiveBillion,
+						PnlPrice:  constants.FiveBillion,
 					},
 				},
 			},
@@ -125,8 +129,9 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 				MarketPrices: []types.MarketPrice{
 					{
-						Id:    0,
-						Price: constants.FiveBillion,
+						Id:        0,
+						SpotPrice: constants.FiveBillion,
+						PnlPrice:  constants.FiveBillion,
 					},
 				},
 			},
@@ -152,12 +157,14 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 				MarketPrices: []types.MarketPrice{
 					{
-						Id:    0,
-						Price: constants.FiveBillion,
+						Id:        0,
+						SpotPrice: constants.FiveBillion,
+						PnlPrice:  constants.FiveBillion,
 					},
 					{
-						Id:    2, // nonconsecutive id
-						Price: constants.FiveBillion,
+						Id:        2, // nonconsecutive id
+						SpotPrice: constants.FiveBillion,
+						PnlPrice:  constants.FiveBillion,
 					},
 				},
 			},

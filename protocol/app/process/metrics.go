@@ -6,7 +6,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -30,18 +29,6 @@ func recordSuccessMetrics(ctx sdk.Context, txs *ProcessProposalTxs, totalNumTxs 
 		metrics.Success,
 		metrics.Count,
 	)
-
-	// Prices tx.
-	updateMarketPricesMsg, ok := txs.UpdateMarketPricesTx.GetMsg().(*pricestypes.MsgUpdateMarketPrices)
-	if ok {
-		telemetry.SetGauge(
-			float32(len(updateMarketPricesMsg.MarketPriceUpdates)),
-			ModuleName,
-			metrics.NumMarketPricesToUpdate,
-		)
-	} else {
-		ctx.Logger().Error("ProcessProposal: expected MsgUpdateMarketPrices")
-	}
 
 	// Funding tx.
 	// TODO(DEC-1254): add more metrics for Funding tx.

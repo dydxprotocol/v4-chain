@@ -150,8 +150,9 @@ func TestNotionalToCoinAmount(t *testing.T) {
 		"$9.5 notional, ATOM price at $9.5, get amount in `uatom` (exp = -6)": {
 			notionalQuoteQuantums: big.NewInt(9_500_000),
 			marketPrice: pricestypes.MarketPrice{
-				Price:    95_000,
-				Exponent: -4,
+				SpotPrice: 95_000,
+				PnlPrice:  95_000,
+				Exponent:  -4,
 			},
 			denomExp:                 -6,
 			bigRatExpectedCoinAmount: big.NewRat(1_000_000, 1),
@@ -159,8 +160,9 @@ func TestNotionalToCoinAmount(t *testing.T) {
 		"$4.75 notional, ATOM price at $9.5, get amount in `uatom` (exp = -6)": {
 			notionalQuoteQuantums: big.NewInt(4_750_000),
 			marketPrice: pricestypes.MarketPrice{
-				Price:    95_000,
-				Exponent: -4,
+				SpotPrice: 95_000,
+				PnlPrice:  95_000,
+				Exponent:  -4,
 			},
 			denomExp:                 -6,
 			bigRatExpectedCoinAmount: big.NewRat(500_000, 1),
@@ -168,8 +170,9 @@ func TestNotionalToCoinAmount(t *testing.T) {
 		"$10.5 notional, ETH price at $2000, get amount in `gwei` (exp = -9)": {
 			notionalQuoteQuantums: big.NewInt(10_500_000),
 			marketPrice: pricestypes.MarketPrice{
-				Price:    20_000_000_000,
-				Exponent: -7,
+				SpotPrice: 20_000_000_000,
+				PnlPrice:  20_000_000_000,
+				Exponent:  -7,
 			},
 			denomExp:                 -9,
 			bigRatExpectedCoinAmount: big.NewRat(5_250_000, 1),
@@ -177,8 +180,9 @@ func TestNotionalToCoinAmount(t *testing.T) {
 		"$1000 notional, ETH price at $2001.57, get amount in `gwei` (exp = -9)": {
 			notionalQuoteQuantums: big.NewInt(1_000_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Price:    20_015_700_000,
-				Exponent: -7,
+				SpotPrice: 20_015_700_000,
+				PnlPrice:  20_015_700_000,
+				Exponent:  -7,
 			},
 			denomExp:                 -9,
 			bigRatExpectedCoinAmount: big.NewRat(100_000_000_000_000, 200157), // 499607807.871 Gwei, or 0.499607807871 Eth.

@@ -25,6 +25,7 @@ lint:
     - SERVICE_SUFFIX
     - PACKAGE_VERSION_SUFFIX
     - RPC_REQUEST_STANDARD_NAME
+    - ENUM_ZERO_VALUE_SUFFIX
   ignore:
     - tendermint
   allow_comment_ignores: true

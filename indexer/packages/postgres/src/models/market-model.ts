@@ -46,7 +46,8 @@ export default class MarketModel extends Model {
         pair: { type: 'string' },
         exponent: { type: 'integer' },
         minPriceChangePpm: { type: 'integer' },
-        oraclePrice: { type: ['string', 'null'], pattern: NonNegativeNumericPattern, default: null },
+        spotPrice: { type: ['string', 'null'], pattern: NonNegativeNumericPattern, default: null },
+        pnlPrice: { type: ['string', 'null'], pattern: NonNegativeNumericPattern, default: null },
       },
     };
   }
@@ -63,7 +64,8 @@ export default class MarketModel extends Model {
       pair: 'string',
       exponent: 'integer',
       minPriceChangePpm: 'integer',
-      oraclePrice: 'string',
+      spotPrice: 'string',
+      pnlPrice: 'string',
     };
   }
 
@@ -75,5 +77,7 @@ export default class MarketModel extends Model {
 
   minPriceChangePpm!: number;
 
-  oraclePrice?: string;
+  spotPrice?: string;
+
+  pnlPrice?: string;
 }

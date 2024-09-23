@@ -29,9 +29,10 @@ func TestCreateMarket(t *testing.T) {
 			MinPriceChangePpm:  uint32(9_999),
 		},
 		types.MarketPrice{
-			Id:       0,
-			Exponent: int32(-6),
-			Price:    constants.FiveBillion,
+			Id:        0,
+			Exponent:  int32(-6),
+			SpotPrice: constants.FiveBillion,
+			PnlPrice:  constants.FiveBillion,
 		},
 	)
 
@@ -51,7 +52,8 @@ func TestCreateMarket(t *testing.T) {
 	// Verify expected price of 0 created.
 	require.Equal(t, uint32(0), marketPrice.Id)
 	require.Equal(t, int32(-6), marketPrice.Exponent)
-	require.Equal(t, constants.FiveBillion, marketPrice.Price)
+	require.Equal(t, constants.FiveBillion, marketPrice.SpotPrice)
+	require.Equal(t, constants.FiveBillion, marketPrice.PnlPrice)
 
 	require.Equal(t, marketParam.Pair, metrics.GetMarketPairForTelemetry(marketParam.Id))
 
@@ -111,7 +113,8 @@ func TestCreateMarket_Errors(t *testing.T) {
 		pair                                              string
 		minExchanges                                      uint32
 		minPriceChangePpm                                 uint32
-		price                                             uint64
+		spotPrice                                         uint64
+		pnlPrice                                          uint64
 		marketPriceIdDoesntMatchMarketParamId             bool
 		marketPriceExponentDoesntMatchMarketParamExponent bool
 		exchangeConfigJson                                string
@@ -122,7 +125,8 @@ func TestCreateMarket_Errors(t *testing.T) {
 			pair:               "", // pair cannot be empty
 			minExchanges:       uint32(2),
 			minPriceChangePpm:  uint32(50),
-			price:              constants.FiveBillion,
+			spotPrice:          constants.FiveBillion,
+			pnlPrice:           constants.FiveBillion,
 			exchangeConfigJson: validExchangeConfigJson,
 			expectedErr:        errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgMarketPairCannotBeEmpty).Error(),
 		},
@@ -130,22 +134,26 @@ func TestCreateMarket_Errors(t *testing.T) {
 			pair:               constants.BtcUsdPair,
 			minExchanges:       uint32(2),
 			minPriceChangePpm:  uint32(0), // must be > 0
-			price:              constants.FiveBillion,
+			spotPrice:          constants.FiveBillion,
+			pnlPrice:           constants.FiveBillion,
 			exchangeConfigJson: validExchangeConfigJson,
 			expectedErr:        errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
 		},
 		"Invalid min price change: ten thousand": {
-			pair:              constants.BtcUsdPair,
-			minExchanges:      uint32(2),
-			minPriceChangePpm: uint32(10_000), // must be < 10,000
-			price:             constants.FiveBillion,
-			expectedErr:       errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
+			pair:               constants.BtcUsdPair,
+			minExchanges:       uint32(2),
+			minPriceChangePpm:  uint32(10_000), // must be < 10,000
+			spotPrice:          constants.FiveBillion,
+			pnlPrice:           constants.FiveBillion,
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr:        errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
 		},
 		"Min exchanges cannot be zero": {
 			pair:               constants.BtcUsdPair,
 			minExchanges:       uint32(0), // cannot be zero
 			minPriceChangePpm:  uint32(50),
-			price:              constants.FiveBillion,
+			spotPrice:          constants.FiveBillion,
+			pnlPrice:           constants.FiveBillion,
 			exchangeConfigJson: validExchangeConfigJson,
 			expectedErr:        types.ErrZeroMinExchanges.Error(),
 		},
@@ -153,7 +161,8 @@ func TestCreateMarket_Errors(t *testing.T) {
 			pair:                                  constants.BtcUsdPair,
 			minExchanges:                          uint32(2),
 			minPriceChangePpm:                     uint32(50),
-			price:                                 constants.FiveBillion,
+			spotPrice:                             constants.FiveBillion,
+			pnlPrice:                              constants.FiveBillion,
 			marketPriceIdDoesntMatchMarketParamId: true,
 			exchangeConfigJson:                    validExchangeConfigJson,
 			expectedErr: errorsmod.Wrap(
@@ -165,12 +174,25 @@ func TestCreateMarket_Errors(t *testing.T) {
 			pair:              constants.BtcUsdPair,
 			minExchanges:      uint32(2),
 			minPriceChangePpm: uint32(50),
-			price:             constants.FiveBillion,
+			spotPrice:         constants.FiveBillion,
+			pnlPrice:          constants.FiveBillion,
 			marketPriceExponentDoesntMatchMarketParamExponent: true,
 			exchangeConfigJson: validExchangeConfigJson,
 			expectedErr: errorsmod.Wrap(
 				types.ErrInvalidInput,
 				"market param 0 exponent -6 does not match market price 0 exponent -5",
+			).Error(),
+		},
+		"Market spot and pnl price differ": {
+			pair:               constants.BtcUsdPair,
+			minExchanges:       uint32(2),
+			minPriceChangePpm:  uint32(50),
+			spotPrice:          constants.FiveBillion,
+			pnlPrice:           constants.FiveBillion + 1,
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr: errorsmod.Wrapf(
+				types.ErrInvalidInput,
+				"spot price and pnl price must be the same",
 			).Error(),
 		},
 	}
@@ -200,9 +222,10 @@ func TestCreateMarket_Errors(t *testing.T) {
 					ExchangeConfigJson: tc.exchangeConfigJson,
 				},
 				types.MarketPrice{
-					Id:       0 + marketPriceIdOffset,
-					Exponent: int32(-6) + marketPriceExponentOffset,
-					Price:    tc.price,
+					Id:        0 + marketPriceIdOffset,
+					Exponent:  int32(-6) + marketPriceExponentOffset,
+					SpotPrice: tc.spotPrice,
+					PnlPrice:  tc.pnlPrice,
 				},
 			)
 			require.EqualError(t, err, tc.expectedErr)

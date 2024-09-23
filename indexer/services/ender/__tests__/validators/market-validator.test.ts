@@ -145,7 +145,8 @@ describe('market-validator', () => {
         {
           ...defaultMarketPriceUpdate,
           priceUpdate: {
-            priceWithExponent: Long.fromValue(0, true),
+            spotPriceWithExponent: Long.fromValue(0, true),
+            pnlPriceWithExponent: Long.fromValue(0, true),
           },
         } as MarketEventV1,
         'Invalid MarketPriceUpdate, priceWithExponent must be > 0',

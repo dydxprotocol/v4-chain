@@ -35,6 +35,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	testlog "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/logger"
+	vetestutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
@@ -495,7 +496,9 @@ func (builder TestAppBuilder) Build() *TestApp {
 				tApp.builder.t.Fatal(err)
 				return nil
 			}
+
 			app, shutdownFn, err := launchValidatorInDir(validatorHomeDir, filteredAppOptions)
+
 			if err != nil {
 				tApp.builder.t.Fatal(err)
 				return nil
@@ -635,7 +638,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 		tApp.builder.t.Fatalf("Failed to finalize block %+v, err %+v", finalizeBlockResponse, err)
 	}
 
-	_, err = tApp.App.Commit()
+	_, err = tApp.App.Commit(&abcitypes.RequestCommit{})
 	require.NoError(tApp.builder.t, err)
 	if tApp.builder.enableNonDeterminismChecks {
 		finalizeBlockAndCommit(tApp.builder.t, tApp.ParallelApp, finalizeBlockRequest, tApp.App)
@@ -698,6 +701,7 @@ func (tApp *TestApp) AdvanceToBlock(
 		tApp.header.NextValidatorsHash = tApp.App.LastCommitID().Hash
 
 		deliverTxs := options.DeliverTxsOverride
+
 		if deliverTxs == nil {
 			// Prepare the proposal and process it.
 			prepareRequest := abcitypes.RequestPrepareProposal{
@@ -707,6 +711,12 @@ func (tApp *TestApp) AdvanceToBlock(
 				Time:               tApp.header.Time,
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
+				LocalLastCommit: vetestutil.GetEmptyLocalLastCommit(
+					tApp.App.ConsumerKeeper.GetAllCCValidator(tApp.App.NewContextLegacy(true, tApp.header)),
+					tApp.App.LastBlockHeight(),
+					0,
+					"localdydxprotocol",
+				),
 			}
 			if options.RequestPrepareProposalTxsOverride != nil {
 				prepareRequest.Txs = options.RequestPrepareProposalTxsOverride
@@ -737,6 +747,7 @@ func (tApp *TestApp) AdvanceToBlock(
 			if options.RequestProcessProposalTxsOverride != nil {
 				prepareResponse.Txs = options.RequestProcessProposalTxsOverride
 			}
+
 			processRequest := abcitypes.RequestProcessProposal{
 				Txs:                prepareResponse.Txs,
 				Hash:               tApp.header.AppHash,
@@ -744,6 +755,7 @@ func (tApp *TestApp) AdvanceToBlock(
 				Time:               tApp.header.Time,
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
+				ProposedLastCommit: vetestutil.GetEmptyProposedLastCommit(),
 			}
 			processResponse, processErr := tApp.App.ProcessProposal(&processRequest)
 
@@ -815,7 +827,6 @@ func (tApp *TestApp) AdvanceToBlock(
 		if tApp.builder.enableNonDeterminismChecks {
 			tApp.restartCrashingApp()
 		}
-
 		// Finalize the block
 		finalizeBlockRequest := abcitypes.RequestFinalizeBlock{
 			Txs:                deliverTxs,
@@ -825,8 +836,8 @@ func (tApp *TestApp) AdvanceToBlock(
 			NextValidatorsHash: tApp.header.NextValidatorsHash,
 			ProposerAddress:    tApp.header.ProposerAddress,
 		}
-		finalizeBlockResponse, finalizeBlockErr := tApp.App.FinalizeBlock(&finalizeBlockRequest)
 
+		finalizeBlockResponse, finalizeBlockErr := tApp.App.FinalizeBlock(&finalizeBlockRequest)
 		if options.ValidateFinalizeBlock != nil {
 			tApp.halted = options.ValidateFinalizeBlock(
 				tApp.App.NewContextLegacy(false, tApp.header),
@@ -845,6 +856,12 @@ func (tApp *TestApp) AdvanceToBlock(
 				finalizeBlockErr,
 			)
 			for i, txResult := range finalizeBlockResponse.TxResults {
+				// TODO: only do this if VE's are enabled, they aren't enabled in all tests like funding_e2e
+				if i == 0 {
+					// The first transaction is the block proposal is a VE
+					continue
+				}
+
 				require.Conditionf(
 					tApp.builder.t,
 					txResult.IsOK,
@@ -857,7 +874,7 @@ func (tApp *TestApp) AdvanceToBlock(
 		}
 
 		// Commit the block.
-		_, err := tApp.App.Commit()
+		_, err := tApp.App.Commit(&abcitypes.RequestCommit{})
 		require.NoError(tApp.builder.t, err)
 
 		// Finalize and commit all the blocks for the non-determinism checkers.
@@ -924,10 +941,11 @@ func finalizeBlockAndCommit(
 ) {
 	_, err := app.FinalizeBlock(&request)
 	require.NoError(t, err)
-	_, err = app.Commit()
+	_, err = app.Commit(&abcitypes.RequestCommit{})
 	require.NoError(t, err)
 
 	diffs := make([]string, 0)
+
 	if !bytes.Equal(app.LastCommitID().Hash, expectedApp.LastCommitID().Hash) {
 		rootMulti := app.CommitMultiStore().(*rootmulti.Store)
 		expectedRootMulti := expectedApp.CommitMultiStore().(*rootmulti.Store)
@@ -1133,13 +1151,21 @@ func (tApp *TestApp) PrepareProposal() (*abcitypes.ResponsePrepareProposal, erro
 		Time:               tApp.header.Time,
 		NextValidatorsHash: tApp.header.NextValidatorsHash,
 		ProposerAddress:    tApp.header.ProposerAddress,
+		LocalLastCommit: vetestutil.GetEmptyLocalLastCommit(
+			tApp.App.ConsumerKeeper.GetAllCCValidator(tApp.App.NewContextLegacy(true, tApp.header)),
+			tApp.App.LastBlockHeight()-1, // we are preparing proposal in the context of the previous block
+			0,
+			"localdydxprotocol",
+		),
 	})
 }
 
 // GetProposedOperations returns the operations queue that would be proposed if a proposal was generated by the
 // application for the current block height. This is helpful for testcases where we want to use DeliverTxsOverride
 // to insert new transactions, but preserve the operations that would have been proposed.
-func (tApp *TestApp) GetProposedOperationsTx() []byte {
+func (tApp *TestApp) GetProposedOperationsTx(
+	lastLocalCommit abcitypes.ExtendedCommitInfo,
+) []byte {
 	tApp.mtx.RLock()
 	defer tApp.mtx.RUnlock()
 	request := abcitypes.RequestPrepareProposal{
@@ -1149,7 +1175,9 @@ func (tApp *TestApp) GetProposedOperationsTx() []byte {
 		Time:               tApp.header.Time,
 		NextValidatorsHash: tApp.header.NextValidatorsHash,
 		ProposerAddress:    tApp.header.ProposerAddress,
+		LocalLastCommit:    lastLocalCommit,
 	}
+
 	response, err := tApp.App.PrepareProposal(&request)
 	require.NoError(
 		tApp.builder.t,
@@ -1159,7 +1187,8 @@ func (tApp *TestApp) GetProposedOperationsTx() []byte {
 		response,
 		err,
 	)
-	return response.Txs[0]
+
+	return response.Txs[appconstants.ProposedOperationsTxIndexWithVE]
 }
 
 // prepareValidatorHomeDir launches a validator using the `start` command with the specified genesis doc and application
@@ -1259,7 +1288,7 @@ func launchValidatorInDir(
 		// TODO(CORE-29): Allow the daemons to be launched and cleaned-up successfully by default.
 		"--price-daemon-enabled",
 		"false",
-		"--liquidation-daemon-enabled",
+		"--deleveraging-daemon-enabled",
 		"false",
 	})
 

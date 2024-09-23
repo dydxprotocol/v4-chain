@@ -18,7 +18,7 @@ describe('asset-validator', () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
   });
-  
+
   beforeEach(async () => {
     await testMocks.seedData();
     jest.spyOn(logger, 'error');

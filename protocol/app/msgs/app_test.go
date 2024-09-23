@@ -21,12 +21,12 @@ type testCase struct {
 var (
 	appInjectedSingle = testCase{
 		name:      "app-injected, multimsgs=false",
-		msg:       constants.ValidMsgUpdateMarketPrices,
+		msg:       constants.ValidMsgAddPremiumVotes,
 		multiMsgs: false,
 	}
 	appInjectedMulti = testCase{
 		name:      "app-injected, multimsgs=true",
-		msg:       constants.ValidMsgUpdateMarketPrices,
+		msg:       constants.ValidMsgAddPremiumVotes,
 		multiMsgs: true,
 	}
 	internalSingle = testCase{
@@ -188,9 +188,9 @@ func TestDisallowMsgs_PrepareProposal_Filter(t *testing.T) {
 					ValidateRespPrepare: func(ctx sdk.Context, resp abcitypes.ResponsePrepareProposal) (haltChain bool) {
 						proposalTxs := resp.GetTxs()
 						require.Len(t, proposalTxs, 3)
-						require.Equal(t, constants.ValidEmptyMsgProposedOperationsTxBytes, proposalTxs[0])
-						require.Equal(t, constants.EmptyMsgAddPremiumVotesTxBytes, proposalTxs[1])
-						require.Equal(t, constants.EmptyMsgUpdateMarketPricesTxBytes, proposalTxs[2])
+						require.Equal(t, constants.ValidMultiEmptyVoteExtInfoBytes, proposalTxs[0])
+						require.Equal(t, constants.ValidEmptyMsgProposedOperationsTxBytes, proposalTxs[1])
+						require.Equal(t, constants.EmptyMsgAddPremiumVotesTxBytes, proposalTxs[2])
 						return false
 					},
 
@@ -259,9 +259,9 @@ func getProposalTxsWithOtherTxs(otherTxsToAppend []byte) [][]byte {
 		panic("otherTxsToAppend cannot be nil")
 	}
 	return [][]byte{
+
 		constants.ValidEmptyMsgProposedOperationsTxBytes,
 		otherTxsToAppend,
 		constants.EmptyMsgAddPremiumVotesTxBytes,
-		constants.EmptyMsgUpdateMarketPricesTxBytes,
 	}
 }

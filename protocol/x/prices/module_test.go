@@ -3,11 +3,12 @@ package prices_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 
@@ -34,7 +35,7 @@ const (
 	validGenesisState = `{` +
 		`"market_params":[{"id":0,"pair":"DENT-USD","exponent":0,"min_exchanges":1,"min_price_change_ppm":1,` +
 		`"exchange_config_json":"{}"}],` +
-		`"market_prices":[{"id":0,"exponent":0,"price":"1"}]` +
+		`"market_prices":[{"id":0,"exponent":0,"spot_price":"1","pnl_price":"1"}]` +
 		`}`
 )
 
@@ -96,7 +97,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	// due to it using an unexported method on the interface thus we use reflection to access the field
 	// directly that contains the registrations.
 	fv := reflect.ValueOf(registry).Elem().FieldByName("implInterfaces")
-	require.Len(t, fv.MapKeys(), 6)
+	require.Len(t, fv.MapKeys(), 4)
 }
 
 func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
@@ -140,7 +141,7 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 		},
 		"Bad state: Invalid price": {
 			genesisJson: `{"market_params":[{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1,` +
-				`"exchangeConfigJson":"{}"}],"market_prices": [{"exponent":1,"price": "0"}]}`,
+				`"exchangeConfigJson":"{}"}],"market_prices": [{"exponent":1,"spot_price": "0", "pnl_price": "0"}]}`,
 			expectedErr: errorsmod.Wrap(
 				pricestypes.ErrInvalidInput,
 				"market param 0 exponent 0 does not match market price 0 exponent 1",

@@ -58,14 +58,16 @@ export const onePerpYieldIndex: string = "1/1";
 export const defaultMarketPriceUpdate: MarketEventV1 = {
   marketId: 0,
   priceUpdate: {
-    priceWithExponent: Long.fromValue(100000000, true),
+    spotPriceWithExponent: Long.fromValue(100000000, true),
+    pnlPriceWithExponent: Long.fromValue(100000000, true),
   },
 };
 
 export const defaultMarketPriceUpdate2: MarketEventV1 = {
   marketId: 10,
   priceUpdate: {
-    priceWithExponent: Long.fromValue(100000000, true),
+    spotPriceWithExponent: Long.fromValue(100000000, true),
+    pnlPriceWithExponent: Long.fromValue(100000000, true),
   },
 };
 
@@ -160,6 +162,7 @@ export const defaultPerpetualMarketCreateEventV2: PerpetualMarketCreateEventV2 =
   stepBaseQuantums: Long.fromValue(10, true),
   liquidityTier: 0,
   marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
+  dangerIndexPpm: 1000000,
 };
 
 export const defaultLiquidityTierUpsertEventV2: LiquidityTierUpsertEventV2 = {
@@ -200,6 +203,7 @@ export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
   marketId: 1,
   atomicResolution: -8,
   liquidityTier: 1,
+  dangerIndexPpm: 1000000,
   perpYieldIndex: '0/1',
 };
 

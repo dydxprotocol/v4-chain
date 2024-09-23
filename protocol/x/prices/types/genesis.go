@@ -28,14 +28,16 @@ func DefaultGenesis() *GenesisState {
 		},
 		MarketPrices: []MarketPrice{
 			{
-				Exponent: -5,
-				Id:       0,
-				Price:    2000000000,
+				Exponent:  -5,
+				Id:        0,
+				SpotPrice: 2000000000,
+				PnlPrice:  2000000000,
 			},
 			{
-				Exponent: -6,
-				Id:       1,
-				Price:    1500000000,
+				Exponent:  -6,
+				Id:        1,
+				SpotPrice: 1500000000,
+				PnlPrice:  1500000000,
 			},
 		},
 	}

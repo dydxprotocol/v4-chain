@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/store/prefix"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
@@ -486,67 +485,6 @@ func TestPruning(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMigratePruneableOrders(t *testing.T) {
-	memClob := &mocks.MemClob{}
-	memClob.On("SetClobKeeper", mock.Anything).Return()
-
-	ks := keepertest.NewClobKeepersTestContext(
-		t,
-		memClob,
-		&mocks.BankKeeper{},
-		&mocks.IndexerEventManager{},
-	)
-
-	ordersA := []types.OrderId{
-		constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-		constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price15_GTB20.OrderId,
-		constants.Order_Alice_Num0_Id1_Clob0_Sell10_Price15_GTB15.OrderId,
-	}
-	ordersB := []types.OrderId{
-		constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15.OrderId,
-		constants.Order_Bob_Num0_Id0_Clob1_Sell10_Price15_GTB20.OrderId,
-		constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price15_GTB20.OrderId,
-	}
-
-	ks.ClobKeeper.LegacyAddOrdersForPruning(
-		ks.Ctx,
-		ordersA,
-		10,
-	)
-	ks.ClobKeeper.LegacyAddOrdersForPruning(
-		ks.Ctx,
-		ordersB,
-		100,
-	)
-
-	ks.ClobKeeper.MigratePruneableOrders(ks.Ctx)
-
-	getPostMigrationOrdersAtHeight := func(height uint32) []types.OrderId {
-		postMigrationOrders := []types.OrderId{}
-		store := ks.ClobKeeper.GetPruneableOrdersStore(ks.Ctx, height)
-		it := store.Iterator(nil, nil)
-		defer it.Close()
-		for ; it.Valid(); it.Next() {
-			var orderId types.OrderId
-			err := orderId.Unmarshal(it.Value())
-			require.NoError(t, err)
-			postMigrationOrders = append(postMigrationOrders, orderId)
-		}
-		return postMigrationOrders
-	}
-
-	require.ElementsMatch(t, ordersA, getPostMigrationOrdersAtHeight(10))
-	require.ElementsMatch(t, ordersB, getPostMigrationOrdersAtHeight(100))
-
-	oldStore := prefix.NewStore(
-		ks.Ctx.KVStore(ks.StoreKey),
-		[]byte(types.LegacyBlockHeightToPotentiallyPrunableOrdersPrefix), // nolint:staticcheck
-	)
-	it := oldStore.Iterator(nil, nil)
-	defer it.Close()
-	require.False(t, it.Valid())
 }
 
 func TestRemoveOrderFillAmount(t *testing.T) {

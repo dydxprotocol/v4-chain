@@ -88,7 +88,7 @@ export function getUnrealizedPnl(
     });
     return Big(0).toFixed();
   }
-  if (marketsMap[perpetualMarket.marketId].oraclePrice === undefined) {
+  if (marketsMap[perpetualMarket.marketId].pnlPrice === undefined) {
     logger.error({
       at: 'getUnrealizedPnl',
       message: 'Oracle price is undefined for market',
@@ -98,7 +98,7 @@ export function getUnrealizedPnl(
   }
   return (
     Big(position.size).times(
-      Big(marketsMap[perpetualMarket.marketId].oraclePrice!).minus(position.entryPrice),
+      Big(marketsMap[perpetualMarket.marketId].pnlPrice!).minus(position.entryPrice),
     )
   ).toFixed();
 }

@@ -3,8 +3,9 @@ package constants
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"sort"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
@@ -13,7 +14,7 @@ import (
 const (
 	// MinimumRequiredExchangesPerMarket is the minimum number of markets required for a market to be reliably priced
 	// by the pricefeed daemon. This number was chosen to supply the minimum number of prices required to
-	// compute an index price for a market, given exchange unavailability due to exchange geo-fencing,
+	// compute an daemon price for a market, given exchange unavailability due to exchange geo-fencing,
 	// downtime, etc.
 	// Ok to drop this to 5 for some markets if needed, but 6 is better.
 	MinimumRequiredExchangesPerMarket = 6

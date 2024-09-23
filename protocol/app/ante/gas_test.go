@@ -19,8 +19,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante"
 	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,19 +45,8 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 
 			expectFreeInfiniteGasMeter: true,
 		},
-		"yes freeInfiniteGasMeter: single msg, MsgUpdateMarketPrices": {
-			msgOne: &pricestypes.MsgUpdateMarketPrices{}, // app-injected.
-
-			expectFreeInfiniteGasMeter: true,
-		},
 		"no freeInfiniteGasMeter: single msg": {
 			msgOne: &testdata.TestMsg{Signers: []string{"meh"}},
-
-			expectFreeInfiniteGasMeter: false,
-		},
-		"no freeInfiniteGasMeter: multi msg, MsgUpdateMarketPrices": {
-			msgOne: &pricestypes.MsgUpdateMarketPrices{}, // app-injected.
-			msgTwo: &testdata.TestMsg{Signers: []string{"meh"}},
 
 			expectFreeInfiniteGasMeter: false,
 		},

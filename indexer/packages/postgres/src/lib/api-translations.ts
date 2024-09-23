@@ -21,7 +21,6 @@ export function orderTIFToAPITIF(timeInForce: TimeInForce): APITimeInForce {
   return TIME_IN_FORCE_TO_API_TIME_IN_FORCE[timeInForce];
 }
 
-
 /**
  * Gets a list of all possible child subaccount numbers for a parent subaccount number
  * Child subaccounts = [128*0+parentSubaccount, 128*1+parentSubaccount ... 128*999+parentSubaccount]

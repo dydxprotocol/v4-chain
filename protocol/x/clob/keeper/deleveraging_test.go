@@ -32,7 +32,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetInsuranceFundBalance(t *testing.T) {
+func TestGetInsuranceFundBalanceInQuoteQuantums(t *testing.T) {
 	tests := map[string]struct {
 		// Setup
 		assets               []assettypes.Asset
@@ -93,7 +93,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 		"panics when asset not found in state": {
 			assets:        []assettypes.Asset{},
 			perpetualId:   0,
-			expectedError: errors.New("GetInsuranceFundBalance: TDai asset not found in state"),
+			expectedError: errors.New("GetInsuranceFundBalanceInQuoteQuantums: TDai asset not found in state"),
 		},
 	}
 
@@ -147,14 +147,14 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 					t,
 					tc.expectedError.Error(),
 					func() {
-						ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx, tc.perpetualId)
+						ks.ClobKeeper.GetInsuranceFundBalanceInQuoteQuantums(ks.Ctx, tc.perpetualId)
 					},
 				)
 			} else {
 				require.Equal(
 					t,
 					tc.expectedInsuranceFundBalance,
-					ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx, tc.perpetualId),
+					ks.ClobKeeper.GetInsuranceFundBalanceInQuoteQuantums(ks.Ctx, tc.perpetualId),
 				)
 			}
 		})
@@ -384,13 +384,12 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 
 			// Update the prices on the test markets.
 			for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
-				err := ks.PricesKeeper.UpdateMarketPrices(
+				err := ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 					ks.Ctx,
-					[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-						{
-							MarketId: marketId,
-							Price:    oraclePrice,
-						},
+					&pricestypes.MarketPriceUpdate{
+						MarketId:  marketId,
+						SpotPrice: oraclePrice,
+						PnlPrice:  oraclePrice,
 					},
 				)
 				require.NoError(t, err)
@@ -409,6 +408,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 					perpetual.Params.DefaultFundingPpm,
 					perpetual.Params.LiquidityTier,
 					perpetual.Params.MarketType,
+					perpetual.Params.DangerIndexPpm,
 					perpetual.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -432,6 +432,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 							clobPair.StepBaseQuantums,
 							perpetuals[i].Params.LiquidityTier,
 							perpetuals[i].Params.MarketType,
+							perpetuals[i].Params.DangerIndexPpm,
 						),
 					),
 				).Once().Return()
@@ -836,6 +837,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -870,6 +872,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 							clobPair.StepBaseQuantums,
 							perps[i].Params.LiquidityTier,
 							perps[i].Params.MarketType,
+							perps[i].Params.DangerIndexPpm,
 						),
 					),
 				).Once().Return()
@@ -925,7 +928,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			}
 
 			positions := clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts)
-			ks.ClobKeeper.DaemonLiquidationInfo.UpdateSubaccountsWithPositions(positions)
+			ks.ClobKeeper.DaemonDeleveragingInfo.UpdateSubaccountsWithPositions(positions)
 			fills, deltaQuantumsRemaining := ks.ClobKeeper.OffsetSubaccountPerpetualPosition(
 				ks.Ctx,
 				tc.liquidatedSubaccountId,
@@ -1357,6 +1360,7 @@ func TestProcessDeleveraging(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -1594,6 +1598,7 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -1746,11 +1751,10 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 			require.NoError(
 				t,
-				ks.PricesKeeper.UpdateMarketPrices(ks.Ctx, []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-					{
-						MarketId: uint32(0),
-						Price:    4_999_999_937, // Set the price to some large prime number.
-					},
+				ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(ks.Ctx, &pricestypes.MarketPriceUpdate{
+					MarketId:  uint32(0),
+					SpotPrice: 4_999_999_937, // Set the price to some large prime number.
+					PnlPrice:  4_999_999_937, // Set the price to some large prime number.
 				}),
 			)
 
@@ -1774,6 +1778,7 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)

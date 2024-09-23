@@ -759,6 +759,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -1015,6 +1016,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -1168,6 +1170,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 				constants.ClobPair_Btc.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
 			),
 		),
 	).Once().Return()
@@ -1232,6 +1235,7 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 				constants.ClobPair_Btc.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
 			),
 		),
 	).Once().Return()
@@ -1993,6 +1997,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 							cp.StepBaseQuantums,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketType,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.DangerIndexPpm,
 						),
 					),
 				).Once().Return()
@@ -2207,6 +2212,7 @@ func TestInitStatefulOrders(t *testing.T) {
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
 					),
 				),
 			).Once().Return()
@@ -2339,6 +2345,7 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
 					),
 				),
 			).Once().Return()

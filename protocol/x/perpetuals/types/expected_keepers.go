@@ -11,9 +11,9 @@ type PricesKeeper interface {
 		ctx sdk.Context,
 		id uint32,
 	) (marketPrice pricestypes.MarketPrice, err error)
-	GetMarketIdToValidIndexPrice(
+	GetMarketIdToValidDaemonPrice(
 		ctx sdk.Context,
-	) map[uint32]pricestypes.MarketPrice
+	) map[uint32]pricestypes.MarketSpotPrice
 }
 
 // PerpetualsClobKeeper defines the expected interface for the clob keeper.

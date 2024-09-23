@@ -14,7 +14,8 @@ CREATE OR REPLACE FUNCTION dydx_market_price_update_handler(block_height int, bl
 DECLARE
     market_record_id integer;
     market_record markets%ROWTYPE;
-    oracle_price numeric;
+    spot_price numeric;
+    pnl_price numeric;
     oracle_price_record oracle_prices%ROWTYPE;
 BEGIN
     market_record_id = (event_data->'marketId')::integer;
@@ -24,22 +25,28 @@ BEGIN
         RAISE EXCEPTION 'MarketPriceUpdateEvent contains a non-existent market id. Id: %', market_record_id;
     END IF;
 
-    oracle_price = dydx_trim_scale(
-        dydx_from_jsonlib_long(event_data->'priceUpdate'->'priceWithExponent') *
+    spot_price = dydx_trim_scale(
+        dydx_from_jsonlib_long(event_data->'priceUpdate'->'spotPriceWithExponent') *
+        power(10, market_record.exponent::numeric));
+    pnl_price = dydx_trim_scale(
+        dydx_from_jsonlib_long(event_data->'priceUpdate'->'pnlPriceWithExponent') *
         power(10, market_record.exponent::numeric));
 
-    market_record."oraclePrice" = oracle_price;
+    market_record."spotPrice" = spot_price;
+    market_record."pnlPrice" = pnl_price;
 
     UPDATE markets
     SET
-        "oraclePrice" = market_record."oraclePrice"
+        "spotPrice" = market_record."spotPrice",
+        "pnlPrice" = market_record."pnlPrice"
     WHERE id = market_record."id";
 
     oracle_price_record."id" = dydx_uuid_from_oracle_price_parts(market_record_id, block_height);
     oracle_price_record."effectiveAt" = block_time;
     oracle_price_record."effectiveAtHeight" = block_height;
     oracle_price_record."marketId" = market_record_id;
-    oracle_price_record."price" = oracle_price;
+    oracle_price_record."spotPrice" = spot_price;
+    oracle_price_record."pnlPrice" = pnl_price;
 
     INSERT INTO oracle_prices VALUES (oracle_price_record.*);
 

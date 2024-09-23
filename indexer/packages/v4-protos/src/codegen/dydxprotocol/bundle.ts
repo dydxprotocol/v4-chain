@@ -21,9 +21,9 @@ import * as _24 from "./clob/order";
 import * as _25 from "./clob/process_proposer_matches_events";
 import * as _26 from "./clob/query";
 import * as _27 from "./clob/tx";
-import * as _28 from "./daemons/liquidation/liquidation";
+import * as _28 from "./daemons/deleveraging/deleveraging";
 import * as _29 from "./daemons/pricefeed/price_feed";
-import * as _30 from "./daemons/sdai/sDAI";
+import * as _30 from "./daemons/sdai/sdai";
 import * as _31 from "./delaymsg/block_message_ids";
 import * as _32 from "./delaymsg/delayed_message";
 import * as _33 from "./delaymsg/genesis";
@@ -76,58 +76,59 @@ import * as _79 from "./subaccounts/perpetual_position";
 import * as _80 from "./subaccounts/query";
 import * as _81 from "./subaccounts/subaccount";
 import * as _82 from "./subaccounts/tx";
-import * as _90 from "./assets/query.lcd";
-import * as _91 from "./blocktime/query.lcd";
-import * as _92 from "./clob/query.lcd";
-import * as _93 from "./delaymsg/query.lcd";
-import * as _94 from "./epochs/query.lcd";
-import * as _95 from "./feetiers/query.lcd";
-import * as _96 from "./perpetuals/query.lcd";
-import * as _97 from "./prices/query.lcd";
-import * as _98 from "./ratelimit/query.lcd";
-import * as _99 from "./stats/query.lcd";
-import * as _100 from "./subaccounts/query.lcd";
-import * as _101 from "./assets/query.rpc.Query";
-import * as _102 from "./blocktime/query.rpc.Query";
-import * as _103 from "./clob/query.rpc.Query";
-import * as _104 from "./delaymsg/query.rpc.Query";
-import * as _105 from "./epochs/query.rpc.Query";
-import * as _106 from "./feetiers/query.rpc.Query";
-import * as _107 from "./perpetuals/query.rpc.Query";
-import * as _108 from "./prices/query.rpc.Query";
-import * as _109 from "./ratelimit/query.rpc.Query";
-import * as _110 from "./sending/query.rpc.Query";
-import * as _111 from "./stats/query.rpc.Query";
-import * as _112 from "./subaccounts/query.rpc.Query";
-import * as _113 from "./blocktime/tx.rpc.msg";
-import * as _114 from "./clob/tx.rpc.msg";
-import * as _115 from "./delaymsg/tx.rpc.msg";
-import * as _116 from "./feetiers/tx.rpc.msg";
-import * as _117 from "./perpetuals/tx.rpc.msg";
-import * as _118 from "./prices/tx.rpc.msg";
-import * as _119 from "./ratelimit/tx.rpc.msg";
-import * as _120 from "./sending/tx.rpc.msg";
-import * as _121 from "./stats/tx.rpc.msg";
-import * as _122 from "./subaccounts/tx.rpc.msg";
-import * as _123 from "./lcd";
-import * as _124 from "./rpc.query";
-import * as _125 from "./rpc.tx";
+import * as _83 from "./ve/ve";
+import * as _91 from "./assets/query.lcd";
+import * as _92 from "./blocktime/query.lcd";
+import * as _93 from "./clob/query.lcd";
+import * as _94 from "./delaymsg/query.lcd";
+import * as _95 from "./epochs/query.lcd";
+import * as _96 from "./feetiers/query.lcd";
+import * as _97 from "./perpetuals/query.lcd";
+import * as _98 from "./prices/query.lcd";
+import * as _99 from "./ratelimit/query.lcd";
+import * as _100 from "./stats/query.lcd";
+import * as _101 from "./subaccounts/query.lcd";
+import * as _102 from "./assets/query.rpc.Query";
+import * as _103 from "./blocktime/query.rpc.Query";
+import * as _104 from "./clob/query.rpc.Query";
+import * as _105 from "./delaymsg/query.rpc.Query";
+import * as _106 from "./epochs/query.rpc.Query";
+import * as _107 from "./feetiers/query.rpc.Query";
+import * as _108 from "./perpetuals/query.rpc.Query";
+import * as _109 from "./prices/query.rpc.Query";
+import * as _110 from "./ratelimit/query.rpc.Query";
+import * as _111 from "./sending/query.rpc.Query";
+import * as _112 from "./stats/query.rpc.Query";
+import * as _113 from "./subaccounts/query.rpc.Query";
+import * as _114 from "./blocktime/tx.rpc.msg";
+import * as _115 from "./clob/tx.rpc.msg";
+import * as _116 from "./delaymsg/tx.rpc.msg";
+import * as _117 from "./feetiers/tx.rpc.msg";
+import * as _118 from "./perpetuals/tx.rpc.msg";
+import * as _119 from "./prices/tx.rpc.msg";
+import * as _120 from "./ratelimit/tx.rpc.msg";
+import * as _121 from "./sending/tx.rpc.msg";
+import * as _122 from "./stats/tx.rpc.msg";
+import * as _123 from "./subaccounts/tx.rpc.msg";
+import * as _124 from "./lcd";
+import * as _125 from "./rpc.query";
+import * as _126 from "./rpc.tx";
 export namespace dydxprotocol {
   export const assets = { ..._5,
     ..._6,
     ..._7,
     ..._8,
-    ..._90,
-    ..._101
+    ..._91,
+    ..._102
   };
   export const blocktime = { ..._9,
     ..._10,
     ..._11,
     ..._12,
     ..._13,
-    ..._91,
-    ..._102,
-    ..._113
+    ..._92,
+    ..._103,
+    ..._114
   };
   export const clob = { ..._14,
     ..._15,
@@ -143,12 +144,12 @@ export namespace dydxprotocol {
     ..._25,
     ..._26,
     ..._27,
-    ..._92,
-    ..._103,
-    ..._114
+    ..._93,
+    ..._104,
+    ..._115
   };
   export namespace daemons {
-    export const liquidation = { ..._28
+    export const deleveraging = { ..._28
     };
     export const pricefeed = { ..._29
     };
@@ -160,23 +161,23 @@ export namespace dydxprotocol {
     ..._33,
     ..._34,
     ..._35,
-    ..._93,
-    ..._104,
-    ..._115
+    ..._94,
+    ..._105,
+    ..._116
   };
   export const epochs = { ..._36,
     ..._37,
     ..._38,
-    ..._94,
-    ..._105
+    ..._95,
+    ..._106
   };
   export const feetiers = { ..._39,
     ..._40,
     ..._41,
     ..._42,
-    ..._95,
-    ..._106,
-    ..._116
+    ..._96,
+    ..._107,
+    ..._117
   };
   export namespace indexer {
     export const events = { ..._43
@@ -203,18 +204,18 @@ export namespace dydxprotocol {
     ..._54,
     ..._55,
     ..._56,
-    ..._96,
-    ..._107,
-    ..._117
+    ..._97,
+    ..._108,
+    ..._118
   };
   export const prices = { ..._57,
     ..._58,
     ..._59,
     ..._60,
     ..._61,
-    ..._97,
-    ..._108,
-    ..._118
+    ..._98,
+    ..._109,
+    ..._119
   };
   export const ratelimit = { ..._62,
     ..._63,
@@ -222,25 +223,25 @@ export namespace dydxprotocol {
     ..._65,
     ..._66,
     ..._67,
-    ..._98,
-    ..._109,
-    ..._119
+    ..._99,
+    ..._110,
+    ..._120
   };
   export const sending = { ..._68,
     ..._69,
     ..._70,
     ..._71,
-    ..._110,
-    ..._120
+    ..._111,
+    ..._121
   };
   export const stats = { ..._72,
     ..._73,
     ..._74,
     ..._75,
     ..._76,
-    ..._99,
-    ..._111,
-    ..._121
+    ..._100,
+    ..._112,
+    ..._122
   };
   export const subaccounts = { ..._77,
     ..._78,
@@ -248,12 +249,14 @@ export namespace dydxprotocol {
     ..._80,
     ..._81,
     ..._82,
-    ..._100,
-    ..._112,
-    ..._122
+    ..._101,
+    ..._113,
+    ..._123
   };
-  export const ClientFactory = { ..._123,
-    ..._124,
-    ..._125
+  export const ve = { ..._83
+  };
+  export const ClientFactory = { ..._124,
+    ..._125,
+    ..._126
   };
 }

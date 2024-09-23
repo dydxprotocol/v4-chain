@@ -67,28 +67,9 @@ func (k Keeper) MustUpdateSubaccountPerpetualLiquidated(
 func (k Keeper) UpdateSubaccountLiquidationInfo(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
-	notionalLiquidatedQuoteQuantums *big.Int,
 	insuranceFundDeltaQuoteQuantums *big.Int,
 ) {
 	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
-
-	updatedNotionalLiquidatedQuoteQuantums := new(big.Int).Add(
-		new(big.Int).Abs(notionalLiquidatedQuoteQuantums),
-		new(big.Int).SetUint64(subaccountLiquidationInfo.NotionalLiquidated),
-	)
-	if !updatedNotionalLiquidatedQuoteQuantums.IsUint64() {
-		// This should never happen, since the total notional liquidated for any subaccount should
-		// never exceed the value of maximum notional liquidated (uint64) in the liquidation config.
-		panic(
-			errorsmod.Wrapf(
-				satypes.ErrIntegerOverflow,
-				"Notional liquidated update for subaccount %v overflows uint64",
-				subaccountId,
-			),
-		)
-	}
-
-	subaccountLiquidationInfo.NotionalLiquidated = updatedNotionalLiquidatedQuoteQuantums.Uint64()
 
 	// Update the total insurance funds lost for this subaccount if the insurance fund delta is
 	// negative.

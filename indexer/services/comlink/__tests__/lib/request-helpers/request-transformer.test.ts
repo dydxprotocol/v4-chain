@@ -62,7 +62,8 @@ describe('request-transformer', () => {
           clobPairId: perpetualMarket.clobPairId,
           ticker: perpetualMarket.ticker,
           status: perpetualMarket.status,
-          oraclePrice: market.oraclePrice,
+          spotPrice: market.spotPrice,
+          pnlPrice: market.pnlPrice,
           priceChange24H: perpetualMarket.priceChange24H,
           volume24H: perpetualMarket.volume24H,
           trades24H: perpetualMarket.trades24H,
@@ -76,6 +77,7 @@ describe('request-transformer', () => {
           ),
           openInterest: perpetualMarket.openInterest,
           atomicResolution: perpetualMarket.atomicResolution,
+          dangerIndexPpm: perpetualMarket.dangerIndexPpm,
           quantumConversionExponent: perpetualMarket.quantumConversionExponent,
           tickSize: Big(10).pow(-2).toFixed(), // 100 * 1e-8 * 1e-6 / 10e-10 = 1e-2
           stepSize: Big(10).pow(-9).toFixed(), // 10 * 1e-10 = 1e-9

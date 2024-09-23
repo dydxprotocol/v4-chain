@@ -140,7 +140,7 @@ func multiplyByPrice(
 //
 //	proratedFundingRate: prorated funding rate adjusted by time delta, in parts-per-million
 //	baseCurrencyAtomicResolution: atomic resolution of the base currency
-//	priceValue: index price of the perpetual market according to the pricesKeeper
+//	priceValue: daemon price of the perpetual market according to the pricesKeeper
 //	priceExponent: priceExponent of the market according to the pricesKeeper
 func FundingRateToIndex(
 	proratedFundingRate *big.Rat,

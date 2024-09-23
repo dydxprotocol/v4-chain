@@ -1,9 +1,10 @@
 package types_test
 
 import (
+	"testing"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const (
@@ -13,15 +14,15 @@ const (
 )
 
 func TestNewMarketToSmoothedPrices_IsEmpty(t *testing.T) {
-	mtsp := types.NewMarketToSmoothedPrices(types.SmoothedPriceTrackingBlockHistoryLength)
-	require.Empty(t, mtsp.GetSmoothedPricesForTest())
+	mtsp := types.NewMarketToSmoothedSpotPrices(types.SmoothedPriceTrackingBlockHistoryLength)
+	require.Empty(t, mtsp.GetSmoothedSpotPricesForTest())
 }
 
 func TestSetSmoothedPrice(t *testing.T) {
-	mtsp := types.NewMarketToSmoothedPrices(types.SmoothedPriceTrackingBlockHistoryLength)
+	mtsp := types.NewMarketToSmoothedSpotPrices(types.SmoothedPriceTrackingBlockHistoryLength)
 
-	mtsp.PushSmoothedPrice(marketId1, price1)
-	actualPrice, ok := mtsp.GetSmoothedPrice(marketId1)
+	mtsp.PushSmoothedSpotPrice(marketId1, price1)
+	actualPrice, ok := mtsp.GetSmoothedSpotPrice(marketId1)
 
 	require.True(t, ok)
 	require.Equal(t, actualPrice, price1)
@@ -31,8 +32,8 @@ func TestSetSmoothedPrice(t *testing.T) {
 	for i := 0; i < int(types.SmoothedPriceTrackingBlockHistoryLength); i++ {
 		updatePrice := price1 + uint64(i+1)*uint64(1_000_000_000)
 
-		mtsp.PushSmoothedPrice(marketId1, updatePrice)
-		actualPrice, ok := mtsp.GetSmoothedPrice(marketId1)
+		mtsp.PushSmoothedSpotPrice(marketId1, updatePrice)
+		actualPrice, ok := mtsp.GetSmoothedSpotPrice(marketId1)
 
 		require.True(t, ok)
 		require.Equal(t, actualPrice, updatePrice)
@@ -63,11 +64,11 @@ func TestGetHistoricalSmoothedPrices(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mtsp := types.NewMarketToSmoothedPrices(testSmoothedPriceHistoryLength)
+			mtsp := types.NewMarketToSmoothedSpotPrices(testSmoothedPriceHistoryLength)
 			for _, price := range tc.prices {
-				mtsp.PushSmoothedPrice(marketId1, price)
+				mtsp.PushSmoothedSpotPrice(marketId1, price)
 			}
-			require.Equal(t, tc.expectedPrices, mtsp.GetHistoricalSmoothedPrices(marketId1))
+			require.Equal(t, tc.expectedPrices, mtsp.GetHistoricalSmoothedSpotPrices(marketId1))
 		})
 	}
 }

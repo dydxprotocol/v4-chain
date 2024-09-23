@@ -25,19 +25,23 @@ message Perpetual {
     (gogoproto.nullable) = false
   ];
 
+  bytes last_funding_rate = 4 [
+    (gogoproto.customtype) =
+        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];  
+
   // The current yield index is determined by the cumulative
   // all-time history of the yield mechanism. Starts at 0.
   // This string should always be converted big.Rat.
-  string yield_index = 4;
+  string yield_index = 5;
 }
 
 enum PerpetualMarketType {
-  // Unspecified market type.
-  PERPETUAL_MARKET_TYPE_UNSPECIFIED = 0;
   // Market type for cross margin perpetual markets.
-  PERPETUAL_MARKET_TYPE_CROSS = 1;
+  PERPETUAL_MARKET_TYPE_CROSS = 0;
   // Market type for isolated margin perpetual markets.
-  PERPETUAL_MARKET_TYPE_ISOLATED = 2;
+  PERPETUAL_MARKET_TYPE_ISOLATED = 1;
 }
 
 // PerpetualParams represents the parameters of a perpetual on the dYdX
@@ -69,6 +73,9 @@ message PerpetualParams {
 
   // The market type specifying if this perpetual is cross or isolated
   PerpetualMarketType market_type = 7;
+
+  // The danger index is used to prioritze certain accounts and positions in liquidations
+  uint32 danger_index_ppm = 8;
 }
 
 // MarketPremiums stores a list of premiums for a single perpetual market.

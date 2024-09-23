@@ -201,6 +201,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				DefaultFundingPpm: genDefaultFundingPpm(r),
 				LiquidityTier:     uint32(simtypes.RandIntBetween(r, 0, numLiquidityTiers)),
 				MarketType:        marketType,
+				DangerIndexPpm:    0,
 			},
 			FundingIndex: dtypes.ZeroInt(),
 			OpenInterest: dtypes.ZeroInt(),

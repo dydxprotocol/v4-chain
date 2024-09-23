@@ -2401,6 +2401,7 @@ func setupProcessProposerOperationsTestCase(
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
 			p.Params.MarketType,
+			p.Params.DangerIndexPpm,
 			p.YieldIndex,
 		)
 		require.NoError(t, err)
@@ -2441,6 +2442,7 @@ func setupProcessProposerOperationsTestCase(
 						clobPair.StepBaseQuantums,
 						tc.perpetuals[perpetualId].Params.LiquidityTier,
 						tc.perpetuals[perpetualId].Params.MarketType,
+						tc.perpetuals[perpetualId].Params.DangerIndexPpm,
 					),
 				),
 			).Once().Return()
@@ -2467,13 +2469,12 @@ func setupProcessProposerOperationsTestCase(
 
 	// Update the oracle prices.
 	for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
-		err := ks.PricesKeeper.UpdateMarketPrices(
+		err := ks.PricesKeeper.UpdateSpotAndPnlMarketPrices(
 			ks.Ctx,
-			[]*pricestypes.MsgUpdateMarketPrices_MarketPrice{
-				{
-					MarketId: marketId,
-					Price:    oraclePrice,
-				},
+			&pricestypes.MarketPriceUpdate{
+				MarketId:  marketId,
+				SpotPrice: oraclePrice,
+				PnlPrice:  oraclePrice,
 			},
 		)
 		require.NoError(t, err)

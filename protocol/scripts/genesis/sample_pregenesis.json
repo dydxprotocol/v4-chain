@@ -489,13 +489,10 @@
           "bankruptcy_adjustment_ppm": 1000000,
           "spread_to_maintenance_margin_ratio_ppm": 1500000
         },
-        "max_liquidation_fee_ppm": 15000,
-        "position_block_limits": {
-          "max_position_portion_liquidated_ppm": 100000,
-          "min_position_notional_liquidated": 1000000000
-        },
+        "insurance_fund_fee_ppm": 15000,
+        "validator_fee_ppm": 200000,
+        "liquidity_fee_ppm": 800000,
         "subaccount_block_limits": {
-          "max_notional_liquidated": 100000000000,
           "max_quantums_insurance_lost": 1000000000000
         }
       }
@@ -823,7 +820,7 @@
             "id": 0,
             "liquidity_tier": 0,
             "market_id": 0,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "BTC-USD"
           },
           "yield_index": "0/1"
@@ -835,7 +832,7 @@
             "id": 1,
             "liquidity_tier": 0,
             "market_id": 1,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "ETH-USD"
           },
           "yield_index": "0/1"
@@ -847,7 +844,7 @@
             "id": 2,
             "liquidity_tier": 1,
             "market_id": 2,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "LINK-USD"
           },
           "yield_index": "0/1"
@@ -859,7 +856,7 @@
             "id": 3,
             "liquidity_tier": 1,
             "market_id": 3,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "MATIC-USD"
           },
           "yield_index": "0/1"
@@ -871,7 +868,7 @@
             "id": 4,
             "liquidity_tier": 1,
             "market_id": 4,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "CRV-USD"
           },
           "yield_index": "0/1"
@@ -883,7 +880,7 @@
             "id": 5,
             "liquidity_tier": 1,
             "market_id": 5,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "SOL-USD"
           },
           "yield_index": "0/1"
@@ -895,7 +892,7 @@
             "id": 6,
             "liquidity_tier": 1,
             "market_id": 6,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "ADA-USD"
           },
           "yield_index": "0/1"
@@ -907,7 +904,7 @@
             "id": 7,
             "liquidity_tier": 1,
             "market_id": 7,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "AVAX-USD"
           },
           "yield_index": "0/1"
@@ -919,7 +916,7 @@
             "id": 8,
             "liquidity_tier": 1,
             "market_id": 8,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "FIL-USD"
           },
           "yield_index": "0/1"
@@ -931,7 +928,7 @@
             "id": 9,
             "liquidity_tier": 1,
             "market_id": 9,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "LTC-USD"
           },
           "yield_index": "0/1"
@@ -943,7 +940,7 @@
             "id": 10,
             "liquidity_tier": 1,
             "market_id": 10,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "DOGE-USD"
           },
           "yield_index": "0/1"
@@ -955,7 +952,7 @@
             "id": 11,
             "liquidity_tier": 1,
             "market_id": 11,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "ATOM-USD"
           },
           "yield_index": "0/1"
@@ -967,7 +964,7 @@
             "id": 12,
             "liquidity_tier": 1,
             "market_id": 12,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "DOT-USD"
           },
           "yield_index": "0/1"
@@ -979,7 +976,7 @@
             "id": 13,
             "liquidity_tier": 1,
             "market_id": 13,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "UNI-USD"
           },
           "yield_index": "0/1"
@@ -991,7 +988,7 @@
             "id": 14,
             "liquidity_tier": 1,
             "market_id": 14,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "BCH-USD"
           },
           "yield_index": "0/1"
@@ -1003,7 +1000,7 @@
             "id": 15,
             "liquidity_tier": 1,
             "market_id": 15,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "TRX-USD"
           },
           "yield_index": "0/1"
@@ -1015,7 +1012,7 @@
             "id": 16,
             "liquidity_tier": 1,
             "market_id": 16,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "NEAR-USD"
           },
           "yield_index": "0/1"
@@ -1027,7 +1024,7 @@
             "id": 17,
             "liquidity_tier": 2,
             "market_id": 17,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "MKR-USD"
           },
           "yield_index": "0/1"
@@ -1039,7 +1036,7 @@
             "id": 18,
             "liquidity_tier": 1,
             "market_id": 18,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "XLM-USD"
           },
           "yield_index": "0/1"
@@ -1051,7 +1048,7 @@
             "id": 19,
             "liquidity_tier": 1,
             "market_id": 19,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "ETC-USD"
           },
           "yield_index": "0/1"
@@ -1063,7 +1060,7 @@
             "id": 20,
             "liquidity_tier": 2,
             "market_id": 20,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "COMP-USD"
           },
           "yield_index": "0/1"
@@ -1075,7 +1072,7 @@
             "id": 21,
             "liquidity_tier": 1,
             "market_id": 21,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "WLD-USD"
           },
           "yield_index": "0/1"
@@ -1087,7 +1084,7 @@
             "id": 22,
             "liquidity_tier": 2,
             "market_id": 22,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "APE-USD"
           },
           "yield_index": "0/1"
@@ -1099,7 +1096,7 @@
             "id": 23,
             "liquidity_tier": 1,
             "market_id": 23,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "APT-USD"
           },
           "yield_index": "0/1"
@@ -1111,7 +1108,7 @@
             "id": 24,
             "liquidity_tier": 1,
             "market_id": 24,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "ARB-USD"
           },
           "yield_index": "0/1"
@@ -1123,7 +1120,7 @@
             "id": 25,
             "liquidity_tier": 2,
             "market_id": 25,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "BLUR-USD"
           },
           "yield_index": "0/1"
@@ -1135,7 +1132,7 @@
             "id": 26,
             "liquidity_tier": 2,
             "market_id": 26,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "LDO-USD"
           },
           "yield_index": "0/1"
@@ -1147,7 +1144,7 @@
             "id": 27,
             "liquidity_tier": 1,
             "market_id": 27,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "OP-USD"
           },
           "yield_index": "0/1"
@@ -1159,7 +1156,7 @@
             "id": 28,
             "liquidity_tier": 1,
             "market_id": 28,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "PEPE-USD"
           },
           "yield_index": "0/1"
@@ -1171,7 +1168,7 @@
             "id": 29,
             "liquidity_tier": 2,
             "market_id": 29,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "SEI-USD"
           },
           "yield_index": "0/1"
@@ -1183,7 +1180,7 @@
             "id": 30,
             "liquidity_tier": 1,
             "market_id": 30,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "SHIB-USD"
           },
           "yield_index": "0/1"
@@ -1195,7 +1192,7 @@
             "id": 31,
             "liquidity_tier": 1,
             "market_id": 31,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "SUI-USD"
           },
           "yield_index": "0/1"
@@ -1207,7 +1204,7 @@
             "id": 32,
             "liquidity_tier": 1,
             "market_id": 32,
-            "market_type": 1,
+            "market_type": 0,
             "ticker": "XRP-USD"
           },
           "yield_index": "0/1"
@@ -1501,177 +1498,212 @@
         {
           "exponent": -5,
           "id": 0,
-          "price": 2868819524
+          "spot_price": 2868819524,
+          "pnl_price": 2868819524
         },
         {
           "exponent": -6,
           "id": 1,
-          "price": 1811985252
+          "spot_price": 1811985252,
+          "pnl_price": 1811985252
         },
         {
           "exponent": -9,
           "id": 2,
-          "price": 7204646989
+          "spot_price": 7204646989,
+          "pnl_price": 7204646989
         },
         {
           "exponent": -10,
           "id": 3,
-          "price": 6665746387
+          "spot_price": 6665746387,
+          "pnl_price": 6665746387
         },
         {
           "exponent": -10,
           "id": 4,
-          "price": 6029316660
+          "spot_price": 6029316660,
+          "pnl_price": 6029316660
         },
         {
           "exponent": -8,
           "id": 5,
-          "price": 2350695125
+          "spot_price": 2350695125,
+          "pnl_price": 2350695125
         },
         {
           "exponent": -10,
           "id": 6,
-          "price": 2918831290
+          "spot_price": 2918831290,
+          "pnl_price": 2918831290
         },
         {
           "exponent": -8,
           "id": 7,
-          "price": 1223293720
+          "spot_price": 1223293720,
+          "pnl_price": 1223293720
         },
         {
           "exponent": -9,
           "id": 8,
-          "price": 4050336602
+          "spot_price": 4050336602,
+          "pnl_price": 4050336602
         },
         {
           "exponent": -8,
           "id": 9,
-          "price": 8193604950
+          "spot_price": 8193604950,
+          "pnl_price": 8193604950
         },
         {
           "exponent": -11,
           "id": 10,
-          "price": 7320836895
+          "spot_price": 7320836895,
+          "pnl_price": 7320836895
         },
         {
           "exponent": -9,
           "id": 11,
-          "price": 8433494428
+          "spot_price": 8433494428,
+          "pnl_price": 8433494428
         },
         {
           "exponent": -9,
           "id": 12,
-          "price": 4937186533
+          "spot_price": 4937186533,
+          "pnl_price": 4937186533
         },
         {
           "exponent": -9,
           "id": 13,
-          "price": 5852293356
+          "spot_price": 5852293335,
+          "pnl_price": 5852293356
         },
         {
           "exponent": -7,
           "id": 14,
-          "price": 2255676327
+          "spot_price": 2255676327,
+          "pnl_price": 2255676327
         },
         {
           "exponent": -11,
           "id": 15,
-          "price": 7795369902
+          "spot_price": 7795369902,
+          "pnl_price": 7795369902
         },
         {
           "exponent": -9,
           "id": 16,
-          "price": 1312325536
+          "spot_price": 1312325536,
+          "pnl_price": 1312325536
         },
         {
           "exponent": -6,
           "id": 17,
-          "price": 1199517382
+          "spot_price": 1199517382,
+          "pnl_price": 1199517382
         },
         {
           "exponent": -10,
           "id": 18,
-          "price": 1398578933
+          "spot_price": 1398578933,
+          "pnl_price": 1398578933
         },
         {
           "exponent": -8,
           "id": 19,
-          "price": 1741060746
+          "spot_price": 1741060746,
+          "pnl_price": 1741060746
         },
         {
           "exponent": -8,
           "id": 20,
-          "price": 5717635307
+          "spot_price": 5717635307,
+          "pnl_price": 5717635307
         },
         {
           "exponent": -9,
           "id": 21,
-          "price": 1943019371
+          "spot_price": 1943019371,
+          "pnl_price": 1943019371
         },
         {
           "exponent": -9,
           "id": 22,
-          "price": 1842365656
+          "spot_price": 1842365656,
+          "pnl_price": 1842365656
         },
         {
           "exponent": -9,
           "id": 23,
-          "price": 6787621897
+          "spot_price": 6787621897,
+          "pnl_price": 6787621897
         },
         {
           "exponent": -9,
           "id": 24,
-          "price": 1127629325
+          "spot_price": 1127629325,
+          "pnl_price": 1127629325
         },
         {
           "exponent": -10,
           "id": 25,
-          "price": 2779565892
+          "spot_price": 2779565892,
+          "pnl_price": 2779565892
         },
         {
           "exponent": -9,
           "id": 26,
-          "price": 1855061997
+          "spot_price": 1855061997,
+          "pnl_price": 1855061997
         },
         {
           "exponent": -9,
           "id": 27,
-          "price": 1562218603
+          "spot_price": 1562218603,
+          "pnl_price": 1562218603
         },
         {
           "exponent": -16,
           "id": 28,
-          "price": 2481900353
+          "spot_price": 2481900353,
+          "pnl_price": 2481900353
         },
         {
           "exponent": -10,
           "id": 29,
-          "price": 1686998025
+          "spot_price": 1686998025,
+          "pnl_price": 1686998025
         },
         {
           "exponent": -15,
           "id": 30,
-          "price": 8895882688
+          "spot_price": 8895882688,
+          "pnl_price": 8895882688
         },
         {
           "exponent": -10,
           "id": 31,
-          "price": 5896318772
+          "spot_price": 5896318772,
+          "pnl_price": 5896318772
         },
         {
           "exponent": -10,
           "id": 32,
-          "price": 6327613800
+          "spot_price": 6327613800,
+          "pnl_price": 6327613800
         },
         {
           "exponent": -9,
           "id": 1000000,
-          "price": 1000000000
+          "spot_price": 1000000000,
+          "pnl_price": 1000000000
         },
         {
           "exponent": -9,
           "id": 1000001,
-          "price": 2050000000
+          "spot_price": 2050000000,
+          "pnl_price": 2050000000
         }
       ]
     },

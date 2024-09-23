@@ -8,6 +8,7 @@ func NewUpdatePerpetualEventV1(
 	marketId uint32,
 	atomicResolution int32,
 	liquidityTier uint32,
+	dangerIndexPpm uint32,
 	perpYieldIndex string,
 ) *UpdatePerpetualEventV1 {
 	return &UpdatePerpetualEventV1{
@@ -16,6 +17,7 @@ func NewUpdatePerpetualEventV1(
 		MarketId:         marketId,
 		AtomicResolution: atomicResolution,
 		LiquidityTier:    liquidityTier,
-		PerpYieldIndex:	  perpYieldIndex,
+		DangerIndexPpm:   dangerIndexPpm,
+		PerpYieldIndex:   perpYieldIndex,
 	}
 }

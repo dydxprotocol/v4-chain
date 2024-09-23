@@ -179,6 +179,7 @@ func TestGetCollateralPool(t *testing.T) {
 						p.Params.DefaultFundingPpm,
 						p.Params.LiquidityTier,
 						p.Params.MarketType,
+						p.Params.DangerIndexPpm,
 						p.YieldIndex,
 					)
 					require.NoError(t, err)
@@ -2233,7 +2234,8 @@ func TestUpdateSubaccounts(t *testing.T) {
 				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100)),
 				*pricestest.GenerateMarketParamPrice(
 					pricestest.WithId(101),
-					pricestest.WithPriceValue(0),
+					pricestest.WithSpotPriceValue(0),
+					pricestest.WithPnlPriceValue(0),
 				),
 			},
 			perpetualPositions: []*types.PerpetualPosition{
@@ -4904,10 +4906,11 @@ func TestUpdateSubaccounts(t *testing.T) {
 			}
 
 			for i, p := range tc.perpetuals {
-				perpetualsKeeper.SetPerpetualForTest(
+				err := perpetualsKeeper.ValidateAndSetPerpetual(
 					ctx,
 					p,
 				)
+				require.NoError(t, err)
 
 				// Update FundingIndex for testing settlements.
 				if i < len(tc.newFundingIndices) {
@@ -6441,6 +6444,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -7377,7 +7381,8 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				*pricestest.GenerateMarketParamPrice(pricestest.WithId(100)),
 				*pricestest.GenerateMarketParamPrice(
 					pricestest.WithId(101),
-					pricestest.WithPriceValue(0),
+					pricestest.WithSpotPriceValue(0),
+					pricestest.WithPnlPriceValue(0),
 				),
 			},
 			perpetualPositions: []*types.PerpetualPosition{
@@ -7589,6 +7594,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -8060,6 +8066,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)

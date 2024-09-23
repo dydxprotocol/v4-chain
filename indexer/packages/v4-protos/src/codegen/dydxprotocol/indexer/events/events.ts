@@ -218,7 +218,14 @@ export interface MarketPriceUpdateEventV1 {
    * price in dollars. For example if `Exponent == -5` then a `exponent_price`
    * of `1,000,000,000` represents “$10,000`.
    */
-  priceWithExponent: Long;
+  spotPriceWithExponent: Long;
+  /**
+   * pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
+   * price in dollars. For example if `Exponent == -5` then a `exponent_price`
+   * of `1,000,000,000` represents “$10,000`.
+   */
+
+  pnlPriceWithExponent: Long;
 }
 /**
  * MarketPriceUpdateEvent message contains all the information about a price
@@ -231,7 +238,14 @@ export interface MarketPriceUpdateEventV1SDKType {
    * price in dollars. For example if `Exponent == -5` then a `exponent_price`
    * of `1,000,000,000` represents “$10,000`.
    */
-  price_with_exponent: Long;
+  spot_price_with_exponent: Long;
+  /**
+   * pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
+   * price in dollars. For example if `Exponent == -5` then a `exponent_price`
+   * of `1,000,000,000` represents “$10,000`.
+   */
+
+  pnl_price_with_exponent: Long;
 }
 /** shared fields between MarketCreateEvent and MarketModifyEvent */
 
@@ -995,6 +1009,9 @@ export interface PerpetualMarketCreateEventV2 {
   /** Market type of the perpetual. */
 
   marketType: PerpetualMarketType;
+  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+
+  dangerIndexPpm: number;
 }
 /**
  * PerpetualMarketCreateEventV2 message contains all the information about a
@@ -1068,6 +1085,9 @@ export interface PerpetualMarketCreateEventV2SDKType {
   /** Market type of the perpetual. */
 
   market_type: PerpetualMarketTypeSDKType;
+  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+
+  danger_index_ppm: number;
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
@@ -1365,6 +1385,9 @@ export interface UpdatePerpetualEventV1 {
    */
 
   liquidityTier: number;
+  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+
+  dangerIndexPpm: number;
   /** The perp yield index of this perpetual market */
 
   perpYieldIndex: string;
@@ -1407,6 +1430,9 @@ export interface UpdatePerpetualEventV1SDKType {
    */
 
   liquidity_tier: number;
+  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+
+  danger_index_ppm: number;
   /** The perp yield index of this perpetual market */
 
   perp_yield_index: string;
@@ -1633,14 +1659,19 @@ export const MarketEventV1 = {
 
 function createBaseMarketPriceUpdateEventV1(): MarketPriceUpdateEventV1 {
   return {
-    priceWithExponent: Long.UZERO
+    spotPriceWithExponent: Long.UZERO,
+    pnlPriceWithExponent: Long.UZERO
   };
 }
 
 export const MarketPriceUpdateEventV1 = {
   encode(message: MarketPriceUpdateEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (!message.priceWithExponent.isZero()) {
-      writer.uint32(8).uint64(message.priceWithExponent);
+    if (!message.spotPriceWithExponent.isZero()) {
+      writer.uint32(8).uint64(message.spotPriceWithExponent);
+    }
+
+    if (!message.pnlPriceWithExponent.isZero()) {
+      writer.uint32(16).uint64(message.pnlPriceWithExponent);
     }
 
     return writer;
@@ -1656,7 +1687,11 @@ export const MarketPriceUpdateEventV1 = {
 
       switch (tag >>> 3) {
         case 1:
-          message.priceWithExponent = (reader.uint64() as Long);
+          message.spotPriceWithExponent = (reader.uint64() as Long);
+          break;
+
+        case 2:
+          message.pnlPriceWithExponent = (reader.uint64() as Long);
           break;
 
         default:
@@ -1670,7 +1705,8 @@ export const MarketPriceUpdateEventV1 = {
 
   fromPartial(object: DeepPartial<MarketPriceUpdateEventV1>): MarketPriceUpdateEventV1 {
     const message = createBaseMarketPriceUpdateEventV1();
-    message.priceWithExponent = object.priceWithExponent !== undefined && object.priceWithExponent !== null ? Long.fromValue(object.priceWithExponent) : Long.UZERO;
+    message.spotPriceWithExponent = object.spotPriceWithExponent !== undefined && object.spotPriceWithExponent !== null ? Long.fromValue(object.spotPriceWithExponent) : Long.UZERO;
+    message.pnlPriceWithExponent = object.pnlPriceWithExponent !== undefined && object.pnlPriceWithExponent !== null ? Long.fromValue(object.pnlPriceWithExponent) : Long.UZERO;
     return message;
   }
 
@@ -2923,7 +2959,8 @@ function createBasePerpetualMarketCreateEventV2(): PerpetualMarketCreateEventV2 
     subticksPerTick: 0,
     stepBaseQuantums: Long.UZERO,
     liquidityTier: 0,
-    marketType: 0
+    marketType: 0,
+    dangerIndexPpm: 0
   };
 }
 
@@ -2971,6 +3008,10 @@ export const PerpetualMarketCreateEventV2 = {
 
     if (message.marketType !== 0) {
       writer.uint32(88).int32(message.marketType);
+    }
+
+    if (message.dangerIndexPpm !== 0) {
+      writer.uint32(96).uint32(message.dangerIndexPpm);
     }
 
     return writer;
@@ -3029,6 +3070,10 @@ export const PerpetualMarketCreateEventV2 = {
           message.marketType = (reader.int32() as any);
           break;
 
+        case 12:
+          message.dangerIndexPpm = reader.uint32();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -3051,6 +3096,7 @@ export const PerpetualMarketCreateEventV2 = {
     message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
     message.liquidityTier = object.liquidityTier ?? 0;
     message.marketType = object.marketType ?? 0;
+    message.dangerIndexPpm = object.dangerIndexPpm ?? 0;
     return message;
   }
 
@@ -3438,6 +3484,7 @@ function createBaseUpdatePerpetualEventV1(): UpdatePerpetualEventV1 {
     marketId: 0,
     atomicResolution: 0,
     liquidityTier: 0,
+    dangerIndexPpm: 0,
     perpYieldIndex: ""
   };
 }
@@ -3464,8 +3511,12 @@ export const UpdatePerpetualEventV1 = {
       writer.uint32(40).uint32(message.liquidityTier);
     }
 
+    if (message.dangerIndexPpm !== 0) {
+      writer.uint32(48).uint32(message.dangerIndexPpm);
+    }
+
     if (message.perpYieldIndex !== "") {
-      writer.uint32(50).string(message.perpYieldIndex);
+      writer.uint32(58).string(message.perpYieldIndex);
     }
 
     return writer;
@@ -3501,6 +3552,10 @@ export const UpdatePerpetualEventV1 = {
           break;
 
         case 6:
+          message.dangerIndexPpm = reader.uint32();
+          break;
+
+        case 7:
           message.perpYieldIndex = reader.string();
           break;
 
@@ -3520,6 +3575,7 @@ export const UpdatePerpetualEventV1 = {
     message.marketId = object.marketId ?? 0;
     message.atomicResolution = object.atomicResolution ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
+    message.dangerIndexPpm = object.dangerIndexPpm ?? 0;
     message.perpYieldIndex = object.perpYieldIndex ?? "";
     return message;
   }

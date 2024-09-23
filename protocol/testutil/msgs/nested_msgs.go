@@ -7,7 +7,6 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
-	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sending "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 )
 
@@ -20,9 +19,6 @@ func init() {
 
 	_ = testTxBuilder.SetMsgs(MsgCancelUpgrade)
 	MsgCancelUpgradeTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
-
-	_ = testTxBuilder.SetMsgs(&MsgExecWithAppInjectedInner)
-	MsgExecWithAppInjectedInnerTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
 
 	_ = testTxBuilder.SetMsgs(&MsgExecWithDydxMessage)
 	MsgExecWithDydxMessageTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
@@ -44,12 +40,6 @@ var (
 		Authority: constants.Bob_Num0.Owner,
 	}
 	MsgCancelUpgradeTxBytes []byte
-
-	MsgExecWithAppInjectedInner = authz.NewMsgExec(
-		constants.AliceAccAddress,
-		[]sdk.Msg{&prices.MsgUpdateMarketPrices{}},
-	)
-	MsgExecWithAppInjectedInnerTxBytes []byte
 
 	MsgExecWithDydxMessage = authz.NewMsgExec(
 		constants.AliceAccAddress,

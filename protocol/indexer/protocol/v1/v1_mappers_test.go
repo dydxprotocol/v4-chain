@@ -433,7 +433,6 @@ func TestConvertToPerpetualMarketType(t *testing.T) {
 	type convertToPerpetualMarketTypeTestCase struct {
 		status         perptypes.PerpetualMarketType
 		expectedStatus v1types.PerpetualMarketType
-		expectedPanic  string
 	}
 
 	tests := make(map[string]convertToPerpetualMarketTypeTestCase)
@@ -444,32 +443,16 @@ func TestConvertToPerpetualMarketType(t *testing.T) {
 			status:         perptypes.PerpetualMarketType(value),
 			expectedStatus: v1types.PerpetualMarketType(perptypes.PerpetualMarketType_value[name]),
 		}
-		if value == int32(perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED) {
-			testCase.expectedPanic = fmt.Sprintf(
-				"ConvertToPerpetualMarketType: invalid perpetual market type: %+v",
-				perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED,
-			)
-		}
 		tests[testName] = testCase
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			if tc.expectedPanic != "" {
-				require.PanicsWithValue(
-					t,
-					tc.expectedPanic,
-					func() {
-						v1.ConvertToPerpetualMarketType(tc.status)
-					},
-				)
-			} else {
-				require.Equal(
-					t,
-					tc.expectedStatus,
-					v1.ConvertToPerpetualMarketType(tc.status),
-				)
-			}
+			require.Equal(
+				t,
+				tc.expectedStatus,
+				v1.ConvertToPerpetualMarketType(tc.status),
+			)
 		})
 	}
 }
