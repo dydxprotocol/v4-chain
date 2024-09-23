@@ -177,17 +177,16 @@ func (k Keeper) GetAllRevShares(
 		return types.RevSharesForFill{}, nil
 	}
 	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
-	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
-	if err != nil {
-		log.ErrorLogWithError(ctx, "error getting unconditional rev shares", err)
-		return types.RevSharesForFill{}, nil
-	}
-
 	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
 		log.ErrorLog(ctx, "net fees sub affiliate fees shared is less than or equal to 0")
 		return types.RevSharesForFill{}, nil
 	}
 
+	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
+	if err != nil {
+		log.ErrorLogWithError(ctx, "error getting unconditional rev shares", err)
+		return types.RevSharesForFill{}, nil
+	}
 	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
 	if err != nil {
 		log.ErrorLogWithError(ctx, "error getting market mapper rev shares", err)

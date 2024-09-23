@@ -324,6 +324,9 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			expectedRevSharesForFill: types.RevSharesForFill{
 				AllRevShares: []types.RevShare{
 					{
+						// BobAddress has 500000000000000000000000 coins staked
+						// via genesis. Which puts Bob at the highest tier
+						// and gives him a 15% taker fee share.
 						Recipient:         constants.BobAccAddress.String(),
 						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 						RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
