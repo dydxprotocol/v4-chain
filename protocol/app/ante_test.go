@@ -29,7 +29,6 @@ func newHandlerOptions() app.HandlerOptions {
 		AuthStoreKey:      dydxApp.CommitMultiStore().(*rootmulti.Store).StoreKeysByName()[authtypes.StoreKey],
 		PerpetualsKeeper:  dydxApp.PerpetualsKeeper,
 		PricesKeeper:      dydxApp.PricesKeeper,
-		MarketMapKeeper:   &dydxApp.MarketMapKeeper,
 	}
 }
 
@@ -60,10 +59,6 @@ func TestNewAnteHandler_Error(t *testing.T) {
 		"nil PricesKeeper": {
 			handlerMutation: func(options *app.HandlerOptions) { options.PricesKeeper = nil },
 			errorMsg:        "prices keeper is required for ante builder",
-		},
-		"nil MarketMapKeeper": {
-			handlerMutation: func(options *app.HandlerOptions) { options.MarketMapKeeper = nil },
-			errorMsg:        "market map keeper is required for ante builder",
 		},
 		"nil handlerOptions.SignModeHandler": {
 			handlerMutation: func(options *app.HandlerOptions) { options.SignModeHandler = nil },
