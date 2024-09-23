@@ -501,7 +501,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 				FillQuoteQuantums:                 big.NewInt(800_000_000),
 				ProductId:                         uint32(1),
 				MarketId:                          uint32(1),
-				MonthlyRollingTakerVolumeQuantums: 50_000_000_000,
+				MonthlyRollingTakerVolumeQuantums: 60_000_000_000_000,
 			},
 			revSharesForFill: revsharetypes.RevSharesForFill{
 				AllRevShares: []revsharetypes.RevShare{
