@@ -24,7 +24,6 @@ import {
   UpdateClobPairEventV1,
   SubaccountMessage,
   DeleveragingEventV1,
-  OpenInterestUpdateEventV1,
   TradingRewardsEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -232,10 +231,26 @@ export function indexerTendermintEventToEventProtoWithType(
         blockEventIndex,
       };
     }
+<<<<<<< HEAD
     case (DydxIndexerSubtypes.OPEN_INTEREST_UPDATE.toString()): {
       return {
         type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
         eventProto: OpenInterestUpdateEventV1.decode(eventDataBinary),
+=======
+    case (DydxIndexerSubtypes.REGISTER_AFFILIATE.toString()): {
+      return {
+        type: DydxIndexerSubtypes.REGISTER_AFFILIATE,
+        eventProto: RegisterAffiliateEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
+        blockEventIndex,
+      };
+    }
+    case (DydxIndexerSubtypes.UPSERT_VAULT.toString()): {
+      return {
+        type: DydxIndexerSubtypes.UPSERT_VAULT,
+        eventProto: UpsertVaultEventV1.decode(eventDataBinary),
+>>>>>>> 06eeb778 (Remove open interest handler (#2319))
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
