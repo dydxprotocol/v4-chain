@@ -30,6 +30,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryTotalShares())
 	cmd.AddCommand(CmdQueryListOwnerShares())
 	cmd.AddCommand(CmdQueryMegavaultWithdrawalInfo())
+	cmd.AddCommand(CmdQueryOwnerShares())
 
 	return cmd
 }
@@ -169,11 +170,11 @@ func CmdQueryListOwnerShares() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			request := &types.QueryMegavaultOwnerSharesRequest{
+			request := &types.QueryMegavaultAllOwnerSharesRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.MegavaultOwnerShares(context.Background(), request)
+			res, err := queryClient.MegavaultAllOwnerShares(context.Background(), request)
 			if err != nil {
 				return err
 			}
@@ -208,6 +209,33 @@ func CmdQueryMegavaultWithdrawalInfo() *cobra.Command {
 					SharesToWithdraw: types.NumShares{
 						NumShares: dtypes.NewIntFromUint64(shares),
 					},
+				},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryOwnerShares() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "owner-shares [address]",
+		Short: "get owner shares by their address",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.MegavaultOwnerShares(
+				context.Background(),
+				&types.QueryMegavaultOwnerSharesRequest{
+					Address: args[0],
 				},
 			)
 			if err != nil {
