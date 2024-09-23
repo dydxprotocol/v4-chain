@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryParamsRequest, QueryParamsResponseSDKType, QueryVaultRequest, QueryVaultResponseSDKType, QueryAllVaultsRequest, QueryAllVaultsResponseSDKType, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponseSDKType, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponseSDKType, QueryVaultParamsRequest, QueryVaultParamsResponseSDKType } from "./query";
+import { QueryParamsRequest, QueryParamsResponseSDKType, QueryVaultRequest, QueryVaultResponseSDKType, QueryAllVaultsRequest, QueryAllVaultsResponseSDKType, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponseSDKType, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponseSDKType, QueryVaultParamsRequest, QueryVaultParamsResponseSDKType, QueryMegavaultWithdrawalInfoRequest, QueryMegavaultWithdrawalInfoResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -16,6 +16,7 @@ export class LCDQueryClient {
     this.megavaultTotalShares = this.megavaultTotalShares.bind(this);
     this.megavaultOwnerShares = this.megavaultOwnerShares.bind(this);
     this.vaultParams = this.vaultParams.bind(this);
+    this.megavaultWithdrawalInfo = this.megavaultWithdrawalInfo.bind(this);
   }
   /* Queries the Params. */
 
@@ -78,6 +79,21 @@ export class LCDQueryClient {
   async vaultParams(params: QueryVaultParamsRequest): Promise<QueryVaultParamsResponseSDKType> {
     const endpoint = `dydxprotocol/vault/params/${params.type}/${params.number}`;
     return await this.req.get<QueryVaultParamsResponseSDKType>(endpoint);
+  }
+  /* Queries withdrawal info for megavault. */
+
+
+  async megavaultWithdrawalInfo(params: QueryMegavaultWithdrawalInfoRequest): Promise<QueryMegavaultWithdrawalInfoResponseSDKType> {
+    const options: any = {
+      params: {}
+    };
+
+    if (typeof params?.sharesToWithdraw !== "undefined") {
+      options.params.shares_to_withdraw = params.sharesToWithdraw;
+    }
+
+    const endpoint = `dydxprotocol/vault/megavault/withdrawal_info`;
+    return await this.req.get<QueryMegavaultWithdrawalInfoResponseSDKType>(endpoint, options);
   }
 
 }
