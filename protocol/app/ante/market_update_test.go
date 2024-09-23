@@ -1,9 +1,10 @@
 package ante_test
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"math/rand"
 	"testing"
+
+	storetypes "cosmossdk.io/store/types"
 
 	sdkmath "cosmossdk.io/math"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -185,7 +186,7 @@ var (
 				Base:  "TESTING",
 				Quote: "USD",
 			},
-			Decimals:         1,
+			Decimals:         8,
 			MinProviderCount: 1,
 			Enabled:          false,
 			Metadata_JSON:    "",
@@ -199,7 +200,7 @@ var (
 				Base:  "TESTING",
 				Quote: "USD",
 			},
-			Decimals:         1,
+			Decimals:         8,
 			MinProviderCount: 1,
 			Enabled:          false,
 			Metadata_JSON:    "",
@@ -218,7 +219,7 @@ var (
 				Base:  "TESTING",
 				Quote: "USD",
 			},
-			Decimals:         1,
+			Decimals:         8,
 			MinProviderCount: 1,
 			Enabled:          true,
 			Metadata_JSON:    "",
@@ -237,7 +238,7 @@ var (
 				Base:  "TESTING",
 				Quote: "USD",
 			},
-			Decimals:         1,
+			Decimals:         8,
 			MinProviderCount: 1,
 			Enabled:          true,
 			Metadata_JSON:    "",
@@ -763,7 +764,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 						ctx,
 						mmtypes.Market{
 							Ticker: mmtypes.Ticker{
-								Decimals:     uint64(pair.market.Exponent),
+								Decimals:     uint64(pair.market.Exponent * -1),
 								Enabled:      false, // will be enabled later
 								CurrencyPair: cp,
 							},

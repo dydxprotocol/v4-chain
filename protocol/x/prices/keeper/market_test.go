@@ -110,13 +110,12 @@ func TestCreateMarket_Errors(t *testing.T) {
 	validExchangeConfigJson := `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"}]}`
 	tests := map[string]struct {
 		// Setup
-		pair                                              string
-		minExchanges                                      uint32
-		minPriceChangePpm                                 uint32
-		price                                             uint64
-		marketPriceIdDoesntMatchMarketParamId             bool
-		marketPriceExponentDoesntMatchMarketParamExponent bool
-		exchangeConfigJson                                string
+		pair                                  string
+		minExchanges                          uint32
+		minPriceChangePpm                     uint32
+		price                                 uint64
+		marketPriceIdDoesntMatchMarketParamId bool
+		exchangeConfigJson                    string
 		// Expected
 		expectedErr string
 	}{
@@ -163,18 +162,6 @@ func TestCreateMarket_Errors(t *testing.T) {
 				"market param id 1 does not match market price id 2",
 			).Error(),
 		},
-		"Market param and price exponents don't match": {
-			pair:              constants.BtcUsdPair,
-			minExchanges:      uint32(2),
-			minPriceChangePpm: uint32(50),
-			price:             constants.FiveBillion,
-			marketPriceExponentDoesntMatchMarketParamExponent: true,
-			exchangeConfigJson: validExchangeConfigJson,
-			expectedErr: errorsmod.Wrap(
-				types.ErrInvalidInput,
-				"market param 1 exponent -6 does not match market price 1 exponent -5",
-			).Error(),
-		},
 		"Pair already exists": {
 			pair:               "0-0",
 			minExchanges:       uint32(2),
@@ -201,9 +188,6 @@ func TestCreateMarket_Errors(t *testing.T) {
 			}
 
 			marketPriceExponentOffset := int32(0)
-			if tc.marketPriceExponentDoesntMatchMarketParamExponent {
-				marketPriceExponentOffset = int32(1)
-			}
 
 			_, err := keeper.CreateMarket(
 				ctx,

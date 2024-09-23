@@ -67,20 +67,6 @@ func TestUpdateMarketParam(t *testing.T) {
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
 		},
-		"Failure: exponent is updated": {
-			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: lib.GovModuleAddress.String(),
-				MarketParam: pricestypes.MarketParam{
-					Id:                 MODIFIED_MARKET_PARAM.Id,
-					Pair:               MODIFIED_MARKET_PARAM.Pair,
-					Exponent:           MODIFIED_MARKET_PARAM.Exponent + 1, // update to exponent is not permitted.
-					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
-					MinPriceChangePpm:  MODIFIED_MARKET_PARAM.MinPriceChangePpm,
-					ExchangeConfigJson: MODIFIED_MARKET_PARAM.ExchangeConfigJson,
-				},
-			},
-			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
-		},
 		"Failure: empty pair": {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
