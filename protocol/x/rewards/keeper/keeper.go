@@ -131,9 +131,10 @@ func (k Keeper) GetRewardShare(
 //     					  * fill_quote_quantum - max_possible_taker_fee_rev_share) * (1 - F)
 //     are added to reward share score.
 // max_possible_taker_fee_rev_share is 0 when taker trailing volume is > MaxReferee30dVolumeForAffiliateShareQuantums,
-// since taker trailing volume is only affiliate at the moment, and they don’t generate affiliate rev share.
+// since taker_fee_share is only affiliate at the moment, and they don’t generate affiliate rev share.
 // When taker volume ≤ MaxReferee30dVolumeForAffiliateShareQuantums,
 // max_possible_taker_fee_rev_share = max_vip_affiliate_share * taker_fee
+// regardless of if the taker has an affiliate or not.
 
 func (k Keeper) AddRewardSharesForFill(
 	ctx sdk.Context,
