@@ -73,13 +73,13 @@ func AddYieldToSubaccount(
 
 	totalNewYield = HandleInsufficientYieldDueToNegativeTNC(totalNewYield, availableYield)
 
-	stringIndex := assetYieldIndex.String()
+	assetYieldIndexString := assetYieldIndex.String()
 	newSubaccount := types.Subaccount{
 		Id:                 subaccount.Id,
 		AssetPositions:     subaccount.AssetPositions,
 		PerpetualPositions: newPerpetualPositions,
 		MarginEnabled:      subaccount.MarginEnabled,
-		AssetYieldIndex:    stringIndex,
+		AssetYieldIndex:    assetYieldIndexString,
 	}
 
 	if totalNewYield.Cmp(big.NewInt(0)) < 0 {
@@ -100,7 +100,6 @@ func HandleInsufficientYieldDueToNegativeTNC(
 	yieldToTransfer *big.Int,
 ) {
 
-	// Get the minimum of totalNewYield and availableYield
 	yieldToTransfer = new(big.Int).Set(totalNewYield)
 	if availableYield.Cmp(totalNewYield) < 0 {
 		yieldToTransfer.Set(availableYield)
@@ -171,9 +170,16 @@ func calculateAssetYieldInQuoteQuantums(
 		return nil, types.ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount
 	}
 
-	yieldIndexDifference := new(big.Rat).Sub(generalYieldIndex, currentYieldIndex)
 	assetAmount := new(big.Rat).SetInt(assetPosition.GetBigQuantums())
-	newYieldRat := new(big.Rat).Mul(assetAmount, yieldIndexDifference)
+	currYieldIndexdivisor := currentYieldIndex
+	if currYieldIndexdivisor.Cmp(big.NewRat(0, 1)) == 0 {
+		currYieldIndexdivisor = big.NewRat(1, 1)
+	}
+
+	yieldIndexQuotient := new(big.Rat).Quo(generalYieldIndex, currYieldIndexdivisor)
+	newAssetAmount := new(big.Rat).Mul(assetAmount, yieldIndexQuotient)
+	newYieldRat := assetAmount.Sub(newAssetAmount, assetAmount)
+
 	newYield = lib.BigRatRound(newYieldRat, false)
 
 	return newYield, nil

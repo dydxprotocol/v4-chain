@@ -141,7 +141,7 @@ func TestMsgUpdateSDAIConversionRate_PostFirstEpoch(t *testing.T) {
 				ConversionRate: "1" + strings.Repeat("0", 27),
 			},
 			expectedSDAIRate:        "1" + strings.Repeat("0", 27),
-			expectedAssetYieldIndex: "1/1",
+			expectedAssetYieldIndex: "2/1",
 			epoch:                   uint64(1),
 			setup: func(ctx sdk.Context, tApp *testapp.TestApp, sDAIEventManager *sdaiserver.SDAIEventManager) {
 				for i := 0; i < 8; i++ {
@@ -283,7 +283,7 @@ func TestMsgUpdateSDAIConversionRate_PerformsAllStateChanges(t *testing.T) {
 				ConversionRate: "1" + strings.Repeat("0", 27),
 			},
 			expectedSDAIRate:         "1" + strings.Repeat("0", 27),
-			expectedAssetYieldIndex:  "1/1",
+			expectedAssetYieldIndex:  "2/1",
 			expectedPerpYieldIndexes: []string{"2/1", "1/1"},
 			epoch:                    uint64(1),
 			setup: func(ctx sdk.Context, tApp *testapp.TestApp, sDAIEventManager *sdaiserver.SDAIEventManager) {

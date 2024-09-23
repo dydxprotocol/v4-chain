@@ -126,7 +126,13 @@ func (k Keeper) SetNewYieldIndex(
 	}
 
 	ratio := new(big.Rat).SetFrac(totalTDaiMinted, totalTDaiPreMint)
-	assetYieldIndex = assetYieldIndex.Add(assetYieldIndex, ratio)
+	additionalFactor := ratio.Add(big.NewRat(1, 1), ratio)
+
+	if assetYieldIndex.Cmp(big.NewRat(0, 1)) == 0 {
+		assetYieldIndex = additionalFactor
+	} else {
+		assetYieldIndex = assetYieldIndex.Mul(assetYieldIndex, additionalFactor)
+	}
 
 	k.SetAssetYieldIndex(ctx, assetYieldIndex)
 	return nil
