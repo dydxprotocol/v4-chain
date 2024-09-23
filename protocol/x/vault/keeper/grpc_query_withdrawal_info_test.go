@@ -66,7 +66,8 @@ func TestQueryMegavaultWithdrawalInfo(t *testing.T) {
 				},
 			},
 		},
-		"Success: Withdraw ~0.65%, 5_471_283_193_197 quantums in main vault, one sub-vault with 1 leverage and 1_500_000_000 equity": {
+		"Success: Withdraw ~0.65%, 5_471_283_193_197 quantums in main vault," +
+			"one sub-vault with 1 leverage and 1_500_000_000 equity": {
 			mainVaultBalance: big.NewInt(5_471_283_193_197),
 			totalShares:      128_412_843_128,
 			vaults: []VaultSetup{
