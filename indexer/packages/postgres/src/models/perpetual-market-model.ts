@@ -69,18 +69,18 @@ export default class PerpetualMarketModel extends Model {
         ticker: { type: 'string' },
         marketId: { type: 'integer' },
         status: { type: 'string', enum: [...Object.values(PerpetualMarketStatus)] },
-        priceChange24H: { type: 'string', pattern: NumericPattern, nullable: true }, // Optional
-        volume24H: { type: 'string', pattern: NonNegativeNumericPattern, nullable: true }, // Optional
-        trades24H: { type: 'integer', nullable: true }, // Optional
-        nextFundingRate: { type: 'string', pattern: NumericPattern, nullable: true }, // Optional
-        openInterest: { type: 'string', pattern: NumericPattern, nullable: true }, // Optional
+        priceChange24H: { type: 'string', pattern: NumericPattern, nullable: true },
+        volume24H: { type: 'string', pattern: NonNegativeNumericPattern, nullable: true },
+        trades24H: { type: 'integer', nullable: true },
+        nextFundingRate: { type: 'string', pattern: NumericPattern, nullable: true },
+        openInterest: { type: 'string', pattern: NumericPattern, nullable: true },
         quantumConversionExponent: { type: 'integer' },
         atomicResolution: { type: 'integer' },
         subticksPerTick: { type: 'integer' },
         stepBaseQuantums: { type: 'integer' },
         liquidityTierId: { type: 'integer' },
         marketType: { type: 'string' },
-        baseOpenInterest: { type: 'string', pattern: NumericPattern, nullable: true }, // Optional
+        baseOpenInterest: { type: 'string', pattern: NumericPattern, nullable: true },
       },
     };
   }
