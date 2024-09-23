@@ -234,15 +234,6 @@ export function indexerTendermintEventToEventProtoWithType(
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.OPEN_INTEREST_UPDATE.toString()): {
-      return {
-        type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
-        eventProto: OpenInterestUpdateEventV1.decode(eventDataBinary),
-        indexerTendermintEvent: event,
-        version,
-        blockEventIndex,
-      };
-    }
     case (DydxIndexerSubtypes.REGISTER_AFFILIATE.toString()): {
       return {
         type: DydxIndexerSubtypes.REGISTER_AFFILIATE,
