@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 	"sort"
 
@@ -307,7 +308,9 @@ func (k Keeper) ConvertAssetToCoin(
 	)
 
 	// round down to get denom amount that was converted.
+	fmt.Println("BEFORE ROUNDING DOWN RAT ", bigRatDenomAmount)
 	bigConvertedDenomAmount := lib.BigRatRound(bigRatDenomAmount, false)
+	fmt.Println("AFTER ROUNDING DOWN ", bigConvertedDenomAmount)
 
 	bigRatConvertedQuantums := lib.BigMulPow10(
 		bigConvertedDenomAmount,
@@ -334,16 +337,17 @@ func (k Keeper) ConvertCoinToAsset(
 	coin sdk.Coin,
 ) (
 	quantums *big.Int,
+	convertedDenom *big.Int,
 	err error,
 ) {
 	asset, exists := k.GetAsset(ctx, assetId)
 	if !exists {
-		return nil, errorsmod.Wrap(
+		return nil, nil, errorsmod.Wrap(
 			types.ErrAssetDoesNotExist, lib.UintToString(assetId))
 	}
 
 	if lib.AbsInt32(asset.AtomicResolution) > types.MaxAssetUnitExponentAbs {
-		return nil, errorsmod.Wrapf(
+		return nil, nil, errorsmod.Wrapf(
 			types.ErrInvalidAssetAtomicResolution,
 			"asset: %+v",
 			asset,
@@ -351,7 +355,7 @@ func (k Keeper) ConvertCoinToAsset(
 	}
 
 	if lib.AbsInt32(asset.DenomExponent) > types.MaxAssetUnitExponentAbs {
-		return nil, errorsmod.Wrapf(
+		return nil, nil, errorsmod.Wrapf(
 			types.ErrInvalidDenomExponent,
 			"asset: %+v",
 			asset,
@@ -363,15 +367,21 @@ func (k Keeper) ConvertCoinToAsset(
 		asset.DenomExponent-asset.AtomicResolution,
 	)
 
-	// Convert to big.Int without rounding
-	quantums = bigRatQuantums.Num()
+	quantums = lib.BigRatRound(bigRatQuantums, false)
 
 	// If the result is zero, return a true zero for backwards compatibility
 	if quantums.Sign() == 0 {
-		return new(big.Int), nil
+		return big.NewInt(0), big.NewInt(0), nil
 	}
 
-	return quantums, nil
+	bigRatConvertedDenomAmount := lib.BigMulPow10(
+		quantums,
+		asset.AtomicResolution-asset.DenomExponent,
+	)
+
+	convertedDenom = bigRatConvertedDenomAmount.Num()
+
+	return quantums, convertedDenom, nil
 }
 
 // ConvertAssetToFullCoin converts the given `assetId` and `quantums`

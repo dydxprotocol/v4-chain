@@ -88,7 +88,7 @@ func (k Keeper) ClaimInsuranceFundYields(ctx sdk.Context, tradingDaiSupplyBefore
 			continue
 		}
 
-		insuranceFundBalanceBigInt, err := k.assetsKeeper.ConvertCoinToAsset(ctx, assettypes.AssetTDai.Id, insuranceFundBalance)
+		insuranceFundBalanceBigInt, _, err := k.assetsKeeper.ConvertCoinToAsset(ctx, assettypes.AssetTDai.Id, insuranceFundBalance)
 		if err != nil {
 			return err
 		}

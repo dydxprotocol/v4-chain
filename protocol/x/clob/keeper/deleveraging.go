@@ -153,7 +153,7 @@ func (k Keeper) GetInsuranceFundBalance(
 		tdaiAsset.Denom,
 	)
 
-	balance, err = k.assetsKeeper.ConvertCoinToAsset(ctx, tdaiAsset.Id, insuranceFundBalanceCoin)
+	balance, _, err = k.assetsKeeper.ConvertCoinToAsset(ctx, tdaiAsset.Id, insuranceFundBalanceCoin)
 
 	if err != nil {
 		return nil
@@ -173,7 +173,7 @@ func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int)
 		tdaiAsset.Denom,
 	)
 
-	balance, err := k.assetsKeeper.ConvertCoinToAsset(ctx, tdaiAsset.Id, insuranceFundBalanceCoin)
+	balance, _, err := k.assetsKeeper.ConvertCoinToAsset(ctx, tdaiAsset.Id, insuranceFundBalanceCoin)
 	if err != nil {
 		return nil
 	}

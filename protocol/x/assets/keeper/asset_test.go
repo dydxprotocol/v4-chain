@@ -569,52 +569,74 @@ func TestConvertCoinToAsset_Success(t *testing.T) {
 	testDenom := "test_denom"
 
 	tests := map[string]struct {
-		denomExponent    int32
-		atomicResolution int32
-		coinToConvert    sdk.Coin
-		expectedQuantums *big.Int
+		denomExponent               int32
+		atomicResolution            int32
+		coinToConvert               sdk.Coin
+		expectedQuantums            *big.Int
+		expectedConvertedCoinAmount *big.Int
 	}{
 		"atomicResolution < denomExponent, DenomExponent=-6, AtomicResolution=-8": {
-			denomExponent:    -6,
-			atomicResolution: -8,
-			coinToConvert:    sdk.NewCoin(testDenom, sdkmath.NewInt(11)),
-			expectedQuantums: big.NewInt(1100),
+			denomExponent:               -6,
+			atomicResolution:            -8,
+			coinToConvert:               sdk.NewCoin(testDenom, sdkmath.NewInt(11)),
+			expectedQuantums:            big.NewInt(1100),
+			expectedConvertedCoinAmount: big.NewInt(11),
 		},
 		"atomicResolution < denomExponent, DenomExponent=-6, AtomicResolution=-7": {
-			denomExponent:    -6,
-			atomicResolution: -7,
-			coinToConvert:    sdk.NewCoin(testDenom, sdkmath.NewInt(112)),
-			expectedQuantums: big.NewInt(1120),
+			denomExponent:               -6,
+			atomicResolution:            -7,
+			coinToConvert:               sdk.NewCoin(testDenom, sdkmath.NewInt(112)),
+			expectedQuantums:            big.NewInt(1120),
+			expectedConvertedCoinAmount: big.NewInt(112),
 		},
 		"atomicResolution < denomExponent, DenomExponent=1, AtomicResolution=-3": {
-			denomExponent:    1,
-			atomicResolution: -3,
-			coinToConvert:    sdk.NewCoin(testDenom, sdkmath.NewInt(12)),
-			expectedQuantums: big.NewInt(120000),
+			denomExponent:               1,
+			atomicResolution:            -3,
+			coinToConvert:               sdk.NewCoin(testDenom, sdkmath.NewInt(12)),
+			expectedQuantums:            big.NewInt(120000),
+			expectedConvertedCoinAmount: big.NewInt(12),
 		},
 		"atomicResolution = denomExponent, DenomExponent=-6, AtomicResolution=-6": {
-			denomExponent:    -6,
-			atomicResolution: -6,
-			coinToConvert:    sdk.NewCoin(testDenom, sdkmath.NewInt(1500)),
-			expectedQuantums: big.NewInt(1500),
+			denomExponent:               -6,
+			atomicResolution:            -6,
+			coinToConvert:               sdk.NewCoin(testDenom, sdkmath.NewInt(1500)),
+			expectedQuantums:            big.NewInt(1500),
+			expectedConvertedCoinAmount: big.NewInt(1500),
 		},
 		"atomicResolution = denomExponent, DenomExponent=-6, AtomicResolution=-6, large input": {
-			denomExponent:    -6,
-			atomicResolution: -6,
-			coinToConvert:    sdk.NewCoin(testDenom, sdkmath.NewInt(12345678)),
-			expectedQuantums: big.NewInt(12345678),
+			denomExponent:               -6,
+			atomicResolution:            -6,
+			coinToConvert:               sdk.NewCoin(testDenom, sdkmath.NewInt(12345678)),
+			expectedQuantums:            big.NewInt(12345678),
+			expectedConvertedCoinAmount: big.NewInt(12345678),
 		},
 		"atomicResolution > denomExponent": {
-			denomExponent:    -6,
-			atomicResolution: -4,
-			coinToConvert:    sdk.NewCoin(testDenom, sdkmath.NewInt(27500)),
-			expectedQuantums: big.NewInt(275),
+			denomExponent:               -6,
+			atomicResolution:            -4,
+			coinToConvert:               sdk.NewCoin(testDenom, sdkmath.NewInt(27500)),
+			expectedQuantums:            big.NewInt(275),
+			expectedConvertedCoinAmount: big.NewInt(27500),
 		},
 		"atomicResolution > denomExponent, positive AtomicResolution": {
-			denomExponent:    -2,
-			atomicResolution: 1,
-			coinToConvert:    sdk.NewCoin(testDenom, sdkmath.NewInt(275000)),
-			expectedQuantums: big.NewInt(275),
+			denomExponent:               -2,
+			atomicResolution:            1,
+			coinToConvert:               sdk.NewCoin(testDenom, sdkmath.NewInt(275000)),
+			expectedQuantums:            big.NewInt(275),
+			expectedConvertedCoinAmount: big.NewInt(275000),
+		},
+		"atomicResolution > denomExponent, positive AtomicResolution. Uneven coin number.": {
+			denomExponent:               -2,
+			atomicResolution:            1,
+			coinToConvert:               sdk.NewCoin(testDenom, sdkmath.NewInt(123456)),
+			expectedQuantums:            big.NewInt(123),
+			expectedConvertedCoinAmount: big.NewInt(123000),
+		},
+		"atomicResolution > denomExponent, positive AtomicResolution. Zero conversion.": {
+			denomExponent:               -2,
+			atomicResolution:            1,
+			coinToConvert:               sdk.NewCoin(testDenom, sdkmath.NewInt(999)),
+			expectedQuantums:            big.NewInt(0),
+			expectedConvertedCoinAmount: big.NewInt(0),
 		},
 	}
 
@@ -637,14 +659,16 @@ func TestConvertCoinToAsset_Success(t *testing.T) {
 			require.NoError(t, err)
 
 			// Call ConvertCoinToAsset
-			quantums, err := keeper.ConvertCoinToAsset(ctx, asset.Id, tc.coinToConvert)
+			quantums, convertedCoinAmount, err := keeper.ConvertCoinToAsset(ctx, asset.Id, tc.coinToConvert)
 
 			// Check for successful conversion
 			require.NoError(t, err)
-			require.NotNil(t, quantums)
 
-			// Check if the converted quantums are as expected
+			require.NotNil(t, quantums)
 			require.Equal(t, tc.expectedQuantums, quantums)
+
+			require.NotNil(t, convertedCoinAmount)
+			require.Equal(t, tc.expectedConvertedCoinAmount, convertedCoinAmount)
 
 			assetEvents := keepertest.GetAssetCreateEventsFromIndexerBlock(ctx, keeper)
 			require.Len(t, assetEvents, 1)
@@ -667,7 +691,7 @@ func TestConvertCoinToAsset_Failure(t *testing.T) {
 	testDenom := "test_denom"
 
 	// Test convert coin with invalid asset ID.
-	_, err := keeper.ConvertCoinToAsset(
+	quantums, convertedDenom, err := keeper.ConvertCoinToAsset(
 		ctx,
 		firstValidAssetId, /* invalid asset ID */
 		sdk.NewCoin(testDenom, sdkmath.NewInt(100)),
@@ -678,6 +702,9 @@ func TestConvertCoinToAsset_Failure(t *testing.T) {
 		err,
 		types.ErrAssetDoesNotExist,
 	)
+
+	require.Nil(t, quantums)
+	require.Nil(t, convertedDenom)
 
 	// Test convert coin with invalid denom exponent.
 	_, err = keeper.CreateAsset(
@@ -693,12 +720,15 @@ func TestConvertCoinToAsset_Failure(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	_, err = keeper.ConvertCoinToAsset(ctx, firstValidAssetId, sdk.NewCoin(testDenom, sdkmath.NewInt(100)))
+	quantums, convertedDenom, err = keeper.ConvertCoinToAsset(ctx, firstValidAssetId, sdk.NewCoin(testDenom, sdkmath.NewInt(100)))
 	require.ErrorIs(
 		t,
 		err,
 		types.ErrInvalidDenomExponent,
 	)
+
+	require.Nil(t, quantums)
+	require.Nil(t, convertedDenom)
 
 	// Test convert coin with invalid atomic resolution.
 	_, err = keeper.CreateAsset(
@@ -713,12 +743,15 @@ func TestConvertCoinToAsset_Failure(t *testing.T) {
 		"0/1", // AssetYieldIndex
 	)
 	require.NoError(t, err)
-	_, err = keeper.ConvertCoinToAsset(ctx, 2, sdk.NewCoin("test-denom-2", sdkmath.NewInt(100)))
+	quantums, convertedDenom, err = keeper.ConvertCoinToAsset(ctx, 2, sdk.NewCoin("test-denom-2", sdkmath.NewInt(100)))
 	require.ErrorIs(
 		t,
 		err,
 		types.ErrInvalidAssetAtomicResolution,
 	)
+
+	require.Nil(t, quantums)
+	require.Nil(t, convertedDenom)
 }
 
 func TestIsPositionUpdatable(t *testing.T) {

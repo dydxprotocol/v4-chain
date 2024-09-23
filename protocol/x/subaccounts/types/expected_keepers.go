@@ -50,7 +50,7 @@ type AssetsKeeper interface {
 		coin sdk.Coin,
 		err error,
 	)
-	ConvertCoinToAsset(ctx sdk.Context, assetId uint32, coin sdk.Coin) (quantums *big.Int, err error)
+	ConvertCoinToAsset(ctx sdk.Context, assetId uint32, coin sdk.Coin) (quantums *big.Int, convertedDenom *big.Int, err error)
 	ConvertAssetToFullCoin(
 		ctx sdk.Context,
 		assetId uint32,

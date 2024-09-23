@@ -83,7 +83,7 @@ type SubaccountsKeeper interface {
 
 type AssetsKeeper interface {
 	GetAsset(ctx sdk.Context, id uint32) (val assettypes.Asset, exists bool)
-	ConvertCoinToAsset(ctx sdk.Context, assetId uint32, coin sdk.Coin) (quantums *big.Int, err error)
+	ConvertCoinToAsset(ctx sdk.Context, assetId uint32, coin sdk.Coin) (quantums *big.Int, convertedDenom *big.Int, err error)
 }
 
 type BlockTimeKeeper interface {

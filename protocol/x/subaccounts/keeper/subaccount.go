@@ -289,7 +289,7 @@ func (k Keeper) fetchParamsToSettleSubaccount(
 	}
 
 	availableYieldCoin := k.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount), assettypes.AssetTDai.Denom)
-	availableYield, err = k.assetsKeeper.ConvertCoinToAsset(ctx, assettypes.AssetTDai.Id, availableYieldCoin)
+	availableYield, _, err = k.assetsKeeper.ConvertCoinToAsset(ctx, assettypes.AssetTDai.Id, availableYieldCoin)
 	if err != nil {
 		return nil, nil, nil, err
 	}

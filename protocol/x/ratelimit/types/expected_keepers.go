@@ -33,7 +33,7 @@ type BankKeeper interface {
 }
 
 type AssetsKeeper interface {
-	ConvertCoinToAsset(ctx sdk.Context, assetId uint32, coin sdk.Coin) (quantums *big.Int, err error)
+	ConvertCoinToAsset(ctx sdk.Context, assetId uint32, coin sdk.Coin) (quantums *big.Int, convertedDenom *big.Int, err error)
 	ConvertAssetToCoin(ctx sdk.Context, assetId uint32, quantums *big.Int) (convertedQuantums *big.Int, coin sdk.Coin, err error)
 }
 
