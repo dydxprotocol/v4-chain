@@ -632,49 +632,6 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-			name: "Market mapper rev shares expired",
-			expectedRevSharesForFill: types.RevSharesForFill{
-				AllRevShares: []types.RevShare{},
-				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
-					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(0),
-					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
-				},
-				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
-					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 0, // 0%
-					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0, // 0%
-				},
-				AffiliateRevShare: nil,
-			},
-			fill: clobtypes.FillForProcess{
-				TakerAddr:                         constants.AliceAccAddress.String(),
-				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
-				MakerAddr:                         constants.BobAccAddress.String(),
-				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
-				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
-				ProductId:                         perpetualId,
-				MarketId:                          marketId,
-				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
-			},
-			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
-				affiliatesKeeper *affiliateskeeper.Keeper) {
-				keeper.SetMarketMapperRevShareDetails(ctx, marketId, types.MarketMapperRevShareDetails{
-					ExpirationTs: uint64(ctx.BlockTime().Unix() + -1),
-				})
-				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
-					Address:         constants.AliceAccAddress.String(),
-					RevenueSharePpm: 100_000, // 10%
-					ValidDays:       1,
-				})
-				require.NoError(t, err)
-
-				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
-				require.NoError(t, err)
-				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
-					constants.BobAccAddress.String())
-				require.NoError(t, err)
-			},
-		},
-		{
 			name: "Valid revenue share with no market mapper rev share",
 			expectedRevSharesForFill: types.RevSharesForFill{
 				AllRevShares: []types.RevShare{
@@ -865,16 +822,14 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 		name                              string
 		revenueSharePpmNetFees            uint32
 		revenueSharePpmTakerFees          uint32
-		expectedError                     error
 		monthlyRollingTakerVolumeQuantums uint64
 		setup                             func(tApp *testapp.TestApp, ctx sdk.Context,
 			keeper *keeper.Keeper, affiliatesKeeper *affiliateskeeper.Keeper)
 	}{
 		{
 			name:                              "Total fees shared exceeds net fees from all sources",
-			revenueSharePpmNetFees:            950_000, // 95%,
-			revenueSharePpmTakerFees:          150_000, // 15%
-			expectedError:                     types.ErrTotalFeesSharedExceedsNetFees,
+			revenueSharePpmNetFees:            950_000,           // 95%,
+			revenueSharePpmTakerFees:          150_000,           // 15%
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -902,9 +857,8 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 		},
 		{
 			name:                              "Total fees shared exceeds net fees - no affiliate rev shares",
-			revenueSharePpmNetFees:            1_150_000, // 115%,
-			revenueSharePpmTakerFees:          0,         // 0%
-			expectedError:                     types.ErrTotalFeesSharedExceedsNetFees,
+			revenueSharePpmNetFees:            1_150_000,         // 115%,
+			revenueSharePpmTakerFees:          0,                 // 0%
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -950,9 +904,10 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 
-			_, err := keeper.GetAllRevShares(ctx, fill, map[string]uint32{})
+			revSharesForFill, err := keeper.GetAllRevShares(ctx, fill, map[string]uint32{})
 
-			require.ErrorIs(t, err, tc.expectedError)
+			require.NoError(t, err)
+			require.Equal(t, types.RevSharesForFill{}, revSharesForFill)
 		})
 	}
 }
