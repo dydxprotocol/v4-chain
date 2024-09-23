@@ -7,6 +7,7 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -247,6 +248,11 @@ func TestGetPerpetualFeePpm_Referral(t *testing.T) {
 
 			statsKeeper := tApp.App.StatsKeeper
 			affiliatesKeeper := tApp.App.AffiliatesKeeper
+
+			// common setup
+			err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+			require.NoError(t, err)
+
 			if tc.setup != nil {
 				tc.setup(ctx, &affiliatesKeeper, &statsKeeper)
 			}
