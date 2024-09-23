@@ -24,7 +24,6 @@ import {
   UpdateClobPairEventV1,
   SubaccountMessage,
   DeleveragingEventV1,
-  OpenInterestUpdateEventV1,
   TradingRewardsEventV1,
   RegisterAffiliateEventV1,
   UpsertVaultEventV1,

@@ -34,7 +34,6 @@ import {
   UpdateClobPairEventV1,
   DeleveragingEventV1,
   TradingRewardsEventV1,
-  OpenInterestUpdateEventV1,
   BlockHeightMessage,
   RegisterAffiliateEventV1,
   UpsertVaultEventV1,
