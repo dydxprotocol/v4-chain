@@ -160,6 +160,7 @@ func GetAffiliateRefereeLowestTakerFeeFromTiers(tiers []*types.PerpetualFeeTier)
 			break
 		}
 	}
+
 	if uint32(len(tiers)) > types.RefereeStartingFeeTier {
 		return min(takerFeePpm, tiers[types.RefereeStartingFeeTier].TakerFeePpm)
 	}

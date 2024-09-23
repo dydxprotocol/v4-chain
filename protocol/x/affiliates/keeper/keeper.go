@@ -23,7 +23,6 @@ type (
 		storeKey            storetypes.StoreKey
 		authorities         map[string]struct{}
 		statsKeeper         types.StatsKeeper
-		revShareKeeper      types.RevShareKeeper
 		feetiersKeeper      types.FeetiersKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
 	}
@@ -277,10 +276,6 @@ func (k Keeper) UpdateAffiliateTiers(ctx sdk.Context, affiliateTiers types.Affil
 	}
 	store.Set([]byte(types.AffiliateTiersKey), affiliateTiersBytes)
 	return nil
-}
-
-func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
-	k.revShareKeeper = revShareKeeper
 }
 
 func (k *Keeper) SetFeetiersKeeper(feetiersKeeper types.FeetiersKeeper) {
