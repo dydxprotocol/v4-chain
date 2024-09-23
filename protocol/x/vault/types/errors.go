@@ -155,4 +155,9 @@ var (
 		30,
 		"Shares must be positive",
 	)
+	ErrInvalidSkewFactor = errorsmod.Register(
+		ModuleName,
+		31,
+		"Skew factor times order_size_pct must be less than 2 to avoid skewing over the spread",
+	)
 )

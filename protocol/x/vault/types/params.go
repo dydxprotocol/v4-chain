@@ -2,6 +2,7 @@ package types
 
 import (
 	"math"
+	"math/big"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -41,6 +42,14 @@ func (p QuotingParams) Validate() error {
 	// Activation threshold quote quantums must be non-negative.
 	if p.ActivationThresholdQuoteQuantums.Sign() < 0 {
 		return ErrInvalidActivationThresholdQuoteQuantums
+	}
+	// Skew factor times order_size_pct must be less than 2 to avoid skewing over the spread
+	skewFactor := new(big.Int).SetUint64(uint64(p.SkewFactorPpm))
+	orderSizePct := new(big.Int).SetUint64(uint64(p.OrderSizePctPpm))
+	skewFactorOrderSizePctProduct := new(big.Int).Mul(skewFactor, orderSizePct)
+	skewFactorOrderSizePctProductThreshold := big.NewInt(2_000_000 * 1_000_000)
+	if skewFactorOrderSizePctProduct.Cmp(skewFactorOrderSizePctProductThreshold) >= 0 {
+		return ErrInvalidSkewFactor
 	}
 
 	return nil
