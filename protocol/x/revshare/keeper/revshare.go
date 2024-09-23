@@ -133,8 +133,6 @@ func (k Keeper) ValidateRevShareSafety(
 	lowestTakerFeePpm int32,
 	lowestMakerFeePpm int32,
 ) bool {
-	highestAffilliateTierRevSharePpm := affiliatetypes.AffiliatesRevSharePpmCap
-
 	totalUnconditionalRevSharePpm := uint32(0)
 	for _, recipientConfig := range unconditionalRevShareConfig.Configs {
 		totalUnconditionalRevSharePpm += recipientConfig.SharePpm
@@ -147,7 +145,7 @@ func (k Keeper) ValidateRevShareSafety(
 	}
 
 	// taker fee can never be 0. Adding a check to ensure lowest_taker_fee is not 0
-	if int32(highestAffilliateTierRevSharePpm)*
+	if int32(affiliatetypes.AffiliatesRevSharePpmCap)*
 		lowestTakerFeePpm-lowestMakerFeePpm*int32(lib.OneMillion) > int32(lib.OneMillion)*lowestTakerFeePpm {
 		return false
 	}
