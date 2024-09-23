@@ -298,7 +298,9 @@ func (k Keeper) AllocateToVault(
 		return types.ErrClobPairNotFound
 	}
 
-	// If vault params doesn't exist, initialize params with `STAND_BY` status.
+	// If vault doesn't exist:
+	// 1. initialize params with `STAND_BY` status.
+	// 2. add vault to address store.
 	_, exists = k.GetVaultParams(ctx, vaultId)
 	if !exists {
 		err := k.SetVaultParams(
@@ -311,6 +313,7 @@ func (k Keeper) AllocateToVault(
 		if err != nil {
 			return err
 		}
+		k.AddVaultToAddressStore(ctx, vaultId)
 	}
 
 	// Transfer from main vault to the specified vault.
