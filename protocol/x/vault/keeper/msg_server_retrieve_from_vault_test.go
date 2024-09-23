@@ -1,18 +1,21 @@
 package keeper_test
 
 import (
+	"bytes"
+	"math"
+	"math/big"
 	"testing"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -30,23 +33,65 @@ func TestMsgRetrieveFromVault(t *testing.T) {
 		vaultParams *vaulttypes.VaultParams
 		// Msg.
 		msg *vaulttypes.MsgRetrieveFromVault
-		// Expected error.
-		expectedErr string
+		// Signer of above msg.
+		signer string
+		// A string that CheckTx response should contain, if any.
+		checkTxResponseContains string
+		// Whether CheckTx fails.
+		checkTxFails bool
+		// Whether DeliverTx fails.
+		deliverTxFails bool
 	}{
-		"Success - Gov Authority, Retrieve 50 From Vault Clob 0": {
-			operator:          constants.AliceAccAddress.String(),
+		"Success - Retrieve 50 From Vault Clob 0": {
+			operator:          constants.DaveAccAddress.String(),
 			mainVaultQuantums: 100,
 			subVaultQuantums:  200,
 			vaultParams: &vaulttypes.VaultParams{
 				Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 			},
 			msg: &vaulttypes.MsgRetrieveFromVault{
-				Authority:     lib.GovModuleAddress.String(),
+				Authority:     constants.DaveAccAddress.String(),
 				VaultId:       constants.Vault_Clob0,
 				QuoteQuantums: dtypes.NewInt(50),
 			},
+			signer: constants.DaveAccAddress.String(),
 		},
-		"Success - Operator Authority, Retrieve all from Vault Clob 1": {
+		"Success - Retrieve all from Vault Clob 1": {
+			operator:          constants.BobAccAddress.String(),
+			mainVaultQuantums: 0,
+			subVaultQuantums:  3_500_000,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			},
+			msg: &vaulttypes.MsgRetrieveFromVault{
+				Authority:     constants.BobAccAddress.String(),
+				VaultId:       constants.Vault_Clob1,
+				QuoteQuantums: dtypes.NewInt(3_500_000),
+			},
+			signer: constants.BobAccAddress.String(),
+		},
+		"Failure - Operator Authority, Retrieve more than max uint64 quantums from Vault Clob 1": {
+			operator:          constants.AliceAccAddress.String(),
+			mainVaultQuantums: 0,
+			subVaultQuantums:  3_500_000,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			},
+			msg: &vaulttypes.MsgRetrieveFromVault{
+				Authority: constants.AliceAccAddress.String(),
+				VaultId:   constants.Vault_Clob1,
+				QuoteQuantums: dtypes.NewIntFromBigInt(
+					new(big.Int).Add(
+						new(big.Int).SetUint64(math.MaxUint64),
+						new(big.Int).SetUint64(1),
+					),
+				),
+			},
+			signer:                  constants.AliceAccAddress.String(),
+			checkTxResponseContains: vaulttypes.ErrInvalidQuoteQuantums.Error(),
+			checkTxFails:            true,
+		},
+		"Failure - Operator Authority, Retrieve zero quantums from Vault Clob 1": {
 			operator:          constants.AliceAccAddress.String(),
 			mainVaultQuantums: 0,
 			subVaultQuantums:  3_500_000,
@@ -56,8 +101,27 @@ func TestMsgRetrieveFromVault(t *testing.T) {
 			msg: &vaulttypes.MsgRetrieveFromVault{
 				Authority:     constants.AliceAccAddress.String(),
 				VaultId:       constants.Vault_Clob1,
-				QuoteQuantums: dtypes.NewInt(3_500_000),
+				QuoteQuantums: dtypes.NewInt(0),
 			},
+			signer:                  constants.AliceAccAddress.String(),
+			checkTxResponseContains: vaulttypes.ErrInvalidQuoteQuantums.Error(),
+			checkTxFails:            true,
+		},
+		"Failure - Operator Authority, Retrieve negative quantums from Vault Clob 1": {
+			operator:          constants.AliceAccAddress.String(),
+			mainVaultQuantums: 0,
+			subVaultQuantums:  3_500_000,
+			vaultParams: &vaulttypes.VaultParams{
+				Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
+			},
+			msg: &vaulttypes.MsgRetrieveFromVault{
+				Authority:     constants.AliceAccAddress.String(),
+				VaultId:       constants.Vault_Clob1,
+				QuoteQuantums: dtypes.NewInt(-1),
+			},
+			signer:                  constants.AliceAccAddress.String(),
+			checkTxResponseContains: vaulttypes.ErrInvalidQuoteQuantums.Error(),
+			checkTxFails:            true,
 		},
 		"Failure - Insufficient quantums to retrieve from Vault Clob 0 with no open position": {
 			operator:          constants.AliceAccAddress.String(),
@@ -71,7 +135,9 @@ func TestMsgRetrieveFromVault(t *testing.T) {
 				VaultId:       constants.Vault_Clob0,
 				QuoteQuantums: dtypes.NewInt(27),
 			},
-			expectedErr: "failed to apply subaccount updates",
+			signer:         constants.AliceAccAddress.String(),
+			checkTxFails:   false,
+			deliverTxFails: true,
 		},
 		"Success - Retrieval from vault with open position exactly meets initial margin requirement": {
 			operator:                     constants.AliceAccAddress.String(),
@@ -90,6 +156,7 @@ func TestMsgRetrieveFromVault(t *testing.T) {
 				VaultId:       constants.Vault_Clob1,
 				QuoteQuantums: dtypes.NewInt(1_925_000),
 			},
+			signer: constants.AliceAccAddress.String(),
 		},
 		"Failure - Retrieval from vault with open position would result in undercollateralization": {
 			operator:                     constants.AliceAccAddress.String(),
@@ -108,7 +175,9 @@ func TestMsgRetrieveFromVault(t *testing.T) {
 				VaultId:       constants.Vault_Clob1,
 				QuoteQuantums: dtypes.NewInt(1_925_001),
 			},
-			expectedErr: satypes.NewlyUndercollateralized.String(),
+			signer:         constants.AliceAccAddress.String(),
+			checkTxFails:   false,
+			deliverTxFails: true,
 		},
 		"Failure - Retrieve from non-existent vault": {
 			operator:          constants.AliceAccAddress.String(),
@@ -119,7 +188,9 @@ func TestMsgRetrieveFromVault(t *testing.T) {
 				VaultId:       constants.Vault_Clob0,
 				QuoteQuantums: dtypes.NewInt(10),
 			},
-			expectedErr: vaulttypes.ErrVaultParamsNotFound.Error(),
+			signer:         constants.AliceAccAddress.String(),
+			checkTxFails:   false,
+			deliverTxFails: true,
 		},
 		"Failure - Invalid Authority": {
 			operator:          constants.BobAccAddress.String(),
@@ -130,7 +201,9 @@ func TestMsgRetrieveFromVault(t *testing.T) {
 				VaultId:       constants.Vault_Clob1,
 				QuoteQuantums: dtypes.NewInt(10),
 			},
-			expectedErr: vaulttypes.ErrInvalidAuthority.Error(),
+			signer:         constants.AliceAccAddress.String(),
+			checkTxFails:   false,
+			deliverTxFails: true,
 		},
 		"Failure - Empty Authority": {
 			operator:          constants.BobAccAddress.String(),
@@ -141,7 +214,9 @@ func TestMsgRetrieveFromVault(t *testing.T) {
 				VaultId:       constants.Vault_Clob1,
 				QuoteQuantums: dtypes.NewInt(10),
 			},
-			expectedErr: vaulttypes.ErrInvalidAuthority.Error(),
+			signer:                  constants.BobAccAddress.String(),
+			checkTxResponseContains: vaulttypes.ErrInvalidAuthority.Error(),
+			checkTxFails:            true,
 		},
 	}
 
@@ -201,20 +276,61 @@ func TestMsgRetrieveFromVault(t *testing.T) {
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
-			k := tApp.App.VaultKeeper
-			ms := keeper.NewMsgServerImpl(k)
 
-			// Retrieve from vault.
-			_, err := ms.RetrieveFromVault(ctx, tc.msg)
+			// Invoke CheckTx.
+			CheckTx_MsgRetrieveFromVault := testapp.MustMakeCheckTx(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: tc.signer,
+					Gas:                  constants.TestGasLimit,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				tc.msg,
+			)
+			checkTxResp := tApp.CheckTx(CheckTx_MsgRetrieveFromVault)
+
+			// Check that CheckTx response log contains expected string, if any.
+			if tc.checkTxResponseContains != "" {
+				require.Contains(t, checkTxResp.Log, tc.checkTxResponseContains)
+			}
+			// Check that CheckTx succeeds or errors out as expected.
+			if tc.checkTxFails {
+				require.Conditionf(t, checkTxResp.IsErr, "Expected CheckTx to error. Response: %+v", checkTxResp)
+				return
+			}
+			require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+			// Advance to next block (and check that DeliverTx is as expected).
+			nextBlock := uint32(ctx.BlockHeight()) + 1
+			if tc.deliverTxFails {
+				// Check that DeliverTx fails on `msgDepositToMegavault`.
+				ctx = tApp.AdvanceToBlock(nextBlock, testapp.AdvanceToBlockOptions{
+					ValidateFinalizeBlock: func(
+						context sdktypes.Context,
+						request abcitypes.RequestFinalizeBlock,
+						response abcitypes.ResponseFinalizeBlock,
+					) (haltChain bool) {
+						for i, tx := range request.Txs {
+							if bytes.Equal(tx, CheckTx_MsgRetrieveFromVault.Tx) {
+								require.True(t, response.TxResults[i].IsErr())
+							} else {
+								require.True(t, response.TxResults[i].IsOK())
+							}
+						}
+						return false
+					},
+				})
+			} else {
+				ctx = tApp.AdvanceToBlock(nextBlock, testapp.AdvanceToBlockOptions{})
+			}
 
 			// Check expectations.
 			mainVault := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, vaulttypes.MegavaultMainSubaccount)
 			subVault := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *tc.msg.VaultId.ToSubaccountId())
 
 			require.Len(t, mainVault.AssetPositions, 1)
-			if tc.expectedErr != "" {
-				require.ErrorContains(t, err, tc.expectedErr)
-
+			if tc.deliverTxFails {
 				// Verify that main vault and sub vault balances are unchanged.
 				require.Len(t, subVault.AssetPositions, 1)
 				require.Equal(
@@ -228,8 +344,6 @@ func TestMsgRetrieveFromVault(t *testing.T) {
 					subVault.AssetPositions[0].Quantums.BigInt().Uint64(),
 				)
 			} else {
-				require.NoError(t, err)
-
 				// Verify that main vault and sub vault balances are updated.
 				expectedSubVaultQuantums := tc.subVaultQuantums - tc.msg.QuoteQuantums.BigInt().Uint64()
 				if expectedSubVaultQuantums == 0 {

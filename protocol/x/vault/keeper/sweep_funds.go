@@ -45,4 +45,10 @@ func (k Keeper) SweepMainVaultBankBalance(
 		)
 		return
 	}
+
+	ctx.EventManager().EmitEvent(
+		types.NewSweepToMegavaultEvent(
+			mainVaultBalance.Amount.BigInt().Uint64(),
+		),
+	)
 }

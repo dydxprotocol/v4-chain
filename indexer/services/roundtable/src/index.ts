@@ -10,6 +10,7 @@ import {
   connect as connectToRedis,
 } from './helpers/redis';
 import aggregateTradingRewardsTasks from './tasks/aggregate-trading-rewards';
+import cacheOrderbookMidPrices from './tasks/cache-orderbook-mid-prices';
 import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
 import createLeaderboardTask from './tasks/create-leaderboard';
 import createPnlTicksTask from './tasks/create-pnl-ticks';
@@ -26,6 +27,7 @@ import subaccountUsernameGeneratorTask from './tasks/subaccount-username-generat
 import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
 import trackLag from './tasks/track-lag';
 import uncrossOrderbookTask from './tasks/uncross-orderbook';
+import updateAffiliateInfoTask from './tasks/update-affiliate-info';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
 import updateWalletTotalVolumeTask from './tasks/update-wallet-total-volume';
@@ -256,12 +258,26 @@ async function start(): Promise<void> {
       config.LOOPS_INTERVAL_MS_UPDATE_WALLET_TOTAL_VOLUME,
     );
   }
-
+  if (config.LOOPS_ENABLED_UPDATE_AFFILIATE_INFO) {
+    startLoop(
+      updateAffiliateInfoTask,
+      'update_affiliate_info',
+      config.LOOPS_INTERVAL_MS_UPDATE_AFFILIATE_INFO,
+    );
+  }
   if (config.LOOPS_ENABLED_DELETE_OLD_FIREBASE_NOTIFICATION_TOKENS) {
     startLoop(
       deleteOldFirebaseNotificationTokensTask,
       'delete-old-firebase-notification-tokens',
       config.LOOPS_INTERVAL_MS_DELETE_FIREBASE_NOTIFICATION_TOKENS_MONTHLY,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_CACHE_ORDERBOOK_MID_PRICES) {
+    startLoop(
+      cacheOrderbookMidPrices,
+      'cache_orderbook_mid_prices',
+      config.LOOPS_INTERVAL_MS_CACHE_ORDERBOOK_MID_PRICES,
     );
   }
 

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -78,6 +79,24 @@ func (k Keeper) SetVaultParams(
 		}
 	}
 
+	// When setting an existing vault to deactivated or stand-by, cancel any existing orders.
+	_, quotingParams, exists := k.GetVaultAndQuotingParams(ctx, vaultId)
+	if exists && (vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED ||
+		vaultParams.Status == types.VaultStatus_VAULT_STATUS_STAND_BY) {
+		mostRecentClientIds := k.GetMostRecentClientIds(ctx, vaultId)
+		for _, clientId := range mostRecentClientIds {
+			_, err := k.TryToCancelVaultClobOrder(ctx, vaultId, clientId, quotingParams.OrderExpirationSeconds)
+			if err != nil {
+				log.ErrorLogWithError(
+					ctx,
+					"Failed to cancel vault clob order when setting existing vault to deactivated or stand-by",
+					err,
+				)
+			}
+		}
+		k.SetMostRecentClientIds(ctx, vaultId, []uint32{})
+	}
+
 	b := k.cdc.MustMarshal(&vaultParams)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))
 	store.Set(vaultId.ToStateKey(), b)
@@ -104,48 +123,28 @@ func (k Keeper) getVaultParamsIterator(ctx sdk.Context) storetypes.Iterator {
 	return storetypes.KVStorePrefixIterator(store, []byte{})
 }
 
-// GetVaultQuotingParams returns quoting parameters for a given vault, which is
+// GetVaultAndQuotingParams returns vault params and quoting parameters for a given vault.
+// Quoting parameters is
 // - `VaultParams.QuotingParams` if set
 // - `DefaultQuotingParams` otherwise
 // `exists` is false if `VaultParams` does not exist for the given vault.
-func (k Keeper) GetVaultQuotingParams(
+func (k Keeper) GetVaultAndQuotingParams(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 ) (
-	params types.QuotingParams,
+	vaultParams types.VaultParams,
+	quotingParams types.QuotingParams,
 	exists bool,
 ) {
-	vaultParams, exists := k.GetVaultParams(ctx, vaultId)
+	vaultParams, exists = k.GetVaultParams(ctx, vaultId)
 	if !exists {
-		return params, false
+		return vaultParams, quotingParams, false
 	}
 	if vaultParams.QuotingParams == nil {
-		return k.GetDefaultQuotingParams(ctx), true
+		return vaultParams, k.GetDefaultQuotingParams(ctx), true
 	} else {
-		return *vaultParams.QuotingParams, true
+		return vaultParams, *vaultParams.QuotingParams, true
 	}
-}
-
-// UnsafeGetParams returns `Params` in state.
-// Used for v6.x upgrade handler.
-func (k Keeper) UnsafeGetParams(
-	ctx sdk.Context,
-) (
-	params types.QuotingParams,
-) {
-	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte("Params"))
-	k.cdc.MustUnmarshal(b, &params)
-	return params
-}
-
-// UnsafeDeleteParams deletes `Params` in state.
-// Used for v6.x upgrade handler.
-func (k Keeper) UnsafeDeleteParams(
-	ctx sdk.Context,
-) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete([]byte("Params"))
 }
 
 // GetOperatorParams returns `OperatorParams` in state.

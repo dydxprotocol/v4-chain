@@ -63,6 +63,8 @@ export const removeOrderScript: LuaScript = newLuaScript('removeOrder', '../scri
 export const addCanceledOrderIdScript: LuaScript = newLuaScript('addCanceledOrderId', '../scripts/add_canceled_order_id.lua');
 export const addStatefulOrderUpdateScript: LuaScript = newLuaScript('addStatefulOrderUpdate', '../scripts/add_stateful_order_update.lua');
 export const removeStatefulOrderUpdateScript: LuaScript = newLuaScript('removeStatefulOrderUpdate', '../scripts/remove_stateful_order_update.lua');
+export const addMarketPriceScript: LuaScript = newLuaScript('addMarketPrice', '../scripts/add_market_price.lua');
+export const getMarketMedianScript: LuaScript = newLuaScript('getMarketMedianPrice', '../scripts/get_market_median_price.lua');
 
 export const allLuaScripts: LuaScript[] = [
   deleteZeroPriceLevelScript,
@@ -75,4 +77,6 @@ export const allLuaScripts: LuaScript[] = [
   addCanceledOrderIdScript,
   addStatefulOrderUpdateScript,
   removeStatefulOrderUpdateScript,
+  addMarketPriceScript,
+  getMarketMedianScript,
 ];

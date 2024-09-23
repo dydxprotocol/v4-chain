@@ -72,6 +72,14 @@ func (k Keeper) RegisterAffiliate(
 		return errorsmod.Wrapf(types.ErrAffiliateAlreadyExistsForReferee, "referee: %s, affiliate: %s",
 			referee, affiliateAddr)
 	}
+	affiliateTiers, err := k.GetAllAffiliateTiers(ctx)
+	if err != nil {
+		return err
+	}
+	// Return error if no tiers are set.
+	if len(affiliateTiers.GetTiers()) == 0 {
+		return types.ErrAffiliateTiersNotSet
+	}
 	prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.ReferredByKeyPrefix)).Set([]byte(referee), []byte(affiliateAddr))
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
@@ -205,6 +213,10 @@ func (k Keeper) GetTierForAffiliate(
 		return 0, 0, err
 	}
 	tiers := affiliateTiers.GetTiers()
+	// Return 0 tier if no tiers are set.
+	if len(tiers) == 0 {
+		return 0, 0, nil
+	}
 	numTiers := uint32(len(tiers))
 	maxTierLevel := numTiers - 1
 	currentTier := uint32(0)

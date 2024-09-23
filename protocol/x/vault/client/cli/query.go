@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -28,6 +29,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryListVault())
 	cmd.AddCommand(CmdQueryTotalShares())
 	cmd.AddCommand(CmdQueryListOwnerShares())
+	cmd.AddCommand(CmdQueryMegavaultWithdrawalInfo())
 
 	return cmd
 }
@@ -181,6 +183,40 @@ func CmdQueryListOwnerShares() *cobra.Command {
 	}
 
 	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryMegavaultWithdrawalInfo() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "megavault-withdrawal-info [shares_to_withdraw]",
+		Short: "get megavault withdrawal info",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			shares, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.MegavaultWithdrawalInfo(
+				context.Background(),
+				&types.QueryMegavaultWithdrawalInfoRequest{
+					SharesToWithdraw: types.NumShares{
+						NumShares: dtypes.NewIntFromUint64(shares),
+					},
+				},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

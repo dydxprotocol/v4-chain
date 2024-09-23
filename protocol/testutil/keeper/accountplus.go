@@ -6,6 +6,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 
 	storetypes "cosmossdk.io/store/types"
@@ -57,6 +58,9 @@ func createTimestampNonceKeeper(
 		cdc,
 		storeKey,
 		authenticator.NewAuthenticatorManager(),
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
 	)
 
 	return k, storeKey, mockTimeProvider
