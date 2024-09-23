@@ -745,7 +745,7 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "always reject USDT/USD - simulate",
+			name: "always reject USDT/USD - simulate - upsert",
 			args: args{
 				msgs: []sdk.Msg{
 					&mmtypes.MsgUpsertMarkets{
@@ -760,7 +760,37 @@ func TestValidateMarketUpdateDecorator_AnteHandle(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "always reject USDT/USD",
+			name: "always reject USDT/USD - upsert",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpsertMarkets{
+						Authority: constants.BobAccAddress.String(),
+						Markets: []mmtypes.Market{
+							testUSDTUSDMarket,
+						},
+					},
+				},
+				simulate: false,
+			},
+			wantErr: true,
+		},
+		{
+			name: "always reject USDT/USD - simulate - update",
+			args: args{
+				msgs: []sdk.Msg{
+					&mmtypes.MsgUpdateMarkets{
+						Authority: constants.BobAccAddress.String(),
+						UpdateMarkets: []mmtypes.Market{
+							testUSDTUSDMarket,
+						},
+					},
+				},
+				simulate: true,
+			},
+			wantErr: true,
+		},
+		{
+			name: "always reject USDT/USD - update",
 			args: args{
 				msgs: []sdk.Msg{
 					&mmtypes.MsgUpdateMarkets{
