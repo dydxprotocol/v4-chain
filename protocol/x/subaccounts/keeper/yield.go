@@ -34,12 +34,12 @@ func (k Keeper) ClaimYieldForSubaccountFromIdAndSetNewState(
 		return err
 	}
 
-	settledSubaccount, totalYield, err := AddYieldToSubaccount(subaccount, perpIdToPerp, assetYieldIndex, availableYield)
+	settledSubaccount, totalYieldInQuantums, err := AddYieldToSubaccount(subaccount, perpIdToPerp, assetYieldIndex, availableYield)
 	if err != nil {
 		return err
 	}
 
-	err = k.DepositYieldToSubaccount(ctx, *settledSubaccount.Id, totalYield)
+	err = k.DepositYieldToSubaccount(ctx, *settledSubaccount.Id, totalYieldInQuantums)
 	if err != nil {
 		return err
 	}
@@ -53,10 +53,10 @@ func AddYieldToSubaccount(
 	subaccount types.Subaccount,
 	perpIdToPerp map[uint32]perptypes.Perpetual,
 	assetYieldIndex *big.Rat,
-	availableYield *big.Int,
+	availableYieldInQuantums *big.Int,
 ) (
 	settledSubaccount types.Subaccount,
-	totalNewYield *big.Int,
+	totalNewYieldInQuantums *big.Int,
 	err error,
 ) {
 	assetYield, err := getYieldFromAssetPositions(subaccount, assetYieldIndex)
@@ -69,9 +69,9 @@ func AddYieldToSubaccount(
 		return types.Subaccount{}, nil, err
 	}
 
-	totalNewYield = new(big.Int).Add(assetYield, totalNewPerpYield)
+	totalNewYieldInQuantums = new(big.Int).Add(assetYield, totalNewPerpYield)
 
-	totalNewYield = HandleInsufficientYieldDueToNegativeTNC(totalNewYield, availableYield)
+	totalNewYieldInQuantums = HandleInsufficientYieldDueToNegativeTNC(totalNewYieldInQuantums, availableYieldInQuantums)
 
 	assetYieldIndexString := assetYieldIndex.String()
 	newSubaccount := types.Subaccount{
@@ -82,15 +82,15 @@ func AddYieldToSubaccount(
 		AssetYieldIndex:    assetYieldIndexString,
 	}
 
-	if totalNewYield.Cmp(big.NewInt(0)) < 0 {
-		totalNewYield = big.NewInt(0)
+	if totalNewYieldInQuantums.Cmp(big.NewInt(0)) < 0 {
+		totalNewYieldInQuantums = big.NewInt(0)
 	}
 
-	newTDaiPosition := new(big.Int).Add(subaccount.GetTDaiPosition(), totalNewYield)
+	newTDaiPosition := new(big.Int).Add(subaccount.GetTDaiPosition(), totalNewYieldInQuantums)
 
 	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
 	newSubaccount.SetTDaiAssetPosition(newTDaiPosition)
-	return newSubaccount, totalNewYield, nil
+	return newSubaccount, totalNewYieldInQuantums, nil
 }
 
 func HandleInsufficientYieldDueToNegativeTNC(
@@ -312,24 +312,24 @@ func calculatePerpetualYieldInQuoteQuantums(
 func (k Keeper) DepositYieldToSubaccount(
 	ctx sdk.Context,
 	subaccountId types.SubaccountId,
-	amountToTransfer *big.Int,
+	totalYieldInQuantums *big.Int,
 ) error {
-	if amountToTransfer == nil {
+	if totalYieldInQuantums == nil {
 		return nil
 	}
 
-	if amountToTransfer.Cmp(big.NewInt(0)) == 0 {
+	if totalYieldInQuantums.Cmp(big.NewInt(0)) == 0 {
 		return nil
 	}
 
-	if amountToTransfer.Cmp(big.NewInt(0)) == -1 {
+	if totalYieldInQuantums.Cmp(big.NewInt(0)) == -1 {
 		return types.ErrTryingToDepositNegativeYield
 	}
 
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assettypes.AssetTDai.Id,
-		amountToTransfer,
+		totalYieldInQuantums,
 	)
 	if err != nil {
 		return err

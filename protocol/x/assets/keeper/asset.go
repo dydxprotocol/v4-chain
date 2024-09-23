@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 	"sort"
 
@@ -308,9 +307,7 @@ func (k Keeper) ConvertAssetToCoin(
 	)
 
 	// round down to get denom amount that was converted.
-	fmt.Println("BEFORE ROUNDING DOWN RAT ", bigRatDenomAmount)
 	bigConvertedDenomAmount := lib.BigRatRound(bigRatDenomAmount, false)
-	fmt.Println("AFTER ROUNDING DOWN ", bigConvertedDenomAmount)
 
 	bigRatConvertedQuantums := lib.BigMulPow10(
 		bigConvertedDenomAmount,

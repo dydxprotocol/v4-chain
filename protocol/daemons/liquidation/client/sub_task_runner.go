@@ -207,7 +207,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 			perpetuals,
 			liquidityTiers,
 			assetYieldIndex,
-			big.NewInt(1_000_000_000_000_000_000), // TODO SOLAL fix this when we merge with liquidation daemon change
+			big.NewInt(1_000_000_000_000_000_000), // TODO: [YBCP-99] fix this when we merge with liquidation daemon change
 		)
 		if err != nil {
 			c.logger.Error("Error checking collateralization status", "error", err)
