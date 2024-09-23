@@ -34,7 +34,8 @@ service Query {
   // Queries owner shares of megavault.
   rpc MegavaultOwnerShares(QueryMegavaultOwnerSharesRequest)
       returns (QueryMegavaultOwnerSharesResponse) {
-    option (google.api.http).get = "/dydxprotocol/vault/megavault/owner_shares";
+    option (google.api.http).get =
+        "/dydxprotocol/vault/megavault/owner_shares/{address}";
   }
   // Queries all owner shares of megavault.
   rpc MegavaultAllOwnerShares(QueryMegavaultAllOwnerSharesRequest)

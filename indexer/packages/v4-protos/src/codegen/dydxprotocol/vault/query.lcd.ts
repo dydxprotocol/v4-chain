@@ -61,16 +61,8 @@ export class LCDQueryClient {
 
 
   async megavaultOwnerShares(params: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponseSDKType> {
-    const options: any = {
-      params: {}
-    };
-
-    if (typeof params?.address !== "undefined") {
-      options.params.address = params.address;
-    }
-
-    const endpoint = `dydxprotocol/vault/megavault/owner_shares`;
-    return await this.req.get<QueryMegavaultOwnerSharesResponseSDKType>(endpoint, options);
+    const endpoint = `dydxprotocol/vault/megavault/owner_shares/${params.address}`;
+    return await this.req.get<QueryMegavaultOwnerSharesResponseSDKType>(endpoint);
   }
   /* Queries all owner shares of megavault. */
 
