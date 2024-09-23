@@ -19,6 +19,9 @@ const (
 	AttributeKeyTotalShares           = "total_shares"
 	AttributeKeyMegavaultEquity       = "megavault_equity"
 	AttributeKeyRedeemedQuoteQuantums = "redeemed_quote_quantums"
+
+	EventTypeSweepToMegavault      = "sweep_to_megavault"
+	AttributeKeySweptQuoteQuantums = "swept_quote_quantums"
 )
 
 // NewDepositToMegavaultEvent constructs a new deposit_to_megavault sdk.Event.
@@ -50,5 +53,14 @@ func NewWithdrawFromMegavaultEvent(
 		sdk.NewAttribute(AttributeKeyTotalShares, fmt.Sprintf("%d", totalShares)),
 		sdk.NewAttribute(AttributeKeyMegavaultEquity, fmt.Sprintf("%d", megavaultEquity)),
 		sdk.NewAttribute(AttributeKeyRedeemedQuoteQuantums, fmt.Sprintf("%d", redeemedQuoteQuantums)),
+	)
+}
+
+func NewSweepToMegavaultEvent(
+	quoteQuantums uint64,
+) sdk.Event {
+	return sdk.NewEvent(
+		EventTypeSweepToMegavault,
+		sdk.NewAttribute(AttributeKeySweptQuoteQuantums, fmt.Sprintf("%d", quoteQuantums)),
 	)
 }

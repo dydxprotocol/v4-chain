@@ -77,10 +77,12 @@ func TestMsgServer_RegisterAffiliate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			k, ms, ctx := setupMsgServer(t)
 			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			err := k.UpdateAffiliateTiers(sdkCtx, types.DefaultAffiliateTiers)
+			require.NoError(t, err)
 			if tc.setup != nil {
 				tc.setup(sdkCtx, k)
 			}
-			_, err := ms.RegisterAffiliate(ctx, tc.msg)
+			_, err = ms.RegisterAffiliate(ctx, tc.msg)
 			if tc.expectErr != nil {
 				require.ErrorIs(t, err, tc.expectErr)
 			} else {

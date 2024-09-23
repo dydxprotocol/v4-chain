@@ -20,7 +20,7 @@ import {
   TradeMessageContents,
   helpers,
 } from '@dydxprotocol-indexer/postgres';
-import { OrderbookLevelsCache } from '@dydxprotocol-indexer/redis';
+import { OrderbookMidPricesCache } from '@dydxprotocol-indexer/redis';
 import { CandleMessage } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
@@ -538,9 +538,9 @@ export async function getOrderbookMidPriceMap(): Promise<{ [ticker: string]: Ord
   const perpetualMarkets = Object.values(perpetualMarketRefresher.getPerpetualMarketsMap());
 
   const promises = perpetualMarkets.map(async (perpetualMarket: PerpetualMarketFromDatabase) => {
-    const price = await OrderbookLevelsCache.getOrderBookMidPrice(
-      perpetualMarket.ticker,
+    const price = await OrderbookMidPricesCache.getMedianPrice(
       redisClient,
+      perpetualMarket.ticker,
     );
     return { [perpetualMarket.ticker]: price === undefined ? undefined : price };
   });

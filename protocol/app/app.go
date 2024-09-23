@@ -1224,6 +1224,9 @@ func New(
 		appCodec,
 		keys[accountplusmoduletypes.StoreKey],
 		app.AuthenticatorManager,
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
 	)
 	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 

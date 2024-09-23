@@ -153,6 +153,30 @@ export interface QueryMegavaultOwnerSharesResponseSDKType {
   owner_shares: OwnerShareSDKType[];
   pagination?: PageResponseSDKType;
 }
+/** QueryVaultParamsRequest is a request for the VaultParams RPC method. */
+
+export interface QueryVaultParamsRequest {
+  type: VaultType;
+  number: number;
+}
+/** QueryVaultParamsRequest is a request for the VaultParams RPC method. */
+
+export interface QueryVaultParamsRequestSDKType {
+  type: VaultTypeSDKType;
+  number: number;
+}
+/** QueryVaultParamsResponse is a response for the VaultParams RPC method. */
+
+export interface QueryVaultParamsResponse {
+  vaultId?: VaultId;
+  vaultParams?: VaultParams;
+}
+/** QueryVaultParamsResponse is a response for the VaultParams RPC method. */
+
+export interface QueryVaultParamsResponseSDKType {
+  vault_id?: VaultIdSDKType;
+  vault_params?: VaultParamsSDKType;
+}
 
 function createBaseQueryParamsRequest(): QueryParamsRequest {
   return {};
@@ -667,6 +691,116 @@ export const QueryMegavaultOwnerSharesResponse = {
     const message = createBaseQueryMegavaultOwnerSharesResponse();
     message.ownerShares = object.ownerShares?.map(e => OwnerShare.fromPartial(e)) || [];
     message.pagination = object.pagination !== undefined && object.pagination !== null ? PageResponse.fromPartial(object.pagination) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryVaultParamsRequest(): QueryVaultParamsRequest {
+  return {
+    type: 0,
+    number: 0
+  };
+}
+
+export const QueryVaultParamsRequest = {
+  encode(message: QueryVaultParamsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.type !== 0) {
+      writer.uint32(8).int32(message.type);
+    }
+
+    if (message.number !== 0) {
+      writer.uint32(16).uint32(message.number);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryVaultParamsRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryVaultParamsRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.type = (reader.int32() as any);
+          break;
+
+        case 2:
+          message.number = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryVaultParamsRequest>): QueryVaultParamsRequest {
+    const message = createBaseQueryVaultParamsRequest();
+    message.type = object.type ?? 0;
+    message.number = object.number ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseQueryVaultParamsResponse(): QueryVaultParamsResponse {
+  return {
+    vaultId: undefined,
+    vaultParams: undefined
+  };
+}
+
+export const QueryVaultParamsResponse = {
+  encode(message: QueryVaultParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.vaultId !== undefined) {
+      VaultId.encode(message.vaultId, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.vaultParams !== undefined) {
+      VaultParams.encode(message.vaultParams, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryVaultParamsResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryVaultParamsResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.vaultId = VaultId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.vaultParams = VaultParams.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryVaultParamsResponse>): QueryVaultParamsResponse {
+    const message = createBaseQueryVaultParamsResponse();
+    message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
+    message.vaultParams = object.vaultParams !== undefined && object.vaultParams !== null ? VaultParams.fromPartial(object.vaultParams) : undefined;
     return message;
   }
 
