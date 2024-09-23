@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -76,6 +77,24 @@ func (k Keeper) SetVaultParams(
 		if vaultEquity.Sign() > 0 {
 			return types.ErrDeactivatePositiveEquityVault
 		}
+	}
+
+	// When setting an existing vault to deactivated or stand-by, cancel any existing orders.
+	_, quotingParams, exists := k.GetVaultAndQuotingParams(ctx, vaultId)
+	if exists && (vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED ||
+		vaultParams.Status == types.VaultStatus_VAULT_STATUS_STAND_BY) {
+		mostRecentClientIds := k.GetMostRecentClientIds(ctx, vaultId)
+		for _, clientId := range mostRecentClientIds {
+			_, err := k.TryToCancelVaultClobOrder(ctx, vaultId, clientId, quotingParams.OrderExpirationSeconds)
+			if err != nil {
+				log.ErrorLogWithError(
+					ctx,
+					"Failed to cancel vault clob order when setting existing vault to deactivated or stand-by",
+					err,
+				)
+			}
+		}
+		k.SetMostRecentClientIds(ctx, vaultId, []uint32{})
 	}
 
 	b := k.cdc.MustMarshal(&vaultParams)

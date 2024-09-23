@@ -133,13 +133,20 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		return types.ErrVaultParamsNotFound
 	}
 	for i := len(ordersToPlace); i < len(mostRecentClientIds); i++ {
-		orderId := vaultId.GetClobOrderId(mostRecentClientIds[i])
-		_, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, *orderId)
-		if exists {
-			err := k.CancelVaultClobOrder(ctx, vaultId, orderId, quotingParams.OrderExpirationSeconds)
-			if err != nil {
-				log.ErrorLogWithError(ctx, "Failed to cancel vault clob order", err, "vaultId", vaultId)
-			}
+		_, err = k.TryToCancelVaultClobOrder(
+			ctx,
+			vaultId,
+			mostRecentClientIds[i],
+			quotingParams.OrderExpirationSeconds,
+		)
+		if err != nil {
+			log.ErrorLogWithError(
+				ctx,
+				"Failed to cancel no longer needed vault clob order",
+				err,
+				"vaultId",
+				vaultId,
+			)
 		}
 	}
 
@@ -471,6 +478,26 @@ func (k Keeper) CancelVaultClobOrder(
 		metrics.GetLabelForBoolValue(metrics.Success, err == nil),
 	)
 	return err
+}
+
+// TryToCancelVaultClobOrder tries to cancel a vault CLOB order. Returns whether the order exists
+// and whether cancellation errors.
+func (k Keeper) TryToCancelVaultClobOrder(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	clientId uint32,
+	orderExpirationSeconds uint32,
+) (
+	orderExists bool,
+	err error,
+) {
+	orderId := vaultId.GetClobOrderId(clientId)
+	_, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, *orderId)
+	if exists {
+		err = k.CancelVaultClobOrder(ctx, vaultId, orderId, orderExpirationSeconds)
+		return true, err
+	}
+	return false, nil
 }
 
 // ReplaceVaultClobOrder replaces a vault CLOB order internal to the protocol and
