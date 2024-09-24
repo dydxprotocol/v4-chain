@@ -154,7 +154,7 @@ func (k Keeper) ValidateRevShareSafety(
 		lib.BigU(affiliatetypes.AffiliatesRevSharePpmCap),
 		true,
 	)
-	return bigNetFee.Cmp(bigLowestTakerFeePpmMulRevShareRateCap) > 0
+	return bigNetFee.Cmp(bigLowestTakerFeePpmMulRevShareRateCap) >= 0
 }
 
 func (k Keeper) GetAllRevShares(
