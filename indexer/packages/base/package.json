@@ -32,6 +32,7 @@
   },
   "homepage": "https://github.com/dydxprotocol/indexer#readme",
   "dependencies": {
+    "@aws-sdk/client-ec2": "^3.354.0",
     "axios": "^1.2.1",
     "big.js": "^6.2.1",
     "bignumber.js": "^9.0.2",

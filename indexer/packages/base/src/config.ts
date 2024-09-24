@@ -39,6 +39,7 @@ export const baseConfigSchema = {
   STATSD_PORT: parseInteger({ default: 8125 }),
   LOG_LEVEL: parseString({ default: 'debug' }),
   ECS_CONTAINER_METADATA_URI_V4: parseString({ default: '' }),
+  AWS_REGION: parseString({ default: '' }),
 };
 
 export default parseSchema(baseConfigSchema);
