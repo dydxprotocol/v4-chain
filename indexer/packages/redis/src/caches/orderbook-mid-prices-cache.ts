@@ -1,3 +1,4 @@
+import Big from 'big.js';
 import { Callback, RedisClient } from 'redis';
 
 import {
@@ -69,7 +70,9 @@ export async function setPrice(
 
 /**
  * Retrieves the median price for a given ticker from the cache.
- * Uses a Lua script to calculate the median price from the sorted set in Redis.
+ * Uses a Lua script to fetch either the middle element (for odd number of prices)
+ * or the two middle elements (for even number of prices) from a sorted set in Redis.
+ * If two middle elements are returned, their average is calculated in JavaScript.
  * @param client The Redis client
  * @param ticker The ticker symbol
  * @returns A promise that resolves with the median price as a string, or null if not found
@@ -77,13 +80,13 @@ export async function setPrice(
 export async function getMedianPrice(client: RedisClient, ticker: string): Promise<string | null> {
   let evalAsync: (
     marketCacheKey: string,
-  ) => Promise<string> = (
+  ) => Promise<string[]> = (
     marketCacheKey,
   ) => {
     return new Promise((resolve, reject) => {
-      const callback: Callback<string> = (
+      const callback: Callback<string[]> = (
         err: Error | null,
-        results: string,
+        results: string[],
       ) => {
         if (err) {
           return reject(err);
@@ -101,7 +104,24 @@ export async function getMedianPrice(client: RedisClient, ticker: string): Promi
   };
   evalAsync = evalAsync.bind(client);
 
-  return evalAsync(
+  const prices = await evalAsync(
     getOrderbookMidPriceCacheKey(ticker),
   );
+
+  if (!prices || prices.length === 0) {
+    return null;
+  }
+
+  if (prices.length === 1) {
+    return Big(prices[0]).toFixed();
+  }
+
+  if (prices.length === 2) {
+    const [price1, price2] = prices.map((price) => {
+      return Big(price);
+    });
+    return price1.plus(price2).div(2).toFixed();
+  }
+
+  return null;
 }
