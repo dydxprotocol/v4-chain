@@ -31,13 +31,18 @@ func (k msgServer) CreateMarketPermissionless(
 		return nil, err
 	}
 
-	_, err = k.Keeper.CreateClobPair(ctx, perpetualId)
+	clobPairId, err := k.Keeper.CreateClobPair(ctx, perpetualId)
 	if err != nil {
 		k.Logger(ctx).Error("failed to create clob pair for PML market", "error", err)
 		return nil, err
 	}
 
 	// TODO: vault deposit for PML
+	err = k.Keeper.DepositToMegavaultforPML(ctx, *msg.SubaccountId, clobPairId)
+	if err != nil {
+		k.Logger(ctx).Error("failed to deposit to megavault for PML market", "error", err)
+		return nil, err
+	}
 
 	return &types.MsgCreateMarketPermissionlessResponse{}, nil
 }

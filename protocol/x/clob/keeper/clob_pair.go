@@ -66,6 +66,9 @@ func (k Keeper) CreatePerpetualClobPair(
 		return clobPair, err
 	}
 
+	// Write the `ClobPair` to state.
+	k.SetClobPair(ctx, clobPair)
+
 	err := k.CreateClobPair(ctx, clobPair)
 	if err != nil {
 		return clobPair, err
@@ -165,19 +168,6 @@ func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 // CreateClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.
 // This function returns an error if a value for the ClobPair's id already exists in state.
 func (k Keeper) CreateClobPair(ctx sdk.Context, clobPair types.ClobPair) error {
-	// Validate the given clob pair id is not already in use.
-	if _, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
-		panic(
-			fmt.Sprintf(
-				"ClobPair with id %+v already exists in state",
-				clobPair.GetClobPairId(),
-			),
-		)
-	}
-
-	// Write the `ClobPair` to state.
-	k.setClobPair(ctx, clobPair)
-
 	// Create the corresponding orderbook in the memclob.
 	k.createOrderbook(ctx, clobPair)
 
@@ -217,8 +207,8 @@ func (k Keeper) CreateClobPair(ctx sdk.Context, clobPair types.ClobPair) error {
 	return nil
 }
 
-// setClobPair sets a specific `ClobPair` in the store from its index.
-func (k Keeper) setClobPair(ctx sdk.Context, clobPair types.ClobPair) {
+// SetClobPair sets a specific `ClobPair` in the store from its index.
+func (k Keeper) SetClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 	store := k.getClobPairStore(ctx)
 	b := k.cdc.MustMarshal(&clobPair)
 	store.Set(clobPairKey(clobPair.GetClobPairId()), b)
@@ -567,7 +557,7 @@ func (k Keeper) UpdateClobPair(
 		return err
 	}
 
-	k.setClobPair(ctx, clobPair)
+	k.SetClobPair(ctx, clobPair)
 
 	// Send UpdateClobPair to indexer.
 	k.GetIndexerEventManager().AddTxnEvent(

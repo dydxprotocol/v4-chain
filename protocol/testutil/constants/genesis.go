@@ -873,7 +873,12 @@ const GenesisState = `{
       }
     },
     "listing": {
-      "hard_cap_for_markets": 0
+      "hard_cap_for_markets": 500,
+      "listing_vault_deposit_params": {
+        "new_vault_deposit_amount": "10000",
+        "main_vault_deposit_amount": "0",
+        "num_blocks_to_lock_shares": 2592000
+      }
 	},
     "perpetuals": {
       "liquidity_tiers": [
