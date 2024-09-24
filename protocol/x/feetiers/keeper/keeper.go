@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 )
 
 type (
@@ -21,6 +22,7 @@ type (
 		storeKey         storetypes.StoreKey
 		authorities      map[string]struct{}
 		affiliatesKeeper types.AffiliatesKeeper
+		revShareKeeper   types.RevShareKeeper
 	}
 )
 
@@ -122,12 +124,46 @@ func (k Keeper) GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool
 func (k Keeper) GetLowestMakerFee(ctx sdk.Context) int32 {
 	feeParams := k.GetPerpetualFeeParams(ctx)
 
+	return GetLowestMakerFeeFromTiers(feeParams.Tiers)
+}
+
+func (k Keeper) GetAffiliateRefereeLowestTakerFee(ctx sdk.Context) int32 {
+	feeParams := k.GetPerpetualFeeParams(ctx)
+
+	return GetAffiliateRefereeLowestTakerFeeFromTiers(feeParams.Tiers)
+}
+
+func (k *Keeper) SetRevShareKeeper(revShareKeeper types.RevShareKeeper) {
+	k.revShareKeeper = revShareKeeper
+}
+
+func GetLowestMakerFeeFromTiers(tiers []*types.PerpetualFeeTier) int32 {
 	lowestMakerFee := int32(math.MaxInt32)
-	for _, tier := range feeParams.Tiers {
+	for _, tier := range tiers {
 		if tier.MakerFeePpm < lowestMakerFee {
 			lowestMakerFee = tier.MakerFeePpm
 		}
 	}
-
 	return lowestMakerFee
+}
+
+// GetAffiliateRefereeLowestTakerFeeFromTiers returns the minimum of
+// - the taker fee of the tier that has the max absolute volume requirement
+// - the taker fee of the referee starting fee tier
+func GetAffiliateRefereeLowestTakerFeeFromTiers(tiers []*types.PerpetualFeeTier) int32 {
+	takerFeePpm := int32(math.MaxInt32)
+	for _, tier := range tiers {
+		// assumes tiers are ordered by absolute volume requirement
+		if tier.AbsoluteVolumeRequirement < revsharetypes.MaxReferee30dVolumeForAffiliateShareQuantums {
+			takerFeePpm = tier.TakerFeePpm
+		} else {
+			break
+		}
+	}
+
+	if uint32(len(tiers)) > types.RefereeStartingFeeTier {
+		return min(takerFeePpm, tiers[types.RefereeStartingFeeTier].TakerFeePpm)
+	}
+
+	return takerFeePpm
 }

@@ -1025,6 +1025,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 		expectedOrderSides    []clobtypes.Order_Side
 		expectedOrderSubticks []uint64
 		expectedOrderQuantums []uint64
+		expectedTimeInForce   []clobtypes.Order_TimeInForce
 		expectedErr           error
 	}{
 		"Success - Vault Clob 0, quoting status, 2 layers, leverage 0, doesn't cross oracle price": {
@@ -1107,6 +1108,14 @@ func TestGetVaultClobOrders(t *testing.T) {
 				20_000_000_000,
 				20_000_000_000,
 				20_000_000_000,
+			},
+			// post-only if increases inventory
+			// vault is flat, all orders should be post-only
+			expectedTimeInForce: []clobtypes.Order_TimeInForce{
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
 			},
 		},
 		"Success - Vault Clob 1, quoting status, 3 layers, leverage -0.6, doesn't cross oracle price": {
@@ -1198,6 +1207,16 @@ func TestGetVaultClobOrders(t *testing.T) {
 				41_666_000,
 				41_666_000,
 			},
+			// post-only if increases inventory
+			// vault is short, sell orders should be post-only
+			expectedTimeInForce: []clobtypes.Order_TimeInForce{
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+			},
 		},
 		"Success - Vault Clob 1, quoting status, 3 layers, leverage -3, crosses oracle price": {
 			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
@@ -1288,6 +1307,16 @@ func TestGetVaultClobOrders(t *testing.T) {
 				33_333_000,
 				33_333_000,
 			},
+			// post-only if increases inventory
+			// vault is short, sell orders should be post-only
+			expectedTimeInForce: []clobtypes.Order_TimeInForce{
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+			},
 		},
 		"Success - Vault Clob 1, quoting status, 2 layers, leverage 3, crosses oracle price": {
 			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
@@ -1364,6 +1393,14 @@ func TestGetVaultClobOrders(t *testing.T) {
 				333_333_000,
 				333_333_000,
 			},
+			// post-only if increases inventory
+			// vault is long, buy orders should be post-only
+			expectedTimeInForce: []clobtypes.Order_TimeInForce{
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+			},
 		},
 		"Success - Vault Clob 1, close-only status, 3 layers, leverage -0.6, buy orders only": {
 			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
@@ -1434,6 +1471,11 @@ func TestGetVaultClobOrders(t *testing.T) {
 				41_666_000,
 				41_666_000,
 			},
+			expectedTimeInForce: []clobtypes.Order_TimeInForce{
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+			},
 		},
 		"Success - Vault Clob 1, close-only status, 3 layers, leverage -0.6, no orders as size is rounded to 0": {
 			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
@@ -1466,20 +1508,20 @@ func TestGetVaultClobOrders(t *testing.T) {
 			expectedOrderQuantums: []uint64{},
 		},
 		"Success - Vault Clob 1, close-only status, 2 layers, leverage 0.6, sell orders only, " +
-			"order size capped to position size": {
+			"total size of orders capped to position size": {
 			vaultStatus: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
 			vaultQuotingParams: vaulttypes.QuotingParams{
 				Layers:                           2,         // 2 layers
 				SpreadMinPpm:                     7_654,     // 76.54 bps
 				SpreadBufferPpm:                  2_900,     // 29 bps
 				SkewFactorPpm:                    1_234_000, // 1.234
-				OrderSizePctPpm:                  1_000_000, // 100%
+				OrderSizePctPpm:                  500_000,   // 50%
 				OrderExpirationSeconds:           4,         // 4 seconds
 				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
 			vaultId:                    constants.Vault_Clob1,
-			vaultAssetQuoteQuantums:    big.NewInt(500_000_000), // 500 USDC
-			vaultInventoryBaseQuantums: big.NewInt(250_000_000), // 0.25 ETH
+			vaultAssetQuoteQuantums:    big.NewInt(1_000_000_000), // 1000 USDC
+			vaultInventoryBaseQuantums: big.NewInt(500_000_000),   // 0.5 ETH
 			clobPair:                   constants.ClobPair_Eth,
 			marketParam:                constants.TestMarketParams[1],
 			marketPrice:                constants.TestMarketPrices[1],
@@ -1507,28 +1549,32 @@ func TestGetVaultClobOrders(t *testing.T) {
 			expectedOrderSubticks: []uint64{
 				// spreadPpm = max(7_654, 2_900 + 50) = 7_654
 				// spread = 0.007654
-				// open_notional = 250_000_000 * 10^-9 * 3_000 * 10^6 = 750_000_000
-				// leverage = 750_000_000 / (500_000_000 + 750_000_000) = 0.6
+				// open_notional = 500_000_000 * 10^-9 * 3_000 * 10^6 = 1_500_000_000
+				// leverage = 1_500_000_000 / (1_000_000_000 + 1_500_000_000) = 0.6
 				// oracleSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3e9
-				// leverage_0 = leverage - 0 * 1 = 0.6
+				// leverage_0 = leverage - 0 * 0.5 = 0.6
 				// skew_ask_0 = -1.234 * 0.6 = -0.7404
 				// ask_spread_0 = (1 - 0.7404) * 0.007654 = 0.0019869784
 				// a_0 = 3e9 * (1 + 0.0019869784) = 3_005_960_935.2 ~= 3_005_961_000 (round up to 1000)
 				3_005_961_000,
-				// leverage_1 = leverage - 1 * 1 = -0.4
-				// skew_ask_0 = -1.234 * -0.4 = 0.4936
-				// ask_spread_0 = (1 + 0.4936) * 0.007654 = 0.0114320144
-				// a_0 = 3e9 * (1 + 0.0114320144) = 3_034_296_043.2 ~= 3_034_297_000 (round up to 1000)
-				3_034_297_000,
+				// leverage_1 = leverage - 1 * 0.5 = 0.1
+				// skew_ask_0 = -1.234 * 0.1 = -0.1234
+				// ask_spread_0 = (1 - 0.1234) * 0.007654 = 0.0067094964
+				// a_0 = 3e9 * (1 + 0.0067094964) = 3020128489.2 ~= 3_020_129_000 (round up to 1000)
+				3_020_129_000,
 			},
-			// order_size = 100% * 1250 / 3000 ~= 0.4166666667
+			// order_size = 50% * 2500 / 3000 ~= 0.4166666667
 			// order_size_base_quantums = 0.4166666667e9 ~= 416_666_667
-			// order_size_base_quantums = min(416_666_667, inventory)
-			// = min(416_666_667, 250_000_000) = 250_000_000
 			// round down to nearest multiple of step_base_quantums=1_000.
 			expectedOrderQuantums: []uint64{
-				250_000_000,
-				250_000_000,
+				416_666_000,
+				// this order size is capped at `position size - sum of previous order sizes`
+				// = 500_000_000 - 416_666_000 = 83_334_000
+				83_334_000,
+			},
+			expectedTimeInForce: []clobtypes.Order_TimeInForce{
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
+				clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED,
 			},
 		},
 		"Success - Get orders from Vault for Clob Pair 1, No Orders due to Zero Order Size": {
@@ -1557,6 +1603,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			// round down to nearest multiple of step_base_quantums=1_000.
 			// order size is 0.
 			expectedOrderQuantums: []uint64{},
+			expectedTimeInForce:   []clobtypes.Order_TimeInForce{},
 		},
 		"Success - Clob Pair doesn't exist, Empty orders": {
 			vaultStatus:           vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
@@ -1570,6 +1617,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			expectedOrderSides:    []clobtypes.Order_Side{},
 			expectedOrderSubticks: []uint64{},
 			expectedOrderQuantums: []uint64{},
+			expectedTimeInForce:   []clobtypes.Order_TimeInForce{},
 		},
 		"Success - Clob Pair in status final settlement, Empty orders": {
 			vaultStatus:        vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
@@ -1636,6 +1684,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			expectedOrderSides:    []clobtypes.Order_Side{},
 			expectedOrderSubticks: []uint64{},
 			expectedOrderQuantums: []uint64{},
+			expectedTimeInForce:   []clobtypes.Order_TimeInForce{},
 		},
 		"Error - Vault equity is zero": {
 			vaultStatus:                vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
@@ -1775,6 +1824,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				side clobtypes.Order_Side,
 				quantums uint64,
 				subticks uint64,
+				timeInForce clobtypes.Order_TimeInForce,
 			) *clobtypes.Order {
 				return &clobtypes.Order{
 					OrderId: clobtypes.OrderId{
@@ -1789,6 +1839,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 					GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
 						GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + tc.vaultQuotingParams.OrderExpirationSeconds,
 					},
+					TimeInForce: timeInForce,
 				}
 			}
 			expectedOrders := make([]*clobtypes.Order, 0)
@@ -1800,6 +1851,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 						tc.expectedOrderSides[i],
 						tc.expectedOrderQuantums[i],
 						tc.expectedOrderSubticks[i],
+						tc.expectedTimeInForce[i],
 					),
 				)
 			}

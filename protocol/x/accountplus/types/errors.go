@@ -23,4 +23,9 @@ var (
 		4,
 		"Smart account is not active",
 	)
+	ErrInitializingAuthenticator = errorsmod.Register(
+		ModuleName,
+		5,
+		"Error initializing authenticator",
+	)
 )

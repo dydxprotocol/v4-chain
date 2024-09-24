@@ -949,19 +949,6 @@ func New(
 	)
 	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 
-	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
-		appCodec,
-		keys[revsharemoduletypes.StoreKey],
-		[]string{
-			lib.GovModuleAddress.String(),
-		},
-		app.AffiliatesKeeper,
-	)
-	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
-
-	// Set the revshare keeper in the affiliates keeper.
-	app.AffiliatesKeeper.SetRevShareKeeper(app.RevShareKeeper)
-
 	app.MarketMapKeeper = *marketmapmodulekeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[marketmapmoduletypes.StoreKey]),
 		appCodec,
@@ -969,6 +956,33 @@ func New(
 	)
 
 	marketmapModule := marketmapmodule.NewAppModule(appCodec, &app.MarketMapKeeper)
+
+	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
+		appCodec,
+		app.StatsKeeper,
+		app.AffiliatesKeeper,
+		keys[feetiersmoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
+	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
+
+	app.AffiliatesKeeper.SetFeetiersKeeper(app.FeeTiersKeeper)
+
+	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
+		appCodec,
+		keys[revsharemoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+		app.AffiliatesKeeper,
+		*app.FeeTiersKeeper,
+	)
+	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
+	app.FeeTiersKeeper.SetRevShareKeeper(app.RevShareKeeper)
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
@@ -1041,19 +1055,6 @@ func New(
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper)
 
-	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
-		appCodec,
-		app.StatsKeeper,
-		app.AffiliatesKeeper,
-		keys[feetiersmoduletypes.StoreKey],
-		// set the governance and delaymsg module accounts as the authority for conducting upgrades
-		[]string{
-			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
-		},
-	)
-	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
-
 	app.VestKeeper = *vestmodulekeeper.NewKeeper(
 		appCodec,
 		keys[vestmoduletypes.StoreKey],
@@ -1091,7 +1092,6 @@ func New(
 		app.BankKeeper,
 		app.PerpetualsKeeper,
 		app.BlockTimeKeeper,
-		app.RevShareKeeper,
 		app.IndexerEventManager,
 		app.FullNodeStreamingManager,
 	)

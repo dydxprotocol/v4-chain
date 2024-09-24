@@ -77,8 +77,9 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 			stakingKeeper,
 		)
 		affiliatesKeeper, _ = createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
-		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
-		affiliatesKeeper.SetRevShareKeeper(revShareKeeper)
+		vaultKeeper, _ := createVaultKeeper(stateStore, db, cdc, transientStoreKey)
+		feetiersKeeper, _ := createFeeTiersKeeper(stateStore, statsKeeper, vaultKeeper, affiliatesKeeper, db, cdc)
+		revShareKeeper, _, _ = createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feetiersKeeper)
 		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 		pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
@@ -100,7 +101,6 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 			bankKeeper,
 			perpetualsKeeper,
 			blocktimeKeeper,
-			revShareKeeper,
 			transientStoreKey,
 			msgSenderEnabled,
 		)
@@ -132,7 +132,6 @@ func createSubaccountsKeeper(
 	bk types.BankKeeper,
 	pk *perpskeeper.Keeper,
 	btk *blocktimekeeper.Keeper,
-	rsk *revsharekeeper.Keeper,
 	transientStoreKey storetypes.StoreKey,
 	msgSenderEnabled bool,
 ) (*keeper.Keeper, storetypes.StoreKey) {
@@ -151,7 +150,6 @@ func createSubaccountsKeeper(
 		bk,
 		pk,
 		btk,
-		rsk,
 		mockIndexerEventsManager,
 		streaming.NewNoopGrpcStreamingManager(),
 	)

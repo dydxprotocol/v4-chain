@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -112,34 +112,20 @@ func (k Keeper) SetNextAuthenticatorId(ctx sdk.Context, authenticatorId uint64) 
 	store.Set([]byte(types.AuthenticatorIdKeyPrefix), b)
 }
 
-// GetAuthenticatorExtension unpacks the extension for the transaction, this is used with transactions specify
-// an authenticator to use
-func (k Keeper) GetAuthenticatorExtension(exts []*codectypes.Any) types.AuthenticatorTxOptions {
-	var authExtension types.AuthenticatorTxOptions
-	for _, ext := range exts {
-		err := k.cdc.UnpackAny(ext, &authExtension)
-		if err == nil {
-			return authExtension
-		}
-	}
-	return nil
-}
-
-// GetSelectedAuthenticatorData gets all authenticators from an account
-// from the store, the data is  prefixed by 2|<accAddr|<keyId>
+// GetSelectedAuthenticatorData gets a single authenticator for the account from the store.
 func (k Keeper) GetSelectedAuthenticatorData(
 	ctx sdk.Context,
 	account sdk.AccAddress,
-	selectedAuthenticator int,
+	selectedAuthenticator uint64,
 ) (*types.AccountAuthenticator, error) {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
 		[]byte(types.AuthenticatorKeyPrefix),
 	)
-	bz := store.Get(types.KeyAccountId(account, uint64(selectedAuthenticator)))
+	bz := store.Get(types.KeyAccountId(account, selectedAuthenticator))
 	if bz == nil {
 		return &types.AccountAuthenticator{}, errors.Wrap(
-			sdkerrors.ErrInvalidRequest,
+			types.ErrAuthenticatorNotFound,
 			fmt.Sprintf("authenticator %d not found for account %s", selectedAuthenticator, account),
 		)
 	}
@@ -157,7 +143,7 @@ func (k Keeper) GetSelectedAuthenticatorData(
 func (k Keeper) GetInitializedAuthenticatorForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,
-	selectedAuthenticator int,
+	selectedAuthenticator uint64,
 ) (authenticator.InitializedAuthenticator, error) {
 	// Get the authenticator data from the store
 	authenticatorFromStore, err := k.GetSelectedAuthenticatorData(ctx, account, selectedAuthenticator)
@@ -187,10 +173,19 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	// NOTE: Always return a concrete authenticator not a pointer, do not modify in place
 	// NOTE: The authenticator manager returns a struct that is reused
 	initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorFromStore.Config)
-	if err != nil || initializedAuthenticator == nil {
+	if err != nil {
 		return authenticator.InitializedAuthenticator{},
-			errors.Wrapf(err,
+			errors.Wrapf(
+				err,
 				"authenticator %d with type %s failed to initialize",
+				selectedAuthenticator, authenticatorFromStore.Type,
+			)
+	}
+	if initializedAuthenticator == nil {
+		return authenticator.InitializedAuthenticator{},
+			errors.Wrapf(
+				types.ErrInitializingAuthenticator,
+				"authenticator.Initialize returned nil for %d with type %s",
 				selectedAuthenticator, authenticatorFromStore.Type,
 			)
 	}
@@ -201,6 +196,31 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	}
 
 	return finalAuthenticator, nil
+}
+
+// GetAuthenticatorDataForAccount gets all authenticators AccAddressFromBech32 with an account
+// from the store.
+func (k Keeper) GetAuthenticatorDataForAccount(
+	ctx sdk.Context,
+	account sdk.AccAddress,
+) ([]*types.AccountAuthenticator, error) {
+	authenticators := make([]*types.AccountAuthenticator, 0)
+
+	store := prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.AuthenticatorKeyPrefix),
+	)
+	iterator := storetypes.KVStorePrefixIterator(store, []byte(account.String()))
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		authenticator, err := k.unmarshalAccountAuthenticator(iterator.Value())
+		if err != nil {
+			return nil, err
+		}
+		authenticators = append(authenticators, authenticator)
+	}
+
+	return authenticators, nil
 }
 
 // unmarshalAccountAuthenticator is used to unmarshal the AccountAuthenticator from the store

@@ -17,6 +17,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
@@ -112,7 +113,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		account := sdk.AccAddress(signers[0])
 
 		// Get the currently selected authenticator
-		selectedAuthenticatorId := int(selectedAuthenticators[msgIndex])
+		selectedAuthenticatorId := selectedAuthenticators[msgIndex]
 		selectedAuthenticator, err := ad.accountPlusKeeper.GetInitializedAuthenticatorForAccount(
 			ctx,
 			account,
@@ -275,7 +276,7 @@ func (ad AuthenticatorDecorator) GetSelectedAuthenticators(
 	}
 
 	// Get the selected authenticator options from the transaction.
-	txOptions := ad.accountPlusKeeper.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions())
+	txOptions := lib.GetAuthenticatorExtension(extTx.GetNonCriticalExtensionOptions(), ad.cdc)
 	if txOptions == nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest,
 			"Cannot get AuthenticatorTxOptions from tx")

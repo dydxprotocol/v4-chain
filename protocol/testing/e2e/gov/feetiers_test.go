@@ -20,16 +20,16 @@ func TestUpdateFeeTiersModuleParams(t *testing.T) {
 		Tiers: []*feetierstypes.PerpetualFeeTier{
 			{
 				Name:        "test_tier_0",
-				MakerFeePpm: 1_000,
-				TakerFeePpm: 2_000,
+				MakerFeePpm: 11_000,
+				TakerFeePpm: 22_000,
 			},
 			{
 				Name:                           "test_tier_1",
 				AbsoluteVolumeRequirement:      200_000,
 				TotalVolumeShareRequirementPpm: 100_000,
 				MakerVolumeShareRequirementPpm: 50_000,
-				MakerFeePpm:                    11_000,
-				TakerFeePpm:                    22_000,
+				MakerFeePpm:                    1_000,
+				TakerFeePpm:                    2_000,
 			},
 		},
 	}
