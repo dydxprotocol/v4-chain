@@ -125,7 +125,7 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 
 // Check two conditions to ensure rev shares are safe.
 // 1. totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm < 100%
-// 2. lowest_taker_fee + lowest_maker_fee > Highest_affiliate_rev_share * lowest_taker_fee
+// 2. lowest_taker_fee + lowest_maker_fee >= Highest_affiliate_rev_share * lowest_taker_fee
 func (k Keeper) ValidateRevShareSafety(
 	ctx sdk.Context,
 	unconditionalRevShareConfig types.UnconditionalRevShareConfig,
