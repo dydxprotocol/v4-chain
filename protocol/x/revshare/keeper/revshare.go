@@ -154,6 +154,7 @@ func (k Keeper) ValidateRevShareSafety(
 		lib.BigU(affiliatetypes.AffiliatesRevSharePpmCap),
 		true,
 	)
+	// TODO(OTE-826): Update ValidateRevshareSafety formula and fix tests
 	return bigNetFee.Cmp(bigLowestTakerFeePpmMulRevShareRateCap) >= 0
 }
 
