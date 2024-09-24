@@ -50,11 +50,12 @@ func (k Keeper) Vault(
 	}
 
 	return &types.QueryVaultResponse{
-		VaultId:      vaultId,
-		SubaccountId: *vaultId.ToSubaccountId(),
-		Equity:       dtypes.NewIntFromBigInt(equity),
-		Inventory:    dtypes.NewIntFromBigInt(inventory),
-		VaultParams:  vaultParams,
+		VaultId:             vaultId,
+		SubaccountId:        *vaultId.ToSubaccountId(),
+		Equity:              dtypes.NewIntFromBigInt(equity),
+		Inventory:           dtypes.NewIntFromBigInt(inventory),
+		VaultParams:         vaultParams,
+		MostRecentClientIds: k.GetMostRecentClientIds(ctx, vaultId),
 	}, nil
 }
 
