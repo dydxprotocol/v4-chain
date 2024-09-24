@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
+	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -55,11 +57,16 @@ func migrateVaultQuotingParamsToVaultParams(ctx sdk.Context, k vaultkeeper.Keepe
 	}
 }
 
+func setDefaultTiersForAffiliates(ctx sdk.Context, k affiliateskeeper.Keeper) {
+	k.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+}
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	pricesKeeper pricestypes.PricesKeeper,
 	vaultKeeper vaultkeeper.Keeper,
+	affiliatesKeeper affiliateskeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
@@ -70,6 +77,9 @@ func CreateUpgradeHandler(
 
 		// Migrate vault quoting params to vault params.
 		migrateVaultQuotingParamsToVaultParams(sdkCtx, vaultKeeper)
+
+		// Set default tiers for affiliates.
+		setDefaultTiersForAffiliates(sdkCtx, affiliatesKeeper)
 
 		return mm.RunMigrations(ctx, configurator, vm)
 	}

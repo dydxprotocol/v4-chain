@@ -11,6 +11,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	affiliatestypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
@@ -48,6 +49,9 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
 	postUpgradeVaultParamsCheck(node, t)
+
+	// Check that the affiliates module has been initialized with the default tiers.
+	postUpgradeAffiliatesModuleTiersCheck(node, t)
 }
 
 func postUpgradeVaultParamsCheck(node *containertest.Node, t *testing.T) {
@@ -95,4 +99,21 @@ func checkVaultParams(
 
 	require.Equal(t, expectedStatus, vaultParamsResp.VaultParams.Status)
 	require.Equal(t, expectedQuotingParams, vaultParamsResp.VaultParams.QuotingParams)
+}
+
+func postUpgradeAffiliatesModuleTiersCheck(node *containertest.Node, t *testing.T) {
+
+	resp, err := containertest.Query(
+		node,
+		affiliatestypes.NewQueryClient,
+		affiliatestypes.QueryClient.AllAffiliateTiers,
+		&affiliatestypes.AllAffiliateTiersRequest{},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	affiliateTiersResp := affiliatestypes.AllAffiliateTiersResponse{}
+	err = proto.UnmarshalText(resp.String(), &affiliateTiersResp)
+	require.NoError(t, err)
+	require.Equal(t, affiliatestypes.DefaultAffiliateTiers, affiliateTiersResp.Tiers)
 }
