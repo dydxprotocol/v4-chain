@@ -151,7 +151,7 @@ func (k Keeper) AddRewardSharesForFill(
 	}
 	maxPossibleTakerFeeRevShare := big.NewInt(0)
 
-	// taker revshare is 0 if taker volume is greater than Max30dTakerVolumeQuantums
+	// taker revshare is always 0 if taker rolling volume is greater than or equal to Max30dTakerVolumeQuantums, so no need to reduce score by `max_possible_taker_fee_rev_share`
 	if fill.MonthlyRollingTakerVolumeQuantums < revsharetypes.MaxReferee30dVolumeForAffiliateShareQuantums {
 		maxPossibleTakerFeeRevShare = lib.BigMulPpm(fill.TakerFeeQuoteQuantums,
 			lib.BigU(affiliatetypes.AffiliatesRevSharePpmCap),
