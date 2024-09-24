@@ -508,7 +508,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
 				ProductId:                         perpetualId,
-				MonthlyRollingTakerVolumeQuantums: types.Max30dRefereeVolumeQuantums + 1,
+				MonthlyRollingTakerVolumeQuantums: types.MaxReferee30dVolumeForAffiliateShareQuantums + 1,
 				MarketId:                          marketId,
 			},
 			expectedRevSharesForFill: types.RevSharesForFill{

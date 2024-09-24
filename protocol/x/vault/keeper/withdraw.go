@@ -150,126 +150,15 @@ func (k Keeper) WithdrawFromMegavault(
 		)
 	}
 
-	// 2. Redeem from main vault.
-	totalShares := k.GetTotalShares(ctx).NumShares.BigInt()
-	megavaultEquity, err := k.GetSubaccountEquity(ctx, types.MegavaultMainSubaccount)
-	redeemedQuoteQuantums = new(big.Int).Set(megavaultEquity)
+	// 2. Redeem from main and sub vaults.
+	// Note that in below function, quote quantums redeemed from each sub vault are transferred to the main vault.
+	redeemedQuoteQuantums, megavaultEquity, totalShares, err :=
+		k.RedeemFromMainAndSubVaults(ctx, sharesToWithdraw, false) // set `simulate` to false.
 	if err != nil {
-		log.ErrorLogWithError(ctx, "Megavault withdrawal: failed to get megavault main vault equity", err)
 		return nil, err
 	}
-	redeemedQuoteQuantums.Mul(redeemedQuoteQuantums, sharesToWithdraw)
-	redeemedQuoteQuantums.Quo(redeemedQuoteQuantums, totalShares)
 
-	// 3. Redeem from each sub vault.
-	vaultParamsIterator := k.getVaultParamsIterator(ctx)
-	defer vaultParamsIterator.Close()
-	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
-		var vaultParams types.VaultParams
-		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
-		// Skip deactivated vaults.
-		if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED {
-			continue
-		}
-
-		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
-		if err != nil {
-			log.ErrorLogWithError(
-				ctx,
-				"Megavault withdrawal: error when getting vault ID from state key. Skipping this vault",
-				err,
-			)
-			continue
-		}
-
-		_, perpetual, marketParam, marketPrice, err := k.GetVaultClobPerpAndMarket(ctx, *vaultId)
-		if err != nil {
-			log.ErrorLogWithError(
-				ctx,
-				"Megavault withdrawal: error when getting perpetual and market. Skipping this vault",
-				err,
-				"Vault ID",
-				vaultId,
-			)
-			continue
-		}
-		leverage, equity, err := k.GetVaultLeverageAndEquity(ctx, *vaultId, &perpetual, &marketPrice)
-		if err != nil {
-			log.ErrorLogWithError(
-				ctx,
-				"Megavault withdrawal: error when getting vault leverage and equity. Skipping this vault",
-				err,
-				"Vault ID",
-				vaultId,
-			)
-			continue
-		}
-
-		slippage, err := k.GetVaultWithdrawalSlippage(
-			ctx,
-			*vaultId,
-			sharesToWithdraw,
-			totalShares,
-			leverage,
-			&perpetual,
-			&marketParam,
-		)
-		if err != nil {
-			log.ErrorLogWithError(
-				ctx,
-				"Megavault withdrawal: error when getting vault withdrawal slippage. Skipping this vault",
-				err,
-				"Vault ID",
-				vaultId,
-			)
-			continue
-		}
-
-		// Transfer `equity * shares / totalShares * (1 - slippage)` from sub vault to main vault.
-		redeemedFromSubVault := new(big.Rat).SetFrac(equity, big.NewInt(1))
-		redeemedFromSubVault.Mul(redeemedFromSubVault, new(big.Rat).SetFrac(sharesToWithdraw, totalShares))
-		redeemedFromSubVault.Mul(redeemedFromSubVault, new(big.Rat).Sub(lib.BigRat1(), slippage))
-		quantumsToTransfer := new(big.Int).Quo(redeemedFromSubVault.Num(), redeemedFromSubVault.Denom())
-
-		if quantumsToTransfer.Sign() <= 0 || !quantumsToTransfer.IsUint64() {
-			log.InfoLog(
-				ctx,
-				"Megavault withdrawal: quantums to transfer is invalid. Skipping this vault",
-				"Vault ID",
-				vaultId,
-				"Quantums",
-				quantumsToTransfer,
-			)
-			continue
-		}
-		err = k.sendingKeeper.ProcessTransfer(
-			ctx,
-			&sendingtypes.Transfer{
-				Sender:    *vaultId.ToSubaccountId(),
-				Recipient: types.MegavaultMainSubaccount,
-				AssetId:   assetstypes.AssetUsdc.Id,
-				Amount:    quantumsToTransfer.Uint64(), // validated above.
-			},
-		)
-		if err != nil {
-			log.ErrorLogWithError(
-				ctx,
-				"Megavault withdrawal: error when transferring from sub vault to main vault. Skipping this vault",
-				err,
-				"Vault ID",
-				vaultId,
-				"Quantums",
-				quantumsToTransfer,
-			)
-			continue
-		}
-
-		// Increment total redeemed quote quantums and record this vault's equity as part of megavault equity.
-		redeemedQuoteQuantums.Add(redeemedQuoteQuantums, quantumsToTransfer)
-		megavaultEquity.Add(megavaultEquity, equity)
-	}
-
-	// 4. Return error if redeemed quantums is invalid.
+	// 3. Return error if redeemed quantums is invalid.
 	if redeemedQuoteQuantums.Sign() <= 0 || !redeemedQuoteQuantums.IsUint64() ||
 		redeemedQuoteQuantums.Cmp(minQuoteQuantums) < 0 {
 		return nil, errorsmod.Wrapf(
@@ -280,7 +169,7 @@ func (k Keeper) WithdrawFromMegavault(
 		)
 	}
 
-	// 5. Transfer from main vault to destination subaccount.
+	// 4. Transfer from main vault to destination subaccount.
 	err = k.sendingKeeper.ProcessTransfer(
 		ctx,
 		&sendingtypes.Transfer{
@@ -303,7 +192,7 @@ func (k Keeper) WithdrawFromMegavault(
 		return nil, err
 	}
 
-	// 6. Decrement total and owner shares.
+	// 5. Decrement total and owner shares.
 	if err = k.SetTotalShares(
 		ctx,
 		types.BigIntToNumShares(new(big.Int).Sub(totalShares, sharesToWithdraw)),
@@ -331,4 +220,207 @@ func (k Keeper) WithdrawFromMegavault(
 	)
 
 	return redeemedQuoteQuantums, nil
+}
+
+// RedeemFromMainAndSubVaults redeems `shares` number of shares from main and sub vaults.
+// If and only if `simulate` is false, logs are enabled and quote quantums redeemed from each
+// sub vault are transferred to the main vault.
+func (k Keeper) RedeemFromMainAndSubVaults(
+	ctx sdk.Context,
+	shares *big.Int,
+	simulate bool,
+) (
+	redeemedQuoteQuantums *big.Int,
+	megavaultEquity *big.Int,
+	totalShares *big.Int,
+	err error,
+) {
+	// Redeem from main vault.
+	totalShares = k.GetTotalShares(ctx).NumShares.BigInt()
+	if shares.Cmp(totalShares) > 0 {
+		return nil, nil, totalShares, errorsmod.Wrapf(
+			types.ErrInvalidSharesToWithdraw,
+			"shares to withdraw %s exceeds total shares %s",
+			shares,
+			totalShares,
+		)
+	}
+	megavaultEquity, err = k.GetSubaccountEquity(ctx, types.MegavaultMainSubaccount)
+	if err != nil {
+		if simulate {
+			log.DebugLog(ctx, "Megavault withdrawal: failed to get megavault main vault equity", "error", err)
+		} else {
+			log.ErrorLogWithError(ctx, "Megavault withdrawal: failed to get megavault main vault equity", err)
+		}
+		return nil, nil, totalShares, err
+	}
+	redeemedQuoteQuantums = new(big.Int).Set(megavaultEquity)
+	redeemedQuoteQuantums.Mul(redeemedQuoteQuantums, shares)
+	redeemedQuoteQuantums.Quo(redeemedQuoteQuantums, totalShares)
+
+	// Redeem from each sub vault.
+	vaultParamsIterator := k.getVaultParamsIterator(ctx)
+	defer vaultParamsIterator.Close()
+	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
+		var vaultParams types.VaultParams
+		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
+		// Skip deactivated vaults.
+		if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED {
+			continue
+		}
+
+		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
+		if err != nil {
+			if simulate {
+				log.DebugLog(
+					ctx,
+					"Megavault withdrawal: failed to get vault ID from state key. Skipping this vault",
+					"error",
+					err,
+				)
+			} else {
+				log.ErrorLogWithError(
+					ctx,
+					"Megavault withdrawal: error when getting vault ID from state key. Skipping this vault",
+					err,
+				)
+			}
+			continue
+		}
+
+		_, perpetual, marketParam, marketPrice, err := k.GetVaultClobPerpAndMarket(ctx, *vaultId)
+		if err != nil {
+			if simulate {
+				log.DebugLog(
+					ctx,
+					"Megavault withdrawal: failed to get perpetual and market. Skipping this vault",
+					"Vault ID",
+					vaultId,
+					"Error",
+					err,
+				)
+			} else {
+				log.ErrorLogWithError(
+					ctx,
+					"Megavault withdrawal: error when getting perpetual and market. Skipping this vault",
+					err,
+					"Vault ID",
+					vaultId,
+				)
+			}
+			continue
+		}
+		leverage, equity, err := k.GetVaultLeverageAndEquity(ctx, *vaultId, &perpetual, &marketPrice)
+		if err != nil {
+			if simulate {
+				log.DebugLog(
+					ctx,
+					"Megavault withdrawal: failed to get vault leverage and equity. Skipping this vault",
+					"Vault ID",
+					vaultId,
+					"Error",
+					err,
+				)
+			} else {
+				log.ErrorLogWithError(
+					ctx,
+					"Megavault withdrawal: error when getting vault leverage and equity. Skipping this vault",
+					err,
+					"Vault ID",
+					vaultId,
+				)
+			}
+			continue
+		}
+
+		slippage, err := k.GetVaultWithdrawalSlippage(
+			ctx,
+			*vaultId,
+			shares,
+			totalShares,
+			leverage,
+			&perpetual,
+			&marketParam,
+		)
+		if err != nil {
+			if simulate {
+				log.DebugLog(
+					ctx,
+					"Megavault withdrawal: failed to get vault withdrawal slippage. Skipping this vault",
+					"Vault ID",
+					vaultId,
+					"Error",
+					err,
+				)
+			} else {
+				log.ErrorLogWithError(
+					ctx,
+					"Megavault withdrawal: error when getting vault withdrawal slippage. Skipping this vault",
+					err,
+					"Vault ID",
+					vaultId,
+				)
+			}
+			continue
+		}
+
+		// Amount redeemed from this sub-vault is `equity * shares / totalShares * (1 - slippage)`.
+		redeemedFromSubVault := new(big.Rat).SetFrac(equity, big.NewInt(1))
+		redeemedFromSubVault.Mul(redeemedFromSubVault, new(big.Rat).SetFrac(shares, totalShares))
+		redeemedFromSubVault.Mul(redeemedFromSubVault, new(big.Rat).Sub(lib.BigRat1(), slippage))
+		quantumsToTransfer := new(big.Int).Quo(redeemedFromSubVault.Num(), redeemedFromSubVault.Denom())
+
+		if quantumsToTransfer.Sign() <= 0 || !quantumsToTransfer.IsUint64() {
+			if simulate {
+				log.DebugLog(
+					ctx,
+					"Megavault withdrawal: quantums to transfer is invalid. Skipping this vault",
+					"Vault ID",
+					vaultId,
+					"Quantums",
+					quantumsToTransfer,
+				)
+			} else {
+				log.ErrorLog(
+					ctx,
+					"Megavault withdrawal: quantums to transfer is invalid. Skipping this vault",
+					"Vault ID",
+					vaultId,
+					"Quantums",
+					quantumsToTransfer,
+				)
+			}
+			continue
+		}
+		if !simulate {
+			// Transfer from sub vault to main vault.
+			err = k.sendingKeeper.ProcessTransfer(
+				ctx,
+				&sendingtypes.Transfer{
+					Sender:    *vaultId.ToSubaccountId(),
+					Recipient: types.MegavaultMainSubaccount,
+					AssetId:   assetstypes.AssetUsdc.Id,
+					Amount:    quantumsToTransfer.Uint64(), // validated above.
+				},
+			)
+			if err != nil {
+				log.ErrorLogWithError(
+					ctx,
+					"Megavault withdrawal: error when transferring from sub vault to main vault. Skipping this vault",
+					err,
+					"Vault ID",
+					vaultId,
+					"Quantums",
+					quantumsToTransfer,
+				)
+				continue
+			}
+		}
+
+		// Increment total redeemed quote quantums and record this vault's equity as part of megavault equity.
+		redeemedQuoteQuantums.Add(redeemedQuoteQuantums, quantumsToTransfer)
+		megavaultEquity.Add(megavaultEquity, equity)
+	}
+
+	return redeemedQuoteQuantums, megavaultEquity, totalShares, nil
 }

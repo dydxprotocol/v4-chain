@@ -228,7 +228,7 @@ func (k Keeper) getAffiliateRevShares(
 ) ([]types.RevShare, *big.Int, error) {
 	takerAddr := fill.TakerAddr
 	takerFee := fill.TakerFeeQuoteQuantums
-	if fill.MonthlyRollingTakerVolumeQuantums >= types.Max30dRefereeVolumeQuantums {
+	if fill.MonthlyRollingTakerVolumeQuantums >= types.MaxReferee30dVolumeForAffiliateShareQuantums {
 		return nil, big.NewInt(0), nil
 	}
 
