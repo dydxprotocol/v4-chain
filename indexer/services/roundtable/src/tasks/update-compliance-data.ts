@@ -319,10 +319,11 @@ async function getComplianceData(
         return result.value;
       },
     ));
-    const responses404:
+    const addressNotFoundResponses:
     PromiseFulfilledResult<ComplianceClientResponse>[] = successResponses.filter(
       (result: PromiseSettledResult<ComplianceClientResponse>):
       result is PromiseFulfilledResult<ComplianceClientResponse> => {
+        // riskScore = NOT_IN_BLOCKCHAIN_RISK_SCORE denotes elliptic 404 responses
         return result.status === 'fulfilled' && result.value.riskScore === NOT_IN_BLOCKCHAIN_RISK_SCORE.toString();
       },
     );
@@ -347,8 +348,8 @@ async function getComplianceData(
       });
     }
 
-    if (responses404.length > 0) {
-      const addresses404 = responses404.map((result) => result.value.address);
+    if (addressNotFoundResponses.length > 0) {
+      const notFoundAddresses = addressNotFoundResponses.map((result) => result.value.address);
 
       stats.increment(
         `${config.SERVICE_NAME}.${taskName}.get_compliance_data_404`,
@@ -359,7 +360,7 @@ async function getComplianceData(
       logger.error({
         at: 'updated-compliance-data#getComplianceData',
         message: 'Failed to retrieve compliance data for the addresses due to elliptic 404',
-        addresses: addresses404,
+        addresses: notFoundAddresses,
       });
     }
     stats.timing(
