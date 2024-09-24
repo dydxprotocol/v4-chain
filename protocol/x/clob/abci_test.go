@@ -684,6 +684,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -713,6 +714,7 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.MarketType,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.DangerIndexPpm,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Once().Return()
@@ -747,6 +749,7 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.MarketType,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.DangerIndexPpm,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Once().Return()
@@ -1415,6 +1418,7 @@ func TestPrepareCheckState(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)

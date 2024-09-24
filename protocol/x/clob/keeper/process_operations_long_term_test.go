@@ -687,10 +687,12 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
 				constants.Dave_Num0: {},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(-250_000_000),
 			},
 		},
 		"Succeeds with existing maker Long-Term order in liquidation match": {
@@ -778,10 +780,12 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
 				constants.Dave_Num0: {},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(-250_000_000),
 			},
 		},
 		"Succeeds with maker Long-Term order when considering state fill amount": {

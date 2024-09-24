@@ -171,6 +171,7 @@ type PerpetualsKeeper interface {
 	)
 	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)
 	GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error)
+	GetInsuranceFundName(ctx sdk.Context, perpetualId uint32) (string, error)
 }
 
 type PricesKeeper interface {

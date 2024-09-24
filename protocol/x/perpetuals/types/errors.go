@@ -157,6 +157,11 @@ var (
 		32,
 		"total tDAI pre mint was 0, but total tDAI minted was not 0",
 	)
+	ErrIsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlockZero = errorsmod.Register(
+		ModuleName,
+		33,
+		"isolated market max cumulative insurance fund delta per block is zero",
+	)
 
 	// Miscallaneous errors
 	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

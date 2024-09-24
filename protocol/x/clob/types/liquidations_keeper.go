@@ -92,12 +92,12 @@ type LiquidationsKeeper interface {
 		perpetualId uint32,
 		err error,
 	)
-	GetSubaccountMaxInsuranceLost(
+	GetMaxQuantumsInsuranceDelta(
 		ctx sdk.Context,
-		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
 	) (
 		bigMaxQuantumsInsuranceLost *big.Int,
+		err error,
 	)
 	MaybeGetLiquidationOrder(
 		ctx sdk.Context,
@@ -125,10 +125,5 @@ type LiquidationsKeeper interface {
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
-	)
-	UpdateSubaccountLiquidationInfo(
-		ctx sdk.Context,
-		subaccountId satypes.SubaccountId,
-		insuranceFundDeltaQuoteQuantums *big.Int,
 	)
 }

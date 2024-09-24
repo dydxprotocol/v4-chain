@@ -149,6 +149,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 				perpetual.Params.LiquidityTier,
 				perpetual.Params.MarketType,
 				perpetual.Params.DangerIndexPpm,
+				perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 				perpetual.YieldIndex,
 			)
 			require.NoError(t, err)
@@ -197,6 +198,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 						perpetual.Params.LiquidityTier,
 						perpetual.Params.MarketType,
 						perpetual.Params.DangerIndexPpm,
+						perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Once().Return()
@@ -331,6 +333,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 				perpetual.Params.LiquidityTier,
 				perpetual.Params.MarketType,
 				perpetual.Params.DangerIndexPpm,
+				perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 				perpetual.YieldIndex,
 			)
 			require.NoError(t, err)
@@ -355,6 +358,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 						perpetual.Params.LiquidityTier,
 						perpetual.Params.MarketType,
 						perpetual.Params.DangerIndexPpm,
+						perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Once().Return()

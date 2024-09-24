@@ -50,6 +50,12 @@ func WithMarketType(marketType perptypes.PerpetualMarketType) PerpetualModifierO
 	}
 }
 
+func WithIsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock(delta uint64) PerpetualModifierOption {
+	return func(cp *perptypes.Perpetual) {
+		cp.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock = delta
+	}
+}
+
 // GeneratePerpetual returns a `Perpetual` object set to default values.
 // Passing in `PerpetualModifierOption` methods alters the value of the `Perpetual` returned.
 // It will start with the default, valid `Perpetual` value defined within the method
@@ -70,7 +76,8 @@ func GeneratePerpetual(optionalModifications ...PerpetualModifierOption) *perpty
 			DefaultFundingPpm: 0,
 			LiquidityTier:     0,
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
-			DangerIndexPpm:    uint32(0),
+			DangerIndexPpm:    0,
+			IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: 0,
 		},
 		FundingIndex:    dtypes.ZeroInt(),
 		OpenInterest:    dtypes.ZeroInt(),

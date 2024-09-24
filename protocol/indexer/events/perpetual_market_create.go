@@ -21,6 +21,7 @@ func NewPerpetualMarketCreateEvent(
 	liquidityTier uint32,
 	marketType perptypes.PerpetualMarketType,
 	dangerIndexPpm uint32,
+	isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock uint64,
 ) *PerpetualMarketCreateEventV2 {
 	return &PerpetualMarketCreateEventV2{
 		Id:                        id,
@@ -35,5 +36,6 @@ func NewPerpetualMarketCreateEvent(
 		LiquidityTier:             liquidityTier,
 		MarketType:                v1.ConvertToPerpetualMarketType(marketType),
 		DangerIndexPpm:            dangerIndexPpm,
+		IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 	}
 }

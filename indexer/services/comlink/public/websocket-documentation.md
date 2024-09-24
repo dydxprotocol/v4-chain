@@ -817,6 +817,7 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "openInterest": "1891.473716288",
         "atomicResolution": -10,
         "dangerIndexPpm": 1000000,
+        "isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock": "0",
         "quantumConversionExponent": -8,
         "tickSize": "1",
         "stepSize": "0.000000001",
@@ -842,6 +843,7 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "openInterest": "44027.853711",
         "atomicResolution": -9,
         "dangerIndexPpm": 1000000,
+        "isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock": "0",
         "quantumConversionExponent": -9,
         "tickSize": "0.01",
         "stepSize": "0.000001",
@@ -890,6 +892,7 @@ interface TradingPerpetualMarketMessage {
   quantumConversionExponent?: number;
   atomicResolution?: number;
   dangerIndexPpm?: number;
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock?: string;
   subticksPerTick?: number;
   stepBaseQuantums?: number;
   priceChange24H?: string;

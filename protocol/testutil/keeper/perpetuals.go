@@ -179,6 +179,7 @@ func CreateTestPerpetuals(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			p.Params.LiquidityTier,
 			p.Params.MarketType,
 			p.Params.DangerIndexPpm,
+			p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			p.YieldIndex,
 		)
 		require.NoError(t, err)
@@ -267,10 +268,12 @@ func CreateNPerpetuals(
 
 		var defaultFundingPpm int32
 		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+		maxInsuranceFundDelta := uint64(0)
 
 		if i%3 == 0 {
 			defaultFundingPpm = 1
 			marketType = types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
+			maxInsuranceFundDelta = uint64(1_000_000)
 		} else if i%3 == 1 {
 			defaultFundingPpm = -1
 		} else {
@@ -287,6 +290,7 @@ func CreateNPerpetuals(
 			allLiquidityTiers[i%len(allLiquidityTiers)].Id, // LiquidityTier
 			marketType,
 			0,
+			maxInsuranceFundDelta,
 			"0/1",
 		)
 		if err != nil {
@@ -339,6 +343,7 @@ func CreateTestPricesAndPerpetualMarkets(
 			perp.Params.LiquidityTier,
 			perp.Params.MarketType,
 			perp.Params.DangerIndexPpm,
+			perp.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			perp.YieldIndex,
 		)
 		require.NoError(t, err)

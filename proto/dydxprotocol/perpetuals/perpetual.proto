@@ -76,6 +76,9 @@ message PerpetualParams {
 
   // The danger index is used to prioritze certain accounts and positions in liquidations
   uint32 danger_index_ppm = 8;
+
+  // The maximum insurance fund delta per block for isolated perpetual markets.
+  uint64 isolated_market_max_cumulative_insurance_fund_delta_per_block = 9;
 }
 
 // MarketPremiums stores a list of premiums for a single perpetual market.

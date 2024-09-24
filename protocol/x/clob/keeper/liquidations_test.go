@@ -339,6 +339,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -461,6 +462,7 @@ func TestPlacePerpetualLiquidation_validateLiquidationAgainstClobPairStatus(t *t
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -508,6 +510,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 		expectedPlacedOrders              []*types.MsgPlaceOrder
 		expectedMatchedOrders             []*types.ClobMatch
 		expectedSubaccountLiquidationInfo map[satypes.SubaccountId]types.SubaccountLiquidationInfo
+		expectedLiquidationDeltaPerBlock  map[uint32]*big.Int
 	}{
 		`PlacePerpetualLiquidation succeeds with pre-existing liquidations in the block`: {
 			subaccounts: []satypes.Subaccount{
@@ -584,10 +587,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{1, 0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{1, 0},
 				},
 				constants.Dave_Num0: {},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(-265000000),
+				1: big.NewInt(-265000000),
 			},
 		},
 		`PlacePerpetualLiquidation considers pre-existing liquidations and stops before exceeding
@@ -616,13 +622,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				InsuranceFundFeePpm: 5_000,
-				ValidatorFeePpm:     0,
-				LiquidityFeePpm:     0,
-				FillablePriceConfig: constants.FillablePriceConfig_Default,
-				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxQuantumsInsuranceLost: 50_000_000, // $50
-				},
+				InsuranceFundFeePpm:             5_000,
+				ValidatorFeePpm:                 0,
+				LiquidityFeePpm:                 0,
+				FillablePriceConfig:             constants.FillablePriceConfig_Default,
+				MaxCumulativeInsuranceFundDelta: uint64(50_000_000),
 			},
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Dave_Num0_Id4_Clob1_Sell1ETH_Price3030,
@@ -657,10 +661,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{1, 0},
-					QuantumsInsuranceLost: 30_000_000, // $30
+					PerpetualsLiquidated: []uint32{1, 0},
 				},
 				constants.Dave_Num0: {},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(30_000_000),
+				1: big.NewInt(30_000_000),
 			},
 		},
 		`PlacePerpetualLiquidation matches some order and stops before exceeding max insurance lost per block`: {
@@ -670,13 +677,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				InsuranceFundFeePpm: 5_000,
-				ValidatorFeePpm:     0,
-				LiquidityFeePpm:     0,
-				FillablePriceConfig: constants.FillablePriceConfig_Default,
-				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxQuantumsInsuranceLost: 500_000, // $0.5
-				},
+				InsuranceFundFeePpm:             5_000,
+				ValidatorFeePpm:                 0,
+				LiquidityFeePpm:                 0,
+				FillablePriceConfig:             constants.FillablePriceConfig_Default,
+				MaxCumulativeInsuranceFundDelta: uint64(500_000),
 			},
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
@@ -711,10 +716,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 250_000,
+					PerpetualsLiquidated: []uint32{0},
 				},
 				constants.Dave_Num0: {},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(250_000),
 			},
 		},
 		`Liquidation buy order does not generate a match when deleveraging is required`: {
@@ -763,10 +770,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedMatchedOrders: []*types.ClobMatch{},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
 				constants.Dave_Num0: {},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(0),
 			},
 		},
 		`Liquidation sell order does not generate a match when deleveraging is required`: {
@@ -816,9 +825,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {},
 				constants.Dave_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(0),
 			},
 		},
 		`Liquidation buy order matches with some orders and stops when insurance fund is empty`: {
@@ -868,11 +879,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				InsuranceFundFeePpm:   5_000,
-				ValidatorFeePpm:       200_000,
-				LiquidityFeePpm:       800_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				InsuranceFundFeePpm:             5_000,
+				ValidatorFeePpm:                 200_000,
+				LiquidityFeePpm:                 800_000,
+				FillablePriceConfig:             constants.FillablePriceConfig_Default,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
@@ -909,10 +920,12 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 250_000,
+					PerpetualsLiquidated: []uint32{0},
 				},
 				constants.Dave_Num0: {},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(250_000),
 			},
 		},
 		`Liquidation sell order matches with some orders and stops when deleveraging is required`: {
@@ -962,11 +975,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				InsuranceFundFeePpm:   5_000,
-				ValidatorFeePpm:       200_000,
-				LiquidityFeePpm:       800_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				InsuranceFundFeePpm:             5_000,
+				ValidatorFeePpm:                 200_000,
+				LiquidityFeePpm:                 800_000,
+				FillablePriceConfig:             constants.FillablePriceConfig_Default,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Carl_Num0_Id3_Clob0_Buy025BTC_Price49500,
@@ -1004,9 +1017,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {},
 				constants.Dave_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 250_000,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(250_000),
 			},
 		},
 		`PlacePerpetualLiquidation panics when trying to liquidate the same perpetual in a block`: {
@@ -1121,6 +1136,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					perpetual.Params.LiquidityTier,
 					perpetual.Params.MarketType,
 					perpetual.Params.DangerIndexPpm,
+					perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					perpetual.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -1156,6 +1172,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 						constants.BtcUsd_100PercentMarginRequirement.Params.DangerIndexPpm,
+						constants.BtcUsd_100PercentMarginRequirement.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Once().Return()
@@ -1187,6 +1204,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.EthUsd_100PercentMarginRequirement.Params.LiquidityTier,
 						constants.EthUsd_100PercentMarginRequirement.Params.MarketType,
 						constants.EthUsd_100PercentMarginRequirement.Params.DangerIndexPpm,
+						constants.EthUsd_100PercentMarginRequirement.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Once().Return()
@@ -1246,6 +1264,16 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						t,
 						liquidationInfo,
 						ks.ClobKeeper.GetSubaccountLiquidationInfo(ctx, subaccountId),
+					)
+				}
+
+				for perpetualId, expectedLiquidationDeltaPerBlock := range tc.expectedLiquidationDeltaPerBlock {
+					liquidationDeltaPerBlock, err := ks.ClobKeeper.GetCumulativeInsuranceFundDelta(ctx, perpetualId)
+					require.NoError(t, err)
+					require.Equal(
+						t,
+						expectedLiquidationDeltaPerBlock,
+						liquidationDeltaPerBlock,
 					)
 				}
 
@@ -1320,7 +1348,7 @@ func TestGetFillablePrice(t *testing.T) {
 					BankruptcyAdjustmentPpm:           2_000_000,
 					SpreadToMaintenanceMarginRatioPpm: 100_000,
 				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 			// $49,998 = (49,998 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
 			// This means we should close the 0.1 BTC long with a $4,999.8 notional sell order.
@@ -1349,7 +1377,7 @@ func TestGetFillablePrice(t *testing.T) {
 					BankruptcyAdjustmentPpm:           lib.OneMillion,
 					SpreadToMaintenanceMarginRatioPpm: 200_000,
 				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 			// $49,998 = (49,998 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
 			// This means we should close the 0.1 BTC long with a $4,999.8 notional sell order.
@@ -1396,7 +1424,7 @@ func TestGetFillablePrice(t *testing.T) {
 					BankruptcyAdjustmentPpm:           2_000_000,
 					SpreadToMaintenanceMarginRatioPpm: 100_000,
 				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			// $50,002 = (50,002 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
@@ -1426,7 +1454,7 @@ func TestGetFillablePrice(t *testing.T) {
 					BankruptcyAdjustmentPpm:           lib.OneMillion,
 					SpreadToMaintenanceMarginRatioPpm: 200_000,
 				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			// $50,002 = (50,002 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
@@ -1568,7 +1596,7 @@ func TestGetFillablePrice(t *testing.T) {
 					BankruptcyAdjustmentPpm:           math.MaxUint32,
 					SpreadToMaintenanceMarginRatioPpm: 100_000,
 				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			// $49,500 = (495 / 1) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
@@ -1597,7 +1625,7 @@ func TestGetFillablePrice(t *testing.T) {
 					BankruptcyAdjustmentPpm:           lib.OneMillion,
 					SpreadToMaintenanceMarginRatioPpm: 1,
 				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			expectedFillablePrice: big.NewRat(4_999_999_999, 10_000_000),
@@ -1624,7 +1652,7 @@ func TestGetFillablePrice(t *testing.T) {
 					BankruptcyAdjustmentPpm:           lib.OneMillion,
 					SpreadToMaintenanceMarginRatioPpm: lib.OneMillion,
 				},
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			// $49,990 = (49990 / 100) subticks * 10^(QuoteCurrencyAtomicResolution - BaseCurrencyAtomicResolution).
@@ -1696,6 +1724,7 @@ func TestGetFillablePrice(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -1744,6 +1773,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 		expectedFilledSize                satypes.BaseQuantums
 		expectedOrderStatus               types.OrderStatus
 		expectedSubaccountLiquidationInfo map[satypes.SubaccountId]types.SubaccountLiquidationInfo
+		expectedLiquidationDeltaPerBlock  map[uint32]*big.Int
 		expectedSubaccounts               []satypes.Subaccount
 		expectedOperationsQueue           []types.OperationRaw
 	}{
@@ -1764,9 +1794,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedOrderStatus: types.Success,
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(-250_000_000),
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -1823,9 +1855,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedOrderStatus: types.Success,
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(-62_500_000),
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -1903,9 +1937,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(0),
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -1963,9 +1999,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(-250000),
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -2041,9 +2079,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(0),
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				// Deleveraging fails.
@@ -2089,9 +2129,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(0),
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				// Deleveraging fails for remaining amount.
@@ -2171,9 +2213,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(0),
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -2255,9 +2299,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(-250_000),
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -2337,9 +2383,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedOrderStatus: types.Success,
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 750_000,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(500_000),
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -2409,9 +2457,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
 				constants.Carl_Num0: {
-					PerpetualsLiquidated:  []uint32{0},
-					QuantumsInsuranceLost: 0,
+					PerpetualsLiquidated: []uint32{0},
 				},
+			},
+			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
+				0: big.NewInt(-62_500_000),
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -2540,6 +2590,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					perpetual.Params.LiquidityTier,
 					perpetual.Params.MarketType,
 					perpetual.Params.DangerIndexPpm,
+					perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					perpetual.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -2596,6 +2647,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							perpetuals[i].Params.LiquidityTier,
 							perpetuals[i].Params.MarketType,
 							perpetuals[i].Params.DangerIndexPpm,
+							perpetuals[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 						),
 					),
 				).Once().Return()
@@ -2648,6 +2700,16 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					t,
 					liquidationInfo,
 					ks.ClobKeeper.GetSubaccountLiquidationInfo(ctx, subaccountId),
+				)
+			}
+
+			for perpetualId, expectedLiquidationDeltaPerBlock := range tc.expectedLiquidationDeltaPerBlock {
+				liquidationDeltaPerBlock, err := ks.ClobKeeper.GetCumulativeInsuranceFundDelta(ctx, perpetualId)
+				require.NoError(t, err)
+				require.Equal(
+					t,
+					expectedLiquidationDeltaPerBlock,
+					liquidationDeltaPerBlock,
 				)
 			}
 
@@ -2725,6 +2787,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			),
 		),
 	).Once().Return()
@@ -2866,6 +2929,7 @@ func TestIsLiquidatable(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -3297,6 +3361,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -3423,11 +3488,11 @@ func TestGetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(t *testin
 				&constants.PerpetualPosition_OneTenthBTCLong,
 			},
 			liquidationConfig: &types.LiquidationsConfig{
-				InsuranceFundFeePpm:   25_000,
-				ValidatorFeePpm:       200_000,
-				LiquidityFeePpm:       800_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				InsuranceFundFeePpm:             25_000,
+				ValidatorFeePpm:                 200_000,
+				LiquidityFeePpm:                 800_000,
+				FillablePriceConfig:             constants.FillablePriceConfig_Default,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			// Bankruptcy price in quote quantums is 5,100,000,000 quote quantums.
@@ -3455,11 +3520,11 @@ func TestGetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(t *testin
 				&constants.PerpetualPosition_OneTenthBTCLong,
 			},
 			liquidationConfig: &types.LiquidationsConfig{
-				InsuranceFundFeePpm:   1_000_000,
-				ValidatorFeePpm:       200_000,
-				LiquidityFeePpm:       800_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				InsuranceFundFeePpm:             1_000_000,
+				ValidatorFeePpm:                 200_000,
+				LiquidityFeePpm:                 800_000,
+				FillablePriceConfig:             constants.FillablePriceConfig_Default,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			// Bankruptcy price in quote quantums is 5,100,000,000 quote quantums.
@@ -3511,11 +3576,11 @@ func TestGetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(t *testin
 				&constants.PerpetualPosition_OneTenthBTCShort,
 			},
 			liquidationConfig: &types.LiquidationsConfig{
-				InsuranceFundFeePpm:   25_000,
-				ValidatorFeePpm:       200_000,
-				LiquidityFeePpm:       800_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				InsuranceFundFeePpm:             25_000,
+				ValidatorFeePpm:                 200_000,
+				LiquidityFeePpm:                 800_000,
+				FillablePriceConfig:             constants.FillablePriceConfig_Default,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			// Bankruptcy price in quote quantums is -4,900,000,000 quote quantums.
@@ -3543,11 +3608,11 @@ func TestGetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(t *testin
 				&constants.PerpetualPosition_OneTenthBTCShort,
 			},
 			liquidationConfig: &types.LiquidationsConfig{
-				InsuranceFundFeePpm:   1_000_000,
-				ValidatorFeePpm:       200_000,
-				LiquidityFeePpm:       800_000,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				InsuranceFundFeePpm:             1_000_000,
+				ValidatorFeePpm:                 200_000,
+				LiquidityFeePpm:                 800_000,
+				FillablePriceConfig:             constants.FillablePriceConfig_Default,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			// Bankruptcy price in quote quantums is -4,900,000,000 quote quantums.
@@ -3784,6 +3849,7 @@ func TestGetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(t *testin
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -3808,6 +3874,7 @@ func TestGetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(t *testin
 						tc.perpetuals[0].Params.LiquidityTier,
 						tc.perpetuals[0].Params.MarketType,
 						tc.perpetuals[0].Params.DangerIndexPpm,
+						tc.perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Once().Return()
@@ -4056,11 +4123,11 @@ func TestGetBestPerpetualPositionToLiquidate(t *testing.T) {
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			liquidationConfig: types.LiquidationsConfig{
-				InsuranceFundFeePpm:   5_000,
-				ValidatorFeePpm:       0,
-				LiquidityFeePpm:       0,
-				FillablePriceConfig:   constants.FillablePriceConfig_Default,
-				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+				InsuranceFundFeePpm:             5_000,
+				ValidatorFeePpm:                 0,
+				LiquidityFeePpm:                 0,
+				FillablePriceConfig:             constants.FillablePriceConfig_Default,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			clobPairs: []types.ClobPair{
@@ -4162,6 +4229,7 @@ func TestGetBestPerpetualPositionToLiquidate(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -4200,6 +4268,7 @@ func TestGetBestPerpetualPositionToLiquidate(t *testing.T) {
 							tc.perpetuals[perpetualId].Params.LiquidityTier,
 							tc.perpetuals[perpetualId].Params.MarketType,
 							tc.perpetuals[perpetualId].Params.DangerIndexPpm,
+							tc.perpetuals[perpetualId].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 						),
 					),
 				).Once().Return()
@@ -4411,6 +4480,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -5380,6 +5450,7 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -5541,6 +5612,7 @@ func TestGetBestPerpetualPositionToLiquidateMultiplePositions(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -5649,6 +5721,7 @@ func TestEnsurePerpetualNotAlreadyLiquidated(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -5688,114 +5761,76 @@ func TestEnsurePerpetualNotAlreadyLiquidated(t *testing.T) {
 
 func TestCheckInsuranceFundLimits(t *testing.T) {
 	tests := map[string]struct {
-		perpetuals            []perptypes.Perpetual
-		subaccount            satypes.Subaccount
-		liquidationsConfig    types.LiquidationsConfig
-		insuranceFundDelta    *big.Int
-		quantumsInsuranceLost *big.Int
-		perpetualId           uint32
-		expectedError         error
-		expectPanic           bool
+		perpetuals         []perptypes.Perpetual
+		liquidationsConfig types.LiquidationsConfig
+		insuranceFundDelta *big.Int
+		perpetualId        uint32
+		expectedError      error
+		expectPanic        bool
 	}{
 		"success - insurance fund delta within limits": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			subaccount: constants.Carl_Num0_1BTC_Short,
 			liquidationsConfig: types.LiquidationsConfig{
 				InsuranceFundFeePpm: 10_000,
-				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxQuantumsInsuranceLost: 1_000_000,
-				},
 				FillablePriceConfig: types.FillablePriceConfig{
 					BankruptcyAdjustmentPpm:           10_000_000,
 					SpreadToMaintenanceMarginRatioPpm: 10_000,
 				},
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000),
 			},
-			insuranceFundDelta:    big.NewInt(-500_000),
-			quantumsInsuranceLost: big.NewInt(-100_000),
-			perpetualId:           0,
-			expectedError:         nil,
+			insuranceFundDelta: big.NewInt(-500_000),
+			perpetualId:        0,
+			expectedError:      nil,
 		},
 		"failure - insurance fund delta exceeds remaining limit": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			subaccount: constants.Carl_Num0_1BTC_Short,
 			liquidationsConfig: types.LiquidationsConfig{
 				InsuranceFundFeePpm: 10_000,
-				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxQuantumsInsuranceLost: 1_000_000,
-				},
 				FillablePriceConfig: types.FillablePriceConfig{
 					BankruptcyAdjustmentPpm:           10_000_000,
 					SpreadToMaintenanceMarginRatioPpm: 10_000,
 				},
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000),
 			},
-			insuranceFundDelta:    big.NewInt(-600_000),
-			quantumsInsuranceLost: big.NewInt(-500_000),
-			perpetualId:           0,
-			expectedError:         types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
-		},
-		"panic - current insurance fund lost exceeds block limit": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_SmallMarginRequirement,
-			},
-			subaccount: constants.Carl_Num0_1BTC_Short,
-			liquidationsConfig: types.LiquidationsConfig{
-				InsuranceFundFeePpm: 10_000,
-				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxQuantumsInsuranceLost: 1_000_000,
-				},
-				FillablePriceConfig: types.FillablePriceConfig{
-					BankruptcyAdjustmentPpm:           10_000_000,
-					SpreadToMaintenanceMarginRatioPpm: 10_000,
-				},
-			},
-			insuranceFundDelta:    big.NewInt(-100_000),
-			quantumsInsuranceLost: big.NewInt(-1_500_000), // Exceeds MaxQuantumsInsuranceLost
-			perpetualId:           0,
-			expectPanic:           true,
-		},
-		"success - positive insurance fund delta": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_SmallMarginRequirement,
-			},
-			subaccount: constants.Carl_Num0_1BTC_Short,
-			liquidationsConfig: types.LiquidationsConfig{
-				InsuranceFundFeePpm: 10_000,
-				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxQuantumsInsuranceLost: 1_000_000,
-				},
-				FillablePriceConfig: types.FillablePriceConfig{
-					BankruptcyAdjustmentPpm:           10_000_000,
-					SpreadToMaintenanceMarginRatioPpm: 10_000,
-				},
-			},
-			insuranceFundDelta:    big.NewInt(100_000),
-			quantumsInsuranceLost: big.NewInt(-500_000),
-			perpetualId:           0,
-			expectedError:         nil,
+			insuranceFundDelta: big.NewInt(-1_100_000),
+			perpetualId:        0,
+			expectedError:      types.ErrLiquidationExceedsMaxInsuranceLost,
 		},
 		"success - insurance fund delta at limit": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			subaccount: constants.Carl_Num0_1BTC_Short,
 			liquidationsConfig: types.LiquidationsConfig{
 				InsuranceFundFeePpm: 10_000,
-				SubaccountBlockLimits: types.SubaccountBlockLimits{
-					MaxQuantumsInsuranceLost: 1_000_000,
-				},
 				FillablePriceConfig: types.FillablePriceConfig{
 					BankruptcyAdjustmentPpm:           10_000_000,
 					SpreadToMaintenanceMarginRatioPpm: 10_000,
 				},
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000),
 			},
-			insuranceFundDelta:    big.NewInt(-500_000),
-			quantumsInsuranceLost: big.NewInt(-500_000),
-			perpetualId:           0,
-			expectedError:         nil,
+			insuranceFundDelta: big.NewInt(-1_000_000),
+			perpetualId:        0,
+			expectedError:      nil,
+		},
+		"success - positive insurance fund delta": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			liquidationsConfig: types.LiquidationsConfig{
+				InsuranceFundFeePpm: 10_000,
+				FillablePriceConfig: types.FillablePriceConfig{
+					BankruptcyAdjustmentPpm:           10_000_000,
+					SpreadToMaintenanceMarginRatioPpm: 10_000,
+				},
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000),
+			},
+			insuranceFundDelta: big.NewInt(2_000_000),
+			perpetualId:        0,
+			expectedError:      nil,
 		},
 	}
 
@@ -5830,27 +5865,21 @@ func TestCheckInsuranceFundLimits(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
 
-			// Create the subaccount.
-			ks.SubaccountsKeeper.SetSubaccount(ctx, tc.subaccount)
-
 			// Set the liquidations config.
 			err = ks.ClobKeeper.InitializeLiquidationsConfig(ctx, tc.liquidationsConfig)
 			require.NoError(t, err)
-
-			// Set up the subaccount liquidation info.
-			ks.ClobKeeper.UpdateSubaccountLiquidationInfo(ctx, *tc.subaccount.Id, tc.quantumsInsuranceLost)
 
 			// Run the test.
 			if tc.expectPanic {
 				require.Panics(t, func() {
 					_ = ks.ClobKeeper.CheckInsuranceFundLimits(
 						ctx,
-						*tc.subaccount.Id,
 						tc.perpetualId,
 						tc.insuranceFundDelta,
 					)
@@ -5858,7 +5887,6 @@ func TestCheckInsuranceFundLimits(t *testing.T) {
 			} else {
 				err := ks.ClobKeeper.CheckInsuranceFundLimits(
 					ctx,
-					*tc.subaccount.Id,
 					tc.perpetualId,
 					tc.insuranceFundDelta,
 				)

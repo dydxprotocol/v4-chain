@@ -38,7 +38,7 @@ func TestUpdateLiquidationsConfig(t *testing.T) {
 					FillablePriceConfig: types.FillablePriceConfig{
 						BankruptcyAdjustmentPpm: 0,
 					},
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+					MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 				},
 			},
 			expectedError: types.ErrInvalidLiquidationsConfig,

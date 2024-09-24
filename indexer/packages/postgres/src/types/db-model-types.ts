@@ -84,6 +84,7 @@ export interface PerpetualMarketFromDatabase {
   quantumConversionExponent: number;
   atomicResolution: number;
   dangerIndexPpm: number;
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: string;
   subticksPerTick: number;
   stepBaseQuantums: number;
   liquidityTierId: number;

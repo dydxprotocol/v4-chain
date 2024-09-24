@@ -80,6 +80,7 @@ func (k Keeper) CreatePerpetual(
 	liquidityTier uint32,
 	marketType types.PerpetualMarketType,
 	dangerIndexPpm uint32,
+	isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock uint64,
 	yieldIndex string,
 ) (types.Perpetual, error) {
 	// Check if perpetual exists.
@@ -101,6 +102,7 @@ func (k Keeper) CreatePerpetual(
 			LiquidityTier:     liquidityTier,
 			MarketType:        marketType,
 			DangerIndexPpm:    dangerIndexPpm,
+			IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 		},
 		FundingIndex:    dtypes.ZeroInt(),
 		OpenInterest:    dtypes.ZeroInt(),
@@ -144,6 +146,7 @@ func (k Keeper) ModifyPerpetual(
 	defaultFundingPpm int32,
 	liquidityTier uint32,
 	dangerIndexPpm uint32,
+	isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock uint64,
 ) (types.Perpetual, error) {
 	// Get perpetual.
 	perpetual, err := k.GetPerpetual(ctx, id)
@@ -157,6 +160,7 @@ func (k Keeper) ModifyPerpetual(
 	perpetual.Params.DefaultFundingPpm = defaultFundingPpm
 	perpetual.Params.LiquidityTier = liquidityTier
 	perpetual.Params.DangerIndexPpm = dangerIndexPpm
+	perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock = isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock
 
 	// Store the modified perpetual.
 	if err := k.ValidateAndSetPerpetual(ctx, perpetual); err != nil {
@@ -176,6 +180,7 @@ func (k Keeper) ModifyPerpetual(
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.LiquidityTier,
 				perpetual.Params.DangerIndexPpm,
+				perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 				perpetual.YieldIndex,
 			),
 		),
@@ -672,6 +677,7 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 					modifiedPerp.Params.AtomicResolution,
 					modifiedPerp.Params.LiquidityTier,
 					modifiedPerp.Params.DangerIndexPpm,
+					modifiedPerp.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					modifiedPerp.YieldIndex,
 				),
 			),
@@ -1200,11 +1206,13 @@ func GetSettlementPpmWithPerpetual(
 	bigNetSettlementPpm *big.Int,
 	newFundingIndex *big.Int,
 ) {
-	indexDelta := new(big.Int).Sub(perpetual.FundingIndex.BigInt(), index)
+	fundingIndex := perpetual.FundingIndex.BigInt()
+
+	indexDelta := new(big.Int).Sub(fundingIndex, index)
 
 	// if indexDelta is zero, then net settlement is zero.
 	if indexDelta.Sign() == 0 {
-		return big.NewInt(0), perpetual.FundingIndex.BigInt()
+		return big.NewInt(0), fundingIndex
 	}
 
 	bigNetSettlementPpm = new(big.Int).Mul(indexDelta, quantums)
@@ -1214,7 +1222,7 @@ func GetSettlementPpmWithPerpetual(
 	// Thus, always negate `bigNetSettlementPpm` here.
 	bigNetSettlementPpm = bigNetSettlementPpm.Neg(bigNetSettlementPpm)
 
-	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt()
+	return bigNetSettlementPpm, fundingIndex
 }
 
 // GetPremiumSamples reads premium samples from the current `funding-tick` epoch,

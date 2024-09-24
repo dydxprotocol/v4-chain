@@ -409,6 +409,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 					perpetual.Params.LiquidityTier,
 					perpetual.Params.MarketType,
 					perpetual.Params.DangerIndexPpm,
+					perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					perpetual.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -433,6 +434,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 							perpetuals[i].Params.LiquidityTier,
 							perpetuals[i].Params.MarketType,
 							perpetuals[i].Params.DangerIndexPpm,
+							perpetuals[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 						),
 					),
 				).Once().Return()
@@ -838,6 +840,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -873,6 +876,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 							perps[i].Params.LiquidityTier,
 							perps[i].Params.MarketType,
 							perps[i].Params.DangerIndexPpm,
+							perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 						),
 					),
 				).Once().Return()
@@ -1361,6 +1365,7 @@ func TestProcessDeleveraging(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -1599,6 +1604,7 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)
@@ -1779,6 +1785,7 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
 					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					p.YieldIndex,
 				)
 				require.NoError(t, err)

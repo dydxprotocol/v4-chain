@@ -1012,6 +1012,9 @@ export interface PerpetualMarketCreateEventV2 {
   /** The danger index is used to prioritze certain accounts and positions in liquidations */
 
   dangerIndexPpm: number;
+  /** The maximum cumulative insurance fund delta per block for isolated markets. */
+
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: Long;
 }
 /**
  * PerpetualMarketCreateEventV2 message contains all the information about a
@@ -1088,6 +1091,9 @@ export interface PerpetualMarketCreateEventV2SDKType {
   /** The danger index is used to prioritze certain accounts and positions in liquidations */
 
   danger_index_ppm: number;
+  /** The maximum cumulative insurance fund delta per block for isolated markets. */
+
+  isolated_market_max_cumulative_insurance_fund_delta_per_block: Long;
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
@@ -1388,6 +1394,9 @@ export interface UpdatePerpetualEventV1 {
   /** The danger index is used to prioritze certain accounts and positions in liquidations */
 
   dangerIndexPpm: number;
+  /** The maximum cumulative insurance fund delta per block for isolated markets. */
+
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: Long;
   /** The perp yield index of this perpetual market */
 
   perpYieldIndex: string;
@@ -1433,6 +1442,9 @@ export interface UpdatePerpetualEventV1SDKType {
   /** The danger index is used to prioritze certain accounts and positions in liquidations */
 
   danger_index_ppm: number;
+  /** The maximum cumulative insurance fund delta per block for isolated markets. */
+
+  isolated_market_max_cumulative_insurance_fund_delta_per_block: Long;
   /** The perp yield index of this perpetual market */
 
   perp_yield_index: string;
@@ -2960,7 +2972,8 @@ function createBasePerpetualMarketCreateEventV2(): PerpetualMarketCreateEventV2 
     stepBaseQuantums: Long.UZERO,
     liquidityTier: 0,
     marketType: 0,
-    dangerIndexPpm: 0
+    dangerIndexPpm: 0,
+    isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: Long.UZERO
   };
 }
 
@@ -3012,6 +3025,10 @@ export const PerpetualMarketCreateEventV2 = {
 
     if (message.dangerIndexPpm !== 0) {
       writer.uint32(96).uint32(message.dangerIndexPpm);
+    }
+
+    if (!message.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock.isZero()) {
+      writer.uint32(104).uint64(message.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock);
     }
 
     return writer;
@@ -3074,6 +3091,10 @@ export const PerpetualMarketCreateEventV2 = {
           message.dangerIndexPpm = reader.uint32();
           break;
 
+        case 13:
+          message.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -3097,6 +3118,7 @@ export const PerpetualMarketCreateEventV2 = {
     message.liquidityTier = object.liquidityTier ?? 0;
     message.marketType = object.marketType ?? 0;
     message.dangerIndexPpm = object.dangerIndexPpm ?? 0;
+    message.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock = object.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock !== undefined && object.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock !== null ? Long.fromValue(object.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock) : Long.UZERO;
     return message;
   }
 
@@ -3485,6 +3507,7 @@ function createBaseUpdatePerpetualEventV1(): UpdatePerpetualEventV1 {
     atomicResolution: 0,
     liquidityTier: 0,
     dangerIndexPpm: 0,
+    isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: Long.UZERO,
     perpYieldIndex: ""
   };
 }
@@ -3515,8 +3538,12 @@ export const UpdatePerpetualEventV1 = {
       writer.uint32(48).uint32(message.dangerIndexPpm);
     }
 
+    if (!message.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock.isZero()) {
+      writer.uint32(56).uint64(message.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock);
+    }
+
     if (message.perpYieldIndex !== "") {
-      writer.uint32(58).string(message.perpYieldIndex);
+      writer.uint32(66).string(message.perpYieldIndex);
     }
 
     return writer;
@@ -3556,6 +3583,10 @@ export const UpdatePerpetualEventV1 = {
           break;
 
         case 7:
+          message.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock = (reader.uint64() as Long);
+          break;
+
+        case 8:
           message.perpYieldIndex = reader.string();
           break;
 
@@ -3576,6 +3607,7 @@ export const UpdatePerpetualEventV1 = {
     message.atomicResolution = object.atomicResolution ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
     message.dangerIndexPpm = object.dangerIndexPpm ?? 0;
+    message.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock = object.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock !== undefined && object.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock !== null ? Long.fromValue(object.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock) : Long.UZERO;
     message.perpYieldIndex = object.perpYieldIndex ?? "";
     return message;
   }

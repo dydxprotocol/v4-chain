@@ -461,6 +461,36 @@ func (_m *ClobKeeper) GetLongTermOrderPlacement(ctx types.Context, orderId clobt
 	return r0, r1
 }
 
+// GetMaxQuantumsInsuranceDelta provides a mock function with given fields: ctx, perpetualId
+func (_m *ClobKeeper) GetMaxQuantumsInsuranceDelta(ctx types.Context, perpetualId uint32) (*big.Int, error) {
+	ret := _m.Called(ctx, perpetualId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMaxQuantumsInsuranceDelta")
+	}
+
+	var r0 *big.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) (*big.Int, error)); ok {
+		return rf(ctx, perpetualId)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) *big.Int); ok {
+		r0 = rf(ctx, perpetualId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) error); ok {
+		r1 = rf(ctx, perpetualId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetNextSubaccountToLiquidate provides a mock function with given fields: ctx, subaccountIds, isolatedPositionsPriorityHeap, numIsolatedLiquidations
 func (_m *ClobKeeper) GetNextSubaccountToLiquidate(ctx types.Context, subaccountIds *heap.LiquidationPriorityHeap, isolatedPositionsPriorityHeap *heap.LiquidationPriorityHeap, numIsolatedLiquidations *int) (subaccountstypes.Subaccount, *heap.LiquidationPriority) {
 	ret := _m.Called(ctx, subaccountIds, isolatedPositionsPriorityHeap, numIsolatedLiquidations)
@@ -562,26 +592,6 @@ func (_m *ClobKeeper) GetSubaccountLiquidationInfo(ctx types.Context, subaccount
 		r0 = rf(ctx, subaccountId)
 	} else {
 		r0 = ret.Get(0).(clobtypes.SubaccountLiquidationInfo)
-	}
-
-	return r0
-}
-
-// GetSubaccountMaxInsuranceLost provides a mock function with given fields: ctx, subaccountId, perpetualId
-func (_m *ClobKeeper) GetSubaccountMaxInsuranceLost(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) *big.Int {
-	ret := _m.Called(ctx, subaccountId, perpetualId)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetSubaccountMaxInsuranceLost")
-	}
-
-	var r0 *big.Int
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) *big.Int); ok {
-		r0 = rf(ctx, subaccountId, perpetualId)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
-		}
 	}
 
 	return r0
@@ -1153,11 +1163,6 @@ func (_m *ClobKeeper) UpdateLiquidationsConfig(ctx types.Context, config clobtyp
 	}
 
 	return r0
-}
-
-// UpdateSubaccountLiquidationInfo provides a mock function with given fields: ctx, subaccountId, insuranceFundDeltaQuoteQuantums
-func (_m *ClobKeeper) UpdateSubaccountLiquidationInfo(ctx types.Context, subaccountId subaccountstypes.SubaccountId, insuranceFundDeltaQuoteQuantums *big.Int) {
-	_m.Called(ctx, subaccountId, insuranceFundDeltaQuoteQuantums)
 }
 
 // NewClobKeeper creates a new instance of ClobKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

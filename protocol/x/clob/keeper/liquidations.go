@@ -155,7 +155,7 @@ func (k Keeper) GetNextSubaccountToLiquidate(
 		}
 	}
 
-	subaccountId = subaccountIds.PopHighestPriority()
+	subaccountId = subaccountIds.PopLowestPriority()
 	subaccount = k.subaccountsKeeper.GetSubaccount(ctx, subaccountId.SubaccountId)
 
 	return subaccount, subaccountId
@@ -1110,23 +1110,27 @@ func (k Keeper) SimulatePriorityWithClosedPosition(
 func deepCopySubaccount(subaccount satypes.Subaccount) satypes.Subaccount {
 
 	copySubaccount := satypes.Subaccount{
-		Id:                 subaccount.Id,
-		AssetPositions:     make([]*satypes.AssetPosition, len(subaccount.AssetPositions)),
-		PerpetualPositions: make([]*satypes.PerpetualPosition, len(subaccount.PerpetualPositions)),
-		MarginEnabled:      subaccount.MarginEnabled,
-		AssetYieldIndex:    subaccount.AssetYieldIndex,
+		Id:              subaccount.Id,
+		MarginEnabled:   subaccount.MarginEnabled,
+		AssetYieldIndex: subaccount.AssetYieldIndex,
 	}
 
-	// Deep copy AssetPositions
-	for i, ap := range subaccount.AssetPositions {
-		newAp := *ap // Dereference and copy the AssetPosition
-		copySubaccount.AssetPositions[i] = &newAp
+	// Deep copy AssetPositions if not nil
+	if subaccount.AssetPositions != nil {
+		copySubaccount.AssetPositions = make([]*satypes.AssetPosition, len(subaccount.AssetPositions))
+		for i, ap := range subaccount.AssetPositions {
+			newAp := *ap // Dereference and copy the AssetPosition
+			copySubaccount.AssetPositions[i] = &newAp
+		}
 	}
 
-	// Deep copy PerpetualPositions
-	for i, pp := range subaccount.PerpetualPositions {
-		newPp := *pp // Dereference and copy the PerpetualPosition
-		copySubaccount.PerpetualPositions[i] = &newPp
+	// Deep copy PerpetualPositions if not nil
+	if subaccount.PerpetualPositions != nil {
+		copySubaccount.PerpetualPositions = make([]*satypes.PerpetualPosition, len(subaccount.PerpetualPositions))
+		for i, pp := range subaccount.PerpetualPositions {
+			newPp := *pp // Dereference and copy the PerpetualPosition
+			copySubaccount.PerpetualPositions[i] = &newPp
+		}
 	}
 
 	return copySubaccount
@@ -1239,33 +1243,50 @@ func (k Keeper) GetNegativePositionSize(
 	return new(big.Int).Neg(perpetualPosition.GetBigQuantums()), nil
 }
 
-func (k Keeper) GetSubaccountMaxInsuranceLost(
+func (k Keeper) GetMaxQuantumsInsuranceDelta(
 	ctx sdk.Context,
-	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
 ) (
 	bigMaxQuantumsInsuranceLost *big.Int,
+	err error,
 ) {
 
-	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
-	liquidationConfig := k.GetLiquidationsConfig(ctx)
-
-	bigCurrentInsuranceFundLost := new(big.Int).SetUint64(subaccountLiquidationInfo.QuantumsInsuranceLost)
-	bigInsuranceFundLostBlockLimit := new(big.Int).SetUint64(liquidationConfig.SubaccountBlockLimits.MaxQuantumsInsuranceLost)
+	bigInsuranceFundLostBlockLimit, err := k.GetInsuranceFundDeltaBlockLimit(ctx, perpetualId)
+	if err != nil {
+		return nil, err
+	}
+	bigCurrentInsuranceFundLost, err := k.GetCumulativeInsuranceFundDelta(ctx, perpetualId)
+	if err != nil {
+		return nil, err
+	}
 
 	if bigCurrentInsuranceFundLost.Cmp(bigInsuranceFundLostBlockLimit) > 0 {
-		panic(
-			errorsmod.Wrapf(
-				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
-				"Subaccount %+v insurance lost exceeds block limit. Current insurance lost: %v, block limit: %v",
-				subaccountId,
-				bigCurrentInsuranceFundLost,
-				bigInsuranceFundLostBlockLimit,
-			),
+		return nil, errorsmod.Wrapf(
+			types.ErrLiquidationExceedsMaxInsuranceLost,
+			"Insurance lost exceeds block limit. Current insurance lost: %v, block limit: %v",
+			bigCurrentInsuranceFundLost,
+			bigInsuranceFundLostBlockLimit,
 		)
 	}
 
-	return new(big.Int).Sub(bigInsuranceFundLostBlockLimit, bigCurrentInsuranceFundLost)
+	return new(big.Int).Sub(bigInsuranceFundLostBlockLimit, bigCurrentInsuranceFundLost), nil
+}
+
+func (k Keeper) GetInsuranceFundDeltaBlockLimit(ctx sdk.Context, perpetualId uint32) (*big.Int, error) {
+	isIsolated, err := k.perpetualsKeeper.IsIsolatedPerpetual(ctx, perpetualId)
+	if err != nil {
+		return big.NewInt(0), err
+	}
+
+	if isIsolated {
+		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+		if err != nil {
+			return big.NewInt(0), err
+		}
+		return new(big.Int).SetUint64(perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock), nil
+	}
+
+	return new(big.Int).SetUint64(k.GetLiquidationsConfig(ctx).MaxCumulativeInsuranceFundDelta), nil
 }
 
 // ConvertLiquidationPriceToSubticks converts the liquidation price of a liquidation order to subticks.
@@ -1393,7 +1414,7 @@ func (k Keeper) validateLiquidationParams(
 		return err
 	}
 
-	err = k.CheckInsuranceFundLimits(ctx, subaccountId, perpetualId, insuranceFundDelta)
+	err = k.CheckInsuranceFundLimits(ctx, perpetualId, insuranceFundDelta)
 	if err != nil {
 		return err
 	}
@@ -1420,19 +1441,19 @@ func (k Keeper) EnsurePerpetualNotAlreadyLiquidated(
 
 func (k Keeper) CheckInsuranceFundLimits(
 	ctx sdk.Context,
-	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	insuranceFundDelta *big.Int,
 ) error {
 	if insuranceFundDelta.Sign() == -1 {
 
-		bigMaxQuantumsInsuranceLost := k.GetSubaccountMaxInsuranceLost(ctx, subaccountId, perpetualId)
+		bigMaxQuantumsInsuranceLost, err := k.GetMaxQuantumsInsuranceDelta(ctx, perpetualId)
+		if err != nil {
+			return err
+		}
 		if insuranceFundDelta.CmpAbs(bigMaxQuantumsInsuranceLost) > 0 {
 			return errorsmod.Wrapf(
-				types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
-				"Subaccount ID: %v, Perpetual ID: %v, Max Insurance Lost: %v, Insurance Lost: %v",
-				subaccountId,
-				perpetualId,
+				types.ErrLiquidationExceedsMaxInsuranceLost,
+				"Max Insurance Lost: %v, Insurance Lost: %v",
 				bigMaxQuantumsInsuranceLost,
 				insuranceFundDelta,
 			)

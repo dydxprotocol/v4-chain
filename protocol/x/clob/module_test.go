@@ -42,8 +42,7 @@ func getValidGenesisStr() string {
 	gs := `{"clob_pairs":[{"id":0,"perpetual_clob_metadata":{"perpetual_id":0},"subticks_per_tick":100,`
 	gs += `"step_base_quantums":5,"status":"STATUS_ACTIVE"}],`
 	gs += `"liquidations_config":{`
-	gs += `"insurance_fund_fee_ppm":5000,"validator_fee_ppm":200000,"liquidity_fee_ppm":800000,"subaccount_block_limits":`
-	gs += `{"max_quantums_insurance_lost":"100000000000000"},`
+	gs += `"insurance_fund_fee_ppm":5000,"validator_fee_ppm":200000,"liquidity_fee_ppm":800000,"max_cumulative_insurance_fund_delta":"1000000000000",`
 	gs += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	gs += `"spread_to_maintenance_margin_ratio_ppm":100000}},`
 	gs += `"block_rate_limit_config":`
@@ -162,8 +161,7 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := `{"clob_pairs":[],"liquidations_config":{`
-	expected += `"insurance_fund_fee_ppm":5000,"validator_fee_ppm":200000,"liquidity_fee_ppm":800000,"subaccount_block_limits":`
-	expected += `{"max_quantums_insurance_lost":"100000000000000"},`
+	expected += `"insurance_fund_fee_ppm":5000,"validator_fee_ppm":200000,"liquidity_fee_ppm":800000,"max_cumulative_insurance_fund_delta":"1000000000000",`
 	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},`
 	expected += `"block_rate_limit_config":`
@@ -309,6 +307,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			),
 		),
 	).Once().Return()
@@ -333,7 +332,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.Equal(t, uint32(800_000), liquidationsConfig.LiquidityFeePpm)
 	require.Equal(t, uint32(1_000_000), liquidationsConfig.FillablePriceConfig.BankruptcyAdjustmentPpm)
 	require.Equal(t, uint32(100_000), liquidationsConfig.FillablePriceConfig.SpreadToMaintenanceMarginRatioPpm)
-	require.Equal(t, uint64(100_000_000_000_000), liquidationsConfig.SubaccountBlockLimits.MaxQuantumsInsuranceLost)
+	require.Equal(t, uint64(1_000_000_000_000), liquidationsConfig.MaxCumulativeInsuranceFundDelta)
 
 	blockRateLimitConfig := keeper.GetBlockRateLimitConfiguration(ctx)
 	require.Equal(
@@ -424,8 +423,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	expected += `"step_base_quantums":"5","subticks_per_tick":100,`
 	expected += `"quantum_conversion_exponent":0,"status":"STATUS_ACTIVE"}],`
 	expected += `"liquidations_config":{`
-	expected += `"insurance_fund_fee_ppm":5000,"validator_fee_ppm":200000,"liquidity_fee_ppm":800000,"subaccount_block_limits":`
-	expected += `{"max_quantums_insurance_lost":"100000000000000"},`
+	expected += `"insurance_fund_fee_ppm":5000,"validator_fee_ppm":200000,"liquidity_fee_ppm":800000,"max_cumulative_insurance_fund_delta":"1000000000000",`
 	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},`
 	expected += `"block_rate_limit_config":`

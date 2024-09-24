@@ -204,6 +204,7 @@ export interface TradingPerpetualMarketMessage {
   quantumConversionExponent?: number;
   atomicResolution?: number;
   dangerIndexPpm?: number;
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock?: string;
   subticksPerTick?: number;
   stepBaseQuantums?: number;
   marketType?: PerpetualMarketType;

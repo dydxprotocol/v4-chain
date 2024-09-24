@@ -68,6 +68,7 @@ type processProposerOperationsTestCase struct {
 	expectedQuoteBalances                map[satypes.SubaccountId]int64
 	expectedPerpetualPositions           map[satypes.SubaccountId][]*satypes.PerpetualPosition
 	expectedSubaccountLiquidationInfo    map[satypes.SubaccountId]types.SubaccountLiquidationInfo
+	expectedLiquidationDeltaPerBlock     map[uint32]*big.Int
 	expectedNegativeTncSubaccountSeen    map[uint32]bool
 	expectedError                        error
 	expectedPanics                       string
@@ -2402,6 +2403,7 @@ func setupProcessProposerOperationsTestCase(
 			p.Params.LiquidityTier,
 			p.Params.MarketType,
 			p.Params.DangerIndexPpm,
+			p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			p.YieldIndex,
 		)
 		require.NoError(t, err)
@@ -2443,6 +2445,7 @@ func setupProcessProposerOperationsTestCase(
 						tc.perpetuals[perpetualId].Params.LiquidityTier,
 						tc.perpetuals[perpetualId].Params.MarketType,
 						tc.perpetuals[perpetualId].Params.DangerIndexPpm,
+						tc.perpetuals[perpetualId].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Once().Return()
@@ -2566,6 +2569,16 @@ func runProcessProposerOperationsTestCase(
 	for subaccountId, expected := range tc.expectedSubaccountLiquidationInfo {
 		actual := ks.ClobKeeper.GetSubaccountLiquidationInfo(ctx, subaccountId)
 		require.Equal(t, expected, actual)
+	}
+
+	for perpetualId, expectedLiquidationDeltaPerBlock := range tc.expectedLiquidationDeltaPerBlock {
+		liquidationDeltaPerBlock, err := ks.ClobKeeper.GetCumulativeInsuranceFundDelta(ctx, perpetualId)
+		require.NoError(t, err)
+		require.Equal(
+			t,
+			expectedLiquidationDeltaPerBlock,
+			liquidationDeltaPerBlock,
+		)
 	}
 
 	// Verify subaccount state.
