@@ -23,7 +23,7 @@ func (k Keeper) FetchInformationForLiquidations(
 	perpetualsMap map[uint32]perptypes.Perpetual,
 	liquidityTiersMap map[uint32]perptypes.LiquidityTier,
 ) {
-
+	// TODO(LIQ-22) Only return subaccounts with open positions
 	subaccounts = k.subaccountsKeeper.GetAllSubaccount(ctx)
 
 	perpetuals := k.perpetualsKeeper.GetAllPerpetuals(ctx)
@@ -58,6 +58,7 @@ func (k Keeper) GetLiquidatableAndNegativeTncSubaccountIds(
 	liquidatableSubaccountIds = heap.NewLiquidationPriorityHeap()
 	for _, subaccount := range subaccounts {
 
+		// TODO(LIQ-22) can remove this after only returning subaccounts with open positions
 		if len(subaccount.PerpetualPositions) == 0 {
 			continue
 		}
