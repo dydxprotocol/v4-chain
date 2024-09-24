@@ -125,7 +125,7 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 
 // Check two conditions to ensure rev shares are safe.
 // 1. totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm < 100%
-// 2. Highest_affiliate_rev_share[protocol constant of 50%] * lowest_taker_fee - lowest_maker_fee < lowest_taker_fee
+// 2. lowest_taker_fee + lowest_maker_fee > Highest_affiliate_rev_share * lowest_taker_fee
 func (k Keeper) ValidateRevShareSafety(
 	ctx sdk.Context,
 	unconditionalRevShareConfig types.UnconditionalRevShareConfig,
@@ -144,13 +144,17 @@ func (k Keeper) ValidateRevShareSafety(
 		return false
 	}
 
-	// taker fee can never be 0. Adding a check to ensure lowest_taker_fee is not 0
-	if int32(affiliatetypes.AffiliatesRevSharePpmCap)*
-		lowestTakerFeePpm-lowestMakerFeePpm*int32(lib.OneMillion) > int32(lib.OneMillion)*lowestTakerFeePpm {
-		return false
-	}
+	bigNetFee := new(big.Int).SetUint64(
+		// Casting is safe since both variables are int32.
+		uint64(lowestTakerFeePpm) + uint64(lowestMakerFeePpm),
+	)
 
-	return true
+	bigLowestTakerFeePpmMulRevShareRateCap := lib.BigMulPpm(
+		lib.BigI(lowestTakerFeePpm),
+		lib.BigU(affiliatetypes.AffiliatesRevSharePpmCap),
+		true,
+	)
+	return bigNetFee.Cmp(bigLowestTakerFeePpmMulRevShareRateCap) > 0
 }
 
 func (k Keeper) GetAllRevShares(
