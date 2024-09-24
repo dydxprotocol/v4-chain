@@ -176,7 +176,7 @@ func (k Keeper) GetAllRevShares(
 	}
 	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
 	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
-		return types.RevSharesForFill{}, err
+		return types.RevSharesForFill{}, types.ErrAffiliateFeesSharedExceedsNetFees
 	}
 
 	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
