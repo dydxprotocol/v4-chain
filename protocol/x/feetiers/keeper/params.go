@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 )
@@ -25,6 +26,28 @@ func (k Keeper) SetPerpetualFeeParams(
 ) error {
 	if err := params.Validate(); err != nil {
 		return err
+	}
+
+	lowestMakerFee := GetLowestMakerFeeFromTiers(params.Tiers)
+	lowestTakerFee := GetAffiliateRefereeLowestTakerFeeFromTiers(params.Tiers)
+
+	unconditionalRevShareConfig, err := k.revShareKeeper.GetUnconditionalRevShareConfigParams(ctx)
+	if err != nil {
+		return err
+	}
+
+	marketMapperRevShareParams := k.revShareKeeper.GetMarketMapperRevenueShareParams(ctx)
+	if err != nil {
+		return err
+	}
+
+	valid := k.revShareKeeper.ValidateRevShareSafety(ctx, unconditionalRevShareConfig,
+		marketMapperRevShareParams, lowestTakerFee, lowestMakerFee)
+	if !valid {
+		return errorsmod.Wrapf(
+			types.ErrRevShareSafetyViolation,
+			"rev share safety violation",
+		)
 	}
 
 	store := ctx.KVStore(k.storeKey)

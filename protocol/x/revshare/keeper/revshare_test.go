@@ -175,14 +175,13 @@ func TestGetMarketMapperRevenueShareForMarket(t *testing.T) {
 
 func TestValidateRevShareSafety(t *testing.T) {
 	tests := map[string]struct {
-		affiliateTiers             affiliatetypes.AffiliateTiers
 		revShareConfig             types.UnconditionalRevShareConfig
 		marketMapperRevShareParams types.MarketMapperRevenueShareParams
-		affiliateWhitelist         affiliatetypes.AffiliateWhitelist
+		lowestTakerFee             int32
+		lowestMakerFee             int32
 		expectedValid              bool
 	}{
 		"valid rev share config": {
-			affiliateTiers: affiliatetypes.DefaultAffiliateTiers,
 			revShareConfig: types.UnconditionalRevShareConfig{
 				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
 					{
@@ -196,113 +195,47 @@ func TestValidateRevShareSafety(t *testing.T) {
 				RevenueSharePpm: 100_000, // 10%
 				ValidDays:       0,
 			},
-			affiliateWhitelist: affiliatetypes.AffiliateWhitelist{
-				Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
-					{
-						Addresses:        []string{constants.AliceAccAddress.String()},
-						TakerFeeSharePpm: 100_000, // 10%
-					},
-				},
-			},
-			expectedValid: true,
+			lowestTakerFee: 350,
+			lowestMakerFee: -110,
+			expectedValid:  true,
 		},
-		"invalid rev share config - sum of shares > 100%": {
-			affiliateTiers: affiliatetypes.DefaultAffiliateTiers,
+		"rev share safety violation: unconditional + marketmapper > 100%": {
 			revShareConfig: types.UnconditionalRevShareConfig{
 				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
 					{
 						Address:  constants.AliceAccAddress.String(),
-						SharePpm: 100_000, // 10%
-					},
-					{
-						Address:  constants.BobAccAddress.String(),
-						SharePpm: 810_000, // 81%
+						SharePpm: 600_000, // 60%
 					},
 				},
 			},
 			marketMapperRevShareParams: types.MarketMapperRevenueShareParams{
 				Address:         constants.AliceAccAddress.String(),
-				RevenueSharePpm: 100_000, // 10%
+				RevenueSharePpm: 500_000, // 50%
 				ValidDays:       0,
 			},
-			affiliateWhitelist: affiliatetypes.AffiliateWhitelist{
-				Tiers: []affiliatetypes.AffiliateWhitelist_Tier{},
-			},
-			expectedValid: false,
+			lowestTakerFee: 350,
+			lowestMakerFee: -110,
+			expectedValid:  false,
 		},
-		"invalid rev share config - sum of shares + highest tier share > 100%": {
-			affiliateTiers: affiliatetypes.AffiliateTiers{
-				Tiers: []affiliatetypes.AffiliateTiers_Tier{
-					{
-						ReqReferredVolumeQuoteQuantums: 0,
-						ReqStakedWholeCoins:            0,
-						TakerFeeSharePpm:               50_000, // 5%
-					},
-					{
-						ReqReferredVolumeQuoteQuantums: 1_000_000_000_000, // 1 million USDC
-						ReqStakedWholeCoins:            200,               // 200 whole coins
-						TakerFeeSharePpm:               800_000,           // 80%
-					},
-				},
-			},
-			revShareConfig: types.UnconditionalRevShareConfig{
-				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
-					{
-						Address:  constants.AliceAccAddress.String(),
-						SharePpm: 100_000, // 10%
-					},
-					{
-						Address:  constants.BobAccAddress.String(),
-						SharePpm: 100_000, // 10%
-					},
-				},
-			},
-			marketMapperRevShareParams: types.MarketMapperRevenueShareParams{
-				Address:         constants.AliceAccAddress.String(),
-				RevenueSharePpm: 100_000, // 10%
-				ValidDays:       0,
-			},
-			affiliateWhitelist: affiliatetypes.AffiliateWhitelist{},
-			expectedValid:      false,
-		},
-		"invalid rev share config - very high whitelist tier share exceeding 100%": {
-			affiliateTiers: affiliatetypes.DefaultAffiliateTiers,
-			revShareConfig: types.UnconditionalRevShareConfig{
-				Configs: []types.UnconditionalRevShareConfig_RecipientConfig{
-					{
-						Address:  constants.AliceAccAddress.String(),
-						SharePpm: 200_000, // 20%
-					},
-				},
-			},
-			marketMapperRevShareParams: types.MarketMapperRevenueShareParams{
-				Address:         constants.AliceAccAddress.String(),
-				RevenueSharePpm: 200_000, // 20%
-				ValidDays:       0,
-			},
-			affiliateWhitelist: affiliatetypes.AffiliateWhitelist{
-				Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
-					{
-						Addresses:        []string{constants.AliceAccAddress.String()},
-						TakerFeeSharePpm: 700_000, // 70%
-					},
-				},
-			},
-			expectedValid: false,
+		"rev share safety violation: affiliate and fees": {
+			lowestTakerFee: 350,
+			lowestMakerFee: -220,
+			expectedValid:  false,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
-			_ = tApp.InitChain()
+			ctx := tApp.InitChain()
 			k := tApp.App.RevShareKeeper
 
 			valid := k.ValidateRevShareSafety(
-				tc.affiliateTiers,
+				ctx,
 				tc.revShareConfig,
 				tc.marketMapperRevShareParams,
-				tc.affiliateWhitelist,
+				tc.lowestTakerFee,
+				tc.lowestMakerFee,
 			)
 			require.Equal(t, tc.expectedValid, valid)
 		})

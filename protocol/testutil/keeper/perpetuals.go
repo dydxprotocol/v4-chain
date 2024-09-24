@@ -89,7 +89,9 @@ func PerpetualsKeepersWithClobHelpers(
 				stakingKeeper,
 			)
 			affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, true)
-			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
+			vaultKeeper, _ := createVaultKeeper(stateStore, db, cdc, transientStoreKey)
+			feetiersKeeper, _ := createFeeTiersKeeper(stateStore, statsKeeper, vaultKeeper, affiliatesKeeper, db, cdc)
+			revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feetiersKeeper)
 			pc.MarketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 			pc.PricesKeeper, _, pc.IndexPriceCache, pc.MockTimeProvider = createPricesKeeper(
 				stateStore,

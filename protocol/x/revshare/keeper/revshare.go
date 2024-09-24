@@ -122,34 +122,39 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 	store.Set([]byte(types.UnconditionalRevShareConfigKey), unconditionalRevShareConfigBytes)
 }
 
-// ValidateRevShareSafety roughly checks if the total rev share is valid using the formula below
-// highest_affiliate_taker_share + sum(unconditional_rev_shares) + market_mapper_rev_share < 100%
-// Note: this is just an estimate as affiliate rev share is based on taker fees, while
-// the rest of the rev share is based on net fees.
-// TODO(OTE-788): Revisit this formula to ensure accuracy.
+// Check two conditions to ensure rev shares are safe.
+// 1. totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm < 100%
+// 2. lowest_taker_fee + lowest_maker_fee >= Highest_affiliate_rev_share * lowest_taker_fee
 func (k Keeper) ValidateRevShareSafety(
-	affiliateTiers affiliatetypes.AffiliateTiers,
+	ctx sdk.Context,
 	unconditionalRevShareConfig types.UnconditionalRevShareConfig,
 	marketMapperRevShareParams types.MarketMapperRevenueShareParams,
-	affiliateWhitelist affiliatetypes.AffiliateWhitelist,
+	lowestTakerFeePpm int32,
+	lowestMakerFeePpm int32,
 ) bool {
-	highestAffilliateTierRevSharePpm := uint32(0)
-	if len(affiliateTiers.Tiers) > 0 {
-		highestAffilliateTierRevSharePpm = affiliateTiers.Tiers[len(affiliateTiers.Tiers)-1].TakerFeeSharePpm
-	}
-	for _, tier := range affiliateWhitelist.Tiers {
-		if tier.TakerFeeSharePpm > highestAffilliateTierRevSharePpm {
-			highestAffilliateTierRevSharePpm = tier.TakerFeeSharePpm
-		}
-	}
 	totalUnconditionalRevSharePpm := uint32(0)
 	for _, recipientConfig := range unconditionalRevShareConfig.Configs {
 		totalUnconditionalRevSharePpm += recipientConfig.SharePpm
 	}
 	totalMarketMapperRevSharePpm := marketMapperRevShareParams.RevenueSharePpm
 
-	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm + highestAffilliateTierRevSharePpm
-	return totalRevSharePpm < lib.OneMillion
+	// return false if totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm >= 100%
+	if totalUnconditionalRevSharePpm+totalMarketMapperRevSharePpm >= lib.OneMillion {
+		return false
+	}
+
+	bigNetFee := new(big.Int).SetUint64(
+		// Casting is safe since both variables are int32.
+		uint64(lowestTakerFeePpm) + uint64(lowestMakerFeePpm),
+	)
+
+	bigLowestTakerFeePpmMulRevShareRateCap := lib.BigMulPpm(
+		lib.BigI(lowestTakerFeePpm),
+		lib.BigU(affiliatetypes.AffiliatesRevSharePpmCap),
+		true,
+	)
+	// TODO(OTE-826): Update ValidateRevshareSafety formula and fix tests
+	return bigNetFee.Cmp(bigLowestTakerFeePpmMulRevShareRateCap) >= 0
 }
 
 func (k Keeper) GetAllRevShares(
