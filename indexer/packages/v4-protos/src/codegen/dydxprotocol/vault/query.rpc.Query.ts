@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryParamsRequest, QueryParamsResponse, QueryVaultRequest, QueryVaultResponse, QueryAllVaultsRequest, QueryAllVaultsResponse, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponse, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponse, QueryVaultParamsRequest, QueryVaultParamsResponse, QueryMegavaultWithdrawalInfoRequest, QueryMegavaultWithdrawalInfoResponse } from "./query";
+import { QueryParamsRequest, QueryParamsResponse, QueryVaultRequest, QueryVaultResponse, QueryAllVaultsRequest, QueryAllVaultsResponse, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponse, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponse, QueryMegavaultAllOwnerSharesRequest, QueryMegavaultAllOwnerSharesResponse, QueryVaultParamsRequest, QueryVaultParamsResponse, QueryMegavaultWithdrawalInfoRequest, QueryMegavaultWithdrawalInfoResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -18,7 +18,10 @@ export interface Query {
   megavaultTotalShares(request?: QueryMegavaultTotalSharesRequest): Promise<QueryMegavaultTotalSharesResponse>;
   /** Queries owner shares of megavault. */
 
-  megavaultOwnerShares(request?: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponse>;
+  megavaultOwnerShares(request: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponse>;
+  /** Queries all owner shares of megavault. */
+
+  megavaultAllOwnerShares(request?: QueryMegavaultAllOwnerSharesRequest): Promise<QueryMegavaultAllOwnerSharesResponse>;
   /** Queries vault params of a vault. */
 
   vaultParams(request: QueryVaultParamsRequest): Promise<QueryVaultParamsResponse>;
@@ -36,6 +39,7 @@ export class QueryClientImpl implements Query {
     this.allVaults = this.allVaults.bind(this);
     this.megavaultTotalShares = this.megavaultTotalShares.bind(this);
     this.megavaultOwnerShares = this.megavaultOwnerShares.bind(this);
+    this.megavaultAllOwnerShares = this.megavaultAllOwnerShares.bind(this);
     this.vaultParams = this.vaultParams.bind(this);
     this.megavaultWithdrawalInfo = this.megavaultWithdrawalInfo.bind(this);
   }
@@ -66,12 +70,18 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryMegavaultTotalSharesResponse.decode(new _m0.Reader(data)));
   }
 
-  megavaultOwnerShares(request: QueryMegavaultOwnerSharesRequest = {
-    pagination: undefined
-  }): Promise<QueryMegavaultOwnerSharesResponse> {
+  megavaultOwnerShares(request: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponse> {
     const data = QueryMegavaultOwnerSharesRequest.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.vault.Query", "MegavaultOwnerShares", data);
     return promise.then(data => QueryMegavaultOwnerSharesResponse.decode(new _m0.Reader(data)));
+  }
+
+  megavaultAllOwnerShares(request: QueryMegavaultAllOwnerSharesRequest = {
+    pagination: undefined
+  }): Promise<QueryMegavaultAllOwnerSharesResponse> {
+    const data = QueryMegavaultAllOwnerSharesRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.vault.Query", "MegavaultAllOwnerShares", data);
+    return promise.then(data => QueryMegavaultAllOwnerSharesResponse.decode(new _m0.Reader(data)));
   }
 
   vaultParams(request: QueryVaultParamsRequest): Promise<QueryVaultParamsResponse> {
@@ -107,8 +117,12 @@ export const createRpcQueryExtension = (base: QueryClient) => {
       return queryService.megavaultTotalShares(request);
     },
 
-    megavaultOwnerShares(request?: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponse> {
+    megavaultOwnerShares(request: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponse> {
       return queryService.megavaultOwnerShares(request);
+    },
+
+    megavaultAllOwnerShares(request?: QueryMegavaultAllOwnerSharesRequest): Promise<QueryMegavaultAllOwnerSharesResponse> {
+      return queryService.megavaultAllOwnerShares(request);
     },
 
     vaultParams(request: QueryVaultParamsRequest): Promise<QueryVaultParamsResponse> {

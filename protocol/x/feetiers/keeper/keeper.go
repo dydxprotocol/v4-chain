@@ -154,7 +154,7 @@ func GetAffiliateRefereeLowestTakerFeeFromTiers(tiers []*types.PerpetualFeeTier)
 	takerFeePpm := int32(math.MaxInt32)
 	for _, tier := range tiers {
 		// assumes tiers are ordered by absolute volume requirement
-		if tier.AbsoluteVolumeRequirement < revsharetypes.Max30dRefereeVolumeQuantums {
+		if tier.AbsoluteVolumeRequirement < revsharetypes.MaxReferee30dVolumeForAffiliateShareQuantums {
 			takerFeePpm = tier.TakerFeePpm
 		} else {
 			break
