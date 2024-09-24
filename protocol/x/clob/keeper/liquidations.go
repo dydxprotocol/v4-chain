@@ -155,7 +155,7 @@ func (k Keeper) GetNextSubaccountToLiquidate(
 		}
 	}
 
-	subaccountId = subaccountIds.PopHighestPriority()
+	subaccountId = subaccountIds.PopLowestPriority()
 	subaccount = k.subaccountsKeeper.GetSubaccount(ctx, subaccountId.SubaccountId)
 
 	return subaccount, subaccountId
@@ -1110,22 +1110,26 @@ func (k Keeper) SimulatePriorityWithClosedPosition(
 func deepCopySubaccount(subaccount satypes.Subaccount) satypes.Subaccount {
 
 	copySubaccount := satypes.Subaccount{
-		Id:                 subaccount.Id,
-		AssetPositions:     make([]*satypes.AssetPosition, len(subaccount.AssetPositions)),
-		PerpetualPositions: make([]*satypes.PerpetualPosition, len(subaccount.PerpetualPositions)),
-		MarginEnabled:      subaccount.MarginEnabled,
+		Id:            subaccount.Id,
+		MarginEnabled: subaccount.MarginEnabled,
 	}
 
-	// Deep copy AssetPositions
-	for i, ap := range subaccount.AssetPositions {
-		newAp := *ap // Dereference and copy the AssetPosition
-		copySubaccount.AssetPositions[i] = &newAp
+	// Deep copy AssetPositions if not nil
+	if subaccount.AssetPositions != nil {
+		copySubaccount.AssetPositions = make([]*satypes.AssetPosition, len(subaccount.AssetPositions))
+		for i, ap := range subaccount.AssetPositions {
+			newAp := *ap // Dereference and copy the AssetPosition
+			copySubaccount.AssetPositions[i] = &newAp
+		}
 	}
 
-	// Deep copy PerpetualPositions
-	for i, pp := range subaccount.PerpetualPositions {
-		newPp := *pp // Dereference and copy the PerpetualPosition
-		copySubaccount.PerpetualPositions[i] = &newPp
+	// Deep copy PerpetualPositions if not nil
+	if subaccount.PerpetualPositions != nil {
+		copySubaccount.PerpetualPositions = make([]*satypes.PerpetualPosition, len(subaccount.PerpetualPositions))
+		for i, pp := range subaccount.PerpetualPositions {
+			newPp := *pp // Dereference and copy the PerpetualPosition
+			copySubaccount.PerpetualPositions[i] = &newPp
+		}
 	}
 
 	return copySubaccount

@@ -45,9 +45,9 @@ func (h *LiquidationPriorityHeap) Pop() interface{} {
 	old := *h
 	n := len(old)
 	item := old[n-1]
-	old[n-1] = nil  // avoid memory leak
-	item.Index = -1 // for safety
 	*h = old[0 : n-1]
+	item.Index = -1 // for safety
+	old[n-1] = nil  // avoid memory leak
 	return item
 }
 
@@ -67,7 +67,7 @@ func (h *LiquidationPriorityHeap) AddSubaccount(subaccountId types.SubaccountId,
 }
 
 // PopLowestPriority removes and returns the subaccount with the lowest priority
-func (h *LiquidationPriorityHeap) PopHighestPriority() *LiquidationPriority {
+func (h *LiquidationPriorityHeap) PopLowestPriority() *LiquidationPriority {
 	if h.Len() == 0 {
 		return nil
 	}
