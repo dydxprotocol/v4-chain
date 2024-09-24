@@ -74,7 +74,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) SetupTest() {
 		s.TestAccAddress = append(s.TestAccAddress, accAddress)
 	}
 
-	// Initialize the Osmosis application
+	// Initialize the dydx application
 	s.HomeDir = fmt.Sprintf("%d", rand.Int())
 	s.tApp = testapp.NewTestAppBuilder(s.T()).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()

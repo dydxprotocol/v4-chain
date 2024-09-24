@@ -8,7 +8,7 @@ import (
 )
 
 // CircuitBreakerDecorator routes transactions through appropriate ante handlers based on
-// the IsCircuitBreakActive function.
+// the existence of `TxExtension`.
 type CircuitBreakerDecorator struct {
 	cdc                          codec.BinaryCodec
 	authenticatorAnteHandlerFlow sdk.AnteHandler

@@ -67,7 +67,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// Authenticators don't support manually setting the fee payer
 	err = ad.ValidateAuthenticatorFeePayer(tx)
 	if err != nil {
-		return sdk.Context{}, err
+		return ctx, err
 	}
 
 	msgs := tx.GetMsgs()
@@ -81,7 +81,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	}
 
 	// The fee payer is the first signer of the transaction. This should have been enforced by the
-	// LimitFeePayerDecorator
+	// ValidateAuthenticatorFeePayer.
 	signers, _, err := ad.cdc.GetMsgV1Signers(msgs[0])
 	if err != nil {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "failed to get signers")
@@ -106,10 +106,10 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 		// Enforce only one signer per message
 		if len(signers) != 1 {
-			return sdk.Context{}, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "messages must have exactly one signer")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "messages must have exactly one signer")
 		}
 
-		// By default, the first signer is the account that is used
+		// Get the account corresponding to the only signer of this message.
 		account := sdk.AccAddress(signers[0])
 
 		// Get the currently selected authenticator
@@ -120,7 +120,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			selectedAuthenticatorId,
 		)
 		if err != nil {
-			return sdk.Context{},
+			return ctx,
 				errorsmod.Wrapf(
 					err,
 					"failed to get initialized authenticator "+
@@ -148,7 +148,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			simulate,
 		)
 		if err != nil {
-			return sdk.Context{},
+			return ctx,
 				errorsmod.Wrapf(
 					err,
 					"failed to generate authentication data "+
@@ -222,7 +222,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 	// to notify its authenticator so that it can handle any state updates.
 	for _, track := range tracks {
 		if err := track(); err != nil {
-			return sdk.Context{}, err
+			return ctx, err
 		}
 	}
 
@@ -233,7 +233,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 // to an account different to the signer of the first message. This is a requirement
 // for the authenticator module.
 // The only user of a manually set fee payer is with fee grants, which are not
-// available on osmosis
+// available on dydx.
 func (ad AuthenticatorDecorator) ValidateAuthenticatorFeePayer(tx sdk.Tx) error {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {

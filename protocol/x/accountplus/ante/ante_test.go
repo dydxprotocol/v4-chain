@@ -128,7 +128,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 	}
 	feeCoins := constants.TestFeeCoins_5Cents
 
-	tx, _ := GenTx(
+	tx, err := GenTx(
 		s.Ctx,
 		s.EncodingConfig.TxConfig,
 		[]sdk.Msg{
@@ -150,9 +150,10 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 		},
 		[]uint64{0, 0},
 	)
+	s.Require().NoError(err)
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
-	_, err := anteHandler(s.Ctx, tx, false)
+	_, err = anteHandler(s.Ctx, tx, false)
 
 	s.Require().Error(err, "Expected error when no authenticator is in the store")
 }
@@ -200,7 +201,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 		"Expected smart account to be active",
 	)
 
-	tx, _ := GenTx(
+	tx, err := GenTx(
 		s.Ctx,
 		s.EncodingConfig.TxConfig,
 		[]sdk.Msg{
@@ -222,6 +223,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 		},
 		[]uint64{0, 1},
 	)
+	s.Require().NoError(err)
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -266,7 +268,7 @@ func (s *AuthenticatorAnteSuite) TestFeePayerGasComsumption() {
 		"Expected smart account to be active",
 	)
 
-	tx, _ := GenTx(
+	tx, err := GenTx(
 		s.Ctx,
 		s.EncodingConfig.TxConfig,
 		[]sdk.Msg{
@@ -286,6 +288,7 @@ func (s *AuthenticatorAnteSuite) TestFeePayerGasComsumption() {
 		},
 		[]uint64{sigId, sigId},
 	)
+	s.Require().NoError(err)
 
 	anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
 	_, err = anteHandler(s.Ctx, tx, false)
@@ -381,7 +384,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
-			tx, _ := GenTx(
+			tx, err := GenTx(
 				s.Ctx,
 				s.EncodingConfig.TxConfig,
 				[]sdk.Msg{
@@ -400,9 +403,10 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 				},
 				tc.selectedAuthenticator,
 			)
+			s.Require().NoError(err)
 
 			anteHandler := sdk.ChainAnteDecorators(s.AuthenticatorDecorator)
-			_, err := anteHandler(s.Ctx.WithGasMeter(storetypes.NewGasMeter(300000)), tx, false)
+			_, err = anteHandler(s.Ctx.WithGasMeter(storetypes.NewGasMeter(300000)), tx, false)
 
 			if tc.shouldPass {
 				s.Require().NoError(err, "Expected to pass but got error")
