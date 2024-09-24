@@ -50,7 +50,7 @@ message MsgRemoveAuthenticatorResponse { bool success = 1; }
 
 // MsgSetActiveState sets the active state of the module.
 message MsgSetActiveState {
-  option (amino.name) = "osmosis/smartaccount/set-active-state";
+  option (amino.name) = "dydxprotocol/accountplus/set-active-state";
   option (cosmos.msg.v1.signer) = "authority";
 
   // Authority is the address that may send this message.
