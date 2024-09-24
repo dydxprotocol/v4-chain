@@ -94,10 +94,13 @@ func (k Keeper) GetSubaccountCollateralizationInfo(
 	bigTotalMaintenanceMargin := big.NewInt(0)
 	bigWeightedMaintenanceMargin := big.NewInt(0)
 
-	settledSubaccount, _, err := subaccountskeeper.GetSettledSubaccountWithPerpetuals(
+	settledSubaccount, _, _, err := subaccountskeeper.GetSettledSubaccountWithPerpetuals(
 		unsettledSubaccount,
 		perpetuals,
+		big.NewRat(1, 1),                      // TODO: [YBCP-99] fix this when we merge with liquidation daemon change
+		big.NewInt(1_000_000_000_000_000_000), // TODO: [YBCP-99] fix this when we merge with liquidation daemon change
 	)
+
 	if err != nil {
 		return false, false, nil, err
 	}
@@ -166,7 +169,7 @@ func updateCollateralizationInfoGivenAssets(
 
 	// Note that we only expect USDC before multi-collateral support is added.
 	for _, assetPosition := range settledSubaccount.AssetPositions {
-		if assetPosition.AssetId != assetstypes.AssetUsdc.Id {
+		if assetPosition.AssetId != assetstypes.AssetTDai.Id {
 			return errorsmod.Wrapf(
 				assetstypes.ErrNotImplementedMulticollateral,
 				"Asset %d is not supported",

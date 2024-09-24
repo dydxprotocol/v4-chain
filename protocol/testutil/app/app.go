@@ -177,6 +177,16 @@ func DefaultGenesis() (genesis types.GenesisDoc) {
 	return genesis
 }
 
+func NoVeGenesis() (genesis types.GenesisDoc) {
+	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+	err := tmjson.Unmarshal([]byte(constants.GenesisStateNoVe), &genesis)
+	if err != nil {
+		panic(err)
+	}
+	genesis.GenesisTime = time.Unix(0, 1)
+	return genesis
+}
+
 // GenesisStates is a type constraint for all well known genesis state types.
 type GenesisStates interface {
 	authtypes.GenesisState |

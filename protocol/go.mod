@@ -447,7 +447,7 @@ replace (
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4
 
 	// Use Stream fork of IBC-go
-	github.com/cosmos/ibc-go/v8 => github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240827003118-793a5001db90
+	github.com/cosmos/ibc-go/v8 => github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240924001133-d8a98ed67527
 
 	github.com/ethos-works/ethos-avs => ./ethos/ethos-avs
 	github.com/ethos-works/ethos/ethos-chain => ./ethos/ethos-chain
@@ -466,7 +466,6 @@ replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
-	github.com/cosmos/ibc-go/v8 v8.3.1 => github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240902125131-7e9b399e027e
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

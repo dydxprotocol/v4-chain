@@ -671,6 +671,7 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 					modifiedPerp.Params.MarketId,
 					modifiedPerp.Params.AtomicResolution,
 					modifiedPerp.Params.LiquidityTier,
+					modifiedPerp.Params.DangerIndexPpm,
 					modifiedPerp.YieldIndex,
 				),
 			),
@@ -741,7 +742,7 @@ func (k Keeper) CalculateYieldIndexForEpoch(
 	priceForOneBaseQuantum := lib.BaseToQuoteQuantums(
 		oneBaseQuantum,
 		perpetual.Params.AtomicResolution,
-		marketPrice.Price,
+		marketPrice.PnlPrice,
 		marketPrice.Exponent,
 	)
 
@@ -1430,6 +1431,13 @@ func (k Keeper) SetEmptyPremiumVotes(
 		types.PremiumStore{},
 		types.PremiumVotesKey,
 	)
+}
+
+func (k Keeper) SetPerpetualForTest(
+	ctx sdk.Context,
+	perpetual types.Perpetual,
+) {
+	k.setPerpetual(ctx, perpetual)
 }
 
 func (k Keeper) setPerpetual(

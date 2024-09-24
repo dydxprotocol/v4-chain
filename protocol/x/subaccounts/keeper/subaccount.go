@@ -82,12 +82,13 @@ func (k Keeper) GetSubaccount(
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
 	b := store.Get(id.ToStateKey())
 
-	// If subaccount does not exist in state, return a default value.
 	assetYieldIndex, found := k.ratelimitKeeper.GetAssetYieldIndex(ctx)
 	// TODO: [YBCP-53] not good error handling
 	if !found {
 		panic("asset yield index not found")
 	}
+
+	// If subaccount does not exist in state, return a default value.
 	if b == nil {
 		return types.Subaccount{
 			Id:              &id,

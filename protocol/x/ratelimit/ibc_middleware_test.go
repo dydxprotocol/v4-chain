@@ -123,7 +123,8 @@ func setupChainForIBC(
 	}
 
 	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-		genesis = testapp.DefaultGenesis()
+		// for IBC testing, disable vote extensions
+		genesis = testapp.NoVeGenesis()
 		genesis.ChainID = chainID // Update chain_id to chainID
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,

@@ -1010,7 +1010,7 @@ func New(
 	)
 
 	if !appFlags.NonValidatingFullNode {
-		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, app.PerpetualsKeeper, app.ClobKeeper, priceApplier)
+		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, &app.PerpetualsKeeper, app.ClobKeeper, priceApplier)
 	}
 
 	/****  Module Options ****/

@@ -330,7 +330,7 @@ func (k Keeper) TransferLiquidityFee(
 
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
-		assettypes.AssetUsdc.Id,
+		assettypes.AssetTDai.Id,
 		new(big.Int).Abs(liquidityFeeQuoteQuantums),
 	)
 	if err != nil {
@@ -368,7 +368,7 @@ func (k Keeper) TransferValidatorFee(
 
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
-		assettypes.AssetUsdc.Id,
+		assettypes.AssetTDai.Id,
 		new(big.Int).Abs(validatorFeeQuoteQuantums),
 	)
 	if err != nil {

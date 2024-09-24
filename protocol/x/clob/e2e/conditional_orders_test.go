@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/types"
-
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"

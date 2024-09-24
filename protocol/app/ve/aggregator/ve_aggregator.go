@@ -175,8 +175,10 @@ func FetchExtCommitInfoFromProposal(
 
 	extCommitInfoBytes := proposal[constants.DaemonInfoIndex]
 
+	fmt.Println("EXT COMMIT DECODING NOW")
 	extCommitInfo, err := extCommitCodec.Decode(extCommitInfoBytes)
 	if err != nil {
+		fmt.Println("WACK. COULD NOT DECODE EXTENDED COMMIT INFO")
 		return abci.ExtendedCommitInfo{}, fmt.Errorf("error decoding extended-commit-info: %w", err)
 	}
 

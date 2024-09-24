@@ -322,8 +322,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 			  },
 			  "funding_index":"0",
 			  "open_interest":"0",
+			  "last_funding_rate":"0",
 			  "yield_index":"0/1"
-			  "last_funding_rate":"0"
 		   }
 		],
 		"liquidity_tiers":[

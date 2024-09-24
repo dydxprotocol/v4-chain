@@ -1,8 +1,10 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
@@ -16,6 +18,7 @@ import (
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
@@ -727,30 +730,25 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				)
 				return genesis
 			}).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
 			ctx := tApp.InitChain()
-
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
-
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Create all orders and add to deliverTxsOverride
 			deliverTxsOverride := make([][]byte, 0)
@@ -778,7 +776,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
 			// Advance to the next block, updating the price.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 			// Make sure stateful orders are in state.
@@ -990,30 +988,31 @@ func TestOrderRemoval(t *testing.T) {
 				)
 				return genesis
 			}).WithNonDeterminismChecksEnabled(!tc.disableNonDeterminismChecks).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			if !(tApp.CrashingApp == nil) {
+				tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+				tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			}
+
+			if !(tApp.NoCheckTxApp == nil) {
+				tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+				tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			}
+
+			if !(tApp.ParallelApp == nil) {
+				tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+				tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			}
+
 			ctx := tApp.InitChain()
-
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
-
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Create all orders.
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -1051,14 +1050,14 @@ func TestOrderRemoval(t *testing.T) {
 
 			// First block only persists stateful orders to state without matching them.
 			// Therefore, both orders should be in state at this point.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.firstOrder.OrderId)
 			require.True(t, found)
 			_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.secondOrder.OrderId)
 			require.True(t, found)
 
 			// Verify expectations.
-			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.firstOrder.OrderId)
 			require.Equal(t, tc.expectedFirstOrderRemoved, !found)
 
@@ -1107,30 +1106,25 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 		)
 		return genesis
 	}).Build()
+
+	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+	require.NoError(t, conversionErr)
+
+	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+	tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+	tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+	tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
 	ctx := tApp.InitChain()
-
-	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-
-	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:         constants.Alice_Num0.Owner,
-		ConversionRate: rate,
-	}
-
-	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
-		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-			Gas:                  1200000,
-			FeeAmt:               constants.TestFeeCoins_5Cents,
-		},
-		&msgUpdateSDAIConversionRate,
-	) {
-		resp := tApp.CheckTx(checkTx)
-		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-	}
-
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Create a resting order for alice.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -1177,7 +1171,7 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 
-	_ = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+	_ = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Local operations queue would be [placement(Alice_Order), ..., removal(Alice_Order)].
 	// Let's say block proposer does not include these operations. Make sure we don't panic in this case.
@@ -1188,8 +1182,8 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 		tApp.GetHeader().Height,
 	)
 	require.NoError(t, err)
-	_ = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
+	_ = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 		DeliverTxsOverride: [][]byte{extCommitBz},
 	})
-	_ = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
+	_ = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 }

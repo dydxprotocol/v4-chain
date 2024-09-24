@@ -707,8 +707,8 @@ github.com/StreamFinance-Protocol/cometbft v0.0.0-20240827053209-3cd53084cbac h1
 github.com/StreamFinance-Protocol/cometbft v0.0.0-20240827053209-3cd53084cbac/go.mod h1:ifUDQWzuacyPvPOEcaREj1zKPU38kkzpc7ExPqBeRIs=
 github.com/StreamFinance-Protocol/cosmos-sdk v0.50.6-0.20240827053504-7217f18069c4 h1:QE67/sePIzDHo3hjH7tQoAebr7n8povQUXYvVHNjwTg=
 github.com/StreamFinance-Protocol/cosmos-sdk v0.50.6-0.20240827053504-7217f18069c4/go.mod h1:34HZXSrO9CTNI/9BoZ6gAO+cLQuCASa8vNcYFykBfp8=
-github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240902125131-7e9b399e027e h1:Og10ymy4HLJStAgEcKxH19qRBeTRE+c6qb8/88ba7ys=
-github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240902125131-7e9b399e027e/go.mod h1:zdRV9kkL1blzF90ZYHYFU+KtzFgjDxDvWC8fz2hQYoM=
+github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240924001133-d8a98ed67527 h1:TVVsf/wmh7KdT7YesXMTjNIE0zB8QaKI1REm0SNfsU8=
+github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240924001133-d8a98ed67527/go.mod h1:6KbkClvR2CQZADKFpF3dpVcyBiy9vLz5s5kbvfaK0Yk=
 github.com/VictoriaMetrics/fastcache v1.12.2 h1:N0y9ASrJ0F6h0QaC3o6uJb3NIZ9VKLjCM7NQbSmF7WI=
 github.com/VictoriaMetrics/fastcache v1.12.2/go.mod h1:AmC+Nzz1+3G2eCPapF6UcsnkThDcMsQicp4xDukwJYI=
 github.com/VividCortex/gohistogram v1.0.0 h1:6+hBz+qvs0JOrrNhhmR7lFxo5sINxBCGXrdtl/UvroE=

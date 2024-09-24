@@ -1114,6 +1114,7 @@ func deepCopySubaccount(subaccount satypes.Subaccount) satypes.Subaccount {
 		AssetPositions:     make([]*satypes.AssetPosition, len(subaccount.AssetPositions)),
 		PerpetualPositions: make([]*satypes.PerpetualPosition, len(subaccount.PerpetualPositions)),
 		MarginEnabled:      subaccount.MarginEnabled,
+		AssetYieldIndex:    subaccount.AssetYieldIndex,
 	}
 
 	// Deep copy AssetPositions
@@ -1187,7 +1188,7 @@ func (k Keeper) SimulateClosePerpetualPosition(
 func UpdateUSDCPosition(subaccount *satypes.Subaccount, quantumsDelta *big.Int) (err error) {
 
 	assetPosition := subaccount.AssetPositions[0]
-	if assetPosition.AssetId != assetstypes.AssetUsdc.Id {
+	if assetPosition.AssetId != assetstypes.AssetTDai.Id {
 		return errors.New("first asset position must be USDC")
 	}
 

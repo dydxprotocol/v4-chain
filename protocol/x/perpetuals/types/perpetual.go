@@ -21,6 +21,7 @@ func (p *Perpetual) GetYieldIndexAsRat() (*big.Rat, error) {
 	yieldIndex := p.GetYieldIndex()
 
 	if yieldIndex == "" {
+		fmt.Println("IN GET YIELD INDEX AS RAT")
 		return nil, ErrYieldIndexDoesNotExist
 	}
 

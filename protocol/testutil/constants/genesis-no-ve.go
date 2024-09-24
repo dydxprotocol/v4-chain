@@ -1,11 +1,11 @@
 package constants
 
 // This is a copy of the localnet genesis.json. This can be retrieved from the localnet docker container path:
-// /dydxprotocol/chain/.alice/config/genesis.json
+// /dydxprotocol/chain/.alice/config/genesis.json. This genesis has Vote Extension disabled until a very high height.
 // Disable linter for exchange config.
 //
 //nolint:all
-const GenesisState = `{
+const GenesisStateNoVe = `{
   "genesis_time": "2023-07-10T19:23:15.891430637Z",
   "chain_id": "localdydxprotocol",
   "initial_height": "1",
@@ -28,7 +28,7 @@ const GenesisState = `{
       "app": "0"
     },
     "abci": {
-      "vote_extensions_enable_height": "1"
+      "vote_extensions_enable_height": "1000000000000"
     }
   },
   "app_hash": "",

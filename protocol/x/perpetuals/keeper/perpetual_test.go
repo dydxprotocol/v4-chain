@@ -66,6 +66,7 @@ func assertPerpetualtUpdateEventsInIndexerBlock(
 			perp.Params.GetMarketId(),
 			perp.Params.GetAtomicResolution(),
 			perp.Params.GetLiquidityTier(),
+			perp.Params.GetDangerIndexPpm(),
 			perp.GetYieldIndex(),
 		)
 
@@ -260,20 +261,6 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 			yieldIndex:        "0/1",
 			dangerIndexPpm:    0,
 			expectedError:     types.ErrTickerEmptyString,
-		},
-		"Unspecified market type": {
-			id:                0,
-			ticker:            "",
-			marketId:          0,
-			atomicResolution:  -10,
-			defaultFundingPpm: 0,
-			liquidityTier:     0,
-			yieldIndex:        "0/1",
-			dangerIndexPpm:    0,
-			expectedError: errorsmod.Wrap(
-				types.ErrInvalidMarketType,
-				fmt.Sprintf("market type %v", types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED),
-			),
 		},
 		"Invalid market type": {
 			id:                0,
@@ -3604,7 +3591,7 @@ func TestIsIsolatedPerpetual(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(
 			name, func(t *testing.T) {
-				ctx, _, pricesKeeper, perpetualsKeeper, _, _, _, _, _ := keepertest.SubaccountsKeepers(
+				ctx, _, pricesKeeper, perpetualsKeeper, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(
 					t,
 					false,
 				)
@@ -3661,9 +3648,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
 			totalTDaiMinted:  big.NewInt(5_000_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    100_000,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 100_000,
+				PnlPrice:  100_000,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        nil,
@@ -3673,9 +3661,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
 			totalTDaiMinted:  big.NewInt(5_000_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -2,
-				Price:    200,
+				Id:        0,
+				Exponent:  -2,
+				SpotPrice: 200,
+				PnlPrice:  200,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        nil,
@@ -3685,9 +3674,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(10_000_000_000_000),
 			totalTDaiMinted:  big.NewInt(7_000_000_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    100_000_000,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 100_000_000,
+				PnlPrice:  100_000_000,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        nil,
@@ -3697,9 +3687,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
 			totalTDaiMinted:  big.NewInt(5_000_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    400_000,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 400_000,
+				PnlPrice:  400_000,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        nil,
@@ -3709,9 +3700,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(5_000_000_000),
 			totalTDaiMinted:  big.NewInt(100_000_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    400_000,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 400_000,
+				PnlPrice:  400_000,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        nil,
@@ -3721,9 +3713,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(5_000_000_000),
 			totalTDaiMinted:  big.NewInt(5_000_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -2,
-				Price:    123,
+				Id:        0,
+				Exponent:  -2,
+				SpotPrice: 123,
+				PnlPrice:  123,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        nil,
@@ -3733,9 +3726,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(5_000_000_000),
 			totalTDaiMinted:  big.NewInt(0),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    123,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 123,
+				PnlPrice:  123,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        nil,
@@ -3745,9 +3739,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(0),
 			totalTDaiMinted:  big.NewInt(500_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    12345,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 12345,
+				PnlPrice:  12345,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        types.ErrTotalTDaiPreMintIsNil,
@@ -3757,9 +3752,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: nil,
 			totalTDaiMinted:  big.NewInt(500_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    12345,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 12345,
+				PnlPrice:  12345,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        types.ErrTotalTDaiPreMintIsNil,
@@ -3769,9 +3765,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(100_000_000),
 			totalTDaiMinted:  nil,
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    12345,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 12345,
+				PnlPrice:  12345,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        types.ErrTotalTDaiMintedIsNil,
@@ -3781,9 +3778,10 @@ func TestCalculateYieldIndexForEpoch(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(100_000_000),
 			totalTDaiMinted:  big.NewInt(1_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       2,
-				Exponent: -5,
-				Price:    12345,
+				Id:        2,
+				Exponent:  -5,
+				SpotPrice: 12345,
+				PnlPrice:  12345,
 			},
 			perpetual:          constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr:        types.ErrTotalTDaiMintedIsNil,
@@ -3828,9 +3826,10 @@ func TestCalculateNewTotalYieldIndex(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
 			totalTDaiMinted:  big.NewInt(5_000_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    100_000,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 100_000,
+				PnlPrice:  100_000,
 			},
 			perpetual:   constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr: nil,
@@ -3845,9 +3844,10 @@ func TestCalculateNewTotalYieldIndex(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(100_000_000_000_000),
 			totalTDaiMinted:  big.NewInt(5_000_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -2,
-				Price:    200,
+				Id:        0,
+				Exponent:  -2,
+				SpotPrice: 200,
+				PnlPrice:  200,
 			},
 			perpetual: types.Perpetual{
 				Params:       constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
@@ -3867,9 +3867,10 @@ func TestCalculateNewTotalYieldIndex(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(0),
 			totalTDaiMinted:  big.NewInt(500_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    12345,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 12345,
+				PnlPrice:  12345,
 			},
 			perpetual:   constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr: types.ErrTotalTDaiPreMintIsNil,
@@ -3878,9 +3879,10 @@ func TestCalculateNewTotalYieldIndex(t *testing.T) {
 			totalTDaiPreMint: nil,
 			totalTDaiMinted:  big.NewInt(500_000_000),
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    12345,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 12345,
+				PnlPrice:  12345,
 			},
 			perpetual:   constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr: types.ErrTotalTDaiPreMintIsNil,
@@ -3889,9 +3891,10 @@ func TestCalculateNewTotalYieldIndex(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(100_000_000),
 			totalTDaiMinted:  nil,
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    12345,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 12345,
+				PnlPrice:  12345,
 			},
 			perpetual:   constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr: types.ErrTotalTDaiMintedIsNil,
@@ -3900,9 +3903,10 @@ func TestCalculateNewTotalYieldIndex(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(100_000_000),
 			totalTDaiMinted:  nil,
 			marketPrice: pricestypes.MarketPrice{
-				Id:       0,
-				Exponent: -5,
-				Price:    12345,
+				Id:        0,
+				Exponent:  -5,
+				SpotPrice: 12345,
+				PnlPrice:  12345,
 			},
 			perpetual: types.Perpetual{
 				Params:       constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
@@ -3916,9 +3920,10 @@ func TestCalculateNewTotalYieldIndex(t *testing.T) {
 			totalTDaiPreMint: big.NewInt(100_000_000),
 			totalTDaiMinted:  nil,
 			marketPrice: pricestypes.MarketPrice{
-				Id:       1,
-				Exponent: -5,
-				Price:    12345,
+				Id:        1,
+				Exponent:  -5,
+				SpotPrice: 12345,
+				PnlPrice:  12345,
 			},
 			perpetual:   constants.BtcUsd_0DefaultFunding_6AtomicResolution,
 			expectedErr: types.ErrTotalTDaiMintedIsNil,
@@ -3939,9 +3944,10 @@ func TestCalculateNewTotalYieldIndex(t *testing.T) {
 					ExchangeConfigJson: "{}",
 				},
 				pricestypes.MarketPrice{
-					Id:       tc.marketPrice.Id,
-					Exponent: tc.marketPrice.Exponent,
-					Price:    tc.marketPrice.Price,
+					Id:        tc.marketPrice.Id,
+					Exponent:  tc.marketPrice.Exponent,
+					SpotPrice: tc.marketPrice.SpotPrice,
+					PnlPrice:  tc.marketPrice.PnlPrice,
 				},
 			)
 			require.NoError(t, err)
@@ -3979,9 +3985,10 @@ func TestUpdateYieldIndexToNewMint(t *testing.T) {
 			totalTDaiMinted:  big.NewInt(5_000_000_000),
 			markets: []pricestypes.MarketPrice{
 				{
-					Id:       0,
-					Exponent: -5,
-					Price:    100_000,
+					Id:        0,
+					Exponent:  -5,
+					SpotPrice: 100_000,
+					PnlPrice:  100_000,
 				},
 			},
 			perps: []types.Perpetual{
@@ -3989,10 +3996,11 @@ func TestUpdateYieldIndexToNewMint(t *testing.T) {
 			},
 			expectedPerps: []types.Perpetual{
 				{
-					Params:       constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
-					FundingIndex: constants.BtcUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
-					OpenInterest: constants.BtcUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
-					YieldIndex:   big.NewRat(1, 20_000).String(),
+					Params:          constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
+					FundingIndex:    constants.BtcUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
+					OpenInterest:    constants.BtcUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
+					LastFundingRate: constants.BtcUsd_0DefaultFunding_6AtomicResolution.LastFundingRate,
+					YieldIndex:      big.NewRat(1, 20_000).String(),
 				},
 			},
 			expectedErr: nil,
@@ -4002,14 +4010,16 @@ func TestUpdateYieldIndexToNewMint(t *testing.T) {
 			totalTDaiMinted:  big.NewInt(5_000_000_000),
 			markets: []pricestypes.MarketPrice{
 				{
-					Id:       0,
-					Exponent: -5,
-					Price:    100_000,
+					Id:        0,
+					Exponent:  -5,
+					SpotPrice: 100_000,
+					PnlPrice:  100_000,
 				},
 				{
-					Id:       1,
-					Exponent: -5,
-					Price:    200_000,
+					Id:        1,
+					Exponent:  -5,
+					SpotPrice: 200_000,
+					PnlPrice:  200_000,
 				},
 			},
 			perps: []types.Perpetual{
@@ -4018,16 +4028,18 @@ func TestUpdateYieldIndexToNewMint(t *testing.T) {
 			},
 			expectedPerps: []types.Perpetual{
 				{
-					Params:       constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
-					FundingIndex: constants.BtcUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
-					OpenInterest: constants.BtcUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
-					YieldIndex:   big.NewRat(1, 20_000).String(),
+					Params:          constants.BtcUsd_0DefaultFunding_6AtomicResolution.Params,
+					FundingIndex:    constants.BtcUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
+					OpenInterest:    constants.BtcUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
+					LastFundingRate: constants.BtcUsd_0DefaultFunding_6AtomicResolution.LastFundingRate,
+					YieldIndex:      big.NewRat(1, 20_000).String(),
 				},
 				{
-					Params:       constants.EthUsd_0DefaultFunding_6AtomicResolution.Params,
-					FundingIndex: constants.EthUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
-					OpenInterest: constants.EthUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
-					YieldIndex:   big.NewRat(1, 10_000).String(),
+					Params:          constants.EthUsd_0DefaultFunding_6AtomicResolution.Params,
+					FundingIndex:    constants.EthUsd_0DefaultFunding_6AtomicResolution.FundingIndex,
+					OpenInterest:    constants.EthUsd_0DefaultFunding_6AtomicResolution.OpenInterest,
+					LastFundingRate: constants.BtcUsd_0DefaultFunding_6AtomicResolution.LastFundingRate,
+					YieldIndex:      big.NewRat(1, 10_000).String(),
 				},
 			},
 			expectedErr: nil,
@@ -4037,9 +4049,10 @@ func TestUpdateYieldIndexToNewMint(t *testing.T) {
 			totalTDaiMinted:  big.NewInt(500_000_000),
 			markets: []pricestypes.MarketPrice{
 				{
-					Id:       0,
-					Exponent: -5,
-					Price:    12345,
+					Id:        0,
+					Exponent:  -5,
+					SpotPrice: 12345,
+					PnlPrice:  12345,
 				},
 			},
 			perps: []types.Perpetual{
@@ -4052,9 +4065,10 @@ func TestUpdateYieldIndexToNewMint(t *testing.T) {
 			totalTDaiMinted:  big.NewInt(500_000_000),
 			markets: []pricestypes.MarketPrice{
 				{
-					Id:       0,
-					Exponent: -5,
-					Price:    12345,
+					Id:        0,
+					Exponent:  -5,
+					SpotPrice: 12345,
+					PnlPrice:  12345,
 				},
 			},
 			perps: []types.Perpetual{
@@ -4067,9 +4081,10 @@ func TestUpdateYieldIndexToNewMint(t *testing.T) {
 			totalTDaiMinted:  nil,
 			markets: []pricestypes.MarketPrice{
 				{
-					Id:       0,
-					Exponent: -5,
-					Price:    12345,
+					Id:        0,
+					Exponent:  -5,
+					SpotPrice: 12345,
+					PnlPrice:  12345,
 				},
 			},
 			perps: []types.Perpetual{
@@ -4082,9 +4097,10 @@ func TestUpdateYieldIndexToNewMint(t *testing.T) {
 			totalTDaiMinted:  big.NewInt(1),
 			markets: []pricestypes.MarketPrice{
 				{
-					Id:       0,
-					Exponent: -5,
-					Price:    12345,
+					Id:        0,
+					Exponent:  -5,
+					SpotPrice: 12345,
+					PnlPrice:  12345,
 				},
 			},
 			perps: []types.Perpetual{
@@ -4110,9 +4126,10 @@ func TestUpdateYieldIndexToNewMint(t *testing.T) {
 						ExchangeConfigJson: "{}",
 					},
 					pricestypes.MarketPrice{
-						Id:       market.Id,
-						Exponent: market.Exponent,
-						Price:    market.Price,
+						Id:        market.Id,
+						Exponent:  market.Exponent,
+						SpotPrice: market.SpotPrice,
+						PnlPrice:  market.PnlPrice,
 					},
 				)
 				require.NoError(t, err)
@@ -4154,7 +4171,15 @@ func TestUpdateYieldIndexToNewMint(t *testing.T) {
 				for _, expectedPerp := range tc.expectedPerps {
 					actualPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, expectedPerp.Params.Id)
 					require.NoError(t, err)
-					require.Equal(t, expectedPerp, actualPerp)
+					require.Equal(t, expectedPerp.Params, actualPerp.Params)
+					require.Equal(t, expectedPerp.FundingIndex, actualPerp.FundingIndex)
+					require.Equal(t, expectedPerp.OpenInterest, actualPerp.OpenInterest)
+					require.Equal(t, expectedPerp.YieldIndex, actualPerp.YieldIndex)
+					if expectedPerp.LastFundingRate.BigInt() == nil || expectedPerp.LastFundingRate.BigInt().Cmp(big.NewInt(0)) == 0 {
+						require.True(t, actualPerp.LastFundingRate.BigInt() == nil || actualPerp.LastFundingRate.BigInt().Cmp(big.NewInt(0)) == 0)
+					} else {
+						require.Equal(t, 0, expectedPerp.LastFundingRate.BigInt().Cmp(actualPerp.LastFundingRate.BigInt()))
+					}
 				}
 			}
 
