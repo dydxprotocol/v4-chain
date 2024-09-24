@@ -102,7 +102,6 @@ func checkVaultParams(
 }
 
 func postUpgradeAffiliatesModuleTiersCheck(node *containertest.Node, t *testing.T) {
-
 	resp, err := containertest.Query(
 		node,
 		affiliatestypes.NewQueryClient,

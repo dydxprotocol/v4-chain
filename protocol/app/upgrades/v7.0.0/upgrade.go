@@ -58,7 +58,10 @@ func migrateVaultQuotingParamsToVaultParams(ctx sdk.Context, k vaultkeeper.Keepe
 }
 
 func setDefaultTiersForAffiliates(ctx sdk.Context, k affiliateskeeper.Keeper) {
-	k.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+	err := k.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+	if err != nil {
+		panic(fmt.Sprintf("failed to set default tiers for affiliates: %s", err))
+	}
 }
 
 func CreateUpgradeHandler(
