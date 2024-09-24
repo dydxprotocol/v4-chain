@@ -134,7 +134,6 @@ func ListingKeepers(
 				bankKeeper,
 				perpetualsKeeper,
 				blockTimeKeeper,
-				revShareKeeper,
 				transientStoreKey,
 				true,
 			)

@@ -100,7 +100,6 @@ func SubaccountsKeepers(t testing.TB, msgSenderEnabled bool) (
 			bankKeeper,
 			perpetualsKeeper,
 			blocktimeKeeper,
-			revShareKeeper,
 			transientStoreKey,
 			msgSenderEnabled,
 		)
@@ -132,7 +131,6 @@ func createSubaccountsKeeper(
 	bk types.BankKeeper,
 	pk *perpskeeper.Keeper,
 	btk *blocktimekeeper.Keeper,
-	rsk *revsharekeeper.Keeper,
 	transientStoreKey storetypes.StoreKey,
 	msgSenderEnabled bool,
 ) (*keeper.Keeper, storetypes.StoreKey) {
@@ -151,7 +149,6 @@ func createSubaccountsKeeper(
 		bk,
 		pk,
 		btk,
-		rsk,
 		mockIndexerEventsManager,
 		streaming.NewNoopGrpcStreamingManager(),
 	)

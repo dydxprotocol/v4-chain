@@ -1091,7 +1091,6 @@ func New(
 		app.BankKeeper,
 		app.PerpetualsKeeper,
 		app.BlockTimeKeeper,
-		app.RevShareKeeper,
 		app.IndexerEventManager,
 		app.FullNodeStreamingManager,
 	)
