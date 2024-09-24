@@ -1063,11 +1063,13 @@ func GetSettlementPpmWithPerpetual(
 	bigNetSettlementPpm *big.Int,
 	newFundingIndex *big.Int,
 ) {
-	indexDelta := new(big.Int).Sub(perpetual.FundingIndex.BigInt(), index)
+	fundingIndex := perpetual.FundingIndex.BigInt()
+
+	indexDelta := new(big.Int).Sub(fundingIndex, index)
 
 	// if indexDelta is zero, then net settlement is zero.
 	if indexDelta.Sign() == 0 {
-		return big.NewInt(0), perpetual.FundingIndex.BigInt()
+		return big.NewInt(0), fundingIndex
 	}
 
 	bigNetSettlementPpm = new(big.Int).Mul(indexDelta, quantums)
@@ -1077,7 +1079,7 @@ func GetSettlementPpmWithPerpetual(
 	// Thus, always negate `bigNetSettlementPpm` here.
 	bigNetSettlementPpm = bigNetSettlementPpm.Neg(bigNetSettlementPpm)
 
-	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt()
+	return bigNetSettlementPpm, fundingIndex
 }
 
 // GetPremiumSamples reads premium samples from the current `funding-tick` epoch,
