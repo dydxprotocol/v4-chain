@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"math/big"
 
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+
+	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +22,7 @@ import (
 
 // GetMegavaultEquity returns the equity of the megavault (in quote quantums), which consists of
 // - equity of the megavault main subaccount
-// - equity of all vaults (if positive)
+// - equity of all vaults (if not-deactivated and positive)
 func (k Keeper) GetMegavaultEquity(ctx sdk.Context) (*big.Int, error) {
 	megavaultEquity, err := k.GetSubaccountEquity(ctx, types.MegavaultMainSubaccount)
 	if err != nil {
@@ -31,6 +35,10 @@ func (k Keeper) GetMegavaultEquity(ctx sdk.Context) (*big.Int, error) {
 	for ; vaultParamsIterator.Valid(); vaultParamsIterator.Next() {
 		var vaultParams types.VaultParams
 		k.cdc.MustUnmarshal(vaultParamsIterator.Value(), &vaultParams)
+
+		if vaultParams.Status == types.VaultStatus_VAULT_STATUS_DEACTIVATED {
+			continue
+		}
 
 		vaultId, err := types.GetVaultIdFromStateKey(vaultParamsIterator.Key())
 		if err != nil {
@@ -276,4 +284,49 @@ func (k Keeper) GetAllVaults(ctx sdk.Context) []types.Vault {
 		})
 	}
 	return vaults
+}
+
+// AllocateToVault transfers funds from main vault to a specified vault.
+func (k Keeper) AllocateToVault(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	quantums *big.Int,
+) error {
+	// Check if vault has a corresponding clob pair.
+	_, exists := k.clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(vaultId.Number))
+	if !exists {
+		return types.ErrClobPairNotFound
+	}
+
+	// If vault doesn't exist:
+	// 1. initialize params with `STAND_BY` status.
+	// 2. add vault to address store.
+	_, exists = k.GetVaultParams(ctx, vaultId)
+	if !exists {
+		err := k.SetVaultParams(
+			ctx,
+			vaultId,
+			types.VaultParams{
+				Status: types.VaultStatus_VAULT_STATUS_STAND_BY,
+			},
+		)
+		if err != nil {
+			return err
+		}
+		k.AddVaultToAddressStore(ctx, vaultId)
+	}
+
+	// Transfer from main vault to the specified vault.
+	if err := k.sendingKeeper.ProcessTransfer(
+		ctx,
+		&sendingtypes.Transfer{
+			Sender:    types.MegavaultMainSubaccount,
+			Recipient: *vaultId.ToSubaccountId(),
+			AssetId:   assetstypes.AssetUsdc.Id,
+			Amount:    quantums.Uint64(), // validated to be positive above.
+		},
+	); err != nil {
+		return err
+	}
+	return nil
 }

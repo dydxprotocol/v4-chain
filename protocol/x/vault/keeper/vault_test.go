@@ -37,7 +37,7 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 			},
 			statuses: []vaulttypes.VaultStatus{
 				vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
-				vaulttypes.VaultStatus_VAULT_STATUS_DEACTIVATED,
+				vaulttypes.VaultStatus_VAULT_STATUS_STAND_BY,
 			},
 			equities: []*big.Int{
 				big.NewInt(1),
@@ -464,7 +464,7 @@ func TestGetMegavaultEquity(t *testing.T) {
 			},
 			expectedMegavaultEquity: big.NewInt(1_345),
 		},
-		"Megavault subaccount with 1000 equity, One quoting vault with 345 equity, One deactivated vault with 5 equity,": {
+		"Megavault subaccount with 1000 equity, One quoting vault with 345 equity, One deactivated vault with -5 equity,": {
 			megavaultSaEquity: big.NewInt(1_000),
 			vaults: []vaulttypes.Vault{
 				{
@@ -482,9 +482,9 @@ func TestGetMegavaultEquity(t *testing.T) {
 			},
 			vaultEquities: []*big.Int{
 				big.NewInt(345),
-				big.NewInt(5),
+				big.NewInt(-5),
 			},
-			expectedMegavaultEquity: big.NewInt(1_350),
+			expectedMegavaultEquity: big.NewInt(1_345), // deactivated vault is not counted.
 		},
 	}
 	for name, tc := range tests {
