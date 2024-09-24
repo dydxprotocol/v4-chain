@@ -7,7 +7,10 @@ import {
   defaultLiquidityTier2,
   defaultMarket,
   defaultMarket2,
+  defaultMarket3,
   defaultPerpetualMarket,
+  defaultPerpetualMarket2,
+  defaultPerpetualMarket3,
   invalidTicker,
 } from '../helpers/constants';
 import * as MarketTable from '../../src/stores/market-table';
@@ -21,6 +24,7 @@ describe('PerpetualMarket store', () => {
     await Promise.all([
       MarketTable.create(defaultMarket),
       MarketTable.create(defaultMarket2),
+      MarketTable.create(defaultMarket3),
     ]);
     await Promise.all([
       LiquidityTiersTable.create(defaultLiquidityTier),
@@ -191,5 +195,56 @@ describe('PerpetualMarket store', () => {
       marketId: 5,
       trades24H: 100,
     }));
+  });
+
+  it('Successfully finds all PerpetualMarkets with specific tickers', async () => {
+    await Promise.all([
+      PerpetualMarketTable.create(defaultPerpetualMarket),
+      PerpetualMarketTable.create(defaultPerpetualMarket2),
+      PerpetualMarketTable.create(defaultPerpetualMarket3),
+    ]);
+
+    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
+      { tickers: ['BTC-USD', 'ETH-USD'] },
+      [],
+      { readReplica: true },
+    );
+
+    expect(perpetualMarkets.length).toEqual(2);
+    expect(perpetualMarkets[0].ticker).toEqual('BTC-USD');
+    expect(perpetualMarkets[1].ticker).toEqual('ETH-USD');
+  });
+
+  it('Returns empty array when no PerpetualMarkets match the given tickers', async () => {
+    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
+      { tickers: ['BAD-TICKER'] },
+      [],
+    );
+
+    expect(perpetualMarkets.length).toEqual(0);
+  });
+
+  it('Successfully combines tickers filter with other filters', async () => {
+    await Promise.all([
+      PerpetualMarketTable.create(defaultPerpetualMarket),
+      PerpetualMarketTable.create(defaultPerpetualMarket2),
+      PerpetualMarketTable.create({
+        ...defaultPerpetualMarket3,
+        liquidityTierId: defaultLiquidityTier2.id,
+      }),
+    ]);
+
+    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
+      {
+        tickers: ['BTC-USD', 'ETH-USD', 'LINK-USD'],
+        liquidityTierId: [defaultLiquidityTier.id],
+      },
+      [],
+      { readReplica: true },
+    );
+
+    expect(perpetualMarkets.length).toEqual(2);
+    expect(perpetualMarkets[0].ticker).toEqual('BTC-USD');
+    expect(perpetualMarkets[1].ticker).toEqual('ETH-USD');
   });
 });

@@ -60,6 +60,7 @@ export enum QueryableField {
   GOOD_TIL_BLOCK_BEFORE_OR_AT = 'goodTilBlockBeforeOrAt',
   GOOD_TIL_BLOCK_TIME_BEFORE_OR_AT = 'goodTilBlockTimeBeforeOrAt',
   TICKER = 'ticker',
+  TICKERS = 'tickers',
   RESOLUTION = 'resolution',
   FROM_ISO = 'fromISO',
   TO_ISO = 'toISO',
@@ -149,6 +150,7 @@ export interface OrderQueryConfig extends QueryConfig {
 export interface PerpetualMarketQueryConfig extends QueryConfig {
   [QueryableField.ID]?: string[],
   [QueryableField.MARKET_ID]?: number[],
+  [QueryableField.TICKERS]?: string[],
   [QueryableField.LIQUIDITY_TIER_ID]?: number[],
 }
 
