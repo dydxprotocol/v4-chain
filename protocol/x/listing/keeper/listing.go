@@ -205,7 +205,6 @@ func (k Keeper) DepositToMegavaultforPML(
 	fromSubaccount satypes.SubaccountId,
 	clobPairId uint32,
 ) error {
-
 	// Get the listing vault deposit params
 	vaultDepositParams := k.GetListingVaultDepositParams(ctx)
 
