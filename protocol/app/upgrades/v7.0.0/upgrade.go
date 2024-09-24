@@ -84,6 +84,9 @@ func CreateUpgradeHandler(
 		// Set default tiers for affiliates.
 		setDefaultTiersForAffiliates(sdkCtx, affiliatesKeeper)
 
+		// Set the module version to 1 to skip init genesis during the first upgrade.
+		vm[affiliatetypes.ModuleName] = 1
+
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
 }
