@@ -3,7 +3,7 @@ package types
 // DefaultGenesis returns the default stats genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		HardCapForMarkets:         0,
+		HardCapForMarkets:         500,
 		ListingVaultDepositParams: DefaultParams(),
 	}
 }
