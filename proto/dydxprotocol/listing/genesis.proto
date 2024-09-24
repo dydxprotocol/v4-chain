@@ -13,5 +13,6 @@ message GenesisState {
   uint32 hard_cap_for_markets = 1;
 
   // listing_vault_deposit_params is the params for PML megavault deposits
-  ListingVaultDepositParams listing_vault_deposit_params = 2 [ (gogoproto.nullable) = false ];
+  ListingVaultDepositParams listing_vault_deposit_params = 2
+      [ (gogoproto.nullable) = false ];
 }
