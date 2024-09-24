@@ -9,7 +9,11 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { stats } from '@dydxprotocol-indexer/base';
 import { complianceProvider } from '../../../../src/helpers/compliance/compliance-clients';
-import { ComplianceClientResponse, INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
+import {
+  ComplianceClientResponse,
+  INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
+  NOT_IN_BLOCKCHAIN_RISK_SCORE,
+} from '@dydxprotocol-indexer/compliance';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { DateTime } from 'luxon';
@@ -256,6 +260,34 @@ describe('compliance-controller#V4', () => {
         'comlink.compliance-controller.compliance_screen_rate_limited_attempts',
         { provider: complianceProvider.provider },
       );
+    });
+
+    it('GET /screen for invalid address does not upsert compliance data', async () => {
+      const invalidAddress: string = 'invalidAddress';
+      const notInBlockchainRiskScore: string = NOT_IN_BLOCKCHAIN_RISK_SCORE.toString();
+
+      jest.spyOn(complianceProvider.client, 'getComplianceResponse').mockImplementation(
+        (address: string): Promise<ComplianceClientResponse> => {
+          return Promise.resolve({
+            address,
+            blocked,
+            riskScore: notInBlockchainRiskScore,
+          });
+        },
+      );
+
+      const response: any = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/screen?address=${invalidAddress}`,
+      });
+
+      expect(response.body).toEqual({
+        restricted: false,
+        reason: undefined,
+      });
+
+      const data = await ComplianceTable.findAll({}, [], {});
+      expect(data).toHaveLength(0);
     });
   });
 });

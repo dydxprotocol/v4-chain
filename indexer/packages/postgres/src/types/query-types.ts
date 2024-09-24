@@ -88,6 +88,14 @@ export enum QueryableField {
   USERNAME = 'username',
   TIMESPAN = 'timeSpan',
   RANK = 'rank',
+<<<<<<< HEAD
+=======
+  AFFILIATE_ADDRESS = 'affiliateAddress',
+  REFEREE_ADDRESS = 'refereeAddress',
+  KEY = 'key',
+  TOKEN = 'token',
+  ADDRESS_IN_WALLETS_TABLE = 'addressInWalletsTable',
+>>>>>>> ab83828b ([OTE-784] Limit addresses for compliance check to dydx wallets with deposit)
 }
 
 export interface QueryConfig {
@@ -287,6 +295,7 @@ export interface ComplianceDataQueryConfig extends QueryConfig {
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string,
   [QueryableField.PROVIDER]?: string,
   [QueryableField.BLOCKED]?: boolean,
+  [QueryableField.ADDRESS_IN_WALLETS_TABLE]?: boolean,
 }
 
 export interface ComplianceStatusQueryConfig extends QueryConfig {
