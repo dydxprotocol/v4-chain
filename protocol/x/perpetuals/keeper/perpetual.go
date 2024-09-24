@@ -177,7 +177,8 @@ func (k Keeper) ModifyPerpetual(
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.LiquidityTier,
-				perpetual.Params.DangerIndexPpm, // TODO SOLAL
+				perpetual.Params.DangerIndexPpm,
+				perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			),
 		),
 	)

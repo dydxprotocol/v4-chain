@@ -307,6 +307,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			),
 		),
 	).Once().Return()

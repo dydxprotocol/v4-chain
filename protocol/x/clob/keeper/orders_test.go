@@ -1143,6 +1143,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			),
 		),
 	).Once().Return()
@@ -1199,6 +1200,7 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			),
 		),
 	).Once().Return()
@@ -1955,6 +1957,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketType,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.DangerIndexPpm,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 						),
 					),
 				).Once().Return()
@@ -2170,6 +2173,7 @@ func TestInitStatefulOrders(t *testing.T) {
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Once().Return()
@@ -2303,6 +2307,7 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Once().Return()

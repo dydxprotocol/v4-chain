@@ -402,6 +402,7 @@ func TestGenesis(t *testing.T) {
 								perpetual.Params.LiquidityTier,
 								perpetual.Params.MarketType,
 								perpetual.Params.DangerIndexPpm,
+								perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 							),
 						),
 					).Once().Return()

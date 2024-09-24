@@ -187,6 +187,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 						perpetual.Params.LiquidityTier,
 						perpetual.Params.MarketType,
 						perpetual.Params.DangerIndexPpm,
+						perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 					),
 				),
 			).Return()

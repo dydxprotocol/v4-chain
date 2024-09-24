@@ -107,6 +107,7 @@ func (k Keeper) CreatePerpetualClobPair(
 				perpetual.Params.LiquidityTier,
 				perpetual.Params.MarketType,
 				perpetual.Params.DangerIndexPpm,
+				perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			),
 		),
 	)

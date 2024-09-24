@@ -73,6 +73,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			AtomicResolution: item.Params.AtomicResolution,
 			LiquidityTier:    liquidityTier,
 			DangerIndexPpm:   uint32(0),
+			IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: uint64(1000000),
 		}
 
 		// Verify updatedp perpetual in store.

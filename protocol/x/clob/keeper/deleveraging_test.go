@@ -422,6 +422,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 							perpetuals[i].Params.LiquidityTier,
 							perpetuals[i].Params.MarketType,
 							perpetuals[i].Params.DangerIndexPpm,
+							perpetuals[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 						),
 					),
 				).Once().Return()
@@ -817,6 +818,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 							perps[i].Params.LiquidityTier,
 							perps[i].Params.MarketType,
 							perps[i].Params.DangerIndexPpm,
+							perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 						),
 					),
 				).Once().Return()

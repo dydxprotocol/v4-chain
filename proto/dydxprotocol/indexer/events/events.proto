@@ -414,6 +414,9 @@ message PerpetualMarketCreateEventV2 {
 
   // The danger index is used to prioritze certain accounts and positions in liquidations
   uint32 danger_index_ppm = 12;
+
+  // The maximum cumulative insurance fund delta per block for isolated markets.
+  uint64 isolated_market_max_cumulative_insurance_fund_delta_per_block = 13;
 }
 
 // LiquidityTierUpsertEventV1 message contains all the information to
@@ -554,4 +557,7 @@ message UpdatePerpetualEventV1 {
 
   // The danger index is used to prioritze certain accounts and positions in liquidations
   uint32 danger_index_ppm = 6;
+
+  // The maximum cumulative insurance fund delta per block for isolated markets.
+  uint64 isolated_market_max_cumulative_insurance_fund_delta_per_block = 7;
 }
