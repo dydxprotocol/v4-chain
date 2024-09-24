@@ -62,9 +62,12 @@ func networkWithLiquidityTierAndPerpetualObjects(
 	// Generate `n` Perpetuals.
 	for i := 0; i < n; i++ {
 		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+		IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock := 0
 		if i%2 == 1 {
 			marketType = types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
+			IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock = 1000000
 		}
+
 		perpetual := types.Perpetual{
 			Params: types.PerpetualParams{
 				Id:             uint32(i),
@@ -72,6 +75,7 @@ func networkWithLiquidityTierAndPerpetualObjects(
 				LiquidityTier:  uint32(i % m),
 				MarketType:     marketType,
 				DangerIndexPpm: uint32(0),
+				IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 			},
 			FundingIndex:    dtypes.ZeroInt(),
 			OpenInterest:    dtypes.ZeroInt(),

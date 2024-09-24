@@ -39,6 +39,7 @@ func TestStoreAndMemstoreKeys(t *testing.T) {
 
 func TestTransientStoreKeys(t *testing.T) {
 	require.Equal(t, "SaLiqInfo:", types.SubaccountLiquidationInfoKeyPrefix)
+	require.Equal(t, "CumInsFundDelta:", types.CumulativeInsuranceFundDeltaKeyPrefix)
 	require.Equal(t, "NextTxIdx", types.NextStatefulOrderBlockTransactionIndexKey)
 	require.Equal(t, "UncmtSO:", types.UncommittedStatefulOrderPlacementKeyPrefix)
 	require.Equal(t, "UncmtSOCxl:", types.UncommittedStatefulOrderCancellationKeyPrefix)

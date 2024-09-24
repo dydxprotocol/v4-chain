@@ -151,9 +151,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			// so skewing towards lower values here.
 			SpreadToMaintenanceMarginRatioPpm: genRandomPositivePpm(r, true),
 		},
-		SubaccountBlockLimits: types.SubaccountBlockLimits{
-			MaxQuantumsInsuranceLost: uint64(sim_helpers.GetRandomBucketValue(r, sim_helpers.SubaccountBlockLimitsBuckets)),
-		},
+		MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 	}
 
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&clobGenesis)

@@ -35,5 +35,12 @@ func (p *PerpetualParams) Validate() error {
 			lib.IntToString(p.DefaultFundingPpm))
 	}
 
+	if p.MarketType == PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED && p.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock == 0 {
+		return errorsmod.Wrap(
+			ErrIsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlockZero,
+			lib.UintToString(p.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
+		)
+	}
+
 	return nil
 }

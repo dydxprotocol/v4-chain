@@ -38,7 +38,7 @@ func TestLiquidationConfig(t *testing.T) {
 		// Expectations.
 		expectedSubaccounts []satypes.Subaccount
 	}{
-		`Liquidating short respects subaccount block limit - MaxQuantumsInsuranceLost`: {
+		`Liquidating short correct`: {
 			subaccounts: []satypes.Subaccount{
 				// Carl_Num0 is irrelevant to the test, but is used to seed the insurance fund.
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -58,14 +58,11 @@ func TestLiquidationConfig(t *testing.T) {
 				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,  // Order at $50,500
 			},
 			liquidationConfig: clobtypes.LiquidationsConfig{
-				InsuranceFundFeePpm: 5_000,
-				ValidatorFeePpm:     200_000,
-				LiquidityFeePpm:     800_000,
-				FillablePriceConfig: constants.FillablePriceConfig_Max_Smmr,
-				SubaccountBlockLimits: clobtypes.SubaccountBlockLimits{
-					// Subaccount may only lose $0.5 per block.
-					MaxQuantumsInsuranceLost: 500_000,
-				},
+				InsuranceFundFeePpm:             5_000,
+				ValidatorFeePpm:                 200_000,
+				LiquidityFeePpm:                 800_000,
+				FillablePriceConfig:             constants.FillablePriceConfig_Max_Smmr,
+				MaxCumulativeInsuranceFundDelta: uint64(500_000),
 			},
 
 			liquidityTiers: constants.LiquidityTiers,
@@ -110,7 +107,7 @@ func TestLiquidationConfig(t *testing.T) {
 				},
 			},
 		},
-		`Liquidating long respects subaccount block limit - MaxQuantumsInsuranceLost`: {
+		`Liquidating long correct`: {
 			subaccounts: []satypes.Subaccount{
 				// Carl_Num0 is irrelevant to the test, but is used to seed the insurance fund.
 				constants.Carl_Num0_1BTC_Short_100000USD,
@@ -130,14 +127,11 @@ func TestLiquidationConfig(t *testing.T) {
 				&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,  // Order at $49,500
 			},
 			liquidationConfig: clobtypes.LiquidationsConfig{
-				InsuranceFundFeePpm: 5_000,
-				ValidatorFeePpm:     200_000,
-				LiquidityFeePpm:     800_000,
-				FillablePriceConfig: constants.FillablePriceConfig_Max_Smmr,
-				SubaccountBlockLimits: clobtypes.SubaccountBlockLimits{
-					// Subaccount may only lose $0.5 per block.
-					MaxQuantumsInsuranceLost: 500_000,
-				},
+				InsuranceFundFeePpm:             5_000,
+				ValidatorFeePpm:                 200_000,
+				LiquidityFeePpm:                 800_000,
+				FillablePriceConfig:             constants.FillablePriceConfig_Max_Smmr,
+				MaxCumulativeInsuranceFundDelta: uint64(500_000),
 			},
 
 			liquidityTiers: constants.LiquidityTiers,
@@ -254,23 +248,32 @@ func TestLiquidationConfig(t *testing.T) {
 
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
-			// Create all existing orders.
-			existingOrderMsgs := make([]clobtypes.MsgPlaceOrder, len(tc.placedMatchableOrders))
-			for i, matchableOrder := range tc.placedMatchableOrders {
-				existingOrderMsgs[i] = clobtypes.MsgPlaceOrder{Order: matchableOrder.MustGetOrder()}
-			}
-			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, existingOrderMsgs...) {
+			// Seed insurance fund
+			if len(tc.placedMatchableOrders) > 0 {
+				firstOrder := tc.placedMatchableOrders[0]
+				firstOrderMsg := clobtypes.MsgPlaceOrder{Order: firstOrder.MustGetOrder()}
+				checkTx := testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, firstOrderMsg)[0]
 				resp := tApp.CheckTx(checkTx)
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
-			// _, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-			// 	LiquidatableSubaccountIds: tc.liquidatableSubaccountIds,
-			// })
-			// require.NoError(t, err)
+			// Advance to block 3.
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
+			// Place remaining orders.
+			if len(tc.placedMatchableOrders) > 1 {
+				remainingOrderMsgs := make([]clobtypes.MsgPlaceOrder, len(tc.placedMatchableOrders)-1)
+				for i, matchableOrder := range tc.placedMatchableOrders[1:] {
+					remainingOrderMsgs[i] = clobtypes.MsgPlaceOrder{Order: matchableOrder.MustGetOrder()}
+				}
+				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, remainingOrderMsgs...) {
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+				}
+			}
 
 			// Verify test expectations.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			for _, expectedSubaccount := range tc.expectedSubaccounts {
 				require.Equal(
 					t,
@@ -685,13 +688,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11,
 			},
 			liquidationConfig: clobtypes.LiquidationsConfig{
-				InsuranceFundFeePpm: 5_000,
-				ValidatorFeePpm:     200_000,
-				LiquidityFeePpm:     800_000,
-				FillablePriceConfig: constants.FillablePriceConfig_Max_Smmr,
-				SubaccountBlockLimits: clobtypes.SubaccountBlockLimits{
-					MaxQuantumsInsuranceLost: 1,
-				},
+				InsuranceFundFeePpm:             5_000,
+				ValidatorFeePpm:                 200_000,
+				LiquidityFeePpm:                 800_000,
+				FillablePriceConfig:             constants.FillablePriceConfig_Max_Smmr,
+				MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 			},
 
 			liquidityTiers: constants.LiquidityTiers,

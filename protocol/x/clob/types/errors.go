@@ -279,10 +279,10 @@ var (
 		1010,
 		"Liquidation order has size greater than max position notional specified in the liquidation config",
 	)
-	ErrLiquidationExceedsSubaccountMaxInsuranceLost = errorsmod.Register(
+	ErrLiquidationExceedsMaxInsuranceLost = errorsmod.Register(
 		ModuleName,
 		1012,
-		"Liquidation exceeds the maximum insurance fund payout amount for a given subaccount per block",
+		"Liquidation exceeds the maximum insurance fund payout amount per block",
 	)
 	ErrInsuranceFundHasInsufficientFunds = errorsmod.Register(
 		ModuleName,

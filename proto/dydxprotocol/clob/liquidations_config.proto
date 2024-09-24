@@ -17,25 +17,13 @@ message LiquidationsConfig {
   // The fraction of the remaining collateral taken as a liquidity fee.
   uint32 liquidity_fee_ppm = 3;
 
-  // Limits around how many quote quantums from a single subaccount can
-  // be liquidated within a single block.
-  SubaccountBlockLimits subaccount_block_limits = 4
-      [ (gogoproto.nullable) = false ];
-
   // Config about how the fillable-price spread from the oracle price
   // increases based on the adjusted bankruptcy rating of the subaccount.
-  FillablePriceConfig fillable_price_config = 5
+  FillablePriceConfig fillable_price_config = 4
       [ (gogoproto.nullable) = false ];
-}
 
-// SubaccountBlockLimits stores all configurable fields related to limits
-// around how many quote quantums from a single subaccount can
-// be liquidated within a single block.
-message SubaccountBlockLimits {
-
-  // The maximum insurance-fund payout amount for a given subaccount
-  // per block. I.e. how much it can cover for that subaccount.
-  uint64 max_quantums_insurance_lost = 1;
+  // The maximum value that the cumulative insurance fund delta can take.
+  uint64 max_cumulative_insurance_fund_delta = 5;
 }
 
 // FillablePriceConfig stores all configurable fields related to calculating

@@ -12,7 +12,6 @@ import (
 // - `LiquidityFeePpm > 1_000_000`.
 // - `bankruptcyAdjustmentPpm < 1_000_000`.
 // - `spreadToMaintenanceMarginRatioPpm == 0.
-// - `maxQuantumsInsuranceLost == 0`.
 
 func (lc *LiquidationsConfig) Validate() error {
 
@@ -71,13 +70,12 @@ func (lc *LiquidationsConfig) Validate() error {
 		)
 	}
 
-	// Validate the MaxQuantumsInsuranceLost.
-	maxQuantumsInsuranceLost := lc.SubaccountBlockLimits.MaxQuantumsInsuranceLost
-	if maxQuantumsInsuranceLost == 0 {
+	// Validate the MaxCumulativeInsuranceFundDelta.
+	if lc.MaxCumulativeInsuranceFundDelta == 0 {
 		return errorsmod.Wrapf(
 			ErrInvalidLiquidationsConfig,
-			"%v is not a valid MaxQuantumsInsuranceLost",
-			maxQuantumsInsuranceLost,
+			"%v is not a valid MaxCumulativeInsuranceFundDelta, it must be greater than 0",
+			lc.MaxCumulativeInsuranceFundDelta,
 		)
 	}
 

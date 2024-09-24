@@ -122,6 +122,11 @@ var (
 		25,
 		"open interest would become negative after update",
 	)
+	ErrIsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlockZero = errorsmod.Register(
+		ModuleName,
+		26,
+		"isolated market max cumulative insurance fund delta per block is zero",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

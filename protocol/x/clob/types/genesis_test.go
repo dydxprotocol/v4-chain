@@ -84,7 +84,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						BankruptcyAdjustmentPpm:           lib.OneMillion + 1,
 						SpreadToMaintenanceMarginRatioPpm: 1,
 					},
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+					MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 				},
 			},
 			expectedError: nil,
@@ -125,7 +125,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						BankruptcyAdjustmentPpm:           lib.OneMillion,
 						SpreadToMaintenanceMarginRatioPpm: 0,
 					},
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+					MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 				},
 			},
 			expectedError: errors.New(
@@ -141,7 +141,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						BankruptcyAdjustmentPpm:           lib.OneMillion,
 						SpreadToMaintenanceMarginRatioPpm: lib.OneMillion + 1,
 					},
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+					MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 				},
 			},
 		},
@@ -155,7 +155,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						BankruptcyAdjustmentPpm:           0,
 						SpreadToMaintenanceMarginRatioPpm: lib.OneMillion,
 					},
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+					MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 				},
 			},
 			expectedError: errors.New(
@@ -171,7 +171,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						BankruptcyAdjustmentPpm:           lib.OneMillion - 1,
 						SpreadToMaintenanceMarginRatioPpm: lib.OneMillion,
 					},
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+					MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 				},
 			},
 			expectedError: errors.New(
@@ -180,11 +180,11 @@ func TestGenesisState_Validate(t *testing.T) {
 		"max liquidation fee ppm of zero is invalid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
-					InsuranceFundFeePpm:   0,
-					ValidatorFeePpm:       200_000,
-					LiquidityFeePpm:       800_000,
-					FillablePriceConfig:   constants.FillablePriceConfig_Default,
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+					InsuranceFundFeePpm:             0,
+					ValidatorFeePpm:                 200_000,
+					LiquidityFeePpm:                 800_000,
+					FillablePriceConfig:             constants.FillablePriceConfig_Default,
+					MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 				},
 			},
 			expectedError: errors.New(
@@ -193,30 +193,15 @@ func TestGenesisState_Validate(t *testing.T) {
 		"max liquidation fee ppm of greater than one million is invalid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{
-					InsuranceFundFeePpm:   lib.OneMillion + 1,
-					ValidatorFeePpm:       200_000,
-					LiquidityFeePpm:       800_000,
-					FillablePriceConfig:   constants.FillablePriceConfig_Default,
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+					InsuranceFundFeePpm:             lib.OneMillion + 1,
+					ValidatorFeePpm:                 200_000,
+					LiquidityFeePpm:                 800_000,
+					FillablePriceConfig:             constants.FillablePriceConfig_Default,
+					MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 				},
 			},
 			expectedError: errors.New(
 				"1000001 is not a valid InsuranceFundFeePpm: Proposed LiquidationsConfig is invalid"),
-		},
-		"max quantums insurance lost of 0 is invalid": {
-			genState: &types.GenesisState{
-				LiquidationsConfig: types.LiquidationsConfig{
-					InsuranceFundFeePpm: lib.OneMillion,
-					ValidatorFeePpm:     200_000,
-					LiquidityFeePpm:     800_000,
-					FillablePriceConfig: constants.FillablePriceConfig_Default,
-					SubaccountBlockLimits: types.SubaccountBlockLimits{
-						MaxQuantumsInsuranceLost: 0,
-					},
-				},
-			},
-			expectedError: errors.New(
-				"0 is not a valid MaxQuantumsInsuranceLost: Proposed LiquidationsConfig is invalid"),
 		},
 		"max num blocks for short term order rate limit is zero": {
 			genState: &types.GenesisState{

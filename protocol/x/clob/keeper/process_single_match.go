@@ -246,11 +246,14 @@ func (k Keeper) ProcessSingleMatch(
 			return false, takerUpdateResult, makerUpdateResult, nil, err
 		}
 
-		k.UpdateSubaccountLiquidationInfo(
+		err = k.IncrementCumulativeInsuranceFundDelta(
 			ctx,
-			matchWithOrders.TakerOrder.GetSubaccountId(),
+			perpetualId,
 			takerInsuranceFundDelta,
 		)
+		if err != nil {
+			return false, takerUpdateResult, makerUpdateResult, nil, err
+		}
 
 		labels := []gometrics.Label{
 			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),

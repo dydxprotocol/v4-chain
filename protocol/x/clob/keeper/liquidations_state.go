@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math/big"
 
-	errorsmod "cosmossdk.io/errors"
-
 	"cosmossdk.io/store/prefix"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
@@ -62,43 +60,6 @@ func (k Keeper) MustUpdateSubaccountPerpetualLiquidated(
 	store.Set(subaccountId.ToStateKey(), b)
 }
 
-// UpdateSubaccountLiquidationInfo updates the total notional liquidated and total insurance lost
-// of the given subaccount for the current block.
-func (k Keeper) UpdateSubaccountLiquidationInfo(
-	ctx sdk.Context,
-	subaccountId satypes.SubaccountId,
-	insuranceFundDeltaQuoteQuantums *big.Int,
-) {
-	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
-
-	// Update the total insurance funds lost for this subaccount if the insurance fund delta is
-	// negative.
-	if insuranceFundDeltaQuoteQuantums.Sign() == -1 {
-		updatedQuantumsInsuranceLost := new(big.Int).Add(
-			new(big.Int).Abs(insuranceFundDeltaQuoteQuantums),
-			new(big.Int).SetUint64(subaccountLiquidationInfo.QuantumsInsuranceLost),
-		)
-		if !updatedQuantumsInsuranceLost.IsUint64() {
-			// This should never happen, since the total insurance lost for any subaccount should never
-			// exceed the value of maximum insurance lost (uint64) in the liquidation config.
-			// This should also never exceed the maximum possible insurance fund balance.
-			panic(
-				errorsmod.Wrapf(
-					satypes.ErrIntegerOverflow,
-					"Quantums insurance lost update for subaccount %v overflows uint64",
-					subaccountId,
-				),
-			)
-		}
-
-		subaccountLiquidationInfo.QuantumsInsuranceLost = updatedQuantumsInsuranceLost.Uint64()
-	}
-
-	store := k.getSubaccountLiquidationInfoStore(ctx)
-	b := k.cdc.MustMarshal(&subaccountLiquidationInfo)
-	store.Set(subaccountId.ToStateKey(), b)
-}
-
 // getSubaccountLiquidationInfoStore is an internal helper function for fetching the store
 // used for reading and writing `SubaccountLiquidationInfo` messages to the transient store.
 func (k Keeper) getSubaccountLiquidationInfoStore(
@@ -110,4 +71,69 @@ func (k Keeper) getSubaccountLiquidationInfoStore(
 	)
 
 	return store
+}
+
+func (k Keeper) getCumulativeInsuranceFundDeltaStore(
+	ctx sdk.Context,
+) prefix.Store {
+	store := prefix.NewStore(
+		ctx.TransientStore(k.transientStoreKey),
+		[]byte(types.CumulativeInsuranceFundDeltaKeyPrefix),
+	)
+
+	return store
+}
+
+// GetCumulativeInsuranceFundDelta returns the cumulative insurance fund delta as a big integer.
+func (k Keeper) GetCumulativeInsuranceFundDelta(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (*big.Int, error) {
+
+	insuranceFundName, err := k.perpetualsKeeper.GetInsuranceFundName(ctx, perpetualId)
+	if err != nil {
+		return nil, err
+	}
+
+	store := k.getCumulativeInsuranceFundDeltaStore(ctx)
+	b := store.Get([]byte(insuranceFundName))
+	if b == nil {
+		return big.NewInt(0), nil
+	}
+
+	var delta big.Int
+	delta.UnmarshalText(b)
+
+	return &delta, nil
+}
+
+// IncrementCumulativeInsuranceFundDelta increments the cumulative insurance fund delta by the given amount.
+func (k Keeper) IncrementCumulativeInsuranceFundDelta(
+	ctx sdk.Context,
+	perpetualId uint32,
+	insuranceFundDelta *big.Int,
+) error {
+
+	insuranceFundName, err := k.perpetualsKeeper.GetInsuranceFundName(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	store := k.getCumulativeInsuranceFundDeltaStore(ctx)
+	currentDelta, err := k.GetCumulativeInsuranceFundDelta(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	newDelta := new(big.Int).Sub(currentDelta, insuranceFundDelta)
+
+	fmt.Printf("newDelta: %s\n", newDelta.String())
+
+	b, err := newDelta.MarshalText()
+	if err != nil {
+		return err
+	}
+
+	store.Set([]byte(insuranceFundName), b)
+	return nil
 }

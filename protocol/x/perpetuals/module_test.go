@@ -275,7 +275,9 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				 "ticker":"EXAM-USD",
 				 "market_id":0,
 				 "liquidity_tier":0,
-				 "market_type": "PERPETUAL_MARKET_TYPE_CROSS"
+				 "market_type": "PERPETUAL_MARKET_TYPE_CROSS",
+				 "danger_index_ppm": 0,
+				 "isolated_market_max_cumulative_insurance_fund_delta_per_block": 1000000
 			  }
 		   }
 		],
@@ -317,7 +319,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				 "default_funding_ppm":0,
 				 "liquidity_tier":0,
 				 "market_type": "PERPETUAL_MARKET_TYPE_CROSS",
-				 "danger_index_ppm": 0
+				 "danger_index_ppm": 0,
+				 "isolated_market_max_cumulative_insurance_fund_delta_per_block": "1000000"
 			  },
 			  "funding_index":"0",
 			  "open_interest":"0",

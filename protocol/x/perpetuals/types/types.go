@@ -78,6 +78,7 @@ type PerpetualsKeeper interface {
 		liquidityTier uint32,
 		marketType PerpetualMarketType,
 		dangerIndexPpm uint32,
+		isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock uint64,
 	) (Perpetual, error)
 	ModifyPerpetual(
 		ctx sdk.Context,
@@ -87,6 +88,7 @@ type PerpetualsKeeper interface {
 		defaultFundingPpm int32,
 		liquidityTier uint32,
 		dangerIndexPpm uint32,
+		isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock uint64,
 	) (Perpetual, error)
 	ModifyOpenInterest(
 		ctx sdk.Context,

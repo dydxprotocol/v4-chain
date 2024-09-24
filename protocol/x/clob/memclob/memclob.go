@@ -1749,7 +1749,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 
 		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(ctx, &matchWithOrders)
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
-			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxInsuranceLost) {
+			if errors.Is(err, types.ErrLiquidationExceedsMaxInsuranceLost) {
 				// Subaccount has reached max insurance lost block limit. Stop matching.
 				telemetry.IncrCounter(1, types.ModuleName, metrics.SubaccountMaxInsuranceLost, metrics.Count)
 				takerOrderStatus.OrderStatus = types.LiquidationExceededSubaccountMaxInsuranceLost

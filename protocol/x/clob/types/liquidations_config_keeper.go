@@ -14,9 +14,7 @@ var (
 			BankruptcyAdjustmentPpm:           lib.OneMillion,
 			SpreadToMaintenanceMarginRatioPpm: 100_000,
 		},
-		SubaccountBlockLimits: SubaccountBlockLimits{
-			MaxQuantumsInsuranceLost: 100_000_000_000_000,
-		},
+		MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 	}
 )
 
