@@ -151,7 +151,7 @@ export default async function runTask(
         blocked: false,
         provider: complianceProvider.provider,
         updatedBeforeOrAt: ageThreshold,
-        onlyAddressInWalletsTable: true,
+        addressInWalletsTable: true,
       },
       [],
       { readReplica: true },

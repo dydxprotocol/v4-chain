@@ -92,7 +92,7 @@ export enum QueryableField {
   REFEREE_ADDRESS = 'refereeAddress',
   KEY = 'key',
   TOKEN = 'token',
-  ONLY_ADDRESS_IN_WALLETS_TABLE = 'onlyAddressInWalletsTable',
+  ADDRESS_IN_WALLETS_TABLE = 'addressInWalletsTable',
 }
 
 export interface QueryConfig {
@@ -292,7 +292,7 @@ export interface ComplianceDataQueryConfig extends QueryConfig {
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string,
   [QueryableField.PROVIDER]?: string,
   [QueryableField.BLOCKED]?: boolean,
-  [QueryableField.ONLY_ADDRESS_IN_WALLETS_TABLE]?: boolean,
+  [QueryableField.ADDRESS_IN_WALLETS_TABLE]?: boolean,
 }
 
 export interface ComplianceStatusQueryConfig extends QueryConfig {

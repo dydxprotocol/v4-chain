@@ -154,7 +154,7 @@ describe('Compliance data store', () => {
 
     const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
       {
-        onlyAddressInWalletsTable: true,
+        addressInWalletsTable: true,
       },
       [],
       { readReplica: true },

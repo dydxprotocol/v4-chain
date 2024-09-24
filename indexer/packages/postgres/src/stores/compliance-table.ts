@@ -35,7 +35,7 @@ export async function findAll(
     provider,
     blocked,
     limit,
-    onlyAddressInWalletsTable,
+    addressInWalletsTable,
   }: ComplianceDataQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
@@ -47,7 +47,7 @@ export async function findAll(
       provider,
       blocked,
       limit,
-      onlyAddressInWalletsTable,
+      addressInWalletsTable,
     } as QueryConfig,
     requiredFields,
   );
@@ -73,7 +73,7 @@ export async function findAll(
     baseQuery = baseQuery.where(ComplianceDataColumns.blocked, blocked);
   }
 
-  if (onlyAddressInWalletsTable === true) {
+  if (addressInWalletsTable === true) {
     baseQuery = baseQuery.innerJoin(
       WalletModel.tableName,
       `${ComplianceDataModel.tableName}.${ComplianceDataColumns.address}`,
