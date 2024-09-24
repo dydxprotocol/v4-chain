@@ -35,7 +35,6 @@ func NewDaemonPreBlockHandler(
 // and writing to the prices module store.
 func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, request *abci.RequestFinalizeBlock) (resp *sdk.ResponsePreBlock, err error) {
 	if request == nil {
-		fmt.Println("received nil RequestFinalizeBlock in prices preblocker")
 		return &sdk.ResponsePreBlock{}, fmt.Errorf(
 			"received nil RequestFinalizeBlock in prices preblocker: height %d",
 			ctx.BlockHeight(),
@@ -43,7 +42,6 @@ func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, request *abci.RequestFin
 	}
 
 	if !veutils.AreVEEnabled(ctx) {
-		fmt.Println("vote extensions are not enabled, skipping prices pre-blocker")
 		pbh.logger.Info(
 			"vote extensions are not enabled, skipping prices pre-blocker",
 			"height", ctx.BlockHeight(),
@@ -53,7 +51,6 @@ func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, request *abci.RequestFin
 
 	err = pbh.priceApplier.ApplyPricesFromVE(ctx, request, true)
 	if err != nil {
-		fmt.Println("error applying prices from vote extensions", err)
 		pbh.logger.Error(
 			"failed to apply prices from vote extensions",
 			"height", request.Height,

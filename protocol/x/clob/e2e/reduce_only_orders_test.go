@@ -12,8 +12,9 @@ import (
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 )
@@ -554,30 +555,25 @@ func TestReduceOnlyOrders(t *testing.T) {
 					)
 					return genesis
 				}).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
 			ctx := tApp.InitChain()
-
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
-
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Create all orders.
 			deliverTxsOverride := make([][]byte, 0)
@@ -619,7 +615,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 			require.NoError(t, err)
 			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
@@ -671,7 +667,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 			require.NoError(t, err)
 			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
-			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
@@ -773,30 +769,25 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 				}
 				return genesis
 			}).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
 			ctx := tApp.InitChain()
-
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
-
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			for idx, order := range tc.orders {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -1087,30 +1078,25 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				}).
 				WithCrashingAppCheckTxNonDeterminismChecksEnabled(false).
 				Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
 			ctx := tApp.InitChain()
-
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
-
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// place first set of orders.
 			for _, order := range tc.firstOrders {
@@ -1124,7 +1110,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				}
 			}
 			// Advance the block to persist matches.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// validate order fill amounts.
 			if orderMap, exists := tc.expectedOrderFillAmounts[2]; exists {
@@ -1162,7 +1148,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 			}
 
 			// Advance the block to persist matches.
-			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 			// validate order fill amounts.
 			if orderMap, exists := tc.expectedOrderFillAmounts[3]; exists {

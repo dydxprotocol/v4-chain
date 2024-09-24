@@ -208,7 +208,7 @@ func (k Keeper) GetSubaccountPriority(
 
 	_, marketPricesMap, perpetualsMap, liquidityTiersMap := k.FetchInformationForLiquidations(ctx)
 
-	isLiquidatable, _, priority, err = k.GetSubaccountCollateralizationInfo(subaccount, marketPricesMap, perpetualsMap, liquidityTiersMap)
+	isLiquidatable, _, priority, err = k.GetSubaccountCollateralizationInfo(ctx, subaccount, marketPricesMap, perpetualsMap, liquidityTiersMap)
 
 	return isLiquidatable, priority, err
 

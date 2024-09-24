@@ -10,7 +10,6 @@ import (
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	subaccountskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -62,7 +61,7 @@ func (k Keeper) GetLiquidatableAndNegativeTncSubaccountIds(
 			continue
 		}
 
-		isLiquidatable, hasNegativeTnc, liquidationPriority, err := k.GetSubaccountCollateralizationInfo(subaccount, marketPrices, perpetuals, liquidityTiers)
+		isLiquidatable, hasNegativeTnc, liquidationPriority, err := k.GetSubaccountCollateralizationInfo(ctx, subaccount, marketPrices, perpetuals, liquidityTiers)
 
 		if err != nil {
 			return nil, nil, errorsmod.Wrap(err, "Error checking collateralization status")
@@ -80,6 +79,7 @@ func (k Keeper) GetLiquidatableAndNegativeTncSubaccountIds(
 }
 
 func (k Keeper) GetSubaccountCollateralizationInfo(
+	ctx sdk.Context,
 	unsettledSubaccount satypes.Subaccount,
 	marketPrices map[uint32]pricestypes.MarketPrice,
 	perpetuals map[uint32]perptypes.Perpetual,
@@ -94,13 +94,7 @@ func (k Keeper) GetSubaccountCollateralizationInfo(
 	bigTotalMaintenanceMargin := big.NewInt(0)
 	bigWeightedMaintenanceMargin := big.NewInt(0)
 
-	settledSubaccount, _, _, err := subaccountskeeper.GetSettledSubaccountWithPerpetuals(
-		unsettledSubaccount,
-		perpetuals,
-		big.NewRat(1, 1),                      // TODO: [YBCP-99] fix this when we merge with liquidation daemon change
-		big.NewInt(1_000_000_000_000_000_000), // TODO: [YBCP-99] fix this when we merge with liquidation daemon change
-	)
-
+	settledSubaccount, _, _, err := k.subaccountsKeeper.GetSettledSubaccount(ctx, unsettledSubaccount)
 	if err != nil {
 		return false, false, nil, err
 	}

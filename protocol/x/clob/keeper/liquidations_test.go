@@ -5506,6 +5506,15 @@ func TestGetBestPerpetualPositionToLiquidateMultiplePositions(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
+			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				mock.Anything,
+				constants.TDai.Denom,
+			).Return(
+				sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
+			)
+
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
 			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
 

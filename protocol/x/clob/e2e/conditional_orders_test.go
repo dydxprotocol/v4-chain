@@ -10,6 +10,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
 
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
@@ -19,6 +20,7 @@ import (
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
@@ -1000,30 +1002,25 @@ func TestConditionalOrder(t *testing.T) {
 				)
 				return genesis
 			}).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+
 			ctx := tApp.InitChain()
-
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
-
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
-
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Create all orders.
 			deliverTxsOverride := make([][]byte, 0)
@@ -1061,7 +1058,7 @@ func TestConditionalOrder(t *testing.T) {
 			// ve info has to be first in block
 			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
@@ -1118,7 +1115,7 @@ func TestConditionalOrder(t *testing.T) {
 
 			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
-			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
@@ -1129,7 +1126,7 @@ func TestConditionalOrder(t *testing.T) {
 			}
 
 			// Advance to the next block so that matches are proposed and persisted.
-			ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[4]; ok {
 				for orderId, triggered := range expectedTriggeredOrders {
 					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 4)

@@ -246,7 +246,7 @@ func (k Keeper) getSettledUpdates(
 		// idToSettledSubaccount map.
 		if !exists {
 			subaccount := k.GetSubaccount(ctx, u.SubaccountId)
-			settledSubaccount, fundingPayments, yieldForSubaccount, err = k.getSettledSubaccount(ctx, subaccount)
+			settledSubaccount, fundingPayments, yieldForSubaccount, err = k.GetSettledSubaccount(ctx, subaccount)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -435,7 +435,7 @@ func (k Keeper) UpdateSubaccounts(
 		}
 		k.SetSubaccount(ctx, u.SettledSubaccount)
 		// Below access is safe because for all updated subaccounts' IDs, this map
-		// is populated as getSettledSubaccount() is called in getSettledUpdates().
+		// is populated as GetSettledSubaccount() is called in getSettledUpdates().
 		fundingPayments := subaccountIdToFundingPayments[*u.SettledSubaccount.Id]
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
@@ -518,7 +518,7 @@ func (k Keeper) CanUpdateSubaccounts(
 // astFundingPayment fields accordingly (does not persist any changes) and 2. a map with
 // perpetual ID as key and last funding payment as value (for emitting funding payments to
 // indexer).
-func (k Keeper) getSettledSubaccount(
+func (k Keeper) GetSettledSubaccount(
 	ctx sdk.Context,
 	subaccount types.Subaccount,
 ) (
@@ -976,7 +976,7 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 ) {
 	subaccount := k.GetSubaccount(ctx, update.SubaccountId)
 
-	settledSubaccount, _, _, err := k.getSettledSubaccount(ctx, subaccount)
+	settledSubaccount, _, _, err := k.GetSettledSubaccount(ctx, subaccount)
 	if err != nil {
 		return nil, nil, nil, err
 	}
