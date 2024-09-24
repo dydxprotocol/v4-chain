@@ -11,6 +11,7 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -187,8 +188,6 @@ func TestCreateMarket_Errors(t *testing.T) {
 				marketPriceIdOffset = uint32(1)
 			}
 
-			marketPriceExponentOffset := int32(0)
-
 			_, err := keeper.CreateMarket(
 				ctx,
 				types.MarketParam{
@@ -201,7 +200,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 				},
 				types.MarketPrice{
 					Id:       1 + marketPriceIdOffset,
-					Exponent: int32(-6) + marketPriceExponentOffset,
+					Exponent: int32(-6),
 					Price:    tc.price,
 				},
 			)
@@ -217,6 +216,74 @@ func TestCreateMarket_Errors(t *testing.T) {
 
 			// Verify no new market event.
 			keepertest.AssertNMarketEventsNotInIndexerBlock(t, keeper, ctx, 1)
+		})
+	}
+}
+
+func TestValidateMarketPriceExponent(t *testing.T) {
+	tests := []struct {
+		name                string
+		marketMapDecimals   uint64
+		marketPriceExponent int32
+		expectedError       error
+	}{
+		{
+			name:                "Success - Market Price Exponent is negation of Market Map Decimals",
+			marketMapDecimals:   6,
+			marketPriceExponent: -6,
+			expectedError:       nil,
+		},
+		{
+			name:                "Failure - Market Price Exponent is not negation of Market Map Decimals",
+			marketMapDecimals:   6,
+			marketPriceExponent: -5,
+			expectedError:       types.ErrInvalidMarketPriceExponent,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, pricesKeeper, _, _, _, _, marketMapKeeper := keepertest.PricesKeepers(t)
+			ctx = ctx.WithTxBytes(constants.TestTxBytes)
+
+			// Create a market map entry for the market with the provided Decimals
+			currencyPair, err := slinky.MarketPairToCurrencyPair(constants.BtcUsdPair)
+			require.NoError(t, err)
+
+			marketMapDetails := marketmaptypes.Market{
+				Ticker: marketmaptypes.Ticker{
+					CurrencyPair:     currencyPair,
+					Decimals:         uint64(tc.marketMapDecimals),
+					MinProviderCount: 1,
+				},
+				ProviderConfigs: []marketmaptypes.ProviderConfig{},
+			}
+			err = marketMapKeeper.CreateMarket(ctx, marketMapDetails)
+			require.NoError(t, err)
+
+			// Create an oracle market containing MarketPrice with the provided exponent
+			testMarketParams := types.MarketParam{
+				Id:                 0,
+				Pair:               constants.BtcUsdPair,
+				MinExchanges:       1,
+				MinPriceChangePpm:  1,
+				ExchangeConfigJson: "{}",
+			}
+			_, err = pricesKeeper.CreateMarket(
+				ctx,
+				testMarketParams,
+				types.MarketPrice{
+					Id:       0,
+					Exponent: int32(tc.marketPriceExponent),
+					Price:    constants.FiveBillion,
+				},
+			)
+
+			if tc.expectedError != nil {
+				require.ErrorIs(t, err, tc.expectedError)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }
