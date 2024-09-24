@@ -826,6 +826,7 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 		revenueSharePpmNetFees            uint32
 		revenueSharePpmTakerFees          uint32
 		monthlyRollingTakerVolumeQuantums uint64
+		expectedError                     error
 		setup                             func(tApp *testapp.TestApp, ctx sdk.Context,
 			keeper *keeper.Keeper, affiliatesKeeper *affiliateskeeper.Keeper)
 	}{
@@ -834,6 +835,7 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 			revenueSharePpmNetFees:            950_000,           // 95%,
 			revenueSharePpmTakerFees:          150_000,           // 15%
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
+			expectedError:                     types.ErrTotalFeesSharedExceedsNetFees,
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
@@ -863,6 +865,7 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 			revenueSharePpmNetFees:            1_150_000,         // 115%,
 			revenueSharePpmTakerFees:          0,                 // 0%
 			monthlyRollingTakerVolumeQuantums: 1_000_000_000_000, // 1 million USDC
+			expectedError:                     types.ErrTotalFeesSharedExceedsNetFees,
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
 				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
@@ -907,10 +910,9 @@ func TestKeeper_GetAllRevShares_Invalid(t *testing.T) {
 
 			keeper.CreateNewMarketRevShare(ctx, marketId)
 
-			revSharesForFill, err := keeper.GetAllRevShares(ctx, fill, map[string]uint32{})
+			_, err := keeper.GetAllRevShares(ctx, fill, map[string]uint32{})
 
-			require.NoError(t, err)
-			require.Equal(t, types.RevSharesForFill{}, revSharesForFill)
+			require.ErrorIs(t, err, tc.expectedError)
 		})
 	}
 }

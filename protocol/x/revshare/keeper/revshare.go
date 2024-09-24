@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
@@ -173,24 +172,20 @@ func (k Keeper) GetAllRevShares(
 
 	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
 	if err != nil {
-		log.ErrorLogWithError(ctx, "error getting affiliate rev shares", err)
-		return types.RevSharesForFill{}, nil
+		return types.RevSharesForFill{}, err
 	}
 	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
 	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
-		log.ErrorLog(ctx, "net fees sub affiliate fees shared is less than or equal to 0")
-		return types.RevSharesForFill{}, nil
+		return types.RevSharesForFill{}, err
 	}
 
 	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
 	if err != nil {
-		log.ErrorLogWithError(ctx, "error getting unconditional rev shares", err)
-		return types.RevSharesForFill{}, nil
+		return types.RevSharesForFill{}, err
 	}
 	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
 	if err != nil {
-		log.ErrorLogWithError(ctx, "error getting market mapper rev shares", err)
-		return types.RevSharesForFill{}, nil
+		return types.RevSharesForFill{}, err
 	}
 
 	revShares = append(revShares, affiliateRevShares...)
@@ -215,8 +210,7 @@ func (k Keeper) GetAllRevShares(
 	}
 	//check total fees shared is less than or equal to net fees
 	if totalFeesShared.Cmp(netFees) > 0 {
-		log.ErrorLog(ctx, "total fees shared exceeds net fees")
-		return types.RevSharesForFill{}, nil
+		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
 
 	return types.RevSharesForFill{
