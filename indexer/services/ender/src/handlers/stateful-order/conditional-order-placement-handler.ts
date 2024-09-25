@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   OrderFromDatabase, OrderModel,
   OrderTable,
@@ -10,6 +11,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
+import config from '../../config';
 import { generateOrderSubaccountMessage } from '../../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
@@ -33,6 +35,12 @@ export class ConditionalOrderPlacementHandler extends
 
     const subaccountId:
     IndexerSubaccountId = this.event.conditionalOrderPlacement!.order!.orderId!.subaccountId!;
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_conditional_order_placement_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     return this.createKafkaEvents(subaccountId, order, perpetualMarket);
   }
 

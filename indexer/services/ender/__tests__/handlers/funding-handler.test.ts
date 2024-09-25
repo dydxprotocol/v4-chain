@@ -233,6 +233,14 @@ describe('fundingHandler', () => {
       }));
       expect(stats.gauge).toHaveBeenCalledWith('ender.funding_index_update_event', 0.1, { ticker: 'BTC-USD' });
       expect(stats.gauge).toHaveBeenCalledWith('ender.funding_index_update', 0.1, { ticker: 'BTC-USD' });
+      expect(stats.timing).toHaveBeenCalledWith(
+        'ender.handle_funding_event.sql_latency',
+        expect.any(Number),
+        {
+          className: 'FundingHandler',
+          eventType: 'FundingEvent',
+        },
+      );
     });
 
   it('successfully processes and clears cache for a new funding rate', async () => {
