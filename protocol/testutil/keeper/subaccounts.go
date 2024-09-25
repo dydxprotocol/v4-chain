@@ -1,13 +1,9 @@
 package keeper
 
 import (
-	"testing"
-
-	"github.com/dydxprotocol/v4-chain/protocol/streaming"
-
-	"math/big"
-
 	"github.com/cosmos/gogoproto/proto"
+	"math/big"
+	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -113,7 +109,6 @@ func createSubaccountsKeeper(
 		pk,
 		btk,
 		mockIndexerEventsManager,
-		streaming.NewNoopGrpcStreamingManager(),
 	)
 
 	return k, storeKey

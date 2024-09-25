@@ -1,4 +1,4 @@
-package lib
+package keeper
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 
 // Helper function to compute the delta long for a single settled update on a perpetual.
 func getDeltaLongFromSettledUpdate(
-	u types.SettledUpdate,
+	u SettledUpdate,
 	updatedPerpId uint32,
 ) (
 	deltaLong *big.Int,
@@ -51,7 +51,7 @@ func getDeltaLongFromSettledUpdate(
 //
 // For other update types, returns nil.
 func GetDeltaOpenInterestFromUpdates(
-	settledUpdates []types.SettledUpdate,
+	settledUpdates []SettledUpdate,
 	updateType types.UpdateType,
 ) (ret *perptypes.OpenInterestDelta) {
 	if updateType != types.Match {

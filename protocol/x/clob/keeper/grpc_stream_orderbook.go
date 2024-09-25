@@ -8,11 +8,7 @@ func (k Keeper) StreamOrderbookUpdates(
 	req *types.StreamOrderbookUpdatesRequest,
 	stream types.Query_StreamOrderbookUpdatesServer,
 ) error {
-	err := k.GetFullNodeStreamingManager().Subscribe(
-		req.GetClobPairId(),
-		req.GetSubaccountIds(),
-		stream,
-	)
+	err := k.GetGrpcStreamingManager().Subscribe(*req, stream)
 	if err != nil {
 		return err
 	}
