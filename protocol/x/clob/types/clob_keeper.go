@@ -140,8 +140,8 @@ type ClobKeeper interface {
 		clobPair ClobPair,
 	) error
 	UpdateLiquidationsConfig(ctx sdk.Context, config LiquidationsConfig) error
-	// full node streaming
-	InitializeNewStreams(ctx sdk.Context)
+	// Gprc streaming
+	InitializeNewGrpcStreams(ctx sdk.Context)
 	SendOrderbookUpdates(
 		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,

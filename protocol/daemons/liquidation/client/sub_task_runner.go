@@ -16,7 +16,7 @@ import (
 	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	salib "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/lib"
+	sakeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -337,7 +337,7 @@ func (c *Client) CheckSubaccountCollateralization(
 
 	// Funding payments are lazily settled, so get the settled subaccount
 	// to ensure that the funding payments are included in the net collateral calculation.
-	settledSubaccount, _, err := salib.GetSettledSubaccountWithPerpetuals(
+	settledSubaccount, _, err := sakeeper.GetSettledSubaccountWithPerpetuals(
 		unsettledSubaccount,
 		perpInfos,
 	)

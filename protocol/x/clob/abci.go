@@ -258,8 +258,8 @@ func PrepareCheckState(
 		types.GetInternalOperationsQueueTextString(newLocalValidatorOperationsQueue),
 	)
 
-	// Initialize new streams with orderbook snapshots, if any.
-	keeper.InitializeNewStreams(ctx)
+	// Initialize new GRPC streams with orderbook snapshots, if any.
+	keeper.InitializeNewGrpcStreams(ctx)
 
 	// Set per-orderbook gauges.
 	keeper.MemClob.SetMemclobGauges(ctx)
