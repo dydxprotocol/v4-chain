@@ -111,7 +111,7 @@ func (k Keeper) CreateClobPair(
 	// Only create the clob pair if we are in deliver tx mode. This is to prevent populating
 	// in memory data structures in the CLOB during simulation mode.
 	if lib.IsDeliverTxMode(ctx) {
-		err := k.ClobKeeper.CreateClobPair(ctx, clobPair)
+		err := k.ClobKeeper.CreateClobPairStructures(ctx, clobPair)
 		if err != nil {
 			return 0, err
 		}

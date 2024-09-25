@@ -69,7 +69,7 @@ func (k Keeper) CreatePerpetualClobPair(
 	// Write the `ClobPair` to state.
 	k.SetClobPair(ctx, clobPair)
 
-	err := k.CreateClobPair(ctx, clobPair)
+	err := k.CreateClobPairStructures(ctx, clobPair)
 	if err != nil {
 		return clobPair, err
 	}
@@ -169,7 +169,7 @@ func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 // These include creating the corresponding orderbook in the memclob, the mapping between
 // the CLOB pair and the perpetual and the indexer event.
 // This function returns an error if a value for the ClobPair's id already exists in state.
-func (k Keeper) CreateClobPair(ctx sdk.Context, clobPair types.ClobPair) error {
+func (k Keeper) CreateClobPairStructures(ctx sdk.Context, clobPair types.ClobPair) error {
 	// Create the corresponding orderbook in the memclob.
 	k.createOrderbook(ctx, clobPair)
 
