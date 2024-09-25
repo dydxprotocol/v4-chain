@@ -49,15 +49,16 @@ func TestPlaceOrderWithAffiliate(t *testing.T) {
 			initialMarketMapperRevShareParams:     nil,
 			expectedTakerFeeQuantums:              2000,
 			expectedMakerFeeQuantums:              550,
-			expectedAffiliateRevShareQuantums:     300,
+			expectedAffiliateRevShareQuantums:     300, // 15% of 2000
 			expectedUnconditionalRevShareQuantums: 0,
 			expectedMarketMapperRevShareQuantums:  0,
 		},
 		{
 			name: "Affiliate over limit",
 			initialUserStateStats: &statstypes.UserStats{
-				TakerNotional: uint64(35_000_000_000_000),
-				MakerNotional: uint64(35_000_000_000_000),
+				// cap is 50 million
+				TakerNotional: uint64(60_000_000_000_000),
+				MakerNotional: uint64(60_000_000_000_000),
 			},
 			initialUnconditionalRevShareConfig:    nil,
 			initialMarketMapperRevShareParams:     nil,
@@ -82,7 +83,7 @@ func TestPlaceOrderWithAffiliate(t *testing.T) {
 			expectedTakerFeeQuantums:              2000,
 			expectedMakerFeeQuantums:              550,
 			expectedAffiliateRevShareQuantums:     300,
-			expectedUnconditionalRevShareQuantums: 145,
+			expectedUnconditionalRevShareQuantums: 115, // 10% of(2000 - 550 - 300)
 			expectedMarketMapperRevShareQuantums:  0,
 		},
 		{
@@ -98,7 +99,7 @@ func TestPlaceOrderWithAffiliate(t *testing.T) {
 			expectedMakerFeeQuantums:              550,
 			expectedAffiliateRevShareQuantums:     300,
 			expectedUnconditionalRevShareQuantums: 0,
-			expectedMarketMapperRevShareQuantums:  145,
+			expectedMarketMapperRevShareQuantums:  115, // 10% of (2000 - 550 - 300)
 		},
 		{
 			name:                  "affiliate + market mapper revshare + unconditional revshare",
@@ -119,8 +120,8 @@ func TestPlaceOrderWithAffiliate(t *testing.T) {
 			expectedTakerFeeQuantums:              2000,
 			expectedMakerFeeQuantums:              550,
 			expectedAffiliateRevShareQuantums:     300,
-			expectedUnconditionalRevShareQuantums: 145,
-			expectedMarketMapperRevShareQuantums:  145,
+			expectedUnconditionalRevShareQuantums: 115, // 10% of (2000 - 550 - 300)
+			expectedMarketMapperRevShareQuantums:  115, // 10% of (2000 - 550 - 300)
 		},
 	}
 
