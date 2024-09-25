@@ -18,17 +18,22 @@ import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
 import config from '../../../../src/config';
 import { DateTime } from 'luxon';
+import Big from 'big.js';
 
 describe('vault-controller#V4', () => {
   const experimentVaultsPrevVal: string = config.EXPERIMENT_VAULTS;
   const experimentVaultMarketsPrevVal: string = config.EXPERIMENT_VAULT_MARKETS;
+  const latestBlockHeight: string = '25';
   const currentBlockHeight: string = '7';
   const twoHourBlockHeight: string = '5';
   const twoDayBlockHeight: string = '3';
   const currentTime: DateTime = DateTime.utc().startOf('day').minus({ hour: 5 });
+  const latestTime: DateTime = currentTime.plus({ second: 5 });
   const twoHoursAgo: DateTime = currentTime.minus({ hour: 2 });
   const twoDaysAgo: DateTime = currentTime.minus({ day: 2 });
   const initialFundingIndex: string = '10000';
+  const vault1Equity: number = 159500;
+  const vault2Equity: number = 10000;
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -61,8 +66,33 @@ describe('vault-controller#V4', () => {
           time: currentTime.toISO(),
           blockHeight: currentBlockHeight,
         }),
+        BlockTable.create({
+          ...testConstants.defaultBlock,
+          time: latestTime.toISO(),
+          blockHeight: latestBlockHeight,
+        }),
       ]);
       await SubaccountTable.create(testConstants.vaultSubaccount);
+      await Promise.all([
+        PerpetualPositionTable.create(
+          testConstants.defaultPerpetualPosition,
+        ),
+        AssetPositionTable.upsert(testConstants.defaultAssetPosition),
+        AssetPositionTable.upsert({
+          ...testConstants.defaultAssetPosition,
+          subaccountId: testConstants.vaultSubaccountId,
+        }),
+        FundingIndexUpdatesTable.create({
+          ...testConstants.defaultFundingIndexUpdate,
+          fundingIndex: initialFundingIndex,
+          effectiveAtHeight: testConstants.createdHeight,
+        }),
+        FundingIndexUpdatesTable.create({
+          ...testConstants.defaultFundingIndexUpdate,
+          eventId: testConstants.defaultTendermintEventId2,
+          effectiveAtHeight: twoDayBlockHeight,
+        }),
+      ]);
     });
 
     afterEach(async () => {
@@ -93,17 +123,25 @@ describe('vault-controller#V4', () => {
       expectedTicksIndex: number[],
     ) => {
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
+      const finalTick: PnlTicksFromDatabase = {
+        ...createdPnlTicks[expectedTicksIndex[expectedTicksIndex.length - 1]],
+        equity: Big(vault1Equity).toFixed(),
+        blockHeight: latestBlockHeight,
+        blockTime: latestTime.toISO(),
+        createdAt: latestTime.toISO(),
+      };
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/vault/v1/megavault/historicalPnl${queryParam}`,
       });
 
+      expect(response.body.megavaultPnl).toHaveLength(expectedTicksIndex.length + 1);
       expect(response.body.megavaultPnl).toEqual(
         expect.arrayContaining(
           expectedTicksIndex.map((index: number) => {
             return expect.objectContaining(createdPnlTicks[index]);
-          }),
+          }).concat([finalTick]),
         ),
       );
     });
@@ -127,7 +165,6 @@ describe('vault-controller#V4', () => {
       ].join(',');
 
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
-
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/vault/v1/megavault/historicalPnl${queryParam}`,
@@ -138,7 +175,15 @@ describe('vault-controller#V4', () => {
         totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) * 2).toString(),
         netTransfers: (parseFloat(testConstants.defaultPnlTick.netTransfers) * 2).toString(),
       };
+      const finalTick: PnlTicksFromDatabase = {
+        ...expectedPnlTickBase,
+        equity: Big(vault1Equity).add(vault2Equity).toFixed(),
+        blockHeight: latestBlockHeight,
+        blockTime: latestTime.toISO(),
+        createdAt: latestTime.toISO(),
+      };
 
+      expect(response.body.megavaultPnl).toHaveLength(expectedTicksIndex.length + 1);
       expect(response.body.megavaultPnl).toEqual(
         expect.arrayContaining(
           expectedTicksIndex.map((index: number) => {
@@ -148,7 +193,7 @@ describe('vault-controller#V4', () => {
               blockHeight: createdPnlTicks[index].blockHeight,
               blockTime: createdPnlTicks[index].blockTime,
             });
-          }),
+          }).concat([expect.objectContaining(finalTick)]),
         ),
       );
     });
@@ -175,6 +220,13 @@ describe('vault-controller#V4', () => {
       expectedTicksIndex: number[],
     ) => {
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
+      const finalTick: PnlTicksFromDatabase = {
+        ...createdPnlTicks[expectedTicksIndex[expectedTicksIndex.length - 1]],
+        equity: Big(vault1Equity).toFixed(),
+        blockHeight: latestBlockHeight,
+        blockTime: latestTime.toISO(),
+        createdAt: latestTime.toISO(),
+      };
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
@@ -182,13 +234,13 @@ describe('vault-controller#V4', () => {
       });
 
       expect(response.body.vaultsPnl).toHaveLength(1);
-
+      expect(response.body.vaultsPnl[0].historicalPnl).toHaveLength(expectedTicksIndex.length + 1);
       expect(response.body.vaultsPnl[0]).toEqual({
         ticker: testConstants.defaultPerpetualMarket.ticker,
         historicalPnl: expect.arrayContaining(
           expectedTicksIndex.map((index: number) => {
             return expect.objectContaining(createdPnlTicks[index]);
-          }),
+          }).concat(finalTick),
         ),
       });
     });
@@ -213,6 +265,20 @@ describe('vault-controller#V4', () => {
       ].join(',');
 
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
+      const finalTick1: PnlTicksFromDatabase = {
+        ...createdPnlTicks[expectedTicksIndex1[expectedTicksIndex1.length - 1]],
+        equity: Big(vault1Equity).toFixed(),
+        blockHeight: latestBlockHeight,
+        blockTime: latestTime.toISO(),
+        createdAt: latestTime.toISO(),
+      };
+      const finalTick2: PnlTicksFromDatabase = {
+        ...createdPnlTicks[expectedTicksIndex2[expectedTicksIndex2.length - 1]],
+        equity: Big(vault2Equity).toFixed(),
+        blockHeight: latestBlockHeight,
+        blockTime: latestTime.toISO(),
+        createdAt: latestTime.toISO(),
+      };
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
@@ -223,14 +289,14 @@ describe('vault-controller#V4', () => {
         ticker: testConstants.defaultPerpetualMarket.ticker,
         historicalPnl: expectedTicksIndex1.map((index: number) => {
           return createdPnlTicks[index];
-        }),
+        }).concat(finalTick1),
       };
 
       const expectedVaultPnl2: VaultHistoricalPnl = {
         ticker: testConstants.defaultPerpetualMarket2.ticker,
         historicalPnl: expectedTicksIndex2.map((index: number) => {
           return createdPnlTicks[index];
-        }),
+        }).concat(finalTick2),
       };
 
       expect(response.body.vaultsPnl).toEqual(
@@ -260,23 +326,6 @@ describe('vault-controller#V4', () => {
     });
 
     it('Get /megavault/positions with 1 vault subaccount', async () => {
-      await Promise.all([
-        PerpetualPositionTable.create(
-          testConstants.defaultPerpetualPosition,
-        ),
-        AssetPositionTable.upsert(testConstants.defaultAssetPosition),
-        FundingIndexUpdatesTable.create({
-          ...testConstants.defaultFundingIndexUpdate,
-          fundingIndex: initialFundingIndex,
-          effectiveAtHeight: testConstants.createdHeight,
-        }),
-        FundingIndexUpdatesTable.create({
-          ...testConstants.defaultFundingIndexUpdate,
-          eventId: testConstants.defaultTendermintEventId2,
-          effectiveAtHeight: twoDayBlockHeight,
-        }),
-      ]);
-
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: '/v4/vault/v1/megavault/positions',
@@ -333,27 +382,6 @@ describe('vault-controller#V4', () => {
         testConstants.defaultPerpetualMarket.clobPairId,
         testConstants.defaultPerpetualMarket2.clobPairId,
       ].join(',');
-
-      await Promise.all([
-        PerpetualPositionTable.create(
-          testConstants.defaultPerpetualPosition,
-        ),
-        AssetPositionTable.upsert(testConstants.defaultAssetPosition),
-        AssetPositionTable.upsert({
-          ...testConstants.defaultAssetPosition,
-          subaccountId: testConstants.vaultSubaccountId,
-        }),
-        FundingIndexUpdatesTable.create({
-          ...testConstants.defaultFundingIndexUpdate,
-          fundingIndex: initialFundingIndex,
-          effectiveAtHeight: testConstants.createdHeight,
-        }),
-        FundingIndexUpdatesTable.create({
-          ...testConstants.defaultFundingIndexUpdate,
-          eventId: testConstants.defaultTendermintEventId2,
-          effectiveAtHeight: twoDayBlockHeight,
-        }),
-      ]);
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
