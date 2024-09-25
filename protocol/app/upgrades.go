@@ -32,7 +32,6 @@ func (app *App) setupUpgradeHandlers() {
 			app.configurator,
 			app.PricesKeeper,
 			app.VaultKeeper,
-			app.AffiliatesKeeper,
 		),
 	)
 }
