@@ -18,7 +18,6 @@ import {
   testMocks,
   Transaction,
   helpers,
-  OrderSide,
 } from '@dydxprotocol-indexer/postgres';
 import { CandleMessage, CandleMessage_Resolution } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -32,9 +31,11 @@ import { KafkaPublisher } from '../../src/lib/kafka-publisher';
 import { ConsolidatedKafkaEvent } from '../../src/lib/types';
 import { defaultTradeContent, defaultTradeKafkaEvent } from '../helpers/constants';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from '../helpers/kafka-publisher-helpers';
-import { updatePriceLevel } from '../helpers/redis-helpers';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
-import { redis } from '@dydxprotocol-indexer/redis';
+import {
+  redis,
+  OrderbookMidPricesCache,
+} from '@dydxprotocol-indexer/redis';
 
 describe('candleHelper', () => {
   beforeAll(async () => {
@@ -113,9 +114,12 @@ describe('candleHelper', () => {
       defaultTradeKafkaEvent2,
     ]);
 
-    // Create Orderbook levels to set orderbookMidPrice open & close
-    await updatePriceLevel('BTC-USD', '100000', OrderSide.BUY);
-    await updatePriceLevel('BTC-USD', '110000', OrderSide.SELL);
+    const ticker = 'BTC-USD';
+    await Promise.all([
+      OrderbookMidPricesCache.setPrice(redisClient, ticker, '100000'),
+      OrderbookMidPricesCache.setPrice(redisClient, ticker, '105000'),
+      OrderbookMidPricesCache.setPrice(redisClient, ticker, '110000'),
+    ]);
 
     await runUpdateCandles(publisher);
 
@@ -155,8 +159,12 @@ describe('candleHelper', () => {
       defaultTradeKafkaEvent2,
     ]);
 
-    await updatePriceLevel('BTC-USD', '80000', OrderSide.BUY);
-    await updatePriceLevel('BTC-USD', '81000', OrderSide.SELL);
+    const ticker = 'BTC-USD';
+    await Promise.all([
+      OrderbookMidPricesCache.setPrice(redisClient, ticker, '80000'),
+      OrderbookMidPricesCache.setPrice(redisClient, ticker, '81000'),
+      OrderbookMidPricesCache.setPrice(redisClient, ticker, '80500'),
+    ]);
 
     // Create Perpetual Position to set open position
     const openInterest: string = '100';
@@ -427,9 +435,7 @@ describe('candleHelper', () => {
     containsKafkaMessages: boolean = true,
     orderbookMidPrice: number,
   ) => {
-    const midPriceSpread = 10;
-    await updatePriceLevel('BTC-USD', String(orderbookMidPrice + midPriceSpread), OrderSide.SELL);
-    await updatePriceLevel('BTC-USD', String(orderbookMidPrice - midPriceSpread), OrderSide.BUY);
+    await OrderbookMidPricesCache.setPrice(redisClient, 'BTC-USD', orderbookMidPrice.toFixed());
 
     if (initialCandle !== undefined) {
       await CandleTable.create(initialCandle);
@@ -494,9 +500,7 @@ describe('candleHelper', () => {
     );
     await startCandleCache();
 
-    // Update Orderbook levels
-    await updatePriceLevel('BTC-USD', '10010', OrderSide.SELL);
-    await updatePriceLevel('BTC-USD', '10000', OrderSide.BUY);
+    await OrderbookMidPricesCache.setPrice(redisClient, 'BTC-USD', '10005');
 
     const publisher: KafkaPublisher = new KafkaPublisher();
     publisher.addEvents([
@@ -594,9 +598,7 @@ describe('candleHelper', () => {
     );
     await startCandleCache();
 
-    // Update Orderbook levels
-    await updatePriceLevel('BTC-USD', '10010', OrderSide.SELL);
-    await updatePriceLevel('BTC-USD', '10000', OrderSide.BUY);
+    await OrderbookMidPricesCache.setPrice(redisClient, 'BTC-USD', '10005');
 
     const publisher: KafkaPublisher = new KafkaPublisher();
     publisher.addEvents([]);
@@ -660,22 +662,19 @@ describe('candleHelper', () => {
   });
 
   it('successfully creates an orderbook price map for each market', async () => {
-    await updatePriceLevel('BTC-USD', '100000', OrderSide.BUY);
-    await updatePriceLevel('BTC-USD', '110000', OrderSide.SELL);
-
-    await updatePriceLevel('ISO-USD', '110000', OrderSide.BUY);
-    await updatePriceLevel('ISO-USD', '120000', OrderSide.SELL);
-
-    await updatePriceLevel('ETH-USD', '100000', OrderSide.BUY);
-    await updatePriceLevel('ETH-USD', '200000', OrderSide.SELL);
+    await Promise.all([
+      OrderbookMidPricesCache.setPrice(redisClient, 'BTC-USD', '105000'),
+      OrderbookMidPricesCache.setPrice(redisClient, 'ISO-USD', '115000'),
+      OrderbookMidPricesCache.setPrice(redisClient, 'ETH-USD', '150000'),
+    ]);
 
     const map = await getOrderbookMidPriceMap();
     expect(map).toEqual({
       'BTC-USD': '105000',
       'ETH-USD': '150000',
       'ISO-USD': '115000',
-      'ISO2-USD': undefined,
-      'SHIB-USD': undefined,
+      'ISO2-USD': null,
+      'SHIB-USD': null,
     });
   });
 });
