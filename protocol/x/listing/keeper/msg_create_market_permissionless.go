@@ -37,7 +37,6 @@ func (k msgServer) CreateMarketPermissionless(
 		return nil, err
 	}
 
-	// TODO: vault deposit for PML
 	err = k.Keeper.DepositToMegavaultforPML(ctx, *msg.SubaccountId, clobPairId)
 	if err != nil {
 		k.Logger(ctx).Error("failed to deposit to megavault for PML market", "error", err)

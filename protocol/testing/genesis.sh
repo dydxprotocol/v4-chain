@@ -2262,7 +2262,7 @@ function edit_genesis() {
 	# Set hard cap for markets
 	dasel put -t int -f "$GENESIS" ".app_state.listing.hard_cap_for_markets" -v '500'
 	# Set default listing vault deposit params
-	dasel put -t string -f "$GENESIS" ".app_state.listing.listing_vault_deposit_params.new_vault_deposit_amount" -v "10000" # 10_000 USDC
+	dasel put -t string -f "$GENESIS" ".app_state.listing.listing_vault_deposit_params.new_vault_deposit_amount" -v "10000000000" # 10_000 USDC
 	dasel put -t string -f "$GENESIS" ".app_state.listing.listing_vault_deposit_params.main_vault_deposit_amount" -v "0" # 0 USDC
 	dasel put -t int -f "$GENESIS" ".app_state.listing.listing_vault_deposit_params.num_blocks_to_lock_shares" -v '2592000' # 30 days
 

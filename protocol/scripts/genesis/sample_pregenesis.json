@@ -872,7 +872,7 @@
       "hard_cap_for_markets": 500,
       "listing_vault_deposit_params": {
         "main_vault_deposit_amount": "0",
-        "new_vault_deposit_amount": "10000",
+        "new_vault_deposit_amount": "10000000000",
         "num_blocks_to_lock_shares": 2592000
       }
     },

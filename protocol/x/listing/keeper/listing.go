@@ -4,8 +4,6 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -209,8 +207,7 @@ func (k Keeper) DepositToMegavaultforPML(
 	vaultDepositParams := k.GetListingVaultDepositParams(ctx)
 
 	// Deposit to the megavault
-	totalDepositAmount := big.NewInt(0)
-	totalDepositAmount.Add(
+	totalDepositAmount := new(big.Int).Add(
 		vaultDepositParams.NewVaultDepositAmount.BigInt(),
 		vaultDepositParams.MainVaultDepositAmount.BigInt(),
 	)
@@ -242,7 +239,7 @@ func (k Keeper) DepositToMegavaultforPML(
 	err = k.VaultKeeper.LockShares(
 		ctx,
 		fromSubaccount.Owner,
-		vaulttypes.NumShares{NumShares: dtypes.NewIntFromBigInt(mintedShares)},
+		vaulttypes.BigIntToNumShares(mintedShares),
 		uint32(ctx.BlockHeight())+vaultDepositParams.NumBlocksToLockShares,
 	)
 	if err != nil {
