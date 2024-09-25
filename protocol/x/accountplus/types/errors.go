@@ -18,4 +18,9 @@ var (
 		3,
 		"Authenticator data exceeds maximum length",
 	)
+	ErrInitializingAuthenticator = errorsmod.Register(
+		ModuleName,
+		4,
+		"Error initializing authenticator",
+	)
 )

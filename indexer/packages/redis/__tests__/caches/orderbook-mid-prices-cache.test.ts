@@ -13,10 +13,6 @@ describe('orderbook-mid-prices-cache', () => {
     await deleteAllAsync(client);
   });
 
-  afterEach(async () => {
-    await deleteAllAsync(client);
-  });
-
   describe('setPrice', () => {
     it('sets a price for a ticker', async () => {
       await setPrice(client, ticker, '50000');
@@ -101,6 +97,40 @@ describe('orderbook-mid-prices-cache', () => {
       expect(result).toBe('50500');
 
       jest.useRealTimers();
+    });
+
+    it('returns the correct median price for small numbers with even number of prices', async () => {
+      await Promise.all([
+        setPrice(client, ticker, '0.00000000002345'),
+        setPrice(client, ticker, '0.00000000002346'),
+      ]);
+
+      const midPrice1 = await getMedianPrice(client, ticker);
+      expect(midPrice1).toEqual('0.000000000023455');
+    });
+
+    it('returns the correct median price for small numbers with odd number of prices', async () => {
+      await Promise.all([
+        setPrice(client, ticker, '0.00000000001'),
+        setPrice(client, ticker, '0.00000000002'),
+        setPrice(client, ticker, '0.00000000003'),
+        setPrice(client, ticker, '0.00000000004'),
+        setPrice(client, ticker, '0.00000000005'),
+      ]);
+
+      const midPrice1 = await getMedianPrice(client, ticker);
+      expect(midPrice1).toEqual('0.00000000003');
+
+      await deleteAllAsync(client);
+
+      await Promise.all([
+        setPrice(client, ticker, '0.00000847007'),
+        setPrice(client, ticker, '0.00000847006'),
+        setPrice(client, ticker, '0.00000847008'),
+      ]);
+
+      const midPrice2 = await getMedianPrice(client, ticker);
+      expect(midPrice2).toEqual('0.00000847007');
     });
   });
 });

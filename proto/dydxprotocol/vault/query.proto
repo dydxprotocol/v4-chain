@@ -1,9 +1,10 @@
 syntax = "proto3";
 package dydxprotocol.vault;
 
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/vault/params.proto";
 import "dydxprotocol/vault/share.proto";
@@ -33,7 +34,14 @@ service Query {
   // Queries owner shares of megavault.
   rpc MegavaultOwnerShares(QueryMegavaultOwnerSharesRequest)
       returns (QueryMegavaultOwnerSharesResponse) {
-    option (google.api.http).get = "/dydxprotocol/vault/megavault/owner_shares";
+    option (google.api.http).get =
+        "/dydxprotocol/vault/megavault/owner_shares/{address}";
+  }
+  // Queries all owner shares of megavault.
+  rpc MegavaultAllOwnerShares(QueryMegavaultAllOwnerSharesRequest)
+      returns (QueryMegavaultAllOwnerSharesResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/vault/megavault/all_owner_shares";
   }
   // Queries vault params of a vault.
   rpc VaultParams(QueryVaultParamsRequest) returns (QueryVaultParamsResponse) {
@@ -81,6 +89,7 @@ message QueryVaultResponse {
     (gogoproto.nullable) = false
   ];
   VaultParams vault_params = 5 [ (gogoproto.nullable) = false ];
+  repeated uint32 most_recent_client_ids = 6;
 }
 
 // QueryAllVaultsRequest is a request type for the AllVaults RPC method.
@@ -105,12 +114,42 @@ message QueryMegavaultTotalSharesResponse { NumShares total_shares = 1; }
 // QueryMegavaultOwnerSharesRequest is a request type for the
 // MegavaultOwnerShares RPC method.
 message QueryMegavaultOwnerSharesRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
 // QueryMegavaultOwnerSharesResponse is a response type for the
 // MegavaultOwnerShares RPC method.
 message QueryMegavaultOwnerSharesResponse {
+  // Owner address.
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // Total number of shares that belong to the owner.
+  NumShares shares = 2 [ (gogoproto.nullable) = false ];
+  // All share unlocks.
+  repeated ShareUnlock share_unlocks = 3 [ (gogoproto.nullable) = false ];
+  // Owner equity in megavault (in quote quantums).
+  bytes equity = 4 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+  // Equity that owner can withdraw in quote quantums (as one cannot
+  // withdraw locked shares).
+  bytes withdrawable_equity = 5 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryMegavaultAllOwnerSharesRequest is a request type for the
+// MegavaultAllOwnerShares RPC method.
+message QueryMegavaultAllOwnerSharesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryMegavaultAllOwnerSharesResponse is a response type for the
+// MegavaultAllOwnerShares RPC method.
+message QueryMegavaultAllOwnerSharesResponse {
   repeated OwnerShare owner_shares = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

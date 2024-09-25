@@ -109,7 +109,23 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 		)
 		ks.AffiliatesKeeper, _ = createAffiliatesKeeper(stateStore, db, cdc, ks.StatsKeeper,
 			indexerEventsTransientStoreKey, true)
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, ks.AffiliatesKeeper)
+		ks.VaultKeeper, _ = createVaultKeeper(
+			stateStore,
+			db,
+			cdc,
+			indexerEventsTransientStoreKey,
+		)
+		ks.FeeTiersKeeper, _ = createFeeTiersKeeper(
+			stateStore,
+			ks.StatsKeeper,
+			ks.VaultKeeper,
+			ks.AffiliatesKeeper,
+			db,
+			cdc,
+		)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, ks.AffiliatesKeeper, ks.FeeTiersKeeper)
+		ks.FeeTiersKeeper.SetRevShareKeeper(revShareKeeper)
+		ks.AffiliatesKeeper.SetFeetiersKeeper(ks.FeeTiersKeeper)
 		ks.MarketMapKeeper, _ = createMarketMapKeeper(stateStore, db, cdc)
 		ks.PricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
@@ -138,20 +154,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			true,
 		)
 		ks.BlockTimeKeeper, _ = createBlockTimeKeeper(stateStore, db, cdc)
-		ks.VaultKeeper, _ = createVaultKeeper(
-			stateStore,
-			db,
-			cdc,
-			indexerEventsTransientStoreKey,
-		)
-		ks.FeeTiersKeeper, _ = createFeeTiersKeeper(
-			stateStore,
-			ks.StatsKeeper,
-			ks.VaultKeeper,
-			ks.AffiliatesKeeper,
-			db,
-			cdc,
-		)
 		ks.RewardsKeeper, _ = createRewardsKeeper(
 			stateStore,
 			ks.AssetsKeeper,
@@ -170,7 +172,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			bankKeeper,
 			ks.PerpetualsKeeper,
 			ks.BlockTimeKeeper,
-			revShareKeeper,
 			indexerEventsTransientStoreKey,
 			true,
 		)

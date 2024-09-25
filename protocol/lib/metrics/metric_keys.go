@@ -89,4 +89,7 @@ const (
 
 	EndBlocker    = "end_blocker"
 	EndBlockerLag = "end_blocker_lag"
+
+	// Account plus
+	MissingRegisteredAuthenticator = "missing_registered_authenticator"
 )

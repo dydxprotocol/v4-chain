@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryParamsRequest, QueryParamsResponseSDKType, QueryVaultRequest, QueryVaultResponseSDKType, QueryAllVaultsRequest, QueryAllVaultsResponseSDKType, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponseSDKType, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponseSDKType, QueryVaultParamsRequest, QueryVaultParamsResponseSDKType, QueryMegavaultWithdrawalInfoRequest, QueryMegavaultWithdrawalInfoResponseSDKType } from "./query";
+import { QueryParamsRequest, QueryParamsResponseSDKType, QueryVaultRequest, QueryVaultResponseSDKType, QueryAllVaultsRequest, QueryAllVaultsResponseSDKType, QueryMegavaultTotalSharesRequest, QueryMegavaultTotalSharesResponseSDKType, QueryMegavaultOwnerSharesRequest, QueryMegavaultOwnerSharesResponseSDKType, QueryMegavaultAllOwnerSharesRequest, QueryMegavaultAllOwnerSharesResponseSDKType, QueryVaultParamsRequest, QueryVaultParamsResponseSDKType, QueryMegavaultWithdrawalInfoRequest, QueryMegavaultWithdrawalInfoResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -15,6 +15,7 @@ export class LCDQueryClient {
     this.allVaults = this.allVaults.bind(this);
     this.megavaultTotalShares = this.megavaultTotalShares.bind(this);
     this.megavaultOwnerShares = this.megavaultOwnerShares.bind(this);
+    this.megavaultAllOwnerShares = this.megavaultAllOwnerShares.bind(this);
     this.vaultParams = this.vaultParams.bind(this);
     this.megavaultWithdrawalInfo = this.megavaultWithdrawalInfo.bind(this);
   }
@@ -59,9 +60,16 @@ export class LCDQueryClient {
   /* Queries owner shares of megavault. */
 
 
-  async megavaultOwnerShares(params: QueryMegavaultOwnerSharesRequest = {
+  async megavaultOwnerShares(params: QueryMegavaultOwnerSharesRequest): Promise<QueryMegavaultOwnerSharesResponseSDKType> {
+    const endpoint = `dydxprotocol/vault/megavault/owner_shares/${params.address}`;
+    return await this.req.get<QueryMegavaultOwnerSharesResponseSDKType>(endpoint);
+  }
+  /* Queries all owner shares of megavault. */
+
+
+  async megavaultAllOwnerShares(params: QueryMegavaultAllOwnerSharesRequest = {
     pagination: undefined
-  }): Promise<QueryMegavaultOwnerSharesResponseSDKType> {
+  }): Promise<QueryMegavaultAllOwnerSharesResponseSDKType> {
     const options: any = {
       params: {}
     };
@@ -70,8 +78,8 @@ export class LCDQueryClient {
       setPaginationParams(options, params.pagination);
     }
 
-    const endpoint = `dydxprotocol/vault/megavault/owner_shares`;
-    return await this.req.get<QueryMegavaultOwnerSharesResponseSDKType>(endpoint, options);
+    const endpoint = `dydxprotocol/vault/megavault/all_owner_shares`;
+    return await this.req.get<QueryMegavaultAllOwnerSharesResponseSDKType>(endpoint, options);
   }
   /* Queries vault params of a vault. */
 

@@ -14,10 +14,9 @@ local middle = math.floor(#prices / 2)
 
 -- Calculate median
 if #prices % 2 == 0 then
-  -- If even, return the average of the two middle elements
-  local median = (tonumber(prices[middle]) + tonumber(prices[middle + 1])) / 2
-  return tostring(median)
+  -- If even, return both prices, division will be handled in Javascript
+  return {prices[middle], prices[middle + 1]}
 else
   -- If odd, return the middle element
-  return prices[middle + 1]
+  return {prices[middle + 1]}
 end

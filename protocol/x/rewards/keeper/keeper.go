@@ -19,6 +19,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -120,15 +121,20 @@ func (k Keeper) GetRewardShare(
 //
 // Within each block, total reward share score for an address is defined as:
 //
-//	reward_share_score = total_taker_fees_paid - total_rev_shared_taker_fee
+//	reward_share_score = total_taker_fees_paid - max_possible_taker_fee_rev_share
 //   - max_possible_maker_rebate * taker_volume + total_positive_maker_fees - total_rev_shared_maker_fee
 //
 // Hence, for each fill, increment reward share score as follow:
 //   - Let F = sum(percentages of general rev-share) (excluding taker only rev share i.e. affiliate)
 //   - For maker address, positive_maker_fees * (1 - F) are added to reward share score.
 //   - For taker address, (positive_taker_fees - max_possible_maker_rebate
-//     					  * fill_quote_quantum - taker_fee_rev_share) * (1 - F)
+//     					  * fill_quote_quantum - max_possible_taker_fee_rev_share) * (1 - F)
 //     are added to reward share score.
+// max_possible_taker_fee_rev_share is 0 when taker trailing volume is > MaxReferee30dVolumeForAffiliateShareQuantums,
+// since taker_fee_share is only affiliate at the moment, and they don’t generate affiliate rev share.
+// When taker volume ≤ MaxReferee30dVolumeForAffiliateShareQuantums,
+// max_possible_taker_fee_rev_share = max_vip_affiliate_share * taker_fee
+// regardless of if the taker has an affiliate or not.
 
 func (k Keeper) AddRewardSharesForFill(
 	ctx sdk.Context,
@@ -140,12 +146,18 @@ func (k Keeper) AddRewardSharesForFill(
 	maxMakerRebatePpm := lib.Min(int32(0), lowestMakerFee)
 
 	totalNetFeeRevSharePpm := uint32(0)
-	if value, ok := revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]; ok {
+	if value, ok := revSharesForFill.FeeSourceToRevSharePpm[revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE]; ok {
 		totalNetFeeRevSharePpm = value
 	}
-	totalTakerFeeRevShareQuantums := big.NewInt(0)
-	if value, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_TAKER_FEE]; ok {
-		totalTakerFeeRevShareQuantums = value
+	maxPossibleTakerFeeRevShare := big.NewInt(0)
+
+	// taker revshare is always 0 if taker rolling volume is greater than or equal
+	// to Max30dTakerVolumeQuantums, so no need to reduce score by `max_possible_taker_fee_rev_share`
+	if fill.MonthlyRollingTakerVolumeQuantums < revsharetypes.MaxReferee30dVolumeForAffiliateShareQuantums {
+		maxPossibleTakerFeeRevShare = lib.BigMulPpm(fill.TakerFeeQuoteQuantums,
+			lib.BigU(affiliatetypes.AffiliatesRevSharePpmCap),
+			false,
+		)
 	}
 
 	totalFeeSubNetRevSharePpm := lib.OneMillion - totalNetFeeRevSharePpm
@@ -159,7 +171,7 @@ func (k Keeper) AddRewardSharesForFill(
 	)
 	netTakerFee = netTakerFee.Sub(
 		netTakerFee,
-		totalTakerFeeRevShareQuantums,
+		maxPossibleTakerFeeRevShare,
 	)
 	takerWeight := lib.BigMulPpm(
 		netTakerFee,

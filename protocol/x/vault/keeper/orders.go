@@ -344,12 +344,20 @@ func (k Keeper) GetVaultClobOrders(
 			maxSubticks,
 		)
 
+		// If the side would increase the vault's inventory, make the order post-only.
+		timeInForceType := clobtypes.Order_TIME_IN_FORCE_UNSPECIFIED
+		if (side == clobtypes.Order_SIDE_SELL && leveragePpm.Sign() <= 0) ||
+			(side == clobtypes.Order_SIDE_BUY && leveragePpm.Sign() >= 0) {
+			timeInForceType = clobtypes.Order_TIME_IN_FORCE_POST_ONLY
+		}
+
 		return &clobtypes.Order{
 			OrderId:      *orderId,
 			Side:         side,
 			Quantums:     orderSize.Uint64(), // Validated to be a uint64 above.
 			Subticks:     subticksRounded,
 			GoodTilOneof: goodTilBlockTime,
+			TimeInForce:  timeInForceType,
 		}
 	}
 
@@ -376,11 +384,11 @@ func (k Keeper) GetVaultClobOrders(
 
 	if vaultParams.Status == types.VaultStatus_VAULT_STATUS_CLOSE_ONLY {
 		// In close-only mode with non-zero leverage.
-		reduceOnlyMaxOrderSize := k.GetVaultInventoryInPerpetual(ctx, vaultId, perpetual.Params.Id)
+		reduceOnlyTotalOrderSize := k.GetVaultInventoryInPerpetual(ctx, vaultId, perpetual.Params.Id)
 		stepSize := lib.BigU(clobPair.StepBaseQuantums)
-		reduceOnlyMaxOrderSize.Quo(reduceOnlyMaxOrderSize, stepSize)
-		reduceOnlyMaxOrderSize.Mul(reduceOnlyMaxOrderSize, stepSize)
-		if reduceOnlyMaxOrderSize.Sign() == 0 {
+		reduceOnlyTotalOrderSize.Quo(reduceOnlyTotalOrderSize, stepSize)
+		reduceOnlyTotalOrderSize.Mul(reduceOnlyTotalOrderSize, stepSize)
+		if reduceOnlyTotalOrderSize.Sign() == 0 {
 			return []*clobtypes.Order{}, nil
 		}
 
@@ -391,9 +399,15 @@ func (k Keeper) GetVaultClobOrders(
 			reduceOnlySide = clobtypes.Order_SIDE_BUY
 		}
 		reduceOnlyOrders := make([]*clobtypes.Order, 0, len(orders))
+		totalOrderSize := reduceOnlyTotalOrderSize.Uint64()
 		for _, order := range orders {
 			if order.Side == reduceOnlySide {
-				order.Quantums = lib.Min(order.Quantums, reduceOnlyMaxOrderSize.Uint64())
+				if totalOrderSize == 0 {
+					break
+				}
+
+				order.Quantums = lib.Min(order.Quantums, totalOrderSize)
+				totalOrderSize -= order.Quantums
 				reduceOnlyOrders = append(reduceOnlyOrders, order)
 			}
 		}

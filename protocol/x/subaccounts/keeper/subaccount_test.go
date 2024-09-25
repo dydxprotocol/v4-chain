@@ -10,6 +10,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -6015,6 +6016,117 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 					require.Equal(t, tc.expectedMaintenanceMargin.String(), risk.MMR.String())
 				}
 				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
+	tests := map[string]struct {
+		// state
+		perpetuals []perptypes.Perpetual
+
+		// subaccount state
+		assetPositions     []*types.AssetPosition
+		perpetualPositions []*types.PerpetualPosition
+
+		// updates
+		assetUpdates     []types.AssetUpdate
+		perpetualUpdates []types.PerpetualUpdate
+	}{
+		"Gas used is deterministic when erroring on gas usage": {
+			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(10_000_000_001)), // $10,000.000001
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.EthUsd_NoMarginRequirement,
+				constants.SolUsd_20PercentInitial_10PercentMaintenance,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				&constants.PerpetualPosition_OneBTCLong,
+				&constants.PerpetualPosition_OneTenthEthLong,
+				&constants.PerpetualPosition_OneSolLong,
+			},
+			assetUpdates: []types.AssetUpdate{
+				{
+					AssetId:          constants.Usdc.Id,
+					BigQuantumsDelta: big.NewInt(1_000_000), // +1 USDC
+				},
+			},
+			perpetualUpdates: []types.PerpetualUpdate{
+				{
+					PerpetualId:      uint32(0),
+					BigQuantumsDelta: big.NewInt(-200_000_000), // -2 BTC
+				},
+				{
+					PerpetualId:      uint32(1),
+					BigQuantumsDelta: big.NewInt(250_000_000), // .25 ETH
+				},
+				{
+					PerpetualId:      uint32(2),
+					BigQuantumsDelta: big.NewInt(500_000_000), // .005 SOL
+				},
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup.
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _, _ := keepertest.SubaccountsKeepers(
+				t,
+				true,
+			)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+			for _, p := range tc.perpetuals {
+				perpetualsKeeper.SetPerpetualForTest(ctx, p)
+			}
+			require.NoError(t, keepertest.CreateUsdcAsset(ctx, assetsKeeper))
+
+			subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
+			subaccount.PerpetualPositions = tc.perpetualPositions
+			subaccount.AssetPositions = tc.assetPositions
+			keeper.SetSubaccount(ctx, subaccount)
+			subaccountId := *subaccount.Id
+
+			update := types.Update{
+				SubaccountId:     subaccountId,
+				AssetUpdates:     tc.assetUpdates,
+				PerpetualUpdates: tc.perpetualUpdates,
+			}
+
+			// Execute.
+			gasUsedBefore := ctx.GasMeter().GasConsumed()
+			_, err := keeper.GetAllRelevantPerpetuals(ctx, []types.Update{update})
+			require.NoError(t, err)
+			gasUsedAfter := ctx.GasMeter().GasConsumed()
+
+			gasUsed := uint64(0)
+			// Run 100 times since it's highly unlikely gas usage is deterministic over 100 times if
+			// there's non-determinism.
+			for range 100 {
+				// divide by 2 so that the state read fails at least second to last time.
+				ctxWithLimitedGas := ctx.WithGasMeter(storetypes.NewGasMeter((gasUsedAfter - gasUsedBefore) / 2))
+
+				require.PanicsWithValue(
+					t,
+					storetypes.ErrorOutOfGas{Descriptor: "ReadFlat"},
+					func() {
+						_, _ = keeper.GetAllRelevantPerpetuals(ctxWithLimitedGas, []types.Update{update})
+					},
+				)
+
+				if gasUsed == 0 {
+					gasUsed = ctxWithLimitedGas.GasMeter().GasConsumed()
+					require.Greater(t, gasUsed, uint64(0))
+				} else {
+					require.Equal(
+						t,
+						gasUsed,
+						ctxWithLimitedGas.GasMeter().GasConsumed(),
+						"Gas usage when out of gas is not deterministic",
+					)
+				}
 			}
 		})
 	}

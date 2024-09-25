@@ -678,6 +678,66 @@ describe('update-compliance-data', () => {
 
     config.MAX_COMPLIANCE_DATA_QUERY_PER_LOOP = defaultMaxQueries;
   });
+
+  it('Only updates old addresses that are in wallets table', async () => {
+    const rogueWallet: string = 'address_not_in_wallets';
+    // Seed database with old compliance data, and set up subaccounts to not be active
+    // Create a compliance dataentry that is not in the wallets table
+    await Promise.all([
+      setupComplianceData(config.MAX_COMPLIANCE_DATA_AGE_SECONDS * 2),
+      setupInitialSubaccounts(config.MAX_ACTIVE_COMPLIANCE_DATA_AGE_SECONDS * 2),
+    ]);
+    await ComplianceTable.create({
+      ...testConstants.nonBlockedComplianceData,
+      address: rogueWallet,
+    });
+
+    const riskScore: string = '75.00';
+    setupMockProvider(
+      mockProvider,
+      { [testConstants.defaultAddress]: { blocked: true, riskScore } },
+    );
+
+    await updateComplianceDataTask(mockProvider);
+
+    const updatedCompliancnceData: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({
+      address: [testConstants.defaultAddress],
+    }, [], {});
+    const unchangedComplianceData: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({
+      address: [rogueWallet],
+    }, [], {});
+
+    expectUpdatedCompliance(
+      updatedCompliancnceData[0],
+      {
+        address: testConstants.defaultAddress,
+        blocked: true,
+        riskScore,
+      },
+      mockProvider.provider,
+    );
+    expectUpdatedCompliance(
+      unchangedComplianceData[0],
+      {
+        address: rogueWallet,
+        blocked: testConstants.nonBlockedComplianceData.blocked,
+        riskScore: testConstants.nonBlockedComplianceData.riskScore,
+      },
+      mockProvider.provider,
+    );
+    expectGaugeStats({
+      activeAddresses: 0,
+      newAddresses: 0,
+      oldAddresses: 1,
+      addressesScreened: 1,
+      upserted: 1,
+      statusUpserted: 1,
+      activeAddressesWithStaleCompliance: 0,
+      inactiveAddressesWithStaleCompliance: 1,
+    },
+    mockProvider.provider,
+    );
+  });
 });
 
 async function setupComplianceData(

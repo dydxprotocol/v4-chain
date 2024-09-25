@@ -80,7 +80,9 @@ func AssetsKeepers(
 			stakingKeeper,
 		)
 		affiliatesKeeper, _ := createAffiliatesKeeper(stateStore, db, cdc, statsKeeper, transientStoreKey, msgSenderEnabled)
-		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper)
+		vaultKeeper, _ := createVaultKeeper(stateStore, db, cdc, transientStoreKey)
+		feetiersKeeper, _ := createFeeTiersKeeper(stateStore, statsKeeper, vaultKeeper, affiliatesKeeper, db, cdc)
+		revShareKeeper, _, _ := createRevShareKeeper(stateStore, db, cdc, affiliatesKeeper, feetiersKeeper)
 		marketMapKeeper, _ := createMarketMapKeeper(stateStore, db, cdc)
 		pricesKeeper, _, _, mockTimeProvider = createPricesKeeper(
 			stateStore,
