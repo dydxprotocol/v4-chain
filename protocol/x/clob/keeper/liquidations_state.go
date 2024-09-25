@@ -21,12 +21,12 @@ func (k Keeper) GetSubaccountLiquidationInfo(
 ) {
 	store := k.getSubaccountLiquidationInfoStore(ctx)
 
-	b := store.Get(subaccountId.ToStateKey())
-	if b == nil {
+	liqInfoBytes := store.Get(subaccountId.ToStateKey())
+	if liqInfoBytes == nil {
 		return liquidationInfo
 	}
 
-	k.cdc.MustUnmarshal(b, &liquidationInfo)
+	k.cdc.MustUnmarshal(liqInfoBytes, &liquidationInfo)
 	return liquidationInfo
 }
 
@@ -56,8 +56,8 @@ func (k Keeper) MustUpdateSubaccountPerpetualLiquidated(
 	)
 
 	store := k.getSubaccountLiquidationInfoStore(ctx)
-	b := k.cdc.MustMarshal(&subaccountLiquidationInfo)
-	store.Set(subaccountId.ToStateKey(), b)
+	liqInfoBytes := k.cdc.MustMarshal(&subaccountLiquidationInfo)
+	store.Set(subaccountId.ToStateKey(), liqInfoBytes)
 }
 
 // getSubaccountLiquidationInfoStore is an internal helper function for fetching the store
@@ -96,13 +96,13 @@ func (k Keeper) GetCumulativeInsuranceFundDelta(
 	}
 
 	store := k.getCumulativeInsuranceFundDeltaStore(ctx)
-	b := store.Get([]byte(insuranceFundName))
-	if b == nil {
+	insuranceFundDeltaBytes := store.Get([]byte(insuranceFundName))
+	if insuranceFundDeltaBytes == nil {
 		return big.NewInt(0), nil
 	}
 
 	var delta big.Int
-	delta.UnmarshalText(b)
+	delta.UnmarshalText(insuranceFundDeltaBytes)
 
 	return &delta, nil
 }
@@ -129,11 +129,11 @@ func (k Keeper) IncrementCumulativeInsuranceFundDelta(
 
 	fmt.Printf("newDelta: %s\n", newDelta.String())
 
-	b, err := newDelta.MarshalText()
+	insuranceFundDeltaBytes, err := newDelta.MarshalText()
 	if err != nil {
 		return err
 	}
 
-	store.Set([]byte(insuranceFundName), b)
+	store.Set([]byte(insuranceFundName), insuranceFundDeltaBytes)
 	return nil
 }
