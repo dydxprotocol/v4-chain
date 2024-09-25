@@ -10,7 +10,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
-	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -57,13 +56,6 @@ func migrateVaultQuotingParamsToVaultParams(ctx sdk.Context, k vaultkeeper.Keepe
 	}
 }
 
-func setDefaultTiersForAffiliates(ctx sdk.Context, k affiliateskeeper.Keeper) {
-	err := k.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
-	if err != nil {
-		panic(fmt.Sprintf("failed to set default tiers for affiliates: %s", err))
-	}
-}
-
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -80,13 +72,6 @@ func CreateUpgradeHandler(
 
 		// Migrate vault quoting params to vault params.
 		migrateVaultQuotingParamsToVaultParams(sdkCtx, vaultKeeper)
-
-		// Set default tiers for affiliates.
-		setDefaultTiersForAffiliates(sdkCtx, affiliatesKeeper)
-
-		// Set the module version to 1 to skip init genesis during the first upgrade.
-		vm[affiliatetypes.ModuleName] = 1
-
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
 }
