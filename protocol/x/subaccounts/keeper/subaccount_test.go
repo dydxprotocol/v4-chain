@@ -6070,7 +6070,7 @@ func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _, _ := keepertest.SubaccountsKeepers(
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _ := keepertest.SubaccountsKeepers(
 				t,
 				true,
 			)
