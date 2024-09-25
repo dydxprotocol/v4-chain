@@ -74,11 +74,11 @@ BEGIN
             event_end_time := clock_timestamp();
             event_latency := event_end_time - event_start_time;
 
-            -- Add the event latency to the rval output for this event
+            -- Add the event latency in ms to the rval output for this event
             rval[i] := jsonb_set(
                 rval[i],
                 '{latency}',
-                to_jsonb(EXTRACT(EPOCH FROM event_latency)) -- Convert interval to seconds as float
+                to_jsonb(EXTRACT(EPOCH FROM event_latency) * 1000)
             );
     END LOOP;
 
