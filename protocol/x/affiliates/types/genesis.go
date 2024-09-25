@@ -3,9 +3,7 @@ package types
 // DefaultGenesis returns the default stats genesis state.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		AffiliateTiers: AffiliateTiers{
-			Tiers: []AffiliateTiers_Tier{},
-		},
+		AffiliateTiers: DefaultAffiliateTiers,
 	}
 }
 
