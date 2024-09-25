@@ -581,7 +581,6 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	// constraint.
 	// Check if the updates satisfy the isolated perpetual constraints.
 	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
-		ctx,
 		settledUpdates,
 		perpetuals,
 	)

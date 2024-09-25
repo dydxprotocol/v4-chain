@@ -23,7 +23,6 @@ import (
 // These map to the updates and are used to indicate which of the updates
 // caused a failure, if any.
 func (k Keeper) checkIsolatedSubaccountConstraints(
-	ctx sdk.Context,
 	settledUpdates []SettledUpdate,
 	perpetuals []perptypes.Perpetual,
 ) (
