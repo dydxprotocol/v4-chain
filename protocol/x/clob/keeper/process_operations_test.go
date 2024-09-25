@@ -2346,8 +2346,6 @@ func setupProcessProposerOperationsTestCase(
 	// Assert Indexer messages
 	if tc.expectedError == nil && tc.expectedPanics == "" && len(tc.expectedMatches) > 0 {
 		setupNewMockEventManager(
-			t,
-			ctx,
 			mockIndexerEventManager,
 			tc.expectedMatches,
 			tc.rawOperations,
@@ -2595,8 +2593,6 @@ func runProcessProposerOperationsTestCase(
 }
 
 func setupNewMockEventManager(
-	t *testing.T,
-	ctx sdk.Context,
 	mockIndexerEventManager *mocks.IndexerEventManager,
 	matches []*MatchWithOrdersForTesting,
 	rawOperations []types.OperationRaw,

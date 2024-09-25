@@ -278,7 +278,6 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 
 			// Create all unique orderbooks.
 			createOrderbooks(
-				t,
 				ctx,
 				memclob,
 				3,

@@ -399,9 +399,7 @@ func TestPlacePerpetualLiquidation_Success(t *testing.T) {
 				tc.placedMatchableOrders,
 				&tc.order,
 				tc.expectedCollatCheck,
-				tc.expectedOrderStatus,
 				satypes.BaseQuantums(0),
-				nil,
 				map[int]map[satypes.SubaccountId]satypes.UpdateResult{},
 				constants.GetStatePosition_ZeroPositionSize,
 			)
@@ -530,9 +528,7 @@ func TestPlacePerpetualLiquidation_CollatCheckFailure(t *testing.T) {
 				tc.placedMatchableOrders,
 				&tc.order,
 				tc.expectedCollatCheck,
-				tc.expectedOrderStatus,
 				satypes.BaseQuantums(0),
-				nil,
 				tc.collateralizationCheckFailures,
 				constants.GetStatePosition_ZeroPositionSize,
 			)
