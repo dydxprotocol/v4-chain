@@ -160,13 +160,14 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 			"account asscoicated authenticator not registered in manager",
 			"type", authenticatorFromStore.Type,
 			"id", selectedAuthenticator,
+			"account", account.String(),
 		)
 
 		return authenticator.InitializedAuthenticator{},
 			errors.Wrapf(
 				sdkerrors.ErrLogic,
-				"authenticator id %d failed to initialize, authenticator type %s not registered in manager",
-				selectedAuthenticator, authenticatorFromStore.Type,
+				"authenticator id %d failed to initialize for account %s, authenticator type %s not registered in manager",
+				selectedAuthenticator, account.String(), authenticatorFromStore.Type,
 			)
 	}
 	// Ensure that initialization of each authenticator works as expected
@@ -177,16 +178,16 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 		return authenticator.InitializedAuthenticator{},
 			errors.Wrapf(
 				err,
-				"authenticator %d with type %s failed to initialize",
-				selectedAuthenticator, authenticatorFromStore.Type,
+				"authenticator %d with type %s failed to initialize for account %s",
+				selectedAuthenticator, authenticatorFromStore.Type, account.String(),
 			)
 	}
 	if initializedAuthenticator == nil {
 		return authenticator.InitializedAuthenticator{},
 			errors.Wrapf(
 				types.ErrInitializingAuthenticator,
-				"authenticator.Initialize returned nil for %d with type %s",
-				selectedAuthenticator, authenticatorFromStore.Type,
+				"authenticator.Initialize returned nil for %d with type %s for account %s",
+				selectedAuthenticator, authenticatorFromStore.Type, account.String(),
 			)
 	}
 
