@@ -1051,19 +1051,12 @@ func (k Keeper) GetAllRelevantPerpetuals(
 	sortedPerpIds := lib.GetSortedKeys[lib.Sortable[uint32]](perpIdsSet)
 
 	// Get all perpetual information from state.
-<<<<<<< HEAD
-	perpetuals := make(map[uint32]perptypes.PerpInfo, len(perpIds))
-	for perpId := range perpIds {
+	perpetuals := make(map[uint32]perptypes.PerpInfo, len(sortedPerpIds))
+	for _, perpId := range sortedPerpIds {
 		perpetual,
 			price,
 			liquidityTier,
 			err := k.perpetualsKeeper.GetPerpetualAndMarketPriceAndLiquidityTier(ctx, perpId)
-=======
-	ltCache := make(map[uint32]perptypes.LiquidityTier)
-	perpInfos := make(perptypes.PerpInfos, len(sortedPerpIds))
-	for _, perpId := range sortedPerpIds {
-		perpetual, price, err := k.perpetualsKeeper.GetPerpetualAndMarketPrice(ctx, perpId)
->>>>>>> cc1b7954 (Fix: deterministically fetch perp info from state (#2341))
 		if err != nil {
 			return nil, err
 		}

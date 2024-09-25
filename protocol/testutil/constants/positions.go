@@ -9,7 +9,6 @@ import (
 
 var (
 	// Perpetual Positions.
-<<<<<<< HEAD
 	Long_Perp_1BTC_PositiveFunding = satypes.PerpetualPosition{
 		PerpetualId:  0,
 		Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
@@ -74,105 +73,12 @@ var (
 		PerpetualId: 1,
 		Quantums:    dtypes.NewIntFromBigInt(BigNegMaxUint64()), // 18,446,744,070 ETH, -$55,340,232,210,000 notional.
 	}
-=======
-	Long_Perp_1BTC_PositiveFunding = *testutil.CreateSinglePerpetualPosition(
-		0,
-		big.NewInt(100_000_000), // 1 BTC
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	Short_Perp_1ETH_NegativeFunding = *testutil.CreateSinglePerpetualPosition(
-		1,
-		big.NewInt(-100_000_000), // 1 ETH
-		big.NewInt(-1),
-		big.NewInt(0),
-	)
-	PerpetualPosition_OneBTCLong = *testutil.CreateSinglePerpetualPosition(
-		0,
-		big.NewInt(100_000_000), // 1 BTC, $50,000 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_OneBTCShort = *testutil.CreateSinglePerpetualPosition(
-		0,
-		big.NewInt(-100_000_000), // 1 BTC, -$50,000 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_OneTenthBTCLong = *testutil.CreateSinglePerpetualPosition(
-		0,
-		big.NewInt(10_000_000), // 0.1 BTC, $5,000 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_OneTenthBTCShort = *testutil.CreateSinglePerpetualPosition(
-		0,
-		big.NewInt(-10_000_000), // 0.1 BTC, -$5,000 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_OneHundredthBTCLong = *testutil.CreateSinglePerpetualPosition(
-		0,
-		big.NewInt(1_000_000), // 0.01 BTC, $500 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_OneHundredthBTCShort = *testutil.CreateSinglePerpetualPosition(
-		0,
-		big.NewInt(-1_000_000), // 0.01 BTC, -$500 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_FourThousandthsBTCLong = *testutil.CreateSinglePerpetualPosition(
-		0,
-		big.NewInt(400_000), // 0.004 BTC, $200 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_FourThousandthsBTCShort = *testutil.CreateSinglePerpetualPosition(
-		0,
-		big.NewInt(-400_000), // 0.004 BTC, -$200 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_OneAndHalfBTCLong = *testutil.CreateSinglePerpetualPosition(
-		0,
-		big.NewInt(150_000_000), // 1.5 BTC, $75,000 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_OneTenthEthLong = *testutil.CreateSinglePerpetualPosition(
-		1,
-		big.NewInt(100_000_000), // 0.1 ETH, $300 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_OneTenthEthShort = *testutil.CreateSinglePerpetualPosition(
-		1,
-		big.NewInt(-100_000_000), // 0.1 ETH, -$300 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_MaxUint64EthLong = *testutil.CreateSinglePerpetualPosition(
-		1,
-		big.NewInt(0).SetUint64(math.MaxUint64), // 18,446,744,070 ETH, $55,340,232,210,000 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
-	PerpetualPosition_MaxUint64EthShort = *testutil.CreateSinglePerpetualPosition(
-		1,
-		BigNegMaxUint64(), // 18,446,744,070 ETH, -$55,340,232,210,000 notional.
-		big.NewInt(0),
-		big.NewInt(0),
-	)
 	// SOL positions
-	PerpetualPosition_OneSolLong = *testutil.CreateSinglePerpetualPosition(
-		2,
-		big.NewInt(100_000_000_000), // 1 SOL
-		big.NewInt(0),
-		big.NewInt(0),
-	)
->>>>>>> cc1b7954 (Fix: deterministically fetch perp info from state (#2341))
+	PerpetualPosition_OneSolLong = satypes.PerpetualPosition{
+		PerpetualId:  2,
+		Quantums:     dtypes.NewInt(100_000_000_000), // 1 SOL
+		FundingIndex: dtypes.NewInt(0),
+	}
 	// Long position for arbitrary isolated market
 	PerpetualPosition_OneISOLong = satypes.PerpetualPosition{
 		PerpetualId:  3,

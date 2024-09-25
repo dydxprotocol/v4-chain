@@ -18,6 +18,7 @@ import (
 	bank_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
@@ -5851,7 +5852,6 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 	}
 }
 
-<<<<<<< HEAD
 func TestIsValidStateTransitionForUndercollateralizedSubaccount_ZeroMarginRequirements(t *testing.T) {
 	tests := map[string]struct {
 		bigCurNetCollateral     *big.Int
@@ -5936,7 +5936,10 @@ func TestIsValidStateTransitionForUndercollateralizedSubaccount_ZeroMarginRequir
 					tc.bigNewMaintenanceMargin,
 				),
 			)
-=======
+		})
+	}
+}
+
 func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 	tests := map[string]struct {
 		// state
@@ -5951,7 +5954,7 @@ func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 		perpetualUpdates []types.PerpetualUpdate
 	}{
 		"Gas used is deterministic when erroring on gas usage": {
-			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(10_000_000_001)), // $10,000.000001
+			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(10_000_000_001)), // $10,000.000001
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 				constants.EthUsd_NoMarginRequirement,
@@ -5987,7 +5990,7 @@ func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _, _, _ := keepertest.SubaccountsKeepers(
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
 				t,
 				true,
 			)
@@ -6026,7 +6029,7 @@ func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 
 				require.PanicsWithValue(
 					t,
-					storetypes.ErrorOutOfGas{Descriptor: "ReadFlat"},
+					storetypes.ErrorOutOfGas{Descriptor: "ReadPerByte"},
 					func() {
 						_, _ = keeper.GetAllRelevantPerpetuals(ctxWithLimitedGas, []types.Update{update})
 					},
@@ -6044,7 +6047,6 @@ func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 					)
 				}
 			}
->>>>>>> cc1b7954 (Fix: deterministically fetch perp info from state (#2341))
 		})
 	}
 }
