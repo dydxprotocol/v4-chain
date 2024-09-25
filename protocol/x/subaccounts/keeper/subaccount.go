@@ -1027,29 +1027,32 @@ func (k Keeper) GetAllRelevantPerpetuals(
 	map[uint32]perptypes.PerpInfo,
 	error,
 ) {
-	subaccountIds := make(map[types.SubaccountId]struct{})
-	perpIds := make(map[uint32]struct{})
+	subaccountIdsSet := make(map[types.SubaccountId]struct{})
+	perpIdsSet := make(map[uint32]struct{})
 
 	// Add all relevant perpetuals in every update.
 	for _, update := range updates {
 		// If this subaccount has not been processed already, get all of its existing perpetuals.
-		if _, exists := subaccountIds[update.SubaccountId]; !exists {
+		if _, exists := subaccountIdsSet[update.SubaccountId]; !exists {
 			sa := k.GetSubaccount(ctx, update.SubaccountId)
 			for _, postition := range sa.PerpetualPositions {
-				perpIds[postition.PerpetualId] = struct{}{}
+				perpIdsSet[postition.PerpetualId] = struct{}{}
 			}
-			subaccountIds[update.SubaccountId] = struct{}{}
+			subaccountIdsSet[update.SubaccountId] = struct{}{}
 		}
 
 		// Add all perpetuals in the update.
 		for _, perpUpdate := range update.PerpetualUpdates {
-			perpIds[perpUpdate.GetId()] = struct{}{}
+			perpIdsSet[perpUpdate.GetId()] = struct{}{}
 		}
 	}
 
+	// Important: Sort the perpIds to ensure determinism!
+	sortedPerpIds := lib.GetSortedKeys[lib.Sortable[uint32]](perpIdsSet)
+
 	// Get all perpetual information from state.
-	perpetuals := make(map[uint32]perptypes.PerpInfo, len(perpIds))
-	for perpId := range perpIds {
+	perpetuals := make(map[uint32]perptypes.PerpInfo, len(sortedPerpIds))
+	for _, perpId := range sortedPerpIds {
 		perpetual,
 			price,
 			liquidityTier,
