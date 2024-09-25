@@ -178,7 +178,7 @@ func (k Keeper) ModifyPerpetual(
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.LiquidityTier,
 				perpetual.Params.DangerIndexPpm,
-				perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+				lib.UintToString(perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 			),
 		),
 	)

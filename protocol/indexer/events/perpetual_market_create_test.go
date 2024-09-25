@@ -24,7 +24,7 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		0,
 		perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		1000000,
-		0,
+		'0',
 	)
 	expectedPerpetualMarketCreateEventProto := &PerpetualMarketCreateEventV2{
 		Id:                        0,
@@ -39,7 +39,7 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		LiquidityTier:             0,
 		MarketType:                v1types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		DangerIndexPpm:            1000000,
-		IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: 0,
+		IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: '0',
 	}
 	require.Equal(t, expectedPerpetualMarketCreateEventProto, perpetualMarketCreateEvent)
 }
