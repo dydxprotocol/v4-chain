@@ -289,7 +289,7 @@ func CreateNClobPair(
 					perps[i].Params.LiquidityTier,
 					perps[i].Params.MarketType,
 					perps[i].Params.DangerIndexPpm,
-					perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+					lib.UintToString(perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 				),
 			),
 		).Return()

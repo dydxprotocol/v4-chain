@@ -1172,7 +1172,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 						constants.BtcUsd_100PercentMarginRequirement.Params.DangerIndexPpm,
-						constants.BtcUsd_100PercentMarginRequirement.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+						lib.UintToString(constants.BtcUsd_100PercentMarginRequirement.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 					),
 				),
 			).Once().Return()
@@ -1204,7 +1204,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.EthUsd_100PercentMarginRequirement.Params.LiquidityTier,
 						constants.EthUsd_100PercentMarginRequirement.Params.MarketType,
 						constants.EthUsd_100PercentMarginRequirement.Params.DangerIndexPpm,
-						constants.EthUsd_100PercentMarginRequirement.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+						lib.UintToString(constants.EthUsd_100PercentMarginRequirement.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 					),
 				),
 			).Once().Return()
@@ -2647,7 +2647,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							perpetuals[i].Params.LiquidityTier,
 							perpetuals[i].Params.MarketType,
 							perpetuals[i].Params.DangerIndexPpm,
-							perpetuals[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+							lib.UintToString(perpetuals[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Once().Return()
@@ -2787,7 +2787,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+				lib.UintToString(constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 			),
 		),
 	).Once().Return()
@@ -3874,7 +3874,7 @@ func TestGetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(t *testin
 						tc.perpetuals[0].Params.LiquidityTier,
 						tc.perpetuals[0].Params.MarketType,
 						tc.perpetuals[0].Params.DangerIndexPpm,
-						tc.perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+						lib.UintToString(tc.perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 					),
 				),
 			).Once().Return()
@@ -4268,7 +4268,7 @@ func TestGetBestPerpetualPositionToLiquidate(t *testing.T) {
 							tc.perpetuals[perpetualId].Params.LiquidityTier,
 							tc.perpetuals[perpetualId].Params.MarketType,
 							tc.perpetuals[perpetualId].Params.DangerIndexPpm,
-							tc.perpetuals[perpetualId].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+							lib.UintToString(tc.perpetuals[perpetualId].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Once().Return()

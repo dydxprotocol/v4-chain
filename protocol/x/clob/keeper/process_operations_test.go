@@ -2445,7 +2445,7 @@ func setupProcessProposerOperationsTestCase(
 						tc.perpetuals[perpetualId].Params.LiquidityTier,
 						tc.perpetuals[perpetualId].Params.MarketType,
 						tc.perpetuals[perpetualId].Params.DangerIndexPpm,
-						tc.perpetuals[perpetualId].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+						lib.UintToString(tc.perpetuals[perpetualId].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 					),
 				),
 			).Once().Return()

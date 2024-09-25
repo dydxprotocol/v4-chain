@@ -65,7 +65,7 @@ func TestCreateClobPair(t *testing.T) {
 							testPerp1.Params.LiquidityTier,
 							testPerp1.Params.MarketType,
 							testPerp1.Params.DangerIndexPpm,
-							testPerp1.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+							lib.UintToString(testPerp1.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Return()

@@ -9,6 +9,7 @@ import (
 
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
@@ -187,7 +188,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 						perpetual.Params.LiquidityTier,
 						perpetual.Params.MarketType,
 						perpetual.Params.DangerIndexPpm,
-						perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+						lib.UintToString(perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 					),
 				),
 			).Return()

@@ -714,7 +714,7 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.MarketType,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.DangerIndexPpm,
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+						lib.UintToString(constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 					),
 				),
 			).Once().Return()
@@ -749,7 +749,7 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.MarketType,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.DangerIndexPpm,
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+						lib.UintToString(constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 					),
 				),
 			).Once().Return()

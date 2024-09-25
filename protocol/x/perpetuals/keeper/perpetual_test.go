@@ -67,7 +67,7 @@ func assertPerpetualtUpdateEventsInIndexerBlock(
 			perp.Params.GetAtomicResolution(),
 			perp.Params.GetLiquidityTier(),
 			perp.Params.GetDangerIndexPpm(),
-			perp.Params.GetIsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock(),
+			lib.UintToString(perp.Params.GetIsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock()),
 			perp.GetYieldIndex(),
 		)
 
@@ -115,7 +115,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			LiquidityTier:    liquidityTier,
 			PerpYieldIndex:   defaultPerpYieldIndex,
 			DangerIndexPpm:   uint32(0),
-			IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: uint64(1000000),
+			IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: "1000000",
 		}
 
 		// Verify updatedp perpetual in store.
