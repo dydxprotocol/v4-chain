@@ -141,6 +141,13 @@ export class FundingHandler extends Handler<FundingEventMessage> {
           });
           stats.increment(`${config.SERVICE_NAME}.handle_funding_event.failure`, 1);
       }
+
+      // Handle latency from resultRow
+      stats.timing(
+        `${config.SERVICE_NAME}.handle_funding_event.sql_latency`,
+        Number(resultRow.latency),
+        this.generateTimingStatsOptions(),
+      );
     }
 
     await Promise.all(promises);

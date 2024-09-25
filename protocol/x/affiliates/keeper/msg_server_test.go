@@ -77,10 +77,12 @@ func TestMsgServer_RegisterAffiliate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			k, ms, ctx := setupMsgServer(t)
 			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			err := k.UpdateAffiliateTiers(sdkCtx, types.DefaultAffiliateTiers)
+			require.NoError(t, err)
 			if tc.setup != nil {
 				tc.setup(sdkCtx, k)
 			}
-			_, err := ms.RegisterAffiliate(ctx, tc.msg)
+			_, err = ms.RegisterAffiliate(ctx, tc.msg)
 			if tc.expectErr != nil {
 				require.ErrorIs(t, err, tc.expectErr)
 			} else {
@@ -128,6 +130,54 @@ func TestMsgServer_UpdateAffiliateTiers(t *testing.T) {
 				tiers, err := k.GetAllAffiliateTiers(sdkCtx)
 				require.NoError(t, err)
 				require.Equal(t, tc.msg.Tiers, tiers)
+			}
+		})
+	}
+}
+
+func TestMsgServer_UpdateAffiliateWhitelist(t *testing.T) {
+	whitelist := types.AffiliateWhitelist{
+		Tiers: []types.AffiliateWhitelist_Tier{
+			{
+				Addresses:        []string{constants.AliceAccAddress.String()},
+				TakerFeeSharePpm: 100_000, // 10%
+			},
+		},
+	}
+	testCases := []struct {
+		name      string
+		msg       *types.MsgUpdateAffiliateWhitelist
+		expectErr bool
+	}{
+		{
+			name: "Gov module updates whitelist",
+			msg: &types.MsgUpdateAffiliateWhitelist{
+				Authority: lib.GovModuleAddress.String(),
+				Whitelist: whitelist,
+			},
+		},
+		{
+			name: "non-gov module updates whitelist",
+			msg: &types.MsgUpdateAffiliateWhitelist{
+				Authority: constants.BobAccAddress.String(),
+				Whitelist: whitelist,
+			},
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			k, ms, ctx := setupMsgServer(t)
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
+			_, err := ms.UpdateAffiliateWhitelist(ctx, tc.msg)
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				whitelist, err := k.GetAffiliateWhitelist(sdkCtx)
+				require.NoError(t, err)
+				require.Equal(t, tc.msg.Whitelist, whitelist)
 			}
 		})
 	}

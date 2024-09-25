@@ -5,6 +5,11 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
+// AuthenticatorTxOptions
+type AuthenticatorTxOptions interface {
+	GetSelectedAuthenticators() []uint64
+}
+
 func RegisterCodec(cdc *codec.LegacyAmino) {}
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {

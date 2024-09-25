@@ -93,6 +93,7 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 
 		// Vault.
 		&vaulttypes.MsgDepositToMegavault{},
+		&vaulttypes.MsgWithdrawFromMegavault{},
 	}
 
 	for _, msg := range msgInterfacesToRegister {

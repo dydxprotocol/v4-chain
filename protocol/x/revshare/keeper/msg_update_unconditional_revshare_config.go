@@ -29,13 +29,17 @@ func (k msgServer) UpdateUnconditionalRevShareConfig(
 		return nil, err
 	}
 
-	affiliateTiers, err := k.affiliatesKeeper.GetAllAffiliateTiers(ctx)
-	if err != nil {
-		return nil, err
-	}
+	lowestTakerFee := k.feetiersKeeper.GetAffiliateRefereeLowestTakerFee(ctx)
+	lowestMakerFee := k.feetiersKeeper.GetLowestMakerFee(ctx)
 
 	marketMapperRevShareParams := k.GetMarketMapperRevenueShareParams(ctx)
-	if !k.ValidateRevShareSafety(affiliateTiers, msg.Config, marketMapperRevShareParams) {
+	if !k.ValidateRevShareSafety(
+		ctx,
+		msg.Config,
+		marketMapperRevShareParams,
+		lowestTakerFee,
+		lowestMakerFee,
+	) {
 		return nil, errorsmod.Wrapf(
 			types.ErrRevShareSafetyViolation,
 			"rev share safety violation",

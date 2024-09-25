@@ -949,19 +949,6 @@ func New(
 	)
 	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 
-	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
-		appCodec,
-		keys[revsharemoduletypes.StoreKey],
-		[]string{
-			lib.GovModuleAddress.String(),
-		},
-		app.AffiliatesKeeper,
-	)
-	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
-
-	// Set the revshare keeper in the affiliates keeper.
-	app.AffiliatesKeeper.SetRevShareKeeper(app.RevShareKeeper)
-
 	app.MarketMapKeeper = *marketmapmodulekeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[marketmapmoduletypes.StoreKey]),
 		appCodec,
@@ -969,6 +956,33 @@ func New(
 	)
 
 	marketmapModule := marketmapmodule.NewAppModule(appCodec, &app.MarketMapKeeper)
+
+	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
+		appCodec,
+		app.StatsKeeper,
+		app.AffiliatesKeeper,
+		keys[feetiersmoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
+	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
+
+	app.AffiliatesKeeper.SetFeetiersKeeper(app.FeeTiersKeeper)
+
+	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
+		appCodec,
+		keys[revsharemoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+		app.AffiliatesKeeper,
+		*app.FeeTiersKeeper,
+	)
+	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
+	app.FeeTiersKeeper.SetRevShareKeeper(app.RevShareKeeper)
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
@@ -1041,19 +1055,6 @@ func New(
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper)
 
-	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
-		appCodec,
-		app.StatsKeeper,
-		app.AffiliatesKeeper,
-		keys[feetiersmoduletypes.StoreKey],
-		// set the governance and delaymsg module accounts as the authority for conducting upgrades
-		[]string{
-			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
-		},
-	)
-	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
-
 	app.VestKeeper = *vestmodulekeeper.NewKeeper(
 		appCodec,
 		keys[vestmoduletypes.StoreKey],
@@ -1091,7 +1092,6 @@ func New(
 		app.BankKeeper,
 		app.PerpetualsKeeper,
 		app.BlockTimeKeeper,
-		app.RevShareKeeper,
 		app.IndexerEventManager,
 		app.FullNodeStreamingManager,
 	)
@@ -1126,6 +1126,7 @@ func New(
 		app.PricesKeeper,
 		app.StatsKeeper,
 		app.RewardsKeeper,
+		app.AffiliatesKeeper,
 		app.IndexerEventManager,
 		app.FullNodeStreamingManager,
 		txConfig.TxDecoder(),
@@ -1178,12 +1179,15 @@ func New(
 	app.VaultKeeper = *vaultmodulekeeper.NewKeeper(
 		appCodec,
 		keys[vaultmoduletypes.StoreKey],
+		app.AssetsKeeper,
+		app.BankKeeper,
 		app.ClobKeeper,
 		app.DelayMsgKeeper,
 		app.PerpetualsKeeper,
 		app.PricesKeeper,
 		app.SendingKeeper,
 		app.SubaccountsKeeper,
+		app.IndexerEventManager,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),
@@ -1202,6 +1206,7 @@ func New(
 		app.ClobKeeper,
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
+		app.VaultKeeper,
 	)
 	listingModule := listingmodule.NewAppModule(
 		appCodec,
@@ -1210,6 +1215,7 @@ func New(
 		app.ClobKeeper,
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
+		app.VaultKeeper,
 	)
 
 	// Initialize authenticators
@@ -1221,6 +1227,9 @@ func New(
 		appCodec,
 		keys[accountplusmoduletypes.StoreKey],
 		app.AuthenticatorManager,
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
 	)
 	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 
@@ -1943,6 +1952,11 @@ func (app *App) RegisterNodeService(clientCtx client.Context, cfg config.Config)
 // SimulationManager always returns nil.
 func (app *App) SimulationManager() *module.SimulationManager {
 	return nil
+}
+
+// GetKVStoreKey gets KV Store keys.
+func (app *App) GetKVStoreKey() map[string]*storetypes.KVStoreKey {
+	return app.keys
 }
 
 // buildAnteHandler builds an AnteHandler object configured for the app.

@@ -1496,6 +1496,13 @@
         "type": "object",
         "additionalProperties": false
       },
+      "PnlTickInterval": {
+        "enum": [
+          "hour",
+          "day"
+        ],
+        "type": "string"
+      },
       "VaultHistoricalPnl": {
         "properties": {
           "ticker": {
@@ -3435,7 +3442,16 @@
           }
         },
         "security": [],
-        "parameters": []
+        "parameters": [
+          {
+            "in": "query",
+            "name": "resolution",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PnlTickInterval"
+            }
+          }
+        ]
       }
     },
     "/vault/v1/vaults/historicalPnl": {
@@ -3454,7 +3470,16 @@
           }
         },
         "security": [],
-        "parameters": []
+        "parameters": [
+          {
+            "in": "query",
+            "name": "resolution",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/PnlTickInterval"
+            }
+          }
+        ]
       }
     },
     "/vault/v1/megavault/positions": {

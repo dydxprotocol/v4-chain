@@ -31,19 +31,16 @@ type VaultKeeper interface {
 	// Shares.
 	GetTotalShares(
 		ctx sdk.Context,
-		vaultId VaultId,
-	) (val NumShares, exists bool)
+	) (val NumShares)
 	SetTotalShares(
 		ctx sdk.Context,
-		vaultId VaultId,
 		totalShares NumShares,
 	) error
 	MintShares(
 		ctx sdk.Context,
-		vaultId VaultId,
 		owner string,
 		quantumsToDeposit *big.Int,
-	) error
+	) (*big.Int, error)
 
 	// Vault info.
 	GetVaultEquity(

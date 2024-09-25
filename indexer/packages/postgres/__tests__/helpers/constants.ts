@@ -565,7 +565,7 @@ export const defaultFill: FillCreateObject = {
   createdAtHeight: createdHeight,
   clientMetadata: '0',
   fee: '1.1',
-  affiliateRevShare: '1.1',
+  affiliateRevShare: '1.10',
 };
 
 export const isolatedMarketFill: FillCreateObject = {

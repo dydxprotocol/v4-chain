@@ -4,7 +4,28 @@
   "app_state": {
     "affiliates": {
       "affiliate_tiers": {
-        "tiers": []
+        "tiers": [
+          {
+            "req_referred_volume_quote_quantums": "0",
+            "req_staked_whole_coins": 0,
+            "taker_fee_share_ppm": 50000
+          },
+          {
+            "req_referred_volume_quote_quantums": "1000000000000",
+            "req_staked_whole_coins": 200,
+            "taker_fee_share_ppm": 100000
+          },
+          {
+            "req_referred_volume_quote_quantums": "5000000000000",
+            "req_staked_whole_coins": 1000,
+            "taker_fee_share_ppm": 125000
+          },
+          {
+            "req_referred_volume_quote_quantums": "25000000000000",
+            "req_staked_whole_coins": 5000,
+            "taker_fee_share_ppm": 150000
+          }
+        ]
       }
     },
     "assets": {
@@ -869,7 +890,12 @@
       }
     },
     "listing": {
-      "hard_cap_for_markets": 0
+      "hard_cap_for_markets": 500,
+      "listing_vault_deposit_params": {
+        "main_vault_deposit_amount": "0",
+        "new_vault_deposit_amount": "10000000000",
+        "num_blocks_to_lock_shares": 2592000
+      }
     },
     "marketmap": {
       "last_updated": "0",
@@ -3926,7 +3952,22 @@
       }
     },
     "subaccounts": {
-      "subaccounts": []
+      "subaccounts": [
+        {
+          "asset_positions": [
+            {
+              "asset_id": 0,
+              "index": 0,
+              "quantums": "1000000000000"
+            }
+          ],
+          "id": {
+            "number": 0,
+            "owner": "dydx18tkxrnrkqc2t0lr3zxr5g6a4hdvqksylxqje4r"
+          },
+          "margin_enabled": true
+        }
+      ]
     },
     "transfer": {
       "denom_traces": [],
@@ -3984,7 +4025,7 @@
       ]
     }
   },
-  "app_version": "5.2.1-119-g77487f61",
+  "app_version": "5.2.1-129-g14ed93f0",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

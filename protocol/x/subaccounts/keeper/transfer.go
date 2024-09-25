@@ -268,7 +268,8 @@ func (k Keeper) DistributeFees(
 		totalTakerFeeRevShareQuantums = value
 	}
 	totalNetFeeRevShareQuantums := big.NewInt(0)
-	if value, ok := revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_NET_FEE]; ok {
+	if value, ok :=
+		revSharesForFill.FeeSourceToQuoteQuantums[revsharetypes.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE]; ok {
 		totalNetFeeRevShareQuantums = value
 	}
 

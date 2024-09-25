@@ -22,6 +22,8 @@ NATIVE_TOKEN="adv4tnt" # public testnet token
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT=1000000000
+MEGAVAULT_MAIN_VAULT_ACCOUNT_ADDR="dydx18tkxrnrkqc2t0lr3zxr5g6a4hdvqksylxqje4r"
+DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE=1000000000000 # 1 million USDC
 NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
 COIN_NAME="dYdX V4 Testnet Token"
 # Each testnet validator has 1 million whole coins of native token.
@@ -1824,6 +1826,10 @@ function edit_genesis() {
 		total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT))
 		acct_idx=$(($acct_idx + 1))
 	done
+	# Update subaccounts module for megavault main vault account.
+	add_subaccount "$GENESIS" "$acct_idx" "$MEGAVAULT_MAIN_VAULT_ACCOUNT_ADDR" "$DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE"
+	total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE))
+	acct_idx=$(($acct_idx + 1))
 
 	next_bank_idx=0
 	if (( total_accounts_quote_balance > 0 )); then
@@ -2251,6 +2257,14 @@ function edit_genesis() {
 	update_ica_host_params
 	# ICA Controller Params
 	update_ica_controller_params
+
+	# Listing
+	# Set hard cap for markets
+	dasel put -t int -f "$GENESIS" ".app_state.listing.hard_cap_for_markets" -v '500'
+	# Set default listing vault deposit params
+	dasel put -t string -f "$GENESIS" ".app_state.listing.listing_vault_deposit_params.new_vault_deposit_amount" -v "10000000000" # 10_000 USDC
+	dasel put -t string -f "$GENESIS" ".app_state.listing.listing_vault_deposit_params.main_vault_deposit_amount" -v "0" # 0 USDC
+	dasel put -t int -f "$GENESIS" ".app_state.listing.listing_vault_deposit_params.num_blocks_to_lock_shares" -v '2592000' # 30 days
 
 	# Vaults
 	# Set default quoting params.

@@ -2,7 +2,6 @@ import {
   dbHelpers,
   testConstants,
   testMocks,
-  PnlTicksCreateObject,
   PnlTicksTable,
   perpetualMarketRefresher,
   BlockTable,
@@ -12,17 +11,29 @@ import {
   PerpetualPositionTable,
   AssetPositionTable,
   FundingIndexUpdatesTable,
+  PnlTicksFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
-import { PnlTicksResponseObject, RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
+import { RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
 import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
 import config from '../../../../src/config';
+import { DateTime } from 'luxon';
+import Big from 'big.js';
 
 describe('vault-controller#V4', () => {
   const experimentVaultsPrevVal: string = config.EXPERIMENT_VAULTS;
   const experimentVaultMarketsPrevVal: string = config.EXPERIMENT_VAULT_MARKETS;
-  const blockHeight: string = '3';
+  const latestBlockHeight: string = '25';
+  const currentBlockHeight: string = '7';
+  const twoHourBlockHeight: string = '5';
+  const twoDayBlockHeight: string = '3';
+  const currentTime: DateTime = DateTime.utc().startOf('day').minus({ hour: 5 });
+  const latestTime: DateTime = currentTime.plus({ second: 5 });
+  const twoHoursAgo: DateTime = currentTime.minus({ hour: 2 });
+  const twoDaysAgo: DateTime = currentTime.minus({ day: 2 });
   const initialFundingIndex: string = '10000';
+  const vault1Equity: number = 159500;
+  const vault2Equity: number = 10000;
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -39,11 +50,49 @@ describe('vault-controller#V4', () => {
       await testMocks.seedData();
       await perpetualMarketRefresher.updatePerpetualMarkets();
       await liquidityTierRefresher.updateLiquidityTiers();
-      await BlockTable.create({
-        ...testConstants.defaultBlock,
-        blockHeight,
-      });
+      await Promise.all([
+        BlockTable.create({
+          ...testConstants.defaultBlock,
+          time: twoDaysAgo.toISO(),
+          blockHeight: twoDayBlockHeight,
+        }),
+        BlockTable.create({
+          ...testConstants.defaultBlock,
+          time: twoHoursAgo.toISO(),
+          blockHeight: twoHourBlockHeight,
+        }),
+        BlockTable.create({
+          ...testConstants.defaultBlock,
+          time: currentTime.toISO(),
+          blockHeight: currentBlockHeight,
+        }),
+        BlockTable.create({
+          ...testConstants.defaultBlock,
+          time: latestTime.toISO(),
+          blockHeight: latestBlockHeight,
+        }),
+      ]);
       await SubaccountTable.create(testConstants.vaultSubaccount);
+      await Promise.all([
+        PerpetualPositionTable.create(
+          testConstants.defaultPerpetualPosition,
+        ),
+        AssetPositionTable.upsert(testConstants.defaultAssetPosition),
+        AssetPositionTable.upsert({
+          ...testConstants.defaultAssetPosition,
+          subaccountId: testConstants.vaultSubaccountId,
+        }),
+        FundingIndexUpdatesTable.create({
+          ...testConstants.defaultFundingIndexUpdate,
+          fundingIndex: initialFundingIndex,
+          effectiveAtHeight: testConstants.createdHeight,
+        }),
+        FundingIndexUpdatesTable.create({
+          ...testConstants.defaultFundingIndexUpdate,
+          eventId: testConstants.defaultTendermintEventId2,
+          effectiveAtHeight: twoDayBlockHeight,
+        }),
+      ]);
     });
 
     afterEach(async () => {
@@ -64,54 +113,48 @@ describe('vault-controller#V4', () => {
       expect(response.body.megavaultPnl).toEqual([]);
     });
 
-    it('Get /megavault/historicalPnl with single vault subaccount', async () => {
-      const createdAt: string = '2000-05-25T00:00:00.000Z';
-      const pnlTick2: PnlTicksCreateObject = {
-        ...testConstants.defaultPnlTick,
-        createdAt,
-        blockHeight,
+    it.each([
+      ['no resolution', '', [1, 2]],
+      ['daily resolution', '?resolution=day', [1, 2]],
+      ['hourly resolution', '?resolution=hour', [1, 2, 3]],
+    ])('Get /megavault/historicalPnl with single vault subaccount (%s)', async (
+      _name: string,
+      queryParam: string,
+      expectedTicksIndex: number[],
+    ) => {
+      const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
+      const finalTick: PnlTicksFromDatabase = {
+        ...createdPnlTicks[expectedTicksIndex[expectedTicksIndex.length - 1]],
+        equity: Big(vault1Equity).toFixed(),
+        blockHeight: latestBlockHeight,
+        blockTime: latestTime.toISO(),
+        createdAt: latestTime.toISO(),
       };
-      await Promise.all([
-        PnlTicksTable.create(testConstants.defaultPnlTick),
-        PnlTicksTable.create(pnlTick2),
-      ]);
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: '/v4/vault/v1/megavault/historicalPnl',
+        path: `/v4/vault/v1/megavault/historicalPnl${queryParam}`,
       });
 
-      const expectedPnlTickResponse: PnlTicksResponseObject = {
-        ...testConstants.defaultPnlTick,
-        id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
-          testConstants.defaultPnlTick.createdAt,
-        ),
-      };
-
-      const expectedPnlTick2Response: any = {
-        ...testConstants.defaultPnlTick,
-        createdAt,
-        blockHeight,
-        id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
-          createdAt,
-        ),
-      };
-
+      expect(response.body.megavaultPnl).toHaveLength(expectedTicksIndex.length + 1);
       expect(response.body.megavaultPnl).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...expectedPnlTick2Response,
-          }),
-          expect.objectContaining({
-            ...expectedPnlTickResponse,
-          }),
-        ]),
+        expect.arrayContaining(
+          expectedTicksIndex.map((index: number) => {
+            return expect.objectContaining(createdPnlTicks[index]);
+          }).concat([finalTick]),
+        ),
       );
     });
 
-    it('Get /megavault/historicalPnl with 2 vault subaccounts', async () => {
+    it.each([
+      ['no resolution', '', [1, 2]],
+      ['daily resolution', '?resolution=day', [1, 2]],
+      ['hourly resolution', '?resolution=hour', [1, 2, 3]],
+    ])('Get /megavault/historicalPnl with 2 vault subaccounts (%s)', async (
+      _name: string,
+      queryParam: string,
+      expectedTicksIndex: number[],
+    ) => {
       config.EXPERIMENT_VAULTS = [
         testConstants.defaultPnlTick.subaccountId,
         testConstants.vaultSubaccountId,
@@ -121,39 +164,37 @@ describe('vault-controller#V4', () => {
         testConstants.defaultPerpetualMarket2.clobPairId,
       ].join(',');
 
-      const pnlTick2: PnlTicksCreateObject = {
-        ...testConstants.defaultPnlTick,
-        subaccountId: testConstants.vaultSubaccountId,
-      };
-      await Promise.all([
-        PnlTicksTable.create(testConstants.defaultPnlTick),
-        PnlTicksTable.create(pnlTick2),
-      ]);
-
+      const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: '/v4/vault/v1/megavault/historicalPnl',
+        path: `/v4/vault/v1/megavault/historicalPnl${queryParam}`,
       });
 
-      const expectedPnlTickResponse: any = {
-        // id and subaccountId don't matter
-        equity: (parseFloat(testConstants.defaultPnlTick.equity) +
-            parseFloat(pnlTick2.equity)).toString(),
-        totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) +
-            parseFloat(pnlTick2.totalPnl)).toString(),
-        netTransfers: (parseFloat(testConstants.defaultPnlTick.netTransfers) +
-            parseFloat(pnlTick2.netTransfers)).toString(),
-        createdAt: testConstants.defaultPnlTick.createdAt,
-        blockHeight: testConstants.defaultPnlTick.blockHeight,
-        blockTime: testConstants.defaultPnlTick.blockTime,
+      const expectedPnlTickBase: any = {
+        equity: (parseFloat(testConstants.defaultPnlTick.equity) * 2).toString(),
+        totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) * 2).toString(),
+        netTransfers: (parseFloat(testConstants.defaultPnlTick.netTransfers) * 2).toString(),
+      };
+      const finalTick: PnlTicksFromDatabase = {
+        ...expectedPnlTickBase,
+        equity: Big(vault1Equity).add(vault2Equity).toFixed(),
+        blockHeight: latestBlockHeight,
+        blockTime: latestTime.toISO(),
+        createdAt: latestTime.toISO(),
       };
 
+      expect(response.body.megavaultPnl).toHaveLength(expectedTicksIndex.length + 1);
       expect(response.body.megavaultPnl).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...expectedPnlTickResponse,
-          }),
-        ]),
+        expect.arrayContaining(
+          expectedTicksIndex.map((index: number) => {
+            return expect.objectContaining({
+              ...expectedPnlTickBase,
+              createdAt: createdPnlTicks[index].createdAt,
+              blockHeight: createdPnlTicks[index].blockHeight,
+              blockTime: createdPnlTicks[index].blockTime,
+            });
+          }).concat([expect.objectContaining(finalTick)]),
+        ),
       );
     });
 
@@ -169,57 +210,51 @@ describe('vault-controller#V4', () => {
       expect(response.body.vaultsPnl).toEqual([]);
     });
 
-    it('Get /vaults/historicalPnl with single vault subaccount', async () => {
-      const createdAt: string = '2000-05-25T00:00:00.000Z';
-      const pnlTick2: PnlTicksCreateObject = {
-        ...testConstants.defaultPnlTick,
-        createdAt,
-        blockHeight,
+    it.each([
+      ['no resolution', '', [1, 2]],
+      ['daily resolution', '?resolution=day', [1, 2]],
+      ['hourly resolution', '?resolution=hour', [1, 2, 3]],
+    ])('Get /vaults/historicalPnl with single vault subaccount (%s)', async (
+      _name: string,
+      queryParam: string,
+      expectedTicksIndex: number[],
+    ) => {
+      const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
+      const finalTick: PnlTicksFromDatabase = {
+        ...createdPnlTicks[expectedTicksIndex[expectedTicksIndex.length - 1]],
+        equity: Big(vault1Equity).toFixed(),
+        blockHeight: latestBlockHeight,
+        blockTime: latestTime.toISO(),
+        createdAt: latestTime.toISO(),
       };
-      await Promise.all([
-        PnlTicksTable.create(testConstants.defaultPnlTick),
-        PnlTicksTable.create(pnlTick2),
-      ]);
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: '/v4/vault/v1/vaults/historicalPnl',
+        path: `/v4/vault/v1/vaults/historicalPnl${queryParam}`,
       });
 
-      const expectedPnlTickResponse: PnlTicksResponseObject = {
-        ...testConstants.defaultPnlTick,
-        id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
-          testConstants.defaultPnlTick.createdAt,
-        ),
-      };
-
-      const expectedPnlTick2Response: any = {
-        ...testConstants.defaultPnlTick,
-        createdAt,
-        blockHeight,
-        id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
-          createdAt,
-        ),
-      };
-
       expect(response.body.vaultsPnl).toHaveLength(1);
-
+      expect(response.body.vaultsPnl[0].historicalPnl).toHaveLength(expectedTicksIndex.length + 1);
       expect(response.body.vaultsPnl[0]).toEqual({
         ticker: testConstants.defaultPerpetualMarket.ticker,
-        historicalPnl: expect.arrayContaining([
-          expect.objectContaining({
-            ...expectedPnlTick2Response,
-          }),
-          expect.objectContaining({
-            ...expectedPnlTickResponse,
-          }),
-        ]),
+        historicalPnl: expect.arrayContaining(
+          expectedTicksIndex.map((index: number) => {
+            return expect.objectContaining(createdPnlTicks[index]);
+          }).concat(finalTick),
+        ),
       });
     });
 
-    it('Get /vaults/historicalPnl with 2 vault subaccounts', async () => {
+    it.each([
+      ['no resolution', '', [1, 2], [5, 6]],
+      ['daily resolution', '?resolution=day', [1, 2], [5, 6]],
+      ['hourly resolution', '?resolution=hour', [1, 2, 3], [5, 6, 7]],
+    ])('Get /vaults/historicalPnl with 2 vault subaccounts (%s)', async (
+      _name: string,
+      queryParam: string,
+      expectedTicksIndex1: number[],
+      expectedTicksIndex2: number[],
+    ) => {
       config.EXPERIMENT_VAULTS = [
         testConstants.defaultPnlTick.subaccountId,
         testConstants.vaultSubaccountId,
@@ -229,44 +264,39 @@ describe('vault-controller#V4', () => {
         testConstants.defaultPerpetualMarket2.clobPairId,
       ].join(',');
 
-      const pnlTick2: PnlTicksCreateObject = {
-        ...testConstants.defaultPnlTick,
-        subaccountId: testConstants.vaultSubaccountId,
+      const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
+      const finalTick1: PnlTicksFromDatabase = {
+        ...createdPnlTicks[expectedTicksIndex1[expectedTicksIndex1.length - 1]],
+        equity: Big(vault1Equity).toFixed(),
+        blockHeight: latestBlockHeight,
+        blockTime: latestTime.toISO(),
+        createdAt: latestTime.toISO(),
       };
-      await Promise.all([
-        PnlTicksTable.create(testConstants.defaultPnlTick),
-        PnlTicksTable.create(pnlTick2),
-      ]);
+      const finalTick2: PnlTicksFromDatabase = {
+        ...createdPnlTicks[expectedTicksIndex2[expectedTicksIndex2.length - 1]],
+        equity: Big(vault2Equity).toFixed(),
+        blockHeight: latestBlockHeight,
+        blockTime: latestTime.toISO(),
+        createdAt: latestTime.toISO(),
+      };
 
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: '/v4/vault/v1/vaults/historicalPnl',
+        path: `/v4/vault/v1/vaults/historicalPnl${queryParam}`,
       });
 
       const expectedVaultPnl: VaultHistoricalPnl = {
         ticker: testConstants.defaultPerpetualMarket.ticker,
-        historicalPnl: [
-          {
-            ...testConstants.defaultPnlTick,
-            id: PnlTicksTable.uuid(
-              testConstants.defaultPnlTick.subaccountId,
-              testConstants.defaultPnlTick.createdAt,
-            ),
-          },
-        ],
+        historicalPnl: expectedTicksIndex1.map((index: number) => {
+          return createdPnlTicks[index];
+        }).concat(finalTick1),
       };
 
       const expectedVaultPnl2: VaultHistoricalPnl = {
         ticker: testConstants.defaultPerpetualMarket2.ticker,
-        historicalPnl: [
-          {
-            ...pnlTick2,
-            id: PnlTicksTable.uuid(
-              pnlTick2.subaccountId,
-              pnlTick2.createdAt,
-            ),
-          },
-        ],
+        historicalPnl: expectedTicksIndex2.map((index: number) => {
+          return createdPnlTicks[index];
+        }).concat(finalTick2),
       };
 
       expect(response.body.vaultsPnl).toEqual(
@@ -296,23 +326,6 @@ describe('vault-controller#V4', () => {
     });
 
     it('Get /megavault/positions with 1 vault subaccount', async () => {
-      await Promise.all([
-        PerpetualPositionTable.create(
-          testConstants.defaultPerpetualPosition,
-        ),
-        AssetPositionTable.upsert(testConstants.defaultAssetPosition),
-        FundingIndexUpdatesTable.create({
-          ...testConstants.defaultFundingIndexUpdate,
-          fundingIndex: initialFundingIndex,
-          effectiveAtHeight: testConstants.createdHeight,
-        }),
-        FundingIndexUpdatesTable.create({
-          ...testConstants.defaultFundingIndexUpdate,
-          eventId: testConstants.defaultTendermintEventId2,
-          effectiveAtHeight: blockHeight,
-        }),
-      ]);
-
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: '/v4/vault/v1/megavault/positions',
@@ -370,27 +383,6 @@ describe('vault-controller#V4', () => {
         testConstants.defaultPerpetualMarket2.clobPairId,
       ].join(',');
 
-      await Promise.all([
-        PerpetualPositionTable.create(
-          testConstants.defaultPerpetualPosition,
-        ),
-        AssetPositionTable.upsert(testConstants.defaultAssetPosition),
-        AssetPositionTable.upsert({
-          ...testConstants.defaultAssetPosition,
-          subaccountId: testConstants.vaultSubaccountId,
-        }),
-        FundingIndexUpdatesTable.create({
-          ...testConstants.defaultFundingIndexUpdate,
-          fundingIndex: initialFundingIndex,
-          effectiveAtHeight: testConstants.createdHeight,
-        }),
-        FundingIndexUpdatesTable.create({
-          ...testConstants.defaultFundingIndexUpdate,
-          eventId: testConstants.defaultTendermintEventId2,
-          effectiveAtHeight: blockHeight,
-        }),
-      ]);
-
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: '/v4/vault/v1/megavault/positions',
@@ -446,4 +438,53 @@ describe('vault-controller#V4', () => {
       });
     });
   });
+
+  async function createPnlTicks(): Promise<PnlTicksFromDatabase[]> {
+    return Promise.all([
+      PnlTicksTable.create(testConstants.defaultPnlTick),
+      PnlTicksTable.create({
+        ...testConstants.defaultPnlTick,
+        blockTime: twoDaysAgo.toISO(),
+        createdAt: twoDaysAgo.toISO(),
+        blockHeight: twoDayBlockHeight,
+      }),
+      PnlTicksTable.create({
+        ...testConstants.defaultPnlTick,
+        blockTime: twoHoursAgo.toISO(),
+        createdAt: twoHoursAgo.toISO(),
+        blockHeight: twoHourBlockHeight,
+      }),
+      PnlTicksTable.create({
+        ...testConstants.defaultPnlTick,
+        blockTime: currentTime.toISO(),
+        createdAt: currentTime.toISO(),
+        blockHeight: currentBlockHeight,
+      }),
+      PnlTicksTable.create({
+        ...testConstants.defaultPnlTick,
+        subaccountId: testConstants.vaultSubaccountId,
+      }),
+      PnlTicksTable.create({
+        ...testConstants.defaultPnlTick,
+        subaccountId: testConstants.vaultSubaccountId,
+        blockTime: twoDaysAgo.toISO(),
+        createdAt: twoDaysAgo.toISO(),
+        blockHeight: twoDayBlockHeight,
+      }),
+      PnlTicksTable.create({
+        ...testConstants.defaultPnlTick,
+        subaccountId: testConstants.vaultSubaccountId,
+        blockTime: twoHoursAgo.toISO(),
+        createdAt: twoHoursAgo.toISO(),
+        blockHeight: twoHourBlockHeight,
+      }),
+      PnlTicksTable.create({
+        ...testConstants.defaultPnlTick,
+        subaccountId: testConstants.vaultSubaccountId,
+        blockTime: currentTime.toISO(),
+        createdAt: currentTime.toISO(),
+        blockHeight: currentBlockHeight,
+      }),
+    ]);
+  }
 });

@@ -1,5 +1,6 @@
 import { ComplianceDataFromDatabase, ComplianceProvider } from '../../src/types';
 import * as ComplianceDataTable from '../../src/stores/compliance-table';
+import * as WalletTable from '../../src/stores/wallet-table';
 import {
   clearData,
   migrate,
@@ -9,6 +10,7 @@ import {
   blockedComplianceData,
   blockedAddress,
   nonBlockedComplianceData,
+  defaultWallet,
 } from '../helpers/constants';
 import { DateTime } from 'luxon';
 
@@ -137,6 +139,29 @@ describe('Compliance data store', () => {
 
     expect(complianceData).toBeDefined();
     expect(complianceData).toEqual(blockedComplianceData);
+  });
+
+  it('Successfully filters by onlyDydxAddressWithDeposit', async () => {
+    // Create two compliance entries, one with a corresponding wallet entry and another without
+    await Promise.all([
+      WalletTable.create(defaultWallet),
+      ComplianceDataTable.create(nonBlockedComplianceData),
+      ComplianceDataTable.create({
+        ...nonBlockedComplianceData,
+        address: 'not_dydx_address',
+      }),
+    ]);
+
+    const complianceData: ComplianceDataFromDatabase[] = await ComplianceDataTable.findAll(
+      {
+        addressInWalletsTable: true,
+      },
+      [],
+      { readReplica: true },
+    );
+
+    expect(complianceData.length).toEqual(1);
+    expect(complianceData[0]).toEqual(nonBlockedComplianceData);
   });
 
   it('Unable finds compliance data', async () => {

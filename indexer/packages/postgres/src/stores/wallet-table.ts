@@ -1,7 +1,8 @@
+import Knex from 'knex';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
-import { knexReadReplica } from '../helpers/knex';
+import { knexPrimary } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import WalletModel from '../models/wallet-model';
@@ -115,18 +116,21 @@ export async function findById(
  * Calculates the total volume in a given time window for each address and adds the values to the
  * existing totalVolume values.
  *
- * @param windowStartTs - The start timestamp of the time window (exclusive).
- * @param windowEndTs - The end timestamp of the time window (inclusive).
+ * @async
+ * @function updateTotalVolume
+ * @param {string} windowStartTs - The exclusive start timestamp for filtering fills.
+ * @param {string} windowEndTs - The inclusive end timestamp for filtering fill.
+ * @param {number} [txId] - Optional transaction ID.
+ * @returns {Promise<void>}
  */
 export async function updateTotalVolume(
   windowStartTs: string,
   windowEndTs: string,
+  txId: number | undefined = undefined,
 ) : Promise<void> {
+  const transaction: Knex.Transaction | undefined = Transaction.get(txId);
 
-  await knexReadReplica.getConnection().raw(
-    `
-    BEGIN;
-
+  const query = `
     WITH fills_total AS (
       -- Step 1: Calculate total volume for each subaccountId
       SELECT "subaccountId", SUM("price" * "size") AS "totalVolume"
@@ -152,14 +156,9 @@ export async function updateTotalVolume(
     SET "totalVolume" = COALESCE(wallets."totalVolume", 0) + av."totalVolume"
     FROM address_volume av
     WHERE wallets."address" = av."address";
+    `;
 
-    -- Step 5: Upsert new totalVolumeUpdateTime to persistent_cache table
-    INSERT INTO persistent_cache (key, value)
-    VALUES ('totalVolumeUpdateTime', '${windowEndTs}')
-    ON CONFLICT (key) 
-    DO UPDATE SET value = EXCLUDED.value;
-
-    COMMIT;
-    `,
-  );
+  return transaction
+    ? knexPrimary.raw(query).transacting(transaction)
+    : knexPrimary.raw(query);
 }

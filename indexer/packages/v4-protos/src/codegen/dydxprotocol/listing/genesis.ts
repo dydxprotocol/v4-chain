@@ -1,3 +1,4 @@
+import { ListingVaultDepositParams, ListingVaultDepositParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** GenesisState defines `x/listing`'s genesis state. */
@@ -8,6 +9,9 @@ export interface GenesisState {
    * listed
    */
   hardCapForMarkets: number;
+  /** listing_vault_deposit_params is the params for PML megavault deposits */
+
+  listingVaultDepositParams?: ListingVaultDepositParams;
 }
 /** GenesisState defines `x/listing`'s genesis state. */
 
@@ -17,11 +21,15 @@ export interface GenesisStateSDKType {
    * listed
    */
   hard_cap_for_markets: number;
+  /** listing_vault_deposit_params is the params for PML megavault deposits */
+
+  listing_vault_deposit_params?: ListingVaultDepositParamsSDKType;
 }
 
 function createBaseGenesisState(): GenesisState {
   return {
-    hardCapForMarkets: 0
+    hardCapForMarkets: 0,
+    listingVaultDepositParams: undefined
   };
 }
 
@@ -29,6 +37,10 @@ export const GenesisState = {
   encode(message: GenesisState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.hardCapForMarkets !== 0) {
       writer.uint32(8).uint32(message.hardCapForMarkets);
+    }
+
+    if (message.listingVaultDepositParams !== undefined) {
+      ListingVaultDepositParams.encode(message.listingVaultDepositParams, writer.uint32(18).fork()).ldelim();
     }
 
     return writer;
@@ -47,6 +59,10 @@ export const GenesisState = {
           message.hardCapForMarkets = reader.uint32();
           break;
 
+        case 2:
+          message.listingVaultDepositParams = ListingVaultDepositParams.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -59,6 +75,7 @@ export const GenesisState = {
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = createBaseGenesisState();
     message.hardCapForMarkets = object.hardCapForMarkets ?? 0;
+    message.listingVaultDepositParams = object.listingVaultDepositParams !== undefined && object.listingVaultDepositParams !== null ? ListingVaultDepositParams.fromPartial(object.listingVaultDepositParams) : undefined;
     return message;
   }
 

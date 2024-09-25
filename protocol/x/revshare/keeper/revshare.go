@@ -3,7 +3,6 @@ package keeper
 import (
 	"math/big"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -123,58 +122,73 @@ func (k Keeper) SetUnconditionalRevShareConfigParams(ctx sdk.Context, config typ
 	store.Set([]byte(types.UnconditionalRevShareConfigKey), unconditionalRevShareConfigBytes)
 }
 
-// ValidateRevShareSafety roughly checks if the total rev share is valid using the formula below
-// highest_affiliate_taker_share + sum(unconditional_rev_shares) + market_mapper_rev_share < 100%
-// Note: this is just an estimate as affiliate rev share is based on taker fees, while
-// the rest of the rev share is based on net fees.
-// TODO(OTE-788): Revisit this formula to ensure accuracy.
+// Check two conditions to ensure rev shares are safe.
+// 1. totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm < 100%
+// 2. lowest_taker_fee + lowest_maker_fee >= Highest_affiliate_rev_share * lowest_taker_fee
 func (k Keeper) ValidateRevShareSafety(
-	affiliateTiers affiliatetypes.AffiliateTiers,
+	ctx sdk.Context,
 	unconditionalRevShareConfig types.UnconditionalRevShareConfig,
 	marketMapperRevShareParams types.MarketMapperRevenueShareParams,
+	lowestTakerFeePpm int32,
+	lowestMakerFeePpm int32,
 ) bool {
-	highestTierRevSharePpm := uint32(0)
-	if len(affiliateTiers.Tiers) > 0 {
-		highestTierRevSharePpm = affiliateTiers.Tiers[len(affiliateTiers.Tiers)-1].TakerFeeSharePpm
-	}
 	totalUnconditionalRevSharePpm := uint32(0)
 	for _, recipientConfig := range unconditionalRevShareConfig.Configs {
 		totalUnconditionalRevSharePpm += recipientConfig.SharePpm
 	}
 	totalMarketMapperRevSharePpm := marketMapperRevShareParams.RevenueSharePpm
 
-	totalRevSharePpm := totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm + highestTierRevSharePpm
-	return totalRevSharePpm < lib.OneMillion
+	// return false if totalUnconditionalRevSharePpm + totalMarketMapperRevSharePpm >= 100%
+	if totalUnconditionalRevSharePpm+totalMarketMapperRevSharePpm >= lib.OneMillion {
+		return false
+	}
+
+	bigNetFee := new(big.Int).SetUint64(
+		// Casting is safe since both variables are int32.
+		uint64(lowestTakerFeePpm) + uint64(lowestMakerFeePpm),
+	)
+
+	bigLowestTakerFeePpmMulRevShareRateCap := lib.BigMulPpm(
+		lib.BigI(lowestTakerFeePpm),
+		lib.BigU(affiliatetypes.AffiliatesRevSharePpmCap),
+		true,
+	)
+	// TODO(OTE-826): Update ValidateRevshareSafety formula and fix tests
+	return bigNetFee.Cmp(bigLowestTakerFeePpmMulRevShareRateCap) >= 0
 }
 
 func (k Keeper) GetAllRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
+	affiliatesWhitelistMap map[string]uint32,
 ) (types.RevSharesForFill, error) {
 	revShares := []types.RevShare{}
 	feeSourceToQuoteQuantums := make(map[types.RevShareFeeSource]*big.Int)
 	feeSourceToRevSharePpm := make(map[types.RevShareFeeSource]uint32)
 	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = big.NewInt(0)
 	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = 0
-	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_FEE] = big.NewInt(0)
-	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_FEE] = 0
+	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = big.NewInt(0)
+	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = 0
 
 	totalFeesShared := big.NewInt(0)
 	takerFees := fill.TakerFeeQuoteQuantums
 	makerFees := fill.MakerFeeQuoteQuantums
 	netFees := big.NewInt(0).Add(takerFees, makerFees)
 
-	affiliateRevShares, err := k.getAffiliateRevShares(ctx, fill)
+	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
+	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
+	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
+		return types.RevSharesForFill{}, types.ErrAffiliateFeesSharedExceedsNetFees
+	}
 
-	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFees)
+	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
-
-	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFees)
+	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
@@ -201,8 +215,7 @@ func (k Keeper) GetAllRevShares(
 	}
 	//check total fees shared is less than or equal to net fees
 	if totalFeesShared.Cmp(netFees) > 0 {
-		return types.RevSharesForFill{}, errorsmod.Wrap(
-			types.ErrTotalFeesSharedExceedsNetFees, "total fees shared exceeds net fees")
+		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
 
 	return types.RevSharesForFill{
@@ -216,19 +229,21 @@ func (k Keeper) GetAllRevShares(
 func (k Keeper) getAffiliateRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
-) ([]types.RevShare, error) {
+	affiliatesWhitelistMap map[string]uint32,
+) ([]types.RevShare, *big.Int, error) {
 	takerAddr := fill.TakerAddr
 	takerFee := fill.TakerFeeQuoteQuantums
-	if fill.MonthlyRollingTakerVolumeQuantums >= types.Max30dRefereeVolumeQuantums {
-		return nil, nil
+	if fill.MonthlyRollingTakerVolumeQuantums >= types.MaxReferee30dVolumeForAffiliateShareQuantums {
+		return nil, big.NewInt(0), nil
 	}
 
-	takerAffiliateAddr, feeSharePpm, exists, err := k.affiliatesKeeper.GetTakerFeeShare(ctx, takerAddr)
+	takerAffiliateAddr, feeSharePpm, exists, err := k.affiliatesKeeper.GetTakerFeeShare(
+		ctx, takerAddr, affiliatesWhitelistMap)
 	if err != nil {
-		return nil, err
+		return nil, big.NewInt(0), err
 	}
 	if !exists {
-		return nil, nil
+		return nil, big.NewInt(0), nil
 	}
 	feesShared := lib.BigMulPpm(takerFee, lib.BigU(feeSharePpm), false)
 	return []types.RevShare{
@@ -239,12 +254,12 @@ func (k Keeper) getAffiliateRevShares(
 			QuoteQuantums:     feesShared,
 			RevSharePpm:       feeSharePpm,
 		},
-	}, nil
+	}, feesShared, nil
 }
 
 func (k Keeper) getUnconditionalRevShares(
 	ctx sdk.Context,
-	netFees *big.Int,
+	netFeesSubAffiliateFeesShared *big.Int,
 ) ([]types.RevShare, error) {
 	revShares := []types.RevShare{}
 	unconditionalRevShareConfig, err := k.GetUnconditionalRevShareConfigParams(ctx)
@@ -252,10 +267,10 @@ func (k Keeper) getUnconditionalRevShares(
 		return nil, err
 	}
 	for _, revShare := range unconditionalRevShareConfig.Configs {
-		feeShared := lib.BigMulPpm(netFees, lib.BigU(revShare.SharePpm), false)
+		feeShared := lib.BigMulPpm(netFeesSubAffiliateFeesShared, lib.BigU(revShare.SharePpm), false)
 		revShare := types.RevShare{
 			Recipient:         revShare.Address,
-			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 			RevShareType:      types.REV_SHARE_TYPE_UNCONDITIONAL,
 			QuoteQuantums:     feeShared,
 			RevSharePpm:       revShare.SharePpm,
@@ -268,7 +283,7 @@ func (k Keeper) getUnconditionalRevShares(
 func (k Keeper) getMarketMapperRevShare(
 	ctx sdk.Context,
 	marketId uint32,
-	netFees *big.Int,
+	netFeesSubAffiliateFeesShared *big.Int,
 ) ([]types.RevShare, error) {
 	revShares := []types.RevShare{}
 	marketMapperRevshareAddress, revenueSharePpm, err := k.GetMarketMapperRevenueShareForMarket(ctx, marketId)
@@ -279,10 +294,10 @@ func (k Keeper) getMarketMapperRevShare(
 		return nil, nil
 	}
 
-	marketMapperRevshareAmount := lib.BigMulPpm(netFees, lib.BigU(revenueSharePpm), false)
+	marketMapperRevshareAmount := lib.BigMulPpm(netFeesSubAffiliateFeesShared, lib.BigU(revenueSharePpm), false)
 	revShares = append(revShares, types.RevShare{
 		Recipient:         marketMapperRevshareAddress.String(),
-		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_FEE,
+		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 		RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
 		QuoteQuantums:     marketMapperRevshareAmount,
 		RevSharePpm:       revenueSharePpm,

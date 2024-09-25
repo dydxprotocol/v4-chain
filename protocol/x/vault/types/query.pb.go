@@ -6,6 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
@@ -187,11 +188,12 @@ func (m *QueryVaultRequest) GetNumber() uint32 {
 
 // QueryVaultResponse is a response type for the Vault RPC method.
 type QueryVaultResponse struct {
-	VaultId      VaultId                                                          `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id"`
-	SubaccountId types.SubaccountId                                               `protobuf:"bytes,2,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id"`
-	Equity       github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=equity,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"equity"`
-	Inventory    github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,4,opt,name=inventory,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"inventory"`
-	VaultParams  VaultParams                                                      `protobuf:"bytes,5,opt,name=vault_params,json=vaultParams,proto3" json:"vault_params"`
+	VaultId             VaultId                                                          `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id"`
+	SubaccountId        types.SubaccountId                                               `protobuf:"bytes,2,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id"`
+	Equity              github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=equity,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"equity"`
+	Inventory           github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,4,opt,name=inventory,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"inventory"`
+	VaultParams         VaultParams                                                      `protobuf:"bytes,5,opt,name=vault_params,json=vaultParams,proto3" json:"vault_params"`
+	MostRecentClientIds []uint32                                                         `protobuf:"varint,6,rep,packed,name=most_recent_client_ids,json=mostRecentClientIds,proto3" json:"most_recent_client_ids,omitempty"`
 }
 
 func (m *QueryVaultResponse) Reset()         { *m = QueryVaultResponse{} }
@@ -246,6 +248,13 @@ func (m *QueryVaultResponse) GetVaultParams() VaultParams {
 		return m.VaultParams
 	}
 	return VaultParams{}
+}
+
+func (m *QueryVaultResponse) GetMostRecentClientIds() []uint32 {
+	if m != nil {
+		return m.MostRecentClientIds
+	}
+	return nil
 }
 
 // QueryAllVaultsRequest is a request type for the AllVaults RPC method.
@@ -433,7 +442,7 @@ func (m *QueryMegavaultTotalSharesResponse) GetTotalShares() *NumShares {
 // QueryMegavaultOwnerSharesRequest is a request type for the
 // MegavaultOwnerShares RPC method.
 type QueryMegavaultOwnerSharesRequest struct {
-	Pagination *query.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
 func (m *QueryMegavaultOwnerSharesRequest) Reset()         { *m = QueryMegavaultOwnerSharesRequest{} }
@@ -469,18 +478,27 @@ func (m *QueryMegavaultOwnerSharesRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryMegavaultOwnerSharesRequest proto.InternalMessageInfo
 
-func (m *QueryMegavaultOwnerSharesRequest) GetPagination() *query.PageRequest {
+func (m *QueryMegavaultOwnerSharesRequest) GetAddress() string {
 	if m != nil {
-		return m.Pagination
+		return m.Address
 	}
-	return nil
+	return ""
 }
 
 // QueryMegavaultOwnerSharesResponse is a response type for the
 // MegavaultOwnerShares RPC method.
 type QueryMegavaultOwnerSharesResponse struct {
-	OwnerShares []*OwnerShare       `protobuf:"bytes,1,rep,name=owner_shares,json=ownerShares,proto3" json:"owner_shares,omitempty"`
-	Pagination  *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// Owner address.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// Total number of shares that belong to the owner.
+	Shares NumShares `protobuf:"bytes,2,opt,name=shares,proto3" json:"shares"`
+	// All share unlocks.
+	ShareUnlocks []ShareUnlock `protobuf:"bytes,3,rep,name=share_unlocks,json=shareUnlocks,proto3" json:"share_unlocks"`
+	// Owner equity in megavault (in quote quantums).
+	Equity github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,4,opt,name=equity,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"equity"`
+	// Equity that owner can withdraw in quote quantums (as one cannot
+	// withdraw locked shares).
+	WithdrawableEquity github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,5,opt,name=withdrawable_equity,json=withdrawableEquity,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"withdrawable_equity"`
 }
 
 func (m *QueryMegavaultOwnerSharesResponse) Reset()         { *m = QueryMegavaultOwnerSharesResponse{} }
@@ -516,18 +534,341 @@ func (m *QueryMegavaultOwnerSharesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryMegavaultOwnerSharesResponse proto.InternalMessageInfo
 
-func (m *QueryMegavaultOwnerSharesResponse) GetOwnerShares() []*OwnerShare {
+func (m *QueryMegavaultOwnerSharesResponse) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *QueryMegavaultOwnerSharesResponse) GetShares() NumShares {
+	if m != nil {
+		return m.Shares
+	}
+	return NumShares{}
+}
+
+func (m *QueryMegavaultOwnerSharesResponse) GetShareUnlocks() []ShareUnlock {
+	if m != nil {
+		return m.ShareUnlocks
+	}
+	return nil
+}
+
+// QueryMegavaultAllOwnerSharesRequest is a request type for the
+// MegavaultAllOwnerShares RPC method.
+type QueryMegavaultAllOwnerSharesRequest struct {
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryMegavaultAllOwnerSharesRequest) Reset()         { *m = QueryMegavaultAllOwnerSharesRequest{} }
+func (m *QueryMegavaultAllOwnerSharesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryMegavaultAllOwnerSharesRequest) ProtoMessage()    {}
+func (*QueryMegavaultAllOwnerSharesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_478fb8dc0ff21ea6, []int{10}
+}
+func (m *QueryMegavaultAllOwnerSharesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryMegavaultAllOwnerSharesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryMegavaultAllOwnerSharesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryMegavaultAllOwnerSharesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMegavaultAllOwnerSharesRequest.Merge(m, src)
+}
+func (m *QueryMegavaultAllOwnerSharesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryMegavaultAllOwnerSharesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMegavaultAllOwnerSharesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryMegavaultAllOwnerSharesRequest proto.InternalMessageInfo
+
+func (m *QueryMegavaultAllOwnerSharesRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryMegavaultAllOwnerSharesResponse is a response type for the
+// MegavaultAllOwnerShares RPC method.
+type QueryMegavaultAllOwnerSharesResponse struct {
+	OwnerShares []*OwnerShare       `protobuf:"bytes,1,rep,name=owner_shares,json=ownerShares,proto3" json:"owner_shares,omitempty"`
+	Pagination  *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryMegavaultAllOwnerSharesResponse) Reset()         { *m = QueryMegavaultAllOwnerSharesResponse{} }
+func (m *QueryMegavaultAllOwnerSharesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryMegavaultAllOwnerSharesResponse) ProtoMessage()    {}
+func (*QueryMegavaultAllOwnerSharesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_478fb8dc0ff21ea6, []int{11}
+}
+func (m *QueryMegavaultAllOwnerSharesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryMegavaultAllOwnerSharesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryMegavaultAllOwnerSharesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryMegavaultAllOwnerSharesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMegavaultAllOwnerSharesResponse.Merge(m, src)
+}
+func (m *QueryMegavaultAllOwnerSharesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryMegavaultAllOwnerSharesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMegavaultAllOwnerSharesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryMegavaultAllOwnerSharesResponse proto.InternalMessageInfo
+
+func (m *QueryMegavaultAllOwnerSharesResponse) GetOwnerShares() []*OwnerShare {
 	if m != nil {
 		return m.OwnerShares
 	}
 	return nil
 }
 
-func (m *QueryMegavaultOwnerSharesResponse) GetPagination() *query.PageResponse {
+func (m *QueryMegavaultAllOwnerSharesResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
+}
+
+// QueryVaultParamsRequest is a request for the VaultParams RPC method.
+type QueryVaultParamsRequest struct {
+	Type   VaultType `protobuf:"varint,1,opt,name=type,proto3,enum=dydxprotocol.vault.VaultType" json:"type,omitempty"`
+	Number uint32    `protobuf:"varint,2,opt,name=number,proto3" json:"number,omitempty"`
+}
+
+func (m *QueryVaultParamsRequest) Reset()         { *m = QueryVaultParamsRequest{} }
+func (m *QueryVaultParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryVaultParamsRequest) ProtoMessage()    {}
+func (*QueryVaultParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_478fb8dc0ff21ea6, []int{12}
+}
+func (m *QueryVaultParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVaultParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVaultParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVaultParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVaultParamsRequest.Merge(m, src)
+}
+func (m *QueryVaultParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVaultParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVaultParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVaultParamsRequest proto.InternalMessageInfo
+
+func (m *QueryVaultParamsRequest) GetType() VaultType {
+	if m != nil {
+		return m.Type
+	}
+	return VaultType_VAULT_TYPE_UNSPECIFIED
+}
+
+func (m *QueryVaultParamsRequest) GetNumber() uint32 {
+	if m != nil {
+		return m.Number
+	}
+	return 0
+}
+
+// QueryVaultParamsResponse is a response for the VaultParams RPC method.
+type QueryVaultParamsResponse struct {
+	VaultId     VaultId     `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id"`
+	VaultParams VaultParams `protobuf:"bytes,2,opt,name=vault_params,json=vaultParams,proto3" json:"vault_params"`
+}
+
+func (m *QueryVaultParamsResponse) Reset()         { *m = QueryVaultParamsResponse{} }
+func (m *QueryVaultParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryVaultParamsResponse) ProtoMessage()    {}
+func (*QueryVaultParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_478fb8dc0ff21ea6, []int{13}
+}
+func (m *QueryVaultParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVaultParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVaultParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVaultParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVaultParamsResponse.Merge(m, src)
+}
+func (m *QueryVaultParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVaultParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVaultParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVaultParamsResponse proto.InternalMessageInfo
+
+func (m *QueryVaultParamsResponse) GetVaultId() VaultId {
+	if m != nil {
+		return m.VaultId
+	}
+	return VaultId{}
+}
+
+func (m *QueryVaultParamsResponse) GetVaultParams() VaultParams {
+	if m != nil {
+		return m.VaultParams
+	}
+	return VaultParams{}
+}
+
+// QueryMegavaultWithdrawalInfoRequest is a request type for the
+// MegavaultWithdrawalInfo RPC method.
+type QueryMegavaultWithdrawalInfoRequest struct {
+	// Number of shares to withdraw.
+	SharesToWithdraw NumShares `protobuf:"bytes,1,opt,name=shares_to_withdraw,json=sharesToWithdraw,proto3" json:"shares_to_withdraw"`
+}
+
+func (m *QueryMegavaultWithdrawalInfoRequest) Reset()         { *m = QueryMegavaultWithdrawalInfoRequest{} }
+func (m *QueryMegavaultWithdrawalInfoRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryMegavaultWithdrawalInfoRequest) ProtoMessage()    {}
+func (*QueryMegavaultWithdrawalInfoRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_478fb8dc0ff21ea6, []int{14}
+}
+func (m *QueryMegavaultWithdrawalInfoRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryMegavaultWithdrawalInfoRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryMegavaultWithdrawalInfoRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryMegavaultWithdrawalInfoRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMegavaultWithdrawalInfoRequest.Merge(m, src)
+}
+func (m *QueryMegavaultWithdrawalInfoRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryMegavaultWithdrawalInfoRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMegavaultWithdrawalInfoRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryMegavaultWithdrawalInfoRequest proto.InternalMessageInfo
+
+func (m *QueryMegavaultWithdrawalInfoRequest) GetSharesToWithdraw() NumShares {
+	if m != nil {
+		return m.SharesToWithdraw
+	}
+	return NumShares{}
+}
+
+// QueryMegavaultWithdrawalInfoResponse is a response type for the
+// MegavaultWithdrawalInfo RPC method.
+type QueryMegavaultWithdrawalInfoResponse struct {
+	// Number of shares to withdraw.
+	SharesToWithdraw NumShares `protobuf:"bytes,1,opt,name=shares_to_withdraw,json=sharesToWithdraw,proto3" json:"shares_to_withdraw"`
+	// Number of quote quantums above `shares` are expected to redeem.
+	// Withdrawl slippage can be calculated by comparing
+	// `expected_quote_quantums` with
+	// `megavault_equity * shares_to_withdraw / total_shares`
+	ExpectedQuoteQuantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=expected_quote_quantums,json=expectedQuoteQuantums,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"expected_quote_quantums"`
+	// Equity of megavault (in quote quantums).
+	MegavaultEquity github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=megavault_equity,json=megavaultEquity,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"megavault_equity"`
+	// Total shares in megavault.
+	TotalShares NumShares `protobuf:"bytes,4,opt,name=total_shares,json=totalShares,proto3" json:"total_shares"`
+}
+
+func (m *QueryMegavaultWithdrawalInfoResponse) Reset()         { *m = QueryMegavaultWithdrawalInfoResponse{} }
+func (m *QueryMegavaultWithdrawalInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryMegavaultWithdrawalInfoResponse) ProtoMessage()    {}
+func (*QueryMegavaultWithdrawalInfoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_478fb8dc0ff21ea6, []int{15}
+}
+func (m *QueryMegavaultWithdrawalInfoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryMegavaultWithdrawalInfoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryMegavaultWithdrawalInfoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryMegavaultWithdrawalInfoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMegavaultWithdrawalInfoResponse.Merge(m, src)
+}
+func (m *QueryMegavaultWithdrawalInfoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryMegavaultWithdrawalInfoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMegavaultWithdrawalInfoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryMegavaultWithdrawalInfoResponse proto.InternalMessageInfo
+
+func (m *QueryMegavaultWithdrawalInfoResponse) GetSharesToWithdraw() NumShares {
+	if m != nil {
+		return m.SharesToWithdraw
+	}
+	return NumShares{}
+}
+
+func (m *QueryMegavaultWithdrawalInfoResponse) GetTotalShares() NumShares {
+	if m != nil {
+		return m.TotalShares
+	}
+	return NumShares{}
 }
 
 func init() {
@@ -541,68 +882,99 @@ func init() {
 	proto.RegisterType((*QueryMegavaultTotalSharesResponse)(nil), "dydxprotocol.vault.QueryMegavaultTotalSharesResponse")
 	proto.RegisterType((*QueryMegavaultOwnerSharesRequest)(nil), "dydxprotocol.vault.QueryMegavaultOwnerSharesRequest")
 	proto.RegisterType((*QueryMegavaultOwnerSharesResponse)(nil), "dydxprotocol.vault.QueryMegavaultOwnerSharesResponse")
+	proto.RegisterType((*QueryMegavaultAllOwnerSharesRequest)(nil), "dydxprotocol.vault.QueryMegavaultAllOwnerSharesRequest")
+	proto.RegisterType((*QueryMegavaultAllOwnerSharesResponse)(nil), "dydxprotocol.vault.QueryMegavaultAllOwnerSharesResponse")
+	proto.RegisterType((*QueryVaultParamsRequest)(nil), "dydxprotocol.vault.QueryVaultParamsRequest")
+	proto.RegisterType((*QueryVaultParamsResponse)(nil), "dydxprotocol.vault.QueryVaultParamsResponse")
+	proto.RegisterType((*QueryMegavaultWithdrawalInfoRequest)(nil), "dydxprotocol.vault.QueryMegavaultWithdrawalInfoRequest")
+	proto.RegisterType((*QueryMegavaultWithdrawalInfoResponse)(nil), "dydxprotocol.vault.QueryMegavaultWithdrawalInfoResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/vault/query.proto", fileDescriptor_478fb8dc0ff21ea6) }
 
 var fileDescriptor_478fb8dc0ff21ea6 = []byte{
-	// 887 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xcf, 0x4e, 0xdb, 0x48,
-	0x18, 0x8f, 0x09, 0x78, 0x97, 0x49, 0x60, 0xb5, 0xb3, 0x59, 0xc4, 0x06, 0xd6, 0x01, 0x4b, 0x0b,
-	0x0b, 0xbb, 0xb5, 0x95, 0x94, 0xaa, 0x52, 0x55, 0x55, 0xc0, 0xa1, 0x85, 0x43, 0x0b, 0x31, 0xa8,
-	0x87, 0x4a, 0x6d, 0x3a, 0x49, 0x06, 0xe3, 0xca, 0xf1, 0x38, 0xf6, 0x38, 0x25, 0x45, 0x5c, 0x5a,
-	0xf5, 0xd0, 0x4b, 0x55, 0xa9, 0x4f, 0xd0, 0x27, 0xe8, 0xb1, 0xea, 0x1b, 0x70, 0x44, 0xea, 0xa5,
-	0xea, 0x01, 0x55, 0xd0, 0x07, 0xa9, 0x3c, 0x9e, 0x24, 0x76, 0xb0, 0x21, 0xad, 0xb8, 0x44, 0xce,
-	0x37, 0xdf, 0xf7, 0xfb, 0xfd, 0xe6, 0xfb, 0x37, 0x40, 0xaa, 0xb7, 0xeb, 0x7b, 0xb6, 0x43, 0x28,
-	0xa9, 0x11, 0x53, 0x6d, 0x21, 0xcf, 0xa4, 0x6a, 0xd3, 0xc3, 0x4e, 0x5b, 0x61, 0x46, 0x08, 0xc3,
-	0xe7, 0x0a, 0x3b, 0xcf, 0xe7, 0x74, 0xa2, 0x13, 0x66, 0x53, 0xfd, 0xaf, 0xc0, 0x33, 0x3f, 0xad,
-	0x13, 0xa2, 0x9b, 0x58, 0x45, 0xb6, 0xa1, 0x22, 0xcb, 0x22, 0x14, 0x51, 0x83, 0x58, 0x2e, 0x3f,
-	0x5d, 0xac, 0x11, 0xb7, 0x41, 0x5c, 0xb5, 0x8a, 0x5c, 0x1c, 0x10, 0xa8, 0xad, 0x62, 0x15, 0x53,
-	0x54, 0x54, 0x6d, 0xa4, 0x1b, 0x16, 0x73, 0xe6, 0xbe, 0x0b, 0x11, 0x4d, 0xae, 0x57, 0x45, 0xb5,
-	0x1a, 0xf1, 0x2c, 0xea, 0x86, 0xbe, 0xb9, 0x6b, 0x21, 0x46, 0xbe, 0x8d, 0x1c, 0xd4, 0xe8, 0xf0,
-	0xc6, 0xdd, 0xcf, 0xdd, 0x45, 0x0e, 0x3e, 0xe7, 0x9c, 0xfd, 0x06, 0xe7, 0x72, 0x0e, 0xc0, 0xb2,
-	0xaf, 0x76, 0x93, 0x81, 0x6a, 0xb8, 0xe9, 0x61, 0x97, 0xca, 0x2f, 0x86, 0xc0, 0x1f, 0x11, 0xb3,
-	0x6b, 0x13, 0xcb, 0xc5, 0xf0, 0x06, 0x10, 0x03, 0xf6, 0x49, 0x61, 0x46, 0xf8, 0x37, 0x53, 0xca,
-	0x2b, 0x67, 0xd3, 0xa7, 0x04, 0x31, 0xab, 0xe2, 0xe1, 0x71, 0x21, 0x35, 0x29, 0x68, 0x3c, 0x02,
-	0x3e, 0x04, 0x13, 0x75, 0xbc, 0xe3, 0x7b, 0x54, 0x9a, 0x1e, 0xa1, 0x86, 0xa5, 0x57, 0x38, 0xd6,
-	0x10, 0xc3, 0x9a, 0x8d, 0xc3, 0x2a, 0x07, 0x9e, 0x1c, 0x72, 0xd8, 0x87, 0xd4, 0x72, 0x1c, 0x26,
-	0x72, 0x06, 0xcb, 0xe0, 0x37, 0x62, 0x63, 0x07, 0x51, 0xe2, 0x74, 0x70, 0xd3, 0x0c, 0x57, 0x8e,
-	0xc3, 0xdd, 0xe0, 0xae, 0x11, 0xe0, 0x71, 0x12, 0xb1, 0xca, 0x8f, 0xc0, 0xef, 0x2c, 0x09, 0xf7,
-	0xfd, 0x10, 0x9e, 0x1a, 0x58, 0x04, 0xc3, 0xb4, 0x6d, 0x63, 0x96, 0x80, 0xf1, 0xd2, 0xdf, 0x71,
-	0xe0, 0xcc, 0x7f, 0xbb, 0x6d, 0x63, 0x8d, 0xb9, 0xc2, 0x09, 0x20, 0x5a, 0x5e, 0xa3, 0x8a, 0x1d,
-	0x76, 0xd3, 0x31, 0x8d, 0xff, 0x93, 0x3f, 0xa6, 0x79, 0xf2, 0x39, 0x01, 0x4f, 0xf2, 0x4d, 0xf0,
-	0x2b, 0xc3, 0xa9, 0x18, 0x75, 0x9e, 0xe6, 0xa9, 0x44, 0x96, 0xf5, 0x3a, 0xd7, 0xfe, 0x4b, 0x2b,
-	0xf8, 0x0b, 0xcb, 0x60, 0xac, 0xd7, 0x45, 0x3e, 0x44, 0x90, 0xdd, 0xb9, 0x28, 0x44, 0xa8, 0xe9,
-	0x94, 0xad, 0xee, 0x77, 0x17, 0x2d, 0xeb, 0x86, 0x6c, 0xf0, 0x31, 0x10, 0x71, 0xd3, 0x33, 0x68,
-	0x9b, 0x65, 0x34, 0xbb, 0xba, 0xe6, 0xfb, 0x7c, 0x39, 0x2e, 0x2c, 0xeb, 0x06, 0xdd, 0xf5, 0xaa,
-	0x4a, 0x8d, 0x34, 0xd4, 0x68, 0x9b, 0x2d, 0x5d, 0xa9, 0xed, 0x22, 0xc3, 0x52, 0xbb, 0x96, 0xba,
-	0x9f, 0x08, 0x57, 0xd9, 0xc2, 0x8e, 0x81, 0x4c, 0xe3, 0x19, 0xaa, 0x9a, 0x78, 0xdd, 0xa2, 0x1a,
-	0xc7, 0x85, 0x3b, 0x60, 0xd4, 0xb0, 0x5a, 0xd8, 0xa2, 0xc4, 0x69, 0x4f, 0x0e, 0x5f, 0x32, 0x49,
-	0x0f, 0x1a, 0xae, 0x81, 0x6c, 0x90, 0x5a, 0xde, 0x21, 0x23, 0x2c, 0x37, 0x85, 0xc4, 0xf4, 0x46,
-	0xda, 0x23, 0xd3, 0xea, 0x99, 0xe4, 0x0a, 0xf8, 0x93, 0x95, 0x6e, 0xc5, 0x34, 0x99, 0x67, 0x67,
-	0x74, 0xe0, 0x6d, 0x00, 0x7a, 0x03, 0xcf, 0xeb, 0x37, 0xa7, 0x04, 0xdb, 0x41, 0xf1, 0xb7, 0x83,
-	0x12, 0xac, 0x1f, 0xbe, 0x1d, 0x94, 0x4d, 0xa4, 0x63, 0x1e, 0xab, 0x85, 0x22, 0xe5, 0x77, 0x02,
-	0x98, 0xe8, 0x67, 0xe0, 0x0d, 0x72, 0x0b, 0x88, 0x4c, 0x8a, 0x3f, 0x85, 0xe9, 0xb3, 0xb5, 0xed,
-	0x4c, 0x4e, 0x7f, 0x63, 0x69, 0x3c, 0x0a, 0xde, 0x89, 0x48, 0x0c, 0xfa, 0x63, 0xfe, 0x42, 0x89,
-	0x1c, 0x24, 0xac, 0x51, 0x06, 0x33, 0x8c, 0xe6, 0x2e, 0xd6, 0x11, 0xc3, 0xde, 0x26, 0x14, 0x99,
-	0x5b, 0xfe, 0xfa, 0xe9, 0xae, 0x12, 0x0c, 0x66, 0xcf, 0xf1, 0xe1, 0x37, 0x5a, 0x06, 0x59, 0xea,
-	0x9b, 0x2b, 0x6c, 0x75, 0x75, 0xb6, 0x4b, 0xec, 0x70, 0xdd, 0xf3, 0x1a, 0x3c, 0x38, 0x43, 0x7b,
-	0x48, 0xf2, 0x93, 0x7e, 0x29, 0x1b, 0x4f, 0x2d, 0xec, 0x44, 0xa4, 0xf4, 0x95, 0x26, 0xfd, 0xd3,
-	0xa5, 0x79, 0x2f, 0xf4, 0xdf, 0x29, 0x42, 0xc6, 0xef, 0xb4, 0x02, 0xb2, 0xc4, 0x37, 0xf7, 0xee,
-	0xe4, 0xd7, 0x4a, 0x8a, 0xdd, 0x46, 0xdd, 0x70, 0x2d, 0x43, 0x7a, 0x50, 0x97, 0x56, 0xa8, 0xd2,
-	0x6b, 0x11, 0x8c, 0x30, 0xc5, 0xf0, 0x00, 0x88, 0x7c, 0x61, 0x26, 0x77, 0x4d, 0xe4, 0x2d, 0xc8,
-	0xcf, 0x5f, 0xe8, 0x17, 0x10, 0xca, 0xf2, 0xf3, 0x4f, 0xdf, 0xde, 0x0e, 0x4d, 0xc3, 0xbc, 0x9a,
-	0xf8, 0x68, 0xc1, 0x57, 0x02, 0x18, 0x61, 0x4d, 0x09, 0xff, 0xb9, 0xa8, 0x69, 0x03, 0xf6, 0x01,
-	0x7b, 0x5b, 0x2e, 0x32, 0xf2, 0xff, 0xe0, 0x82, 0x9a, 0xf4, 0xe0, 0xa9, 0xfb, 0xfe, 0x7a, 0x38,
-	0x50, 0xf7, 0x83, 0xed, 0x7b, 0x00, 0x5f, 0x0a, 0x60, 0xb4, 0x3b, 0x5c, 0x70, 0x21, 0x91, 0xa8,
-	0x7f, 0xc4, 0xf3, 0x8b, 0x83, 0xb8, 0x72, 0x5d, 0xb3, 0x4c, 0xd7, 0x14, 0xfc, 0x2b, 0x51, 0x17,
-	0xfc, 0x20, 0x80, 0x5c, 0xdc, 0x74, 0xc0, 0xa5, 0x44, 0x9e, 0x73, 0x06, 0x2e, 0x7f, 0xed, 0x07,
-	0xa3, 0xb8, 0xd0, 0x12, 0x13, 0xfa, 0x3f, 0x5c, 0x8c, 0x13, 0xda, 0xe8, 0x44, 0xaa, 0xe1, 0x31,
-	0x8d, 0x2a, 0x0f, 0xcd, 0xc0, 0x20, 0xca, 0xcf, 0xce, 0xe7, 0x20, 0xca, 0x63, 0x06, 0x6d, 0x50,
-	0xe5, 0xe1, 0x61, 0x5c, 0x2d, 0x1f, 0x9e, 0x48, 0xc2, 0xd1, 0x89, 0x24, 0x7c, 0x3d, 0x91, 0x84,
-	0x37, 0xa7, 0x52, 0xea, 0xe8, 0x54, 0x4a, 0x7d, 0x3e, 0x95, 0x52, 0x0f, 0xae, 0x0f, 0xfe, 0xde,
-	0xec, 0x71, 0x0e, 0xf6, 0xec, 0x54, 0x45, 0x66, 0xbf, 0xfa, 0x3d, 0x00, 0x00, 0xff, 0xff, 0x95,
-	0x29, 0x54, 0xe4, 0x72, 0x0a, 0x00, 0x00,
+	// 1295 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x57, 0x4f, 0x6f, 0x1b, 0x45,
+	0x14, 0xcf, 0xc6, 0x89, 0x4b, 0x26, 0x49, 0x5b, 0x26, 0x69, 0xe2, 0xba, 0xc5, 0x49, 0x16, 0x68,
+	0x9b, 0xb4, 0xf1, 0x92, 0x34, 0x6d, 0x11, 0x54, 0xa8, 0x09, 0xa2, 0x34, 0x48, 0xd0, 0x7a, 0x13,
+	0x8a, 0x84, 0x04, 0xcb, 0xd8, 0x3b, 0x71, 0x56, 0xac, 0x77, 0x9c, 0xdd, 0xd9, 0x24, 0x26, 0x8a,
+	0x84, 0x40, 0x1c, 0xb8, 0x21, 0x71, 0xe5, 0x02, 0x1f, 0x01, 0x21, 0x21, 0x0e, 0x1c, 0x10, 0x3d,
+	0xf4, 0x58, 0xc1, 0x05, 0x71, 0xa8, 0x50, 0xc2, 0x99, 0xcf, 0x80, 0x76, 0xe6, 0xad, 0xbd, 0xeb,
+	0xac, 0x9d, 0x6d, 0xe5, 0x5e, 0x22, 0xef, 0xcc, 0x7b, 0xbf, 0xdf, 0x7b, 0x6f, 0xde, 0xbf, 0xa0,
+	0x82, 0xd9, 0x30, 0x77, 0xeb, 0x2e, 0xe3, 0xac, 0xc2, 0x6c, 0x6d, 0x9b, 0xf8, 0x36, 0xd7, 0xb6,
+	0x7c, 0xea, 0x36, 0x8a, 0xe2, 0x10, 0xe3, 0xe8, 0x7d, 0x51, 0xdc, 0xe7, 0xcf, 0x56, 0x98, 0x57,
+	0x63, 0x9e, 0x21, 0x8e, 0x35, 0xf9, 0x21, 0xc5, 0xf3, 0x73, 0xf2, 0x4b, 0x2b, 0x13, 0x8f, 0x4a,
+	0x1c, 0x6d, 0x7b, 0xa1, 0x4c, 0x39, 0x59, 0xd0, 0xea, 0xa4, 0x6a, 0x39, 0x84, 0x5b, 0xcc, 0x01,
+	0xd9, 0xf1, 0x2a, 0xab, 0x32, 0x89, 0x11, 0xfc, 0x82, 0xd3, 0xf3, 0x55, 0xc6, 0xaa, 0x36, 0xd5,
+	0x48, 0xdd, 0xd2, 0x88, 0xe3, 0x30, 0x2e, 0x54, 0x42, 0xfc, 0xd9, 0x98, 0xb9, 0x9e, 0x5f, 0x26,
+	0x95, 0x0a, 0xf3, 0x1d, 0xee, 0x45, 0x7e, 0x83, 0xe8, 0x54, 0x82, 0x67, 0x75, 0xe2, 0x92, 0x5a,
+	0x88, 0x95, 0xe4, 0xba, 0xb7, 0x49, 0x5c, 0xda, 0xe5, 0x5e, 0xfc, 0x95, 0xf7, 0xea, 0x38, 0xc2,
+	0xa5, 0xc0, 0xc3, 0x7b, 0x02, 0x54, 0xa7, 0x5b, 0x3e, 0xf5, 0xb8, 0xfa, 0x65, 0x3f, 0x1a, 0x8b,
+	0x1d, 0x7b, 0x75, 0xe6, 0x78, 0x14, 0xbf, 0x86, 0xb2, 0x92, 0x3d, 0xa7, 0x4c, 0x2b, 0x97, 0x86,
+	0x17, 0xf3, 0xc5, 0xa3, 0x91, 0x2d, 0x4a, 0x9d, 0x95, 0xec, 0xc3, 0xc7, 0x53, 0x7d, 0x39, 0x45,
+	0x07, 0x0d, 0xfc, 0x11, 0x9a, 0x30, 0xe9, 0x46, 0x20, 0x61, 0x6c, 0xf9, 0x8c, 0x5b, 0x4e, 0xd5,
+	0x00, 0xac, 0x7e, 0x81, 0x35, 0x93, 0x84, 0x55, 0x92, 0x92, 0x00, 0x39, 0x10, 0x40, 0xea, 0xe3,
+	0x00, 0x13, 0xbb, 0xc3, 0x25, 0x74, 0x8a, 0xd5, 0xa9, 0x4b, 0x38, 0x73, 0x43, 0xdc, 0x8c, 0xc0,
+	0x55, 0x93, 0x70, 0xef, 0x82, 0x68, 0x0c, 0xf8, 0x24, 0x8b, 0x9d, 0xaa, 0x1f, 0xa3, 0xe7, 0x45,
+	0x10, 0xee, 0x07, 0x2a, 0x10, 0x1a, 0xbc, 0x80, 0x06, 0x78, 0xa3, 0x4e, 0x45, 0x00, 0x4e, 0x2e,
+	0xbe, 0x90, 0x04, 0x2e, 0xe4, 0xd7, 0x1b, 0x75, 0xaa, 0x0b, 0x51, 0x3c, 0x81, 0xb2, 0x8e, 0x5f,
+	0x2b, 0x53, 0x57, 0x78, 0x3a, 0xaa, 0xc3, 0x97, 0xfa, 0x5f, 0x06, 0x82, 0x0f, 0x04, 0x10, 0xe4,
+	0x9b, 0xe8, 0x39, 0x81, 0x63, 0x58, 0x26, 0x84, 0xf9, 0x5c, 0x47, 0x96, 0x55, 0x13, 0x6c, 0x3f,
+	0xb1, 0x2d, 0x3f, 0x71, 0x09, 0x8d, 0xb6, 0xb2, 0x28, 0x80, 0x90, 0xd1, 0xbd, 0x10, 0x87, 0x88,
+	0x24, 0x5d, 0x71, 0xad, 0xf9, 0xbb, 0x89, 0x36, 0xe2, 0x45, 0xce, 0xf0, 0x27, 0x28, 0x4b, 0xb7,
+	0x7c, 0x8b, 0x37, 0x44, 0x44, 0x47, 0x56, 0xee, 0x04, 0x32, 0x7f, 0x3f, 0x9e, 0xba, 0x55, 0xb5,
+	0xf8, 0xa6, 0x5f, 0x2e, 0x56, 0x58, 0x4d, 0x8b, 0xa7, 0xd9, 0xd2, 0x7c, 0x65, 0x93, 0x58, 0x8e,
+	0xd6, 0x3c, 0x31, 0x83, 0x40, 0x78, 0xc5, 0x35, 0xea, 0x5a, 0xc4, 0xb6, 0x3e, 0x23, 0x65, 0x9b,
+	0xae, 0x3a, 0x5c, 0x07, 0x5c, 0xbc, 0x81, 0x86, 0x2c, 0x67, 0x9b, 0x3a, 0x9c, 0xb9, 0x8d, 0xdc,
+	0x40, 0x8f, 0x49, 0x5a, 0xd0, 0xf8, 0x0e, 0x1a, 0x91, 0xa1, 0x85, 0x0c, 0x19, 0x14, 0xb1, 0x99,
+	0xea, 0x18, 0xde, 0x58, 0x7a, 0x0c, 0x6f, 0xb7, 0x8e, 0xf0, 0x55, 0x34, 0x51, 0x63, 0x1e, 0x37,
+	0x5c, 0x5a, 0xa1, 0x0e, 0x37, 0x2a, 0xb6, 0x45, 0x45, 0xb8, 0xbd, 0x5c, 0x76, 0x3a, 0x73, 0x69,
+	0x54, 0x1f, 0x0b, 0x6e, 0x75, 0x71, 0xf9, 0xa6, 0xb8, 0x5b, 0x35, 0x3d, 0xd5, 0x40, 0x67, 0xc4,
+	0x7b, 0x2f, 0xdb, 0xb6, 0x80, 0x0f, 0xeb, 0x0d, 0xdf, 0x46, 0xa8, 0xd5, 0x59, 0xe0, 0xd1, 0x2f,
+	0x14, 0xa1, 0x29, 0x05, 0x6d, 0xa8, 0x28, 0xdb, 0x19, 0xb4, 0xa1, 0xe2, 0x3d, 0x52, 0xa5, 0xa0,
+	0xab, 0x47, 0x34, 0xd5, 0xef, 0x15, 0x34, 0xd1, 0xce, 0x00, 0x59, 0xf5, 0x06, 0xca, 0x0a, 0xfb,
+	0x83, 0xd2, 0xcd, 0x1c, 0x4d, 0x88, 0xb0, 0xdc, 0xda, 0xb3, 0x51, 0x07, 0x2d, 0xfc, 0x76, 0xcc,
+	0x44, 0x99, 0x54, 0x17, 0x8f, 0x35, 0x11, 0x40, 0xa2, 0x36, 0xaa, 0x68, 0x5a, 0xd0, 0xbc, 0x4b,
+	0xab, 0x44, 0x60, 0xaf, 0x33, 0x4e, 0xec, 0xb5, 0xa0, 0x67, 0x35, 0xfb, 0x0f, 0x45, 0x33, 0x5d,
+	0x64, 0xc0, 0xa3, 0x5b, 0x68, 0x84, 0x07, 0xc7, 0x86, 0xe8, 0x77, 0x61, 0x4b, 0x4a, 0xac, 0xc8,
+	0xf7, 0xfc, 0x1a, 0x28, 0x0f, 0xf3, 0x16, 0x92, 0x7a, 0xbf, 0xdd, 0x94, 0xbb, 0x3b, 0x0e, 0x75,
+	0x63, 0xa6, 0xe0, 0x45, 0x74, 0x82, 0x98, 0xa6, 0x4b, 0x3d, 0x49, 0x30, 0xb4, 0x92, 0xfb, 0xe3,
+	0xa7, 0xf9, 0x71, 0xf0, 0x7b, 0x59, 0xde, 0xac, 0x71, 0xd7, 0x72, 0xaa, 0x7a, 0x28, 0xa8, 0xfe,
+	0x9a, 0x69, 0xb7, 0x3f, 0x06, 0x0c, 0xf6, 0x3f, 0x05, 0x32, 0x7e, 0x1d, 0x65, 0xc1, 0xdb, 0xfe,
+	0x14, 0xde, 0x42, 0xe2, 0x82, 0x0a, 0x7e, 0x07, 0x8d, 0x8a, 0x5f, 0x86, 0xef, 0xd8, 0xac, 0xf2,
+	0x69, 0xd0, 0x20, 0x33, 0x9d, 0xd2, 0x5f, 0x00, 0xbc, 0x2f, 0xe4, 0x9a, 0x3d, 0xa1, 0x75, 0xe4,
+	0x45, 0x7a, 0xc2, 0xc0, 0x33, 0xea, 0x09, 0x0d, 0x34, 0xb6, 0x63, 0xf1, 0x4d, 0xd3, 0x25, 0x3b,
+	0xc1, 0x95, 0x01, 0x74, 0x83, 0x3d, 0xa6, 0xc3, 0x51, 0x92, 0xb7, 0x04, 0x87, 0x5a, 0x43, 0x2f,
+	0xc6, 0x9f, 0x6f, 0xd9, 0xb6, 0x13, 0x52, 0xa3, 0x57, 0x55, 0xfb, 0xa3, 0x82, 0x5e, 0xea, 0xce,
+	0x07, 0x19, 0xb3, 0x8c, 0x46, 0x58, 0x70, 0xdc, 0xca, 0xf8, 0xe0, 0xfd, 0x0a, 0x89, 0x03, 0xae,
+	0xa9, 0xae, 0x0f, 0xb3, 0x16, 0x54, 0xef, 0xca, 0xd8, 0x44, 0x93, 0xad, 0x6e, 0x11, 0xdb, 0x1e,
+	0x7a, 0x39, 0x22, 0x7f, 0x50, 0x50, 0xee, 0x28, 0x4d, 0x4f, 0x06, 0x65, 0xfb, 0x2c, 0xe8, 0x7f,
+	0xda, 0x59, 0xa0, 0xee, 0xb6, 0xa7, 0xcb, 0x07, 0x61, 0x4a, 0xd9, 0xab, 0xce, 0x06, 0x0b, 0xc3,
+	0x52, 0x42, 0x58, 0xbe, 0x9b, 0xc1, 0x99, 0x11, 0x66, 0x5d, 0xaa, 0xae, 0x05, 0xa4, 0xa7, 0xa5,
+	0xfa, 0x3a, 0x0b, 0xf1, 0xd5, 0x5f, 0x32, 0xed, 0x99, 0xd3, 0x4e, 0x0d, 0xa1, 0xea, 0x3d, 0x37,
+	0xfe, 0x5c, 0x41, 0x93, 0x74, 0xb7, 0x4e, 0x2b, 0x9c, 0x9a, 0x62, 0xa3, 0xa3, 0xc6, 0x96, 0x4f,
+	0x1c, 0xee, 0x43, 0x2c, 0x7b, 0x59, 0xa4, 0x67, 0x42, 0xa2, 0x60, 0xe7, 0xa3, 0x25, 0xa0, 0xc1,
+	0x1e, 0x3a, 0x5d, 0x0b, 0x1d, 0x37, 0x9e, 0xd1, 0x8a, 0x72, 0xaa, 0xc9, 0x20, 0x9b, 0x03, 0xbe,
+	0xdd, 0x36, 0x76, 0x06, 0xd2, 0x07, 0x31, 0x3a, 0x7c, 0x16, 0x1f, 0x20, 0x34, 0x28, 0xde, 0x0e,
+	0xef, 0xa3, 0x2c, 0x6c, 0x15, 0x9d, 0x87, 0x72, 0xac, 0xc2, 0xf2, 0x17, 0x8f, 0x95, 0x93, 0xef,
+	0xae, 0xaa, 0x5f, 0xfc, 0xf9, 0xef, 0xb7, 0xfd, 0xe7, 0x71, 0x5e, 0xeb, 0xf8, 0x8f, 0x04, 0xfe,
+	0x5a, 0x41, 0x83, 0x22, 0xc3, 0xf1, 0xcb, 0xc7, 0xed, 0x04, 0x92, 0x3d, 0xe5, 0xea, 0xa0, 0x2e,
+	0x08, 0xf2, 0xcb, 0x78, 0x56, 0xeb, 0xf4, 0x4f, 0x88, 0xb6, 0x17, 0x04, 0x7d, 0x5f, 0xdb, 0x93,
+	0xe5, 0xbe, 0x8f, 0xbf, 0x52, 0xd0, 0x50, 0x73, 0x77, 0xc1, 0xb3, 0x1d, 0x89, 0xda, 0x37, 0xa8,
+	0xfc, 0x5c, 0x1a, 0x51, 0xb0, 0x6b, 0x46, 0xd8, 0x75, 0x0e, 0x9f, 0xed, 0x68, 0x17, 0xfe, 0x59,
+	0x41, 0xe3, 0x49, 0xcb, 0x07, 0x5e, 0xea, 0xc8, 0xd3, 0x65, 0x9f, 0xc9, 0x5f, 0x7b, 0x42, 0x2d,
+	0x30, 0x74, 0x51, 0x18, 0x7a, 0x05, 0xcf, 0x25, 0x19, 0xda, 0xcc, 0x4b, 0x2d, 0x9a, 0x8e, 0xf8,
+	0xb7, 0xa8, 0xe5, 0x91, 0x21, 0x92, 0xc6, 0xf2, 0xa3, 0x33, 0x2e, 0x8d, 0xe5, 0x09, 0x93, 0x4a,
+	0xbd, 0x29, 0x2c, 0xbf, 0x8e, 0x97, 0xba, 0x5b, 0x1e, 0x9d, 0x66, 0xda, 0x1e, 0x2c, 0x39, 0xfb,
+	0xf8, 0x81, 0x82, 0x26, 0x3b, 0xcc, 0x42, 0x7c, 0xe3, 0x78, 0x83, 0x12, 0xa7, 0x75, 0xfe, 0xd5,
+	0x27, 0x57, 0x04, 0x67, 0xae, 0x0b, 0x67, 0x5e, 0xc1, 0xc5, 0xee, 0xce, 0x10, 0xdb, 0x36, 0xa2,
+	0x0e, 0xe1, 0xef, 0x14, 0x34, 0x1c, 0x19, 0x1d, 0xf8, 0x72, 0xf7, 0xba, 0x89, 0x97, 0xf8, 0x95,
+	0x74, 0xc2, 0x69, 0x32, 0x45, 0xd6, 0xf9, 0x91, 0x5a, 0xfb, 0x3d, 0x1a, 0xe5, 0xf8, 0xdc, 0x48,
+	0x13, 0xe5, 0xc4, 0x21, 0x97, 0x26, 0xca, 0xc9, 0x23, 0x4a, 0xbd, 0x26, 0x5c, 0xd0, 0xf0, 0x7c,
+	0xf7, 0x28, 0x37, 0xd7, 0x35, 0xdb, 0xb0, 0x9c, 0x0d, 0xb6, 0x52, 0x7a, 0x78, 0x50, 0x50, 0x1e,
+	0x1d, 0x14, 0x94, 0x7f, 0x0e, 0x0a, 0xca, 0x37, 0x87, 0x85, 0xbe, 0x47, 0x87, 0x85, 0xbe, 0xbf,
+	0x0e, 0x0b, 0x7d, 0x1f, 0xde, 0x48, 0xdf, 0xfb, 0x77, 0x81, 0x46, 0x8c, 0x80, 0x72, 0x56, 0x9c,
+	0x5f, 0xfd, 0x3f, 0x00, 0x00, 0xff, 0xff, 0x49, 0x93, 0xca, 0x9a, 0x57, 0x12, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -627,6 +999,12 @@ type QueryClient interface {
 	MegavaultTotalShares(ctx context.Context, in *QueryMegavaultTotalSharesRequest, opts ...grpc.CallOption) (*QueryMegavaultTotalSharesResponse, error)
 	// Queries owner shares of megavault.
 	MegavaultOwnerShares(ctx context.Context, in *QueryMegavaultOwnerSharesRequest, opts ...grpc.CallOption) (*QueryMegavaultOwnerSharesResponse, error)
+	// Queries all owner shares of megavault.
+	MegavaultAllOwnerShares(ctx context.Context, in *QueryMegavaultAllOwnerSharesRequest, opts ...grpc.CallOption) (*QueryMegavaultAllOwnerSharesResponse, error)
+	// Queries vault params of a vault.
+	VaultParams(ctx context.Context, in *QueryVaultParamsRequest, opts ...grpc.CallOption) (*QueryVaultParamsResponse, error)
+	// Queries withdrawal info for megavault.
+	MegavaultWithdrawalInfo(ctx context.Context, in *QueryMegavaultWithdrawalInfoRequest, opts ...grpc.CallOption) (*QueryMegavaultWithdrawalInfoResponse, error)
 }
 
 type queryClient struct {
@@ -682,6 +1060,33 @@ func (c *queryClient) MegavaultOwnerShares(ctx context.Context, in *QueryMegavau
 	return out, nil
 }
 
+func (c *queryClient) MegavaultAllOwnerShares(ctx context.Context, in *QueryMegavaultAllOwnerSharesRequest, opts ...grpc.CallOption) (*QueryMegavaultAllOwnerSharesResponse, error) {
+	out := new(QueryMegavaultAllOwnerSharesResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Query/MegavaultAllOwnerShares", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) VaultParams(ctx context.Context, in *QueryVaultParamsRequest, opts ...grpc.CallOption) (*QueryVaultParamsResponse, error) {
+	out := new(QueryVaultParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Query/VaultParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) MegavaultWithdrawalInfo(ctx context.Context, in *QueryMegavaultWithdrawalInfoRequest, opts ...grpc.CallOption) (*QueryMegavaultWithdrawalInfoResponse, error) {
+	out := new(QueryMegavaultWithdrawalInfoResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Query/MegavaultWithdrawalInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Queries the Params.
@@ -694,6 +1099,12 @@ type QueryServer interface {
 	MegavaultTotalShares(context.Context, *QueryMegavaultTotalSharesRequest) (*QueryMegavaultTotalSharesResponse, error)
 	// Queries owner shares of megavault.
 	MegavaultOwnerShares(context.Context, *QueryMegavaultOwnerSharesRequest) (*QueryMegavaultOwnerSharesResponse, error)
+	// Queries all owner shares of megavault.
+	MegavaultAllOwnerShares(context.Context, *QueryMegavaultAllOwnerSharesRequest) (*QueryMegavaultAllOwnerSharesResponse, error)
+	// Queries vault params of a vault.
+	VaultParams(context.Context, *QueryVaultParamsRequest) (*QueryVaultParamsResponse, error)
+	// Queries withdrawal info for megavault.
+	MegavaultWithdrawalInfo(context.Context, *QueryMegavaultWithdrawalInfoRequest) (*QueryMegavaultWithdrawalInfoResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -714,6 +1125,15 @@ func (*UnimplementedQueryServer) MegavaultTotalShares(ctx context.Context, req *
 }
 func (*UnimplementedQueryServer) MegavaultOwnerShares(ctx context.Context, req *QueryMegavaultOwnerSharesRequest) (*QueryMegavaultOwnerSharesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MegavaultOwnerShares not implemented")
+}
+func (*UnimplementedQueryServer) MegavaultAllOwnerShares(ctx context.Context, req *QueryMegavaultAllOwnerSharesRequest) (*QueryMegavaultAllOwnerSharesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MegavaultAllOwnerShares not implemented")
+}
+func (*UnimplementedQueryServer) VaultParams(ctx context.Context, req *QueryVaultParamsRequest) (*QueryVaultParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VaultParams not implemented")
+}
+func (*UnimplementedQueryServer) MegavaultWithdrawalInfo(ctx context.Context, req *QueryMegavaultWithdrawalInfoRequest) (*QueryMegavaultWithdrawalInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MegavaultWithdrawalInfo not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -810,6 +1230,60 @@ func _Query_MegavaultOwnerShares_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_MegavaultAllOwnerShares_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMegavaultAllOwnerSharesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).MegavaultAllOwnerShares(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.vault.Query/MegavaultAllOwnerShares",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).MegavaultAllOwnerShares(ctx, req.(*QueryMegavaultAllOwnerSharesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_VaultParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVaultParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VaultParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.vault.Query/VaultParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VaultParams(ctx, req.(*QueryVaultParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_MegavaultWithdrawalInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMegavaultWithdrawalInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).MegavaultWithdrawalInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.vault.Query/MegavaultWithdrawalInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).MegavaultWithdrawalInfo(ctx, req.(*QueryMegavaultWithdrawalInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.vault.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -833,6 +1307,18 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MegavaultOwnerShares",
 			Handler:    _Query_MegavaultOwnerShares_Handler,
+		},
+		{
+			MethodName: "MegavaultAllOwnerShares",
+			Handler:    _Query_MegavaultAllOwnerShares_Handler,
+		},
+		{
+			MethodName: "VaultParams",
+			Handler:    _Query_VaultParams_Handler,
+		},
+		{
+			MethodName: "MegavaultWithdrawalInfo",
+			Handler:    _Query_MegavaultWithdrawalInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -968,6 +1454,24 @@ func (m *QueryVaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.MostRecentClientIds) > 0 {
+		dAtA5 := make([]byte, len(m.MostRecentClientIds)*10)
+		var j4 int
+		for _, num := range m.MostRecentClientIds {
+			for num >= 1<<7 {
+				dAtA5[j4] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j4++
+			}
+			dAtA5[j4] = uint8(num)
+			j4++
+		}
+		i -= j4
+		copy(dAtA[i:], dAtA5[:j4])
+		i = encodeVarintQuery(dAtA, i, uint64(j4))
+		i--
+		dAtA[i] = 0x32
+	}
 	{
 		size, err := m.VaultParams.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -1183,17 +1687,12 @@ func (m *QueryMegavaultOwnerSharesRequest) MarshalToSizedBuffer(dAtA []byte) (in
 	_ = i
 	var l int
 	_ = l
-	if m.Pagination != nil {
-		{
-			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1214,6 +1713,115 @@ func (m *QueryMegavaultOwnerSharesResponse) MarshalTo(dAtA []byte) (int, error) 
 }
 
 func (m *QueryMegavaultOwnerSharesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.WithdrawableEquity.Size()
+		i -= size
+		if _, err := m.WithdrawableEquity.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.Equity.Size()
+		i -= size
+		if _, err := m.Equity.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if len(m.ShareUnlocks) > 0 {
+		for iNdEx := len(m.ShareUnlocks) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ShareUnlocks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	{
+		size, err := m.Shares.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryMegavaultAllOwnerSharesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryMegavaultAllOwnerSharesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryMegavaultAllOwnerSharesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryMegavaultAllOwnerSharesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryMegavaultAllOwnerSharesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryMegavaultAllOwnerSharesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1244,6 +1852,178 @@ func (m *QueryMegavaultOwnerSharesResponse) MarshalToSizedBuffer(dAtA []byte) (i
 			dAtA[i] = 0xa
 		}
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVaultParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVaultParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVaultParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Number != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Number))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Type != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Type))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVaultParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVaultParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVaultParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.VaultParams.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.VaultId.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryMegavaultWithdrawalInfoRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryMegavaultWithdrawalInfoRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryMegavaultWithdrawalInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.SharesToWithdraw.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryMegavaultWithdrawalInfoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryMegavaultWithdrawalInfoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryMegavaultWithdrawalInfoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.TotalShares.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.MegavaultEquity.Size()
+		i -= size
+		if _, err := m.MegavaultEquity.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.ExpectedQuoteQuantums.Size()
+		i -= size
+		if _, err := m.ExpectedQuoteQuantums.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.SharesToWithdraw.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1313,6 +2093,13 @@ func (m *QueryVaultResponse) Size() (n int) {
 	n += 1 + l + sovQuery(uint64(l))
 	l = m.VaultParams.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	if len(m.MostRecentClientIds) > 0 {
+		l = 0
+		for _, e := range m.MostRecentClientIds {
+			l += sovQuery(uint64(e))
+		}
+		n += 1 + sovQuery(uint64(l)) + l
+	}
 	return n
 }
 
@@ -1376,6 +2163,44 @@ func (m *QueryMegavaultOwnerSharesRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryMegavaultOwnerSharesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = m.Shares.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	if len(m.ShareUnlocks) > 0 {
+		for _, e := range m.ShareUnlocks {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	l = m.Equity.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	l = m.WithdrawableEquity.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryMegavaultAllOwnerSharesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
@@ -1383,7 +2208,7 @@ func (m *QueryMegavaultOwnerSharesRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryMegavaultOwnerSharesResponse) Size() (n int) {
+func (m *QueryMegavaultAllOwnerSharesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1399,6 +2224,62 @@ func (m *QueryMegavaultOwnerSharesResponse) Size() (n int) {
 		l = m.Pagination.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
+	return n
+}
+
+func (m *QueryVaultParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Type != 0 {
+		n += 1 + sovQuery(uint64(m.Type))
+	}
+	if m.Number != 0 {
+		n += 1 + sovQuery(uint64(m.Number))
+	}
+	return n
+}
+
+func (m *QueryVaultParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.VaultId.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	l = m.VaultParams.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryMegavaultWithdrawalInfoRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.SharesToWithdraw.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryMegavaultWithdrawalInfoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.SharesToWithdraw.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	l = m.ExpectedQuoteQuantums.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	l = m.MegavaultEquity.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	l = m.TotalShares.Size()
+	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
@@ -1889,6 +2770,82 @@ func (m *QueryVaultResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 6:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQuery
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.MostRecentClientIds = append(m.MostRecentClientIds, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQuery
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthQuery
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthQuery
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.MostRecentClientIds) == 0 {
+					m.MostRecentClientIds = make([]uint32, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowQuery
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.MostRecentClientIds = append(m.MostRecentClientIds, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field MostRecentClientIds", wireType)
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -2281,7 +3238,304 @@ func (m *QueryMegavaultOwnerSharesRequest) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: QueryMegavaultOwnerSharesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryMegavaultOwnerSharesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryMegavaultOwnerSharesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryMegavaultOwnerSharesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Shares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Shares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ShareUnlocks", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ShareUnlocks = append(m.ShareUnlocks, ShareUnlock{})
+			if err := m.ShareUnlocks[len(m.ShareUnlocks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Equity", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Equity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field WithdrawableEquity", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.WithdrawableEquity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryMegavaultAllOwnerSharesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryMegavaultAllOwnerSharesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryMegavaultAllOwnerSharesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
 			}
@@ -2338,7 +3592,7 @@ func (m *QueryMegavaultOwnerSharesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryMegavaultOwnerSharesResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryMegavaultAllOwnerSharesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2361,10 +3615,10 @@ func (m *QueryMegavaultOwnerSharesResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMegavaultOwnerSharesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryMegavaultAllOwnerSharesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMegavaultOwnerSharesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryMegavaultAllOwnerSharesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2434,6 +3688,475 @@ func (m *QueryMegavaultOwnerSharesResponse) Unmarshal(dAtA []byte) error {
 				m.Pagination = &query.PageResponse{}
 			}
 			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVaultParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVaultParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVaultParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= VaultType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Number", wireType)
+			}
+			m.Number = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Number |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVaultParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVaultParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVaultParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.VaultId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultParams", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.VaultParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryMegavaultWithdrawalInfoRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryMegavaultWithdrawalInfoRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryMegavaultWithdrawalInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SharesToWithdraw", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SharesToWithdraw.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryMegavaultWithdrawalInfoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryMegavaultWithdrawalInfoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryMegavaultWithdrawalInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SharesToWithdraw", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SharesToWithdraw.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExpectedQuoteQuantums", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ExpectedQuoteQuantums.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MegavaultEquity", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MegavaultEquity.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalShares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TotalShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

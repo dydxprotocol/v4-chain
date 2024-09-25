@@ -1,12 +1,13 @@
 package trading_rewards_test
 
 import (
-	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"math/big"
 	"testing"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -229,20 +230,20 @@ func TestTradingRewards(t *testing.T) {
 						},
 						{
 							AccAddress: RewardsTreasuryAccAddress,
-							// Total of ~5.06 full coins have vested, which is less than calculated
-							// rewards (~5.5 full coins). So all reward tokens were distributed.
+							// Total of ~5.06 full coins have vested, calculated rewards are
+							// ~1.99 full coins. So remaining rewards are ~3.07 full coins.
 							Balance: big_testutil.MustFirst(new(big.Int).SetString(
-								"0",
+								"3077645653924902967",
 								10,
 							)),
 						},
 						{
 							AccAddress: constants.AliceAccAddress,
-							// starting balance + ~5.06 full coins rewards
+							// starting balance + ~1.99 full coins rewards
 							Balance: new(big.Int).Add(
 								TestAccountStartingTokenBalance,
 								big_testutil.MustFirst(new(big.Int).SetString(
-									"5068012730847979890",
+									"1990367076923076923",
 									10,
 								)),
 							),
@@ -258,7 +259,7 @@ func TestTradingRewards(t *testing.T) {
 							TradingRewards: []*indexerevents.AddressTradingReward{
 								{
 									Owner:       constants.AliceAccAddress.String(),
-									DenomAmount: dtypes.NewIntFromUint64(5068012730847979890),
+									DenomAmount: dtypes.NewIntFromUint64(1990367076923076923),
 								},
 							},
 						},
@@ -277,10 +278,10 @@ func TestTradingRewards(t *testing.T) {
 						},
 						{
 							AccAddress: RewardsTreasuryAccAddress,
-							// ~25.34 full coins. Note this is exactly 10x the amount vested per block,
+							// balance + ~25.34 full coins. Note this is exactly 10x the amount vested per block,
 							// since 10 blocks has passed since the last check.
 							Balance: big_testutil.MustFirst(new(big.Int).SetString(
-								"25340063654239899450",
+								"28417709308164802417",
 								10,
 							)),
 						},
@@ -300,23 +301,23 @@ func TestTradingRewards(t *testing.T) {
 						{
 							AccAddress: constants.BobAccAddress,
 							// Starting balance: 500000000000000000000000
-							// Total rewards = (TakerFee - TakerVolume * MaxMakerRebate) * 0.99
-							//               = ($28003 * 0.05% - $28003 * 0.011%) * 0.99
-							//               = ($14.0015 - $3.08033) 0.99 = $10.8119583
-							// Reward tokens = $10.8119583 / $1.95 = 5.544594 full coins
+							// Total rewards = (TakerFee - TakerVolume * MaxMakerRebate - (takerFee * MaxPossibleTakerFeeRevShare)) * 0.99
+							//               = ($28003 * 0.05% - $28003 * 0.011% - $28003 * 0.05% * 0.5) * 0.99
+							//               = ($14.0015 - $3.08033 - $7.00075) 0.99 = $3.8812158
+							// Reward tokens = $3.8812158 / $1.95 = 1.9903670769 full coins
 							Balance: new(big.Int).Add(
 								TestAccountStartingTokenBalance,
 								big_testutil.MustFirst(new(big.Int).SetString(
-									"5544594000000000000",
+									"1990367076923076923",
 									10,
 								)),
 							),
 						},
 						{
 							AccAddress: RewardsTreasuryAccAddress,
-							// 25.34 + 2.534 - 5.544594 ~= 22.329 full coins
+							// balance + 25.34 + 2.534 - 1.9903670769 ~= 22.329 full coins
 							Balance: big_testutil.MustFirst(new(big.Int).SetString(
-								"22329476019663889395",
+								"28961348596665715439",
 								10,
 							)),
 						},
@@ -326,7 +327,7 @@ func TestTradingRewards(t *testing.T) {
 							TradingRewards: []*indexerevents.AddressTradingReward{
 								{
 									Owner:       constants.BobAccAddress.String(),
-									DenomAmount: dtypes.NewIntFromUint64(5544594000000000000),
+									DenomAmount: dtypes.NewIntFromUint64(1990367076923076923),
 								},
 							},
 						},
@@ -482,8 +483,8 @@ func TestTradingRewards(t *testing.T) {
 					// - Carl and Dave: $12.519
 					// Total rewards tokens distributed: ~25.34 (less than the value of net fees)
 					// Entitled reward tokens:
-					// - Alice and Bob: 8.0539
-					// - Carl and Dave: 4.616
+					// - Alice and Bob: 3.98073
+					// - Carl and Dave: 2.28156
 					ExpectedBalances: []expectedBalance{
 						{
 							AccAddress: RewardsVesterAccAddress,
@@ -495,9 +496,9 @@ func TestTradingRewards(t *testing.T) {
 						},
 						{
 							AccAddress: RewardsTreasuryAccAddress,
-							// All vested rewards were distributed, only rounding dusts left.
+							// 12.52458 full coins distributed, ~12.815 full coins remaining
 							Balance: big_testutil.MustFirst(new(big.Int).SetString(
-								"2",
+								"12815456885009130222",
 								10,
 							)),
 						},
@@ -506,7 +507,7 @@ func TestTradingRewards(t *testing.T) {
 							Balance: new(big.Int).Add(
 								TestAccountStartingTokenBalance,
 								big_testutil.MustFirst(new(big.Int).SetString(
-									"8053910091363583686",
+									"3980734153846153845",
 									10,
 								)),
 							),
@@ -516,7 +517,7 @@ func TestTradingRewards(t *testing.T) {
 							Balance: new(big.Int).Add(
 								TestAccountStartingTokenBalance,
 								big_testutil.MustFirst(new(big.Int).SetString(
-									"8053910091363583686",
+									"3980734153846153845",
 									10,
 								)),
 							),
@@ -526,7 +527,7 @@ func TestTradingRewards(t *testing.T) {
 							Balance: new(big.Int).Add(
 								TestAccountStartingTokenBalance,
 								big_testutil.MustFirst(new(big.Int).SetString(
-									"4616121735756366038",
+									"2281569230769230769",
 									10,
 								)),
 							),
@@ -536,7 +537,7 @@ func TestTradingRewards(t *testing.T) {
 							Balance: new(big.Int).Add(
 								TestAccountStartingTokenBalance,
 								big_testutil.MustFirst(new(big.Int).SetString(
-									"4616121735756366038",
+									"2281569230769230769",
 									10,
 								)),
 							),
@@ -547,19 +548,19 @@ func TestTradingRewards(t *testing.T) {
 							TradingRewards: []*indexerevents.AddressTradingReward{
 								{
 									Owner:       constants.BobAccAddress.String(),
-									DenomAmount: dtypes.NewIntFromUint64(8053910091363583686),
+									DenomAmount: dtypes.NewIntFromUint64(3980734153846153845),
 								},
 								{
 									Owner:       constants.AliceAccAddress.String(),
-									DenomAmount: dtypes.NewIntFromUint64(8053910091363583686),
+									DenomAmount: dtypes.NewIntFromUint64(3980734153846153845),
 								},
 								{
 									Owner:       constants.CarlAccAddress.String(),
-									DenomAmount: dtypes.NewIntFromUint64(4616121735756366038),
+									DenomAmount: dtypes.NewIntFromUint64(2281569230769230769),
 								},
 								{
 									Owner:       constants.DaveAccAddress.String(),
-									DenomAmount: dtypes.NewIntFromUint64(4616121735756366038),
+									DenomAmount: dtypes.NewIntFromUint64(2281569230769230769),
 								},
 							},
 						},

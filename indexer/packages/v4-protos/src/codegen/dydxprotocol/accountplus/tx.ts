@@ -71,13 +71,15 @@ export interface MsgRemoveAuthenticatorResponseSDKType {
 /** MsgSetActiveState sets the active state of the module. */
 
 export interface MsgSetActiveState {
-  sender: string;
+  /** Authority is the address that may send this message. */
+  authority: string;
   active: boolean;
 }
 /** MsgSetActiveState sets the active state of the module. */
 
 export interface MsgSetActiveStateSDKType {
-  sender: string;
+  /** Authority is the address that may send this message. */
+  authority: string;
   active: boolean;
 }
 /** MsgSetActiveStateResponse defines the Msg/SetActiveState response type. */
@@ -323,15 +325,15 @@ export const MsgRemoveAuthenticatorResponse = {
 
 function createBaseMsgSetActiveState(): MsgSetActiveState {
   return {
-    sender: "",
+    authority: "",
     active: false
   };
 }
 
 export const MsgSetActiveState = {
   encode(message: MsgSetActiveState, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.sender !== "") {
-      writer.uint32(10).string(message.sender);
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
     }
 
     if (message.active === true) {
@@ -351,7 +353,7 @@ export const MsgSetActiveState = {
 
       switch (tag >>> 3) {
         case 1:
-          message.sender = reader.string();
+          message.authority = reader.string();
           break;
 
         case 2:
@@ -369,7 +371,7 @@ export const MsgSetActiveState = {
 
   fromPartial(object: DeepPartial<MsgSetActiveState>): MsgSetActiveState {
     const message = createBaseMsgSetActiveState();
-    message.sender = object.sender ?? "";
+    message.authority = object.authority ?? "";
     message.active = object.active ?? false;
     return message;
   }

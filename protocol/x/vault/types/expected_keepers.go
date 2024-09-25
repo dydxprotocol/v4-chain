@@ -1,14 +1,36 @@
 package types
 
 import (
+	"context"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
+
+type AssetsKeeper interface {
+	GetAsset(
+		ctx sdk.Context,
+		assetId uint32,
+	) (
+		asset assettypes.Asset,
+		exists bool,
+	)
+}
+
+type BankKeeper interface {
+	GetBalance(
+		ctx context.Context,
+		addr sdk.AccAddress,
+		denom string,
+	) sdk.Coin
+}
 
 type ClobKeeper interface {
 	// Clob Pair.
@@ -71,6 +93,13 @@ type SendingKeeper interface {
 }
 
 type SubaccountsKeeper interface {
+	DepositFundsFromAccountToSubaccount(
+		ctx sdk.Context,
+		fromAccount sdk.AccAddress,
+		toSubaccountId satypes.SubaccountId,
+		assetId uint32,
+		quantums *big.Int,
+	) error
 	GetNetCollateralAndMarginRequirements(
 		ctx sdk.Context,
 		update satypes.Update,

@@ -7,6 +7,8 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
+	affiliatetypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
+	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -247,6 +249,11 @@ func TestGetPerpetualFeePpm_Referral(t *testing.T) {
 
 			statsKeeper := tApp.App.StatsKeeper
 			affiliatesKeeper := tApp.App.AffiliatesKeeper
+
+			// common setup
+			err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+			require.NoError(t, err)
+
 			if tc.setup != nil {
 				tc.setup(ctx, &affiliatesKeeper, &statsKeeper)
 			}
@@ -343,6 +350,34 @@ func TestGetMaxMakerRebate(t *testing.T) {
 			require.NoError(t, err)
 
 			require.Equal(t, tc.expectedLowestMakerFee, k.GetLowestMakerFee(ctx))
+		})
+	}
+}
+
+func TestGetAffiliateRefereeLowestTakerFee(t *testing.T) {
+	tests := map[string]struct {
+		expectedLowestTakerFee int32
+		feeTiers               types.PerpetualFeeParams
+	}{
+		"tiers are ordered by absolute volume requirement": {
+			feeTiers:               types.StandardParams(),
+			expectedLowestTakerFee: 350,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+			k := tApp.App.FeeTiersKeeper
+			err := k.SetPerpetualFeeParams(
+				ctx,
+				tc.feeTiers,
+			)
+			require.NoError(t, err)
+
+			feeTiers := k.GetPerpetualFeeParams(ctx).Tiers
+			require.Equal(t, tc.expectedLowestTakerFee, feetierskeeper.GetAffiliateRefereeLowestTakerFeeFromTiers(feeTiers))
 		})
 	}
 }

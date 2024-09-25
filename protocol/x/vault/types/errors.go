@@ -20,10 +20,10 @@ var (
 		3,
 		"MarketParam not found",
 	)
-	ErrInvalidDepositAmount = errorsmod.Register(
+	ErrInvalidQuoteQuantums = errorsmod.Register(
 		ModuleName,
 		4,
-		"Deposit amount is invalid",
+		"QuoteQuantums must be positive and less than 2^64",
 	)
 	ErrNonPositiveEquity = errorsmod.Register(
 		ModuleName,
@@ -129,5 +129,35 @@ var (
 		ModuleName,
 		25,
 		"Shares to withdraw must be positive and less than or equal to total shares",
+	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		26,
+		"Authority must be a module authority or operator",
+	)
+	ErrInsufficientWithdrawableShares = errorsmod.Register(
+		ModuleName,
+		27,
+		"Insufficient withdrawable shares",
+	)
+	ErrInsufficientRedeemedQuoteQuantums = errorsmod.Register(
+		ModuleName,
+		28,
+		"Insufficient redeemed quote quantums",
+	)
+	ErrDeactivatePositiveEquityVault = errorsmod.Register(
+		ModuleName,
+		29,
+		"Cannot deactivate vaults with positive equity",
+	)
+	ErrNonPositiveShares = errorsmod.Register(
+		ModuleName,
+		30,
+		"Shares must be positive",
+	)
+	ErrInvalidSkewFactor = errorsmod.Register(
+		ModuleName,
+		31,
+		"Skew factor times order_size_pct must be less than 2 to avoid skewing over the spread",
 	)
 )

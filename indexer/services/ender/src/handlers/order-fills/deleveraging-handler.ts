@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   FillFromDatabase,
   FillModel,
@@ -15,6 +15,7 @@ import {
 import { DeleveragingEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
+import config from '../../config';
 import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
@@ -95,6 +96,12 @@ export class DeleveragingHandler extends AbstractOrderFillHandler<DeleveragingEv
         liquidatedFill,
       ),
     ];
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_deleveraging_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     return kafkaEvents;
   }
 }
