@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   AssetFromDatabase,
   AssetModel,
@@ -8,6 +9,7 @@ import {
 import { TransferEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
+import config from '../config';
 import { generateTransferContents } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
@@ -22,6 +24,12 @@ export class TransferHandler extends Handler<TransferEventV1> {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_transfer_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     const asset: AssetFromDatabase = AssetModel.fromJson(
       resultRow.asset) as AssetFromDatabase;
     const transfer: TransferFromDatabase = TransferModel.fromJson(
