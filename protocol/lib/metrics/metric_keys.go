@@ -91,5 +91,7 @@ const (
 	EndBlockerLag = "end_blocker_lag"
 
 	// Account plus
-	MissingRegisteredAuthenticator = "missing_registered_authenticator"
+	AuthenticatorDecoratorAnteHandleLatency = "authenticator_decorator_ante_handle_latency"
+	MissingRegisteredAuthenticator          = "missing_registered_authenticator"
+	AuthenticatorTrackFailed                = "authenticator_track_failed"
 )
