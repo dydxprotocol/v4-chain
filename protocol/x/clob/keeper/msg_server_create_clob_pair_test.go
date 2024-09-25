@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -65,7 +66,7 @@ func TestCreateClobPair(t *testing.T) {
 							testPerp1.Params.LiquidityTier,
 							testPerp1.Params.MarketType,
 							testPerp1.Params.DangerIndexPpm,
-							testPerp1.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+							fmt.Sprintf("%d", testPerp1.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Return()
