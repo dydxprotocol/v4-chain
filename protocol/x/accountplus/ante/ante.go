@@ -160,16 +160,16 @@ func (ad AuthenticatorDecorator) AnteHandle(
 				)
 		}
 
-		a11r := selectedAuthenticator.Authenticator
+		authenticator := selectedAuthenticator.Authenticator
 		stringId := strconv.FormatUint(selectedAuthenticator.Id, 10)
 		authenticationRequest.AuthenticatorId = stringId
 
 		// Consume the authenticator's static gas
-		ctx.GasMeter().ConsumeGas(a11r.StaticGas(), "authenticator static gas")
+		ctx.GasMeter().ConsumeGas(authenticator.StaticGas(), "authenticator static gas")
 
 		// Authenticate should never modify state. That's what track is for
 		neverWriteCtx, _ := ctx.CacheContext()
-		authErr := a11r.Authenticate(neverWriteCtx, authenticationRequest)
+		authErr := authenticator.Authenticate(neverWriteCtx, authenticationRequest)
 
 		// If authentication is successful, continue
 		if authErr == nil {
@@ -178,7 +178,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 			// loop variable inside the closure.
 			currentMsgTypeURL := sdk.MsgTypeURL(msg)
 			tracks = append(tracks, func() error {
-				err := a11r.Track(ctx, authenticationRequest)
+				err := authenticator.Track(ctx, authenticationRequest)
 				if err != nil {
 					// track should not fail in normal circumstances,
 					// since it is intended to update track state before execution.
@@ -198,7 +198,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 						"track failed (account = %s, authenticator id = %s, authenticator type, %s, msg index = %d)",
 						account,
 						stringId,
-						a11r.Type(),
+						authenticator.Type(),
 						msgIndex,
 					)
 				}

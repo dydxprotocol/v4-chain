@@ -29,6 +29,12 @@ func NewCircuitBreakerDecorator(
 }
 
 // AnteHandle checks if a tx is a smart account tx and routes it through the correct series of ante handlers.
+//
+// Note that whether or not to use the new authenticator flow is determined by the presence of the `TxExtension`.
+// This is different from the Osmosis's implementation, which falls back to the original flow if
+// smart account is disabled.
+// The reason for this is because only minimal validation is done on resting maker orders when they get matched
+// and this approach mitigates an issue for maker orders when smart account gets disabled through governance.
 func (ad CircuitBreakerDecorator) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
