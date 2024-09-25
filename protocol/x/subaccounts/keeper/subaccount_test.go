@@ -6108,7 +6108,9 @@ func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 			gasUsedAfter := ctx.GasMeter().GasConsumed()
 
 			gasUsed := uint64(0)
-			for range 100 { // run 100 times since it's highly unlikely gas usage is deterministic over 100 times if there's non-determinism.
+			// Run 100 times since it's highly unlikely gas usage is deterministic over 100 times if
+			// there's non-determinism.
+			for range 100 {
 				// divide by 2 so that the state read fails at least second to last time.
 				ctxWithLimitedGas := ctx.WithGasMeter(storetypes.NewGasMeter((gasUsedAfter - gasUsedBefore) / 2))
 
@@ -6116,7 +6118,7 @@ func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 					t,
 					storetypes.ErrorOutOfGas{Descriptor: "ReadFlat"},
 					func() {
-						keeper.GetAllRelevantPerpetuals(ctxWithLimitedGas, []types.Update{update})
+						_, _ = keeper.GetAllRelevantPerpetuals(ctxWithLimitedGas, []types.Update{update})
 					},
 				)
 
@@ -6124,7 +6126,12 @@ func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 					gasUsed = ctxWithLimitedGas.GasMeter().GasConsumed()
 					require.Greater(t, gasUsed, uint64(0))
 				} else {
-					require.Equal(t, gasUsed, ctxWithLimitedGas.GasMeter().GasConsumed(), "Gas usage when out of gas is not deterministic")
+					require.Equal(
+						t,
+						gasUsed,
+						ctxWithLimitedGas.GasMeter().GasConsumed(),
+						"Gas usage when out of gas is not deterministic",
+					)
 				}
 			}
 		})
