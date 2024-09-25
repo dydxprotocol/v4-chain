@@ -136,7 +136,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.StatsKeeper,
 			ks.SubaccountsKeeper,
 			indexerEventManager,
-			indexerEventsTransientStoreKey,
 		)
 		ks.Cdc = cdc
 
@@ -172,7 +171,6 @@ func createClobKeeper(
 	statsKeeper *statskeeper.Keeper,
 	saKeeper *subkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
-	indexerEventsTransientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey, storetypes.StoreKey) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
