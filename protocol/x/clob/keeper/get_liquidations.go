@@ -187,12 +187,39 @@ func updateCollateralizationInfoGivenPerp(
 	bigWeightedMaintenanceMargin *big.Int,
 	bigTotalMaintenanceMargin *big.Int,
 ) {
+	updateNetCollateral(perpetual, price, bigPositionQuantums, bigTotalNetCollateral)
+	updateWeightedMaintenanceMargin(perpetual, price, bigPositionQuantums, bigWeightedMaintenanceMargin)
+	updateTotalMaintenanceMargin(perpetual, price, liquidityTier, bigPositionQuantums, bigTotalMaintenanceMargin)
+}
+
+func updateNetCollateral(
+	perpetual perptypes.Perpetual,
+	price pricestypes.MarketPrice,
+	bigPositionQuantums *big.Int,
+	bigTotalNetCollateral *big.Int,
+) {
 	bigPositionQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, price, bigPositionQuantums)
 	bigTotalNetCollateral.Add(bigTotalNetCollateral, bigPositionQuoteQuantums)
+}
 
+func updateWeightedMaintenanceMargin(
+	perpetual perptypes.Perpetual,
+	price pricestypes.MarketPrice,
+	bigPositionQuantums *big.Int,
+	bigWeightedMaintenanceMargin *big.Int,
+) {
+	bigPositionQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, price, bigPositionQuantums)
 	weightedPositionQuoteQuantums := new(big.Int).Mul(bigPositionQuoteQuantums.Abs(bigPositionQuoteQuantums), new(big.Int).SetUint64(uint64(perpetual.Params.DangerIndexPpm)))
 	bigWeightedMaintenanceMargin.Add(bigWeightedMaintenanceMargin, weightedPositionQuoteQuantums)
+}
 
+func updateTotalMaintenanceMargin(
+	perpetual perptypes.Perpetual,
+	price pricestypes.MarketPrice,
+	liquidityTier perptypes.LiquidityTier,
+	bigPositionQuantums *big.Int,
+	bigTotalMaintenanceMargin *big.Int,
+) {
 	_, bigMaintenanceMarginQuoteQuantums := perpkeeper.GetMarginRequirementsInQuoteQuantums(perpetual, price, liquidityTier, bigPositionQuantums)
 	bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
 }
