@@ -6033,12 +6033,6 @@ func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 		// updates
 		assetUpdates     []types.AssetUpdate
 		perpetualUpdates []types.PerpetualUpdate
-
-		// expectations
-		expectedNetCollateral     *big.Int
-		expectedInitialMargin     *big.Int
-		expectedMaintenanceMargin *big.Int
-		expectedErr               error
 	}{
 		"Gas used is deterministic when erroring on gas usage": {
 			assetPositions: testutil.CreateUsdcAssetPositions(big.NewInt(10_000_000_001)), // $10,000.000001
