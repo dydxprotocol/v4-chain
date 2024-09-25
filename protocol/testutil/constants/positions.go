@@ -102,7 +102,7 @@ var (
 	// SOL positions
 	PerpetualPosition_OneSolLong = *testutil.CreateSinglePerpetualPosition(
 		2,
-		big.NewInt(10_000_000_000), // 0.1 SOL
+		big.NewInt(100_000_000_000), // 1 SOL
 		big.NewInt(0),
 		big.NewInt(0),
 	)
