@@ -82,9 +82,9 @@ type VaultKeeper interface {
 		sharesToLock vaulttypes.NumShares,
 		tilBlock uint32,
 	) error
-	SetVaultParams(
+	SetVaultStatus(
 		ctx sdk.Context,
 		vaultId vaulttypes.VaultId,
-		vaultParams vaulttypes.VaultParams,
+		status vaulttypes.VaultStatus,
 	) error
 }

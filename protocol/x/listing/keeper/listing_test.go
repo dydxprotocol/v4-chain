@@ -316,7 +316,7 @@ func TestDepositToMegavaultforPML(t *testing.T) {
 	}{
 		"success": {
 			address:    constants.AliceAccAddress.String(),
-			balance:    big.NewInt(20_000),
+			balance:    big.NewInt(10_000_000_000),
 			asset:      *constants.Usdc,
 			clobPairId: 1,
 
@@ -332,7 +332,7 @@ func TestDepositToMegavaultforPML(t *testing.T) {
 		},
 		"failure - invalid clob pair id": {
 			address:    constants.AliceAccAddress.String(),
-			balance:    big.NewInt(20_000),
+			balance:    big.NewInt(10_000_000_000),
 			asset:      *constants.Usdc,
 			clobPairId: 100, // non existent clob pair id
 
@@ -399,6 +399,15 @@ func TestDepositToMegavaultforPML(t *testing.T) {
 					require.ErrorContains(t, err, tc.expectedErr)
 				} else {
 					require.NoError(t, err)
+					vaultParams, exists := tApp.App.VaultKeeper.GetVaultParams(
+						ctx,
+						vaulttypes.VaultId{
+							Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+							Number: tc.clobPairId,
+						},
+					)
+					require.True(t, exists)
+					require.Equal(t, vaulttypes.VaultStatus_VAULT_STATUS_QUOTING, vaultParams.Status)
 				}
 			},
 		)

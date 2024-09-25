@@ -247,12 +247,10 @@ func (k Keeper) DepositToMegavaultforPML(
 	}
 
 	// Activate vault to quoting status
-	err = k.VaultKeeper.SetVaultParams(
+	err = k.VaultKeeper.SetVaultStatus(
 		ctx,
 		vaultId,
-		vaulttypes.VaultParams{
-			Status: vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
-		},
+		vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
 	)
 	if err != nil {
 		return err
