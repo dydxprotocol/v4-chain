@@ -103,6 +103,7 @@ type AppModule struct {
 	clobKeeper       types.ClobKeeper
 	marketMapKeeper  types.MarketMapKeeper
 	perpetualsKeeper types.PerpetualsKeeper
+	vaultKeeper      types.VaultKeeper
 }
 
 func NewAppModule(
@@ -112,6 +113,7 @@ func NewAppModule(
 	clobKeeper types.ClobKeeper,
 	marketMapKeeper types.MarketMapKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
+	vaultKeeper types.VaultKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic:   NewAppModuleBasic(cdc),
@@ -120,6 +122,7 @@ func NewAppModule(
 		clobKeeper:       clobKeeper,
 		marketMapKeeper:  marketMapKeeper,
 		perpetualsKeeper: perpetualsKeeper,
+		vaultKeeper:      vaultKeeper,
 	}
 }
 

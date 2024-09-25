@@ -117,6 +117,20 @@ func (k Keeper) SetVaultParams(
 	return nil
 }
 
+// SetVaultStatus sets `VaultParams.Status` in state for a given vault.
+func (k Keeper) SetVaultStatus(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	status types.VaultStatus,
+) error {
+	vaultParams, exists := k.GetVaultParams(ctx, vaultId)
+	if !exists {
+		return types.ErrVaultParamsNotFound
+	}
+	vaultParams.Status = status
+	return k.SetVaultParams(ctx, vaultId, vaultParams)
+}
+
 // getVaultParamsIterator returns an iterator over all VaultParams.
 func (k Keeper) getVaultParamsIterator(ctx sdk.Context) storetypes.Iterator {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VaultParamsKeyPrefix))

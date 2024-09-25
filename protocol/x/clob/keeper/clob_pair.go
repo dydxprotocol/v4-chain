@@ -66,7 +66,10 @@ func (k Keeper) CreatePerpetualClobPair(
 		return clobPair, err
 	}
 
-	err := k.CreateClobPair(ctx, clobPair)
+	// Write the `ClobPair` to state.
+	k.SetClobPair(ctx, clobPair)
+
+	err := k.CreateClobPairStructures(ctx, clobPair)
 	if err != nil {
 		return clobPair, err
 	}
@@ -162,22 +165,11 @@ func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 	k.MemClob.CreateOrderbook(clobPair)
 }
 
-// CreateClobPair creates a new `ClobPair` in the store and creates the corresponding orderbook in the memclob.
+// CreateClobPair performs all non stateful operations to create a CLOB pair.
+// These include creating the corresponding orderbook in the memclob, the mapping between
+// the CLOB pair and the perpetual and the indexer event.
 // This function returns an error if a value for the ClobPair's id already exists in state.
-func (k Keeper) CreateClobPair(ctx sdk.Context, clobPair types.ClobPair) error {
-	// Validate the given clob pair id is not already in use.
-	if _, exists := k.GetClobPair(ctx, clobPair.GetClobPairId()); exists {
-		panic(
-			fmt.Sprintf(
-				"ClobPair with id %+v already exists in state",
-				clobPair.GetClobPairId(),
-			),
-		)
-	}
-
-	// Write the `ClobPair` to state.
-	k.setClobPair(ctx, clobPair)
-
+func (k Keeper) CreateClobPairStructures(ctx sdk.Context, clobPair types.ClobPair) error {
 	// Create the corresponding orderbook in the memclob.
 	k.createOrderbook(ctx, clobPair)
 
@@ -217,8 +209,8 @@ func (k Keeper) CreateClobPair(ctx sdk.Context, clobPair types.ClobPair) error {
 	return nil
 }
 
-// setClobPair sets a specific `ClobPair` in the store from its index.
-func (k Keeper) setClobPair(ctx sdk.Context, clobPair types.ClobPair) {
+// SetClobPair sets a specific `ClobPair` in the store from its index.
+func (k Keeper) SetClobPair(ctx sdk.Context, clobPair types.ClobPair) {
 	store := k.getClobPairStore(ctx)
 	b := k.cdc.MustMarshal(&clobPair)
 	store.Set(clobPairKey(clobPair.GetClobPairId()), b)
@@ -567,7 +559,7 @@ func (k Keeper) UpdateClobPair(
 		return err
 	}
 
-	k.setClobPair(ctx, clobPair)
+	k.SetClobPair(ctx, clobPair)
 
 	// Send UpdateClobPair to indexer.
 	k.GetIndexerEventManager().AddTxnEvent(
