@@ -68,7 +68,7 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
 					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketType,
 					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.DangerIndexPpm,
-					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+					fmt.Sprintf("%d", constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 				),
 			),
 		).Once().Return()
@@ -192,7 +192,7 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+				fmt.Sprintf("%d", constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 			),
 		),
 	).Once().Return()
@@ -286,7 +286,7 @@ func TestCreatePerpetualClobPair(t *testing.T) {
 							perpetual.Params.LiquidityTier,
 							perpetual.Params.MarketType,
 							perpetual.Params.DangerIndexPpm,
-							perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+							fmt.Sprintf("%d", perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Return()
@@ -441,7 +441,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 								perpetual.Params.LiquidityTier,
 								perpetual.Params.MarketType,
 								perpetual.Params.DangerIndexPpm,
-								perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+								fmt.Sprintf("%d", perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 							),
 						),
 					).Return()
@@ -635,7 +635,7 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+				fmt.Sprintf("%d", constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 			),
 		),
 	).Once().Return()
@@ -754,7 +754,7 @@ func TestUpdateClobPair(t *testing.T) {
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+							fmt.Sprintf("%d", constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Once().Return()
@@ -814,7 +814,7 @@ func TestUpdateClobPair(t *testing.T) {
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+							fmt.Sprintf("%d", constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Once().Return()
@@ -854,7 +854,7 @@ func TestUpdateClobPair(t *testing.T) {
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DangerIndexPpm,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+							fmt.Sprintf("%d", constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Once().Return()
