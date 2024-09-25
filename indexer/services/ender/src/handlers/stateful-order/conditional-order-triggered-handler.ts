@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   OrderFromDatabase,
   OrderTable,
@@ -15,6 +16,11 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
+<<<<<<< HEAD
+=======
+import config from '../../config';
+import { sendOrderTriggeredNotification } from '../../helpers/notifications/notifications-functions';
+>>>>>>> 9fcbcc87 (Add sql script latency metrics (#2356))
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 
@@ -39,6 +45,16 @@ export class ConditionalOrderTriggeredHandler extends
 
     const indexerOrder: IndexerOrder = orderTranslations.convertToIndexerOrderWithSubaccount(
       order, perpetualMarket, subaccount);
+<<<<<<< HEAD
+=======
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_conditional_order_triggered_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
+    await sendOrderTriggeredNotification(order, perpetualMarket, subaccount);
+>>>>>>> 9fcbcc87 (Add sql script latency metrics (#2356))
     return this.createKafkaEvents(indexerOrder);
   }
 

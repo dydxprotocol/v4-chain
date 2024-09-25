@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   FillFromDatabase,
   FillModel,
@@ -22,6 +23,7 @@ import { IndexerOrderId, LiquidationOrderV1 } from '@dydxprotocol-indexer/v4-pro
 import Long from 'long';
 import * as pg from 'pg';
 
+import config from '../../config';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
@@ -98,6 +100,12 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
       convertPerpetualPosition(position),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
       market,
+    );
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_liquidation_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
     );
 
     if (this.event.liquidity === Liquidity.MAKER) {
