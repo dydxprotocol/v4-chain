@@ -141,10 +141,7 @@ type ClobKeeper interface {
 	) error
 	UpdateLiquidationsConfig(ctx sdk.Context, config LiquidationsConfig) error
 	// full node streaming
-	InitializeNewStreams(
-		ctx sdk.Context,
-		subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
-	)
+	InitializeNewStreams(ctx sdk.Context)
 	SendOrderbookUpdates(
 		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,
