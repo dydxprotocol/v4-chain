@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   FillFromDatabase,
   FillModel,
@@ -22,6 +23,7 @@ import { IndexerOrder, IndexerOrderId, IndexerSubaccountId } from '@dydxprotocol
 import Long from 'long';
 import * as pg from 'pg';
 
+import config from '../../config';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { annotateWithPnl, convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
@@ -124,6 +126,13 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       kafkaEvents.push(this.generateTradeKafkaEventFromTakerOrderFill(fill));
       return kafkaEvents;
     }
+
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_order_fill_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
 
     return kafkaEvents;
   }

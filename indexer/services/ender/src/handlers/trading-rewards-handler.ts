@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   SubaccountMessageContents,
   TradingRewardFromDatabase,
@@ -8,6 +9,7 @@ import { TradingRewardsEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
 import * as pg from 'pg';
 
+import config from '../config';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
 
@@ -21,6 +23,12 @@ export class TradingRewardsHandler extends Handler<TradingRewardsEventV1> {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_trading_rewards_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     const tradingRewards: TradingRewardFromDatabase[] = _.map(
       resultRow.trading_rewards,
       (tradingReward: object) => {

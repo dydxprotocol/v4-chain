@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import { generateSubaccountMessageContents } from '@dydxprotocol-indexer/kafka';
 import {
   OrderFromDatabase,
@@ -65,6 +66,12 @@ export class StatefulOrderPlacementHandler
     } else {
       order = this.event.longTermOrderPlacement!.order!;
     }
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_stateful_order_placement_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     return this.createKafkaEvents(order, resultRow);
   }
 
