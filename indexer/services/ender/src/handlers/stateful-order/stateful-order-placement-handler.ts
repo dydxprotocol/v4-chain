@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+import { stats } from '@dydxprotocol-indexer/base';
 import { generateSubaccountMessageContents } from '@dydxprotocol-indexer/kafka';
 import {
   OrderFromDatabase,
@@ -9,10 +9,6 @@ import {
   SubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
 import { convertToRedisOrder } from '@dydxprotocol-indexer/redis';
-=======
-import { stats } from '@dydxprotocol-indexer/base';
-import { OrderTable } from '@dydxprotocol-indexer/postgres';
->>>>>>> 9fcbcc87 (Add sql script latency metrics (#2356))
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
@@ -70,17 +66,13 @@ export class StatefulOrderPlacementHandler
     } else {
       order = this.event.longTermOrderPlacement!.order!;
     }
-<<<<<<< HEAD
-    return this.createKafkaEvents(order, resultRow);
-=======
     // Handle latency from resultRow
     stats.timing(
       `${config.SERVICE_NAME}.handle_stateful_order_placement_event.sql_latency`,
       Number(resultRow.latency),
       this.generateTimingStatsOptions(),
     );
-    return this.createKafkaEvents(order);
->>>>>>> 9fcbcc87 (Add sql script latency metrics (#2356))
+    return this.createKafkaEvents(order, resultRow);
   }
 
   private createKafkaEvents(
