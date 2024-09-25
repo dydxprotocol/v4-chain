@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import {logger, stats} from '@dydxprotocol-indexer/base';
 import {
   MarketFromDatabase,
   OraclePriceFromDatabase,
@@ -13,6 +13,7 @@ import {
   ConsolidatedKafkaEvent,
 } from '../../lib/types';
 import { Handler } from '../handler';
+import config from '../../config';
 
 export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
   eventType: string = 'MarketEvent';
@@ -34,6 +35,13 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
       resultRow.market) as MarketFromDatabase;
     const oraclePrice: OraclePriceFromDatabase = OraclePriceModel.fromJson(
       resultRow.oracle_price) as OraclePriceFromDatabase;
+
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_market_price_update_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
 
     return [
       this.generateKafkaEvent(

@@ -29,6 +29,8 @@ import { orderFillWithLiquidityToOrderFillEventWithLiquidation } from '../../hel
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
 import { ConsolidatedKafkaEvent, OrderFillEventWithLiquidation } from '../../lib/types';
 import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
+import {stats} from '@dydxprotocol-indexer/base';
+import config from '../../config';
 
 export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'LiquidationEvent';
@@ -98,6 +100,12 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
       convertPerpetualPosition(position),
       perpetualMarketRefresher.getPerpetualMarketsMap(),
       market,
+    );
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_liquidation_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
     );
 
     if (this.event.liquidity === Liquidity.MAKER) {

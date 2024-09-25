@@ -9,6 +9,8 @@ import * as pg from 'pg';
 import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
+import {stats} from '@dydxprotocol-indexer/base';
+import config from '../config';
 
 export class UpdateClobPairHandler extends Handler<UpdateClobPairEventV1> {
   eventType: string = 'UpdateClobPairEventV1';
@@ -19,6 +21,12 @@ export class UpdateClobPairHandler extends Handler<UpdateClobPairEventV1> {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_clob_pair_update_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
       resultRow.perpetual_market) as PerpetualMarketFromDatabase;
 

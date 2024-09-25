@@ -12,6 +12,8 @@ import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import {stats} from '@dydxprotocol-indexer/base';
+import config from '../../config';
 
 export class StatefulOrderRemovalHandler extends
   AbstractStatefulOrderHandler<StatefulOrderEventV1> {
@@ -24,8 +26,14 @@ export class StatefulOrderRemovalHandler extends
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(_: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const orderIdProto: IndexerOrderId = this.event.orderRemoval!.removedOrderId!;
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_stateful_order_removal_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     return this.createKafkaEvents(orderIdProto);
   }
 

@@ -17,6 +17,8 @@ import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import {stats} from '@dydxprotocol-indexer/base';
+import config from '../../config';
 
 export class ConditionalOrderTriggeredHandler extends
   AbstractStatefulOrderHandler<StatefulOrderEventV1> {
@@ -39,6 +41,12 @@ export class ConditionalOrderTriggeredHandler extends
 
     const indexerOrder: IndexerOrder = orderTranslations.convertToIndexerOrderWithSubaccount(
       order, perpetualMarket, subaccount);
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_conditional_order_triggered_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     return this.createKafkaEvents(indexerOrder);
   }
 

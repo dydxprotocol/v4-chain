@@ -23,6 +23,7 @@ import * as pg from 'pg';
 import config from '../../config';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import {stats} from '@dydxprotocol-indexer/base';
 
 // TODO(IND-334): Rename to LongTermOrderPlacementHandler after deprecating StatefulOrderPlacement
 export class StatefulOrderPlacementHandler
@@ -65,6 +66,12 @@ export class StatefulOrderPlacementHandler
     } else {
       order = this.event.longTermOrderPlacement!.order!;
     }
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_stateful_order_placement_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     return this.createKafkaEvents(order, resultRow);
   }
 

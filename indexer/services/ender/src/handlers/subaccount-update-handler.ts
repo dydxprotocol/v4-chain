@@ -21,6 +21,8 @@ import { addPositionsToContents, annotateWithPnl } from '../helpers/kafka-helper
 import { SubaccountUpdate } from '../lib/translated-types';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
+import {stats} from '@dydxprotocol-indexer/base';
+import config from '../config';
 
 export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
   eventType: string = 'SubaccountUpdateEvent';
@@ -61,6 +63,12 @@ export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
         marketIdToMarket[marketId],
       );
     }
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_subaccount_update_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
 
     return [
       this.generateConsolidatedKafkaEvent(

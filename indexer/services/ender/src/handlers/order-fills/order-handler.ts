@@ -29,6 +29,8 @@ import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/t
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
 import { ConsolidatedKafkaEvent, OrderFillEventWithOrder } from '../../lib/types';
 import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
+import {stats} from '@dydxprotocol-indexer/base';
+import config from '../../config';
 
 export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'OrderFillEvent';
@@ -124,6 +126,13 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       kafkaEvents.push(this.generateTradeKafkaEventFromTakerOrderFill(fill));
       return kafkaEvents;
     }
+
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_order_fill_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
 
     return kafkaEvents;
   }
