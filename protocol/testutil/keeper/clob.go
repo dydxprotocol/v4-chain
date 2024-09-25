@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
@@ -275,7 +276,7 @@ func CreateNClobPair(
 					perps[i].Params.LiquidityTier,
 					perps[i].Params.MarketType,
 					perps[i].Params.DangerIndexPpm,
-					perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+					fmt.Sprintf("%d", perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 				),
 			),
 		).Return()
