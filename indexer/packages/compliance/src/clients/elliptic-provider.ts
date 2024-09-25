@@ -26,6 +26,8 @@ export const API_PATH: string = '/v2/wallet/synchronous';
 export const API_URI: string = `https://aml-api.elliptic.co${API_PATH}`;
 export const RISK_SCORE_KEY: string = 'risk_score';
 export const NO_RULES_TRIGGERED_RISK_SCORE: number = -1;
+// We use different negative values of risk score to represent different elliptic response states
+export const NOT_IN_BLOCKCHAIN_RISK_SCORE: number = -2;
 
 export class EllipticProviderClient extends ComplianceClient {
   private apiKey: string;
@@ -86,7 +88,11 @@ export class EllipticProviderClient extends ComplianceClient {
         error?.response?.status === 404 &&
         error?.response?.data?.name === 'NotInBlockchain'
       ) {
-        return NO_RULES_TRIGGERED_RISK_SCORE;
+        stats.increment(
+          `${config.SERVICE_NAME}.get_elliptic_risk_score.status_code`,
+          { status: '404' },
+        );
+        return NOT_IN_BLOCKCHAIN_RISK_SCORE;
       }
 
       if (error?.response?.status === 429) {

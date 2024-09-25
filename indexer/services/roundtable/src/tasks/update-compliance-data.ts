@@ -1,7 +1,7 @@
 import {
   STATS_NO_SAMPLING, delay, logger, stats,
 } from '@dydxprotocol-indexer/base';
-import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
+import { ComplianceClientResponse, NOT_IN_BLOCKCHAIN_RISK_SCORE } from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceDataColumns,
   ComplianceDataCreateObject,
@@ -151,6 +151,7 @@ export default async function runTask(
         blocked: false,
         provider: complianceProvider.provider,
         updatedBeforeOrAt: ageThreshold,
+        addressInWalletsTable: true,
       },
       [],
       { readReplica: true },
@@ -318,10 +319,19 @@ async function getComplianceData(
         return result.value;
       },
     ));
+    const addressNotFoundResponses:
+    PromiseFulfilledResult<ComplianceClientResponse>[] = successResponses.filter(
+      (result: PromiseSettledResult<ComplianceClientResponse>):
+      result is PromiseFulfilledResult<ComplianceClientResponse> => {
+        // riskScore = NOT_IN_BLOCKCHAIN_RISK_SCORE denotes elliptic 404 responses
+        return result.status === 'fulfilled' && result.value.riskScore === NOT_IN_BLOCKCHAIN_RISK_SCORE.toString();
+      },
+    );
 
     if (failedResponses.length > 0) {
       const addressesWithoutResponses: string[] = _.without(
         addresses,
+        // complianceResponses includes 404 responses
         ..._.map(complianceResponses, 'address'),
       );
       stats.increment(
@@ -335,6 +345,22 @@ async function getComplianceData(
         message: 'Failed to retrieve compliance data for the addresses',
         addresses: addressesWithoutResponses,
         errors: failedResponses,
+      });
+    }
+
+    if (addressNotFoundResponses.length > 0) {
+      const notFoundAddresses = addressNotFoundResponses.map((result) => result.value.address);
+
+      stats.increment(
+        `${config.SERVICE_NAME}.${taskName}.get_compliance_data_404`,
+        1,
+        undefined,
+        { provider: complianceProvider.provider },
+      );
+      logger.error({
+        at: 'updated-compliance-data#getComplianceData',
+        message: 'Failed to retrieve compliance data for the addresses due to elliptic 404',
+        addresses: notFoundAddresses,
       });
     }
     stats.timing(

@@ -88,6 +88,7 @@ export enum QueryableField {
   USERNAME = 'username',
   TIMESPAN = 'timeSpan',
   RANK = 'rank',
+  ADDRESS_IN_WALLETS_TABLE = 'addressInWalletsTable',
 }
 
 export interface QueryConfig {
@@ -287,6 +288,7 @@ export interface ComplianceDataQueryConfig extends QueryConfig {
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string,
   [QueryableField.PROVIDER]?: string,
   [QueryableField.BLOCKED]?: boolean,
+  [QueryableField.ADDRESS_IN_WALLETS_TABLE]?: boolean,
 }
 
 export interface ComplianceStatusQueryConfig extends QueryConfig {
