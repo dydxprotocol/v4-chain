@@ -110,7 +110,8 @@ describe('update-perpetual-handler', () => {
       atomicResolution: defaultUpdatePerpetualEvent.atomicResolution,
       liquidityTierId: defaultUpdatePerpetualEvent.liquidityTier,
       dangerIndexPpm: defaultUpdatePerpetualEvent.dangerIndexPpm,
-      isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: defaultUpdatePerpetualEvent.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+      isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock:
+        defaultUpdatePerpetualEvent.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
     }));
     expect(perpetualMarket).toEqual(
       perpetualMarketRefresher.getPerpetualMarketFromId(

@@ -929,7 +929,8 @@ export function expectPerpetualMarketV2(
     quantumConversionExponent: perpetual.quantumConversionExponent,
     atomicResolution: perpetual.atomicResolution,
     dangerIndexPpm: perpetual.dangerIndexPpm,
-    isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: perpetual.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+    isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock:
+      perpetual.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
     subticksPerTick: perpetual.subticksPerTick,
     stepBaseQuantums: Number(perpetual.stepBaseQuantums),
     liquidityTierId: perpetual.liquidityTier,

@@ -351,7 +351,8 @@ export function perpetualMarketToResponseObject(
     openInterest: perpetualMarket.openInterest,
     atomicResolution: perpetualMarket.atomicResolution,
     dangerIndexPpm: perpetualMarket.dangerIndexPpm,
-    isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: perpetualMarket.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+    isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock:
+      perpetualMarket.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
     quantumConversionExponent: perpetualMarket.quantumConversionExponent,
     tickSize: protocolTranslations.getTickSize(perpetualMarket),
     stepSize: protocolTranslations.getStepSize(perpetualMarket),
