@@ -70,6 +70,7 @@ func CreateUpgradeHandler(
 
 		// Migrate vault quoting params to vault params.
 		migrateVaultQuotingParamsToVaultParams(sdkCtx, vaultKeeper)
+
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
 }
