@@ -316,7 +316,7 @@ func TestDepositToMegavaultforPML(t *testing.T) {
 	}{
 		"success": {
 			address:    constants.AliceAccAddress.String(),
-			balance:    big.NewInt(10_000_000_000),
+			balance:    big.NewInt(10_000_000_000), // 10k USDC
 			asset:      *constants.Usdc,
 			clobPairId: 1,
 
@@ -332,7 +332,7 @@ func TestDepositToMegavaultforPML(t *testing.T) {
 		},
 		"failure - invalid clob pair id": {
 			address:    constants.AliceAccAddress.String(),
-			balance:    big.NewInt(10_000_000_000),
+			balance:    big.NewInt(10_000_000_000), // 10k USDC
 			asset:      *constants.Usdc,
 			clobPairId: 100, // non existent clob pair id
 

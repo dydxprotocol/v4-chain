@@ -31,27 +31,27 @@ func TestMsgCreateMarketPermissionless(t *testing.T) {
 		"success": {
 			ticker:      "TEST2-USD",
 			hardCap:     300,
-			balance:     big.NewInt(20_000),
+			balance:     big.NewInt(10_000_000_000),
 			expectedErr: nil,
 		},
 		"failure - hard cap reached": {
 			ticker:  "TEST2-USD",
 			hardCap: 0,
-			balance: big.NewInt(20_000),
+			balance: big.NewInt(10_000_000_000),
 
 			expectedErr: types.ErrMarketsHardCapReached,
 		},
 		"failure - ticker not found": {
 			ticker:  "INVALID-USD",
 			hardCap: 300,
-			balance: big.NewInt(20_000),
+			balance: big.NewInt(10_000_000_000),
 
 			expectedErr: types.ErrMarketNotFound,
 		},
 		"failure - market already listed": {
 			ticker:  "BTC-USD",
 			hardCap: 300,
-			balance: big.NewInt(20_000),
+			balance: big.NewInt(10_000_000_000),
 
 			expectedErr: pricestypes.ErrMarketParamPairAlreadyExists,
 		},
