@@ -85,7 +85,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			SDAI: SDAIFlags{
 				Enabled:        true,
 				LoopDelayMs:    30_000,
-				EthRpcEndpoint: "",
+				EthRpcEndpoint: "https://eth-mainnet.g.alchemy.com/v2/-IfChTcasSLaAOyyJMXRe5BbTT3uHG6I",
 			},
 			Deleveraging: DeleveragingFlags{
 				Enabled:        true,

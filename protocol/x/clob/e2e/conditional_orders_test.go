@@ -598,7 +598,7 @@ func TestConditionalOrder(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -630,7 +630,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.TDai_Asset_10_000,
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -675,7 +675,7 @@ func TestConditionalOrder(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -720,7 +720,7 @@ func TestConditionalOrder(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -754,7 +754,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.TDai_Asset_10_000,
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -805,7 +805,7 @@ func TestConditionalOrder(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -839,7 +839,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.TDai_Asset_10_000,
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -893,7 +893,7 @@ func TestConditionalOrder(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.TDai_Asset_1,
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -1009,16 +1009,16 @@ func TestConditionalOrder(t *testing.T) {
 			require.NoError(t, conversionErr)
 
 			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			ctx := tApp.InitChain()
 
@@ -1910,7 +1910,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -1941,7 +1941,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.TDai_Asset_10_000,
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -1985,7 +1985,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -2029,7 +2029,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -2062,7 +2062,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.TDai_Asset_10_000,
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -2112,7 +2112,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -2145,7 +2145,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.TDai_Asset_10_000,
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},

@@ -43,7 +43,7 @@ const GenesisState = `{
           "id": 0,
           "market_id": 0,
           "symbol": "TDAI",
-          "asset_yield_index": "0/1"
+          "asset_yield_index": "1/1"
         }
       ]
     },
@@ -1232,7 +1232,7 @@ const GenesisState = `{
             "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"
           },
           "margin_enabled": true,
-          "asset_yield_index": "0/1"
+          "asset_yield_index": "1/1"
         },
         {
           "asset_positions": [
@@ -1247,7 +1247,7 @@ const GenesisState = `{
             "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs"
           },
           "margin_enabled": true,
-          "asset_yield_index": "0/1"
+          "asset_yield_index": "1/1"
         },
         {
           "asset_positions": [
@@ -1262,7 +1262,7 @@ const GenesisState = `{
             "owner": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70"
           },
           "margin_enabled": true,
-          "asset_yield_index": "0/1"
+          "asset_yield_index": "1/1"
         },
         {
           "asset_positions": [
@@ -1277,7 +1277,7 @@ const GenesisState = `{
             "owner": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn"
           },
           "margin_enabled": true,
-          "asset_yield_index": "0/1"
+          "asset_yield_index": "1/1"
         },
         {
           "asset_positions": [
@@ -1292,7 +1292,7 @@ const GenesisState = `{
             "owner": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m"
           },
           "margin_enabled": true,
-          "asset_yield_index": "0/1"
+          "asset_yield_index": "1/1"
         }
       ]
     },

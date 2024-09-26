@@ -15,7 +15,7 @@ import (
 
 // Prevent strconv unused error
 var _ = strconv.IntSize
-var defaultAssetYieldIndex = "0/1"
+var defaultAssetYieldIndex = "1/1"
 
 func TestGetAssetYieldIndexQuery(t *testing.T) {
 	cfg := network.DefaultConfig(nil)

@@ -93,7 +93,7 @@ func TestLiquidationConfig(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -111,7 +111,7 @@ func TestLiquidationConfig(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -165,7 +165,7 @@ func TestLiquidationConfig(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num1,
@@ -183,7 +183,7 @@ func TestLiquidationConfig(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -264,16 +264,16 @@ func TestLiquidationConfig(t *testing.T) {
 			require.NoError(t, conversionErr)
 
 			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			ctx := tApp.InitChain()
 
@@ -358,7 +358,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(50_499_000_000 - 50_000_000_000 - 250_000_000),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -368,7 +368,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(100_000_000_000), // $100,000
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -398,7 +398,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(124500000), // 50_499_000_000 - 50_000_000_000 - 250_000_000 / 2
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -408,7 +408,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(100_000_000_000), // $100,000
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -449,7 +449,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -467,7 +467,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -497,7 +497,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccounts: []satypes.Subaccount{
 				{
 					Id:              &constants.Carl_Num0,
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num1,
@@ -507,7 +507,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -553,7 +553,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -571,7 +571,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -645,7 +645,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				// Dave's bankruptcy price to close 1 BTC long is $50,000, and deleveraging can not be
 				// performed due to non overlapping bankruptcy prices.
@@ -659,7 +659,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(50_000_000_000 + 12_499_750_000),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -703,7 +703,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				// Dave_Num0 does not change since deleveraging against this subaccount failed.
 				constants.Dave_Num0_1BTC_Long_50000USD_Short,
@@ -715,7 +715,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(50_000_000_000 + 24_999_500_000),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -753,7 +753,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccounts: []satypes.Subaccount{
 				{
 					Id:              &constants.Carl_Num0,
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -763,7 +763,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -788,7 +788,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccounts: []satypes.Subaccount{
 				{
 					Id:              &constants.Carl_Num0,
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -798,7 +798,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -824,7 +824,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(100_000_000_000 - 50_000_000_000),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Dave_Num0,
@@ -834,7 +834,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							Quantums: dtypes.NewInt(50_000_000_000 + 50_000_000_000),
 						},
 					},
-					AssetYieldIndex: big.NewRat(0, 1).String(),
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -915,16 +915,16 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			require.NoError(t, conversionErr)
 
 			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
-			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 

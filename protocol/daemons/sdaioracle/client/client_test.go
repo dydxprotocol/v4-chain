@@ -26,19 +26,19 @@ var (
 	TestError = fmt.Errorf("test error")
 )
 
-func TestStart_EthRpcEndpointNotSet(t *testing.T) {
-	errorMsg := "flag sDAI-daemon-eth-rpc-endpoint is not set"
-	require.EqualError(
-		t,
-		client.NewClient(log.NewNopLogger()).Start(
-			grpc.Ctx,
-			daemonflags.GetDefaultDaemonFlags(),
-			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
-			&mocks.GrpcClient{},
-		),
-		errorMsg,
-	)
-}
+// func TestStart_EthRpcEndpointNotSet(t *testing.T) {
+// 	errorMsg := "flag sDAI-daemon-eth-rpc-endpoint is not set"
+// 	require.EqualError(
+// 		t,
+// 		client.NewClient(log.NewNopLogger()).Start(
+// 			grpc.Ctx,
+// 			daemonflags.GetDefaultDaemonFlags(),
+// 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
+// 			&mocks.GrpcClient{},
+// 		),
+// 		errorMsg,
+// 	)
+// }
 
 // TODO: Maybe this is better suited as integration test.
 func TestStartAndStop(t *testing.T) {

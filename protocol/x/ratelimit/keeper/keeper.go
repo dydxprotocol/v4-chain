@@ -398,7 +398,10 @@ func (k Keeper) Logger(ctx sdk.Context) cosmoslog.Logger {
 	return ctx.Logger().With(cosmoslog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}
+func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
+	fmt.Println("InitializeForGenesis")
+	k.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
+}
 
 /* Functions related to the sDAI conversion */
 

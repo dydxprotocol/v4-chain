@@ -76,14 +76,14 @@ func TestMsgUpdateSDAIConversionRate_Initial(t *testing.T) {
 				require.Error(t, err)
 				require.False(t, conversionRateFound)
 				require.Nil(t, conversionRate)
-				require.False(t, assetYieldIndexFound)
-				require.Nil(t, assetYieldIndex)
+				require.True(t, assetYieldIndexFound)
+				require.Equal(t, 0, big.NewRat(1, 1).Cmp(assetYieldIndex))
 			} else {
 				require.NoError(t, err)
 				require.True(t, conversionRateFound)
 				require.Equal(t, tc.expectedSDAIRate, conversionRate.String())
 				require.True(t, assetYieldIndexFound)
-				require.Equal(t, 0, big.NewRat(0, 1).Cmp(assetYieldIndex))
+				require.Equal(t, 0, big.NewRat(1, 1).Cmp(assetYieldIndex))
 			}
 		})
 	}
@@ -107,7 +107,7 @@ func TestMsgUpdateSDAIConversionRate_PostFirstEpoch(t *testing.T) {
 				ConversionRate: "1",
 			},
 			expectedSDAIRate:        "1",
-			expectedAssetYieldIndex: "0/1",
+			expectedAssetYieldIndex: "1/1",
 			epoch:                   uint64(1),
 			setup: func(ctx sdk.Context, tApp *testapp.TestApp, sDAIEventManager *sdaiserver.SDAIEventManager) {
 				sDAIEventManager.AddsDAIEvent(&api.AddsDAIEventsRequest{
@@ -123,7 +123,7 @@ func TestMsgUpdateSDAIConversionRate_PostFirstEpoch(t *testing.T) {
 				ConversionRate: "10",
 			},
 			expectedSDAIRate:        "10",
-			expectedAssetYieldIndex: "0/1",
+			expectedAssetYieldIndex: "1/1",
 			epoch:                   uint64(1),
 			setup: func(ctx sdk.Context, tApp *testapp.TestApp, sDAIEventManager *sdaiserver.SDAIEventManager) {
 				for i := 1; i <= 10; i++ {
@@ -183,7 +183,7 @@ func TestMsgUpdateSDAIConversionRate_PostFirstEpoch(t *testing.T) {
 				ConversionRate: "11",
 			},
 			expectedSDAIRate:        "0",
-			expectedAssetYieldIndex: "0/1",
+			expectedAssetYieldIndex: "1/1",
 			epoch:                   uint64(1),
 			setup: func(ctx sdk.Context, tApp *testapp.TestApp, sDAIEventManager *sdaiserver.SDAIEventManager) {
 				for i := 1; i <= 10; i++ {
@@ -201,7 +201,7 @@ func TestMsgUpdateSDAIConversionRate_PostFirstEpoch(t *testing.T) {
 				ConversionRate: "10",
 			},
 			expectedSDAIRate:        "10",
-			expectedAssetYieldIndex: "0/1",
+			expectedAssetYieldIndex: "1/1",
 			epoch:                   uint64(1),
 			setup: func(ctx sdk.Context, tApp *testapp.TestApp, sDAIEventManager *sdaiserver.SDAIEventManager) {
 				for i := 1; i <= 10; i++ {
@@ -239,7 +239,7 @@ func TestMsgUpdateSDAIConversionRate_PostFirstEpoch(t *testing.T) {
 			ms := keeper.NewMsgServerImpl(k)
 
 			k.SetSDAIPrice(ctx, big.NewInt(0))
-			k.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
+			k.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 
 			ctx = ctx.WithBlockHeight(110)
 			sDAIEventManager := k.GetSDAIEventManagerForTestingOnly()
@@ -329,7 +329,7 @@ func TestMsgUpdateSDAIConversionRate_PerformsAllStateChanges(t *testing.T) {
 			ms := keeper.NewMsgServerImpl(k)
 
 			k.SetSDAIPrice(ctx, big.NewInt(0))
-			k.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
+			k.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 
 			ctx = ctx.WithBlockHeight(110)
 			sDAIEventManager := k.GetSDAIEventManagerForTestingOnly()

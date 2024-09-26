@@ -2354,7 +2354,7 @@ func setupProcessProposerOperationsTestCase(
 		mockIndexerEventManager,
 	)
 
-	ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
+	ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))
 
 	// set DeliverTx mode.
 	ctx = ks.Ctx.WithIsCheckTx(false)

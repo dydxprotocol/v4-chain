@@ -36,6 +36,10 @@ func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
 	key := subaccount.Id.ToStateKey()
 
+	if subaccount.AssetYieldIndex == "" {
+		subaccount.AssetYieldIndex = "1/1"
+	}
+
 	if len(subaccount.PerpetualPositions) == 0 && len(subaccount.AssetPositions) == 0 {
 		if store.Has(key) {
 			store.Delete(key)

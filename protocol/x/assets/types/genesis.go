@@ -17,7 +17,7 @@ var (
 		Denom:            TDaiDenom,
 		HasMarket:        false,
 		AtomicResolution: lib.QuoteCurrencyAtomicResolution,
-		AssetYieldIndex:  "0/1",
+		AssetYieldIndex:  "1/1",
 	}
 )
 

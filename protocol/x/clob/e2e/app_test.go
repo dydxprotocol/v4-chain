@@ -367,7 +367,7 @@ func TestHydrationInPreBlocker(t *testing.T) {
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 	// Let's add some pre-existing orders to state.
 	// Note that the order is not added to memclob.
@@ -451,7 +451,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
-	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(0, 1))
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 	// 1. Let's add some pre-existing orders to state before clob is initialized.
 	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
@@ -561,7 +561,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 				YieldIndex:   big.NewRat(0, 1).String(),
 			},
 		},
-		AssetYieldIndex: big.NewRat(0, 1).String(),
+		AssetYieldIndex: big.NewRat(1, 1).String(),
 	}, carl)
 
 	dave := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Dave_Num0)
@@ -581,7 +581,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 				YieldIndex:   big.NewRat(0, 1).String(),
 			},
 		},
-		AssetYieldIndex: big.NewRat(0, 1).String(),
+		AssetYieldIndex: big.NewRat(1, 1).String(),
 	}, dave)
 
 	require.Empty(t, tApp.App.ClobKeeper.MemClob.GetOperationsRaw(ctx))

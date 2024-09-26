@@ -23,7 +23,7 @@ func TestGenesis(t *testing.T) {
 					Number: uint32(0),
 				},
 				AssetPositions:  keepertest.CreateTDaiAssetPosition(big.NewInt(1_000)),
-				AssetYieldIndex: big.NewRat(0, 1).String(),
+				AssetYieldIndex: big.NewRat(1, 1).String(),
 			},
 			{
 				Id: &types.SubaccountId{
@@ -31,7 +31,7 @@ func TestGenesis(t *testing.T) {
 					Number: uint32(99),
 				},
 				AssetPositions:  keepertest.CreateTDaiAssetPosition(big.NewInt(1_000)),
-				AssetYieldIndex: big.NewRat(0, 1).String(),
+				AssetYieldIndex: big.NewRat(1, 1).String(),
 			},
 			{
 				Id: &types.SubaccountId{

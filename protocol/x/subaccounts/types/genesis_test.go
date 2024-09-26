@@ -69,7 +69,7 @@ func TestGenesisState_Validate(t *testing.T) {
 							Owner:  sample.AccAddress(),
 							Number: uint32(0),
 						},
-						AssetYieldIndex: "0",
+						AssetYieldIndex: "1",
 					},
 				},
 			},

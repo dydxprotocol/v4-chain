@@ -44,6 +44,7 @@ func createNSubaccount(keeper *keeper.Keeper, ctx sdk.Context, n int, tdaiBalanc
 			Number: uint32(i),
 		}
 		items[i].AssetPositions = testutil.CreateTDaiAssetPosition(tdaiBalance)
+		items[i].AssetYieldIndex = "1/1"
 
 		keeper.SetSubaccount(ctx, items[i])
 	}
@@ -166,7 +167,7 @@ func TestGetCollateralPool(t *testing.T) {
 				testutil.CreateTestMarkets(t, ctx, pricesKeeper)
 				testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
-				rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
+				rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 
 				require.NoError(t, testutil.CreateTDaiAsset(ctx, assetsKeeper))
 				for _, p := range tc.perpetuals {
@@ -199,7 +200,7 @@ func TestGetCollateralPool(t *testing.T) {
 
 func TestSubaccountGet(t *testing.T) {
 	ctx, keeper, _, _, _, _, _, rateLimitKeeper, _, _ := testutil.SubaccountsKeepers(t, true)
-	rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
+	rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 	items := createNSubaccount(keeper, ctx, 10, big.NewInt(1_000))
 
 	for _, item := range items {
@@ -233,7 +234,7 @@ func TestSubaccountSet_Empty(t *testing.T) {
 
 func TestSubaccountGetNonExistent(t *testing.T) {
 	ctx, keeper, _, _, _, _, _, rateLimitKeeper, _, _ := testutil.SubaccountsKeepers(t, true)
-	rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
+	rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 	id := types.SubaccountId{
 		Owner:  "non-existent",
 		Number: uint32(123),
@@ -2733,6 +2734,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 					AssetPositions: testutil.CreateTDaiAssetPosition(big.NewInt(
 						900_000_000_000,
 					)), // 900_000 TDai
+					AssetYieldIndex: "1/1",
 				},
 			},
 			updateType: types.Match,
@@ -2843,6 +2845,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 							Quantums:    dtypes.NewInt(-200_000_000), // -2 BTC
 						},
 					},
+					AssetYieldIndex: "1/1",
 				},
 			},
 			updateType: types.Match,
@@ -2951,6 +2954,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 							Quantums:    dtypes.NewInt(10_000_000), // 0.1 BTC
 						},
 					},
+					AssetYieldIndex: "1/1",
 				},
 			},
 			updateType: types.Match,
@@ -3079,7 +3083,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		"Successfully claims yield for one perp": {
 			assetPositions:            testutil.CreateTDaiAssetPosition(big.NewInt(100_000_000_000)), // $100,000
 			subaccountAssetYieldIndex: constants.AssetYieldIndex_Zero,
-			globalAssetYieldIndex:     big.NewRat(0, 1),
+			globalAssetYieldIndex:     big.NewRat(1, 1),
 			fundsInTDaiPool:           big.NewInt(200_000_000_000),
 			collateralPoolTDaiBalances: map[string]int64{
 				types.ModuleAddress.String(): 100_000_000_000,
@@ -3102,7 +3106,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
-			expectedAssetYieldIndex:  big.NewRat(0, 1).String(),
+			expectedAssetYieldIndex:  big.NewRat(1, 1).String(),
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId:  uint32(0),
@@ -3324,7 +3328,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		},
 		"Successfully claims yield and correctly sets AssetYieldIndex when only perp position is open": {
 			subaccountAssetYieldIndex: constants.AssetYieldIndex_Zero,
-			globalAssetYieldIndex:     big.NewRat(0, 1),
+			globalAssetYieldIndex:     big.NewRat(1, 1),
 			fundsInTDaiPool:           big.NewInt(222_000_000_000),
 			perpetuals: []perptypes.Perpetual{
 				{
@@ -3344,7 +3348,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
-			expectedAssetYieldIndex:  big.NewRat(0, 1).String(),
+			expectedAssetYieldIndex:  big.NewRat(1, 1).String(),
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId:  uint32(0),
@@ -4267,7 +4271,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		},
 		"Successfully does not claim yield when negative positions cancel out positive position yield claims": {
 			assetPositions:            testutil.CreateTDaiAssetPosition(big.NewInt(100_000_000_000)), // $100,000
-			subaccountAssetYieldIndex: big.NewRat(0, 1).String(),
+			subaccountAssetYieldIndex: big.NewRat(1, 1).String(),
 			globalAssetYieldIndex:     big.NewRat(1, 1),
 			fundsInTDaiPool:           big.NewInt(200_000_000_000),
 			collateralPoolTDaiBalances: map[string]int64{
@@ -4484,7 +4488,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		"Fails yield claim: Negative general perp yield index": {
 			assetPositions:            testutil.CreateTDaiAssetPosition(big.NewInt(100_000_000_000)), // $100,000
 			subaccountAssetYieldIndex: constants.AssetYieldIndex_Zero,
-			globalAssetYieldIndex:     big.NewRat(0, 1),
+			globalAssetYieldIndex:     big.NewRat(1, 1),
 			fundsInTDaiPool:           big.NewInt(200_000_000_000),
 			collateralPoolTDaiBalances: map[string]int64{
 				types.ModuleAddress.String(): 100_000_000_000,
@@ -4559,7 +4563,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		"Fails yield claim: Perp yield index in subaccount higher than in general": {
 			assetPositions:            testutil.CreateTDaiAssetPosition(big.NewInt(100_000_000_000)), // $100,000
 			subaccountAssetYieldIndex: constants.AssetYieldIndex_Zero,
-			globalAssetYieldIndex:     big.NewRat(0, 1),
+			globalAssetYieldIndex:     big.NewRat(1, 1),
 			fundsInTDaiPool:           big.NewInt(200_000_000_000),
 			collateralPoolTDaiBalances: map[string]int64{
 				types.ModuleAddress.String(): 100_000_000_000,
@@ -4582,7 +4586,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedSuccess:         false,
 			expectedErr:             types.ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount,
-			expectedAssetYieldIndex: big.NewRat(0, 1).String(),
+			expectedAssetYieldIndex: big.NewRat(1, 1).String(),
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId:  uint32(0),
@@ -4634,7 +4638,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		"Fails yield claim: Perp yield index in subaccount badly initialized": {
 			assetPositions:            testutil.CreateTDaiAssetPosition(big.NewInt(100_000_000_000)), // $100,000
 			subaccountAssetYieldIndex: constants.AssetYieldIndex_Zero,
-			globalAssetYieldIndex:     big.NewRat(0, 1),
+			globalAssetYieldIndex:     big.NewRat(1, 1),
 			fundsInTDaiPool:           big.NewInt(200_000_000_000),
 			collateralPoolTDaiBalances: map[string]int64{
 				types.ModuleAddress.String(): 100_000_000_000,
@@ -4657,7 +4661,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedSuccess:         false,
 			expectedErr:             types.ErrYieldIndexUninitialized,
-			expectedAssetYieldIndex: big.NewRat(0, 2).String(),
+			expectedAssetYieldIndex: big.NewRat(1, 1).String(),
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId:  uint32(0),
@@ -4709,7 +4713,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		"Successful yield claim: not enough yield in tdai pool so we take what's available": {
 			assetPositions:            testutil.CreateTDaiAssetPosition(big.NewInt(100_000_000_000)), // $100,000
 			subaccountAssetYieldIndex: constants.AssetYieldIndex_Zero,
-			globalAssetYieldIndex:     big.NewRat(0, 1),
+			globalAssetYieldIndex:     big.NewRat(1, 1),
 			fundsInTDaiPool:           big.NewInt(1),
 			collateralPoolTDaiBalances: map[string]int64{
 				types.ModuleAddress.String(): 100_000_000_000,
@@ -4732,7 +4736,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
-			expectedAssetYieldIndex:  big.NewRat(0, 1).String(),
+			expectedAssetYieldIndex:  big.NewRat(1, 1).String(),
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId:  uint32(0),
@@ -4874,7 +4878,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			require.NoError(t, conversionErr)
 
 			rateLimitKeeper.SetSDAIPrice(ctx, rate)
-			globalAssetYieldIndex := big.NewRat(0, 1)
+			globalAssetYieldIndex := big.NewRat(1, 1)
 			if tc.globalAssetYieldIndex != nil {
 				globalAssetYieldIndex = tc.globalAssetYieldIndex
 			}
@@ -6402,7 +6406,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			require.NoError(t, conversionErr)
 
 			ratelimitKeeper.SetSDAIPrice(ctx, rate)
-			ratelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
+			ratelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 
 			// ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 			for _, m := range tc.marketParamPrices {
@@ -6591,6 +6595,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 							Quantums: dtypes.NewInt(900_000_000_000),
 						},
 					},
+					AssetYieldIndex: "1/1",
 				},
 			},
 			updates: []types.Update{
@@ -6652,6 +6657,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 							Quantums: dtypes.NewInt(900_000_000_000),
 						},
 					},
+					AssetYieldIndex: "1/1",
 				},
 			},
 			openInterests: []perptypes.OpenInterestDelta{
@@ -6720,6 +6726,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 							Quantums: dtypes.NewInt(900_000_000_000),
 						},
 					},
+					AssetYieldIndex: "1/1",
 				},
 			},
 			openInterests: []perptypes.OpenInterestDelta{
@@ -6790,6 +6797,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 							Quantums: dtypes.NewInt(900_000_000_000),
 						},
 					},
+					AssetYieldIndex: "1/1",
 				},
 			},
 			openInterests: []perptypes.OpenInterestDelta{
@@ -6859,6 +6867,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 							Quantums: dtypes.NewInt(4_500_000_000_000),
 						},
 					},
+					AssetYieldIndex: "1/1",
 				},
 			},
 			openInterests: []perptypes.OpenInterestDelta{
@@ -7553,7 +7562,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			require.NoError(t, conversionErr)
 
 			ratelimitKeeper.SetSDAIPrice(ctx, rate)
-			ratelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
+			ratelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 
 			// ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 
@@ -8035,7 +8044,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 			require.NoError(t, conversionErr)
 
 			ratelimitKeeper.SetSDAIPrice(ctx, rate)
-			ratelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(0, 1))
+			ratelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 
 			// ratelimitKeeper.SetCurrentDaiYieldEpochNumber(ctx, 0)
 

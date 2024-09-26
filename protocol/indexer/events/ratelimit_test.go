@@ -9,11 +9,11 @@ import (
 func TestNewUpdateYieldParamsEventV1_Success(t *testing.T) {
 	updatePerpetualEventV1 := NewUpdateYieldParamsEventV1(
 		"100000000",
-		"0/1",
+		"1/1",
 	)
 	expectedUpdatePerpetualEventV1Proto := &UpdateYieldParamsEventV1{
 		SdaiPrice:       "100000000",
-		AssetYieldIndex: "0/1",
+		AssetYieldIndex: "1/1",
 	}
 	require.Equal(t, expectedUpdatePerpetualEventV1Proto, updatePerpetualEventV1)
 }

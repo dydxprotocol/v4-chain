@@ -59,7 +59,7 @@ func (k msgServer) setNewSDaiConversionRate(
 	}
 
 	if !converstionRateInitialized {
-		k.SetAssetYieldIndex(ctx, new(big.Rat).SetInt64(0))
+		k.SetAssetYieldIndex(ctx, new(big.Rat).SetInt64(1))
 	}
 
 	k.SetSDAIPrice(ctx, conversionRate)

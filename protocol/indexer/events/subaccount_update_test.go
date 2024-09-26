@@ -31,7 +31,7 @@ var (
 		&constants.Long_Asset_1ETH,
 	}
 	indexerAssetPositions = v1.AssetPositionsToIndexerAssetPositions(updatedAssetPositions)
-	assetYieldIndex       = big.NewRat(0, 1).String()
+	assetYieldIndex       = big.NewRat(1, 1).String()
 )
 
 func TestNewSubaccountUpdateEvent_Success(t *testing.T) {

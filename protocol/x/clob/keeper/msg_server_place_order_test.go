@@ -103,7 +103,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, indexerEventManager)
-			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))
 
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
@@ -295,7 +295,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, indexerEventManager)
-			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(0, 1))
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))
 
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
