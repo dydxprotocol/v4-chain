@@ -15,7 +15,7 @@ export interface Msg {
    */
 
   setMarketMapperRevShareDetailsForMarket(request: MsgSetMarketMapperRevShareDetailsForMarket): Promise<MsgSetMarketMapperRevShareDetailsForMarketResponse>;
-  /** SetUnconditionalRevShareConfig sets the unconditional revshare config */
+  /** UpdateUnconditionalRevShareConfig sets the unconditional revshare config */
 
   updateUnconditionalRevShareConfig(request: MsgUpdateUnconditionalRevShareConfig): Promise<MsgUpdateUnconditionalRevShareConfigResponse>;
 }

@@ -21,7 +21,7 @@ service Msg {
   rpc SetMarketMapperRevShareDetailsForMarket(
       MsgSetMarketMapperRevShareDetailsForMarket)
       returns (MsgSetMarketMapperRevShareDetailsForMarketResponse);
-  // SetUnconditionalRevShareConfig sets the unconditional revshare config
+  // UpdateUnconditionalRevShareConfig sets the unconditional revshare config
   rpc UpdateUnconditionalRevShareConfig(MsgUpdateUnconditionalRevShareConfig)
       returns (MsgUpdateUnconditionalRevShareConfigResponse);
 }
