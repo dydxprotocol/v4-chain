@@ -3,6 +3,7 @@
 package v_7_0_0_test
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -49,9 +50,13 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
 	postUpgradeVaultParamsCheck(node, t)
+<<<<<<< HEAD
 
 	// Check that the affiliates module has been initialized with the default tiers.
 	postUpgradeAffiliatesModuleTiersCheck(node, t)
+=======
+	postUpgradeMegavaultSharesCheck(node, t)
+>>>>>>> d0d22faa (migrate vault shares to megavault shares in v7 upgrade handler (#2379))
 }
 
 func postUpgradeVaultParamsCheck(node *containertest.Node, t *testing.T) {
@@ -101,18 +106,82 @@ func checkVaultParams(
 	require.Equal(t, expectedQuotingParams, vaultParamsResp.VaultParams.QuotingParams)
 }
 
+<<<<<<< HEAD
 func postUpgradeAffiliatesModuleTiersCheck(node *containertest.Node, t *testing.T) {
 	resp, err := containertest.Query(
 		node,
 		affiliatestypes.NewQueryClient,
 		affiliatestypes.QueryClient.AllAffiliateTiers,
 		&affiliatestypes.AllAffiliateTiersRequest{},
+=======
+func postUpgradeMegavaultSharesCheck(node *containertest.Node, t *testing.T) {
+	// Alice equity = vault_0_equity * 1 + vault_1_equity * 1/3 + vault_2_equity * 123_456/556_677
+	// = 1_000 + 2_000 * 1/3 + 3_000 * 123_456/556_677
+	// ~= 2331.99
+	// Bob equity = vault_1_equity * 1/3 + vault_2_equity * 433_221/556_677
+	// = 2_000 * 1/3 + 3_000 * 433_221/556_677
+	// ~= 3001.35
+	// Carl equity = vault_1_equity * 1/3
+	// = 2_000 * 1/3
+	// ~= 666.67
+	// 1 USDC in equity should be granted 1 megavault share and round down to nearest integer.
+	expectedOwnerShares := map[string]*big.Int{
+		constants.AliceAccAddress.String(): big.NewInt(2_331),
+		constants.BobAccAddress.String():   big.NewInt(3_001),
+		constants.CarlAccAddress.String():  big.NewInt(666),
+	}
+	// 2331 + 3001 + 666 = 5998
+	expectedTotalShares := big.NewInt(5_998)
+
+	// Check MegaVault total shares.
+	resp, err := containertest.Query(
+		node,
+		vaulttypes.NewQueryClient,
+		vaulttypes.QueryClient.MegavaultTotalShares,
+		&vaulttypes.QueryMegavaultTotalSharesRequest{},
+>>>>>>> d0d22faa (migrate vault shares to megavault shares in v7 upgrade handler (#2379))
 	)
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 
+<<<<<<< HEAD
 	affiliateTiersResp := affiliatestypes.AllAffiliateTiersResponse{}
 	err = proto.UnmarshalText(resp.String(), &affiliateTiersResp)
 	require.NoError(t, err)
 	require.Equal(t, affiliatestypes.DefaultAffiliateTiers, affiliateTiersResp.Tiers)
+=======
+	totalSharesResp := vaulttypes.QueryMegavaultTotalSharesResponse{}
+	err = proto.UnmarshalText(resp.String(), &totalSharesResp)
+	require.NoError(t, err)
+
+	require.Equal(
+		t,
+		expectedTotalShares,
+		totalSharesResp.TotalShares.NumShares.BigInt(),
+	)
+
+	// Check MegaVault owner shares.
+	resp, err = containertest.Query(
+		node,
+		vaulttypes.NewQueryClient,
+		vaulttypes.QueryClient.MegavaultAllOwnerShares,
+		&vaulttypes.QueryMegavaultAllOwnerSharesRequest{},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	allOwnerSharesResp := vaulttypes.QueryMegavaultAllOwnerSharesResponse{}
+	err = proto.UnmarshalText(resp.String(), &allOwnerSharesResp)
+	require.NoError(t, err)
+
+	require.Len(t, allOwnerSharesResp.OwnerShares, 3)
+	gotOwnerShares := make(map[string]*big.Int)
+	for _, ownerShare := range allOwnerSharesResp.OwnerShares {
+		gotOwnerShares[ownerShare.Owner] = ownerShare.Shares.NumShares.BigInt()
+	}
+	for owner, expectedShares := range expectedOwnerShares {
+		require.Contains(t, gotOwnerShares, owner)
+		require.Equal(t, expectedShares, gotOwnerShares[owner])
+	}
+>>>>>>> d0d22faa (migrate vault shares to megavault shares in v7 upgrade handler (#2379))
 }
