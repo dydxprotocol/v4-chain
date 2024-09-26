@@ -178,6 +178,16 @@ func (am AppModule) PreBlock(ctx context.Context) (appmodule.ResponsePreBlock, e
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the clob module.
+func (am AppModule) Precommit(ctx context.Context) error {
+	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyPrecommiter)
+	Precommit(
+		lib.UnwrapSDKContext(ctx, types.ModuleName),
+		*am.keeper,
+	)
+	return nil
+}
+
+// BeginBlock executes all ABCI BeginBlock logic respective to the clob module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyBeginBlocker)
 	BeginBlocker(
