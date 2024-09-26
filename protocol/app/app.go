@@ -332,6 +332,8 @@ func New(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
+
+	logger.Info("Starting app")
 	assertAppPreconditions()
 
 	// dYdX specific command-line flags.
