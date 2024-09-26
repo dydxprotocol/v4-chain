@@ -2100,6 +2100,7 @@ func getFullNodeStreamingManagerFromOptions(
 			appFlags.GrpcStreamingMaxChannelBufferSize,
 			appFlags.FullNodeStreamingSnapshotInterval,
 			streamingManagerTransientStoreKey,
+			cdc,
 		)
 
 		// Start websocket server.
