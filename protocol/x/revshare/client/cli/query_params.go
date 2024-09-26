@@ -66,3 +66,26 @@ func CmdQueryRevShareDetailsForMarket() *cobra.Command {
 
 	return cmd
 }
+
+func CmdQueryUnconditionalRevShareConfig() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unconditional-revshare-config",
+		Short: "unconditional revshare config",
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.UnconditionalRevShareConfig(
+				context.Background(),
+				&types.QueryUnconditionalRevShareConfig{},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
