@@ -570,9 +570,16 @@ func New(
 	)
 	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
 
+	// Get Daemon Flags.
+	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
+	logger.Info("Parsed Daemon flags", "Flags", daemonFlags)
+
 	// Setup server for sDAI oracle prices.
 	// The in-memory data structure is shared by the x/ratelimit module and sdaioracle daemon.
-	sDAIEventManager := sdaidaemontypes.NewsDAIEventManager()
+	sDAIEventManager := sdaidaemontypes.NewsDAIEventManager(0)
+	if !appFlags.NonValidatingFullNode && daemonFlags.SDAI.Enabled {
+		sDAIEventManager = sdaidaemontypes.NewsDAIEventManager(10)
+	}
 
 	msgSender, indexerFlags := getIndexerFromOptions(appOpts, logger)
 	app.IndexerEventManager = indexer_manager.NewIndexerEventManager(
@@ -695,10 +702,6 @@ func New(
 		keys[epochsmoduletypes.StoreKey],
 	)
 	epochsModule := epochsmodule.NewAppModule(appCodec, app.EpochsKeeper)
-
-	// Get Daemon Flags.
-	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
-	logger.Info("Parsed Daemon flags", "Flags", daemonFlags)
 
 	// Create server that will ingest gRPC messages from daemon clients.
 	// Note that gRPC clients will block on new gRPC connection until the gRPC server is ready to

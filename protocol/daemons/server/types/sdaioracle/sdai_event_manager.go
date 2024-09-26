@@ -83,6 +83,11 @@ type EventFetcher interface {
 type EthEventFetcher struct{}
 
 func (r *EthEventFetcher) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
+
+	if numOfEvents == 0 {
+		return [10]api.AddsDAIEventsRequest{}, nil
+	}
+
 	time.Sleep(1 * time.Second)
 	ethClient, err := ethclient.Dial(types.ETHRPC)
 	if err != nil {
@@ -121,9 +126,13 @@ type SDAIEventManager struct {
 }
 
 // NewsDAIEventManager creates a new sDAIEventManager.
-func NewsDAIEventManager() *SDAIEventManager {
+func NewsDAIEventManager(initialNumEvents ...int) *SDAIEventManager {
+	numEvents := InitialNumEvents
+	if len(initialNumEvents) > 0 {
+		numEvents = initialNumEvents[0]
+	}
 
-	events, err := SDAIEventFetcher.GetInitialEvents(InitialNumEvents)
+	events, err := SDAIEventFetcher.GetInitialEvents(numEvents)
 
 	if err != nil {
 		log.Fatalf("Failed to get initial events: %v", err)
