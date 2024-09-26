@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -33,6 +34,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/client"
 	cosmosflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -410,7 +412,18 @@ func New(
 
 	// Enable optimistic block execution.
 	if appFlags.OptimisticExecutionEnabled {
-		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+		logger.Info("optimistic execution is enabled.")
+		if appFlags.OptimisticExecutionTestAbortRate > 0 {
+			logger.Warn(fmt.Sprintf(
+				"Test flag optimistic-execution-test-abort-rate is set: %v\n",
+				appFlags.OptimisticExecutionTestAbortRate,
+			))
+		}
+		baseAppOptions = append(
+			baseAppOptions,
+			baseapp.SetOptimisticExecution(
+				oe.WithAbortRate(int(appFlags.OptimisticExecutionTestAbortRate)),
+			))
 	}
 
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
