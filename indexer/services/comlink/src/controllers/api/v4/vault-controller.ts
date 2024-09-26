@@ -23,6 +23,7 @@ import {
   FundingIndexUpdatesTable,
   PnlTickInterval,
 } from '@dydxprotocol-indexer/postgres';
+import Big from 'big.js';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import _ from 'lodash';
@@ -68,13 +69,38 @@ class VaultController extends Controller {
   async getMegavaultHistoricalPnl(
     @Query() resolution?: PnlTickInterval,
   ): Promise<MegavaultHistoricalPnlResponse> {
-    const vaultPnlTicks: PnlTicksFromDatabase[] = await getVaultSubaccountPnlTicks(resolution);
+    const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
+    const [
+      vaultPnlTicks,
+      vaultPositions,
+      latestBlock,
+    ] : [
+      PnlTicksFromDatabase[],
+      Map<string, VaultPosition>,
+      BlockFromDatabase,
+    ] = await Promise.all([
+      getVaultSubaccountPnlTicks(resolution),
+      getVaultPositions(vaultSubaccounts),
+      BlockTable.getLatest(),
+    ]);
 
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
     const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = aggregatePnlTicks(vaultPnlTicks);
 
+    const currentEquity: string = Array.from(vaultPositions.values())
+      .map((position: VaultPosition): string => {
+        return position.equity;
+      }).reduce((acc: string, curr: string): string => {
+        return (Big(acc).add(Big(curr))).toFixed();
+      }, '0');
+    const pnlTicksWithCurrentTick: PnlTicksFromDatabase[] = getPnlTicksWithCurrentTick(
+      currentEquity,
+      Array.from(aggregatedPnlTicks.values()),
+      latestBlock,
+    );
+
     return {
-      megavaultPnl: Array.from(aggregatedPnlTicks.values()).map(
+      megavaultPnl: pnlTicksWithCurrentTick.map(
         (pnlTick: PnlTicksFromDatabase) => {
           return pnlTicksToResponseObject(pnlTick);
         }),
@@ -86,7 +112,19 @@ class VaultController extends Controller {
     @Query() resolution?: PnlTickInterval,
   ): Promise<VaultsHistoricalPnlResponse> {
     const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
-    const vaultPnlTicks: PnlTicksFromDatabase[] = await getVaultSubaccountPnlTicks(resolution);
+    const [
+      vaultPnlTicks,
+      vaultPositions,
+      latestBlock,
+    ] : [
+      PnlTicksFromDatabase[],
+      Map<string, VaultPosition>,
+      BlockFromDatabase,
+    ] = await Promise.all([
+      getVaultSubaccountPnlTicks(resolution),
+      getVaultPositions(vaultSubaccounts),
+      BlockTable.getLatest(),
+    ]);
 
     const groupedVaultPnlTicks: VaultHistoricalPnl[] = _(vaultPnlTicks)
       .groupBy('subaccountId')
@@ -102,9 +140,17 @@ class VaultController extends Controller {
             'a perpetual market.');
         }
 
+        const vaultPosition: VaultPosition | undefined = vaultPositions.get(subaccountId);
+        const currentEquity: string = vaultPosition === undefined ? '0' : vaultPosition.equity;
+        const pnlTicksWithCurrentTick: PnlTicksFromDatabase[] = getPnlTicksWithCurrentTick(
+          currentEquity,
+          pnlTicks,
+          latestBlock,
+        );
+
         return {
           ticker: market.ticker,
-          historicalPnl: pnlTicks,
+          historicalPnl: pnlTicksWithCurrentTick,
         };
       })
       .values()
@@ -118,120 +164,11 @@ class VaultController extends Controller {
   @Get('/megavault/positions')
   async getMegavaultPositions(): Promise<MegavaultPositionResponse> {
     const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
-    const vaultSubaccountIds: string[] = _.keys(vaultSubaccounts);
 
-    if (vaultSubaccountIds.length === 0) {
-      return {
-        positions: [],
-      };
-    }
-
-    const [
-      subaccounts,
-      assets,
-      openPerpetualPositions,
-      assetPositions,
-      markets,
-      latestBlock,
-    ]: [
-      SubaccountFromDatabase[],
-      AssetFromDatabase[],
-      PerpetualPositionFromDatabase[],
-      AssetPositionFromDatabase[],
-      MarketFromDatabase[],
-      BlockFromDatabase | undefined,
-    ] = await Promise.all([
-      SubaccountTable.findAll(
-        {
-          id: vaultSubaccountIds,
-        },
-        [],
-      ),
-      AssetTable.findAll(
-        {},
-        [],
-      ),
-      PerpetualPositionTable.findAll(
-        {
-          subaccountId: vaultSubaccountIds,
-          status: [PerpetualPositionStatus.OPEN],
-        },
-        [],
-      ),
-      AssetPositionTable.findAll(
-        {
-          subaccountId: vaultSubaccountIds,
-          assetId: [USDC_ASSET_ID],
-        },
-        [],
-      ),
-      MarketTable.findAll(
-        {},
-        [],
-      ),
-      BlockTable.getLatest(),
-    ]);
-
-    const latestFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
-      .findFundingIndexMap(
-        latestBlock.blockHeight,
-      );
-    const assetPositionsBySubaccount:
-    { [subaccountId: string]: AssetPositionFromDatabase[] } = _.groupBy(
-      assetPositions,
-      'subaccountId',
-    );
-    const openPerpetualPositionsBySubaccount:
-    { [subaccountId: string]: PerpetualPositionFromDatabase[] } = _.groupBy(
-      openPerpetualPositions,
-      'subaccountId',
-    );
-    const assetIdToAsset: AssetById = _.keyBy(
-      assets,
-      AssetColumns.id,
-    );
-
-    const vaultPositions: VaultPosition[] = await Promise.all(
-      subaccounts.map(async (subaccount: SubaccountFromDatabase) => {
-        const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-          .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
-        if (perpetualMarket === undefined) {
-          throw new Error(
-            `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
-            'perpetual market.');
-        }
-        const lastUpdatedFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
-          .findFundingIndexMap(
-            subaccount.updatedAtHeight,
-          );
-
-        const subaccountResponse: SubaccountResponseObject = getSubaccountResponse(
-          subaccount,
-          openPerpetualPositionsBySubaccount[subaccount.id] || [],
-          assetPositionsBySubaccount[subaccount.id] || [],
-          assets,
-          markets,
-          perpetualMarketRefresher.getPerpetualMarketsMap(),
-          latestBlock.blockHeight,
-          latestFundingIndexMap,
-          lastUpdatedFundingIndexMap,
-        );
-
-        return {
-          ticker: perpetualMarket.ticker,
-          assetPosition: subaccountResponse.assetPositions[
-            assetIdToAsset[USDC_ASSET_ID].symbol
-          ],
-          perpetualPosition: subaccountResponse.openPerpetualPositions[
-            perpetualMarket.ticker
-          ] || undefined,
-          equity: subaccountResponse.equity,
-        };
-      }),
-    );
+    const vaultPositions: Map<string, VaultPosition> = await getVaultPositions(vaultSubaccounts);
 
     return {
-      positions: _.sortBy(vaultPositions, 'ticker'),
+      positions: _.sortBy(Array.from(vaultPositions.values()), 'ticker'),
     };
   }
 }
@@ -369,6 +306,152 @@ async function getVaultSubaccountPnlTicks(
   );
 
   return pnlTicks;
+}
+
+async function getVaultPositions(
+  vaultSubaccounts: VaultMapping,
+): Promise<Map<string, VaultPosition>> {
+  const vaultSubaccountIds: string[] = _.keys(vaultSubaccounts);
+  if (vaultSubaccountIds.length === 0) {
+    return new Map();
+  }
+
+  const [
+    subaccounts,
+    assets,
+    openPerpetualPositions,
+    assetPositions,
+    markets,
+    latestBlock,
+  ]: [
+    SubaccountFromDatabase[],
+    AssetFromDatabase[],
+    PerpetualPositionFromDatabase[],
+    AssetPositionFromDatabase[],
+    MarketFromDatabase[],
+    BlockFromDatabase | undefined,
+  ] = await Promise.all([
+    SubaccountTable.findAll(
+      {
+        id: vaultSubaccountIds,
+      },
+      [],
+    ),
+    AssetTable.findAll(
+      {},
+      [],
+    ),
+    PerpetualPositionTable.findAll(
+      {
+        subaccountId: vaultSubaccountIds,
+        status: [PerpetualPositionStatus.OPEN],
+      },
+      [],
+    ),
+    AssetPositionTable.findAll(
+      {
+        subaccountId: vaultSubaccountIds,
+        assetId: [USDC_ASSET_ID],
+      },
+      [],
+    ),
+    MarketTable.findAll(
+      {},
+      [],
+    ),
+    BlockTable.getLatest(),
+  ]);
+
+  const latestFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
+    .findFundingIndexMap(
+      latestBlock.blockHeight,
+    );
+  const assetPositionsBySubaccount:
+  { [subaccountId: string]: AssetPositionFromDatabase[] } = _.groupBy(
+    assetPositions,
+    'subaccountId',
+  );
+  const openPerpetualPositionsBySubaccount:
+  { [subaccountId: string]: PerpetualPositionFromDatabase[] } = _.groupBy(
+    openPerpetualPositions,
+    'subaccountId',
+  );
+  const assetIdToAsset: AssetById = _.keyBy(
+    assets,
+    AssetColumns.id,
+  );
+
+  const vaultPositionsAndSubaccountId: {
+    position: VaultPosition,
+    subaccountId: string,
+  }[] = await Promise.all(
+    subaccounts.map(async (subaccount: SubaccountFromDatabase) => {
+      const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+        .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
+      if (perpetualMarket === undefined) {
+        throw new Error(
+          `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
+          'perpetual market.');
+      }
+      const lastUpdatedFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
+        .findFundingIndexMap(
+          subaccount.updatedAtHeight,
+        );
+
+      const subaccountResponse: SubaccountResponseObject = getSubaccountResponse(
+        subaccount,
+        openPerpetualPositionsBySubaccount[subaccount.id] || [],
+        assetPositionsBySubaccount[subaccount.id] || [],
+        assets,
+        markets,
+        perpetualMarketRefresher.getPerpetualMarketsMap(),
+        latestBlock.blockHeight,
+        latestFundingIndexMap,
+        lastUpdatedFundingIndexMap,
+      );
+
+      return {
+        position: {
+          ticker: perpetualMarket.ticker,
+          assetPosition: subaccountResponse.assetPositions[
+            assetIdToAsset[USDC_ASSET_ID].symbol
+          ],
+          perpetualPosition: subaccountResponse.openPerpetualPositions[
+            perpetualMarket.ticker
+          ] || undefined,
+          equity: subaccountResponse.equity,
+        },
+        subaccountId: subaccount.id,
+      };
+    }),
+  );
+
+  return new Map(vaultPositionsAndSubaccountId.map(
+    (obj: { position: VaultPosition, subaccountId: string }) : [string, VaultPosition] => {
+      return [
+        obj.subaccountId,
+        obj.position,
+      ];
+    },
+  ));
+}
+
+function getPnlTicksWithCurrentTick(
+  equity: string,
+  pnlTicks: PnlTicksFromDatabase[],
+  latestBlock: BlockFromDatabase,
+): PnlTicksFromDatabase[] {
+  if (pnlTicks.length === 0) {
+    return [];
+  }
+  const currentTick: PnlTicksFromDatabase = {
+    ...pnlTicks[pnlTicks.length - 1],
+    equity,
+    blockHeight: latestBlock.blockHeight,
+    blockTime: latestBlock.time,
+    createdAt: latestBlock.time,
+  };
+  return pnlTicks.concat([currentTick]);
 }
 
 // TODO(TRA-570): Placeholder for getting vault subaccount ids until vault table is added.
