@@ -30,6 +30,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdSetVaultParams())
 	cmd.AddCommand(CmdAllocateToVault())
 	cmd.AddCommand(CmdRetrieveFromVault())
+	cmd.AddCommand(CmdWithdrawFromVault())
 
 	return cmd
 }
@@ -231,6 +232,57 @@ func CmdRetrieveFromVault() *cobra.Command {
 					Number: uint32(vaultNumber),
 				},
 				QuoteQuantums: dtypes.NewIntFromUint64(quantums),
+			}
+
+			// Broadcast or generate the transaction.
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	// Add the necessary flags.
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdWithdrawFromVault() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-from-vault [withdrawer_owner] [withdrawer_number] [shares] [min_quote_quantums]",
+		Short: "Broadcast message WithdrawFromVault",
+		Args:  cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// Parse withdrawer owner and number
+			withdrawerOwner := args[0]
+			withdrawerNumber, err := cast.ToUint32E(args[1])
+			if err != nil {
+				return err
+			}
+
+			// Parse shares.
+			shares, err := cast.ToUint64E(args[2])
+			if err != nil {
+				return err
+			}
+
+			// Parse min quote quantums.
+			minQuoteQuantums, err := cast.ToUint64E(args[3])
+			if err != nil {
+				return err
+			}
+
+			// Create MsgWithdrawFromMegavault.
+			msg := &types.MsgWithdrawFromMegavault{
+				SubaccountId: satypes.SubaccountId{
+					Owner:  withdrawerOwner,
+					Number: withdrawerNumber,
+				},
+				Shares:           types.NumShares{NumShares: dtypes.NewIntFromUint64(shares)},
+				MinQuoteQuantums: dtypes.NewIntFromUint64(minQuoteQuantums),
 			}
 
 			// Broadcast or generate the transaction.
