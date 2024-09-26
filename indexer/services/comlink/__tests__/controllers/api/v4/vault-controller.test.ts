@@ -12,17 +12,15 @@ import {
   AssetPositionTable,
   FundingIndexUpdatesTable,
   PnlTicksFromDatabase,
+  VaultTable,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
 import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
-import config from '../../../../src/config';
 import { DateTime } from 'luxon';
 import Big from 'big.js';
 
 describe('vault-controller#V4', () => {
-  const experimentVaultsPrevVal: string = config.EXPERIMENT_VAULTS;
-  const experimentVaultMarketsPrevVal: string = config.EXPERIMENT_VAULT_MARKETS;
   const latestBlockHeight: string = '25';
   const currentBlockHeight: string = '7';
   const twoHourBlockHeight: string = '5';
@@ -45,8 +43,6 @@ describe('vault-controller#V4', () => {
 
   describe('GET /v1', () => {
     beforeEach(async () => {
-      config.EXPERIMENT_VAULTS = testConstants.defaultPnlTick.subaccountId;
-      config.EXPERIMENT_VAULT_MARKETS = testConstants.defaultPerpetualMarket.clobPairId;
       await testMocks.seedData();
       await perpetualMarketRefresher.updatePerpetualMarkets();
       await liquidityTierRefresher.updateLiquidityTiers();
@@ -96,15 +92,10 @@ describe('vault-controller#V4', () => {
     });
 
     afterEach(async () => {
-      config.EXPERIMENT_VAULTS = experimentVaultsPrevVal;
-      config.EXPERIMENT_VAULT_MARKETS = experimentVaultMarketsPrevVal;
       await dbHelpers.clearData();
     });
 
     it('Get /megavault/historicalPnl with no vault subaccounts', async () => {
-      config.EXPERIMENT_VAULTS = '';
-      config.EXPERIMENT_VAULT_MARKETS = '';
-
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: '/v4/vault/v1/megavault/historicalPnl',
@@ -122,6 +113,11 @@ describe('vault-controller#V4', () => {
       queryParam: string,
       expectedTicksIndex: number[],
     ) => {
+      await VaultTable.create({
+        ...testConstants.defaultVault,
+        address: testConstants.defaultSubaccount.address,
+        clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+      });
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
       const finalTick: PnlTicksFromDatabase = {
         ...createdPnlTicks[expectedTicksIndex[expectedTicksIndex.length - 1]],
@@ -155,14 +151,18 @@ describe('vault-controller#V4', () => {
       queryParam: string,
       expectedTicksIndex: number[],
     ) => {
-      config.EXPERIMENT_VAULTS = [
-        testConstants.defaultPnlTick.subaccountId,
-        testConstants.vaultSubaccountId,
-      ].join(',');
-      config.EXPERIMENT_VAULT_MARKETS = [
-        testConstants.defaultPerpetualMarket.clobPairId,
-        testConstants.defaultPerpetualMarket2.clobPairId,
-      ].join(',');
+      await Promise.all([
+        VaultTable.create({
+          ...testConstants.defaultVault,
+          address: testConstants.defaultAddress,
+          clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+        }),
+        VaultTable.create({
+          ...testConstants.defaultVault,
+          address: testConstants.vaultAddress,
+          clobPairId: testConstants.defaultPerpetualMarket2.clobPairId,
+        }),
+      ]);
 
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
       const response: request.Response = await sendRequest({
@@ -199,9 +199,6 @@ describe('vault-controller#V4', () => {
     });
 
     it('Get /vaults/historicalPnl with no vault subaccounts', async () => {
-      config.EXPERIMENT_VAULTS = '';
-      config.EXPERIMENT_VAULT_MARKETS = '';
-
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: '/v4/vault/v1/vaults/historicalPnl',
@@ -219,6 +216,11 @@ describe('vault-controller#V4', () => {
       queryParam: string,
       expectedTicksIndex: number[],
     ) => {
+      await VaultTable.create({
+        ...testConstants.defaultVault,
+        address: testConstants.defaultAddress,
+        clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+      });
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
       const finalTick: PnlTicksFromDatabase = {
         ...createdPnlTicks[expectedTicksIndex[expectedTicksIndex.length - 1]],
@@ -255,15 +257,18 @@ describe('vault-controller#V4', () => {
       expectedTicksIndex1: number[],
       expectedTicksIndex2: number[],
     ) => {
-      config.EXPERIMENT_VAULTS = [
-        testConstants.defaultPnlTick.subaccountId,
-        testConstants.vaultSubaccountId,
-      ].join(',');
-      config.EXPERIMENT_VAULT_MARKETS = [
-        testConstants.defaultPerpetualMarket.clobPairId,
-        testConstants.defaultPerpetualMarket2.clobPairId,
-      ].join(',');
-
+      await Promise.all([
+        VaultTable.create({
+          ...testConstants.defaultVault,
+          address: testConstants.defaultAddress,
+          clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+        }),
+        VaultTable.create({
+          ...testConstants.defaultVault,
+          address: testConstants.vaultAddress,
+          clobPairId: testConstants.defaultPerpetualMarket2.clobPairId,
+        }),
+      ]);
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
       const finalTick1: PnlTicksFromDatabase = {
         ...createdPnlTicks[expectedTicksIndex1[expectedTicksIndex1.length - 1]],
@@ -312,9 +317,6 @@ describe('vault-controller#V4', () => {
     });
 
     it('Get /megavault/positions with no vault subaccount', async () => {
-      config.EXPERIMENT_VAULTS = '';
-      config.EXPERIMENT_VAULT_MARKETS = '';
-
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: '/v4/vault/v1/megavault/positions',
@@ -326,6 +328,11 @@ describe('vault-controller#V4', () => {
     });
 
     it('Get /megavault/positions with 1 vault subaccount', async () => {
+      await VaultTable.create({
+        ...testConstants.defaultVault,
+        address: testConstants.defaultAddress,
+        clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+      });
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: '/v4/vault/v1/megavault/positions',
@@ -374,15 +381,18 @@ describe('vault-controller#V4', () => {
     });
 
     it('Get /megavault/positions with 2 vault subaccount, 1 with no perpetual', async () => {
-      config.EXPERIMENT_VAULTS = [
-        testConstants.defaultPnlTick.subaccountId,
-        testConstants.vaultSubaccountId,
-      ].join(',');
-      config.EXPERIMENT_VAULT_MARKETS = [
-        testConstants.defaultPerpetualMarket.clobPairId,
-        testConstants.defaultPerpetualMarket2.clobPairId,
-      ].join(',');
-
+      await Promise.all([
+        VaultTable.create({
+          ...testConstants.defaultVault,
+          address: testConstants.defaultAddress,
+          clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+        }),
+        VaultTable.create({
+          ...testConstants.defaultVault,
+          address: testConstants.vaultAddress,
+          clobPairId: testConstants.defaultPerpetualMarket2.clobPairId,
+        }),
+      ]);
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: '/v4/vault/v1/megavault/positions',
