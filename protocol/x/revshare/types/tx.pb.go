@@ -394,7 +394,7 @@ type MsgClient interface {
 	// SetMarketMapperRevenueShareDetails sets the revenue share details for a
 	// market mapper.
 	SetMarketMapperRevShareDetailsForMarket(ctx context.Context, in *MsgSetMarketMapperRevShareDetailsForMarket, opts ...grpc.CallOption) (*MsgSetMarketMapperRevShareDetailsForMarketResponse, error)
-	// SetUnconditionalRevShareConfig sets the unconditional revshare config
+	// UpdateUnconditionalRevShareConfig sets the unconditional revshare config
 	UpdateUnconditionalRevShareConfig(ctx context.Context, in *MsgUpdateUnconditionalRevShareConfig, opts ...grpc.CallOption) (*MsgUpdateUnconditionalRevShareConfigResponse, error)
 }
 
@@ -441,7 +441,7 @@ type MsgServer interface {
 	// SetMarketMapperRevenueShareDetails sets the revenue share details for a
 	// market mapper.
 	SetMarketMapperRevShareDetailsForMarket(context.Context, *MsgSetMarketMapperRevShareDetailsForMarket) (*MsgSetMarketMapperRevShareDetailsForMarketResponse, error)
-	// SetUnconditionalRevShareConfig sets the unconditional revshare config
+	// UpdateUnconditionalRevShareConfig sets the unconditional revshare config
 	UpdateUnconditionalRevShareConfig(context.Context, *MsgUpdateUnconditionalRevShareConfig) (*MsgUpdateUnconditionalRevShareConfigResponse, error)
 }
 
