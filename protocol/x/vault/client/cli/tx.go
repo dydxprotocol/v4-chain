@@ -30,7 +30,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdSetVaultParams())
 	cmd.AddCommand(CmdAllocateToVault())
 	cmd.AddCommand(CmdRetrieveFromVault())
-	cmd.AddCommand(CmdWithdrawFromVault())
+	cmd.AddCommand(CmdWithdrawFromMegavault())
 
 	return cmd
 }
@@ -245,10 +245,10 @@ func CmdRetrieveFromVault() *cobra.Command {
 	return cmd
 }
 
-func CmdWithdrawFromVault() *cobra.Command {
+func CmdWithdrawFromMegavault() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw-from-vault [withdrawer_owner] [withdrawer_number] [shares] [min_quote_quantums]",
-		Short: "Broadcast message WithdrawFromVault",
+		Use:   "withdraw-from-megavault [withdrawer_owner] [withdrawer_number] [shares] [min_quote_quantums]",
+		Short: "Broadcast message WithdrawFromMegavault",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
