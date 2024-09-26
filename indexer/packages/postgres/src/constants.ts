@@ -23,6 +23,7 @@ import {
   PerpetualMarketStatus,
   TimeInForce,
 } from './types';
+import { uuid } from './stores/subaccount-table';
 
 export const BUFFER_ENCODING_UTF_8: BufferEncoding = 'utf-8';
 
@@ -129,3 +130,7 @@ export const DEFAULT_POSTGRES_OPTIONS : Options = config.USE_READ_REPLICA
 export const MAX_PARENT_SUBACCOUNTS: number = 128;
 
 export const CHILD_SUBACCOUNT_MULTIPLIER: number = 1000;
+
+// From https://github.com/dydxprotocol/v4-chain/blob/protocol/v7.0.0-dev0/protocol/app/module_accounts_test.go#L41
+export const MEGAVAULT_MODULE_ADDRESS: string = 'dydx18tkxrnrkqc2t0lr3zxr5g6a4hdvqksylxqje4r';
+export const MEGAVAULT_SUBACCOUNT_ID: string = uuid(MEGAVAULT_MODULE_ADDRESS, 0);
