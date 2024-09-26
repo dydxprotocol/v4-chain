@@ -459,15 +459,15 @@ async function getVaultMapping(): Promise<VaultMapping> {
   const vaults: VaultFromDatabase[] = await VaultTable.findAll(
     {},
     [],
-    {}
+    {},
   );
-  return  _.zipObject(
+  return _.zipObject(
     vaults.map((vault: VaultFromDatabase): string => {
       return SubaccountTable.uuid(vault.address, 0);
     }),
     vaults.map((vault: VaultFromDatabase): string => {
       return vault.clobPairId;
-    }), 
+    }),
   );
 }
 

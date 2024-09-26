@@ -17,7 +17,6 @@ import {
 import { RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
 import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
-import config from '../../../../src/config';
 import { DateTime } from 'luxon';
 import Big from 'big.js';
 
