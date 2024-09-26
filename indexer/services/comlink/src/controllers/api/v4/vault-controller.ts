@@ -22,6 +22,8 @@ import {
   BlockFromDatabase,
   FundingIndexUpdatesTable,
   PnlTickInterval,
+  VaultTable,
+  VaultFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -57,8 +59,6 @@ import {
 const router: express.Router = express.Router();
 const controllerName: string = 'vault-controller';
 
-// TODO(TRA-570): Placeholder interface for mapping of vault subaccounts to tickers until vaults
-// table is added.
 interface VaultMapping {
   [subaccountId: string]: string,
 }
@@ -69,7 +69,7 @@ class VaultController extends Controller {
   async getMegavaultHistoricalPnl(
     @Query() resolution?: PnlTickInterval,
   ): Promise<MegavaultHistoricalPnlResponse> {
-    const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
+    const vaultSubaccounts: VaultMapping = await getVaultMapping();
     const [
       vaultPnlTicks,
       vaultPositions,
@@ -79,7 +79,7 @@ class VaultController extends Controller {
       Map<string, VaultPosition>,
       BlockFromDatabase,
     ] = await Promise.all([
-      getVaultSubaccountPnlTicks(resolution),
+      getVaultSubaccountPnlTicks(vaultSubaccounts, resolution),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
     ]);
@@ -111,7 +111,7 @@ class VaultController extends Controller {
   async getVaultsHistoricalPnl(
     @Query() resolution?: PnlTickInterval,
   ): Promise<VaultsHistoricalPnlResponse> {
-    const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
+    const vaultSubaccounts: VaultMapping = await getVaultMapping();
     const [
       vaultPnlTicks,
       vaultPositions,
@@ -121,7 +121,7 @@ class VaultController extends Controller {
       Map<string, VaultPosition>,
       BlockFromDatabase,
     ] = await Promise.all([
-      getVaultSubaccountPnlTicks(resolution),
+      getVaultSubaccountPnlTicks(vaultSubaccounts, resolution),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
     ]);
@@ -163,7 +163,7 @@ class VaultController extends Controller {
 
   @Get('/megavault/positions')
   async getMegavaultPositions(): Promise<MegavaultPositionResponse> {
-    const vaultSubaccounts: VaultMapping = getVaultSubaccountsFromConfig();
+    const vaultSubaccounts: VaultMapping = await getVaultMapping();
 
     const vaultPositions: Map<string, VaultPosition> = await getVaultPositions(vaultSubaccounts);
 
@@ -286,9 +286,10 @@ router.get(
   });
 
 async function getVaultSubaccountPnlTicks(
+  vaultSubaccounts: VaultMapping,
   resolution?: PnlTickInterval,
 ): Promise<PnlTicksFromDatabase[]> {
-  const vaultSubaccountIds: string[] = _.keys(getVaultSubaccountsFromConfig());
+  const vaultSubaccountIds: string[] = _.keys(vaultSubaccounts);
   if (vaultSubaccountIds.length === 0) {
     return [];
   }
@@ -454,19 +455,19 @@ function getPnlTicksWithCurrentTick(
   return pnlTicks.concat([currentTick]);
 }
 
-// TODO(TRA-570): Placeholder for getting vault subaccount ids until vault table is added.
-function getVaultSubaccountsFromConfig(): VaultMapping {
-  if (config.EXPERIMENT_VAULTS === '' && config.EXPERIMENT_VAULT_MARKETS === '') {
-    return {};
-  }
-  const vaultSubaccountIds: string[] = config.EXPERIMENT_VAULTS.split(',');
-  const vaultClobPairIds: string[] = config.EXPERIMENT_VAULT_MARKETS.split(',');
-  if (vaultSubaccountIds.length !== vaultClobPairIds.length) {
-    throw new Error('Expected number of vaults to match number of markets');
-  }
+async function getVaultMapping(): Promise<VaultMapping> {
+  const vaults: VaultFromDatabase[] = await VaultTable.findAll(
+    {},
+    [],
+    {},
+  );
   return _.zipObject(
-    vaultSubaccountIds,
-    vaultClobPairIds,
+    vaults.map((vault: VaultFromDatabase): string => {
+      return SubaccountTable.uuid(vault.address, 0);
+    }),
+    vaults.map((vault: VaultFromDatabase): string => {
+      return vault.clobPairId;
+    }),
   );
 }
 

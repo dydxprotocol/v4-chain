@@ -113,14 +113,17 @@ func TestValidate(t *testing.T) {
 				OptimisticExecutionEnabled: true,
 			},
 		},
-		"failure - optimistic execution cannot be enabled with gRPC streaming": {
+		"success - optimistic execution canbe  enabled with gRPC streaming": {
 			flags: flags.Flags{
-				NonValidatingFullNode:      false,
-				GrpcEnable:                 true,
-				GrpcStreamingEnabled:       true,
-				OptimisticExecutionEnabled: true,
+				NonValidatingFullNode:             false,
+				GrpcEnable:                        true,
+				GrpcStreamingEnabled:              true,
+				OptimisticExecutionEnabled:        true,
+				GrpcStreamingMaxBatchSize:         2000,
+				GrpcStreamingFlushIntervalMs:      100,
+				GrpcStreamingMaxChannelBufferSize: 2000,
+				WebsocketStreamingPort:            8989,
 			},
-			expectedErr: fmt.Errorf("grpc streaming cannot be enabled together with optimistic execution"),
 		},
 		"failure - gRPC disabled": {
 			flags: flags.Flags{

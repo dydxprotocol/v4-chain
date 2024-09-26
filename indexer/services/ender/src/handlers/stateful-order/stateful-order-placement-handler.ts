@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import { OrderTable } from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -6,7 +7,9 @@ import {
   OrderPlaceV1_OrderPlacementStatus,
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
+import * as pg from 'pg';
 
+import config from '../../config';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 
@@ -32,7 +35,7 @@ export class StatefulOrderPlacementHandler
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     let order: IndexerOrder;
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
     if (this.event.orderPlace !== undefined) {
@@ -40,6 +43,12 @@ export class StatefulOrderPlacementHandler
     } else {
       order = this.event.longTermOrderPlacement!.order!;
     }
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_stateful_order_placement_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     return this.createKafkaEvents(order);
   }
 
