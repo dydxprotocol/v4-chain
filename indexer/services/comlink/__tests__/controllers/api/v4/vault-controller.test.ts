@@ -13,6 +13,8 @@ import {
   FundingIndexUpdatesTable,
   PnlTicksFromDatabase,
   VaultTable,
+  MEGAVAULT_MODULE_ADDRESS,
+  MEGAVAULT_SUBACCOUNT_ID,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
 import request from 'supertest';
@@ -32,6 +34,7 @@ describe('vault-controller#V4', () => {
   const initialFundingIndex: string = '10000';
   const vault1Equity: number = 159500;
   const vault2Equity: number = 10000;
+  const mainVaultEquity: number = 10000;
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -69,6 +72,12 @@ describe('vault-controller#V4', () => {
         }),
       ]);
       await SubaccountTable.create(testConstants.vaultSubaccount);
+      await SubaccountTable.create({
+        address: MEGAVAULT_MODULE_ADDRESS,
+        subaccountNumber: 0,
+        updatedAt: latestTime.toISO(),
+        updatedAtHeight: latestBlockHeight,
+      });
       await Promise.all([
         PerpetualPositionTable.create(
           testConstants.defaultPerpetualPosition,
@@ -146,7 +155,7 @@ describe('vault-controller#V4', () => {
       ['no resolution', '', [1, 2]],
       ['daily resolution', '?resolution=day', [1, 2]],
       ['hourly resolution', '?resolution=hour', [1, 2, 3]],
-    ])('Get /megavault/historicalPnl with 2 vault subaccounts (%s)', async (
+    ])('Get /megavault/historicalPnl with 2 vault subaccounts and main subaccount (%s)', async (
       _name: string,
       queryParam: string,
       expectedTicksIndex: number[],
@@ -162,22 +171,28 @@ describe('vault-controller#V4', () => {
           address: testConstants.vaultAddress,
           clobPairId: testConstants.defaultPerpetualMarket2.clobPairId,
         }),
+        AssetPositionTable.upsert({
+          ...testConstants.defaultAssetPosition,
+          subaccountId: MEGAVAULT_SUBACCOUNT_ID,
+        }),
       ]);
 
-      const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
+      const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks(
+        true, // createMainSubaccounPnlTicks
+      );
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/vault/v1/megavault/historicalPnl${queryParam}`,
       });
 
       const expectedPnlTickBase: any = {
-        equity: (parseFloat(testConstants.defaultPnlTick.equity) * 2).toString(),
-        totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) * 2).toString(),
-        netTransfers: (parseFloat(testConstants.defaultPnlTick.netTransfers) * 2).toString(),
+        equity: (parseFloat(testConstants.defaultPnlTick.equity) * 3).toString(),
+        totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) * 3).toString(),
+        netTransfers: (parseFloat(testConstants.defaultPnlTick.netTransfers) * 3).toString(),
       };
       const finalTick: PnlTicksFromDatabase = {
         ...expectedPnlTickBase,
-        equity: Big(vault1Equity).add(vault2Equity).toFixed(),
+        equity: Big(vault1Equity).add(vault2Equity).add(mainVaultEquity).toFixed(),
         blockHeight: latestBlockHeight,
         blockTime: latestTime.toISO(),
         createdAt: latestTime.toISO(),
@@ -449,8 +464,10 @@ describe('vault-controller#V4', () => {
     });
   });
 
-  async function createPnlTicks(): Promise<PnlTicksFromDatabase[]> {
-    return Promise.all([
+  async function createPnlTicks(
+    createMainSubaccountPnlTicks: boolean = false,
+  ): Promise<PnlTicksFromDatabase[]> {
+    const createdTicks: PnlTicksFromDatabase[] = await Promise.all([
       PnlTicksTable.create(testConstants.defaultPnlTick),
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
@@ -496,5 +513,38 @@ describe('vault-controller#V4', () => {
         blockHeight: currentBlockHeight,
       }),
     ]);
+
+    if (createMainSubaccountPnlTicks) {
+      const mainSubaccountTicks: PnlTicksFromDatabase[] = await Promise.all([
+        PnlTicksTable.create({
+          ...testConstants.defaultPnlTick,
+          subaccountId: MEGAVAULT_SUBACCOUNT_ID,
+        }),
+        PnlTicksTable.create({
+          ...testConstants.defaultPnlTick,
+          subaccountId: MEGAVAULT_SUBACCOUNT_ID,
+          blockTime: twoDaysAgo.toISO(),
+          createdAt: twoDaysAgo.toISO(),
+          blockHeight: twoDayBlockHeight,
+        }),
+        PnlTicksTable.create({
+          ...testConstants.defaultPnlTick,
+          subaccountId: MEGAVAULT_SUBACCOUNT_ID,
+          blockTime: twoHoursAgo.toISO(),
+          createdAt: twoHoursAgo.toISO(),
+          blockHeight: twoHourBlockHeight,
+        }),
+        PnlTicksTable.create({
+          ...testConstants.defaultPnlTick,
+          subaccountId: MEGAVAULT_SUBACCOUNT_ID,
+          blockTime: currentTime.toISO(),
+          createdAt: currentTime.toISO(),
+          blockHeight: currentBlockHeight,
+        }),
+      ]);
+      createdTicks.push(...mainSubaccountTicks);
+    }
+
+    return createdTicks;
   }
 });

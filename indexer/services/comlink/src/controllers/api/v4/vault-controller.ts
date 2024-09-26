@@ -24,6 +24,7 @@ import {
   PnlTickInterval,
   VaultTable,
   VaultFromDatabase,
+  MEGAVAULT_SUBACCOUNT_ID,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -70,18 +71,24 @@ class VaultController extends Controller {
     @Query() resolution?: PnlTickInterval,
   ): Promise<MegavaultHistoricalPnlResponse> {
     const vaultSubaccounts: VaultMapping = await getVaultMapping();
+    const vaultSubaccountIdsWithMainSubaccount: string[] = _
+      .keys(vaultSubaccounts)
+      .concat([MEGAVAULT_SUBACCOUNT_ID]);
     const [
       vaultPnlTicks,
       vaultPositions,
       latestBlock,
+      mainSubaccountEquity,
     ] : [
       PnlTicksFromDatabase[],
       Map<string, VaultPosition>,
       BlockFromDatabase,
+      string,
     ] = await Promise.all([
-      getVaultSubaccountPnlTicks(vaultSubaccounts, resolution),
+      getVaultSubaccountPnlTicks(vaultSubaccountIdsWithMainSubaccount, resolution),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
+      getMainSubaccountEquity(),
     ]);
 
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
@@ -92,7 +99,7 @@ class VaultController extends Controller {
         return position.equity;
       }).reduce((acc: string, curr: string): string => {
         return (Big(acc).add(Big(curr))).toFixed();
-      }, '0');
+      }, mainSubaccountEquity);
     const pnlTicksWithCurrentTick: PnlTicksFromDatabase[] = getPnlTicksWithCurrentTick(
       currentEquity,
       Array.from(aggregatedPnlTicks.values()),
@@ -100,7 +107,7 @@ class VaultController extends Controller {
     );
 
     return {
-      megavaultPnl: pnlTicksWithCurrentTick.map(
+      megavaultPnl: _.sortBy(pnlTicksWithCurrentTick, 'blockTime').map(
         (pnlTick: PnlTicksFromDatabase) => {
           return pnlTicksToResponseObject(pnlTick);
         }),
@@ -121,7 +128,7 @@ class VaultController extends Controller {
       Map<string, VaultPosition>,
       BlockFromDatabase,
     ] = await Promise.all([
-      getVaultSubaccountPnlTicks(vaultSubaccounts, resolution),
+      getVaultSubaccountPnlTicks(_.keys(vaultSubaccounts), resolution),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
     ]);
@@ -286,10 +293,9 @@ router.get(
   });
 
 async function getVaultSubaccountPnlTicks(
-  vaultSubaccounts: VaultMapping,
+  vaultSubaccountIds: string[],
   resolution?: PnlTickInterval,
 ): Promise<PnlTicksFromDatabase[]> {
-  const vaultSubaccountIds: string[] = _.keys(vaultSubaccounts);
   if (vaultSubaccountIds.length === 0) {
     return [];
   }
@@ -435,6 +441,15 @@ async function getVaultPositions(
       ];
     },
   ));
+}
+
+async function getMainSubaccountEquity(): Promise<string> {
+  // Main vault subaccount should only ever hold a USDC and never any perpetuals.
+  const usdcBalance: {[subaccountId: string]: Big} = await AssetPositionTable
+    .findUsdcPositionForSubaccounts(
+      [MEGAVAULT_SUBACCOUNT_ID],
+    );
+  return usdcBalance[MEGAVAULT_SUBACCOUNT_ID]?.toFixed() || '0';
 }
 
 function getPnlTicksWithCurrentTick(
