@@ -23,7 +23,6 @@ import {
   PerpetualMarketStatus,
   TimeInForce,
 } from './types';
-import { SubaccountTable } from '.';
 
 export const BUFFER_ENCODING_UTF_8: BufferEncoding = 'utf-8';
 
