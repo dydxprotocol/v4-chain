@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   LiquidityTiersFromDatabase,
   LiquidityTiersModel,
@@ -9,6 +10,7 @@ import { LiquidityTierUpsertEventV1, LiquidityTierUpsertEventV2 } from '@dydxpro
 import _ from 'lodash';
 import * as pg from 'pg';
 
+import config from '../config';
 import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
@@ -21,6 +23,12 @@ export class LiquidityTierHandlerBase<T> extends Handler<T> {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_liquidity_tier_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
     const liquidityTier: LiquidityTiersFromDatabase = LiquidityTiersModel.fromJson(
       resultRow.liquidity_tier,
     ) as LiquidityTiersFromDatabase;

@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -27,6 +28,7 @@ var _ types.FullNodeStreamingManager = (*FullNodeStreamingManagerImpl)(nil)
 type FullNodeStreamingManagerImpl struct {
 	sync.Mutex
 
+	cdc    codec.BinaryCodec
 	logger log.Logger
 
 	// orderbookSubscriptions maps subscription IDs to their respective orderbook subscriptions.
@@ -95,6 +97,7 @@ func NewFullNodeStreamingManager(
 	maxSubscriptionChannelSize uint32,
 	snapshotBlockInterval uint32,
 	streamingManagerTransientStoreKey storetypes.StoreKey,
+	cdc codec.BinaryCodec,
 ) *FullNodeStreamingManagerImpl {
 	fullNodeStreamingManager := &FullNodeStreamingManagerImpl{
 		logger:                 logger,
@@ -113,6 +116,7 @@ func NewFullNodeStreamingManager(
 		snapshotBlockInterval:      snapshotBlockInterval,
 
 		streamingManagerTransientStoreKey: streamingManagerTransientStoreKey,
+		cdc:                               cdc,
 	}
 
 	// Start the goroutine for pushing order updates through.
@@ -391,6 +395,7 @@ func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockSubaccountUpdate(
 	ctx sdk.Context,
 	subaccountUpdate satypes.StreamSubaccountUpdate,
 ) {
+	lib.AssertDeliverTxMode(ctx)
 	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
 		Event: &clobtypes.StagedFinalizeBlockEvent_SubaccountUpdate{
 			SubaccountUpdate: &subaccountUpdate,
@@ -398,7 +403,7 @@ func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockSubaccountUpdate(
 	}
 	sm.stageFinalizeBlockEvent(
 		ctx,
-		clobtypes.Amino.MustMarshal(stagedEvent),
+		sm.cdc.MustMarshal(&stagedEvent),
 	)
 }
 
@@ -411,25 +416,30 @@ func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockFill(
 	ctx sdk.Context,
 	fill clobtypes.StreamOrderbookFill,
 ) {
+	lib.AssertDeliverTxMode(ctx)
 	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
 		Event: &clobtypes.StagedFinalizeBlockEvent_OrderFill{
 			OrderFill: &fill,
 		},
 	}
+
 	sm.stageFinalizeBlockEvent(
 		ctx,
-		clobtypes.Amino.MustMarshal(stagedEvent),
+		sm.cdc.MustMarshal(&stagedEvent),
 	)
 }
 
-func getStagedFinalizeBlockEvents(store storetypes.KVStore) []clobtypes.StagedFinalizeBlockEvent {
+func getStagedFinalizeBlockEventsFromStore(
+	store storetypes.KVStore,
+	cdc codec.BinaryCodec,
+) []clobtypes.StagedFinalizeBlockEvent {
 	count := getStagedEventsCount(store)
 	events := make([]clobtypes.StagedFinalizeBlockEvent, count)
 	store = prefix.NewStore(store, []byte(StagedEventsKeyPrefix))
 	for i := uint32(0); i < count; i++ {
 		var event clobtypes.StagedFinalizeBlockEvent
 		bytes := store.Get(lib.Uint32ToKey(i))
-		clobtypes.Amino.MustUnmarshal(bytes, &event)
+		cdc.MustUnmarshal(bytes, &event)
 		events[i] = event
 	}
 	return events
@@ -441,7 +451,7 @@ func (sm *FullNodeStreamingManagerImpl) GetStagedFinalizeBlockEvents(
 ) []clobtypes.StagedFinalizeBlockEvent {
 	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
 	store := noGasCtx.TransientStore(sm.streamingManagerTransientStoreKey)
-	return getStagedFinalizeBlockEvents(store)
+	return getStagedFinalizeBlockEventsFromStore(store, sm.cdc)
 }
 
 func (sm *FullNodeStreamingManagerImpl) stageFinalizeBlockEvent(
@@ -889,6 +899,9 @@ func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
 	orderBookUpdatesToSyncLocalOpsQueue *clobtypes.OffchainUpdates,
 	perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
 ) {
+	// Prevent gas metering from state read.
+	ctx = ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
+
 	finalizedFills, finalizedSubaccountUpdates := sm.getStagedEventsFromFinalizeBlock(ctx)
 
 	orderbookStreamUpdates, orderbookClobPairIds := getStreamUpdatesFromOffchainUpdates(

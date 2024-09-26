@@ -31,7 +31,8 @@ type Flags struct {
 
 	VEOracleEnabled bool // Slinky Vote Extensions
 	// Optimistic block execution
-	OptimisticExecutionEnabled bool
+	OptimisticExecutionEnabled       bool
+	OptimisticExecutionTestAbortRate uint16
 }
 
 // List of CLI flags.
@@ -58,7 +59,8 @@ const (
 	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
 
 	// Enable optimistic block execution.
-	OptimisticExecutionEnabled = "optimistic-execution-enabled"
+	OptimisticExecutionEnabled       = "optimistic-execution-enabled"
+	OptimisticExecutionTestAbortRate = "optimistic-execution-test-abort-rate"
 )
 
 // Default values.
@@ -76,8 +78,10 @@ const (
 	DefaultWebsocketStreamingPort            = 9092
 	DefaultFullNodeStreamingSnapshotInterval = 0
 
-	DefaultVEOracleEnabled            = true
-	DefaultOptimisticExecutionEnabled = false
+	DefaultVEOracleEnabled = true
+
+	DefaultOptimisticExecutionEnabled       = false
+	DefaultOptimisticExecutionTestAbortRate = 0
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -152,6 +156,11 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		DefaultOptimisticExecutionEnabled,
 		"Whether to enable optimistic block execution",
 	)
+	cmd.Flags().Uint16(
+		OptimisticExecutionTestAbortRate,
+		DefaultOptimisticExecutionTestAbortRate,
+		"[Test only] Abort rate for optimistic execution",
+	)
 }
 
 // Validate checks that the flags are valid.
@@ -163,10 +172,6 @@ func (f *Flags) Validate() error {
 
 	// Grpc streaming
 	if f.GrpcStreamingEnabled {
-		if f.OptimisticExecutionEnabled {
-			// TODO(OTE-456): Finish gRPC streaming x OE integration.
-			return fmt.Errorf("grpc streaming cannot be enabled together with optimistic execution")
-		}
 		if !f.GrpcEnable {
 			return fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server")
 		}
@@ -214,8 +219,9 @@ func GetFlagValuesFromOptions(
 		WebsocketStreamingPort:            DefaultWebsocketStreamingPort,
 		FullNodeStreamingSnapshotInterval: DefaultFullNodeStreamingSnapshotInterval,
 
-		VEOracleEnabled:            true,
-		OptimisticExecutionEnabled: DefaultOptimisticExecutionEnabled,
+		VEOracleEnabled:                  true,
+		OptimisticExecutionEnabled:       DefaultOptimisticExecutionEnabled,
+		OptimisticExecutionTestAbortRate: DefaultOptimisticExecutionTestAbortRate,
 	}
 
 	// Populate the flags if they exist.
@@ -306,6 +312,12 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(OptimisticExecutionEnabled); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
 			result.OptimisticExecutionEnabled = v
+		}
+	}
+
+	if option := appOpts.Get(OptimisticExecutionTestAbortRate); option != nil {
+		if v, err := cast.ToUint16E(option); err == nil {
+			result.OptimisticExecutionTestAbortRate = v
 		}
 	}
 	return result
