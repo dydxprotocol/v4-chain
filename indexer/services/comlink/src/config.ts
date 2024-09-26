@@ -56,11 +56,6 @@ export const configSchema = {
   // Expose setting compliance status, only set to true in dev/staging.
   EXPOSE_SET_COMPLIANCE_ENDPOINT: parseBoolean({ default: false }),
 
-  // TODO(TRA-570): Placeholder data for vaults and matching set of markets for each vault until
-  // vaults table is added.
-  EXPERIMENT_VAULTS: parseString({ default: '' }),
-  EXPERIMENT_VAULT_MARKETS: parseString({ default: '' }),
-
   // Affiliates config
   VOLUME_ELIGIBILITY_THRESHOLD: parseInteger({ default: 10_000 }),
 
