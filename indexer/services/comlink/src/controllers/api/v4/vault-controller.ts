@@ -444,6 +444,7 @@ async function getVaultPositions(
 }
 
 async function getMainSubaccountEquity(): Promise<string> {
+  // Main vault subaccount should only ever hold a USDC and never any perpetuals.
   const usdcBalance: {[subaccountId: string]: Big} = await AssetPositionTable
     .findUsdcPositionForSubaccounts(
       [MEGAVAULT_SUBACCOUNT_ID],
