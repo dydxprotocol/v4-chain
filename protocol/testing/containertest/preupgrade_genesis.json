@@ -4354,7 +4354,21 @@
           "asset_positions": [
             {
               "asset_id": 0,
-              "quantums": "1000000000",
+              "quantums": "2000000000",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "id": {
+            "owner": "dydx190te44zcctdgk0qmqtenve2m00g3r2dn7ntd72",
+            "number": 0
+          },
+          "margin_enabled": true,
+          "asset_positions": [
+            {
+              "asset_id": 0,
+              "quantums": "3000000000",
               "index": 0
             }
           ]
@@ -4405,13 +4419,48 @@
             "number": 1
           },
           "total_shares": {
-            "num_shares": "1000000000"
+            "num_shares": "3000000000"
           },
           "owner_shares": [
             {
               "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
               "shares": {
                 "num_shares": "1000000000"
+              }
+            },
+            {
+              "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
+              "shares": {
+                "num_shares": "1000000000"
+              }
+            },
+            {
+              "owner": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
+              "shares": {
+                "num_shares": "1000000000"
+              }
+            }
+          ]
+        },
+        {
+          "vault_id": {
+            "type": "VAULT_TYPE_CLOB",
+            "number": 2
+          },
+          "total_shares": {
+            "num_shares": "556677"
+          },
+          "owner_shares": [
+            {
+              "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
+              "shares": {
+                "num_shares": "123456"
+              }
+            },
+            {
+              "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
+              "shares": {
+                "num_shares": "433221"
               }
             }
           ]
