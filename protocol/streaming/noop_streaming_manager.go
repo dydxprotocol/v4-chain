@@ -32,14 +32,14 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
 	updates *clobtypes.OffchainUpdates,
 	blockHeight uint32,
-	execMode sdk.ExecMode,
+	ctx sdk.Context,
 ) {
 }
 
-func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdates(
-	orderbookFills []clobtypes.StreamOrderbookFill,
+func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdate(
+	orderbookFill clobtypes.StreamOrderbookFill,
 	blockHeight uint32,
-	execMode sdk.ExecMode,
+	ctx sdk.Context,
 	perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
 ) {
 }
@@ -47,7 +47,7 @@ func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdates(
 func (sm *NoopGrpcStreamingManager) SendTakerOrderStatus(
 	takerOrder clobtypes.StreamTakerOrder,
 	blockHeight uint32,
-	execMode sdk.ExecMode,
+	ctx sdk.Context,
 ) {
 }
 
@@ -79,19 +79,13 @@ func (sm *NoopGrpcStreamingManager) InitializeNewStreams(
 func (sm *NoopGrpcStreamingManager) Stop() {
 }
 
-func (sm *NoopGrpcStreamingManager) StageFinalizeBlockFill(
-	ctx sdk.Context,
-	fill clobtypes.StreamOrderbookFill,
-) {
-}
-
 func (sm *NoopGrpcStreamingManager) GetStagedFinalizeBlockEvents(
 	ctx sdk.Context,
 ) []clobtypes.StagedFinalizeBlockEvent {
 	return nil
 }
 
-func (sm *NoopGrpcStreamingManager) StageFinalizeBlockSubaccountUpdate(
+func (sm *NoopGrpcStreamingManager) SendSubaccountUpdate(
 	ctx sdk.Context,
 	subaccountUpdate satypes.StreamSubaccountUpdate,
 ) {

@@ -20,6 +20,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	streaming_util "github.com/dydxprotocol/v4-chain/protocol/streaming/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 )
 
 var _ types.FullNodeStreamingManager = (*FullNodeStreamingManagerImpl)(nil)
@@ -313,10 +315,7 @@ func toOrderbookStreamUpdate(
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) []clobtypes.StreamUpdate {
-	v1updates, err := streaming_util.GetOffchainUpdatesV1(offchainUpdates)
-	if err != nil {
-		panic(err)
-	}
+	v1updates := streaming_util.GetOffchainUpdatesV1(offchainUpdates)
 	return []clobtypes.StreamUpdate{
 		{
 			UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
@@ -391,38 +390,21 @@ func getStagedEventsCount(store storetypes.KVStore) uint32 {
 }
 
 // Stage a subaccount update event in transient store, during `FinalizeBlock`.
-func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockSubaccountUpdate(
+func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdate(
 	ctx sdk.Context,
 	subaccountUpdate satypes.StreamSubaccountUpdate,
 ) {
-	lib.AssertDeliverTxMode(ctx)
+	// If not `DeliverTx`, return since we don't stream optimistic subaccount updates.
+	if !lib.IsDeliverTxMode(ctx) {
+		return
+	}
+
+	// If `DeliverTx`, updates should be staged to be streamed after consensus finalizese on a block.
 	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
 		Event: &clobtypes.StagedFinalizeBlockEvent_SubaccountUpdate{
 			SubaccountUpdate: &subaccountUpdate,
 		},
 	}
-	sm.stageFinalizeBlockEvent(
-		ctx,
-		sm.cdc.MustMarshal(&stagedEvent),
-	)
-}
-
-// Stage a fill event in transient store, during `FinalizeBlock`.
-// Since `FinalizeBlock` code block can be called more than once with optimistic
-// execution (once optimistically and optionally once on the canonical block),
-// we need to stage the events in transient store and later emit them
-// during `Precommit`.
-func (sm *FullNodeStreamingManagerImpl) StageFinalizeBlockFill(
-	ctx sdk.Context,
-	fill clobtypes.StreamOrderbookFill,
-) {
-	lib.AssertDeliverTxMode(ctx)
-	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
-		Event: &clobtypes.StagedFinalizeBlockEvent_OrderFill{
-			OrderFill: &fill,
-		},
-	}
-
 	sm.stageFinalizeBlockEvent(
 		ctx,
 		sm.cdc.MustMarshal(&stagedEvent),
@@ -501,28 +483,37 @@ func (sm *FullNodeStreamingManagerImpl) TracksSubaccountId(subaccountId satypes.
 }
 
 func getStreamUpdatesFromOffchainUpdates(
-	offchainUpdates *clobtypes.OffchainUpdates,
+	v1updates []ocutypes.OffChainUpdateV1,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) (streamUpdates []clobtypes.StreamUpdate, clobPairIds []uint32) {
 	// Group updates by clob pair id.
-	updates := make(map[uint32]*clobtypes.OffchainUpdates)
-	for _, message := range offchainUpdates.Messages {
-		clobPairId := message.OrderId.ClobPairId
-		if _, ok := updates[clobPairId]; !ok {
-			updates[clobPairId] = clobtypes.NewOffchainUpdates()
+	clobPairIdToV1Updates := make(map[uint32][]ocutypes.OffChainUpdateV1)
+	for _, v1update := range v1updates {
+		var clobPairId uint32
+		switch u := v1update.UpdateMessage.(type) {
+		case *ocutypes.OffChainUpdateV1_OrderPlace:
+			clobPairId = u.OrderPlace.Order.OrderId.ClobPairId
+		case *ocutypes.OffChainUpdateV1_OrderReplace:
+			clobPairId = u.OrderReplace.OldOrderId.ClobPairId
+		case *ocutypes.OffChainUpdateV1_OrderRemove:
+			clobPairId = u.OrderRemove.RemovedOrderId.ClobPairId
+		case *ocutypes.OffChainUpdateV1_OrderUpdate:
+			clobPairId = u.OrderUpdate.OrderId.ClobPairId
+		default:
+			panic(fmt.Sprintf("Unhandled UpdateMessage type: %v", u))
 		}
-		updates[clobPairId].Messages = append(updates[clobPairId].Messages, message)
+
+		if _, ok := clobPairIdToV1Updates[clobPairId]; !ok {
+			clobPairIdToV1Updates[clobPairId] = []ocutypes.OffChainUpdateV1{}
+		}
+		clobPairIdToV1Updates[clobPairId] = append(clobPairIdToV1Updates[clobPairId], v1update)
 	}
 
 	// Unmarshal each per-clob pair message to v1 updates.
 	streamUpdates = make([]clobtypes.StreamUpdate, 0)
 	clobPairIds = make([]uint32, 0)
-	for clobPairId, update := range updates {
-		v1updates, err := streaming_util.GetOffchainUpdatesV1(update)
-		if err != nil {
-			panic(err)
-		}
+	for clobPairId, v1updates := range clobPairIdToV1Updates {
 		streamUpdate := clobtypes.StreamUpdate{
 			UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
 				OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
@@ -545,17 +536,36 @@ func getStreamUpdatesFromOffchainUpdates(
 func (sm *FullNodeStreamingManagerImpl) SendOrderbookUpdates(
 	offchainUpdates *clobtypes.OffchainUpdates,
 	blockHeight uint32,
-	execMode sdk.ExecMode,
+	ctx sdk.Context,
 ) {
-	defer metrics.ModuleMeasureSince(
-		metrics.FullNodeGrpc,
-		metrics.GrpcSendOrderbookUpdatesLatency,
-		time.Now(),
+	v1updates := streaming_util.GetOffchainUpdatesV1(offchainUpdates)
+
+	// If not `DeliverTx`, then updates are optimistic. Stream them directly.
+	if !lib.IsDeliverTxMode(ctx) {
+		defer metrics.ModuleMeasureSince(
+			metrics.FullNodeGrpc,
+			metrics.GrpcSendOrderbookUpdatesLatency,
+			time.Now(),
+		)
+
+		streamUpdates, clobPairIds := getStreamUpdatesFromOffchainUpdates(v1updates, blockHeight, ctx.ExecMode())
+		sm.AddOrderUpdatesToCache(streamUpdates, clobPairIds)
+		return
+	}
+
+	// If `DeliverTx`, updates should be staged to be streamed after consensus finalizese on a block.
+	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
+		Event: &clobtypes.StagedFinalizeBlockEvent_OrderbookUpdate{
+			OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
+				Updates:  v1updates,
+				Snapshot: false,
+			},
+		},
+	}
+	sm.stageFinalizeBlockEvent(
+		ctx,
+		sm.cdc.MustMarshal(&stagedEvent),
 	)
-
-	streamUpdates, clobPairIds := getStreamUpdatesFromOffchainUpdates(offchainUpdates, blockHeight, execMode)
-
-	sm.AddOrderUpdatesToCache(streamUpdates, clobPairIds)
 }
 
 func (sm *FullNodeStreamingManagerImpl) getStreamUpdatesForOrderbookFills(
@@ -595,36 +605,54 @@ func (sm *FullNodeStreamingManagerImpl) getStreamUpdatesForOrderbookFills(
 	return streamUpdates, clobPairIds
 }
 
-// SendOrderbookFillUpdates groups fills by their clob pair ids and
+// SendOrderbookFillUpdate groups fills by their clob pair ids and
 // sends messages to the subscribers.
-func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdates(
-	orderbookFills []clobtypes.StreamOrderbookFill,
+func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdate(
+	orderbookFill clobtypes.StreamOrderbookFill,
 	blockHeight uint32,
-	execMode sdk.ExecMode,
+	ctx sdk.Context,
 	perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
 ) {
-	defer metrics.ModuleMeasureSince(
-		metrics.FullNodeGrpc,
-		metrics.GrpcSendOrderbookFillsLatency,
-		time.Now(),
-	)
+	// If not `DeliverTx`, then updates are optimistic. Stream them directly.
+	if !lib.IsDeliverTxMode(ctx) {
+		defer metrics.ModuleMeasureSince(
+			metrics.FullNodeGrpc,
+			metrics.GrpcSendOrderbookFillsLatency,
+			time.Now(),
+		)
 
-	streamUpdates, clobPairIds := sm.getStreamUpdatesForOrderbookFills(
-		orderbookFills,
-		blockHeight,
-		execMode,
-		perpetualIdToClobPairId,
-	)
+		streamUpdates, clobPairIds := sm.getStreamUpdatesForOrderbookFills(
+			[]clobtypes.StreamOrderbookFill{orderbookFill},
+			blockHeight,
+			ctx.ExecMode(),
+			perpetualIdToClobPairId,
+		)
+		sm.AddOrderUpdatesToCache(streamUpdates, clobPairIds)
+		return
+	}
 
-	sm.AddOrderUpdatesToCache(streamUpdates, clobPairIds)
+	// If `DeliverTx`, updates should be staged to be streamed after consensus finalizese on a block.
+	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
+		Event: &clobtypes.StagedFinalizeBlockEvent_OrderFill{
+			OrderFill: &orderbookFill,
+		},
+	}
+
+	sm.stageFinalizeBlockEvent(
+		ctx,
+		sm.cdc.MustMarshal(&stagedEvent),
+	)
 }
 
 // SendTakerOrderStatus sends out a taker order and its status to the full node streaming service.
 func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
 	streamTakerOrder clobtypes.StreamTakerOrder,
 	blockHeight uint32,
-	execMode sdk.ExecMode,
+	ctx sdk.Context,
 ) {
+	// In current design, we never send this during `DeliverTx` (`FinalizeBlock`).
+	lib.AssertCheckTxMode(ctx)
+
 	clobPairId := uint32(0)
 	if liqOrder := streamTakerOrder.GetLiquidationOrder(); liqOrder != nil {
 		clobPairId = liqOrder.ClobPairId
@@ -640,7 +668,7 @@ func (sm *FullNodeStreamingManagerImpl) SendTakerOrderStatus(
 					TakerOrder: &streamTakerOrder,
 				},
 				BlockHeight: blockHeight,
-				ExecMode:    uint32(execMode),
+				ExecMode:    uint32(ctx.ExecMode()),
 			},
 		},
 		[]uint32{clobPairId},
@@ -712,13 +740,7 @@ func (sm *FullNodeStreamingManagerImpl) AddOrderUpdatesToCache(
 		float32(len(updates)),
 	)
 
-	sm.streamUpdateCache = append(sm.streamUpdateCache, updates...)
-	for _, clobPairId := range clobPairIds {
-		sm.streamUpdateSubscriptionCache = append(
-			sm.streamUpdateSubscriptionCache,
-			sm.clobPairIdToSubscriptionIdMapping[clobPairId],
-		)
-	}
+	sm.cacheStreamUpdatesByClobPairWithLock(updates, clobPairIds)
 
 	// Remove all subscriptions and wipe the buffer if buffer overflows.
 	sm.RemoveSubscriptionsAndClearBufferIfFull()
@@ -739,13 +761,8 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 		float32(len(updates)),
 	)
 
-	sm.streamUpdateCache = append(sm.streamUpdateCache, updates...)
-	for _, subaccountId := range subaccountIds {
-		sm.streamUpdateSubscriptionCache = append(
-			sm.streamUpdateSubscriptionCache,
-			sm.subaccountIdToSubscriptionIdMapping[*subaccountId],
-		)
-	}
+	sm.cacheStreamUpdatesBySubaccountWithLock(updates, subaccountIds)
+
 	sm.RemoveSubscriptionsAndClearBufferIfFull()
 	sm.EmitMetrics()
 }
@@ -850,38 +867,31 @@ func (sm *FullNodeStreamingManagerImpl) GetSubaccountSnapshotsForInitStreams(
 	return ret
 }
 
-// addBatchUpdatesToCacheWithLock adds batched updates to the cache.
-// Used by `StreamBatchUpdatesAfterFinalizeBlock` to batch orderbook, fill
-// and subaccount updates in a single stream.
-// Note this method requires the lock and assumes that the lock has already been
+// cacheStreamUpdatesByClobPairWithLock adds stream updates to cache,
+// and store corresponding clob pair Ids.
+// This method requires the lock and assumes that the lock has already been
 // acquired by the caller.
-func (sm *FullNodeStreamingManagerImpl) addBatchUpdatesToCacheWithLock(
-	orderbookStreamUpdates []clobtypes.StreamUpdate,
-	orderbookClobPairIds []uint32,
-	fillStreamUpdates []clobtypes.StreamUpdate,
-	fillClobPairIds []uint32,
+func (sm *FullNodeStreamingManagerImpl) cacheStreamUpdatesByClobPairWithLock(
+	streamUpdates []clobtypes.StreamUpdate,
+	clobPairIds []uint32,
+) {
+	sm.streamUpdateCache = append(sm.streamUpdateCache, streamUpdates...)
+	for _, clobPairId := range clobPairIds {
+		sm.streamUpdateSubscriptionCache = append(
+			sm.streamUpdateSubscriptionCache,
+			sm.clobPairIdToSubscriptionIdMapping[clobPairId],
+		)
+	}
+}
+
+// cacheStreamUpdatesBySubaccountWithLock adds subaccount stream updates to cache,
+// and store corresponding subaccount Ids.
+// This method requires the lock and assumes that the lock has already been
+// acquired by the caller.
+func (sm *FullNodeStreamingManagerImpl) cacheStreamUpdatesBySubaccountWithLock(
 	subaccountStreamUpdates []clobtypes.StreamUpdate,
 	subaccountIds []*satypes.SubaccountId,
 ) {
-	// Add orderbook updates to cache.
-	sm.streamUpdateCache = append(sm.streamUpdateCache, orderbookStreamUpdates...)
-	for _, clobPairId := range orderbookClobPairIds {
-		sm.streamUpdateSubscriptionCache = append(
-			sm.streamUpdateSubscriptionCache,
-			sm.clobPairIdToSubscriptionIdMapping[clobPairId],
-		)
-	}
-
-	// Add fill updates to cache.
-	sm.streamUpdateCache = append(sm.streamUpdateCache, fillStreamUpdates...)
-	for _, clobPairId := range fillClobPairIds {
-		sm.streamUpdateSubscriptionCache = append(
-			sm.streamUpdateSubscriptionCache,
-			sm.clobPairIdToSubscriptionIdMapping[clobPairId],
-		)
-	}
-
-	// Add subaccount updates to cache.
 	sm.streamUpdateCache = append(sm.streamUpdateCache, subaccountStreamUpdates...)
 	for _, subaccountId := range subaccountIds {
 		sm.streamUpdateSubscriptionCache = append(
@@ -902,26 +912,9 @@ func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
 	// Prevent gas metering from state read.
 	ctx = ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
 
-	finalizedFills, finalizedSubaccountUpdates := sm.getStagedEventsFromFinalizeBlock(ctx)
-
-	orderbookStreamUpdates, orderbookClobPairIds := getStreamUpdatesFromOffchainUpdates(
-		orderBookUpdatesToSyncLocalOpsQueue,
-		uint32(ctx.BlockHeight()),
-		ctx.ExecMode(),
-	)
-
-	fillStreamUpdates, fillClobPairIds := sm.getStreamUpdatesForOrderbookFills(
-		finalizedFills,
-		uint32(ctx.BlockHeight()),
-		ctx.ExecMode(),
-		perpetualIdToClobPairId,
-	)
-
-	subaccountStreamUpdates, subaccountIds := getStreamUpdatesForSubaccountUpdates(
+	finalizedFills,
 		finalizedSubaccountUpdates,
-		uint32(ctx.BlockHeight()),
-		ctx.ExecMode(),
-	)
+		finalizedOrderbookUpdates := sm.getStagedEventsFromFinalizeBlock(ctx)
 
 	sm.Lock()
 	defer sm.Unlock()
@@ -929,14 +922,40 @@ func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
 	// Flush all pending updates, since we want the onchain updates to arrive in a batch.
 	sm.FlushStreamUpdatesWithLock()
 
-	sm.addBatchUpdatesToCacheWithLock(
-		orderbookStreamUpdates,
-		orderbookClobPairIds,
-		fillStreamUpdates,
-		fillClobPairIds,
-		subaccountStreamUpdates,
-		subaccountIds,
+	// Cache updates to sync local ops queue
+	sycnLocalUpdates, syncLocalClobPairIds := getStreamUpdatesFromOffchainUpdates(
+		streaming_util.GetOffchainUpdatesV1(orderBookUpdatesToSyncLocalOpsQueue),
+		uint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
 	)
+	sm.cacheStreamUpdatesByClobPairWithLock(sycnLocalUpdates, syncLocalClobPairIds)
+
+	// Cache updates for finalized fills.
+	fillStreamUpdates, fillClobPairIds := sm.getStreamUpdatesForOrderbookFills(
+		finalizedFills,
+		uint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+		perpetualIdToClobPairId,
+	)
+	sm.cacheStreamUpdatesByClobPairWithLock(fillStreamUpdates, fillClobPairIds)
+
+	// Cache updates for finalized orderbook updates (e.g. RemoveOrderFillAmount in `EndBlocker`).
+	for _, finalizedUpdate := range finalizedOrderbookUpdates {
+		streamUpdates, clobPairIds := getStreamUpdatesFromOffchainUpdates(
+			finalizedUpdate.Updates,
+			uint32(ctx.BlockHeight()),
+			ctx.ExecMode(),
+		)
+		sm.cacheStreamUpdatesByClobPairWithLock(streamUpdates, clobPairIds)
+	}
+
+	// Finally, cache updates for finalized subaccount updates
+	subaccountStreamUpdates, subaccountIds := getStreamUpdatesForSubaccountUpdates(
+		finalizedSubaccountUpdates,
+		uint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+	)
+	sm.cacheStreamUpdatesBySubaccountWithLock(subaccountStreamUpdates, subaccountIds)
 
 	// Emit all stream updates in a single batch.
 	// Note we still have the lock, which is released right before function returns.
@@ -950,6 +969,7 @@ func (sm *FullNodeStreamingManagerImpl) getStagedEventsFromFinalizeBlock(
 ) (
 	finalizedFills []clobtypes.StreamOrderbookFill,
 	finalizedSubaccountUpdates []satypes.StreamSubaccountUpdate,
+	finalizedOrderbookUpdates []clobtypes.StreamOrderbookUpdate,
 ) {
 	// Get onchain stream events stored in transient store.
 	stagedEvents := sm.GetStagedFinalizeBlockEvents(ctx)
@@ -965,6 +985,10 @@ func (sm *FullNodeStreamingManagerImpl) getStagedEventsFromFinalizeBlock(
 			finalizedFills = append(finalizedFills, *event.OrderFill)
 		case *clobtypes.StagedFinalizeBlockEvent_SubaccountUpdate:
 			finalizedSubaccountUpdates = append(finalizedSubaccountUpdates, *event.SubaccountUpdate)
+		case *clobtypes.StagedFinalizeBlockEvent_OrderbookUpdate:
+			finalizedOrderbookUpdates = append(finalizedOrderbookUpdates, *event.OrderbookUpdate)
+		default:
+			panic(fmt.Sprintf("Unhandled staged event type: %v\n", stagedEvent.Event))
 		}
 	}
 
@@ -977,7 +1001,7 @@ func (sm *FullNodeStreamingManagerImpl) getStagedEventsFromFinalizeBlock(
 		float32(len(finalizedFills)),
 	)
 
-	return finalizedFills, finalizedSubaccountUpdates
+	return finalizedFills, finalizedSubaccountUpdates, finalizedOrderbookUpdates
 }
 
 func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
