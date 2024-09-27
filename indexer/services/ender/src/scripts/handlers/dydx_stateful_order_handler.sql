@@ -127,7 +127,7 @@ BEGIN
         RETURNING * INTO order_record;
 
         IF NOT FOUND THEN
-            RAISE EXCEPTION 'Unable to update order status with orderId: %', dydx_uuid_from_order_id(order_id);
+            RAISE EXCEPTION 'Unable to update order status with orderId: %, %', dydx_uuid_from_order_id(order_id), event_data;
         END IF;
 
         RETURN jsonb_build_object(
