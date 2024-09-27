@@ -1,6 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
-  consumer, producer, TO_ENDER_TOPIC, updateOnMessageFunction,
+  consumer, initConsumer, producer, TO_ENDER_TOPIC, updateOnMessageFunction,
 } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 
@@ -8,11 +8,11 @@ import { onMessage } from '../../lib/on-message';
 
 export async function connect(): Promise<void> {
   await Promise.all([
-    consumer.connect(),
+    initConsumer(),
     producer.connect(),
   ]);
 
-  await consumer.subscribe({
+  await consumer!.subscribe({
     topic: TO_ENDER_TOPIC,
     // https://kafka.js.org/docs/consuming#a-name-from-beginning-a-frombeginning
     // Need to set fromBeginning to true, so when ender restarts, it will consume all messages
