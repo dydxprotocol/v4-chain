@@ -31,6 +31,9 @@ var (
 		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse": nil,
 
 		// vault
+		// MsgSetVaultQuotingParams is deprecated since v6.x and replaced by MsgSetVaultParams.
+		// nolint:staticcheck
+		"/dydxprotocol.vault.MsgSetVaultQuotingParams": &vaulttypes.MsgSetVaultQuotingParams{},
 		// MsgUpdateParams is deprecated since v6.x and replaced by MsgUpdateDefaultQuotingParams.
 		// nolint:staticcheck
 		"/dydxprotocol.vault.MsgUpdateParams": &vaulttypes.MsgUpdateParams{},
