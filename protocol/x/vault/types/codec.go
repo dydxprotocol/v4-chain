@@ -19,6 +19,12 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgUpdateParams{},
 	)
+	// Register deprecated MsgSetVaultQuotingParams as it's not part of msg service.
+	registry.RegisterInterface(
+		"/"+proto.MessageName(&MsgSetVaultQuotingParams{}),
+		(*sdk.Msg)(nil),
+		&MsgSetVaultQuotingParams{},
+	)
 }
 
 var (
