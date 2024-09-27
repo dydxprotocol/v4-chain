@@ -629,7 +629,7 @@ var (
 			},
 		},
 	}
-	Dave_Num0_TinyBTC_Long_1ETH_Long_46000USD_Short = satypes.Subaccount{
+	Dave_Num0_TinyBTC_Long_1ETH_Long_2900USD_Short = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			&Short_Usdc_Asset_2_900,
@@ -645,6 +645,7 @@ var (
 			},
 		},
 	}
+
 	Dave_Num1_1BTC_Long_46000USD_Short = satypes.Subaccount{
 		Id: &Dave_Num1,
 		AssetPositions: []*satypes.AssetPosition{

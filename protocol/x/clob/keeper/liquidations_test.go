@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -4906,7 +4907,7 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_TinyBTC_Long_1ETH_Long_46000USD_Short,
+				constants.Dave_Num0_TinyBTC_Long_1ETH_Long_2900USD_Short,
 			},
 			clobs:     []types.ClobPair{constants.ClobPair_Btc, constants.ClobPair_Eth},
 			feeParams: constants.PerpetualFeeParams,
@@ -5314,6 +5315,7 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 			require.Equal(t, tc.expectedSubaccountIds, tc.subaccountIds)
 			require.Equal(t, tc.expectedIsolatedPositionsPriorityHeap, tc.isolatedPositionsPriorityHeap)
 			require.Equal(t, tc.expectedSubaccountsToDeleverage, subaccountsToDeleverage)
+
 		})
 	}
 }
@@ -5336,7 +5338,7 @@ func TestGetBestPerpetualPositionToLiquidateMultiplePositions(t *testing.T) {
 				constants.BtcUsd_SmallMarginRequirement_DangerIndex,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance_DangerIndex,
 			},
-			subaccount: constants.Dave_Num0_TinyBTC_Long_1ETH_Long_46000USD_Short,
+			subaccount: constants.Dave_Num0_TinyBTC_Long_1ETH_Long_2900USD_Short,
 
 			expectedPerpetualId: 1,
 		},
@@ -5352,7 +5354,7 @@ func TestGetBestPerpetualPositionToLiquidateMultiplePositions(t *testing.T) {
 				constants.BtcUsd_SmallMarginRequirement_DangerIndex,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance_DangerIndex,
 			},
-			subaccount:                     constants.Dave_Num0_TinyBTC_Long_1ETH_Long_46000USD_Short,
+			subaccount:                     constants.Dave_Num0_TinyBTC_Long_1ETH_Long_2900USD_Short,
 			previouslyLiquidatedPerpetuals: []uint32{0, 1},
 			expectedError:                  true,
 			expectedExactError:             "Subaccount has no perpetual positions to liquidate",
@@ -5362,7 +5364,7 @@ func TestGetBestPerpetualPositionToLiquidateMultiplePositions(t *testing.T) {
 				constants.BtcUsd_SmallMarginRequirement_DangerIndex,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance_DangerIndex,
 			},
-			subaccount:                     constants.Dave_Num0_TinyBTC_Long_1ETH_Long_46000USD_Short,
+			subaccount:                     constants.Dave_Num0_TinyBTC_Long_1ETH_Long_2900USD_Short,
 			previouslyLiquidatedPerpetuals: []uint32{1},
 			expectedPerpetualId:            0,
 		},
@@ -5463,7 +5465,7 @@ func TestEnsurePerpetualNotAlreadyLiquidated(t *testing.T) {
 				constants.BtcUsd_SmallMarginRequirement,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
 			},
-			subaccount:                     constants.Dave_Num0_TinyBTC_Long_1ETH_Long_46000USD_Short,
+			subaccount:                     constants.Dave_Num0_TinyBTC_Long_1ETH_Long_2900USD_Short,
 			previouslyLiquidatedPerpetuals: []uint32{},
 			perpetualIdToCheck:             0, // BTC
 			expectedError:                  nil,
@@ -5473,7 +5475,7 @@ func TestEnsurePerpetualNotAlreadyLiquidated(t *testing.T) {
 				constants.BtcUsd_SmallMarginRequirement,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
 			},
-			subaccount:                     constants.Dave_Num0_TinyBTC_Long_1ETH_Long_46000USD_Short,
+			subaccount:                     constants.Dave_Num0_TinyBTC_Long_1ETH_Long_2900USD_Short,
 			previouslyLiquidatedPerpetuals: []uint32{0}, // BTC already liquidated
 			perpetualIdToCheck:             0,           // BTC
 			expectedError:                  types.ErrSubaccountHasLiquidatedPerpetual,
@@ -5483,7 +5485,7 @@ func TestEnsurePerpetualNotAlreadyLiquidated(t *testing.T) {
 				constants.BtcUsd_SmallMarginRequirement,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
 			},
-			subaccount:                     constants.Dave_Num0_TinyBTC_Long_1ETH_Long_46000USD_Short,
+			subaccount:                     constants.Dave_Num0_TinyBTC_Long_1ETH_Long_2900USD_Short,
 			previouslyLiquidatedPerpetuals: []uint32{1}, // ETH already liquidated
 			perpetualIdToCheck:             0,           // BTC
 			expectedError:                  nil,
@@ -5696,4 +5698,94 @@ func TestCheckInsuranceFundLimits(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestIsIsolatedPerpetualError_InLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
+	tests := map[string]struct {
+		perpetuals                             []perptypes.Perpetual
+		subaccounts                            []satypes.Subaccount
+		subaccountIds                          *heap.LiquidationPriorityHeap
+		isolatedPositionsPriorityHeap          *heap.LiquidationPriorityHeap
+		MaxLiquidationAttemptsPerBlock         uint32
+		MaxIsolatedLiquidationAttemptsPerBlock uint32
+		expectedError                          error
+	}{
+		"Perpetual does not exist and returns err": {
+			perpetuals: []perptypes.Perpetual{},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			subaccountIds: &heap.LiquidationPriorityHeap{
+				{
+					SubaccountId: constants.Carl_Num0,
+					Priority:     big.NewFloat(0),
+				},
+			},
+			isolatedPositionsPriorityHeap:          heap.NewLiquidationPriorityHeap(),
+			MaxLiquidationAttemptsPerBlock:         1,
+			MaxIsolatedLiquidationAttemptsPerBlock: 1,
+			expectedError:                          errors.New("0: Perpetual does not exist"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup keeper state.
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockBankKeeper := &mocks.BankKeeper{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+
+			ctx := ks.Ctx.WithIsCheckTx(true)
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+			// Set up USDC asset in assets module.
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			// Create all perpetuals.
+			for _, p := range tc.perpetuals {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ctx,
+					p.Params.Id,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
+					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+				)
+				require.NoError(t, err)
+			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
+
+			// Create all subaccounts.
+			for _, subaccount := range tc.subaccounts {
+				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
+			}
+
+			// Initialize the liquidations config.
+			require.NoError(
+				t,
+				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default),
+			)
+
+			ks.ClobKeeper.Flags.MaxLiquidationAttemptsPerBlock = tc.MaxLiquidationAttemptsPerBlock
+			ks.ClobKeeper.Flags.MaxIsolatedLiquidationAttemptsPerBlock = tc.MaxIsolatedLiquidationAttemptsPerBlock
+
+			_, err = ks.ClobKeeper.LiquidateSubaccountsAgainstOrderbookInternal(ctx, tc.subaccountIds, tc.isolatedPositionsPriorityHeap)
+			require.Error(t, err)
+			if tc.expectedError != nil {
+				require.Contains(t, err.Error(), tc.expectedError.Error())
+			}
+		})
+	}
+
 }
