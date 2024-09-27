@@ -5862,3 +5862,96 @@ func TestIsIsolatedPerpetualError_InLiquidateSubaccountsAgainstOrderbookInternal
 	}
 
 }
+
+func TestPlacePerpetualLiquidation_InLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
+	tests := map[string]struct {
+		perpetuals                             []perptypes.Perpetual
+		subaccounts                            []satypes.Subaccount
+		feeParams                              feetypes.PerpetualFeeParams
+		subaccountIds                          *heap.LiquidationPriorityHeap
+		isolatedPositionsPriorityHeap          *heap.LiquidationPriorityHeap
+		MaxLiquidationAttemptsPerBlock         uint32
+		MaxIsolatedLiquidationAttemptsPerBlock uint32
+		expectedError                          error
+	}{
+		"clob does not exists, throws an error": {
+			perpetuals: []perptypes.Perpetual{},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			feeParams: constants.PerpetualFeeParams,
+			subaccountIds: &heap.LiquidationPriorityHeap{
+				{
+					SubaccountId: constants.Carl_Num0,
+					Priority:     big.NewFloat(0),
+				},
+			},
+			isolatedPositionsPriorityHeap:          heap.NewLiquidationPriorityHeap(),
+			MaxLiquidationAttemptsPerBlock:         1,
+			MaxIsolatedLiquidationAttemptsPerBlock: 1,
+			expectedError:                          errors.New("Clob 0 is not a valid clob"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup keeper state.
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockBankKeeper := &mocks.BankKeeper{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+
+			ctx := ks.Ctx.WithIsCheckTx(true)
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, tc.feeParams))
+
+			// Set up USDC asset in assets module.
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			// Create all perpetuals.
+			for _, p := range tc.perpetuals {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ctx,
+					p.Params.Id,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
+					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+				)
+				require.NoError(t, err)
+			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
+
+			// Create all subaccounts.
+			for _, subaccount := range tc.subaccounts {
+				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
+			}
+
+			// Initialize the liquidations config.
+			require.NoError(
+				t,
+				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default),
+			)
+
+			ks.ClobKeeper.Flags.MaxLiquidationAttemptsPerBlock = tc.MaxLiquidationAttemptsPerBlock
+			ks.ClobKeeper.Flags.MaxIsolatedLiquidationAttemptsPerBlock = tc.MaxIsolatedLiquidationAttemptsPerBlock
+
+			_, err = ks.ClobKeeper.LiquidateSubaccountsAgainstOrderbookInternal(ctx, tc.subaccountIds, tc.isolatedPositionsPriorityHeap)
+			require.Error(t, err)
+			if tc.expectedError != nil {
+				require.Contains(t, err.Error(), tc.expectedError.Error())
+			}
+		})
+	}
+
+}
