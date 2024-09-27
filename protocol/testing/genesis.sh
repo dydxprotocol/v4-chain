@@ -22,15 +22,13 @@ NATIVE_TOKEN="adv4tnt" # public testnet token
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT=1000000000
-MEGAVAULT_MAIN_VAULT_ACCOUNT_ADDR="dydx18tkxrnrkqc2t0lr3zxr5g6a4hdvqksylxqje4r"
-DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE=1000000000000 # 1 million USDC
 NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
 COIN_NAME="dYdX V4 Testnet Token"
 # Each testnet validator has 1 million whole coins of native token.
 TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE=1000000$EIGHTEEN_ZEROS # 1e24 or 1 million native tokens.
 # Each testnet validator self-delegates 500k whole coins of native token.
 TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT=500000$EIGHTEEN_ZEROS # 5e23 or 500k native tokens.
-FAUCET_NATIVE_TOKEN_BALANCE=50000000$EIGHTEEN_ZEROS # 5e25 or 50 million native tokens. 
+FAUCET_NATIVE_TOKEN_BALANCE=50000000$EIGHTEEN_ZEROS # 5e25 or 50 million native tokens.
 ETH_CHAIN_ID=11155111 # sepolia
 # https://sepolia.etherscan.io/address/0xf75012c350e4ad55be2048bd67ce6e03b20de82d
 ETH_BRIDGE_ADDRESS="0xf75012c350e4ad55be2048bd67ce6e03b20de82d"
@@ -77,7 +75,7 @@ function edit_genesis() {
 		# Default to 200 million full coins.
 		REWARDS_VESTER_ACCOUNT_BALANCE="200000000$EIGHTEEN_ZEROS"
 	fi
-	
+
 	# Genesis time
 	dasel put -t string -f "$GENESIS" '.genesis_time' -v "$GENESIS_TIME"
 
@@ -93,10 +91,10 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_min_deposit.[0].denom' -v "$NATIVE_TOKEN"
 	# reduced deposit period
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '120s'
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '300s'
 	# reduced voting period
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_voting_period' -v '60s'
-	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '120s'
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '300s'
 	# set initial deposit ratio to prevent spamming
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
 	# setting to 1 disables cancelling proposals
@@ -139,16 +137,18 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].name' -v 'Large-Cap'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].initial_margin_ppm' -v '50000' # 5%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].maintenance_fraction_ppm' -v '600000' # 60% of IM
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].base_position_notional' -v '1000000000000' # 1_000_000 USDC
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].impact_notional' -v '10000000000' # 10_000 USDC (500 USDC / 5%)
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].open_interest_lower_cap' -v '0' # OIMF doesn't apply to Large-Cap
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].open_interest_upper_cap' -v '0' # OIMF doesn't apply to Large-Cap
 
-	# Liquidity Tier: Small-Cap
+	# Liquidity Tier: Mid-Cap
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].id' -v '1'
-	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].name' -v 'Small-Cap'
+	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].name' -v 'Mid-Cap'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].initial_margin_ppm' -v '100000' # 10%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].maintenance_fraction_ppm' -v '500000' # 50% of IM
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].base_position_notional' -v '250000000000' # 250_000 USDC
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].impact_notional' -v '5000000000' # 5_000 USDC (500 USDC / 10%)
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].open_interest_lower_cap' -v '20000000000000' # 20 million USDC
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[1].open_interest_upper_cap' -v '50000000000000' # 50 million USDC
@@ -159,6 +159,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].name' -v 'Long-Tail'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].initial_margin_ppm' -v '200000' # 20%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].maintenance_fraction_ppm' -v '500000' # 50% of IM
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].base_position_notional' -v '100000000000' # 100_000 USDC
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].impact_notional' -v '2500000000' # 2_500 USDC (500 USDC / 20%)
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].open_interest_lower_cap' -v '5000000000000' # 5 million USDC
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[2].open_interest_upper_cap' -v '10000000000000' # 10 million USDC
@@ -169,40 +170,11 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].name' -v 'Safety'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].initial_margin_ppm' -v '1000000' # 100%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].maintenance_fraction_ppm' -v '200000' # 20% of IM
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].base_position_notional' -v '1000000000' # 1_000 USDC
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].impact_notional' -v '2500000000' # 2_500 USDC (2_500 USDC / 100%)
 	# For `Safety` IMF is already at 100%; still we set OIMF for completeness.
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].open_interest_lower_cap' -v '2000000000000' # 2 million USDC
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[3].open_interest_upper_cap' -v '5000000000000' # 5 million USDC
-
-	# Liquidity Tier: Isolated
-	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[4].id' -v '4'
-	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[4].name' -v 'Isolated'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[4].initial_margin_ppm' -v '50000' # 5%
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[4].maintenance_fraction_ppm' -v '600000' # 60% of IM
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[4].impact_notional' -v '2500000000' # 2_500 USDC (125 USDC / 5%)
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[4].open_interest_lower_cap' -v '500000000000' # 500k USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[4].open_interest_upper_cap' -v '1000000000000' # 1 million USDC
-
-	# Liquidity Tier: Mid-Cap
-	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[5].id' -v '5'
-	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[5].name' -v 'Mid-Cap'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[5].initial_margin_ppm' -v '50000' # 5%
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[5].maintenance_fraction_ppm' -v '600000' # 60% of IM
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[5].impact_notional' -v '5000000000' # 5_000 USDC (250 USDC / 5%)
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[5].open_interest_lower_cap' -v '40000000000000' # 40 million USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[5].open_interest_upper_cap' -v '100000000000000' # 100 million USDC
-
-	# Liquidity Tier: FX
-	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].id' -v '6'
-	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].name' -v 'FX'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].initial_margin_ppm' -v '10000' # 1%
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].maintenance_fraction_ppm' -v '500000' # 50% of IM
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].impact_notional' -v '2500000000' # 2_500 USDC (25 USDC / 1%)
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].open_interest_lower_cap' -v '500000000000' # 500k USDC
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[6].open_interest_upper_cap' -v '1000000000000' # 1 million USDC
 
 	# Params.
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.params.funding_rate_clamp_factor_ppm' -v '6000000' # 600 % (same as 75% on hourly rate)
@@ -548,7 +520,7 @@ function edit_genesis() {
 
     # Marketmap: BTC-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.BTC/USD.ticker.currency_pair.Base' -v 'BTC'
@@ -569,7 +541,7 @@ function edit_genesis() {
 
     # Marketmap: ETH-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ETH/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ETH/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ETH/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ETH/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.ETH/USD.ticker.currency_pair.Base' -v 'ETH'
@@ -589,7 +561,7 @@ function edit_genesis() {
 
     # Marketmap: LINK-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LINK/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LINK/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LINK/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LINK/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.LINK/USD.ticker.currency_pair.Base' -v 'LINK'
@@ -609,7 +581,7 @@ function edit_genesis() {
 
     # Marketmap: MATIC-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker.currency_pair.Base' -v 'MATIC'
@@ -631,7 +603,7 @@ function edit_genesis() {
 
     # Marketmap: CRV-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.CRV/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.CRV/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.CRV/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.CRV/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.CRV/USD.ticker.currency_pair.Base' -v 'CRV'
@@ -650,7 +622,7 @@ function edit_genesis() {
 
     # Marketmap: SOL-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SOL/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SOL/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SOL/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SOL/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.SOL/USD.ticker.currency_pair.Base' -v 'SOL'
@@ -671,7 +643,7 @@ function edit_genesis() {
 
     # Marketmap: ADA-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ADA/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ADA/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ADA/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ADA/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.ADA/USD.ticker.currency_pair.Base' -v 'ADA'
@@ -693,7 +665,7 @@ function edit_genesis() {
 
     # Marketmap: AVAX-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.AVAX/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.AVAX/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.AVAX/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.AVAX/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.AVAX/USD.ticker.currency_pair.Base' -v 'AVAX'
@@ -715,7 +687,7 @@ function edit_genesis() {
 
     # Marketmap: FIL-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.FIL/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.FIL/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.FIL/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.FIL/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.FIL/USD.ticker.currency_pair.Base' -v 'FIL'
@@ -735,7 +707,7 @@ function edit_genesis() {
 
     # Marketmap: LTC-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LTC/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LTC/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LTC/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LTC/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.LTC/USD.ticker.currency_pair.Base' -v 'LTC'
@@ -756,7 +728,7 @@ function edit_genesis() {
 
     # Marketmap: DOGE-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DOGE/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DOGE/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DOGE/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DOGE/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.DOGE/USD.ticker.currency_pair.Base' -v 'DOGE'
@@ -778,7 +750,7 @@ function edit_genesis() {
 
     # Marketmap: ATOM-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ATOM/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ATOM/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ATOM/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ATOM/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.ATOM/USD.ticker.currency_pair.Base' -v 'ATOM'
@@ -799,7 +771,7 @@ function edit_genesis() {
 
     # Marketmap: DOT-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DOT/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DOT/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DOT/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DOT/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.DOT/USD.ticker.currency_pair.Base' -v 'DOT'
@@ -820,7 +792,7 @@ function edit_genesis() {
 
     # Marketmap: UNI-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.UNI/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.UNI/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.UNI/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.UNI/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.UNI/USD.ticker.currency_pair.Base' -v 'UNI'
@@ -841,7 +813,7 @@ function edit_genesis() {
 
     # Marketmap: BCH-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BCH/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BCH/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BCH/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BCH/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.BCH/USD.ticker.currency_pair.Base' -v 'BCH'
@@ -863,7 +835,7 @@ function edit_genesis() {
 
     # Marketmap: TRX-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TRX/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TRX/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TRX/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TRX/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.TRX/USD.ticker.currency_pair.Base' -v 'TRX'
@@ -884,7 +856,7 @@ function edit_genesis() {
 
     # Marketmap: NEAR-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.NEAR/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.NEAR/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.NEAR/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.NEAR/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.NEAR/USD.ticker.currency_pair.Base' -v 'NEAR'
@@ -904,7 +876,7 @@ function edit_genesis() {
 
     # Marketmap: MKR-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MKR/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MKR/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MKR/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MKR/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.MKR/USD.ticker.currency_pair.Base' -v 'MKR'
@@ -923,7 +895,7 @@ function edit_genesis() {
 
     # Marketmap: XLM-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.XLM/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.XLM/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.XLM/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.XLM/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.XLM/USD.ticker.currency_pair.Base' -v 'XLM'
@@ -943,7 +915,7 @@ function edit_genesis() {
 
     # Marketmap: ETC-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ETC/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ETC/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ETC/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ETC/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.ETC/USD.ticker.currency_pair.Base' -v 'ETC'
@@ -963,7 +935,7 @@ function edit_genesis() {
 
     # Marketmap: COMP-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.COMP/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.COMP/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.COMP/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.COMP/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.COMP/USD.ticker.currency_pair.Base' -v 'COMP'
@@ -982,7 +954,7 @@ function edit_genesis() {
 
     # Marketmap: WLD-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.WLD/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.WLD/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.WLD/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.WLD/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.WLD/USD.ticker.currency_pair.Base' -v 'WLD'
@@ -1002,7 +974,7 @@ function edit_genesis() {
 
     # Marketmap: APE-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.APE/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.APE/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.APE/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.APE/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.APE/USD.ticker.currency_pair.Base' -v 'APE'
@@ -1022,7 +994,7 @@ function edit_genesis() {
 
     # Marketmap: APT-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.APT/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.APT/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.APT/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.APT/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.APT/USD.ticker.currency_pair.Base' -v 'APT'
@@ -1043,7 +1015,7 @@ function edit_genesis() {
 
     # Marketmap: ARB-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ARB/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ARB/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ARB/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.ARB/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.ARB/USD.ticker.currency_pair.Base' -v 'ARB'
@@ -1064,7 +1036,7 @@ function edit_genesis() {
 
     # Marketmap: BLUR-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BLUR/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BLUR/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BLUR/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BLUR/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.BLUR/USD.ticker.currency_pair.Base' -v 'BLUR'
@@ -1083,7 +1055,7 @@ function edit_genesis() {
 
     # Marketmap: LDO-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LDO/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LDO/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LDO/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LDO/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.LDO/USD.ticker.currency_pair.Base' -v 'LDO'
@@ -1102,7 +1074,7 @@ function edit_genesis() {
 
     # Marketmap: OP-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.OP/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.OP/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.OP/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.OP/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.OP/USD.ticker.currency_pair.Base' -v 'OP'
@@ -1121,7 +1093,7 @@ function edit_genesis() {
 
     # Marketmap: PEPE-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.PEPE/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.PEPE/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.PEPE/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.PEPE/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.PEPE/USD.ticker.currency_pair.Base' -v 'PEPE'
@@ -1140,7 +1112,7 @@ function edit_genesis() {
 
     # Marketmap: SEI-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SEI/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SEI/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SEI/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SEI/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.SEI/USD.ticker.currency_pair.Base' -v 'SEI'
@@ -1159,7 +1131,7 @@ function edit_genesis() {
 
     # Marketmap: SHIB-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SHIB/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SHIB/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SHIB/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SHIB/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.SHIB/USD.ticker.currency_pair.Base' -v 'SHIB'
@@ -1179,7 +1151,7 @@ function edit_genesis() {
 
     # Marketmap: SUI-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SUI/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SUI/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SUI/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.SUI/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.SUI/USD.ticker.currency_pair.Base' -v 'SUI'
@@ -1199,7 +1171,7 @@ function edit_genesis() {
 
     # Marketmap: XRP-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.XRP/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.XRP/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.XRP/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.XRP/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.XRP/USD.ticker.currency_pair.Base' -v 'XRP'
@@ -1221,7 +1193,7 @@ function edit_genesis() {
 
     # Marketmap: TEST-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.TEST/USD.ticker.currency_pair.Base' -v 'TEST'
@@ -1236,7 +1208,7 @@ function edit_genesis() {
 
     # Marketmap: USDT-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.ticker.currency_pair.Base' -v 'USDT'
@@ -1257,7 +1229,7 @@ function edit_genesis() {
 
     # Marketmap: DYDX-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DYDX/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DYDX/USD.ticker' -v "{}" 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DYDX/USD.ticker' -v "{}"
 
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DYDX/USD.ticker.currency_pair' -v "{}"
     dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.DYDX/USD.ticker.currency_pair.Base' -v 'DYDX'
@@ -1826,10 +1798,6 @@ function edit_genesis() {
 		total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT))
 		acct_idx=$(($acct_idx + 1))
 	done
-	# Update subaccounts module for megavault main vault account.
-	add_subaccount "$GENESIS" "$acct_idx" "$MEGAVAULT_MAIN_VAULT_ACCOUNT_ADDR" "$DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE"
-	total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE))
-	acct_idx=$(($acct_idx + 1))
 
 	next_bank_idx=0
 	if (( total_accounts_quote_balance > 0 )); then
@@ -2259,28 +2227,24 @@ function edit_genesis() {
 	update_ica_controller_params
 
 	# Vaults
-	# Set default quoting params.
+	# Set vault params.
 	dasel put -t int -f "$GENESIS" ".app_state.vault.default_quoting_params.spread_min_ppm" -v '3000'
-	# Set operator params.
-	dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.operator" -v 'dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky'
-	# Set total shares and owner shares.
+	# Set total shares and owner shares of each vault.
+	vault_idx=0
 	if [ -z "${INPUT_TEST_ACCOUNTS[0]}" ]; then
 		vault_owner_address='dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4' # alice as default vault owner
 	else
 		vault_owner_address="${INPUT_TEST_ACCOUNTS[0]}"
 	fi
-	total_deposit=$((DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT * ${#INPUT_VAULT_NUMBERS[@]})) 
-	dasel put -t string -f "$GENESIS" ".app_state.vault.total_shares.num_shares" -v "${total_deposit}"
-	dasel put -t json -f "$GENESIS" ".app_state.vault.owner_shares.[]" -v '{}'
-	dasel put -t string -f "$GENESIS" ".app_state.vault.owner_shares.[0].owner" -v "${vault_owner_address}"
-	dasel put -t string -f "$GENESIS" ".app_state.vault.owner_shares.[0].shares.num_shares" -v "${total_deposit}"
-	# Set vaults.
-	vault_idx=0
 	for number in "${INPUT_VAULT_NUMBERS[@]}"; do
 		dasel put -t json -f "$GENESIS" '.app_state.vault.vaults.[]' -v '{}'
 		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.type" -v 'VAULT_TYPE_CLOB'
 		dasel put -t int -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_id.number" -v "${number}"
-		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_params.status" -v 'VAULT_STATUS_QUOTING'
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].total_shares.num_shares" -v "${DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT}"
+
+		dasel put -t json -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[]" -v '{}'
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].owner" -v "${vault_owner_address}"
+		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].owner_shares.[0].shares.num_shares" -v "${DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT}"
 		vault_idx=$(($vault_idx + 1))
 	done
 }
@@ -2387,6 +2351,7 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().name' -v 'test-usd-100x-liq-tier-linear'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().initial_margin_ppm' -v '10007' # 1% + a little prime (100x leverage)
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().maintenance_fraction_ppm' -v '500009' # 50% of IM + a little prime
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().base_position_notional' -v '1000000000039' # 1_000_000 USDC + a little prime
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().impact_notional' -v '50000000000' # 50_000 USDC (500 USDC / 1%)
 
 	# Liquidity Tier: For TEST-USD. 1% leverage and 100 nonlinear margin thresholds.
@@ -2396,6 +2361,7 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().name' -v 'test-usd-100x-liq-tier-nonlinear'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().initial_margin_ppm' -v '10007' # 1% + a little prime (100x leverage)
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().maintenance_fraction_ppm' -v '500009' # 50% of IM + a little prime
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().base_position_notional' -v '100000007' # 100 USDC + a little prime
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().impact_notional' -v '50000000000' # 50_000 USDC (500 USDC / 1%)
 
 	# Perpetual: TEST-USD
