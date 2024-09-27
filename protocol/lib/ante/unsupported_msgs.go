@@ -23,6 +23,8 @@ func IsUnsupportedMsg(msg sdk.Msg) bool {
 		// ------- dYdX custom modules
 		// vault
 		// nolint:staticcheck
+		*vaulttypes.MsgSetVaultQuotingParams,
+		// nolint:staticcheck
 		*vaulttypes.MsgUpdateParams:
 		return true
 	}

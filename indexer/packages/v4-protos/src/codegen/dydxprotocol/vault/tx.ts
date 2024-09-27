@@ -210,6 +210,38 @@ export interface MsgUpdateParamsSDKType {
 
   params?: ParamsSDKType;
 }
+/**
+ * MsgSetVaultQuotingParams is the Msg/SetVaultQuotingParams request type.
+ * Deprecated since v6.x as is replaced by MsgSetVaultParams.
+ */
+
+/** @deprecated */
+
+export interface MsgSetVaultQuotingParams {
+  authority: string;
+  /** The vault to set quoting params of. */
+
+  vaultId?: VaultId;
+  /** The quoting parameters to set. Each field must be set. */
+
+  quotingParams?: QuotingParams;
+}
+/**
+ * MsgSetVaultQuotingParams is the Msg/SetVaultQuotingParams request type.
+ * Deprecated since v6.x as is replaced by MsgSetVaultParams.
+ */
+
+/** @deprecated */
+
+export interface MsgSetVaultQuotingParamsSDKType {
+  authority: string;
+  /** The vault to set quoting params of. */
+
+  vault_id?: VaultIdSDKType;
+  /** The quoting parameters to set. Each field must be set. */
+
+  quoting_params?: QuotingParamsSDKType;
+}
 /** MsgUpdateOperatorParams is the Msg/UpdateOperatorParams request type. */
 
 export interface MsgUpdateOperatorParams {
@@ -837,6 +869,71 @@ export const MsgUpdateParams = {
     const message = createBaseMsgUpdateParams();
     message.authority = object.authority ?? "";
     message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgSetVaultQuotingParams(): MsgSetVaultQuotingParams {
+  return {
+    authority: "",
+    vaultId: undefined,
+    quotingParams: undefined
+  };
+}
+
+export const MsgSetVaultQuotingParams = {
+  encode(message: MsgSetVaultQuotingParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.vaultId !== undefined) {
+      VaultId.encode(message.vaultId, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.quotingParams !== undefined) {
+      QuotingParams.encode(message.quotingParams, writer.uint32(26).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgSetVaultQuotingParams {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgSetVaultQuotingParams();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.vaultId = VaultId.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.quotingParams = QuotingParams.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgSetVaultQuotingParams>): MsgSetVaultQuotingParams {
+    const message = createBaseMsgSetVaultQuotingParams();
+    message.authority = object.authority ?? "";
+    message.vaultId = object.vaultId !== undefined && object.vaultId !== null ? VaultId.fromPartial(object.vaultId) : undefined;
+    message.quotingParams = object.quotingParams !== undefined && object.quotingParams !== null ? QuotingParams.fromPartial(object.quotingParams) : undefined;
     return message;
   }
 

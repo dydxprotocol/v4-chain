@@ -258,6 +258,7 @@ var (
 		"/dydxprotocol.vault.MsgRetrieveFromVaultResponse":          {},
 		"/dydxprotocol.vault.MsgSetVaultParams":                     {},
 		"/dydxprotocol.vault.MsgSetVaultParamsResponse":             {},
+		"/dydxprotocol.vault.MsgSetVaultQuotingParams":              {},
 		"/dydxprotocol.vault.MsgUnlockShares":                       {},
 		"/dydxprotocol.vault.MsgUnlockSharesResponse":               {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
