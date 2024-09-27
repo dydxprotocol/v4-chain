@@ -50,13 +50,10 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Add test for your upgrade handler logic below
 	postUpgradeVaultParamsCheck(node, t)
-<<<<<<< HEAD
+	postUpgradeMegavaultSharesCheck(node, t)
 
 	// Check that the affiliates module has been initialized with the default tiers.
 	postUpgradeAffiliatesModuleTiersCheck(node, t)
-=======
-	postUpgradeMegavaultSharesCheck(node, t)
->>>>>>> d0d22faa (migrate vault shares to megavault shares in v7 upgrade handler (#2379))
 }
 
 func postUpgradeVaultParamsCheck(node *containertest.Node, t *testing.T) {
@@ -106,14 +103,6 @@ func checkVaultParams(
 	require.Equal(t, expectedQuotingParams, vaultParamsResp.VaultParams.QuotingParams)
 }
 
-<<<<<<< HEAD
-func postUpgradeAffiliatesModuleTiersCheck(node *containertest.Node, t *testing.T) {
-	resp, err := containertest.Query(
-		node,
-		affiliatestypes.NewQueryClient,
-		affiliatestypes.QueryClient.AllAffiliateTiers,
-		&affiliatestypes.AllAffiliateTiersRequest{},
-=======
 func postUpgradeMegavaultSharesCheck(node *containertest.Node, t *testing.T) {
 	// Alice equity = vault_0_equity * 1 + vault_1_equity * 1/3 + vault_2_equity * 123_456/556_677
 	// = 1_000 + 2_000 * 1/3 + 3_000 * 123_456/556_677
@@ -139,17 +128,10 @@ func postUpgradeMegavaultSharesCheck(node *containertest.Node, t *testing.T) {
 		vaulttypes.NewQueryClient,
 		vaulttypes.QueryClient.MegavaultTotalShares,
 		&vaulttypes.QueryMegavaultTotalSharesRequest{},
->>>>>>> d0d22faa (migrate vault shares to megavault shares in v7 upgrade handler (#2379))
 	)
 	require.NoError(t, err)
 	require.NotNil(t, resp)
 
-<<<<<<< HEAD
-	affiliateTiersResp := affiliatestypes.AllAffiliateTiersResponse{}
-	err = proto.UnmarshalText(resp.String(), &affiliateTiersResp)
-	require.NoError(t, err)
-	require.Equal(t, affiliatestypes.DefaultAffiliateTiers, affiliateTiersResp.Tiers)
-=======
 	totalSharesResp := vaulttypes.QueryMegavaultTotalSharesResponse{}
 	err = proto.UnmarshalText(resp.String(), &totalSharesResp)
 	require.NoError(t, err)
@@ -183,5 +165,20 @@ func postUpgradeMegavaultSharesCheck(node *containertest.Node, t *testing.T) {
 		require.Contains(t, gotOwnerShares, owner)
 		require.Equal(t, expectedShares, gotOwnerShares[owner])
 	}
->>>>>>> d0d22faa (migrate vault shares to megavault shares in v7 upgrade handler (#2379))
+}
+
+func postUpgradeAffiliatesModuleTiersCheck(node *containertest.Node, t *testing.T) {
+	resp, err := containertest.Query(
+		node,
+		affiliatestypes.NewQueryClient,
+		affiliatestypes.QueryClient.AllAffiliateTiers,
+		&affiliatestypes.AllAffiliateTiersRequest{},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	affiliateTiersResp := affiliatestypes.AllAffiliateTiersResponse{}
+	err = proto.UnmarshalText(resp.String(), &affiliateTiersResp)
+	require.NoError(t, err)
+	require.Equal(t, affiliatestypes.DefaultAffiliateTiers, affiliateTiersResp.Tiers)
 }
