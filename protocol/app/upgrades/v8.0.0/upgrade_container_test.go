@@ -1,9 +1,11 @@
-package v_7_1_0_test
+//go:build all || container_test
+
+package v_8_0_0_test
 
 import (
 	"testing"
 
-	v_7_1_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v7.1.0"
+	v_8_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v7.1.0"
 	listingtypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -31,7 +33,7 @@ func TestStateUpgrade(t *testing.T) {
 	preUpgradeSetups(node, t)
 	preUpgradeChecks(node, t)
 
-	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_7_1_0.UpgradeName)
+	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_8_0_0.UpgradeName)
 	require.NoError(t, err)
 
 	postUpgradeChecks(node, t)
