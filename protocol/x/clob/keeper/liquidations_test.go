@@ -4837,6 +4837,7 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 		expectedSubaccountIds                 *heap.LiquidationPriorityHeap
 		expectedIsolatedPositionsPriorityHeap *heap.LiquidationPriorityHeap
 		expectedError                         error
+		expectPanic                           bool
 	}{
 		`Can place a liquidation that doesn't match any maker orders`: {
 			perpetuals: []perptypes.Perpetual{
@@ -5215,6 +5216,34 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 			expectedIsolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
 			expectedSubaccountsToDeleverage:       nil,
 		},
+		"Clob Pair does not exist - panic in MaybeGetLiquidationOrder": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_46000USD_Short,
+			},
+			clobs:     []types.ClobPair{},
+			feeParams: constants.PerpetualFeeParams,
+
+			existingOrders: []types.Order{},
+			subaccountIds: &heap.LiquidationPriorityHeap{
+				{
+					SubaccountId: constants.Dave_Num0,
+					Priority:     big.NewFloat(0),
+				},
+			},
+			isolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
+
+			MaxLiquidationAttemptsPerBlock:         2,
+			MaxIsolatedLiquidationAttemptsPerBlock: 1,
+
+			expectedSubaccountIds:                 heap.NewLiquidationPriorityHeap(),
+			expectedIsolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
+			expectedSubaccountsToDeleverage:       nil,
+			expectPanic:                           true,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -5343,6 +5372,13 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			if tc.expectPanic {
+				require.Panics(t, func() {
+					_, err := ks.ClobKeeper.LiquidateSubaccountsAgainstOrderbookInternal(ctx, tc.subaccountIds, tc.isolatedPositionsPriorityHeap)
+					require.Error(t, err)
+				})
+				return
+			}
 			subaccountsToDeleverage, err := ks.ClobKeeper.LiquidateSubaccountsAgainstOrderbookInternal(ctx, tc.subaccountIds, tc.isolatedPositionsPriorityHeap)
 			if tc.expectedError != nil {
 				require.Contains(t, err.Error(), tc.expectedError.Error())
