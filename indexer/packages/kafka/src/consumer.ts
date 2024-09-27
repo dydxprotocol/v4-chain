@@ -1,4 +1,5 @@
 import {
+  getAvailabilityZoneId,
   logger,
 } from '@dydxprotocol-indexer/base';
 import {
@@ -13,15 +14,10 @@ const groupIdPrefix: string = config.SERVICE_NAME;
 const groupIdSuffix: string = config.KAFKA_ENABLE_UNIQUE_CONSUMER_GROUP_IDS ? `_${uuidv4()}` : '';
 const groupId: string = `${groupIdPrefix}${groupIdSuffix}`;
 
-export const consumer: Consumer = kafka.consumer({
-  groupId,
-  sessionTimeout: config.KAFKA_SESSION_TIMEOUT_MS,
-  rebalanceTimeout: config.KAFKA_REBALANCE_TIMEOUT_MS,
-  heartbeatInterval: config.KAFKA_HEARTBEAT_INTERVAL_MS,
-  maxWaitTimeInMs: config.KAFKA_WAIT_MAX_TIME_MS,
-  readUncommitted: false,
-  maxBytes: 4194304, // 4MB
-});
+// As a hack, we made this mutable since CommonJS doesn't support top level await.
+// Top level await would needed to fetch the az id (used as rack id).
+// eslint-disable-next-line import/no-mutable-exports
+export let consumer: Consumer | undefined;
 
 // List of functions to run per message consumed.
 let onMessageFunction: (topic: string, message: KafkaMessage) => Promise<void>;
@@ -51,29 +47,6 @@ export function updateOnBatchFunction(
 // Whether the consumer is stopped.
 let stopped: boolean = false;
 
-consumer.on('consumer.disconnect', async () => {
-  logger.info({
-    at: 'consumers#disconnect',
-    message: 'Kafka consumer disconnected',
-    groupId,
-  });
-
-  if (!stopped) {
-    await consumer.connect();
-    logger.info({
-      at: 'kafka-consumer#disconnect',
-      message: 'Kafka consumer reconnected',
-      groupId,
-    });
-  } else {
-    logger.info({
-      at: 'kafka-consumer#disconnect',
-      message: 'Not reconnecting since task is shutting down',
-      groupId,
-    });
-  }
-});
-
 export async function stopConsumer(): Promise<void> {
   logger.info({
     at: 'kafka-consumer#stop',
@@ -82,7 +55,43 @@ export async function stopConsumer(): Promise<void> {
   });
 
   stopped = true;
-  await consumer.disconnect();
+  await consumer!.disconnect();
+}
+
+export async function initConsumer(): Promise<void> {
+  consumer = kafka.consumer({
+    groupId,
+    sessionTimeout: config.KAFKA_SESSION_TIMEOUT_MS,
+    rebalanceTimeout: config.KAFKA_REBALANCE_TIMEOUT_MS,
+    heartbeatInterval: config.KAFKA_HEARTBEAT_INTERVAL_MS,
+    maxWaitTimeInMs: config.KAFKA_WAIT_MAX_TIME_MS,
+    readUncommitted: false,
+    maxBytes: 4194304, // 4MB
+    rackId: await getAvailabilityZoneId(),
+  });
+
+  consumer!.on('consumer.disconnect', async () => {
+    logger.info({
+      at: 'consumers#disconnect',
+      message: 'Kafka consumer disconnected',
+      groupId,
+    });
+
+    if (!stopped) {
+      await consumer!.connect();
+      logger.info({
+        at: 'kafka-consumer#disconnect',
+        message: 'Kafka consumer reconnected',
+        groupId,
+      });
+    } else {
+      logger.info({
+        at: 'kafka-consumer#disconnect',
+        message: 'Not reconnecting since task is shutting down',
+        groupId,
+      });
+    }
+  });
 }
 
 export async function startConsumer(batchProcessing: boolean = false): Promise<void> {
@@ -102,7 +111,7 @@ export async function startConsumer(batchProcessing: boolean = false): Promise<v
     };
   }
 
-  await consumer.run(consumerRunConfig);
+  await consumer!.run(consumerRunConfig);
 
   logger.info({
     at: 'consumers#connect',
