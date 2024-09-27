@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	v_7_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v7.0.0"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
@@ -48,9 +49,12 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 }
 
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
-	// Add test for your upgrade handler logic below
+	// Check that vault quoting params are successfully migrated to vault params.
 	postUpgradeVaultParamsCheck(node, t)
+	// Check that vault shares are successfully migrated to megavault shares.
 	postUpgradeMegavaultSharesCheck(node, t)
+	// Check that megavault module account is successfully initialized.
+	postUpgradeMegavaultModuleAccCheck(node, t)
 
 	// Check that the affiliates module has been initialized with the default tiers.
 	postUpgradeAffiliatesModuleTiersCheck(node, t)
@@ -181,4 +185,21 @@ func postUpgradeAffiliatesModuleTiersCheck(node *containertest.Node, t *testing.
 	err = proto.UnmarshalText(resp.String(), &affiliateTiersResp)
 	require.NoError(t, err)
 	require.Equal(t, affiliatestypes.DefaultAffiliateTiers, affiliateTiersResp.Tiers)
+}
+
+func postUpgradeMegavaultModuleAccCheck(node *containertest.Node, t *testing.T) {
+	resp, err := containertest.Query(
+		node,
+		authtypes.NewQueryClient,
+		authtypes.QueryClient.ModuleAccountByName,
+		&authtypes.QueryModuleAccountByNameRequest{
+			Name: vaulttypes.MegavaultAccountName,
+		},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	moduleAccResp := authtypes.QueryModuleAccountByNameResponse{}
+	err = proto.UnmarshalText(resp.String(), &moduleAccResp)
+	require.NoError(t, err)
 }
