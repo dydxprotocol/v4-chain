@@ -4836,6 +4836,7 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 		expectedSubaccountsToDeleverage       []heap.SubaccountToDeleverage
 		expectedSubaccountIds                 *heap.LiquidationPriorityHeap
 		expectedIsolatedPositionsPriorityHeap *heap.LiquidationPriorityHeap
+		expectedError                         error
 	}{
 		`Can place a liquidation that doesn't match any maker orders`: {
 			perpetuals: []perptypes.Perpetual{
@@ -5181,6 +5182,39 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 				},
 			},
 		},
+		"Maybe Get Liquidation Order returns no perps to liquidate error": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_1BTC_Long_46000USD_Short,
+			},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc},
+			feeParams: constants.PerpetualFeeParams,
+
+			existingOrders: []types.Order{
+				constants.Order_Carl_Num0_Id0_Clob0_BuySub1BTC_Price49500_GTB10,
+			},
+			subaccountIds: &heap.LiquidationPriorityHeap{
+				{
+					SubaccountId: constants.Dave_Num0,
+					Priority:     big.NewFloat(0),
+				},
+				{
+					SubaccountId: constants.Dave_Num0,
+					Priority:     big.NewFloat(1),
+				},
+			},
+			isolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
+
+			MaxLiquidationAttemptsPerBlock:         2,
+			MaxIsolatedLiquidationAttemptsPerBlock: 1,
+
+			expectedSubaccountIds:                 heap.NewLiquidationPriorityHeap(),
+			expectedIsolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
+			expectedSubaccountsToDeleverage:       nil,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -5310,11 +5344,14 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 			}
 
 			subaccountsToDeleverage, err := ks.ClobKeeper.LiquidateSubaccountsAgainstOrderbookInternal(ctx, tc.subaccountIds, tc.isolatedPositionsPriorityHeap)
-			require.NoError(t, err)
-
-			require.Equal(t, tc.expectedSubaccountIds, tc.subaccountIds)
-			require.Equal(t, tc.expectedIsolatedPositionsPriorityHeap, tc.isolatedPositionsPriorityHeap)
-			require.Equal(t, tc.expectedSubaccountsToDeleverage, subaccountsToDeleverage)
+			if tc.expectedError != nil {
+				require.Contains(t, err.Error(), tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedSubaccountIds, tc.subaccountIds)
+				require.Equal(t, tc.expectedIsolatedPositionsPriorityHeap, tc.isolatedPositionsPriorityHeap)
+				require.Equal(t, tc.expectedSubaccountsToDeleverage, subaccountsToDeleverage)
+			}
 
 		})
 	}
