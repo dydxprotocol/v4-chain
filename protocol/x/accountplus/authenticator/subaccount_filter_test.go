@@ -21,7 +21,7 @@ type SubaccountFilterTest struct {
 }
 
 func TestSubaccountFilterTest(t *testing.T) {
-	suite.Run(t, new(MessageFilterTest))
+	suite.Run(t, new(SubaccountFilterTest))
 }
 
 func (s *SubaccountFilterTest) SetupTest() {
@@ -89,8 +89,8 @@ func (s *SubaccountFilterTest) TestFilter() {
 				s.tApp.App.AppCodec(),
 				ak,
 				sigModeHandler,
-				s.TestAccAddress[0],
-				s.TestAccAddress[0],
+				constants.AliceAccAddress,
+				constants.AliceAccAddress,
 				nil,
 				sdk.NewCoins(),
 				tt.msg,

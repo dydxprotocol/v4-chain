@@ -12,10 +12,10 @@ import (
 
 var _ Authenticator = &ClobPairIdFilter{}
 
-// ClobPairIdFilter filters incoming messages based on a predefined JSON pattern.
-// It allows for complex pattern matching to support advanced authentication flows.
+// ClobPairIdFilter filters incoming messages based on a whitelist of clob pair ids.
+// It ensures that only messages with whitelisted clob pair ids are allowed.
 type ClobPairIdFilter struct {
-	whitelist []uint32
+	whitelist map[uint32]struct{}
 }
 
 // NewClobPairIdFilter creates a new ClobPairIdFilter with the provided EncodingConfig.
@@ -33,17 +33,18 @@ func (m ClobPairIdFilter) StaticGas() uint64 {
 	return 0
 }
 
-// Initialize sets up the authenticator with the given data, which should be a valid JSON pattern for message filtering.
+// Initialize sets up the authenticator with the given configuration,
+// which should be a list of clob pair ids separated by a predefined separator.
 func (m ClobPairIdFilter) Initialize(config []byte) (Authenticator, error) {
 	strSlice := strings.Split(string(config), SEPARATOR)
 
-	m.whitelist = make([]uint32, len(strSlice))
-	for i, str := range strSlice {
+	m.whitelist = make(map[uint32]struct{})
+	for _, str := range strSlice {
 		num, err := strconv.ParseUint(str, 10, 32)
 		if err != nil {
 			return nil, err
 		}
-		m.whitelist[i] = uint32(num)
+		m.whitelist[uint32(num)] = struct{}{}
 	}
 	return m, nil
 }
@@ -53,8 +54,7 @@ func (m ClobPairIdFilter) Track(ctx sdk.Context, request AuthenticationRequest) 
 	return nil
 }
 
-// Authenticate checks if the provided message conforms to the set JSON pattern.
-// It returns an AuthenticationResult based on the evaluation.
+// Authenticate checks if the message's clob pair ids are in the whitelist.
 func (m ClobPairIdFilter) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	// Collect the clob pair ids from the request.
 	requestOrderIds := make([]uint32, 0)
@@ -67,19 +67,14 @@ func (m ClobPairIdFilter) Authenticate(ctx sdk.Context, request AuthenticationRe
 		for _, batch := range msg.ShortTermCancels {
 			requestOrderIds = append(requestOrderIds, batch.ClobPairId)
 		}
+	default:
+		// Skip other messages.
+		return nil
 	}
 
 	// Make sure all the clob pair ids are in the whitelist.
 	for _, clobPairId := range requestOrderIds {
-		whitelisted := false
-		for _, whitelistId := range m.whitelist {
-			if clobPairId == whitelistId {
-				whitelisted = true
-				break
-			}
-		}
-
-		if !whitelisted {
+		if _, ok := m.whitelist[clobPairId]; !ok {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrUnauthorized,
 				"order id %d not in whitelist %v",
@@ -96,8 +91,7 @@ func (m ClobPairIdFilter) ConfirmExecution(ctx sdk.Context, request Authenticati
 	return nil
 }
 
-// OnAuthenticatorAdded performs additional checks when an authenticator is added.
-// Specifically, it ensures numbers in JSON are encoded as strings.
+// OnAuthenticatorAdded is currently a no-op but can be extended for additional logic when an authenticator is added.
 func (m ClobPairIdFilter) OnAuthenticatorAdded(
 	ctx sdk.Context,
 	account sdk.AccAddress,

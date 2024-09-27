@@ -21,7 +21,7 @@ type ClobPairIdFilterTest struct {
 }
 
 func TestClobPairIdFilterTest(t *testing.T) {
-	suite.Run(t, new(MessageFilterTest))
+	suite.Run(t, new(ClobPairIdFilterTest))
 }
 
 func (s *ClobPairIdFilterTest) SetupTest() {
@@ -89,8 +89,8 @@ func (s *ClobPairIdFilterTest) TestFilter() {
 				s.tApp.App.AppCodec(),
 				ak,
 				sigModeHandler,
-				s.TestAccAddress[0],
-				s.TestAccAddress[0],
+				constants.AliceAccAddress,
+				constants.AliceAccAddress,
 				nil,
 				sdk.NewCoins(),
 				tt.msg,

@@ -9,8 +9,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const SEPARATOR = ","
-
 var _ Authenticator = &MessageFilter{}
 
 // MessageFilter filters incoming messages based on a predefined JSON pattern.

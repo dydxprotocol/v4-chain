@@ -12,10 +12,10 @@ import (
 
 var _ Authenticator = &SubaccountFilter{}
 
-// SubaccountFilter filters incoming messages based on a predefined JSON pattern.
-// It allows for complex pattern matching to support advanced authentication flows.
+// SubaccountFilter filters incoming messages based on a whitelist of subaccount numbers.
+// It ensures that only messages with whitelisted subaccount numbers are allowed.
 type SubaccountFilter struct {
-	whitelist []uint32
+	whitelist map[uint32]struct{}
 }
 
 // NewSubaccountFilter creates a new SubaccountFilter with the provided EncodingConfig.
@@ -33,17 +33,18 @@ func (m SubaccountFilter) StaticGas() uint64 {
 	return 0
 }
 
-// Initialize sets up the authenticator with the given data, which should be a valid JSON pattern for message filtering.
+// Initialize sets up the authenticator with the given data,
+// which should be a string of subaccount numbers separated by the specified separator.
 func (m SubaccountFilter) Initialize(config []byte) (Authenticator, error) {
 	strSlice := strings.Split(string(config), SEPARATOR)
 
-	m.whitelist = make([]uint32, len(strSlice))
-	for i, str := range strSlice {
+	m.whitelist = make(map[uint32]struct{})
+	for _, str := range strSlice {
 		num, err := strconv.ParseUint(str, 10, 32)
 		if err != nil {
 			return nil, err
 		}
-		m.whitelist[i] = uint32(num)
+		m.whitelist[uint32(num)] = struct{}{}
 	}
 	return m, nil
 }
@@ -53,8 +54,7 @@ func (m SubaccountFilter) Track(ctx sdk.Context, request AuthenticationRequest) 
 	return nil
 }
 
-// Authenticate checks if the provided message conforms to the set JSON pattern.
-// It returns an AuthenticationResult based on the evaluation.
+// Authenticate checks if the message's subaccount numbers are in the whitelist.
 func (m SubaccountFilter) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	// Collect the clob pair ids from the request.
 	requestSubaccountNums := make([]uint32, 0)
@@ -65,19 +65,14 @@ func (m SubaccountFilter) Authenticate(ctx sdk.Context, request AuthenticationRe
 		requestSubaccountNums = append(requestSubaccountNums, msg.OrderId.SubaccountId.Number)
 	case *clobtypes.MsgBatchCancel:
 		requestSubaccountNums = append(requestSubaccountNums, msg.SubaccountId.Number)
+	default:
+		// Skip other messages.
+		return nil
 	}
 
 	// Make sure all the subaccount numbers are in the whitelist.
 	for _, subaccountNum := range requestSubaccountNums {
-		whitelisted := false
-		for _, whitelistId := range m.whitelist {
-			if subaccountNum == whitelistId {
-				whitelisted = true
-				break
-			}
-		}
-
-		if !whitelisted {
+		if _, ok := m.whitelist[subaccountNum]; !ok {
 			return errorsmod.Wrapf(
 				sdkerrors.ErrUnauthorized,
 				"subaccount number %d not in whitelist %v",
@@ -94,8 +89,7 @@ func (m SubaccountFilter) ConfirmExecution(ctx sdk.Context, request Authenticati
 	return nil
 }
 
-// OnAuthenticatorAdded performs additional checks when an authenticator is added.
-// Specifically, it ensures numbers in JSON are encoded as strings.
+// OnAuthenticatorAdded is currently a no-op but can be extended for additional logic when an authenticator is added.
 func (m SubaccountFilter) OnAuthenticatorAdded(
 	ctx sdk.Context,
 	account sdk.AccAddress,
