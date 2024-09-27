@@ -19,7 +19,7 @@ func TestGetAssetYieldIndexQuery(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 
 	assetYieldIndexQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
-		" ratelimit query get-asset-yield-index"
+		" query ratelimit get-asset-yield-index"
 	data, _, err := network.QueryCustomNetwork(assetYieldIndexQuery)
 
 	require.NoError(t, err)

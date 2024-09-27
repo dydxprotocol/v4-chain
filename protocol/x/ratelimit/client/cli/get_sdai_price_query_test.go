@@ -3,6 +3,7 @@
 package cli_test
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -37,9 +38,12 @@ func TestGetSDAIPriceQuery(t *testing.T) {
 
 	setTx := "docker exec interchain-security-instance-setup interchain-security-cd" +
 		" tx ratelimit update-market-prices dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 " +
-		chi +
+		chi + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
 		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
 	_, _, err = network.QueryCustomNetwork(setTx)
+
+	fmt.Println("first eror")
+	fmt.Println(err)
 	require.NoError(t, err)
 
 	time.Sleep(10 * time.Second)
@@ -47,6 +51,9 @@ func TestGetSDAIPriceQuery(t *testing.T) {
 	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
 		" query ratelimit get-sdai-price "
 	data, _, err := network.QueryCustomNetwork(rateQuery)
+
+	fmt.Println("second eror")
+	fmt.Println(err)
 
 	require.NoError(t, err)
 	var resp types.GetSDAIPriceQueryResponse
