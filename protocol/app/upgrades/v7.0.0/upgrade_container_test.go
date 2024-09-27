@@ -49,10 +49,11 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 }
 
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
-	// Add test for your upgrade handler logic below
+	// Check that vault quoting params are successfully migrated to vault params.
 	postUpgradeVaultParamsCheck(node, t)
+	// Check that vault shares are successfully migrated to megavault shares.
 	postUpgradeMegavaultSharesCheck(node, t)
-
+	// Check that megavault module account is successfully initialized.
 	postUpgradeMegavaultModuleAccCheck(node, t)
 
 	// Check that the affiliates module has been initialized with the default tiers.
