@@ -25,6 +25,13 @@ service Query {
     option (google.api.http).get =
         "/dydxprotocol/revshare/market_mapper_rev_share_details/{market_id}";
   }
+
+  // Queries unconditional revenue share config
+  rpc UnconditionalRevShareConfig(QueryUnconditionalRevShareConfig)
+      returns (QueryUnconditionalRevShareConfigResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/revshare/unconditional_rev_share";
+  }
 }
 
 // Queries for the default market mapper revenue share params
@@ -41,4 +48,12 @@ message QueryMarketMapperRevShareDetails { uint32 market_id = 1; }
 // Response type for QueryMarketMapperRevShareDetails
 message QueryMarketMapperRevShareDetailsResponse {
   MarketMapperRevShareDetails details = 1 [ (gogoproto.nullable) = false ];
+}
+
+// Queries unconditional revenue share details
+message QueryUnconditionalRevShareConfig {}
+
+// Response type for QueryUnconditionalRevShareConfig
+message QueryUnconditionalRevShareConfigResponse {
+  UnconditionalRevShareConfig config = 1 [ (gogoproto.nullable) = false ];
 }
