@@ -49,14 +49,14 @@ func (m MessageFilter) Track(ctx sdk.Context, request AuthenticationRequest) err
 // It returns an AuthenticationResult based on the evaluation.
 func (m MessageFilter) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
 	for _, msgType := range m.msgTypes {
-		if request.Msg.TypeURL == msgType {
+		if sdk.MsgTypeURL(request.Msg) == msgType {
 			return nil
 		}
 	}
 	return errorsmod.Wrapf(
 		sdkerrors.ErrUnauthorized,
 		"message types do not match. Got %s, Expected %v",
-		request.Msg.TypeURL,
+		sdk.MsgTypeURL(request.Msg),
 		m.msgTypes,
 	)
 }

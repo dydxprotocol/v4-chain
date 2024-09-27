@@ -15,10 +15,10 @@ import (
 var _ authenticator.Authenticator = &SpyAuthenticator{}
 
 type SpyTrackRequest struct {
-	AuthenticatorId string                 `json:"authenticator_id"`
-	Account         sdk.AccAddress         `json:"account"`
-	Msg             authenticator.LocalAny `json:"msg"`
-	MsgIndex        uint64                 `json:"msg_index"`
+	AuthenticatorId string         `json:"authenticator_id"`
+	Account         sdk.AccAddress `json:"account"`
+	Msg             sdk.Msg        `json:"msg"`
+	MsgIndex        uint64         `json:"msg_index"`
 }
 
 type SpyAddRequest struct {

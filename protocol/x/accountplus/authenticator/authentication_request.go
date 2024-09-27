@@ -7,7 +7,6 @@ import (
 
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -27,13 +26,6 @@ type SignModeData struct {
 	Textual string `json:"sign_mode_textual"`
 }
 
-// LocalAny holds a message with its type URL and byte value. This is necessary because the type Any fails
-// to serialize and deserialize properly in nested contexts.
-type LocalAny struct {
-	TypeURL string `json:"type_url"`
-	Value   []byte `json:"value"`
-}
-
 // SimplifiedSignatureData contains lists of signers and their corresponding signatures.
 type SimplifiedSignatureData struct {
 	Signers    []sdk.AccAddress `json:"signers"`
@@ -42,12 +34,12 @@ type SimplifiedSignatureData struct {
 
 // ExplicitTxData encapsulates key transaction data like chain ID, account info, and messages.
 type ExplicitTxData struct {
-	ChainID         string     `json:"chain_id"`
-	AccountNumber   uint64     `json:"account_number"`
-	AccountSequence uint64     `json:"sequence"`
-	TimeoutHeight   uint64     `json:"timeout_height"`
-	Msgs            []LocalAny `json:"msgs"`
-	Memo            string     `json:"memo"`
+	ChainID         string    `json:"chain_id"`
+	AccountNumber   uint64    `json:"account_number"`
+	AccountSequence uint64    `json:"sequence"`
+	TimeoutHeight   uint64    `json:"timeout_height"`
+	Msgs            []sdk.Msg `json:"msgs"`
+	Memo            string    `json:"memo"`
 }
 
 // GetSignerAndSignatures gets an array of signer and an array of signatures from the transaction
@@ -131,26 +123,12 @@ func extractExplicitTxData(tx sdk.Tx, signerData authsigning.SignerData) (Explic
 		return ExplicitTxData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
 	}
 
-	// Encode messages as Anys and manually convert them to a struct we can serialize to json for cosmwasm.
-	txMsgs := tx.GetMsgs()
-	msgs := make([]LocalAny, len(txMsgs))
-	for i, txMsg := range txMsgs {
-		encodedMsg, err := types.NewAnyWithValue(txMsg)
-		if err != nil {
-			return ExplicitTxData{}, errorsmod.Wrap(err, "failed to encode msg")
-		}
-		msgs[i] = LocalAny{
-			TypeURL: encodedMsg.TypeUrl,
-			Value:   encodedMsg.Value,
-		}
-	}
-
 	return ExplicitTxData{
 		ChainID:         signerData.ChainID,
 		AccountNumber:   signerData.AccountNumber,
 		AccountSequence: signerData.Sequence,
 		TimeoutHeight:   timeoutTx.GetTimeoutHeight(),
-		Msgs:            msgs,
+		Msgs:            tx.GetMsgs(),
 		Memo:            memoTx.GetMemo(),
 	}, nil
 }

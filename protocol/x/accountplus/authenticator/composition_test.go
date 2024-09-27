@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -665,9 +664,6 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
 		}
 
-		encodedMsg, err := codectypes.NewAnyWithValue(msg)
-		s.Require().NoError(err, "Should encode Any value successfully")
-
 		// mock the authentication request
 		authReq := authenticator.AuthenticationRequest{
 			AuthenticatorId: tc.id,
@@ -675,7 +671,7 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 			FeePayer:        s.TestAccAddress[0],
 			FeeGranter:      nil,
 			Fee:             sdk.NewCoins(),
-			Msg:             authenticator.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
+			Msg:             msg,
 			MsgIndex:        0,
 			Signature:       []byte{1, 1, 1, 1, 1},
 			SignModeTxData:  authenticator.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
@@ -834,15 +830,12 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
 		}
 
-		encodedMsg, err := codectypes.NewAnyWithValue(msg)
-		s.Require().NoError(err, "Should encode Any value successfully")
-
 		// mock the authentication request
 		authReq := authenticator.AuthenticationRequest{
 			AuthenticatorId: "1",
 			Account:         s.TestAccAddress[0],
 			FeePayer:        s.TestAccAddress[0],
-			Msg:             authenticator.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
+			Msg:             msg,
 			MsgIndex:        0,
 			Signature:       []byte{1, 1, 1, 1, 1},
 			SignModeTxData:  authenticator.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
