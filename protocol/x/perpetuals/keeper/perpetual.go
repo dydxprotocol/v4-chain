@@ -1452,6 +1452,11 @@ func (k Keeper) setPerpetual(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) {
+
+	if perpetual.YieldIndex == "" {
+		perpetual.YieldIndex = "0/1"
+	}
+
 	b := k.cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
@@ -1462,6 +1467,11 @@ func (k Keeper) ValidateAndSetPerpetual(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) error {
+
+	if perpetual.YieldIndex == "" {
+		perpetual.YieldIndex = "0/1"
+	}
+
 	if err := k.validatePerpetual(
 		ctx,
 		&perpetual,

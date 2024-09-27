@@ -49,7 +49,7 @@ func initAppConfig() (string, *DydxAppConfig) {
 	//
 	// In simapp, we set the min gas prices to 0.
 
-	srvCfg.MinGasPrices = MinGasPrice
+	srvCfg.MinGasPrices = "0stake"
 
 	appConfig := DydxAppConfig{
 		Config: *srvCfg,

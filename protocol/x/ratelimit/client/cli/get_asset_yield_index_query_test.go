@@ -3,13 +3,11 @@
 package cli_test
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,10 +18,8 @@ var defaultAssetYieldIndex = "1/1"
 func TestGetAssetYieldIndexQuery(t *testing.T) {
 	cfg := network.DefaultConfig(nil)
 
-	param := fmt.Sprintf("--%s=json", tmcli.OutputFlag)
-
 	assetYieldIndexQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
-		" query get-asset-yield-index " + param
+		" ratelimit query get-asset-yield-index"
 	data, _, err := network.QueryCustomNetwork(assetYieldIndexQuery)
 
 	require.NoError(t, err)

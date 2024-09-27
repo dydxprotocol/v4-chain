@@ -190,6 +190,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 			)
 
 			checkTx := tApp.CheckTx(msgSendCheckTx)
+
 			// Sanity check that gas was used.
 			require.Greater(t, checkTx.GasUsed, int64(0))
 			require.Equal(t, tc.responseCode, checkTx.Code)
