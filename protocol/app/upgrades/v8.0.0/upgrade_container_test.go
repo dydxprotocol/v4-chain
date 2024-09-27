@@ -5,7 +5,7 @@ package v_8_0_0_test
 import (
 	"testing"
 
-	v_8_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v7.1.0"
+	v_8_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.0.0"
 	listingtypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 
 	"github.com/cosmos/gogoproto/proto"
