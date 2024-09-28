@@ -57,6 +57,7 @@ func PrepareProposalHandler(
 	clobKeeper PrepareClobKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
+	ratelimitKeeper ve.PreBlockExecRateLimitKeeper,
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
@@ -95,6 +96,7 @@ func PrepareProposalHandler(
 		if err := SetVE(
 			txSetterUtils,
 			pricesKeeper,
+			ratelimitKeeper,
 			veCodec,
 			extCommitCodec,
 			validateVoteExtensionFn,
@@ -180,6 +182,7 @@ func PrepareProposalHandler(
 func SetVE(
 	txSetterUtils TxSetterUtils,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
+	ratelimitKeeper ve.PreBlockExecRateLimitKeeper,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
 	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
@@ -198,6 +201,7 @@ func SetVE(
 		txSetterUtils.Request.LocalLastCommit,
 		voteCodec,
 		pricesKeeper,
+		ratelimitKeeper,
 		validateVoteExtensionFn,
 	)
 
@@ -205,7 +209,8 @@ func SetVE(
 		return err
 	}
 	// Create the vote extension injection data which will be injected into the proposal. These contain the
-	// oracle data for the current block which will be committed to state in PreBlock.
+	// oracle data for the current block along with the sDAI conversion rate at the appropriate heights
+	// which will be committed to state in PreBlock.
 	extInfoBz, err := extCodec.Encode(cleanExtCommitInfo)
 	if err != nil {
 		return err

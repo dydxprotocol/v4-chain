@@ -32,6 +32,10 @@ type PreBlockExecPricesKeeper interface {
 	GetSmoothedSpotPrice(markedId uint32) (uint64, bool)
 }
 
+type PreBlockExecRateLimitKeeper interface {
+	GetSDAIPrice(ctx sdk.Context) (price *big.Int, found bool)
+}
+
 type ExtendVoteClobKeeper interface {
 	GetSingleMarketClobMetadata(ctx sdk.Context, clobPair clobtypes.ClobPair) clobtypes.ClobMetadata
 	GetClobPair(ctx sdk.Context, id clobtypes.ClobPairId) (val clobtypes.ClobPair, found bool)

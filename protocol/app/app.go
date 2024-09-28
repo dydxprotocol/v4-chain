@@ -1263,6 +1263,7 @@ func New(
 				app.ClobKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
+				app.RatelimitKeeper,
 				app.voteCodec,
 				app.extCodec,
 				veValidationFn,
