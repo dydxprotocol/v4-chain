@@ -553,7 +553,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 	}
 }
 
-func TestGetVEBytesFromCurrPrices(t *testing.T) {
+func TestGetVEBytes(t *testing.T) {
 	tests := map[string]struct {
 		markets        []uint32
 		daemonPrices   []*pricestypes.MarketSpotPriceUpdate
@@ -993,7 +993,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			veBytes, err := h.GetVEBytesFromCurrPrices(ctx)
+			veBytes, err := h.GetVEBytes(ctx)
 
 			if tc.expectedError {
 				require.Error(t, err)

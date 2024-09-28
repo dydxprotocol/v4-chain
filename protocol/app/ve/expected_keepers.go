@@ -34,6 +34,7 @@ type PreBlockExecPricesKeeper interface {
 
 type PreBlockExecRateLimitKeeper interface {
 	GetSDAIPrice(ctx sdk.Context) (price *big.Int, found bool)
+	GetSDAILastBlockUpdated(ctx sdk.Context) (blockHeight *big.Int, found bool)
 }
 
 type ExtendVoteClobKeeper interface {
