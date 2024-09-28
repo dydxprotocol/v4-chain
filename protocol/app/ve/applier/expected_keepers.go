@@ -1,4 +1,4 @@
-package price_writer
+package ve_writer
 
 import (
 	"math/big"
@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type PriceApplierPricesKeeper interface {
+type VEApplierPricesKeeper interface {
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
 		marketPriceUpdates *types.MarketPriceUpdate,
@@ -39,6 +39,7 @@ type PriceApplierPricesKeeper interface {
 	)
 }
 
-type PriceApplierRatelimitKeeper interface {
+type VEApplierRatelimitKeeper interface {
 	SetSDAIPrice(ctx sdk.Context, price *big.Int)
+	ValidateAndSetSDAILastBlockUpdated(ctx sdk.Context, newBlockHeight *big.Int) error
 }

@@ -57,10 +57,9 @@ func PrepareProposalHandler(
 	clobKeeper PrepareClobKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
-	ratelimitKeeper ve.PreBlockExecRateLimitKeeper,
+	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
-	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, request *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 		var finalTxs [][]byte
@@ -99,7 +98,6 @@ func PrepareProposalHandler(
 			ratelimitKeeper,
 			veCodec,
 			extCommitCodec,
-			validateVoteExtensionFn,
 		); err != nil {
 			ctx.Logger().Error(
 				"failed to inject vote extensions into block",
@@ -182,10 +180,9 @@ func PrepareProposalHandler(
 func SetVE(
 	txSetterUtils TxSetterUtils,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
-	ratelimitKeeper ve.PreBlockExecRateLimitKeeper,
+	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
-	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) error {
 	if !veutils.AreVEEnabled(txSetterUtils.Ctx) {
 		return nil
@@ -202,7 +199,6 @@ func SetVE(
 		voteCodec,
 		pricesKeeper,
 		ratelimitKeeper,
-		validateVoteExtensionFn,
 	)
 
 	if err != nil {

@@ -318,7 +318,7 @@ func TestExtendVoteHandler(t *testing.T) {
 			ctx = vetestutils.GetVeEnabledCtx(ctx, round)
 			votecodec := vecodec.NewDefaultVoteExtensionCodec()
 
-			mPriceApplier := &mocks.VEPriceApplier{}
+			mVEApplier := &mocks.VEApplierInterface{}
 
 			h := ve.NewVoteExtensionHandler(
 				log.NewTestLogger(t),
@@ -326,7 +326,7 @@ func TestExtendVoteHandler(t *testing.T) {
 				tc.pricesKeeper(),
 				tc.perpKeeper(),
 				tc.clobKeeper(),
-				mPriceApplier,
+				mVEApplier,
 			)
 
 			req := &cometabci.RequestExtendVote{}
@@ -334,7 +334,7 @@ func TestExtendVoteHandler(t *testing.T) {
 				req = tc.extendVoteRequest()
 			}
 
-			mPriceApplier.On("ApplyPricesFromVE", mock.Anything, mock.Anything).Return(nil)
+			mVEApplier.On("ApplyVE", mock.Anything, mock.Anything).Return(nil)
 
 			resp, err := h.ExtendVoteHandler()(ctx, req)
 			if !tc.expectedError {
@@ -527,7 +527,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 			ctx = vetestutils.GetVeEnabledCtx(ctx, 3)
-			mPriceApplier := &mocks.VEPriceApplier{}
+			mVEApplier := &mocks.VEApplierInterface{}
 			mClobKeeper := &mocks.ExtendVoteClobKeeper{}
 			mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
 			mPricesKeeper := tc.pricesKeeper()
@@ -538,7 +538,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 				mPricesKeeper,
 				mPerpKeeper,
 				mClobKeeper,
-				mPriceApplier,
+				mVEApplier,
 			).VerifyVoteExtensionHandler()
 
 			resp, err := handler(ctx, tc.getReq())
@@ -890,7 +890,7 @@ func TestGetVEBytes(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			votecodec := vecodec.NewDefaultVoteExtensionCodec()
-			mPriceApplier := &mocks.VEPriceApplier{}
+			mVEApplier := &mocks.VEApplierInterface{}
 			mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 			mClobKeeper := &mocks.ExtendVoteClobKeeper{}
 			mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
@@ -980,7 +980,7 @@ func TestGetVEBytes(t *testing.T) {
 				mPricesKeeper,
 				mPerpKeeper,
 				mClobKeeper,
-				mPriceApplier,
+				mVEApplier,
 			)
 
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)

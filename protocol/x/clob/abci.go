@@ -217,7 +217,7 @@ func PrepareCheckState(
 	}
 
 	// 3. Update the prices to reflect next block's prices.
-	err := keeper.SetNextBlocksPricesFromExtendedCommitInfo(ctx, req.ExtendedCommitInfo)
+	err := keeper.SetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(ctx, req.ExtendedCommitInfo)
 	if err != nil {
 		panic(err)
 	}

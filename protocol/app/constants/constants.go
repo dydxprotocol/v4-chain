@@ -10,7 +10,7 @@ const (
 	MaximumPriceSizeInBytes = 33
 
 	// MaxSDaiConversionRateLengthCharacters is the maximum length of the sDai conversion rate in characters.
-	MaxSDaiConversionRateLengthCharacters = 29
+	MaxSDaiConversionRateLengthCharacters = 35
 
 	// where in the proposal the injected VE's are located
 	DaemonInfoIndex    = 0

@@ -1,4 +1,4 @@
-package pricecache
+package vecache
 
 import (
 	"math/big"
@@ -12,11 +12,12 @@ import (
 // redundant computation on calculating stake weighthed median prices in VEs.
 // sDaiConversionRate is set to nil when no sDaiUpdateShould be performed.
 type VeUpdatesCache struct {
-	priceUpdates       PriceUpdates
-	sDaiConversionRate *big.Int
-	height             int64
-	round              int32
-	mu                 sync.RWMutex
+	priceUpdates         PriceUpdates
+	sDaiConversionRate   *big.Int
+	sDAILastUpdatedBlock *big.Int
+	height               int64
+	round                int32
+	mu                   sync.RWMutex
 }
 
 type PriceUpdate struct {
@@ -27,16 +28,16 @@ type PriceUpdate struct {
 
 type PriceUpdates []PriceUpdate
 
-func (pc *VeUpdatesCache) SetPriceUpdates(
+func (veCache *VeUpdatesCache) SetPriceUpdates(
 	ctx sdk.Context,
 	updates PriceUpdates,
 	round int32,
 ) {
-	pc.mu.Lock()
-	defer pc.mu.Unlock()
-	pc.priceUpdates = updates
-	pc.height = ctx.BlockHeight()
-	pc.round = round
+	veCache.mu.Lock()
+	defer veCache.mu.Unlock()
+	veCache.priceUpdates = updates
+	veCache.height = ctx.BlockHeight()
+	veCache.round = round
 }
 
 func (veCache *VeUpdatesCache) GetPriceUpdates() PriceUpdates {
@@ -46,22 +47,24 @@ func (veCache *VeUpdatesCache) GetPriceUpdates() PriceUpdates {
 }
 
 // TODO: Look into potential issues with setting the round here
-func (pc *VeUpdatesCache) SetSDaiConversionRate(
+func (veCache *VeUpdatesCache) SetSDaiConversionRateAndBlockHeight(
 	ctx sdk.Context,
 	sDaiConversionRate *big.Int,
+	blockHeight *big.Int,
 	round int32,
 ) {
-	pc.mu.Lock()
-	defer pc.mu.Unlock()
-	pc.sDaiConversionRate = sDaiConversionRate
-	pc.height = ctx.BlockHeight()
-	pc.round = round
+	veCache.mu.Lock()
+	defer veCache.mu.Unlock()
+	veCache.sDaiConversionRate = sDaiConversionRate
+	veCache.sDAILastUpdatedBlock = blockHeight
+	veCache.height = ctx.BlockHeight()
+	veCache.round = round
 }
 
-func (veCache *VeUpdatesCache) GetConversionRateUpdate() *big.Int {
+func (veCache *VeUpdatesCache) GetConversionRateUpdateAndBlockHeight() (*big.Int, *big.Int) {
 	veCache.mu.RLock()
 	defer veCache.mu.RUnlock()
-	return veCache.sDaiConversionRate
+	return veCache.sDaiConversionRate, veCache.sDAILastUpdatedBlock
 }
 
 func (veCache *VeUpdatesCache) GetHeight() int64 {

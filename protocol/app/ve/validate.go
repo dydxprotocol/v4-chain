@@ -8,10 +8,10 @@ import (
 
 	"cosmossdk.io/core/comet"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ratelimit/types"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -45,8 +45,7 @@ func CleanAndValidateExtCommitInfo(
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
-	ratelimitKeeper PreBlockExecRateLimitKeeper,
-	validateVEConsensusInfo ValidateVEConsensusInfoFn,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
 ) (cometabci.ExtendedCommitInfo, error) {
 	for i, vote := range extCommitInfo.Votes {
 		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper); err != nil {
@@ -70,7 +69,7 @@ func ValidateExtendedCommitInfo(
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
-	ratelimitKeeper PreBlockExecRateLimitKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
 	validateVEConsensusInfo ValidateVEConsensusInfoFn,
 ) error {
 	if err := validateVEConsensusInfo(ctx, extCommitInfo); err != nil {
@@ -103,7 +102,7 @@ func validateIndividualVoteExtension(
 	vote cometabci.ExtendedVoteInfo,
 	voteCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
-	ratelimitKeeper PreBlockExecRateLimitKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
 
 ) error {
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
@@ -146,7 +145,7 @@ func ValidateVEMarketsAndPrices(
 
 func ValidateVeSDaiConversionRate(
 	ctx sdk.Context,
-	ratelimitKeeper PreBlockExecRateLimitKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
 	veBytes []byte,
 	voteCodec codec.VoteExtensionCodec,
 ) error {
@@ -220,7 +219,7 @@ func ValidateSDaiConversionRateSizeInVE(
 func ValidateSDaiConversionRateHeightInVE(
 	ctx sdk.Context,
 	ve vetypes.DaemonVoteExtension,
-	ratelimitKeeper PreBlockExecRateLimitKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
 ) error {
 
 	lastBlockUpdated, found := ratelimitKeeper.GetSDAILastBlockUpdated(ctx)
@@ -235,7 +234,7 @@ func ValidateSDaiConversionRateHeightInVE(
 func ValidateSDaiConversionRateValueInVE(
 	ctx sdk.Context,
 	ve vetypes.DaemonVoteExtension,
-	ratelimitKeeper PreBlockExecRateLimitKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
 ) error {
 	sDaiConversionRate, ok := new(big.Int).SetString(ve.SDaiConversionRate, 10)
 	if !ok {
@@ -248,11 +247,7 @@ func ValidateSDaiConversionRateValueInVE(
 	}
 
 	prevRate, found := ratelimitKeeper.GetSDAIPrice(ctx)
-	if !found {
-		return fmt.Errorf("failed to get sDai conversion rate from keeper")
-	}
-
-	if sDaiConversionRate.Cmp(prevRate) <= 0 {
+	if found && sDaiConversionRate.Cmp(prevRate) <= 0 {
 		return fmt.Errorf("new sDai conversion rate (%s) is not greater than the previous rate (%s)", ve.SDaiConversionRate, prevRate.String())
 	}
 

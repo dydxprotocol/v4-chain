@@ -1,4 +1,4 @@
-package price_writer_test
+package ve_writer_test
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
-	pricewriter "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
+	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vemath "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
@@ -30,11 +30,11 @@ func TestPriceWriter(t *testing.T) {
 
 	ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
-	pricesKeeper := &mocks.PriceApplierPricesKeeper{}
+	pricesKeeper := &mocks.VEApplierPricesKeeper{}
 
 	pricesKeeper.On("PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything).Return(true, true)
 
-	pricesApplier := pricewriter.NewPriceApplier(
+	veApplier := veapplier.NewVEApplier(
 		log.NewNopLogger(),
 		voteAggregator,
 		pricesKeeper,
@@ -44,11 +44,11 @@ func TestPriceWriter(t *testing.T) {
 
 	t.Run("if extracting oracle votes fails, fail", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(1)
-		err := pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
+		err := veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{[]byte("garbage"), {1, 2, 3, 4}, {1, 2, 3, 4}},
 		}, true)
 
-		priceUpdates := pricesApplier.GetCachedPrices()
+		priceUpdates := veApplier.GetCachedPrices()
 
 		cachedPrices := make(map[string]ve.VEPricePair)
 		for _, priceUpdate := range priceUpdates {
@@ -93,11 +93,11 @@ func TestPriceWriter(t *testing.T) {
 			},
 		}).Return(nil, fmt.Errorf("fail")).Once()
 
-		err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		}, true)
 
-		priceUpdates := pricesApplier.GetCachedPrices()
+		priceUpdates := veApplier.GetCachedPrices()
 
 		cachedPrices := make(map[string]ve.VEPricePair)
 		for _, priceUpdate := range priceUpdates {
@@ -166,7 +166,7 @@ func TestPriceWriter(t *testing.T) {
 			true,
 		)
 
-		err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
 		}, true)
 
@@ -255,7 +255,7 @@ func TestPriceWriter(t *testing.T) {
 
 		pricesKeeper.On("UpdateSpotAndPnlMarketPrices", ctx, mock.Anything).Return(nil)
 
-		err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
 			DecidedLastCommit: cometabci.CommitInfo{
 				Round: 1,
@@ -263,7 +263,7 @@ func TestPriceWriter(t *testing.T) {
 			},
 		}, true)
 
-		priceUpdates := pricesApplier.GetCachedPrices()
+		priceUpdates := veApplier.GetCachedPrices()
 
 		cachedPrices := make(map[string]ve.VEPricePair)
 		for _, priceUpdate := range priceUpdates {
@@ -369,7 +369,7 @@ func TestPriceWriter(t *testing.T) {
 		pricesKeeper.On("UpdateSpotAndPnlMarketPrices", ctx, mock.Anything).Return(nil).Twice()
 
 		// First call
-		err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz1, {1, 2, 3, 4}, {1, 2, 3, 4}},
 			DecidedLastCommit: cometabci.CommitInfo{
 				Round: 1,
@@ -378,7 +378,7 @@ func TestPriceWriter(t *testing.T) {
 		}, true)
 		require.NoError(t, err)
 
-		priceUpdates := pricesApplier.GetCachedPrices()
+		priceUpdates := veApplier.GetCachedPrices()
 		fmt.Println("priceUpdates 1", priceUpdates)
 		cachedPrices := make(map[string]ve.VEPricePair)
 		for _, priceUpdate := range priceUpdates {
@@ -415,7 +415,7 @@ func TestPriceWriter(t *testing.T) {
 		}, nil).Once()
 
 		// Second call with the same round and height
-		err = pricesApplier.ApplyPricesFromVE(ctx, &cometabci.RequestFinalizeBlock{
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz2, {1, 2, 3, 4}, {1, 2, 3, 4}},
 			DecidedLastCommit: cometabci.CommitInfo{
 				Round: 1,
@@ -424,7 +424,7 @@ func TestPriceWriter(t *testing.T) {
 		}, true)
 		require.NoError(t, err)
 
-		priceUpdates = pricesApplier.GetCachedPrices()
+		priceUpdates = veApplier.GetCachedPrices()
 		cachedPrices = make(map[string]ve.VEPricePair)
 		for _, priceUpdate := range priceUpdates {
 			marketId := priceUpdate.MarketId

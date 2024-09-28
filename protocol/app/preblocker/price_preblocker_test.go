@@ -8,7 +8,7 @@ import (
 	preblocker "github.com/StreamFinance-Protocol/stream-chain/protocol/app/preblocker"
 	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
-	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
+	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
@@ -35,7 +35,7 @@ type PreBlockTestSuite struct {
 	marketParamPrices []pricestypes.MarketParamPrice
 	pricesKeeper      *pk.Keeper
 	daemonPriceCache  *pricefeedtypes.MarketToExchangePrices
-	priceApplier      *priceapplier.PriceApplier
+	veApplier         *veapplier.VEApplier
 	handler           *preblocker.PreBlockHandler
 	ccvStore          *mocks.CCValidatorStore
 	voteCodec         vecodec.VoteExtensionCodec
@@ -51,6 +51,7 @@ func (s *PreBlockTestSuite) SetupTest() {
 	s.validator = constants.AliceEthosConsAddress
 
 	ctx, pricesKeeper, _, daemonPriceCahce, _, mockTimeProvider := keepertest.PricesKeepers(s.T())
+
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	s.ctx = ctx
 	s.pricesKeeper = pricesKeeper
@@ -64,7 +65,13 @@ func (s *PreBlockTestSuite) SetupTest() {
 	mCCVStore := &mocks.CCValidatorStore{}
 	s.ccvStore = mCCVStore
 
-	aggregationFn := voteweighted.Median(
+	pricesAggregatorFn := voteweighted.MedianPrices(
+		s.logger,
+		s.ccvStore,
+		voteweighted.DefaultPowerThreshold,
+	)
+
+	conversionRateAggregatorFn := voteweighted.MedianConversionRate(
 		s.logger,
 		s.ccvStore,
 		voteweighted.DefaultPowerThreshold,
@@ -72,12 +79,12 @@ func (s *PreBlockTestSuite) SetupTest() {
 
 	aggregator := veaggregator.NewVeAggregator(
 		s.logger,
-		s.daemonPriceCache,
 		*s.pricesKeeper,
-		aggregationFn,
+		pricesAggregatorFn,
+		conversionRateAggregatorFn,
 	)
 
-	s.priceApplier = priceapplier.NewPriceApplier(
+	s.veApplier = veapplier.NewVEApplier(
 		s.logger,
 		aggregator,
 		*s.pricesKeeper,
@@ -95,7 +102,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		s.ctx = vetesting.GetVeEnabledCtx(s.ctx, 3)
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.priceApplier,
+			s.veApplier,
 		)
 		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
 
@@ -112,7 +119,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.priceApplier,
+			s.veApplier,
 		)
 
 		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
@@ -130,7 +137,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.priceApplier,
+			s.veApplier,
 		)
 
 		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
@@ -168,7 +175,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.priceApplier,
+			s.veApplier,
 		)
 
 		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
@@ -237,7 +244,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.priceApplier,
+			s.veApplier,
 		)
 
 		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
@@ -315,7 +322,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 
 		s.handler = preblocker.NewDaemonPreBlockHandler(
 			s.logger,
-			s.priceApplier,
+			s.veApplier,
 		)
 
 		s.daemonPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)

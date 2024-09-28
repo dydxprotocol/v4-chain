@@ -106,7 +106,7 @@ import (
 
 	// VE
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
-	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
+	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 
@@ -941,13 +941,12 @@ func New(
 
 	aggregator := veaggregator.NewVeAggregator(
 		logger,
-		daemonPriceCache,
 		app.PricesKeeper,
 		pricesAggregatorFn,
 		conversionRateAggregatorFn,
 	)
 
-	priceApplier := priceapplier.NewPriceApplier(
+	veApplier := veapplier.NewVEApplier(
 		logger,
 		aggregator,
 		app.PricesKeeper,
@@ -987,7 +986,7 @@ func New(
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[sdk.Msg](),
 		daemonDeleveragingInfo,
-		priceApplier,
+		veApplier,
 	)
 	clobModule := clobmodule.NewAppModule(
 		appCodec,
@@ -1021,11 +1020,11 @@ func New(
 
 	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(
 		logger,
-		priceApplier,
+		veApplier,
 	)
 
 	if !appFlags.NonValidatingFullNode {
-		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, &app.PerpetualsKeeper, app.ClobKeeper, &app.RatelimitKeeper, sDAIEventManager, priceApplier)
+		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, &app.PerpetualsKeeper, app.ClobKeeper, &app.RatelimitKeeper, sDAIEventManager, veApplier)
 	}
 
 	/****  Module Options ****/
@@ -1276,7 +1275,6 @@ func New(
 				app.RatelimitKeeper,
 				app.voteCodec,
 				app.extCodec,
-				veValidationFn,
 			),
 		)
 	}
@@ -1304,7 +1302,7 @@ func New(
 				app.RatelimitKeeper,
 				app.extCodec,
 				app.voteCodec,
-				priceApplier,
+				veApplier,
 				veValidationFn,
 			),
 		)
@@ -1413,7 +1411,7 @@ func (app *App) InitVoteExtensions(
 	clobKeeper *clobmodulekeeper.Keeper,
 	rateLimitKeeper *ratelimitmodulekeeper.Keeper,
 	sDAIEventManager *sdaiserver.SDAIEventManager,
-	priceApplier *priceapplier.PriceApplier,
+	veApplier *veapplier.VEApplier,
 ) {
 	veHandler := ve.NewVoteExtensionHandler(
 		logger,
@@ -1423,7 +1421,7 @@ func (app *App) InitVoteExtensions(
 		clobKeeper,
 		rateLimitKeeper,
 		sDAIEventManager,
-		priceApplier,
+		veApplier,
 	)
 	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())
 	app.SetVerifyVoteExtensionHandler(veHandler.VerifyVoteExtensionHandler())

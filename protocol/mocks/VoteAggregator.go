@@ -3,7 +3,10 @@
 package mocks
 
 import (
+	big "math/big"
+
 	aggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -16,17 +19,18 @@ type VoteAggregator struct {
 	mock.Mock
 }
 
-// AggregateDaemonVEIntoFinalPrices provides a mock function with given fields: ctx, votes
-func (_m *VoteAggregator) AggregateDaemonVEIntoFinalPrices(ctx types.Context, votes []aggregator.Vote) (map[string]voteweighted.AggregatorPricePair, error) {
+// AggregateDaemonVEIntoFinalPricesAndConversionRate provides a mock function with given fields: ctx, votes
+func (_m *VoteAggregator) AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx types.Context, votes []aggregator.Vote) (map[string]voteweighted.AggregatorPricePair, *big.Int, error) {
 	ret := _m.Called(ctx, votes)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AggregateDaemonVEIntoFinalPrices")
+		panic("no return value specified for AggregateDaemonVEIntoFinalPricesAndConversionRate")
 	}
 
 	var r0 map[string]voteweighted.AggregatorPricePair
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, []aggregator.Vote) (map[string]voteweighted.AggregatorPricePair, error)); ok {
+	var r1 *big.Int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, []aggregator.Vote) (map[string]voteweighted.AggregatorPricePair, *big.Int, error)); ok {
 		return rf(ctx, votes)
 	}
 	if rf, ok := ret.Get(0).(func(types.Context, []aggregator.Vote) map[string]voteweighted.AggregatorPricePair); ok {
@@ -37,13 +41,21 @@ func (_m *VoteAggregator) AggregateDaemonVEIntoFinalPrices(ctx types.Context, vo
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, []aggregator.Vote) error); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, []aggregator.Vote) *big.Int); ok {
 		r1 = rf(ctx, votes)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*big.Int)
+		}
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(types.Context, []aggregator.Vote) error); ok {
+		r2 = rf(ctx, votes)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetPriceForValidator provides a mock function with given fields: validator

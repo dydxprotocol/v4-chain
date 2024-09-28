@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) SetNextBlocksPricesFromExtendedCommitInfo(ctx sdk.Context, extendedCommitInfo *abcicomet.ExtendedCommitInfo) error {
+func (k Keeper) SetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(ctx sdk.Context, extendedCommitInfo *abcicomet.ExtendedCommitInfo) error {
 
 	// from cometbft so is either nil or is valid and > 2/3
 	if extendedCommitInfo != nil {
@@ -18,13 +18,13 @@ func (k Keeper) SetNextBlocksPricesFromExtendedCommitInfo(ctx sdk.Context, exten
 		}
 
 		if len(votes) > 0 {
-			prices, conversionRate, err := k.PriceApplier.VoteAggregator().AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx, votes)
+			prices, conversionRate, err := k.VEApplier.VoteAggregator().AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx, votes)
 			if err == nil {
-				err = k.PriceApplier.WritePricesToStoreAndMaybeCache(ctx, prices, 0, false)
+				err = k.VEApplier.WritePricesToStoreAndMaybeCache(ctx, prices, 0, false)
 				if err != nil {
 					return err
 				}
-				err = k.PriceApplier.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, conversionRate, 0, false)
+				err = k.VEApplier.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, conversionRate, 0, false)
 				if err != nil {
 					return err
 				}

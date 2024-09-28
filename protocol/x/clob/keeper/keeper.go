@@ -60,7 +60,7 @@ type (
 
 		DaemonDeleveragingInfo *deleveragingtypes.DaemonDeleveragingInfo
 
-		PriceApplier PriceApplierInterface
+		VEApplier VEApplierInterface
 	}
 )
 
@@ -90,7 +90,7 @@ func NewKeeper(
 	clobFlags flags.ClobFlags,
 	placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg],
 	daemonDeleveragingInfo *deleveragingtypes.DaemonDeleveragingInfo,
-	priceApplier PriceApplierInterface,
+	veApplier VEApplierInterface,
 ) *Keeper {
 	keeper := &Keeper{
 		cdc:                          cdc,
@@ -122,7 +122,7 @@ func NewKeeper(
 		Flags:                       clobFlags,
 		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
 		DaemonDeleveragingInfo:      daemonDeleveragingInfo,
-		PriceApplier:                priceApplier,
+		VEApplier:                   veApplier,
 	}
 
 	// Provide the keeper to the MemClob.

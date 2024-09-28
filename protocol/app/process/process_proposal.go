@@ -41,10 +41,10 @@ func ProcessProposalHandler(
 	clobKeeper ProcessClobKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
-	ratelimitKeeper ve.PreBlockExecRateLimitKeeper,
+	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
 	extCodec codec.ExtendedCommitCodec,
 	veCodec codec.VoteExtensionCodec,
-	pricesApplier ProcessProposalPriceApplier,
+	veApplier ProcessProposalVEApplier,
 	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
 ) sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, request *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
@@ -83,7 +83,7 @@ func ProcessProposalHandler(
 			if err := DecodeValidateAndCacheVE(
 				ctx,
 				request,
-				pricesApplier,
+				veApplier,
 				extCommitBz,
 				validateVoteExtensionFn,
 				pricesKeeper,
@@ -126,11 +126,11 @@ func ProcessProposalHandler(
 func DecodeValidateAndCacheVE(
 	ctx sdk.Context,
 	request *abci.RequestProcessProposal,
-	pricesApplier ProcessProposalPriceApplier,
+	veApplier ProcessProposalVEApplier,
 	extCommitBz []byte,
 	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
-	ratelimitKeeper ve.PreBlockExecRateLimitKeeper,
+	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
 
@@ -161,7 +161,7 @@ func DecodeValidateAndCacheVE(
 		},
 	}
 
-	if err := pricesApplier.ApplyPricesFromVE(ctx, reqFinalizeBlock, true); err != nil {
+	if err := veApplier.ApplyVE(ctx, reqFinalizeBlock, true); err != nil {
 		ctx.Logger().Error("failed to cache VE prices", "err", err)
 	}
 	request.Txs = request.Txs[1:]

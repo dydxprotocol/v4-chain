@@ -144,8 +144,8 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			mockClobKeeper.On("RecordMevMetricsIsEnabled").Return(true)
 			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-			mockPriceApplier := &mocks.ProcessProposalPriceApplier{}
-			mockPriceApplier.On("ApplyPricesFromVE", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			mockVEApplier := &mocks.ProcessProposalVEApplier{}
+			mockVEApplier.On("ApplyVE", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			handler := process.ProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
 				mockClobKeeper,
@@ -153,7 +153,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				pricesKeeper,
 				vecodec.NewDefaultExtendedCommitCodec(),
 				vecodec.NewDefaultVoteExtensionCodec(),
-				mockPriceApplier,
+				mockVEApplier,
 				prepareutils.NoOpValidateVoteExtensionsFn,
 			)
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}

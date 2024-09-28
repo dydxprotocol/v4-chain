@@ -12,7 +12,6 @@ import (
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
-	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -60,7 +59,6 @@ type MedianAggregator struct {
 
 func NewVeAggregator(
 	logger log.Logger,
-	daemonPriceCache *pricefeedtypes.MarketToExchangePrices,
 	pricekeeper pk.Keeper,
 	pricesAggregateFn veaggregator.PricesAggregateFn,
 	conversionRateAggregateFn veaggregator.ConversionRateAggregateFn,
@@ -159,11 +157,10 @@ func (ma *MedianAggregator) addVoteToAggregator(
 	var sDaiConversionRate *big.Int
 	if ve.SDaiConversionRate != "" {
 		newConversionRate, ok := new(big.Int).SetString(ve.SDaiConversionRate, 10)
-		// TODO: This should never happen, but we should handle more gracefully
-		if !ok {
-			panic("failed to convert sDai conversion rate to big.Int")
+
+		if ok {
+			sDaiConversionRate = newConversionRate
 		}
-		sDaiConversionRate = newConversionRate
 	}
 
 	ma.perValidatorSDaiConversionRate[address] = sDaiConversionRate
