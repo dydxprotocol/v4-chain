@@ -90,6 +90,8 @@ import (
 	"github.com/spf13/cast"
 	"google.golang.org/grpc"
 
+	sdaiserver "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
+
 	// App
 	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
@@ -1015,7 +1017,7 @@ func New(
 	)
 
 	if !appFlags.NonValidatingFullNode {
-		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, &app.PerpetualsKeeper, app.ClobKeeper, priceApplier)
+		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, &app.PerpetualsKeeper, app.ClobKeeper, &app.RatelimitKeeper, sDAIEventManager, priceApplier)
 	}
 
 	/****  Module Options ****/
@@ -1400,6 +1402,8 @@ func (app *App) InitVoteExtensions(
 	pricesKeeper pricesmodulekeeper.Keeper,
 	perpetualsKeeper *perpetualsmodulekeeper.Keeper,
 	clobKeeper *clobmodulekeeper.Keeper,
+	rateLimitKeeper *ratelimitmodulekeeper.Keeper,
+	sDAIEventManager *sdaiserver.SDAIEventManager,
 	priceApplier *priceapplier.PriceApplier,
 ) {
 	veHandler := ve.NewVoteExtensionHandler(
@@ -1408,6 +1412,8 @@ func (app *App) InitVoteExtensions(
 		pricesKeeper,
 		perpetualsKeeper,
 		clobKeeper,
+		rateLimitKeeper,
+		sDAIEventManager,
 		priceApplier,
 	)
 	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())

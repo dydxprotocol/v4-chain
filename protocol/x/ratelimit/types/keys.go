@@ -49,6 +49,9 @@ const (
 	// sDAIKeyPrefix is the prefix for the key-value store forthe sDAI price
 	SDaiKeyPrefix = "SDAIPrice:"
 
+	// SDAILastBlockUpdate is the prefix for the key-value store for the last block that the sDAI price was updated
+	SDAILastBlockUpdate = "SDAILastBlockUpdate:"
+
 	// AssetYieldIndexPrefix is the prefix for the key value store that tracks
 	// the cumulative yield index across all yield epochs.
 	AssetYieldIndexPrefix = "AssetYieldIndex:"
@@ -57,14 +60,13 @@ const (
 // State
 const (
 
-	// The number of ethereum blocks we store the sDAI rate for
-	ETH_BLOCKS_TO_STORE = 5
-
 	// base 10
 	BASE_10 = 10
 
 	// Maker RAY value which stores decimal points
 	SDAI_DECIMALS = 27
+
+	SDAI_UPDATE_BLOCK_DELAY = 5000
 )
 
 func GetPendingSendPacketKey(channelId string, sequenceNumber uint64) []byte {

@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/core/comet"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ratelimit/types"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
@@ -221,10 +222,12 @@ func ValidateSDaiConversionRateHeightInVE(
 	ve vetypes.DaemonVoteExtension,
 	ratelimitKeeper PreBlockExecRateLimitKeeper,
 ) error {
-	// TODO: Fetch last sDai converstion rate update height from ratelimitKeeper
-	// and update this placeholder logic.
-	if ctx.BlockHeight() > 10000000000 {
-		return fmt.Errorf("incorrect height to update sDai conversion rate")
+
+	lastBlockUpdated, found := ratelimitKeeper.GetSDAILastBlockUpdated(ctx)
+	if found {
+		if ctx.BlockHeight()-lastBlockUpdated.Int64() < ratelimittypes.SDAI_UPDATE_BLOCK_DELAY {
+			return fmt.Errorf("sDai conversion rate height is not within the allowed delay of %d blocks", ratelimittypes.SDAI_UPDATE_BLOCK_DELAY)
+		}
 	}
 	return nil
 }
