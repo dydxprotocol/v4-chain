@@ -15,4 +15,6 @@ message PricePair {
 message DaemonVoteExtension {
   // Prices defines a map of marketId -> PricePair.
   repeated PricePair prices = 1 [ (gogoproto.nullable) = false ];
+  // sDaiConversionRate defines the conversion rate for sDAI.
+  string sDaiConversionRate = 2;
 }
