@@ -204,6 +204,16 @@ func TestGetSubaccountCollateralizationInfo(t *testing.T) {
 				"0: Perpetual does not exist",
 			),
 		},
+		"Non USDC asset in subaccount returns error": {
+			subaccount: constants.Carl_Num0_1BTC_short_50000_non_USDC,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+			},
+			feeParams: constants.PerpetualFeeParams,
+			expectedError: errors.New(
+				"Asset 1 is not supported: Not Implemented: Multi-Collateral",
+			),
+		},
 	}
 
 	for name, tc := range tests {
@@ -215,10 +225,17 @@ func TestGetSubaccountCollateralizationInfo(t *testing.T) {
 			ctx := ks.Ctx.WithIsCheckTx(true)
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
 			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, tc.feeParams))
 
 			// Set up USDC asset in assets module.
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			err = keepertest.CreateNonUSDCAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			// Create all perpetuals.

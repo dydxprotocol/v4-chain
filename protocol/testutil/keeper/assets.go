@@ -37,6 +37,20 @@ func CreateUsdcAsset(ctx sdk.Context, assetsKeeper *keeper.Keeper) error {
 	return err
 }
 
+func CreateNonUSDCAsset(ctx sdk.Context, assetsKeeper *keeper.Keeper) error {
+	_, err := assetsKeeper.CreateAsset(
+		ctx,
+		constants.BtcUsd.Id,
+		constants.BtcUsd.Symbol,
+		constants.BtcUsd.Denom,
+		constants.BtcUsd.DenomExponent,
+		constants.BtcUsd.HasMarket,
+		constants.BtcUsd.MarketId,
+		constants.BtcUsd.AtomicResolution,
+	)
+	return err
+}
+
 func AssetsKeepers(
 	t testing.TB,
 	msgSenderEnabled bool,

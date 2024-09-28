@@ -173,6 +173,23 @@ var (
 			},
 		},
 	}
+	Carl_Num0_1BTC_short_50000_non_USDC = satypes.Subaccount{
+		Id: &Carl_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			{
+				AssetId:  1,
+				Quantums: dtypes.NewInt(50_000_000_000), // non usdc asset
+			},
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(-100_000_000), // -1 BTC
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
+	}
+
 	Carl_Num0_1BTC_Short_50499USD = satypes.Subaccount{
 		Id: &Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
