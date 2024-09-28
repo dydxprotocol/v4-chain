@@ -24,7 +24,7 @@ func (server *Server) WithsDAIEventManager(
 
 // AddsDAIEvents stores any conversion rate recognized by the daemon
 // in a go-routine safe slice.
-func (s *Server) AddsDAIEvents(
+func (s *Server) AddsDAIEvent(
 	ctx context.Context,
 	req *api.AddsDAIEventsRequest,
 ) (

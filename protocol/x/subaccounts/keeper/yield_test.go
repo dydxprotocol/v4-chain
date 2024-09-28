@@ -244,7 +244,7 @@ func TestDepositYieldToSubaccount(t *testing.T) {
 			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
 			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 			rateLimitKeeper.SetSDAIPrice(ctx, rate)
@@ -1267,7 +1267,7 @@ func TestAddYieldToSubaccount(t *testing.T) {
 			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			// Set up initial sdai price
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 
@@ -2227,7 +2227,7 @@ func TestClaimYieldForSubaccountFromIdAndSetNewState(t *testing.T) {
 			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			// Set up initial sdai price
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 

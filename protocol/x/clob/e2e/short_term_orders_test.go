@@ -637,7 +637,7 @@ func TestPlaceOrder(t *testing.T) {
 			}
 			tApp = testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
@@ -1081,7 +1081,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -1287,7 +1287,7 @@ func TestCancelShortTermOrder(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -1896,7 +1896,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,

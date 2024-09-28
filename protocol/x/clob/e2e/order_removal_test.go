@@ -303,7 +303,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			}).WithNonDeterminismChecksEnabled(!tc.disableNonDeterminismChecks).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -731,7 +731,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				return genesis
 			}).Build()
 
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
 			require.NoError(t, conversionErr)
@@ -989,7 +989,7 @@ func TestOrderRemoval(t *testing.T) {
 				return genesis
 			}).WithNonDeterminismChecksEnabled(!tc.disableNonDeterminismChecks).Build()
 
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
 			require.NoError(t, conversionErr)
@@ -1107,7 +1107,7 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 		return genesis
 	}).Build()
 
-	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
 	require.NoError(t, conversionErr)

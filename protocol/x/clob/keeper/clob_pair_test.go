@@ -44,7 +44,7 @@ func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 	mockIndexerEventManager := &mocks.IndexerEventManager{}
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
-	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	ks.RatelimitKeeper.SetSDAIPrice(ks.Ctx, rate)

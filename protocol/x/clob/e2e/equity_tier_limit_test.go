@@ -683,7 +683,7 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -898,7 +898,7 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -1234,7 +1234,7 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,

@@ -1003,7 +1003,7 @@ func TestConditionalOrder(t *testing.T) {
 				return genesis
 			}).Build()
 
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
 			require.NoError(t, conversionErr)
@@ -2227,7 +2227,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -2431,7 +2431,7 @@ func TestConditionalOrderCancellation(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -2770,7 +2770,7 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,

@@ -902,7 +902,7 @@ func TestClaimYieldForSubaccount(t *testing.T) {
 			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
 
 			// Set up initial sdai price
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 

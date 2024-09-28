@@ -578,9 +578,9 @@ func New(
 
 	// Setup server for sDAI oracle prices.
 	// The in-memory data structure is shared by the x/ratelimit module and sdaioracle daemon.
-	sDAIEventManager := sdaidaemontypes.NewsDAIEventManager(0)
+	sDAIEventManager := sdaidaemontypes.NewsDAIEventManager(true)
 	if !appFlags.NonValidatingFullNode && daemonFlags.SDAI.Enabled {
-		sDAIEventManager = sdaidaemontypes.NewsDAIEventManager(10)
+		sDAIEventManager = sdaidaemontypes.NewsDAIEventManager()
 	}
 
 	msgSender, indexerFlags := getIndexerFromOptions(appOpts, logger)

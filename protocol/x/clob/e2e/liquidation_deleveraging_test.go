@@ -258,7 +258,7 @@ func TestLiquidationConfig(t *testing.T) {
 				return genesis
 			}).Build()
 
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
 			require.NoError(t, conversionErr)
@@ -909,7 +909,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				return genesis
 			}).Build()
 
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
 			require.NoError(t, conversionErr)

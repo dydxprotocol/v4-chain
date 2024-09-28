@@ -3,7 +3,6 @@ package types
 import (
 	"log"
 	"sync"
-	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api"
 
@@ -12,104 +11,54 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-const (
-	INITIAL_EVENT_NUM = 3
-	ZERO_EVENT_NUM    = 0
-)
-
 var (
-	SDAIEventFetcher      EventFetcher = &EthEventFetcher{}
-	InitialNumEvents                   = INITIAL_EVENT_NUM
-	FirstNextIndexInArray              = INITIAL_EVENT_NUM % 10
+	SDAIEventFetcher EventFetcher = &EthEventFetcher{}
 
-	TestSDAIEventRequests = []api.AddsDAIEventsRequest{
-		{
-			ConversionRate: "1006681181716810314385961731",
-		},
-		{
-			ConversionRate: "1016681181716810314385961731",
-		},
-		{
-			ConversionRate: "1026681181716810314385961731",
-		},
-		{
-			ConversionRate: "1036681181716810314385961731",
-		},
-		{
-			ConversionRate: "1046681181716810314385961731",
-		},
-		{
-			ConversionRate: "1056681181716810314385961731",
-		},
-		{
-			ConversionRate: "1066681181716810314385961731",
-		},
-		{
-			ConversionRate: "1076681181716810314385961731",
-		},
-		{
-			ConversionRate: "1086681181716810314385961731",
-		},
-		{
-			ConversionRate: "1096681181716810314385961731",
-		},
+	TestSDAIEventRequest = api.AddsDAIEventsRequest{
+		ConversionRate: "1006681181716810314385961731",
 	}
 )
 
 type MockEventFetcher struct{}
 
-func (m *MockEventFetcher) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
-	events := [10]api.AddsDAIEventsRequest{}
-	for i := 0; i < numOfEvents; i++ {
-		events[i] = TestSDAIEventRequests[i]
+func (m *MockEventFetcher) GetInitialEvent(empty bool) (api.AddsDAIEventsRequest, error) {
+	if empty {
+		return api.AddsDAIEventsRequest{}, nil
 	}
-
-	return events, nil
+	return TestSDAIEventRequest, nil
 }
 
 type MockEventFetcherNoEvents struct{}
 
-func (m *MockEventFetcherNoEvents) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
-	events := [10]api.AddsDAIEventsRequest{}
-	InitialNumEvents = ZERO_EVENT_NUM
-	FirstNextIndexInArray = ZERO_EVENT_NUM
-	return events, nil
+func (m *MockEventFetcherNoEvents) GetInitialEvent(empty bool) (api.AddsDAIEventsRequest, error) {
+	return api.AddsDAIEventsRequest{}, nil
 }
 
 type EventFetcher interface {
-	GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error)
+	GetInitialEvent(empty bool) (api.AddsDAIEventsRequest, error)
 }
 
 type EthEventFetcher struct{}
 
-func (r *EthEventFetcher) GetInitialEvents(numOfEvents int) ([10]api.AddsDAIEventsRequest, error) {
+func (r *EthEventFetcher) GetInitialEvent(empty bool) (api.AddsDAIEventsRequest, error) {
 
-	if numOfEvents == 0 {
-		return [10]api.AddsDAIEventsRequest{}, nil
+	if empty {
+		return api.AddsDAIEventsRequest{}, nil
 	}
 
-	time.Sleep(1 * time.Second)
 	ethClient, err := ethclient.Dial(types.ETHRPC)
 	if err != nil {
-		return [10]api.AddsDAIEventsRequest{}, err
+		return api.AddsDAIEventsRequest{}, err
 	}
 
-	rates, err := store.QueryDaiConversionRateForPastBlocks(ethClient, int64(numOfEvents), 3)
+	rate, err := store.QueryDaiConversionRateWithRetries(ethClient, 3)
 	if err != nil {
-		return [10]api.AddsDAIEventsRequest{}, err
-	}
-
-	events := [10]api.AddsDAIEventsRequest{}
-
-	for i := 0; i < numOfEvents; i++ {
-		events[i] = api.AddsDAIEventsRequest{
-			ConversionRate: rates[i],
-		}
+		return api.AddsDAIEventsRequest{}, err
 	}
 
 	ethClient.Close()
 
-	return events, nil
+	return api.AddsDAIEventsRequest{ConversionRate: rate}, nil
 }
 
 // sDAIEventManager maintains an array of ethereum block height
@@ -118,28 +67,22 @@ type SDAIEventManager struct {
 	// Exclusive mutex taken when reading or writing
 	sync.Mutex
 
-	// Array to store the last 10 Ethereum block heights and conversion rates
-	lastTenEvents [10]api.AddsDAIEventsRequest
-
-	// Index of the array where we should store the next api.AddsDAIEventsRequest
-	nextIndexInArray int
+	price api.AddsDAIEventsRequest
 }
 
 // NewsDAIEventManager creates a new sDAIEventManager.
-func NewsDAIEventManager(initialNumEvents ...int) *SDAIEventManager {
-	numEvents := InitialNumEvents
-	if len(initialNumEvents) > 0 {
-		numEvents = initialNumEvents[0]
+func NewsDAIEventManager(isEmpty ...bool) *SDAIEventManager {
+	empty := false
+	if len(isEmpty) > 0 && isEmpty[0] {
+		empty = true
 	}
 
-	events, err := SDAIEventFetcher.GetInitialEvents(numEvents)
-
+	event, err := SDAIEventFetcher.GetInitialEvent(empty)
 	if err != nil {
 		log.Fatalf("Failed to get initial events: %v", err)
 	}
 	return &SDAIEventManager{
-		lastTenEvents:    events,
-		nextIndexInArray: InitialNumEvents,
+		price: event,
 	}
 }
 
@@ -147,47 +90,23 @@ func (s *SDAIEventManager) AddsDAIEvent(event *api.AddsDAIEventsRequest) error {
 	s.Lock()
 	defer s.Unlock()
 
-	// Update the array with the new event
-	s.lastTenEvents[s.nextIndexInArray] = *event
-
-	// Move to the next index, wrapping around if necessary
-	s.nextIndexInArray = (s.nextIndexInArray + 1) % 10
-
+	s.price = *event
 	return nil
 }
 
-// GetLastTensDAIEvents returns the last ten sDAI events.
-// TODO: This does not handle the circular buffer
-func (s *SDAIEventManager) GetLastTensDAIEventsUnordered() [10]api.AddsDAIEventsRequest {
+func (s *SDAIEventManager) GetDAIPrice() api.AddsDAIEventsRequest {
 	s.Lock()
 	defer s.Unlock()
 
-	return s.lastTenEvents
+	return s.price
 }
 
-// GetLatestsDAIEvent returns the most recent sDAI event.
-func (s *SDAIEventManager) GetLatestsDAIEvent() (api.AddsDAIEventsRequest, bool) {
-	s.Lock()
-	defer s.Unlock()
-
-	latestIndex := (s.nextIndexInArray - 1 + 10) % 10
-	if s.lastTenEvents[latestIndex].ConversionRate != "" {
-		return s.lastTenEvents[latestIndex], true
-	}
-
-	return api.AddsDAIEventsRequest{}, false
-}
-
-// GetNextIndexInArray returns the next index in the array.
-func (s *SDAIEventManager) GetNextIndexInArray() int {
-	s.Lock()
-	defer s.Unlock()
-
-	return s.nextIndexInArray
-}
-
-func SetupMockEventManager() *SDAIEventManager {
+func SetupMockEventManager(isEmpty ...bool) *SDAIEventManager {
 	SDAIEventFetcher = &MockEventFetcher{}
+
+	if len(isEmpty) > 0 && isEmpty[0] {
+		return NewsDAIEventManager(true)
+	}
 	return NewsDAIEventManager()
 }
 

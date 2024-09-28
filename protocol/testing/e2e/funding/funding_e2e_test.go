@@ -370,7 +370,7 @@ func TestFunding(t *testing.T) {
 				}).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,

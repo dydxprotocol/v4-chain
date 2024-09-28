@@ -124,8 +124,7 @@ func TestAppModuleBasic_GetTxCmd(t *testing.T) {
 
 	cmd := am.GetTxCmd()
 	require.Equal(t, "ratelimit", cmd.Use)
-	require.Equal(t, 1, len(cmd.Commands()))
-	require.Equal(t, "update-market-prices", cmd.Commands()[0].Name())
+	require.Equal(t, 0, len(cmd.Commands()))
 }
 
 func TestAppModuleBasic_GetQueryCmd(t *testing.T) {

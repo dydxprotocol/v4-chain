@@ -140,10 +140,8 @@ var (
 		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  {},
 
 		// ratelimit
-		"/dydxprotocol.ratelimit.MsgSetLimitParams":                   {},
-		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse":           {},
-		"/dydxprotocol.ratelimit.MsgUpdateSDAIConversionRate":         {},
-		"/dydxprotocol.ratelimit.MsgUpdateSDAIConversionRateResponse": {},
+		"/dydxprotocol.ratelimit.MsgSetLimitParams":         {},
+		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": {},
 
 		// sending
 		"/dydxprotocol.sending.MsgCreateTransfer":                  {},

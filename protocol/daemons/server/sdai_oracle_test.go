@@ -23,13 +23,13 @@ func TestAddsDAIEvents_EmptyRequest(t *testing.T) {
 		sDAIEventManager,
 	)
 
-	resp, err := s.AddsDAIEvents(grpc.Ctx, &api.AddsDAIEventsRequest{})
+	resp, err := s.AddsDAIEvent(grpc.Ctx, &api.AddsDAIEventsRequest{})
 	require.NoError(t, err)
 	require.Empty(t, resp)
-	require.Empty(t, sDAIEventManager.GetLastTensDAIEventsUnordered())
+	require.Empty(t, sDAIEventManager.GetDAIPrice())
 }
 
-func TestAddsDAIEvents_SingleEvent(t *testing.T) {
+func TestAddsDAIEvents(t *testing.T) {
 	mockGrpcServer := &mocks.GrpcServer{}
 	mockFileHandler := &mocks.FileHandler{}
 	sDAIEventManager := sdaitypes.SetupMockEventManagerWithNoEvents()
@@ -43,55 +43,26 @@ func TestAddsDAIEvents_SingleEvent(t *testing.T) {
 	)
 
 	expectedEvent := &api.AddsDAIEventsRequest{
-		ConversionRate: sdaitypes.TestSDAIEventRequests[0].ConversionRate,
+		ConversionRate: sdaitypes.TestSDAIEventRequest.ConversionRate,
 	}
 
-	resp, err := s.AddsDAIEvents(grpc.Ctx, &api.AddsDAIEventsRequest{
-		ConversionRate: sdaitypes.TestSDAIEventRequests[0].ConversionRate,
+	resp, err := s.AddsDAIEvent(grpc.Ctx, &api.AddsDAIEventsRequest{
+		ConversionRate: sdaitypes.TestSDAIEventRequest.ConversionRate,
 	})
 	require.NoError(t, err)
 	require.Empty(t, resp)
 
-	events := sDAIEventManager.GetLastTensDAIEventsUnordered()
-	require.Equal(t, expectedEvent.ConversionRate, events[0].ConversionRate)
-}
+	event := sDAIEventManager.GetDAIPrice()
+	require.Equal(t, expectedEvent.ConversionRate, event.ConversionRate)
 
-func TestAddsDAIEvents_MultipleEvents(t *testing.T) {
-	mockGrpcServer := &mocks.GrpcServer{}
-	mockFileHandler := &mocks.FileHandler{}
-	sDAIEventManager := sdaitypes.SetupMockEventManagerWithNoEvents()
-
-	s := createServerWithMocks(
-		t,
-		mockGrpcServer,
-		mockFileHandler,
-	).WithsDAIEventManager(
-		sDAIEventManager,
-	)
-
-	expectedEvents := []*api.AddsDAIEventsRequest{
-		{
-			ConversionRate: sdaitypes.TestSDAIEventRequests[0].ConversionRate,
-		},
-		{
-			ConversionRate: sdaitypes.TestSDAIEventRequests[1].ConversionRate,
-		},
-		{
-			ConversionRate: sdaitypes.TestSDAIEventRequests[2].ConversionRate,
-		},
-		{
-			ConversionRate: sdaitypes.TestSDAIEventRequests[1].ConversionRate,
-		},
+	secondEvent := &api.AddsDAIEventsRequest{
+		ConversionRate: "1",
 	}
 
-	for _, event := range expectedEvents {
-		resp, err := s.AddsDAIEvents(grpc.Ctx, event)
-		require.NoError(t, err)
-		require.Empty(t, resp)
-	}
+	resp, err = s.AddsDAIEvent(grpc.Ctx, secondEvent)
+	require.NoError(t, err)
+	require.Empty(t, resp)
 
-	actualEvents := sDAIEventManager.GetLastTensDAIEventsUnordered()
-	for i, event := range expectedEvents {
-		require.Equal(t, event.ConversionRate, actualEvents[i].ConversionRate)
-	}
+	event = sDAIEventManager.GetDAIPrice()
+	require.Equal(t, secondEvent.ConversionRate, event.ConversionRate)
 }

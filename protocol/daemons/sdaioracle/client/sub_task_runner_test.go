@@ -69,7 +69,7 @@ func TestRunsDAIDaemonTaskLoop(t *testing.T) {
 
 			mockQueryClient.On("ChainID", ctx, mock.Anything).Return(big.NewInt(int64(tc.chainId)), tc.chainIdError)
 			mockQueryClient.On("QueryDaiConversionRate", mock.Anything).Return(tc.daiRate, tc.queryDaiErr)
-			mockServiceClient.On("AddsDAIEvents", ctx, mock.Anything).Return(nil, tc.addsDAIEventsErr)
+			mockServiceClient.On("AddsDAIEvent", ctx, mock.Anything).Return(nil, tc.addsDAIEventsErr)
 
 			subTaskRunner := &client.SubTaskRunnerImpl{}
 			err := subTaskRunner.RunsDAIDaemonTaskLoop(

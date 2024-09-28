@@ -17,8 +17,8 @@ type SDAIServiceClient struct {
 	mock.Mock
 }
 
-// AddsDAIEvents provides a mock function with given fields: ctx, in, opts
-func (_m *SDAIServiceClient) AddsDAIEvents(ctx context.Context, in *api.AddsDAIEventsRequest, opts ...grpc.CallOption) (*api.AddsDAIEventsResponse, error) {
+// AddsDAIEvent provides a mock function with given fields: ctx, in, opts
+func (_m *SDAIServiceClient) AddsDAIEvent(ctx context.Context, in *api.AddsDAIEventsRequest, opts ...grpc.CallOption) (*api.AddsDAIEventsResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -29,7 +29,7 @@ func (_m *SDAIServiceClient) AddsDAIEvents(ctx context.Context, in *api.AddsDAIE
 	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddsDAIEvents")
+		panic("no return value specified for AddsDAIEvent")
 	}
 
 	var r0 *api.AddsDAIEventsResponse

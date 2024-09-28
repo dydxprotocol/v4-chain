@@ -363,7 +363,7 @@ func TestHydrationInPreBlocker(t *testing.T) {
 		return genesis
 	}).WithNonDeterminismChecksEnabled(false).Build()
 
-	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
@@ -447,7 +447,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 		return genesis
 	}).WithNonDeterminismChecksEnabled(false).Build()
 
-	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
@@ -628,7 +628,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
-	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 		Sender:         constants.Alice_Num0.Owner,
@@ -953,7 +953,7 @@ func TestStats(t *testing.T) {
 	}
 	tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 
-	// rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	// rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 	// rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	// require.NoError(t, conversionErr)
 	// tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
@@ -965,7 +965,7 @@ func TestStats(t *testing.T) {
 		BlockTime: startTime,
 	})
 
-	rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 		Sender:         constants.Alice_Num0.Owner,

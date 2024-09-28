@@ -556,7 +556,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 					return genesis
 				}).Build()
 
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
 			require.NoError(t, conversionErr)
@@ -770,7 +770,7 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 				return genesis
 			}).Build()
 
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
 			require.NoError(t, conversionErr)
@@ -1079,7 +1079,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				WithCrashingAppCheckTxNonDeterminismChecksEnabled(false).
 				Build()
 
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
 			require.NoError(t, conversionErr)

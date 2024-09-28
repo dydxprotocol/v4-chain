@@ -153,7 +153,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				}).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -308,7 +308,7 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 				}).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -425,7 +425,7 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 func TestCancellationAndMatchInTheSameBlock_Regression(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 
-	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
@@ -565,7 +565,7 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 
 			ctx := tApp.InitChain()
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -700,7 +700,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 				}).Build()
 
 			ctx := tApp.InitChain()
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -795,7 +795,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *te
 	}).Build()
 
 	// Initialize sDAI Epoch price
-	rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 	require.NoError(t, conversionErr)
 	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
@@ -915,7 +915,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,

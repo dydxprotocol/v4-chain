@@ -250,7 +250,7 @@ func TestBatchCancelSingleCancelFunctionality(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -646,7 +646,7 @@ func TestBatchCancelBatchFunctionality(t *testing.T) {
 			}).WithCrashingAppCheckTxNonDeterminismChecksEnabled(false).Build()
 			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
 				Sender:         constants.Alice_Num0.Owner,
@@ -913,7 +913,7 @@ func TestBatchCancelOffchainUpdates(t *testing.T) {
 			}).WithCrashingAppCheckTxNonDeterminismChecksEnabled(false).WithAppOptions(appOpts).Build()
 
 			// Set up initial sdai price
-			rateString := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 			require.NoError(t, conversionErr)
 

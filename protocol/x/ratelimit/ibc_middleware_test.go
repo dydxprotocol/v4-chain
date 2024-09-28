@@ -116,7 +116,7 @@ func setupChainForIBC(
 	simAccounts := simtypes.RandomAccounts(r, 10)
 
 	// sdai_amount / tdai_amount
-	sDaiToTDaiConversionRate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	sDaiToTDaiConversionRate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 	sDaiToTDaiConversionRateAsBigInt, found := new(big.Int).SetString(sDaiToTDaiConversionRate, 10)
 	if !found {
 		panic("Could not convert sdai to tdai conversion rate to big.Int")
@@ -280,7 +280,7 @@ func (suite *KeeperTestSuite) SetupTest(accountCoinDenom string, accountCoinAmou
 
 func (suite *KeeperTestSuite) setupSDaiDenomTrace() {
 	chains := []*ibctesting.TestChain{suite.chainA, suite.chainB, suite.chainC}
-	sDaiToTDaiConversionRate := sdaiservertypes.TestSDAIEventRequests[0].ConversionRate
+	sDaiToTDaiConversionRate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 	sDaiToTDaiConversionRateAsBigInt, found := new(big.Int).SetString(sDaiToTDaiConversionRate, 10)
 	if !found {
 		panic("Could not convert sdai to tdai conversion rate to big.Int")
