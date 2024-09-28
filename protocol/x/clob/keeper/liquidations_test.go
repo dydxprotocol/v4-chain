@@ -5874,7 +5874,7 @@ func TestPlacePerpetualLiquidation_InLiquidateSubaccountsAgainstOrderbookInterna
 		MaxIsolatedLiquidationAttemptsPerBlock uint32
 		expectedError                          error
 	}{
-		"clob does not exists, throws an error": {
+		"clob does not exists throws an error": {
 			perpetuals: []perptypes.Perpetual{},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
