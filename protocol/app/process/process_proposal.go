@@ -41,6 +41,7 @@ func ProcessProposalHandler(
 	clobKeeper ProcessClobKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
+	ratelimitKeeper ve.PreBlockExecRateLimitKeeper,
 	extCodec codec.ExtendedCommitCodec,
 	veCodec codec.VoteExtensionCodec,
 	pricesApplier ProcessProposalPriceApplier,
@@ -86,6 +87,7 @@ func ProcessProposalHandler(
 				extCommitBz,
 				validateVoteExtensionFn,
 				pricesKeeper,
+				ratelimitKeeper,
 				veCodec,
 				extCodec,
 			); err != nil {
@@ -128,6 +130,7 @@ func DecodeValidateAndCacheVE(
 	extCommitBz []byte,
 	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
+	ratelimitKeeper ve.PreBlockExecRateLimitKeeper,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
 
@@ -143,6 +146,7 @@ func DecodeValidateAndCacheVE(
 		extInfo,
 		voteCodec,
 		pricesKeeper,
+		ratelimitKeeper,
 		validateVoteExtensionFn,
 	); err != nil {
 		return err

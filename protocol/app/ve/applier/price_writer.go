@@ -1,6 +1,9 @@
 package price_writer
 
 import (
+	"fmt"
+	"math/big"
+
 	"cosmossdk.io/log"
 
 	aggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
@@ -17,11 +20,14 @@ type PriceApplier struct {
 	// used to aggregate votes into final prices
 	voteAggregator aggregator.VoteAggregator
 
-	// pk is the prices keeper that is used to write prices to state.
+	// prices keeper that is used to write prices to state.
 	pricesKeeper PriceApplierPricesKeeper
 
+	// ratelimit keeper that is used to write sDAI conversion rate to state.
+	ratelimitKeeper PriceApplierRatelimitKeeper
+
 	// finalPriceCache is the cache that stores the final prices
-	finalPriceCache pricecache.PriceCache
+	finalVeUpdatesCache pricecache.VeUpdatesCache
 
 	// logger
 	logger log.Logger
@@ -35,12 +41,14 @@ func NewPriceApplier(
 	logger log.Logger,
 	voteAggregator aggregator.VoteAggregator,
 	pricesKeeper PriceApplierPricesKeeper,
+	ratelimitKeeper PriceApplierRatelimitKeeper,
 	voteExtensionCodec codec.VoteExtensionCodec,
 	extendedCommitCodec codec.ExtendedCommitCodec,
 ) *PriceApplier {
 	return &PriceApplier{
 		voteAggregator:      voteAggregator,
 		pricesKeeper:        pricesKeeper,
+		ratelimitKeeper:     ratelimitKeeper,
 		logger:              logger,
 		voteExtensionCodec:  voteExtensionCodec,
 		extendedCommitCodec: extendedCommitCodec,
@@ -60,6 +68,10 @@ func (pa *PriceApplier) ApplyPricesFromVE(
 		return err
 	}
 
+	if err := pa.writeSDaiConversionRateToStore(ctx, request, writeToCache); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -68,7 +80,7 @@ func (pa *PriceApplier) writePricesToStore(
 	request *abci.RequestFinalizeBlock,
 	writeToCache bool,
 ) error {
-	if pa.finalPriceCache.HasValidPrices(ctx.BlockHeight(), request.DecidedLastCommit.Round) {
+	if pa.finalVeUpdatesCache.HasValidValues(ctx.BlockHeight(), request.DecidedLastCommit.Round) {
 		err := pa.writePricesToStoreFromCache(ctx)
 		return err
 	} else {
@@ -77,6 +89,28 @@ func (pa *PriceApplier) writePricesToStore(
 			return err
 		}
 		err = pa.WritePricesToStoreAndMaybeCache(ctx, prices, request.DecidedLastCommit.Round, writeToCache)
+
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+
+func (pa *PriceApplier) writeSDaiConversionRateToStore(
+	ctx sdk.Context,
+	request *abci.RequestFinalizeBlock,
+	writeToCache bool,
+) error {
+	if pa.finalVeUpdatesCache.HasValidValues(ctx.BlockHeight(), request.DecidedLastCommit.Round) {
+		err := pa.writeConversionRateToStoreFromCache(ctx)
+		return err
+	} else {
+		conversionRate, err := pa.getAggregateSDaiConversionRateFromVE(ctx, request)
+		if err != nil {
+			return err
+		}
+		err = pa.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, conversionRate, request.DecidedLastCommit.Round, writeToCache)
 
 		if err != nil {
 			return err
@@ -104,7 +138,7 @@ func (pa *PriceApplier) getPricesAndAggregateFromVE(
 
 		return nil, err
 	}
-	prices, err := pa.voteAggregator.AggregateDaemonVEIntoFinalPrices(ctx, votes)
+	prices, _, err := pa.voteAggregator.AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx, votes)
 	if err != nil {
 		pa.logger.Error(
 			"failed to aggregate prices",
@@ -118,12 +152,42 @@ func (pa *PriceApplier) getPricesAndAggregateFromVE(
 	return prices, nil
 }
 
-func (pa *PriceApplier) GetCachedPrices() pricecache.PriceUpdates {
-	return pa.finalPriceCache.GetPriceUpdates()
+// TODO: Refactor and merge this with the above function
+func (pa *PriceApplier) getAggregateSDaiConversionRateFromVE(
+	ctx sdk.Context,
+	request *abci.RequestFinalizeBlock,
+) (*big.Int, error) {
+	votes, err := aggregator.GetDaemonVotesFromBlock(
+		request.Txs,
+		pa.voteExtensionCodec,
+		pa.extendedCommitCodec,
+	)
+	if err != nil {
+		pa.logger.Error(
+			"failed to get extended commit info from proposal",
+			"height", request.Height,
+			"num_txs", len(request.Txs),
+			"err", err,
+		)
+
+		return nil, err
+	}
+	_, conversionRate, err := pa.voteAggregator.AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx, votes)
+	if err != nil {
+		pa.logger.Error(
+			"failed to aggregate conversion rate",
+			"height", request.Height,
+			"err", err,
+		)
+
+		return nil, err
+	}
+
+	return conversionRate, nil
 }
 
 func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
-	pricesFromCache := pa.finalPriceCache.GetPriceUpdates()
+	pricesFromCache := pa.finalVeUpdatesCache.GetPriceUpdates()
 	for _, price := range pricesFromCache {
 		if price.SpotPrice != nil && price.PnlPrice != nil {
 			marketPriceUpdate := &pricestypes.MarketPriceUpdate{
@@ -197,6 +261,14 @@ func (pa *PriceApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 	return nil
 }
 
+func (pa *PriceApplier) writeConversionRateToStoreFromCache(ctx sdk.Context) error {
+	sDaiConversionRate := pa.finalVeUpdatesCache.GetConversionRateUpdate()
+	if sDaiConversionRate != nil {
+		pa.ratelimitKeeper.SetSDAIPrice(ctx, sDaiConversionRate)
+	}
+	return nil
+}
+
 func (pa *PriceApplier) WritePricesToStoreAndMaybeCache(
 	ctx sdk.Context,
 	prices map[string]voteweighted.AggregatorPricePair,
@@ -243,7 +315,30 @@ func (pa *PriceApplier) WritePricesToStoreAndMaybeCache(
 	}
 
 	if writeToCache {
-		pa.finalPriceCache.SetPriceUpdates(ctx, finalPriceUpdates, round)
+		pa.finalVeUpdatesCache.SetPriceUpdates(ctx, finalPriceUpdates, round)
+	}
+
+	return nil
+}
+
+func (pa *PriceApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
+	ctx sdk.Context,
+	sDaiConversionRate *big.Int,
+	round int32,
+	writeToCache bool,
+) error {
+	if sDaiConversionRate == nil {
+		return nil
+	}
+
+	if sDaiConversionRate.Sign() < 0 {
+		return fmt.Errorf("sDAI conversion rate cannot be negative: %s", sDaiConversionRate.String())
+	}
+
+	pa.ratelimitKeeper.SetSDAIPrice(ctx, sDaiConversionRate)
+
+	if writeToCache {
+		pa.finalVeUpdatesCache.SetSDaiConversionRate(ctx, sDaiConversionRate, round)
 	}
 
 	return nil
@@ -383,4 +478,8 @@ func (pa *PriceApplier) shouldWritePriceToStore(
 	}
 
 	return isValidSpot, isValidPnl
+}
+
+func (pa *PriceApplier) GetCachedPrices() pricecache.PriceUpdates {
+	return pa.finalVeUpdatesCache.GetPriceUpdates()
 }

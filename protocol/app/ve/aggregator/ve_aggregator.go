@@ -35,7 +35,7 @@ type VoteAggregator interface {
 	// In order for a currency pair to be included in the final oracle price, the currency
 	// pair must be provided by a super-majority (2/3+) of validators. This is enforced by the
 	// price aggregator but can be replaced by the application.
-	AggregateDaemonVEIntoFinalPrices(ctx sdk.Context, votes []Vote) (map[string]veaggregator.AggregatorPricePair, error)
+	AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx sdk.Context, votes []Vote) (map[string]veaggregator.AggregatorPricePair, *big.Int, error)
 
 	// GetPriceForValidator gets the prices reported by a given validator. This method depends
 	// on the prices from the latest set of aggregated votes.
@@ -51,27 +51,34 @@ type MedianAggregator struct {
 	// prices is a map of validator address to a map of currency pair to price
 	perValidatorPrices map[string]map[string]veaggregator.AggregatorPricePair
 
-	aggregateFn veaggregator.AggregateFn
+	perValidatorSDaiConversionRate map[string]*big.Int
+
+	pricesAggregateFn veaggregator.PricesAggregateFn
+
+	conversionRateAggregateFn veaggregator.ConversionRateAggregateFn
 }
 
 func NewVeAggregator(
 	logger log.Logger,
 	daemonPriceCache *pricefeedtypes.MarketToExchangePrices,
 	pricekeeper pk.Keeper,
-	aggregateFn veaggregator.AggregateFn,
+	pricesAggregateFn veaggregator.PricesAggregateFn,
+	conversionRateAggregateFn veaggregator.ConversionRateAggregateFn,
 ) VoteAggregator {
 	return &MedianAggregator{
-		logger:             logger,
-		perValidatorPrices: make(map[string]map[string]veaggregator.AggregatorPricePair),
-		aggregateFn:        aggregateFn,
-		pricesKeeper:       pricekeeper,
+		logger:                         logger,
+		perValidatorPrices:             make(map[string]map[string]veaggregator.AggregatorPricePair),
+		perValidatorSDaiConversionRate: make(map[string]*big.Int),
+		pricesAggregateFn:              pricesAggregateFn,
+		conversionRateAggregateFn:      conversionRateAggregateFn,
+		pricesKeeper:                   pricekeeper,
 	}
 }
 
-func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPrices(
+func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPricesAndConversionRate(
 	ctx sdk.Context,
 	votes []Vote,
-) (map[string]veaggregator.AggregatorPricePair, error) {
+) (map[string]veaggregator.AggregatorPricePair, *big.Int, error) {
 	// wipe the previous prices
 	ma.perValidatorPrices = make(map[string]map[string]veaggregator.AggregatorPricePair)
 
@@ -81,16 +88,25 @@ func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPrices(
 		ma.addVoteToAggregator(ctx, consAddr, voteExtension)
 	}
 
-	prices, err := ma.aggregateFn(ctx, ma.perValidatorPrices)
+	prices, err := ma.pricesAggregateFn(ctx, ma.perValidatorPrices)
 	if err != nil {
 		ma.logger.Error(
 			"failed to aggregate prices",
 			"err", err,
 		)
-		return nil, err
+		return nil, nil, err
 	}
 
-	return prices, nil
+	sDaiConversionRate, err := ma.conversionRateAggregateFn(ctx, ma.perValidatorSDaiConversionRate)
+	if err != nil {
+		ma.logger.Error(
+			"failed to aggregate sDai conversion rate",
+			"err", err,
+		)
+		return nil, nil, err
+	}
+
+	return prices, sDaiConversionRate, nil
 }
 
 func (ma *MedianAggregator) addVoteToAggregator(
@@ -139,6 +155,18 @@ func (ma *MedianAggregator) addVoteToAggregator(
 		}
 	}
 	ma.perValidatorPrices[address] = prices
+
+	var sDaiConversionRate *big.Int
+	if ve.SDaiConversionRate != "" {
+		newConversionRate, ok := new(big.Int).SetString(ve.SDaiConversionRate, 10)
+		// TODO: This should never happen, but we should handle more gracefully
+		if !ok {
+			panic("failed to convert sDai conversion rate to big.Int")
+		}
+		sDaiConversionRate = newConversionRate
+	}
+
+	ma.perValidatorSDaiConversionRate[address] = sDaiConversionRate
 }
 
 func (ma *MedianAggregator) GetPriceForValidator(validator sdk.ConsAddress) map[string]veaggregator.AggregatorPricePair {

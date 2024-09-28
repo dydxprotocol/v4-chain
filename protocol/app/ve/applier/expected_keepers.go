@@ -1,6 +1,8 @@
 package price_writer
 
 import (
+	"math/big"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -35,4 +37,8 @@ type PriceApplierPricesKeeper interface {
 		market types.MarketParam,
 		exists bool,
 	)
+}
+
+type PriceApplierRatelimitKeeper interface {
+	SetSDAIPrice(ctx sdk.Context, price *big.Int)
 }

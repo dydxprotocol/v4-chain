@@ -22,7 +22,8 @@ type AggregatorPricePair struct {
 	PnlPrice  *big.Int
 }
 
-type AggregateFn func(ctx sdk.Context, vePrices map[string]map[string]AggregatorPricePair) (map[string]AggregatorPricePair, error)
+type PricesAggregateFn func(ctx sdk.Context, vePrices map[string]map[string]AggregatorPricePair) (map[string]AggregatorPricePair, error)
+type ConversionRateAggregateFn func(ctx sdk.Context, veConversionRates map[string]*big.Int) (*big.Int, error)
 
 // DefaultPowerThreshold defines the total voting power % that must be
 // submitted in order for a currency pair to be considered for the
@@ -43,13 +44,18 @@ type (
 		VoteWeight int64
 		Price      *big.Int
 	}
+
+	ConverstionRateInfo struct {
+		ConversionRates []PricePerValidator
+		TotalWeight     math.Int
+	}
 )
 
-func Median(
+func MedianPrices(
 	logger log.Logger,
 	validatorStore CCValidatorStore,
 	threshold math.LegacyDec,
-) AggregateFn {
+) PricesAggregateFn {
 	return func(
 		ctx sdk.Context,
 		vePricesPerValidator map[string]map[string]AggregatorPricePair,
@@ -141,6 +147,77 @@ func Median(
 			}
 		}
 		return finalPrices, nil
+	}
+}
+
+func MedianConversionRate(
+	logger log.Logger,
+	validatorStore CCValidatorStore,
+	threshold math.LegacyDec,
+) ConversionRateAggregateFn {
+	return func(
+		ctx sdk.Context,
+		veConversionRatesPerValidator map[string]*big.Int,
+	) (*big.Int, error) {
+		conversionRateInfo := ConverstionRateInfo{
+			ConversionRates: make([]PricePerValidator, 0),
+			TotalWeight:     math.ZeroInt(),
+		}
+
+		for validatorAddr, validatorConversionRate := range veConversionRatesPerValidator {
+			validatorPower, err := getValidatorPowerByAddress(ctx, validatorStore, validatorAddr)
+			if err != nil {
+				logger.Info(
+					"failed to get validator power, skipping",
+					"validator_address", validatorAddr,
+					"err", err,
+				)
+				continue
+			}
+
+			if validatorConversionRate == nil {
+				logger.Info(
+					"validator conversion rate is nil, skipping",
+					"validator_address", validatorAddr,
+				)
+				continue
+			}
+
+			conversionRateInfo.ConversionRates = append(conversionRateInfo.ConversionRates, PricePerValidator{
+				VoteWeight: validatorPower,
+				Price:      validatorConversionRate,
+			})
+
+			conversionRateInfo.TotalWeight = conversionRateInfo.TotalWeight.Add(math.NewInt(validatorPower))
+		}
+
+		finalConversionRate := new(big.Int)
+
+		totalPower := GetTotalPower(ctx, validatorStore)
+
+		// The total voting power % that submitted a price update for the given currency pair must be
+		// greater than the threshold to be included in the final oracle price.
+		percentSubmitted := math.LegacyNewDecFromInt(conversionRateInfo.TotalWeight).Quo(math.LegacyNewDecFromInt(totalPower))
+
+		if percentSubmitted.GTE(threshold) {
+			finalConversionRate = ComputeMedian(conversionRateInfo.ConversionRates, conversionRateInfo.TotalWeight)
+
+			logger.Info(
+				"computed stake-weighted median conversion rate",
+				"percent_submitted", percentSubmitted.String(),
+				"threshold", threshold.String(),
+				"num_validators", len(conversionRateInfo.ConversionRates),
+				"final_conversion_rate", finalConversionRate.String(),
+			)
+		} else {
+			logger.Info(
+				"not enough voting power to compute stake-weighted median conversion rate",
+				"threshold", threshold.String(),
+				"percent_submitted", percentSubmitted.String(),
+				"num_validators", len(conversionRateInfo.ConversionRates),
+			)
+		}
+		return finalConversionRate, nil
 	}
 }
 

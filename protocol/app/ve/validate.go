@@ -249,11 +249,8 @@ func ValidateSDaiConversionRateValueInVE(
 		return fmt.Errorf("failed to get sDai conversion rate from keeper")
 	}
 
-	halfPrevRate := new(big.Int).Div(prevRate, big.NewInt(2))
-
-	// TODO: Adjust this check to be more granular
-	if sDaiConversionRate.Cmp(halfPrevRate) <= 0 {
-		return fmt.Errorf("new sDai conversion rate (%s) is not greater than half of the previous rate (%s)", ve.SDaiConversionRate, halfPrevRate.String())
+	if sDaiConversionRate.Cmp(prevRate) <= 0 {
+		return fmt.Errorf("new sDai conversion rate (%s) is not greater than the previous rate (%s)", ve.SDaiConversionRate, prevRate.String())
 	}
 
 	return nil

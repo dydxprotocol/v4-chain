@@ -18,9 +18,13 @@ func (k Keeper) SetNextBlocksPricesFromExtendedCommitInfo(ctx sdk.Context, exten
 		}
 
 		if len(votes) > 0 {
-			prices, err := k.PriceApplier.VoteAggregator().AggregateDaemonVEIntoFinalPrices(ctx, votes)
+			prices, conversionRate, err := k.PriceApplier.VoteAggregator().AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx, votes)
 			if err == nil {
 				err = k.PriceApplier.WritePricesToStoreAndMaybeCache(ctx, prices, 0, false)
+				if err != nil {
+					return err
+				}
+				err = k.PriceApplier.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, conversionRate, 0, false)
 				if err != nil {
 					return err
 				}

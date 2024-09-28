@@ -9,12 +9,14 @@ import (
 
 // this cache is used to set prices from vote extensions in processProposal
 // which are fetched in ExtendVoteHandler and PreBlocker. This is to avoid
-// redundant computation on calculating stake weighthed median prices in VEs
-type PriceCache struct {
-	priceUpdates PriceUpdates
-	height       int64
-	round        int32
-	mu           sync.RWMutex
+// redundant computation on calculating stake weighthed median prices in VEs.
+// sDaiConversionRate is set to nil when no sDaiUpdateShould be performed.
+type VeUpdatesCache struct {
+	priceUpdates       PriceUpdates
+	sDaiConversionRate *big.Int
+	height             int64
+	round              int32
+	mu                 sync.RWMutex
 }
 
 type PriceUpdate struct {
@@ -25,7 +27,7 @@ type PriceUpdate struct {
 
 type PriceUpdates []PriceUpdate
 
-func (pc *PriceCache) SetPriceUpdates(
+func (pc *VeUpdatesCache) SetPriceUpdates(
 	ctx sdk.Context,
 	updates PriceUpdates,
 	round int32,
@@ -37,26 +39,45 @@ func (pc *PriceCache) SetPriceUpdates(
 	pc.round = round
 }
 
-func (pc *PriceCache) GetPriceUpdates() PriceUpdates {
-	pc.mu.RLock()
-	defer pc.mu.RUnlock()
-	return pc.priceUpdates
+func (veCache *VeUpdatesCache) GetPriceUpdates() PriceUpdates {
+	veCache.mu.RLock()
+	defer veCache.mu.RUnlock()
+	return veCache.priceUpdates
 }
 
-func (pc *PriceCache) GetHeight() int64 {
-	pc.mu.RLock()
-	defer pc.mu.RUnlock()
-	return pc.height
+// TODO: Look into potential issues with setting the round here
+func (pc *VeUpdatesCache) SetSDaiConversionRate(
+	ctx sdk.Context,
+	sDaiConversionRate *big.Int,
+	round int32,
+) {
+	pc.mu.Lock()
+	defer pc.mu.Unlock()
+	pc.sDaiConversionRate = sDaiConversionRate
+	pc.height = ctx.BlockHeight()
+	pc.round = round
 }
 
-func (pc *PriceCache) GetRound() int32 {
-	pc.mu.RLock()
-	defer pc.mu.RUnlock()
-	return pc.round
+func (veCache *VeUpdatesCache) GetConversionRateUpdate() *big.Int {
+	veCache.mu.RLock()
+	defer veCache.mu.RUnlock()
+	return veCache.sDaiConversionRate
 }
 
-func (pc *PriceCache) HasValidPrices(currBlock int64, round int32) bool {
-	pc.mu.RLock()
-	defer pc.mu.RUnlock()
-	return (pc.height == currBlock && pc.round == round)
+func (veCache *VeUpdatesCache) GetHeight() int64 {
+	veCache.mu.RLock()
+	defer veCache.mu.RUnlock()
+	return veCache.height
+}
+
+func (veCache *VeUpdatesCache) GetRound() int32 {
+	veCache.mu.RLock()
+	defer veCache.mu.RUnlock()
+	return veCache.round
+}
+
+func (veCache *VeUpdatesCache) HasValidValues(currBlock int64, round int32) bool {
+	veCache.mu.RLock()
+	defer veCache.mu.RUnlock()
+	return (veCache.height == currBlock && veCache.round == round)
 }
