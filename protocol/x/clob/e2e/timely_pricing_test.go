@@ -134,6 +134,7 @@ func TestTimelyPricing(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdate,
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)

@@ -84,6 +84,7 @@ func TestPriceWriter(t *testing.T) {
 		_, extCommitInfoBz, err := vetesting.CreateSingleValidatorExtendedCommitInfo(
 			constants.AliceConsAddress,
 			prices,
+			"",
 		)
 		require.NoError(t, err)
 
@@ -136,6 +137,7 @@ func TestPriceWriter(t *testing.T) {
 		_, extCommitInfoBz, err := vetesting.CreateSingleValidatorExtendedCommitInfo(
 			constants.AliceConsAddress,
 			prices,
+			"",
 		)
 		require.NoError(t, err)
 
@@ -203,6 +205,7 @@ func TestPriceWriter(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceConsAddress,
 				prices1,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -211,6 +214,7 @@ func TestPriceWriter(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.BobConsAddress,
 				prices2,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -317,6 +321,7 @@ func TestPriceWriter(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceConsAddress,
 				prices1,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -325,6 +330,7 @@ func TestPriceWriter(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.BobConsAddress,
 				prices2,
+				"",
 			),
 		)
 		require.NoError(t, err)

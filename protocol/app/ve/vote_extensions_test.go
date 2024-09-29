@@ -486,6 +486,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				extBz, err := vetestutils.CreateVoteExtensionBytes(
 					constants.ValidVEPrice,
+					"",
 				)
 				require.NoError(t, err)
 				return &cometabci.RequestVerifyVoteExtension{
@@ -513,6 +514,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				extBz, err := vetestutils.CreateVoteExtensionBytes(
 					constants.ValidVEPrice,
+					"",
 				)
 				require.NoError(t, err)
 				return &cometabci.RequestVerifyVoteExtension{
@@ -542,6 +544,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 
 				extBz, err := vetestutils.CreateVoteExtensionBytes(
 					prices,
+					"",
 				)
 				require.NoError(t, err)
 
@@ -579,6 +582,7 @@ func TestVerifyVoteHandler(t *testing.T) {
 
 				extBz, err := vetestutils.CreateVoteExtensionBytes(
 					prices,
+					"",
 				)
 				require.NoError(t, err)
 

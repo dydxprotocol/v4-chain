@@ -9,6 +9,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/msgsender"
@@ -18,9 +19,9 @@ import (
 
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
@@ -252,26 +253,18 @@ func TestBatchCancelSingleCancelFunctionality(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			// Place first block orders and cancels
 			for _, order := range tc.firstBlockOrders {
@@ -648,26 +641,18 @@ func TestBatchCancelBatchFunctionality(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			// Advance block to 10
 			ctx = tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})

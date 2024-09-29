@@ -19,7 +19,6 @@ import (
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -305,26 +304,18 @@ func TestConditionalOrderRemoval(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			// Create all orders.
 			deliverTxsOverride := make([][]byte, 0)
@@ -351,10 +342,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
 			// Add the price update.
-			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdate,
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -769,6 +761,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -789,6 +782,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdate,
+				"",
 				2,
 			)
 			require.NoError(t, err)
@@ -801,6 +795,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
+				"",
 				3,
 			)
 			require.NoError(t, err)
@@ -1179,6 +1174,7 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 		&tApp.App.ConsumerKeeper,
 		ctx,
 		map[uint32]ve.VEPricePair{},
+		"",
 		tApp.GetHeader().Height,
 	)
 	require.NoError(t, err)

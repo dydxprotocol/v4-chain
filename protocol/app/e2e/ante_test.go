@@ -7,11 +7,13 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
@@ -25,8 +27,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 	"github.com/syndtr/goleveldb/leveldb/testutil"
-
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 )
 
 var (
@@ -88,27 +88,18 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:         constants.Alice_Num0.Owner,
-		ConversionRate: rate,
-	}
-
-	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
 		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-			Gas:                  1200000,
-			FeeAmt:               constants.TestFeeCoins_5Cents,
-		},
-		&msgUpdateSDAIConversionRate,
-	) {
-		resp := tApp.CheckTx(checkTx)
-		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-	}
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
 
-	// Advance to next block to store conversion rate update
-	tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
+	})
 
 	accounts := make([]sdktypes.AccountI, len(simAccounts))
 	for i, simAccount := range simAccounts {

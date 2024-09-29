@@ -163,6 +163,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		extCommitBz := s.getVoteExtensionsForValidatorsWithSamePrices(
 			[]string{"alice", "bob"},
 			prices,
+			"",
 		)
 
 		s.mockCCVStoreGetAllValidatorsCall([]string{"alice", "bob"})
@@ -219,6 +220,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		extCommitBz := s.getVoteExtensionsForValidatorsWithSamePrices(
 			[]string{"alice", "bob"},
 			prices,
+			"",
 		)
 
 		s.mockCCVStoreGetAllValidatorsCall([]string{"alice", "bob"})
@@ -297,6 +299,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 		extCommitBz := s.getVoteExtensionsForValidatorsWithSamePrices(
 			[]string{"alice", "bob"},
 			prices,
+			"",
 		)
 
 		s.mockCCVStoreGetAllValidatorsCall([]string{"alice", "bob"})
@@ -406,16 +409,18 @@ func (s *PreBlockTestSuite) createTestMarkets() {
 
 func (s *PreBlockTestSuite) getVoteExtension(
 	prices []vetypes.PricePair,
+	sdaiConversionRate string,
 	val sdk.ConsAddress,
 ) cometabci.ExtendedVoteInfo {
 	ve, err := vetesting.CreateSignedExtendedVoteInfo(
 		vetesting.SignedVEInfo{
-			Val:     val,
-			Power:   500,
-			Prices:  prices,
-			Height:  3,
-			Round:   0,
-			ChainId: "localdydxprotocol",
+			Val:                val,
+			Power:              500,
+			Prices:             prices,
+			SDaiConversionRate: sdaiConversionRate,
+			Height:             3,
+			Round:              0,
+			ChainId:            "localdydxprotocol",
 		},
 	)
 	s.Require().NoError(err)
@@ -473,10 +478,11 @@ func (s *PreBlockTestSuite) mockCCVStoreGetAllValidatorsCall(validators []string
 func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
 	validators []string,
 	prices []vetypes.PricePair,
+	sdaiConversionRate string,
 ) []byte {
 	var votes []cometabci.ExtendedVoteInfo
 	for _, valName := range validators {
-		ve := s.getVoteExtension(prices, s.getValidatorConsAddr(valName))
+		ve := s.getVoteExtension(prices, sdaiConversionRate, s.getValidatorConsAddr(valName))
 		votes = append(votes, ve)
 	}
 	return s.getExtendedCommitInfoBz(votes)

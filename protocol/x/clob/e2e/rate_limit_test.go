@@ -7,7 +7,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -155,26 +154,18 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			firstCheckTx := testapp.MustMakeCheckTx(
 				ctx,
@@ -310,26 +301,18 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			firstCheckTxArray := []abcitypes.RequestCheckTx{}
 			for _, msg := range tc.firstBatch {
@@ -567,26 +550,18 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 			ctx := tApp.InitChain()
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 				ctx, tApp.App, LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20) {
@@ -611,6 +586,7 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 					&tApp.App.ConsumerKeeper,
 					ctx,
 					map[uint32]ve.VEPricePair{},
+					"",
 					tApp.GetHeader().Height,
 				)
 				require.NoError(t, err)
@@ -635,6 +611,7 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 					&tApp.App.ConsumerKeeper,
 					ctx,
 					map[uint32]ve.VEPricePair{},
+					"",
 					tApp.GetHeader().Height,
 				)
 				require.NoError(t, err)
@@ -701,27 +678,18 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 
 			ctx := tApp.InitChain()
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
-
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			// First placement should pass since the order is unknown.
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -735,6 +703,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 					&tApp.App.ConsumerKeeper,
 					ctx,
 					map[uint32]ve.VEPricePair{},
+					"",
 					tApp.GetHeader().Height,
 				)
 				require.NoError(t, err)
@@ -757,6 +726,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 					&tApp.App.ConsumerKeeper,
 					ctx,
 					map[uint32]ve.VEPricePair{},
+					"",
 					tApp.GetHeader().Height,
 				)
 				require.NoError(t, err)
@@ -832,6 +802,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *te
 		&tApp.App.ConsumerKeeper,
 		ctx,
 		map[uint32]ve.VEPricePair{},
+		"",
 		tApp.GetHeader().Height,
 	)
 	require.NoError(t, err)
@@ -917,26 +888,18 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			// First tx fails due to GTB being too low.
 			replayLessGTBTx := testapp.MustMakeCheckTx(

@@ -6,11 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -29,7 +31,6 @@ import (
 	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
@@ -177,26 +178,18 @@ func TestMsgCreateTransfer(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         tc.senderSubaccountId.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -438,26 +431,18 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         tc.subaccountId.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
 
@@ -656,26 +641,18 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         tc.subaccountId.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
 
@@ -957,28 +934,18 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         tc.subaccount.Id.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			// Move forward in time by the specified time delta.
 			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-				BlockTime: startTime.Add((time.Duration(tc.secondsBetweenBlocks) * time.Second)),
+				DeliverTxsOverride: [][]byte{extCommitBz},
+				BlockTime:          startTime.Add((time.Duration(tc.secondsBetweenBlocks) * time.Second)),
 			})
 
 			// Verify withdrawals are blocked by trying to create a transfer message that withdraws funds.

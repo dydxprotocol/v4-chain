@@ -70,6 +70,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceEthosConsAddress,
 				constants.ValidSingleVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -98,6 +99,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceEthosConsAddress,
 				constants.ValidVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -133,6 +135,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceEthosConsAddress,
 				constants.ValidSingleVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -141,6 +144,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.BobEthosConsAddress,
 				constants.ValidSingleVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -169,6 +173,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceEthosConsAddress,
 				constants.ValidVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -177,6 +182,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.BobEthosConsAddress,
 				constants.ValidVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -213,6 +219,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceEthosConsAddress,
 				constants.ValidSingleVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -221,6 +228,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.BobEthosConsAddress,
 				constants.ValidSingleVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -229,6 +237,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.CarlEthosConsAddress,
 				constants.ValidSingleVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -263,6 +272,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceEthosConsAddress,
 				constants.ValidVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -271,6 +281,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.BobEthosConsAddress,
 				constants.ValidVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -279,6 +290,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.CarlEthosConsAddress,
 				constants.ValidVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -314,6 +326,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceEthosConsAddress,
 				constants.ValidSingleVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -341,6 +354,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceEthosConsAddress,
 				constants.ValidVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -364,6 +378,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceEthosConsAddress,
 				constants.ValidVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -372,6 +387,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.BobEthosConsAddress,
 				constants.ValidSingleVEPrice,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -380,6 +396,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.CarlEthosConsAddress,
 				constants.ValidSingleVEPrice,
+				"",
 			),
 		)
 
@@ -409,6 +426,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceEthosConsAddress,
 				constants.ValidVEPricesWithOneInvalid,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -417,6 +435,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.BobEthosConsAddress,
 				constants.ValidVEPricesWithOneInvalid,
+				"",
 			),
 		)
 		require.NoError(t, err)
@@ -425,6 +444,7 @@ func TestVEAggregator(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.CarlEthosConsAddress,
 				constants.ValidVEPricesWithOneInvalid,
+				"",
 			),
 		)
 		require.NoError(t, err)

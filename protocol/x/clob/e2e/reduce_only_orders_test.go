@@ -610,6 +610,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdateForFirstBlock,
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -662,6 +663,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdateForFirstBlock,
+				"",
 				tApp.GetHeader().Height+1,
 			)
 			require.NoError(t, err)

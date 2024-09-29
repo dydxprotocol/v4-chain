@@ -213,6 +213,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
 						constants.ValidVEPrice,
+						"",
 					),
 				)
 
@@ -262,6 +263,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
 						constants.ValidVEPrice,
+						"",
 					),
 				)
 
@@ -332,6 +334,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
 						constants.ValidVEPrice,
+						"",
 					),
 				)
 
@@ -383,6 +386,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
 						constants.ValidVEPrice,
+						"",
 					),
 				)
 
@@ -436,6 +440,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
 						constants.ValidVEPrice,
+						"",
 					),
 				)
 				require.NoError(t, err)
@@ -444,6 +449,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 					vetesting.NewDefaultSignedVeInfo(
 						constants.BobConsAddress,
 						constants.ValidVEPrice,
+						"",
 					),
 				)
 
@@ -497,6 +503,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
 						constants.ValidVEPrice,
+						"",
 					),
 				)
 				require.NoError(t, err)
@@ -505,6 +512,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 					vetesting.NewDefaultSignedVeInfo(
 						constants.BobConsAddress,
 						constants.ValidVEPrice,
+						"",
 					),
 				)
 

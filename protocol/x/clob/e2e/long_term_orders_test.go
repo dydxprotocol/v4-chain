@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
@@ -18,9 +19,9 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
 	testtx "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/tx"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -35,26 +36,18 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:         constants.Alice_Num0.Owner,
-		ConversionRate: rate,
-	}
-
-	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
 		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-			Gas:                  1200000,
-			FeeAmt:               constants.TestFeeCoins_5Cents,
-		},
-		&msgUpdateSDAIConversionRate,
-	) {
-		resp := tApp.CheckTx(checkTx)
-		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-	}
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
 
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
+	})
 
 	// Place the order.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -105,26 +98,18 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:         constants.Alice_Num0.Owner,
-		ConversionRate: rate,
-	}
-
-	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
 		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-			Gas:                  1200000,
-			FeeAmt:               constants.TestFeeCoins_5Cents,
-		},
-		&msgUpdateSDAIConversionRate,
-	) {
-		resp := tApp.CheckTx(checkTx)
-		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-	}
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
 
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
+	})
 
 	// Place order
 	result := tApp.CheckTx(testapp.MustMakeCheckTx(
@@ -336,26 +321,18 @@ func TestCancelStatefulOrder(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-			msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-				Sender:         constants.Alice_Num0.Owner,
-				ConversionRate: rate,
-			}
-
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
 				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-					Gas:                  1200000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				&msgUpdateSDAIConversionRate,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-			}
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			for _, blockWithMessages := range tc.blockWithMessages {
 				for _, testSdkMsg := range blockWithMessages.Msgs {
@@ -439,26 +416,18 @@ func TestLongTermOrderExpires(t *testing.T) {
 
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:         constants.Alice_Num0.Owner,
-		ConversionRate: rate,
-	}
-
-	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
 		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-			Gas:                  1200000,
-			FeeAmt:               constants.TestFeeCoins_5Cents,
-		},
-		&msgUpdateSDAIConversionRate,
-	) {
-		resp := tApp.CheckTx(checkTx)
-		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-	}
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
 
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
+	})
 
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(

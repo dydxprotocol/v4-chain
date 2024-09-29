@@ -71,6 +71,7 @@ func (b BlockAdvancementWithErrors) AdvanceToBlock(
 			&tApp.App.ConsumerKeeper,
 			ctx,
 			map[uint32]ve.VEPricePair{},
+			"",
 			int64(blockHeight),
 		)
 		require.NoError(t, err)

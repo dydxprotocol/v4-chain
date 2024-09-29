@@ -40,7 +40,6 @@ import (
 
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 )
 
 var (
@@ -630,26 +629,18 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
-	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:         constants.Alice_Num0.Owner,
-		ConversionRate: rate,
-	}
-
-	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
 		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-			Gas:                  1200000,
-			FeeAmt:               constants.TestFeeCoins_5Cents,
-		},
-		&msgUpdateSDAIConversionRate,
-	) {
-		resp := tApp.CheckTx(checkTx)
-		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-	}
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
 
-	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
+	})
 
 	expectedFills := make([]clobtypes.Order, 300)
 	expectedCancels := make([]clobtypes.Order, len(simAccounts)-len(expectedFills))
@@ -866,6 +857,7 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -922,6 +914,7 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -966,27 +959,18 @@ func TestStats(t *testing.T) {
 	})
 
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
-
-	msgUpdateSDAIConversionRate := ratelimittypes.MsgUpdateSDAIConversionRate{
-		Sender:         constants.Alice_Num0.Owner,
-		ConversionRate: rate,
-	}
-
-	for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
 		ctx,
-		tApp.App,
-		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: msgUpdateSDAIConversionRate.Sender,
-			Gas:                  1200000,
-			FeeAmt:               constants.TestFeeCoins_5Cents,
-		},
-		&msgUpdateSDAIConversionRate,
-	) {
-		resp := tApp.CheckTx(checkTx)
-		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
-	}
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
 
-	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
+	})
 
 	aliceAddress := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0).Id.MustGetAccAddress().String()
 	bobAddress := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0).Id.MustGetAccAddress().String()
