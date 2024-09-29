@@ -191,7 +191,7 @@ func MedianConversionRate(
 			conversionRateInfo.TotalWeight = conversionRateInfo.TotalWeight.Add(math.NewInt(validatorPower))
 		}
 
-		finalConversionRate := new(big.Int)
+		var finalConversionRate *big.Int
 
 		totalPower := GetTotalPower(ctx, validatorStore)
 
