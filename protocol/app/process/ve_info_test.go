@@ -42,6 +42,7 @@ func TestVEInjectionHandling(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, daemonPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+
 			ctx = vetesting.GetVeEnabledCtx(ctx, 3)
 			ctx = ctx.WithCometInfo(
 				vetesting.NewBlockInfo(
@@ -62,6 +63,8 @@ func TestVEInjectionHandling(t *testing.T) {
 			mockClobKeeper.On("RecordMevMetricsIsEnabled").Return(true)
 			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
+			mockRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+
 			mockVEApplier := &mocks.ProcessProposalVEApplier{}
 			mockVEApplier.On("ApplyVE", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
@@ -70,6 +73,7 @@ func TestVEInjectionHandling(t *testing.T) {
 				mockClobKeeper,
 				&mocks.ProcessPerpetualKeeper{},
 				pricesKeeper,
+				mockRatelimitKeeper,
 				vecodec.NewDefaultExtendedCommitCodec(),
 				vecodec.NewDefaultVoteExtensionCodec(),
 				mockVEApplier,

@@ -146,11 +146,15 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 
 			mockVEApplier := &mocks.ProcessProposalVEApplier{}
 			mockVEApplier.On("ApplyVE", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+			mockRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+
 			handler := process.ProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
 				mockClobKeeper,
 				&mocks.ProcessPerpetualKeeper{},
 				pricesKeeper,
+				mockRatelimitKeeper,
 				vecodec.NewDefaultExtendedCommitCodec(),
 				vecodec.NewDefaultVoteExtensionCodec(),
 				mockVEApplier,

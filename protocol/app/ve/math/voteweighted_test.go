@@ -849,7 +849,7 @@ func TestVoteWeightedMedian(t *testing.T) {
 
 			mCCVStore := ethosutils.NewGetAllCCValidatorMockReturnWithPowers(ctx, tc.validators, tc.powers)
 
-			medianFn := vemath.Median(
+			medianFn := vemath.MedianPrices(
 				log.NewNopLogger(),
 				mCCVStore,
 				vemath.DefaultPowerThreshold,

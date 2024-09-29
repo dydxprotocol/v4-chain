@@ -23,11 +23,15 @@ import (
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	sdaitypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 )
 
 type TestExtendedVoteTC struct {
 	expectedResponse  *vetypes.DaemonVoteExtension
 	pricesKeeper      func() *mocks.PreBlockExecPricesKeeper
+	ratelimitKeeper   func() *mocks.VoteExtensionRateLimitKeeper
+	sdaiEventManager  *sdaitypes.SDAIEventManager
 	perpKeeper        func() *mocks.ExtendVotePerpetualsKeeper
 	clobKeeper        func() *mocks.ExtendVoteClobKeeper
 	extendVoteRequest func() *cometabci.RequestExtendVote
@@ -41,6 +45,11 @@ func TestExtendVoteHandler(t *testing.T) {
 				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				return mPricesKeeper
 			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				return mRatelimitKeeper
+			},
+			sdaiEventManager: sdaitypes.SetupMockEventManager(),
 			perpKeeper: func() *mocks.ExtendVotePerpetualsKeeper {
 				mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
 				return mPerpKeeper
@@ -69,6 +78,13 @@ func TestExtendVoteHandler(t *testing.T) {
 
 				return mPricesKeeper
 			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				mRatelimitKeeper.On("GetSDAILastBlockUpdated", mock.Anything).
+					Return(new(big.Int), false)
+				return mRatelimitKeeper
+			},
+			sdaiEventManager: sdaitypes.SetupMockEventManager(),
 			perpKeeper: func() *mocks.ExtendVotePerpetualsKeeper {
 				mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
 				mPerpKeeper.On("GetPerpetual", mock.Anything, mock.Anything).Return(
@@ -104,6 +120,13 @@ func TestExtendVoteHandler(t *testing.T) {
 
 				return mpricesKeeper
 			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				mRatelimitKeeper.On("GetSDAILastBlockUpdated", mock.Anything).
+					Return(new(big.Int), false)
+				return mRatelimitKeeper
+			},
+			sdaiEventManager: sdaitypes.SetupMockEventManager(),
 			perpKeeper: func() *mocks.ExtendVotePerpetualsKeeper {
 				mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
 				mPerpKeeper.On("GetPerpetual", mock.Anything, uint32(0)).Return(
@@ -186,6 +209,13 @@ func TestExtendVoteHandler(t *testing.T) {
 				)
 				return mPricesKeeper
 			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				mRatelimitKeeper.On("GetSDAILastBlockUpdated", mock.Anything).
+					Return(new(big.Int), false)
+				return mRatelimitKeeper
+			},
+			sdaiEventManager: sdaitypes.SetupMockEventManager(),
 			perpKeeper: func() *mocks.ExtendVotePerpetualsKeeper {
 				mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
 				mPerpKeeper.On("GetPerpetual", mock.Anything, mock.Anything).Return(
@@ -297,6 +327,11 @@ func TestExtendVoteHandler(t *testing.T) {
 				mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Panic("panic")
 				return mPricesKeeper
 			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				return mRatelimitKeeper
+			},
+			sdaiEventManager: sdaitypes.SetupMockEventManager(),
 			expectedResponse: &vetypes.DaemonVoteExtension{
 				Prices: nil,
 			},
@@ -326,6 +361,8 @@ func TestExtendVoteHandler(t *testing.T) {
 				tc.pricesKeeper(),
 				tc.perpKeeper(),
 				tc.clobKeeper(),
+				tc.ratelimitKeeper(),
+				tc.sdaiEventManager,
 				mVEApplier,
 			)
 
@@ -357,6 +394,7 @@ func TestExtendVoteHandler(t *testing.T) {
 type TestVerifyExtendedVoteTC struct {
 	getReq           func() *cometabci.RequestVerifyVoteExtension
 	pricesKeeper     func() *mocks.PreBlockExecPricesKeeper
+	ratelimitKeeper  func() *mocks.VoteExtensionRateLimitKeeper
 	expectedResponse *cometabci.ResponseVerifyVoteExtension
 	expectedError    bool
 }
@@ -369,6 +407,10 @@ func TestVerifyVoteHandler(t *testing.T) {
 				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				return mPricesKeeper
 			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				return mRatelimitKeeper
+			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				return nil
 			},
@@ -379,6 +421,10 @@ func TestVerifyVoteHandler(t *testing.T) {
 			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
 				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				return mPricesKeeper
+			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				return mRatelimitKeeper
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				return &cometabci.RequestVerifyVoteExtension{}
@@ -394,6 +440,10 @@ func TestVerifyVoteHandler(t *testing.T) {
 				mPricesKeeper.On("GetMaxPairs", mock.Anything).Return(1)
 				return mPricesKeeper
 			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				return mRatelimitKeeper
+			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				return &cometabci.RequestVerifyVoteExtension{}
 			},
@@ -406,6 +456,10 @@ func TestVerifyVoteHandler(t *testing.T) {
 			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
 				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				return mPricesKeeper
+			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				return mRatelimitKeeper
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				return &cometabci.RequestVerifyVoteExtension{
@@ -424,6 +478,10 @@ func TestVerifyVoteHandler(t *testing.T) {
 					constants.TestMarketParams,
 				)
 				return mPricesKeeper
+			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				return mRatelimitKeeper
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				extBz, err := vetestutils.CreateVoteExtensionBytes(
@@ -448,6 +506,10 @@ func TestVerifyVoteHandler(t *testing.T) {
 				)
 				return mPricesKeeper
 			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				return mRatelimitKeeper
+			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				extBz, err := vetestutils.CreateVoteExtensionBytes(
 					constants.ValidVEPrice,
@@ -470,6 +532,10 @@ func TestVerifyVoteHandler(t *testing.T) {
 					[]pricestypes.MarketParam{}, // two prices
 				)
 				return mPricesKeeper
+			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				return mRatelimitKeeper
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				prices := []vetypes.PricePair{}
@@ -497,6 +563,10 @@ func TestVerifyVoteHandler(t *testing.T) {
 					[]pricestypes.MarketParam{constants.TestMarketParams[0]},
 				)
 				return mPricesKeeper
+			},
+			ratelimitKeeper: func() *mocks.VoteExtensionRateLimitKeeper {
+				mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+				return mRatelimitKeeper
 			},
 			getReq: func() *cometabci.RequestVerifyVoteExtension {
 				prices := []vetypes.PricePair{
@@ -531,6 +601,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 			mClobKeeper := &mocks.ExtendVoteClobKeeper{}
 			mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
 			mPricesKeeper := tc.pricesKeeper()
+			mRatelimitKeeper := tc.ratelimitKeeper()
+			sdaiEventManager := sdaitypes.SetupMockEventManager()
 
 			handler := ve.NewVoteExtensionHandler(
 				log.NewTestLogger(t),
@@ -538,6 +610,8 @@ func TestVerifyVoteHandler(t *testing.T) {
 				mPricesKeeper,
 				mPerpKeeper,
 				mClobKeeper,
+				mRatelimitKeeper,
+				sdaiEventManager,
 				mVEApplier,
 			).VerifyVoteExtensionHandler()
 
@@ -563,15 +637,6 @@ func TestGetVEBytes(t *testing.T) {
 		expected       *vetypes.DaemonVoteExtension
 		expectedError  bool
 	}{
-		"throws error if no prices": {
-			markets:        []uint32{},
-			daemonPrices:   []*pricestypes.MarketSpotPriceUpdate{},
-			smoothedPrices: nil,
-			midPrices:      nil,
-			fundingRates:   nil,
-			expected:       nil,
-			expectedError:  true,
-		},
 		"valid single price, no funding-smooth-or-mid": {
 			markets: []uint32{constants.MarketId0},
 			daemonPrices: []*pricestypes.MarketSpotPriceUpdate{
@@ -974,12 +1039,19 @@ func TestGetVEBytes(t *testing.T) {
 				}
 			}
 
+			sDaIEventManager := sdaitypes.SetupMockEventManager()
+			mRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+			mRatelimitKeeper.On("GetSDAILastBlockUpdated", mock.Anything).
+				Return(new(big.Int), false)
+
 			h := ve.NewVoteExtensionHandler(
 				log.NewTestLogger(t),
 				votecodec,
 				mPricesKeeper,
 				mPerpKeeper,
 				mClobKeeper,
+				mRatelimitKeeper,
+				sDaIEventManager,
 				mVEApplier,
 			)
 

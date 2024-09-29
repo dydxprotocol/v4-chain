@@ -56,7 +56,7 @@ func (k Keeper) GetValidMarketSpotPriceUpdates(
 	}
 
 	// 2. Get all daemon prices from in-memory cache.
-	allDaemonPrices := k.daemonPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
+	allDaemonPrices := k.DaemonPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
 
 	// 3. Collect all "valid" price updates.
 	updates := make([]*types.MarketSpotPriceUpdate, 0, len(allMarketParamPrices))

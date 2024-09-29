@@ -31,13 +31,17 @@ func TestPriceWriter(t *testing.T) {
 	ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 	pricesKeeper := &mocks.VEApplierPricesKeeper{}
-
 	pricesKeeper.On("PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything).Return(true, true)
+
+	ratelimitKeeper := &mocks.VEApplierRatelimitKeeper{}
+	ratelimitKeeper.On("SetSDAIPrice", mock.Anything, mock.Anything).Return()
+	ratelimitKeeper.On("SetSDAILastBlockUpdated", mock.Anything, mock.Anything).Return()
 
 	veApplier := veapplier.NewVEApplier(
 		log.NewNopLogger(),
 		voteAggregator,
 		pricesKeeper,
+		ratelimitKeeper,
 		voteCodec,
 		extCodec,
 	)
@@ -84,14 +88,14 @@ func TestPriceWriter(t *testing.T) {
 		require.NoError(t, err)
 
 		// fail vote aggregation
-		voteAggregator.On("AggregateDaemonVEIntoFinalPrices", ctx, []aggregator.Vote{
+		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
 					Prices: prices,
 				},
 				ConsAddress: constants.AliceConsAddress,
 			},
-		}).Return(nil, fmt.Errorf("fail")).Once()
+		}).Return(nil, nil, fmt.Errorf("fail")).Once()
 
 		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
@@ -135,7 +139,7 @@ func TestPriceWriter(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		voteAggregator.On("AggregateDaemonVEIntoFinalPrices", ctx, []aggregator.Vote{
+		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
 					Prices: prices,
@@ -147,7 +151,7 @@ func TestPriceWriter(t *testing.T) {
 				SpotPrice: big.NewInt(-100),
 				PnlPrice:  big.NewInt(-100),
 			},
-		}, nil)
+		}, nil, nil)
 
 		pricesKeeper.On("GetAllMarketParams", ctx).Return(
 			[]pricestypes.MarketParam{
@@ -216,7 +220,7 @@ func TestPriceWriter(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		voteAggregator.On("AggregateDaemonVEIntoFinalPrices", ctx, []aggregator.Vote{
+		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
 					Prices: prices1,
@@ -234,7 +238,7 @@ func TestPriceWriter(t *testing.T) {
 				SpotPrice: big.NewInt(150),
 				PnlPrice:  big.NewInt(150),
 			},
-		}, nil)
+		}, nil, nil)
 
 		pricesKeeper.On("GetAllMarketParams", ctx).Return(
 			[]pricestypes.MarketParam{
@@ -335,7 +339,7 @@ func TestPriceWriter(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		voteAggregator.On("AggregateDaemonVEIntoFinalPrices", ctx, []aggregator.Vote{
+		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
 					Prices: prices1,
@@ -347,7 +351,7 @@ func TestPriceWriter(t *testing.T) {
 				SpotPrice: big.NewInt(100),
 				PnlPrice:  big.NewInt(100),
 			},
-		}, nil).Once()
+		}, nil, nil).Once()
 
 		pricesKeeper.On("GetAllMarketParams", ctx).Return(
 			[]pricestypes.MarketParam{
@@ -400,7 +404,7 @@ func TestPriceWriter(t *testing.T) {
 			},
 		}, cachedPrices)
 
-		voteAggregator.On("AggregateDaemonVEIntoFinalPrices", ctx, []aggregator.Vote{
+		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
 					Prices: prices2,
@@ -412,7 +416,7 @@ func TestPriceWriter(t *testing.T) {
 				SpotPrice: big.NewInt(200),
 				PnlPrice:  big.NewInt(200),
 			},
-		}, nil).Once()
+		}, nil, nil).Once()
 
 		// Second call with the same round and height
 		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{

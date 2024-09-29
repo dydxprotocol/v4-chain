@@ -17,7 +17,7 @@ func (k Keeper) UpdateSmoothedSpotPrices(
 	linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
 ) error {
 	allMarketParams := k.GetAllMarketParams(ctx)
-	daemonPrices := k.daemonPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
+	daemonPrices := k.DaemonPriceCache.GetValidMedianPrices(allMarketParams, k.timeProvider.Now())
 
 	// Track errors for each market.
 	updateErrors := make([]error, 0)

@@ -21,6 +21,7 @@ import (
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
@@ -34,6 +35,7 @@ type PreBlockTestSuite struct {
 	ctx               sdk.Context
 	marketParamPrices []pricestypes.MarketParamPrice
 	pricesKeeper      *pk.Keeper
+	ratelimitKeeper   *ratelimitkeeper.Keeper
 	daemonPriceCache  *pricefeedtypes.MarketToExchangePrices
 	veApplier         *veapplier.VEApplier
 	handler           *preblocker.PreBlockHandler
@@ -50,12 +52,16 @@ func TestPreBlockTestSuite(t *testing.T) {
 func (s *PreBlockTestSuite) SetupTest() {
 	s.validator = constants.AliceEthosConsAddress
 
-	ctx, pricesKeeper, _, daemonPriceCahce, _, mockTimeProvider := keepertest.PricesKeepers(s.T())
+	//ctx, pricesKeeper, _, daemonPriceCahce, _, mockTimeProvider := keepertest.PricesKeepers(s.T())
 
+	ctx, _, pricesKeeper, _, _, _, _, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(s.T(), true)
+
+	mockTimeProvider := &mocks.TimeProvider{}
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	s.ctx = ctx
 	s.pricesKeeper = pricesKeeper
-	s.daemonPriceCache = daemonPriceCahce
+	s.ratelimitKeeper = ratelimitKeeper
+	s.daemonPriceCache = pricesKeeper.DaemonPriceCache
 
 	s.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
 	s.extCodec = vecodec.NewDefaultExtendedCommitCodec()
@@ -88,6 +94,7 @@ func (s *PreBlockTestSuite) SetupTest() {
 		s.logger,
 		aggregator,
 		*s.pricesKeeper,
+		*s.ratelimitKeeper,
 		s.voteCodec,
 		s.extCodec,
 	)

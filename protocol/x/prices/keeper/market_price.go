@@ -329,7 +329,7 @@ func (k Keeper) GetMarketIdToValidDaemonPrice(
 	ctx sdk.Context,
 ) map[uint32]types.MarketSpotPrice {
 	allMarketParams := k.GetAllMarketParams(ctx)
-	marketIdToValidDaemonPrice := k.daemonPriceCache.GetValidMedianPrices(
+	marketIdToValidDaemonPrice := k.DaemonPriceCache.GetValidMedianPrices(
 		allMarketParams,
 		k.timeProvider.Now(),
 	)

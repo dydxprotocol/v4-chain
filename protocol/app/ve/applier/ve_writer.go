@@ -213,16 +213,19 @@ func (vea *VEApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 }
 
 func (vea *VEApplier) writeConversionRateToStoreFromCache(ctx sdk.Context) error {
+
 	sDaiConversionRate, blockHeight := vea.finalVeUpdatesCache.GetConversionRateUpdateAndBlockHeight()
-	if sDaiConversionRate != nil {
-		vea.ratelimitKeeper.SetSDAIPrice(ctx, sDaiConversionRate)
+
+	if sDaiConversionRate == nil || blockHeight == nil {
+		return nil
 	}
 
-	// this should never fail
-	err := vea.ratelimitKeeper.ValidateAndSetSDAILastBlockUpdated(ctx, blockHeight)
-	if err != nil {
-		return err
+	if blockHeight.Int64() != ctx.BlockHeight() {
+		return nil
 	}
+
+	vea.ratelimitKeeper.SetSDAIPrice(ctx, sDaiConversionRate)
+	vea.ratelimitKeeper.SetSDAILastBlockUpdated(ctx, blockHeight)
 	return nil
 }
 
@@ -293,12 +296,7 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 	}
 
 	vea.ratelimitKeeper.SetSDAIPrice(ctx, sDaiConversionRate)
-
-	// this should never fail
-	err := vea.ratelimitKeeper.ValidateAndSetSDAILastBlockUpdated(ctx, big.NewInt(ctx.BlockHeight()))
-	if err != nil {
-		return err
-	}
+	vea.ratelimitKeeper.SetSDAILastBlockUpdated(ctx, big.NewInt(ctx.BlockHeight()))
 
 	if writeToCache {
 		vea.finalVeUpdatesCache.SetSDaiConversionRateAndBlockHeight(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()), round)

@@ -41,5 +41,5 @@ type VEApplierPricesKeeper interface {
 
 type VEApplierRatelimitKeeper interface {
 	SetSDAIPrice(ctx sdk.Context, price *big.Int)
-	ValidateAndSetSDAILastBlockUpdated(ctx sdk.Context, newBlockHeight *big.Int) error
+	SetSDAILastBlockUpdated(ctx sdk.Context, blockHeight *big.Int)
 }

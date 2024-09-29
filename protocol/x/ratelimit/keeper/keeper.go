@@ -440,27 +440,6 @@ func (k Keeper) GetSDAILastBlockUpdated(ctx sdk.Context) (blockHeight *big.Int, 
 	return blockHeight, true
 }
 
-func (k Keeper) ValidateAndSetSDAILastBlockUpdated(ctx sdk.Context, newBlockHeight *big.Int) error {
-
-	if newBlockHeight.Sign() < 0 {
-		return fmt.Errorf("new block height (%v) must be non-negative", newBlockHeight)
-	}
-
-	lastBlockHeight, found := k.GetSDAILastBlockUpdated(ctx)
-
-	if found {
-		// Compare the new block height with the last stored one
-		if newBlockHeight.Cmp(lastBlockHeight) <= 0 {
-			return fmt.Errorf("new block height (%v) must be larger than the last stored block height (%v)", newBlockHeight, lastBlockHeight)
-		}
-	}
-
-	// If we reach here, either there was no previous block height,
-	// or the new block height is valid (larger than the previous one)
-	k.SetSDAILastBlockUpdated(ctx, newBlockHeight)
-	return nil
-}
-
 // SetAssetYieldIndex sets the current asset yield index
 func (k Keeper) SetAssetYieldIndex(ctx sdk.Context, yieldIndex *big.Rat) {
 	store := ctx.KVStore(k.storeKey)

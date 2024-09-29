@@ -3,6 +3,7 @@ package prepare_test
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/prepare"
@@ -542,9 +543,9 @@ func TestPrepareProposalHandler(t *testing.T) {
 			)
 
 			// necessary mock keepers
-			mPricesKeeper, mClobKeeper, mPerpKeeper := buildMockKeepers()
+			mPricesKeeper, mClobKeeper, mPerpKeeper, mRatelimitKeeper := buildMockKeepers()
 
-			setMockResponses(mPricesKeeper, mClobKeeper, mPerpKeeper, tc)
+			setMockResponses(mPricesKeeper, mRatelimitKeeper, mClobKeeper, mPerpKeeper, tc)
 
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
@@ -557,6 +558,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 				mClobKeeper,
 				mPerpKeeper,
 				mPricesKeeper,
+				mRatelimitKeeper,
 				votecodec,
 				extcodec,
 			)
@@ -630,6 +632,12 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			mockPricesKeeper.On("GetAllMarketParams", mock.Anything).
 				Return(constants.ValidEmptyMarketParams)
 
+			mockRatelimitKeeper := mocks.VoteExtensionRateLimitKeeper{}
+			mockRatelimitKeeper.On("GetSDAILastBlockUpdated", mock.Anything).
+				Return(new(big.Int), false)
+			mockRatelimitKeeper.On("GetSDAIPrice", mock.Anything).
+				Return(new(big.Int), false)
+
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
 			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 				Return(constants.ValidMsgAddPremiumVotes)
@@ -653,6 +661,7 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				&mockClobKeeper,
 				&mockPerpKeeper,
 				&mockPricesKeeper,
+				&mockRatelimitKeeper,
 				vecodec.NewDefaultVoteExtensionCodec(),
 				vecodec.NewDefaultExtendedCommitCodec(),
 			)
@@ -870,16 +879,18 @@ func createRequestPrepareProposal(
 	}
 }
 
-func buildMockKeepers() (*mocks.PreBlockExecPricesKeeper, *mocks.PrepareClobKeeper, *mocks.PreparePerpetualsKeeper) {
+func buildMockKeepers() (*mocks.PreBlockExecPricesKeeper, *mocks.PrepareClobKeeper, *mocks.PreparePerpetualsKeeper, *mocks.VoteExtensionRateLimitKeeper) {
 	mPricesk := &mocks.PreBlockExecPricesKeeper{}
 	mClobk := &mocks.PrepareClobKeeper{}
 	mPerpk2 := &mocks.PreparePerpetualsKeeper{}
+	mRatelimitk := &mocks.VoteExtensionRateLimitKeeper{}
 
-	return mPricesk, mClobk, mPerpk2
+	return mPricesk, mClobk, mPerpk2, mRatelimitk
 }
 
 func setMockResponses(
 	mPricesKeeper *mocks.PreBlockExecPricesKeeper,
+	mRatelimitKeeper *mocks.VoteExtensionRateLimitKeeper,
 	mClobKeeper *mocks.PrepareClobKeeper,
 	mPerpKeeper *mocks.PreparePerpetualsKeeper,
 	tc PerpareProposalHandlerTC,
@@ -892,6 +903,10 @@ func setMockResponses(
 		Return(tc.fundingResp)
 	mClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 		Return(tc.clobResp)
+	mRatelimitKeeper.On("GetSDAILastBlockUpdated", mock.Anything).
+		Return(new(big.Int), false)
+	mRatelimitKeeper.On("GetSDAIPrice", mock.Anything).
+		Return(new(big.Int), false)
 }
 
 func getResponseTransactionsWithoutExtInfo(txs [][]byte) [][]byte {
