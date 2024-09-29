@@ -207,7 +207,7 @@ func TestStart_RegistersAllServices(t *testing.T) {
 		return sd.ServiceName == "dydxprotocol.daemons.deleveraging.DeleveragingService"
 	}), mock.Anything)
 	mockGrpcServer.AssertCalled(t, "RegisterService", mock.MatchedBy(func(sd *golanggrpc.ServiceDesc) bool {
-		return sd.ServiceName == "dydxprotocol.daemons.sdai.sDAIService"
+		return sd.ServiceName == "dydxprotocol.daemons.sdaioracle.sDAIService"
 	}), mock.Anything)
 
 	verifyGrpcServerMocks(

@@ -23,7 +23,7 @@ import * as _26 from "./clob/query";
 import * as _27 from "./clob/tx";
 import * as _28 from "./daemons/deleveraging/deleveraging";
 import * as _29 from "./daemons/pricefeed/price_feed";
-import * as _30 from "./daemons/sdai/sdai";
+import * as _30 from "./daemons/sdaioracle/sdai";
 import * as _31 from "./delaymsg/block_message_ids";
 import * as _32 from "./delaymsg/delayed_message";
 import * as _33 from "./delaymsg/genesis";
@@ -153,7 +153,7 @@ export namespace dydxprotocol {
     };
     export const pricefeed = { ..._29
     };
-    export const sdai = { ..._30
+    export const sdaioracle = { ..._30
     };
   }
   export const delaymsg = { ..._31,

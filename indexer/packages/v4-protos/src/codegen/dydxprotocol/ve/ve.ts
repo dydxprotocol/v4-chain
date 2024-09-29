@@ -27,12 +27,18 @@ export interface PricePairSDKType {
 export interface DaemonVoteExtension {
   /** Prices defines a map of marketId -> PricePair. */
   prices: PricePair[];
+  /** sDaiConversionRate defines the conversion rate for sDAI. */
+
+  sDaiConversionRate: string;
 }
 /** Daemon VoteExtension defines the vote extension structure for daemon prices. */
 
 export interface DaemonVoteExtensionSDKType {
   /** Prices defines a map of marketId -> PricePair. */
   prices: PricePairSDKType[];
+  /** sDaiConversionRate defines the conversion rate for sDAI. */
+
+  sDaiConversionRate: string;
 }
 
 function createBasePricePair(): PricePair {
@@ -102,7 +108,8 @@ export const PricePair = {
 
 function createBaseDaemonVoteExtension(): DaemonVoteExtension {
   return {
-    prices: []
+    prices: [],
+    sDaiConversionRate: ""
   };
 }
 
@@ -110,6 +117,10 @@ export const DaemonVoteExtension = {
   encode(message: DaemonVoteExtension, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.prices) {
       PricePair.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.sDaiConversionRate !== "") {
+      writer.uint32(18).string(message.sDaiConversionRate);
     }
 
     return writer;
@@ -128,6 +139,10 @@ export const DaemonVoteExtension = {
           message.prices.push(PricePair.decode(reader, reader.uint32()));
           break;
 
+        case 2:
+          message.sDaiConversionRate = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -140,6 +155,7 @@ export const DaemonVoteExtension = {
   fromPartial(object: DeepPartial<DaemonVoteExtension>): DaemonVoteExtension {
     const message = createBaseDaemonVoteExtension();
     message.prices = object.prices?.map(e => PricePair.fromPartial(e)) || [];
+    message.sDaiConversionRate = object.sDaiConversionRate ?? "";
     return message;
   }
 

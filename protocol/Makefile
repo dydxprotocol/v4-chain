@@ -252,6 +252,9 @@ test-slow:
 test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -tags='test_ledger_mock $(build_tags)' ./...
 
+test-unit-verbose:
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -tags='test_ledger_mock $(build_tags)' -v -count=1 -failfast -cover ./...
+
 specific-unit: 
 	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' -p 1 -timeout 20m -run "TestGetNetCollateralAndMarginRequirements" ./x/subaccounts/keeper/...
 
