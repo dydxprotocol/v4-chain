@@ -10,7 +10,7 @@ type TrackRequest struct {
 	FeePayer            sdk.AccAddress `json:"fee_payer"`
 	FeeGranter          sdk.AccAddress `json:"fee_granter,omitempty"`
 	Fee                 sdk.Coins      `json:"fee"`
-	Msg                 LocalAny       `json:"msg"`
+	Msg                 sdk.Msg        `json:"msg"`
 	MsgIndex            uint64         `json:"msg_index"`
 	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
 }
@@ -21,7 +21,7 @@ type ConfirmExecutionRequest struct {
 	FeePayer            sdk.AccAddress `json:"fee_payer"`
 	FeeGranter          sdk.AccAddress `json:"fee_granter,omitempty"`
 	Fee                 sdk.Coins      `json:"fee"`
-	Msg                 LocalAny       `json:"msg"`
+	Msg                 sdk.Msg        `json:"msg"`
 	MsgIndex            uint64         `json:"msg_index"`
 	AuthenticatorParams []byte         `json:"authenticator_params,omitempty"`
 }
@@ -32,7 +32,7 @@ type AuthenticationRequest struct {
 	FeePayer        sdk.AccAddress `json:"fee_payer"`
 	FeeGranter      sdk.AccAddress `json:"fee_granter,omitempty"`
 	Fee             sdk.Coins      `json:"fee"`
-	Msg             LocalAny       `json:"msg"`
+	Msg             sdk.Msg        `json:"msg"`
 
 	// Since array size is int, and size depends on the system architecture,
 	// we use uint64 to cover all available architectures.
