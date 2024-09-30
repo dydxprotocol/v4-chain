@@ -560,9 +560,10 @@ func (k Keeper) PersistMatchOrdersToState(
 			makerOrders,
 		)
 
-		k.GetFullNodeStreamingManager().StageFinalizeBlockFill(
-			ctx,
+		k.GetFullNodeStreamingManager().SendOrderbookFillUpdate(
 			streamOrderbookFill,
+			ctx,
+			k.PerpetualIdToClobPairId,
 		)
 	}
 
@@ -670,9 +671,10 @@ func (k Keeper) PersistMatchLiquidationToState(
 			takerOrder,
 			makerOrders,
 		)
-		k.GetFullNodeStreamingManager().StageFinalizeBlockFill(
-			ctx,
+		k.GetFullNodeStreamingManager().SendOrderbookFillUpdate(
 			streamOrderbookFill,
+			ctx,
+			k.PerpetualIdToClobPairId,
 		)
 	}
 	return nil
@@ -843,11 +845,9 @@ func (k Keeper) PersistMatchDeleveragingToState(
 					},
 				},
 			}
-			k.SendOrderbookFillUpdates(
+			k.SendOrderbookFillUpdate(
 				ctx,
-				[]types.StreamOrderbookFill{
-					streamOrderbookFill,
-				},
+				streamOrderbookFill,
 			)
 		}
 	}

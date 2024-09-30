@@ -1,4 +1,4 @@
-import { StreamOrderbookFill, StreamOrderbookFillSDKType } from "./query";
+import { StreamOrderbookFill, StreamOrderbookFillSDKType, StreamOrderbookUpdate, StreamOrderbookUpdateSDKType } from "./query";
 import { StreamSubaccountUpdate, StreamSubaccountUpdateSDKType } from "../subaccounts/streaming";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
@@ -7,18 +7,21 @@ import { DeepPartial } from "../../helpers";
 export interface StagedFinalizeBlockEvent {
   orderFill?: StreamOrderbookFill;
   subaccountUpdate?: StreamSubaccountUpdate;
+  orderbookUpdate?: StreamOrderbookUpdate;
 }
 /** StagedFinalizeBlockEvent is an event staged during `FinalizeBlock`. */
 
 export interface StagedFinalizeBlockEventSDKType {
   order_fill?: StreamOrderbookFillSDKType;
   subaccount_update?: StreamSubaccountUpdateSDKType;
+  orderbook_update?: StreamOrderbookUpdateSDKType;
 }
 
 function createBaseStagedFinalizeBlockEvent(): StagedFinalizeBlockEvent {
   return {
     orderFill: undefined,
-    subaccountUpdate: undefined
+    subaccountUpdate: undefined,
+    orderbookUpdate: undefined
   };
 }
 
@@ -30,6 +33,10 @@ export const StagedFinalizeBlockEvent = {
 
     if (message.subaccountUpdate !== undefined) {
       StreamSubaccountUpdate.encode(message.subaccountUpdate, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.orderbookUpdate !== undefined) {
+      StreamOrderbookUpdate.encode(message.orderbookUpdate, writer.uint32(26).fork()).ldelim();
     }
 
     return writer;
@@ -52,6 +59,10 @@ export const StagedFinalizeBlockEvent = {
           message.subaccountUpdate = StreamSubaccountUpdate.decode(reader, reader.uint32());
           break;
 
+        case 3:
+          message.orderbookUpdate = StreamOrderbookUpdate.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -65,6 +76,7 @@ export const StagedFinalizeBlockEvent = {
     const message = createBaseStagedFinalizeBlockEvent();
     message.orderFill = object.orderFill !== undefined && object.orderFill !== null ? StreamOrderbookFill.fromPartial(object.orderFill) : undefined;
     message.subaccountUpdate = object.subaccountUpdate !== undefined && object.subaccountUpdate !== null ? StreamSubaccountUpdate.fromPartial(object.subaccountUpdate) : undefined;
+    message.orderbookUpdate = object.orderbookUpdate !== undefined && object.orderbookUpdate !== null ? StreamOrderbookUpdate.fromPartial(object.orderbookUpdate) : undefined;
     return message;
   }
 
