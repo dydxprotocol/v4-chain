@@ -15,6 +15,7 @@ import yargs from 'yargs';
 import config from './config';
 import { annotateIndexerTendermintEvent } from './helpers/block-helpers';
 import { AnnotatedIndexerTendermintBlock, AnnotatedIndexerTendermintEvent } from './helpers/types';
+import { OrderTable } from '@dydxprotocol-indexer/postgres';
 
 /**
  * Creates an IndexerTendermintBlock from a KafkaMessage.
@@ -106,6 +107,7 @@ export async function printMessageAtHeight(
         });
         throw Error('Failed to parse event');
       }
+
       annotatedEvents.push(annotatedEvent);
     });
     const annotatedBlock: AnnotatedIndexerTendermintBlock = {
