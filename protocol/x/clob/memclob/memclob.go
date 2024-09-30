@@ -402,7 +402,7 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 		)
 		clobMatch := internalOperation.GetMatch()
 		orderbookMatchFill := m.GenerateStreamOrderbookFill(ctx, *clobMatch, takerOrder, makerOrders)
-		m.clobKeeper.SendOrderbookFillUpdates(ctx, []types.StreamOrderbookFill{orderbookMatchFill})
+		m.clobKeeper.SendOrderbookFillUpdate(ctx, orderbookMatchFill)
 	}
 
 	// Build a slice of all subaccounts which had matches this matching loop, and sort them for determinism.

@@ -31,30 +31,23 @@ type FullNodeStreamingManager interface {
 	) map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate
 	SendOrderbookUpdates(
 		offchainUpdates *clobtypes.OffchainUpdates,
-		blockHeight uint32,
-		execMode sdk.ExecMode,
+		ctx sdk.Context,
 	)
-	SendOrderbookFillUpdates(
-		orderbookFills []clobtypes.StreamOrderbookFill,
-		blockHeight uint32,
-		execMode sdk.ExecMode,
+	SendOrderbookFillUpdate(
+		orderbookFill clobtypes.StreamOrderbookFill,
+		ctx sdk.Context,
 		perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
 	)
 	SendTakerOrderStatus(
 		takerOrder clobtypes.StreamTakerOrder,
-		blockHeight uint32,
-		execMode sdk.ExecMode,
+		ctx sdk.Context,
 	)
 	SendFinalizedSubaccountUpdates(
 		subaccountUpdates []satypes.StreamSubaccountUpdate,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
-	StageFinalizeBlockFill(
-		ctx sdk.Context,
-		fill clobtypes.StreamOrderbookFill,
-	)
-	StageFinalizeBlockSubaccountUpdate(
+	SendSubaccountUpdate(
 		ctx sdk.Context,
 		subaccountUpdate satypes.StreamSubaccountUpdate,
 	)
