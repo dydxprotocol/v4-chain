@@ -31,14 +31,12 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 
 func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
 	updates *clobtypes.OffchainUpdates,
-	blockHeight uint32,
 	ctx sdk.Context,
 ) {
 }
 
 func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdate(
 	orderbookFill clobtypes.StreamOrderbookFill,
-	blockHeight uint32,
 	ctx sdk.Context,
 	perpetualIdToClobPairId map[uint32][]clobtypes.ClobPairId,
 ) {
@@ -46,7 +44,6 @@ func (sm *NoopGrpcStreamingManager) SendOrderbookFillUpdate(
 
 func (sm *NoopGrpcStreamingManager) SendTakerOrderStatus(
 	takerOrder clobtypes.StreamTakerOrder,
-	blockHeight uint32,
 	ctx sdk.Context,
 ) {
 }

@@ -309,7 +309,6 @@ func (k Keeper) SendOrderbookUpdates(
 
 	k.GetFullNodeStreamingManager().SendOrderbookUpdates(
 		offchainUpdates,
-		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx,
 	)
 }
@@ -321,7 +320,6 @@ func (k Keeper) SendOrderbookFillUpdate(
 ) {
 	k.GetFullNodeStreamingManager().SendOrderbookFillUpdate(
 		orderbookFill,
-		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx,
 		k.PerpetualIdToClobPairId,
 	)
@@ -334,7 +332,6 @@ func (k Keeper) SendTakerOrderStatus(
 ) {
 	k.GetFullNodeStreamingManager().SendTakerOrderStatus(
 		takerOrder,
-		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx,
 	)
 }

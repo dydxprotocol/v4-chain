@@ -562,7 +562,6 @@ func (k Keeper) PersistMatchOrdersToState(
 
 		k.GetFullNodeStreamingManager().SendOrderbookFillUpdate(
 			streamOrderbookFill,
-			uint32(ctx.BlockHeight()),
 			ctx,
 			k.PerpetualIdToClobPairId,
 		)
@@ -674,7 +673,6 @@ func (k Keeper) PersistMatchLiquidationToState(
 		)
 		k.GetFullNodeStreamingManager().SendOrderbookFillUpdate(
 			streamOrderbookFill,
-			uint32(ctx.BlockHeight()),
 			ctx,
 			k.PerpetualIdToClobPairId,
 		)
