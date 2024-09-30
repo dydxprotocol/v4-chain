@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -16,6 +15,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/testutils"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
@@ -65,6 +65,7 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 		Confirm:        testutils.Always,
 	}
 	s.spyAuth = testutils.NewSpyAuthenticator(
+		s.tApp.App.AppCodec(),
 		s.tApp.App.GetKVStoreKey()[types.StoreKey],
 	)
 
@@ -665,9 +666,6 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
 		}
 
-		encodedMsg, err := codectypes.NewAnyWithValue(msg)
-		s.Require().NoError(err, "Should encode Any value successfully")
-
 		// mock the authentication request
 		authReq := authenticator.AuthenticationRequest{
 			AuthenticatorId: tc.id,
@@ -675,7 +673,7 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 			FeePayer:        s.TestAccAddress[0],
 			FeeGranter:      nil,
 			Fee:             sdk.NewCoins(),
-			Msg:             authenticator.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
+			Msg:             msg,
 			MsgIndex:        0,
 			Signature:       []byte{1, 1, 1, 1, 1},
 			SignModeTxData:  authenticator.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
@@ -699,7 +697,11 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 			expectedAuthReq := authReq
 			expectedAuthReq.AuthenticatorId = tc.expectedIds[i]
 
-			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
+			spy := testutils.SpyAuthenticator{
+				KvStoreKey: s.spyAuth.KvStoreKey,
+				Name:       name,
+				Cdc:        constants.TestEncodingCfg.Codec,
+			}
 			latestCalls := spy.GetLatestCalls(s.Ctx)
 
 			spyData, err := json.Marshal(testutils.SpyAuthenticatorData{Name: name})
@@ -713,17 +715,33 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 				},
 				latestCalls.OnAuthenticatorAdded,
 			)
-			s.Require().Equal(expectedAuthReq, latestCalls.Authenticate)
+			s.Require().Equal(
+				testutils.SpyAuthenticateRequest{
+					AuthenticatorId: expectedAuthReq.AuthenticatorId,
+					Account:         expectedAuthReq.Account,
+					Msg:             s.tApp.App.AppCodec().MustMarshal(expectedAuthReq.Msg),
+					MsgIndex:        expectedAuthReq.MsgIndex,
+				},
+				latestCalls.Authenticate,
+			)
 			s.Require().Equal(
 				testutils.SpyTrackRequest{
 					AuthenticatorId: expectedAuthReq.AuthenticatorId,
 					Account:         expectedAuthReq.Account,
-					Msg:             expectedAuthReq.Msg,
+					Msg:             s.tApp.App.AppCodec().MustMarshal(expectedAuthReq.Msg),
 					MsgIndex:        expectedAuthReq.MsgIndex,
 				},
 				latestCalls.Track,
 			)
-			s.Require().Equal(expectedAuthReq, latestCalls.ConfirmExecution)
+			s.Require().Equal(
+				testutils.SpyConfirmExecutionRequest{
+					AuthenticatorId: expectedAuthReq.AuthenticatorId,
+					Account:         expectedAuthReq.Account,
+					Msg:             s.tApp.App.AppCodec().MustMarshal(expectedAuthReq.Msg),
+					MsgIndex:        expectedAuthReq.MsgIndex,
+				},
+				latestCalls.ConfirmExecution,
+			)
 			s.Require().Equal(
 				testutils.SpyRemoveRequest{
 					Account:         expectedAuthReq.Account,
@@ -834,15 +852,12 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
 		}
 
-		encodedMsg, err := codectypes.NewAnyWithValue(msg)
-		s.Require().NoError(err, "Should encode Any value successfully")
-
 		// mock the authentication request
 		authReq := authenticator.AuthenticationRequest{
 			AuthenticatorId: "1",
 			Account:         s.TestAccAddress[0],
 			FeePayer:        s.TestAccAddress[0],
-			Msg:             authenticator.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
+			Msg:             msg,
 			MsgIndex:        0,
 			Signature:       []byte{1, 1, 1, 1, 1},
 			SignModeTxData:  authenticator.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
@@ -858,7 +873,11 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 		s.Require().NoError(auth.ConfirmExecution(s.Ctx, authReq))
 
 		for i, name := range tc.names {
-			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
+			spy := testutils.SpyAuthenticator{
+				KvStoreKey: s.spyAuth.KvStoreKey,
+				Name:       name,
+				Cdc:        constants.TestEncodingCfg.Codec,
+			}
 			latestCalls := spy.GetLatestCalls(s.Ctx)
 			latestConfirmExecuion := latestCalls.ConfirmExecution
 
