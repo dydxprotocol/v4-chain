@@ -61,6 +61,7 @@ export const configSchema = {
 
   // Vaults config
   VAULT_PNL_HISTORY_DAYS: parseInteger({ default: 90 }),
+  VAULT_PNL_HISTORY_HOURS: parseInteger({ default: 72 }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////
