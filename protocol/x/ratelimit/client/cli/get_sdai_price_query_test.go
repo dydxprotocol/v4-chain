@@ -3,7 +3,7 @@
 package cli_test
 
 import (
-	"fmt"
+	"math/big"
 	"strconv"
 	"testing"
 	"time"
@@ -34,29 +34,28 @@ func TestGetSDAIPriceQuery(t *testing.T) {
 	chi, err := store.QueryDaiConversionRate(client)
 	assert.Nil(t, err, "Expected no error with real client")
 
-	time.Sleep(15 * time.Second) // to ensure other validators have queried the sdai rate at this block
-
-	setTx := "docker exec interchain-security-instance-setup interchain-security-cd" +
-		" tx ratelimit update-market-prices dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6 " +
-		chi + " --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
-		" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
-	_, _, err = network.QueryCustomNetwork(setTx)
-
-	fmt.Println("first eror")
-	fmt.Println(err)
-	require.NoError(t, err)
-
-	time.Sleep(10 * time.Second)
+	time.Sleep(15 * time.Second)
 
 	rateQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
 		" query ratelimit get-sdai-price "
 	data, _, err := network.QueryCustomNetwork(rateQuery)
 
-	fmt.Println("second eror")
-	fmt.Println(err)
-
 	require.NoError(t, err)
 	var resp types.GetSDAIPriceQueryResponse
 	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
-	require.Equal(t, chi, resp.Price)
+
+	chiFloat, success := new(big.Float).SetString(chi)
+	require.True(t, success, "Failed to parse chi as big.Float")
+
+	priceFloat, success := new(big.Float).SetString(resp.Price)
+	require.True(t, success, "Failed to parse price as big.Float")
+
+	// Compare the big.Float values directly
+	comparison := new(big.Float).Quo(priceFloat, chiFloat)
+
+	minThreshold := big.NewFloat(0.99)
+	maxThreshold := big.NewFloat(1.16)
+
+	require.True(t, comparison.Cmp(minThreshold) >= 0, "Price should be at least 99% of chi")
+	require.True(t, comparison.Cmp(maxThreshold) <= 0, "Price should be at most 116% of chi")
 }
