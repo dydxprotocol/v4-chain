@@ -7,10 +7,11 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-var _ Authenticator = &SubaccountFilter{}
+var _ types.Authenticator = &SubaccountFilter{}
 
 // SubaccountFilter filters incoming messages based on a whitelist of subaccount numbers.
 // It ensures that only messages with whitelisted subaccount numbers are allowed.
@@ -35,7 +36,7 @@ func (m SubaccountFilter) StaticGas() uint64 {
 
 // Initialize sets up the authenticator with the given data,
 // which should be a string of subaccount numbers separated by the specified separator.
-func (m SubaccountFilter) Initialize(config []byte) (Authenticator, error) {
+func (m SubaccountFilter) Initialize(config []byte) (types.Authenticator, error) {
 	strSlice := strings.Split(string(config), SEPARATOR)
 
 	m.whitelist = make(map[uint32]struct{})
@@ -50,12 +51,12 @@ func (m SubaccountFilter) Initialize(config []byte) (Authenticator, error) {
 }
 
 // Track is a no-op in this implementation but can be used to track message handling.
-func (m SubaccountFilter) Track(ctx sdk.Context, request AuthenticationRequest) error {
+func (m SubaccountFilter) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
 // Authenticate checks if the message's subaccount numbers are in the whitelist.
-func (m SubaccountFilter) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
+func (m SubaccountFilter) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	// Collect the clob pair ids from the request.
 	requestSubaccountNums := make([]uint32, 0)
 	switch msg := request.Msg.(type) {
@@ -85,7 +86,7 @@ func (m SubaccountFilter) Authenticate(ctx sdk.Context, request AuthenticationRe
 }
 
 // ConfirmExecution confirms the execution of a message. Currently, it always confirms.
-func (m SubaccountFilter) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
+func (m SubaccountFilter) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 

@@ -12,7 +12,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
@@ -144,11 +143,11 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,
 	selectedAuthenticator uint64,
-) (authenticator.InitializedAuthenticator, error) {
+) (types.InitializedAuthenticator, error) {
 	// Get the authenticator data from the store
 	authenticatorFromStore, err := k.GetSelectedAuthenticatorData(ctx, account, selectedAuthenticator)
 	if err != nil {
-		return authenticator.InitializedAuthenticator{}, err
+		return types.InitializedAuthenticator{}, err
 	}
 
 	uninitializedAuthenticator := k.authenticatorManager.GetAuthenticatorByType(authenticatorFromStore.Type)
@@ -163,7 +162,7 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 			"account", account.String(),
 		)
 
-		return authenticator.InitializedAuthenticator{},
+		return types.InitializedAuthenticator{},
 			errors.Wrapf(
 				sdkerrors.ErrLogic,
 				"authenticator id %d failed to initialize for account %s, authenticator type %s not registered in manager",
@@ -175,7 +174,7 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	// NOTE: The authenticator manager returns a struct that is reused
 	initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorFromStore.Config)
 	if err != nil {
-		return authenticator.InitializedAuthenticator{},
+		return types.InitializedAuthenticator{},
 			errors.Wrapf(
 				err,
 				"authenticator %d with type %s failed to initialize for account %s",
@@ -183,7 +182,7 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 			)
 	}
 	if initializedAuthenticator == nil {
-		return authenticator.InitializedAuthenticator{},
+		return types.InitializedAuthenticator{},
 			errors.Wrapf(
 				types.ErrInitializingAuthenticator,
 				"authenticator.Initialize returned nil for %d with type %s for account %s",
@@ -191,7 +190,7 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 			)
 	}
 
-	finalAuthenticator := authenticator.InitializedAuthenticator{
+	finalAuthenticator := types.InitializedAuthenticator{
 		Id:            authenticatorFromStore.Id,
 		Authenticator: initializedAuthenticator,
 	}

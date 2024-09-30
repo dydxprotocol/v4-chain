@@ -1232,7 +1232,7 @@ func New(
 
 	// Initialize authenticators
 	app.AuthenticatorManager = authenticator.NewAuthenticatorManager()
-	app.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
+	app.AuthenticatorManager.InitializeAuthenticators([]accountplusmoduletypes.Authenticator{
 		authenticator.NewSignatureVerification(app.AccountKeeper),
 	})
 	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(

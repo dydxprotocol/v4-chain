@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.tApp.App.AuthenticatorManager.ResetAuthenticators()
 	s.tApp.App.AuthenticatorManager.InitializeAuthenticators(
-		[]authenticator.Authenticator{
+		[]types.Authenticator{
 			authenticator.SignatureVerification{},
 			authenticator.MessageFilter{},
 			testutils.TestingAuthenticator{

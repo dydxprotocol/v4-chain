@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
 var (
-	_ authenticator.Authenticator = &TestingAuthenticator{}
+	_ types.Authenticator = &TestingAuthenticator{}
 )
 
 type ApproveOn int
@@ -59,11 +59,11 @@ func (t TestingAuthenticator) StaticGas() uint64 {
 	return uint64(t.GasConsumption)
 }
 
-func (t TestingAuthenticator) Initialize(config []byte) (authenticator.Authenticator, error) {
+func (t TestingAuthenticator) Initialize(config []byte) (types.Authenticator, error) {
 	return t, nil
 }
 
-func (t TestingAuthenticator) Authenticate(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (t TestingAuthenticator) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	if t.Approve == Always {
 		return nil
 	} else {
@@ -71,11 +71,11 @@ func (t TestingAuthenticator) Authenticate(ctx sdk.Context, request authenticato
 	}
 }
 
-func (t TestingAuthenticator) Track(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (t TestingAuthenticator) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
-func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (t TestingAuthenticator) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	if t.Confirm == Always {
 		return nil
 	} else {

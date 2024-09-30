@@ -15,7 +15,6 @@ import (
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
@@ -133,7 +132,7 @@ func (ad AuthenticatorDecorator) AnteHandle(
 		}
 
 		// Generate the authentication request data
-		authenticationRequest, err := authenticator.GenerateAuthenticationRequest(
+		authenticationRequest, err := lib.GenerateAuthenticationRequest(
 			ctx,
 			ad.cdc,
 			ad.accountKeeper,
