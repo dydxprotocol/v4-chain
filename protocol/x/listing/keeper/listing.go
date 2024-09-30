@@ -1,16 +1,14 @@
 package keeper
 
 import (
+	"context"
 	"math"
 	"math/big"
 
-	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
-
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -41,10 +39,12 @@ func (k Keeper) GetMarketsHardCap(ctx sdk.Context) (hardCap uint32) {
 // Function to wrap the creation of a new market
 // Note: This will only list long-tail/isolated markets
 func (k Keeper) CreateMarket(
-	ctx sdk.Context,
+	ctx context.Context,
 	ticker string,
 ) (marketId uint32, err error) {
-	marketId = k.PricesKeeper.AcquireNextMarketID(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	marketId = k.PricesKeeper.AcquireNextMarketID(sdkCtx)
 
 	// Get market details from marketmap
 	// TODO: change to use util from marketmap when available
@@ -52,14 +52,14 @@ func (k Keeper) CreateMarket(
 	if err != nil {
 		return 0, err
 	}
-	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, marketMapPair.String())
+	marketMapDetails, err := k.MarketMapKeeper.GetMarket(sdkCtx, marketMapPair.String())
 	if err != nil {
 		return 0, types.ErrMarketNotFound
 	}
 
 	// Create a new market
 	market, err := k.PricesKeeper.CreateMarket(
-		ctx,
+		sdkCtx,
 		pricestypes.MarketParam{
 			Id:   marketId,
 			Pair: ticker,

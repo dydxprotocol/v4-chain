@@ -1,6 +1,8 @@
 package types
 
 import (
+	"context"
+
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slinkytypes "github.com/skip-mev/connect/v2/pkg/types"
@@ -10,7 +12,7 @@ import (
 type PricesKeeper interface {
 	// Market related.
 	CreateMarket(
-		ctx sdk.Context,
+		ctx context.Context,
 		param MarketParam,
 		price MarketPrice,
 	) (createdMarketParam MarketParam, err error)
@@ -51,7 +53,7 @@ type PricesKeeper interface {
 	AddCurrencyPairIDToStore(ctx sdk.Context, id uint32, cp slinkytypes.CurrencyPair)
 
 	// Slinky compat
-	GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool)
-	GetIDForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (uint64, bool)
-	GetPriceForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (oracletypes.QuotePrice, error)
+	GetCurrencyPairFromID(ctx context.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool)
+	GetIDForCurrencyPair(ctx context.Context, cp slinkytypes.CurrencyPair) (uint64, bool)
+	GetPriceForCurrencyPair(ctx context.Context, cp slinkytypes.CurrencyPair) (oracletypes.QuotePrice, error)
 }

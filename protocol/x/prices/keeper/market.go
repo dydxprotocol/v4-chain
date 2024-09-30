@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -20,11 +21,13 @@ import (
 // This is the only path to creating new MarketPrices, so if we have a param
 // defined for a market, we should expect to see a price defined, and vice versa.
 func (k Keeper) CreateMarket(
-	ctx sdk.Context,
+	ctx context.Context,
 	marketParam types.MarketParam,
 	marketPrice types.MarketPrice,
 ) (types.MarketParam, error) {
-	if _, exists := k.GetMarketParam(ctx, marketParam.Id); exists {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	if _, exists := k.GetMarketParam(sdkCtx, marketParam.Id); exists {
 		return types.MarketParam{}, errorsmod.Wrapf(
 			types.ErrMarketParamAlreadyExists,
 			"market param with id %d already exists",
@@ -40,7 +43,7 @@ func (k Keeper) CreateMarket(
 		return types.MarketParam{}, err
 	}
 	// Stateful Validation
-	for _, market := range k.GetAllMarketParams(ctx) {
+	for _, market := range k.GetAllMarketParams(sdkCtx) {
 		if market.Pair == marketParam.Pair {
 			return types.MarketParam{}, errorsmod.Wrapf(
 				types.ErrMarketParamPairAlreadyExists,
@@ -68,18 +71,18 @@ func (k Keeper) CreateMarket(
 	paramBytes := k.cdc.MustMarshal(&marketParam)
 	priceBytes := k.cdc.MustMarshal(&marketPrice)
 
-	marketParamStore := k.getMarketParamStore(ctx)
+	marketParamStore := k.getMarketParamStore(sdkCtx)
 	marketParamStore.Set(lib.Uint32ToKey(marketParam.Id), paramBytes)
 
-	marketPriceStore := k.getMarketPriceStore(ctx)
+	marketPriceStore := k.getMarketPriceStore(sdkCtx)
 	marketPriceStore.Set(lib.Uint32ToKey(marketPrice.Id), priceBytes)
 
 	// add the pair to the currency-pair-id cache
-	k.AddCurrencyPairIDToStore(ctx, marketParam.Id, currencyPair)
+	k.AddCurrencyPairIDToStore(sdkCtx, marketParam.Id, currencyPair)
 
 	// Generate indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
-		ctx,
+		sdkCtx,
 		indexerevents.SubtypeMarket,
 		indexerevents.MarketEventVersion,
 		indexer_manager.GetBytes(
@@ -95,12 +98,12 @@ func (k Keeper) CreateMarket(
 	metrics.SetMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
 
 	// create a new market rev share
-	k.RevShareKeeper.CreateNewMarketRevShare(ctx, marketParam.Id)
+	k.RevShareKeeper.CreateNewMarketRevShare(sdkCtx, marketParam.Id)
 
 	// enable the market in the market map
 	err = k.MarketMapKeeper.EnableMarket(ctx, currencyPairStr)
 	if err != nil {
-		k.Logger(ctx).Error(
+		k.Logger(sdkCtx).Error(
 			"failed to enable market in market map",
 			"market ticker",
 			currencyPairStr,

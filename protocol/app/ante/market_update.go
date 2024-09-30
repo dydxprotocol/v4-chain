@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -19,7 +20,7 @@ var ErrRestrictedMarketUpdates = errors.New("cannot call MsgUpdateMarkets or Msg
 	"on a restricted market")
 
 type MarketMapKeeper interface {
-	GetAllMarkets(ctx sdk.Context) (map[string]mmtypes.Market, error)
+	GetAllMarkets(ctx context.Context) (map[string]mmtypes.Market, error)
 }
 
 var (

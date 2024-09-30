@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"math/big"
 
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -15,7 +16,7 @@ import (
 
 type PricesKeeper interface {
 	CreateMarket(
-		ctx sdk.Context,
+		ctx context.Context,
 		marketParam pricestypes.MarketParam,
 		marketPrice pricestypes.MarketPrice,
 	) (pricestypes.MarketParam, error)
@@ -40,12 +41,12 @@ type ClobKeeper interface {
 
 type MarketMapKeeper interface {
 	GetMarket(
-		ctx sdk.Context,
+		ctx context.Context,
 		ticker string,
 	) (marketmaptypes.Market, error)
 	// Only used for testing purposes
 	CreateMarket(
-		ctx sdk.Context,
+		ctx context.Context,
 		market marketmaptypes.Market,
 	) error
 }
