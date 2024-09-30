@@ -155,6 +155,16 @@ var (
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":     {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":         {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse": {},
+
+		// accountplus
+		"/dydxprotocol.accountplus.MsgAddAuthenticator":            {},
+		"/dydxprotocol.accountplus.MsgAddAuthenticatorResponse":    {},
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticator":         {},
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticatorResponse": {},
+		"/dydxprotocol.accountplus.MsgSetActiveState":              {},
+		"/dydxprotocol.accountplus.MsgSetActiveStateResponse":      {},
+		"/dydxprotocol.accountplus.TxExtension":                    {},
+
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         {},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},

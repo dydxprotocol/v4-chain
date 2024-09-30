@@ -11,15 +11,15 @@ import (
 // the existence of `TxExtension`.
 type CircuitBreakerDecorator struct {
 	cdc                          codec.BinaryCodec
-	authenticatorAnteHandlerFlow sdk.AnteHandler
-	originalAnteHandlerFlow      sdk.AnteHandler
+	authenticatorAnteHandlerFlow sdk.AnteDecorator
+	originalAnteHandlerFlow      sdk.AnteDecorator
 }
 
 // NewCircuitBreakerDecorator creates a new instance of CircuitBreakerDecorator with the provided parameters.
 func NewCircuitBreakerDecorator(
 	cdc codec.BinaryCodec,
-	auth sdk.AnteHandler,
-	classic sdk.AnteHandler,
+	auth sdk.AnteDecorator,
+	classic sdk.AnteDecorator,
 ) CircuitBreakerDecorator {
 	return CircuitBreakerDecorator{
 		cdc:                          cdc,
@@ -44,9 +44,9 @@ func (ad CircuitBreakerDecorator) AnteHandle(
 	// Check that the authenticator flow is active
 	if specified, _ := lib.HasSelectedAuthenticatorTxExtensionSpecified(tx, ad.cdc); specified {
 		// Return and call the AnteHandle function on all the authenticator decorators.
-		return ad.authenticatorAnteHandlerFlow(ctx, tx, simulate)
+		return ad.authenticatorAnteHandlerFlow.AnteHandle(ctx, tx, simulate, next)
 	}
 
 	// Return and call the AnteHandle function on all the original decorators.
-	return ad.originalAnteHandlerFlow(ctx, tx, simulate)
+	return ad.originalAnteHandlerFlow.AnteHandle(ctx, tx, simulate, next)
 }
