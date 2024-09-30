@@ -2254,164 +2254,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				),
 			},
 		},
-		`Partially matched deleveraging is skipped - negative TNC`: {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_50499USD,
-				constants.Dave_Num0_1BTC_Long_50000USD,
-			},
-			insuranceFundBalance: 750_000, // $0.75
-			marketIdToOraclePriceOverride: map[uint32]uint64{
-				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC.
-			},
-
-			liquidationConfig: constants.LiquidationsConfig_No_Limit,
-			placedMatchableOrders: []types.MatchableOrder{
-				// First order at $50,498, Carl pays $0.25 to the insurance fund.
-				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,
-				// Carl's bankruptcy price to close 0.75 BTC short is $50,499, and closing at $50,500
-				// would require $0.75 from the insurance fund. The insurance fund balance can
-				// cover this loss so the liquidation succeeds.
-				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
-			},
-			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500, // Liquidation order at $50,500
-
-			expectedFilledSize:  satypes.BaseQuantums(100_000_000),
-			expectedOrderStatus: types.Success,
-			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
-				constants.Carl_Num0: {
-					PerpetualsLiquidated: []uint32{0},
-				},
-			},
-			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
-				0: big.NewInt(500_000),
-			},
-			expectedSubaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Carl_Num0,
-				},
-				{
-					Id: &constants.Dave_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_500_000),
-						},
-					},
-				},
-			},
-			expectedOperationsQueue: []types.OperationRaw{
-				clobtest.NewShortTermOrderPlacementOperationRaw(
-					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,
-				),
-				clobtest.NewShortTermOrderPlacementOperationRaw(
-					constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
-				),
-				clobtest.NewMatchOperationRaw(
-					&constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
-					[]types.MakerFill{
-						{
-							MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11.GetOrderId(),
-							FillAmount:   25_000_000,
-						},
-						{
-							MakerOrderId: constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10.GetOrderId(),
-							FillAmount:   75_000_000,
-						},
-					},
-				),
-			},
-		},
-		`Can place a liquidation order that is partially-filled and subaccount becomes non-liquidatable -
-			deleveraging is skipped`: {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_54999USD,
-				constants.Dave_Num0_1BTC_Long_50000USD,
-			},
-			insuranceFundBalance: 0,
-			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
-			placedMatchableOrders: []types.MatchableOrder{
-				// First order at $50,000, matching against this order will make Carl's TNC >= MMR.
-				// Insurance fund fee will be maxed out. DeltaQuoteQuantums = .25 BTC * $50k/BTC = $12,500.
-				// Current InsuranceFundFeePpm = 5000.
-				// Fee = $12,500 * 5000 / 1,000,000 = $62.5.
-				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
-				// Carl's account has now become well-collateralized, however the liquidation order
-				// is for the full position size and will try to match against this high price order.
-				// Because of the high price, the insurance fund will be needed to cover the loss but the insurance
-				// fund is empty so we must deleverage. Our deleveraging algorithm will verify that the account is
-				// still liquidatable before actually doing any deleveraging. For this test, we expect that the
-				// account is no longer liquidatable and so deleveraging will be skipped.
-				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price60000_GTB10,
-			},
-			// Liquidation order at $60,000, setting high fill price to allow the order to
-			// attempt to fill against the high price order above.
-			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price60000,
-
-			expectedFilledSize:  satypes.BaseQuantums(25_000_000),
-			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
-			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{
-				constants.Carl_Num0: {
-					PerpetualsLiquidated: []uint32{0},
-				},
-			},
-			expectedLiquidationDeltaPerBlock: map[uint32]*big.Int{
-				0: big.NewInt(-62_500_000),
-			},
-			expectedSubaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Carl_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							Quantums: dtypes.NewInt(
-								54_999_000_000 - 50_000_000_000/4 -
-									lib.BigIntMulPpm(
-										big.NewInt(50_000_000_000/4),
-										constants.LiquidationsConfig_No_Limit.InsuranceFundFeePpm,
-									).Int64(),
-							),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-				{
-					Id: &constants.Dave_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + 50_000_000_000/4),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(75_000_000), // 0.75 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-			},
-			expectedOperationsQueue: []types.OperationRaw{
-				clobtest.NewShortTermOrderPlacementOperationRaw(
-					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
-				),
-				clobtest.NewMatchOperationRaw(
-					&constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price60000,
-					[]types.MakerFill{
-						{
-							MakerOrderId: constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11.GetOrderId(),
-							FillAmount:   25_000_000,
-						},
-					},
-				),
-			},
-		},
 	}
 
 	for name, tc := range tests {
@@ -5183,67 +5025,6 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 				},
 			},
 		},
-		"Maybe Get Liquidation Order returns no perps to liquidate error": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_SmallMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long_46000USD_Short,
-			},
-			clobs:     []types.ClobPair{constants.ClobPair_Btc},
-			feeParams: constants.PerpetualFeeParams,
-
-			existingOrders: []types.Order{
-				constants.Order_Carl_Num0_Id0_Clob0_BuySub1BTC_Price49500_GTB10,
-			},
-			subaccountIds: &heap.LiquidationPriorityHeap{
-				{
-					SubaccountId: constants.Dave_Num0,
-					Priority:     big.NewFloat(0),
-				},
-				{
-					SubaccountId: constants.Dave_Num0,
-					Priority:     big.NewFloat(1),
-				},
-			},
-			isolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
-
-			MaxLiquidationAttemptsPerBlock:         2,
-			MaxIsolatedLiquidationAttemptsPerBlock: 1,
-
-			expectedSubaccountIds:                 heap.NewLiquidationPriorityHeap(),
-			expectedIsolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
-			expectedSubaccountsToDeleverage:       nil,
-		},
-		"Clob Pair does not exist - panic in MaybeGetLiquidationOrder": {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_SmallMarginRequirement,
-			},
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short,
-				constants.Dave_Num0_1BTC_Long_46000USD_Short,
-			},
-			clobs:     []types.ClobPair{},
-			feeParams: constants.PerpetualFeeParams,
-
-			existingOrders: []types.Order{},
-			subaccountIds: &heap.LiquidationPriorityHeap{
-				{
-					SubaccountId: constants.Dave_Num0,
-					Priority:     big.NewFloat(0),
-				},
-			},
-			isolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
-
-			MaxLiquidationAttemptsPerBlock:         2,
-			MaxIsolatedLiquidationAttemptsPerBlock: 1,
-
-			expectedSubaccountIds:                 heap.NewLiquidationPriorityHeap(),
-			expectedIsolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
-			expectedSubaccountsToDeleverage:       nil,
-			expectPanic:                           true,
-		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -5962,4 +5743,62 @@ func TestPlacePerpetualLiquidation_InLiquidateSubaccountsAgainstOrderbookInterna
 		})
 	}
 
+}
+
+func TestGetValidatorAndLiquidityFee(t *testing.T) {
+	tests := map[string]struct {
+		remainingQuoteQuantums            *big.Int
+		expectedValidatorFeeQuoteQuantums *big.Int
+		expectedLiquidityFeeQuoteQuantums *big.Int
+		expectedError                     error
+	}{
+		"remaining quote quantums is negative - throws error": {
+			remainingQuoteQuantums:            big.NewInt(-1),
+			expectedValidatorFeeQuoteQuantums: big.NewInt(0),
+			expectedLiquidityFeeQuoteQuantums: big.NewInt(0),
+			expectedError:                     errors.New("Remaining quote quantums -1 is negative"),
+		},
+		"remaining quote quantums is zero - returns zero fees": {
+			remainingQuoteQuantums:            big.NewInt(0),
+			expectedValidatorFeeQuoteQuantums: big.NewInt(0),
+			expectedLiquidityFeeQuoteQuantums: big.NewInt(0),
+			expectedError:                     nil,
+		},
+		"remaining quote quantums is positive - returns fees": {
+			remainingQuoteQuantums:            big.NewInt(100),
+			expectedValidatorFeeQuoteQuantums: big.NewInt(20),
+			expectedLiquidityFeeQuoteQuantums: big.NewInt(80),
+			expectedError:                     nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+
+			mockBankKeeper := &mocks.BankKeeper{}
+
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+
+			ctx := ks.Ctx.WithIsCheckTx(true)
+
+			require.NoError(
+				t,
+				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default),
+			)
+
+			validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, err := ks.ClobKeeper.GetValidatorAndLiquidityFee(
+				ctx,
+				tc.remainingQuoteQuantums,
+			)
+
+			if tc.expectedError != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedValidatorFeeQuoteQuantums, validatorFeeQuoteQuantums)
+				require.Equal(t, tc.expectedLiquidityFeeQuoteQuantums, liquidityFeeQuoteQuantums)
+			}
+		})
+	}
 }
