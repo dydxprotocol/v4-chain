@@ -17,6 +17,7 @@ import (
 	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	ibccore "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	accountplus "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	affiliates "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	listing "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
@@ -221,6 +222,14 @@ var (
 		// affiliates
 		"/dydxprotocol.affiliates.MsgRegisterAffiliate":         &affiliates.MsgRegisterAffiliate{},
 		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse": nil,
+
+		// accountplus
+		"/dydxprotocol.accountplus.MsgAddAuthenticator":            &accountplus.MsgAddAuthenticator{},
+		"/dydxprotocol.accountplus.MsgAddAuthenticatorResponse":    nil,
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticator":         &accountplus.MsgRemoveAuthenticator{},
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticatorResponse": nil,
+		"/dydxprotocol.accountplus.TxExtension":                    nil,
+
 		// clob
 		"/dydxprotocol.clob.MsgBatchCancel":         &clob.MsgBatchCancel{},
 		"/dydxprotocol.clob.MsgBatchCancelResponse": nil,

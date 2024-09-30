@@ -150,8 +150,8 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	// Create a CircuitBreaker AnteDecorator
 	cbd := ante.NewCircuitBreakerDecorator(
 		s.tApp.App.AppCodec(),
-		sdk.ChainAnteDecorators(mockTestAuthenticator),
-		sdk.ChainAnteDecorators(mockTestClassic),
+		mockTestAuthenticator,
+		mockTestClassic,
 	)
 	anteHandler := sdk.ChainAnteDecorators(cbd)
 
