@@ -48,6 +48,9 @@ message OrderRemoval {
     // REMOVAL_REASON_FULLY_FILLED represents a removal of an order that
     //  would lead to the subaccount violating isolated subaccount constraints.
     REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 8;
+    // REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED represents a removal of an order
+    // that was placed using an expired permissioned key.
+    REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED = 9;
   }
 
   RemovalReason removal_reason = 2;
