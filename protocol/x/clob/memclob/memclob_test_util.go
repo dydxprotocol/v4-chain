@@ -1486,7 +1486,6 @@ func assertPlacePerpetualLiquidationOffchainMessages(
 	expectedMatches []expectedMatch,
 ) {
 	expectedOffchainMessages := getExpectedPlacePerpetualLiquidationOffchainMessages(
-		t,
 		ctx,
 		liquidationOrder,
 		placedMatchableOrders,
@@ -1503,7 +1502,6 @@ func assertPlacePerpetualLiquidationOffchainMessages(
 //     order that cross the liquidation order. This is due to the subaccount being undercollateralized.
 //   - `OrderUpdate` message generated for any maker orders that match with the liquidation order
 func getExpectedPlacePerpetualLiquidationOffchainMessages(
-	t *testing.T,
 	ctx sdk.Context,
 	liquidationOrder types.LiquidationOrder,
 	placedMatchableOrders []types.MatchableOrder,

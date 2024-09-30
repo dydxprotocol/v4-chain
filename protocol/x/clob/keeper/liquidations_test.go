@@ -5872,10 +5872,11 @@ func TestPlacePerpetualLiquidation_InLiquidateSubaccountsAgainstOrderbookInterna
 		isolatedPositionsPriorityHeap          *heap.LiquidationPriorityHeap
 		MaxLiquidationAttemptsPerBlock         uint32
 		MaxIsolatedLiquidationAttemptsPerBlock uint32
-		expectedError                          error
 	}{
 		"clob does not exists throws an error": {
-			perpetuals: []perptypes.Perpetual{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
 			},
@@ -5889,7 +5890,6 @@ func TestPlacePerpetualLiquidation_InLiquidateSubaccountsAgainstOrderbookInterna
 			isolatedPositionsPriorityHeap:          heap.NewLiquidationPriorityHeap(),
 			MaxLiquidationAttemptsPerBlock:         1,
 			MaxIsolatedLiquidationAttemptsPerBlock: 1,
-			expectedError:                          errors.New("Clob 0 is not a valid clob"),
 		},
 	}
 	for name, tc := range tests {
@@ -5900,8 +5900,11 @@ func TestPlacePerpetualLiquidation_InLiquidateSubaccountsAgainstOrderbookInterna
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
 
 			ctx := ks.Ctx.WithIsCheckTx(true)
-			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
 			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, tc.feeParams))
 
 			// Set up USDC asset in assets module.
@@ -5946,11 +5949,16 @@ func TestPlacePerpetualLiquidation_InLiquidateSubaccountsAgainstOrderbookInterna
 			ks.ClobKeeper.Flags.MaxLiquidationAttemptsPerBlock = tc.MaxLiquidationAttemptsPerBlock
 			ks.ClobKeeper.Flags.MaxIsolatedLiquidationAttemptsPerBlock = tc.MaxIsolatedLiquidationAttemptsPerBlock
 
-			_, err = ks.ClobKeeper.LiquidateSubaccountsAgainstOrderbookInternal(ctx, tc.subaccountIds, tc.isolatedPositionsPriorityHeap)
-			require.Error(t, err)
-			if tc.expectedError != nil {
-				require.Contains(t, err.Error(), tc.expectedError.Error())
-			}
+			require.Panics(t, func() {
+				_, err = ks.ClobKeeper.LiquidateSubaccountsAgainstOrderbookInternal(ctx, tc.subaccountIds, tc.isolatedPositionsPriorityHeap)
+			}, "Expected panic did not occur")
+
+			// Check the panic message.
+			defer func() {
+				if r := recover(); r != nil {
+					require.Contains(t, r.(string), "Perpetual ID 0 has no associated CLOB pairs")
+				}
+			}()
 		})
 	}
 
