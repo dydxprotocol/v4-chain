@@ -29,7 +29,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/ci"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/gofrs/flock"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmaptypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmapkeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
 
 	errorsmod "cosmossdk.io/errors"
 

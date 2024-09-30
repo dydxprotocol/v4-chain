@@ -7,8 +7,8 @@ import (
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
-	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
+	slinkytypes "github.com/skip-mev/connect/v2/pkg/types"
+	oracletypes "github.com/skip-mev/connect/v2/x/oracle/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -116,7 +116,7 @@ func (k Keeper) GetNumRemovedCurrencyPairs(_ sdk.Context) (uint64, error) {
 }
 
 // GetAllCurrencyPairs is not used with the DefaultCurrencyPair strategy.
-// See https://github.com/skip-mev/slinky/blob/main/abci/strategies/currencypair/default.go
+// See https://github.com/skip-mev/connect/v2/blob/main/abci/strategies/currencypair/default.go
 func (k Keeper) GetAllCurrencyPairs(ctx sdk.Context) []slinkytypes.CurrencyPair {
 	return nil
 }

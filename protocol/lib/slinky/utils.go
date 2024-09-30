@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/skip-mev/slinky/pkg/types"
+	"github.com/skip-mev/connect/v2/pkg/types"
 )
 
 /*

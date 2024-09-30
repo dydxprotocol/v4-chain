@@ -18,7 +18,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
+	"github.com/skip-mev/connect/v2/x/marketmap/types/tickermetadata"
 )
 
 // Function to set hard cap on listed markets in module store

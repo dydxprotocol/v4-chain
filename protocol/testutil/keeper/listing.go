@@ -15,7 +15,7 @@ import (
 	perpetualskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmapkeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 
 	"testing"

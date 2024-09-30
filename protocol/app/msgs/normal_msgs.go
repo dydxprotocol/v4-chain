@@ -23,7 +23,7 @@ import (
 	listing "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	vault "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmapmoduletypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 var (

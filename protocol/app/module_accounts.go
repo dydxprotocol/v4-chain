@@ -15,7 +15,7 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaultmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmapmoduletypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 
 	"golang.org/x/exp/maps"
 )

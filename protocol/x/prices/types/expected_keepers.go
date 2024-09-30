@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmaptypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 

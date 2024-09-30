@@ -2,7 +2,7 @@ package vote_extensions
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	oracletypes "github.com/skip-mev/slinky/pkg/types"
+	oracletypes "github.com/skip-mev/connect/v2/pkg/types"
 
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )

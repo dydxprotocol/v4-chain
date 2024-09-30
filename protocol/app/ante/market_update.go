@@ -3,12 +3,12 @@ package ante
 import (
 	"errors"
 	"fmt"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
+	slinkytypes "github.com/skip-mev/connect/v2/pkg/types"
+	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 
 	slinkylibs "github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"

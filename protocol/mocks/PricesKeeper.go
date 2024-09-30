@@ -4,10 +4,10 @@ package mocks
 
 import (
 	log "cosmossdk.io/log"
-	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
+	oracletypes "github.com/skip-mev/connect/v2/x/oracle/types"
 	mock "github.com/stretchr/testify/mock"
 
-	pkgtypes "github.com/skip-mev/slinky/pkg/types"
+	pkgtypes "github.com/skip-mev/connect/v2/pkg/types"
 
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
