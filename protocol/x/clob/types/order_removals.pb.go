@@ -63,8 +63,8 @@ const (
 	// REMOVAL_REASON_FULLY_FILLED represents a removal of an order that
 	//  would lead to the subaccount violating isolated subaccount constraints.
 	OrderRemoval_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS OrderRemoval_RemovalReason = 8
-	// REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED represents a removal of an order that
-	// was placed using an expired permissioned key.
+	// REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED represents a removal of an order
+	// that was placed using an expired permissioned key.
 	OrderRemoval_REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED OrderRemoval_RemovalReason = 9
 )
 

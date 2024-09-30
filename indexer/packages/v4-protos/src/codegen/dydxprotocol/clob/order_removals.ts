@@ -67,8 +67,8 @@ export enum OrderRemoval_RemovalReason {
   REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 8,
 
   /**
-   * REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED - REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED represents a removal of an order that
-   * was placed using an expired permissioned key.
+   * REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED - REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED represents a removal of an order
+   * that was placed using an expired permissioned key.
    */
   REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED = 9,
   UNRECOGNIZED = -1,
@@ -139,8 +139,8 @@ export enum OrderRemoval_RemovalReasonSDKType {
   REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 8,
 
   /**
-   * REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED - REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED represents a removal of an order that
-   * was placed using an expired permissioned key.
+   * REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED - REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED represents a removal of an order
+   * that was placed using an expired permissioned key.
    */
   REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED = 9,
   UNRECOGNIZED = -1,
