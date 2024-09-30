@@ -1283,10 +1283,7 @@ func (k Keeper) GetInsuranceFundDeltaBlockLimit(ctx sdk.Context, perpetualId uin
 	}
 
 	if isIsolated {
-		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
-		if err != nil {
-			return big.NewInt(0), err
-		}
+		perpetual, _ := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
 		return new(big.Int).SetUint64(perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock), nil
 	}
 

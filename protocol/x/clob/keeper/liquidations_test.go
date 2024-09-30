@@ -5722,7 +5722,6 @@ func TestPlacePerpetualLiquidation_InLiquidateSubaccountsAgainstOrderbookInterna
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
@@ -5846,6 +5845,90 @@ func TestGetValidatorAndLiquidityFee(t *testing.T) {
 				require.Equal(t, tc.expectedValidatorFeeQuoteQuantums, validatorFeeQuoteQuantums)
 				require.Equal(t, tc.expectedLiquidityFeeQuoteQuantums, liquidityFeeQuoteQuantums)
 			}
+		})
+	}
+}
+
+func TestGetInsuranceFundDeltaBlockLimit(t *testing.T) {
+	tests := map[string]struct {
+		perpetuals                           []perptypes.Perpetual
+		feeParams                            feetypes.PerpetualFeeParams
+		perpetualId                          uint32
+		expectedInsuranceFundDeltaBlockLimit *big.Int
+		expectedError                        error
+	}{
+		"perpetual does not exist - returns error": {
+			perpetuals:                           []perptypes.Perpetual{},
+			feeParams:                            constants.PerpetualFeeParams,
+			perpetualId:                          0,
+			expectedInsuranceFundDeltaBlockLimit: big.NewInt(0),
+			expectedError:                        errors.New("Perpetual does not exist"),
+		},
+		"isolated perpetual returns isolated market max cummalitive insurance fund delta per block": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement_Isolated,
+			},
+			feeParams:                            constants.PerpetualFeeParams,
+			perpetualId:                          0,
+			expectedInsuranceFundDeltaBlockLimit: big.NewInt(1_000_000),
+			expectedError:                        nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockBankKeeper := &mocks.BankKeeper{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+
+			ctx := ks.Ctx.WithIsCheckTx(true)
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, tc.feeParams))
+
+			// Set up USDC asset in assets module.
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			// Create all perpetuals.
+			for _, p := range tc.perpetuals {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ctx,
+					p.Params.Id,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
+					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+				)
+				require.NoError(t, err)
+			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
+
+			insuranceFundDeltaBlockLimit, err := ks.ClobKeeper.GetInsuranceFundDeltaBlockLimit(
+				ctx,
+				tc.perpetualId,
+			)
+
+			if tc.expectedError != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedInsuranceFundDeltaBlockLimit, insuranceFundDeltaBlockLimit)
+			}
+
 		})
 	}
 }
