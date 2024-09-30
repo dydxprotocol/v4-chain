@@ -7,9 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
-var _ Authenticator = &MessageFilter{}
+var _ types.Authenticator = &MessageFilter{}
 
 // MessageFilter filters incoming messages based on a predefined JSON pattern.
 // It allows for complex pattern matching to support advanced authentication flows.
@@ -33,7 +34,7 @@ func (m MessageFilter) StaticGas() uint64 {
 }
 
 // Initialize sets up the authenticator with the given data, which should be a valid JSON pattern for message filtering.
-func (m MessageFilter) Initialize(config []byte) (Authenticator, error) {
+func (m MessageFilter) Initialize(config []byte) (types.Authenticator, error) {
 	strSlice := strings.Split(string(config), SEPARATOR)
 
 	m.whitelist = make(map[string]struct{})
@@ -44,13 +45,13 @@ func (m MessageFilter) Initialize(config []byte) (Authenticator, error) {
 }
 
 // Track is a no-op in this implementation but can be used to track message handling.
-func (m MessageFilter) Track(ctx sdk.Context, request AuthenticationRequest) error {
+func (m MessageFilter) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
 // Authenticate checks if the provided message conforms to the set JSON pattern.
 // It returns an AuthenticationResult based on the evaluation.
-func (m MessageFilter) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
+func (m MessageFilter) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	if _, ok := m.whitelist[sdk.MsgTypeURL(request.Msg)]; !ok {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrUnauthorized,
@@ -63,7 +64,7 @@ func (m MessageFilter) Authenticate(ctx sdk.Context, request AuthenticationReque
 }
 
 // ConfirmExecution confirms the execution of a message. Currently, it always confirms.
-func (m MessageFilter) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
+func (m MessageFilter) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 

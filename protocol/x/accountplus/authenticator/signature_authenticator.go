@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -15,7 +16,7 @@ import (
 
 // Compile time type assertion for the SignatureData using the
 // SignatureVerification struct
-var _ Authenticator = &SignatureVerification{}
+var _ types.Authenticator = &SignatureVerification{}
 
 const (
 	// SignatureVerificationType represents a type of authenticator specifically designed for
@@ -44,7 +45,7 @@ func NewSignatureVerification(ak authante.AccountKeeper) SignatureVerification {
 }
 
 // Initialize sets up the public key to the data supplied from the account-authenticator configuration
-func (sva SignatureVerification) Initialize(config []byte) (Authenticator, error) {
+func (sva SignatureVerification) Initialize(config []byte) (types.Authenticator, error) {
 	if len(config) != secp256k1.PubKeySize {
 		sva.PubKey = nil
 	}
@@ -54,7 +55,7 @@ func (sva SignatureVerification) Initialize(config []byte) (Authenticator, error
 
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using signature verification
-func (sva SignatureVerification) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
+func (sva SignatureVerification) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	if request.Simulate || ctx.IsReCheckTx() {
 		return nil
 	}
@@ -74,11 +75,11 @@ func (sva SignatureVerification) Authenticate(ctx sdk.Context, request Authentic
 	return nil
 }
 
-func (sva SignatureVerification) Track(ctx sdk.Context, request AuthenticationRequest) error {
+func (sva SignatureVerification) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
-func (sva SignatureVerification) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
+func (sva SignatureVerification) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
