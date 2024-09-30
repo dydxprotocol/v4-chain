@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
+	aptypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -183,4 +184,13 @@ type RevShareKeeper interface {
 
 type AffiliatesKeeper interface {
 	GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error)
+}
+
+type AccountPlusKeeper interface {
+	GetIsSmartAccountActive(ctx sdk.Context) bool
+	GetInitializedAuthenticatorForAccount(
+		ctx sdk.Context,
+		account sdk.AccAddress,
+		selectedAuthenticator uint64,
+	) (aptypes.InitializedAuthenticator, error)
 }

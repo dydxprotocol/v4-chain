@@ -44,6 +44,7 @@ type (
 		rewardsKeeper     types.RewardsKeeper
 		affiliatesKeeper  types.AffiliatesKeeper
 		revshareKeeper    types.RevShareKeeper
+		accountPlusKeeper types.AccountPlusKeeper
 
 		indexerEventManager indexer_manager.IndexerEventManager
 		streamingManager    streamingtypes.FullNodeStreamingManager
