@@ -175,6 +175,11 @@ func (k Keeper) GetAllRevShares(
 	makerFees := fill.MakerFeeQuoteQuantums
 	netFees := big.NewInt(0).Add(takerFees, makerFees)
 
+	// net fees is 0 in case of liquidations where maker and taker fees are 0
+	if netFees.Sign() == 0 {
+		return types.RevSharesForFill{}, nil
+	}
+
 	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
 	if err != nil {
 		return types.RevSharesForFill{}, err
