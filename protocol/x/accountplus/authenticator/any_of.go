@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
 type SignatureAssignment string
@@ -19,17 +20,17 @@ const (
 )
 
 type AnyOf struct {
-	SubAuthenticators   []Authenticator
+	SubAuthenticators   []types.Authenticator
 	am                  *AuthenticatorManager
 	signatureAssignment SignatureAssignment
 }
 
-var _ Authenticator = &AnyOf{}
+var _ types.Authenticator = &AnyOf{}
 
 func NewAnyOf(am *AuthenticatorManager) AnyOf {
 	return AnyOf{
 		am:                  am,
-		SubAuthenticators:   []Authenticator{},
+		SubAuthenticators:   []types.Authenticator{},
 		signatureAssignment: Single,
 	}
 }
@@ -37,7 +38,7 @@ func NewAnyOf(am *AuthenticatorManager) AnyOf {
 func NewPartitionedAnyOf(am *AuthenticatorManager) AnyOf {
 	return AnyOf{
 		am:                  am,
-		SubAuthenticators:   []Authenticator{},
+		SubAuthenticators:   []types.Authenticator{},
 		signatureAssignment: Partitioned,
 	}
 }
@@ -57,7 +58,7 @@ func (aoa AnyOf) StaticGas() uint64 {
 	return totalGas
 }
 
-func (aoa AnyOf) Initialize(config []byte) (Authenticator, error) {
+func (aoa AnyOf) Initialize(config []byte) (types.Authenticator, error) {
 	// Decode the initialization data for each sub-authenticator
 	var initDatas []SubAuthenticatorInitData
 	if err := json.Unmarshal(config, &initDatas); err != nil {
@@ -86,7 +87,7 @@ func (aoa AnyOf) Initialize(config []byte) (Authenticator, error) {
 	return aoa, nil
 }
 
-func (aoa AnyOf) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
+func (aoa AnyOf) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	if len(aoa.SubAuthenticators) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
@@ -134,13 +135,13 @@ func (aoa AnyOf) Authenticate(ctx sdk.Context, request AuthenticationRequest) er
 	return nil
 }
 
-func (aoa AnyOf) Track(ctx sdk.Context, request AuthenticationRequest) error {
+func (aoa AnyOf) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return subTrack(ctx, request, aoa.SubAuthenticators)
 }
 
 // ConfirmExecution is called on all sub-authenticators, but only the changes
 // made by the authenticator that succeeds are written.
-func (aoa AnyOf) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
+func (aoa AnyOf) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	var signatures [][]byte
 	var err error
 

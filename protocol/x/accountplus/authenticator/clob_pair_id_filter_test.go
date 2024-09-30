@@ -10,6 +10,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -84,7 +85,7 @@ func (s *ClobPairIdFilterTest) TestFilter() {
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
 			tx, err := s.GenSimpleTx([]sdk.Msg{tt.msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(
+			request, err := lib.GenerateAuthenticationRequest(
 				s.Ctx,
 				s.tApp.App.AppCodec(),
 				ak,

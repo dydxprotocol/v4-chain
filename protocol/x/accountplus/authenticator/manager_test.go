@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
 // Mock Authenticator for testing purposes
@@ -24,11 +25,11 @@ func (m MockAuthenticator) OnAuthenticatorRemoved(
 	return nil
 }
 
-func (m MockAuthenticator) Track(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (m MockAuthenticator) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
-func (m MockAuthenticator) Initialize(config []byte) (authenticator.Authenticator, error) {
+func (m MockAuthenticator) Initialize(config []byte) (types.Authenticator, error) {
 	return m, nil
 }
 
@@ -36,11 +37,11 @@ func (m MockAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticator) Authenticate(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (m MockAuthenticator) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
-func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (m MockAuthenticator) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
@@ -57,14 +58,14 @@ func (m MockAuthenticator) Type() string {
 	return m.authType
 }
 
-var _ authenticator.Authenticator = MockAuthenticator{}
+var _ types.Authenticator = MockAuthenticator{}
 
 func TestInitializeAuthenticators(t *testing.T) {
 	am := authenticator.NewAuthenticatorManager()
 	auth1 := MockAuthenticator{"type1"}
 	auth2 := MockAuthenticator{"type2"}
 
-	am.InitializeAuthenticators([]authenticator.Authenticator{auth1, auth2})
+	am.InitializeAuthenticators([]types.Authenticator{auth1, auth2})
 
 	authenticators := am.GetRegisteredAuthenticators()
 	require.Equal(t, 2, len(authenticators))
@@ -125,11 +126,11 @@ func (m MockAuthenticatorFail) OnAuthenticatorAdded(
 	return nil
 }
 
-func (m MockAuthenticatorFail) Track(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (m MockAuthenticatorFail) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
-func (m MockAuthenticatorFail) Initialize(config []byte) (authenticator.Authenticator, error) {
+func (m MockAuthenticatorFail) Initialize(config []byte) (types.Authenticator, error) {
 	return m, nil
 }
 
@@ -137,11 +138,11 @@ func (m MockAuthenticatorFail) StaticGas() uint64 {
 	return 1000
 }
 
-func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (m MockAuthenticatorFail) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return fmt.Errorf("Authentication failed")
 }
 
-func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (m MockAuthenticatorFail) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
@@ -150,8 +151,8 @@ func (m MockAuthenticatorFail) Type() string {
 }
 
 // Ensure our mocks implement the Authenticator interface
-var _ authenticator.Authenticator = MockAuthenticator{}
-var _ authenticator.Authenticator = MockAuthenticatorFail{}
+var _ types.Authenticator = MockAuthenticator{}
+var _ types.Authenticator = MockAuthenticatorFail{}
 
 // Tests for the mocks behavior
 func TestMockAuthenticators(t *testing.T) {
@@ -163,10 +164,10 @@ func TestMockAuthenticators(t *testing.T) {
 	var mockCtx sdk.Context
 
 	// Testing mockPass
-	err := mockPass.Authenticate(mockCtx, authenticator.AuthenticationRequest{})
+	err := mockPass.Authenticate(mockCtx, types.AuthenticationRequest{})
 	require.NoError(t, err)
 
 	// Testing mockFail
-	err = mockFail.Authenticate(mockCtx, authenticator.AuthenticationRequest{})
+	err = mockFail.Authenticate(mockCtx, types.AuthenticationRequest{})
 	require.Error(t, err)
 }

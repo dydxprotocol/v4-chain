@@ -20,6 +20,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
 )
 
 type SigVerifyAuthenticationSuite struct {
@@ -266,7 +267,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 			if tc.TestData.ShouldSucceedGettingData {
 				// request for the first message
-				request, err := authenticator.GenerateAuthenticationRequest(
+				request, err := lib.GenerateAuthenticationRequest(
 					s.Ctx,
 					s.tApp.App.AppCodec(),
 					ak,
@@ -293,7 +294,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.Require().Error(err)
 				}
 			} else {
-				_, err := authenticator.GenerateAuthenticationRequest(
+				_, err := lib.GenerateAuthenticationRequest(
 					s.Ctx,
 					s.tApp.App.AppCodec(),
 					ak,

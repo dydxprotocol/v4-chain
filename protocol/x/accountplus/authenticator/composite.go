@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
 type SubAuthenticatorInitData struct {
@@ -16,8 +17,8 @@ type SubAuthenticatorInitData struct {
 
 func subTrack(
 	ctx sdk.Context,
-	request AuthenticationRequest,
-	subAuthenticators []Authenticator,
+	request types.AuthenticationRequest,
+	subAuthenticators []types.Authenticator,
 ) error {
 	baseId := request.AuthenticatorId
 	for id, auth := range subAuthenticators {
