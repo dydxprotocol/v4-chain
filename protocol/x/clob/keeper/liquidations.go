@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"time"
@@ -184,11 +185,15 @@ func (k Keeper) insertIntoLiquidationHeapIfUnhealthy(
 	subaccountId satypes.SubaccountId,
 	subaccountIds *heap.LiquidationPriorityHeap,
 ) error {
+
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	isLiquidatable, priority, err := k.GetSubaccountPriority(ctx, subaccount)
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("insertIntoLiquidationHeapIfUnhealthy subaccountId: %v, priority: %v\n",
+		subaccountId, priority)
 
 	if isLiquidatable {
 		subaccountIds.AddSubaccount(subaccountId, priority)

@@ -4680,6 +4680,7 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 		expectedIsolatedPositionsPriorityHeap *heap.LiquidationPriorityHeap
 		expectedError                         error
 		expectPanic                           bool
+		ignorePriorityOnSubaccountIds         bool
 	}{
 		`Can place a liquidation that doesn't match any maker orders`: {
 			perpetuals: []perptypes.Perpetual{
@@ -4778,6 +4779,43 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 					PerpetualId:  1,
 				},
 			},
+		},
+		`Reinsert subaccount that is still liquidatable after liquidating eth position`: {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement_DangerIndex,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance_DangerIndex,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+				constants.Dave_Num0_TinyBTC_Long_1ETH_Long_2900USD_Short,
+			},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc, constants.ClobPair_Eth},
+			feeParams: constants.PerpetualFeeParams,
+
+			existingOrders: []types.Order{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy_SmallETH_Price3000_GTB10,
+			},
+			subaccountIds: &heap.LiquidationPriorityHeap{
+				{
+					SubaccountId: constants.Dave_Num0,
+					Priority:     big.NewFloat(0),
+				},
+			},
+			isolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
+
+			MaxLiquidationAttemptsPerBlock:         1,
+			MaxIsolatedLiquidationAttemptsPerBlock: 1,
+
+			expectedSubaccountIds: &heap.LiquidationPriorityHeap{
+				{
+					SubaccountId: constants.Dave_Num0,
+					Priority:     big.NewFloat(0),
+				},
+			},
+			expectedIsolatedPositionsPriorityHeap: heap.NewLiquidationPriorityHeap(),
+			expectedSubaccountsToDeleverage:       nil,
+			ignorePriorityOnSubaccountIds:         true,
 		},
 		`Too many orders to liquidate, one get deleveraged`: {
 			perpetuals: []perptypes.Perpetual{
@@ -5165,7 +5203,16 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 				require.Contains(t, err.Error(), tc.expectedError.Error())
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.expectedSubaccountIds, tc.subaccountIds)
+				if tc.ignorePriorityOnSubaccountIds {
+					require.Equal(t, tc.expectedSubaccountIds.Len(), tc.subaccountIds.Len(), "Heap lengths should match")
+					for i := 0; i < tc.expectedSubaccountIds.Len(); i++ {
+						expected := tc.expectedSubaccountIds.PopLowestPriority()
+						actual := tc.subaccountIds.PopLowestPriority()
+						require.Equal(t, expected.SubaccountId, actual.SubaccountId, "SubaccountIds should match")
+					}
+				} else {
+					require.Equal(t, tc.expectedSubaccountIds, tc.subaccountIds)
+				}
 				require.Equal(t, tc.expectedIsolatedPositionsPriorityHeap, tc.isolatedPositionsPriorityHeap)
 				require.Equal(t, tc.expectedSubaccountsToDeleverage, subaccountsToDeleverage)
 			}

@@ -127,8 +127,6 @@ func (k Keeper) IncrementCumulativeInsuranceFundDelta(
 
 	newDelta := new(big.Int).Sub(currentDelta, insuranceFundDelta)
 
-	fmt.Printf("newDelta: %s\n", newDelta.String())
-
 	insuranceFundDeltaBytes, err := newDelta.MarshalText()
 	if err != nil {
 		return err
