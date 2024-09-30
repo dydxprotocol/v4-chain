@@ -516,7 +516,7 @@ func getStreamUpdatesFromOffchainUpdates(
 	// Unmarshal each per-clob pair message to v1 updates.
 	streamUpdates = make([]clobtypes.StreamUpdate, len(clobPairIds))
 
-	for _, clobPairId := range clobPairIds {
+	for i, clobPairId := range clobPairIds {
 		v1updates, exists := clobPairIdToV1Updates[clobPairId]
 		if !exists {
 			panic(fmt.Sprintf(
@@ -525,7 +525,7 @@ func getStreamUpdatesFromOffchainUpdates(
 				clobPairIdToV1Updates,
 			))
 		}
-		streamUpdate := clobtypes.StreamUpdate{
+		streamUpdates[i] = clobtypes.StreamUpdate{
 			UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
 				OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
 					Updates:  v1updates,
@@ -535,7 +535,6 @@ func getStreamUpdatesFromOffchainUpdates(
 			BlockHeight: blockHeight,
 			ExecMode:    uint32(execMode),
 		}
-		streamUpdates = append(streamUpdates, streamUpdate)
 	}
 
 	return streamUpdates, clobPairIds
