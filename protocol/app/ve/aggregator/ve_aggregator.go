@@ -112,10 +112,6 @@ func (ma *MedianAggregator) addVoteToAggregator(
 	address string,
 	ve vetypes.DaemonVoteExtension,
 ) {
-	if len(ve.Prices) == 0 {
-		return
-	}
-
 	prices := make(map[string]veaggregator.AggregatorPricePair, len(ve.Prices))
 	for _, pricePair := range ve.Prices {
 		var spotPrice, pnlPrice *big.Int

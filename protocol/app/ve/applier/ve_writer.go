@@ -295,6 +295,10 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 		return fmt.Errorf("sDAI conversion rate cannot be negative: %s", sDaiConversionRate.String())
 	}
 
+	if sDaiConversionRate.Sign() == 0 {
+		return fmt.Errorf("sDAI conversion rate cannot be zero")
+	}
+
 	vea.ratelimitKeeper.SetSDAIPrice(ctx, sDaiConversionRate)
 	vea.ratelimitKeeper.SetSDAILastBlockUpdated(ctx, big.NewInt(ctx.BlockHeight()))
 
@@ -443,4 +447,8 @@ func (vea *VEApplier) shouldWritePriceToStore(
 
 func (vea *VEApplier) GetCachedPrices() vecache.PriceUpdates {
 	return vea.finalVeUpdatesCache.GetPriceUpdates()
+}
+
+func (vea *VEApplier) GetCachedSDaiConversionRate() (*big.Int, *big.Int) {
+	return vea.finalVeUpdatesCache.GetConversionRateUpdateAndBlockHeight()
 }

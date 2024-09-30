@@ -385,7 +385,7 @@ var (
 		},
 	}
 
-	ValidVEPrice = []vetypes.PricePair{
+	ValidVEPrices = []vetypes.PricePair{
 		{
 			MarketId:  MarketId0,
 			SpotPrice: Price5Bytes,

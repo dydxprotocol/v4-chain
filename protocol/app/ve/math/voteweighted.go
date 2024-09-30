@@ -29,7 +29,8 @@ type ConversionRateAggregateFn func(ctx sdk.Context, veConversionRates map[strin
 // submitted in order for a currency pair to be considered for the
 // final oracle price. We provide a default supermajority threshold
 // of 2/3+.
-var DefaultPowerThreshold = math.LegacyNewDecWithPrec(667, 3)
+// TODO: Make this more precise by using big.Rat instead of math.LegacyDec
+var DefaultPowerThreshold = math.LegacyNewDecWithPrec(6666666667, 10)
 
 type (
 	// VoteWeightPriceInfo tracks the stake weight(s) + price(s) for a given currency pair.
@@ -121,7 +122,7 @@ func MedianPrices(
 			// greater than the threshold to be included in the final oracle price.
 			percentSubmitted := math.LegacyNewDecFromInt(info.TotalWeight).Quo(math.LegacyNewDecFromInt(totalPower))
 
-			if percentSubmitted.GTE(threshold) {
+			if percentSubmitted.GT(threshold) {
 				finalPrices[pair] = AggregatorPricePair{
 					SpotPrice: ComputeMedian(info.SpotPrices, info.TotalWeight),
 					PnlPrice:  ComputeMedian(info.PnlPrices, info.TotalWeight),
@@ -199,7 +200,7 @@ func MedianConversionRate(
 		// greater than the threshold to be included in the final oracle price.
 		percentSubmitted := math.LegacyNewDecFromInt(conversionRateInfo.TotalWeight).Quo(math.LegacyNewDecFromInt(totalPower))
 
-		if percentSubmitted.GTE(threshold) {
+		if percentSubmitted.GT(threshold) {
 			finalConversionRate = ComputeMedian(conversionRateInfo.ConversionRates, conversionRateInfo.TotalWeight)
 
 			logger.Info(
@@ -236,6 +237,9 @@ func ComputeMedian(prices []PricePerValidator, totalWeight math.Int) *big.Int {
 
 	// Compute the median weight.
 	middle := totalWeight.QuoRaw(2)
+	if !totalWeight.Mod(math.NewInt(2)).IsZero() {
+		middle = middle.AddRaw(1)
+	}
 
 	// Iterate through the prices and compute the median price.
 	sum := math.ZeroInt()

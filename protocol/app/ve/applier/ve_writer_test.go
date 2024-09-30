@@ -11,7 +11,9 @@ import (
 	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vemath "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/vecache"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
@@ -22,7 +24,456 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPriceWriter(t *testing.T) {
+func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
+	testHeight := int64(101)
+
+	// Note that the difference between the intitial prices and the input prices
+	// has to exceed the minimum price change for the price to be updated in the store.
+	tests := map[string]struct {
+		initialPrices         map[uint32]*pricestypes.MarketPrice
+		inputPrices           map[string]voteweighted.AggregatorPricePair
+		marketParams          []pricestypes.MarketParam
+		round                 int32
+		writeToCache          bool
+		expectedError         error
+		expectedPrices        map[uint32]*pricestypes.MarketPrice
+		expectedCachedUpdates vecache.PriceUpdates
+	}{
+		"Valid prices, write to cache": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+				1: {Id: 1, SpotPrice: 2000000, PnlPrice: 2000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(1500000), PnlPrice: big.NewInt(1500000)},
+				"ETH-USD": {SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+				{Id: 1, Pair: "ETH-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1500000, PnlPrice: 1500000},
+				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2500000},
+			},
+			expectedCachedUpdates: vecache.PriceUpdates{
+				{MarketId: 0, SpotPrice: big.NewInt(1500000), PnlPrice: big.NewInt(1500000)},
+				{MarketId: 1, SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
+			},
+		},
+		"Valid prices, don't write to cache": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+				1: {Id: 1, SpotPrice: 2000000, PnlPrice: 2000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(1500000), PnlPrice: big.NewInt(1500000)},
+				"ETH-USD": {SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+				{Id: 1, Pair: "ETH-USD"},
+			},
+			round:         1,
+			writeToCache:  false,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1500000, PnlPrice: 1500000},
+				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2500000},
+			},
+			expectedCachedUpdates: nil,
+		},
+		"Spot price change too small": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(1000001), PnlPrice: big.NewInt(1500000)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1500000},
+			},
+			expectedCachedUpdates: vecache.PriceUpdates{
+				{MarketId: 0, SpotPrice: nil, PnlPrice: big.NewInt(1500000)},
+			},
+		},
+		"PnL price change too small": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(1500000), PnlPrice: big.NewInt(1000001)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1500000, PnlPrice: 1000000},
+			},
+			expectedCachedUpdates: vecache.PriceUpdates{
+				{MarketId: 0, SpotPrice: big.NewInt(1500000), PnlPrice: nil},
+			},
+		},
+		"Spot and pnl price change too small": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(1000001), PnlPrice: big.NewInt(1000001)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+			},
+			expectedCachedUpdates: nil,
+		},
+		"Spot price change too small for BTC-USD, valid for ETH-USD": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+				1: {Id: 1, SpotPrice: 2000000, PnlPrice: 2000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(1000001), PnlPrice: big.NewInt(1500000)},
+				"ETH-USD": {SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+				{Id: 1, Pair: "ETH-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1500000},
+				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2500000},
+			},
+			expectedCachedUpdates: vecache.PriceUpdates{
+				{MarketId: 0, SpotPrice: nil, PnlPrice: big.NewInt(1500000)},
+				{MarketId: 1, SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
+			},
+		},
+		"PnL price change too small for ETH-USD, valid for BTC-USD": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+				1: {Id: 1, SpotPrice: 2000000, PnlPrice: 2000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(1500000), PnlPrice: big.NewInt(1500000)},
+				"ETH-USD": {SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2000001)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+				{Id: 1, Pair: "ETH-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1500000, PnlPrice: 1500000},
+				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2000000},
+			},
+			expectedCachedUpdates: vecache.PriceUpdates{
+				{MarketId: 0, SpotPrice: big.NewInt(1500000), PnlPrice: big.NewInt(1500000)},
+				{MarketId: 1, SpotPrice: big.NewInt(2500000), PnlPrice: nil},
+			},
+		},
+		"Spot and PnL price change too small for BTC-USD, valid for ETH-USD": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+				1: {Id: 1, SpotPrice: 2000000, PnlPrice: 2000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(1000001), PnlPrice: big.NewInt(1000001)},
+				"ETH-USD": {SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+				{Id: 1, Pair: "ETH-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2500000},
+			},
+			expectedCachedUpdates: vecache.PriceUpdates{
+				{MarketId: 1, SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
+			},
+		},
+		"Negative spot price": { // Note that pnl price cannot be negative if spot is not negative
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(-1500000), PnlPrice: big.NewInt(1500000)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+			},
+			expectedCachedUpdates: nil,
+		},
+		"Negative spot and pnl price": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(-1500000), PnlPrice: big.NewInt(-1500000)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+			},
+			expectedCachedUpdates: nil,
+		},
+		"Negative spot price for BTC, valid prices for ETH": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+				1: {Id: 1, SpotPrice: 2000000, PnlPrice: 2000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(-1500000), PnlPrice: big.NewInt(1500000)},
+				"ETH-USD": {SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+				{Id: 1, Pair: "ETH-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2500000},
+			},
+			expectedCachedUpdates: vecache.PriceUpdates{
+				{MarketId: 1, SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
+			},
+		},
+		"Negative spot and pnl price for BTC, negative spot price for ETH": {
+			initialPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+				1: {Id: 1, SpotPrice: 2000000, PnlPrice: 2000000},
+			},
+			inputPrices: map[string]voteweighted.AggregatorPricePair{
+				"BTC-USD": {SpotPrice: big.NewInt(-1500000), PnlPrice: big.NewInt(-1500000)},
+				"ETH-USD": {SpotPrice: big.NewInt(-2500000), PnlPrice: big.NewInt(2500000)},
+			},
+			marketParams: []pricestypes.MarketParam{
+				{Id: 0, Pair: "BTC-USD"},
+				{Id: 1, Pair: "ETH-USD"},
+			},
+			round:         1,
+			writeToCache:  true,
+			expectedError: nil,
+			expectedPrices: map[uint32]*pricestypes.MarketPrice{
+				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
+				1: {Id: 1, SpotPrice: 2000000, PnlPrice: 2000000},
+			},
+			expectedCachedUpdates: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			voteCodec := vecodec.NewDefaultVoteExtensionCodec()
+			extCodec := vecodec.NewDefaultExtendedCommitCodec()
+			voteAggregator := &mocks.VoteAggregator{}
+			ctx, _, pricesKeeper, _, _, _, _, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(t, false)
+
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+
+			for id, price := range tc.initialPrices {
+				err := pricesKeeper.UpdateSpotAndPnlMarketPrices(ctx, &pricestypes.MarketPriceUpdate{
+					MarketId:  uint32(id),
+					SpotPrice: price.SpotPrice,
+					PnlPrice:  price.PnlPrice,
+				})
+				require.NoError(t, err)
+			}
+
+			veApplier := veapplier.NewVEApplier(
+				log.NewNopLogger(),
+				voteAggregator,
+				pricesKeeper,
+				ratelimitKeeper,
+				voteCodec,
+				extCodec,
+			)
+
+			ctx = ctx.WithBlockHeight(testHeight)
+			err := veApplier.WritePricesToStoreAndMaybeCache(ctx, tc.inputPrices, tc.round, tc.writeToCache)
+
+			if tc.expectedError != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			for id, expectedPrice := range tc.expectedPrices {
+				actualPrice, err := pricesKeeper.GetMarketPrice(ctx, id)
+				require.NoError(t, err)
+				require.Equal(t, expectedPrice.Id, actualPrice.Id)
+				require.Equal(t, expectedPrice.SpotPrice, actualPrice.SpotPrice)
+				require.Equal(t, expectedPrice.PnlPrice, actualPrice.PnlPrice)
+			}
+
+			actualCachedUpdates := veApplier.GetCachedPrices()
+			require.Equal(t, tc.expectedCachedUpdates, actualCachedUpdates)
+		})
+	}
+}
+
+func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
+	testHeight := int64(101)
+
+	tests := map[string]struct {
+		initialSDaiPrice            *big.Int
+		initialLastBlockUpdated     *big.Int
+		sDaiConversionRate          *big.Int
+		round                       int32
+		writeToCache                bool
+		expectedError               error
+		expectedSDaiPrice           *big.Int
+		expectedLastBlockUpdated    *big.Int
+		expectedCacheConversionRate *big.Int
+		expectedCacheBlockHeight    *big.Int
+	}{
+		"Valid conversion rate": {
+			initialSDaiPrice:            big.NewInt(500000),
+			initialLastBlockUpdated:     big.NewInt(100),
+			sDaiConversionRate:          big.NewInt(1000000),
+			round:                       1,
+			writeToCache:                true,
+			expectedError:               nil,
+			expectedSDaiPrice:           big.NewInt(1000000),
+			expectedLastBlockUpdated:    big.NewInt(101), // Assuming current block height is 101
+			expectedCacheConversionRate: big.NewInt(1000000),
+			expectedCacheBlockHeight:    big.NewInt(testHeight),
+		},
+		"Nil conversion rate": {
+			initialSDaiPrice:            big.NewInt(500000),
+			initialLastBlockUpdated:     big.NewInt(100),
+			sDaiConversionRate:          nil,
+			round:                       1,
+			writeToCache:                true,
+			expectedError:               nil,
+			expectedSDaiPrice:           big.NewInt(500000),
+			expectedLastBlockUpdated:    big.NewInt(100),
+			expectedCacheConversionRate: nil,
+			expectedCacheBlockHeight:    nil,
+		},
+		"Negative conversion rate": {
+			initialSDaiPrice:            big.NewInt(500000),
+			initialLastBlockUpdated:     big.NewInt(100),
+			sDaiConversionRate:          big.NewInt(-1000000),
+			round:                       1,
+			writeToCache:                true,
+			expectedError:               fmt.Errorf("sDAI conversion rate cannot be negative: -1000000"),
+			expectedSDaiPrice:           big.NewInt(500000),
+			expectedLastBlockUpdated:    big.NewInt(100),
+			expectedCacheConversionRate: nil,
+			expectedCacheBlockHeight:    nil,
+		},
+		"Zero conversion rate": {
+			initialSDaiPrice:            big.NewInt(500000),
+			initialLastBlockUpdated:     big.NewInt(100),
+			sDaiConversionRate:          big.NewInt(0),
+			round:                       1,
+			writeToCache:                true,
+			expectedError:               fmt.Errorf("sDAI conversion rate cannot be zero"),
+			expectedSDaiPrice:           big.NewInt(500000),
+			expectedLastBlockUpdated:    big.NewInt(100),
+			expectedCacheConversionRate: nil,
+			expectedCacheBlockHeight:    nil,
+		},
+		"Valid conversion rate, don't write to cache": {
+			initialSDaiPrice:            big.NewInt(500000),
+			initialLastBlockUpdated:     big.NewInt(100),
+			sDaiConversionRate:          big.NewInt(2000000),
+			round:                       2,
+			writeToCache:                false,
+			expectedError:               nil,
+			expectedSDaiPrice:           big.NewInt(2000000),
+			expectedLastBlockUpdated:    big.NewInt(testHeight),
+			expectedCacheConversionRate: nil,
+			expectedCacheBlockHeight:    nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			voteCodec := vecodec.NewDefaultVoteExtensionCodec()
+			extCodec := vecodec.NewDefaultExtendedCommitCodec()
+			voteAggregator := &mocks.VoteAggregator{}
+			ctx, _, pricesKeeper, _, _, _, _, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(t, false)
+
+			ratelimitKeeper.SetSDAIPrice(ctx, tc.initialSDaiPrice)
+			ratelimitKeeper.SetSDAILastBlockUpdated(ctx, tc.initialLastBlockUpdated)
+
+			veApplier := veapplier.NewVEApplier(
+				log.NewNopLogger(),
+				voteAggregator,
+				pricesKeeper,
+				ratelimitKeeper,
+				voteCodec,
+				extCodec,
+			)
+
+			ctx = ctx.WithBlockHeight(testHeight)
+			err := veApplier.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, tc.sDaiConversionRate, tc.round, tc.writeToCache)
+
+			if tc.expectedError != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			// Check ratelimitKeeper state
+			actualSDaiPrice, found := ratelimitKeeper.GetSDAIPrice(ctx)
+			require.True(t, found)
+			require.Equal(t, tc.expectedSDaiPrice, actualSDaiPrice)
+
+			actualLastBlockUpdated, found := ratelimitKeeper.GetSDAILastBlockUpdated(ctx)
+			require.True(t, found)
+			require.Equal(t, tc.expectedLastBlockUpdated, actualLastBlockUpdated)
+
+			actualCacheConversionRate, actualCacheBlockHeight := veApplier.GetCachedSDaiConversionRate()
+			require.Equal(t, tc.expectedCacheConversionRate, actualCacheConversionRate)
+			require.Equal(t, tc.expectedCacheBlockHeight, actualCacheBlockHeight)
+		})
+	}
+}
+
+func TestVEWriter(t *testing.T) {
 	voteCodec := vecodec.NewDefaultVoteExtensionCodec()
 	extCodec := vecodec.NewDefaultExtendedCommitCodec()
 

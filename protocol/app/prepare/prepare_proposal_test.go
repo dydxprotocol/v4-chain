@@ -198,7 +198,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			pricesParamsResp:              constants.TestMarketParams,
 			pricesMarketPriceFromByesResp: constants.ValidMarketPriceUpdates[0],
 
-			expectedPrices: constants.ValidVEPrice,
+			expectedPrices: constants.ValidVEPrices,
 
 			expectedTxs: [][]byte{
 				{1, 2, 3, 4},               // order.
@@ -212,7 +212,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
-						constants.ValidVEPrice,
+						constants.ValidVEPrices,
 						"",
 					),
 				)
@@ -246,7 +246,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			pricesParamsResp:              constants.TestMarketParams,
 			pricesMarketPriceFromByesResp: constants.ValidMarketPriceUpdates[0],
 
-			expectedPrices: constants.ValidVEPrice,
+			expectedPrices: constants.ValidVEPrices,
 
 			clobResp:    &clobtypes.MsgProposedOperations{},
 			clobEncoder: passingTxEncoderFour,
@@ -262,7 +262,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
-						constants.ValidVEPrice,
+						constants.ValidVEPrices,
 						"",
 					),
 				)
@@ -327,13 +327,13 @@ func TestPrepareProposalHandler(t *testing.T) {
 			veEnabled: true,
 			height:    3,
 
-			expectedPrices: constants.ValidVEPrice,
+			expectedPrices: constants.ValidVEPrices,
 
 			request: func() *cometabci.RequestPrepareProposal {
 				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
-						constants.ValidVEPrice,
+						constants.ValidVEPrices,
 						"",
 					),
 				)
@@ -374,7 +374,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			veEnabled: true,
 			height:    3,
 
-			expectedPrices: constants.ValidVEPrice,
+			expectedPrices: constants.ValidVEPrices,
 
 			request: func() *cometabci.RequestPrepareProposal {
 				proposal := [][]byte{
@@ -385,7 +385,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 				valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
-						constants.ValidVEPrice,
+						constants.ValidVEPrices,
 						"",
 					),
 				)
@@ -428,7 +428,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			veEnabled: true,
 			height:    3,
 
-			expectedPrices: constants.ValidVEPrice,
+			expectedPrices: constants.ValidVEPrices,
 
 			request: func() *cometabci.RequestPrepareProposal {
 				proposal := [][]byte{
@@ -439,7 +439,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 				valVoteInfoAlice, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
-						constants.ValidVEPrice,
+						constants.ValidVEPrices,
 						"",
 					),
 				)
@@ -448,7 +448,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 				valVoteInfoBob, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.BobConsAddress,
-						constants.ValidVEPrice,
+						constants.ValidVEPrices,
 						"",
 					),
 				)
@@ -491,7 +491,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			veEnabled: true,
 			height:    3,
 
-			expectedPrices: constants.ValidVEPrice,
+			expectedPrices: constants.ValidVEPrices,
 
 			request: func() *cometabci.RequestPrepareProposal {
 				proposal := [][]byte{
@@ -502,7 +502,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 				valVoteInfoAlice, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.AliceConsAddress,
-						constants.ValidVEPrice,
+						constants.ValidVEPrices,
 						"",
 					),
 				)
@@ -511,7 +511,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 				valVoteInfoBob, err := vetesting.CreateSignedExtendedVoteInfo(
 					vetesting.NewDefaultSignedVeInfo(
 						constants.BobConsAddress,
-						constants.ValidVEPrice,
+						constants.ValidVEPrices,
 						"",
 					),
 				)
