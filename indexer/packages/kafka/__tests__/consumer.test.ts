@@ -10,10 +10,10 @@ import { TO_ENDER_TOPIC } from '../src';
 describe.skip('consumer', () => {
   beforeAll(async () => {
     await Promise.all([
-      consumer.connect(),
+      consumer!.connect(),
       producer.connect(),
     ]);
-    await consumer.subscribe({ topic: TO_ENDER_TOPIC });
+    await consumer!.subscribe({ topic: TO_ENDER_TOPIC });
     await startConsumer();
   });
 
