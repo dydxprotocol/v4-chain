@@ -15,7 +15,28 @@
   },
   "affiliates": {
     "affiliate_tiers": {
-      "tiers": []
+      "tiers": [
+        {
+          "req_referred_volume_quote_quantums": "0",
+          "req_staked_whole_coins": 0,
+          "taker_fee_share_ppm": 50000
+        },
+        {
+          "req_referred_volume_quote_quantums": "1000000000000",
+          "req_staked_whole_coins": 200,
+          "taker_fee_share_ppm": 100000
+        },
+        {
+          "req_referred_volume_quote_quantums": "5000000000000",
+          "req_staked_whole_coins": 1000,
+          "taker_fee_share_ppm": 125000
+        },
+        {
+          "req_referred_volume_quote_quantums": "25000000000000",
+          "req_staked_whole_coins": 5000,
+          "taker_fee_share_ppm": 150000
+        }
+      ]
     }
   },
   "auth": {
@@ -353,7 +374,12 @@
     }
   },
   "listing": {
-    "hard_cap_for_markets": 0
+    "hard_cap_for_markets": 500,
+    "listing_vault_deposit_params": {
+      "new_vault_deposit_amount": "10000000000",
+      "main_vault_deposit_amount": "0",
+      "num_blocks_to_lock_shares": 2592000
+    }
   },
   "params": null,
   "perpetuals": {

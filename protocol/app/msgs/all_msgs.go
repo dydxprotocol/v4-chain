@@ -155,6 +155,16 @@ var (
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":     {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":         {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse": {},
+
+		// accountplus
+		"/dydxprotocol.accountplus.MsgAddAuthenticator":            {},
+		"/dydxprotocol.accountplus.MsgAddAuthenticatorResponse":    {},
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticator":         {},
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticatorResponse": {},
+		"/dydxprotocol.accountplus.MsgSetActiveState":              {},
+		"/dydxprotocol.accountplus.MsgSetActiveStateResponse":      {},
+		"/dydxprotocol.accountplus.TxExtension":                    {},
+
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         {},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},
@@ -258,13 +268,14 @@ var (
 		"/dydxprotocol.vault.MsgRetrieveFromVaultResponse":          {},
 		"/dydxprotocol.vault.MsgSetVaultParams":                     {},
 		"/dydxprotocol.vault.MsgSetVaultParamsResponse":             {},
+		"/dydxprotocol.vault.MsgSetVaultQuotingParams":              {}, // deprecated
 		"/dydxprotocol.vault.MsgUnlockShares":                       {},
 		"/dydxprotocol.vault.MsgUnlockSharesResponse":               {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": {},
 		"/dydxprotocol.vault.MsgUpdateOperatorParams":               {},
 		"/dydxprotocol.vault.MsgUpdateOperatorParamsResponse":       {},
-		"/dydxprotocol.vault.MsgUpdateParams":                       {},
+		"/dydxprotocol.vault.MsgUpdateParams":                       {}, // deprecated
 		"/dydxprotocol.vault.MsgWithdrawFromMegavault":              {},
 		"/dydxprotocol.vault.MsgWithdrawFromMegavaultResponse":      {},
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 )
@@ -38,25 +37,8 @@ func (k msgServer) UpdateAffiliateTiers(ctx context.Context,
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	unconditionalRevShareConfig, err := k.revShareKeeper.GetUnconditionalRevShareConfigParams(sdkCtx)
-	if err != nil {
-		return nil, err
-	}
-	marketMapperRevShareParams := k.revShareKeeper.GetMarketMapperRevenueShareParams(sdkCtx)
-	affiliateWhitelist, err := k.GetAffiliateWhitelist(sdkCtx)
-	if err != nil {
-		return nil, err
-	}
 
-	if !k.revShareKeeper.ValidateRevShareSafety(msg.Tiers,
-		unconditionalRevShareConfig, marketMapperRevShareParams, affiliateWhitelist) {
-		return nil, errorsmod.Wrapf(
-			types.ErrRevShareSafetyViolation,
-			"rev share safety violation",
-		)
-	}
-
-	err = k.Keeper.UpdateAffiliateTiers(sdkCtx, msg.Tiers)
+	err := k.Keeper.UpdateAffiliateTiers(sdkCtx, msg.Tiers)
 	if err != nil {
 		return nil, err
 	}
@@ -70,27 +52,7 @@ func (k msgServer) UpdateAffiliateWhitelist(ctx context.Context,
 		return nil, errors.New("invalid authority")
 	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	unconditionalRevShareConfig, err := k.revShareKeeper.GetUnconditionalRevShareConfigParams(sdkCtx)
-	if err != nil {
-		return nil, err
-	}
-	marketMapperRevShareParams := k.revShareKeeper.GetMarketMapperRevenueShareParams(sdkCtx)
-
-	affiliateTiers, err := k.Keeper.GetAllAffiliateTiers(sdkCtx)
-	if err != nil {
-		return nil, err
-	}
-
-	if !k.revShareKeeper.ValidateRevShareSafety(affiliateTiers,
-		unconditionalRevShareConfig, marketMapperRevShareParams, msg.Whitelist) {
-		return nil, errorsmod.Wrapf(
-			types.ErrRevShareSafetyViolation,
-			"rev share safety violation",
-		)
-	}
-
-	err = k.Keeper.SetAffiliateWhitelist(sdk.UnwrapSDKContext(ctx), msg.Whitelist)
+	err := k.Keeper.SetAffiliateWhitelist(sdk.UnwrapSDKContext(ctx), msg.Whitelist)
 	if err != nil {
 		return nil, err
 	}

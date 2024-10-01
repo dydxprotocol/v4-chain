@@ -28,6 +28,8 @@ func TestVault(t *testing.T) {
 		inventory *big.Int
 		// Vault params.
 		vaultParams vaulttypes.VaultParams
+		// Client IDs.
+		clientIds []uint32
 		// Query request.
 		req *vaulttypes.QueryVaultRequest
 
@@ -45,6 +47,7 @@ func TestVault(t *testing.T) {
 			perpId:         0,
 			inventory:      big.NewInt(200),
 			vaultParams:    constants.VaultParams,
+			clientIds:      []uint32{0, 1, 2, 3},
 			expectedEquity: big.NewInt(500),
 		},
 		"Success: close only vault status": {
@@ -59,6 +62,7 @@ func TestVault(t *testing.T) {
 			vaultParams: vaulttypes.VaultParams{
 				Status: vaulttypes.VaultStatus_VAULT_STATUS_CLOSE_ONLY,
 			},
+			clientIds:      []uint32{},
 			expectedEquity: big.NewInt(500),
 		},
 		"Success: negative inventory and equity": {
@@ -71,6 +75,7 @@ func TestVault(t *testing.T) {
 			perpId:         0,
 			inventory:      big.NewInt(-200),
 			vaultParams:    constants.VaultParams,
+			clientIds:      []uint32{77, 88, 99},
 			expectedEquity: big.NewInt(-300),
 		},
 		"Success: non-existent clob pair": {
@@ -86,6 +91,7 @@ func TestVault(t *testing.T) {
 			perpId:         0,
 			inventory:      big.NewInt(0),
 			vaultParams:    constants.VaultParams,
+			clientIds:      []uint32{93_213, 212_092},
 			expectedEquity: big.NewInt(100),
 		},
 		"Error: query non-existent vault": {
@@ -98,6 +104,7 @@ func TestVault(t *testing.T) {
 			perpId:      0,
 			inventory:   big.NewInt(200),
 			vaultParams: constants.VaultParams,
+			clientIds:   []uint32{0, 1, 2, 3},
 			expectedErr: "vault not found",
 		},
 		"Error: nil request": {
@@ -139,14 +146,21 @@ func TestVault(t *testing.T) {
 						}
 					},
 				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *vaulttypes.GenesisState) {
+						genesisState.Vaults = []vaulttypes.Vault{
+							{
+								VaultId:     tc.vaultId,
+								VaultParams: tc.vaultParams,
+							},
+						}
+					},
+				)
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
-
-			// Set vault params.
-			err := k.SetVaultParams(ctx, tc.vaultId, tc.vaultParams)
-			require.NoError(t, err)
 
 			// Check Vault query response is as expected.
 			response, err := k.Vault(ctx, tc.req)
@@ -155,11 +169,12 @@ func TestVault(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				expectedResponse := vaulttypes.QueryVaultResponse{
-					VaultId:      tc.vaultId,
-					SubaccountId: *tc.vaultId.ToSubaccountId(),
-					Equity:       dtypes.NewIntFromBigInt(tc.expectedEquity),
-					Inventory:    dtypes.NewIntFromBigInt(tc.inventory),
-					VaultParams:  tc.vaultParams,
+					VaultId:             tc.vaultId,
+					SubaccountId:        *tc.vaultId.ToSubaccountId(),
+					Equity:              dtypes.NewIntFromBigInt(tc.expectedEquity),
+					Inventory:           dtypes.NewIntFromBigInt(tc.inventory),
+					VaultParams:         tc.vaultParams,
+					MostRecentClientIds: k.GetMostRecentClientIds(ctx, tc.vaultId),
 				}
 				require.Equal(t, expectedResponse, *response)
 			}

@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.tApp.App.AuthenticatorManager.ResetAuthenticators()
 	s.tApp.App.AuthenticatorManager.InitializeAuthenticators(
-		[]authenticator.Authenticator{
+		[]types.Authenticator{
 			authenticator.SignatureVerification{},
 			authenticator.MessageFilter{},
 			testutils.TestingAuthenticator{
@@ -134,4 +134,34 @@ func (s *KeeperTestSuite) TestKeeper_GetAndSetAuthenticatorId() {
 
 	authenticatorId = s.tApp.App.AccountPlusKeeper.InitializeOrGetNextAuthenticatorId(ctx)
 	s.Require().Equal(authenticatorId, uint64(2), "Initialize/Get authenticator id returned incorrect id")
+}
+
+func (s *KeeperTestSuite) TestKeeper_GetAuthenticatorDataForAccount() {
+	ctx := s.Ctx
+
+	// Set up account
+	key := "6cf5103c60c939a5f38e383b52239c5296c968579eec1c68a47d70fbf1d19159"
+	bz, _ := hex.DecodeString(key)
+	priv := &secp256k1.PrivKey{Key: bz}
+	accAddress := sdk.AccAddress(priv.PubKey().Address())
+
+	_, err := s.tApp.App.AccountPlusKeeper.AddAuthenticator(
+		ctx,
+		accAddress,
+		"SignatureVerification",
+		priv.PubKey().Bytes(),
+	)
+	s.Require().NoError(err, "Should successfully add a SignatureVerification")
+
+	_, err = s.tApp.App.AccountPlusKeeper.AddAuthenticator(
+		ctx,
+		accAddress,
+		"SignatureVerification",
+		priv.PubKey().Bytes(),
+	)
+	s.Require().NoError(err, "Should successfully add a MessageFilter")
+
+	authenticators, err := s.tApp.App.AccountPlusKeeper.GetAuthenticatorDataForAccount(ctx, accAddress)
+	s.Require().NoError(err)
+	s.Require().Equal(len(authenticators), 2, "Getting authenticators returning incorrect data")
 }

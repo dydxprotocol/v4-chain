@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -33,6 +34,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/client"
 	cosmosflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -413,7 +415,17 @@ func New(
 	// Enable optimistic block execution.
 	if appFlags.OptimisticExecutionEnabled {
 		logger.Info("optimistic execution is enabled.")
-		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+		if appFlags.OptimisticExecutionTestAbortRate > 0 {
+			logger.Warn(fmt.Sprintf(
+				"Test flag optimistic-execution-test-abort-rate is set: %v\n",
+				appFlags.OptimisticExecutionTestAbortRate,
+			))
+		}
+		baseAppOptions = append(
+			baseAppOptions,
+			baseapp.SetOptimisticExecution(
+				oe.WithAbortRate(int(appFlags.OptimisticExecutionTestAbortRate)),
+			))
 	}
 
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
@@ -949,19 +961,6 @@ func New(
 	)
 	affiliatesModule := affiliatesmodule.NewAppModule(appCodec, app.AffiliatesKeeper)
 
-	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
-		appCodec,
-		keys[revsharemoduletypes.StoreKey],
-		[]string{
-			lib.GovModuleAddress.String(),
-		},
-		app.AffiliatesKeeper,
-	)
-	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
-
-	// Set the revshare keeper in the affiliates keeper.
-	app.AffiliatesKeeper.SetRevShareKeeper(app.RevShareKeeper)
-
 	app.MarketMapKeeper = *marketmapmodulekeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[marketmapmoduletypes.StoreKey]),
 		appCodec,
@@ -969,6 +968,33 @@ func New(
 	)
 
 	marketmapModule := marketmapmodule.NewAppModule(appCodec, &app.MarketMapKeeper)
+
+	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
+		appCodec,
+		app.StatsKeeper,
+		app.AffiliatesKeeper,
+		keys[feetiersmoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
+	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
+
+	app.AffiliatesKeeper.SetFeetiersKeeper(app.FeeTiersKeeper)
+
+	app.RevShareKeeper = *revsharemodulekeeper.NewKeeper(
+		appCodec,
+		keys[revsharemoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+		app.AffiliatesKeeper,
+		*app.FeeTiersKeeper,
+	)
+	revShareModule := revsharemodule.NewAppModule(appCodec, app.RevShareKeeper)
+	app.FeeTiersKeeper.SetRevShareKeeper(app.RevShareKeeper)
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
@@ -1041,19 +1067,6 @@ func New(
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper)
 
-	app.FeeTiersKeeper = feetiersmodulekeeper.NewKeeper(
-		appCodec,
-		app.StatsKeeper,
-		app.AffiliatesKeeper,
-		keys[feetiersmoduletypes.StoreKey],
-		// set the governance and delaymsg module accounts as the authority for conducting upgrades
-		[]string{
-			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
-		},
-	)
-	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
-
 	app.VestKeeper = *vestmodulekeeper.NewKeeper(
 		appCodec,
 		keys[vestmoduletypes.StoreKey],
@@ -1091,7 +1104,6 @@ func New(
 		app.BankKeeper,
 		app.PerpetualsKeeper,
 		app.BlockTimeKeeper,
-		app.RevShareKeeper,
 		app.IndexerEventManager,
 		app.FullNodeStreamingManager,
 	)
@@ -1206,6 +1218,7 @@ func New(
 		app.ClobKeeper,
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
+		app.VaultKeeper,
 	)
 	listingModule := listingmodule.NewAppModule(
 		appCodec,
@@ -1214,11 +1227,12 @@ func New(
 		app.ClobKeeper,
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
+		app.VaultKeeper,
 	)
 
 	// Initialize authenticators
 	app.AuthenticatorManager = authenticator.NewAuthenticatorManager()
-	app.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
+	app.AuthenticatorManager.InitializeAuthenticators([]accountplusmoduletypes.Authenticator{
 		authenticator.NewSignatureVerification(app.AccountKeeper),
 	})
 	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
@@ -2098,6 +2112,7 @@ func getFullNodeStreamingManagerFromOptions(
 			appFlags.GrpcStreamingMaxChannelBufferSize,
 			appFlags.FullNodeStreamingSnapshotInterval,
 			streamingManagerTransientStoreKey,
+			cdc,
 		)
 
 		// Start websocket server.

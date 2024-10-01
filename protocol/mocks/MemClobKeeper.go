@@ -415,9 +415,9 @@ func (_m *MemClobKeeper) ReplayPlaceOrder(ctx types.Context, msg *clobtypes.MsgP
 	return r0, r1, r2, r3
 }
 
-// SendOrderbookFillUpdates provides a mock function with given fields: ctx, orderbookFills
-func (_m *MemClobKeeper) SendOrderbookFillUpdates(ctx types.Context, orderbookFills []clobtypes.StreamOrderbookFill) {
-	_m.Called(ctx, orderbookFills)
+// SendOrderbookFillUpdate provides a mock function with given fields: ctx, orderbookFills
+func (_m *MemClobKeeper) SendOrderbookFillUpdate(ctx types.Context, orderbookFill clobtypes.StreamOrderbookFill) {
+	_m.Called(ctx, orderbookFill)
 }
 
 // SendOrderbookUpdates provides a mock function with given fields: ctx, offchainUpdates

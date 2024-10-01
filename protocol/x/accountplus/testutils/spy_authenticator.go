@@ -6,19 +6,34 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
-var _ authenticator.Authenticator = &SpyAuthenticator{}
+var _ types.Authenticator = &SpyAuthenticator{}
+
+type SpyAuthenticateRequest struct {
+	AuthenticatorId string         `json:"authenticator_id"`
+	Account         sdk.AccAddress `json:"account"`
+	Msg             []byte         `json:"msg"`
+	MsgIndex        uint64         `json:"msg_index"`
+}
 
 type SpyTrackRequest struct {
-	AuthenticatorId string                 `json:"authenticator_id"`
-	Account         sdk.AccAddress         `json:"account"`
-	Msg             authenticator.LocalAny `json:"msg"`
-	MsgIndex        uint64                 `json:"msg_index"`
+	AuthenticatorId string         `json:"authenticator_id"`
+	Account         sdk.AccAddress `json:"account"`
+	Msg             []byte         `json:"msg"`
+	MsgIndex        uint64         `json:"msg_index"`
+}
+
+type SpyConfirmExecutionRequest struct {
+	AuthenticatorId string         `json:"authenticator_id"`
+	Account         sdk.AccAddress `json:"account"`
+	Msg             []byte         `json:"msg"`
+	MsgIndex        uint64         `json:"msg_index"`
 }
 
 type SpyAddRequest struct {
@@ -34,9 +49,9 @@ type SpyRemoveRequest struct {
 }
 
 type LatestCalls struct {
-	Authenticate           authenticator.AuthenticationRequest
+	Authenticate           SpyAuthenticateRequest
 	Track                  SpyTrackRequest
-	ConfirmExecution       authenticator.AuthenticationRequest
+	ConfirmExecution       SpyConfirmExecutionRequest
 	OnAuthenticatorAdded   SpyAddRequest
 	OnAuthenticatorRemoved SpyRemoveRequest
 }
@@ -62,10 +77,11 @@ type SpyAuthenticator struct {
 	KvStoreKey storetypes.StoreKey
 	Name       string
 	Failure    FailureFlag
+	Cdc        codec.BinaryCodec
 }
 
-func NewSpyAuthenticator(kvStoreKey storetypes.StoreKey) SpyAuthenticator {
-	return SpyAuthenticator{KvStoreKey: kvStoreKey}
+func NewSpyAuthenticator(cdc codec.BinaryCodec, kvStoreKey storetypes.StoreKey) SpyAuthenticator {
+	return SpyAuthenticator{Cdc: cdc, KvStoreKey: kvStoreKey}
 }
 
 func (s SpyAuthenticator) Type() string {
@@ -76,7 +92,7 @@ func (s SpyAuthenticator) StaticGas() uint64 {
 	return 1000
 }
 
-func (s SpyAuthenticator) Initialize(config []byte) (authenticator.Authenticator, error) {
+func (s SpyAuthenticator) Initialize(config []byte) (types.Authenticator, error) {
 	var spyData SpyAuthenticatorData
 	err := json.Unmarshal(config, &spyData)
 	if err != nil {
@@ -87,9 +103,15 @@ func (s SpyAuthenticator) Initialize(config []byte) (authenticator.Authenticator
 	return s, nil
 }
 
-func (s SpyAuthenticator) Authenticate(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (s SpyAuthenticator) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	s.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
-		calls.Authenticate = request
+		bz := s.Cdc.MustMarshal(request.Msg)
+		calls.Authenticate = SpyAuthenticateRequest{
+			AuthenticatorId: request.AuthenticatorId,
+			Account:         request.Account,
+			Msg:             bz,
+			MsgIndex:        request.MsgIndex,
+		}
 		return calls
 	})
 
@@ -99,12 +121,13 @@ func (s SpyAuthenticator) Authenticate(ctx sdk.Context, request authenticator.Au
 	return nil
 }
 
-func (s SpyAuthenticator) Track(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (s SpyAuthenticator) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	s.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
+		bz := s.Cdc.MustMarshal(request.Msg)
 		calls.Track = SpyTrackRequest{
 			AuthenticatorId: request.AuthenticatorId,
 			Account:         request.Account,
-			Msg:             request.Msg,
+			Msg:             bz,
 			MsgIndex:        request.MsgIndex,
 		}
 		return calls
@@ -112,10 +135,16 @@ func (s SpyAuthenticator) Track(ctx sdk.Context, request authenticator.Authentic
 	return nil
 }
 
-func (s SpyAuthenticator) ConfirmExecution(ctx sdk.Context, request authenticator.AuthenticationRequest) error {
+func (s SpyAuthenticator) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	// intentionlly call update before check to test state revert
 	s.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
-		calls.ConfirmExecution = request
+		bz := s.Cdc.MustMarshal(request.Msg)
+		calls.ConfirmExecution = SpyConfirmExecutionRequest{
+			AuthenticatorId: request.AuthenticatorId,
+			Account:         request.Account,
+			Msg:             bz,
+			MsgIndex:        request.MsgIndex,
+		}
 		return calls
 	})
 

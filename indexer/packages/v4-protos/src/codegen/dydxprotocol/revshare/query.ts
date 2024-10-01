@@ -1,5 +1,5 @@
 import { MarketMapperRevenueShareParams, MarketMapperRevenueShareParamsSDKType } from "./params";
-import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType } from "./revshare";
+import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType, UnconditionalRevShareConfig, UnconditionalRevShareConfigSDKType } from "./revshare";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** Queries for the default market mapper revenue share params */
@@ -39,6 +39,22 @@ export interface QueryMarketMapperRevShareDetailsResponse {
 
 export interface QueryMarketMapperRevShareDetailsResponseSDKType {
   details?: MarketMapperRevShareDetailsSDKType;
+}
+/** Queries unconditional revenue share details */
+
+export interface QueryUnconditionalRevShareConfig {}
+/** Queries unconditional revenue share details */
+
+export interface QueryUnconditionalRevShareConfigSDKType {}
+/** Response type for QueryUnconditionalRevShareConfig */
+
+export interface QueryUnconditionalRevShareConfigResponse {
+  config?: UnconditionalRevShareConfig;
+}
+/** Response type for QueryUnconditionalRevShareConfig */
+
+export interface QueryUnconditionalRevShareConfigResponseSDKType {
+  config?: UnconditionalRevShareConfigSDKType;
 }
 
 function createBaseQueryMarketMapperRevenueShareParams(): QueryMarketMapperRevenueShareParams {
@@ -205,6 +221,85 @@ export const QueryMarketMapperRevShareDetailsResponse = {
   fromPartial(object: DeepPartial<QueryMarketMapperRevShareDetailsResponse>): QueryMarketMapperRevShareDetailsResponse {
     const message = createBaseQueryMarketMapperRevShareDetailsResponse();
     message.details = object.details !== undefined && object.details !== null ? MarketMapperRevShareDetails.fromPartial(object.details) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryUnconditionalRevShareConfig(): QueryUnconditionalRevShareConfig {
+  return {};
+}
+
+export const QueryUnconditionalRevShareConfig = {
+  encode(_: QueryUnconditionalRevShareConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryUnconditionalRevShareConfig {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryUnconditionalRevShareConfig();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryUnconditionalRevShareConfig>): QueryUnconditionalRevShareConfig {
+    const message = createBaseQueryUnconditionalRevShareConfig();
+    return message;
+  }
+
+};
+
+function createBaseQueryUnconditionalRevShareConfigResponse(): QueryUnconditionalRevShareConfigResponse {
+  return {
+    config: undefined
+  };
+}
+
+export const QueryUnconditionalRevShareConfigResponse = {
+  encode(message: QueryUnconditionalRevShareConfigResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.config !== undefined) {
+      UnconditionalRevShareConfig.encode(message.config, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryUnconditionalRevShareConfigResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryUnconditionalRevShareConfigResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.config = UnconditionalRevShareConfig.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryUnconditionalRevShareConfigResponse>): QueryUnconditionalRevShareConfigResponse {
+    const message = createBaseQueryUnconditionalRevShareConfigResponse();
+    message.config = object.config !== undefined && object.config !== null ? UnconditionalRevShareConfig.fromPartial(object.config) : undefined;
     return message;
   }
 

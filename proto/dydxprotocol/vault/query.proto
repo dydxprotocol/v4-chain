@@ -89,6 +89,7 @@ message QueryVaultResponse {
     (gogoproto.nullable) = false
   ];
   VaultParams vault_params = 5 [ (gogoproto.nullable) = false ];
+  repeated uint32 most_recent_client_ids = 6;
 }
 
 // QueryAllVaultsRequest is a request type for the AllVaults RPC method.

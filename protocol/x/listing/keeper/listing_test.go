@@ -2,7 +2,19 @@ package keeper_test
 
 import (
 	"errors"
+	"math/big"
 	"testing"
+
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
+
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
+
+	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	"github.com/stretchr/testify/mock"
 
@@ -16,6 +28,7 @@ import (
 
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
+	comettypes "github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -139,7 +152,7 @@ func TestCreatePerpetual(t *testing.T) {
 				market := marketmaptypes.Market{
 					Ticker: marketmaptypes.Ticker{
 						CurrencyPair:     oracletypes.CurrencyPair{Base: "TEST", Quote: "USD"},
-						Decimals:         6,
+						Decimals:         10,
 						MinProviderCount: 2,
 						Enabled:          false,
 						Metadata_JSON:    string(dydxMetadata),
@@ -172,8 +185,8 @@ func TestCreatePerpetual(t *testing.T) {
 					require.Equal(t, uint32(10), perpetual.GetId())
 					require.Equal(t, marketId, perpetual.Params.MarketId)
 					require.Equal(t, tc.ticker, perpetual.Params.Ticker)
-					// Expected resolution = -6 - Floor(log10(1000000000)) = -15
-					require.Equal(t, int32(-15), perpetual.Params.AtomicResolution)
+					// Expected resolution = -6 - (Floor(log10(1000000000))-10) = -5
+					require.Equal(t, int32(-5), perpetual.Params.AtomicResolution)
 					require.Equal(t, int32(types.DefaultFundingPpm), perpetual.Params.DefaultFundingPpm)
 					require.Equal(t, uint32(types.LiquidityTier_Isolated), perpetual.Params.LiquidityTier)
 					require.Equal(
@@ -265,25 +278,136 @@ func TestCreateClobPair(t *testing.T) {
 				clobPairId, err := keeper.CreateClobPair(ctx, perpetualId)
 				require.NoError(t, err)
 
+				clobPair, found := clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(clobPairId))
+				require.True(t, found)
+				require.Equal(t, clobtypes.ClobPair_STATUS_ACTIVE, clobPair.Status)
+				require.Equal(
+					t,
+					clobtypes.SubticksPerTick(types.SubticksPerTick_LongTail),
+					clobPair.GetClobPairSubticksPerTick(),
+				)
+				require.Equal(
+					t,
+					types.DefaultStepBaseQuantums,
+					clobPair.GetClobPairMinOrderBaseQuantums().ToUint64(),
+				)
+				require.Equal(t, perpetualId, clobPair.MustGetPerpetualId())
+
 				// Check if the clob pair was created only if we are in deliverTx mode
+				_, found = clobKeeper.PerpetualIdToClobPairId[perpetualId]
 				if tc.isDeliverTx {
-					clobPair, found := clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(clobPairId))
 					require.True(t, found)
-					require.Equal(t, clobtypes.ClobPair_STATUS_ACTIVE, clobPair.Status)
-					require.Equal(
-						t,
-						clobtypes.SubticksPerTick(types.SubticksPerTick_LongTail),
-						clobPair.GetClobPairSubticksPerTick(),
-					)
-					require.Equal(
-						t,
-						types.DefaultStepBaseQuantums,
-						clobPair.GetClobPairMinOrderBaseQuantums().ToUint64(),
-					)
-					require.Equal(t, perpetualId, clobPair.MustGetPerpetualId())
 				} else {
-					_, found := clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(clobPairId))
 					require.False(t, found)
+				}
+			},
+		)
+	}
+}
+
+func TestDepositToMegavaultforPML(t *testing.T) {
+	tests := map[string]struct {
+		address    string
+		balance    *big.Int
+		asset      asstypes.Asset
+		clobPairId uint32
+
+		expectedErr string
+	}{
+		"success": {
+			address:    constants.AliceAccAddress.String(),
+			balance:    big.NewInt(10_000_000_000), // 10k USDC
+			asset:      *constants.Usdc,
+			clobPairId: 1,
+
+			expectedErr: "",
+		},
+		"failure - insufficient balance": {
+			address:    constants.AliceAccAddress.String(),
+			balance:    big.NewInt(0),
+			asset:      *constants.Usdc,
+			clobPairId: 1,
+
+			expectedErr: "NewlyUndercollateralized",
+		},
+		"failure - invalid clob pair id": {
+			address:    constants.AliceAccAddress.String(),
+			balance:    big.NewInt(10_000_000_000), // 10k USDC
+			asset:      *constants.Usdc,
+			clobPairId: 100, // non existent clob pair id
+
+			expectedErr: "ClobPair not found",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(
+			name, func(t *testing.T) {
+				tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(
+					func() (genesis comettypes.GenesisDoc) {
+						genesis = testapp.DefaultGenesis()
+						// Initialize vault with its existing equity.
+						testapp.UpdateGenesisDocWithAppStateForModule(
+							&genesis,
+							func(genesisState *satypes.GenesisState) {
+								genesisState.Subaccounts = []satypes.Subaccount{
+									{
+										Id: &vaulttypes.MegavaultMainSubaccount,
+										AssetPositions: []*satypes.AssetPosition{
+											testutil.CreateSingleAssetPosition(
+												0,
+												big.NewInt(1_000_000),
+											),
+										},
+									},
+									{
+										Id: &satypes.SubaccountId{
+											Owner:  tc.address,
+											Number: 0,
+										},
+										AssetPositions: []*satypes.AssetPosition{
+											testutil.CreateSingleAssetPosition(
+												tc.asset.Id,
+												tc.balance,
+											),
+										},
+									},
+								}
+							},
+						)
+						return genesis
+					},
+				).Build()
+				ctx := tApp.InitChain()
+
+				// Set existing total shares.
+				err := tApp.App.VaultKeeper.SetTotalShares(
+					ctx,
+					vaulttypes.BigIntToNumShares(big.NewInt(1_000_000)),
+				)
+				require.NoError(t, err)
+
+				err = tApp.App.ListingKeeper.DepositToMegavaultforPML(
+					ctx,
+					satypes.SubaccountId{
+						Owner:  tc.address,
+						Number: 0,
+					},
+					tc.clobPairId,
+				)
+				if tc.expectedErr != "" {
+					require.ErrorContains(t, err, tc.expectedErr)
+				} else {
+					require.NoError(t, err)
+					vaultParams, exists := tApp.App.VaultKeeper.GetVaultParams(
+						ctx,
+						vaulttypes.VaultId{
+							Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+							Number: tc.clobPairId,
+						},
+					)
+					require.True(t, exists)
+					require.Equal(t, vaulttypes.VaultStatus_VAULT_STATUS_QUOTING, vaultParams.Status)
 				}
 			},
 		)

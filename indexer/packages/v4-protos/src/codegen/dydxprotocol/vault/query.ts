@@ -51,6 +51,7 @@ export interface QueryVaultResponse {
   equity: Uint8Array;
   inventory: Uint8Array;
   vaultParams?: VaultParams;
+  mostRecentClientIds: number[];
 }
 /** QueryVaultResponse is a response type for the Vault RPC method. */
 
@@ -60,6 +61,7 @@ export interface QueryVaultResponseSDKType {
   equity: Uint8Array;
   inventory: Uint8Array;
   vault_params?: VaultParamsSDKType;
+  most_recent_client_ids: number[];
 }
 /** QueryAllVaultsRequest is a request type for the AllVaults RPC method. */
 
@@ -466,7 +468,8 @@ function createBaseQueryVaultResponse(): QueryVaultResponse {
     subaccountId: undefined,
     equity: new Uint8Array(),
     inventory: new Uint8Array(),
-    vaultParams: undefined
+    vaultParams: undefined,
+    mostRecentClientIds: []
   };
 }
 
@@ -492,6 +495,13 @@ export const QueryVaultResponse = {
       VaultParams.encode(message.vaultParams, writer.uint32(42).fork()).ldelim();
     }
 
+    writer.uint32(50).fork();
+
+    for (const v of message.mostRecentClientIds) {
+      writer.uint32(v);
+    }
+
+    writer.ldelim();
     return writer;
   },
 
@@ -524,6 +534,19 @@ export const QueryVaultResponse = {
           message.vaultParams = VaultParams.decode(reader, reader.uint32());
           break;
 
+        case 6:
+          if ((tag & 7) === 2) {
+            const end2 = reader.uint32() + reader.pos;
+
+            while (reader.pos < end2) {
+              message.mostRecentClientIds.push(reader.uint32());
+            }
+          } else {
+            message.mostRecentClientIds.push(reader.uint32());
+          }
+
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -540,6 +563,7 @@ export const QueryVaultResponse = {
     message.equity = object.equity ?? new Uint8Array();
     message.inventory = object.inventory ?? new Uint8Array();
     message.vaultParams = object.vaultParams !== undefined && object.vaultParams !== null ? VaultParams.fromPartial(object.vaultParams) : undefined;
+    message.mostRecentClientIds = object.mostRecentClientIds?.map(e => e) || [];
     return message;
   }
 

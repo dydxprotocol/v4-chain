@@ -2,6 +2,11 @@ package keeper
 
 import (
 	"math"
+	"math/big"
+
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
+
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
@@ -101,10 +106,12 @@ func (k Keeper) CreateClobPair(
 		return 0, err
 	}
 
+	k.ClobKeeper.SetClobPair(ctx, clobPair)
+
 	// Only create the clob pair if we are in deliver tx mode. This is to prevent populating
 	// in memory data structures in the CLOB during simulation mode.
 	if lib.IsDeliverTxMode(ctx) {
-		err := k.ClobKeeper.CreateClobPair(ctx, clobPair)
+		err := k.ClobKeeper.CreateClobPairStructures(ctx, clobPair)
 		if err != nil {
 			return 0, err
 		}
@@ -141,7 +148,10 @@ func (k Keeper) CreatePerpetual(
 	}
 
 	// calculate atomic resolution from reference price
-	atomicResolution := types.ResolutionOffset - int32(math.Floor(math.Log10(float64(metadata.ReferencePrice))))
+	// atomic resolution = -6 - (log10(referencePrice) - decimals)
+	atomicResolution := types.ResolutionOffset -
+		(int32(math.Floor(math.Log10(float64(metadata.ReferencePrice)))) -
+			int32(marketMapDetails.Ticker.Decimals))
 
 	// Create a new perpetual
 	perpetual, err := k.PerpetualsKeeper.CreatePerpetual(
@@ -186,4 +196,68 @@ func (k Keeper) GetListingVaultDepositParams(
 	b := store.Get([]byte(types.ListingVaultDepositParamsKey))
 	k.cdc.MustUnmarshal(b, &vaultDepositParams)
 	return vaultDepositParams
+}
+
+// Function to deposit to the megavault for a new PML market
+// This function deposits money to the megavault, transfers the new vault
+// deposit amount to the new market vault and locks the shares for the deposit
+func (k Keeper) DepositToMegavaultforPML(
+	ctx sdk.Context,
+	fromSubaccount satypes.SubaccountId,
+	clobPairId uint32,
+) error {
+	// Get the listing vault deposit params
+	vaultDepositParams := k.GetListingVaultDepositParams(ctx)
+
+	// Deposit to the megavault
+	totalDepositAmount := new(big.Int).Add(
+		vaultDepositParams.NewVaultDepositAmount.BigInt(),
+		vaultDepositParams.MainVaultDepositAmount.BigInt(),
+	)
+	mintedShares, err := k.VaultKeeper.DepositToMegavault(
+		ctx,
+		fromSubaccount,
+		totalDepositAmount,
+	)
+	if err != nil {
+		return err
+	}
+
+	vaultId := vaulttypes.VaultId{
+		Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+		Number: clobPairId,
+	}
+
+	// Transfer the new vault deposit amount to the new market vault
+	err = k.VaultKeeper.AllocateToVault(
+		ctx,
+		vaultId,
+		vaultDepositParams.NewVaultDepositAmount.BigInt(),
+	)
+	if err != nil {
+		return err
+	}
+
+	// Lock the shares for the new vault deposit amount
+	err = k.VaultKeeper.LockShares(
+		ctx,
+		fromSubaccount.Owner,
+		vaulttypes.BigIntToNumShares(mintedShares),
+		uint32(ctx.BlockHeight())+vaultDepositParams.NumBlocksToLockShares,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Activate vault to quoting status
+	err = k.VaultKeeper.SetVaultStatus(
+		ctx,
+		vaultId,
+		vaulttypes.VaultStatus_VAULT_STATUS_QUOTING,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

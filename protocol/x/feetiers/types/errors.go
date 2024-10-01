@@ -30,4 +30,9 @@ var (
 		404,
 		"Authority is invalid",
 	)
+	ErrRevShareSafetyViolation = errorsmod.Register(
+		ModuleName,
+		405,
+		"Rev share safety violation",
+	)
 )

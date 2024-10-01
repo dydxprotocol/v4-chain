@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 )
 
@@ -13,15 +12,7 @@ type StatsKeeper interface {
 	GetBlockStats(ctx sdk.Context) *stattypes.BlockStats
 }
 
-type RevShareKeeper interface {
-	GetUnconditionalRevShareConfigParams(ctx sdk.Context) (revsharetypes.UnconditionalRevShareConfig, error)
-	GetMarketMapperRevenueShareParams(
-		ctx sdk.Context,
-	) revsharetypes.MarketMapperRevenueShareParams
-	ValidateRevShareSafety(
-		affiliateTiers AffiliateTiers,
-		unconditionalRevShareConfig revsharetypes.UnconditionalRevShareConfig,
-		marketMapperRevShareParams revsharetypes.MarketMapperRevenueShareParams,
-		affiliateWhitelist AffiliateWhitelist,
-	) bool
+type FeetiersKeeper interface {
+	GetAffiliateRefereeLowestTakerFee(ctx sdk.Context) int32
+	GetLowestMakerFee(ctx sdk.Context) int32
 }

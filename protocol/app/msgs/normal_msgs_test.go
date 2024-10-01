@@ -118,6 +118,13 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal",
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
 
+		// accountplus
+		"/dydxprotocol.accountplus.MsgAddAuthenticator",
+		"/dydxprotocol.accountplus.MsgAddAuthenticatorResponse",
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticator",
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticatorResponse",
+		"/dydxprotocol.accountplus.TxExtension",
+
 		// affiliates
 		"/dydxprotocol.affiliates.MsgRegisterAffiliate",
 		"/dydxprotocol.affiliates.MsgRegisterAffiliateResponse",

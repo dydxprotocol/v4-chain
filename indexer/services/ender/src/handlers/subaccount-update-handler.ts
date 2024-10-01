@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   AssetPositionFromDatabase,
   AssetPositionModel,
@@ -16,6 +17,7 @@ import {
 import _ from 'lodash';
 import * as pg from 'pg';
 
+import config from '../config';
 import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../constants';
 import { addPositionsToContents, annotateWithPnl } from '../helpers/kafka-helper';
 import { SubaccountUpdate } from '../lib/translated-types';
@@ -61,6 +63,12 @@ export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
         marketIdToMarket[marketId],
       );
     }
+    // Handle latency from resultRow
+    stats.timing(
+      `${config.SERVICE_NAME}.handle_subaccount_update_event.sql_latency`,
+      Number(resultRow.latency),
+      this.generateTimingStatsOptions(),
+    );
 
     return [
       this.generateConsolidatedKafkaEvent(

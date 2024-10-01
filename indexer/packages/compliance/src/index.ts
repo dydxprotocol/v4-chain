@@ -5,3 +5,4 @@ export * from './geoblocking/util';
 export * from './types';
 export * from './config';
 export * from './constants';
+export * from './clients/elliptic-provider';
