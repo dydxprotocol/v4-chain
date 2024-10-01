@@ -28,4 +28,9 @@ var (
 		5,
 		"Error initializing authenticator",
 	)
+	ErrTxnHasMultipleSigners = errorsmod.Register(
+		ModuleName,
+		6,
+		"The transaction has multiple signers",
+	)
 )

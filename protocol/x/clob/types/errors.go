@@ -225,11 +225,6 @@ var (
 		48,
 		"This field has been deprecated",
 	)
-	ErrTxnHasMultipleSigners = errorsmod.Register(
-		ModuleName,
-		49,
-		"The transaction has multiple signers",
-	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(

@@ -10,10 +10,68 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
+
+// MaybeValidateAuthenticators checks if the transaction has authenticators specified and if so,
+// validates them. It returns an error if the authenticators are not valid or removed from state.
+func (k Keeper) MaybeValidateAuthenticators(ctx sdk.Context, tx sdk.Tx) error {
+	// Check if the tx had authenticator specified.
+	specified, txOptions := lib.HasSelectedAuthenticatorTxExtensionSpecified(tx, k.cdc)
+	if !specified {
+		return nil
+	}
+
+	// The tx had authenticators specified.
+	// First make sure smart account flow is enabled.
+	if active := k.GetIsSmartAccountActive(ctx); !active {
+		return types.ErrSmartAccountNotActive
+	}
+
+	// Make sure txn is a SigVerifiableTx and get signers from the tx.
+	sigVerifiableTx, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return errors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+	}
+
+	signers, err := sigVerifiableTx.GetSigners()
+	if err != nil {
+		return err
+	}
+
+	if len(signers) != 1 {
+		return errors.Wrap(types.ErrTxnHasMultipleSigners, "only one signer is allowed")
+	}
+
+	account := sdk.AccAddress(signers[0])
+
+	// Retrieve the selected authenticators from the extension and make sure they are valid, i.e. they
+	// are registered and not removed from state.
+	//
+	// Note that we only verify the existence of the authenticators here without actually
+	// runnning them. This is because all current authenticators are stateless and do not read/modify any states.
+	selectedAuthenticators := txOptions.GetSelectedAuthenticators()
+	for _, authenticatorId := range selectedAuthenticators {
+		_, err := k.GetInitializedAuthenticatorForAccount(
+			ctx,
+			account,
+			authenticatorId,
+		)
+		if err != nil {
+			return errors.Wrapf(
+				err,
+				"selected authenticator (%s, %d) is not registered or removed from state",
+				account.String(),
+				authenticatorId,
+			)
+		}
+	}
+	return nil
+}
 
 // AddAuthenticator adds an authenticator to an account, this function is used to add multiple
 // authenticators such as SignatureVerifications and AllOfs
