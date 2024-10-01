@@ -15,7 +15,6 @@ import {
   UpdateClobPairEventV1,
   UpdatePerpetualEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
-import { OrderTable } from '@dydxprotocol-indexer/postgres';
 
 import { AnnotatedIndexerTendermintEvent, DydxIndexerSubtypes } from './types';
 
@@ -53,8 +52,6 @@ export function annotateIndexerTendermintEvent(
       };
     }
     case (DydxIndexerSubtypes.STATEFUL_ORDER.toString()): {
-      const temp = StatefulOrderEventV1.decode(eventDataBinary);
-      const orderId = OrderTable.orderIdToUuid(temp.orderRemoval!.removedOrderId!);
       return {
         ...event,
         dataBytes: new Uint8Array(),

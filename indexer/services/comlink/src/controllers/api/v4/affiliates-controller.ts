@@ -64,7 +64,7 @@ class AffiliatesController extends Controller {
     const isVolumeEligible = Number(walletRow.totalVolume) >= config.VOLUME_ELIGIBILITY_THRESHOLD;
     const isAffiliate = referredUserRows !== undefined ? referredUserRows.length > 0 : false;
 
-    // subaccountRows.length > 1 is not possible because subaccountNumber is unique for an address
+    // No need to check subaccountRows.length > 1 as subaccountNumber is unique for an address
     if (subaccountRows.length === 0) {
       // error logging will be performed by handleInternalServerError
       throw new UnexpectedServerError(`Subaccount 0 not found for address ${address}`);
@@ -78,22 +78,14 @@ class AffiliatesController extends Controller {
       },
       [],
     );
-    
-    let referralCode: string = '';
-    // usernameRows.length > 1 is not possible because subAccountId is unique (foreign key 
-    // constraint)
+    // No need to check usernameRows.length > 1 as subAccountId is unique (foreign key constraint)
+    // This error can happen if a user calls this endpoint before subaccount-username-generator
+    // has generated the username
     if (usernameRows.length === 0) {
-      // This error can happen if a user calls this endpoint before subaccount-username-generator
-      // has generated the username
       stats.increment(`${config.SERVICE_NAME}.${controllerName}.get_metadata.subaccount_username_not_found`);
-      logger.warning({
-        at: 'affiliates-controller#metadata',
-        message: `Could not find referral code for address: ${address}`,
-      });
       throw new UnexpectedServerError(`Username not found for subaccount ${subaccountId}`);
-    } else {
-      referralCode = usernameRows[0].username;
     }
+    const referralCode = usernameRows[0].username;
 
     return {
       referralCode,
