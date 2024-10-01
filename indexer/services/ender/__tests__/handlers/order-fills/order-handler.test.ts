@@ -138,7 +138,7 @@ describe('OrderHandler', () => {
     perpetualId: testConstants.defaultPerpetualMarket.id,
     side: PositionSide.LONG,
     status: PerpetualPositionStatus.OPEN,
-    size: '5',
+    size: '10',
     maxSize: '25',
     sumOpen: '10',
     entryPrice: '15000',
@@ -439,7 +439,7 @@ describe('OrderHandler', () => {
             defaultPerpetualPosition.openEventId,
           ),
           {
-            sumOpen: Big(defaultPerpetualPosition.sumOpen!).plus(totalFilled).toFixed(),
+            sumOpen: Big(defaultPerpetualPosition.size).plus(totalFilled).toFixed(),
             entryPrice: getWeightedAverage(
               defaultPerpetualPosition.entryPrice!,
               defaultPerpetualPosition.size,
