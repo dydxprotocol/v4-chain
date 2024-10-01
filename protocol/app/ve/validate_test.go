@@ -108,6 +108,20 @@ func TestCleanAndValidateExtCommitInfo(t *testing.T) {
 			expectedError: nil,
 			blockHeight:   100,
 		},
+		"Nil vote extension": {
+			setupMocks: func(pricesKeeper *mocks.PreBlockExecPricesKeeper, ratelimitKeeper *mocks.VoteExtensionRateLimitKeeper) {
+			},
+			extCommitInfo: cometabci.ExtendedCommitInfo{
+				Round: 1,
+				Votes: []cometabci.ExtendedVoteInfo{prunedVote},
+			},
+			expectedInfo: cometabci.ExtendedCommitInfo{
+				Round: 1,
+				Votes: []cometabci.ExtendedVoteInfo{prunedVote},
+			},
+			expectedError: nil,
+			blockHeight:   100,
+		},
 	}
 
 	for name, tc := range tests {
