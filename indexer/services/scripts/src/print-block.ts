@@ -42,7 +42,7 @@ export function seek(offset: bigint): void {
     offset: offset.toString(),
   });
 
-  consumer.seek({
+  consumer!.seek({
     topic: TO_ENDER_TOPIC,
     partition: 0,
     offset: offset.toString(),
@@ -57,11 +57,11 @@ export function seek(offset: bigint): void {
 
 export async function connect(height: number): Promise<void> {
   await Promise.all([
-    consumer.connect(),
+    consumer!.connect(),
     producer.connect(),
   ]);
 
-  await consumer.subscribe({
+  await consumer!.subscribe({
     topic: TO_ENDER_TOPIC,
     fromBeginning: true,
   });

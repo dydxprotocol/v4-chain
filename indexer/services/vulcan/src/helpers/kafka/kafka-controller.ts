@@ -1,6 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
-  consumer, producer, KafkaTopics, updateOnMessageFunction, updateOnBatchFunction,
+  consumer, initConsumer, producer, KafkaTopics, updateOnMessageFunction, updateOnBatchFunction,
 } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 
@@ -10,11 +10,11 @@ import { onMessage } from '../../lib/on-message';
 
 export async function connect(): Promise<void> {
   await Promise.all([
-    consumer.connect(),
+    initConsumer(),
     producer.connect(),
   ]);
 
-  await consumer.subscribe({
+  await consumer!.subscribe({
     topic: KafkaTopics.TO_VULCAN,
     // https://kafka.js.org/docs/consuming#a-name-from-beginning-a-frombeginning
     // Need to set fromBeginning to true, so when vulcan restarts, it will consume all messages
