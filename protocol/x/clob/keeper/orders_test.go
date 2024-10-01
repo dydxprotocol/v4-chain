@@ -623,7 +623,16 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			// Create all existing orders.
 			for _, order := range tc.existingOrders {
-				_, _, err := ks.ClobKeeper.PlaceShortTermOrder(ctx, &types.MsgPlaceOrder{Order: order})
+				msg := &types.MsgPlaceOrder{Order: order}
+
+				txBuilder := constants.TestEncodingCfg.TxConfig.NewTxBuilder()
+				err := txBuilder.SetMsgs(msg)
+				require.NoError(t, err)
+				bytes, err := constants.TestEncodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+				require.NoError(t, err)
+				ctx = ctx.WithTxBytes(bytes)
+
+				_, _, err = ks.ClobKeeper.PlaceShortTermOrder(ctx, msg)
 				require.NoError(t, err)
 			}
 
@@ -632,6 +641,14 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			ctx.MultiStore().SetTracer(traceDecoder)
 
 			msg := &types.MsgPlaceOrder{Order: tc.order}
+
+			txBuilder := constants.TestEncodingCfg.TxConfig.NewTxBuilder()
+			err = txBuilder.SetMsgs(msg)
+			require.NoError(t, err)
+			bytes, err := constants.TestEncodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+			require.NoError(t, err)
+			ctx = ctx.WithTxBytes(bytes)
+
 			orderSizeOptimisticallyFilledFromMatching,
 				orderStatus,
 				err := ks.ClobKeeper.PlaceShortTermOrder(ctx, msg)
