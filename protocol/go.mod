@@ -34,7 +34,7 @@ require (
 	github.com/zyedidia/generic v1.0.0
 	golang.org/x/exp v0.0.0-20240909161429-701f63a606c0
 	google.golang.org/genproto v0.0.0-20240903143218-8af14fe29dc1 // indirect
-	google.golang.org/grpc v1.67.0
+	google.golang.org/grpc v1.67.1
 	gopkg.in/DataDog/dd-trace-go.v1 v1.48.0
 	gopkg.in/typ.v4 v4.1.0
 )
@@ -66,7 +66,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rs/zerolog v1.33.0
 	github.com/shopspring/decimal v1.3.1
-	github.com/skip-mev/connect/v2 v2.0.2-0.20240930185250-fc1e299fb719
+	github.com/skip-mev/connect/v2 v2.1.0
 	github.com/spf13/viper v1.19.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
