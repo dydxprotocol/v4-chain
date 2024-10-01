@@ -14,6 +14,7 @@ import (
 
 	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/vecache"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -946,6 +947,8 @@ func New(
 		conversionRateAggregatorFn,
 	)
 
+	veCache := vecache.VeUpdatesCacheImpl{}
+
 	veApplier := veapplier.NewVEApplier(
 		logger,
 		aggregator,
@@ -953,6 +956,7 @@ func New(
 		app.RatelimitKeeper,
 		app.voteCodec,
 		app.extCodec,
+		&veCache,
 	)
 
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)

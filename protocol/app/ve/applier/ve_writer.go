@@ -43,11 +43,13 @@ func NewVEApplier(
 	ratelimitKeeper VEApplierRatelimitKeeper,
 	voteExtensionCodec codec.VoteExtensionCodec,
 	extendedCommitCodec codec.ExtendedCommitCodec,
+	finalVeUpdatesCache vecache.VeUpdatesCache,
 ) *VEApplier {
 	return &VEApplier{
 		voteAggregator:      voteAggregator,
 		pricesKeeper:        pricesKeeper,
 		ratelimitKeeper:     ratelimitKeeper,
+		finalVeUpdatesCache: finalVeUpdatesCache,
 		logger:              logger,
 		voteExtensionCodec:  voteExtensionCodec,
 		extendedCommitCodec: extendedCommitCodec,
@@ -140,74 +142,35 @@ func (vea *VEApplier) getAggregatePricesAndConversionRateFromVE(
 func (vea *VEApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 	pricesFromCache := vea.finalVeUpdatesCache.GetPriceUpdates()
 	for _, price := range pricesFromCache {
-		if price.SpotPrice != nil && price.PnlPrice != nil {
-			marketPriceUpdate := &pricestypes.MarketPriceUpdate{
-				MarketId:  price.MarketId,
-				SpotPrice: price.SpotPrice.Uint64(),
-				PnlPrice:  price.PnlPrice.Uint64(),
-			}
-
-			if err := vea.pricesKeeper.UpdateSpotAndPnlMarketPrices(
-				ctx,
-				marketPriceUpdate,
-			); err != nil {
-				vea.logger.Error(
-					"failed to set prices for currency pair",
-					"market_id", price.MarketId,
-					"err", err,
-				)
-
-				return err
-			}
-
-			vea.logger.Info(
-				"set prices for currency pair",
-				"market_id", price.MarketId,
-				"spot_price", price.SpotPrice.Uint64(),
-				"pnl_price", price.PnlPrice.Uint64(),
-			)
-		} else if price.SpotPrice != nil {
-			spotPriceUpdate := &pricestypes.MarketSpotPriceUpdate{
-				MarketId:  price.MarketId,
-				SpotPrice: price.SpotPrice.Uint64(),
-			}
-
-			if err := vea.pricesKeeper.UpdateSpotPrice(ctx, spotPriceUpdate); err != nil {
-				vea.logger.Error(
-					"failed to set spot price for currency pair",
-					"market_id", price.MarketId,
-					"err", err,
-				)
-
-				return err
-			}
-
-			vea.logger.Info(
-				"set spot price for currency pair",
-				"market_id", price.MarketId,
-				"spot_price", price.SpotPrice.Uint64(),
-			)
-		} else if price.PnlPrice != nil {
-			pnlPriceUpdate := &pricestypes.MarketPnlPriceUpdate{
-				MarketId: price.MarketId,
-				PnlPrice: price.PnlPrice.Uint64(),
-			}
-
-			if err := vea.pricesKeeper.UpdatePnlPrice(ctx, pnlPriceUpdate); err != nil {
-				vea.logger.Error(
-					"failed to set pnl price for currency pair",
-					"market_id", price.MarketId,
-					"err", err,
-				)
-				return err
-			}
-
-			vea.logger.Info(
-				"set pnl price for currency pair",
-				"market_id", price.MarketId,
-				"pnl_price", price.PnlPrice.Uint64(),
-			)
+		if price.SpotPrice == nil || price.PnlPrice == nil {
+			return fmt.Errorf("cache spot price or pnl price is nil. spot price is %v, pnl price is %v", price.SpotPrice, price.PnlPrice)
 		}
+
+		marketPriceUpdate := &pricestypes.MarketPriceUpdate{
+			MarketId:  price.MarketId,
+			SpotPrice: price.SpotPrice.Uint64(),
+			PnlPrice:  price.PnlPrice.Uint64(),
+		}
+
+		if err := vea.pricesKeeper.UpdateSpotAndPnlMarketPrices(
+			ctx,
+			marketPriceUpdate,
+		); err != nil {
+			vea.logger.Error(
+				"failed to set prices for currency pair",
+				"market_id", price.MarketId,
+				"err", err,
+			)
+
+			return err
+		}
+
+		vea.logger.Info(
+			"set prices for currency pair",
+			"market_id", price.MarketId,
+			"spot_price", price.SpotPrice.Uint64(),
+			"pnl_price", price.PnlPrice.Uint64(),
+		)
 	}
 	return nil
 }

@@ -13,7 +13,7 @@ import (
 )
 
 func TestVEPriceCaching(t *testing.T) {
-	veCache := vecache.VeUpdatesCache{}
+	veCache := vecache.VeUpdatesCacheImpl{}
 	ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 	t.Run("valid: set price updates for single round + height", func(t *testing.T) {
@@ -228,7 +228,7 @@ func TestVEPriceCaching(t *testing.T) {
 
 func checkValidCacheState(
 	t *testing.T,
-	veCache *vecache.VeUpdatesCache,
+	veCache vecache.VeUpdatesCache,
 	shouldBeHight int64,
 	shouldBeRound int32,
 	shouldBeUpdates vecache.PriceUpdates,

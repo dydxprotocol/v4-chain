@@ -320,6 +320,8 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			veCache := vecache.VeUpdatesCacheImpl{}
+
 			veApplier := veapplier.NewVEApplier(
 				log.NewNopLogger(),
 				voteAggregator,
@@ -327,6 +329,7 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				ratelimitKeeper,
 				voteCodec,
 				extCodec,
+				&veCache,
 			)
 
 			ctx = ctx.WithBlockHeight(testHeight)
@@ -439,6 +442,8 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 			ratelimitKeeper.SetSDAIPrice(ctx, tc.initialSDaiPrice)
 			ratelimitKeeper.SetSDAILastBlockUpdated(ctx, tc.initialLastBlockUpdated)
 
+			veCache := vecache.VeUpdatesCacheImpl{}
+
 			veApplier := veapplier.NewVEApplier(
 				log.NewNopLogger(),
 				voteAggregator,
@@ -446,6 +451,7 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 				ratelimitKeeper,
 				voteCodec,
 				extCodec,
+				&veCache,
 			)
 
 			ctx = ctx.WithBlockHeight(testHeight)
@@ -488,6 +494,8 @@ func TestVEWriter(t *testing.T) {
 	ratelimitKeeper.On("SetSDAIPrice", mock.Anything, mock.Anything).Return()
 	ratelimitKeeper.On("SetSDAILastBlockUpdated", mock.Anything, mock.Anything).Return()
 
+	veCache := vecache.VeUpdatesCacheImpl{}
+
 	veApplier := veapplier.NewVEApplier(
 		log.NewNopLogger(),
 		voteAggregator,
@@ -495,6 +503,7 @@ func TestVEWriter(t *testing.T) {
 		ratelimitKeeper,
 		voteCodec,
 		extCodec,
+		&veCache,
 	)
 
 	t.Run("if extracting oracle votes fails, fail", func(t *testing.T) {
@@ -1039,7 +1048,7 @@ func TestVEWriter(t *testing.T) {
 		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz2, {1, 2, 3, 4}, {1, 2, 3, 4}},
 			DecidedLastCommit: cometabci.CommitInfo{
-				Round: 2,
+				Round: 2, // TODO: Not sure whether this should be 2 or 1
 				Votes: []cometabci.VoteInfo{},
 			},
 		}, true)
@@ -1270,5 +1279,132 @@ func TestVEWriter(t *testing.T) {
 			}
 		*/
 		ratelimitKeeper.AssertNumberOfCalls(t, "SetSDAIPrice", 1)
+	})
+
+	t.Run("throws error when cache returns nil prices", func(t *testing.T) {
+		veCache := mocks.VeUpdatesCache{}
+
+		veApplier := veapplier.NewVEApplier(
+			log.NewNopLogger(),
+			voteAggregator,
+			pricesKeeper,
+			ratelimitKeeper,
+			voteCodec,
+			extCodec,
+			&veCache,
+		)
+
+		veCache.On("GetPriceUpdates").Return(vecache.PriceUpdates{
+			{
+				MarketId:  1,
+				SpotPrice: big.NewInt(100),
+				PnlPrice:  nil,
+			},
+		}, nil).Once()
+
+		veCache.On("HasValidValues", mock.Anything, mock.Anything).Return(true, nil)
+		veCache.On("GetConversionRateUpdateAndBlockHeight").Return(big.NewInt(100), big.NewInt(5))
+
+		ctx = ctx.WithBlockHeight(5)
+
+		price1Bz := big.NewInt(100).Bytes()
+
+		prices1 := []vetypes.PricePair{
+			{
+				MarketId:  1,
+				SpotPrice: price1Bz,
+				PnlPrice:  price1Bz,
+			},
+		}
+
+		vote1, err := vetesting.CreateSignedExtendedVoteInfo(
+			vetesting.NewDefaultSignedVeInfo(
+				constants.AliceConsAddress,
+				prices1,
+				"",
+			),
+		)
+		require.NoError(t, err)
+
+		_, extCommitInfoBz1, err := vetesting.CreateExtendedCommitInfo(
+			[]cometabci.ExtendedVoteInfo{vote1},
+		)
+		require.NoError(t, err)
+
+		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
+			{
+				DaemonVoteExtension: vetypes.DaemonVoteExtension{
+					Prices: prices1,
+				},
+				ConsAddress: constants.AliceConsAddress,
+			},
+		}).Return(map[string]vemath.AggregatorPricePair{
+			constants.BtcUsdPair: {
+				SpotPrice: big.NewInt(100),
+				PnlPrice:  big.NewInt(100),
+			},
+		}, nil, nil).Once()
+
+		pricesKeeper.On("GetAllMarketParams", ctx).Return(
+			[]pricestypes.MarketParam{
+				{
+					Id:   1,
+					Pair: constants.BtcUsdPair,
+				},
+			},
+		).Twice()
+
+		pricesKeeper.On("GetMarketParam", ctx, uint32(1)).Return(
+			pricestypes.MarketParam{
+				Id:   1,
+				Pair: constants.BtcUsdPair,
+			},
+			true,
+		).Twice()
+
+		// First call
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{extCommitInfoBz1, {1, 2, 3, 4}, {1, 2, 3, 4}},
+			DecidedLastCommit: cometabci.CommitInfo{
+				Round: 1,
+				Votes: []cometabci.VoteInfo{},
+			},
+		}, true)
+		require.Error(t, err)
+		pricesKeeper.AssertNotCalled(t, "UpdateSpotAndPnlMarketPrices")
+
+		veCache.On("GetPriceUpdates").Return(vecache.PriceUpdates{
+			{
+				MarketId:  1,
+				SpotPrice: nil,
+				PnlPrice:  big.NewInt(100),
+			},
+		}, nil).Once()
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{extCommitInfoBz1, {1, 2, 3, 4}, {1, 2, 3, 4}},
+			DecidedLastCommit: cometabci.CommitInfo{
+				Round: 2,
+				Votes: []cometabci.VoteInfo{},
+			},
+		}, true)
+		require.Error(t, err)
+		pricesKeeper.AssertNotCalled(t, "UpdateSpotAndPnlMarketPrices")
+
+		veCache.On("GetPriceUpdates").Return(vecache.PriceUpdates{
+			{
+				MarketId:  1,
+				SpotPrice: nil,
+				PnlPrice:  nil,
+			},
+		}, nil).Once()
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{extCommitInfoBz1, {1, 2, 3, 4}, {1, 2, 3, 4}},
+			DecidedLastCommit: cometabci.CommitInfo{
+				Round: 3,
+				Votes: []cometabci.VoteInfo{},
+			},
+		}, true)
+		require.Error(t, err)
+		pricesKeeper.AssertNotCalled(t, "UpdateSpotAndPnlMarketPrices")
 	})
 }
