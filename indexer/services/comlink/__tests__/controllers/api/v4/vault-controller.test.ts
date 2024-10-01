@@ -21,6 +21,7 @@ import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
 import { DateTime } from 'luxon';
 import Big from 'big.js';
+import config from '../../../../src/config';
 
 describe('vault-controller#V4', () => {
   const latestBlockHeight: string = '25';
@@ -37,6 +38,7 @@ describe('vault-controller#V4', () => {
   const vault1Equity: number = 159500;
   const vault2Equity: number = 10000;
   const mainVaultEquity: number = 10000;
+  const vaultPnlHistoryHoursPrev: number = config.VAULT_PNL_HISTORY_HOURS;
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -48,6 +50,8 @@ describe('vault-controller#V4', () => {
 
   describe('GET /v1', () => {
     beforeEach(async () => {
+      // Get a week of data for hourly pnl ticks.
+      config.VAULT_PNL_HISTORY_HOURS = 168;
       await testMocks.seedData();
       await perpetualMarketRefresher.updatePerpetualMarkets();
       await liquidityTierRefresher.updateLiquidityTiers();
@@ -109,6 +113,7 @@ describe('vault-controller#V4', () => {
 
     afterEach(async () => {
       await dbHelpers.clearData();
+      config.VAULT_PNL_HISTORY_HOURS = vaultPnlHistoryHoursPrev;
     });
 
     it('Get /megavault/historicalPnl with no vault subaccounts', async () => {
