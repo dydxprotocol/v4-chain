@@ -492,26 +492,27 @@ function filterOutIntervalTicks(
     blockToBlockTime.set(block, blockTime);
 
     const startOfInterval: DateTime = blockTime.toUTC().startOf(resolution);
-    const startOfIntervalBlock: number | undefined = blocksPerInterval.get(startOfInterval.toISO());
+    const startOfIntervalStr: string = startOfInterval.toISO();
+    const startOfIntervalBlock: number | undefined = blocksPerInterval.get(startOfIntervalStr);
     // No block for the start of interval, set this block as the block for the interval.
     if (startOfIntervalBlock === undefined) {
-      blocksPerInterval.set(startOfInterval.toISO(), block);
-      ticksPerInterval.set(startOfInterval.toISO(), pnlTick);
+      blocksPerInterval.set(startOfIntervalStr, block);
+      ticksPerInterval.set(startOfIntervalStr, pnlTick);
       return;
     }
 
     const startOfDayBlockTime: DateTime | undefined = blockToBlockTime.get(startOfIntervalBlock);
     // Invalid block set as start of day block, set this block as the block for the day.
     if (startOfDayBlockTime === undefined) {
-      blocksPerInterval.set(startOfInterval.toISO(), block);
-      ticksPerInterval.set(startOfInterval.toISO(), pnlTick);
+      blocksPerInterval.set(startOfIntervalStr, block);
+      ticksPerInterval.set(startOfIntervalStr, pnlTick);
       return;
     }
 
     // This block is closer to the start of the day, set it as the block for the day.
     if (blockTime.diff(startOfInterval) < startOfDayBlockTime.diff(startOfInterval)) {
-      blocksPerInterval.set(startOfInterval.toISO(), block);
-      ticksPerInterval.set(startOfInterval.toISO(), pnlTick);
+      blocksPerInterval.set(startOfIntervalStr, block);
+      ticksPerInterval.set(startOfIntervalStr, pnlTick);
     }
   });
   return Array.from(ticksPerInterval.values());
