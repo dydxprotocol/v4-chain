@@ -320,6 +320,41 @@ func TestGetPubKeyByConsAddr(t *testing.T) {
 	}
 }
 
+func TestGetVEEncodedPrice(t *testing.T) {
+	tests := map[string]struct {
+		price           *big.Int
+		expectedVEBytes []byte
+		expectedError   bool
+	}{
+		"Positive price": {
+			price:           big.NewInt(100),
+			expectedVEBytes: mustEncodePrice(t, big.NewInt(100)),
+			expectedError:   false,
+		},
+		"Zero price": {
+			price:           big.NewInt(0),
+			expectedVEBytes: mustEncodePrice(t, big.NewInt(0)),
+			expectedError:   false,
+		},
+		"Negative price": {
+			price:           big.NewInt(-100),
+			expectedVEBytes: nil,
+			expectedError:   true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			veBytes, err := veutils.GetVEEncodedPrice(tc.price)
+			if tc.expectedError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedVEBytes, veBytes)
+			}
+		})
+	}
+}
+
 func mustEncodePrice(t *testing.T, price *big.Int) []byte {
 	encoded, err := price.GobEncode()
 	require.NoError(t, err)
