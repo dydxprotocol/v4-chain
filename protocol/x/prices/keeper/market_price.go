@@ -182,7 +182,7 @@ func (k Keeper) GetMarketIdToValidIndexPrice(
 					"market pair", marketParam.Pair,
 					"error", err,
 				)
-				return nil
+				continue
 			}
 			ret[marketParam.Id] = types.MarketPrice{
 				Id:       marketParam.Id,
