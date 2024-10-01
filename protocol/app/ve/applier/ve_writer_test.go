@@ -1099,6 +1099,15 @@ func TestVEWriter(t *testing.T) {
 		)
 		require.NoError(t, err)
 
+		vote3, err := vetesting.CreateSignedExtendedVoteInfo(
+			vetesting.NewDefaultSignedVeInfo(
+				constants.AliceConsAddress,
+				prices1,
+				"1111111111",
+			),
+		)
+		require.NoError(t, err)
+
 		vote2, err := vetesting.CreateSignedExtendedVoteInfo(
 			vetesting.NewDefaultSignedVeInfo(
 				constants.BobConsAddress,
@@ -1118,6 +1127,11 @@ func TestVEWriter(t *testing.T) {
 		)
 		require.NoError(t, err)
 
+		_, extCommitInfoBz3, err := vetesting.CreateExtendedCommitInfo(
+			[]cometabci.ExtendedVoteInfo{vote3},
+		)
+		require.NoError(t, err)
+
 		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
@@ -1133,6 +1147,21 @@ func TestVEWriter(t *testing.T) {
 			},
 		}, big.NewInt(1234567890), nil).Once()
 
+		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
+			{
+				DaemonVoteExtension: vetypes.DaemonVoteExtension{
+					Prices:             prices1,
+					SDaiConversionRate: "1111111111",
+				},
+				ConsAddress: constants.AliceConsAddress,
+			},
+		}).Return(map[string]vemath.AggregatorPricePair{
+			constants.BtcUsdPair: {
+				SpotPrice: big.NewInt(100),
+				PnlPrice:  big.NewInt(100),
+			},
+		}, big.NewInt(1111111111), nil).Once()
+
 		pricesKeeper.On("GetAllMarketParams", ctx).Return(
 			[]pricestypes.MarketParam{
 				{
@@ -1140,7 +1169,7 @@ func TestVEWriter(t *testing.T) {
 					Pair: constants.BtcUsdPair,
 				},
 			},
-		)
+		).Twice()
 
 		pricesKeeper.On("GetMarketParam", ctx, uint32(1)).Return(
 			pricestypes.MarketParam{
@@ -1148,9 +1177,9 @@ func TestVEWriter(t *testing.T) {
 				Pair: constants.BtcUsdPair,
 			},
 			true,
-		)
+		).Twice()
 
-		pricesKeeper.On("UpdateSpotAndPnlMarketPrices", ctx, mock.Anything).Return(nil)
+		pricesKeeper.On("UpdateSpotAndPnlMarketPrices", ctx, mock.Anything).Return(nil).Times(3)
 
 		// First call
 		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
@@ -1185,6 +1214,32 @@ func TestVEWriter(t *testing.T) {
 
 		cachedSDAIRate, _ := veApplier.GetCachedSDaiConversionRate()
 		require.Equal(t, big.NewInt(1234567890), cachedSDAIRate)
+
+		// Second call should be using the cache and so not change the sdai rate
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{extCommitInfoBz3, {1, 2, 3, 4}, {1, 2, 3, 4}},
+			DecidedLastCommit: cometabci.CommitInfo{
+				Round: 1,
+				Votes: []cometabci.VoteInfo{},
+			},
+		}, true)
+		require.NoError(t, err)
+
+		cachedSDAIRate, _ = veApplier.GetCachedSDaiConversionRate()
+		require.Equal(t, big.NewInt(1234567890), cachedSDAIRate)
+
+		// Second call should be using the cache and so not change the sdai rate
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{extCommitInfoBz3, {1, 2, 3, 4}, {1, 2, 3, 4}},
+			DecidedLastCommit: cometabci.CommitInfo{
+				Round: 2,
+				Votes: []cometabci.VoteInfo{},
+			},
+		}, true)
+		require.NoError(t, err)
+
+		cachedSDAIRate, _ = veApplier.GetCachedSDaiConversionRate()
+		require.Equal(t, big.NewInt(1111111111), cachedSDAIRate)
 
 		ctx = ctx.WithBlockHeight(6)
 
@@ -1253,7 +1308,7 @@ func TestVEWriter(t *testing.T) {
 			},
 		}, cachedPrices)
 
-		// Second call with different round
+		// Second call
 		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz2, {1, 2, 3, 4}, {1, 2, 3, 4}},
 			DecidedLastCommit: cometabci.CommitInfo{
@@ -1269,6 +1324,6 @@ func TestVEWriter(t *testing.T) {
 				return nil
 			}
 		*/
-		ratelimitKeeper.AssertNumberOfCalls(t, "SetSDAIPrice", 1)
+		ratelimitKeeper.AssertNumberOfCalls(t, "SetSDAIPrice", 3)
 	})
 }

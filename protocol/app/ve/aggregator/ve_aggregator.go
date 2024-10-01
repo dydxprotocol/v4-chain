@@ -35,10 +35,6 @@ type VoteAggregator interface {
 	// pair must be provided by a super-majority (2/3+) of validators. This is enforced by the
 	// price aggregator but can be replaced by the application.
 	AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx sdk.Context, votes []Vote) (map[string]veaggregator.AggregatorPricePair, *big.Int, error)
-
-	// GetPriceForValidator gets the prices reported by a given validator. This method depends
-	// on the prices from the latest set of aggregated votes.
-	GetPriceForValidator(validator sdk.ConsAddress) map[string]veaggregator.AggregatorPricePair
 }
 
 type MedianAggregator struct {
@@ -135,11 +131,11 @@ func (ma *MedianAggregator) addVoteToAggregator(
 			}
 		}
 
-		if spotPrice == nil {
+		if spotPrice == nil || spotPrice.Sign() == 0 {
 			continue
 		}
 
-		if pnlPrice == nil {
+		if pnlPrice == nil || pnlPrice.Sign() == 0 {
 			pnlPrice = spotPrice
 		}
 
@@ -160,10 +156,6 @@ func (ma *MedianAggregator) addVoteToAggregator(
 	}
 
 	ma.perValidatorSDaiConversionRate[address] = sDaiConversionRate
-}
-
-func (ma *MedianAggregator) GetPriceForValidator(validator sdk.ConsAddress) map[string]veaggregator.AggregatorPricePair {
-	return ma.perValidatorPrices[validator.String()]
 }
 
 func GetDaemonVotesFromBlock(

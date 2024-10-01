@@ -209,20 +209,6 @@ func GetVECacheEncodedPrice(price *big.Int) ([]byte, error) {
 	return price.GobEncode()
 }
 
-func GetVECacheDecodedPrice(priceBz []byte) (*big.Int, error) {
-	var price big.Int
-	err := price.GobDecode(priceBz)
-	if err != nil {
-		return nil, err
-	}
-
-	if price.Sign() < 0 {
-		return nil, fmt.Errorf("price must be non-negative %v", price.String())
-	}
-
-	return &price, nil
-}
-
 func CreateSingleValidatorExtendedCommitInfo(
 	consAddr sdk.ConsAddress,
 	prices []vetypes.PricePair,

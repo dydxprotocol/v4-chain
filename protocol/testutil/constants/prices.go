@@ -425,6 +425,29 @@ var (
 		},
 	}
 
+	ValidVEPricesOnlySpot = []vetypes.PricePair{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5Bytes,
+		},
+		{
+			MarketId:  MarketId1,
+			SpotPrice: Price6Bytes,
+		},
+		{
+			MarketId:  MarketId2,
+			SpotPrice: Price7Bytes,
+		},
+	}
+
+	ValidVEPricesWithNoMarkets = []vetypes.PricePair{
+		{
+			MarketId:  99,
+			SpotPrice: Price5Bytes,
+			PnlPrice:  Price5Bytes,
+		},
+	}
+
 	InvalidVEPriceBytes = []vetypes.PricePair{
 		{
 			MarketId:  MarketId0,
