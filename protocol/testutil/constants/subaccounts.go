@@ -191,6 +191,23 @@ var (
 		},
 		AssetYieldIndex: big.NewRat(1, 1).String(),
 	}
+	Carl_Num0_1BTC_short_50000_non_TDai = satypes.Subaccount{
+		Id: &Carl_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			{
+				AssetId:  1,
+				Quantums: dtypes.NewInt(50_000_000_000), // non tdai asset
+			},
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(-100_000_000), // -1 BTC
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
+	}
+
 	Carl_Num0_1BTC_Short_50499USD = satypes.Subaccount{
 		Id: &Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
@@ -685,7 +702,7 @@ var (
 		},
 		AssetYieldIndex: big.NewRat(1, 1).String(),
 	}
-	Dave_Num0_TinyBTC_Long_1ETH_Long_46000USD_Short = satypes.Subaccount{
+	Dave_Num0_TinyBTC_Long_1ETH_Long_2900USD_Short = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
 			&Short_TDai_Asset_2_900,
@@ -702,6 +719,7 @@ var (
 		},
 		AssetYieldIndex: big.NewRat(1, 1).String(),
 	}
+
 	Dave_Num1_1BTC_Long_46000USD_Short = satypes.Subaccount{
 		Id: &Dave_Num1,
 		AssetPositions: []*satypes.AssetPosition{

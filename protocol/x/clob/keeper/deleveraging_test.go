@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"testing"
@@ -9,7 +10,6 @@ import (
 
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 
 	sdkmath "cosmossdk.io/math"
@@ -435,7 +435,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 							perpetuals[i].Params.LiquidityTier,
 							perpetuals[i].Params.MarketType,
 							perpetuals[i].Params.DangerIndexPpm,
-							lib.UintToString(perpetuals[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
+							fmt.Sprintf("%d", perpetuals[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Once().Return()
@@ -877,7 +877,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 							perps[i].Params.LiquidityTier,
 							perps[i].Params.MarketType,
 							perps[i].Params.DangerIndexPpm,
-							lib.UintToString(perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
+							fmt.Sprintf("%d", perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Once().Return()

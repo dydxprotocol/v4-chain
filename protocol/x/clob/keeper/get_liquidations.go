@@ -22,7 +22,7 @@ func (k Keeper) FetchInformationForLiquidations(
 	perpetualsMap map[uint32]perptypes.Perpetual,
 	liquidityTiersMap map[uint32]perptypes.LiquidityTier,
 ) {
-	// TODO(LIQ-22) Only return subaccounts with open positions
+
 	subaccounts = k.subaccountsKeeper.GetAllSubaccount(ctx)
 
 	perpetuals := k.perpetualsKeeper.GetAllPerpetuals(ctx)
@@ -57,7 +57,6 @@ func (k Keeper) GetLiquidatableAndNegativeTncSubaccountIds(
 	liquidatableSubaccountIds = heap.NewLiquidationPriorityHeap()
 	for _, subaccount := range subaccounts {
 
-		// TODO(LIQ-22) can remove this after only returning subaccounts with open positions
 		if len(subaccount.PerpetualPositions) == 0 {
 			continue
 		}
@@ -162,7 +161,7 @@ func updateCollateralizationInfoGivenAssets(
 	bigTotalNetCollateral *big.Int,
 ) error {
 
-	// Note that we only expect USDC before multi-collateral support is added.
+	// Note that we only expect TDai before multi-collateral support is added.
 	for _, assetPosition := range settledSubaccount.AssetPositions {
 		if assetPosition.AssetId != assetstypes.AssetTDai.Id {
 			return errorsmod.Wrapf(
@@ -185,12 +184,39 @@ func updateCollateralizationInfoGivenPerp(
 	bigWeightedMaintenanceMargin *big.Int,
 	bigTotalMaintenanceMargin *big.Int,
 ) {
+	updateNetCollateral(perpetual, price, bigPositionQuantums, bigTotalNetCollateral)
+	updateWeightedMaintenanceMargin(perpetual, price, bigPositionQuantums, bigWeightedMaintenanceMargin)
+	updateTotalMaintenanceMargin(perpetual, price, liquidityTier, bigPositionQuantums, bigTotalMaintenanceMargin)
+}
+
+func updateNetCollateral(
+	perpetual perptypes.Perpetual,
+	price pricestypes.MarketPrice,
+	bigPositionQuantums *big.Int,
+	bigTotalNetCollateral *big.Int,
+) {
 	bigPositionQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, price, bigPositionQuantums)
 	bigTotalNetCollateral.Add(bigTotalNetCollateral, bigPositionQuoteQuantums)
+}
 
+func updateWeightedMaintenanceMargin(
+	perpetual perptypes.Perpetual,
+	price pricestypes.MarketPrice,
+	bigPositionQuantums *big.Int,
+	bigWeightedMaintenanceMargin *big.Int,
+) {
+	bigPositionQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, price, bigPositionQuantums)
 	weightedPositionQuoteQuantums := new(big.Int).Mul(bigPositionQuoteQuantums.Abs(bigPositionQuoteQuantums), new(big.Int).SetUint64(uint64(perpetual.Params.DangerIndexPpm)))
 	bigWeightedMaintenanceMargin.Add(bigWeightedMaintenanceMargin, weightedPositionQuoteQuantums)
+}
 
+func updateTotalMaintenanceMargin(
+	perpetual perptypes.Perpetual,
+	price pricestypes.MarketPrice,
+	liquidityTier perptypes.LiquidityTier,
+	bigPositionQuantums *big.Int,
+	bigTotalMaintenanceMargin *big.Int,
+) {
 	_, bigMaintenanceMarginQuoteQuantums := perpkeeper.GetMarginRequirementsInQuoteQuantums(perpetual, price, liquidityTier, bigPositionQuantums)
 	bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
 }

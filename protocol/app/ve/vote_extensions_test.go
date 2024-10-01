@@ -370,6 +370,35 @@ func TestExtendVoteHandler(t *testing.T) {
 					},
 					true,
 				)
+				mClobKeeper.On("GetClobPair", mock.Anything, mock.Anything).Return(
+					clobtypes.ClobPair{
+						Id:              constants.MarketId1,
+						SubticksPerTick: 100_000,
+					},
+					true,
+				)
+				mClobKeeper.On("GetClobPair", mock.Anything, mock.Anything).Return(
+					clobtypes.ClobPair{
+						Id:              constants.MarketId2,
+						SubticksPerTick: 100_000,
+					},
+					true,
+				)
+				mClobKeeper.On("GetClobPair", mock.Anything, mock.Anything).Return(
+					clobtypes.ClobPair{
+						Id:              constants.MarketId3,
+						SubticksPerTick: 100_000,
+					},
+					true,
+				)
+				mClobKeeper.On("GetClobPair", mock.Anything, mock.Anything).Return(
+					clobtypes.ClobPair{
+						Id:              constants.MarketId4,
+						SubticksPerTick: 100_000,
+					},
+					true,
+				)
+
 				mClobKeeper.On(
 					"GetSingleMarketClobMetadata",
 					mock.Anything,

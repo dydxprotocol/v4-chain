@@ -280,7 +280,6 @@ func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
 		if !allExist {
 			continue
 		}
-
 		medianPnlPrice := h.getMedianPnlPrice(
 			new(big.Int).SetUint64(market.SpotPrice),
 			clobMidPrice,
@@ -362,7 +361,6 @@ func (h *VoteExtensionHandler) getFundingWeightedDaemonPrice(
 	adjustedFundingRate := new(big.Int).Add(lastFundingRate, big.NewInt(ppmFactor))
 	fundingWeightedPrice := new(big.Int).Mul(daemonPrice, adjustedFundingRate)
 	fundingWeightedPrice = fundingWeightedPrice.Div(fundingWeightedPrice, big.NewInt(ppmFactor))
-
 	return fundingWeightedPrice
 }
 

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
@@ -149,7 +150,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.StatsKeeper,
 			ks.SubaccountsKeeper,
 			indexerEventManager,
-			indexerEventsTransientStoreKey,
 		)
 		ks.Cdc = cdc
 
@@ -185,7 +185,6 @@ func createClobKeeper(
 	statsKeeper *statskeeper.Keeper,
 	saKeeper *subkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
-	indexerEventsTransientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey, storetypes.StoreKey) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
@@ -289,7 +288,7 @@ func CreateNClobPair(
 					perps[i].Params.LiquidityTier,
 					perps[i].Params.MarketType,
 					perps[i].Params.DangerIndexPpm,
-					lib.UintToString(perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
+					fmt.Sprintf("%d", perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 				),
 			),
 		).Return()

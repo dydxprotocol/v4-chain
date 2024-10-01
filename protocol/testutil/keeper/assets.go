@@ -38,6 +38,21 @@ func CreateTDaiAsset(ctx sdk.Context, assetsKeeper *keeper.Keeper) error {
 	return err
 }
 
+func CreateNonTDaiAsset(ctx sdk.Context, assetsKeeper *keeper.Keeper) error {
+	_, err := assetsKeeper.CreateAsset(
+		ctx,
+		constants.BtcUsd.Id,
+		constants.BtcUsd.Symbol,
+		constants.BtcUsd.Denom,
+		constants.BtcUsd.DenomExponent,
+		constants.BtcUsd.HasMarket,
+		constants.BtcUsd.MarketId,
+		constants.BtcUsd.AtomicResolution,
+		constants.BtcUsd.AssetYieldIndex,
+	)
+	return err
+}
+
 func AssetsKeepers(
 	t testing.TB,
 	msgSenderEnabled bool,

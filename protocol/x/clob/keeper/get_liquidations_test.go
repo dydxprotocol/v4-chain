@@ -4,22 +4,34 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cometbft/cometbft/types"
+
+	"errors"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	perptest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/perpetuals"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/memclob"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	feetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	"github.com/cometbft/cometbft/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -197,6 +209,124 @@ func TestChangePriceVE_CauseNegativeTNC(t *testing.T) {
 			)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedNegativeTncSubaccountSeenAtBlock, negativeTncSubaccountSeenAtBlock)
+		})
+	}
+}
+
+func TestGetSubaccountCollateralizationInfo(t *testing.T) {
+	tests := map[string]struct {
+		subaccount                  satypes.Subaccount
+		perpetuals                  []perptypes.Perpetual
+		feeParams                   feetypes.PerpetualFeeParams
+		expectedIsLiquidatable      bool
+		expectedHasNegativeTnc      bool
+		expectedLiquidationPriority *big.Float
+		expectedError               error
+	}{
+		`No perp found returns error`: {
+			subaccount: constants.Carl_Num0_1BTC_Short_50000USD,
+			perpetuals: []perptypes.Perpetual{},
+			feeParams:  constants.PerpetualFeeParams,
+			expectedError: errors.New(
+				"0: Perpetual does not exist",
+			),
+		},
+		"Non TDai asset in subaccount returns error": {
+			subaccount: constants.Carl_Num0_1BTC_short_50000_non_TDai,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+			},
+			feeParams: constants.PerpetualFeeParams,
+			expectedError: errors.New(
+				"Not Implemented: Multi-Collateral",
+			),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockBankKeeper := &mocks.BankKeeper{}
+			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				mock.Anything,
+				constants.TDai.Denom,
+			).Return(
+				sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
+			)
+
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))
+
+			ctx := ks.Ctx.WithIsCheckTx(true)
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, tc.feeParams))
+
+			// Set up TDai asset in assets module.
+			err := keepertest.CreateTDaiAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			err = keepertest.CreateNonTDaiAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			// Create all perpetuals.
+			for _, p := range tc.perpetuals {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ctx,
+					p.Params.Id,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
+					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+					"0/1",
+				)
+				require.NoError(t, err)
+			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
+
+			ks.SubaccountsKeeper.SetSubaccount(ctx, tc.subaccount)
+
+			require.NoError(
+				t,
+				ks.ClobKeeper.InitializeLiquidationsConfig(ctx, clobtypes.LiquidationsConfig_Default),
+			)
+			_, marketPriceMap, perpetualMap, liquidityTierMap := ks.ClobKeeper.FetchInformationForLiquidations(ctx)
+			isLiquidatable, hasNegativeTnc, liquidationPriority, err := ks.ClobKeeper.GetSubaccountCollateralizationInfo(
+				ctx,
+				tc.subaccount,
+				marketPriceMap,
+				perpetualMap,
+				liquidityTierMap,
+			)
+
+			if tc.expectedError != nil {
+				require.Error(t, err)
+				require.Equal(t, tc.expectedError.Error(), err.Error())
+				require.False(t, isLiquidatable)
+				require.False(t, hasNegativeTnc)
+				require.Nil(t, liquidationPriority)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedIsLiquidatable, isLiquidatable)
+				require.Equal(t, tc.expectedHasNegativeTnc, hasNegativeTnc)
+				require.Equal(t, tc.expectedLiquidationPriority, liquidationPriority)
+			}
 		})
 	}
 }

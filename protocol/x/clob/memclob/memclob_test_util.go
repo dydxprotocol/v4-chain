@@ -45,11 +45,8 @@ type OrderWithRemainingSize struct {
 // Note that this function also adds in matches currently within the match queue to the expected pending matches,
 // for each subaccount, within each expected collateralization check.
 func createCollatCheckExpectationsFromPendingMatches(
-	ctx sdk.Context,
 	t *testing.T,
-	memclob *MemClobPriceTimePriority,
 	expectedPendingMatches []expectedMatch,
-	expectedCollatCheckFailures map[int]bool,
 	order types.MatchableOrder,
 	addToOrderbookSize satypes.BaseQuantums,
 ) (
@@ -544,7 +541,6 @@ func assertOrderbookStateExpectations(
 
 // createOrderbooks creates orderbooks up to the provided `maxId`.
 func createOrderbooks(
-	t *testing.T,
 	ctx sdk.Context,
 	memclob *MemClobPriceTimePriority,
 	maxOrderbooks uint,
@@ -570,7 +566,6 @@ func createOrderbooks(
 // matchable order if the orderbook does not already exist. The only difference between each created
 // CLOB pair is the `Id` field, all other fields are the same.
 func createAllOrderbooksForMatchableOrders(
-	t *testing.T,
 	ctx sdk.Context,
 	memclob *MemClobPriceTimePriority,
 	orders []types.MatchableOrder,
@@ -599,7 +594,6 @@ func createAllOrderbooksForMatchableOrders(
 // createAllOrderbooksForOrders creates relevant orderbooks in the memclob for each order if the orderbook
 // does not already exist.
 func createAllOrderbooksForOrders(
-	t *testing.T,
 	ctx sdk.Context,
 	memclob *MemClobPriceTimePriority,
 	orders []types.Order,
@@ -736,7 +730,6 @@ func createAllOrders(
 
 // doesOrderExistOnSide is a testing helper used for checking whether `orderId` exists in `orderLevels`.
 func doesOrderExistOnSide(
-	t *testing.T,
 	orderId types.OrderId,
 	orderLevels map[types.Subticks]*types.Level,
 ) bool {
@@ -795,7 +788,7 @@ func requireOrderExistsInMemclob(
 	// Verify the order exists on the correct side of the orderbook.
 	orderbook, exists := memclob.openOrders.orderbooksMap[order.GetClobPairId()]
 	require.True(t, exists)
-	require.True(t, doesOrderExistOnSide(t, order.OrderId, orderbook.GetSide(order.IsBuy())))
+	require.True(t, doesOrderExistOnSide(order.OrderId, orderbook.GetSide(order.IsBuy())))
 
 	// If this is a reduce-only order, verify the order exists in the open reduce-only orders for
 	// this subaccount. Else, verify it is not present.
@@ -847,8 +840,8 @@ func requireOrderDoesNotExistInMemclob(
 	// Verify the order does not exist on either side of the orderbook.
 	orderbook, exists := memclob.openOrders.orderbooksMap[order.GetClobPairId()]
 	require.True(t, exists)
-	require.False(t, doesOrderExistOnSide(t, order.OrderId, orderbook.Bids))
-	require.False(t, doesOrderExistOnSide(t, order.OrderId, orderbook.Asks))
+	require.False(t, doesOrderExistOnSide(order.OrderId, orderbook.Bids))
+	require.False(t, doesOrderExistOnSide(order.OrderId, orderbook.Asks))
 
 	// Verify the order does not exist in the open reduce-only orders for this subaccount.
 	require.NotContains(
@@ -877,7 +870,6 @@ func setUpMemclobAndOrderbook(
 
 	// Create all unique orderbooks.
 	createAllOrderbooksForMatchableOrders(
-		t,
 		ctx,
 		memclob,
 		append(placedMatchableOrders, newOrder...),
@@ -905,9 +897,7 @@ func placeOrderTestSetup(
 	placedMatchableOrders []types.MatchableOrder,
 	newOrder types.MatchableOrder,
 	expectedPendingMatches []expectedMatch,
-	expectedOrderStatus types.OrderStatus,
 	addOrderToOrderbookSize satypes.BaseQuantums,
-	expectedErr error,
 	collatCheckFailures map[int]map[satypes.SubaccountId]satypes.UpdateResult,
 	getStatePosition types.GetStatePositionFn,
 ) (
@@ -929,11 +919,8 @@ func placeOrderTestSetup(
 	}
 
 	expectedCollatChecks := createCollatCheckExpectationsFromPendingMatches(
-		ctx,
 		t,
-		memclob,
 		expectedPendingMatches,
-		collatCheckFailuresSet,
 		newOrder,
 		addOrderToOrderbookSize,
 	)
@@ -1015,7 +1002,6 @@ func memclobOperationsTestSetupWithCustomCollatCheck(
 
 	// Create all unique orderbooks.
 	createOrderbooks(
-		t,
 		ctx,
 		memclob,
 		3,
@@ -1500,7 +1486,6 @@ func assertPlacePerpetualLiquidationOffchainMessages(
 	expectedMatches []expectedMatch,
 ) {
 	expectedOffchainMessages := getExpectedPlacePerpetualLiquidationOffchainMessages(
-		t,
 		ctx,
 		liquidationOrder,
 		placedMatchableOrders,
@@ -1517,7 +1502,6 @@ func assertPlacePerpetualLiquidationOffchainMessages(
 //     order that cross the liquidation order. This is due to the subaccount being undercollateralized.
 //   - `OrderUpdate` message generated for any maker orders that match with the liquidation order
 func getExpectedPlacePerpetualLiquidationOffchainMessages(
-	t *testing.T,
 	ctx sdk.Context,
 	liquidationOrder types.LiquidationOrder,
 	placedMatchableOrders []types.MatchableOrder,

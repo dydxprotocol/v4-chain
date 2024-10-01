@@ -334,7 +334,7 @@ func (k Keeper) TransferLiquidityFee(
 		new(big.Int).Abs(liquidityFeeQuoteQuantums),
 	)
 	if err != nil {
-		// Panic if USDC does not exist.
+		// Panic if TDai does not exist.
 		panic(err)
 	}
 
@@ -372,7 +372,7 @@ func (k Keeper) TransferValidatorFee(
 		new(big.Int).Abs(validatorFeeQuoteQuantums),
 	)
 	if err != nil {
-		// Panic if USDC does not exist.
+		// Panic if TDai does not exist.
 		panic(err)
 	}
 

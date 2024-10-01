@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -2362,8 +2363,6 @@ func setupProcessProposerOperationsTestCase(
 	// Assert Indexer messages
 	if tc.expectedError == nil && tc.expectedPanics == "" && len(tc.expectedMatches) > 0 {
 		setupNewMockEventManager(
-			t,
-			ctx,
 			mockIndexerEventManager,
 			tc.expectedMatches,
 			tc.rawOperations,
@@ -2445,7 +2444,7 @@ func setupProcessProposerOperationsTestCase(
 						tc.perpetuals[perpetualId].Params.LiquidityTier,
 						tc.perpetuals[perpetualId].Params.MarketType,
 						tc.perpetuals[perpetualId].Params.DangerIndexPpm,
-						lib.UintToString(tc.perpetuals[perpetualId].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
+						fmt.Sprintf("%d", tc.perpetuals[perpetualId].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 					),
 				),
 			).Once().Return()
@@ -2612,8 +2611,6 @@ func runProcessProposerOperationsTestCase(
 }
 
 func setupNewMockEventManager(
-	t *testing.T,
-	ctx sdk.Context,
 	mockIndexerEventManager *mocks.IndexerEventManager,
 	matches []*MatchWithOrdersForTesting,
 	rawOperations []types.OperationRaw,

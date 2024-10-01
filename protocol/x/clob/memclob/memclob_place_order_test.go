@@ -324,9 +324,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				tc.existingOrders,
 				&tc.order,
 				[]expectedMatch{},
-				tc.expectedOrderStatus,
 				addOrderToOrderbookSize,
-				tc.expectedErr,
 				collatCheckFailures,
 				constants.GetStatePosition_ZeroPositionSize,
 			)
@@ -1090,9 +1088,7 @@ func TestPlaceOrder_MatchOrders(t *testing.T) {
 				tc.placedMatchableOrders,
 				&tc.order,
 				tc.expectedCollatCheck,
-				tc.expectedOrderStatus,
 				addOrderToOrderbookSize,
-				nil,
 				map[int]map[satypes.SubaccountId]satypes.UpdateResult{},
 				constants.GetStatePosition_ZeroPositionSize,
 			)
@@ -2263,9 +2259,7 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 				tc.placedMatchableOrders,
 				&tc.order,
 				tc.expectedCollatCheck,
-				tc.expectedOrderStatus,
 				addOrderToOrderbookSize,
-				tc.expectedErr,
 				map[int]map[satypes.SubaccountId]satypes.UpdateResult{},
 				constants.GetStatePosition_ZeroPositionSize,
 			)
@@ -2754,9 +2748,7 @@ func TestPlaceOrder_MatchOrders_CollatCheckFailure(t *testing.T) {
 				tc.placedMatchableOrders,
 				&tc.order,
 				tc.expectedCollatCheck,
-				tc.expectedOrderStatus,
 				addOrderToOrderbookSize,
-				nil,
 				tc.collateralizationCheckFailures,
 				constants.GetStatePosition_ZeroPositionSize,
 			)
@@ -2877,7 +2869,7 @@ func TestAddOrderToSubaccountOrders_PanicsOnInvalidSide(t *testing.T) {
 	memclob := NewMemClobPriceTimePriority(false)
 
 	require.Panics(t, func() {
-		memclob.openOrders.mustAddOrderToSubaccountOrders(ctx, types.Order{})
+		memclob.openOrders.mustAddOrderToSubaccountOrders(types.Order{})
 	})
 }
 
@@ -2887,7 +2879,7 @@ func TestAddOrderToSubaccountOrders_PanicsOnInvalidClob(t *testing.T) {
 	memclob := NewMemClobPriceTimePriority(false)
 
 	require.Panics(t, func() {
-		memclob.openOrders.mustAddOrderToSubaccountOrders(ctx, types.Order{Side: types.Order_SIDE_BUY})
+		memclob.openOrders.mustAddOrderToSubaccountOrders(types.Order{Side: types.Order_SIDE_BUY})
 	})
 }
 
@@ -3259,9 +3251,7 @@ func TestPlaceOrder_PostOnly(t *testing.T) {
 				tc.placedMatchableOrders,
 				&order,
 				tc.expectedCollatCheck,
-				tc.expectedOrderStatus,
 				addOrderToOrderbookSize,
-				tc.expectedErr,
 				tc.collateralizationCheckFailures,
 				constants.GetStatePosition_ZeroPositionSize,
 			)
@@ -3403,9 +3393,7 @@ func TestPlaceOrder_ImmediateOrCancel(t *testing.T) {
 				tc.placedMatchableOrders,
 				&order,
 				tc.expectedCollatCheck,
-				tc.expectedOrderStatus,
 				addOrderToOrderbookSize,
-				nil,
 				tc.collateralizationCheckFailures,
 				constants.GetStatePosition_ZeroPositionSize,
 			)
@@ -4073,9 +4061,7 @@ func TestPlaceOrder_FillOrKill(t *testing.T) {
 				tc.placedMatchableOrders,
 				&order,
 				tc.expectedCollatCheck,
-				tc.expectedOrderStatus,
 				addOrderToOrderbookSize,
-				tc.expectedErr,
 				tc.collateralizationCheckFailures,
 				getStatePositionFn,
 			)

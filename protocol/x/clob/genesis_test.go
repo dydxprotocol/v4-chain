@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"fmt"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -402,7 +403,7 @@ func TestGenesis(t *testing.T) {
 								perpetual.Params.LiquidityTier,
 								perpetual.Params.MarketType,
 								perpetual.Params.DangerIndexPpm,
-								lib.UintToString(perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
+								fmt.Sprintf("%d", perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 							),
 						),
 					).Once().Return()

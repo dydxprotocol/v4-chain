@@ -40,7 +40,7 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 		return false, false
 	}
 
-	return k.performDeterministicStatefulValidation(ctx, marketPriceUpdate, marketParamPrices)
+	return k.performDeterministicStatefulValidation(marketPriceUpdate, marketParamPrices)
 }
 
 // performDeterministicStatefulValidation performs stateful validations that are deterministic.
@@ -49,7 +49,6 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 //   - The market exists.
 //   - The price update is greater than the min price change.
 func (k Keeper) performDeterministicStatefulValidation(
-	ctx sdk.Context,
 	marketPriceUpdate *types.MarketPriceUpdate,
 	allMarketParamPrices []types.MarketParamPrice,
 ) (isSpotValid bool, isPnlValid bool) {

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"time"
@@ -184,11 +185,15 @@ func (k Keeper) insertIntoLiquidationHeapIfUnhealthy(
 	subaccountId satypes.SubaccountId,
 	subaccountIds *heap.LiquidationPriorityHeap,
 ) error {
+
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	isLiquidatable, priority, err := k.GetSubaccountPriority(ctx, subaccount)
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("insertIntoLiquidationHeapIfUnhealthy subaccountId: %v, priority: %v\n",
+		subaccountId, priority)
 
 	if isLiquidatable {
 		subaccountIds.AddSubaccount(subaccountId, priority)
@@ -1182,18 +1187,18 @@ func (k Keeper) SimulateClosePerpetualPosition(
 	}
 	bigNetCollateralQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, price, position.GetBigQuantums())
 
-	err = UpdateUSDCPosition(&subaccount, bigNetCollateralQuoteQuantums)
+	err = UpdateTDaiPosition(&subaccount, bigNetCollateralQuoteQuantums)
 	if err != nil {
 		return satypes.Subaccount{}, err
 	}
 	return subaccount, nil
 }
 
-func UpdateUSDCPosition(subaccount *satypes.Subaccount, quantumsDelta *big.Int) (err error) {
+func UpdateTDaiPosition(subaccount *satypes.Subaccount, quantumsDelta *big.Int) (err error) {
 
 	assetPosition := subaccount.AssetPositions[0]
 	if assetPosition.AssetId != assetstypes.AssetTDai.Id {
-		return errors.New("first asset position must be USDC")
+		return errors.New("first asset position must be TDai")
 	}
 
 	assetPosition.Quantums = dtypes.NewIntFromBigInt(new(big.Int).Add(assetPosition.Quantums.BigInt(), quantumsDelta))
@@ -1279,10 +1284,7 @@ func (k Keeper) GetInsuranceFundDeltaBlockLimit(ctx sdk.Context, perpetualId uin
 	}
 
 	if isIsolated {
-		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
-		if err != nil {
-			return big.NewInt(0), err
-		}
+		perpetual, _ := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
 		return new(big.Int).SetUint64(perpetual.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock), nil
 	}
 

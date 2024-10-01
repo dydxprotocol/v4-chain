@@ -1,13 +1,13 @@
 package memclob
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"math"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
 	"github.com/zyedidia/generic/list"
 )
@@ -36,7 +36,6 @@ func newMemclobOpenOrders() *memclobOpenOrders {
 
 // mustGetOrderbook returns the orderbook for the given clobPairId. Panics if the orderbook cannot be found.
 func (m *memclobOpenOrders) mustGetOrderbook(
-	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 ) *types.Orderbook {
 	orderbook, exists := m.orderbooksMap[clobPairId]
@@ -50,7 +49,6 @@ func (m *memclobOpenOrders) mustGetOrderbook(
 // Note that it does not modify any state in the memclob.
 // It will return the next best level order along with a boolean indicating whether the next best level order exists.
 func (m *memclobOpenOrders) findNextBestLevelOrder(
-	ctx sdk.Context,
 	levelOrder *types.LevelOrder,
 ) (
 	nextBestLevelOrder *types.LevelOrder,
@@ -64,10 +62,10 @@ func (m *memclobOpenOrders) findNextBestLevelOrder(
 	// No more orders in this level exist. Attempt to get the first order at the next best level, if it exists.
 	order := levelOrder.Value.Order
 	subticks := order.GetOrderSubticks()
-	orderbook := m.mustGetOrderbook(ctx, order.GetClobPairId())
+	orderbook := m.mustGetOrderbook(order.GetClobPairId())
 	isBuy := order.IsBuy()
 
-	nextBestSubticks, foundOrder := m.findNextBestSubticks(ctx, subticks, orderbook, isBuy)
+	nextBestSubticks, foundOrder := m.findNextBestSubticks(subticks, orderbook, isBuy)
 	if !foundOrder {
 		return nil, false
 	}
@@ -87,7 +85,6 @@ func (m *memclobOpenOrders) findNextBestLevelOrder(
 // It returns the next best subtick for the given orderbook and side, and a boolean to indicate whether it exists
 // (false if no "next best" subticks exist on that side of the book).
 func (m *memclobOpenOrders) findNextBestSubticks(
-	ctx sdk.Context,
 	startingTicks types.Subticks,
 	orderbook *types.Orderbook,
 	isBuy bool,
@@ -192,7 +189,6 @@ func (m *memclobOpenOrders) getFirstOrderAtSideAndSubticks(
 
 // hasOrder returns true if the order by ID exists on the book.
 func (m *memclobOpenOrders) hasOrder(
-	ctx sdk.Context,
 	orderId types.OrderId,
 ) bool {
 	_, exists := m.orderIdToLevelOrder[orderId]
@@ -201,7 +197,6 @@ func (m *memclobOpenOrders) hasOrder(
 
 // getOrder gets an order by ID and returns it.
 func (m *memclobOpenOrders) getOrder(
-	ctx sdk.Context,
 	orderId types.OrderId,
 ) (order types.Order, found bool) {
 	levelOrder, exists := m.orderIdToLevelOrder[orderId]
@@ -215,7 +210,6 @@ func (m *memclobOpenOrders) getOrder(
 // getSubaccountOrders gets all of a subaccount's order on a specific CLOB and side.
 // This function will panic if `side` is invalid or if the orderbook does not exist.
 func (m *memclobOpenOrders) getSubaccountOrders(
-	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 	subaccountId satypes.SubaccountId,
 	side types.Order_Side,
@@ -248,7 +242,7 @@ func (m *memclobOpenOrders) getSubaccountOrders(
 	openOrders = make([]types.Order, len(openClobOrdersForSubaccountAndSide))
 	i := 0
 	for orderId := range openClobOrdersForSubaccountAndSide {
-		order, found := m.getOrder(ctx, orderId)
+		order, found := m.getOrder(orderId)
 		if !found {
 			panic("Open subaccount order does not exist in memclob")
 		}
@@ -262,7 +256,6 @@ func (m *memclobOpenOrders) getSubaccountOrders(
 // createOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
 // This function will panic if `clobPairId` already exists in any of the memclob's internal data structures.
 func (m *memclobOpenOrders) createOrderbook(
-	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 	subticksPerTick types.SubticksPerTick,
 	minOrderBaseQuantums satypes.BaseQuantums,
@@ -298,7 +291,6 @@ func (m *memclobOpenOrders) createOrderbook(
 // This function assumes that it will only be called with Short-Term orders that have passed order validation
 // in the CLOB keeper and the `validateNewOrder` function.
 func (m *memclobOpenOrders) mustAddShortTermOrderToBlockExpirationsForOrders(
-	ctx sdk.Context,
 	order types.Order,
 ) {
 	if !order.OrderId.IsShortTermOrder() {
@@ -326,7 +318,6 @@ func (m *memclobOpenOrders) mustAddShortTermOrderToBlockExpirationsForOrders(
 // in the CLOB keeper and the `validateNewOrder` function.
 // If `order.Side` is an invalid side or `order.ClobPairId` does not reference a valid CLOB, this function will panic.
 func (m *memclobOpenOrders) mustAddOrderToSubaccountOrders(
-	ctx sdk.Context,
 	order types.Order,
 ) {
 	// If `ClobPairId` does not reference a valid CLOB, panic.
@@ -361,7 +352,6 @@ func (m *memclobOpenOrders) mustAddOrderToSubaccountOrders(
 // If `forceToFrontOfLevel` is true, places the order at the head of the level,
 // otherwise places it at the tail.
 func (m *memclobOpenOrders) mustAddOrderToOrderbook(
-	ctx sdk.Context,
 	newOrder types.Order,
 	forceToFrontOfLevel bool,
 ) {
@@ -369,7 +359,7 @@ func (m *memclobOpenOrders) mustAddOrderToOrderbook(
 	newOrder.MustBeValidOrderSide()
 
 	// Initialize variables used for traversing the orderbook.
-	orderbook := m.mustGetOrderbook(ctx, newOrder.GetClobPairId())
+	orderbook := m.mustGetOrderbook(newOrder.GetClobPairId())
 	isBuy := newOrder.IsBuy()
 	clobOrder := types.ClobOrder{
 		Order: newOrder,
@@ -422,14 +412,14 @@ func (m *memclobOpenOrders) mustAddOrderToOrderbook(
 	}
 
 	// Add the order to the subaccount's currently open orders.
-	m.mustAddOrderToSubaccountOrders(ctx, newOrder)
+	m.mustAddOrderToSubaccountOrders(newOrder)
 
 	// Increment the total number of open orders for this orderbook.
 	orderbook.TotalOpenOrders++
 
 	// If the order is a Short-Term order, add the order to the order block expirations map.
 	if newOrder.IsShortTermOrder() {
-		m.mustAddShortTermOrderToBlockExpirationsForOrders(ctx, newOrder)
+		m.mustAddShortTermOrderToBlockExpirationsForOrders(newOrder)
 	}
 
 	// If the order is reduce-only, add it to the open reduce-only orders for this subaccount.
@@ -448,7 +438,6 @@ func (m *memclobOpenOrders) mustAddOrderToOrderbook(
 // NOTE: `mustRemoveOrder` does _not_ remove cancels.
 // TODO(DEC-847): Remove stateful orders properly.
 func (m *memclobOpenOrders) mustRemoveOrder(
-	ctx sdk.Context,
 	levelOrder *types.LevelOrder,
 ) {
 	// Define variables related to this order for more succinct reference.
@@ -508,7 +497,7 @@ func (m *memclobOpenOrders) mustRemoveOrder(
 	// 8. If after `totalLevels` of iteration, we still have not found the next best level, then we fall back to
 	// iterating over every level on the appropriate side to find the next best price.
 
-	orderbook := m.mustGetOrderbook(ctx, clobPairId)
+	orderbook := m.mustGetOrderbook(clobPairId)
 	levels := orderbook.GetSide(isBuy)
 	level, levelExists := levels[subticks]
 	if !levelExists {
@@ -529,14 +518,14 @@ func (m *memclobOpenOrders) mustRemoveOrder(
 			if subticks == orderbook.BestBid {
 				// Edge case: If this removed level represented the best price level for this side
 				// of the book, we need to find the next best price level.
-				nextBestSubticks, _ := m.findNextBestSubticks(ctx, subticks, orderbook, true)
+				nextBestSubticks, _ := m.findNextBestSubticks(subticks, orderbook, true)
 				orderbook.BestBid = nextBestSubticks
 			}
 		} else {
 			if subticks == orderbook.BestAsk {
 				// Edge case: If this removed level represented the best price level for this side
 				// of the book, we need to find the next best price level.
-				nextBestSubticks, _ := m.findNextBestSubticks(ctx, subticks, orderbook, false)
+				nextBestSubticks, _ := m.findNextBestSubticks(subticks, orderbook, false)
 				orderbook.BestAsk = nextBestSubticks
 			}
 		}

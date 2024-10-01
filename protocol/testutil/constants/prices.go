@@ -338,7 +338,6 @@ var (
 			SpotPrice: Price3,
 		},
 	}
-
 	ValidMarketPriceUpdates = []*types.MarketPriceUpdate{
 		{
 			MarketId:  MarketId0,
