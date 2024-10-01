@@ -43,12 +43,15 @@ BEGIN
     -- Update the perpetual position record based on the side
     IF dydx_perpetual_position_and_order_side_matching(perpetual_position_record."side", side) THEN
         sum_open := dydx_trim_scale(perpetual_position_record."sumOpen" + size);
-        RAISE EXCEPTION 'Unable to get entry price % % %', perpetual_position_record, price, size
-        entry_price := dydx_get_weighted_average(
-            perpetual_position_record."entryPrice", perpetual_position_record."size", price, size
-        );
-        perpetual_position_record."sumOpen" = sum_open;
-        perpetual_position_record."entryPrice" = entry_price;
+        BEGIN
+            entry_price := dydx_get_weighted_average(
+                perpetual_position_record."entryPrice", perpetual_position_record."size", price, size
+            );
+            perpetual_position_record."sumOpen" = sum_open;
+            perpetual_position_record."entryPrice" = entry_price;
+        EXCEPTION
+            RAISE EXCEPTION 'Unable to get entry price % % %', perpetual_position_record, price, size
+        END;
     ELSE
         sum_close := dydx_trim_scale(perpetual_position_record."sumClose" + size);
         exit_price := dydx_get_weighted_average(
