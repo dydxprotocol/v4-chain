@@ -245,10 +245,6 @@ func ComputeMedian(prices []PricePerValidator, totalWeight math.Int) *big.Int {
 		}
 	}
 
-	// If we've reached here, return the last price (should not happen with valid input)
-	if len(prices) > 0 {
-		return prices[len(prices)-1].Price
-	}
 	return nil
 }
 

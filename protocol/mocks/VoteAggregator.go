@@ -58,26 +58,6 @@ func (_m *VoteAggregator) AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx 
 	return r0, r1, r2
 }
 
-// GetPriceForValidator provides a mock function with given fields: validator
-func (_m *VoteAggregator) GetPriceForValidator(validator types.ConsAddress) map[string]voteweighted.AggregatorPricePair {
-	ret := _m.Called(validator)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetPriceForValidator")
-	}
-
-	var r0 map[string]voteweighted.AggregatorPricePair
-	if rf, ok := ret.Get(0).(func(types.ConsAddress) map[string]voteweighted.AggregatorPricePair); ok {
-		r0 = rf(validator)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]voteweighted.AggregatorPricePair)
-		}
-	}
-
-	return r0
-}
-
 // NewVoteAggregator creates a new instance of VoteAggregator. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewVoteAggregator(t interface {

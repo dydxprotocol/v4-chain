@@ -637,6 +637,41 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 			expectedSDaiConversionRate: nil,
 			expectedError:              nil,
 		},
+		"Success: Markets don't exist": {
+			validators: []string{"alice", "bob", "carl", "dave"},
+			voteInfos: []cometabci.ExtendedVoteInfo{
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPricesWithNoMarkets, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPricesWithNoMarkets, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPricesWithNoMarkets, ""),
+			},
+			expectedPrices:             map[string]voteweighted.AggregatorPricePair{},
+			expectedSDaiConversionRate: nil,
+			expectedError:              nil,
+		},
+		"Success: Default PnL price to Spot price": {
+			validators: []string{"alice", "bob", "carl", "dave"},
+			voteInfos: []cometabci.ExtendedVoteInfo{
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPricesOnlySpot, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPricesOnlySpot, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPricesOnlySpot, "1000000000000000000000000002"),
+			},
+			expectedPrices: map[string]voteweighted.AggregatorPricePair{
+				constants.BtcUsdPair: {
+					SpotPrice: constants.Price5Big,
+					PnlPrice:  constants.Price5Big,
+				},
+				constants.EthUsdPair: {
+					SpotPrice: constants.Price6Big,
+					PnlPrice:  constants.Price6Big,
+				},
+				constants.SolUsdPair: {
+					SpotPrice: constants.Price7Big,
+					PnlPrice:  constants.Price7Big,
+				},
+			},
+			expectedSDaiConversionRate: ratelimitkeeper.ConvertStringToBigIntWithPanicOnErr("1000000000000000000000000002"),
+			expectedError:              nil,
+		},
 		"Success: Multiple price updates from >2/3 but not all validators with some different conversion rates": {
 			validators: []string{"alice", "bob", "carl", "dave"},
 			voteInfos: []cometabci.ExtendedVoteInfo{

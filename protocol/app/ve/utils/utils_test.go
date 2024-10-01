@@ -1,6 +1,7 @@
 package ve_utils_test
 
 import (
+	"bytes"
 	"math/big"
 	"testing"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	ethosutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ethos"
 	cometabcitypes "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cometbftproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -17,6 +19,8 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	protoio "github.com/cosmos/gogoproto/io"
+	"github.com/cosmos/gogoproto/proto"
 	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -318,6 +322,98 @@ func TestGetPubKeyByConsAddr(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetVEEncodedPrice(t *testing.T) {
+	tests := map[string]struct {
+		price           *big.Int
+		expectedVEBytes []byte
+		expectedError   bool
+	}{
+		"Positive price": {
+			price:           big.NewInt(100),
+			expectedVEBytes: mustEncodePrice(t, big.NewInt(100)),
+			expectedError:   false,
+		},
+		"Zero price": {
+			price:           big.NewInt(0),
+			expectedVEBytes: mustEncodePrice(t, big.NewInt(0)),
+			expectedError:   false,
+		},
+		"Negative price": {
+			price:           big.NewInt(-100),
+			expectedVEBytes: nil,
+			expectedError:   true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			veBytes, err := veutils.GetVEEncodedPrice(tc.price)
+			if tc.expectedError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedVEBytes, veBytes)
+			}
+		})
+	}
+}
+
+func TestMarshalDelimited(t *testing.T) {
+	tests := map[string]struct {
+		input          proto.Message
+		expectedOutput []byte
+		expectedError  bool
+	}{
+		"Valid message": {
+			input: &cometbftproto.BlockID{
+				Hash: []byte("testhash"),
+			},
+			expectedOutput: mustEncodeDelimited(t, &cometbftproto.BlockID{
+				Hash: []byte("testhash"),
+			}),
+			expectedError: false,
+		},
+		"valid canconical vote": {
+			input: &cmtproto.CanonicalVoteExtension{
+				Extension: []byte("test"),
+				Height:    1,
+				Round:     1,
+				ChainId:   "test",
+			},
+			expectedOutput: mustEncodeDelimited(t, &cmtproto.CanonicalVoteExtension{
+				Extension: []byte("test"),
+				Height:    1,
+				Round:     1,
+				ChainId:   "test",
+			}),
+			expectedError: false,
+		},
+		"Nil message": {
+			input:          nil,
+			expectedOutput: nil,
+			expectedError:  true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			output, err := veutils.MarshalDelimited(tc.input)
+			if tc.expectedError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedOutput, output)
+			}
+		})
+	}
+}
+
+func mustEncodeDelimited(t *testing.T, msg proto.Message) []byte {
+	var buf bytes.Buffer
+	err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg)
+	require.NoError(t, err)
+	return buf.Bytes()
 }
 
 func mustEncodePrice(t *testing.T, price *big.Int) []byte {
