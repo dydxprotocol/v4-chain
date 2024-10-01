@@ -244,7 +244,6 @@ func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
 		if !allExist {
 			continue
 		}
-
 		medianPnlPrice := h.getMedianPnlPrice(
 			new(big.Int).SetUint64(market.SpotPrice),
 			clobMidPrice,

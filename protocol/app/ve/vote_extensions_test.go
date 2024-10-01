@@ -326,25 +326,25 @@ func TestExtendVoteHandler(t *testing.T) {
 				},
 			},
 		},
-		// "getting prices panics": {
-		// 	pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
-		// 		mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
-		// 		mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Panic("panic")
-		// 		return mPricesKeeper
-		// 	},
-		// 	expectedResponse: &vetypes.DaemonVoteExtension{
-		// 		Prices: nil,
-		// 	},
-		// 	perpKeeper: func() *mocks.ExtendVotePerpetualsKeeper {
-		// 		mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
-		// 		return mPerpKeeper
-		// 	},
-		// 	clobKeeper: func() *mocks.ExtendVoteClobKeeper {
-		// 		mClobKeeper := &mocks.ExtendVoteClobKeeper{}
-		// 		return mClobKeeper
-		// 	},
-		// 	expectedError: true,
-		// },
+		"getting prices panics": {
+			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
+				mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Panic("panic")
+				return mPricesKeeper
+			},
+			expectedResponse: &vetypes.DaemonVoteExtension{
+				Prices: nil,
+			},
+			perpKeeper: func() *mocks.ExtendVotePerpetualsKeeper {
+				mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
+				return mPerpKeeper
+			},
+			clobKeeper: func() *mocks.ExtendVoteClobKeeper {
+				mClobKeeper := &mocks.ExtendVoteClobKeeper{}
+				return mClobKeeper
+			},
+			expectedError: true,
+		},
 	}
 	var round int64 = 3
 	for name, tc := range tests {
@@ -381,7 +381,18 @@ func TestExtendVoteHandler(t *testing.T) {
 				ext, err := votecodec.Decode(resp.VoteExtension)
 				require.NoError(t, err)
 				require.Equal(t, len(tc.expectedResponse.Prices), len(ext.Prices))
-				require.Equal(t, tc.expectedResponse.Prices, ext.Prices)
+
+				expectedPriceMap := make(map[uint32]vetypes.PricePair)
+				for _, expectedPricePair := range tc.expectedResponse.Prices {
+					expectedPriceMap[expectedPricePair.MarketId] = expectedPricePair
+				}
+
+				for _, actualPricePair := range ext.Prices {
+					expectedPricePair, exists := expectedPriceMap[actualPricePair.MarketId]
+					require.True(t, exists, "MarketId %d not found in expected prices", actualPricePair.MarketId)
+					require.Equal(t, expectedPricePair.PnlPrice, actualPricePair.PnlPrice)
+					require.Equal(t, expectedPricePair.SpotPrice, actualPricePair.SpotPrice)
+				}
 			} else {
 				require.Error(t, err)
 			}
