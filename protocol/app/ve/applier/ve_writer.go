@@ -287,6 +287,7 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 	round int32,
 	writeToCache bool,
 ) error {
+
 	if sDaiConversionRate == nil {
 		return nil
 	}
