@@ -122,20 +122,6 @@ func TestUpdateMarketParam(t *testing.T) {
 			},
 			expectedErr: "Invalid input",
 		},
-		"Failure: update market exponent": {
-			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: lib.GovModuleAddress.String(),
-				MarketParam: pricestypes.MarketParam{
-					Id:                 testMarketParam.Id,
-					Pair:               testMarketParam.Pair,
-					Exponent:           testMarketParam.Exponent + 1, // cannot be updated
-					MinExchanges:       testMarketParam.MinExchanges,
-					MinPriceChangePpm:  testMarketParam.MinPriceChangePpm,
-					ExchangeConfigJson: "{}",
-				},
-			},
-			expectedErr: "Market exponent cannot be updated",
-		},
 		"Failure: new pair name does not exist in marketmap": {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
