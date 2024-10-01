@@ -4007,7 +4007,7 @@ const GenesisState = `{
         },
         {
           "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"LINKUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"LINKUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LINK-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"LINK_USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"linkusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LINKUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LINK-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LINK-USDT\"}]}",
-          "exponent": -8,
+          "exponent": -9,
           "id": 2,
           "min_exchanges": 1,
           "min_price_change_ppm": 2000,
@@ -4175,7 +4175,7 @@ const GenesisState = `{
         },
         {
           "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"MKRUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"MKRUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tMKRUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MKR-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"MKR_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"mkrusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MKR-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MKR-USDT\"}]}",
-          "exponent": -7,
+          "exponent": -6,
           "id": 23,
           "min_exchanges": 1,
           "min_price_change_ppm": 2000,
@@ -4191,7 +4191,7 @@ const GenesisState = `{
         },
         {
           "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"XLMUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"XLMUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tXLMUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"XLM-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"XLM_USDT\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXLMZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"XLM-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"XLM-USDT\"}]}",
-          "exponent": -11,
+          "exponent": -10,
           "id": 25,
           "min_exchanges": 1,
           "min_price_change_ppm": 2000,
@@ -4266,7 +4266,7 @@ const GenesisState = `{
           "price": 1500000000
         },
         {
-          "exponent": -8,
+          "exponent": -9,
           "id": 2,
           "price": 700000000
         },
@@ -4371,7 +4371,7 @@ const GenesisState = `{
           "price": 2200000000
         },
         {
-          "exponent": -7,
+          "exponent": -6,
           "id": 23,
           "price": 7100000000
         },
@@ -4381,7 +4381,7 @@ const GenesisState = `{
           "price": 7000000000
         },
         {
-          "exponent": -11,
+          "exponent": -10,
           "id": 25,
           "price": 10000000000
         },

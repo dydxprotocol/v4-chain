@@ -18,7 +18,11 @@ export interface MarketParam {
    * For example if `Exponent == -5` then a `Value` of `1,000,000,000`
    * represents ``$10,000`. Therefore `10 ^ Exponent` represents the smallest
    * price step (in dollars) that can be recorded.
+   * 
+   * Deprecated since v7.1.x. This value is now determined from the marketmap.
    */
+
+  /** @deprecated */
 
   exponent: number;
   /**
@@ -58,7 +62,11 @@ export interface MarketParamSDKType {
    * For example if `Exponent == -5` then a `Value` of `1,000,000,000`
    * represents ``$10,000`. Therefore `10 ^ Exponent` represents the smallest
    * price step (in dollars) that can be recorded.
+   * 
+   * Deprecated since v7.1.x. This value is now determined from the marketmap.
    */
+
+  /** @deprecated */
 
   exponent: number;
   /**

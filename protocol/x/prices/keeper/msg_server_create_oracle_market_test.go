@@ -13,13 +13,14 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateOracleMarket(t *testing.T) {
 	testMarket1 := *pricestest.GenerateMarketParamPrice(
 		pricestest.WithId(1),
-		pricestest.WithPair("BTC-USD"),
+		pricestest.WithPair(constants.BtcUsdPair),
 		pricestest.WithExponent(-8), // for both Param and Price
 		pricestest.WithPriceValue(0),
 	)
@@ -54,20 +55,16 @@ func TestCreateOracleMarket(t *testing.T) {
 				).Param,
 			},
 			expectedMarkets: []pricestypes.MarketParamPrice{},
-			expectedErr:     "Pair cannot be empty",
+			expectedErr:     "incorrectly formatted CurrencyPair",
 		},
-		"Failure: typo in exchange config json": {
+		"Failure: market not found in MarketMap": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
 			msg: &pricestypes.MsgCreateOracleMarket{
 				Authority: lib.GovModuleAddress.String(),
-				Params: pricestest.GenerateMarketParamPrice(
-					pricestest.WithPair("BTC-USD"),
-					pricestest.WithExponent(-8), // for both Param and Price
-					pricestest.WithExchangeConfigJson(`{"exchanges":[{"exchangeName":"Binance"""}]}`),
-				).Param,
+				Params:    testMarket1.Param,
 			},
+			expectedErr:     "Ticker not found in market map",
 			expectedMarkets: []pricestypes.MarketParamPrice{},
-			expectedErr:     "ExchangeConfigJson string is not valid",
 		},
 		"Failure: oracle market id already exists": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {
@@ -76,6 +73,14 @@ func TestCreateOracleMarket(t *testing.T) {
 					ctx,
 					pricesKeeper,
 					[]pricestypes.MarketParamPrice{testMarket1},
+				)
+				keepertest.CreateMarketsInMarketMapFromParams(
+					t,
+					ctx,
+					pricesKeeper.MarketMapKeeper.(*marketmapkeeper.Keeper),
+					[]pricestypes.MarketParam{pricestest.GenerateMarketParamPrice(
+						pricestest.WithId(1), // same id as testMarket1
+					).Param},
 				)
 			},
 			msg: &pricestypes.MsgCreateOracleMarket{
@@ -138,4 +143,45 @@ func TestCreateOracleMarket(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMarketPriceExponentIsFromMarketmap(t *testing.T) {
+	ctx, pricesKeeper, _, _, _, _, marketMapKeeper := keepertest.PricesKeepers(t)
+	msgServer := keeper.NewMsgServerImpl(pricesKeeper)
+
+	// Create test market in marketmap
+	currencyPair, err := slinky.MarketPairToCurrencyPair(constants.BtcUsdPair)
+	require.NoError(t, err)
+
+	marketMapDetails := marketmaptypes.Market{
+		Ticker: marketmaptypes.Ticker{
+			CurrencyPair:     currencyPair,
+			Decimals:         uint64(8),
+			MinProviderCount: 1,
+		},
+		ProviderConfigs: []marketmaptypes.ProviderConfig{},
+	}
+	err = marketMapKeeper.CreateMarket(ctx, marketMapDetails)
+	require.NoError(t, err)
+
+	// Send message to create oracle market without setting exponent
+	// because the market price exponent is calculated from the marketmap Decimals
+	testMarket := pricestest.GenerateMarketParamPrice(
+		pricestest.WithId(1),
+		pricestest.WithPair(constants.BtcUsdPair),
+		pricestest.WithPriceValue(0),
+		// Do not set exponent
+	)
+
+	msg := &pricestypes.MsgCreateOracleMarket{
+		Authority: lib.GovModuleAddress.String(),
+		Params:    testMarket.Param,
+	}
+	_, err = msgServer.CreateOracleMarket(ctx, msg)
+	require.NoError(t, err)
+
+	// Verify that the market price exponent matches negation of the marketmap Decimals
+	marketPrice, err := pricesKeeper.GetMarketPrice(ctx, 1)
+	require.NoError(t, err)
+	require.Equal(t, int32(-8), marketPrice.Exponent)
 }

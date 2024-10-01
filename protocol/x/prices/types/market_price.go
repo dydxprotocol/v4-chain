@@ -14,15 +14,5 @@ func (mp *MarketPrice) ValidateFromParam(marketParam MarketParam) error {
 			mp.Id,
 		)
 	}
-	if marketParam.Exponent != mp.Exponent {
-		return errorsmod.Wrapf(
-			ErrInvalidInput,
-			"market param %d exponent %d does not match market price %d exponent %d",
-			marketParam.Id,
-			marketParam.Exponent,
-			mp.Id,
-			mp.Exponent,
-		)
-	}
 	return nil
 }
