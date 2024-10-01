@@ -94,7 +94,7 @@ func (s *SDAIEventManager) AddsDAIEvent(event *api.AddsDAIEventsRequest) error {
 	return nil
 }
 
-func (s *SDAIEventManager) GetDAIPrice() api.AddsDAIEventsRequest {
+func (s *SDAIEventManager) GetSDaiPrice() api.AddsDAIEventsRequest {
 	s.Lock()
 	defer s.Unlock()
 

@@ -29,8 +29,7 @@ type ConversionRateAggregateFn func(ctx sdk.Context, veConversionRates map[strin
 // submitted in order for a currency pair to be considered for the
 // final oracle price. We provide a default supermajority threshold
 // of 2/3+.
-// TODO: Make this more precise by using big.Rat instead of math.LegacyDec
-var DefaultPowerThreshold = math.LegacyNewDecWithPrec(6666666667, 10)
+var DefaultPowerThreshold = big.NewRat(2, 3)
 
 type (
 	// VoteWeightPriceInfo tracks the stake weight(s) + price(s) for a given currency pair.
@@ -55,7 +54,7 @@ type (
 func MedianPrices(
 	logger log.Logger,
 	validatorStore CCValidatorStore,
-	threshold math.LegacyDec,
+	threshold *big.Rat,
 ) PricesAggregateFn {
 	return func(
 		ctx sdk.Context,
@@ -120,9 +119,9 @@ func MedianPrices(
 		for pair, info := range priceInfo {
 			// The total voting power % that submitted a price update for the given currency pair must be
 			// greater than the threshold to be included in the final oracle price.
-			percentSubmitted := math.LegacyNewDecFromInt(info.TotalWeight).Quo(math.LegacyNewDecFromInt(totalPower))
+			percentSubmitted := new(big.Rat).SetFrac(info.TotalWeight.BigInt(), totalPower.BigInt())
 
-			if percentSubmitted.GT(threshold) {
+			if percentSubmitted.Cmp(threshold) > 0 {
 				finalPrices[pair] = AggregatorPricePair{
 					SpotPrice: ComputeMedian(info.SpotPrices, info.TotalWeight),
 					PnlPrice:  ComputeMedian(info.PnlPrices, info.TotalWeight),
@@ -154,7 +153,7 @@ func MedianPrices(
 func MedianConversionRate(
 	logger log.Logger,
 	validatorStore CCValidatorStore,
-	threshold math.LegacyDec,
+	threshold *big.Rat,
 ) ConversionRateAggregateFn {
 	return func(
 		ctx sdk.Context,
@@ -198,9 +197,9 @@ func MedianConversionRate(
 
 		// The total voting power % that submitted a price update for the given currency pair must be
 		// greater than the threshold to be included in the final oracle price.
-		percentSubmitted := math.LegacyNewDecFromInt(conversionRateInfo.TotalWeight).Quo(math.LegacyNewDecFromInt(totalPower))
+		percentSubmitted := new(big.Rat).SetFrac(conversionRateInfo.TotalWeight.BigInt(), totalPower.BigInt())
 
-		if percentSubmitted.GT(threshold) {
+		if percentSubmitted.Cmp(threshold) > 0 {
 			finalConversionRate = ComputeMedian(conversionRateInfo.ConversionRates, conversionRateInfo.TotalWeight)
 
 			logger.Info(
@@ -225,37 +224,31 @@ func MedianConversionRate(
 func ComputeMedian(prices []PricePerValidator, totalWeight math.Int) *big.Int {
 	// Sort the prices by price.
 	sort.SliceStable(prices, func(i, j int) bool {
-		switch prices[i].Price.Cmp(prices[j].Price) {
-		case -1:
-			return true
-		case 1:
-			return false
-		default:
-			return true
-		}
+		return prices[i].Price.Cmp(prices[j].Price) < 0
 	})
 
-	// Compute the median weight.
-	middle := totalWeight.QuoRaw(2)
-	if !totalWeight.Mod(math.NewInt(2)).IsZero() {
-		middle = middle.AddRaw(1)
-	}
+	halfWeight := totalWeight.QuoRaw(2)
+	isEven := totalWeight.Mod(math.NewInt(2)).IsZero()
 
-	// Iterate through the prices and compute the median price.
 	sum := math.ZeroInt()
-	for index, price := range prices {
+	for i, price := range prices {
 		sum = sum.Add(math.NewInt(price.VoteWeight))
 
-		if sum.GTE(middle) {
-			return price.Price
-		}
-
-		// If we reached the end of the list, return the last price.
-		if index == len(prices)-1 {
+		if sum.GT(halfWeight) || (isEven && sum.Equal(halfWeight)) {
+			if isEven && sum.Equal(halfWeight) && i+1 < len(prices) {
+				// If total weight is even and we're exactly at half, average with the next price
+				nextPrice := prices[i+1].Price
+				avg := new(big.Int).Add(price.Price, nextPrice)
+				return avg.Div(avg, big.NewInt(2))
+			}
 			return price.Price
 		}
 	}
 
+	// If we've reached here, return the last price (should not happen with valid input)
+	if len(prices) > 0 {
+		return prices[len(prices)-1].Price
+	}
 	return nil
 }
 

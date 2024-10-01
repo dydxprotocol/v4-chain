@@ -840,7 +840,6 @@ func TestVEWriter(t *testing.T) {
 		require.NoError(t, err)
 
 		priceUpdates := veApplier.GetCachedPrices()
-		fmt.Println("priceUpdates 1", priceUpdates)
 		cachedPrices := make(map[string]ve.VEPricePair)
 		for _, priceUpdate := range priceUpdates {
 			marketId := priceUpdate.MarketId
@@ -904,6 +903,166 @@ func TestVEWriter(t *testing.T) {
 			constants.BtcUsdPair: {
 				SpotPrice: 100,
 				PnlPrice:  100,
+			},
+		}, cachedPrices)
+	})
+	t.Run("correctly updates prices in cache", func(t *testing.T) {
+		ctx = ctx.WithBlockHeight(5)
+
+		price1Bz := big.NewInt(100).Bytes()
+		price2Bz := big.NewInt(200).Bytes()
+
+		prices1 := []vetypes.PricePair{
+			{
+				MarketId:  1,
+				SpotPrice: price1Bz,
+				PnlPrice:  price1Bz,
+			},
+		}
+
+		prices2 := []vetypes.PricePair{
+			{
+				MarketId:  1,
+				SpotPrice: price2Bz,
+				PnlPrice:  price2Bz,
+			},
+		}
+
+		vote1, err := vetesting.CreateSignedExtendedVoteInfo(
+			vetesting.NewDefaultSignedVeInfo(
+				constants.AliceConsAddress,
+				prices1,
+				"",
+			),
+		)
+		require.NoError(t, err)
+
+		vote2, err := vetesting.CreateSignedExtendedVoteInfo(
+			vetesting.NewDefaultSignedVeInfo(
+				constants.BobConsAddress,
+				prices2,
+				"",
+			),
+		)
+		require.NoError(t, err)
+
+		_, extCommitInfoBz1, err := vetesting.CreateExtendedCommitInfo(
+			[]cometabci.ExtendedVoteInfo{vote1},
+		)
+		require.NoError(t, err)
+
+		_, extCommitInfoBz2, err := vetesting.CreateExtendedCommitInfo(
+			[]cometabci.ExtendedVoteInfo{vote2},
+		)
+		require.NoError(t, err)
+
+		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
+			{
+				DaemonVoteExtension: vetypes.DaemonVoteExtension{
+					Prices: prices1,
+				},
+				ConsAddress: constants.AliceConsAddress,
+			},
+		}).Return(map[string]vemath.AggregatorPricePair{
+			constants.BtcUsdPair: {
+				SpotPrice: big.NewInt(100),
+				PnlPrice:  big.NewInt(100),
+			},
+		}, nil, nil).Once()
+
+		pricesKeeper.On("GetAllMarketParams", ctx).Return(
+			[]pricestypes.MarketParam{
+				{
+					Id:   1,
+					Pair: constants.BtcUsdPair,
+				},
+			},
+		).Twice()
+
+		pricesKeeper.On("GetMarketParam", ctx, uint32(1)).Return(
+			pricestypes.MarketParam{
+				Id:   1,
+				Pair: constants.BtcUsdPair,
+			},
+			true,
+		).Twice()
+
+		pricesKeeper.On("UpdateSpotAndPnlMarketPrices", ctx, mock.Anything).Return(nil).Twice()
+
+		// First call
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{extCommitInfoBz1, {1, 2, 3, 4}, {1, 2, 3, 4}},
+			DecidedLastCommit: cometabci.CommitInfo{
+				Round: 1,
+				Votes: []cometabci.VoteInfo{},
+			},
+		}, true)
+		require.NoError(t, err)
+
+		priceUpdates := veApplier.GetCachedPrices()
+		cachedPrices := make(map[string]ve.VEPricePair)
+		for _, priceUpdate := range priceUpdates {
+			marketId := priceUpdate.MarketId
+			pair, exists := pricesKeeper.GetMarketParam(ctx, marketId)
+			if !exists {
+				continue
+			}
+			cachedPrices[pair.Pair] = ve.VEPricePair{
+				SpotPrice: priceUpdate.SpotPrice.Uint64(),
+				PnlPrice:  priceUpdate.PnlPrice.Uint64(),
+			}
+		}
+
+		require.Equal(t, map[string]ve.VEPricePair{
+			constants.BtcUsdPair: {
+				SpotPrice: 100,
+				PnlPrice:  100,
+			},
+		}, cachedPrices)
+
+		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
+			{
+				DaemonVoteExtension: vetypes.DaemonVoteExtension{
+					Prices: prices2,
+				},
+				ConsAddress: constants.BobConsAddress,
+			},
+		}).Return(map[string]vemath.AggregatorPricePair{
+			constants.BtcUsdPair: {
+				SpotPrice: big.NewInt(200),
+				PnlPrice:  big.NewInt(200),
+			},
+		}, nil, nil).Once()
+
+		// Second call with different round
+		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
+			Txs: [][]byte{extCommitInfoBz2, {1, 2, 3, 4}, {1, 2, 3, 4}},
+			DecidedLastCommit: cometabci.CommitInfo{
+				Round: 2,
+				Votes: []cometabci.VoteInfo{},
+			},
+		}, true)
+		require.NoError(t, err)
+
+		priceUpdates = veApplier.GetCachedPrices()
+		cachedPrices = make(map[string]ve.VEPricePair)
+		for _, priceUpdate := range priceUpdates {
+			marketId := priceUpdate.MarketId
+			pair, exists := pricesKeeper.GetMarketParam(ctx, marketId)
+			if !exists {
+				continue
+			}
+			cachedPrices[pair.Pair] = ve.VEPricePair{
+				SpotPrice: priceUpdate.SpotPrice.Uint64(),
+				PnlPrice:  priceUpdate.PnlPrice.Uint64(),
+			}
+		}
+
+		// Ensure the cached prices change
+		require.Equal(t, map[string]ve.VEPricePair{
+			constants.BtcUsdPair: {
+				SpotPrice: 200,
+				PnlPrice:  200,
 			},
 		}, cachedPrices)
 	})

@@ -10,13 +10,13 @@ import (
 
 func TestDefaultNewSDAIEventManager(t *testing.T) {
 	sdaiEventManager := sdaitypes.SetupMockEventManager()
-	actualEvents := sdaiEventManager.GetDAIPrice()
+	actualEvents := sdaiEventManager.GetSDaiPrice()
 	require.EqualValues(t, sdaitypes.TestSDAIEventRequest, actualEvents)
 }
 
 func TestEmptyNewSDAIEventManager(t *testing.T) {
 	sdaiEventManager := sdaitypes.SetupMockEventManager(true)
-	actualEvents := sdaiEventManager.GetDAIPrice()
+	actualEvents := sdaiEventManager.GetSDaiPrice()
 	require.EqualValues(t, api.AddsDAIEventsRequest{}, actualEvents)
 }
 
@@ -32,6 +32,6 @@ func TestSDAIEventManager_AddsDAIEvent(t *testing.T) {
 	require.NoError(t, sdaiEventManager.AddsDAIEvent(event))
 
 	// Check if the event was added correctly
-	actualEvents := sdaiEventManager.GetDAIPrice()
+	actualEvents := sdaiEventManager.GetSDaiPrice()
 	require.EqualValues(t, *event, actualEvents)
 }

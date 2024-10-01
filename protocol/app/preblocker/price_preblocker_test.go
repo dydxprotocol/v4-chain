@@ -52,8 +52,6 @@ func TestPreBlockTestSuite(t *testing.T) {
 func (s *PreBlockTestSuite) SetupTest() {
 	s.validator = constants.AliceEthosConsAddress
 
-	//ctx, pricesKeeper, _, daemonPriceCahce, _, mockTimeProvider := keepertest.PricesKeepers(s.T())
-
 	ctx, _, pricesKeeper, _, _, _, _, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(s.T(), true)
 
 	mockTimeProvider := &mocks.TimeProvider{}

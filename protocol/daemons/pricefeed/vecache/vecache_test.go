@@ -1,7 +1,6 @@
 package vecache_test
 
 import (
-	"fmt"
 	"math/big"
 	"sync"
 	"testing"
@@ -34,7 +33,7 @@ func TestVEPriceCaching(t *testing.T) {
 	t.Run("valid: set priced updates for multi round single height", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(2)
 		var updates vecache.PriceUpdates
-		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
+		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
 			updates = append(updates, vecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
@@ -45,7 +44,7 @@ func TestVEPriceCaching(t *testing.T) {
 
 		checkValidCacheState(t, &veCache, 2, 1, updates)
 		var newUpdates vecache.PriceUpdates
-		for _, marketPrice := range constants.ValidSingleMarketPriceUpdateObj.MarketPriceUpdates {
+		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
 			newUpdates = append(newUpdates, vecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
@@ -71,7 +70,7 @@ func TestVEPriceCaching(t *testing.T) {
 
 		ctx = ctx.WithBlockHeight(4)
 		var newUpdates vecache.PriceUpdates
-		for _, marketPrice := range constants.ValidSingleMarketPriceUpdateObj.MarketPriceUpdates {
+		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
 			newUpdates = append(newUpdates, vecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
@@ -96,7 +95,7 @@ func TestVEPriceCaching(t *testing.T) {
 		checkValidCacheState(t, &veCache, 5, 1, updates)
 
 		var newUpdates vecache.PriceUpdates
-		for _, marketPrice := range constants.ValidSingleMarketPriceUpdateObj.MarketPriceUpdates {
+		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
 			newUpdates = append(newUpdates, vecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
@@ -234,7 +233,6 @@ func checkValidCacheState(
 	shouldBeRound int32,
 	shouldBeUpdates vecache.PriceUpdates,
 ) {
-	fmt.Println()
 	require.True(t, veCache.HasValidValues(shouldBeHight, shouldBeRound))
 	require.Equal(t, shouldBeHight, veCache.GetHeight())
 	require.Equal(t, shouldBeRound, veCache.GetRound())

@@ -29,35 +29,6 @@ var (
 	extCodec  = vecodec.NewDefaultExtendedCommitCodec()
 )
 
-// func SetupTest(t *testing.T, vals []string) (sdk.Context, veaggregator.VoteAggregator) {
-// 	ctx, pk, _, _, _, mTimeProvider := keepertest.PricesKeepers(t)
-// 	mTimeProvider.On("Now").Return(constants.TimeT)
-
-// 	keepertest.CreateTestMarkets(t, ctx, pk)
-
-// 	mCCVStore := ethosutils.NewGetAllCCValidatorMockReturn(ctx, vals)
-
-// 	pricesAggregatorFn := voteweighted.MedianPrices(
-// 		ctx.Logger(),
-// 		mCCVStore,
-// 		voteweighted.DefaultPowerThreshold,
-// 	)
-
-// 	conversionRateAggregatorFn := voteweighted.MedianConversionRate(
-// 		ctx.Logger(),
-// 		mCCVStore,
-// 		voteweighted.DefaultPowerThreshold,
-// 	)
-
-// 	handler := veaggregator.NewVeAggregator(
-// 		ctx.Logger(),
-// 		*pk,
-// 		pricesAggregatorFn,
-// 		conversionRateAggregatorFn,
-// 	)
-// 	return ctx, handler
-// }
-
 func SetupTest(t *testing.T, vals []string, errorString string) (sdk.Context, veaggregator.VoteAggregator) {
 	ctx, pk, _, _, _, mTimeProvider := keepertest.PricesKeepers(t)
 	mTimeProvider.On("Now").Return(constants.TimeT)

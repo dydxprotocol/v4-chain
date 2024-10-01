@@ -13,8 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: Expand tests for median prices beyond just default threshold
-
 type TestVoteWeightedMedianTC struct {
 	validators      []string
 	validatorPrices map[string]map[string]vemath.AggregatorPricePair
@@ -467,8 +465,8 @@ func TestMedianPrices(t *testing.T) {
 			},
 			expectedPrices: map[string]vemath.AggregatorPricePair{
 				constants.BtcUsdPair: {
-					SpotPrice: big.NewInt(6000),
-					PnlPrice:  big.NewInt(6000),
+					SpotPrice: big.NewInt(6500),
+					PnlPrice:  big.NewInt(6500),
 				},
 			},
 		},
@@ -884,6 +882,46 @@ func TestMedianPrices(t *testing.T) {
 				},
 			},
 		},
+		"voters barely have > 2/3 with large powers": {
+			validators: []string{"alice", "bob", "carl"},
+			powers: map[string]int64{
+				"alice": 500000000000001,
+				"bob":   500000000000000,
+				"carl":  500000000000000,
+			},
+			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
+				constants.AliceEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4000),
+						PnlPrice:  big.NewInt(4005),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(5000),
+						PnlPrice:  big.NewInt(5005),
+					},
+				},
+				constants.BobEthosConsAddress.String(): {
+					constants.BtcUsdPair: {
+						SpotPrice: big.NewInt(4002),
+						PnlPrice:  big.NewInt(4007),
+					},
+					constants.EthUsdPair: {
+						SpotPrice: big.NewInt(5002),
+						PnlPrice:  big.NewInt(5007),
+					},
+				},
+			},
+			expectedPrices: map[string]vemath.AggregatorPricePair{
+				constants.BtcUsdPair: {
+					SpotPrice: big.NewInt(4000),
+					PnlPrice:  big.NewInt(4005),
+				},
+				constants.EthUsdPair: {
+					SpotPrice: big.NewInt(5000),
+					PnlPrice:  big.NewInt(5005),
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -999,6 +1037,20 @@ func TestMedianConversionRate(t *testing.T) {
 			},
 			expectedConversionRate: big.NewInt(5000),
 		},
+		"multiple validators with different large powers, varied conversion rates, one nil, returns non-nil": {
+			validators: []string{"alice", "bob", "carl"},
+			powers: map[string]int64{
+				"alice": 500000000000001,
+				"bob":   500000000000000,
+				"carl":  500000000000000,
+			},
+			validatorConversionRates: map[string]*big.Int{
+				constants.AliceEthosConsAddress.String(): big.NewInt(5000),
+				constants.BobEthosConsAddress.String():   nil,
+				constants.CarlEthosConsAddress.String():  big.NewInt(5002),
+			},
+			expectedConversionRate: big.NewInt(5000),
+		},
 		"multiple validators, varied rates, all nil": {
 			validators: []string{"alice", "bob", "carl"},
 			powers: map[string]int64{
@@ -1052,7 +1104,7 @@ func TestMedianConversionRate(t *testing.T) {
 				constants.BobEthosConsAddress.String():   big.NewInt(6000),
 				constants.CarlEthosConsAddress.String():  big.NewInt(7000),
 			},
-			expectedConversionRate: big.NewInt(6000),
+			expectedConversionRate: big.NewInt(6500),
 		},
 		"multiple validators, varied rates, varied stake 1": {
 			validators: []string{"alice", "bob", "carl"},
@@ -1136,16 +1188,8 @@ func TestComputeMedian(t *testing.T) {
 				{VoteWeight: 50, Price: big.NewInt(6000)},
 			},
 			totalWeight: math.NewInt(100),
-			expected:    big.NewInt(5500), // Average of 5000 and 6000
+			expected:    big.NewInt(5500),
 		},
-		// "two prices, equal weight": {
-		// 	prices: []vemath.PricePerValidator{
-		// 		{VoteWeight: 50, Price: big.NewInt(5000)},
-		// 		{VoteWeight: 50, Price: big.NewInt(6000)},
-		// 	},
-		// 	totalWeight: math.NewInt(100),
-		// 	expected:    big.NewInt(5000),
-		// },
 		"three prices, equal weight": {
 			prices: []vemath.PricePerValidator{
 				{VoteWeight: 33, Price: big.NewInt(5000)},
@@ -1194,16 +1238,6 @@ func TestComputeMedian(t *testing.T) {
 			totalWeight: math.NewInt(100),
 			expected:    big.NewInt(5750), // Average of 5500 and 6000
 		},
-		// "even number of prices, unequal weights": {
-		// 	prices: []vemath.PricePerValidator{
-		// 		{VoteWeight: 25, Price: big.NewInt(5000)},
-		// 		{VoteWeight: 25, Price: big.NewInt(5500)},
-		// 		{VoteWeight: 30, Price: big.NewInt(6000)},
-		// 		{VoteWeight: 20, Price: big.NewInt(6500)},
-		// 	},
-		// 	totalWeight: math.NewInt(100),
-		// 	expected:    big.NewInt(5500),
-		// },
 		"large weights": {
 			prices: []vemath.PricePerValidator{
 				{VoteWeight: 1000000, Price: big.NewInt(5000)},
@@ -1211,7 +1245,7 @@ func TestComputeMedian(t *testing.T) {
 				{VoteWeight: 3000000, Price: big.NewInt(7000)},
 			},
 			totalWeight: math.NewInt(6000000),
-			expected:    big.NewInt(6000),
+			expected:    big.NewInt(6500),
 		},
 		"single price with large weight": {
 			prices: []vemath.PricePerValidator{

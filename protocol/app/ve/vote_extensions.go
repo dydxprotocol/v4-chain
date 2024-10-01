@@ -192,10 +192,12 @@ func (h *VoteExtensionHandler) ValidateVE(
 }
 
 func (h *VoteExtensionHandler) GetVEBytes(ctx sdk.Context) ([]byte, error) {
-
 	priceUpdates := h.getCurrentPricesForEachMarket(ctx)
-
 	sDAIConversionRate := h.getSDAIPriceUpdate(ctx)
+
+	if len(priceUpdates) == 0 && sDAIConversionRate == "" {
+		return nil, fmt.Errorf("no prices or conversion rate available")
+	}
 
 	voteExt := h.createVE(priceUpdates, sDAIConversionRate)
 
@@ -216,7 +218,7 @@ func (h *VoteExtensionHandler) getSDAIPriceUpdate(ctx sdk.Context) string {
 		}
 	}
 
-	return h.sDAIEventManager.GetDAIPrice().ConversionRate
+	return h.sDAIEventManager.GetSDaiPrice().ConversionRate
 }
 
 func (h *VoteExtensionHandler) createVE(
@@ -268,7 +270,6 @@ func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
 ) map[uint32]VEPricePair {
 	vePrices := make(map[uint32]VEPricePair)
 	daemonPrices := h.pricesKeeper.GetValidMarketSpotPriceUpdates(ctx)
-
 	for _, market := range daemonPrices {
 		clobMidPrice, smoothedPrice, lastFundingRate, allExist := h.getPeripheryPnlPriceData(
 			ctx,
@@ -292,7 +293,6 @@ func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
 			PnlPrice:  medianPnlPrice.Uint64(),
 		}
 	}
-
 	return vePrices
 }
 

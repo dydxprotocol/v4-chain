@@ -26,7 +26,7 @@ func TestAddsDAIEvents_EmptyRequest(t *testing.T) {
 	resp, err := s.AddsDAIEvent(grpc.Ctx, &api.AddsDAIEventsRequest{})
 	require.NoError(t, err)
 	require.Empty(t, resp)
-	require.Empty(t, sDAIEventManager.GetDAIPrice())
+	require.Empty(t, sDAIEventManager.GetSDaiPrice())
 }
 
 func TestAddsDAIEvents(t *testing.T) {
@@ -52,7 +52,7 @@ func TestAddsDAIEvents(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, resp)
 
-	event := sDAIEventManager.GetDAIPrice()
+	event := sDAIEventManager.GetSDaiPrice()
 	require.Equal(t, expectedEvent.ConversionRate, event.ConversionRate)
 
 	secondEvent := &api.AddsDAIEventsRequest{
@@ -63,6 +63,6 @@ func TestAddsDAIEvents(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, resp)
 
-	event = sDAIEventManager.GetDAIPrice()
+	event = sDAIEventManager.GetSDaiPrice()
 	require.Equal(t, secondEvent.ConversionRate, event.ConversionRate)
 }
