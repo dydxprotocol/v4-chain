@@ -169,13 +169,13 @@ var (
 	Price6       uint64 = 60006
 	Price7       uint64 = 7007
 
-	Price1In1000SubticksPerTick = Price1 * 1000
-	Price2In1000SubticksPerTick = Price2 * 1000
-	Price3In1000SubticksPerTick = Price3 * 1000
-	Price4In1000SubticksPerTick = Price4 * 1000
-	Price5In1000SubticksPerTick = Price5 * 1000
-	Price6In1000SubticksPerTick = Price6 * 1000
-	Price7In1000SubticksPerTick = Price7 * 1000
+	Price1In100_000SubticksPerTick = Price1 * 100_000
+	Price2In100_000SubticksPerTick = Price2 * 100_000
+	Price3In100_000SubticksPerTick = Price3 * 100_000
+	Price4In100_000SubticksPerTick = Price4 * 100_000
+	Price5In100_000SubticksPerTick = Price5 * 100_000
+	Price6In100_000SubticksPerTick = Price6 * 100_000
+	Price7In100_000SubticksPerTick = Price7 * 100_000
 
 	Price5Negative int64 = -500005
 	Price6Negative int64 = -60006

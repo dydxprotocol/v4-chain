@@ -885,7 +885,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId0: 2000, // 0.2% in ppm
 			},
 			midPrices: map[uint32]uint64{
-				constants.MarketId0: constants.Price5In1000SubticksPerTick - 2000,
+				constants.MarketId0: constants.Price5In100_000SubticksPerTick - 200_000,
 			},
 			expected: &vetypes.DaemonVoteExtension{
 				Prices: []vetypes.PricePair{
@@ -913,8 +913,8 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				constants.MarketId1: 500,
 			},
 			midPrices: map[uint32]uint64{
-				constants.MarketId0: constants.Price5In1000SubticksPerTick - 2000,
-				constants.MarketId1: constants.Price6In1000SubticksPerTick + 2000,
+				constants.MarketId0: constants.Price5In100_000SubticksPerTick - 200_000,
+				constants.MarketId1: constants.Price6In100_000SubticksPerTick + 200_000,
 			},
 			expected: &vetypes.DaemonVoteExtension{
 				Prices: []vetypes.PricePair{
@@ -987,7 +987,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 				mClobKeeper.On("GetClobPair", mock.Anything, clobtypes.ClobPairId(market)).Return(
 					clobtypes.ClobPair{
 						Id:              market,
-						SubticksPerTick: 1000,
+						SubticksPerTick: 100_000,
 					},
 					true,
 				)
@@ -998,7 +998,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 						mock.Anything,
 						clobtypes.ClobPair{
 							Id:              market,
-							SubticksPerTick: 1000,
+							SubticksPerTick: 100_000,
 						},
 					).Return(
 						clobtypes.ClobMetadata{
@@ -1011,7 +1011,7 @@ func TestGetVEBytesFromCurrPrices(t *testing.T) {
 						mock.Anything,
 						clobtypes.ClobPair{
 							Id:              market,
-							SubticksPerTick: 1000,
+							SubticksPerTick: 100_000,
 						},
 					).Return(
 						clobtypes.ClobMetadata{
