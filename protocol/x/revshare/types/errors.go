@@ -36,9 +36,9 @@ var (
 		6,
 		"total fees shared exceeds net fees",
 	)
-	ErrAffiliateFeesSharedExceedsNetFees = errorsmod.Register(
+	ErrAffiliateFeesSharedGreaterThanOrEqualToNetFees = errorsmod.Register(
 		ModuleName,
 		7,
-		"affiliate fees shared exceeds net fees",
+		"net fees minus affiliate fee share is not larger than zero",
 	)
 )
