@@ -474,8 +474,9 @@ function getPnlTicksWithCurrentTick(
 
 /**
  * Takes in a map of block heights to PnlTicks and filters out the closest pnl tick per interval.
- * @param pnlTicksByBlock
- * @returns
+ * @param pnlTicksByBlock Map of block number to pnl tick.
+ * @param resolution Resolution of interval.
+ * @returns Array of PnlTicksFromDatabase, one per interval.
  */
 function filterOutIntervalTicks(
   pnlTicksByBlock: Map<number, PnlTicksFromDatabase>,
