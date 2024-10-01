@@ -519,7 +519,7 @@ function filterOutIntervalTicks(
   return Array.from(ticksPerInterval.values());
 }
 
-function getResolution(resolution: PnlTickInterval = PnlTickInterval.day) {
+function getResolution(resolution: PnlTickInterval = PnlTickInterval.day): PnlTickInterval {
   return resolution;
 }
 
