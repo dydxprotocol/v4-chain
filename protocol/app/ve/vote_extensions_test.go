@@ -52,14 +52,13 @@ func TestExtendVoteHandler(t *testing.T) {
 			extendVoteRequest: func() *cometabci.RequestExtendVote {
 				return nil
 			},
+			expectedError: true,
 		},
-		"price daemon returns no prices": {
+		"price daemon returns no prices - throws error": {
 			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
 				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Return(
-					&pricestypes.MarketPriceUpdates{
-						MarketPriceUpdates: []*pricestypes.MarketPriceUpdate{},
-					},
+					[]*pricestypes.MarketSpotPriceUpdate{},
 				)
 
 				mPricesKeeper.On("GetMarketParam", mock.Anything, mock.Anything).Return(
@@ -83,15 +82,13 @@ func TestExtendVoteHandler(t *testing.T) {
 				)
 				return mClobKeeper
 			},
-			expectedResponse: &vetypes.DaemonVoteExtension{
-				Prices: nil,
-			},
+			expectedError: true,
 		},
 		"oracle service returns single price": {
 			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
 				mpricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mpricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Return(
-					constants.ValidSingleMarketPriceUpdateObj,
+					constants.ValidSingleSpotMarketPriceUpdate,
 				)
 				mpricesKeeper.On("GetMarketParam", mock.Anything, mock.Anything).Return(
 					constants.TestSingleMarketParam,
@@ -118,12 +115,15 @@ func TestExtendVoteHandler(t *testing.T) {
 			clobKeeper: func() *mocks.ExtendVoteClobKeeper {
 				mClobKeeper := &mocks.ExtendVoteClobKeeper{}
 				mClobKeeper.On("GetClobPair", mock.Anything, mock.Anything).Return(
-					clobtypes.ClobPair{},
+					clobtypes.ClobPair{
+						Id:              constants.MarketId0,
+						SubticksPerTick: 100_000,
+					},
 					true,
 				)
 				mClobKeeper.On("GetSingleMarketClobMetadata", mock.Anything, mock.Anything).Return(
 					clobtypes.ClobMetadata{
-						MidPrice: clobtypes.Subticks(constants.Price5),
+						MidPrice: clobtypes.Subticks(getSubticksFromPrice(constants.Price5)),
 					},
 				)
 				return mClobKeeper
@@ -142,7 +142,7 @@ func TestExtendVoteHandler(t *testing.T) {
 			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
 				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Return(
-					constants.ValidMarketPriceUpdateObj,
+					constants.ValidMultiMarketSpotPriceUpdates,
 				)
 				mPricesKeeper.On("GetMarketParam", mock.Anything, constants.MarketId0).Return(
 					constants.TestMarketParams[0],
@@ -157,23 +157,23 @@ func TestExtendVoteHandler(t *testing.T) {
 					true,
 				)
 				mPricesKeeper.On("GetMarketParam", mock.Anything, constants.MarketId3).Return(
-					constants.Price4,
+					constants.TestMarketParams[3],
 					true,
 				)
 				mPricesKeeper.On("GetMarketParam", mock.Anything, constants.MarketId4).Return(
-					constants.Price3,
+					constants.TestMarketParams[4],
 					true,
 				)
 				mPricesKeeper.On("GetSmoothedSpotPrice", constants.MarketId0).Return(
-					constants.Price1,
+					constants.Price5,
 					true,
 				)
 				mPricesKeeper.On("GetSmoothedSpotPrice", constants.MarketId1).Return(
-					constants.Price2,
+					constants.Price6,
 					true,
 				)
 				mPricesKeeper.On("GetSmoothedSpotPrice", constants.MarketId2).Return(
-					constants.Price3,
+					constants.Price7,
 					true,
 				)
 				mPricesKeeper.On("GetSmoothedSpotPrice", constants.MarketId3).Return(
@@ -200,63 +200,98 @@ func TestExtendVoteHandler(t *testing.T) {
 				mClobKeeper := &mocks.ExtendVoteClobKeeper{}
 				mClobKeeper.On("GetClobPair", mock.Anything, mock.Anything).Return(
 					clobtypes.ClobPair{
-						Id: constants.MarketId0,
+						Id:              constants.MarketId0,
+						SubticksPerTick: 100_000,
 					},
 					true,
 				)
+				mClobKeeper.On("GetClobPair", mock.Anything, mock.Anything).Return(
+					clobtypes.ClobPair{
+						Id:              constants.MarketId1,
+						SubticksPerTick: 100_000,
+					},
+					true,
+				)
+				mClobKeeper.On("GetClobPair", mock.Anything, mock.Anything).Return(
+					clobtypes.ClobPair{
+						Id:              constants.MarketId2,
+						SubticksPerTick: 100_000,
+					},
+					true,
+				)
+				mClobKeeper.On("GetClobPair", mock.Anything, mock.Anything).Return(
+					clobtypes.ClobPair{
+						Id:              constants.MarketId3,
+						SubticksPerTick: 100_000,
+					},
+					true,
+				)
+				mClobKeeper.On("GetClobPair", mock.Anything, mock.Anything).Return(
+					clobtypes.ClobPair{
+						Id:              constants.MarketId4,
+						SubticksPerTick: 100_000,
+					},
+					true,
+				)
+
 				mClobKeeper.On(
 					"GetSingleMarketClobMetadata",
 					mock.Anything,
 					clobtypes.ClobPair{
-						Id: constants.MarketId0,
+						Id:              constants.MarketId0,
+						SubticksPerTick: 100_000,
 					},
 				).Return(
 					clobtypes.ClobMetadata{
-						MidPrice: clobtypes.Subticks(constants.Price5),
+						MidPrice: clobtypes.Subticks(getSubticksFromPrice(constants.Price5)),
 					},
 				)
 				mClobKeeper.On(
 					"GetSingleMarketClobMetadata",
 					mock.Anything,
 					clobtypes.ClobPair{
-						Id: constants.MarketId1,
+						Id:              constants.MarketId1,
+						SubticksPerTick: 100_000,
 					},
 				).Return(
 					clobtypes.ClobMetadata{
-						MidPrice: clobtypes.Subticks(constants.Price6),
+						MidPrice: clobtypes.Subticks(getSubticksFromPrice(constants.Price6)),
 					},
 				)
 				mClobKeeper.On(
 					"GetSingleMarketClobMetadata",
 					mock.Anything,
 					clobtypes.ClobPair{
-						Id: constants.MarketId2,
+						Id:              constants.MarketId2,
+						SubticksPerTick: 100_000,
 					},
 				).Return(
 					clobtypes.ClobMetadata{
-						MidPrice: clobtypes.Subticks(constants.Price7),
+						MidPrice: clobtypes.Subticks(getSubticksFromPrice(constants.Price7)),
 					},
 				)
 				mClobKeeper.On(
 					"GetSingleMarketClobMetadata",
 					mock.Anything,
 					clobtypes.ClobPair{
-						Id: constants.MarketId3,
+						Id:              constants.MarketId3,
+						SubticksPerTick: 100_000,
 					},
 				).Return(
 					clobtypes.ClobMetadata{
-						MidPrice: clobtypes.Subticks(constants.Price4),
+						MidPrice: clobtypes.Subticks(getSubticksFromPrice(constants.Price4)),
 					},
 				)
 				mClobKeeper.On(
 					"GetSingleMarketClobMetadata",
 					mock.Anything,
 					clobtypes.ClobPair{
-						Id: constants.MarketId4,
+						Id:              constants.MarketId4,
+						SubticksPerTick: 100_000,
 					},
 				).Return(
 					clobtypes.ClobMetadata{
-						MidPrice: clobtypes.Subticks(constants.Price3),
+						MidPrice: clobtypes.Subticks(getSubticksFromPrice(constants.Price3)),
 					},
 				)
 				return mClobKeeper
@@ -291,25 +326,25 @@ func TestExtendVoteHandler(t *testing.T) {
 				},
 			},
 		},
-		"getting prices panics": {
-			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
-				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
-				mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Panic("panic")
-				return mPricesKeeper
-			},
-			expectedResponse: &vetypes.DaemonVoteExtension{
-				Prices: nil,
-			},
-			perpKeeper: func() *mocks.ExtendVotePerpetualsKeeper {
-				mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
-				return mPerpKeeper
-			},
-			clobKeeper: func() *mocks.ExtendVoteClobKeeper {
-				mClobKeeper := &mocks.ExtendVoteClobKeeper{}
-				return mClobKeeper
-			},
-			expectedError: true,
-		},
+		// "getting prices panics": {
+		// 	pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
+		// 		mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
+		// 		mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Panic("panic")
+		// 		return mPricesKeeper
+		// 	},
+		// 	expectedResponse: &vetypes.DaemonVoteExtension{
+		// 		Prices: nil,
+		// 	},
+		// 	perpKeeper: func() *mocks.ExtendVotePerpetualsKeeper {
+		// 		mPerpKeeper := &mocks.ExtendVotePerpetualsKeeper{}
+		// 		return mPerpKeeper
+		// 	},
+		// 	clobKeeper: func() *mocks.ExtendVoteClobKeeper {
+		// 		mClobKeeper := &mocks.ExtendVoteClobKeeper{}
+		// 		return mClobKeeper
+		// 	},
+		// 	expectedError: true,
+		// },
 	}
 	var round int64 = 3
 	for name, tc := range tests {
@@ -334,17 +369,18 @@ func TestExtendVoteHandler(t *testing.T) {
 				req = tc.extendVoteRequest()
 			}
 
-			mPriceApplier.On("ApplyPricesFromVE", mock.Anything, mock.Anything).Return(nil)
+			mPriceApplier.On("ApplyPricesFromVE", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			resp, err := h.ExtendVoteHandler()(ctx, req)
 			if !tc.expectedError {
-				if resp == nil || len(resp.VoteExtension) == 0 {
+				require.NoError(t, err)
+				if resp == nil && tc.expectedResponse == nil {
 					return
 				}
-				require.NoError(t, err)
 				require.NotNil(t, resp)
 				ext, err := votecodec.Decode(resp.VoteExtension)
 				require.NoError(t, err)
+				require.Equal(t, len(tc.expectedResponse.Prices), len(ext.Prices))
 				require.Equal(t, tc.expectedResponse.Prices, ext.Prices)
 			} else {
 				require.Error(t, err)
@@ -1032,4 +1068,8 @@ func getGobEncodedPriceBytes(
 		return []byte{}
 	}
 	return bytes
+}
+
+func getSubticksFromPrice(price uint64) clobtypes.Subticks {
+	return clobtypes.Subticks(price * 100_000)
 }

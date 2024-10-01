@@ -105,7 +105,6 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 
 			return &abci.ResponseExtendVote{VoteExtension: []byte{}}, err
 		}
-
 		veBytes, err := h.GetVEBytesFromCurrPrices(ctx)
 		if err != nil {
 			h.logger.Error(
@@ -170,7 +169,6 @@ func (h *VoteExtensionHandler) VerifyVoteExtensionHandler() sdk.VerifyVoteExtens
 
 func (h *VoteExtensionHandler) GetVEBytesFromCurrPrices(ctx sdk.Context) ([]byte, error) {
 	priceUpdates := h.getCurrentPricesForEachMarket(ctx)
-
 	if len(priceUpdates) == 0 {
 		return nil, fmt.Errorf("no valid prices")
 	}
@@ -236,7 +234,6 @@ func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
 ) map[uint32]VEPricePair {
 	vePrices := make(map[uint32]VEPricePair)
 	daemonPrices := h.pricesKeeper.GetValidMarketSpotPriceUpdates(ctx)
-
 	for _, market := range daemonPrices {
 		clobMidPrice, smoothedPrice, lastFundingRate, allExist := h.getPeripheryPnlPriceData(
 			ctx,
@@ -330,7 +327,6 @@ func (h *VoteExtensionHandler) getFundingWeightedDaemonPrice(
 	adjustedFundingRate := new(big.Int).Add(lastFundingRate, big.NewInt(ppmFactor))
 	fundingWeightedPrice := new(big.Int).Mul(daemonPrice, adjustedFundingRate)
 	fundingWeightedPrice = fundingWeightedPrice.Div(fundingWeightedPrice, big.NewInt(ppmFactor))
-
 	return fundingWeightedPrice
 }
 

@@ -316,6 +316,28 @@ var TestPricesGenesisState = types.GenesisState{
 }
 
 var (
+	ValidMultiMarketSpotPriceUpdates = []*types.MarketSpotPriceUpdate{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5,
+		},
+		{
+			MarketId:  MarketId1,
+			SpotPrice: Price6,
+		},
+		{
+			MarketId:  MarketId2,
+			SpotPrice: Price7,
+		},
+		{
+			MarketId:  MarketId3,
+			SpotPrice: Price4,
+		},
+		{
+			MarketId:  MarketId4,
+			SpotPrice: Price3,
+		},
+	}
 	ValidMarketPriceUpdates = []*types.MarketPriceUpdate{
 		{
 			MarketId:  MarketId0,
@@ -344,19 +366,19 @@ var (
 		},
 	}
 
-	ValidSingleMarketPriceUpdateObj = &types.MarketPriceUpdates{
-		MarketPriceUpdates: ValidSingleMarketPriceUpdate,
+	ValidSingleSpotMarketPriceUpdate = []*types.MarketSpotPriceUpdate{
+		{
+			MarketId:  MarketId0,
+			SpotPrice: Price5,
+		},
 	}
+
 	ValidSingleMarketPriceUpdate = []*types.MarketPriceUpdate{
 		{
 			MarketId:  MarketId0,
 			SpotPrice: Price5,
 			PnlPrice:  Price5,
 		},
-	}
-
-	ValidMarketPriceUpdateObj = &types.MarketPriceUpdates{
-		MarketPriceUpdates: ValidMarketPriceUpdates,
 	}
 
 	ValidSingleVEPrice = []vetypes.PricePair{
