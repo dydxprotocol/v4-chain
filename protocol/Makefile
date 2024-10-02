@@ -252,6 +252,10 @@ test-slow:
 test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -tags='test_ledger_mock $(build_tags)' ./...
 
+test-unit-specific:
+	@echo "Running specific test: $(TESTNAME) in file: $(FILE)"
+	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' -timeout 20m -run "$(TESTNAME)" $(FILE)
+
 test-unit-verbose:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -tags='test_ledger_mock $(build_tags)' -v -count=1 -failfast -cover ./...
 
@@ -300,6 +304,24 @@ test-container-build:
 
 .PHONY: test test-all test-cover test-unit test-race test-container test-slow
 	\ container-test-build-base container-test-build-local
+
+###############################################################################
+###                                Coverage                                  ###
+###############################################################################
+
+get-coverage:
+	@echo "Running tests and generating coverage report..."
+	@go test -coverprofile=coverage.out ./...
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated at coverage.html"
+	@open coverage.html
+
+get-file-coverage:
+	@echo "Running tests and generating coverage report for directory: $(DIR)"
+	@go test -coverprofile=coverage.out $(DIR)
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated at coverage.html"
+	@open coverage.html
 
 ###############################################################################
 ###                                Linting                                  ###
