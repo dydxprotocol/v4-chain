@@ -87,10 +87,6 @@ type SubaccountsKeeper interface {
 		revSharesForFill revsharetypes.RevSharesForFill,
 		fillForProcess FillForProcess,
 	) error
-	SendFinalizedSubaccountUpdates(
-		ctx sdk.Context,
-		subaccountUpdates []satypes.StreamSubaccountUpdate,
-	)
 }
 
 type AssetsKeeper interface {
