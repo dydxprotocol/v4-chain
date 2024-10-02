@@ -1,7 +1,6 @@
 package streaming
 
 import (
-	"encoding/binary"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -11,7 +10,6 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,6 +20,8 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+
+	"github.com/dydxprotocol/v4-chain/protocol/finalizeblock"
 )
 
 var _ types.FullNodeStreamingManager = (*FullNodeStreamingManagerImpl)(nil)
@@ -62,6 +62,8 @@ type FullNodeStreamingManagerImpl struct {
 
 	// stores the staged FinalizeBlock events for full node streaming.
 	streamingManagerTransientStoreKey storetypes.StoreKey
+
+	finalizeBlockStager finalizeblock.EventStager[*clobtypes.StagedFinalizeBlockEvent]
 }
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
@@ -119,6 +121,12 @@ func NewFullNodeStreamingManager(
 
 		streamingManagerTransientStoreKey: streamingManagerTransientStoreKey,
 		cdc:                               cdc,
+		finalizeBlockStager: finalizeblock.NewEventStager[*clobtypes.StagedFinalizeBlockEvent](
+			streamingManagerTransientStoreKey,
+			cdc,
+			StagedEventsCountKey,
+			StagedEventsKeyPrefix,
+		),
 	}
 
 	// Start the goroutine for pushing order updates through.
@@ -381,14 +389,6 @@ func (sm *FullNodeStreamingManagerImpl) sendStreamUpdates(
 	}
 }
 
-func getStagedEventsCount(store storetypes.KVStore) uint32 {
-	countsBytes := store.Get([]byte(StagedEventsCountKey))
-	if countsBytes == nil {
-		return 0
-	}
-	return binary.BigEndian.Uint32(countsBytes)
-}
-
 // Send a subaccount update event.
 func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdate(
 	ctx sdk.Context,
@@ -405,51 +405,30 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdate(
 			SubaccountUpdate: &subaccountUpdate,
 		},
 	}
-	sm.stageFinalizeBlockEvent(
+	sm.finalizeBlockStager.StageFinalizeBlockEvent(
 		ctx,
-		sm.cdc.MustMarshal(&stagedEvent),
+		&stagedEvent,
 	)
-}
-
-func getStagedFinalizeBlockEventsFromStore(
-	store storetypes.KVStore,
-	cdc codec.BinaryCodec,
-) []clobtypes.StagedFinalizeBlockEvent {
-	count := getStagedEventsCount(store)
-	events := make([]clobtypes.StagedFinalizeBlockEvent, count)
-	store = prefix.NewStore(store, []byte(StagedEventsKeyPrefix))
-	for i := uint32(0); i < count; i++ {
-		var event clobtypes.StagedFinalizeBlockEvent
-		bytes := store.Get(lib.Uint32ToKey(i))
-		cdc.MustUnmarshal(bytes, &event)
-		events[i] = event
-	}
-	return events
 }
 
 // Retrieve all events staged during `FinalizeBlock`.
 func (sm *FullNodeStreamingManagerImpl) GetStagedFinalizeBlockEvents(
 	ctx sdk.Context,
 ) []clobtypes.StagedFinalizeBlockEvent {
-	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
-	store := noGasCtx.TransientStore(sm.streamingManagerTransientStoreKey)
-	return getStagedFinalizeBlockEventsFromStore(store, sm.cdc)
-}
-
-func (sm *FullNodeStreamingManagerImpl) stageFinalizeBlockEvent(
-	ctx sdk.Context,
-	eventBytes []byte,
-) {
-	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
-	store := noGasCtx.TransientStore(sm.streamingManagerTransientStoreKey)
-
-	// Increment events count.
-	count := getStagedEventsCount(store)
-	store.Set([]byte(StagedEventsCountKey), lib.Uint32ToKey(count+1))
-
-	// Store events keyed by index.
-	store = prefix.NewStore(store, []byte(StagedEventsKeyPrefix))
-	store.Set(lib.Uint32ToKey(count), eventBytes)
+	events := sm.finalizeBlockStager.GetStagedFinalizeBlockEvents(
+		ctx,
+		func() *clobtypes.StagedFinalizeBlockEvent {
+			return &clobtypes.StagedFinalizeBlockEvent{}
+		},
+	)
+	results := make([]clobtypes.StagedFinalizeBlockEvent, len(events))
+	for i, event := range events {
+		if event == nil {
+			panic("Got nil event from finalizeBlockStager")
+		}
+		results[i] = *event
+	}
+	return results
 }
 
 // SendCombinedSnapshot sends messages to a particular subscriber without buffering.
@@ -574,9 +553,9 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookUpdates(
 			},
 		},
 	}
-	sm.stageFinalizeBlockEvent(
+	sm.finalizeBlockStager.StageFinalizeBlockEvent(
 		ctx,
-		sm.cdc.MustMarshal(&stagedEvent),
+		&stagedEvent,
 	)
 }
 
@@ -649,9 +628,9 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdate(
 		},
 	}
 
-	sm.stageFinalizeBlockEvent(
+	sm.finalizeBlockStager.StageFinalizeBlockEvent(
 		ctx,
-		sm.cdc.MustMarshal(&stagedEvent),
+		&stagedEvent,
 	)
 }
 
@@ -708,32 +687,6 @@ func getStreamUpdatesForSubaccountUpdates(
 		subaccountIds = append(subaccountIds, subaccountUpdate.SubaccountId)
 	}
 	return streamUpdates, subaccountIds
-}
-
-// SendFinalizedSubaccountUpdates groups subaccount updates by their subaccount ids and
-// sends messages to the subscribers.
-func (sm *FullNodeStreamingManagerImpl) SendFinalizedSubaccountUpdates(
-	subaccountUpdates []satypes.StreamSubaccountUpdate,
-	blockHeight uint32,
-	execMode sdk.ExecMode,
-) {
-	defer metrics.ModuleMeasureSince(
-		metrics.FullNodeGrpc,
-		metrics.GrpcSendFinalizedSubaccountUpdatesLatency,
-		time.Now(),
-	)
-
-	if execMode != sdk.ExecModeFinalize {
-		panic("SendFinalizedSubaccountUpdates should only be called in ExecModeFinalize")
-	}
-
-	streamUpdates, subaccountIds := getStreamUpdatesForSubaccountUpdates(
-		subaccountUpdates,
-		blockHeight,
-		execMode,
-	)
-
-	sm.AddSubaccountUpdatesToCache(streamUpdates, subaccountIds)
 }
 
 // AddOrderUpdatesToCache adds a series of updates to the full node streaming cache.
