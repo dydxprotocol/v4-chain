@@ -192,7 +192,8 @@ affiliate_stats AS (
       affiliate_fills."affiliateAddress",
       SUM(affiliate_fills."fee") AS "totalReferredFees",
       SUM(affiliate_fills."affiliateRevShare") AS "affiliateEarnings",
-      SUM(affiliate_fills."fee") - SUM(affiliate_fills."affiliateRevShare") AS "referredNetProtocolEarnings",
+      SUM(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.MAKER}' THEN affiliate_fills."fee" ELSE 0 END) AS "totalReferredMakerFees",
+      SUM(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.TAKER}' THEN affiliate_fills."fee" ELSE 0 END) AS "totalReferredTakerFees",
       COUNT(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.MAKER}' THEN 1 END) AS "referredMakerTrades",
       COUNT(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.TAKER}' THEN 1 END) AS "referredTakerTrades",
       SUM(affiliate_fills."price" * affiliate_fills."size") AS "referredTotalVolume"
@@ -210,9 +211,9 @@ affiliate_info_update AS (
     affiliate_metadata."affiliateAddress",
     affiliate_metadata."totalReferredUsers",    
     affiliate_metadata."firstReferralBlockHeight",
-    COALESCE(affiliate_stats."totalReferredFees", 0) AS "totalReferredFees",
+    COALESCE(affiliate_stats."totalReferredMakerFees", 0) AS "totalReferredMakerFees",
+    COALESCE(affiliate_stats."totalReferredTakerFees", 0) AS "totalReferredTakerFees",
     COALESCE(affiliate_stats."affiliateEarnings", 0) AS "affiliateEarnings",
-    COALESCE(affiliate_stats."referredNetProtocolEarnings", 0) AS "referredNetProtocolEarnings",
     COALESCE(affiliate_stats."referredMakerTrades", 0) AS "referredMakerTrades",
     COALESCE(affiliate_stats."referredTakerTrades", 0) AS "referredTakerTrades",
     COALESCE(affiliate_stats."referredTotalVolume", 0) AS "referredTotalVolume"
@@ -231,8 +232,8 @@ INSERT INTO affiliate_info (
     "affiliateEarnings", 
     "referredMakerTrades", 
     "referredTakerTrades", 
-    "totalReferredFees", 
-    "referredNetProtocolEarnings",
+    "totalReferredMakerFees",
+    "totalReferredTakerFees", 
     "referredTotalVolume"
 )
 SELECT
@@ -242,8 +243,8 @@ SELECT
     "affiliateEarnings",
     "referredMakerTrades",
     "referredTakerTrades",
-    "totalReferredFees",
-    "referredNetProtocolEarnings",
+    "totalReferredMakerFees",
+    "totalReferredTakerFees", 
     "referredTotalVolume"
 FROM 
     affiliate_info_update
@@ -254,8 +255,8 @@ DO UPDATE SET
     "affiliateEarnings" = affiliate_info."affiliateEarnings" + EXCLUDED."affiliateEarnings",
     "referredMakerTrades" = affiliate_info."referredMakerTrades" + EXCLUDED."referredMakerTrades",
     "referredTakerTrades" = affiliate_info."referredTakerTrades" + EXCLUDED."referredTakerTrades",
-    "totalReferredFees" = affiliate_info."totalReferredFees" + EXCLUDED."totalReferredFees",
-    "referredNetProtocolEarnings" = affiliate_info."referredNetProtocolEarnings" + EXCLUDED."referredNetProtocolEarnings",
+    "totalReferredMakerFees" = affiliate_info."totalReferredMakerFees" + EXCLUDED."totalReferredMakerFees",
+    "totalReferredTakerFees" = affiliate_info."totalReferredTakerFees" + EXCLUDED."totalReferredTakerFees",
     "referredTotalVolume" = affiliate_info."referredTotalVolume" + EXCLUDED."referredTotalVolume";
     `;
 

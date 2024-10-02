@@ -113,9 +113,9 @@ describe('Affiliate info store', () => {
         affiliateEarnings: '1000',
         referredMakerTrades: 1,
         referredTakerTrades: 1,
-        totalReferredFees: '2000',
+        totalReferredMakerFees: '-1000',
+        totalReferredTakerFees: '1000',
         totalReferredUsers: 1,
-        referredNetProtocolEarnings: '1000',
         firstReferralBlockHeight: '1',
         referredTotalVolume: '2',
       };
@@ -140,9 +140,9 @@ describe('Affiliate info store', () => {
         affiliateEarnings: '1000',
         referredMakerTrades: 2,
         referredTakerTrades: 0,
-        totalReferredFees: '2000',
+        totalReferredMakerFees: '-2000',
+        totalReferredTakerFees: '0',
         totalReferredUsers: 1,
-        referredNetProtocolEarnings: '1000',
         firstReferralBlockHeight: '1',
         referredTotalVolume: '2',
       };
@@ -157,14 +157,14 @@ describe('Affiliate info store', () => {
       const updatedInfo2 = await AffiliateInfoTable.findById(
         defaultWallet2.address,
       );
-      const expectedAffiliateInfo2 = {
+      const expectedAffiliateInfo2: AffiliateInfoFromDatabase = {
         address: defaultWallet2.address,
         affiliateEarnings: '2000',
         referredMakerTrades: 3,
         referredTakerTrades: 1,
-        totalReferredFees: '4000',
+        totalReferredMakerFees: '-3000',
+        totalReferredTakerFees: '1000',
         totalReferredUsers: 1,
-        referredNetProtocolEarnings: '2000',
         firstReferralBlockHeight: '1',
         referredTotalVolume: '4',
       };
@@ -183,14 +183,14 @@ describe('Affiliate info store', () => {
       const updatedInfo3 = await AffiliateInfoTable.findById(
         defaultWallet2.address,
       );
-      const expectedAffiliateInfo3 = {
+      const expectedAffiliateInfo3: AffiliateInfoFromDatabase = {
         address: defaultWallet2.address,
         affiliateEarnings: '2000',
         referredMakerTrades: 3,
         referredTakerTrades: 1,
-        totalReferredFees: '4000',
+        totalReferredMakerFees: '-3000',
+        totalReferredTakerFees: '1000',
         totalReferredUsers: 2,
-        referredNetProtocolEarnings: '2000',
         firstReferralBlockHeight: '1',
         referredTotalVolume: '4',
       };
@@ -236,9 +236,9 @@ describe('Affiliate info store', () => {
         affiliateEarnings: '0',
         referredMakerTrades: 0,
         referredTakerTrades: 0,
-        totalReferredFees: '0',
+        totalReferredMakerFees: '0',
+        totalReferredTakerFees: '0',
         totalReferredUsers: 1,
-        referredNetProtocolEarnings: '0',
         firstReferralBlockHeight: '2',
         referredTotalVolume: '0',
       };
@@ -391,7 +391,7 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
       eventId: defaultTendermintEventId2,
       price: '1',
       size: '1',
-      fee: '1000',
+      fee: '-1000',
       affiliateRevShare: '500',
     }),
     FillTable.create({
@@ -402,7 +402,7 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
       eventId: defaultTendermintEventId3,
       price: '1',
       size: '1',
-      fee: '1000',
+      fee: '-1000',
       affiliateRevShare: '500',
     }),
     FillTable.create({
@@ -413,7 +413,7 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
       eventId: defaultTendermintEventId4,
       price: '1',
       size: '1',
-      fee: '1000',
+      fee: '-1000',
       affiliateRevShare: '500',
     }),
   ]);

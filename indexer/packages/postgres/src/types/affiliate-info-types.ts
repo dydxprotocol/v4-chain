@@ -3,9 +3,9 @@ export interface AffiliateInfoCreateObject {
   affiliateEarnings: string,
   referredMakerTrades: number,
   referredTakerTrades: number,
-  totalReferredFees: string,
+  totalReferredMakerFees: string,
+  totalReferredTakerFees: string,
   totalReferredUsers: number,
-  referredNetProtocolEarnings: string,
   firstReferralBlockHeight: string,
   referredTotalVolume: string,
 }
@@ -15,9 +15,9 @@ export enum AffiliateInfoColumns {
   affiliateEarnings = 'affiliateEarnings',
   referredMakerTrades = 'referredMakerTrades',
   referredTakerTrades = 'referredTakerTrades',
-  totalReferredFees = 'totalReferredFees',
+  totalReferredMakerFees = 'totalReferredMakerFees',
+  totalReferredTakerFees = 'totalReferredTakerFees',
   totalReferredUsers = 'totalReferredUsers',
-  referredNetProtocolEarnings = 'referredNetProtocolEarnings',
   firstReferralBlockHeight = 'firstReferralBlockHeight',
   referredTotalVolume = 'referredTotalVolume',
 }
