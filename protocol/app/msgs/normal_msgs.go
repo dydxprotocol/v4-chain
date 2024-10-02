@@ -23,12 +23,12 @@ import (
 	listing "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	vault "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmapmoduletypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 var (
 	// NormalMsgs are messages that can be submitted by external users.
-	NormalMsgs = lib.MergeAllMapsMustHaveDistinctKeys(NormalMsgsDefault, NormalMsgsDydxCustom, NormalMsgsSlinky)
+	NormalMsgs = lib.MergeAllMapsMustHaveDistinctKeys(NormalMsgsDefault, NormalMsgsDydxCustom, NormalMsgsConnect)
 
 	// Default modules
 	NormalMsgsDefault = map[string]sdk.Msg{
@@ -267,17 +267,19 @@ var (
 		"/dydxprotocol.vault.MsgWithdrawFromMegavaultResponse": nil,
 	}
 
-	NormalMsgsSlinky = map[string]sdk.Msg{
-		// slinky marketmap messages
-		"/slinky.marketmap.v1.MsgCreateMarkets":                   &marketmapmoduletypes.MsgCreateMarkets{},
-		"/slinky.marketmap.v1.MsgCreateMarketsResponse":           nil,
-		"/slinky.marketmap.v1.MsgParams":                          &marketmapmoduletypes.MsgParams{},
-		"/slinky.marketmap.v1.MsgParamsResponse":                  nil,
-		"/slinky.marketmap.v1.MsgRemoveMarketAuthorities":         &marketmapmoduletypes.MsgRemoveMarketAuthorities{},
-		"/slinky.marketmap.v1.MsgRemoveMarketAuthoritiesResponse": nil,
-		"/slinky.marketmap.v1.MsgUpdateMarkets":                   &marketmapmoduletypes.MsgUpdateMarkets{},
-		"/slinky.marketmap.v1.MsgUpdateMarketsResponse":           nil,
-		"/slinky.marketmap.v1.MsgUpsertMarkets":                   &marketmapmoduletypes.MsgUpsertMarkets{},
-		"/slinky.marketmap.v1.MsgUpsertMarketsResponse":           nil,
+	NormalMsgsConnect = map[string]sdk.Msg{
+		// connect marketmap messages
+		"/connect.marketmap.v2.MsgCreateMarkets":                   &marketmapmoduletypes.MsgCreateMarkets{},
+		"/connect.marketmap.v2.MsgCreateMarketsResponse":           nil,
+		"/connect.marketmap.v2.MsgParams":                          &marketmapmoduletypes.MsgParams{},
+		"/connect.marketmap.v2.MsgParamsResponse":                  nil,
+		"/connect.marketmap.v2.MsgRemoveMarketAuthorities":         &marketmapmoduletypes.MsgRemoveMarketAuthorities{},
+		"/connect.marketmap.v2.MsgRemoveMarketAuthoritiesResponse": nil,
+		"/connect.marketmap.v2.MsgRemoveMarkets":                   &marketmapmoduletypes.MsgRemoveMarkets{},
+		"/connect.marketmap.v2.MsgRemoveMarketsResponse":           nil,
+		"/connect.marketmap.v2.MsgUpdateMarkets":                   &marketmapmoduletypes.MsgUpdateMarkets{},
+		"/connect.marketmap.v2.MsgUpdateMarketsResponse":           nil,
+		"/connect.marketmap.v2.MsgUpsertMarkets":                   &marketmapmoduletypes.MsgUpsertMarkets{},
+		"/connect.marketmap.v2.MsgUpsertMarketsResponse":           nil,
 	}
 )

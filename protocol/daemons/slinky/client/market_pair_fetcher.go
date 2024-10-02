@@ -14,7 +14,7 @@ import (
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
+	slinkytypes "github.com/skip-mev/connect/v2/pkg/types"
 )
 
 // MarketPairFetcher is a lightweight process run in a goroutine by the slinky client.

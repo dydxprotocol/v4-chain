@@ -33,7 +33,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	prices_keeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	marketmap_keeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmap_keeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
