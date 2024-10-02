@@ -1188,8 +1188,6 @@ github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a h1:w8hkcTqaFpzKqonE9
 github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a/go.mod h1:ryS0uhF+x9jgbj/N71xsEqODy9BN81/GonCZiOzirOk=
 github.com/golangci/gofmt v0.0.0-20240816233607-d8596aa466a9 h1:/1322Qns6BtQxUZDTAT4SdcoxknUki7IAoK4SAXr8ME=
 github.com/golangci/gofmt v0.0.0-20240816233607-d8596aa466a9/go.mod h1:Oesb/0uFAyWoaw1U1qS5zyjCg5NP9C9iwjnI4tIsXEE=
-github.com/golangci/golangci-lint v1.59.1 h1:CRRLu1JbhK5avLABFJ/OHVSQ0Ie5c4ulsOId1h3TTks=
-github.com/golangci/golangci-lint v1.59.1/go.mod h1:jX5Oif4C7P0j9++YB2MMJmoNrb01NJ8ITqKWNLewThg=
 github.com/golangci/golangci-lint v1.61.0 h1:VvbOLaRVWmyxCnUIMTbf1kDsaJbTzH20FAMXTAlQGu8=
 github.com/golangci/golangci-lint v1.61.0/go.mod h1:e4lztIrJJgLPhWvFPDkhiMwEFRrWlmFbrZea3FsJyN8=
 github.com/golangci/misspell v0.6.0 h1:JCle2HUTNWirNlDIAUO44hUsKhOFqGPoC4LZxlaSXDs=
