@@ -70,7 +70,7 @@ func (k Keeper) CreateMarket(
 
 	// Check that the exponent of market price is the negation of the decimals value in the market map
 	if marketPrice.Exponent != int32(marketMapDetails.Ticker.Decimals)*-1 {
-		return types.MarketParam{}, errorsmod.Wrapf(
+		return types.MarketParam{}, errorsmod.Wrap(
 			types.ErrInvalidMarketPriceExponent,
 			currencyPairStr,
 		)
@@ -133,7 +133,7 @@ func (k Keeper) GetExponent(ctx sdk.Context, ticker string) (int32, error) {
 
 	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, currencyPair.String())
 	if err != nil {
-		return 0, errorsmod.Wrapf(
+		return 0, errorsmod.Wrap(
 			types.ErrTickerNotFoundInMarketMap,
 			ticker,
 		)
