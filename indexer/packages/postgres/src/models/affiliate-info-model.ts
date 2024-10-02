@@ -21,6 +21,7 @@ export default class AffiliateInfoModel extends BaseModel {
         'referredTakerTrades',
         'totalReferredMakerFees',
         'totalReferredTakerFees',
+        'totalReferredMakerRebates',
         'totalReferredUsers',
         'firstReferralBlockHeight',
         'referredTotalVolume',
@@ -30,8 +31,9 @@ export default class AffiliateInfoModel extends BaseModel {
         affiliateEarnings: { type: 'string', pattern: NonNegativeNumericPattern },
         referredMakerTrades: { type: 'int' },
         referredTakerTrades: { type: 'int' },
-        totalReferredMakerFees: { type: 'string', pattern: NumericPattern },
-        totalReferredTakerFees: { type: 'string', pattern: NumericPattern },
+        totalReferredMakerFees: { type: 'string', pattern: NonNegativeNumericPattern },
+        totalReferredTakerFees: { type: 'string', pattern: NonNegativeNumericPattern },
+        totalReferredMakerRebates: { type: 'string', pattern: NumericPattern },
         totalReferredUsers: { type: 'int' },
         firstReferralBlockHeight: { type: 'string', pattern: NonNegativeNumericPattern },
         referredTotalVolume: { type: 'string', pattern: NonNegativeNumericPattern },
@@ -53,6 +55,7 @@ export default class AffiliateInfoModel extends BaseModel {
       referredTakerTrades: 'int',
       totalReferredMakerFees: 'string',
       totalReferredTakerFees: 'string',
+      totalReferredMakerRebates: 'string',
       totalReferredUsers: 'int',
       firstReferralBlockHeight: 'string',
       referredTotalVolume: 'string',
@@ -72,6 +75,8 @@ export default class AffiliateInfoModel extends BaseModel {
   totalReferredMakerFees!: string;
 
   totalReferredTakerFees!: string;
+
+  totalReferredMakerRebates!: string;
 
   totalReferredUsers!: number;
 

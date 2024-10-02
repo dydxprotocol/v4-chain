@@ -165,10 +165,12 @@ class AffiliatesController extends Controller {
       affiliateEarnings: Number(info.affiliateEarnings),
       affiliateReferredTrades: Number(info.referredMakerTrades) + Number(info.referredTakerTrades),
       affiliateTotalReferredFees: Number(info.totalReferredMakerFees) +
-      Number(info.totalReferredTakerFees),
+      Number(info.totalReferredTakerFees) +
+      Number(info.totalReferredMakerRebates),
       affiliateReferredUsers: Number(info.totalReferredUsers),
       affiliateReferredNetProtocolEarnings: Number(info.totalReferredMakerFees) +
-      Number(info.totalReferredTakerFees) -
+      Number(info.totalReferredTakerFees) +
+      Number(info.totalReferredMakerRebates) -
       Number(info.affiliateEarnings),
       affiliateReferredTotalVolume: Number(info.referredTotalVolume),
       affiliateReferredMakerFees: Number(info.totalReferredMakerFees),

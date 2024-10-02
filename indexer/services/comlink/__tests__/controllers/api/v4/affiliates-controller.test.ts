@@ -370,10 +370,12 @@ function affiliateInfoCreateToResponseObject(
     affiliateReferredTrades:
       Number(info.referredTakerTrades) + Number(info.referredMakerTrades),
     affiliateTotalReferredFees: Number(info.totalReferredMakerFees) +
-    Number(info.totalReferredTakerFees),
+    Number(info.totalReferredTakerFees) +
+    Number(info.totalReferredMakerRebates),
     affiliateReferredUsers: Number(info.totalReferredUsers),
     affiliateReferredNetProtocolEarnings: Number(info.totalReferredMakerFees) +
-    Number(info.totalReferredTakerFees) -
+    Number(info.totalReferredTakerFees) +
+    Number(info.totalReferredMakerRebates) -
     Number(info.affiliateEarnings),
     affiliateReferredTotalVolume: Number(info.referredTotalVolume),
     affiliateReferredMakerFees: Number(info.totalReferredMakerFees),

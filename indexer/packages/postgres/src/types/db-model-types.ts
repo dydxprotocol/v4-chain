@@ -290,6 +290,7 @@ export interface AffiliateInfoFromDatabase {
   referredTakerTrades: number,
   totalReferredMakerFees: string,
   totalReferredTakerFees: string,
+  totalReferredMakerRebates: string,
   totalReferredUsers: number,
   firstReferralBlockHeight: string,
   referredTotalVolume: string,
