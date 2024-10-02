@@ -253,10 +253,14 @@ export async function getBlockHeightToFundingIndexMap(
     subaccountsWithTransfers,
     'id',
   );
+  console.log(JSON.stringify(subaccountsWithTransfers));
+  console.log(JSON.stringify(accountsToUpdate));
   // get the subaccount id to last updated block height
   const blockHeights: Set<string> = _.reduce(
     accountsToUpdate,
     (acc: Set<string>, accountId: string) => {
+      console.log(accountId);
+      console.log(JSON.stringify(idToSubaccount[accountId]))
       acc.add(idToSubaccount[accountId].updatedAtHeight);
       return acc;
     },
