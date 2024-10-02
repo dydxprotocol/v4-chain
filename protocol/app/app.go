@@ -91,8 +91,6 @@ import (
 	"github.com/spf13/cast"
 	"google.golang.org/grpc"
 
-	sdaiserver "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
-
 	// App
 	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
@@ -335,7 +333,6 @@ func New(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
-
 	logger.Info("Starting app")
 	assertAppPreconditions()
 
@@ -1414,7 +1411,7 @@ func (app *App) InitVoteExtensions(
 	perpetualsKeeper *perpetualsmodulekeeper.Keeper,
 	clobKeeper *clobmodulekeeper.Keeper,
 	rateLimitKeeper *ratelimitmodulekeeper.Keeper,
-	sDAIEventManager sdaiserver.SDAIEventManager,
+	sDAIEventManager sdaidaemontypes.SDAIEventManager,
 	veApplier *veapplier.VEApplier,
 ) {
 	veHandler := ve.NewVoteExtensionHandler(

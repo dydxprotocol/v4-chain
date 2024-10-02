@@ -2865,7 +2865,7 @@ func TestAddOrderToOrderbook_PanicsIfFullyFilled(t *testing.T) {
 
 func TestAddOrderToSubaccountOrders_PanicsOnInvalidSide(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
+	_ = ctx.WithIsCheckTx(true)
 	memclob := NewMemClobPriceTimePriority(false)
 
 	require.Panics(t, func() {
@@ -2875,7 +2875,7 @@ func TestAddOrderToSubaccountOrders_PanicsOnInvalidSide(t *testing.T) {
 
 func TestAddOrderToSubaccountOrders_PanicsOnInvalidClob(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
-	ctx = ctx.WithIsCheckTx(true)
+	_ = ctx.WithIsCheckTx(true)
 	memclob := NewMemClobPriceTimePriority(false)
 
 	require.Panics(t, func() {

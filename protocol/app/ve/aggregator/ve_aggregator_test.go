@@ -9,7 +9,6 @@ import (
 
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
-	vemath "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -37,11 +36,11 @@ func SetupTest(t *testing.T, vals []string, errorString string) (sdk.Context, ve
 
 	mCCVStore := ethosutils.NewGetAllCCValidatorMockReturn(ctx, vals)
 
-	var pricesAggregatorFn vemath.PricesAggregateFn
-	var conversionRateAggregatorFn vemath.ConversionRateAggregateFn
+	var pricesAggregatorFn voteweighted.PricesAggregateFn
+	var conversionRateAggregatorFn voteweighted.ConversionRateAggregateFn
 
 	if strings.Contains(errorString, "failed to aggregate prices") {
-		pricesAggregatorFn = func(ctx sdk.Context, vePrices map[string]map[string]vemath.AggregatorPricePair) (map[string]vemath.AggregatorPricePair, error) {
+		pricesAggregatorFn = func(ctx sdk.Context, vePrices map[string]map[string]voteweighted.AggregatorPricePair) (map[string]voteweighted.AggregatorPricePair, error) {
 			return nil, fmt.Errorf(errorString)
 		}
 	} else {

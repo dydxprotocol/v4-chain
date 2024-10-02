@@ -1,24 +1,20 @@
 package ratelimit_test
 
 import (
-	"encoding/json"
 	"errors"
 	"math/big"
 	"strconv"
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cometbft/cometbft/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
@@ -64,17 +60,8 @@ func TestKeeperTestSuite(t *testing.T) {
 	testifysuite.Run(t, new(KeeperTestSuite))
 }
 
-func marshalPacketData(packetData transfertypes.FungibleTokenPacketData) []byte {
-	marshaledPacketData, err := json.Marshal(packetData)
-	if err != nil {
-		panic("Could not set up test")
-	}
-	return marshaledPacketData
-}
-
 func createSignersByAddress(t *testing.T, val *ccvtypes.CrossChainValidator) (string, cmttypes.PrivValidator, *cmttypes.Validator) {
-
-	consAddress := sdk.ConsAddress(val.Address)
+	consAddress := sdktypes.ConsAddress(val.Address)
 	privKey := constants.GetPrivKeyFromConsAddress(consAddress)
 	edPriv := ed25519.PrivKey(privKey.Bytes())
 	priv := cmttypes.MockPV{
@@ -122,7 +109,7 @@ func setupChainForIBC(
 		panic("Could not convert sdai to tdai conversion rate to big.Int")
 	}
 
-	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cmttypes.GenesisDoc) {
 		// for IBC testing, disable vote extensions
 		genesis = testapp.NoVeGenesis()
 		genesis.ChainID = chainID // Update chain_id to chainID
@@ -166,10 +153,9 @@ func setupChainForIBC(
 						Address: sDaiPoolAccountAddressString,
 						Coins: sdktypes.NewCoins(sdktypes.NewCoin(
 							ratelimittypes.SDaiDenom,
-							math.NewIntFromBigInt(gSDaiAmount),
+							sdkmath.NewIntFromBigInt(gSDaiAmount),
 						)),
 					})
-
 				}
 
 				for _, simAccount := range simAccounts {
@@ -177,7 +163,7 @@ func setupChainForIBC(
 						Address: sdktypes.AccAddress(simAccount.PubKey.Address()).String(),
 						Coins: sdktypes.NewCoins(sdktypes.NewCoin(
 							accountCoinDenom,
-							math.NewIntFromBigInt(accountCoinAmount),
+							sdkmath.NewIntFromBigInt(accountCoinAmount),
 						)),
 					})
 				}
@@ -244,7 +230,6 @@ func setupChainForIBC(
 	chain.NextBlock()
 
 	return chain
-
 }
 
 func NewCoordinator(t *testing.T, n int, accountCoinDenom string, accountCoinAmount *big.Int) *ibctesting.Coordinator {
@@ -305,9 +290,9 @@ func (suite *KeeperTestSuite) setupSDaiDenomTrace() {
 
 func (suite *KeeperTestSuite) TestSendTransfer() {
 	var (
-		coin                  sdk.Coin
+		coin                  sdktypes.Coin
 		path                  *ibctesting.Path
-		sender                sdk.AccAddress
+		sender                sdktypes.AccAddress
 		timeoutHeight         clienttypes.Height
 		isEscrow              bool     // if false, then we expect token to be burned
 		accountCoinAmountSent *big.Int // amount of coins in account that were sent
@@ -319,7 +304,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 		accountCoinDenom  string
 		accountCoinAmount *big.Int
 		sendCoinDenom     string
-		sendCoinAmount    math.Int
+		sendCoinAmount    sdkmath.Int
 		additionalSetup   func()
 		malleate          func()
 		expPass           bool
@@ -327,9 +312,9 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 	}{
 		{
 			name:              "successful transfer with native token",
-			accountCoinDenom:  sdk.DefaultBondDenom,
+			accountCoinDenom:  sdktypes.DefaultBondDenom,
 			accountCoinAmount: constants.TDai_Asset_500_000.Quantums.BigInt(),
-			sendCoinDenom:     sdk.DefaultBondDenom,
+			sendCoinDenom:     sdktypes.DefaultBondDenom,
 			sendCoinAmount:    sdkmath.NewInt(100),
 			additionalSetup:   func() {},
 			malleate: func() {
@@ -425,7 +410,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 			path = ibctesting.NewTransferPath(suite.chainA, suite.chainB)
 			suite.coordinator.Setup(path)
 
-			coin = sdk.NewCoin(tc.sendCoinDenom, tc.sendCoinAmount)
+			coin = sdktypes.NewCoin(tc.sendCoinDenom, tc.sendCoinAmount)
 			sender = suite.chainA.SenderAccount.GetAddress()
 			memo = ""
 			timeoutHeight = suite.chainB.GetTimeoutHeight()
@@ -507,7 +492,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 	}{
 		{
 			name:             "successful receive of non-sDAI token",
-			denom:            sdk.DefaultBondDenom,
+			denom:            sdktypes.DefaultBondDenom,
 			denomAmountSent:  "100",
 			tDaiAmountMinted: "0",
 			conversionRate:   "1000000000000000000000000000",
@@ -540,7 +525,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 		},
 		{
 			name:             "failed receive due to invalid packet data",
-			denom:            sdk.DefaultBondDenom,
+			denom:            sdktypes.DefaultBondDenom,
 			denomAmountSent:  "100",
 			tDaiAmountMinted: "0",
 			conversionRate:   "1000000000000000000000000000",
@@ -557,7 +542,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			suite.SetupTest(sdk.DefaultBondDenom, big.NewInt(1000000))
+			suite.SetupTest(sdktypes.DefaultBondDenom, big.NewInt(1000000))
 
 			path = ibctesting.NewTransferPath(suite.chainA, suite.chainB)
 			suite.coordinator.Setup(path)
@@ -581,10 +566,10 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 
 			// Record initial capacities and balances
 			var initialCapacityList []dtypes.SerializableInt
-			var initialBalance sdk.Coin
+			var initialBalance sdktypes.Coin
 			if tc.expPass {
 				initialCapacityList = app.RatelimitKeeper.GetDenomCapacity(ctx, packetData.Denom).CapacityList
-				initialBalance = app.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(packetData.Receiver), assettypes.TDaiDenom)
+				initialBalance = app.BankKeeper.GetBalance(ctx, sdktypes.MustAccAddressFromBech32(packetData.Receiver), assettypes.TDaiDenom)
 			}
 
 			module, _, err := app.GetIBCKeeper().PortKeeper.LookupModuleByPort(ctx, ibctesting.TransferPort)
@@ -619,7 +604,7 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 					suite.Require().Equal(initialCapacityList, newCapacity.CapacityList)
 				}
 
-				newBalance := app.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(packetData.Receiver), assettypes.TDaiDenom)
+				newBalance := app.BankKeeper.GetBalance(ctx, sdktypes.MustAccAddressFromBech32(packetData.Receiver), assettypes.TDaiDenom)
 				if tc.expMintTDAI {
 					expectedBalance := new(big.Int).Add(initialBalance.Amount.BigInt(), keeper.ConvertStringToBigIntWithPanicOnErr(tc.tDaiAmountMinted))
 					suite.Require().Equal(expectedBalance, newBalance.Amount.BigInt())
@@ -628,9 +613,8 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 				}
 
 				// User should not have sDAI in their account
-				sDaiDenomBalance := app.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(packetData.Receiver), ratelimittypes.SDaiDenom)
+				sDaiDenomBalance := app.BankKeeper.GetBalance(ctx, sdktypes.MustAccAddressFromBech32(packetData.Receiver), ratelimittypes.SDaiDenom)
 				suite.Require().Equal(0, sDaiDenomBalance.Amount.BigInt().Cmp(big.NewInt(0)))
-
 			}
 		})
 	}
@@ -655,8 +639,8 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 		expMintTDAI      bool
 	}{
 		{
-			name:             "Sucess: handles ack success in case of non-sDai",
-			denom:            sdk.DefaultBondDenom,
+			name:             "Success: handles ack success in case of non-sDai",
+			denom:            sdktypes.DefaultBondDenom,
 			denomAmountSent:  "10000000000000",
 			tDaiAmountMinted: "0",
 			conversionRate:   "1000000000000000000000000000",
@@ -667,8 +651,8 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			expMintTDAI:      false,
 		},
 		{
-			name:             "Sucess: handles ack failure in case of non-sDai",
-			denom:            sdk.DefaultBondDenom,
+			name:             "Success: handles ack failure in case of non-sDai",
+			denom:            sdktypes.DefaultBondDenom,
 			denomAmountSent:  "10000000000000",
 			tDaiAmountMinted: "0",
 			conversionRate:   "1000000000000000000000000000",
@@ -679,7 +663,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			expMintTDAI:      false,
 		},
 		{
-			name:             "Sucess: handles ack success in case of sDai",
+			name:             "Success: handles ack success in case of sDai",
 			denom:            ratelimittypes.SDaiBaseDenomFullPath,
 			denomAmountSent:  "10000000000000",
 			tDaiAmountMinted: "0",
@@ -691,7 +675,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 			expMintTDAI:      true,
 		},
 		{
-			name:             "Sucess: handles ack failure in case of sDai",
+			name:             "Success: handles ack failure in case of sDai",
 			denom:            ratelimittypes.SDaiBaseDenomFullPath,
 			denomAmountSent:  "10000000000000",
 			tDaiAmountMinted: "10",
@@ -708,7 +692,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			suite.SetupTest(sdk.DefaultBondDenom, big.NewInt(1000000))
+			suite.SetupTest(sdktypes.DefaultBondDenom, big.NewInt(1000000))
 
 			path = ibctesting.NewTransferPath(suite.chainA, suite.chainB)
 			suite.coordinator.Setup(path)
@@ -738,10 +722,10 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 
 			// Record initial capacities and balances
 			var initialCapacityList []dtypes.SerializableInt
-			var initialSenderBalance sdk.Coin
+			var initialSenderBalance sdktypes.Coin
 			if tc.expPass {
 				initialCapacityList = app.RatelimitKeeper.GetDenomCapacity(ctx, packetData.Denom).CapacityList
-				initialSenderBalance = app.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(packetData.Sender), assettypes.TDaiDenom)
+				initialSenderBalance = app.BankKeeper.GetBalance(ctx, sdktypes.MustAccAddressFromBech32(packetData.Sender), assettypes.TDaiDenom)
 			}
 
 			packetForTest := channeltypes.Packet{
@@ -760,7 +744,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 				denomToMint = ratelimittypes.SDaiDenom
 			}
 
-			escrowedCoin := sdk.NewCoins(sdk.NewCoin(denomToMint, sdkmath.NewIntFromBigInt(keeper.ConvertStringToBigIntWithPanicOnErr(tc.denomAmountSent))))
+			escrowedCoin := sdktypes.NewCoins(sdktypes.NewCoin(denomToMint, sdkmath.NewIntFromBigInt(keeper.ConvertStringToBigIntWithPanicOnErr(tc.denomAmountSent))))
 			err = app.BankKeeper.MintCoins(ctx, module, escrowedCoin)
 			suite.Require().NoError(err)
 			escrowAddress := transfertypes.GetEscrowAddress(packetForTest.SourcePort, packetForTest.SourceChannel)
@@ -795,7 +779,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 					suite.Require().Equal(initialCapacityList, newCapacity.CapacityList)
 				}
 
-				newSenderBalance := app.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(packetData.Sender), assettypes.TDaiDenom)
+				newSenderBalance := app.BankKeeper.GetBalance(ctx, sdktypes.MustAccAddressFromBech32(packetData.Sender), assettypes.TDaiDenom)
 				if tc.expMintTDAI {
 					expectedBalance := new(big.Int).Add(initialSenderBalance.Amount.BigInt(), keeper.ConvertStringToBigIntWithPanicOnErr(tc.tDaiAmountMinted))
 					suite.Require().Equal(expectedBalance, newSenderBalance.Amount.BigInt())
@@ -804,7 +788,7 @@ func (suite *KeeperTestSuite) TestOnAcknowledgementPacket() {
 				}
 
 				// user should not have sDAI at the end
-				sDaiDenomBalance := app.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(packetData.Sender), ratelimittypes.SDaiDenom)
+				sDaiDenomBalance := app.BankKeeper.GetBalance(ctx, sdktypes.MustAccAddressFromBech32(packetData.Sender), ratelimittypes.SDaiDenom)
 				suite.Require().Equal(0, sDaiDenomBalance.Amount.BigInt().Cmp(big.NewInt(0)))
 			}
 		})
@@ -829,8 +813,8 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 		expMintTDAI      bool
 	}{
 		{
-			name:             "Sucess: handles non-sDai",
-			denom:            sdk.DefaultBondDenom,
+			name:             "Success: handles non-sDai",
+			denom:            sdktypes.DefaultBondDenom,
 			denomAmountSent:  "10000000000000",
 			tDaiAmountMinted: "0",
 			conversionRate:   "1000000000000000000000000000",
@@ -840,7 +824,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 			expMintTDAI:      false,
 		},
 		{
-			name:             "Sucess: handles sDai",
+			name:             "Success: handles sDai",
 			denom:            ratelimittypes.SDaiBaseDenomFullPath,
 			denomAmountSent:  "10000000000000",
 			tDaiAmountMinted: "10",
@@ -856,7 +840,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			suite.SetupTest(sdk.DefaultBondDenom, big.NewInt(1000000))
+			suite.SetupTest(sdktypes.DefaultBondDenom, big.NewInt(1000000))
 
 			path = ibctesting.NewTransferPath(suite.chainA, suite.chainB)
 			suite.coordinator.Setup(path)
@@ -886,10 +870,10 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 
 			// Record initial capacities and balances
 			var initialCapacityList []dtypes.SerializableInt
-			var initialSenderBalance sdk.Coin
+			var initialSenderBalance sdktypes.Coin
 			if tc.expPass {
 				initialCapacityList = app.RatelimitKeeper.GetDenomCapacity(ctx, packetData.Denom).CapacityList
-				initialSenderBalance = app.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(packetData.Sender), assettypes.TDaiDenom)
+				initialSenderBalance = app.BankKeeper.GetBalance(ctx, sdktypes.MustAccAddressFromBech32(packetData.Sender), assettypes.TDaiDenom)
 			}
 
 			packetForTest := channeltypes.Packet{
@@ -908,7 +892,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 				denomToMint = ratelimittypes.SDaiDenom
 			}
 
-			escrowedCoin := sdk.NewCoins(sdk.NewCoin(denomToMint, sdkmath.NewIntFromBigInt(keeper.ConvertStringToBigIntWithPanicOnErr(tc.denomAmountSent))))
+			escrowedCoin := sdktypes.NewCoins(sdktypes.NewCoin(denomToMint, sdkmath.NewIntFromBigInt(keeper.ConvertStringToBigIntWithPanicOnErr(tc.denomAmountSent))))
 			err = app.BankKeeper.MintCoins(ctx, module, escrowedCoin)
 			suite.Require().NoError(err)
 			escrowAddress := transfertypes.GetEscrowAddress(packetForTest.SourcePort, packetForTest.SourceChannel)
@@ -925,7 +909,6 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 			if !tc.expPass {
 				suite.Require().Error(err)
 				suite.Require().True(app.RatelimitKeeper.HasPendingSendPacket(ctx, packetForTest.SourceChannel, packetForTest.Sequence))
-
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().False(app.RatelimitKeeper.HasPendingSendPacket(ctx, packetForTest.SourceChannel, packetForTest.Sequence))
@@ -941,7 +924,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 					suite.Require().Equal(initialCapacityList, newCapacity.CapacityList)
 				}
 
-				newSenderBalance := app.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(packetData.Sender), assettypes.TDaiDenom)
+				newSenderBalance := app.BankKeeper.GetBalance(ctx, sdktypes.MustAccAddressFromBech32(packetData.Sender), assettypes.TDaiDenom)
 				if tc.expMintTDAI {
 					expectedBalance := new(big.Int).Add(initialSenderBalance.Amount.BigInt(), keeper.ConvertStringToBigIntWithPanicOnErr(tc.tDaiAmountMinted))
 					suite.Require().Equal(expectedBalance, newSenderBalance.Amount.BigInt())
@@ -950,7 +933,7 @@ func (suite *KeeperTestSuite) TestOnTimeoutPacket() {
 				}
 
 				// user should not have sDAI at the end
-				sDaiDenomBalance := app.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(packetData.Sender), ratelimittypes.SDaiDenom)
+				sDaiDenomBalance := app.BankKeeper.GetBalance(ctx, sdktypes.MustAccAddressFromBech32(packetData.Sender), ratelimittypes.SDaiDenom)
 				suite.Require().Equal(0, sDaiDenomBalance.Amount.BigInt().Cmp(big.NewInt(0)))
 			}
 		})

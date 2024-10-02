@@ -41,7 +41,6 @@ type EventFetcher interface {
 type EthEventFetcher struct{}
 
 func (r *EthEventFetcher) GetInitialEvent(empty bool) (api.AddsDAIEventsRequest, error) {
-
 	if empty {
 		return api.AddsDAIEventsRequest{}, nil
 	}

@@ -773,7 +773,6 @@ func (m *MemClobPriceTimePriority) matchOrder(
 	makerOrdersToRemove []OrderWithRemovalReason,
 	err error,
 ) {
-
 	offchainUpdates = types.NewOffchainUpdates()
 
 	// Branch the state. State will be wrote to only if matching does not return an error.

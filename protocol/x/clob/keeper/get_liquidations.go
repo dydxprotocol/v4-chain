@@ -22,7 +22,6 @@ func (k Keeper) FetchInformationForLiquidations(
 	perpetualsMap map[uint32]perptypes.Perpetual,
 	liquidityTiersMap map[uint32]perptypes.LiquidityTier,
 ) {
-
 	subaccounts = k.subaccountsKeeper.GetAllSubaccount(ctx)
 
 	perpetuals := k.perpetualsKeeper.GetAllPerpetuals(ctx)
@@ -50,13 +49,11 @@ func (k Keeper) GetLiquidatableAndNegativeTncSubaccountIds(
 	negativeTncSubaccountIds []satypes.SubaccountId,
 	err error,
 ) {
-
 	subaccounts, marketPrices, perpetuals, liquidityTiers := k.FetchInformationForLiquidations(ctx)
 
 	negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
 	liquidatableSubaccountIds = heap.NewLiquidationPriorityHeap()
 	for _, subaccount := range subaccounts {
-
 		if len(subaccount.PerpetualPositions) == 0 {
 			continue
 		}
@@ -160,7 +157,6 @@ func updateCollateralizationInfoGivenAssets(
 	settledSubaccount satypes.Subaccount,
 	bigTotalNetCollateral *big.Int,
 ) error {
-
 	// Note that we only expect TDai before multi-collateral support is added.
 	for _, assetPosition := range settledSubaccount.AssetPositions {
 		if assetPosition.AssetId != assetstypes.AssetTDai.Id {

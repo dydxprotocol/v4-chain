@@ -10,15 +10,13 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	ethosutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ethos"
 	cometabcitypes "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cometbftproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
@@ -86,7 +84,7 @@ func TestAreVEEnabled(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := types.Context{}.
+			ctx := sdktypes.Context{}.
 				WithConsensusParams(*tc.consensusParams).
 				WithBlockHeight(tc.blockHeight)
 
@@ -194,12 +192,12 @@ func TestGetVEDecodedPrice(t *testing.T) {
 }
 
 func TestGetValCmtPubKeyFromVote(t *testing.T) {
-	ctx := sdk.Context{}
+	ctx := sdktypes.Context{}
 	mockValidatorStore := &mocks.CCValidatorStore{}
 
 	testValPower := int64(1000)
 	testVal := ethosutils.BuildCCValidator("alice", testValPower)
-	testValConsAddr := sdk.ConsAddress(testVal.Address)
+	testValConsAddr := sdktypes.ConsAddress(testVal.Address)
 
 	mockVote := cometabcitypes.ExtendedVoteInfo{
 		Validator: cometabcitypes.Validator{
@@ -375,13 +373,13 @@ func TestMarshalDelimited(t *testing.T) {
 			expectedError: false,
 		},
 		"valid canconical vote": {
-			input: &cmtproto.CanonicalVoteExtension{
+			input: &cometbftproto.CanonicalVoteExtension{
 				Extension: []byte("test"),
 				Height:    1,
 				Round:     1,
 				ChainId:   "test",
 			},
-			expectedOutput: mustEncodeDelimited(t, &cmtproto.CanonicalVoteExtension{
+			expectedOutput: mustEncodeDelimited(t, &cometbftproto.CanonicalVoteExtension{
 				Extension: []byte("test"),
 				Height:    1,
 				Round:     1,

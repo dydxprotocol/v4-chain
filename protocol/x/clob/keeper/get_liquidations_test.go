@@ -25,7 +25,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/memclob"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
-	feetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
@@ -118,7 +117,6 @@ func TestChangePriceVE_CauseNegativeTNC(t *testing.T) {
 						copy(marketPricesCopy, pricesGenesis.MarketPrices)
 
 						for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
-
 							exponent, exists := constants.TestMarketIdsToExponents[marketId]
 							require.True(t, exists)
 
@@ -217,7 +215,7 @@ func TestGetSubaccountCollateralizationInfo(t *testing.T) {
 	tests := map[string]struct {
 		subaccount                  satypes.Subaccount
 		perpetuals                  []perptypes.Perpetual
-		feeParams                   feetypes.PerpetualFeeParams
+		feeParams                   feetiertypes.PerpetualFeeParams
 		expectedIsLiquidatable      bool
 		expectedHasNegativeTnc      bool
 		expectedLiquidationPriority *big.Float

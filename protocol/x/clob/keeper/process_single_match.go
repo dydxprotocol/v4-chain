@@ -49,7 +49,6 @@ func (k Keeper) ProcessSingleMatch(
 	offchainUpdates *types.OffchainUpdates,
 	err error,
 ) {
-
 	if matchWithOrders.TakerOrder.IsLiquidation() {
 		defer func() {
 			if errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) && !takerUpdateResult.IsSuccess() {
@@ -448,8 +447,15 @@ func (k Keeper) persistMatchedOrders(
 	}
 
 	// Transfer the liquidity and validator fees
-	k.subaccountsKeeper.TransferLiquidityFee(ctx, liquidityFeeQuoteQuantums, perpetualId)
-	k.subaccountsKeeper.TransferValidatorFee(ctx, validatorFeeQuoteQuantums, perpetualId)
+	err = k.subaccountsKeeper.TransferLiquidityFee(ctx, liquidityFeeQuoteQuantums, perpetualId)
+	if err != nil {
+		return satypes.UpdateCausedError, satypes.UpdateCausedError, err
+	}
+
+	err = k.subaccountsKeeper.TransferValidatorFee(ctx, validatorFeeQuoteQuantums, perpetualId)
+	if err != nil {
+		return satypes.UpdateCausedError, satypes.UpdateCausedError, err
+	}
 
 	// Transfer the fee amount from subacounts module to fee collector module account.
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)

@@ -10,7 +10,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
-	vemath "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/vecache"
@@ -608,7 +607,7 @@ func TestVEWriter(t *testing.T) {
 				},
 				ConsAddress: constants.AliceConsAddress,
 			},
-		}).Return(map[string]vemath.AggregatorPricePair{
+		}).Return(map[string]voteweighted.AggregatorPricePair{
 			constants.BtcUsdPair: {
 				SpotPrice: big.NewInt(-100),
 				PnlPrice:  big.NewInt(-100),
@@ -697,7 +696,7 @@ func TestVEWriter(t *testing.T) {
 				},
 				ConsAddress: constants.BobConsAddress,
 			},
-		}).Return(map[string]vemath.AggregatorPricePair{
+		}).Return(map[string]voteweighted.AggregatorPricePair{
 			constants.BtcUsdPair: {
 				SpotPrice: big.NewInt(150),
 				PnlPrice:  big.NewInt(150),
@@ -753,7 +752,6 @@ func TestVEWriter(t *testing.T) {
 				PnlPrice:  150,
 			},
 		}, cachedPrices)
-
 	})
 
 	t.Run("doesn't update prices for same round and height", func(t *testing.T) {
@@ -813,7 +811,7 @@ func TestVEWriter(t *testing.T) {
 				},
 				ConsAddress: constants.AliceConsAddress,
 			},
-		}).Return(map[string]vemath.AggregatorPricePair{
+		}).Return(map[string]voteweighted.AggregatorPricePair{
 			constants.BtcUsdPair: {
 				SpotPrice: big.NewInt(100),
 				PnlPrice:  big.NewInt(100),
@@ -877,7 +875,7 @@ func TestVEWriter(t *testing.T) {
 				},
 				ConsAddress: constants.BobConsAddress,
 			},
-		}).Return(map[string]vemath.AggregatorPricePair{
+		}).Return(map[string]voteweighted.AggregatorPricePair{
 			constants.BtcUsdPair: {
 				SpotPrice: big.NewInt(200),
 				PnlPrice:  big.NewInt(200),
@@ -973,7 +971,7 @@ func TestVEWriter(t *testing.T) {
 				},
 				ConsAddress: constants.AliceConsAddress,
 			},
-		}).Return(map[string]vemath.AggregatorPricePair{
+		}).Return(map[string]voteweighted.AggregatorPricePair{
 			constants.BtcUsdPair: {
 				SpotPrice: big.NewInt(100),
 				PnlPrice:  big.NewInt(100),
@@ -1037,7 +1035,7 @@ func TestVEWriter(t *testing.T) {
 				},
 				ConsAddress: constants.BobConsAddress,
 			},
-		}).Return(map[string]vemath.AggregatorPricePair{
+		}).Return(map[string]voteweighted.AggregatorPricePair{
 			constants.BtcUsdPair: {
 				SpotPrice: big.NewInt(200),
 				PnlPrice:  big.NewInt(200),
@@ -1149,7 +1147,7 @@ func TestVEWriter(t *testing.T) {
 				},
 				ConsAddress: constants.AliceConsAddress,
 			},
-		}).Return(map[string]vemath.AggregatorPricePair{
+		}).Return(map[string]voteweighted.AggregatorPricePair{
 			constants.BtcUsdPair: {
 				SpotPrice: big.NewInt(100),
 				PnlPrice:  big.NewInt(100),
@@ -1164,7 +1162,7 @@ func TestVEWriter(t *testing.T) {
 				},
 				ConsAddress: constants.AliceConsAddress,
 			},
-		}).Return(map[string]vemath.AggregatorPricePair{
+		}).Return(map[string]voteweighted.AggregatorPricePair{
 			constants.BtcUsdPair: {
 				SpotPrice: big.NewInt(100),
 				PnlPrice:  big.NewInt(100),
@@ -1278,7 +1276,7 @@ func TestVEWriter(t *testing.T) {
 				},
 				ConsAddress: constants.BobConsAddress,
 			},
-		}).Return(map[string]vemath.AggregatorPricePair{
+		}).Return(map[string]voteweighted.AggregatorPricePair{
 			constants.BtcUsdPair: {
 				SpotPrice: big.NewInt(200),
 				PnlPrice:  big.NewInt(200),
@@ -1393,7 +1391,7 @@ func TestVEWriter(t *testing.T) {
 				},
 				ConsAddress: constants.AliceConsAddress,
 			},
-		}).Return(map[string]vemath.AggregatorPricePair{
+		}).Return(map[string]voteweighted.AggregatorPricePair{
 			constants.BtcUsdPair: {
 				SpotPrice: big.NewInt(100),
 				PnlPrice:  big.NewInt(100),

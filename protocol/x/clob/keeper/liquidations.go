@@ -35,7 +35,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	subaccountsToDeleverage []heap.SubaccountToDeleverage,
 	err error,
 ) {
-
 	lib.AssertCheckTxMode(ctx)
 
 	defer telemetry.MeasureSince(
@@ -85,7 +84,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbookInternal(
 ) {
 	numIsolatedLiquidations := 0
 	for i := 0; i < int(k.Flags.MaxLiquidationAttemptsPerBlock); i++ {
-
 		subaccount, subaccountId := k.GetNextSubaccountToLiquidate(ctx, subaccountIds, isolatedPositionsPriorityHeap, &numIsolatedLiquidations)
 		if subaccountId == nil {
 			break
@@ -108,7 +106,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbookInternal(
 
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
 		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId.SubaccountId)
-		if err == types.ErrNoPerpetualPositionsToLiquidate {
+		if errors.Is(err, types.ErrNoPerpetualPositionsToLiquidate) {
 			i--
 			continue
 		} else if err != nil {
@@ -185,7 +183,6 @@ func (k Keeper) insertIntoLiquidationHeapIfUnhealthy(
 	subaccountId satypes.SubaccountId,
 	subaccountIds *heap.LiquidationPriorityHeap,
 ) error {
-
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	isLiquidatable, priority, err := k.GetSubaccountPriority(ctx, subaccount)
 	if err != nil {
@@ -210,13 +207,11 @@ func (k Keeper) GetSubaccountPriority(
 	priority *big.Float,
 	err error,
 ) {
-
 	_, marketPricesMap, perpetualsMap, liquidityTiersMap := k.FetchInformationForLiquidations(ctx)
 
 	isLiquidatable, _, priority, err = k.GetSubaccountCollateralizationInfo(ctx, subaccount, marketPricesMap, perpetualsMap, liquidityTiersMap)
 
 	return isLiquidatable, priority, err
-
 }
 
 // MaybeGetLiquidationOrder takes a subaccount ID and returns a liquidation order that can be used to
@@ -229,7 +224,6 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	liquidationOrder *types.LiquidationOrder,
 	err error,
 ) {
-
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),
@@ -317,7 +311,6 @@ func (k Keeper) handleLiquidationMetrics(
 	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 	perpetualId uint32,
 ) {
-
 	labels := []metrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 	}
@@ -441,7 +434,6 @@ func CalculateLiquidationPriority(
 ) (
 	liquidationPriority *big.Float,
 ) {
-
 	if bigWeightedMaintenanceMargin.Sign() <= 0 {
 		return big.NewFloat(math.MaxFloat64)
 	}
@@ -484,7 +476,6 @@ func (k Keeper) getLiquidationPrice(
 	liquidationPrice types.Subticks,
 	err error,
 ) {
-
 	bankruptcyPriceRat, err := k.GetBankruptcyPrice(ctx, subaccountId, perpetualId, orderQuantums)
 	if err != nil {
 		return 0, err
@@ -530,7 +521,6 @@ func (k Keeper) GetFillablePrice(
 	fillablePrice *big.Rat,
 	err error,
 ) {
-
 	pnnvBig, pmmrBig, tncBig, tmmrBig, ba, smmr, bigPositionSizeQuantums, err := k.getFillablePriceCalculationInputs(ctx, subaccountId, perpetualId)
 	if err != nil {
 		return nil, err
@@ -748,7 +738,6 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	bankruptcyPriceQuoteQuantumsBig *big.Int,
 	err error,
 ) {
-
 	tncBig, tmmrBig, pnnvBig, pnnvadBig, pmmrBig, pmmradBig, err := k.getBankruptcyPriceCalculationInputs(ctx, subaccountId, perpetualId, deltaQuantums)
 	if err != nil {
 		return nil, err
@@ -769,7 +758,6 @@ func calculateBankruptcyPrice(
 ) (
 	bankruptcyPriceQuoteQuantumsBig *big.Int,
 ) {
-
 	// `DNNV = PNNVAD - PNNV`, where `PNNVAD` is the perpetual's net notional
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we are intentionally not calculating `DNNV` from `deltaQuantums`
@@ -933,7 +921,6 @@ func (k Keeper) GetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(
 	remainingQuoteQuantumsBig = new(big.Int).Sub(bankruptcyDeltaQuoteQuantums, insuranceFundFeeQuoteQuantums)
 
 	return remainingQuoteQuantumsBig, insuranceFundFeeQuoteQuantums, nil
-
 }
 
 func (k Keeper) getMaxInsuranceFundFee(
@@ -943,7 +930,6 @@ func (k Keeper) getMaxInsuranceFundFee(
 ) (
 	insuranceFundFeeQuoteQuantums *big.Int,
 ) {
-
 	// The insurance fund delta is positive. We must read the liquidations config from state to
 	// determine the max liquidation fee this user must pay.
 	liquidationsConfig := k.GetLiquidationsConfig(ctx)
@@ -975,7 +961,6 @@ func (k Keeper) getPositionChangeAndBankruptcyQuoteQuantums(
 	bankruptcyPriceInQuoteQuantums *big.Int,
 	err error,
 ) {
-
 	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	liquidationOrderQuantums := new(big.Int).SetUint64(fillAmount)
 	positionChangeQuoteQuantums, err = getFillQuoteQuantums(clobPair, subticks, satypes.BaseQuantums(fillAmount))
@@ -1006,7 +991,6 @@ func (k Keeper) GetValidatorAndLiquidityFee(
 	liquidityFeeQuoteQuantums *big.Int,
 	err error,
 ) {
-
 	if remainingQuoteQuantumsBig.Cmp(big.NewInt(0)) < 0 {
 		return nil, nil, errorsmod.Wrapf(
 			types.ErrInvalidQuantumsForInsuranceFundDeltaCalculation,
@@ -1029,7 +1013,6 @@ func (k Keeper) GetValidatorAndLiquidityFee(
 	}
 
 	return validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, nil
-
 }
 
 func (k Keeper) validateValidatorAndLiquidityFee(
@@ -1037,7 +1020,6 @@ func (k Keeper) validateValidatorAndLiquidityFee(
 	validatorFeeQuoteQuantums *big.Int,
 	liquidityFeeQuoteQuantums *big.Int,
 ) error {
-
 	totalFees := new(big.Int).Add(validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums)
 	if totalFees.Cmp(remainingQuoteQuantumsBig) > 0 {
 		return errorsmod.Wrapf(
@@ -1057,7 +1039,6 @@ func (k Keeper) GetBestPerpetualPositionToLiquidate(
 	perpetualId uint32,
 	err error,
 ) {
-
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
 
@@ -1093,7 +1074,6 @@ func (k Keeper) SimulatePriorityWithClosedPosition(
 	bestPriority *big.Float,
 	bestPerpetualId *uint32,
 ) error {
-
 	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, position.PerpetualId)
 	if err != nil {
 		return err
@@ -1113,7 +1093,6 @@ func (k Keeper) SimulatePriorityWithClosedPosition(
 }
 
 func deepCopySubaccount(subaccount satypes.Subaccount) satypes.Subaccount {
-
 	copySubaccount := satypes.Subaccount{
 		Id:              subaccount.Id,
 		MarginEnabled:   subaccount.MarginEnabled,
@@ -1149,7 +1128,6 @@ func (k Keeper) simulatePriorityWithClosedPosition(
 	bestPriority *big.Float,
 	bestPerpetualId *uint32,
 ) error {
-
 	closedSubaccount := deepCopySubaccount(subaccount)
 
 	closedSubaccount, err := k.SimulateClosePerpetualPosition(ctx, closedSubaccount, position, price)
@@ -1178,7 +1156,6 @@ func (k Keeper) SimulateClosePerpetualPosition(
 	closedSubaccount satypes.Subaccount,
 	err error,
 ) {
-
 	RemovePerpetualPosition(&subaccount, position.PerpetualId)
 
 	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, position.PerpetualId)
@@ -1195,7 +1172,6 @@ func (k Keeper) SimulateClosePerpetualPosition(
 }
 
 func UpdateTDaiPosition(subaccount *satypes.Subaccount, quantumsDelta *big.Int) (err error) {
-
 	assetPosition := subaccount.AssetPositions[0]
 	if assetPosition.AssetId != assetstypes.AssetTDai.Id {
 		return errors.New("first asset position must be TDai")
@@ -1255,7 +1231,6 @@ func (k Keeper) GetMaxQuantumsInsuranceDelta(
 	bigMaxQuantumsInsuranceLost *big.Int,
 	err error,
 ) {
-
 	bigInsuranceFundLostBlockLimit, err := k.GetInsuranceFundDeltaBlockLimit(ctx, perpetualId)
 	if err != nil {
 		return nil, err
@@ -1336,7 +1311,6 @@ func (k Keeper) ConvertLiquidationPriceToSubticks(
 }
 
 func boundSubticks(subticksBig *big.Int, clobPair types.ClobPair) types.Subticks {
-
 	// Bound the result between `clobPair.SubticksPerTick` and
 	// `math.MaxUint64 - math.MaxUint64 % clobPair.SubticksPerTick`.
 	minSubticks := uint64(clobPair.SubticksPerTick)
@@ -1384,7 +1358,6 @@ func (k Keeper) validateMatchedLiquidationAndGetFees(
 	liquidityFeeQuoteQuantums *big.Int,
 	err error,
 ) {
-
 	remainingQuoteQuantumsBig, insuranceFundDelta, err := k.GetLiquidationInsuranceFundFeeAndRemainingAvailableCollateral(ctx, order.GetSubaccountId(), perpetualId, order.IsBuy(), fillAmount.ToUint64(), makerSubticks)
 	if err != nil {
 		return nil, nil, nil, err
@@ -1410,7 +1383,6 @@ func (k Keeper) validateLiquidationParams(
 ) (
 	err error,
 ) {
-
 	err = k.EnsurePerpetualNotAlreadyLiquidated(ctx, subaccountId, perpetualId)
 	if err != nil {
 		return err
@@ -1447,7 +1419,6 @@ func (k Keeper) CheckInsuranceFundLimits(
 	insuranceFundDelta *big.Int,
 ) error {
 	if insuranceFundDelta.Sign() == -1 {
-
 		bigMaxQuantumsInsuranceLost, err := k.GetMaxQuantumsInsuranceDelta(ctx, perpetualId)
 		if err != nil {
 			return err
@@ -1469,7 +1440,6 @@ func (k Keeper) verifyInsuranceFundHasSufficientBalance(
 	perpetualId uint32,
 	insuranceFundDelta *big.Int,
 ) error {
-
 	if !k.IsValidInsuranceFundDelta(ctx, insuranceFundDelta, perpetualId) {
 		log.DebugLog(ctx, "ProcessMatches: insurance fund has insufficient balance to process the liquidation.")
 		return errorsmod.Wrapf(

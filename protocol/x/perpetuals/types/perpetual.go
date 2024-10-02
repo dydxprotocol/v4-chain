@@ -32,7 +32,6 @@ func (p *Perpetual) GetYieldIndexAsRat() (*big.Rat, error) {
 	}
 
 	return result, nil
-
 }
 
 // Stateless validation on Perpetual params.

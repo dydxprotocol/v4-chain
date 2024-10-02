@@ -59,7 +59,6 @@ func assertPerpetualtUpdateEventsInIndexerBlock(
 	require.Equal(t, len(expectedPerpetuals), len(perpetualEvents))
 
 	for _, perp := range expectedPerpetuals {
-
 		expectedUpdatePerpetualEvent := indexerevents.NewUpdatePerpetualEventV1(
 			perp.GetId(),
 			perp.Params.GetTicker(),

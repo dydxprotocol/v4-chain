@@ -634,7 +634,7 @@ func TestUndoMintTradingDAIIfAfterTimeoutIBCTransferPacket(t *testing.T) {
 		customSetup        func(*testapp.TestApp, sdk.Context)
 		expectedErr        string
 	}{
-		"Success: mints succesfully": {
+		"Success: mints successfully": {
 			packet:             packetFullSDaiPathPacketData,
 			packetData:         fullSDaiPathPacketData,
 			expectedMintedTDai: big.NewInt(100),

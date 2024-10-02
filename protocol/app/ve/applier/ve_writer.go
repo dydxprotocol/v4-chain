@@ -176,7 +176,6 @@ func (vea *VEApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
 }
 
 func (vea *VEApplier) writeConversionRateToStoreFromCache(ctx sdk.Context) error {
-
 	sDaiConversionRate, blockHeight := vea.finalVeUpdatesCache.GetConversionRateUpdateAndBlockHeight()
 
 	if sDaiConversionRate == nil || blockHeight == nil {
@@ -250,7 +249,6 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 	round int32,
 	writeToCache bool,
 ) error {
-
 	if sDaiConversionRate == nil {
 		return nil
 	}

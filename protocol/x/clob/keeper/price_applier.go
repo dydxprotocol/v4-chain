@@ -8,7 +8,6 @@ import (
 )
 
 func (k Keeper) SetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(ctx sdk.Context, extendedCommitInfo *abcicomet.ExtendedCommitInfo) error {
-
 	// from cometbft so is either nil or is valid and > 2/3
 	if extendedCommitInfo != nil {
 		veCodec := vecodec.NewDefaultVoteExtensionCodec()

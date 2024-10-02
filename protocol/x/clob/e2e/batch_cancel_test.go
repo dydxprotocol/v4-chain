@@ -650,7 +650,7 @@ func TestBatchCancelBatchFunctionality(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+			_ = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: [][]byte{extCommitBz},
 			})
 

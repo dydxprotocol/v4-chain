@@ -26,7 +26,6 @@ func QueryDaiConversionRate(client *ethclient.Client) (string, error) {
 }
 
 func QueryDaiConversionRateWithRetries(client *ethclient.Client, maxRetries int) (string, error) {
-
 	for i := 0; i < maxRetries; i++ {
 		rate, err := QueryDaiConversionRate(client)
 		if err == nil {

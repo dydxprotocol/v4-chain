@@ -1105,7 +1105,6 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				).Return(sdk.NewCoin("TDAI", sdkmath.NewIntFromUint64(math.MaxUint64)))
-
 			}
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
@@ -5567,7 +5566,6 @@ func TestLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
 				require.Equal(t, tc.expectedIsolatedPositionsPriorityHeap, tc.isolatedPositionsPriorityHeap)
 				require.Equal(t, tc.expectedSubaccountsToDeleverage, subaccountsToDeleverage)
 			}
-
 		})
 	}
 }
@@ -6054,7 +6052,6 @@ func TestIsIsolatedPerpetualError_InLiquidateSubaccountsAgainstOrderbookInternal
 			}
 		})
 	}
-
 }
 
 func TestPlacePerpetualLiquidation_InLiquidateSubaccountsAgainstOrderbookInternal(t *testing.T) {
@@ -6155,7 +6152,6 @@ func TestPlacePerpetualLiquidation_InLiquidateSubaccountsAgainstOrderbookInterna
 			}()
 		})
 	}
-
 }
 
 func TestGetValidatorAndLiquidityFee(t *testing.T) {
@@ -6296,7 +6292,6 @@ func TestGetInsuranceFundDeltaBlockLimit(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.expectedInsuranceFundDeltaBlockLimit, insuranceFundDeltaBlockLimit)
 			}
-
 		})
 	}
 }

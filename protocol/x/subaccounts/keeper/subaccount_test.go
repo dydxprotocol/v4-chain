@@ -5041,7 +5041,6 @@ func TestUpdateSubaccounts(t *testing.T) {
 					sdk.NewCoin(asstypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(tc.expectedTDaiYieldPoolBalance)),
 					TDaiBal,
 				)
-
 			}
 
 			for _, perp := range tc.perpetuals {

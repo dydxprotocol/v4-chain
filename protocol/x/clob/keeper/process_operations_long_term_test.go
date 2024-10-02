@@ -56,7 +56,6 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
 					constants.TDai.Denom,
 				).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
-
 			},
 			preExistingStatefulOrders: []types.Order{
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,

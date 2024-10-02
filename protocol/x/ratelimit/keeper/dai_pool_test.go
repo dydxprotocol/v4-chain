@@ -50,7 +50,6 @@ type PoolTestCase struct {
 }
 
 func TestGetTradingDAIFromSDAIAmount(t *testing.T) {
-
 	tests := map[string]struct {
 		sDAIAmount         *big.Int
 		sDAIPrice          *big.Int
@@ -152,7 +151,6 @@ func TestGetTradingDAIFromSDAIAmount(t *testing.T) {
 }
 
 func TestGetTradingDAIFromSDAIAmountAndRoundUp(t *testing.T) {
-
 	tests := map[string]struct {
 		sDAIAmount         *big.Int
 		sDAIPrice          *big.Int
@@ -494,7 +492,6 @@ func TestMintTradingDAIToUserAccount(t *testing.T) {
 
 			// Process each minting transfer
 			for _, transfer := range tc.transfers {
-
 				/* Setup state */
 				k.SetSDAIPrice(ctx, transfer.sDAIPrice)
 				sDAICoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewIntFromBigInt(transfer.userInitialSDAIBalance)))
@@ -799,7 +796,6 @@ func TestWithdrawSDaiFromTDai(t *testing.T) {
 
 			// Process each minting transfer
 			for _, transfer := range tc.transfers {
-
 				/* Setup state */
 				k.SetSDAIPrice(ctx, transfer.sDAIPrice)
 

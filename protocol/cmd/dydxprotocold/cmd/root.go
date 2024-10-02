@@ -85,7 +85,6 @@ func NewRootCmdWithInterceptors(
 	appConfigInterceptor func(string, *DydxAppConfig) (string, *DydxAppConfig),
 	appInterceptor func(app *dydxapp.App) *dydxapp.App,
 ) *cobra.Command {
-
 	initAppOptions := viper.New()
 	initAppOptions.Set(flags.FlagHome, tempDir())
 	initAppOptions.Set(protocolflags.NonValidatingFullNodeFlag, true)

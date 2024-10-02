@@ -281,7 +281,6 @@ func (k Keeper) fetchParamsToSettleSubaccount(
 	availableYield *big.Int,
 	err error,
 ) {
-
 	assetYieldIndex, found := k.ratelimitKeeper.GetAssetYieldIndex(ctx)
 	if !found {
 		return nil, nil, nil, errors.New("could not find asset yield index")
@@ -624,7 +623,6 @@ func getNewPerpPositionWithFundingRateUpdate(
 	newPerpetualPosition types.PerpetualPosition,
 	err error,
 ) {
-
 	// Call the stateless utility function to get the net settlement and new funding index.
 	bigNetSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
 		perpetual,

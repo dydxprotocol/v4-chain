@@ -57,7 +57,6 @@ func divideAndRoundUp(x *big.Int, y *big.Int) (*big.Int, error) {
 }
 
 func ConvertStringToBigInt(str string) (*big.Int, error) {
-
 	bigint, ok := new(big.Int).SetString(str, 10)
 	if !ok {
 		return nil, errorsmod.Wrap(

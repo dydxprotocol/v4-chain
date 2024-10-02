@@ -89,7 +89,6 @@ func (k Keeper) GetCumulativeInsuranceFundDelta(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) (*big.Int, error) {
-
 	insuranceFundName, err := k.perpetualsKeeper.GetInsuranceFundName(ctx, perpetualId)
 	if err != nil {
 		return nil, err
@@ -102,7 +101,10 @@ func (k Keeper) GetCumulativeInsuranceFundDelta(
 	}
 
 	var delta big.Int
-	delta.UnmarshalText(insuranceFundDeltaBytes)
+	err = delta.UnmarshalText(insuranceFundDeltaBytes)
+	if err != nil {
+		return nil, err
+	}
 
 	return &delta, nil
 }
@@ -113,7 +115,6 @@ func (k Keeper) IncrementCumulativeInsuranceFundDelta(
 	perpetualId uint32,
 	insuranceFundDelta *big.Int,
 ) error {
-
 	insuranceFundName, err := k.perpetualsKeeper.GetInsuranceFundName(ctx, perpetualId)
 	if err != nil {
 		return err

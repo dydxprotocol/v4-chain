@@ -163,7 +163,6 @@ func GetDaemonVotesFromBlock(
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
 ) ([]Vote, error) {
-
 	extCommitInfo, err := FetchExtCommitInfoFromProposal(proposal, extCommitCodec)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching extended-commit-info: %w", err)
@@ -181,7 +180,6 @@ func FetchExtCommitInfoFromProposal(
 	proposal [][]byte,
 	extCommitCodec codec.ExtendedCommitCodec,
 ) (abci.ExtendedCommitInfo, error) {
-
 	if len(proposal) <= constants.DaemonInfoIndex {
 		return abci.ExtendedCommitInfo{}, fmt.Errorf("proposal slice is too short, expected at least %d elements but got %d", constants.DaemonInfoIndex+1, len(proposal))
 	}

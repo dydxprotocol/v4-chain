@@ -31,7 +31,6 @@ func (s *Server) UpdateSubaccountsListForDeleveragingDaemon(
 	response *api.UpdateSubaccountsListForDeleveragingDaemonResponse,
 	err error,
 ) {
-
 	s.daemonDeleveragingInfo.UpdateSubaccountsWithPositions(req.SubaccountOpenPositionInfo)
 
 	// Capture valid responses in metrics.

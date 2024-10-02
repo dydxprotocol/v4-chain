@@ -30,7 +30,6 @@ func (k Keeper) MintTradingDAIToUserAccount(
 	userAddr sdk.AccAddress,
 	sDAIAmount *big.Int,
 ) error {
-
 	tradingDAIAmount, err := k.GetTradingDAIFromSDAIAmount(ctx, sDAIAmount)
 	if err != nil {
 		return errorsmod.Wrap(err, "failed to convert sDAI to trading DAI")
@@ -64,7 +63,6 @@ func (k Keeper) WithdrawSDaiFromTDai(
 	userAddr sdk.AccAddress,
 	sDaiAmount *big.Int,
 ) error {
-
 	tDaiDenomAmount, err := k.GetTradingDAIFromSDAIAmountAndRoundUp(ctx, sDaiAmount)
 	if err != nil {
 		return err
@@ -178,7 +176,6 @@ func (k Keeper) calculateTDaiAmount(sDaiAmount *big.Int, sDAIPrice *big.Int) *bi
 	scaledSDaiAmount := new(big.Int).Mul(sDaiAmount, sDAIPrice)
 	tDaiAmount := divideAmountBySDaiDecimals(scaledSDaiAmount)
 	return tDaiAmount
-
 }
 
 func (k Keeper) calculateTDaiAmountAndRoundUp(sDaiAmount *big.Int, sDAIPrice *big.Int) (*big.Int, error) {

@@ -14,7 +14,6 @@ import (
 )
 
 func (k Keeper) ProcessNewTDaiConversionRateUpdate(ctx sdk.Context) error {
-
 	tDaiSupplyDenomAmountBeforeNewEpoch, tDaiDenomAmountMinted, err := k.MintNewTDaiYield(ctx)
 	if err != nil {
 		return err
@@ -67,7 +66,6 @@ func (k Keeper) ProcessNewTDaiConversionRateUpdate(ctx sdk.Context) error {
 }
 
 func (k Keeper) ClaimInsuranceFundYields(ctx sdk.Context, tDaiSupplyDenomAmountBeforeNewEpoch *big.Int, tDaiDenomAmountMinted *big.Int) error {
-
 	perps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
 	insuranceFundsSeen := make(map[string]bool)
 
@@ -139,7 +137,6 @@ func (k Keeper) SetNewYieldIndex(
 }
 
 func (k Keeper) MintNewTDaiYield(ctx sdk.Context) (*big.Int, *big.Int, error) {
-
 	sDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.SDaiDenom)
 	sDaiSupplyDenomAmount := sDaiSupplyCoins.Amount.BigInt()
 

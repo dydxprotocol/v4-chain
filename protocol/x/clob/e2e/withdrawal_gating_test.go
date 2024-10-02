@@ -200,7 +200,6 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 						copy(marketPricesCopy, pricesGenesis.MarketPrices)
 
 						for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
-
 							exponent, exists := constants.TestMarketIdsToExponents[marketId]
 							require.True(t, exists)
 

@@ -381,9 +381,9 @@ func TestHydrationInPreBlocker(t *testing.T) {
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 	)
 
-	ctx := tApp.InitChain()
+	_ = tApp.InitChain()
 	// Advance one block so that pre blocker is called and clob is hydrated.
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Order should exist in state
 	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(

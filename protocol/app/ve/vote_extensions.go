@@ -169,7 +169,6 @@ func (h *VoteExtensionHandler) ValidateVE(
 	veBytes []byte,
 	blockHeight int64,
 ) (resp *abci.ResponseVerifyVoteExtension, err error) {
-
 	if err := ValidateVEMarketsAndPrices(ctx, h.pricesKeeper, veBytes, h.voteCodec); err != nil {
 		h.logger.Error(
 			"failed to decode and validate vote extension",
@@ -210,7 +209,6 @@ func (h *VoteExtensionHandler) GetVEBytes(ctx sdk.Context) ([]byte, error) {
 }
 
 func (h *VoteExtensionHandler) getSDAIPriceUpdate(ctx sdk.Context) string {
-
 	lastBlockUpdated, found := h.rateLimitKeeper.GetSDAILastBlockUpdated(ctx)
 	if found {
 		if ctx.BlockHeight()-lastBlockUpdated.Int64() < ratelimittypes.SDAI_UPDATE_BLOCK_DELAY {

@@ -105,7 +105,6 @@ func MedianPrices(
 					})
 
 					pInfo.TotalWeight = pInfo.TotalWeight.Add(math.NewInt(validatorPower))
-
 				}
 
 				priceInfo[market] = pInfo

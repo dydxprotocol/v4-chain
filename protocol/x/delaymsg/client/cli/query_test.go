@@ -91,7 +91,6 @@ func TestQueryMessage(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			genesisChanges := getGenesisChanges(name)
 
 			network.DeployCustomNetwork(genesisChanges)

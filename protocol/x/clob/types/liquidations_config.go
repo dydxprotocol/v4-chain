@@ -14,7 +14,6 @@ import (
 // - `spreadToMaintenanceMarginRatioPpm == 0.
 
 func (lc *LiquidationsConfig) Validate() error {
-
 	// Validate the InsuranceFundFeePpm.
 	if lc.InsuranceFundFeePpm == 0 || lc.InsuranceFundFeePpm > lib.OneMillion {
 		return errorsmod.Wrapf(

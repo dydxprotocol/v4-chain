@@ -36,7 +36,6 @@ import (
 )
 
 func TestMsgCreateTransfer(t *testing.T) {
-
 	tests := map[string]struct {
 		/* Setup */
 		// Initial balance of sender subaccount.
@@ -358,7 +357,6 @@ func TestMsgCreateTransfer(t *testing.T) {
 }
 
 func TestMsgDepositToSubaccount(t *testing.T) {
-
 	tests := map[string]struct {
 		// Account address.
 		accountAccAddress sdktypes.AccAddress
@@ -759,7 +757,6 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 				},
 			)}
 			require.ElementsMatch(t, expectedOnchainMessages, msgSender.GetOnchainMessages())
-
 		})
 	}
 }
@@ -839,7 +836,6 @@ func getSubaccountAssetQuantums(
 }
 
 func TestWithdrawalGating_ChainOutage(t *testing.T) {
-
 	tests := map[string]struct {
 		// State.
 		subaccount satypes.Subaccount

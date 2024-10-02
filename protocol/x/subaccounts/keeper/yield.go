@@ -19,7 +19,6 @@ func (k Keeper) ClaimYieldForSubaccountFromIdAndSetNewState(
 ) (
 	err error,
 ) {
-
 	if subaccountId == nil {
 		return types.ErrSubaccountIdIsNil
 	}
@@ -99,7 +98,6 @@ func HandleInsufficientYieldDueToNegativeTNC(
 ) (
 	yieldToTransfer *big.Int,
 ) {
-
 	yieldToTransfer = new(big.Int).Set(totalNewYield)
 	if availableYield.Cmp(totalNewYield) < 0 {
 		yieldToTransfer.Set(availableYield)
@@ -140,7 +138,6 @@ func calculateAssetYieldInQuoteQuantums(
 	newYield *big.Int,
 	err error,
 ) {
-
 	if assetPosition == nil {
 		return nil, types.ErrPositionIsNil
 	}

@@ -26,7 +26,6 @@ func (k msgServer) ClaimYieldForSubaccount(
 	response *types.MsgClaimYieldForSubaccountResponse,
 	err error,
 ) {
-
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 	err = k.ClaimYieldForSubaccountFromIdAndSetNewState(ctx, msg.Id)
 	if err != nil {

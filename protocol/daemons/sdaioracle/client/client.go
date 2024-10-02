@@ -48,7 +48,6 @@ func (c *Client) Start(
 	appFlags appflags.Flags,
 	grpcClient daemontypes.GrpcClient,
 ) error {
-
 	c.logger.Info(
 		"Starting sDAI daemon with flags",
 		"SDAIFlags", flags.SDAI,

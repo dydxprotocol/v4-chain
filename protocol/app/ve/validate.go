@@ -221,7 +221,6 @@ func ValidateSDaiConversionRateHeightInVE(
 	ve vetypes.DaemonVoteExtension,
 	ratelimitKeeper VoteExtensionRateLimitKeeper,
 ) error {
-
 	lastBlockUpdated, found := ratelimitKeeper.GetSDAILastBlockUpdated(ctx)
 
 	if found {

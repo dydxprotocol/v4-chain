@@ -11,7 +11,6 @@ import (
 )
 
 func TestQueryDaiConversionRate_Integration(t *testing.T) {
-
 	client, err := ethclient.Dial(types.ETHRPC)
 	require.NoError(t, err, "Failed to connect to Ethereum client")
 	defer client.Close()

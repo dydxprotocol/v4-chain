@@ -469,7 +469,7 @@ func TestClaimYieldForSubaccount(t *testing.T) {
 				types.ModuleAddress.String(): 1_000_000_000_000,
 			},
 		},
-		"Succesfully does not claim yield when negative positions cancel out positive position yield claims": {
+		"Successfully does not claim yield when negative positions cancel out positive position yield claims": {
 			assetPositions:            testutil.CreateTDaiAssetPosition(big.NewInt(100_000_000_000)),
 			subaccountAssetYieldIndex: big.NewRat(1, 1).String(),
 			globalAssetYieldIndex:     big.NewRat(1, 1),
@@ -1019,7 +1019,6 @@ func TestClaimYieldForSubaccount(t *testing.T) {
 					sdk.NewCoin(asstypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(tc.expectedTDaiYieldPoolBalance)),
 					TDaiBal,
 				)
-
 			}
 		})
 	}

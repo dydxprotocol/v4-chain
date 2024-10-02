@@ -629,7 +629,6 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 	totalTDaiPreMint *big.Int,
 	totalTDaiMinted *big.Int,
 ) error {
-
 	if totalTDaiPreMint == nil {
 		return types.ErrTotalTDaiPreMintIsNil
 	}
@@ -649,7 +648,6 @@ func (k Keeper) UpdateYieldIndexToNewMint(
 	allPerps := k.GetAllPerpetuals(ctx)
 
 	for _, perp := range allPerps {
-
 		modifiedPerp, err := k.CalculateNewTotalYieldIndex(
 			ctx,
 			totalTDaiPreMint,
@@ -730,7 +728,6 @@ func (k Keeper) CalculateYieldIndexForEpoch(
 	yieldIndex *big.Rat,
 	err error,
 ) {
-
 	if totalTDaiPreMint == nil || totalTDaiPreMint.Cmp(big.NewInt(0)) == 0 {
 		return nil, types.ErrTotalTDaiPreMintIsNil
 	}
@@ -1452,7 +1449,6 @@ func (k Keeper) setPerpetual(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) {
-
 	if perpetual.YieldIndex == "" {
 		perpetual.YieldIndex = "0/1"
 	}
@@ -1467,7 +1463,6 @@ func (k Keeper) ValidateAndSetPerpetual(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) error {
-
 	if perpetual.YieldIndex == "" {
 		perpetual.YieldIndex = "0/1"
 	}

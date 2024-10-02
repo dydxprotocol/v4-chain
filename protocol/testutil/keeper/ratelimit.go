@@ -32,7 +32,6 @@ func createRatelimitKeeper(
 	transientStoreKey storetypes.StoreKey,
 	msgSenderEnabled bool,
 ) (*ratelimitkeeper.Keeper, storetypes.StoreKey) {
-
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 

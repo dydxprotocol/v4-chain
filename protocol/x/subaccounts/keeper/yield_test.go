@@ -13,7 +13,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
-	asstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
@@ -264,7 +263,7 @@ func TestDepositYieldToSubaccount(t *testing.T) {
 					ctx,
 					sdk.MustAccAddressFromBech32(collateralPoolAddr),
 					sdk.Coins{
-						sdk.NewCoin(asstypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(TDaiBal)),
+						sdk.NewCoin(assettypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(TDaiBal)),
 					},
 					*bankKeeper,
 				)
@@ -276,7 +275,7 @@ func TestDepositYieldToSubaccount(t *testing.T) {
 					ctx,
 					ratelimittypes.TDaiPoolAccount,
 					sdk.Coins{
-						sdk.NewCoin(asstypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(tc.fundsInTDaiPool)),
+						sdk.NewCoin(assettypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(tc.fundsInTDaiPool)),
 					},
 					*bankKeeper,
 				)
@@ -298,10 +297,10 @@ func TestDepositYieldToSubaccount(t *testing.T) {
 				TDaiBal := bankKeeper.GetBalance(
 					ctx,
 					sdk.MustAccAddressFromBech32(collateralPoolAddr),
-					asstypes.AssetTDai.Denom,
+					assettypes.AssetTDai.Denom,
 				)
 				require.Equal(t,
-					sdk.NewCoin(asstypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(expectedTDaiBal)),
+					sdk.NewCoin(assettypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(expectedTDaiBal)),
 					TDaiBal,
 				)
 			}
@@ -310,10 +309,10 @@ func TestDepositYieldToSubaccount(t *testing.T) {
 				TDaiBal := bankKeeper.GetBalance(
 					ctx,
 					accountKeeper.GetModuleAddress(ratelimittypes.TDaiPoolAccount),
-					asstypes.AssetTDai.Denom,
+					assettypes.AssetTDai.Denom,
 				)
 				require.Equal(t,
-					sdk.NewCoin(asstypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(tc.expectedTDaiYieldPoolBalance)),
+					sdk.NewCoin(assettypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(tc.expectedTDaiYieldPoolBalance)),
 					TDaiBal,
 				)
 			}
@@ -325,7 +324,7 @@ func TestAddYieldToSubaccount(t *testing.T) {
 	tests := map[string]struct {
 		// state
 		perpetuals []perptypes.Perpetual
-		assets     []*asstypes.Asset
+		assets     []*assettypes.Asset
 		// Only set when specified. Defaults to 0/1.
 		globalAssetYieldIndex *big.Rat
 		availableYield        *big.Int
@@ -1348,7 +1347,7 @@ func TestClaimYieldForSubaccountFromIdAndSetNewState(t *testing.T) {
 	tests := map[string]struct {
 		// state
 		perpetuals []perptypes.Perpetual
-		assets     []*asstypes.Asset
+		assets     []*assettypes.Asset
 		// Only set when specified. Defaults to 0/1.
 		// Set perpYieldIndex in the perpetuals state.
 		globalAssetYieldIndex *big.Rat
@@ -1816,7 +1815,7 @@ func TestClaimYieldForSubaccountFromIdAndSetNewState(t *testing.T) {
 				types.ModuleAddress.String(): 1_000_000_000_000,
 			},
 		},
-		"Succesfully does not claim yield when negative positions cancel out positive position yield claims": {
+		"Successfully does not claim yield when negative positions cancel out positive position yield claims": {
 			assetPositions:            testutil.CreateTDaiAssetPosition(big.NewInt(100_000_000_000)),
 			subaccountAssetYieldIndex: big.NewRat(1, 1).String(),
 			globalAssetYieldIndex:     big.NewRat(1, 1),
@@ -2267,7 +2266,7 @@ func TestClaimYieldForSubaccountFromIdAndSetNewState(t *testing.T) {
 					ctx,
 					sdk.MustAccAddressFromBech32(collateralPoolAddr),
 					sdk.Coins{
-						sdk.NewCoin(asstypes.AssetTDai.Denom, sdkmath.NewInt(TDaiBal)),
+						sdk.NewCoin(assettypes.AssetTDai.Denom, sdkmath.NewInt(TDaiBal)),
 					},
 					*bankKeeper,
 				)
@@ -2279,7 +2278,7 @@ func TestClaimYieldForSubaccountFromIdAndSetNewState(t *testing.T) {
 					ctx,
 					ratelimittypes.TDaiPoolAccount,
 					sdk.Coins{
-						sdk.NewCoin(asstypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(tc.fundsInTDaiPool)),
+						sdk.NewCoin(assettypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(tc.fundsInTDaiPool)),
 					},
 					*bankKeeper,
 				)
@@ -2323,10 +2322,10 @@ func TestClaimYieldForSubaccountFromIdAndSetNewState(t *testing.T) {
 				TDaiBal := bankKeeper.GetBalance(
 					ctx,
 					sdk.MustAccAddressFromBech32(collateralPoolAddr),
-					asstypes.AssetTDai.Denom,
+					assettypes.AssetTDai.Denom,
 				)
 				require.Equal(t,
-					sdk.NewCoin(asstypes.AssetTDai.Denom, sdkmath.NewInt(expectedTDaiBal)),
+					sdk.NewCoin(assettypes.AssetTDai.Denom, sdkmath.NewInt(expectedTDaiBal)),
 					TDaiBal,
 				)
 			}
@@ -2335,13 +2334,12 @@ func TestClaimYieldForSubaccountFromIdAndSetNewState(t *testing.T) {
 				TDaiBal := bankKeeper.GetBalance(
 					ctx,
 					accountKeeper.GetModuleAddress(ratelimittypes.TDaiPoolAccount),
-					asstypes.AssetTDai.Denom,
+					assettypes.AssetTDai.Denom,
 				)
 				require.Equal(t,
-					sdk.NewCoin(asstypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(tc.expectedTDaiYieldPoolBalance)),
+					sdk.NewCoin(assettypes.AssetTDai.Denom, sdkmath.NewIntFromBigInt(tc.expectedTDaiYieldPoolBalance)),
 					TDaiBal,
 				)
-
 			}
 		})
 	}

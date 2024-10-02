@@ -7,10 +7,8 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	testkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
-	perpetualsmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
@@ -21,7 +19,6 @@ import (
 )
 
 func TestProcessNewTDaiConversionRateUpdate(t *testing.T) {
-
 	testCases := []struct {
 		name                     string
 		initialSDaiSupply        *big.Int
@@ -294,7 +291,6 @@ func TestProcessNewTDaiConversionRateUpdate(t *testing.T) {
 					AssetYieldIndex: tc.expectedAssetYieldIndex,
 				}
 				require.Equal(t, expectedEvent, *actualEvents[0])
-
 			}
 		})
 	}
@@ -479,7 +475,7 @@ func TestMintNewTDaiYield(t *testing.T) {
 			expectError:             true,
 		},
 		{
-			name:                    "FAILS: tradingDaiAfterYield will be less than intial trading dai",
+			name:                    "FAILS: tradingDaiAfterYield will be less than initial trading dai",
 			initialSDAISupply:       sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, sdkmath.NewInt(100))),
 			initialTradingDAISupply: sdk.NewCoins(sdk.NewCoin(types.TDaiDenom, sdkmath.NewInt(200))),
 			sdaiPrice:               new(big.Int).Mul(big.NewInt(1), new(big.Int).Exp(big.NewInt(types.BASE_10), big.NewInt(types.SDAI_DECIMALS), nil)),
@@ -601,17 +597,10 @@ func burnAllCoinsOfDenom(t *testing.T, ctx sdk.Context, bankKeeper bankkeeper.Ke
 		require.NoError(t, err)
 	}
 
-	bankKeeper.BurnCoins(
+	err = bankKeeper.BurnCoins(
 		ctx,
 		types.TDaiPoolAccount,
 		sdk.NewCoins(bankKeeper.GetSupply(ctx, denom)),
 	)
-}
-
-func getPerpetualsEventsFromIndexerBlock(
-	ctx sdk.Context,
-	perpetualsKeeper *perpetualsmodulekeeper.Keeper,
-) []*indexer_manager.IndexerTendermintEvent {
-	block := perpetualsKeeper.GetIndexerEventManager().ProduceBlock(ctx)
-	return block.Events
+	require.NoError(t, err)
 }
