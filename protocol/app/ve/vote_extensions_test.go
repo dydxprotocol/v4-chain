@@ -33,7 +33,7 @@ type TestExtendedVoteTC struct {
 	expectedResponse  *vetypes.DaemonVoteExtension
 	pricesKeeper      func() *mocks.PreBlockExecPricesKeeper
 	ratelimitKeeper   func() *mocks.VoteExtensionRateLimitKeeper
-	sdaiEventManager  *sdaiservertypes.SDAIEventManager
+	sdaiEventManager  sdaiservertypes.SDAIEventManager
 	perpKeeper        func() *mocks.ExtendVotePerpetualsKeeper
 	clobKeeper        func() *mocks.ExtendVoteClobKeeper
 	extendVoteRequest func() *cometabci.RequestExtendVote

@@ -1414,7 +1414,7 @@ func (app *App) InitVoteExtensions(
 	perpetualsKeeper *perpetualsmodulekeeper.Keeper,
 	clobKeeper *clobmodulekeeper.Keeper,
 	rateLimitKeeper *ratelimitmodulekeeper.Keeper,
-	sDAIEventManager *sdaiserver.SDAIEventManager,
+	sDAIEventManager sdaiserver.SDAIEventManager,
 	veApplier *veapplier.VEApplier,
 ) {
 	veHandler := ve.NewVoteExtensionHandler(

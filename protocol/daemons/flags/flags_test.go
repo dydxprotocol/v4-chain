@@ -47,6 +47,10 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	optsMap[flags.FlagDeleveragingDaemonLoopDelayMs] = uint32(2222)
 	optsMap[flags.FlagDeleveragingDaemonQueryPageLimit] = uint64(3333)
 
+	optsMap[flags.FlagSDAIDaemonEnabled] = true
+	optsMap[flags.FlagSDAIDaemonEthRpcEndpoint] = "test-eth-rpc-endpoint"
+	optsMap[flags.FlagSDAIDaemonLoopDelayMs] = uint32(5555)
+
 	optsMap[flags.FlagPriceDaemonEnabled] = true
 	optsMap[flags.FlagPriceDaemonLoopDelayMs] = uint32(4444)
 
@@ -71,6 +75,11 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	require.Equal(t, optsMap[flags.FlagDeleveragingDaemonEnabled], r.Deleveraging.Enabled)
 	require.Equal(t, optsMap[flags.FlagDeleveragingDaemonLoopDelayMs], r.Deleveraging.LoopDelayMs)
 	require.Equal(t, optsMap[flags.FlagDeleveragingDaemonQueryPageLimit], r.Deleveraging.QueryPageLimit)
+
+	// SDAI Daemon.
+	require.Equal(t, optsMap[flags.FlagSDAIDaemonEnabled], r.SDAI.Enabled)
+	require.Equal(t, optsMap[flags.FlagSDAIDaemonEthRpcEndpoint], r.SDAI.EthRpcEndpoint)
+	require.Equal(t, optsMap[flags.FlagSDAIDaemonLoopDelayMs], r.SDAI.LoopDelayMs)
 
 	// Price Daemon.
 	require.Equal(t, optsMap[flags.FlagPriceDaemonEnabled], r.Price.Enabled)

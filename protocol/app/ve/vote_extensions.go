@@ -34,7 +34,7 @@ type VoteExtensionHandler struct {
 
 	rateLimitKeeper VoteExtensionRateLimitKeeper
 
-	sDAIEventManager *sdaiserver.SDAIEventManager
+	sDAIEventManager sdaiserver.SDAIEventManager
 
 	// writing prices to the prices module store
 	veApplier VEApplierInterface
@@ -58,7 +58,7 @@ func NewVoteExtensionHandler(
 	perpetualsKeeper ExtendVotePerpetualsKeeper,
 	clobKeeper ExtendVoteClobKeeper,
 	rateLimitKeeper VoteExtensionRateLimitKeeper,
-	sDAIEventManager *sdaiserver.SDAIEventManager,
+	sDAIEventManager sdaiserver.SDAIEventManager,
 	veApplier VEApplierInterface,
 ) *VoteExtensionHandler {
 	return &VoteExtensionHandler{

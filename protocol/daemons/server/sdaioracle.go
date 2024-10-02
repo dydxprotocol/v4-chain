@@ -10,13 +10,13 @@ import (
 
 // sDAIServer defines the fields required for sDAI conversion rate updates.
 type SDAIServer struct {
-	sDAIEventManager *bdtypes.SDAIEventManager
+	sDAIEventManager bdtypes.SDAIEventManager
 }
 
 // WithsDAIEventManager sets the `sDAIEventManager` field.
 // This is updated by the sDAI service with a new conversion rate
 func (server *Server) WithsDAIEventManager(
-	sDAIEventManager *bdtypes.SDAIEventManager,
+	sDAIEventManager bdtypes.SDAIEventManager,
 ) *Server {
 	server.sDAIEventManager = sDAIEventManager
 	return server
@@ -31,7 +31,9 @@ func (s *Server) AddsDAIEvent(
 	response *api.AddsDAIEventsResponse,
 	err error,
 ) {
-	if err = s.sDAIEventManager.AddsDAIEvent(req); err != nil {
+	err = s.sDAIEventManager.AddsDAIEvent(req)
+
+	if err != nil {
 		return nil, err
 	}
 

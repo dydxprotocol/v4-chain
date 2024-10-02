@@ -28,7 +28,7 @@ type (
 	Keeper struct {
 		cdc                 codec.BinaryCodec
 		storeKey            storetypes.StoreKey
-		sDAIEventManager    *sdaiserver.SDAIEventManager
+		sDAIEventManager    sdaiserver.SDAIEventManager
 		indexerEventManager indexer_manager.IndexerEventManager
 		bankKeeper          types.BankKeeper
 		blockTimeKeeper     types.BlockTimeKeeper
@@ -44,7 +44,7 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
-	sDAIEventManager *sdaiserver.SDAIEventManager,
+	sDAIEventManager sdaiserver.SDAIEventManager,
 	indexerEventsManager indexer_manager.IndexerEventManager,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
@@ -466,7 +466,7 @@ func (k Keeper) GetAssetYieldIndex(ctx sdk.Context) (yieldIndex *big.Rat, found 
 }
 
 // functions for better testing
-func (k Keeper) GetSDAIEventManagerForTestingOnly() *sdaiserver.SDAIEventManager {
+func (k Keeper) GetSDAIEventManagerForTestingOnly() sdaiserver.SDAIEventManager {
 	return k.sDAIEventManager
 }
 
