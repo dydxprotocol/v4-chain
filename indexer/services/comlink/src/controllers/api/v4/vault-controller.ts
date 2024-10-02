@@ -30,6 +30,7 @@ import Big from 'big.js';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import _ from 'lodash';
+import { DateTime } from 'luxon';
 import {
   Controller, Get, Query, Route,
 } from 'tsoa';
@@ -85,7 +86,7 @@ class VaultController extends Controller {
       BlockFromDatabase,
       string,
     ] = await Promise.all([
-      getVaultSubaccountPnlTicks(vaultSubaccountIdsWithMainSubaccount, resolution),
+      getVaultSubaccountPnlTicks(vaultSubaccountIdsWithMainSubaccount, getResolution(resolution)),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
       getMainSubaccountEquity(),
@@ -102,7 +103,7 @@ class VaultController extends Controller {
       }, mainSubaccountEquity);
     const pnlTicksWithCurrentTick: PnlTicksFromDatabase[] = getPnlTicksWithCurrentTick(
       currentEquity,
-      Array.from(aggregatedPnlTicks.values()),
+      filterOutIntervalTicks(aggregatedPnlTicks, getResolution(resolution)),
       latestBlock,
     );
 
@@ -128,7 +129,7 @@ class VaultController extends Controller {
       Map<string, VaultPosition>,
       BlockFromDatabase,
     ] = await Promise.all([
-      getVaultSubaccountPnlTicks(_.keys(vaultSubaccounts), resolution),
+      getVaultSubaccountPnlTicks(_.keys(vaultSubaccounts), getResolution(resolution)),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
     ]);
@@ -294,21 +295,22 @@ router.get(
 
 async function getVaultSubaccountPnlTicks(
   vaultSubaccountIds: string[],
-  resolution?: PnlTickInterval,
+  resolution: PnlTickInterval,
 ): Promise<PnlTicksFromDatabase[]> {
   if (vaultSubaccountIds.length === 0) {
     return [];
   }
-  let pnlTickInterval: PnlTickInterval;
-  if (resolution === undefined) {
-    pnlTickInterval = PnlTickInterval.day;
+
+  let windowSeconds: number;
+  if (resolution === PnlTickInterval.day) {
+    windowSeconds = config.VAULT_PNL_HISTORY_DAYS * 24 * 60 * 60; // days to seconds
   } else {
-    pnlTickInterval = resolution;
+    windowSeconds = config.VAULT_PNL_HISTORY_HOURS * 60 * 60; // hours to seconds
   }
 
   const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getPnlTicksAtIntervals(
-    pnlTickInterval,
-    config.VAULT_PNL_HISTORY_DAYS * 24 * 60 * 60,
+    resolution,
+    windowSeconds,
     vaultSubaccountIds,
   );
 
@@ -461,13 +463,64 @@ function getPnlTicksWithCurrentTick(
     return [];
   }
   const currentTick: PnlTicksFromDatabase = {
-    ...pnlTicks[pnlTicks.length - 1],
+    ...(_.maxBy(pnlTicks, 'blockTime')!),
     equity,
     blockHeight: latestBlock.blockHeight,
     blockTime: latestBlock.time,
     createdAt: latestBlock.time,
   };
   return pnlTicks.concat([currentTick]);
+}
+
+/**
+ * Takes in a map of block heights to PnlTicks and filters out the closest pnl tick per interval.
+ * @param pnlTicksByBlock Map of block number to pnl tick.
+ * @param resolution Resolution of interval.
+ * @returns Array of PnlTicksFromDatabase, one per interval.
+ */
+function filterOutIntervalTicks(
+  pnlTicksByBlock: Map<number, PnlTicksFromDatabase>,
+  resolution: PnlTickInterval,
+): PnlTicksFromDatabase[] {
+  // Track block to block time.
+  const blockToBlockTime: Map<number, DateTime> = new Map();
+  // Track start of days to closest block by block time.
+  const blocksPerInterval: Map<string, number> = new Map();
+  // Track start of days to closest Pnl tick.
+  const ticksPerInterval: Map<string, PnlTicksFromDatabase> = new Map();
+  pnlTicksByBlock.forEach((pnlTick: PnlTicksFromDatabase, block: number): void => {
+    const blockTime: DateTime = DateTime.fromISO(pnlTick.blockTime).toUTC();
+    blockToBlockTime.set(block, blockTime);
+
+    const startOfInterval: DateTime = blockTime.toUTC().startOf(resolution);
+    const startOfIntervalStr: string = startOfInterval.toISO();
+    const startOfIntervalBlock: number | undefined = blocksPerInterval.get(startOfIntervalStr);
+    // No block for the start of interval, set this block as the block for the interval.
+    if (startOfIntervalBlock === undefined) {
+      blocksPerInterval.set(startOfIntervalStr, block);
+      ticksPerInterval.set(startOfIntervalStr, pnlTick);
+      return;
+    }
+
+    const startOfDayBlockTime: DateTime | undefined = blockToBlockTime.get(startOfIntervalBlock);
+    // Invalid block set as start of day block, set this block as the block for the day.
+    if (startOfDayBlockTime === undefined) {
+      blocksPerInterval.set(startOfIntervalStr, block);
+      ticksPerInterval.set(startOfIntervalStr, pnlTick);
+      return;
+    }
+
+    // This block is closer to the start of the day, set it as the block for the day.
+    if (blockTime.diff(startOfInterval) < startOfDayBlockTime.diff(startOfInterval)) {
+      blocksPerInterval.set(startOfIntervalStr, block);
+      ticksPerInterval.set(startOfIntervalStr, pnlTick);
+    }
+  });
+  return Array.from(ticksPerInterval.values());
+}
+
+function getResolution(resolution: PnlTickInterval = PnlTickInterval.day): PnlTickInterval {
+  return resolution;
 }
 
 async function getVaultMapping(): Promise<VaultMapping> {

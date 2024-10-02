@@ -40,11 +40,17 @@ func MustMakeOrderFromHumanInput(
 	if !exists {
 		panic(fmt.Sprintf("marketParam does not exist: %v", perp.Params.MarketId))
 	}
-	marketPrice := pricestest.MustHumanPriceToMarketPrice(humanPrice, marketParams.Exponent)
+
+	exponent, err := app.PricesKeeper.GetExponent(ctx, marketParams.Pair)
+	if err != nil {
+		panic(err)
+	}
+
+	marketPrice := pricestest.MustHumanPriceToMarketPrice(humanPrice, exponent)
 	subticks := clobtypes.PriceToSubticks(
 		pricestypes.MarketPrice{
 			Price:    marketPrice,
-			Exponent: marketParams.Exponent,
+			Exponent: exponent,
 		},
 		clobPair,
 		perp.Params.AtomicResolution,

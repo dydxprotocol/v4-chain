@@ -7,10 +7,11 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-var _ Authenticator = &ClobPairIdFilter{}
+var _ types.Authenticator = &ClobPairIdFilter{}
 
 // ClobPairIdFilter filters incoming messages based on a whitelist of clob pair ids.
 // It ensures that only messages with whitelisted clob pair ids are allowed.
@@ -35,7 +36,7 @@ func (m ClobPairIdFilter) StaticGas() uint64 {
 
 // Initialize sets up the authenticator with the given configuration,
 // which should be a list of clob pair ids separated by a predefined separator.
-func (m ClobPairIdFilter) Initialize(config []byte) (Authenticator, error) {
+func (m ClobPairIdFilter) Initialize(config []byte) (types.Authenticator, error) {
 	strSlice := strings.Split(string(config), SEPARATOR)
 
 	m.whitelist = make(map[uint32]struct{})
@@ -50,12 +51,12 @@ func (m ClobPairIdFilter) Initialize(config []byte) (Authenticator, error) {
 }
 
 // Track is a no-op in this implementation but can be used to track message handling.
-func (m ClobPairIdFilter) Track(ctx sdk.Context, request AuthenticationRequest) error {
+func (m ClobPairIdFilter) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
 // Authenticate checks if the message's clob pair ids are in the whitelist.
-func (m ClobPairIdFilter) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
+func (m ClobPairIdFilter) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	// Collect the clob pair ids from the request.
 	requestOrderIds := make([]uint32, 0)
 	switch msg := request.Msg.(type) {
@@ -87,7 +88,7 @@ func (m ClobPairIdFilter) Authenticate(ctx sdk.Context, request AuthenticationRe
 }
 
 // ConfirmExecution confirms the execution of a message. Currently, it always confirms.
-func (m ClobPairIdFilter) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
+func (m ClobPairIdFilter) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 

@@ -142,14 +142,6 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 				`"exchangeConfigJson":"{}"}]}`,
 			expectedErr: "expected the same number of market prices and market params",
 		},
-		"Bad state: Invalid price": {
-			genesisJson: `{"market_params":[{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1,` +
-				`"exchangeConfigJson":"{}"}],"market_prices": [{"exponent":1,"price": "0"}]}`,
-			expectedErr: errorsmod.Wrap(
-				pricestypes.ErrInvalidInput,
-				"market param 0 exponent 0 does not match market price 0 exponent 1",
-			).Error(),
-		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

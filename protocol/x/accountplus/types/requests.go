@@ -1,8 +1,34 @@
-package authenticator
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+//
+// These structs define the data structure for authentication, used with AuthenticationRequest struct.
+//
+
+// SignModeData represents the signing modes with direct bytes and textual representation.
+type SignModeData struct {
+	Direct  []byte `json:"sign_mode_direct"`
+	Textual string `json:"sign_mode_textual"`
+}
+
+// SimplifiedSignatureData contains lists of signers and their corresponding signatures.
+type SimplifiedSignatureData struct {
+	Signers    []sdk.AccAddress `json:"signers"`
+	Signatures [][]byte         `json:"signatures"`
+}
+
+// ExplicitTxData encapsulates key transaction data like chain ID, account info, and messages.
+type ExplicitTxData struct {
+	ChainID         string    `json:"chain_id"`
+	AccountNumber   uint64    `json:"account_number"`
+	AccountSequence uint64    `json:"sequence"`
+	TimeoutHeight   uint64    `json:"timeout_height"`
+	Msgs            []sdk.Msg `json:"msgs"`
+	Memo            string    `json:"memo"`
+}
 
 type TrackRequest struct {
 	AuthenticatorId     string         `json:"authenticator_id"`

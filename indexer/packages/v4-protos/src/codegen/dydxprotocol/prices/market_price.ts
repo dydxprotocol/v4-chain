@@ -8,6 +8,9 @@ export interface MarketPrice {
   /**
    * Static value. The exponent of the price. See the comment on the duplicate
    * MarketParam field for more information.
+   * 
+   * As of v7.1.x, this value is determined from the marketmap instead of
+   * needing to match the MarketParam field.
    */
 
   exponent: number;
@@ -26,6 +29,9 @@ export interface MarketPriceSDKType {
   /**
    * Static value. The exponent of the price. See the comment on the duplicate
    * MarketParam field for more information.
+   * 
+   * As of v7.1.x, this value is determined from the marketmap instead of
+   * needing to match the MarketParam field.
    */
 
   exponent: number;

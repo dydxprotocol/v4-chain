@@ -154,6 +154,34 @@ func (_m *PricesKeeper) GetCurrencyPairFromID(ctx context.Context, id uint64) (p
 	return r0, r1
 }
 
+// GetExponent provides a mock function with given fields: ctx, ticker
+func (_m *PricesKeeper) GetExponent(ctx types.Context, ticker string) (int32, error) {
+	ret := _m.Called(ctx, ticker)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetExponent")
+	}
+
+	var r0 int32
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, string) (int32, error)); ok {
+		return rf(ctx, ticker)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string) int32); ok {
+		r0 = rf(ctx, ticker)
+	} else {
+		r0 = ret.Get(0).(int32)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, string) error); ok {
+		r1 = rf(ctx, ticker)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetIDForCurrencyPair provides a mock function with given fields: ctx, cp
 func (_m *PricesKeeper) GetIDForCurrencyPair(ctx context.Context, cp pkgtypes.CurrencyPair) (uint64, bool) {
 	ret := _m.Called(ctx, cp)
