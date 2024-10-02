@@ -1449,3 +1449,16 @@ func TestSetGetAssetYieldIndex(t *testing.T) {
 // 	require.Nil(t, assetYieldIndex, "Expected assetYieldIndex to be nil when not set")
 // 	require.False(t, found, "Expected found to be false when assetYieldIndex is not set")
 // }
+
+func TestSetAndGetSDAILastBlockUpdated(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	blockHeight := big.NewInt(123456789)
+
+	k.SetSDAILastBlockUpdated(ctx, blockHeight)
+	gotBlockHeight, found := k.GetSDAILastBlockUpdated(ctx)
+	require.True(t, found, "sDAI last block updated not found in store")
+	require.Equal(t, blockHeight, gotBlockHeight, "retrieved sDAI last block updated does not match the set value")
+}
