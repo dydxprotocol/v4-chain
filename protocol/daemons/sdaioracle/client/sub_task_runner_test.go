@@ -1,3 +1,5 @@
+//go:build all || integration_test
+
 package client_test
 
 import (
