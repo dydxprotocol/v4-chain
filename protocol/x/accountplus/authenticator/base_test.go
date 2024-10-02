@@ -17,6 +17,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	smartaccounttypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	"github.com/stretchr/testify/suite"
@@ -103,7 +104,7 @@ func (s *BaseAuthenticatorSuite) GenSimpleTx(msgs []sdk.Msg, signers []cryptotyp
 		accSeqs = append(accSeqs, account.GetSequence())
 	}
 
-	tx, err := GenTx(
+	tx, err := testtx.GenTx(
 		s.Ctx,
 		txconfig,
 		msgs,
@@ -114,6 +115,7 @@ func (s *BaseAuthenticatorSuite) GenSimpleTx(msgs []sdk.Msg, signers []cryptotyp
 		accSeqs,
 		signers,
 		signers,
+		nil,
 	)
 	if err != nil {
 		return nil, err
@@ -139,7 +141,7 @@ func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(
 		accSeqs = append(accSeqs, account.GetSequence())
 	}
 
-	baseTxBuilder, err := MakeTxBuilder(
+	baseTxBuilder, err := testtx.MakeTxBuilder(
 		s.Ctx,
 		txconfig,
 		msgs,
@@ -150,6 +152,7 @@ func (s *BaseAuthenticatorSuite) GenSimpleTxWithSelectedAuthenticators(
 		accSeqs,
 		signers,
 		signers,
+		nil,
 	)
 	if err != nil {
 		return nil, err
