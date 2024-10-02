@@ -45,7 +45,7 @@ func (k Keeper) CreateMarket(
 	// Stateful Validation
 	for _, market := range k.GetAllMarketParams(sdkCtx) {
 		if market.Pair == marketParam.Pair {
-			return types.MarketParam{}, errorsmod.Wrapf(
+			return types.MarketParam{}, errorsmod.Wrap(
 				types.ErrMarketParamPairAlreadyExists,
 				marketParam.Pair,
 			)
@@ -54,7 +54,7 @@ func (k Keeper) CreateMarket(
 	// check that the market exists in market map
 	currencyPair, err := slinky.MarketPairToCurrencyPair(marketParam.Pair)
 	if err != nil {
-		return types.MarketParam{}, errorsmod.Wrapf(
+		return types.MarketParam{}, errorsmod.Wrap(
 			types.ErrMarketPairConversionFailed,
 			marketParam.Pair,
 		)
@@ -62,7 +62,7 @@ func (k Keeper) CreateMarket(
 	currencyPairStr := currencyPair.String()
 	_, err = k.MarketMapKeeper.GetMarket(ctx, currencyPairStr)
 	if err != nil {
-		return types.MarketParam{}, errorsmod.Wrapf(
+		return types.MarketParam{}, errorsmod.Wrap(
 			types.ErrTickerNotFoundInMarketMap,
 			currencyPairStr,
 		)
