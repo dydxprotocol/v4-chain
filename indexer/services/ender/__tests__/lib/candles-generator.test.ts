@@ -133,8 +133,8 @@ describe('candleHelper', () => {
           id: CandleTable.uuid(currentStartedAt, defaultCandle.ticker, resolution),
           startedAt: currentStartedAt,
           resolution,
-          orderbookMidPriceClose: '105000',
-          orderbookMidPriceOpen: '105000',
+          orderbookMidPriceClose: null,
+          orderbookMidPriceOpen: null,
         };
       },
     );
@@ -179,8 +179,8 @@ describe('candleHelper', () => {
           startedAt: currentStartedAt,
           resolution,
           startingOpenInterest: openInterest,
-          orderbookMidPriceClose: '80500',
-          orderbookMidPriceOpen: '80500',
+          orderbookMidPriceClose: null,
+          orderbookMidPriceOpen: null,
         };
       },
     );
@@ -303,8 +303,8 @@ describe('candleHelper', () => {
         usdVolume: '0',
         trades: 0,
         startingOpenInterest: '100',
-        orderbookMidPriceClose: '1000',
-        orderbookMidPriceOpen: '1000',
+        orderbookMidPriceClose: null,
+        orderbookMidPriceOpen: null,
       },
       true,
       1000,
@@ -334,8 +334,8 @@ describe('candleHelper', () => {
         startedAt,
         resolution: CandleResolution.ONE_MINUTE,
         startingOpenInterest: '100',
-        orderbookMidPriceClose: '1000',
-        orderbookMidPriceOpen: '1000',
+        orderbookMidPriceClose: null,
+        orderbookMidPriceOpen: null,
       },
       true, // contains kafka messages
       1000, // orderbook mid price
@@ -465,6 +465,7 @@ describe('candleHelper', () => {
     expectTimingStats();
   });
 
+<<<<<<< HEAD
   it('Updates previous candle orderBookMidPriceClose if startTime is past candle resolution', async () => {
     // Create existing candles
     const existingPrice: string = '7000';
@@ -659,6 +660,8 @@ describe('candleHelper', () => {
 
   });
 
+=======
+>>>>>>> 9fecfc5d (Return undefined from getOrderbookMidPriceMap (#2441))
   it('successfully creates an orderbook price map for each market', async () => {
     await updatePriceLevel('BTC-USD', '100000', OrderSide.BUY);
     await updatePriceLevel('BTC-USD', '110000', OrderSide.SELL);
@@ -671,9 +674,15 @@ describe('candleHelper', () => {
 
     const map = await getOrderbookMidPriceMap();
     expect(map).toEqual({
+<<<<<<< HEAD
       'BTC-USD': '105000',
       'ETH-USD': '150000',
       'ISO-USD': '115000',
+=======
+      'BTC-USD': undefined,
+      'ETH-USD': undefined,
+      'ISO-USD': undefined,
+>>>>>>> 9fecfc5d (Return undefined from getOrderbookMidPriceMap (#2441))
       'ISO2-USD': undefined,
       'SHIB-USD': undefined,
     });

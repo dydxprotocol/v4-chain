@@ -20,7 +20,10 @@ import {
   TradeMessageContents,
   helpers,
 } from '@dydxprotocol-indexer/postgres';
+<<<<<<< HEAD
 import { OrderbookLevelsCache } from '@dydxprotocol-indexer/redis';
+=======
+>>>>>>> 9fecfc5d (Return undefined from getOrderbookMidPriceMap (#2441))
 import { CandleMessage } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
@@ -28,7 +31,6 @@ import { DateTime } from 'luxon';
 
 import { getCandle } from '../caches/candle-cache';
 import config from '../config';
-import { redisClient } from '../helpers/redis/redis-controller';
 import { KafkaPublisher } from './kafka-publisher';
 import { ConsolidatedKafkaEvent, SingleTradeMessage } from './types';
 
@@ -538,11 +540,15 @@ export async function getOrderbookMidPriceMap(): Promise<{ [ticker: string]: Ord
   const perpetualMarkets = Object.values(perpetualMarketRefresher.getPerpetualMarketsMap());
 
   const promises = perpetualMarkets.map(async (perpetualMarket: PerpetualMarketFromDatabase) => {
+<<<<<<< HEAD
     const price = await OrderbookLevelsCache.getOrderBookMidPrice(
       perpetualMarket.ticker,
       redisClient,
     );
     return { [perpetualMarket.ticker]: price === undefined ? undefined : price };
+=======
+    return Promise.resolve({ [perpetualMarket.ticker]: undefined });
+>>>>>>> 9fecfc5d (Return undefined from getOrderbookMidPriceMap (#2441))
   });
 
   const pricesArray = await Promise.all(promises);
