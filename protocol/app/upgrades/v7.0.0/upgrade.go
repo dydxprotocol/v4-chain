@@ -199,7 +199,7 @@ func migrateVaultSharesToMegavaultShares(ctx sdk.Context, k vaultkeeper.Keeper) 
 
 func initListingModuleState(ctx sdk.Context, listingKeeper listingkeeper.Keeper) {
 	// Set hard cap on listed markets
-	err := listingKeeper.SetMarketsHardCap(ctx, 500)
+	err := listingKeeper.SetMarketsHardCap(ctx, listingtypes.DefaultMarketsHardCap)
 	if err != nil {
 		panic(fmt.Sprintf("failed to set markets hard cap: %s", err))
 	}
