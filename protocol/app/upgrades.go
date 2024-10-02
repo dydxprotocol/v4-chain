@@ -5,6 +5,7 @@ import (
 
 	v6_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.0.0"
 	v6_0_0_testnet_fix "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.0.0_testnet_fix"
+	v6_0_0_testnet_fix_1 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v6.0.0_testnet_fix_1"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +18,7 @@ var (
 	Upgrades = []upgrades.Upgrade{
 		v6_0_0.Upgrade,
 		v6_0_0_testnet_fix.Upgrade,
+		v6_0_0_testnet_fix_1.Upgrade,
 	}
 	Forks = []upgrades.Fork{}
 )
@@ -46,6 +48,18 @@ func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v6_0_0_testnet_fix.UpgradeName,
 		v6_0_0_testnet_fix.CreateUpgradeHandler(
+			app.ModuleManager,
+			app.configurator,
+		),
+	)
+
+	// v6_0_0_testnet_fix_1 not intended for prod use.
+	if app.UpgradeKeeper.HasHandler(v6_0_0_testnet_fix_1.UpgradeName) {
+		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v6_0_0_testnet_fix_1.UpgradeName))
+	}
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v6_0_0_testnet_fix_1.UpgradeName,
+		v6_0_0_testnet_fix_1.CreateUpgradeHandler(
 			app.ModuleManager,
 			app.configurator,
 		),
