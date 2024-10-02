@@ -1,6 +1,10 @@
 package types
 
 import (
+	"math/big"
+
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -30,7 +34,8 @@ type ClobKeeper interface {
 	) (clobtypes.ClobPair, error)
 	AcquireNextClobPairID(ctx sdk.Context) uint32
 	ValidateClobPairCreation(ctx sdk.Context, clobPair *clobtypes.ClobPair) error
-	CreateClobPair(ctx sdk.Context, clobPair clobtypes.ClobPair) error
+	CreateClobPairStructures(ctx sdk.Context, clobPair clobtypes.ClobPair) error
+	SetClobPair(ctx sdk.Context, clobPair clobtypes.ClobPair)
 }
 
 type MarketMapKeeper interface {
@@ -58,4 +63,28 @@ type PerpetualsKeeper interface {
 	) (perpetualtypes.Perpetual, error)
 	AcquireNextPerpetualID(ctx sdk.Context) uint32
 	GetAllPerpetuals(ctx sdk.Context) (list []perpetualtypes.Perpetual)
+}
+
+type VaultKeeper interface {
+	DepositToMegavault(
+		ctx sdk.Context,
+		fromSubaccount satypes.SubaccountId,
+		quoteQuantums *big.Int,
+	) (mintedShares *big.Int, err error)
+	AllocateToVault(
+		ctx sdk.Context,
+		vaultId vaulttypes.VaultId,
+		quantums *big.Int,
+	) error
+	LockShares(
+		ctx sdk.Context,
+		ownerAddress string,
+		sharesToLock vaulttypes.NumShares,
+		tilBlock uint32,
+	) error
+	SetVaultStatus(
+		ctx sdk.Context,
+		vaultId vaulttypes.VaultId,
+		status vaulttypes.VaultStatus,
+	) error
 }

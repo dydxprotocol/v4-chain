@@ -5,7 +5,7 @@ import "github.com/dydxprotocol/v4-chain/protocol/dtypes"
 // DefaultParams defines the default parameters for listing vault deposits.
 func DefaultParams() ListingVaultDepositParams {
 	return ListingVaultDepositParams{
-		NewVaultDepositAmount:  dtypes.NewIntFromUint64(10_000),
+		NewVaultDepositAmount:  dtypes.NewIntFromUint64(10_000_000_000), // 10_000 USDC
 		MainVaultDepositAmount: dtypes.NewIntFromUint64(0),
 		NumBlocksToLockShares:  30 * 24 * 3600, // 30 days
 	}

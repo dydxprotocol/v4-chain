@@ -1218,6 +1218,7 @@ func New(
 		app.ClobKeeper,
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
+		app.VaultKeeper,
 	)
 	listingModule := listingmodule.NewAppModule(
 		appCodec,
@@ -1226,6 +1227,7 @@ func New(
 		app.ClobKeeper,
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
+		app.VaultKeeper,
 	)
 
 	// Initialize authenticators

@@ -13,6 +13,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.SetMarketsHardCap(ctx, genState.HardCapForMarkets); err != nil {
 		panic(err)
 	}
+
+	if err := k.SetListingVaultDepositParams(ctx, genState.ListingVaultDepositParams); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
