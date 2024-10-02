@@ -35,11 +35,14 @@ func NewEventStager[T proto.Message](
 	}
 }
 
-// GetStagedFinalizeBlockEventsFromStore retrieves all staged events from the store.
-func (s EventStager[T]) GetStagedFinalizeBlockEventsFromStore(
-	store storetypes.KVStore,
+// GetStagedFinalizeBlockEvents retrieves all staged events from the store.
+func (s EventStager[T]) GetStagedFinalizeBlockEvents(
+	ctx sdk.Context,
 	newStagedEvent func() T,
 ) []T {
+	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
+	store := noGasCtx.TransientStore(s.transientStoreKey)
+
 	count := s.getStagedEventsCount(store)
 	events := make([]T, count)
 	store = prefix.NewStore(store, []byte(s.stagedEventKeyPrefix))
@@ -65,10 +68,9 @@ func (s EventStager[T]) getStagedEventsCount(
 // StageFinalizeBlockEvent stages an event in the transient store.
 func (s EventStager[T]) StageFinalizeBlockEvent(
 	ctx sdk.Context,
-	eventBytes []byte,
+	stagedEvent T,
 ) {
 	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
-
 	store := noGasCtx.TransientStore(s.transientStoreKey)
 
 	// Increment events count.
@@ -77,5 +79,5 @@ func (s EventStager[T]) StageFinalizeBlockEvent(
 
 	// Store events keyed by index.
 	store = prefix.NewStore(store, []byte(s.stagedEventKeyPrefix))
-	store.Set(lib.Uint32ToKey(count), eventBytes)
+	store.Set(lib.Uint32ToKey(count), s.cdc.MustMarshal(stagedEvent))
 }

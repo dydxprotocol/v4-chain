@@ -407,7 +407,7 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdate(
 	}
 	sm.finalizeBlockStager.StageFinalizeBlockEvent(
 		ctx,
-		sm.cdc.MustMarshal(&stagedEvent),
+		&stagedEvent,
 	)
 }
 
@@ -415,10 +415,8 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdate(
 func (sm *FullNodeStreamingManagerImpl) GetStagedFinalizeBlockEvents(
 	ctx sdk.Context,
 ) []clobtypes.StagedFinalizeBlockEvent {
-	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
-	store := noGasCtx.TransientStore(sm.streamingManagerTransientStoreKey)
-	events := sm.finalizeBlockStager.GetStagedFinalizeBlockEventsFromStore(
-		store,
+	events := sm.finalizeBlockStager.GetStagedFinalizeBlockEvents(
+		ctx,
 		func() *clobtypes.StagedFinalizeBlockEvent {
 			return &clobtypes.StagedFinalizeBlockEvent{}
 		},
@@ -557,7 +555,7 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookUpdates(
 	}
 	sm.finalizeBlockStager.StageFinalizeBlockEvent(
 		ctx,
-		sm.cdc.MustMarshal(&stagedEvent),
+		&stagedEvent,
 	)
 }
 
@@ -632,7 +630,7 @@ func (sm *FullNodeStreamingManagerImpl) SendOrderbookFillUpdate(
 
 	sm.finalizeBlockStager.StageFinalizeBlockEvent(
 		ctx,
-		sm.cdc.MustMarshal(&stagedEvent),
+		&stagedEvent,
 	)
 }
 
