@@ -352,7 +352,16 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 
 			// Create all existing orders.
 			for _, order := range tc.existingOrders {
-				_, _, err := ks.ClobKeeper.PlaceShortTermOrder(ctx, &types.MsgPlaceOrder{Order: order})
+				msg := &types.MsgPlaceOrder{Order: order}
+
+				txBuilder := constants.TestEncodingCfg.TxConfig.NewTxBuilder()
+				err := txBuilder.SetMsgs(msg)
+				require.NoError(t, err)
+				bytes, err := constants.TestEncodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+				require.NoError(t, err)
+				ctx = ctx.WithTxBytes(bytes)
+
+				_, _, err = ks.ClobKeeper.PlaceShortTermOrder(ctx, msg)
 				require.NoError(t, err)
 			}
 
@@ -1306,7 +1315,16 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					require.NoError(t, err)
 				} else {
 					order := matchableOrder.MustGetOrder()
-					_, _, err := ks.ClobKeeper.PlaceShortTermOrder(ctx, &types.MsgPlaceOrder{Order: order.MustGetOrder()})
+					msg := &types.MsgPlaceOrder{Order: order}
+
+					txBuilder := constants.TestEncodingCfg.TxConfig.NewTxBuilder()
+					err := txBuilder.SetMsgs(msg)
+					require.NoError(t, err)
+					bytes, err := constants.TestEncodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+					require.NoError(t, err)
+					ctx = ctx.WithTxBytes(bytes)
+
+					_, _, err = ks.ClobKeeper.PlaceShortTermOrder(ctx, msg)
 					require.NoError(t, err)
 				}
 			}

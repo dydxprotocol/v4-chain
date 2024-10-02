@@ -1211,8 +1211,15 @@ func TestPrepareCheckState(t *testing.T) {
 				case *types.Operation_ShortTermOrderPlacement:
 					order := operation.GetShortTermOrderPlacement()
 					tempCtx, writeCache := setupCtx.CacheContext()
-					tempCtx = tempCtx.WithTxBytes(order.Order.GetOrderHash().ToBytes())
-					_, _, err := ks.ClobKeeper.PlaceShortTermOrder(
+
+					txBuilder := constants.TestEncodingCfg.TxConfig.NewTxBuilder()
+					err := txBuilder.SetMsgs(operation.GetShortTermOrderPlacement())
+					require.NoError(t, err)
+					bytes, err := constants.TestEncodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+					require.NoError(t, err)
+					tempCtx = tempCtx.WithTxBytes(bytes)
+
+					_, _, err = ks.ClobKeeper.PlaceShortTermOrder(
 						tempCtx,
 						order,
 					)

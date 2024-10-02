@@ -17,6 +17,7 @@ import (
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
@@ -51,6 +52,7 @@ type ClobKeepersTestContext struct {
 	SubaccountsKeeper *subkeeper.Keeper
 	AffiliatesKeeper  *affiliateskeeper.Keeper
 	VaultKeeper       *vaultkeeper.Keeper
+	AccountPlusKeeper *accountpluskeeper.Keeper
 	StoreKey          storetypes.StoreKey
 	MemKey            storetypes.StoreKey
 	Cdc               *codec.ProtoCodec
@@ -91,7 +93,13 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			stateStore,
 			db,
 			cdc,
-			registry)
+			registry,
+		)
+		ks.AccountPlusKeeper, _, _ = createAccountPlusKeeper(
+			stateStore,
+			db,
+			cdc,
+		)
 
 		stakingKeeper, _ := createStakingKeeper(
 			stateStore,
@@ -191,6 +199,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.AffiliatesKeeper,
 			ks.SubaccountsKeeper,
 			revShareKeeper,
+			ks.AccountPlusKeeper,
 			indexerEventManager,
 			indexerEventsTransientStoreKey,
 		)
@@ -231,6 +240,7 @@ func createClobKeeper(
 	affiliatesKeeper types.AffiliatesKeeper,
 	saKeeper *subkeeper.Keeper,
 	revShareKeeper types.RevShareKeeper,
+	accountplusKeeper types.AccountPlusKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey, storetypes.StoreKey) {
@@ -262,6 +272,7 @@ func createClobKeeper(
 		statsKeeper,
 		rewardsKeeper,
 		affiliatesKeeper,
+		accountplusKeeper,
 		indexerEventManager,
 		streaming.NewNoopGrpcStreamingManager(),
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),

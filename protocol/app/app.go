@@ -1139,6 +1139,7 @@ func New(
 		app.StatsKeeper,
 		app.RewardsKeeper,
 		app.AffiliatesKeeper,
+		app.AccountPlusKeeper,
 		app.IndexerEventManager,
 		app.FullNodeStreamingManager,
 		txConfig.TxDecoder(),

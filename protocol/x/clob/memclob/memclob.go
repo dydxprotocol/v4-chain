@@ -1624,6 +1624,24 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			continue
 		}
 
+		// Perform a lightweight check on maker orders that use the new smart account authentication flow.
+		// Note that this only applies to short term orders since short term orders go through the ante
+		// handlers one more time during `DeliverTx`.
+		if makerOrder.Order.IsShortTermOrder() {
+			txBytes := m.operationsToPropose.MustGetShortTermOrderTxBytes(makerOrder.Order)
+			err := m.clobKeeper.MaybeValidateAuthenticators(ctx, txBytes)
+			if err != nil {
+				makerOrdersToRemove = append(
+					makerOrdersToRemove,
+					OrderWithRemovalReason{
+						Order:         makerOrder.Order,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED,
+					},
+				)
+				continue
+			}
+		}
+
 		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder.Order)
 		if !makerHasRemainingSize {
 			panic(fmt.Sprintf("mustPerformTakerOrderMatching: maker order has no remaining amount %v", makerOrder.Order))

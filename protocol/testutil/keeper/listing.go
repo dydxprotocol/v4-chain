@@ -56,7 +56,13 @@ func ListingKeepers(
 				stateStore,
 				db,
 				cdc,
-				registry)
+				registry,
+			)
+			accountPlusKeeper, _, _ := createAccountPlusKeeper(
+				stateStore,
+				db,
+				cdc,
+			)
 			bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountsKeeper)
 			stakingKeeper, _ := createStakingKeeper(
 				stateStore,
@@ -154,6 +160,7 @@ func ListingKeepers(
 				affiliatesKeeper,
 				subaccountsKeeper,
 				revShareKeeper,
+				accountPlusKeeper,
 				indexerEventManager,
 				transientStoreKey,
 			)

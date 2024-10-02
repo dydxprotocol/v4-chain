@@ -115,4 +115,5 @@ type MemClobKeeper interface {
 		subaccountId satypes.SubaccountId,
 		order PendingOpenOrder,
 	) satypes.UpdateResult
+	MaybeValidateAuthenticators(ctx sdk.Context, txBytes []byte) error
 }
