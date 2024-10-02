@@ -184,3 +184,7 @@ type RevShareKeeper interface {
 type AffiliatesKeeper interface {
 	GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error)
 }
+
+type AccountPlusKeeper interface {
+	MaybeValidateAuthenticators(ctx sdk.Context, tx sdk.Tx) error
+}
