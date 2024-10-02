@@ -49,6 +49,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testlog "github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
+	affiliatestypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -207,7 +208,8 @@ type GenesisStates interface {
 		govplus.GenesisState |
 		vaulttypes.GenesisState |
 		revsharetypes.GenesisState |
-		marketmapmoduletypes.GenesisState
+		marketmapmoduletypes.GenesisState |
+		affiliatestypes.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function
@@ -269,6 +271,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = marketmapmoduletypes.ModuleName
 	case listingtypes.GenesisState:
 		moduleName = listingtypes.ModuleName
+	case affiliatestypes.GenesisState:
+		moduleName = affiliatestypes.ModuleName
 	default:
 		panic(fmt.Errorf("Unsupported type %T", t))
 	}
