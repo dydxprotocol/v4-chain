@@ -57,6 +57,7 @@ export default async function runTask(): Promise<void> {
     await perpetualMarketRefresher.updatePerpetualMarkets();
     newTicksToCreate = await getPnlTicksCreateObjects(latestBlockHeight, latestBlockTime, txId);
   } catch (error) {
+    console.log(error);
     logger.error({
       at: 'create-pnl-ticks#runTask',
       message: 'Error when getting pnl ticks',
