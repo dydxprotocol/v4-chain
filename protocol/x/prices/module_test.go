@@ -25,7 +25,7 @@ import (
 	prices_keeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmapkeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/log"
 
-	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
+	oracleclient "github.com/skip-mev/connect/v2/service/clients/oracle"
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"

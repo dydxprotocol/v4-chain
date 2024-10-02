@@ -2,8 +2,8 @@ package v_6_0_0
 
 import (
 	store "cosmossdk.io/store/types"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
+	slinkytypes "github.com/skip-mev/connect/v2/pkg/types"
+	marketmapmoduletypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"

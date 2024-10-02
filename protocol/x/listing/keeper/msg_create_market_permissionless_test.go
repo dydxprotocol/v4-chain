@@ -12,9 +12,9 @@ import (
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
-	oracletypes "github.com/skip-mev/slinky/pkg/types"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
-	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
+	oracletypes "github.com/skip-mev/connect/v2/pkg/types"
+	marketmaptypes "github.com/skip-mev/connect/v2/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/x/marketmap/types/tickermetadata"
 	"github.com/stretchr/testify/require"
 
 	"testing"

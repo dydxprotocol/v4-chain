@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"math/big"
 
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -10,12 +11,12 @@ import (
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmaptypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 type PricesKeeper interface {
 	CreateMarket(
-		ctx sdk.Context,
+		ctx context.Context,
 		marketParam pricestypes.MarketParam,
 		marketPrice pricestypes.MarketPrice,
 	) (pricestypes.MarketParam, error)
@@ -40,12 +41,12 @@ type ClobKeeper interface {
 
 type MarketMapKeeper interface {
 	GetMarket(
-		ctx sdk.Context,
+		ctx context.Context,
 		ticker string,
 	) (marketmaptypes.Market, error)
 	// Only used for testing purposes
 	CreateMarket(
-		ctx sdk.Context,
+		ctx context.Context,
 		market marketmaptypes.Market,
 	) error
 }

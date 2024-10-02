@@ -7,7 +7,7 @@ import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	oracleconfig "github.com/skip-mev/slinky/oracle/config"
+	oracleconfig "github.com/skip-mev/connect/v2/oracle/config"
 )
 
 const (

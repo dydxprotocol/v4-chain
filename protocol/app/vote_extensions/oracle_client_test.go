@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	oracletypes "github.com/skip-mev/slinky/pkg/types"
+	oracletypes "github.com/skip-mev/connect/v2/pkg/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 

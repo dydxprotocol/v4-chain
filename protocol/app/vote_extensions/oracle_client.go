@@ -7,7 +7,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	oracleservicetypes "github.com/skip-mev/slinky/service/servers/oracle/types"
+	oracleservicetypes "github.com/skip-mev/connect/v2/service/servers/oracle/types"
 	"google.golang.org/grpc"
 )
 

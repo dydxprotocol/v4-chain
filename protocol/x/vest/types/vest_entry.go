@@ -7,15 +7,15 @@ import (
 
 func (entry VestEntry) Validate() error {
 	if entry.VesterAccount == "" {
-		return errorsmod.Wrapf(ErrInvalidVesterAccount, "vester account cannot be empty")
+		return errorsmod.Wrap(ErrInvalidVesterAccount, "vester account cannot be empty")
 	}
 
 	if entry.TreasuryAccount == "" {
-		return errorsmod.Wrapf(ErrInvalidTreasuryAccount, "treasury account cannot be empty")
+		return errorsmod.Wrap(ErrInvalidTreasuryAccount, "treasury account cannot be empty")
 	}
 
 	if err := sdk.ValidateDenom(entry.Denom); err != nil {
-		return errorsmod.Wrapf(ErrInvalidDenom, err.Error())
+		return errorsmod.Wrap(ErrInvalidDenom, err.Error())
 	}
 
 	if !entry.StartTime.Before(entry.EndTime) {
@@ -23,11 +23,11 @@ func (entry VestEntry) Validate() error {
 	}
 
 	if entry.StartTime.Location().String() != "UTC" {
-		return errorsmod.Wrapf(ErrInvalidTimeZone, "start_time must be in UTC")
+		return errorsmod.Wrap(ErrInvalidTimeZone, "start_time must be in UTC")
 	}
 
 	if entry.EndTime.Location().String() != "UTC" {
-		return errorsmod.Wrapf(ErrInvalidTimeZone, "start_time must be in UTC")
+		return errorsmod.Wrap(ErrInvalidTimeZone, "start_time must be in UTC")
 	}
 	return nil
 }

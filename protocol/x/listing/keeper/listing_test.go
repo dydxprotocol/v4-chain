@@ -22,9 +22,9 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	oracletypes "github.com/skip-mev/slinky/pkg/types"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
-	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
+	oracletypes "github.com/skip-mev/connect/v2/pkg/types"
+	marketmaptypes "github.com/skip-mev/connect/v2/x/marketmap/types"
+	"github.com/skip-mev/connect/v2/x/marketmap/types/tickermetadata"
 
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 

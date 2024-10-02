@@ -198,9 +198,9 @@ import (
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
 	vestmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
-	marketmapmodulekeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmapmodule "github.com/skip-mev/connect/v2/x/marketmap"
+	marketmapmodulekeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
+	marketmapmoduletypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 
 	// IBC
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
@@ -225,16 +225,16 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 
 	// Slinky
-	slinkyproposals "github.com/skip-mev/slinky/abci/proposals"
-	"github.com/skip-mev/slinky/abci/strategies/aggregator"
-	compression "github.com/skip-mev/slinky/abci/strategies/codec"
-	"github.com/skip-mev/slinky/abci/strategies/currencypair"
-	"github.com/skip-mev/slinky/abci/ve"
-	oracleconfig "github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/pkg/math/voteweighted"
-	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
-	servicemetrics "github.com/skip-mev/slinky/service/metrics"
-	promserver "github.com/skip-mev/slinky/service/servers/prometheus"
+	slinkyproposals "github.com/skip-mev/connect/v2/abci/proposals"
+	"github.com/skip-mev/connect/v2/abci/strategies/aggregator"
+	compression "github.com/skip-mev/connect/v2/abci/strategies/codec"
+	"github.com/skip-mev/connect/v2/abci/strategies/currencypair"
+	"github.com/skip-mev/connect/v2/abci/ve"
+	oracleconfig "github.com/skip-mev/connect/v2/oracle/config"
+	"github.com/skip-mev/connect/v2/pkg/math/voteweighted"
+	oracleclient "github.com/skip-mev/connect/v2/service/clients/oracle"
+	servicemetrics "github.com/skip-mev/connect/v2/service/metrics"
+	promserver "github.com/skip-mev/connect/v2/service/servers/prometheus"
 
 	// Full Node Streaming
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
