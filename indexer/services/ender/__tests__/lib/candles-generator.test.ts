@@ -471,8 +471,6 @@ describe('candleHelper', () => {
     expectTimingStats();
   });
 
-<<<<<<< HEAD
-=======
   it('Updates previous candle orderBookMidPriceClose if startTime is past candle resolution', async () => {
     // Create existing candles
     const existingPrice: string = '7000';
@@ -674,7 +672,6 @@ describe('candleHelper', () => {
 
   });
 
->>>>>>> 672169be7 (Fix issue with flaky candle test (#2430))
   it('successfully creates an orderbook price map for each market', async () => {
     await Promise.all([
       OrderbookMidPricesCache.setPrice(redisClient, 'BTC-USD', '105000'),
