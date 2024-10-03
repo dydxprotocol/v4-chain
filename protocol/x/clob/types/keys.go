@@ -139,3 +139,9 @@ const (
 	// This is meant to be used for improved conditional order triggering.
 	MaxTradePricePrefix = "MaxTrade:"
 )
+
+// FinalizeBlock event staging
+const (
+	StagedEventsCountKey  = "StgEvtCnt"
+	StagedEventsKeyPrefix = "StgEvt:"
+)
