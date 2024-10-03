@@ -369,9 +369,16 @@ function affiliateInfoCreateToResponseObject(
     affiliateEarnings: Number(info.affiliateEarnings),
     affiliateReferredTrades:
       Number(info.referredTakerTrades) + Number(info.referredMakerTrades),
-    affiliateTotalReferredFees: Number(info.totalReferredFees),
+    affiliateTotalReferredFees: Number(info.totalReferredMakerFees) +
+    Number(info.totalReferredTakerFees) +
+    Number(info.totalReferredMakerRebates),
     affiliateReferredUsers: Number(info.totalReferredUsers),
-    affiliateReferredNetProtocolEarnings: Number(info.referredNetProtocolEarnings),
+    affiliateReferredNetProtocolEarnings: Number(info.totalReferredMakerFees) +
+    Number(info.totalReferredTakerFees) +
+    Number(info.totalReferredMakerRebates) -
+    Number(info.affiliateEarnings),
     affiliateReferredTotalVolume: Number(info.referredTotalVolume),
+    affiliateReferredMakerFees: Number(info.totalReferredMakerFees),
+    affiliateReferredTakerFees: Number(info.totalReferredTakerFees),
   };
 }
