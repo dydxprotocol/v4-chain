@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strings"
@@ -57,7 +58,7 @@ func (k Keeper) GetAllAccountStates(ctx sdk.Context) ([]types.AccountState, erro
 		key := iterator.Key()
 
 		// Temporary workaround to exclude smart account kv pairs.
-		if strings.HasPrefix(string(key), types.SmartAccountKeyPrefix) {
+		if bytes.HasPrefix(key, []byte(types.SmartAccountKeyPrefix)) {
 			continue
 		}
 
