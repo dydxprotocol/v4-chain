@@ -9,7 +9,7 @@ import (
 	aggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
-	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/vecache"
+	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +26,7 @@ type VEApplier struct {
 	ratelimitKeeper VEApplierRatelimitKeeper
 
 	// VeUpdatesCache is the cache that stores the final prices
-	finalVeUpdatesCache vecache.VeUpdatesCache
+	finalVeUpdatesCache pricecache.VeUpdatesCache
 
 	// logger
 	logger log.Logger
@@ -43,7 +43,7 @@ func NewVEApplier(
 	ratelimitKeeper VEApplierRatelimitKeeper,
 	voteExtensionCodec codec.VoteExtensionCodec,
 	extendedCommitCodec codec.ExtendedCommitCodec,
-	finalVeUpdatesCache vecache.VeUpdatesCache,
+	finalVeUpdatesCache pricecache.VeUpdatesCache,
 ) *VEApplier {
 	return &VEApplier{
 		voteAggregator:      voteAggregator,
@@ -198,7 +198,7 @@ func (vea *VEApplier) WritePricesToStoreAndMaybeCache(
 	writeToCache bool,
 ) error {
 	marketParams := vea.pricesKeeper.GetAllMarketParams(ctx)
-	var finalPriceUpdates vecache.PriceUpdates
+	var finalPriceUpdates pricecache.PriceUpdates
 	for _, market := range marketParams {
 		pair := market.Pair
 		pricePair, ok := prices[pair]
@@ -275,7 +275,7 @@ func (vea *VEApplier) writePnlAndSpotPriceToStore(
 	ctx sdk.Context,
 	pricePair voteweighted.AggregatorPricePair,
 	marketId uint32,
-) (vecache.PriceUpdate, error) {
+) (pricecache.PriceUpdate, error) {
 	newPrice := &pricestypes.MarketPriceUpdate{
 		MarketId:  marketId,
 		SpotPrice: pricePair.SpotPrice.Uint64(),
@@ -289,7 +289,7 @@ func (vea *VEApplier) writePnlAndSpotPriceToStore(
 			"err", err,
 		)
 
-		return vecache.PriceUpdate{}, err
+		return pricecache.PriceUpdate{}, err
 	}
 
 	vea.logger.Info(
@@ -299,7 +299,7 @@ func (vea *VEApplier) writePnlAndSpotPriceToStore(
 		"pnl_price", newPrice.PnlPrice,
 	)
 
-	finalPriceUpdate := vecache.PriceUpdate{
+	finalPriceUpdate := pricecache.PriceUpdate{
 		MarketId:  marketId,
 		SpotPrice: pricePair.SpotPrice,
 		PnlPrice:  pricePair.PnlPrice,
@@ -312,14 +312,14 @@ func (vea *VEApplier) writePnlPriceToStore(
 	ctx sdk.Context,
 	pricePair voteweighted.AggregatorPricePair,
 	marketId uint32,
-) (vecache.PriceUpdate, error) {
+) (pricecache.PriceUpdate, error) {
 	pnlPriceUpdate := &pricestypes.MarketPnlPriceUpdate{
 		MarketId: marketId,
 		PnlPrice: pricePair.PnlPrice.Uint64(),
 	}
 
 	if err := vea.pricesKeeper.UpdatePnlPrice(ctx, pnlPriceUpdate); err != nil {
-		return vecache.PriceUpdate{}, err
+		return pricecache.PriceUpdate{}, err
 	}
 
 	vea.logger.Info(
@@ -328,7 +328,7 @@ func (vea *VEApplier) writePnlPriceToStore(
 		"pnl_price", pricePair.PnlPrice.Uint64(),
 	)
 
-	return vecache.PriceUpdate{
+	return pricecache.PriceUpdate{
 		MarketId:  marketId,
 		SpotPrice: nil,
 		PnlPrice:  pricePair.PnlPrice,
@@ -339,14 +339,14 @@ func (vea *VEApplier) writeSpotPriceToStore(
 	ctx sdk.Context,
 	pricePair voteweighted.AggregatorPricePair,
 	marketId uint32,
-) (vecache.PriceUpdate, error) {
+) (pricecache.PriceUpdate, error) {
 	spotPriceUpdate := &pricestypes.MarketSpotPriceUpdate{
 		MarketId:  marketId,
 		SpotPrice: pricePair.SpotPrice.Uint64(),
 	}
 
 	if err := vea.pricesKeeper.UpdateSpotPrice(ctx, spotPriceUpdate); err != nil {
-		return vecache.PriceUpdate{}, err
+		return pricecache.PriceUpdate{}, err
 	}
 
 	vea.logger.Info(
@@ -355,7 +355,7 @@ func (vea *VEApplier) writeSpotPriceToStore(
 		"spot_price", pricePair.SpotPrice.Uint64(),
 	)
 
-	return vecache.PriceUpdate{
+	return pricecache.PriceUpdate{
 		MarketId:  marketId,
 		SpotPrice: pricePair.SpotPrice,
 		PnlPrice:  nil,
@@ -407,7 +407,7 @@ func (vea *VEApplier) shouldWritePriceToStore(
 	return isValidSpot, isValidPnl
 }
 
-func (vea *VEApplier) GetCachedPrices() vecache.PriceUpdates {
+func (vea *VEApplier) GetCachedPrices() pricecache.PriceUpdates {
 	return vea.finalVeUpdatesCache.GetPriceUpdates()
 }
 
