@@ -85,6 +85,7 @@ func (s *PreBlockTestSuite) SetupTest() {
 	aggregator := veaggregator.NewVeAggregator(
 		s.logger,
 		*s.pricesKeeper,
+		*s.ratelimitKeeper,
 		pricesAggregatorFn,
 		conversionRateAggregatorFn,
 	)

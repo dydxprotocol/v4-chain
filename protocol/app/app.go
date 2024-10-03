@@ -940,6 +940,7 @@ func New(
 	aggregator := veaggregator.NewVeAggregator(
 		logger,
 		app.PricesKeeper,
+		app.RatelimitKeeper,
 		pricesAggregatorFn,
 		conversionRateAggregatorFn,
 	)
