@@ -175,13 +175,18 @@ func (k Keeper) GetAllRevShares(
 	makerFees := fill.MakerFeeQuoteQuantums
 	netFees := big.NewInt(0).Add(takerFees, makerFees)
 
+	// when net fee is zero, no rev share is generated from the fill
+	if netFees.Sign() == 0 {
+		return types.RevSharesForFill{}, nil
+	}
+
 	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
 	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
 	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
-		return types.RevSharesForFill{}, types.ErrAffiliateFeesSharedExceedsNetFees
+		return types.RevSharesForFill{}, types.ErrAffiliateFeesSharedGreaterThanOrEqualToNetFees
 	}
 
 	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
@@ -233,7 +238,8 @@ func (k Keeper) getAffiliateRevShares(
 ) ([]types.RevShare, *big.Int, error) {
 	takerAddr := fill.TakerAddr
 	takerFee := fill.TakerFeeQuoteQuantums
-	if fill.MonthlyRollingTakerVolumeQuantums >= types.MaxReferee30dVolumeForAffiliateShareQuantums {
+	if fill.MonthlyRollingTakerVolumeQuantums >= types.MaxReferee30dVolumeForAffiliateShareQuantums ||
+		takerFee.Sign() == 0 {
 		return nil, big.NewInt(0), nil
 	}
 
