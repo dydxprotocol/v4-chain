@@ -10,6 +10,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	marketmap "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 func init() {
@@ -45,6 +46,9 @@ func init() {
 
 	_ = testTxBuilder.SetMsgs(&MsgExecWithDydxMessage)
 	MsgExecWithDydxMessageTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
+
+	_ = testTxBuilder.SetMsgs(&MsgExecWithConnectMessage)
+	MsgExecWithConnectMessageTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
 
 	_ = testTxBuilder.SetMsgs(MsgSubmitProposalWithUpgrade)
 	MsgSubmitProposalWithUpgradeTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
@@ -119,6 +123,12 @@ var (
 		[]sdk.Msg{&sending.MsgCreateTransfer{}},
 	)
 	MsgExecWithDydxMessageTxBytes []byte
+
+	MsgExecWithConnectMessage = authz.NewMsgExec(
+		constants.AliceAccAddress,
+		[]sdk.Msg{&marketmap.MsgUpsertMarkets{}},
+	)
+	MsgExecWithConnectMessageTxBytes []byte
 
 	// Valid MsgSubmitProposals
 	MsgSubmitProposalWithUpgrade, _ = gov.NewMsgSubmitProposal(
