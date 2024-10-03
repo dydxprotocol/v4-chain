@@ -80,16 +80,19 @@ class VaultController extends Controller {
       vaultPositions,
       latestBlock,
       mainSubaccountEquity,
+      latestPnlTick,
     ] : [
       PnlTicksFromDatabase[],
       Map<string, VaultPosition>,
       BlockFromDatabase,
       string,
+      PnlTicksFromDatabase | undefined,
     ] = await Promise.all([
       getVaultSubaccountPnlTicks(vaultSubaccountIdsWithMainSubaccount, getResolution(resolution)),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
       getMainSubaccountEquity(),
+      getLatestPnlTick(vaultSubaccountIdsWithMainSubaccount),
     ]);
 
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
@@ -105,6 +108,7 @@ class VaultController extends Controller {
       currentEquity,
       filterOutIntervalTicks(aggregatedPnlTicks, getResolution(resolution)),
       latestBlock,
+      latestPnlTick,
     );
 
     return {
@@ -458,7 +462,17 @@ function getPnlTicksWithCurrentTick(
   equity: string,
   pnlTicks: PnlTicksFromDatabase[],
   latestBlock: BlockFromDatabase,
+  latestTick: PnlTicksFromDatabase | undefined = undefined,
 ): PnlTicksFromDatabase[] {
+  if (latestTick !== undefined) {
+    return pnlTicks.concat({
+      ...latestTick,
+      equity,
+      blockHeight: latestBlock.blockHeight,
+      blockTime: latestBlock.time,
+      createdAt: latestBlock.time,
+    });
+  }
   if (pnlTicks.length === 0) {
     return [];
   }
@@ -470,6 +484,23 @@ function getPnlTicksWithCurrentTick(
     createdAt: latestBlock.time,
   };
   return pnlTicks.concat([currentTick]);
+}
+
+export async function getLatestPnlTick(
+  vaultSubaccountIds: string[],
+): Promise<PnlTicksFromDatabase | undefined> {
+  const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getPnlTicksAtIntervals(
+    PnlTickInterval.hour,
+    config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS * 60 * 60,
+    vaultSubaccountIds,
+  );
+  // Aggregate and get pnl tick closest to the hour
+  const aggregatedTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(pnlTicks);
+  const filteredTicks: PnlTicksFromDatabase[] = filterOutIntervalTicks(
+    aggregatedTicks,
+    PnlTickInterval.hour,
+  );
+  return _.maxBy(filteredTicks, 'blockTime');
 }
 
 /**
