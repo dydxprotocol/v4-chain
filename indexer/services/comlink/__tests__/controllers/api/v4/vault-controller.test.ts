@@ -25,20 +25,23 @@ import config from '../../../../src/config';
 
 describe('vault-controller#V4', () => {
   const latestBlockHeight: string = '25';
-  const currentBlockHeight: string = '9';
+  const currentHourBlockHeight: string = '10';
+  const currentDayBlockHeight: string = '9';
   const twoHourBlockHeight: string = '7';
   const almostTwoDayBlockHeight: string = '5';
   const twoDayBlockHeight: string = '3';
-  const currentTime: DateTime = DateTime.utc().startOf('day').minus({ hour: 5 });
-  const latestTime: DateTime = currentTime.plus({ second: 5 });
-  const twoHoursAgo: DateTime = currentTime.minus({ hour: 2 });
-  const twoDaysAgo: DateTime = currentTime.minus({ day: 2 });
-  const almostTwoDaysAgo: DateTime = currentTime.minus({ hour: 47 });
+  const currentDay: DateTime = DateTime.utc().startOf('day').minus({ hour: 5 });
+  const currentHour: DateTime = currentDay.plus({ hour: 1 });
+  const latestTime: DateTime = currentDay.plus({ minute: 90 });
+  const twoHoursAgo: DateTime = currentDay.minus({ hour: 2 });
+  const twoDaysAgo: DateTime = currentDay.minus({ day: 2 });
+  const almostTwoDaysAgo: DateTime = currentDay.minus({ hour: 47 });
   const initialFundingIndex: string = '10000';
   const vault1Equity: number = 159500;
   const vault2Equity: number = 10000;
   const mainVaultEquity: number = 10000;
   const vaultPnlHistoryHoursPrev: number = config.VAULT_PNL_HISTORY_HOURS;
+  const vaultPnlLastPnlWindowPrev: number = config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS;
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -52,6 +55,8 @@ describe('vault-controller#V4', () => {
     beforeEach(async () => {
       // Get a week of data for hourly pnl ticks.
       config.VAULT_PNL_HISTORY_HOURS = 168;
+      // Use last 48 hours to get latest pnl tick for tests.
+      config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS = 48;
       await testMocks.seedData();
       await perpetualMarketRefresher.updatePerpetualMarkets();
       await liquidityTierRefresher.updateLiquidityTiers();
@@ -68,8 +73,8 @@ describe('vault-controller#V4', () => {
         }),
         BlockTable.create({
           ...testConstants.defaultBlock,
-          time: currentTime.toISO(),
-          blockHeight: currentBlockHeight,
+          time: currentDay.toISO(),
+          blockHeight: currentDayBlockHeight,
         }),
         BlockTable.create({
           ...testConstants.defaultBlock,
@@ -80,6 +85,11 @@ describe('vault-controller#V4', () => {
           ...testConstants.defaultBlock,
           time: almostTwoDaysAgo.toISO(),
           blockHeight: almostTwoDayBlockHeight,
+        }),
+        BlockTable.create({
+          ...testConstants.defaultBlock,
+          time: currentHour.toISO(),
+          blockHeight: currentHourBlockHeight,
         }),
       ]);
       await SubaccountTable.create(testConstants.vaultSubaccount);
@@ -114,6 +124,7 @@ describe('vault-controller#V4', () => {
     afterEach(async () => {
       await dbHelpers.clearData();
       config.VAULT_PNL_HISTORY_HOURS = vaultPnlHistoryHoursPrev;
+      config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS = vaultPnlLastPnlWindowPrev;
     });
 
     it('Get /megavault/historicalPnl with no vault subaccounts', async () => {
@@ -126,13 +137,14 @@ describe('vault-controller#V4', () => {
     });
 
     it.each([
-      ['no resolution', '', [1, 2]],
-      ['daily resolution', '?resolution=day', [1, 2]],
-      ['hourly resolution', '?resolution=hour', [1, 2, 3]],
+      ['no resolution', '', [1, 2], 4],
+      ['daily resolution', '?resolution=day', [1, 2], 4],
+      ['hourly resolution', '?resolution=hour', [1, 2, 3, 4], 4],
     ])('Get /megavault/historicalPnl with single vault subaccount (%s)', async (
       _name: string,
       queryParam: string,
       expectedTicksIndex: number[],
+      finalTickIndex: number,
     ) => {
       await VaultTable.create({
         ...testConstants.defaultVault,
@@ -141,7 +153,7 @@ describe('vault-controller#V4', () => {
       });
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
       const finalTick: PnlTicksFromDatabase = {
-        ...createdPnlTicks[expectedTicksIndex[expectedTicksIndex.length - 1]],
+        ...createdPnlTicks[finalTickIndex],
         equity: Big(vault1Equity).toFixed(),
         blockHeight: latestBlockHeight,
         blockTime: latestTime.toISO(),
@@ -164,14 +176,14 @@ describe('vault-controller#V4', () => {
     });
 
     it.each([
-      ['no resolution', '', [1, 2], [undefined, 6], [9, 10]],
-      ['daily resolution', '?resolution=day', [1, 2], [undefined, 6], [9, 10]],
+      ['no resolution', '', [1, 2], [undefined, 7], [11, 12]],
+      ['daily resolution', '?resolution=day', [1, 2], [undefined, 7], [11, 12]],
       [
         'hourly resolution',
         '?resolution=hour',
-        [1, undefined, 2, 3],
-        [undefined, 5, 6, 7],
-        [9, undefined, 10, 11],
+        [1, undefined, 2, 3, 4],
+        [undefined, 6, 7, 8, 9],
+        [11, undefined, 12, 13, 14],
       ],
     ])('Get /megavault/historicalPnl with 2 vault subaccounts and main subaccount (%s)', async (
       _name: string,
@@ -212,7 +224,8 @@ describe('vault-controller#V4', () => {
 
       const expectedPnlTickBase: any = {
         equity: (parseFloat(testConstants.defaultPnlTick.equity) * 3).toString(),
-        totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) * 3).toString(),
+        // total pnl should be fetched from latest hourly pnl tick.
+        totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) * 4).toString(),
         netTransfers: (parseFloat(testConstants.defaultPnlTick.netTransfers) * 3).toString(),
       };
       const finalTick: PnlTicksFromDatabase = {
@@ -268,7 +281,7 @@ describe('vault-controller#V4', () => {
     it.each([
       ['no resolution', '', [1, 2]],
       ['daily resolution', '?resolution=day', [1, 2]],
-      ['hourly resolution', '?resolution=hour', [1, 2, 3]],
+      ['hourly resolution', '?resolution=hour', [1, 2, 3, 4]],
     ])('Get /vaults/historicalPnl with single vault subaccount (%s)', async (
       _name: string,
       queryParam: string,
@@ -306,9 +319,9 @@ describe('vault-controller#V4', () => {
     });
 
     it.each([
-      ['no resolution', '', [1, 2], [5, 6]],
-      ['daily resolution', '?resolution=day', [1, 2], [5, 6]],
-      ['hourly resolution', '?resolution=hour', [1, 2, 3], [5, 6, 7]],
+      ['no resolution', '', [1, 2], [6, 7]],
+      ['daily resolution', '?resolution=day', [1, 2], [6, 7]],
+      ['hourly resolution', '?resolution=hour', [1, 2, 3, 4], [6, 7, 8, 9]],
     ])('Get /vaults/historicalPnl with 2 vault subaccounts (%s)', async (
       _name: string,
       queryParam: string,
@@ -526,9 +539,16 @@ describe('vault-controller#V4', () => {
       }),
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
-        blockTime: currentTime.toISO(),
-        createdAt: currentTime.toISO(),
-        blockHeight: currentBlockHeight,
+        blockTime: currentDay.toISO(),
+        createdAt: currentDay.toISO(),
+        blockHeight: currentDayBlockHeight,
+      }),
+      PnlTicksTable.create({
+        ...testConstants.defaultPnlTick,
+        totalPnl: (2 * parseFloat(testConstants.defaultPnlTick.totalPnl)).toString(),
+        blockTime: currentHour.toISO(),
+        createdAt: currentHour.toISO(),
+        blockHeight: currentHourBlockHeight,
       }),
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
@@ -551,9 +571,16 @@ describe('vault-controller#V4', () => {
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
         subaccountId: testConstants.vaultSubaccountId,
-        blockTime: currentTime.toISO(),
-        createdAt: currentTime.toISO(),
-        blockHeight: currentBlockHeight,
+        blockTime: currentDay.toISO(),
+        createdAt: currentDay.toISO(),
+        blockHeight: currentDayBlockHeight,
+      }),
+      PnlTicksTable.create({
+        ...testConstants.defaultPnlTick,
+        subaccountId: testConstants.vaultSubaccountId,
+        blockTime: currentHour.toISO(),
+        createdAt: currentHour.toISO(),
+        blockHeight: currentHourBlockHeight,
       }),
     ]);
 
@@ -580,9 +607,16 @@ describe('vault-controller#V4', () => {
         PnlTicksTable.create({
           ...testConstants.defaultPnlTick,
           subaccountId: MEGAVAULT_SUBACCOUNT_ID,
-          blockTime: currentTime.toISO(),
-          createdAt: currentTime.toISO(),
-          blockHeight: currentBlockHeight,
+          blockTime: currentDay.toISO(),
+          createdAt: currentDay.toISO(),
+          blockHeight: currentDayBlockHeight,
+        }),
+        PnlTicksTable.create({
+          ...testConstants.defaultPnlTick,
+          subaccountId: MEGAVAULT_SUBACCOUNT_ID,
+          blockTime: currentHour.toISO(),
+          createdAt: currentHour.toISO(),
+          blockHeight: currentHourBlockHeight,
         }),
       ]);
       createdTicks.push(...mainSubaccountTicks);
