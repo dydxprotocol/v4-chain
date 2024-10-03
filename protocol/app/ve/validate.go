@@ -519,7 +519,7 @@ func GetMaxMarketPairs(ctx sdk.Context, pricesKeeper PreBlockExecPricesKeeper) u
 func IsVoteExtensionSeen(veCache *vecache.VeCache, consAddress string, currHeight int64) bool {
 	consAddresses := veCache.GetSeenVotesInCache()
 	cacheHeight := veCache.GetHeight()
-	if currHeight != cacheHeight+1 {
+	if currHeight != cacheHeight+1 || len(consAddresses) == 0 {
 		return true
 	}
 	_, ok := consAddresses[consAddress]
