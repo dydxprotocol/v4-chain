@@ -926,7 +926,7 @@ func New(
 	app.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
 	app.extCodec = vecodec.NewDefaultExtendedCommitCodec()
 
-	vecache := vecache.NewVECache()
+	veCache := vecache.NewVECache()
 
 	pricesAggregatorFn := voteweighted.MedianPrices(
 		logger,
@@ -958,7 +958,7 @@ func New(
 		app.voteCodec,
 		app.extCodec,
 		&pricecache,
-		vecache,
+		veCache,
 	)
 
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
@@ -1279,6 +1279,7 @@ func New(
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
 				app.RatelimitKeeper,
+				veCache,
 				app.voteCodec,
 				app.extCodec,
 			),
@@ -1309,6 +1310,7 @@ func New(
 				app.extCodec,
 				app.voteCodec,
 				veApplier,
+				veCache,
 				veValidationFn,
 			),
 		)

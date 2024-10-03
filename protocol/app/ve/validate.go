@@ -11,7 +11,9 @@ import (
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -46,9 +48,10 @@ func CleanAndValidateExtCommitInfo(
 	veCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
 	ratelimitKeeper VoteExtensionRateLimitKeeper,
+	veCache *vecache.VeCache,
 ) (cometabci.ExtendedCommitInfo, error) {
 	for i, vote := range extCommitInfo.Votes {
-		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper); err != nil {
+		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache); err != nil {
 			ctx.Logger().Info(
 				"failed to validate vote extension - pruning vote",
 				"err", err,
@@ -70,6 +73,7 @@ func ValidateExtendedCommitInfo(
 	veCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
 	ratelimitKeeper VoteExtensionRateLimitKeeper,
+	veCache *vecache.VeCache,
 	validateVEConsensusInfo ValidateVEConsensusInfoFn,
 ) error {
 	if err := validateVEConsensusInfo(ctx, extCommitInfo); err != nil {
@@ -84,7 +88,7 @@ func ValidateExtendedCommitInfo(
 	for _, vote := range extCommitInfo.Votes {
 		addr := sdk.ConsAddress(vote.Validator.Address)
 
-		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper); err != nil {
+		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache); err != nil {
 			ctx.Logger().Error(
 				"failed to validate vote extension",
 				"height", height,
@@ -103,10 +107,14 @@ func validateIndividualVoteExtension(
 	voteCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
 	ratelimitKeeper VoteExtensionRateLimitKeeper,
-
+	veCache *vecache.VeCache,
 ) error {
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
 		return nil
+	}
+
+	if isSeen := IsVoteExtensionSeen(veCache, getConsAddressFromValidator(vote.Validator)); !isSeen {
+		return fmt.Errorf("vote extension not seen")
 	}
 
 	if err := ValidateVEMarketsAndPrices(ctx, pricesKeeper, vote.VoteExtension, voteCodec); err != nil {
@@ -506,4 +514,16 @@ func validateVoteAddress(
 func GetMaxMarketPairs(ctx sdk.Context, pricesKeeper PreBlockExecPricesKeeper) uint32 {
 	markets := pricesKeeper.GetAllMarketParams(ctx)
 	return uint32(len(markets))
+}
+
+func IsVoteExtensionSeen(veCache *vecache.VeCache, consAddress string) bool {
+	consAddresses := veCache.GetSeenVotesInCache()
+	_, ok := consAddresses[consAddress]
+	return ok
+}
+
+func getConsAddressFromValidator(
+	validator cometabci.Validator,
+) string {
+	return sdk.ConsAddress(validator.Address).String()
 }
