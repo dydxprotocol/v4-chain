@@ -96,19 +96,27 @@ func (k Keeper) AddAuthenticator(
 	}
 
 	k.SetNextAuthenticatorId(ctx, id+1)
-
-	store := prefix.NewStore(
-		ctx.KVStore(k.storeKey),
-		[]byte(types.AuthenticatorKeyPrefix),
-	)
 	authenticator := types.AccountAuthenticator{
 		Id:     id,
 		Type:   authenticatorType,
 		Config: config,
 	}
-	b := k.cdc.MustMarshal(&authenticator)
-	store.Set(types.KeyAccountId(account, id), b)
+	k.SetAuthenticator(ctx, account.String(), id, authenticator)
 	return id, nil
+}
+
+func (k Keeper) SetAuthenticator(
+	ctx sdk.Context,
+	account string,
+	authenticatorId uint64,
+	authenticator types.AccountAuthenticator,
+) {
+	store := prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.AuthenticatorKeyPrefix),
+	)
+	b := k.cdc.MustMarshal(&authenticator)
+	store.Set(types.BuildKey(account, authenticatorId), b)
 }
 
 // RemoveAuthenticator removes an authenticator from an account
