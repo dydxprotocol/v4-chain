@@ -34,6 +34,11 @@ func clobPairKey(
 	return lib.Uint32ToKey(id.ToUint32())
 }
 
+// (Same behavior as old `CreatePerpetualClobPair`) creates the
+// objects in state and in-memory.
+// This function should ONLY be used to initialize genesis state
+// or test setups.
+// Regular CLOB logic should use `CreatePerpetualClobPair` instead.
 func (k Keeper) CreatePerpetualClobPairAndMemStructs(
 	ctx sdk.Context,
 	clobPairId uint32,
