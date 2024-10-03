@@ -303,6 +303,14 @@
           "affiliateReferredTotalVolume": {
             "type": "number",
             "format": "double"
+          },
+          "affiliateReferredMakerFees": {
+            "type": "number",
+            "format": "double"
+          },
+          "affiliateReferredTakerFees": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
@@ -313,7 +321,9 @@
           "affiliateTotalReferredFees",
           "affiliateReferredUsers",
           "affiliateReferredNetProtocolEarnings",
-          "affiliateReferredTotalVolume"
+          "affiliateReferredTotalVolume",
+          "affiliateReferredMakerFees",
+          "affiliateReferredTakerFees"
         ],
         "type": "object",
         "additionalProperties": false
