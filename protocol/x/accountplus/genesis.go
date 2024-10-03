@@ -18,7 +18,19 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if err != nil {
 		panic(err)
 	}
+
+	params := k.GetParams(ctx)
+	nextAuthenticatorId := k.InitializeOrGetNextAuthenticatorId(ctx)
+
+	data, err := k.GetAllAuthenticatorData(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	return &types.GenesisState{
-		Accounts: accounts,
+		Accounts:            accounts,
+		Params:              params,
+		NextAuthenticatorId: nextAuthenticatorId,
+		AuthenticatorData:   data,
 	}
 }
