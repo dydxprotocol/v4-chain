@@ -20,14 +20,16 @@ import (
 
 // Client is the daemon implementation for pulling price data from the slinky sidecar.
 type Client struct {
-	ctx               context.Context
-	cf                context.CancelFunc
-	marketPairFetcher MarketPairFetcher
-	marketPairHC      daemontypes.HealthCheckable
-	priceFetcher      PriceFetcher
-	priceHC           daemontypes.HealthCheckable
-	wg                sync.WaitGroup
-	logger            log.Logger
+	ctx                   context.Context
+	cf                    context.CancelFunc
+	marketPairFetcher     MarketPairFetcher
+	marketPairHC          daemontypes.HealthCheckable
+	priceFetcher          PriceFetcher
+	priceHC               daemontypes.HealthCheckable
+	sidecarVersionChecker SidecarVersionChecker
+	sidecarVersionHC      daemontypes.HealthCheckable
+	wg                    sync.WaitGroup
+	logger                log.Logger
 }
 
 func newClient(ctx context.Context, logger log.Logger) *Client {
@@ -43,6 +45,11 @@ func newClient(ctx context.Context, logger log.Logger) *Client {
 			&libtime.TimeProviderImpl{},
 			logger,
 		),
+		sidecarVersionHC: daemontypes.NewTimeBoundedHealthCheckable(
+			SlinkyClientSidecarVersionFetcherDaemonModuleName,
+			&libtime.TimeProviderImpl{},
+			logger,
+		),
 		logger: logger,
 	}
 	client.ctx, client.cf = context.WithCancel(ctx)
@@ -55,6 +62,10 @@ func (c *Client) GetMarketPairHC() daemontypes.HealthCheckable {
 
 func (c *Client) GetPriceHC() daemontypes.HealthCheckable {
 	return c.priceHC
+}
+
+func (c *Client) GetSidecarVersionHC() daemontypes.HealthCheckable {
+	return c.sidecarVersionHC
 }
 
 // start creates the main goroutines of the Client.
@@ -139,6 +150,32 @@ func (c *Client) RunMarketPairFetcher(ctx context.Context, appFlags appflags.Fla
 				c.marketPairHC.ReportFailure(errors.Wrap(err, "failed to run FetchIdMappings for slinky daemon"))
 			} else {
 				c.marketPairHC.ReportSuccess()
+			}
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+// RunSidecarVersionChecker periodically calls the sidecarVersionChecker to check if the running sidecar version
+// is at least a minimum acceptable version
+func (c *Client) RunSidecarVersionChecker(ctx context.Context) {
+	err := c.sidecarVersionChecker.Start(ctx)
+	if err != nil {
+		c.logger.Error("Error initializing sidecarVersionChecker in slinky daemon: %w", err)
+		panic(err)
+	}
+	ticker := time.NewTicker(SlinkySidecarCheckDelay)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			err = c.sidecarVersionChecker.CheckSidecarVersion(ctx)
+			if err != nil {
+				c.logger.Error("Sidecar version check failed", "error", err)
+				c.sidecarVersionHC.ReportFailure(errors.Wrap(err, "Sidecar version check failed for slinky daemon"))
+			} else {
+				c.sidecarVersionHC.ReportSuccess()
 			}
 		case <-ctx.Done():
 			return

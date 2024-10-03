@@ -888,6 +888,7 @@ func New(
 				)
 				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetMarketPairHC(), maxDaemonUnhealthyDuration)
 				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetPriceHC(), maxDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetSidecarVersionHC(), maxDaemonUnhealthyDuration)
 			}
 		}
 
