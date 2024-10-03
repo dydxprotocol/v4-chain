@@ -200,7 +200,7 @@ BEGIN
                 perpetual_position_record."side", order_side) THEN
             sum_open = dydx_trim_scale(perpetual_position_record."sumOpen" + fill_amount);
             entry_price = dydx_get_weighted_average(
-                    perpetual_position_record."entryPrice", perpetual_position_record."size",
+                    perpetual_position_record."entryPrice", ABS(perpetual_position_record."size"),
                     maker_price, fill_amount);
             perpetual_position_record."sumOpen" = sum_open;
             perpetual_position_record."entryPrice" = entry_price;

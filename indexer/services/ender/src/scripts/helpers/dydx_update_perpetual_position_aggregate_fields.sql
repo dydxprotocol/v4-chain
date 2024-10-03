@@ -44,7 +44,7 @@ BEGIN
     IF dydx_perpetual_position_and_order_side_matching(perpetual_position_record."side", side) THEN
         sum_open := dydx_trim_scale(perpetual_position_record."sumOpen" + size);
         entry_price := dydx_get_weighted_average(
-            perpetual_position_record."entryPrice", perpetual_position_record."size", price, size
+            perpetual_position_record."entryPrice", ABS(perpetual_position_record."size"), price, size
         );
         perpetual_position_record."sumOpen" = sum_open;
         perpetual_position_record."entryPrice" = entry_price;
