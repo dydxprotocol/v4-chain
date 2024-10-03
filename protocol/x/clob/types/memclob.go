@@ -23,7 +23,7 @@ type MemClob interface {
 	)
 	MaybeCreateOrderbook(
 		clobPair ClobPair,
-	)
+	) bool
 	GetOperationsToReplay(
 		ctx sdk.Context,
 	) (

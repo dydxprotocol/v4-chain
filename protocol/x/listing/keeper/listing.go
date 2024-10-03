@@ -8,8 +8,6 @@ import (
 
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,31 +88,17 @@ func (k Keeper) CreateClobPair(
 ) (clobPairId uint32, err error) {
 	clobPairId = k.ClobKeeper.AcquireNextClobPairID(ctx)
 
-	clobPair := clobtypes.ClobPair{
-		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
-			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
-				PerpetualId: perpetualId,
-			},
-		},
-		Id:                        clobPairId,
-		StepBaseQuantums:          types.DefaultStepBaseQuantums,
-		QuantumConversionExponent: types.DefaultQuantumConversionExponent,
-		SubticksPerTick:           types.SubticksPerTick_LongTail,
-		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
-	}
-	if err := k.ClobKeeper.ValidateClobPairCreation(ctx, &clobPair); err != nil {
+	clobPair, err := k.ClobKeeper.CreatePerpetualClobPair(
+		ctx,
+		clobPairId,
+		perpetualId,
+		satypes.BaseQuantums(types.DefaultStepBaseQuantums),
+		types.DefaultQuantumConversionExponent,
+		types.SubticksPerTick_LongTail,
+		clobtypes.ClobPair_STATUS_ACTIVE,
+	)
+	if err != nil {
 		return 0, err
-	}
-
-	k.ClobKeeper.SetClobPair(ctx, clobPair)
-
-	// Only create the clob pair if we are in deliver tx mode. This is to prevent populating
-	// in memory data structures in the CLOB during simulation mode.
-	if lib.IsDeliverTxMode(ctx) {
-		err := k.ClobKeeper.CreateClobPairStructures(ctx, clobPair)
-		if err != nil {
-			return 0, err
-		}
 	}
 
 	return clobPair.Id, nil
