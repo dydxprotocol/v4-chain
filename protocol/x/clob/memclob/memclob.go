@@ -158,11 +158,12 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 // MaybeCreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
 func (m *MemClobPriceTimePriority) MaybeCreateOrderbook(
 	clobPair types.ClobPair,
-) {
+) (created bool) {
 	if _, exists := m.orderbooks[clobPair.GetClobPairId()]; exists {
-		return
+		return false
 	}
 	m.CreateOrderbook(clobPair)
+	return true
 }
 
 // CreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.

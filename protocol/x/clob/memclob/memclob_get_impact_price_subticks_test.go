@@ -338,7 +338,7 @@ func initializeMemclobForTest(
 	}
 
 	// Create CLOB
-	_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+	_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 		ctx,
 		clobPair.Id,
 		clobtest.MustPerpetualId(clobPair),
