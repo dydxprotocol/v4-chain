@@ -116,6 +116,76 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId: false,
 			},
 		},
+		"Txn has authenticators specified, but it was removed": {
+			smartAccountEnabled: true,
+			blocks: []TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []TestSdkMsg{
+						{
+							Msg: &aptypes.MsgAddAuthenticator{
+								Sender:            constants.BobAccAddress.String(),
+								AuthenticatorType: "MessageFilter",
+								Data:              []byte("/cosmos.bank.v1beta1.MsgSend"),
+							},
+
+							Fees:       constants.TestFeeCoins_5Cents,
+							Gas:        300_000,
+							AccountNum: []uint64{1},
+							SeqNum:     []uint64{1},
+							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey},
+
+							ExpectedRespCode: 0,
+						},
+					},
+				},
+				{
+					Block: 4,
+					Msgs: []TestSdkMsg{
+						{
+							Msg: &aptypes.MsgRemoveAuthenticator{
+								Sender: constants.BobAccAddress.String(),
+								Id:     0,
+							},
+
+							Fees:       constants.TestFeeCoins_5Cents,
+							Gas:        300_000,
+							AccountNum: []uint64{1},
+							SeqNum:     []uint64{2},
+							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey},
+
+							ExpectedRespCode: 0,
+						},
+					},
+				},
+				{
+					Block: 6,
+					Msgs: []TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								testapp.MustScaleOrder(
+									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+									testapp.DefaultGenesis(),
+								),
+							),
+							Authenticators: []uint64{0},
+
+							Fees:       constants.TestFeeCoins_5Cents,
+							Gas:        0,
+							AccountNum: []uint64{1},
+							SeqNum:     []uint64{0},
+							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey},
+
+							ExpectedRespCode: aptypes.ErrAuthenticatorNotFound.ABCICode(),
+							ExpectedLog:      aptypes.ErrAuthenticatorNotFound.Error(),
+						},
+					},
+				},
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId: false,
+			},
+		},
 		"Txn rejected by signature verification authenticator": {
 			smartAccountEnabled: true,
 			blocks: []TestBlockWithMsgs{
