@@ -10,6 +10,11 @@ type InitializedAuthenticator struct {
 	Authenticator Authenticator
 }
 
+type SubAuthenticatorInitData struct {
+	Type   string `json:"type"`
+	Config []byte `json:"config"`
+}
+
 // Authenticator is an interface that encapsulates all authentication functionalities essential for
 // verifying transactions, paying transaction fees, and managing gas consumption during verification.
 type Authenticator interface {

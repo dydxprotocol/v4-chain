@@ -442,6 +442,14 @@ const GenesisState = `{
       "validator_historical_rewards": [],
       "validator_slash_events": []
     },
+    "dydxaccountplus": {
+      "accounts": [],
+      "params": {
+        "is_smart_account_active": false
+      },
+      "next_authenticator_id": "0",
+      "authenticator_data": []
+    },
     "epochs": {
       "epoch_info_list": [
         {

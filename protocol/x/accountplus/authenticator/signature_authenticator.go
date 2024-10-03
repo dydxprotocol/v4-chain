@@ -65,7 +65,7 @@ func (sva SignatureVerification) Authenticate(ctx sdk.Context, request types.Aut
 
 	if !sva.PubKey.VerifySignature(request.SignModeTxData.Direct, request.Signature) {
 		return errorsmod.Wrapf(
-			sdkerrors.ErrUnauthorized,
+			types.ErrSignatureVerification,
 			"signature verification failed; please verify account number (%d), sequence (%d) and chain-id (%s)",
 			request.TxData.AccountNumber,
 			request.TxData.AccountSequence,
