@@ -590,7 +590,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobs {
-				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -851,7 +851,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobs {
-				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ctx,
 					clobPair.Id,
 					clobPair.GetPerpetualClobMetadata().PerpetualId,
@@ -982,7 +982,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 			),
 		),
 	).Once().Return()
-	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+	_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 		ctx,
 		constants.ClobPair_Btc.Id,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -1039,7 +1039,7 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 			),
 		),
 	).Once().Return()
-	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+	_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 		ks.Ctx,
 		constants.ClobPair_Btc.Id,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -1796,7 +1796,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 						),
 					),
 				).Once().Return()
-				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ks.Ctx,
 					cp.Id,
 					perpetualId,
@@ -1853,7 +1853,7 @@ func TestGetStatePosition_PanicsOnInvalidClob(t *testing.T) {
 
 // 	// Create CLOB pair.
 // 	clobPair := constants.ClobPair_Asset
-// 	clobKeeper.CreatePerpetualClobPair(
+// 	clobKeeper.CreatePerpetualClobPairAndMemStructs(
 // 		ctx,
 // 		clobPair.Metadata.(*types.ClobPair_PerpetualClobMetadata),
 // 		satypes.BaseQuantums(clobPair.StepBaseQuantums),
@@ -2014,7 +2014,7 @@ func TestInitStatefulOrders(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ks.Ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -2184,7 +2184,7 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -2314,7 +2314,7 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
