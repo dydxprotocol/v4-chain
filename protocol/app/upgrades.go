@@ -33,6 +33,7 @@ func (app *App) setupUpgradeHandlers() {
 			app.AccountKeeper,
 			app.PricesKeeper,
 			app.VaultKeeper,
+			app.ListingKeeper,
 		),
 	)
 }

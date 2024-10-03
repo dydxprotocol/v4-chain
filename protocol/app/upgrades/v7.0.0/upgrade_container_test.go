@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"testing"
 
+	listingtypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -58,6 +60,9 @@ func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 
 	// Check that the affiliates module has been initialized with the default tiers.
 	postUpgradeAffiliatesModuleTiersCheck(node, t)
+
+	// Check that the listing module state has been initialized with the hard cap and default deposit params.
+	postUpgradeListingModuleStateCheck(node, t)
 }
 
 func postUpgradeVaultParamsCheck(node *containertest.Node, t *testing.T) {
@@ -201,4 +206,35 @@ func postUpgradeMegavaultModuleAccCheck(node *containertest.Node, t *testing.T) 
 	moduleAccResp := authtypes.QueryModuleAccountByNameResponse{}
 	err = proto.UnmarshalText(resp.String(), &moduleAccResp)
 	require.NoError(t, err)
+}
+
+func postUpgradeListingModuleStateCheck(node *containertest.Node, t *testing.T) {
+	// Check that the listing module state has been initialized with the hard cap and default deposit params.
+	resp, err := containertest.Query(
+		node,
+		listingtypes.NewQueryClient,
+		listingtypes.QueryClient.ListingVaultDepositParams,
+		&listingtypes.QueryListingVaultDepositParams{},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	listingVaultDepositParamsResp := listingtypes.QueryListingVaultDepositParamsResponse{}
+	err = proto.UnmarshalText(resp.String(), &listingVaultDepositParamsResp)
+	require.NoError(t, err)
+	require.Equal(t, listingtypes.DefaultParams(), listingVaultDepositParamsResp.Params)
+
+	resp, err = containertest.Query(
+		node,
+		listingtypes.NewQueryClient,
+		listingtypes.QueryClient.MarketsHardCap,
+		&listingtypes.QueryMarketsHardCap{},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	marketsHardCapResp := listingtypes.QueryMarketsHardCapResponse{}
+	err = proto.UnmarshalText(resp.String(), &marketsHardCapResp)
+	require.NoError(t, err)
+	require.Equal(t, uint32(500), marketsHardCapResp.HardCap)
 }
