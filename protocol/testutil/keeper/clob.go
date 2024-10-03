@@ -282,7 +282,7 @@ func CreateTestClobPairs(
 	clobPairs []types.ClobPair,
 ) {
 	for _, clobPair := range clobPairs {
-		_, err := clobKeeper.CreatePerpetualClobPairAndMemStructs(
+		_, err := clobKeeper.CreatePerpetualClobPair(
 			ctx,
 			clobPair.Id,
 			clobPair.MustGetPerpetualId(),
@@ -341,7 +341,7 @@ func CreateNClobPair(
 			),
 		).Return()
 
-		_, err := keeper.CreatePerpetualClobPairAndMemStructs(
+		_, err := keeper.CreatePerpetualClobPair(
 			ctx,
 			items[i].Id,
 			clobtest.MustPerpetualId(items[i]),

@@ -186,7 +186,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				clobPair.Id,
 				clobtest.MustPerpetualId(clobPair),
@@ -337,7 +337,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				clobPair.Id,
 				clobtest.MustPerpetualId(clobPair),

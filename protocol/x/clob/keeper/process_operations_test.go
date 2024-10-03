@@ -2461,7 +2461,7 @@ func setupProcessProposerOperationsTestCase(
 			).Once().Return()
 		}
 
-		_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+		_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 			ctx,
 			clobPair.Id,
 			clobtest.MustPerpetualId(clobPair),

@@ -419,7 +419,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 					),
 				).Once().Return()
 
-				_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobPair.Id,
 					clobPair.MustGetPerpetualId(),
@@ -816,7 +816,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					),
 				).Once().Return()
 
-				_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobPair.Id,
 					clobPair.MustGetPerpetualId(),

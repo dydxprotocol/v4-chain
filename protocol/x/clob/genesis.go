@@ -19,7 +19,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 		if err != nil {
 			panic(errorsmod.Wrap(types.ErrInvalidClobPairParameter, err.Error()))
 		}
-		_, err = k.CreatePerpetualClobPairAndMemStructs(
+		_, err = k.CreatePerpetualClobPair(
 			ctx,
 			elem.Id,
 			perpetualId,

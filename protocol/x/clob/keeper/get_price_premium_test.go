@@ -188,7 +188,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 					),
 				),
 			).Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				tc.args.clobPair.Id,
 				clobtest.MustPerpetualId(tc.args.clobPair),
