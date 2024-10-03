@@ -250,7 +250,15 @@ func (k Keeper) DistributeFees(
 			return err
 		}
 
-		// emit a metric for the amount of fees transferred to the market mapper
+		// Emit revenue share
+		metrics.AddSampleWithLabels(
+			metrics.RevenueShareDistribution,
+			metrics.GetMetricValueFromBigInt(revShare.QuoteQuantums),
+			metrics.GetLabelForStringValue(metrics.RevShareType, revShare.RevShareType.String()),
+			metrics.GetLabelForStringValue(metrics.RecipientAddress, revShare.Recipient),
+		)
+
+		// Old metric which is being kept for now to ensure data continuity
 		if revShare.RevShareType == revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER {
 			labels := []metrics.Label{
 				metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)),
@@ -288,6 +296,12 @@ func (k Keeper) DistributeFees(
 	if feeCollectorShare.Sign() < 0 {
 		panic("fee collector share is < 0")
 	}
+
+	// Emit fee colletor metric
+	metrics.AddSample(
+		metrics.NetFeesPostRevenueShareDistribution,
+		metrics.GetMetricValueFromBigInt(feeCollectorShare),
+	)
 
 	// Transfer fees to the fee collector
 	if err := k.TransferFees(
