@@ -305,8 +305,7 @@ const (
 	UpdateSubaccounts                     = "update_subaccounts"
 	SubaccountOwner                       = "subaccount_owner"
 	MarketMapperRevenueDistribution       = "market_mapper_revenue_distribution"
-	AffiliateRevenueShareDistribution     = "affiliate_revenue_share_distribution"
-	UnconditionalRevenueShareDistribution = "unconditional_revenue_share_distribution"
+	RevenueShareDistribution              = "revenue_share_distribution"
 	NetFeesPostRevenueShareDistribution   = "net_fees_post_revenue_share_distribution"
 
 	// Liquidation Daemon.
@@ -412,6 +411,9 @@ const (
 	ValidatorNumFills              = "validator_num_fills"
 	ValidatorNumMatchedTakerOrders = "validator_num_matched_taker_orders"
 	ValidatorVolumeQuoteQuantums   = "validator_volume_quote_quantums"
+
+	// x/revshare
+	RevShareType = "rev_share_type"
 
 	// x/acocuntplus
 	TimestampNonce = "timestamp_nonce"

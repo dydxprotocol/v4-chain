@@ -250,28 +250,25 @@ func (k Keeper) DistributeFees(
 			return err
 		}
 
-		// emit a metric for revenue share
-		labels := []metrics.Label{}
-		var metricName string
-		switch revShare.RevShareType {
-		case revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER:
-			labels = append(labels, metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)))
-			metricName = metrics.MarketMapperRevenueDistribution
-		case revsharetypes.REV_SHARE_TYPE_AFFILIATE:
-			labels = append(labels, metrics.GetLabelForStringValue(metrics.RecipientAddress, revShare.Recipient))
-			metricName = metrics.AffiliateRevenueShareDistribution
-		case revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL:
-			labels = append(labels, metrics.GetLabelForStringValue(metrics.RecipientAddress, revShare.Recipient))
-			metricName = metrics.UnconditionalRevenueShareDistribution
-		default:
-			ctx.Logger().Error("invalid rev share type", "type", revShare.RevShareType)
-			continue
-		}
+		// Emit revenue share
 		metrics.AddSampleWithLabels(
-			metricName,
+			metrics.RevenueShareDistribution,
 			metrics.GetMetricValueFromBigInt(revShare.QuoteQuantums),
-			labels...,
+			metrics.GetLabelForStringValue(metrics.RevShareType, revShare.RevShareType.String()),
+			metrics.GetLabelForStringValue(metrics.RecipientAddress, revShare.Recipient),
 		)
+
+		// Old metric which is being kept for now to ensure data continuity
+		if revShare.RevShareType == revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER {
+			labels := []metrics.Label{
+				metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)),
+			}
+			metrics.AddSampleWithLabels(
+				metrics.MarketMapperRevenueDistribution,
+				metrics.GetMetricValueFromBigInt(revShare.QuoteQuantums),
+				labels...,
+			)
+		}
 	}
 
 	totalTakerFeeRevShareQuantums := big.NewInt(0)
