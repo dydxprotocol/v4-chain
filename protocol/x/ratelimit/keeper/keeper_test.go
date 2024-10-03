@@ -1440,15 +1440,17 @@ func TestSetGetAssetYieldIndex(t *testing.T) {
 	require.Equal(t, yieldIndex, gotYieldIndex, "assetYieldIndex does not match the set value")
 }
 
-// func TestGetAssetYieldIndex_AssetYieldIndexNotSet(t *testing.T) {
-// 	tApp := testapp.NewTestAppBuilder(t).Build()
-// 	ctx := tApp.InitChain()
-// 	k := tApp.App.RatelimitKeeper
+func TestGetAssetYieldIndex_AssetYieldIndexNotSet(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+	store := ctx.KVStore(k.GetStoreKeyForTestingOnly())
+	store.Delete([]byte(types.AssetYieldIndexPrefix))
 
-// 	assetYieldIndex, found := k.GetAssetYieldIndex(ctx)
-// 	require.Nil(t, assetYieldIndex, "Expected assetYieldIndex to be nil when not set")
-// 	require.False(t, found, "Expected found to be false when assetYieldIndex is not set")
-// }
+	assetYieldIndex, found := k.GetAssetYieldIndex(ctx)
+	require.Nil(t, assetYieldIndex, "Expected assetYieldIndex to be nil when not set")
+	require.False(t, found, "Expected found to be false when assetYieldIndex is not set")
+}
 
 func TestSetAndGetSDAILastBlockUpdated(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()

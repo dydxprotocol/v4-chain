@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -13,26 +14,69 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) ProcessNewTDaiConversionRateUpdate(ctx sdk.Context) error {
+func (k Keeper) ProcessNewSDaiConversionRateUpdate(ctx sdk.Context, sDaiConversionRate *big.Int, blockHeight *big.Int) error {
+	fmt.Println("IN PROCESS NEW SDAI CONVERSION RATE UPDATE")
+
+	if sDaiConversionRate == nil || blockHeight == nil {
+		return errors.New("sDaiConversionRate or blockHeight cannot be nil")
+	}
+
+	currBlockHeight, found := k.GetSDAILastBlockUpdated(ctx)
+
+	if found && blockHeight.Cmp(currBlockHeight) == -1 {
+		return errors.New("new block height is less than the current block height")
+	}
+
+	currConversionRate, found := k.GetSDAIPrice(ctx)
+
+	if found {
+		if sDaiConversionRate.Cmp(currConversionRate) == -1 {
+			return errors.New("new sDAI conversion is less than the current sDAI conversion rate")
+		}
+
+		if sDaiConversionRate.Cmp(currConversionRate) == 0 {
+			return nil
+		}
+	}
+
+	fmt.Println("ALL TESTS PASSED")
+
+	k.SetSDAIPrice(ctx, sDaiConversionRate)
+	k.SetSDAILastBlockUpdated(ctx, blockHeight)
+
+	fmt.Println("BEFORE UPDATE MINT STATE ON SDAI CONVERSION RATE UPDATE")
+
+	return k.UpdateMintStateOnSDaiConversionRateUpdate(ctx)
+}
+
+func (k Keeper) UpdateMintStateOnSDaiConversionRateUpdate(ctx sdk.Context) error {
 	tDaiSupplyDenomAmountBeforeNewEpoch, tDaiDenomAmountMinted, err := k.MintNewTDaiYield(ctx)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("AFTER MINT NEW TDAI YIELD")
 
 	err = k.ClaimInsuranceFundYields(ctx, tDaiSupplyDenomAmountBeforeNewEpoch, tDaiDenomAmountMinted)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("AFTER CLAIM INSURANCE FUND YIELDS")
+
 	err = k.SetNewYieldIndex(ctx, tDaiSupplyDenomAmountBeforeNewEpoch, tDaiDenomAmountMinted)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("AFTER SET NEW YIELD INDEX")
+
 	err = k.perpetualsKeeper.UpdateYieldIndexToNewMint(ctx, tDaiSupplyDenomAmountBeforeNewEpoch, tDaiDenomAmountMinted)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("AFTER UPDATE YIELD INDEX TO NEW MINT")
 
 	// Emit indexer event
 	sDAIPrice, found := k.GetSDAIPrice(ctx)
@@ -40,10 +84,14 @@ func (k Keeper) ProcessNewTDaiConversionRateUpdate(ctx sdk.Context) error {
 		return errors.New("could not find sDAI price when emitting indexer event for new yield index")
 	}
 
+	fmt.Println("BEFORE GETTING ASSET YIELD INDEX. SDAI PRICE IS ", sDAIPrice)
+
 	assetYieldIndex, found := k.GetAssetYieldIndex(ctx)
 	if !found {
 		return errors.New("could not find asset yield index when emitting indexer event for new yield index")
 	}
+
+	fmt.Println("ASSET YIELD INDEX IS ", assetYieldIndex)
 
 	indexerevents.NewUpdateYieldParamsEventV1(
 		sDAIPrice.String(),
@@ -110,11 +158,6 @@ func (k Keeper) SetNewYieldIndex(
 	totalTDaiPreMint *big.Int,
 	totalTDaiMinted *big.Int,
 ) error {
-	assetYieldIndex, found := k.GetAssetYieldIndex(ctx)
-	if !found {
-		return errors.New("could not retrieve asset yield index")
-	}
-
 	if totalTDaiMinted.Cmp(big.NewInt(0)) == 0 {
 		return nil
 	}
@@ -126,7 +169,9 @@ func (k Keeper) SetNewYieldIndex(
 	ratio := new(big.Rat).SetFrac(totalTDaiMinted, totalTDaiPreMint)
 	additionalFactor := ratio.Add(big.NewRat(1, 1), ratio)
 
-	if assetYieldIndex.Cmp(big.NewRat(0, 1)) == 0 {
+	assetYieldIndex, found := k.GetAssetYieldIndex(ctx)
+
+	if !found || assetYieldIndex.Cmp(big.NewRat(0, 1)) == 0 {
 		assetYieldIndex = additionalFactor
 	} else {
 		assetYieldIndex = assetYieldIndex.Mul(assetYieldIndex, additionalFactor)

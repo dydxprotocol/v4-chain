@@ -14,14 +14,22 @@ type VEApplierRatelimitKeeper struct {
 	mock.Mock
 }
 
-// SetSDAILastBlockUpdated provides a mock function with given fields: ctx, blockHeight
-func (_m *VEApplierRatelimitKeeper) SetSDAILastBlockUpdated(ctx types.Context, blockHeight *big.Int) {
-	_m.Called(ctx, blockHeight)
-}
+// ProcessNewSDaiConversionRateUpdate provides a mock function with given fields: ctx, sDaiConversionRate, blockHeight
+func (_m *VEApplierRatelimitKeeper) ProcessNewSDaiConversionRateUpdate(ctx types.Context, sDaiConversionRate *big.Int, blockHeight *big.Int) error {
+	ret := _m.Called(ctx, sDaiConversionRate, blockHeight)
 
-// SetSDAIPrice provides a mock function with given fields: ctx, price
-func (_m *VEApplierRatelimitKeeper) SetSDAIPrice(ctx types.Context, price *big.Int) {
-	_m.Called(ctx, price)
+	if len(ret) == 0 {
+		panic("no return value specified for ProcessNewSDaiConversionRateUpdate")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *big.Int, *big.Int) error); ok {
+		r0 = rf(ctx, sDaiConversionRate, blockHeight)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // NewVEApplierRatelimitKeeper creates a new instance of VEApplierRatelimitKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

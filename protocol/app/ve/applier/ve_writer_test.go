@@ -1324,13 +1324,6 @@ func TestVEWriter(t *testing.T) {
 			},
 		}, true)
 		require.NoError(t, err)
-
-		/*
-			This tests the following statement
-			if blockHeight.Int64() != ctx.BlockHeight() {
-				return nil
-			}
-		*/
 		ratelimitKeeper.AssertNumberOfCalls(t, "SetSDAIPrice", 3)
 	})
 

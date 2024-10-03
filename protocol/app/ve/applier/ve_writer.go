@@ -186,8 +186,11 @@ func (vea *VEApplier) writeConversionRateToStoreFromCache(ctx sdk.Context) error
 		return nil
 	}
 
-	vea.ratelimitKeeper.SetSDAIPrice(ctx, sDaiConversionRate)
-	vea.ratelimitKeeper.SetSDAILastBlockUpdated(ctx, blockHeight)
+	err := vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(ctx, sDaiConversionRate, blockHeight)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -261,8 +264,10 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 		return fmt.Errorf("sDAI conversion rate cannot be zero")
 	}
 
-	vea.ratelimitKeeper.SetSDAIPrice(ctx, sDaiConversionRate)
-	vea.ratelimitKeeper.SetSDAILastBlockUpdated(ctx, big.NewInt(ctx.BlockHeight()))
+	err := vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()))
+	if err != nil {
+		return err
+	}
 
 	if writeToCache {
 		vea.finalVeUpdatesCache.SetSDaiConversionRateAndBlockHeight(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()), round)

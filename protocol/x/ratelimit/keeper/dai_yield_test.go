@@ -18,7 +18,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func TestProcessNewTDaiConversionRateUpdate(t *testing.T) {
+func TestUpdateMintStateOnSDaiConversionRateUpdate(t *testing.T) {
 	testCases := []struct {
 		name                     string
 		initialSDaiSupply        *big.Int
@@ -258,7 +258,7 @@ func TestProcessNewTDaiConversionRateUpdate(t *testing.T) {
 
 			tc.customSetup(ctx, k)
 
-			err = k.ProcessNewTDaiConversionRateUpdate(ctx)
+			err = k.UpdateMintStateOnSDaiConversionRateUpdate(ctx)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
