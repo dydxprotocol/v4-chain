@@ -105,7 +105,8 @@ func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorD
 			return err
 		}
 
-		// Extract account address from key
+		// Key is of format `SA/A/{accountAddr}/{authenticatorId}`.
+		// Extract account address from key.
 		accountAddr := strings.Split(string(key), "/")[2]
 
 		// Check if this entry is for a new address or the same as the last one processed
