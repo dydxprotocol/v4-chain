@@ -51,6 +51,10 @@ func Precommit(
 	ctx sdk.Context,
 	keeper keeper.Keeper,
 ) {
+	// Process all staged finalize block events, and apply necessary side effects
+	// (e.g. MemClob orderbook creation) that could not be done during FinalizeBlock.
+	// Note: this must be done in `Precommit` which is prior to `PrepareCheckState`, when
+	// MemClob could access the new orderbooks.
 	keeper.ProcessStagedFinalizeBlockEvents(ctx)
 
 	if streamingManager := keeper.GetFullNodeStreamingManager(); !streamingManager.Enabled() {
