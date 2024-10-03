@@ -32,7 +32,12 @@ func TestIsTimestampNonceTx(t *testing.T) {
 			expectedResult: true,
 			expectedErr:    false,
 		},
-		"Returns error for more than one signature": {
+		"Returns false with no error if multisignature with regular seq number": {
+			seqs:           []uint64{1, 1},
+			expectedResult: false,
+			expectedErr:    false,
+		},
+		"Returns error for multisignature with timestamp nonce": {
 			seqs:           []uint64{keeper.TimestampNonceSequenceCutoff, keeper.TimestampNonceSequenceCutoff},
 			expectedResult: false,
 			expectedErr:    true,
