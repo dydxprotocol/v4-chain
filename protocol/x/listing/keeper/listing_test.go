@@ -12,6 +12,7 @@ import (
 
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -203,14 +204,17 @@ func TestCreateClobPair(t *testing.T) {
 	tests := map[string]struct {
 		ticker      string
 		isDeliverTx bool
+		isGenesis   bool
 	}{
 		"deliverTx - true": {
 			ticker:      "TEST-USD",
 			isDeliverTx: true,
+			isGenesis:   false,
 		},
 		"deliverTx - false": {
 			ticker:      "TEST-USD",
 			isDeliverTx: false,
+			isGenesis:   false,
 		},
 	}
 
@@ -223,6 +227,11 @@ func TestCreateClobPair(t *testing.T) {
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,
 				)
+				// if tc.isGenesis {
+				// 	ctx = ctx.WithBlockHeight(0)
+				// } else {
+				// 	ctx = ctx.WithBlockHeight(1)
+				// }
 				mockIndexerEventManager.On(
 					"AddTxnEvent",
 					mock.Anything,
@@ -234,7 +243,7 @@ func TestCreateClobPair(t *testing.T) {
 
 				// Set deliverTx mode
 				if tc.isDeliverTx {
-					ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
+					ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false).WithExecMode(sdk.ExecModeFinalize)
 					lib.AssertDeliverTxMode(ctx)
 				} else {
 					ctx = ctx.WithIsCheckTx(true)
@@ -293,12 +302,21 @@ func TestCreateClobPair(t *testing.T) {
 				)
 				require.Equal(t, perpetualId, clobPair.MustGetPerpetualId())
 
-				// Check if the clob pair was created only if we are in deliverTx mode
+				// Should not modify in-memory object right away
 				_, found = clobKeeper.PerpetualIdToClobPairId[perpetualId]
+				require.False(t, found)
+
+				// Check the corresponding ClobPair creation was staged.
+				stagedEvents := clobKeeper.GetStagedClobFinalizeBlockEvents(ctx)
+
 				if tc.isDeliverTx {
-					require.True(t, found)
+					require.Equal(t, 1, len(stagedEvents))
+					require.Equal(t,
+						stagedEvents[0].GetCreateClobPair().GetPerpetualClobMetadata().PerpetualId,
+						perpetualId,
+					)
 				} else {
-					require.False(t, found)
+					require.Equal(t, 0, len(stagedEvents))
 				}
 			},
 		)
@@ -378,6 +396,7 @@ func TestDepositToMegavaultforPML(t *testing.T) {
 						return genesis
 					},
 				).Build()
+
 				ctx := tApp.InitChain()
 
 				// Set existing total shares.

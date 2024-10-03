@@ -51,6 +51,8 @@ func Precommit(
 	ctx sdk.Context,
 	keeper keeper.Keeper,
 ) {
+	keeper.ProcessStagedFinalizeBlockEvents(ctx)
+
 	if streamingManager := keeper.GetFullNodeStreamingManager(); !streamingManager.Enabled() {
 		return
 	}

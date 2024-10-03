@@ -33,6 +33,34 @@ func clobPairKey(
 	return lib.Uint32ToKey(id.ToUint32())
 }
 
+func (k Keeper) CreatePerpetualClobPairAndMemStructs(
+	ctx sdk.Context,
+	clobPairId uint32,
+	perpetualId uint32,
+	stepSizeBaseQuantums satypes.BaseQuantums,
+	quantumConversionExponent int32,
+	subticksPerTick uint32,
+	status types.ClobPair_Status,
+) (types.ClobPair, error) {
+	clobPair, err := k.createPerpetualClobPair(
+		ctx,
+		clobPairId,
+		perpetualId,
+		stepSizeBaseQuantums,
+		quantumConversionExponent,
+		subticksPerTick,
+		status,
+	)
+	if err != nil {
+		return types.ClobPair{}, err
+	}
+
+	k.MemClob.CreateOrderbook(clobPair)
+	k.SetClobPairIdForPerpetual(clobPair)
+
+	return clobPair, nil
+}
+
 // CreatePerpetualClobPair creates a new perpetual CLOB pair in the store.
 // Additionally, it creates an order book matching the ID of the newly created CLOB pair.
 //
@@ -42,6 +70,38 @@ func clobPairKey(
 //
 // Returns the newly created CLOB pair and an error if one occurs.
 func (k Keeper) CreatePerpetualClobPair(
+	ctx sdk.Context,
+	clobPairId uint32,
+	perpetualId uint32,
+	stepSizeBaseQuantums satypes.BaseQuantums,
+	quantumConversionExponent int32,
+	subticksPerTick uint32,
+	status types.ClobPair_Status,
+) (types.ClobPair, error) {
+	clobPair, err := k.createPerpetualClobPair(
+		ctx,
+		clobPairId,
+		perpetualId,
+		stepSizeBaseQuantums,
+		quantumConversionExponent,
+		subticksPerTick,
+		status,
+	)
+	if err != nil {
+		return types.ClobPair{}, err
+	}
+
+	// Don't stage events for the genesis block.
+	if lib.IsDeliverTxMode(ctx) {
+		if err := k.StageNewClobPairSideEffects(ctx, clobPair); err != nil {
+			return clobPair, err
+		}
+	}
+
+	return clobPair, nil
+}
+
+func (k Keeper) createPerpetualClobPair(
 	ctx sdk.Context,
 	clobPairId uint32,
 	perpetualId uint32,
@@ -69,10 +129,35 @@ func (k Keeper) CreatePerpetualClobPair(
 	// Write the `ClobPair` to state.
 	k.SetClobPair(ctx, clobPair)
 
-	err := k.CreateClobPairStructures(ctx, clobPair)
+	perpetualId, err := clobPair.GetPerpetualId()
 	if err != nil {
-		return clobPair, err
+		panic(err)
 	}
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return types.ClobPair{}, err
+	}
+
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypePerpetualMarket,
+		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				perpetualId,
+				clobPair.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				clobPair.Status,
+				clobPair.QuantumConversionExponent,
+				perpetual.Params.AtomicResolution,
+				clobPair.SubticksPerTick,
+				clobPair.StepBaseQuantums,
+				perpetual.Params.LiquidityTier,
+				perpetual.Params.MarketType,
+			),
+		),
+	)
 
 	return clobPair, nil
 }
@@ -159,51 +244,30 @@ func (k Keeper) maybeCreateOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
 	k.MemClob.MaybeCreateOrderbook(clobPair)
 }
 
-// createOrderbook creates a new orderbook in the memclob.
-func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
-	// Create the corresponding orderbook in the memclob.
-	k.MemClob.CreateOrderbook(clobPair)
+func (k Keeper) ApplySideEffectsForCNewlobPair(
+	ctx sdk.Context,
+	clobPair types.ClobPair,
+) {
+	// TODO throw error if orderbook is not created.
+	k.MemClob.MaybeCreateOrderbook(clobPair)
+	k.SetClobPairIdForPerpetual(clobPair)
 }
 
-// CreateClobPair performs all non stateful operations to create a CLOB pair.
-// These include creating the corresponding orderbook in the memclob, the mapping between
-// the CLOB pair and the perpetual and the indexer event.
-// This function returns an error if a value for the ClobPair's id already exists in state.
-func (k Keeper) CreateClobPairStructures(ctx sdk.Context, clobPair types.ClobPair) error {
-	// Create the corresponding orderbook in the memclob.
-	k.createOrderbook(ctx, clobPair)
+// StageNewClobPairSideEffects stages a ClobPair creation event, so that any in-memory side effects
+// can happen later when the transaction and block is committed.
+// Note the staged event will be processed only if below are both true:
+//   - The current transaction is committed.
+//   - The current block is agreed upon and committed by consensus.
+func (k Keeper) StageNewClobPairSideEffects(ctx sdk.Context, clobPair types.ClobPair) error {
+	lib.AssertDeliverTxMode(ctx)
 
-	// Create the mapping between clob pair and perpetual.
-	k.SetClobPairIdForPerpetual(ctx, clobPair)
-
-	perpetualId, err := clobPair.GetPerpetualId()
-	if err != nil {
-		panic(err)
-	}
-	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
-	if err != nil {
-		return err
-	}
-
-	k.GetIndexerEventManager().AddTxnEvent(
+	k.finalizeBlockEventStager.StageFinalizeBlockEvent(
 		ctx,
-		indexerevents.SubtypePerpetualMarket,
-		indexerevents.PerpetualMarketEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				perpetualId,
-				clobPair.Id,
-				perpetual.Params.Ticker,
-				perpetual.Params.MarketId,
-				clobPair.Status,
-				clobPair.QuantumConversionExponent,
-				perpetual.Params.AtomicResolution,
-				clobPair.SubticksPerTick,
-				clobPair.StepBaseQuantums,
-				perpetual.Params.LiquidityTier,
-				perpetual.Params.MarketType,
-			),
-		),
+		&types.ClobStagedFinalizeBlockEvent{
+			Event: &types.ClobStagedFinalizeBlockEvent_CreateClobPair{
+				CreateClobPair: &clobPair,
+			},
+		},
 	)
 
 	return nil
@@ -234,14 +298,13 @@ func (k Keeper) HydrateClobPairAndPerpetualMapping(ctx sdk.Context) {
 	for _, clobPair := range clobPairs {
 		// Create the corresponding mapping between clob pair and perpetual.
 		k.SetClobPairIdForPerpetual(
-			ctx,
 			clobPair,
 		)
 	}
 }
 
 // SetClobPairIdForPerpetual sets the mapping between clob pair and perpetual.
-func (k Keeper) SetClobPairIdForPerpetual(ctx sdk.Context, clobPair types.ClobPair) {
+func (k Keeper) SetClobPairIdForPerpetual(clobPair types.ClobPair) {
 	// If this `ClobPair` is for a perpetual, add the `clobPairId` to the list of CLOB pair IDs
 	// that facilitate trading of this perpetual.
 	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata != nil {
