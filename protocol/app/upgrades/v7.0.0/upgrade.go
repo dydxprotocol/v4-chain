@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/big"
 
+	listingtypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
+
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -12,6 +14,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
+	listingkeeper "github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -194,12 +197,30 @@ func migrateVaultSharesToMegavaultShares(ctx sdk.Context, k vaultkeeper.Keeper) 
 	ctx.Logger().Info("Successfully migrated vault shares to megavault shares")
 }
 
+func initListingModuleState(ctx sdk.Context, listingKeeper listingkeeper.Keeper) {
+	// Set hard cap on listed markets
+	err := listingKeeper.SetMarketsHardCap(ctx, listingtypes.DefaultMarketsHardCap)
+	if err != nil {
+		panic(fmt.Sprintf("failed to set markets hard cap: %s", err))
+	}
+
+	// Set listing vault deposit params
+	err = listingKeeper.SetListingVaultDepositParams(
+		ctx,
+		listingtypes.DefaultParams(),
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to set listing vault deposit params: %s", err))
+	}
+}
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	accountKeeper authkeeper.AccountKeeper,
 	pricesKeeper pricestypes.PricesKeeper,
 	vaultKeeper vaultkeeper.Keeper,
+	listingKeeper listingkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
@@ -216,6 +237,9 @@ func CreateUpgradeHandler(
 
 		// Migrate vault shares to megavault shares.
 		migrateVaultSharesToMegavaultShares(sdkCtx, vaultKeeper)
+
+		// Initialize listing module state.
+		initListingModuleState(sdkCtx, listingKeeper)
 
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
