@@ -17,6 +17,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 
 	"github.com/stretchr/testify/suite"
 
@@ -133,7 +134,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	feeCoins := constants.TestFeeCoins_5Cents
 
 	// Generate a test transaction
-	tx, _ := GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ := testtx.GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{
@@ -176,7 +177,7 @@ func (s *AuthenticatorCircuitBreakerAnteSuite) TestCircuitBreakerAnte() {
 	s.Require().NoError(err)
 
 	// Generate a test transaction with a selected authenticator
-	tx, _ = GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
+	tx, _ = testtx.GenTx(s.Ctx, s.EncodingConfig.TxConfig, []sdk.Msg{
 		testMsg1,
 		testMsg2,
 	}, feeCoins, 300000, "", []uint64{0, 0}, []uint64{0, 0}, []cryptotypes.PrivKey{

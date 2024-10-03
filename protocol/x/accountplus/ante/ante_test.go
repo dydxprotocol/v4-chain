@@ -6,23 +6,18 @@ import (
 	"math/rand"
 	"os"
 	"testing"
-	"time"
 
 	storetypes "cosmossdk.io/store/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 
 	"github.com/stretchr/testify/suite"
 
@@ -31,7 +26,6 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
 type AuthenticatorAnteSuite struct {
@@ -128,7 +122,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationNoAuthenticatorInStore
 	}
 	feeCoins := constants.TestFeeCoins_5Cents
 
-	tx, err := GenTx(
+	tx, err := testtx.GenTx(
 		s.Ctx,
 		s.EncodingConfig.TxConfig,
 		[]sdk.Msg{
@@ -201,7 +195,7 @@ func (s *AuthenticatorAnteSuite) TestSignatureVerificationWithAuthenticatorInSto
 		"Expected smart account to be active",
 	)
 
-	tx, err := GenTx(
+	tx, err := testtx.GenTx(
 		s.Ctx,
 		s.EncodingConfig.TxConfig,
 		[]sdk.Msg{
@@ -268,7 +262,7 @@ func (s *AuthenticatorAnteSuite) TestFeePayerGasComsumption() {
 		"Expected smart account to be active",
 	)
 
-	tx, err := GenTx(
+	tx, err := testtx.GenTx(
 		s.Ctx,
 		s.EncodingConfig.TxConfig,
 		[]sdk.Msg{
@@ -384,7 +378,7 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 
 	for name, tc := range testCases {
 		s.Run(name, func() {
-			tx, err := GenTx(
+			tx, err := testtx.GenTx(
 				s.Ctx,
 				s.EncodingConfig.TxConfig,
 				[]sdk.Msg{
@@ -415,93 +409,4 @@ func (s *AuthenticatorAnteSuite) TestSpecificAuthenticator() {
 			}
 		})
 	}
-}
-
-// GenTx generates a signed mock transaction.
-func GenTx(
-	ctx sdk.Context,
-	gen client.TxConfig,
-	msgs []sdk.Msg,
-	feeAmt sdk.Coins,
-	gas uint64,
-	chainID string,
-	accNums, accSeqs []uint64,
-	signers, signatures []cryptotypes.PrivKey,
-	selectedAuthenticators []uint64,
-) (sdk.Tx, error) {
-	sigs := make([]signing.SignatureV2, len(signers))
-
-	// create a random length memo
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
-	signMode, err := authsigning.APISignModeToInternal(gen.SignModeHandler().DefaultMode())
-	if err != nil {
-		return nil, err
-	}
-
-	// 1st round: set SignatureV2 with empty signatures, to set correct
-	// signer infos.
-	for i, p := range signers {
-		sigs[i] = signing.SignatureV2{
-			PubKey: p.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode: signMode,
-			},
-			Sequence: accSeqs[i],
-		}
-	}
-
-	baseTxBuilder := gen.NewTxBuilder()
-
-	txBuilder, ok := baseTxBuilder.(authtx.ExtensionOptionsTxBuilder)
-	if !ok {
-		return nil, fmt.Errorf("expected authtx.ExtensionOptionsTxBuilder, got %T", baseTxBuilder)
-	}
-	if len(selectedAuthenticators) > 0 {
-		value, err := codectypes.NewAnyWithValue(&types.TxExtension{
-			SelectedAuthenticators: selectedAuthenticators,
-		})
-		if err != nil {
-			return nil, err
-		}
-		txBuilder.SetNonCriticalExtensionOptions(value)
-	}
-
-	err = txBuilder.SetMsgs(msgs...)
-	if err != nil {
-		return nil, err
-	}
-	err = txBuilder.SetSignatures(sigs...)
-	if err != nil {
-		return nil, err
-	}
-	txBuilder.SetMemo(memo)
-	txBuilder.SetFeeAmount(feeAmt)
-	txBuilder.SetGasLimit(gas)
-
-	// 2nd round: once all signer infos are set, every signer can sign.
-	for i, p := range signatures {
-		signerData := authsigning.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNums[i],
-			Sequence:      accSeqs[i],
-		}
-		signBytes, err := authsigning.GetSignBytesAdapter(
-			ctx, gen.SignModeHandler(), signMode, signerData, txBuilder.GetTx())
-		if err != nil {
-			panic(err)
-		}
-
-		sig, err := p.Sign(signBytes)
-		if err != nil {
-			panic(err)
-		}
-		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
-		err = txBuilder.SetSignatures(sigs...)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	return txBuilder.GetTx(), nil
 }
