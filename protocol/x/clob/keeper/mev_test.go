@@ -904,7 +904,7 @@ func TestRecordMevMetrics(t *testing.T) {
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobPairs {
-				_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -1289,7 +1289,7 @@ func TestGetMidPrices(t *testing.T) {
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobPairs {
-				_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),

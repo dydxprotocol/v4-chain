@@ -12,7 +12,6 @@ import (
 
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -235,7 +234,7 @@ func TestCreateClobPair(t *testing.T) {
 
 				// Set deliverTx mode
 				if tc.isDeliverTx {
-					ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false).WithExecMode(sdk.ExecModeFinalize)
+					ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
 					lib.AssertDeliverTxMode(ctx)
 				} else {
 					ctx = ctx.WithIsCheckTx(true)
@@ -294,21 +293,12 @@ func TestCreateClobPair(t *testing.T) {
 				)
 				require.Equal(t, perpetualId, clobPair.MustGetPerpetualId())
 
-				// Should not modify in-memory object right away
+				// Check if the clob pair was created only if we are in deliverTx mode
 				_, found = clobKeeper.PerpetualIdToClobPairId[perpetualId]
-				require.False(t, found)
-
-				// Check the corresponding ClobPair creation was staged.
-				stagedEvents := clobKeeper.GetStagedClobFinalizeBlockEvents(ctx)
-
 				if tc.isDeliverTx {
-					require.Equal(t, 1, len(stagedEvents))
-					require.Equal(t,
-						stagedEvents[0].GetCreateClobPair().GetPerpetualClobMetadata().PerpetualId,
-						perpetualId,
-					)
+					require.True(t, found)
 				} else {
-					require.Equal(t, 0, len(stagedEvents))
+					require.False(t, found)
 				}
 			},
 		)
@@ -388,7 +378,6 @@ func TestDepositToMegavaultforPML(t *testing.T) {
 						return genesis
 					},
 				).Build()
-
 				ctx := tApp.InitChain()
 
 				// Set existing total shares.

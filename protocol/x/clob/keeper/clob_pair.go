@@ -15,7 +15,6 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	dydxlog "github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -34,39 +33,6 @@ func clobPairKey(
 	return lib.Uint32ToKey(id.ToUint32())
 }
 
-// (Same behavior as old `CreatePerpetualClobPair`) creates the
-// objects in state and in-memory.
-// This function should ONLY be used to initialize genesis state
-// or test setups.
-// Regular CLOB logic should use `CreatePerpetualClobPair` instead.
-func (k Keeper) CreatePerpetualClobPairAndMemStructs(
-	ctx sdk.Context,
-	clobPairId uint32,
-	perpetualId uint32,
-	stepSizeBaseQuantums satypes.BaseQuantums,
-	quantumConversionExponent int32,
-	subticksPerTick uint32,
-	status types.ClobPair_Status,
-) (types.ClobPair, error) {
-	clobPair, err := k.createPerpetualClobPair(
-		ctx,
-		clobPairId,
-		perpetualId,
-		stepSizeBaseQuantums,
-		quantumConversionExponent,
-		subticksPerTick,
-		status,
-	)
-	if err != nil {
-		return types.ClobPair{}, err
-	}
-
-	k.MemClob.CreateOrderbook(clobPair)
-	k.SetClobPairIdForPerpetual(clobPair)
-
-	return clobPair, nil
-}
-
 // CreatePerpetualClobPair creates a new perpetual CLOB pair in the store.
 // Additionally, it creates an order book matching the ID of the newly created CLOB pair.
 //
@@ -76,38 +42,6 @@ func (k Keeper) CreatePerpetualClobPairAndMemStructs(
 //
 // Returns the newly created CLOB pair and an error if one occurs.
 func (k Keeper) CreatePerpetualClobPair(
-	ctx sdk.Context,
-	clobPairId uint32,
-	perpetualId uint32,
-	stepSizeBaseQuantums satypes.BaseQuantums,
-	quantumConversionExponent int32,
-	subticksPerTick uint32,
-	status types.ClobPair_Status,
-) (types.ClobPair, error) {
-	clobPair, err := k.createPerpetualClobPair(
-		ctx,
-		clobPairId,
-		perpetualId,
-		stepSizeBaseQuantums,
-		quantumConversionExponent,
-		subticksPerTick,
-		status,
-	)
-	if err != nil {
-		return types.ClobPair{}, err
-	}
-
-	// Don't stage events for the genesis block.
-	if lib.IsDeliverTxMode(ctx) {
-		if err := k.StageNewClobPairSideEffects(ctx, clobPair); err != nil {
-			return clobPair, err
-		}
-	}
-
-	return clobPair, nil
-}
-
-func (k Keeper) createPerpetualClobPair(
 	ctx sdk.Context,
 	clobPairId uint32,
 	perpetualId uint32,
@@ -135,35 +69,10 @@ func (k Keeper) createPerpetualClobPair(
 	// Write the `ClobPair` to state.
 	k.SetClobPair(ctx, clobPair)
 
-	perpetualId, err := clobPair.GetPerpetualId()
+	err := k.CreateClobPairStructures(ctx, clobPair)
 	if err != nil {
-		panic(err)
+		return clobPair, err
 	}
-	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
-	if err != nil {
-		return types.ClobPair{}, err
-	}
-
-	k.GetIndexerEventManager().AddTxnEvent(
-		ctx,
-		indexerevents.SubtypePerpetualMarket,
-		indexerevents.PerpetualMarketEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				perpetualId,
-				clobPair.Id,
-				perpetual.Params.Ticker,
-				perpetual.Params.MarketId,
-				clobPair.Status,
-				clobPair.QuantumConversionExponent,
-				perpetual.Params.AtomicResolution,
-				clobPair.SubticksPerTick,
-				clobPair.StepBaseQuantums,
-				perpetual.Params.LiquidityTier,
-				perpetual.Params.MarketType,
-			),
-		),
-	)
 
 	return clobPair, nil
 }
@@ -244,36 +153,57 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 	return nil
 }
 
-func (k Keeper) ApplySideEffectsForNewClobPair(
-	ctx sdk.Context,
-	clobPair types.ClobPair,
-) {
-	if created := k.MemClob.MaybeCreateOrderbook(clobPair); !created {
-		dydxlog.ErrorLog(
-			ctx,
-			"ApplySideEffectsForNewClobPair: Orderbook already exists for CLOB pair",
-			"clob_pair", clobPair,
-		)
-		return
-	}
-	k.SetClobPairIdForPerpetual(clobPair)
+// maybeCreateOrderbook creates a new orderbook in the memclob.
+func (k Keeper) maybeCreateOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
+	// Create the corresponding orderbook in the memclob.
+	k.MemClob.MaybeCreateOrderbook(clobPair)
 }
 
-// StageNewClobPairSideEffects stages a ClobPair creation event, so that any in-memory side effects
-// can happen later when the transaction and block is committed.
-// Note the staged event will be processed only if below are both true:
-//   - The current transaction is committed.
-//   - The current block is agreed upon and committed by consensus.
-func (k Keeper) StageNewClobPairSideEffects(ctx sdk.Context, clobPair types.ClobPair) error {
-	lib.AssertDeliverTxMode(ctx)
+// createOrderbook creates a new orderbook in the memclob.
+func (k Keeper) createOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
+	// Create the corresponding orderbook in the memclob.
+	k.MemClob.CreateOrderbook(clobPair)
+}
 
-	k.finalizeBlockEventStager.StageFinalizeBlockEvent(
+// CreateClobPair performs all non stateful operations to create a CLOB pair.
+// These include creating the corresponding orderbook in the memclob, the mapping between
+// the CLOB pair and the perpetual and the indexer event.
+// This function returns an error if a value for the ClobPair's id already exists in state.
+func (k Keeper) CreateClobPairStructures(ctx sdk.Context, clobPair types.ClobPair) error {
+	// Create the corresponding orderbook in the memclob.
+	k.createOrderbook(ctx, clobPair)
+
+	// Create the mapping between clob pair and perpetual.
+	k.SetClobPairIdForPerpetual(ctx, clobPair)
+
+	perpetualId, err := clobPair.GetPerpetualId()
+	if err != nil {
+		panic(err)
+	}
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
-		&types.ClobStagedFinalizeBlockEvent{
-			Event: &types.ClobStagedFinalizeBlockEvent_CreateClobPair{
-				CreateClobPair: &clobPair,
-			},
-		},
+		indexerevents.SubtypePerpetualMarket,
+		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				perpetualId,
+				clobPair.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				clobPair.Status,
+				clobPair.QuantumConversionExponent,
+				perpetual.Params.AtomicResolution,
+				clobPair.SubticksPerTick,
+				clobPair.StepBaseQuantums,
+				perpetual.Params.LiquidityTier,
+				perpetual.Params.MarketType,
+			),
+		),
 	)
 
 	return nil
@@ -291,7 +221,8 @@ func (k Keeper) InitMemClobOrderbooks(ctx sdk.Context) {
 	clobPairs := k.GetAllClobPairs(ctx)
 	for _, clobPair := range clobPairs {
 		// Create the corresponding orderbook in the memclob.
-		k.MemClob.MaybeCreateOrderbook(
+		k.maybeCreateOrderbook(
+			ctx,
 			clobPair,
 		)
 	}
@@ -303,13 +234,14 @@ func (k Keeper) HydrateClobPairAndPerpetualMapping(ctx sdk.Context) {
 	for _, clobPair := range clobPairs {
 		// Create the corresponding mapping between clob pair and perpetual.
 		k.SetClobPairIdForPerpetual(
+			ctx,
 			clobPair,
 		)
 	}
 }
 
 // SetClobPairIdForPerpetual sets the mapping between clob pair and perpetual.
-func (k Keeper) SetClobPairIdForPerpetual(clobPair types.ClobPair) {
+func (k Keeper) SetClobPairIdForPerpetual(ctx sdk.Context, clobPair types.ClobPair) {
 	// If this `ClobPair` is for a perpetual, add the `clobPairId` to the list of CLOB pair IDs
 	// that facilitate trading of this perpetual.
 	if perpetualClobMetadata := clobPair.GetPerpetualClobMetadata(); perpetualClobMetadata != nil {

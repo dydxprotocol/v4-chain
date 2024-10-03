@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/dydxprotocol/v4-chain/protocol/finalizeblock"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"cosmossdk.io/log"
@@ -16,7 +15,6 @@ import (
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	dydxlog "github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	flags "github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
@@ -47,9 +45,8 @@ type (
 		affiliatesKeeper  types.AffiliatesKeeper
 		revshareKeeper    types.RevShareKeeper
 
-		indexerEventManager      indexer_manager.IndexerEventManager
-		streamingManager         streamingtypes.FullNodeStreamingManager
-		finalizeBlockEventStager finalizeblock.EventStager[*types.ClobStagedFinalizeBlockEvent]
+		indexerEventManager indexer_manager.IndexerEventManager
+		streamingManager    streamingtypes.FullNodeStreamingManager
 
 		initialized         *atomic.Bool
 		memStoreInitialized *atomic.Bool
@@ -78,7 +75,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	memKey storetypes.StoreKey,
-	transientStoreKey storetypes.StoreKey,
+	liquidationsStoreKey storetypes.StoreKey,
 	authorities []string,
 	memClob types.MemClob,
 	subaccountsKeeper types.SubaccountsKeeper,
@@ -103,7 +100,7 @@ func NewKeeper(
 		cdc:                     cdc,
 		storeKey:                storeKey,
 		memKey:                  memKey,
-		transientStoreKey:       transientStoreKey,
+		transientStoreKey:       liquidationsStoreKey,
 		authorities:             lib.UniqueSliceToSet(authorities),
 		MemClob:                 memClob,
 		PerpetualIdToClobPairId: make(map[uint32][]types.ClobPairId),
@@ -131,12 +128,6 @@ func NewKeeper(
 		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
 		DaemonLiquidationInfo:       daemonLiquidationInfo,
 		revshareKeeper:              revshareKeeper,
-		finalizeBlockEventStager: finalizeblock.NewEventStager[*types.ClobStagedFinalizeBlockEvent](
-			transientStoreKey,
-			cdc,
-			types.StagedEventsCountKey,
-			types.StagedEventsKeyPrefix,
-		),
 	}
 
 	// Provide the keeper to the MemClob.
@@ -203,43 +194,6 @@ func (k Keeper) Initialize(ctx sdk.Context) {
 	// Initialize the untriggered conditional orders data structure with untriggered
 	// conditional orders in state.
 	k.HydrateClobPairAndPerpetualMapping(checkCtx)
-}
-
-func (k Keeper) GetStagedClobFinalizeBlockEvents(ctx sdk.Context) []*types.ClobStagedFinalizeBlockEvent {
-	return k.finalizeBlockEventStager.GetStagedFinalizeBlockEvents(
-		ctx,
-		func() *types.ClobStagedFinalizeBlockEvent {
-			return &types.ClobStagedFinalizeBlockEvent{}
-		},
-	)
-}
-
-func (k Keeper) ProcessStagedFinalizeBlockEvents(ctx sdk.Context) {
-	stagedEvents := k.GetStagedClobFinalizeBlockEvents(ctx)
-	for _, stagedEvent := range stagedEvents {
-		if stagedEvent == nil {
-			// We don't ever expect this. However, should not panic since we are in Precommit.
-			dydxlog.ErrorLog(
-				ctx,
-				"got nil ClobStagedFinalizeBlockEvent, skipping",
-				"staged_events",
-				stagedEvents,
-			)
-			continue
-		}
-
-		switch event := stagedEvent.Event.(type) {
-		case *types.ClobStagedFinalizeBlockEvent_CreateClobPair:
-			k.ApplySideEffectsForNewClobPair(ctx, *event.CreateClobPair)
-		default:
-			dydxlog.ErrorLog(
-				ctx,
-				"got unknown ClobStagedFinalizeBlockEvent",
-				"event",
-				event,
-			)
-		}
-	}
 }
 
 // InitMemStore initializes the memstore of the `clob` keeper.

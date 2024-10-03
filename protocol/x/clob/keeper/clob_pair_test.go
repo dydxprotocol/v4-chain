@@ -35,7 +35,7 @@ import (
 // Prevent strconv unused error
 var _ = strconv.IntSize
 
-func TestCreatePerpetualClobPairAndMemStructs_MultiplePerpetual(t *testing.T) {
+func TestCreatePerpetualClobPair_MultiplePerpetual(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	mockIndexerEventManager := &mocks.IndexerEventManager{}
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
@@ -71,7 +71,7 @@ func TestCreatePerpetualClobPairAndMemStructs_MultiplePerpetual(t *testing.T) {
 			),
 		).Once().Return()
 		//nolint: errcheck
-		ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+		ks.ClobKeeper.CreatePerpetualClobPair(
 			ks.Ctx,
 			clobPair.Id,
 			clobtest.MustPerpetualId(clobPair),
@@ -92,7 +92,7 @@ func TestCreatePerpetualClobPairAndMemStructs_MultiplePerpetual(t *testing.T) {
 	)
 }
 
-func TestCreatePerpetualClobPairAndMemStructs_FailsWithPerpetualAssociatedWithExistingClobPair(t *testing.T) {
+func TestCreatePerpetualClobPair_FailsWithPerpetualAssociatedWithExistingClobPair(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	// Set up mock indexer event manager that accepts anything.
 	mockIndexerEventManager := &mocks.IndexerEventManager{}
@@ -130,7 +130,7 @@ func TestCreatePerpetualClobPairAndMemStructs_FailsWithPerpetualAssociatedWithEx
 
 	// Create test clob pair id 1, associated with perpetual id 0.
 	newClobPair := clobtest.GenerateClobPair(clobtest.WithId(1), clobtest.WithPerpetualId(0))
-	_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ks.Ctx,
 		newClobPair.Id,
 		newClobPair.MustGetPerpetualId(),
@@ -146,7 +146,7 @@ func TestCreatePerpetualClobPairAndMemStructs_FailsWithPerpetualAssociatedWithEx
 	)
 }
 
-func TestCreatePerpetualClobPairAndMemStructs_FailsWithDuplicateClobPairId(t *testing.T) {
+func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	mockIndexerEventManager := &mocks.IndexerEventManager{}
 	ks := keepertest.NewClobKeepersTestContext(
@@ -194,7 +194,7 @@ func TestCreatePerpetualClobPairAndMemStructs_FailsWithDuplicateClobPairId(t *te
 		),
 	).Once().Return()
 
-	_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+	_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 		ks.Ctx,
 		clobPair.Id,
 		clobtest.MustPerpetualId(clobPair),
@@ -211,7 +211,7 @@ func TestCreatePerpetualClobPairAndMemStructs_FailsWithDuplicateClobPairId(t *te
 	)
 }
 
-func TestCreatePerpetualClobPairAndMemStructs(t *testing.T) {
+func TestCreatePerpetualClobPair(t *testing.T) {
 	tests := map[string]struct {
 		// CLOB pair.
 		clobPair types.ClobPair
@@ -289,7 +289,7 @@ func TestCreatePerpetualClobPairAndMemStructs(t *testing.T) {
 			}
 
 			// Perform the method under test.
-			createdClobPair, actualErr := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+			createdClobPair, actualErr := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
 				tc.clobPair.Id,
 				clobtest.MustPerpetualId(tc.clobPair),
@@ -442,7 +442,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 					).Return()
 				}
 
-				_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					make.clobPair.Id,
 					clobtest.MustPerpetualId(make.clobPair),
@@ -635,7 +635,7 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 		),
 	).Once().Return()
 
-	_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 		ks.Ctx,
 		clobPair.Id,
 		clobtest.MustPerpetualId(clobPair),
@@ -744,7 +744,7 @@ func TestUpdateClobPair(t *testing.T) {
 					),
 				).Once().Return()
 
-				_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -802,7 +802,7 @@ func TestUpdateClobPair(t *testing.T) {
 					),
 				).Once().Return()
 
-				_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -840,7 +840,7 @@ func TestUpdateClobPair(t *testing.T) {
 					),
 				).Once().Return()
 
-				_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 					ks.Ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -923,7 +923,7 @@ func TestGetAllClobPairs_Sorted(t *testing.T) {
 	).Return().Times(len(clobPairs))
 
 	for _, clobPair := range clobPairs {
-		_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+		_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 			ks.Ctx,
 			clobPair.Id,
 			clobtest.MustPerpetualId(clobPair),
@@ -1048,7 +1048,7 @@ func TestIsPerpetualClobPairActive(t *testing.T) {
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			if tc.clobPair != nil {
-				// allows us to circumvent CreatePerpetualClobPairAndMemStructs and write unsupported statuses to state to
+				// allows us to circumvent CreatePerpetualClobPair and write unsupported statuses to state to
 				// test this function with unsupported statuses.
 				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
@@ -1183,7 +1183,7 @@ func TestAcquireNextClobPairID(t *testing.T) {
 		clobtest.WithPerpetualId(perp.Params.Id),
 	)
 
-	_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+	_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 		ks.Ctx,
 		clobPair.Id,
 		perp.GetId(),
