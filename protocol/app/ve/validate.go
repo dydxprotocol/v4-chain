@@ -86,7 +86,7 @@ func ValidateExtendedCommitInfo(
 	}
 
 	for _, vote := range extCommitInfo.Votes {
-		addr := sdk.ConsAddress(vote.Validator.Address)
+		addr := getConsAddressFromValidator(vote.Validator)
 
 		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache); err != nil {
 			ctx.Logger().Error(
@@ -113,7 +113,7 @@ func validateIndividualVoteExtension(
 		return nil
 	}
 
-	if isSeen := IsVoteExtensionSeen(veCache, getConsAddressFromValidator(vote.Validator)); !isSeen {
+	if isSeen := IsVoteExtensionSeen(veCache, getConsAddressFromValidator(vote.Validator), ctx.BlockHeight()); !isSeen {
 		return fmt.Errorf("vote extension not seen")
 	}
 
@@ -516,8 +516,12 @@ func GetMaxMarketPairs(ctx sdk.Context, pricesKeeper PreBlockExecPricesKeeper) u
 	return uint32(len(markets))
 }
 
-func IsVoteExtensionSeen(veCache *vecache.VeCache, consAddress string) bool {
+func IsVoteExtensionSeen(veCache *vecache.VeCache, consAddress string, currHeight int64) bool {
 	consAddresses := veCache.GetSeenVotesInCache()
+	cacheHeight := veCache.GetHeight()
+	if currHeight != cacheHeight+1 {
+		return true
+	}
 	_, ok := consAddresses[consAddress]
 	return ok
 }
