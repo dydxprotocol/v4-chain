@@ -3948,22 +3948,7 @@
       }
     },
     "subaccounts": {
-      "subaccounts": [
-        {
-          "asset_positions": [
-            {
-              "asset_id": 0,
-              "index": 0,
-              "quantums": "1000000000000"
-            }
-          ],
-          "id": {
-            "number": 0,
-            "owner": "dydx18tkxrnrkqc2t0lr3zxr5g6a4hdvqksylxqje4r"
-          },
-          "margin_enabled": true
-        }
-      ]
+      "subaccounts": []
     },
     "transfer": {
       "denom_traces": [],
