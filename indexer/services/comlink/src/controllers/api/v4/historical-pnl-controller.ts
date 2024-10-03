@@ -19,7 +19,7 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
-import { aggregatePnlTicks, getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
+import { aggregateHourlyPnlTicks, getChildSubaccountIds, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
   CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
@@ -156,10 +156,10 @@ class HistoricalPnlController extends Controller {
     }
 
     // aggregate pnlTicks for all subaccounts grouped by blockHeight
-    const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = aggregatePnlTicks(pnlTicks);
+    const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(pnlTicks);
 
     return {
-      historicalPnl: Array.from(aggregatedPnlTicks.values()).map(
+      historicalPnl: aggregatedPnlTicks.map(
         (pnlTick: PnlTicksFromDatabase) => {
           return pnlTicksToResponseObject(pnlTick);
         }),
