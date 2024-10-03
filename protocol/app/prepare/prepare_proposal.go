@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -58,6 +59,7 @@ func PrepareProposalHandler(
 	perpetualKeeper PreparePerpetualsKeeper,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
 	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
+	veCache *vecache.VeCache,
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
 ) sdk.PrepareProposalHandler {
@@ -96,6 +98,7 @@ func PrepareProposalHandler(
 			txSetterUtils,
 			pricesKeeper,
 			ratelimitKeeper,
+			veCache,
 			veCodec,
 			extCommitCodec,
 		); err != nil {
@@ -181,6 +184,7 @@ func SetVE(
 	txSetterUtils TxSetterUtils,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
 	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
+	veCache *vecache.VeCache,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
 ) error {
@@ -199,6 +203,7 @@ func SetVE(
 		voteCodec,
 		pricesKeeper,
 		ratelimitKeeper,
+		veCache,
 	)
 
 	if err != nil {

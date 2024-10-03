@@ -12,7 +12,7 @@ import (
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
-	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/vecache"
+	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -85,11 +85,12 @@ func (s *PreBlockTestSuite) SetupTest() {
 	aggregator := veaggregator.NewVeAggregator(
 		s.logger,
 		*s.pricesKeeper,
+		*s.ratelimitKeeper,
 		pricesAggregatorFn,
 		conversionRateAggregatorFn,
 	)
 
-	veCache := vecache.VeUpdatesCacheImpl{}
+	pricecache := pricecache.VeUpdatesCacheImpl{}
 
 	s.veApplier = veapplier.NewVEApplier(
 		s.logger,
@@ -98,7 +99,7 @@ func (s *PreBlockTestSuite) SetupTest() {
 		*s.ratelimitKeeper,
 		s.voteCodec,
 		s.extCodec,
-		&veCache,
+		&pricecache,
 	)
 
 	s.marketParamPrices = s.setMarketPrices()

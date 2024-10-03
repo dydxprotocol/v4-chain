@@ -13,7 +13,10 @@ import (
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
+	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 )
 
 // Vote encapsulates the validator and oracle data contained within a vote extension.
@@ -43,6 +46,8 @@ type MedianAggregator struct {
 	// keeper is used to fetch the marketParam object
 	pricesKeeper pk.Keeper
 
+	ratelimitKeeper ratelimitkeeper.Keeper
+
 	// prices is a map of validator address to a map of currency pair to price
 	perValidatorPrices map[string]map[string]veaggregator.AggregatorPricePair
 
@@ -56,6 +61,7 @@ type MedianAggregator struct {
 func NewVeAggregator(
 	logger log.Logger,
 	pricekeeper pk.Keeper,
+	ratelimitKeeper ratelimitkeeper.Keeper,
 	pricesAggregateFn veaggregator.PricesAggregateFn,
 	conversionRateAggregateFn veaggregator.ConversionRateAggregateFn,
 ) VoteAggregator {
@@ -66,6 +72,7 @@ func NewVeAggregator(
 		pricesAggregateFn:              pricesAggregateFn,
 		conversionRateAggregateFn:      conversionRateAggregateFn,
 		pricesKeeper:                   pricekeeper,
+		ratelimitKeeper:                ratelimitKeeper,
 	}
 }
 
@@ -75,11 +82,20 @@ func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPricesAndConversionRate(
 ) (map[string]veaggregator.AggregatorPricePair, *big.Int, error) {
 	// wipe the previous prices
 	ma.perValidatorPrices = make(map[string]map[string]veaggregator.AggregatorPricePair)
+	defaultPrices := ma.getDefaultValidatorPrices(ctx)
+	defaultSDAIPrice, found := ma.ratelimitKeeper.GetSDAIPrice(ctx)
+	if !found {
+		ma.logger.Error("failed to get default sDai price")
+	}
+
+	fmt.Println("default")
+	fmt.Println(defaultPrices)
 
 	for _, vote := range votes {
 		consAddr := vote.ConsAddress.String()
 		voteExtension := vote.DaemonVoteExtension
-		ma.addVoteToAggregator(ctx, consAddr, voteExtension)
+		deepCopyPrices := ma.deepCopyDefaultPrices(defaultPrices)
+		ma.addVoteToAggregator(ctx, consAddr, voteExtension, deepCopyPrices, defaultSDAIPrice)
 	}
 
 	prices, err := ma.pricesAggregateFn(ctx, ma.perValidatorPrices)
@@ -103,17 +119,62 @@ func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPricesAndConversionRate(
 	return prices, sDaiConversionRate, nil
 }
 
+func (ma *MedianAggregator) getDefaultValidatorPrices(ctx sdk.Context) map[string]veaggregator.AggregatorPricePair {
+	defaultPrices := make(map[string]veaggregator.AggregatorPricePair)
+
+	markets := ma.pricesKeeper.GetAllMarketParams(ctx)
+	marketPrices := ma.pricesKeeper.GetAllMarketPrices(ctx)
+
+	// Create a map of market prices by ID for easier lookup
+	pricesById := make(map[uint32]pricetypes.MarketPrice)
+	for _, marketPrice := range marketPrices {
+		pricesById[marketPrice.Id] = marketPrice
+	}
+
+	for _, market := range markets {
+		marketPrice, exists := pricesById[market.Id]
+		if !exists {
+			ma.logger.Error("failed to find matching price for market param", "market", market.Pair, "id", market.Id)
+			continue
+		}
+
+		defaultPrices[market.Pair] = veaggregator.AggregatorPricePair{
+			SpotPrice: new(big.Int).SetUint64(marketPrice.SpotPrice),
+			PnlPrice:  new(big.Int).SetUint64(marketPrice.PnlPrice),
+		}
+	}
+
+	return defaultPrices
+}
+
+func (ma *MedianAggregator) deepCopyDefaultPrices(defaultPrices map[string]veaggregator.AggregatorPricePair) map[string]veaggregator.AggregatorPricePair {
+	copy := make(map[string]veaggregator.AggregatorPricePair)
+	for k, v := range defaultPrices {
+		copy[k] = veaggregator.AggregatorPricePair{
+			SpotPrice: new(big.Int).Set(v.SpotPrice),
+			PnlPrice:  new(big.Int).Set(v.PnlPrice),
+		}
+	}
+	return copy
+}
+
 func (ma *MedianAggregator) addVoteToAggregator(
 	ctx sdk.Context,
 	address string,
 	ve vetypes.DaemonVoteExtension,
+	defaultPrices map[string]veaggregator.AggregatorPricePair,
+	defaultSDAIPrice *big.Int,
 ) {
-	prices := make(map[string]veaggregator.AggregatorPricePair, len(ve.Prices))
 	for _, pricePair := range ve.Prices {
 		var spotPrice, pnlPrice *big.Int
 
 		market, exists := ma.pricesKeeper.GetMarketParam(ctx, pricePair.MarketId)
 		if !exists {
+			continue
+		}
+
+		if _, ok := defaultPrices[market.Pair]; !ok {
+			ma.logger.Error("market pair not found in default prices", "pair", market.Pair)
 			continue
 		}
 
@@ -139,14 +200,14 @@ func (ma *MedianAggregator) addVoteToAggregator(
 			pnlPrice = spotPrice
 		}
 
-		prices[market.Pair] = veaggregator.AggregatorPricePair{
+		defaultPrices[market.Pair] = veaggregator.AggregatorPricePair{
 			SpotPrice: spotPrice,
 			PnlPrice:  pnlPrice,
 		}
 	}
-	ma.perValidatorPrices[address] = prices
+	ma.perValidatorPrices[address] = defaultPrices
 
-	var sDaiConversionRate *big.Int
+	sDaiConversionRate := defaultSDAIPrice
 	if ve.SDaiConversionRate != "" {
 		newConversionRate, ok := new(big.Int).SetString(ve.SDaiConversionRate, 10)
 

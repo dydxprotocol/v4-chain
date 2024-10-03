@@ -14,7 +14,8 @@ import (
 
 	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
-	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/vecache"
+	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -925,6 +926,8 @@ func New(
 	app.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
 	app.extCodec = vecodec.NewDefaultExtendedCommitCodec()
 
+	veCache := vecache.NewVECache()
+
 	pricesAggregatorFn := voteweighted.MedianPrices(
 		logger,
 		app.ConsumerKeeper,
@@ -940,11 +943,12 @@ func New(
 	aggregator := veaggregator.NewVeAggregator(
 		logger,
 		app.PricesKeeper,
+		app.RatelimitKeeper,
 		pricesAggregatorFn,
 		conversionRateAggregatorFn,
 	)
 
-	veCache := vecache.VeUpdatesCacheImpl{}
+	pricecache := pricecache.VeUpdatesCacheImpl{}
 
 	veApplier := veapplier.NewVEApplier(
 		logger,
@@ -953,7 +957,8 @@ func New(
 		app.RatelimitKeeper,
 		app.voteCodec,
 		app.extCodec,
-		&veCache,
+		&pricecache,
+		veCache,
 	)
 
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
@@ -1274,6 +1279,7 @@ func New(
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
 				app.RatelimitKeeper,
+				veCache,
 				app.voteCodec,
 				app.extCodec,
 			),
@@ -1304,6 +1310,7 @@ func New(
 				app.extCodec,
 				app.voteCodec,
 				veApplier,
+				veCache,
 				veValidationFn,
 			),
 		)

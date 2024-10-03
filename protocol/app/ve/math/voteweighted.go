@@ -60,6 +60,7 @@ func MedianPrices(
 		ctx sdk.Context,
 		vePricesPerValidator map[string]map[string]AggregatorPricePair,
 	) (map[string]AggregatorPricePair, error) {
+
 		priceInfo := make(map[string]PriceInfo)
 
 		for validatorAddr, validatorPrices := range vePricesPerValidator {

@@ -6,21 +6,21 @@ import (
 	"testing"
 	"time"
 
-	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/vecache"
+	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	"github.com/stretchr/testify/require"
 )
 
 func TestVEPriceCaching(t *testing.T) {
-	veCache := vecache.VeUpdatesCacheImpl{}
+	veCache := pricecache.VeUpdatesCacheImpl{}
 	ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 	t.Run("valid: set price updates for single round + height", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(1)
-		var updates vecache.PriceUpdates
+		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
-			updates = append(updates, vecache.PriceUpdate{
+			updates = append(updates, pricecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -32,9 +32,9 @@ func TestVEPriceCaching(t *testing.T) {
 
 	t.Run("valid: set priced updates for multi round single height", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(2)
-		var updates vecache.PriceUpdates
+		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
-			updates = append(updates, vecache.PriceUpdate{
+			updates = append(updates, pricecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -43,9 +43,9 @@ func TestVEPriceCaching(t *testing.T) {
 		veCache.SetPriceUpdates(ctx, updates, 1)
 
 		checkValidCacheState(t, &veCache, 2, 1, updates)
-		var newUpdates vecache.PriceUpdates
+		var newUpdates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
-			newUpdates = append(newUpdates, vecache.PriceUpdate{
+			newUpdates = append(newUpdates, pricecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -57,9 +57,9 @@ func TestVEPriceCaching(t *testing.T) {
 
 	t.Run("valid: set price updates for single rounds multi height", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(3)
-		var updates vecache.PriceUpdates
+		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
-			updates = append(updates, vecache.PriceUpdate{
+			updates = append(updates, pricecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -69,9 +69,9 @@ func TestVEPriceCaching(t *testing.T) {
 		checkValidCacheState(t, &veCache, 3, 1, updates)
 
 		ctx = ctx.WithBlockHeight(4)
-		var newUpdates vecache.PriceUpdates
+		var newUpdates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
-			newUpdates = append(newUpdates, vecache.PriceUpdate{
+			newUpdates = append(newUpdates, pricecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -83,9 +83,9 @@ func TestVEPriceCaching(t *testing.T) {
 
 	t.Run("valid: set diff update for same height + round", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(5)
-		var updates vecache.PriceUpdates
+		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
-			updates = append(updates, vecache.PriceUpdate{
+			updates = append(updates, pricecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -94,9 +94,9 @@ func TestVEPriceCaching(t *testing.T) {
 		veCache.SetPriceUpdates(ctx, updates, 1)
 		checkValidCacheState(t, &veCache, 5, 1, updates)
 
-		var newUpdates vecache.PriceUpdates
+		var newUpdates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
-			newUpdates = append(newUpdates, vecache.PriceUpdate{
+			newUpdates = append(newUpdates, pricecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -108,9 +108,9 @@ func TestVEPriceCaching(t *testing.T) {
 
 	t.Run("invalid: No valid values, wrong block height", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(6)
-		var updates vecache.PriceUpdates
+		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
-			updates = append(updates, vecache.PriceUpdate{
+			updates = append(updates, pricecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -122,9 +122,9 @@ func TestVEPriceCaching(t *testing.T) {
 
 	t.Run("invalid: No valid values, wrong round", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(8)
-		var updates vecache.PriceUpdates
+		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
-			updates = append(updates, vecache.PriceUpdate{
+			updates = append(updates, pricecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -144,9 +144,9 @@ func TestVEPriceCaching(t *testing.T) {
 				defer wg.Done()
 				if i%2 == 0 {
 					// Even goroutines write
-					var updates vecache.PriceUpdates
+					var updates pricecache.PriceUpdates
 					for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
-						updates = append(updates, vecache.PriceUpdate{
+						updates = append(updates, pricecache.PriceUpdate{
 							MarketId:  marketPrice.MarketId,
 							SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 							PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -175,9 +175,9 @@ func TestVEPriceCaching(t *testing.T) {
 			wg.Add(1)
 			go func(i int) {
 				defer wg.Done()
-				var updates vecache.PriceUpdates
+				var updates pricecache.PriceUpdates
 				for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
-					updates = append(updates, vecache.PriceUpdate{
+					updates = append(updates, pricecache.PriceUpdate{
 						MarketId:  marketPrice.MarketId,
 						SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 						PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -198,9 +198,9 @@ func TestVEPriceCaching(t *testing.T) {
 
 	t.Run("concurrent reads", func(t *testing.T) {
 		// Set initial state
-		var updates vecache.PriceUpdates
+		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
-			updates = append(updates, vecache.PriceUpdate{
+			updates = append(updates, pricecache.PriceUpdate{
 				MarketId:  marketPrice.MarketId,
 				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
 				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
@@ -228,10 +228,10 @@ func TestVEPriceCaching(t *testing.T) {
 
 func checkValidCacheState(
 	t *testing.T,
-	veCache vecache.VeUpdatesCache,
+	veCache pricecache.VeUpdatesCache,
 	shouldBeHight int64,
 	shouldBeRound int32,
-	shouldBeUpdates vecache.PriceUpdates,
+	shouldBeUpdates pricecache.PriceUpdates,
 ) {
 	require.True(t, veCache.HasValidValues(shouldBeHight, shouldBeRound))
 	require.Equal(t, shouldBeHight, veCache.GetHeight())

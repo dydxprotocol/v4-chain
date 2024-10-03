@@ -8,8 +8,10 @@ import (
 
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	error_lib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/error"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -45,6 +47,7 @@ func ProcessProposalHandler(
 	extCodec codec.ExtendedCommitCodec,
 	veCodec codec.VoteExtensionCodec,
 	veApplier ProcessProposalVEApplier,
+	veCache *vecache.VeCache,
 	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
 ) sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, request *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
@@ -88,6 +91,7 @@ func ProcessProposalHandler(
 				validateVoteExtensionFn,
 				pricesKeeper,
 				ratelimitKeeper,
+				veCache,
 				veCodec,
 				extCodec,
 			); err != nil {
@@ -131,9 +135,9 @@ func DecodeValidateAndCacheVE(
 	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
 	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
+	veCache *vecache.VeCache,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
-
 ) error {
 	var extInfo abci.ExtendedCommitInfo
 	extInfo, err := extCodec.Decode(extCommitBz)
@@ -147,6 +151,7 @@ func DecodeValidateAndCacheVE(
 		voteCodec,
 		pricesKeeper,
 		ratelimitKeeper,
+		veCache,
 		validateVoteExtensionFn,
 	); err != nil {
 		return err
