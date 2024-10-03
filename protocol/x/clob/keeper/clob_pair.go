@@ -15,6 +15,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	dydxlog "github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -238,18 +239,18 @@ func (k Keeper) validateClobPair(ctx sdk.Context, clobPair *types.ClobPair) erro
 	return nil
 }
 
-// maybeCreateOrderbook creates a new orderbook in the memclob.
-func (k Keeper) maybeCreateOrderbook(ctx sdk.Context, clobPair types.ClobPair) {
-	// Create the corresponding orderbook in the memclob.
-	k.MemClob.MaybeCreateOrderbook(clobPair)
-}
-
-func (k Keeper) ApplySideEffectsForCNewlobPair(
+func (k Keeper) ApplySideEffectsForNewClobPair(
 	ctx sdk.Context,
 	clobPair types.ClobPair,
 ) {
-	// TODO throw error if orderbook is not created.
-	k.MemClob.MaybeCreateOrderbook(clobPair)
+	if created := k.MemClob.MaybeCreateOrderbook(clobPair); !created {
+		dydxlog.ErrorLog(
+			ctx,
+			"ApplySideEffectsForNewClobPair: Orderbook already exists for CLOB pair",
+			"clob_pair", clobPair,
+		)
+		return
+	}
 	k.SetClobPairIdForPerpetual(clobPair)
 }
 
@@ -285,8 +286,7 @@ func (k Keeper) InitMemClobOrderbooks(ctx sdk.Context) {
 	clobPairs := k.GetAllClobPairs(ctx)
 	for _, clobPair := range clobPairs {
 		// Create the corresponding orderbook in the memclob.
-		k.maybeCreateOrderbook(
-			ctx,
+		k.MemClob.MaybeCreateOrderbook(
 			clobPair,
 		)
 	}

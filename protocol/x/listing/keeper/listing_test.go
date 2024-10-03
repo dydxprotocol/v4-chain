@@ -204,17 +204,14 @@ func TestCreateClobPair(t *testing.T) {
 	tests := map[string]struct {
 		ticker      string
 		isDeliverTx bool
-		isGenesis   bool
 	}{
 		"deliverTx - true": {
 			ticker:      "TEST-USD",
 			isDeliverTx: true,
-			isGenesis:   false,
 		},
 		"deliverTx - false": {
 			ticker:      "TEST-USD",
 			isDeliverTx: false,
-			isGenesis:   false,
 		},
 	}
 
@@ -227,11 +224,6 @@ func TestCreateClobPair(t *testing.T) {
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,
 				)
-				// if tc.isGenesis {
-				// 	ctx = ctx.WithBlockHeight(0)
-				// } else {
-				// 	ctx = ctx.WithBlockHeight(1)
-				// }
 				mockIndexerEventManager.On(
 					"AddTxnEvent",
 					mock.Anything,

@@ -233,7 +233,7 @@ func (k Keeper) ProcessStagedFinalizeBlockEvents(ctx sdk.Context) {
 
 		switch event := stagedEvent.Event.(type) {
 		case *types.ClobStagedFinalizeBlockEvent_CreateClobPair:
-			k.ApplySideEffectsForCNewlobPair(ctx, *event.CreateClobPair)
+			k.ApplySideEffectsForNewClobPair(ctx, *event.CreateClobPair)
 		default:
 			dydxlog.ErrorLog(
 				ctx,
