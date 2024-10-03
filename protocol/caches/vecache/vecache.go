@@ -9,20 +9,20 @@ import (
 // this cache is used to set prices from vote extensions in processProposal
 // which are fetched in ExtendVoteHandler and PreBlocker. This is to avoid
 // redundant computation on calculating stake weighthed median prices in VEs
-type vecache struct {
+type VeCache struct {
 	height        int64
 	consAddresses map[string]struct{}
 	mu            sync.RWMutex
 }
 
-func NewVECache() *vecache {
-	return &vecache{
+func NewVECache() *VeCache {
+	return &VeCache{
 		height:        0,
 		consAddresses: make(map[string]struct{}),
 	}
 }
 
-func (pc *vecache) SetSeenVotesInCache(
+func (pc *VeCache) SetSeenVotesInCache(
 	ctx sdk.Context,
 	consAddresses map[string]struct{},
 ) {
@@ -32,13 +32,13 @@ func (pc *vecache) SetSeenVotesInCache(
 	pc.consAddresses = consAddresses
 }
 
-func (pc *vecache) GetSeenVotesInCache() map[string]struct{} {
+func (pc *VeCache) GetSeenVotesInCache() map[string]struct{} {
 	pc.mu.RLock()
 	defer pc.mu.RUnlock()
 	return pc.consAddresses
 }
 
-func (pc *vecache) GetHeight() int64 {
+func (pc *VeCache) GetHeight() int64 {
 	pc.mu.RLock()
 	defer pc.mu.RUnlock()
 	return pc.height
