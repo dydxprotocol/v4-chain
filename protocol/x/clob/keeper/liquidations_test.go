@@ -332,7 +332,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobs {
-				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -438,7 +438,7 @@ func TestPlacePerpetualLiquidation_validateLiquidationAgainstClobPairStatus(t *t
 			}
 
 			clobPair := constants.ClobPair_Btc
-			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				clobPair.Id,
 				clobtest.MustPerpetualId(clobPair),
@@ -1244,7 +1244,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -1274,7 +1274,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				constants.ClobPair_Eth.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Eth),
@@ -2175,7 +2175,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 						),
 					),
 				).Once().Return()
-				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -2295,7 +2295,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 			),
 		),
 	).Once().Return()
-	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+	_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 		ctx,
 		constants.ClobPair_Btc.Id,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -3834,7 +3834,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ks.Ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -4582,7 +4582,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 						),
 					),
 				).Once().Return()
-				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ks.Ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -4818,7 +4818,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobs {
-				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -5163,7 +5163,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ks.Ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -5318,7 +5318,7 @@ func TestSortLiquidationOrders(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ks.Ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),

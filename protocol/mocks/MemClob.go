@@ -443,8 +443,21 @@ func (_m *MemClob) InsertZeroFillDeleveragingIntoOperationsQueue(subaccountId su
 }
 
 // MaybeCreateOrderbook provides a mock function with given fields: clobPair
-func (_m *MemClob) MaybeCreateOrderbook(clobPair clobtypes.ClobPair) {
-	_m.Called(clobPair)
+func (_m *MemClob) MaybeCreateOrderbook(clobPair clobtypes.ClobPair) bool {
+	ret := _m.Called(clobPair)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MaybeCreateOrderbook")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(clobtypes.ClobPair) bool); ok {
+		r0 = rf(clobPair)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
 }
 
 // PlaceOrder provides a mock function with given fields: ctx, order
