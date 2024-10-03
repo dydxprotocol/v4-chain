@@ -6,7 +6,7 @@
 Base URLs:
 
 * For **the deployment by DYDX token holders**, use <a href="https://indexer.dydx.trade/v4">https://indexer.dydx.trade/v4</a>
-* For **Testnet**, use <a href="https://dydx-testnet.imperator.co/v4">https://dydx-testnet.imperator.co/v4</a>
+* For **Testnet**, use <a href="https://indexer.v4testnet.dydx.exchange/v4">https://indexer.v4testnet.dydx.exchange/v4</a>
 
 Note: Messages on Indexer WebSocket feeds are typically more recent than data fetched via Indexer's REST API, because the latter is backed by read replicas of the databases that feed the former. Ordinarily this difference is minimal (less than a second), but it might become prolonged under load. Please see [Indexer Architecture](https://dydx.exchange/blog/v4-deep-dive-indexer) for more information.
 
@@ -28,7 +28,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/affiliates/address', params={
   'referralCode': 'string'
@@ -46,7 +46,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/affiliates/address?referralCode=string`,
 {
@@ -104,7 +104,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
 
@@ -120,7 +120,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/addresses/{address}/subaccountNumber/{subaccountNumber}`,
 {
@@ -239,7 +239,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}', headers = headers)
 
@@ -255,7 +255,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}`,
 {
@@ -382,7 +382,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.post(f'{baseURL}/addresses/{address}/registerToken', headers = headers)
 
@@ -401,7 +401,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/addresses/{address}/registerToken`,
 {
@@ -458,7 +458,7 @@ import requests
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.post(f'{baseURL}/addresses/{address}/testNotification')
 
@@ -470,7 +470,7 @@ print(r.json())
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/addresses/{address}/testNotification`,
 {
@@ -517,7 +517,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/affiliates/metadata', params={
   'address': 'string'
@@ -535,7 +535,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/affiliates/metadata?address=string`,
 {
@@ -595,7 +595,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/affiliates/snapshot', headers = headers)
 
@@ -611,7 +611,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/affiliates/snapshot`,
 {
@@ -687,7 +687,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/affiliates/total_volume', params={
   'address': 'string'
@@ -705,7 +705,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/affiliates/total_volume?address=string`,
 {
@@ -763,7 +763,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/assetPositions', params={
   'address': 'string',  'subaccountNumber': '0.1'
@@ -781,7 +781,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/assetPositions?address=string&subaccountNumber=0.1`,
 {
@@ -848,7 +848,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/assetPositions/parentSubaccountNumber', params={
   'address': 'string',  'parentSubaccountNumber': '0.1'
@@ -866,7 +866,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/assetPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
 {
@@ -933,7 +933,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/candles/perpetualMarkets/{ticker}', params={
   'resolution': '1MIN'
@@ -951,7 +951,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/candles/perpetualMarkets/{ticker}?resolution=1MIN`,
 {
@@ -1042,7 +1042,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/compliance/screen/{address}', headers = headers)
 
@@ -1058,7 +1058,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/compliance/screen/{address}`,
 {
@@ -1118,7 +1118,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/fills', params={
   'address': 'string',  'subaccountNumber': '0.1'
@@ -1136,7 +1136,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
 {
@@ -1229,7 +1229,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/fills/parentSubaccount', params={
   'address': 'string',  'parentSubaccountNumber': '0.1'
@@ -1247,7 +1247,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0.1`,
 {
@@ -1340,7 +1340,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/height', headers = headers)
 
@@ -1356,7 +1356,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/height`,
 {
@@ -1409,7 +1409,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/historicalBlockTradingRewards/{address}', headers = headers)
 
@@ -1425,7 +1425,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/historicalBlockTradingRewards/{address}`,
 {
@@ -1492,7 +1492,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/historicalFunding/{ticker}', headers = headers)
 
@@ -1508,7 +1508,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/historicalFunding/{ticker}`,
 {
@@ -1577,7 +1577,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/historical-pnl', params={
   'address': 'string',  'subaccountNumber': '0.1'
@@ -1595,7 +1595,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/historical-pnl?address=string&subaccountNumber=0.1`,
 {
@@ -1674,7 +1674,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/historical-pnl/parentSubaccountNumber', params={
   'address': 'string',  'parentSubaccountNumber': '0.1'
@@ -1692,7 +1692,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/historical-pnl/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
 {
@@ -1770,7 +1770,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/historicalTradingRewardAggregations/{address}', params={
   'period': 'DAILY'
@@ -1788,7 +1788,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/historicalTradingRewardAggregations/{address}?period=DAILY`,
 {
@@ -1867,7 +1867,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/orderbooks/perpetualMarket/{ticker}', headers = headers)
 
@@ -1883,7 +1883,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/orderbooks/perpetualMarket/{ticker}`,
 {
@@ -1952,7 +1952,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/orders', params={
   'address': 'string',  'subaccountNumber': '0.1'
@@ -1970,7 +1970,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
 {
@@ -2146,7 +2146,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/orders/parentSubaccountNumber', params={
   'address': 'string',  'parentSubaccountNumber': '0.1'
@@ -2164,7 +2164,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
 {
@@ -2340,7 +2340,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/orders/{orderId}', headers = headers)
 
@@ -2356,7 +2356,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/orders/{orderId}`,
 {
@@ -2436,7 +2436,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/perpetualMarkets', headers = headers)
 
@@ -2452,7 +2452,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/perpetualMarkets`,
 {
@@ -2558,7 +2558,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/perpetualPositions', params={
   'address': 'string',  'subaccountNumber': '0.1'
@@ -2576,7 +2576,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/perpetualPositions?address=string&subaccountNumber=0.1`,
 {
@@ -2666,7 +2666,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/perpetualPositions/parentSubaccountNumber', params={
   'address': 'string',  'parentSubaccountNumber': '0.1'
@@ -2684,7 +2684,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/perpetualPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
 {
@@ -2774,7 +2774,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/trader/search', params={
   'searchParam': 'string'
@@ -2792,7 +2792,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/trader/search?searchParam=string`,
 {
@@ -2855,7 +2855,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/sparklines', params={
   'timePeriod': 'ONE_DAY'
@@ -2873,7 +2873,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/sparklines?timePeriod=ONE_DAY`,
 {
@@ -2943,7 +2943,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/time', headers = headers)
 
@@ -2959,7 +2959,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/time`,
 {
@@ -3012,7 +3012,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/trades/perpetualMarket/{ticker}', headers = headers)
 
@@ -3028,7 +3028,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/trades/perpetualMarket/{ticker}`,
 {
@@ -3103,7 +3103,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/transfers', params={
   'address': 'string',  'subaccountNumber': '0.1'
@@ -3121,7 +3121,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/transfers?address=string&subaccountNumber=0.1`,
 {
@@ -3205,7 +3205,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/transfers/parentSubaccountNumber', params={
   'address': 'string',  'parentSubaccountNumber': '0.1'
@@ -3223,7 +3223,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/transfers/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1`,
 {
@@ -3307,7 +3307,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/transfers/between', params={
   'sourceAddress': 'string',  'sourceSubaccountNumber': '0.1',  'recipientAddress': 'string',  'recipientSubaccountNumber': '0.1'
@@ -3325,7 +3325,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=0.1&recipientAddress=string&recipientSubaccountNumber=0.1`,
 {
@@ -3410,7 +3410,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/vault/v1/megavault/historicalPnl', headers = headers)
 
@@ -3426,7 +3426,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/vault/v1/megavault/historicalPnl`,
 {
@@ -3502,7 +3502,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/vault/v1/vaults/historicalPnl', headers = headers)
 
@@ -3518,7 +3518,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/vault/v1/vaults/historicalPnl`,
 {
@@ -3599,7 +3599,7 @@ headers = {
 
 # For the deployment by DYDX token holders, use
 # baseURL = 'https://indexer.dydx.trade/v4'
-baseURL = 'https://dydx-testnet.imperator.co/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/vault/v1/megavault/positions', headers = headers)
 
@@ -3615,7 +3615,7 @@ const headers = {
 
 // For the deployment by DYDX token holders, use
 // const baseURL = 'https://indexer.dydx.trade/v4';
-const baseURL = 'https://dydx-testnet.imperator.co/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
 fetch(`${baseURL}/vault/v1/megavault/positions`,
 {
