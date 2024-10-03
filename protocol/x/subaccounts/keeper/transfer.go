@@ -250,17 +250,28 @@ func (k Keeper) DistributeFees(
 			return err
 		}
 
-		// emit a metric for the amount of fees transferred to the market mapper
-		if revShare.RevShareType == revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER {
-			labels := []metrics.Label{
-				metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)),
-			}
-			metrics.AddSampleWithLabels(
-				metrics.MarketMapperRevenueDistribution,
-				metrics.GetMetricValueFromBigInt(revShare.QuoteQuantums),
-				labels...,
-			)
+		// emit a metric for revenue share
+		labels := []metrics.Label{}
+		var metricName string
+		switch revShare.RevShareType {
+		case revsharetypes.REV_SHARE_TYPE_MARKET_MAPPER:
+			labels = append(labels, metrics.GetLabelForIntValue(metrics.MarketId, int(perpetual.Params.MarketId)))
+			metricName = metrics.MarketMapperRevenueDistribution
+		case revsharetypes.REV_SHARE_TYPE_AFFILIATE:
+			labels = append(labels, metrics.GetLabelForStringValue(metrics.RecipientAddress, revShare.Recipient))
+			metricName = metrics.AffiliateRevenueShareDistribution
+		case revsharetypes.REV_SHARE_TYPE_UNCONDITIONAL:
+			labels = append(labels, metrics.GetLabelForStringValue(metrics.RecipientAddress, revShare.Recipient))
+			metricName = metrics.UnconditionalRevenueShareDistribution
+		default:
+			ctx.Logger().Error("invalid rev share type", "type", revShare.RevShareType)
+			continue
 		}
+		metrics.AddSampleWithLabels(
+			metricName,
+			metrics.GetMetricValueFromBigInt(revShare.QuoteQuantums),
+			labels...,
+		)
 	}
 
 	totalTakerFeeRevShareQuantums := big.NewInt(0)
@@ -288,6 +299,12 @@ func (k Keeper) DistributeFees(
 	if feeCollectorShare.Sign() < 0 {
 		panic("fee collector share is < 0")
 	}
+
+	// Emit fee colletor metric
+	metrics.AddSample(
+		metrics.NetFeesPostRevenueShareDistribution,
+		metrics.GetMetricValueFromBigInt(feeCollectorShare),
+	)
 
 	// Transfer fees to the fee collector
 	if err := k.TransferFees(

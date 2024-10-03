@@ -305,6 +305,9 @@ const (
 	UpdateSubaccounts                     = "update_subaccounts"
 	SubaccountOwner                       = "subaccount_owner"
 	MarketMapperRevenueDistribution       = "market_mapper_revenue_distribution"
+	AffiliateRevenueShareDistribution     = "affiliate_revenue_share_distribution"
+	UnconditionalRevenueShareDistribution = "unconditional_revenue_share_distribution"
+	NetFeesPostRevenueShareDistribution   = "net_fees_post_revenue_share_distribution"
 
 	// Liquidation Daemon.
 	CheckCollateralizationForSubaccounts     = "check_collateralization_for_subaccounts"
