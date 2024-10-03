@@ -1827,9 +1827,11 @@ function edit_genesis() {
 		acct_idx=$(($acct_idx + 1))
 	done
 	# Update subaccounts module for megavault main vault account.
-	add_subaccount "$GENESIS" "$acct_idx" "$MEGAVAULT_MAIN_VAULT_ACCOUNT_ADDR" "$DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE"
-	total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE))
-	acct_idx=$(($acct_idx + 1))
+	if [ "$DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE" -gt 0 ]; then
+		add_subaccount "$GENESIS" "$acct_idx" "$MEGAVAULT_MAIN_VAULT_ACCOUNT_ADDR" "$DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE"
+		total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE))
+		acct_idx=$(($acct_idx + 1))
+	fi
 
 	next_bank_idx=0
 	if (( total_accounts_quote_balance > 0 )); then
