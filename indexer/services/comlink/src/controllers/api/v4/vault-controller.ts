@@ -38,7 +38,7 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import {
-  aggregatePnlTicks,
+  aggregateHourlyPnlTicks,
   getSubaccountResponse,
   handleControllerError,
 } from '../../../lib/helpers';
@@ -93,7 +93,7 @@ class VaultController extends Controller {
     ]);
 
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
-    const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = aggregatePnlTicks(vaultPnlTicks);
+    const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(vaultPnlTicks);
 
     const currentEquity: string = Array.from(vaultPositions.values())
       .map((position: VaultPosition): string => {
@@ -473,46 +473,34 @@ function getPnlTicksWithCurrentTick(
 }
 
 /**
- * Takes in a map of block heights to PnlTicks and filters out the closest pnl tick per interval.
- * @param pnlTicksByBlock Map of block number to pnl tick.
+ * Takes in an array of PnlTicks and filters out the closest pnl tick per interval.
+ * @param pnlTicks Array of pnl ticks.
  * @param resolution Resolution of interval.
  * @returns Array of PnlTicksFromDatabase, one per interval.
  */
 function filterOutIntervalTicks(
-  pnlTicksByBlock: Map<number, PnlTicksFromDatabase>,
+  pnlTicks: PnlTicksFromDatabase[],
   resolution: PnlTickInterval,
 ): PnlTicksFromDatabase[] {
-  // Track block to block time.
-  const blockToBlockTime: Map<number, DateTime> = new Map();
-  // Track start of days to closest block by block time.
-  const blocksPerInterval: Map<string, number> = new Map();
-  // Track start of days to closest Pnl tick.
+  // Track start of intervals to closest Pnl tick.
   const ticksPerInterval: Map<string, PnlTicksFromDatabase> = new Map();
-  pnlTicksByBlock.forEach((pnlTick: PnlTicksFromDatabase, block: number): void => {
+  pnlTicks.forEach((pnlTick: PnlTicksFromDatabase): void => {
     const blockTime: DateTime = DateTime.fromISO(pnlTick.blockTime).toUTC();
-    blockToBlockTime.set(block, blockTime);
 
     const startOfInterval: DateTime = blockTime.toUTC().startOf(resolution);
     const startOfIntervalStr: string = startOfInterval.toISO();
-    const startOfIntervalBlock: number | undefined = blocksPerInterval.get(startOfIntervalStr);
-    // No block for the start of interval, set this block as the block for the interval.
-    if (startOfIntervalBlock === undefined) {
-      blocksPerInterval.set(startOfIntervalStr, block);
+    const tickForInterval: PnlTicksFromDatabase | undefined = ticksPerInterval.get(
+      startOfIntervalStr,
+    );
+    // No tick for the start of interval, set this tick as the block for the interval.
+    if (tickForInterval === undefined) {
       ticksPerInterval.set(startOfIntervalStr, pnlTick);
       return;
     }
+    const tickPerIntervalBlockTime: DateTime = DateTime.fromISO(tickForInterval.blockTime);
 
-    const startOfDayBlockTime: DateTime | undefined = blockToBlockTime.get(startOfIntervalBlock);
-    // Invalid block set as start of day block, set this block as the block for the day.
-    if (startOfDayBlockTime === undefined) {
-      blocksPerInterval.set(startOfIntervalStr, block);
-      ticksPerInterval.set(startOfIntervalStr, pnlTick);
-      return;
-    }
-
-    // This block is closer to the start of the day, set it as the block for the day.
-    if (blockTime.diff(startOfInterval) < startOfDayBlockTime.diff(startOfInterval)) {
-      blocksPerInterval.set(startOfIntervalStr, block);
+    // This tick is closer to the start of the interval, set it as the tick for the interval.
+    if (blockTime.diff(startOfInterval) < tickPerIntervalBlockTime.diff(startOfInterval)) {
       ticksPerInterval.set(startOfIntervalStr, pnlTick);
     }
   });

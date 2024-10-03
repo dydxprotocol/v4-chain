@@ -28,6 +28,7 @@ import {
 import Big from 'big.js';
 import express from 'express';
 import _ from 'lodash';
+import { DateTime } from 'luxon';
 
 import config from '../config';
 import {
@@ -672,32 +673,36 @@ export function getSubaccountResponse(
 /* ------- PNL HELPERS ------- */
 
 /**
- * Aggregates a list of PnL ticks, combining any PnL ticks for the same blockheight by summing
+ * Aggregates a list of PnL ticks, combining any PnL ticks for the same hour by summing
  * the equity, totalPnl, and net transfers.
  * Returns a map of block height to the resulting PnL tick.
  * @param pnlTicks
  * @returns
  */
-export function aggregatePnlTicks(
+export function aggregateHourlyPnlTicks(
   pnlTicks: PnlTicksFromDatabase[],
-): Map<number, PnlTicksFromDatabase> {
-  const aggregatedPnlTicks: Map<number, PnlTicksFromDatabase> = new Map();
+): PnlTicksFromDatabase[] {
+  const hourlyPnlTicks: Map<string, PnlTicksFromDatabase> = new Map();
   for (const pnlTick of pnlTicks) {
-    const blockHeight: number = parseInt(pnlTick.blockHeight, 10);
-    if (aggregatedPnlTicks.has(blockHeight)) {
-      const currentPnlTick: PnlTicksFromDatabase = aggregatedPnlTicks.get(
-        blockHeight,
+    const truncatedTime: string = DateTime.fromISO(pnlTick.createdAt).startOf('hour').toISO();
+    if (hourlyPnlTicks.has(truncatedTime)) {
+      const aggregatedTick: PnlTicksFromDatabase = hourlyPnlTicks.get(
+        truncatedTime,
       ) as PnlTicksFromDatabase;
-      aggregatedPnlTicks.set(blockHeight, {
-        ...currentPnlTick,
-        equity: (parseFloat(currentPnlTick.equity) + parseFloat(pnlTick.equity)).toString(),
-        totalPnl: (parseFloat(currentPnlTick.totalPnl) + parseFloat(pnlTick.totalPnl)).toString(),
-        netTransfers: (parseFloat(currentPnlTick.netTransfers) +
-            parseFloat(pnlTick.netTransfers)).toString(),
-      });
+      hourlyPnlTicks.set(
+        truncatedTime,
+        {
+          ...aggregatedTick,
+          equity: (parseFloat(aggregatedTick.equity) + parseFloat(pnlTick.equity)).toString(),
+          totalPnl: (parseFloat(aggregatedTick.totalPnl) + parseFloat(pnlTick.totalPnl)).toString(),
+          netTransfers: (
+            parseFloat(aggregatedTick.netTransfers) + parseFloat(pnlTick.netTransfers)
+          ).toString(),
+        },
+      );
     } else {
-      aggregatedPnlTicks.set(blockHeight, pnlTick);
+      hourlyPnlTicks.set(truncatedTime, pnlTick);
     }
   }
-  return aggregatedPnlTicks;
+  return Array.from(hourlyPnlTicks.values());
 }
