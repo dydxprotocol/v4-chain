@@ -12,7 +12,6 @@ import {
   defaultPerpetualPosition,
   defaultPerpetualPositionId,
   defaultZeroPerpYieldIndex,
-  zeroAssetYieldIndex,
 } from '../helpers/constants';
 import * as PerpetualPositionTable from '../../src/stores/perpetual-position-table';
 import * as MarketTable from '../../src/stores/market-table';

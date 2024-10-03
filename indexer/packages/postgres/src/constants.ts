@@ -13,6 +13,7 @@ import PerpetualMarketModel from './models/perpetual-market-model';
 import PerpetualPositionModel from './models/perpetual-position-model';
 import SubaccountModel from './models/subaccount-model';
 import TransferModel from './models/transfer-model';
+import YieldParamsModel from './models/yield-params-model';
 import {
   APITimeInForce,
   CandleResolution,
@@ -20,7 +21,6 @@ import {
   PerpetualMarketStatus,
   TimeInForce,
 } from './types';
-import YieldParamsModel from './models/yield-params-model';
 
 export const BUFFER_ENCODING_UTF_8: BufferEncoding = 'utf-8';
 

@@ -2,8 +2,8 @@ import path from 'path';
 
 import { Model } from 'objection';
 
-import { IsoString } from '../types';
 import { IntegerPattern } from '../lib/validators';
+import { IsoString } from '../types';
 import BaseModel from './base-model';
 
 export default class YieldParamsModel extends BaseModel {

@@ -7,7 +7,6 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
-import _ from 'lodash';
 import {
   Controller, Get, Query, Route,
 } from 'tsoa';
@@ -29,7 +28,6 @@ import {
 } from '../../../request-helpers/request-transformer';
 import {
   YieldParamsResponse,
-  YieldParamsResponseObject,
   YieldParamsRequest,
 } from '../../../types';
 
@@ -40,18 +38,18 @@ const controllerName: string = 'yield-params-controller';
 class YieldParamsController extends Controller {
   @Get('/')
   async getYieldParams(
-      @Query() createdBeforeOrAtHeight?: string,
+    @Query() createdBeforeOrAtHeight?: string,
   ): Promise<YieldParamsResponse> {
 
     // [YBCP-30]: Add cache for yield params
-    const query = createdBeforeOrAtHeight !== undefined 
-      ? { createdBeforeOrAtHeight: createdBeforeOrAtHeight } 
+    const query = createdBeforeOrAtHeight !== undefined
+      ? { createdBeforeOrAtHeight }
       : {};
     const allYieldParams: YieldParamsFromDatabase[] | undefined = await YieldParamsTable.findAll(
-        query, 
-        [], {
+      query,
+      [], {
         orderBy: [[YieldParamsColumns.createdAtHeight, Ordering.ASC]],
-    });
+      });
 
     if (allYieldParams === undefined) {
       throw new NotFoundError(
@@ -67,25 +65,24 @@ class YieldParamsController extends Controller {
       allYieldParams: allYieldParams.map((yieldParams: YieldParamsFromDatabase) => {
         return yieldParamsToResponseObject(yieldParams);
       }),
-    }
+    };
 
     return resultParams;
   }
 
-
   @Get('/latestYieldParams')
   async getLatestYieldParams(): Promise<YieldParamsResponse> {
     // [YBCP-30]: Add cache for yield params
-    const yieldParams: YieldParamsFromDatabase | undefined = await YieldParamsTable.getLatest()
+    const yieldParams: YieldParamsFromDatabase | undefined = await YieldParamsTable.getLatest();
 
     if (yieldParams === undefined) {
       throw new NotFoundError(
-        `No lates yield params found`,
+        'No lates yield params found',
       );
     }
 
     return {
-        allYieldParams: [yieldParamsToResponseObject(yieldParams)],
+      allYieldParams: [yieldParamsToResponseObject(yieldParams)],
     };
   }
 }
@@ -103,27 +100,27 @@ router.get(
     const matchedDataObject = matchedData(req);
     const yieldParamsGetRequest: YieldParamsRequest = {
       createdBeforeOrAtHeight: matchedDataObject.createdAtOrBeforeHeight,
-    }
+    };
 
     try {
-        const controllers: YieldParamsController = new YieldParamsController();
-        const response: YieldParamsResponse = await controllers.getYieldParams(
-          yieldParamsGetRequest.createdBeforeOrAtHeight,
-        );
-        return res.send(response);
+      const controllers: YieldParamsController = new YieldParamsController();
+      const response: YieldParamsResponse = await controllers.getYieldParams(
+        yieldParamsGetRequest.createdBeforeOrAtHeight,
+      );
+      return res.send(response);
     } catch (error) {
-        return handleControllerError(
-            'YieldParamsController GET /',
-            'YieldParams error',
-            error,
-            req,
-            res
-        );
+      return handleControllerError(
+        'YieldParamsController GET /',
+        'YieldParams error',
+        error,
+        req,
+        res,
+      );
     } finally {
-        stats.timing(
-            `${config.SERVICE_NAME}.${controllerName}.get_yield_params.timing`,
-            Date.now() - start,
-        );
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_yield_params.timing`,
+        Date.now() - start,
+      );
     }
   },
 );
@@ -140,22 +137,22 @@ router.get(
     matchedData(req);
 
     try {
-        const controller: YieldParamsController = new YieldParamsController();
-        const response: YieldParamsResponse = await controller.getLatestYieldParams();
-        return res.send(response);
+      const controller: YieldParamsController = new YieldParamsController();
+      const response: YieldParamsResponse = await controller.getLatestYieldParams();
+      return res.send(response);
     } catch (error) {
-        return handleControllerError(
-            'YieldParamsController GET /latestYieldParams',
-            'YieldParams error',
-            error,
-            req,
-            res,
-        );
+      return handleControllerError(
+        'YieldParamsController GET /latestYieldParams',
+        'YieldParams error',
+        error,
+        req,
+        res,
+      );
     } finally {
-        stats.timing(
-            `${config.SERVICE_NAME}.${controllerName}.get_latest_yield_params.timing`,
-            Date.now() - start,
-        );
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_latest_yield_params.timing`,
+        Date.now() - start,
+      );
     }
   },
 );

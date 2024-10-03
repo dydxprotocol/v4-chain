@@ -182,15 +182,15 @@ describe('perpetualMarketHandler', () => {
           orderBy: [[PerpetualMarketColumns.id, Ordering.ASC]],
         });
 
-    expect(newPerpetualMarkets.length).toEqual(1);
-    expectPerpetualMarketMatchesEvent(event, newPerpetualMarkets[0]);
-    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromId('0');
-    expect(perpetualMarket).toBeDefined();
-    expectPerpetualMarket(perpetualMarket!, event);
-    expect(perpetualMarket!.perpYieldIndex).toEqual('0/1')
-    expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
+      expect(newPerpetualMarkets.length).toEqual(1);
+      expectPerpetualMarketMatchesEvent(event, newPerpetualMarkets[0]);
+      const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromId('0');
+      expect(perpetualMarket).toBeDefined();
+      expectPerpetualMarket(perpetualMarket!, event);
+      expect(perpetualMarket!.perpYieldIndex).toEqual('0/1');
+      expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
+    });
   });
-});
 });
 
 function createKafkaMessageFromPerpetualMarketEvent({

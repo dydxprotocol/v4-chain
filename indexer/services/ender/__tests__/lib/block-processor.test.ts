@@ -63,9 +63,7 @@ describe('block-processor', () => {
         owner: '',
         number: 0,
       },
-      yieldIndex: "0/1",
-      // updatedPerpetualPositions: [],
-      // updatedAssetPositions: [],
+      yieldIndex: '0/1',
     });
   const defaultSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
     SubaccountUpdateEventV1.encode(

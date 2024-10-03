@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 const Sequencer = require('@jest/test-sequencer').default;
 
 class CustomSequencer extends Sequencer {

@@ -38,7 +38,7 @@ describe('subaccount-update-validator', () => {
       const invalidEvent: SubaccountUpdateEventV1 = {
         updatedAssetPositions: [],
         updatedPerpetualPositions: [],
-        yieldIndex: "0/1",
+        yieldIndex: '0/1',
       };
       const validator: SubaccountUpdateValidator = new SubaccountUpdateValidator(
         invalidEvent,

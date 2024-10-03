@@ -812,11 +812,11 @@ export const defaultYieldParams1: YieldParamsCreateObject = {
   assetYieldIndex: zeroAssetYieldIndex,
   createdAtHeight: createdHeight,
   createdAt: createdDateTime.toISO(),
-}
+};
 
 export const defaultYieldParams2: YieldParamsCreateObject = {
   sDAIPrice: '11000000',
   assetYieldIndex: oneAssetYieldIndex,
   createdAtHeight: createdHeightPlusOne,
-  createdAt:  createdDateTime.plus(1).toISO(),
-}
+  createdAt: createdDateTime.plus(1).toISO(),
+};

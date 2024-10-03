@@ -56,7 +56,6 @@ import { createdDateTime, createdHeight } from '@dydxprotocol-indexer/postgres/b
 import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
 
-
 describe('DeleveragingHandler', () => {
   const offsettingSubaccount: SubaccountCreateObject = {
     address: defaultDeleveragingEvent.offsetting!.owner,

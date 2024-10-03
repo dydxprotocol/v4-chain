@@ -1,14 +1,14 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { PartialModelObject, QueryBuilder } from 'objection';
+import { QueryBuilder } from 'objection';
 
 import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import {
   verifyAllRequiredFields,
   setupBaseQuery,
-  rawQuery,
 } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
+import YieldParamsModel from '../models/yield-params-model';
 import {
   QueryConfig,
   YieldParamsFromDatabase,
@@ -19,12 +19,11 @@ import {
   Ordering,
   QueryableField,
 } from '../types';
-import YieldParamsModel from '../models/yield-params-model';
 
 export function uuid(createdAtHeight: string): string {
-    // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
-    return getUuid(Buffer.from(`${createdAtHeight}`, BUFFER_ENCODING_UTF_8));
-  }
+  // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
+  return getUuid(Buffer.from(`${createdAtHeight}`, BUFFER_ENCODING_UTF_8));
+}
 
 export async function findAll(
   {
@@ -68,11 +67,11 @@ export async function findAll(
   }
 
   if (assetYieldIndex) {
-    baseQuery = baseQuery.where(YieldParamsColumns.assetYieldIndex, assetYieldIndex)
+    baseQuery = baseQuery.where(YieldParamsColumns.assetYieldIndex, assetYieldIndex);
   }
 
   if (sDAIPrice) {
-    baseQuery = baseQuery.where(YieldParamsColumns.sDAIPrice, sDAIPrice)
+    baseQuery = baseQuery.where(YieldParamsColumns.sDAIPrice, sDAIPrice);
   }
 
   if (createdAt) {
@@ -133,39 +132,38 @@ export async function create(
 }
 
 export async function findById(
-    id: string,
-    options: Options = DEFAULT_POSTGRES_OPTIONS,
+  id: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<YieldParamsFromDatabase | undefined> {
-    const baseQuery: QueryBuilder<YieldParamsModel> = setupBaseQuery<YieldParamsModel>(
-      YieldParamsModel,
-      options,
-    );
-    return baseQuery
-      .findById(id)
-      .returning('*');
+  const baseQuery: QueryBuilder<YieldParamsModel> = setupBaseQuery<YieldParamsModel>(
+    YieldParamsModel,
+    options,
+  );
+  return baseQuery
+    .findById(id)
+    .returning('*');
 }
 
 export async function getLatest(
-    options: Options = DEFAULT_POSTGRES_OPTIONS,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<YieldParamsFromDatabase> {
-    const baseQuery: QueryBuilder<YieldParamsModel> = setupBaseQuery<YieldParamsModel>(
-        YieldParamsModel,
-        options,
-    );
+  const baseQuery: QueryBuilder<YieldParamsModel> = setupBaseQuery<YieldParamsModel>(
+    YieldParamsModel,
+    options,
+  );
 
-    const results: YieldParamsFromDatabase[] = await baseQuery
-        .orderBy(YieldParamsColumns.createdAtHeight, Ordering.DESC)
-        .limit(1)
-        .returning('*');
+  const results: YieldParamsFromDatabase[] = await baseQuery
+    .orderBy(YieldParamsColumns.createdAtHeight, Ordering.DESC)
+    .limit(1)
+    .returning('*');
 
-    const latestYieldParams: YieldParamsFromDatabase | undefined = results[0];
-    if (latestYieldParams === undefined) {
-        logger.error({
-        at: 'yield-params-table#getLatest',
-        message: 'Unable to find latest yield params',
-        });
-        throw new Error('Unable to find latest yield params');
-    }
-    return latestYieldParams;
+  const latestYieldParams: YieldParamsFromDatabase | undefined = results[0];
+  if (latestYieldParams === undefined) {
+    logger.error({
+      at: 'yield-params-table#getLatest',
+      message: 'Unable to find latest yield params',
+    });
+    throw new Error('Unable to find latest yield params');
+  }
+  return latestYieldParams;
 }
-  

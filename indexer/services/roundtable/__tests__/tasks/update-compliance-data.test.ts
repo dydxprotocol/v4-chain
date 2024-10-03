@@ -563,13 +563,12 @@ async function setupSubaccounts(
   }).toUTC().toISO();
   await Promise.all(subaccountIds.map(
     (subaccountId: string) => {
-      return SubaccountTable.update(
-        { id: subaccountId, 
-          updatedAtHeight: '1', 
-          updatedAt: newUpdatedAt, 
-          assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex, 
-        },
-      );
+      return SubaccountTable.update({
+        id: subaccountId,
+        updatedAtHeight: '1',
+        updatedAt: newUpdatedAt,
+        assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
+      });
     },
   ));
 }

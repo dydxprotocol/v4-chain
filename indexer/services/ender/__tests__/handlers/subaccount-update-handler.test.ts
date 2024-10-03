@@ -510,7 +510,7 @@ describe('subaccountUpdateHandler', () => {
       size: perpetualSize,
       maxSize: perpetualSize,
       settledFunding: '0',  // settledFunding of new opened position is 0.
-      perpYieldIndex: onePerpYieldIndex, // perpYieldIndex of new opened position should be latest perp yield index
+      perpYieldIndex: onePerpYieldIndex, // should be latest perp yield index
     }));
     const closedPositionSubaccountKafkaObject:
     UpdatedPerpetualPositionSubaccountKafkaObject = annotateWithPnl(

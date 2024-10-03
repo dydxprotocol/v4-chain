@@ -32,7 +32,6 @@ import {
   yieldParamsToResponseObject,
 } from '../../../src/request-helpers/request-transformer';
 import { OrderResponseObject, YieldParamsResponseObject } from '../../../src/types';
-import { response } from 'express';
 
 describe('request-transformer', () => {
   const ticker: string = testConstants.defaultPerpetualMarket.ticker;
@@ -275,9 +274,11 @@ describe('request-transformer', () => {
           assetYieldIndex: testConstants.defaultYieldParams1.assetYieldIndex,
           createdAt: testConstants.defaultYieldParams1.createdAt,
           createdAtHeight: testConstants.defaultYieldParams1.createdAtHeight,
-        }
+        };
 
-        const responseObject: YieldParamsResponseObject = yieldParamsToResponseObject(yieldParamsFromDatabase)
+        const responseObject: YieldParamsResponseObject = yieldParamsToResponseObject(
+          yieldParamsFromDatabase,
+        );
 
         expect(responseObject).toEqual({
           id: yieldParamsFromDatabase.id,

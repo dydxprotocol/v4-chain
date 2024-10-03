@@ -163,7 +163,7 @@ export type EventProtoWithTypeAndVersion = {
   eventProto: UpdateYieldParamsEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
-  blockEventIndex: number, 
+  blockEventIndex: number,
 });
 
 // Events grouped into events block events and events for each transactionIndex

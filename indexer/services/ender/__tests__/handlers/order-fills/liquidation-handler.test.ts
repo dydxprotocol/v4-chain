@@ -65,7 +65,12 @@ import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
 import { ORDER_FLAG_SHORT_TERM, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { updateBlockCache } from '../../../src/caches/block-cache';
-import { defaultLiquidation, defaultLiquidationEvent, defaultPreviousHeight, defaultZeroPerpYieldIndex } from '../../helpers/constants';
+import {
+  defaultLiquidation,
+  defaultLiquidationEvent,
+  defaultPreviousHeight,
+  defaultZeroPerpYieldIndex,
+} from '../../helpers/constants';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import { LiquidationHandler } from '../../../src/handlers/order-fills/liquidation-handler';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';

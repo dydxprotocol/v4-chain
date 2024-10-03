@@ -52,9 +52,8 @@ import {
 } from '../../src/lib/types';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 
-
-export const defaultZeroPerpYieldIndex: string = "0/1";
-export const onePerpYieldIndex: string = "1/1";
+export const defaultZeroPerpYieldIndex: string = '0/1';
+export const onePerpYieldIndex: string = '1/1';
 export const defaultMarketPriceUpdate: MarketEventV1 = {
   marketId: 0,
   priceUpdate: {
@@ -226,7 +225,7 @@ export const defaultTime: Timestamp = {
 };
 export const defaultTxHash: string = '0x32343534306431622d306461302d343831322d613730372d3965613162336162';
 
-export const defaultZeroAssetYieldIndex: string = "0/1"
+export const defaultZeroAssetYieldIndex: string = '0/1';
 
 export const defaultSubaccountId: IndexerSubaccountId = {
   owner: testConstants.defaultAddress,
@@ -465,9 +464,9 @@ export const defaultLongTermOrderPlacementEvent: StatefulOrderEventV1 = {
 export const defaultUpdateYieldParamsEvent1: UpdateYieldParamsEventV1 = {
   sdaiPrice: '100000000',
   assetYieldIndex: '0/1',
-}
+};
 
 export const defaultUpdateYieldParamsEvent2: UpdateYieldParamsEventV1 = {
   sdaiPrice: '110000000',
   assetYieldIndex: '1/1',
-}
+};

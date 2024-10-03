@@ -33,7 +33,7 @@ import {
 } from '../../src/helpers/kafka-helper';
 import { stats } from '@dydxprotocol-indexer/base';
 import { updateBlockCache } from '../../src/caches/block-cache';
-import { defaultPreviousHeight, defaultWalletAddress, defaultZeroPerpYieldIndex, } from './constants';
+import { defaultPreviousHeight, defaultWalletAddress, defaultZeroPerpYieldIndex } from './constants';
 
 describe('kafka-helper', () => {
   describe('addPositionsToContents', () => {

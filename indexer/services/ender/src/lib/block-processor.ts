@@ -26,8 +26,8 @@ import { SubaccountUpdateValidator } from '../validators/subaccount-update-valid
 import { TransferValidator } from '../validators/transfer-validator';
 import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
 import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
-import { YieldParamsValidator } from '../validators/yield-params-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
+import { YieldParamsValidator } from '../validators/yield-params-validator';
 import { BatchedHandlers } from './batched-handlers';
 import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
 import { KafkaPublisher } from './kafka-publisher';

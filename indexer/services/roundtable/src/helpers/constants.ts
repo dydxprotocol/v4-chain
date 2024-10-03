@@ -10,4 +10,4 @@ export const defaultPnlTickForSubaccounts: PnlTickForSubaccounts = {
   },
 };
 
-export const defaultZeroPerpYieldIndex: string = "0/1";
+export const defaultZeroPerpYieldIndex: string = '0/1';

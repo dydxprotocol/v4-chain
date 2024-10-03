@@ -100,7 +100,7 @@ describe('on-message', () => {
         owner: '',
         number: 0,
       },
-      yieldIndex: "0/1",
+      yieldIndex: '0/1',
     });
   const defaultSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
     SubaccountUpdateEventV1.encode(
@@ -119,7 +119,6 @@ describe('on-message', () => {
       errorSubaccountUpdateEvent,
     ).finish(),
   );
-
 
   const defaultTransferEvent: TransferEventV1 = TransferEventV1.fromPartial({
     sender: {
@@ -160,7 +159,6 @@ describe('on-message', () => {
       defaultUpdateYieldParamsEvent1,
     ).finish(),
   );
-
 
   it('successfully processes block with transaction event', async () => {
     const transactionIndex: number = 0;
@@ -244,7 +242,7 @@ describe('on-message', () => {
     const eventIndex1: number = 1;
     // NOTE: A transfer event writes to the subaccounts table.
     // A subaccount row should always have an asset yield index.
-    // To ensure this, we need at least one subaccount update 
+    // To ensure this, we need at least one subaccount update
     // event before a transfer event.
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(

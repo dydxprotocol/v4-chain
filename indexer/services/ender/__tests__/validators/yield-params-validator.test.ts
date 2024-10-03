@@ -55,63 +55,63 @@ describe('yield-params-validator', () => {
     });
 
     it('throws error on undefined assetYieldIndex', () => {
-        const validator: YieldParamsValidator = new YieldParamsValidator(
-          {
-            ...defaultUpdateYieldParamsEvent1,
-            assetYieldIndex: undefined as unknown as string, // satisfy type checker
-          },
-          createBlock(defaultUpdateYieldParamsEvent1),
-          0,
-        );
+      const validator: YieldParamsValidator = new YieldParamsValidator(
+        {
+          ...defaultUpdateYieldParamsEvent1,
+          assetYieldIndex: undefined as unknown as string, // satisfy type checker
+        },
+        createBlock(defaultUpdateYieldParamsEvent1),
+        0,
+      );
 
-        expect(() => validator.validate()).toThrow(new ParseMessageError(
-            'UpdateYieldParamsEvent must have an assetYieldIndex that is defined and non-empty',
-          ));
+      expect(() => validator.validate()).toThrow(new ParseMessageError(
+        'UpdateYieldParamsEvent must have an assetYieldIndex that is defined and non-empty',
+      ));
     });
 
     it('throws error on empty assetYieldIndex', () => {
-        const validator: YieldParamsValidator = new YieldParamsValidator(
-          {
-            ...defaultUpdateYieldParamsEvent1,
-            assetYieldIndex: '',
-          },
-          createBlock(defaultUpdateYieldParamsEvent1),
-          0,
-        );
+      const validator: YieldParamsValidator = new YieldParamsValidator(
+        {
+          ...defaultUpdateYieldParamsEvent1,
+          assetYieldIndex: '',
+        },
+        createBlock(defaultUpdateYieldParamsEvent1),
+        0,
+      );
 
-        expect(() => validator.validate()).toThrow(new ParseMessageError(
-            'UpdateYieldParamsEvent must have an assetYieldIndex that is defined and non-empty',
-          ));
+      expect(() => validator.validate()).toThrow(new ParseMessageError(
+        'UpdateYieldParamsEvent must have an assetYieldIndex that is defined and non-empty',
+      ));
     });
 
     it('throws error on undefined sDAIPrice', () => {
-        const validator: YieldParamsValidator = new YieldParamsValidator(
-          {
-            ...defaultUpdateYieldParamsEvent1,
-            sdaiPrice: undefined as unknown as string, // satisfy type checker
-          },
-          createBlock(defaultUpdateYieldParamsEvent1),
-          0,
-        );
+      const validator: YieldParamsValidator = new YieldParamsValidator(
+        {
+          ...defaultUpdateYieldParamsEvent1,
+          sdaiPrice: undefined as unknown as string, // satisfy type checker
+        },
+        createBlock(defaultUpdateYieldParamsEvent1),
+        0,
+      );
 
-        expect(() => validator.validate()).toThrow(new ParseMessageError(
-            'UpdateYieldParamsEvent must have an sDAIPrice that is defined and non-empty',
-          ));
+      expect(() => validator.validate()).toThrow(new ParseMessageError(
+        'UpdateYieldParamsEvent must have an sDAIPrice that is defined and non-empty',
+      ));
     });
 
     it('throws error on empty sDAIPrice', () => {
-        const validator: YieldParamsValidator = new YieldParamsValidator(
-          {
-            ...defaultUpdateYieldParamsEvent1,
-            sdaiPrice: '',
-          },
-          createBlock(defaultUpdateYieldParamsEvent1),
-          0,
-        );
+      const validator: YieldParamsValidator = new YieldParamsValidator(
+        {
+          ...defaultUpdateYieldParamsEvent1,
+          sdaiPrice: '',
+        },
+        createBlock(defaultUpdateYieldParamsEvent1),
+        0,
+      );
 
-        expect(() => validator.validate()).toThrow(new ParseMessageError(
-            'UpdateYieldParamsEvent must have an sDAIPrice that is defined and non-empty',
-          ));
+      expect(() => validator.validate()).toThrow(new ParseMessageError(
+        'UpdateYieldParamsEvent must have an sDAIPrice that is defined and non-empty',
+      ));
     });
   });
 });
@@ -133,4 +133,3 @@ function createBlock(
     [defaultTxHash],
   );
 }
-

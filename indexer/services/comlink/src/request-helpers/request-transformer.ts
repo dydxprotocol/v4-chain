@@ -58,7 +58,6 @@ import {
   TransferResponseObject,
   YieldParamsResponseObject,
 } from '../types';
-import { oneAssetYieldIndex } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 /**
  * @description Converts perpetual position objects from the database into response objects.
@@ -546,5 +545,5 @@ export function yieldParamsToResponseObject(
     assetYieldIndex: yieldParams.assetYieldIndex,
     createdAt: yieldParams.createdAt,
     createdAtHeight: yieldParams.createdAtHeight,
-  }
+  };
 }

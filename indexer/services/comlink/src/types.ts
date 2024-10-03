@@ -24,7 +24,6 @@ import {
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import express from 'express';
-import { UUIDVersion } from 'express-validator/src/options';
 
 /* ------- GENERAL/UNCATEGORIZED TYPES ------- */
 
@@ -348,7 +347,7 @@ export interface YieldParamsResponse {
 export interface YieldParamsResponseObject {
   id: string,
   sDAIPrice: string,
-  assetYieldIndex: string, 
+  assetYieldIndex: string,
   createdAt: IsoString,
   createdAtHeight: string,
 }
