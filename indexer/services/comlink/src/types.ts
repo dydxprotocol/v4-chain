@@ -731,6 +731,8 @@ export interface AffiliateSnapshotResponseObject {
   affiliateReferredUsers: number,
   affiliateReferredNetProtocolEarnings: number,
   affiliateReferredTotalVolume: number,
+  affiliateReferredMakerFees: number,
+  affiliateReferredTakerFees: number,
 }
 
 export interface AffiliateTotalVolumeResponse {

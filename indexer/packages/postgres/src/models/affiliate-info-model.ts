@@ -1,4 +1,4 @@
-import { NonNegativeNumericPattern } from '../lib/validators';
+import { NonNegativeNumericPattern, NumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
 
@@ -19,9 +19,10 @@ export default class AffiliateInfoModel extends BaseModel {
         'affiliateEarnings',
         'referredMakerTrades',
         'referredTakerTrades',
-        'totalReferredFees',
+        'totalReferredMakerFees',
+        'totalReferredTakerFees',
+        'totalReferredMakerRebates',
         'totalReferredUsers',
-        'referredNetProtocolEarnings',
         'firstReferralBlockHeight',
         'referredTotalVolume',
       ],
@@ -30,9 +31,10 @@ export default class AffiliateInfoModel extends BaseModel {
         affiliateEarnings: { type: 'string', pattern: NonNegativeNumericPattern },
         referredMakerTrades: { type: 'int' },
         referredTakerTrades: { type: 'int' },
-        totalReferredFees: { type: 'string', pattern: NonNegativeNumericPattern },
+        totalReferredMakerFees: { type: 'string', pattern: NonNegativeNumericPattern },
+        totalReferredTakerFees: { type: 'string', pattern: NonNegativeNumericPattern },
+        totalReferredMakerRebates: { type: 'string', pattern: NumericPattern },
         totalReferredUsers: { type: 'int' },
-        referredNetProtocolEarnings: { type: 'string', pattern: NonNegativeNumericPattern },
         firstReferralBlockHeight: { type: 'string', pattern: NonNegativeNumericPattern },
         referredTotalVolume: { type: 'string', pattern: NonNegativeNumericPattern },
       },
@@ -51,9 +53,10 @@ export default class AffiliateInfoModel extends BaseModel {
       affiliateEarnings: 'string',
       referredMakerTrades: 'int',
       referredTakerTrades: 'int',
-      totalReferredFees: 'string',
+      totalReferredMakerFees: 'string',
+      totalReferredTakerFees: 'string',
+      totalReferredMakerRebates: 'string',
       totalReferredUsers: 'int',
-      referredNetProtocolEarnings: 'string',
       firstReferralBlockHeight: 'string',
       referredTotalVolume: 'string',
     };
@@ -69,11 +72,13 @@ export default class AffiliateInfoModel extends BaseModel {
 
   referredTakerTrades!: number;
 
-  totalReferredFees!: string;
+  totalReferredMakerFees!: string;
+
+  totalReferredTakerFees!: string;
+
+  totalReferredMakerRebates!: string;
 
   totalReferredUsers!: number;
-
-  referredNetProtocolEarnings!: string;
 
   firstReferralBlockHeight!: string;
 
