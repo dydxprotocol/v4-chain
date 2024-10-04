@@ -655,7 +655,8 @@ fetch(`${baseURL}/affiliates/snapshot`,
       "affiliateReferredNetProtocolEarnings": 0.1,
       "affiliateReferredTotalVolume": 0.1,
       "affiliateReferredMakerFees": 0.1,
-      "affiliateReferredTakerFees": 0.1
+      "affiliateReferredTakerFees": 0.1,
+      "affiliateReferredMakerRebates": 0.1
     }
   ],
   "total": 0.1,
@@ -4248,7 +4249,8 @@ This operation does not require authentication
   "affiliateReferredNetProtocolEarnings": 0.1,
   "affiliateReferredTotalVolume": 0.1,
   "affiliateReferredMakerFees": 0.1,
-  "affiliateReferredTakerFees": 0.1
+  "affiliateReferredTakerFees": 0.1,
+  "affiliateReferredMakerRebates": 0.1
 }
 
 ```
@@ -4267,6 +4269,7 @@ This operation does not require authentication
 |affiliateReferredTotalVolume|number(double)|true|none|none|
 |affiliateReferredMakerFees|number(double)|true|none|none|
 |affiliateReferredTakerFees|number(double)|true|none|none|
+|affiliateReferredMakerRebates|number(double)|true|none|none|
 
 ## AffiliateSnapshotResponse
 
@@ -4288,7 +4291,8 @@ This operation does not require authentication
       "affiliateReferredNetProtocolEarnings": 0.1,
       "affiliateReferredTotalVolume": 0.1,
       "affiliateReferredMakerFees": 0.1,
-      "affiliateReferredTakerFees": 0.1
+      "affiliateReferredTakerFees": 0.1,
+      "affiliateReferredMakerRebates": 0.1
     }
   ],
   "total": 0.1,
