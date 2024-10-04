@@ -10,6 +10,7 @@ func (k Keeper) StreamOrderbookUpdates(
 ) error {
 	err := k.GetFullNodeStreamingManager().Subscribe(
 		req.GetClobPairId(),
+		req.GetSubaccountIds(),
 		stream,
 	)
 	if err != nil {
