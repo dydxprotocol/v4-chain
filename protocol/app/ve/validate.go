@@ -51,7 +51,7 @@ func CleanAndValidateExtCommitInfo(
 	veCache *vecache.VeCache,
 ) (cometabci.ExtendedCommitInfo, error) {
 	for i, vote := range extCommitInfo.Votes {
-		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache); err != nil {
+		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache, true); err != nil {
 			ctx.Logger().Info(
 				"failed to validate vote extension - pruning vote",
 				"err", err,
@@ -88,7 +88,7 @@ func ValidateExtendedCommitInfo(
 	for _, vote := range extCommitInfo.Votes {
 		addr := getConsAddressFromValidator(vote.Validator)
 
-		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache); err != nil {
+		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache, false); err != nil {
 			ctx.Logger().Error(
 				"failed to validate vote extension",
 				"height", height,
@@ -108,13 +108,16 @@ func validateIndividualVoteExtension(
 	pricesKeeper PreBlockExecPricesKeeper,
 	ratelimitKeeper VoteExtensionRateLimitKeeper,
 	veCache *vecache.VeCache,
+	isPrepareProposal bool,
 ) error {
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
 		return nil
 	}
 
-	if isSeen := IsVoteExtensionSeen(veCache, getConsAddressFromValidator(vote.Validator), ctx.BlockHeight()); !isSeen {
-		return fmt.Errorf("vote extension not seen")
+	if isPrepareProposal {
+		if isSeen := IsVoteExtensionSeen(veCache, getConsAddressFromValidator(vote.Validator), ctx.BlockHeight()); !isSeen {
+			return fmt.Errorf("vote extension not seen")
+		}
 	}
 
 	if err := ValidateVEMarketsAndPrices(ctx, pricesKeeper, vote.VoteExtension, voteCodec); err != nil {
