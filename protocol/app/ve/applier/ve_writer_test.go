@@ -1355,7 +1355,7 @@ func TestVEWriter(t *testing.T) {
 				SpotPrice: big.NewInt(100),
 				PnlPrice:  nil,
 			},
-		}, nil).Once()
+		}).Once()
 
 		priceCache.On("HasValidValues", mock.Anything, mock.Anything).Return(true, nil)
 		priceCache.On("GetConversionRateUpdateAndBlockHeight").Return(big.NewInt(100), big.NewInt(5))
@@ -1434,7 +1434,7 @@ func TestVEWriter(t *testing.T) {
 				SpotPrice: nil,
 				PnlPrice:  big.NewInt(100),
 			},
-		}, nil).Once()
+		}).Once()
 		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz1, {1, 2, 3, 4}, {1, 2, 3, 4}},
 			DecidedLastCommit: cometabci.CommitInfo{
@@ -1451,7 +1451,7 @@ func TestVEWriter(t *testing.T) {
 				SpotPrice: nil,
 				PnlPrice:  nil,
 			},
-		}, nil).Once()
+		}).Once()
 		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitInfoBz1, {1, 2, 3, 4}, {1, 2, 3, 4}},
 			DecidedLastCommit: cometabci.CommitInfo{
