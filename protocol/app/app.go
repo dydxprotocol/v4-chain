@@ -1310,7 +1310,6 @@ func New(
 				app.extCodec,
 				app.voteCodec,
 				veApplier,
-				veCache,
 				veValidationFn,
 			),
 		)

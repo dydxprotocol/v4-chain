@@ -5,7 +5,6 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/process"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
-	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	prepareutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -70,8 +69,6 @@ func TestVEInjectionHandling(t *testing.T) {
 			mockVEApplier := &mocks.ProcessProposalVEApplier{}
 			mockVEApplier.On("ApplyVE", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-			veCache := vecache.NewVECache()
-
 			handler := process.ProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
 				mockClobKeeper,
@@ -81,7 +78,6 @@ func TestVEInjectionHandling(t *testing.T) {
 				vecodec.NewDefaultExtendedCommitCodec(),
 				vecodec.NewDefaultVoteExtensionCodec(),
 				mockVEApplier,
-				veCache,
 				prepareutils.NoOpValidateVoteExtensionsFn,
 			)
 
