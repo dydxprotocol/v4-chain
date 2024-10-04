@@ -390,7 +390,7 @@ async function getVaultPositions(
     FundingIndexUpdatesTable
       .findFundingIndexMaps(
         updatedAtHeights,
-      )
+      ),
   ]);
   const assetPositionsBySubaccount:
   { [subaccountId: string]: AssetPositionFromDatabase[] } = _.groupBy(
@@ -411,44 +411,48 @@ async function getVaultPositions(
     position: VaultPosition,
     subaccountId: string,
   }[] = subaccounts.map((subaccount: SubaccountFromDatabase) => {
-      const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-        .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
-      if (perpetualMarket === undefined) {
-        throw new Error(
-          `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
+    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+      .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
+    if (perpetualMarket === undefined) {
+      throw new Error(
+        `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
           'perpetual market.');
-      }
-
-      const lastUpdatedFundingIndexMap: FundingIndexMap = fundingIndexMaps[
-        subaccount.updatedAtHeight
-      ];
-
-      const subaccountResponse: SubaccountResponseObject = getSubaccountResponse(
-        subaccount,
-        openPerpetualPositionsBySubaccount[subaccount.id] || [],
-        assetPositionsBySubaccount[subaccount.id] || [],
-        assets,
-        markets,
-        perpetualMarketRefresher.getPerpetualMarketsMap(),
-        latestBlock.blockHeight,
-        latestFundingIndexMap,
-        lastUpdatedFundingIndexMap,
+    }
+    const lastUpdatedFundingIndexMap: FundingIndexMap = fundingIndexMaps[
+      subaccount.updatedAtHeight
+    ];
+    if (lastUpdatedFundingIndexMap === undefined) {
+      throw new Error(
+        `No funding indices could be found for vault with subaccount ${subaccount.id}`,
       );
+    }
 
-      return {
-        position: {
-          ticker: perpetualMarket.ticker,
-          assetPosition: subaccountResponse.assetPositions[
-            assetIdToAsset[USDC_ASSET_ID].symbol
-          ],
-          perpetualPosition: subaccountResponse.openPerpetualPositions[
-            perpetualMarket.ticker
-          ] || undefined,
-          equity: subaccountResponse.equity,
-        },
-        subaccountId: subaccount.id,
-      };
-    });
+    const subaccountResponse: SubaccountResponseObject = getSubaccountResponse(
+      subaccount,
+      openPerpetualPositionsBySubaccount[subaccount.id] || [],
+      assetPositionsBySubaccount[subaccount.id] || [],
+      assets,
+      markets,
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      latestBlock.blockHeight,
+      latestFundingIndexMap,
+      lastUpdatedFundingIndexMap,
+    );
+
+    return {
+      position: {
+        ticker: perpetualMarket.ticker,
+        assetPosition: subaccountResponse.assetPositions[
+          assetIdToAsset[USDC_ASSET_ID].symbol
+        ],
+        perpetualPosition: subaccountResponse.openPerpetualPositions[
+          perpetualMarket.ticker
+        ] || undefined,
+        equity: subaccountResponse.equity,
+      },
+      subaccountId: subaccount.id,
+    };
+  });
 
   return new Map(vaultPositionsAndSubaccountId.map(
     (obj: { position: VaultPosition, subaccountId: string }) : [string, VaultPosition] => {

@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
 import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
+import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
@@ -20,7 +21,6 @@ import {
   PerpetualMarketFromDatabase,
 } from '../types';
 import * as PerpetualMarketTable from './perpetual-market-table';
-import { knexReadReplica } from '../helpers/knex';
 
 // Assuming block time of 1 second, this should be 4 hours of blocks
 const FOUR_HOUR_OF_BLOCKS = Big(3600).times(4);
@@ -28,7 +28,7 @@ const FOUR_HOUR_OF_BLOCKS = Big(3600).times(4);
 interface FundingIndexUpdatesFromDatabaseWithSearchHeight extends FundingIndexUpdatesFromDatabase {
   // max effective height being queried for
   searchHeight: string,
-};
+}
 
 export function uuid(
   blockHeight: string,
@@ -229,7 +229,7 @@ export async function findFundingIndexMap(
  * an array of effective before or at heights and cross-joining with the funding index updates table
  * to find the closest funding index update per effective before or at height.
  * @param effectiveBeforeOrAtHeights Heights to get funding index maps for.
- * @param options 
+ * @param options
  * @returns Object mapping block heights to the respective funding index maps.
  */
 export async function findFundingIndexMaps(
@@ -237,13 +237,14 @@ export async function findFundingIndexMaps(
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<{[blockHeight: string]: FundingIndexMap}> {
   const heightNumbers: number[] = effectiveBeforeOrAtHeights
-    .map((height: string) => parseInt(height, 10))
+    .map((height: string):number => parseInt(height, 10))
+    .filter((parsedHeight: number): boolean => { return !Number.isNaN(parsedHeight); })
     .sort();
   // Get the min height to limit the search to blocks 4 hours or before the min height.
   const minHeight: number = heightNumbers[0];
 
   const result: {
-    rows: FundingIndexUpdatesFromDatabaseWithSearchHeight[]
+    rows: FundingIndexUpdatesFromDatabaseWithSearchHeight[],
   } = await knexReadReplica.getConnection().raw(
     `
     SELECT
@@ -251,15 +252,16 @@ export async function findFundingIndexMaps(
       "funding_index_updates".*
     FROM
       "funding_index_updates",
-      unnest(ARRAY[${heightNumbers.join(',')}]) AS "searchHeight"
+      unnest(ARRAY[?]) AS "searchHeight"
     WHERE
-      "effectiveAtHeight" > ${Big(minHeight).minus(FOUR_HOUR_OF_BLOCKS).toFixed()} AND
+      "effectiveAtHeight" > ? AND
       "effectiveAtHeight" <= "searchHeight"
     ORDER BY
       "perpetualId",
       "searchHeight",
       "effectiveAtHeight" DESC
     `,
+    [heightNumbers, Big(minHeight).minus(FOUR_HOUR_OF_BLOCKS).toFixed()],
   ) as unknown as {
     rows: FundingIndexUpdatesFromDatabaseWithSearchHeight[],
   };
@@ -281,7 +283,7 @@ export async function findFundingIndexMaps(
     );
   }
   for (const funding of result.rows) {
-    fundingIndexMaps[funding.searchHeight][funding.perpetualId] = Big(funding.fundingIndex)
+    fundingIndexMaps[funding.searchHeight][funding.perpetualId] = Big(funding.fundingIndex);
   }
 
   return fundingIndexMaps;
