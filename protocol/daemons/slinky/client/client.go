@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -82,6 +83,7 @@ func (c *Client) start(
 		defer c.wg.Done()
 		c.RunMarketPairFetcher(c.ctx, appFlags, grpcClient)
 	}()
+
 	// 2. Start the PriceFetcher
 	c.priceFetcher = NewPriceFetcher(
 		c.marketPairFetcher,
@@ -93,6 +95,17 @@ func (c *Client) start(
 	go func() {
 		defer c.wg.Done()
 		c.RunPriceFetcher(c.ctx)
+	}()
+
+	// 3. Start the SidecarVersionChecker
+	c.sidecarVersionChecker = NewSidecarVersionChecker(
+		slinky,
+		c.logger,
+	)
+	c.wg.Add(1)
+	go func() {
+		defer c.wg.Done()
+		c.RunSidecarVersionChecker(c.ctx)
 	}()
 	return nil
 }
@@ -160,6 +173,7 @@ func (c *Client) RunMarketPairFetcher(ctx context.Context, appFlags appflags.Fla
 // RunSidecarVersionChecker periodically calls the sidecarVersionChecker to check if the running sidecar version
 // is at least a minimum acceptable version
 func (c *Client) RunSidecarVersionChecker(ctx context.Context) {
+	fmt.Println("Running SidecarVersionChecker")
 	err := c.sidecarVersionChecker.Start(ctx)
 	if err != nil {
 		c.logger.Error("Error initializing sidecarVersionChecker in slinky daemon: %w", err)

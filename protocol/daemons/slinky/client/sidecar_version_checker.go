@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	MinSidecarVersion = "v1.0.12"
+	MinSidecarVersion = "v2.1.0"
 )
 
 // SidecarVersionChecker is a lightweight process run in a goroutine by the slinky client.
@@ -26,14 +26,14 @@ type SidecarVersionChecker interface {
 
 // SidecarVersionCheckerImpl implements the SidecarVersionChecker interface.
 type SidecarVersionCheckerImpl struct {
-	Logger log.Logger
 	slinky oracleclient.OracleClient
+	logger log.Logger
 }
 
-func NewSidecarVersionChecker(logger log.Logger, slinky oracleclient.OracleClient) SidecarVersionChecker {
+func NewSidecarVersionChecker(slinky oracleclient.OracleClient, logger log.Logger) SidecarVersionChecker {
 	return &SidecarVersionCheckerImpl{
-		Logger: logger,
 		slinky: slinky,
+		logger: logger,
 	}
 }
 
@@ -55,6 +55,7 @@ func (p *SidecarVersionCheckerImpl) CheckSidecarVersion(ctx context.Context) err
 		return err
 	}
 	current, err := version.NewVersion(slinkyResponse.Version)
+	fmt.Println("Sidecar version", current)
 	if err != nil {
 		return fmt.Errorf("failed to parse current version: %w", err)
 	}
@@ -70,7 +71,7 @@ func (p *SidecarVersionCheckerImpl) CheckSidecarVersion(ctx context.Context) err
 	}
 
 	// Version is acceptable
-	p.Logger.Info("Sidecar version check passed", "version", current)
+	p.logger.Info("Sidecar version check passed", "version", current)
 	return nil
 
 }

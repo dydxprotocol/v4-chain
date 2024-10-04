@@ -12,7 +12,7 @@ var (
 	// SlinkyMarketParamFetchDelay is the frequency at which we query the x/price module to refresh mappings from
 	// currency pair to x/price ID.
 	SlinkyMarketParamFetchDelay = time.Millisecond * 1900
-	SlinkySidecarCheckDelay     = time.Minute * 10
+	SlinkySidecarCheckDelay     = time.Second * 10
 )
 
 const (
