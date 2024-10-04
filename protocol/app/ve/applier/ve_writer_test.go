@@ -779,6 +779,8 @@ func TestVEWriter(t *testing.T) {
 				PnlPrice:  150,
 			},
 		}, cachedPrices)
+
+		pricesKeeper.AssertCalled(t, "PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything)
 	})
 
 	t.Run("doesn't update prices for same round and height", func(t *testing.T) {
@@ -940,6 +942,8 @@ func TestVEWriter(t *testing.T) {
 				PnlPrice:  100,
 			},
 		}, cachedPrices)
+
+		pricesKeeper.AssertCalled(t, "PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything)
 	})
 	t.Run("correctly updates prices in cache", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(5)
@@ -1100,6 +1104,8 @@ func TestVEWriter(t *testing.T) {
 				PnlPrice:  200,
 			},
 		}, cachedPrices)
+
+		pricesKeeper.AssertCalled(t, "PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything)
 	})
 
 	t.Run("Invalid block height in cache when trying to write to store sdai rate", func(t *testing.T) {
@@ -1352,6 +1358,7 @@ func TestVEWriter(t *testing.T) {
 		}, true)
 		require.NoError(t, err)
 		ratelimitKeeper.AssertNumberOfCalls(t, "ProcessNewSDaiConversionRateUpdate", 3)
+
 	})
 
 	t.Run("throws error when cache returns nil prices", func(t *testing.T) {
