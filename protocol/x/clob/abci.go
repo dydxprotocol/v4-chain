@@ -216,8 +216,12 @@ func PrepareCheckState(
 		keeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
-	// 3. Update the prices to reflect next block's prices.
+	// 3. Update the prices to reflect next block's prices and mark the validator's votes.
 	err := keeper.SetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(ctx, req.ExtendedCommitInfo)
+	if err != nil {
+		panic(err)
+	}
+	err = keeper.VEApplier.CacheSeenExtendedVotes(ctx, req)
 	if err != nil {
 		panic(err)
 	}
