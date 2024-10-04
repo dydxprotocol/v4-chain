@@ -498,7 +498,7 @@ func TestVEWriter(t *testing.T) {
 	ratelimitKeeper.On("SetSDAIPrice", mock.Anything, mock.Anything).Return()
 	ratelimitKeeper.On("SetSDAILastBlockUpdated", mock.Anything, mock.Anything).Return()
 
-	pricecache := pricecache.PriceUpdatesCacheImpl{}
+	priceCache := pricecache.PriceUpdatesCacheImpl{}
 	veCache := vecache.NewVECache()
 
 	veApplier := veapplier.NewVEApplier(
@@ -508,7 +508,7 @@ func TestVEWriter(t *testing.T) {
 		ratelimitKeeper,
 		voteCodec,
 		extCodec,
-		&pricecache,
+		&priceCache,
 		veCache,
 	)
 
@@ -1335,7 +1335,7 @@ func TestVEWriter(t *testing.T) {
 	})
 
 	t.Run("throws error when cache returns nil prices", func(t *testing.T) {
-		pricecache := mocks.PriceUpdatesCache{}
+		priceCache := &mocks.PriceUpdatesCache{}
 		veCache := vecache.NewVECache()
 
 		veApplier := veapplier.NewVEApplier(
@@ -1345,11 +1345,11 @@ func TestVEWriter(t *testing.T) {
 			ratelimitKeeper,
 			voteCodec,
 			extCodec,
-			&pricecache,
+			priceCache,
 			veCache,
 		)
 
-		pricecache.On("GetPriceUpdates").Return(pricecache.PriceUpdates{
+		priceCache.On("GetPriceUpdates").Return(pricecache.PriceUpdates{
 			{
 				MarketId:  1,
 				SpotPrice: big.NewInt(100),
@@ -1357,8 +1357,8 @@ func TestVEWriter(t *testing.T) {
 			},
 		}, nil).Once()
 
-		pricecache.On("HasValidValues", mock.Anything, mock.Anything).Return(true, nil)
-		pricecache.On("GetConversionRateUpdateAndBlockHeight").Return(big.NewInt(100), big.NewInt(5))
+		priceCache.On("HasValidValues", mock.Anything, mock.Anything).Return(true, nil)
+		priceCache.On("GetConversionRateUpdateAndBlockHeight").Return(big.NewInt(100), big.NewInt(5))
 
 		ctx = ctx.WithBlockHeight(5)
 
@@ -1428,7 +1428,7 @@ func TestVEWriter(t *testing.T) {
 		require.Error(t, err)
 		pricesKeeper.AssertNotCalled(t, "UpdateSpotAndPnlMarketPrices")
 
-		pricecache.On("GetPriceUpdates").Return(pricecache.PriceUpdates{
+		priceCache.On("GetPriceUpdates").Return(pricecache.PriceUpdates{
 			{
 				MarketId:  1,
 				SpotPrice: nil,
@@ -1445,7 +1445,7 @@ func TestVEWriter(t *testing.T) {
 		require.Error(t, err)
 		pricesKeeper.AssertNotCalled(t, "UpdateSpotAndPnlMarketPrices")
 
-		pricecache.On("GetPriceUpdates").Return(pricecache.PriceUpdates{
+		priceCache.On("GetPriceUpdates").Return(pricecache.PriceUpdates{
 			{
 				MarketId:  1,
 				SpotPrice: nil,
