@@ -303,33 +303,30 @@ func (h *VoteExtensionHandler) getPeripheryPnlPriceData(
 	lastFundingRate *big.Int,
 	allExist bool,
 ) {
-	clobMidPrice = h.getClobMidPrice(ctx, market.MarketId)
-	if clobMidPrice == nil {
+
+	setDefaultSpotPriceAndReturn := func() {
 		vePrices[market.MarketId] = VEPricePair{
 			SpotPrice: market.SpotPrice,
 			PnlPrice:  market.SpotPrice,
 		}
 		allExist = false
+	}
+
+	clobMidPrice = h.getClobMidPrice(ctx, market.MarketId)
+	if clobMidPrice == nil {
+		setDefaultSpotPriceAndReturn()
 		return
 	}
 
 	smoothedPrice = h.getSmoothedPrice(market.MarketId)
 	if smoothedPrice == nil {
-		vePrices[market.MarketId] = VEPricePair{
-			SpotPrice: market.SpotPrice,
-			PnlPrice:  market.SpotPrice,
-		}
-		allExist = false
+		setDefaultSpotPriceAndReturn()
 		return
 	}
 
 	lastFundingRate = h.getLastFundingRate(ctx, market.MarketId)
 	if lastFundingRate == nil {
-		vePrices[market.MarketId] = VEPricePair{
-			SpotPrice: market.SpotPrice,
-			PnlPrice:  market.SpotPrice,
-		}
-		allExist = false
+		setDefaultSpotPriceAndReturn()
 		return
 	}
 
