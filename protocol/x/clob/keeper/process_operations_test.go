@@ -2300,7 +2300,7 @@ func TestGenerateProcessProposerMatchesEvents(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			memclob := memclob.NewMemClobPriceTimePriority(true)
-			ks := keepertest.NewClobKeepersTestContext(t, memclob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memclob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight))
 
 			processProposerMatchesEvents := ks.ClobKeeper.GenerateProcessProposerMatchesEvents(ctx, tc.operations)
@@ -2353,6 +2353,7 @@ func setupProcessProposerOperationsTestCase(
 		memclob.NewMemClobPriceTimePriority(false),
 		mockBankKeeper,
 		mockIndexerEventManager,
+		nil,
 	)
 
 	ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))

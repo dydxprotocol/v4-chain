@@ -106,7 +106,7 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			bankMock := &mocks.BankKeeper{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{}, nil)
 
 			if tc.setupState != nil {
 				tc.setupState(ks.Ctx, ks.ClobKeeper)
@@ -129,7 +129,7 @@ func TestSetGetSubaccountLiquidationInfo(t *testing.T) {
 func TestUpdateSubaccountLiquidationInfo_MultipleLiquidationsOfSubaccountAndPerpetualPanics(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	bankMock := &mocks.BankKeeper{}
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{}, nil)
 
 	subaccountId := constants.Alice_Num0
 	perpetualId := uint32(0)
@@ -251,7 +251,7 @@ func TestIncrementCumulativeInsuranceFundDelta(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			bankMock := &mocks.BankKeeper{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{}, nil)
 
 			ctx := ks.Ctx.WithIsCheckTx(true)
 

@@ -152,6 +152,7 @@ func TestSetProcessProposerMatchesEvents(t *testing.T) {
 				memClob,
 				&mocks.BankKeeper{},
 				&mocks.IndexerEventManager{},
+				nil,
 			)
 
 			// Set the tracer on the multistore to verify the performed writes are correct.
@@ -185,6 +186,7 @@ func TestSetProcessProposerMatchesEvents_BadBlockHeight(t *testing.T) {
 		memClob,
 		&mocks.BankKeeper{},
 		&mocks.IndexerEventManager{},
+		nil,
 	)
 	ctx := ks.Ctx.WithBlockHeight(1)
 	require.Panics(t, func() {

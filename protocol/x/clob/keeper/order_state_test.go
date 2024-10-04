@@ -117,6 +117,7 @@ func TestGetAllOrderFillStates(t *testing.T) {
 				memClob,
 				&mocks.BankKeeper{},
 				&mocks.IndexerEventManager{},
+				nil,
 			)
 
 			tc.setup(ks.Ctx, *ks.ClobKeeper)
@@ -192,6 +193,7 @@ func TestSetGetOrderFillAmount(t *testing.T) {
 				memClob,
 				&mocks.BankKeeper{},
 				&mocks.IndexerEventManager{},
+				nil,
 			)
 
 			tc.setup(ks.Ctx, *ks.ClobKeeper, tc.orderId)
@@ -215,6 +217,7 @@ func TestOrderFillAmountInitMemStore_Success(t *testing.T) {
 		memClob,
 		&mocks.BankKeeper{},
 		&mocks.IndexerEventManager{},
+		nil,
 	)
 
 	// Set some fill amounts.
@@ -463,6 +466,7 @@ func TestPruning(t *testing.T) {
 				memClob,
 				&mocks.BankKeeper{},
 				&mocks.IndexerEventManager{},
+				nil,
 			)
 
 			tc.setup(t, ks.Ctx, *ks.ClobKeeper, tc.orderId)
@@ -666,6 +670,7 @@ func TestRemoveOrderFillAmount(t *testing.T) {
 				memClob,
 				&mocks.BankKeeper{},
 				&mocks.IndexerEventManager{},
+				nil,
 			)
 
 			// Set the tracer on the multistore to verify the performed writes are correct.

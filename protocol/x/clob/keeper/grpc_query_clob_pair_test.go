@@ -22,7 +22,7 @@ var _ = strconv.IntSize
 func TestClobPairQuerySingle(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	mockIndexerEventManager := &mocks.IndexerEventManager{}
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager, nil)
 	msgs := keepertest.CreateNClobPair(t,
 		ks.ClobKeeper,
 		ks.PerpetualsKeeper,
@@ -81,7 +81,7 @@ func TestClobPairQuerySingle(t *testing.T) {
 func TestClobPairQueryPaginated(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	mockIndexerEventManager := &mocks.IndexerEventManager{}
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager, nil)
 	msgs := keepertest.CreateNClobPair(t,
 		ks.ClobKeeper,
 		ks.PerpetualsKeeper,

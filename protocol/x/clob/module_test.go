@@ -89,7 +89,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 	).Return(
 		sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
 	)
-	ks := keeper.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager)
+	ks := keeper.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager, nil)
 
 	err := keeper.CreateTDaiAsset(ks.Ctx, ks.AssetsKeeper)
 	require.NoError(t, err)

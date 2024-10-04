@@ -4,7 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	aggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
+	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
+	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	deleveragingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/deleveraging"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
@@ -56,8 +64,9 @@ func NewClobKeepersTestContext(
 	memClob types.MemClob,
 	bankKeeper bankkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
+	voteAggregator aggregator.VoteAggregator,
 ) (ks ClobKeepersTestContext) {
-	ks = NewClobKeepersTestContextWithUninitializedMemStore(t, memClob, bankKeeper, indexerEventManager)
+	ks = NewClobKeepersTestContextWithUninitializedMemStore(t, memClob, bankKeeper, indexerEventManager, voteAggregator)
 
 	// Initialize the memstore.
 	ks.ClobKeeper.InitMemStore(ks.Ctx)
@@ -70,6 +79,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 	memClob types.MemClob,
 	bankKeeper bankkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
+	voteAggregator aggregator.VoteAggregator,
 ) (ks ClobKeepersTestContext) {
 	var mockTimeProvider *mocks.TimeProvider
 	ks.Ctx = initKeepers(t, func(
@@ -136,6 +146,42 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			indexerEventsTransientStoreKey,
 			true,
 		)
+
+		mCCVStore := &mocks.CCValidatorStore{}
+		pricesAggregatorFn := voteweighted.MedianPrices(
+			log.NewNopLogger(),
+			mCCVStore,
+			voteweighted.DefaultPowerThreshold,
+		)
+
+		conversionRateAggregatorFn := voteweighted.MedianConversionRate(
+			log.NewNopLogger(),
+			mCCVStore,
+			voteweighted.DefaultPowerThreshold,
+		)
+
+		if voteAggregator == nil {
+
+			voteAggregator = veaggregator.NewVeAggregator(
+				log.NewNopLogger(),
+				*ks.PricesKeeper,
+				*ks.RatelimitKeeper,
+				pricesAggregatorFn,
+				conversionRateAggregatorFn,
+			)
+		}
+
+		veApplier := veapplier.NewVEApplier(
+			log.NewNopLogger(),
+			voteAggregator,
+			ks.PricesKeeper,
+			ks.RatelimitKeeper,
+			vecodec.NewDefaultVoteExtensionCodec(),
+			vecodec.NewDefaultExtendedCommitCodec(),
+			&pricecache.PriceUpdatesCacheImpl{},
+			vecache.NewVECache(),
+		)
+
 		ks.ClobKeeper, ks.StoreKey, ks.MemKey = createClobKeeper(
 			stateStore,
 			db,
@@ -150,6 +196,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.StatsKeeper,
 			ks.SubaccountsKeeper,
 			indexerEventManager,
+			veApplier,
 		)
 		ks.Cdc = cdc
 
@@ -185,6 +232,7 @@ func createClobKeeper(
 	statsKeeper *statskeeper.Keeper,
 	saKeeper *subkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
+	veApplier *veapplier.VEApplier,
 ) (*keeper.Keeper, storetypes.StoreKey, storetypes.StoreKey) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
@@ -218,7 +266,7 @@ func createClobKeeper(
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[sdk.Msg](),
 		deleveragingtypes.NewDaemonDeleveragingInfo(),
-		nil,
+		veApplier,
 	)
 	k.SetAnteHandler(constants.EmptyAnteHandler)
 

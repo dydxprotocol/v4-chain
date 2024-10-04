@@ -157,7 +157,7 @@ func TestCreateClobPair(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager, nil)
 			tc.setup(t, ks, mockIndexerEventManager)
 
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)

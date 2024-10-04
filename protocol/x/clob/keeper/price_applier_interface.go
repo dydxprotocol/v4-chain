@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type VEApplierInterface interface {
+type VEApplierClobInterface interface {
 	WritePricesToStoreAndMaybeCache(ctx sdk.Context, prices map[string]voteweighted.AggregatorPricePair, round int32, writeToCache bool) error
 	WriteSDaiConversionRateToStoreAndMaybeCache(ctx sdk.Context, sDaiConversionRate *big.Int, round int32, writeToCache bool) error
 	VoteAggregator() aggregator.VoteAggregator

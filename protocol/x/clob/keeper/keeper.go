@@ -60,7 +60,7 @@ type (
 
 		DaemonDeleveragingInfo *deleveragingtypes.DaemonDeleveragingInfo
 
-		VEApplier VEApplierInterface
+		VEApplier VEApplierClobInterface
 	}
 )
 
@@ -90,7 +90,7 @@ func NewKeeper(
 	clobFlags flags.ClobFlags,
 	placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg],
 	daemonDeleveragingInfo *deleveragingtypes.DaemonDeleveragingInfo,
-	veApplier VEApplierInterface,
+	veApplier VEApplierClobInterface,
 ) *Keeper {
 	keeper := &Keeper{
 		cdc:                          cdc,

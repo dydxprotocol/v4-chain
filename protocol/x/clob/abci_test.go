@@ -10,14 +10,17 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	abcicomet "github.com/cometbft/cometbft/abci/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -117,7 +120,7 @@ func TestEndBlocker_Failure(t *testing.T) {
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager, nil)
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
 
 			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
@@ -660,7 +663,7 @@ func TestEndBlocker_Success(t *testing.T) {
 				sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
 			)
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager, nil)
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
 
 			// Set up prices keeper markets with default prices.
@@ -1103,7 +1106,7 @@ func TestPrepareCheckState_WithProcessProposerMatchesEventsWithBadBlockHeight(t 
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 
 	ks := keepertest.NewClobKeepersTestContext(
-		t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop())
+		t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop(), nil)
 
 	// Set the process proposer matches events from the last block.
 	ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
@@ -1130,7 +1133,7 @@ func TestCommitBlocker_WithProcessProposerMatchesEventsWithBadBlockHeight(t *tes
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 
 	ks := keepertest.NewClobKeepersTestContext(
-		t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop())
+		t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop(), nil)
 
 	// Set the process proposer matches events from the last block.
 	ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
@@ -1219,7 +1222,7 @@ func TestBeginBlocker_Success(t *testing.T) {
 			memClob.On("SetClobKeeper", mock.Anything).Return()
 
 			ks := keepertest.NewClobKeepersTestContext(
-				t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop())
+				t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop(), nil)
 			ctx := ks.Ctx.WithBlockHeight(int64(20)).WithBlockTime(unixTimeTen)
 
 			if tc.setupState != nil {
@@ -1242,6 +1245,21 @@ func TestBeginBlocker_Success(t *testing.T) {
 	}
 }
 
+func CreateValidExtendedCommitInfo(t *testing.T) *abcicomet.ExtendedCommitInfo {
+	valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+		vetesting.NewDefaultSignedVeInfo(
+			constants.AliceConsAddress,
+			constants.ValidVEPrices,
+			"2006681181716810314385961731",
+		),
+	)
+	require.NoError(t, err)
+
+	return &abcicomet.ExtendedCommitInfo{
+		Votes: []abcicomet.ExtendedVoteInfo{valVoteInfo},
+	}
+}
+
 // TODO(CLOB-231): Add more test coverage to `PrepareCheckState` method.
 func TestPrepareCheckState(t *testing.T) {
 	tests := map[string]struct {
@@ -1256,7 +1274,7 @@ func TestPrepareCheckState(t *testing.T) {
 		// Memclob state.
 		placedOperations []types.Operation
 		// VE
-		extendCommitInfo *cometabci.RequestCommit
+		useDefaultExtendCommitInfo bool
 
 		// Expectations.
 		expectedOperationsQueue []types.InternalOperation
@@ -1271,8 +1289,8 @@ func TestPrepareCheckState(t *testing.T) {
 			processProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				BlockHeight: 4,
 			},
-			placedOperations: []types.Operation{},
-			extendCommitInfo: &cometabci.RequestCommit{},
+			placedOperations:           []types.Operation{},
+			useDefaultExtendCommitInfo: false,
 
 			expectedOperationsQueue: []types.InternalOperation{},
 			expectedBids:            []memclob.OrderWithRemainingSize{},
@@ -1290,8 +1308,8 @@ func TestPrepareCheckState(t *testing.T) {
 			processProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				BlockHeight: 4,
 			},
-			placedOperations: []types.Operation{},
-			extendCommitInfo: &cometabci.RequestCommit{},
+			placedOperations:           []types.Operation{},
+			useDefaultExtendCommitInfo: true,
 
 			expectedOperationsQueue: []types.InternalOperation{},
 			expectedBids:            []memclob.OrderWithRemainingSize{},
@@ -1327,7 +1345,7 @@ func TestPrepareCheckState(t *testing.T) {
 					constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16.MustGetOrder(),
 				),
 			},
-			extendCommitInfo: &cometabci.RequestCommit{},
+			useDefaultExtendCommitInfo: false,
 
 			expectedOperationsQueue: []types.InternalOperation{
 				types.NewShortTermOrderPlacementInternalOperation(
@@ -1386,7 +1404,26 @@ func TestPrepareCheckState(t *testing.T) {
 				authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
 				constants.TDai.Denom,
 			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+
+			voteAggregator := &mocks.VoteAggregator{}
+			if tc.useDefaultExtendCommitInfo {
+				mockBankKeeper.On(
+					"GetSupply",
+					mock.Anything,
+					ratelimittypes.SDaiDenom,
+				).Return(
+					sdk.NewCoin(ratelimittypes.SDaiDenom, sdkmath.NewInt(0)),
+				).Once()
+
+				prices := map[string]voteweighted.AggregatorPricePair{
+					"BTC-USD": {SpotPrice: constants.Price5Big, PnlPrice: constants.Price5Big},
+				}
+				conversionRate := ratelimitkeeper.ConvertStringToBigIntWithPanicOnErr("2006681181716810314385961731")
+				voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", mock.Anything, mock.Anything).
+					Return(prices, conversionRate, nil).Once()
+			}
+
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop(), voteAggregator)
 
 			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockHeight(int64(tc.processProposerMatchesEvents.BlockHeight))
 			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
@@ -1526,10 +1563,17 @@ func TestPrepareCheckState(t *testing.T) {
 			}
 
 			// Run the test.
+			defaultExtendCommitInfo := &cometabci.RequestCommit{}
+			if tc.useDefaultExtendCommitInfo {
+				defaultExtendCommitInfo = &cometabci.RequestCommit{
+					ExtendedCommitInfo: CreateValidExtendedCommitInfo(t),
+				}
+			}
+
 			clob.PrepareCheckState(
 				ctx,
 				ks.ClobKeeper,
-				tc.extendCommitInfo,
+				defaultExtendCommitInfo,
 			)
 
 			// Verify test expectations.
@@ -1554,6 +1598,19 @@ func TestPrepareCheckState(t *testing.T) {
 				tc.expectedBids,
 				tc.expectedAsks,
 			)
+
+			if tc.useDefaultExtendCommitInfo {
+				actualSDaiPrice, found := ks.RatelimitKeeper.GetSDAIPrice(ctx)
+				require.True(t, found)
+				require.Equal(t, ratelimitkeeper.ConvertStringToBigIntWithPanicOnErr("2006681181716810314385961731"), actualSDaiPrice)
+
+				marketPrice, err := ks.PricesKeeper.GetMarketPrice(ctx, constants.MarketId0)
+				require.NoError(t, err)
+				require.Equal(t, marketPrice.SpotPrice, constants.Price5)
+
+				mockBankKeeper.AssertCalled(t, "GetSupply", mock.Anything, ratelimittypes.SDaiDenom)
+				voteAggregator.AssertCalled(t, "AggregateDaemonVEIntoFinalPricesAndConversionRate", mock.Anything, mock.Anything)
+			}
 		})
 	}
 }

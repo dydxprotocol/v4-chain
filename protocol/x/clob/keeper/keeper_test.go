@@ -16,7 +16,9 @@ func TestLogger(t *testing.T) {
 		t,
 		memClob,
 		&mocks.BankKeeper{},
-		&mocks.IndexerEventManager{})
+		&mocks.IndexerEventManager{},
+		nil,
+	)
 	logger := ks.ClobKeeper.Logger(ks.Ctx)
 	require.NotNil(t, logger)
 }
@@ -27,7 +29,9 @@ func TestInitMemStore_OnlyAllowedOnce(t *testing.T) {
 		t,
 		memClob,
 		&mocks.BankKeeper{},
-		&mocks.IndexerEventManager{})
+		&mocks.IndexerEventManager{},
+		nil,
+	)
 
 	ks.ClobKeeper.InitMemStore(ks.Ctx)
 
@@ -44,6 +48,7 @@ func TestInitMemStore_StatefulOrderCount(t *testing.T) {
 		memClob,
 		&mocks.BankKeeper{},
 		&mocks.IndexerEventManager{},
+		nil,
 	)
 
 	// Long term order.

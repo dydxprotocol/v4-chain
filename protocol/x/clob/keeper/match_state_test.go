@@ -13,7 +13,7 @@ import (
 func TestGetSetLastTradePrices(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 	// Get non-existent last trade price.
 	minTradePriceSubticks, maxTradePriceSubticks, found := ks.ClobKeeper.GetTradePricesForPerpetual(ks.Ctx, 0)

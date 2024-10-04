@@ -732,7 +732,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.TDai.Denom,
 			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop(), nil)
 			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
@@ -854,7 +854,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 func TestPlaceShortTermOrder_PanicsOnStatefulOrder(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	mockBankKeeper := &mocks.BankKeeper{}
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop(), nil)
 	msgPlaceOrder := &types.MsgPlaceOrder{Order: constants.LongTermOrder_Bob_Num0_Id2_Clob0_Buy15_Price5_GTBT10}
 
 	require.Panicsf(
@@ -990,7 +990,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				constants.TDai.Denom,
 			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop(), nil)
 			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
@@ -1146,7 +1146,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 		constants.TDai.Denom,
 	).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, indexerEventManager)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, indexerEventManager, nil)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 	ctx := ks.Ctx.WithTxBytes(constants.TestTxBytes)
@@ -1214,7 +1214,7 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 		constants.TDai.Denom,
 	).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
 
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, indexerEventManager)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, indexerEventManager, nil)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -1971,7 +1971,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			indexerEventManager := &mocks.IndexerEventManager{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager, nil)
 			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))
 			// Create subaccount if it's specified.
 			if tc.subaccount != nil {
@@ -2029,7 +2029,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 func TestGetStatePosition_PanicsOnInvalidClob(t *testing.T) {
 	// Setup keeper state.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -2194,7 +2194,7 @@ func TestInitStatefulOrders(t *testing.T) {
 
 			indexerEventManager := &mocks.IndexerEventManager{}
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager, nil)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -2328,7 +2328,7 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 
 			indexerEventManager := &mocks.IndexerEventManager{}
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager, nil)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
@@ -2498,6 +2498,7 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 				memClob,
 				&mocks.BankKeeper{},
 				indexer_manager.NewIndexerEventManagerNoop(),
+				nil,
 			)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
@@ -2627,6 +2628,7 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				memClob,
 				&mocks.BankKeeper{},
 				indexer_manager.NewIndexerEventManagerNoop(),
+				nil,
 			)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
