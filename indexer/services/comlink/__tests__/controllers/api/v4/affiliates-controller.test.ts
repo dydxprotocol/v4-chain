@@ -380,5 +380,6 @@ function affiliateInfoCreateToResponseObject(
     affiliateReferredTotalVolume: Number(info.referredTotalVolume),
     affiliateReferredMakerFees: Number(info.totalReferredMakerFees),
     affiliateReferredTakerFees: Number(info.totalReferredTakerFees),
+    affiliateReferredMakerRebates: Number(info.totalReferredMakerRebates),
   };
 }
