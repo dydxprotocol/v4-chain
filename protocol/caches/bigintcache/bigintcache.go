@@ -1,4 +1,4 @@
-package pricecache
+package bigintcache
 
 import (
 	"math/big"
