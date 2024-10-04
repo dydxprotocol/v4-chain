@@ -51,7 +51,7 @@ func CleanAndValidateExtCommitInfoInPrepareProposal(
 	veCache *vecache.VeCache,
 ) (cometabci.ExtendedCommitInfo, error) {
 	for i, vote := range extCommitInfo.Votes {
-		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache, true); err != nil {
+		if err := validateIndividualVoteExtensionWithVECache(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache); err != nil {
 			ctx.Logger().Info(
 				"failed to validate vote extension - pruning vote",
 				"err", err,
@@ -88,7 +88,13 @@ func ValidateExtendedCommitInfoInProcessProposal(
 	for _, vote := range extCommitInfo.Votes {
 		addr := getConsAddressFromValidator(vote.Validator)
 
-		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache, false); err != nil {
+		if err := validateIndividualVoteExtensionForProccessingProposal(
+			ctx,
+			vote,
+			veCodec,
+			pricesKeeper,
+			ratelimitKeeper,
+		); err != nil {
 			ctx.Logger().Error(
 				"failed to validate vote extension",
 				"height", height,
@@ -101,24 +107,47 @@ func ValidateExtendedCommitInfoInProcessProposal(
 	return nil
 }
 
-func validateIndividualVoteExtension(
+func validateIndividualVoteExtensionWithVECache(
 	ctx sdk.Context,
 	vote cometabci.ExtendedVoteInfo,
 	voteCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
 	ratelimitKeeper VoteExtensionRateLimitKeeper,
 	veCache *vecache.VeCache,
-	isPrepareProposal bool,
 ) error {
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
 		return nil
 	}
 
-	if isPrepareProposal {
-		if isSeen := IsVoteExtensionSeen(veCache, getConsAddressFromValidator(vote.Validator), ctx.BlockHeight()); !isSeen {
-			return fmt.Errorf("vote extension not seen")
-		}
+	if isSeen := IsVoteExtensionSeen(veCache, getConsAddressFromValidator(vote.Validator), ctx.BlockHeight()); !isSeen {
+		return fmt.Errorf("vote extension not seen")
 	}
+
+	return validateIndividualVoteExtension(ctx, vote, voteCodec, pricesKeeper, ratelimitKeeper)
+}
+
+func validateIndividualVoteExtensionForProccessingProposal(
+	ctx sdk.Context,
+	vote cometabci.ExtendedVoteInfo,
+	voteCodec codec.VoteExtensionCodec,
+	pricesKeeper PreBlockExecPricesKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
+) error {
+
+	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
+		return nil
+	}
+
+	return validateIndividualVoteExtension(ctx, vote, voteCodec, pricesKeeper, ratelimitKeeper)
+}
+
+func validateIndividualVoteExtension(
+	ctx sdk.Context,
+	vote cometabci.ExtendedVoteInfo,
+	voteCodec codec.VoteExtensionCodec,
+	pricesKeeper PreBlockExecPricesKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
+) error {
 
 	if err := ValidateVEMarketsAndPrices(ctx, pricesKeeper, vote.VoteExtension, voteCodec); err != nil {
 		return err
