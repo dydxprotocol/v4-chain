@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
@@ -19,9 +20,13 @@ import (
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 )
 
 func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
@@ -358,7 +363,7 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 }
 
 func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
-	testHeight := int64(101)
+	testHeight := int64(6000)
 
 	tests := map[string]struct {
 		initialSDaiPrice            *big.Int
@@ -380,7 +385,7 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 			writeToCache:                true,
 			expectedError:               nil,
 			expectedSDaiPrice:           big.NewInt(1000000),
-			expectedLastBlockUpdated:    big.NewInt(101), // Assuming current block height is 101
+			expectedLastBlockUpdated:    big.NewInt(testHeight),
 			expectedCacheConversionRate: big.NewInt(1000000),
 			expectedCacheBlockHeight:    big.NewInt(testHeight),
 		},
@@ -439,7 +444,7 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 			voteCodec := vecodec.NewDefaultVoteExtensionCodec()
 			extCodec := vecodec.NewDefaultExtendedCommitCodec()
 			voteAggregator := &mocks.VoteAggregator{}
-			ctx, _, pricesKeeper, _, _, _, _, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(t, false)
+			ctx, _, pricesKeeper, _, _, bankKeeper, _, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(t, false)
 
 			ratelimitKeeper.SetSDAIPrice(ctx, tc.initialSDaiPrice)
 			ratelimitKeeper.SetSDAILastBlockUpdated(ctx, tc.initialLastBlockUpdated)
@@ -459,10 +464,24 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 			)
 
 			ctx = ctx.WithBlockHeight(testHeight)
-			err := veApplier.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, tc.sDaiConversionRate, tc.round, tc.writeToCache)
+
+			// Set test tdai balance
+			initialTestAmountTDai := sdkmath.NewIntFromBigInt(big.NewInt(1))
+			tDaiToMintCoins := sdk.NewCoins(sdk.NewCoin(types.TDaiDenom, initialTestAmountTDai))
+			err := bankKeeper.MintCoins(ctx, types.TDaiPoolAccount, tDaiToMintCoins)
+			require.NoError(t, err)
+
+			initialTestAmountSDai := sdkmath.NewIntFromBigInt(ratelimitkeeper.ConvertStringToBigIntWithPanicOnErr("100000000000000000000000000000000000000000000"))
+			sDaiToMintCoins := sdk.NewCoins(sdk.NewCoin(types.SDaiDenom, initialTestAmountSDai))
+			err = bankKeeper.MintCoins(ctx, types.TDaiPoolAccount, sDaiToMintCoins)
+			require.NoError(t, err)
+
+			err = veApplier.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, tc.sDaiConversionRate, tc.round, tc.writeToCache)
 
 			if tc.expectedError != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
+				actualTDaiBalance := bankKeeper.GetSupply(ctx, types.TDaiDenom)
+				require.Equal(t, 0, actualTDaiBalance.Amount.BigInt().Cmp(initialTestAmountTDai.BigInt()))
 			} else {
 				require.NoError(t, err)
 			}
@@ -495,8 +514,7 @@ func TestVEWriter(t *testing.T) {
 	pricesKeeper.On("PerformStatefulPriceUpdateValidation", mock.Anything, mock.Anything).Return(true, true)
 
 	ratelimitKeeper := &mocks.VEApplierRatelimitKeeper{}
-	ratelimitKeeper.On("SetSDAIPrice", mock.Anything, mock.Anything).Return()
-	ratelimitKeeper.On("SetSDAILastBlockUpdated", mock.Anything, mock.Anything).Return()
+	ratelimitKeeper.On("ProcessNewSDaiConversionRateUpdate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	priceCache := pricecache.PriceUpdatesCacheImpl{}
 	veCache := vecache.NewVECache()
@@ -1331,7 +1349,7 @@ func TestVEWriter(t *testing.T) {
 			},
 		}, true)
 		require.NoError(t, err)
-		ratelimitKeeper.AssertNumberOfCalls(t, "SetSDAIPrice", 3)
+		ratelimitKeeper.AssertNumberOfCalls(t, "ProcessNewSDaiConversionRateUpdate", 3)
 	})
 
 	t.Run("throws error when cache returns nil prices", func(t *testing.T) {

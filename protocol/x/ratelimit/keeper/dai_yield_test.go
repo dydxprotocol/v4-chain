@@ -19,6 +19,8 @@ import (
 )
 
 func TestUpdateMintStateOnSDaiConversionRateUpdate(t *testing.T) {
+	expectEvent := true
+
 	testCases := []struct {
 		name                     string
 		initialSDaiSupply        *big.Int
@@ -147,7 +149,7 @@ func TestUpdateMintStateOnSDaiConversionRateUpdate(t *testing.T) {
 			expectedAssetYieldIndex:  "1/1",
 			expectedPerpYieldIndexes: []string{"0/1", "0/1"},
 			expErr:                   false,
-			customSetup:              func(ctx sdk.Context, k *keeper.Keeper) {},
+			customSetup:              func(ctx sdk.Context, k *keeper.Keeper) { expectEvent = false },
 		},
 		{
 			name:                     "Failure: Zero tDai Minted",
@@ -176,32 +178,16 @@ func TestUpdateMintStateOnSDaiConversionRateUpdate(t *testing.T) {
 			customSetup:              func(ctx sdk.Context, k *keeper.Keeper) {},
 		},
 		{
-			name:                     "Failure: Asset yield index not found",
+			name:                     "Granular Mint",
 			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("987654321234567898765432123"),
-			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139230"),
+			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139000"),
 			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1096681181716810314385961731"),
 			initialAssetYieldIndex:   "345/678",
 			initialPerpYieldIndexes:  []string{"9876/5432", "123456789/12345678"},
-			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139230"),
-			expectedAssetYieldIndex:  "345/678",
-			expectedPerpYieldIndexes: []string{"9876/5432", "123456789/12345678"},
-			expErr:                   true,
-			customSetup: func(ctx sdk.Context, k *keeper.Keeper) {
-				store := ctx.KVStore(k.GetStoreKeyForTestingOnly())
-				store.Delete([]byte(types.AssetYieldIndexPrefix))
-			},
-		},
-		{
-			name:                     "Failure: Asset yield index not found",
-			initialSDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("987654321234567898765432123"),
-			initialTDaiSupply:        keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139230"),
-			sDaiConversionRate:       keeper.ConvertStringToBigIntWithPanicOnErr("1096681181716810314385961731"),
-			initialAssetYieldIndex:   "345/678",
-			initialPerpYieldIndexes:  []string{"9876/5432", "123456789/12345678"},
-			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139230"),
-			expectedAssetYieldIndex:  "345/678",
-			expectedPerpYieldIndexes: []string{"9876/5432", "123456789/12345678"},
-			expErr:                   true,
+			expectedTDAISupply:       keeper.ConvertStringToBigIntWithPanicOnErr("1083141908139240"),
+			expectedAssetYieldIndex:  "9026182567827/9026182567825",
+			expectedPerpYieldIndexes: []string{"4457128951994701/2451511185421270", "123815946305724809777/12381593727953401150"},
+			expErr:                   false,
 			customSetup: func(ctx sdk.Context, k *keeper.Keeper) {
 				store := ctx.KVStore(k.GetStoreKeyForTestingOnly())
 				store.Delete([]byte(types.AssetYieldIndexPrefix))
@@ -285,13 +271,19 @@ func TestUpdateMintStateOnSDaiConversionRateUpdate(t *testing.T) {
 				}
 
 				actualEvents := testkeeper.GetUpdateYieldParamsFromIndexerBlock(ctx, k)
-				require.Equal(t, 1, len(actualEvents))
-				expectedEvent := indexerevents.UpdateYieldParamsEventV1{
-					SdaiPrice:       tc.sDaiConversionRate.String(),
-					AssetYieldIndex: tc.expectedAssetYieldIndex,
+				if expectEvent {
+					require.Equal(t, 1, len(actualEvents))
+					expectedEvent := indexerevents.UpdateYieldParamsEventV1{
+						SdaiPrice:       tc.sDaiConversionRate.String(),
+						AssetYieldIndex: tc.expectedAssetYieldIndex,
+					}
+					require.Equal(t, expectedEvent, *actualEvents[0])
+				} else {
+					require.Equal(t, 0, len(actualEvents))
 				}
-				require.Equal(t, expectedEvent, *actualEvents[0])
 			}
+			// reset expectEvent to true for next test case
+			expectEvent = true
 		})
 	}
 }
@@ -402,23 +394,42 @@ func TestSetNewYieldIndex(t *testing.T) {
 			customSetup:             func(ctx sdk.Context, tApp *testapp.TestApp) {},
 		},
 		{
-			name:                    "TotalTDaiMinted is non-zero, but totalTDaiPreMint is zero",
+			name:                    "TotalTDaiMinted is negative",
+			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("12345678"),
+			totalTDaiMinted:         keeper.ConvertStringToBigIntWithPanicOnErr("-1"),
+			initialAssetYieldIndex:  keeper.ConvertStringToBigRatWithPanicOnErr("1.2345"),
+			expectedAssetYieldIndex: keeper.ConvertStringToBigRatWithPanicOnErr("1.2345"),
+			expectErr:               true,
+			expectedErrMsg:          "total t-dai minted is negative",
+			customSetup:             func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                    "totalTDaiPreMint is zero",
 			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("0"),
 			totalTDaiMinted:         keeper.ConvertStringToBigIntWithPanicOnErr("2"),
 			initialAssetYieldIndex:  keeper.ConvertStringToBigRatWithPanicOnErr("1"),
 			expectedAssetYieldIndex: keeper.ConvertStringToBigRatWithPanicOnErr("1"),
 			expectErr:               true,
-			expectedErrMsg:          "total t-dai minted is non-zero, while total t-dai before mint is 0",
+			expectedErrMsg:          "total t-dai before mint is 0 or negative",
 			customSetup:             func(ctx sdk.Context, tApp *testapp.TestApp) {},
 		},
 		{
-			name:                    "Failure: Cannot find asset yield index",
-			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("0"),
+			name:                    "totalTDaiPreMint is zero",
+			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("-1"),
 			totalTDaiMinted:         keeper.ConvertStringToBigIntWithPanicOnErr("2"),
 			initialAssetYieldIndex:  keeper.ConvertStringToBigRatWithPanicOnErr("1"),
-			expectedAssetYieldIndex: nil,
+			expectedAssetYieldIndex: keeper.ConvertStringToBigRatWithPanicOnErr("1"),
 			expectErr:               true,
-			expectedErrMsg:          "could not retrieve asset yield index",
+			expectedErrMsg:          "total t-dai before mint is 0 or negative",
+			customSetup:             func(ctx sdk.Context, tApp *testapp.TestApp) {},
+		},
+		{
+			name:                    "Cannot find asset yield index, handled gracefully",
+			totalTDaiPreMint:        keeper.ConvertStringToBigIntWithPanicOnErr("1"),
+			totalTDaiMinted:         keeper.ConvertStringToBigIntWithPanicOnErr("2"),
+			initialAssetYieldIndex:  keeper.ConvertStringToBigRatWithPanicOnErr("1"),
+			expectedAssetYieldIndex: keeper.ConvertStringToBigRatWithPanicOnErr("3/1"),
+			expectErr:               false,
 			customSetup: func(ctx sdk.Context, tApp *testapp.TestApp) {
 				k := tApp.App.RatelimitKeeper
 				store := ctx.KVStore(k.GetStoreKeyForTestingOnly())

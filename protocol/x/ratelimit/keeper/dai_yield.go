@@ -14,37 +14,50 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Assumes that it is called with valid inputs from vote extension logic.
 func (k Keeper) ProcessNewSDaiConversionRateUpdate(ctx sdk.Context, sDaiConversionRate *big.Int, blockHeight *big.Int) error {
-	fmt.Println("IN PROCESS NEW SDAI CONVERSION RATE UPDATE")
-
 	if sDaiConversionRate == nil || blockHeight == nil {
 		return errors.New("sDaiConversionRate or blockHeight cannot be nil")
 	}
 
-	currBlockHeight, found := k.GetSDAILastBlockUpdated(ctx)
-
-	if found && blockHeight.Cmp(currBlockHeight) == -1 {
-		return errors.New("new block height is less than the current block height")
+	if blockHeight.Sign() <= 0 {
+		return fmt.Errorf("blockHeight must be positive: %s", blockHeight)
 	}
 
-	currConversionRate, found := k.GetSDAIPrice(ctx)
+	if sDaiConversionRate.Sign() <= 0 {
+		return fmt.Errorf("sDai conversion rate must be positive: %s", sDaiConversionRate)
+	}
 
+	lastBlockUpdated, found := k.GetSDAILastBlockUpdated(ctx)
+	if found && ctx.BlockHeight()-lastBlockUpdated.Int64() < types.SDAI_UPDATE_BLOCK_DELAY {
+		return nil
+	}
+
+	prevRate, found := k.GetSDAIPrice(ctx)
 	if found {
-		if sDaiConversionRate.Cmp(currConversionRate) == -1 {
-			return errors.New("new sDAI conversion is less than the current sDAI conversion rate")
+		if sDaiConversionRate.Cmp(prevRate) < 0 {
+			return fmt.Errorf("new sDai conversion rate (%s) is not greater than the previous rate (%s)", sDaiConversionRate, prevRate.String())
 		}
 
-		if sDaiConversionRate.Cmp(currConversionRate) == 0 {
+		if sDaiConversionRate.Cmp(prevRate) == 0 {
 			return nil
 		}
 	}
 
-	fmt.Println("ALL TESTS PASSED")
-
 	k.SetSDAIPrice(ctx, sDaiConversionRate)
 	k.SetSDAILastBlockUpdated(ctx, blockHeight)
 
-	fmt.Println("BEFORE UPDATE MINT STATE ON SDAI CONVERSION RATE UPDATE")
+	sDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.SDaiDenom)
+	sDaiSupplyDenomAmount := sDaiSupplyCoins.Amount.BigInt()
+	if sDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {
+		return nil
+	}
+
+	tDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.TDaiDenom)
+	tDaiSupplyDenomAmount := tDaiSupplyCoins.Amount.BigInt()
+	if tDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {
+		return nil
+	}
 
 	return k.UpdateMintStateOnSDaiConversionRateUpdate(ctx)
 }
@@ -55,28 +68,24 @@ func (k Keeper) UpdateMintStateOnSDaiConversionRateUpdate(ctx sdk.Context) error
 		return err
 	}
 
-	fmt.Println("AFTER MINT NEW TDAI YIELD")
+	if tDaiDenomAmountMinted.Cmp(big.NewInt(0)) == 0 || tDaiSupplyDenomAmountBeforeNewEpoch.Cmp(big.NewInt(0)) == 0 {
+		return nil
+	}
 
 	err = k.ClaimInsuranceFundYields(ctx, tDaiSupplyDenomAmountBeforeNewEpoch, tDaiDenomAmountMinted)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("AFTER CLAIM INSURANCE FUND YIELDS")
-
 	err = k.SetNewYieldIndex(ctx, tDaiSupplyDenomAmountBeforeNewEpoch, tDaiDenomAmountMinted)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("AFTER SET NEW YIELD INDEX")
-
 	err = k.perpetualsKeeper.UpdateYieldIndexToNewMint(ctx, tDaiSupplyDenomAmountBeforeNewEpoch, tDaiDenomAmountMinted)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("AFTER UPDATE YIELD INDEX TO NEW MINT")
 
 	// Emit indexer event
 	sDAIPrice, found := k.GetSDAIPrice(ctx)
@@ -84,14 +93,10 @@ func (k Keeper) UpdateMintStateOnSDaiConversionRateUpdate(ctx sdk.Context) error
 		return errors.New("could not find sDAI price when emitting indexer event for new yield index")
 	}
 
-	fmt.Println("BEFORE GETTING ASSET YIELD INDEX. SDAI PRICE IS ", sDAIPrice)
-
 	assetYieldIndex, found := k.GetAssetYieldIndex(ctx)
 	if !found {
 		return errors.New("could not find asset yield index when emitting indexer event for new yield index")
 	}
-
-	fmt.Println("ASSET YIELD INDEX IS ", assetYieldIndex)
 
 	indexerevents.NewUpdateYieldParamsEventV1(
 		sDAIPrice.String(),
@@ -158,12 +163,12 @@ func (k Keeper) SetNewYieldIndex(
 	totalTDaiPreMint *big.Int,
 	totalTDaiMinted *big.Int,
 ) error {
-	if totalTDaiMinted.Cmp(big.NewInt(0)) == 0 {
-		return nil
+	if totalTDaiMinted.Cmp(big.NewInt(0)) < 0 {
+		return errors.New("total t-dai minted is negative")
 	}
 
-	if totalTDaiPreMint.Cmp(big.NewInt(0)) == 0 {
-		return errors.New("total t-dai minted is non-zero, while total t-dai before mint is 0")
+	if totalTDaiPreMint.Cmp(big.NewInt(0)) <= 0 {
+		return errors.New("total t-dai before mint is 0 or negative")
 	}
 
 	ratio := new(big.Rat).SetFrac(totalTDaiMinted, totalTDaiPreMint)
@@ -182,15 +187,18 @@ func (k Keeper) SetNewYieldIndex(
 }
 
 func (k Keeper) MintNewTDaiYield(ctx sdk.Context) (*big.Int, *big.Int, error) {
+
 	sDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.SDaiDenom)
 	sDaiSupplyDenomAmount := sDaiSupplyCoins.Amount.BigInt()
-
 	if sDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {
 		return big.NewInt(0), big.NewInt(0), nil
 	}
 
 	tDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.TDaiDenom)
 	tDaiSupplyDenomAmount := tDaiSupplyCoins.Amount.BigInt()
+	if tDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {
+		return big.NewInt(0), big.NewInt(0), nil
+	}
 
 	tDAIAfterYield, err := k.GetTradingDAIFromSDAIAmount(ctx, sDaiSupplyDenomAmount)
 	if err != nil {

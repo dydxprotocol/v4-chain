@@ -167,7 +167,7 @@ func ValidateVeSDaiConversionRate(
 		return nil
 	}
 
-	if err := ValidateSDaiConversionRateHeightInVE(ctx, ve, ratelimitKeeper); err != nil {
+	if err := ValidateSDaiConversionRateHeightInVE(ctx, ratelimitKeeper); err != nil {
 		return err
 	}
 
@@ -226,7 +226,6 @@ func ValidateSDaiConversionRateSizeInVE(
 
 func ValidateSDaiConversionRateHeightInVE(
 	ctx sdk.Context,
-	ve vetypes.DaemonVoteExtension,
 	ratelimitKeeper VoteExtensionRateLimitKeeper,
 ) error {
 	lastBlockUpdated, found := ratelimitKeeper.GetSDAILastBlockUpdated(ctx)
@@ -249,14 +248,18 @@ func ValidateSDaiConversionRateValueInVE(
 		return fmt.Errorf("failed to convert sDai conversion rate to big.Int: %s", ve.SDaiConversionRate)
 	}
 
+	return ValidateBigIntSDaiConversionRateValue(ctx, sDaiConversionRate, ratelimitKeeper)
+}
+
+func ValidateBigIntSDaiConversionRateValue(ctx sdk.Context, sDaiConversionRate *big.Int, ratelimitKeeper VoteExtensionRateLimitKeeper) error {
 	// TODO: Left in to exit early if the rate is not positive. Could remove this given below check.
 	if sDaiConversionRate.Sign() <= 0 {
-		return fmt.Errorf("sDai conversion rate must be positive: %s", ve.SDaiConversionRate)
+		return fmt.Errorf("sDai conversion rate must be positive: %s", sDaiConversionRate)
 	}
 
 	prevRate, found := ratelimitKeeper.GetSDAIPrice(ctx)
 	if found && sDaiConversionRate.Cmp(prevRate) <= 0 {
-		return fmt.Errorf("new sDai conversion rate (%s) is not greater than the previous rate (%s)", ve.SDaiConversionRate, prevRate.String())
+		return fmt.Errorf("new sDai conversion rate (%s) is not greater than the previous rate (%s)", sDaiConversionRate, prevRate.String())
 	}
 
 	return nil

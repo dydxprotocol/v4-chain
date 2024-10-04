@@ -72,18 +72,6 @@ func (vea *VEApplier) ApplyVE(
 	request *abci.RequestFinalizeBlock,
 	writeToCache bool,
 ) error {
-	if err := vea.writeVEToStore(ctx, request, writeToCache); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (vea *VEApplier) writeVEToStore(
-	ctx sdk.Context,
-	request *abci.RequestFinalizeBlock,
-	writeToCache bool,
-) error {
 	if vea.finalPriceUpdateCache.HasValidValues(ctx.BlockHeight(), request.DecidedLastCommit.Round) {
 		err := vea.writePricesToStoreFromCache(ctx)
 		if err != nil {
