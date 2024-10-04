@@ -197,7 +197,7 @@ func SetVE(
 		"height", txSetterUtils.Request.Height,
 	)
 
-	cleanExtCommitInfo, err := ve.CleanAndValidateExtCommitInfo(
+	cleanExtCommitInfo, err := ve.CleanAndValidateExtCommitInfoInPrepareProposal(
 		txSetterUtils.Ctx,
 		txSetterUtils.Request.LocalLastCommit,
 		voteCodec,

@@ -144,7 +144,7 @@ func DecodeValidateAndCacheVE(
 	if err != nil {
 		return err
 	}
-	if err := ve.ValidateExtendedCommitInfo(
+	if err := ve.ValidateExtendedCommitInfoInProcessProposal(
 		ctx,
 		request.Height,
 		extInfo,

@@ -42,7 +42,7 @@ type ValidatorStore interface {
 
 // ---------------------------- VE VALIDATION ----------------------------
 
-func CleanAndValidateExtCommitInfo(
+func CleanAndValidateExtCommitInfoInPrepareProposal(
 	ctx sdk.Context,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
@@ -66,7 +66,7 @@ func CleanAndValidateExtCommitInfo(
 	return extCommitInfo, nil
 }
 
-func ValidateExtendedCommitInfo(
+func ValidateExtendedCommitInfoInProcessProposal(
 	ctx sdk.Context,
 	height int64,
 	extCommitInfo cometabci.ExtendedCommitInfo,

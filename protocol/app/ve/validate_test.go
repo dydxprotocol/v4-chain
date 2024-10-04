@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCleanAndValidateExtCommitInfo(t *testing.T) {
+func TestCleanAndValidateExtCommitInfoInPrepareProposal(t *testing.T) {
 	// Create signed vote infos
 	validVote, err := vetesting.CreateSignedExtendedVoteInfo(
 		vetesting.NewDefaultSignedVeInfo(
@@ -140,7 +140,7 @@ func TestCleanAndValidateExtCommitInfo(t *testing.T) {
 			}
 			veCache := vecache.NewVECache()
 
-			result, err := ve.CleanAndValidateExtCommitInfo(
+			result, err := ve.CleanAndValidateExtCommitInfoInPrepareProposal(
 				ctx,
 				tc.extCommitInfo,
 				voteCodec,
