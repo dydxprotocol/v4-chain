@@ -14,6 +14,7 @@ import (
 
 	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	bigintcache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/bigintcache"
 	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 
@@ -948,7 +949,9 @@ func New(
 		conversionRateAggregatorFn,
 	)
 
-	pricecache := pricecache.PriceUpdatesCacheImpl{}
+	spotPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+	pnlPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+	sDaiConversionRateCache := bigintcache.BigIntCacheImpl{}
 
 	veApplier := veapplier.NewVEApplier(
 		logger,
@@ -957,7 +960,9 @@ func New(
 		app.RatelimitKeeper,
 		app.voteCodec,
 		app.extCodec,
-		&pricecache,
+		&spotPriceUpdateCache,
+		&pnlPriceUpdateCache,
+		&sDaiConversionRateCache,
 		veCache,
 	)
 

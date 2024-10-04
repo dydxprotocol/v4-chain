@@ -12,6 +12,7 @@ import (
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
+	bigintcache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/bigintcache"
 	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 
@@ -92,7 +93,9 @@ func (s *PreBlockTestSuite) SetupTest() {
 		conversionRateAggregatorFn,
 	)
 
-	pricecache := pricecache.PriceUpdatesCacheImpl{}
+	spotPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+	pnlPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+	sDaiConversionRateCache := bigintcache.BigIntCacheImpl{}
 	vecache := vecache.NewVECache()
 	s.veApplier = veapplier.NewVEApplier(
 		s.logger,
@@ -101,7 +104,9 @@ func (s *PreBlockTestSuite) SetupTest() {
 		*s.ratelimitKeeper,
 		s.voteCodec,
 		s.extCodec,
-		&pricecache,
+		&spotPriceUpdateCache,
+		&pnlPriceUpdateCache,
+		&sDaiConversionRateCache,
 		vecache,
 	)
 

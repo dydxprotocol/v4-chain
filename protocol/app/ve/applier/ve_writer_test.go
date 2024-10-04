@@ -13,6 +13,7 @@ import (
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
+	bigintcache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/bigintcache"
 	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
@@ -327,7 +328,9 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			pricecache := pricecache.PriceUpdatesCacheImpl{}
+			spotPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+			pnlPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+			sDaiConversionRateCache := bigintcache.BigIntCacheImpl{}
 			veCache := vecache.NewVECache()
 
 			veApplier := veapplier.NewVEApplier(
@@ -337,7 +340,9 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				ratelimitKeeper,
 				voteCodec,
 				extCodec,
-				&pricecache,
+				&spotPriceUpdateCache,
+				&pnlPriceUpdateCache,
+				&sDaiConversionRateCache,
 				veCache,
 			)
 
@@ -451,7 +456,9 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 			ratelimitKeeper.SetSDAIPrice(ctx, tc.initialSDaiPrice)
 			ratelimitKeeper.SetSDAILastBlockUpdated(ctx, tc.initialLastBlockUpdated)
 
-			pricecache := pricecache.PriceUpdatesCacheImpl{}
+			spotPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+			pnlPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+			sDaiConversionRateCache := bigintcache.BigIntCacheImpl{}
 			veCache := vecache.NewVECache()
 
 			veApplier := veapplier.NewVEApplier(
@@ -461,7 +468,9 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 				ratelimitKeeper,
 				voteCodec,
 				extCodec,
-				&pricecache,
+				&spotPriceUpdateCache,
+				&pnlPriceUpdateCache,
+				&sDaiConversionRateCache,
 				veCache,
 			)
 
@@ -518,7 +527,9 @@ func TestVEWriter(t *testing.T) {
 	ratelimitKeeper := &mocks.VEApplierRatelimitKeeper{}
 	ratelimitKeeper.On("ProcessNewSDaiConversionRateUpdate", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	priceCache := pricecache.PriceUpdatesCacheImpl{}
+	spotPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+	pnlPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+	sDaiConversionRateCache := bigintcache.BigIntCacheImpl{}
 	veCache := vecache.NewVECache()
 
 	veApplier := veapplier.NewVEApplier(
@@ -528,7 +539,9 @@ func TestVEWriter(t *testing.T) {
 		ratelimitKeeper,
 		voteCodec,
 		extCodec,
-		&priceCache,
+		&spotPriceUpdateCache,
+		&pnlPriceUpdateCache,
+		&sDaiConversionRateCache,
 		veCache,
 	)
 
@@ -1362,7 +1375,9 @@ func TestVEWriter(t *testing.T) {
 	})
 
 	t.Run("throws error when cache returns nil prices", func(t *testing.T) {
-		priceCache := &mocks.PriceUpdatesCache{}
+		spotPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+		pnlPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+		sDaiConversionRateCache := bigintcache.BigIntCacheImpl{}
 		veCache := vecache.NewVECache()
 
 		veApplier := veapplier.NewVEApplier(
@@ -1372,7 +1387,9 @@ func TestVEWriter(t *testing.T) {
 			ratelimitKeeper,
 			voteCodec,
 			extCodec,
-			priceCache,
+			&spotPriceUpdateCache,
+			&pnlPriceUpdateCache,
+			&sDaiConversionRateCache,
 			veCache,
 		)
 
