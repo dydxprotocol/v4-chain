@@ -1608,6 +1608,11 @@ func TestPrepareCheckState(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, marketPrice.SpotPrice, constants.Price5)
 
+				consAddresses := ks.ClobKeeper.VEApplier.GetVECache().GetSeenVotesInCache()
+				alice := sdk.ConsAddress(constants.AliceConsAddress).String()
+				_, ok := consAddresses[alice]
+				require.True(t, ok)
+
 				mockBankKeeper.AssertCalled(t, "GetSupply", mock.Anything, ratelimittypes.SDaiDenom)
 				voteAggregator.AssertCalled(t, "AggregateDaemonVEIntoFinalPricesAndConversionRate", mock.Anything, mock.Anything)
 			}

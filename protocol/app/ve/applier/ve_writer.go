@@ -67,6 +67,10 @@ func (vea *VEApplier) VoteAggregator() aggregator.VoteAggregator {
 	return vea.voteAggregator
 }
 
+func (vea *VEApplier) GetVECache() *vecache.VeCache {
+	return vea.veCache
+}
+
 func (vea *VEApplier) ApplyVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
@@ -415,7 +419,7 @@ func (vea *VEApplier) GetCachedSDaiConversionRate() (*big.Int, *big.Int) {
 	return vea.finalPriceUpdateCache.GetConversionRateUpdateAndBlockHeight()
 }
 
-func (pa *VEApplier) CacheSeenExtendedVotes(
+func (vea *VEApplier) CacheSeenExtendedVotes(
 	ctx sdk.Context,
 	req *abci.RequestCommit,
 ) error {
@@ -423,7 +427,7 @@ func (pa *VEApplier) CacheSeenExtendedVotes(
 		return nil
 	}
 
-	votes, err := aggregator.FetchVotesFromExtCommitInfo(*req.ExtendedCommitInfo, pa.voteExtensionCodec)
+	votes, err := aggregator.FetchVotesFromExtCommitInfo(*req.ExtendedCommitInfo, vea.voteExtensionCodec)
 	if err != nil {
 		return err
 	}
@@ -433,7 +437,7 @@ func (pa *VEApplier) CacheSeenExtendedVotes(
 		seenValidators[vote.ConsAddress.String()] = struct{}{}
 	}
 
-	pa.veCache.SetSeenVotesInCache(ctx, seenValidators)
+	vea.veCache.SetSeenVotesInCache(ctx, seenValidators)
 
 	return nil
 }

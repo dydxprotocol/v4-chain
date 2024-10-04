@@ -12,6 +12,8 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
+
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 )
 
@@ -33,6 +35,26 @@ func (_m *VEApplierClobInterface) CacheSeenExtendedVotes(ctx types.Context, req 
 		r0 = rf(ctx, req)
 	} else {
 		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GetVECache provides a mock function with given fields:
+func (_m *VEApplierClobInterface) GetVECache() *vecache.VeCache {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetVECache")
+	}
+
+	var r0 *vecache.VeCache
+	if rf, ok := ret.Get(0).(func() *vecache.VeCache); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*vecache.VeCache)
+		}
 	}
 
 	return r0
