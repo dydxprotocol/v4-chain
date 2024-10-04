@@ -1,9 +1,10 @@
 import Big from 'big.js';
 import { Callback, RedisClient } from 'redis';
 
+import { getOrderBookMidPrice } from './orderbook-levels-cache';
 import {
-  addMarketPriceScript,
-  getMarketMedianScript,
+  addOrderbookMidPricesScript,
+  getOrderbookMedianPriceScript,
 } from './scripts';
 
 // Cache of orderbook prices for each clob pair
@@ -20,52 +21,57 @@ function getOrderbookMidPriceCacheKey(ticker: string): string {
 }
 
 /**
- * Adds a price to the market prices cache for a given ticker.
- * Uses a Lua script to add the price with a timestamp to a sorted set in Redis.
+ * Fetches and caches mid prices for multiple tickers.
  * @param client The Redis client
- * @param ticker The ticker symbol
- * @param price The price to be added
- * @returns A promise that resolves when the operation is complete
+ * @param tickers An array of ticker symbols
+ * @returns A promise that resolves when all prices are fetched and cached
  */
-export async function setPrice(
+export async function fetchAndCacheOrderbookMidPrices(
   client: RedisClient,
-  ticker: string,
-  price: string,
+  tickers: string[],
 ): Promise<void> {
-  // Number of keys for the lua script.
-  const numKeys: number = 1;
-
-  let evalAsync: (
-    marketCacheKey: string,
-  ) => Promise<void> = (marketCacheKey) => {
-
-    return new Promise<void>((resolve, reject) => {
-      const callback: Callback<void> = (
-        err: Error | null,
-      ) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve();
-      };
-
-      const nowSeconds = Math.floor(Date.now() / 1000); // Current time in seconds
-      client.evalsha(
-        addMarketPriceScript.hash,
-        numKeys,
-        marketCacheKey,
-        price,
-        nowSeconds,
-        callback,
-      );
-
-    });
-  };
-  evalAsync = evalAsync.bind(client);
-
-  return evalAsync(
-    getOrderbookMidPriceCacheKey(ticker),
+  // Fetch midPrices and filter out undefined values
+  const cacheKeyPricePairs = await Promise.all(
+    tickers.map(async (ticker) => {
+      const cacheKey = getOrderbookMidPriceCacheKey(ticker);
+      const midPrice = await getOrderBookMidPrice(cacheKey, client);
+      if (midPrice !== undefined) {
+        return { cacheKey, midPrice };
+      }
+      return null; // Return null for undefined midPrice
+    }),
   );
+
+  // Filter out null values
+  const validPairs = cacheKeyPricePairs.filter(
+    (pair): pair is { cacheKey: string, midPrice: string } => pair !== null,
+  );
+  if (validPairs.length === 0) {
+    // No valid midPrices to cache
+    return;
+  }
+
+  const nowSeconds = Math.floor(Date.now() / 1000); // Current time in seconds
+  // Extract cache keys and prices
+  const priceCacheKeys = validPairs.map((pair) => pair.cacheKey);
+  const priceValues = validPairs.map((pair) => pair.midPrice);
+
+  return new Promise<void>((resolve, reject) => {
+    client.evalsha(
+      addOrderbookMidPricesScript.hash,
+      priceCacheKeys.length,
+      ...priceCacheKeys,
+      ...priceValues,
+      nowSeconds,
+      (err: Error | null) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
 }
 
 /**
@@ -95,7 +101,7 @@ export async function getMedianPrice(client: RedisClient, ticker: string): Promi
       };
 
       client.evalsha(
-        getMarketMedianScript.hash,
+        getOrderbookMedianPriceScript.hash,
         1,
         marketCacheKey,
         callback,
