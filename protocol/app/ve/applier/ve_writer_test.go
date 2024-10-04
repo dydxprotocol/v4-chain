@@ -19,11 +19,13 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/memclob"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
+
 	"github.com/stretchr/testify/require"
 
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
@@ -1480,4 +1482,83 @@ func TestVEWriter(t *testing.T) {
 		require.Error(t, err)
 		pricesKeeper.AssertNotCalled(t, "UpdateSpotAndPnlMarketPrices")
 	})
+}
+
+func TestCacheSeenExtendedVotes(t *testing.T) {
+	tests := map[string]struct {
+		setup                func(*testing.T, *cometabci.RequestCommit)
+		expectedCacheEntries map[string]struct{}
+	}{
+		"Nil ExtendedCommitInfo": {
+			setup: func(t *testing.T, req *cometabci.RequestCommit) {
+				req.ExtendedCommitInfo = nil
+			},
+			expectedCacheEntries: map[string]struct{}{},
+		},
+		"Single validator vote": {
+			setup: func(t *testing.T, req *cometabci.RequestCommit) {
+				voteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrices,
+						"1000000000000000000000000000",
+					),
+				)
+				require.NoError(t, err)
+				req.ExtendedCommitInfo = &cometabci.ExtendedCommitInfo{
+					Votes: []cometabci.ExtendedVoteInfo{voteInfo},
+				}
+			},
+			expectedCacheEntries: map[string]struct{}{
+				sdk.ConsAddress(constants.AliceConsAddress).String(): {},
+			},
+		},
+		"Multiple validator votes": {
+			setup: func(t *testing.T, req *cometabci.RequestCommit) {
+				aliceVote, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.AliceConsAddress,
+						constants.ValidVEPrices,
+						"1000000000000000000000000000",
+					),
+				)
+				require.NoError(t, err)
+				bobVote, err := vetesting.CreateSignedExtendedVoteInfo(
+					vetesting.NewDefaultSignedVeInfo(
+						constants.BobConsAddress,
+						constants.ValidVEPrices,
+						"1000000000000000000000000001",
+					),
+				)
+				require.NoError(t, err)
+				req.ExtendedCommitInfo = &cometabci.ExtendedCommitInfo{
+					Votes: []cometabci.ExtendedVoteInfo{aliceVote, bobVote},
+				}
+			},
+			expectedCacheEntries: map[string]struct{}{
+				sdk.ConsAddress(constants.AliceConsAddress).String(): {},
+				sdk.ConsAddress(constants.BobConsAddress).String():   {},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager, nil)
+
+			req := &cometabci.RequestCommit{}
+			tc.setup(t, req)
+
+			// Execute
+			err := ks.ClobKeeper.VEApplier.CacheSeenExtendedVotes(ks.Ctx, req)
+			require.NoError(t, err)
+
+			// Assert
+			consAddresses := ks.ClobKeeper.VEApplier.GetVECache().GetSeenVotesInCache()
+			require.Equal(t, tc.expectedCacheEntries, consAddresses)
+		})
+	}
 }
