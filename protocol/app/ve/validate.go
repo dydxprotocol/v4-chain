@@ -73,7 +73,6 @@ func ValidateExtendedCommitInfoInProcessProposal(
 	veCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
 	ratelimitKeeper VoteExtensionRateLimitKeeper,
-	veCache *vecache.VeCache,
 	validateVEConsensusInfo ValidateVEConsensusInfoFn,
 ) error {
 	if err := validateVEConsensusInfo(ctx, extCommitInfo); err != nil {
@@ -118,7 +117,6 @@ func validateIndividualVoteExtensionWithVECache(
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
 		return nil
 	}
-
 	if isSeen := IsVoteExtensionSeen(veCache, getConsAddressFromValidator(vote.Validator), ctx.BlockHeight()); !isSeen {
 		return fmt.Errorf("vote extension not seen")
 	}
