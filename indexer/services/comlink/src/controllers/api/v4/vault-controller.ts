@@ -375,10 +375,23 @@ async function getVaultPositions(
     BlockTable.getLatest(),
   ]);
 
-  const latestFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
-    .findFundingIndexMap(
-      latestBlock.blockHeight,
-    );
+  const updatedAtHeights: string[] = _(subaccounts).map('updatedAtHeight').uniq().value();
+  const [
+    latestFundingIndexMap,
+    fundingIndexMaps,
+  ]: [
+    FundingIndexMap,
+    {[blockHeight: string]: FundingIndexMap}
+  ] = await Promise.all([
+    FundingIndexUpdatesTable
+      .findFundingIndexMap(
+        latestBlock.blockHeight,
+      ),
+    FundingIndexUpdatesTable
+      .findFundingIndexMaps(
+        updatedAtHeights,
+      )
+  ]);
   const assetPositionsBySubaccount:
   { [subaccountId: string]: AssetPositionFromDatabase[] } = _.groupBy(
     assetPositions,
@@ -397,8 +410,7 @@ async function getVaultPositions(
   const vaultPositionsAndSubaccountId: {
     position: VaultPosition,
     subaccountId: string,
-  }[] = await Promise.all(
-    subaccounts.map(async (subaccount: SubaccountFromDatabase) => {
+  }[] = subaccounts.map((subaccount: SubaccountFromDatabase) => {
       const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
         .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
       if (perpetualMarket === undefined) {
@@ -406,10 +418,10 @@ async function getVaultPositions(
           `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
           'perpetual market.');
       }
-      const lastUpdatedFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
-        .findFundingIndexMap(
-          subaccount.updatedAtHeight,
-        );
+
+      const lastUpdatedFundingIndexMap: FundingIndexMap = fundingIndexMaps[
+        subaccount.updatedAtHeight
+      ];
 
       const subaccountResponse: SubaccountResponseObject = getSubaccountResponse(
         subaccount,
@@ -436,8 +448,7 @@ async function getVaultPositions(
         },
         subaccountId: subaccount.id,
       };
-    }),
-  );
+    });
 
   return new Map(vaultPositionsAndSubaccountId.map(
     (obj: { position: VaultPosition, subaccountId: string }) : [string, VaultPosition] => {
