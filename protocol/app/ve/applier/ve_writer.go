@@ -419,6 +419,10 @@ func (pa *VEApplier) CacheSeenExtendedVotes(
 	ctx sdk.Context,
 	req *abci.RequestCommit,
 ) error {
+	if req.ExtendedCommitInfo == nil {
+		return nil
+	}
+
 	votes, err := aggregator.FetchVotesFromExtCommitInfo(*req.ExtendedCommitInfo, pa.voteExtensionCodec)
 	if err != nil {
 		return err
