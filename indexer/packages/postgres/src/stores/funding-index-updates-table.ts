@@ -254,14 +254,14 @@ export async function findFundingIndexMaps(
       "funding_index_updates",
       unnest(ARRAY[?]) AS "searchHeight"
     WHERE
-      "effectiveAtHeight" > ? AND
+      "effectiveAtHeight" > ${Big(minHeight).minus(FOUR_HOUR_OF_BLOCKS).toFixed()} AND
       "effectiveAtHeight" <= "searchHeight"
     ORDER BY
       "perpetualId",
       "searchHeight",
       "effectiveAtHeight" DESC
     `,
-    [heightNumbers, Big(minHeight).minus(FOUR_HOUR_OF_BLOCKS).toFixed()],
+    [heightNumbers],
   ) as unknown as {
     rows: FundingIndexUpdatesFromDatabaseWithSearchHeight[],
   };
