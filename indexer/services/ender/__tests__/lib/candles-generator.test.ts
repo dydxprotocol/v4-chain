@@ -34,8 +34,8 @@ import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } fr
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 import {
   redis,
-  OrderbookMidPricesCache,
 } from '@dydxprotocol-indexer/redis';
+import { ORDERBOOK_MID_PRICES_CACHE_KEY_PREFIX } from '@dydxprotocol-indexer/redis/build/src/caches/orderbook-mid-prices-cache';
 
 describe('candleHelper', () => {
   beforeAll(async () => {
@@ -60,6 +60,12 @@ describe('candleHelper', () => {
     await dbHelpers.teardown();
     jest.resetAllMocks();
   });
+
+  // Helper function to set a price for a given market ticker
+  const setCachePrice = (marketTicker: string, price: string) => {
+    const now = Date.now();
+    redisClient.zadd(`${ORDERBOOK_MID_PRICES_CACHE_KEY_PREFIX}${marketTicker}`, now, price);
+  };
 
   const defaultPrice: string = defaultTradeContent.price;
   const defaultPrice2: string = '15000';
@@ -115,11 +121,9 @@ describe('candleHelper', () => {
     ]);
 
     const ticker = 'BTC-USD';
-    await Promise.all([
-      OrderbookMidPricesCache.setPrice(redisClient, ticker, '100000'),
-      OrderbookMidPricesCache.setPrice(redisClient, ticker, '105000'),
-      OrderbookMidPricesCache.setPrice(redisClient, ticker, '110000'),
-    ]);
+    setCachePrice(ticker, '100000');
+    setCachePrice(ticker, '105000');
+    setCachePrice(ticker, '110000');
 
     await runUpdateCandles(publisher);
 
@@ -160,11 +164,9 @@ describe('candleHelper', () => {
     ]);
 
     const ticker = 'BTC-USD';
-    await Promise.all([
-      OrderbookMidPricesCache.setPrice(redisClient, ticker, '80000'),
-      OrderbookMidPricesCache.setPrice(redisClient, ticker, '81000'),
-      OrderbookMidPricesCache.setPrice(redisClient, ticker, '80500'),
-    ]);
+    setCachePrice(ticker, '80000');
+    setCachePrice(ticker, '81000');
+    setCachePrice(ticker, '80500');
 
     // Create Perpetual Position to set open position
     const openInterest: string = '100';
@@ -435,7 +437,7 @@ describe('candleHelper', () => {
     containsKafkaMessages: boolean = true,
     orderbookMidPrice: number,
   ) => {
-    await OrderbookMidPricesCache.setPrice(redisClient, 'BTC-USD', orderbookMidPrice.toFixed());
+    setCachePrice('BTC-USD', orderbookMidPrice.toFixed());
 
     if (initialCandle !== undefined) {
       await CandleTable.create(initialCandle);
@@ -673,11 +675,9 @@ describe('candleHelper', () => {
   });
 
   it('successfully creates an orderbook price map for each market', async () => {
-    await Promise.all([
-      OrderbookMidPricesCache.setPrice(redisClient, 'BTC-USD', '105000'),
-      OrderbookMidPricesCache.setPrice(redisClient, 'ISO-USD', '115000'),
-      OrderbookMidPricesCache.setPrice(redisClient, 'ETH-USD', '150000'),
-    ]);
+    setCachePrice('BTC-USD', '105000');
+    setCachePrice('ISO-USD', '115000');
+    setCachePrice('ETH-USD', '150000');
 
     const map = await getOrderbookMidPriceMap();
     expect(map).toEqual({
