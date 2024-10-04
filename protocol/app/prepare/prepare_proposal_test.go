@@ -9,6 +9,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/prepare"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
@@ -17,6 +18,7 @@ import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
@@ -561,12 +563,15 @@ func TestPrepareProposalHandler(t *testing.T) {
 				ctx = vetesting.GetVeEnabledCtx(ctx, tc.height)
 			}
 
+			veCache := vecache.NewVECache()
+
 			handler := prepare.PrepareProposalHandler(
 				mockTxConfig,
 				mClobKeeper,
 				mPerpKeeper,
 				mPricesKeeper,
 				mRatelimitKeeper,
+				veCache,
 				votecodec,
 				extcodec,
 			)
@@ -664,12 +669,15 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				ctx = vetesting.GetVeEnabledCtx(ctx, 3)
 			}
 
+			veCache := vecache.NewVECache()
+
 			handler := prepare.PrepareProposalHandler(
 				encodingCfg.TxConfig,
 				&mockClobKeeper,
 				&mockPerpKeeper,
 				&mockPricesKeeper,
 				&mockRatelimitKeeper,
+				veCache,
 				vecodec.NewDefaultVoteExtensionCodec(),
 				vecodec.NewDefaultExtendedCommitCodec(),
 			)

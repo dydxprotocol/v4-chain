@@ -1,4 +1,4 @@
-package vecache
+package pricecache
 
 import (
 	"math/big"
@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// VeUpdatesCache is an interface that defines the methods for caching vote extension updates
+// PriceUpdatesCache is an interface that defines the methods for caching price updates
 //
-//go:generate mockery --name VeUpdatesCache --filename mock_ve_updates_cache.go
-type VeUpdatesCache interface {
+//go:generate mockery --name PriceUpdatesCache --filename mock_price_updates_cache.go
+type PriceUpdatesCache interface {
 	SetPriceUpdates(ctx sdk.Context, updates PriceUpdates, round int32)
 	GetPriceUpdates() PriceUpdates
 	SetSDaiConversionRateAndBlockHeight(ctx sdk.Context, sDaiConversionRate *big.Int, blockHeight *big.Int, round int32)
@@ -20,14 +20,14 @@ type VeUpdatesCache interface {
 	HasValidValues(currBlock int64, round int32) bool
 }
 
-// Ensure VeUpdatesCacheImpl implements VeUpdatesCache
-var _ VeUpdatesCache = (*VeUpdatesCacheImpl)(nil)
+// Ensure PriceUpdatesCacheImpl implements PriceUpdatesCache
+var _ PriceUpdatesCache = (*PriceUpdatesCacheImpl)(nil)
 
 // this cache is used to set prices from vote extensions in processProposal
 // which are fetched in ExtendVoteHandler and PreBlocker. This is to avoid
 // redundant computation on calculating stake weighthed median prices in VEs.
 // sDaiConversionRate is set to nil when no sDaiUpdateShould be performed.
-type VeUpdatesCacheImpl struct {
+type PriceUpdatesCacheImpl struct {
 	priceUpdates         PriceUpdates
 	sDaiConversionRate   *big.Int
 	sDAILastUpdatedBlock *big.Int
@@ -44,7 +44,7 @@ type PriceUpdate struct {
 
 type PriceUpdates []PriceUpdate
 
-func (veCache *VeUpdatesCacheImpl) SetPriceUpdates(
+func (veCache *PriceUpdatesCacheImpl) SetPriceUpdates(
 	ctx sdk.Context,
 	updates PriceUpdates,
 	round int32,
@@ -56,14 +56,14 @@ func (veCache *VeUpdatesCacheImpl) SetPriceUpdates(
 	veCache.round = round
 }
 
-func (veCache *VeUpdatesCacheImpl) GetPriceUpdates() PriceUpdates {
+func (veCache *PriceUpdatesCacheImpl) GetPriceUpdates() PriceUpdates {
 	veCache.mu.RLock()
 	defer veCache.mu.RUnlock()
 	return veCache.priceUpdates
 }
 
 // TODO: Look into potential issues with setting the round here
-func (veCache *VeUpdatesCacheImpl) SetSDaiConversionRateAndBlockHeight(
+func (veCache *PriceUpdatesCacheImpl) SetSDaiConversionRateAndBlockHeight(
 	ctx sdk.Context,
 	sDaiConversionRate *big.Int,
 	blockHeight *big.Int,
@@ -77,25 +77,25 @@ func (veCache *VeUpdatesCacheImpl) SetSDaiConversionRateAndBlockHeight(
 	veCache.round = round
 }
 
-func (veCache *VeUpdatesCacheImpl) GetConversionRateUpdateAndBlockHeight() (*big.Int, *big.Int) {
+func (veCache *PriceUpdatesCacheImpl) GetConversionRateUpdateAndBlockHeight() (*big.Int, *big.Int) {
 	veCache.mu.RLock()
 	defer veCache.mu.RUnlock()
 	return veCache.sDaiConversionRate, veCache.sDAILastUpdatedBlock
 }
 
-func (veCache *VeUpdatesCacheImpl) GetHeight() int64 {
+func (veCache *PriceUpdatesCacheImpl) GetHeight() int64 {
 	veCache.mu.RLock()
 	defer veCache.mu.RUnlock()
 	return veCache.height
 }
 
-func (veCache *VeUpdatesCacheImpl) GetRound() int32 {
+func (veCache *PriceUpdatesCacheImpl) GetRound() int32 {
 	veCache.mu.RLock()
 	defer veCache.mu.RUnlock()
 	return veCache.round
 }
 
-func (veCache *VeUpdatesCacheImpl) HasValidValues(currBlock int64, round int32) bool {
+func (veCache *PriceUpdatesCacheImpl) HasValidValues(currBlock int64, round int32) bool {
 	veCache.mu.RLock()
 	defer veCache.mu.RUnlock()
 	return (veCache.height == currBlock && veCache.round == round)

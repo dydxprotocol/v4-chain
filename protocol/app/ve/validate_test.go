@@ -6,11 +6,13 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
@@ -136,8 +138,16 @@ func TestCleanAndValidateExtCommitInfo(t *testing.T) {
 			if tc.setupMocks != nil {
 				tc.setupMocks(pricesKeeper, ratelimitKeeper)
 			}
+			veCache := vecache.NewVECache()
 
-			result, err := ve.CleanAndValidateExtCommitInfo(ctx, tc.extCommitInfo, voteCodec, pricesKeeper, ratelimitKeeper)
+			result, err := ve.CleanAndValidateExtCommitInfo(
+				ctx,
+				tc.extCommitInfo,
+				voteCodec,
+				pricesKeeper,
+				ratelimitKeeper,
+				veCache,
+			)
 
 			if tc.expectedError != nil {
 				assert.Error(t, err)

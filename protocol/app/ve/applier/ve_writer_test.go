@@ -12,7 +12,8 @@ import (
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
-	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/vecache"
+	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
@@ -36,7 +37,7 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 		writeToCache          bool
 		expectedError         error
 		expectedPrices        map[uint32]*pricestypes.MarketPrice
-		expectedCachedUpdates vecache.PriceUpdates
+		expectedCachedUpdates pricecache.PriceUpdates
 	}{
 		"Valid prices, write to cache": {
 			initialPrices: map[uint32]*pricestypes.MarketPrice{
@@ -58,7 +59,7 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				0: {Id: 0, SpotPrice: 1500000, PnlPrice: 1500000},
 				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2500000},
 			},
-			expectedCachedUpdates: vecache.PriceUpdates{
+			expectedCachedUpdates: pricecache.PriceUpdates{
 				{MarketId: 0, SpotPrice: big.NewInt(1500000), PnlPrice: big.NewInt(1500000)},
 				{MarketId: 1, SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
 			},
@@ -101,7 +102,7 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 			expectedPrices: map[uint32]*pricestypes.MarketPrice{
 				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1500000},
 			},
-			expectedCachedUpdates: vecache.PriceUpdates{
+			expectedCachedUpdates: pricecache.PriceUpdates{
 				{MarketId: 0, SpotPrice: nil, PnlPrice: big.NewInt(1500000)},
 			},
 		},
@@ -121,7 +122,7 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 			expectedPrices: map[uint32]*pricestypes.MarketPrice{
 				0: {Id: 0, SpotPrice: 1500000, PnlPrice: 1000000},
 			},
-			expectedCachedUpdates: vecache.PriceUpdates{
+			expectedCachedUpdates: pricecache.PriceUpdates{
 				{MarketId: 0, SpotPrice: big.NewInt(1500000), PnlPrice: nil},
 			},
 		},
@@ -163,7 +164,7 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1500000},
 				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2500000},
 			},
-			expectedCachedUpdates: vecache.PriceUpdates{
+			expectedCachedUpdates: pricecache.PriceUpdates{
 				{MarketId: 0, SpotPrice: nil, PnlPrice: big.NewInt(1500000)},
 				{MarketId: 1, SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
 			},
@@ -188,7 +189,7 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				0: {Id: 0, SpotPrice: 1500000, PnlPrice: 1500000},
 				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2000000},
 			},
-			expectedCachedUpdates: vecache.PriceUpdates{
+			expectedCachedUpdates: pricecache.PriceUpdates{
 				{MarketId: 0, SpotPrice: big.NewInt(1500000), PnlPrice: big.NewInt(1500000)},
 				{MarketId: 1, SpotPrice: big.NewInt(2500000), PnlPrice: nil},
 			},
@@ -213,7 +214,7 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
 				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2500000},
 			},
-			expectedCachedUpdates: vecache.PriceUpdates{
+			expectedCachedUpdates: pricecache.PriceUpdates{
 				{MarketId: 1, SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
 			},
 		},
@@ -273,7 +274,7 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				0: {Id: 0, SpotPrice: 1000000, PnlPrice: 1000000},
 				1: {Id: 1, SpotPrice: 2500000, PnlPrice: 2500000},
 			},
-			expectedCachedUpdates: vecache.PriceUpdates{
+			expectedCachedUpdates: pricecache.PriceUpdates{
 				{MarketId: 1, SpotPrice: big.NewInt(2500000), PnlPrice: big.NewInt(2500000)},
 			},
 		},
@@ -319,7 +320,8 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			veCache := vecache.VeUpdatesCacheImpl{}
+			pricecache := pricecache.PriceUpdatesCacheImpl{}
+			veCache := vecache.NewVECache()
 
 			veApplier := veapplier.NewVEApplier(
 				log.NewNopLogger(),
@@ -328,7 +330,8 @@ func TestWritePricesToStoreAndMaybeCache(t *testing.T) {
 				ratelimitKeeper,
 				voteCodec,
 				extCodec,
-				&veCache,
+				&pricecache,
+				veCache,
 			)
 
 			ctx = ctx.WithBlockHeight(testHeight)
@@ -441,7 +444,8 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 			ratelimitKeeper.SetSDAIPrice(ctx, tc.initialSDaiPrice)
 			ratelimitKeeper.SetSDAILastBlockUpdated(ctx, tc.initialLastBlockUpdated)
 
-			veCache := vecache.VeUpdatesCacheImpl{}
+			pricecache := pricecache.PriceUpdatesCacheImpl{}
+			veCache := vecache.NewVECache()
 
 			veApplier := veapplier.NewVEApplier(
 				log.NewNopLogger(),
@@ -450,7 +454,8 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 				ratelimitKeeper,
 				voteCodec,
 				extCodec,
-				&veCache,
+				&pricecache,
+				veCache,
 			)
 
 			ctx = ctx.WithBlockHeight(testHeight)
@@ -493,7 +498,8 @@ func TestVEWriter(t *testing.T) {
 	ratelimitKeeper.On("SetSDAIPrice", mock.Anything, mock.Anything).Return()
 	ratelimitKeeper.On("SetSDAILastBlockUpdated", mock.Anything, mock.Anything).Return()
 
-	veCache := vecache.VeUpdatesCacheImpl{}
+	pricecache := pricecache.PriceUpdatesCacheImpl{}
+	veCache := vecache.NewVECache()
 
 	veApplier := veapplier.NewVEApplier(
 		log.NewNopLogger(),
@@ -502,7 +508,8 @@ func TestVEWriter(t *testing.T) {
 		ratelimitKeeper,
 		voteCodec,
 		extCodec,
-		&veCache,
+		&pricecache,
+		veCache,
 	)
 
 	t.Run("if extracting oracle votes fails, fail", func(t *testing.T) {
@@ -1328,7 +1335,8 @@ func TestVEWriter(t *testing.T) {
 	})
 
 	t.Run("throws error when cache returns nil prices", func(t *testing.T) {
-		veCache := mocks.VeUpdatesCache{}
+		pricecache := mocks.PriceUpdatesCache{}
+		veCache := vecache.NewVECache()
 
 		veApplier := veapplier.NewVEApplier(
 			log.NewNopLogger(),
@@ -1337,10 +1345,11 @@ func TestVEWriter(t *testing.T) {
 			ratelimitKeeper,
 			voteCodec,
 			extCodec,
-			&veCache,
+			&pricecache,
+			veCache,
 		)
 
-		veCache.On("GetPriceUpdates").Return(vecache.PriceUpdates{
+		pricecache.On("GetPriceUpdates").Return(pricecache.PriceUpdates{
 			{
 				MarketId:  1,
 				SpotPrice: big.NewInt(100),
@@ -1348,8 +1357,8 @@ func TestVEWriter(t *testing.T) {
 			},
 		}, nil).Once()
 
-		veCache.On("HasValidValues", mock.Anything, mock.Anything).Return(true, nil)
-		veCache.On("GetConversionRateUpdateAndBlockHeight").Return(big.NewInt(100), big.NewInt(5))
+		pricecache.On("HasValidValues", mock.Anything, mock.Anything).Return(true, nil)
+		pricecache.On("GetConversionRateUpdateAndBlockHeight").Return(big.NewInt(100), big.NewInt(5))
 
 		ctx = ctx.WithBlockHeight(5)
 
@@ -1419,7 +1428,7 @@ func TestVEWriter(t *testing.T) {
 		require.Error(t, err)
 		pricesKeeper.AssertNotCalled(t, "UpdateSpotAndPnlMarketPrices")
 
-		veCache.On("GetPriceUpdates").Return(vecache.PriceUpdates{
+		pricecache.On("GetPriceUpdates").Return(pricecache.PriceUpdates{
 			{
 				MarketId:  1,
 				SpotPrice: nil,
@@ -1436,7 +1445,7 @@ func TestVEWriter(t *testing.T) {
 		require.Error(t, err)
 		pricesKeeper.AssertNotCalled(t, "UpdateSpotAndPnlMarketPrices")
 
-		veCache.On("GetPriceUpdates").Return(vecache.PriceUpdates{
+		pricecache.On("GetPriceUpdates").Return(pricecache.PriceUpdates{
 			{
 				MarketId:  1,
 				SpotPrice: nil,

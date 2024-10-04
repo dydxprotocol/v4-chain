@@ -28,7 +28,7 @@ type VEApplier struct {
 	ratelimitKeeper VEApplierRatelimitKeeper
 
 	// finalPriceUpdateCache is the cache that stores the final prices
-	finalPriceUpdateCache pricecache.VeUpdatesCache
+	finalPriceUpdateCache pricecache.PriceUpdatesCache
 
 	// veCache is the cache that is used to store the seen votes
 	veCache *vecache.VeCache
@@ -48,7 +48,7 @@ func NewVEApplier(
 	ratelimitKeeper VEApplierRatelimitKeeper,
 	voteExtensionCodec codec.VoteExtensionCodec,
 	extendedCommitCodec codec.ExtendedCommitCodec,
-	finalPriceUpdateCache pricecache.VeUpdatesCache,
+	finalPriceUpdateCache pricecache.PriceUpdatesCache,
 	vecache *vecache.VeCache,
 ) *VEApplier {
 	return &VEApplier{

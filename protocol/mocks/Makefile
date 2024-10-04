@@ -69,7 +69,7 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=IndexerEventManager --dir=./indexer/indexer_manager --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PricefeedMutableMarketConfigs --dir=./daemons/pricefeed/client/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ExchangeConfigUpdater --dir=./daemons/pricefeed/client/types --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=VeUpdatesCache --dir=./daemons/pricefeed/vecache --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=PriceUpdatesCache --dir=./caches/pricecache --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=EthQueryClient --dir=./daemons/sdaioracle/client/eth_query_client --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=SDAIServiceClient --dir=./daemons/sdaioracle/api --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=SDAIEventManager --dir=./daemons/server/types/sdaioracle --recursive --output=./mocks

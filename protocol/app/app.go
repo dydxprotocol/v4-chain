@@ -948,7 +948,7 @@ func New(
 		conversionRateAggregatorFn,
 	)
 
-	pricecache := pricecache.VeUpdatesCacheImpl{}
+	pricecache := pricecache.PriceUpdatesCacheImpl{}
 
 	veApplier := veapplier.NewVEApplier(
 		logger,
