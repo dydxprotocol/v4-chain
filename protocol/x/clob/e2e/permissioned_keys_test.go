@@ -4,15 +4,19 @@ import (
 	"encoding/json"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	aptypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +26,7 @@ type TestBlockWithMsgs struct {
 }
 
 type TestSdkMsg struct {
-	Msg            sdk.Msg
+	Msg            []sdk.Msg
 	Authenticators []uint64
 	Fees           sdk.Coins
 	Gas            uint64
@@ -61,12 +65,14 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 2,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: clobtypes.NewMsgPlaceOrder(
-								testapp.MustScaleOrder(
-									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-									testapp.DefaultGenesis(),
+							Msg: []sdk.Msg{
+								clobtypes.NewMsgPlaceOrder(
+									testapp.MustScaleOrder(
+										constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+										testapp.DefaultGenesis(),
+									),
 								),
-							),
+							},
 							Authenticators: []uint64{0},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -92,12 +98,14 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 2,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: clobtypes.NewMsgPlaceOrder(
-								testapp.MustScaleOrder(
-									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-									testapp.DefaultGenesis(),
+							Msg: []sdk.Msg{
+								clobtypes.NewMsgPlaceOrder(
+									testapp.MustScaleOrder(
+										constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+										testapp.DefaultGenesis(),
+									),
 								),
-							),
+							},
 							Authenticators: []uint64{0},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -123,10 +131,12 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 2,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: &aptypes.MsgAddAuthenticator{
-								Sender:            constants.BobAccAddress.String(),
-								AuthenticatorType: "MessageFilter",
-								Data:              []byte("/cosmos.bank.v1beta1.MsgSend"),
+							Msg: []sdk.Msg{
+								&aptypes.MsgAddAuthenticator{
+									Sender:            constants.BobAccAddress.String(),
+									AuthenticatorType: "MessageFilter",
+									Data:              []byte("/cosmos.bank.v1beta1.MsgSend"),
+								},
 							},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -143,9 +153,11 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 4,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: &aptypes.MsgRemoveAuthenticator{
-								Sender: constants.BobAccAddress.String(),
-								Id:     0,
+							Msg: []sdk.Msg{
+								&aptypes.MsgRemoveAuthenticator{
+									Sender: constants.BobAccAddress.String(),
+									Id:     0,
+								},
 							},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -162,12 +174,14 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 6,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: clobtypes.NewMsgPlaceOrder(
-								testapp.MustScaleOrder(
-									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-									testapp.DefaultGenesis(),
+							Msg: []sdk.Msg{
+								clobtypes.NewMsgPlaceOrder(
+									testapp.MustScaleOrder(
+										constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+										testapp.DefaultGenesis(),
+									),
 								),
-							),
+							},
 							Authenticators: []uint64{0},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -193,11 +207,13 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 2,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: &aptypes.MsgAddAuthenticator{
-								Sender:            constants.BobAccAddress.String(),
-								AuthenticatorType: "SignatureVerification",
-								// Allow signature verification using Alice's public key.
-								Data: constants.AlicePrivateKey.PubKey().Bytes(),
+							Msg: []sdk.Msg{
+								&aptypes.MsgAddAuthenticator{
+									Sender:            constants.BobAccAddress.String(),
+									AuthenticatorType: "SignatureVerification",
+									// Allow signature verification using Alice's public key.
+									Data: constants.AlicePrivateKey.PubKey().Bytes(),
+								},
 							},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -214,12 +230,14 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 4,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: clobtypes.NewMsgPlaceOrder(
-								testapp.MustScaleOrder(
-									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-									testapp.DefaultGenesis(),
+							Msg: []sdk.Msg{
+								clobtypes.NewMsgPlaceOrder(
+									testapp.MustScaleOrder(
+										constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+										testapp.DefaultGenesis(),
+									),
 								),
-							),
+							},
 							Authenticators: []uint64{0},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -245,10 +263,12 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 2,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: &aptypes.MsgAddAuthenticator{
-								Sender:            constants.BobAccAddress.String(),
-								AuthenticatorType: "MessageFilter",
-								Data:              []byte("/cosmos.bank.v1beta1.MsgSend"),
+							Msg: []sdk.Msg{
+								&aptypes.MsgAddAuthenticator{
+									Sender:            constants.BobAccAddress.String(),
+									AuthenticatorType: "MessageFilter",
+									Data:              []byte("/cosmos.bank.v1beta1.MsgSend"),
+								},
 							},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -265,12 +285,14 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 4,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: clobtypes.NewMsgPlaceOrder(
-								testapp.MustScaleOrder(
-									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-									testapp.DefaultGenesis(),
+							Msg: []sdk.Msg{
+								clobtypes.NewMsgPlaceOrder(
+									testapp.MustScaleOrder(
+										constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+										testapp.DefaultGenesis(),
+									),
 								),
-							),
+							},
 							Authenticators: []uint64{0},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -296,10 +318,12 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 2,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: &aptypes.MsgAddAuthenticator{
-								Sender:            constants.BobAccAddress.String(),
-								AuthenticatorType: "ClobPairIdFilter",
-								Data:              []byte("0"),
+							Msg: []sdk.Msg{
+								&aptypes.MsgAddAuthenticator{
+									Sender:            constants.BobAccAddress.String(),
+									AuthenticatorType: "ClobPairIdFilter",
+									Data:              []byte("0"),
+								},
 							},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -316,12 +340,14 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 4,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: clobtypes.NewMsgPlaceOrder(
-								testapp.MustScaleOrder(
-									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-									testapp.DefaultGenesis(),
+							Msg: []sdk.Msg{
+								clobtypes.NewMsgPlaceOrder(
+									testapp.MustScaleOrder(
+										constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+										testapp.DefaultGenesis(),
+									),
 								),
-							),
+							},
 							Authenticators: []uint64{0},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -347,10 +373,12 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 2,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: &aptypes.MsgAddAuthenticator{
-								Sender:            constants.BobAccAddress.String(),
-								AuthenticatorType: "SubaccountFilter",
-								Data:              []byte("1"),
+							Msg: []sdk.Msg{
+								&aptypes.MsgAddAuthenticator{
+									Sender:            constants.BobAccAddress.String(),
+									AuthenticatorType: "SubaccountFilter",
+									Data:              []byte("1"),
+								},
 							},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -367,12 +395,14 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 4,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: clobtypes.NewMsgPlaceOrder(
-								testapp.MustScaleOrder(
-									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-									testapp.DefaultGenesis(),
+							Msg: []sdk.Msg{
+								clobtypes.NewMsgPlaceOrder(
+									testapp.MustScaleOrder(
+										constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+										testapp.DefaultGenesis(),
+									),
 								),
-							),
+							},
 							Authenticators: []uint64{0},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -398,10 +428,12 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 2,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: &aptypes.MsgAddAuthenticator{
-								Sender:            constants.BobAccAddress.String(),
-								AuthenticatorType: "AllOf",
-								Data:              compositeAuthenticatorConfig,
+							Msg: []sdk.Msg{
+								&aptypes.MsgAddAuthenticator{
+									Sender:            constants.BobAccAddress.String(),
+									AuthenticatorType: "AllOf",
+									Data:              compositeAuthenticatorConfig,
+								},
 							},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -418,12 +450,14 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 4,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: clobtypes.NewMsgPlaceOrder(
-								testapp.MustScaleOrder(
-									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-									testapp.DefaultGenesis(),
+							Msg: []sdk.Msg{
+								clobtypes.NewMsgPlaceOrder(
+									testapp.MustScaleOrder(
+										constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+										testapp.DefaultGenesis(),
+									),
 								),
-							),
+							},
 							Authenticators: []uint64{0},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -449,10 +483,12 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 2,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: &aptypes.MsgAddAuthenticator{
-								Sender:            constants.BobAccAddress.String(),
-								AuthenticatorType: "AnyOf",
-								Data:              compositeAuthenticatorConfig,
+							Msg: []sdk.Msg{
+								&aptypes.MsgAddAuthenticator{
+									Sender:            constants.BobAccAddress.String(),
+									AuthenticatorType: "AnyOf",
+									Data:              compositeAuthenticatorConfig,
+								},
 							},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -469,12 +505,14 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					Block: 4,
 					Msgs: []TestSdkMsg{
 						{
-							Msg: clobtypes.NewMsgPlaceOrder(
-								testapp.MustScaleOrder(
-									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
-									testapp.DefaultGenesis(),
+							Msg: []sdk.Msg{
+								clobtypes.NewMsgPlaceOrder(
+									testapp.MustScaleOrder(
+										constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+										testapp.DefaultGenesis(),
+									),
 								),
-							),
+							},
 							Authenticators: []uint64{0},
 
 							Fees:       constants.TestFeeCoins_5Cents,
@@ -485,6 +523,71 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 
 							ExpectedRespCode: aptypes.ErrAnyOfVerification.ABCICode(),
 							ExpectedLog:      aptypes.ErrAnyOfVerification.Error(),
+						},
+					},
+				},
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId: false,
+			},
+		},
+		"One of the messages in the transaction is rejected": {
+			smartAccountEnabled: true,
+			blocks: []TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []TestSdkMsg{
+						{
+							Msg: []sdk.Msg{
+								&aptypes.MsgAddAuthenticator{
+									Sender:            constants.BobAccAddress.String(),
+									AuthenticatorType: "MessageFilter",
+									Data:              []byte("/cosmos.bank.v1beta1.MsgSend"),
+								},
+							},
+
+							Fees:       constants.TestFeeCoins_5Cents,
+							Gas:        300_000,
+							AccountNum: []uint64{1},
+							SeqNum:     []uint64{1},
+							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey},
+
+							ExpectedRespCode: 0,
+						},
+					},
+				},
+				{
+					Block: 4,
+					Msgs: []TestSdkMsg{
+						{
+							Msg: []sdk.Msg{
+								&banktypes.MsgSend{
+									FromAddress: constants.BobAccAddress.String(),
+									ToAddress:   constants.AliceAccAddress.String(),
+									Amount: sdk.Coins{sdk.Coin{
+										Denom:  "foo",
+										Amount: sdkmath.OneInt(),
+									}},
+								},
+								&sendingtypes.MsgCreateTransfer{
+									Transfer: &sendingtypes.Transfer{
+										Sender:    constants.Bob_Num0,
+										Recipient: constants.Alice_Num0,
+										AssetId:   assettypes.AssetUsdc.Id,
+										Amount:    500_000_000, // $500
+									},
+								},
+							},
+							Authenticators: []uint64{0, 0},
+
+							Fees:       constants.TestFeeCoins_5Cents,
+							Gas:        300_000,
+							AccountNum: []uint64{1},
+							SeqNum:     []uint64{2},
+							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey},
+
+							ExpectedRespCode: aptypes.ErrMessageTypeVerification.ABCICode(),
+							ExpectedLog:      aptypes.ErrMessageTypeVerification.Error(),
 						},
 					},
 				},
@@ -514,7 +617,7 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 					tx, err := testtx.GenTx(
 						ctx,
 						tApp.App.TxConfig(),
-						[]sdk.Msg{msg.Msg},
+						msg.Msg,
 						msg.Fees,
 						msg.Gas,
 						tApp.App.ChainID(),
