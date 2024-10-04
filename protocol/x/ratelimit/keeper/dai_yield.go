@@ -49,13 +49,24 @@ func (k Keeper) ProcessNewSDaiConversionRateUpdate(ctx sdk.Context, sDaiConversi
 
 	sDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.SDaiDenom)
 	sDaiSupplyDenomAmount := sDaiSupplyCoins.Amount.BigInt()
-	if sDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {
+	tDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.TDaiDenom)
+	tDaiSupplyDenomAmount := tDaiSupplyCoins.Amount.BigInt()
+
+	sDaiSupplyZero := sDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0
+	tDaiSupplyZero := tDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0
+
+	if sDaiSupplyZero && !tDaiSupplyZero {
+		fmt.Println("sDai supply is zero but tDai supply is not zero")
+		fmt.Println("sDai supply", sDaiSupplyDenomAmount)
+		fmt.Println("tDai supply", tDaiSupplyDenomAmount)
+		return errors.New("sDai supply is zero but tDai supply is not zero")
+	}
+
+	if sDaiSupplyZero {
 		return nil
 	}
 
-	tDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.TDaiDenom)
-	tDaiSupplyDenomAmount := tDaiSupplyCoins.Amount.BigInt()
-	if tDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {
+	if tDaiSupplyZero {
 		return nil
 	}
 
@@ -206,9 +217,12 @@ func (k Keeper) MintNewTDaiYield(ctx sdk.Context) (*big.Int, *big.Int, error) {
 	}
 
 	if tDAIAfterYield.Cmp(tDaiSupplyDenomAmount) <= 0 {
+		fmt.Println("TDai after mint is less than tDai before mint.")
+		fmt.Println("Before mint", tDaiSupplyDenomAmount)
+		fmt.Println("After mint", tDAIAfterYield)
 		return nil, nil, errorsmod.Wrap(
 			types.ErrInvalidSDAIConversionRate,
-			"Trading DAI supply is less than or equal to the sDAI supply",
+			"TDai after mint is less than tDai before mint.",
 		)
 	}
 

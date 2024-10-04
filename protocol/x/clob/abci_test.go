@@ -1414,6 +1414,13 @@ func TestPrepareCheckState(t *testing.T) {
 				).Return(
 					sdk.NewCoin(ratelimittypes.SDaiDenom, sdkmath.NewInt(0)),
 				).Once()
+				mockBankKeeper.On(
+					"GetSupply",
+					mock.Anything,
+					ratelimittypes.TDaiDenom,
+				).Return(
+					sdk.NewCoin(ratelimittypes.TDaiDenom, sdkmath.NewInt(0)),
+				).Once()
 
 				prices := map[string]voteweighted.AggregatorPricePair{
 					"BTC-USD": {SpotPrice: constants.Price5Big, PnlPrice: constants.Price5Big},
