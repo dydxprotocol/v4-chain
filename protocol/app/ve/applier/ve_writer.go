@@ -175,10 +175,6 @@ func (vea *VEApplier) getAggregatePricesAndConversionRateFromVE(
 
 func (vea *VEApplier) writeSpotPricesToStoreFromCache(ctx sdk.Context) error {
 	pricesFromCache := vea.spotPriceUpdateCache.GetPriceUpdates()
-	if pricesFromCache == nil {
-		return nil
-	}
-
 	for _, price := range pricesFromCache {
 		if price.Price == nil {
 			return fmt.Errorf("cache spot price is nil. spot price is %v", price.Price)
@@ -209,10 +205,6 @@ func (vea *VEApplier) writeSpotPricesToStoreFromCache(ctx sdk.Context) error {
 
 func (vea *VEApplier) writePnlPricesToStoreFromCache(ctx sdk.Context) error {
 	pricesFromCache := vea.pnlPriceUpdateCache.GetPriceUpdates()
-	if pricesFromCache == nil {
-		return nil
-	}
-
 	for _, price := range pricesFromCache {
 		if price.Price == nil {
 			return fmt.Errorf("cache pnl price is nil. pnl price is %v", price.Price)
