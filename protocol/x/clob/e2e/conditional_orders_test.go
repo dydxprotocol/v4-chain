@@ -2227,22 +2227,27 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				)
 				return genesis
 			}).Build()
-			ctx := tApp.InitChain()
 
-			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
-			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
-				ctx,
-				map[uint32]ve.VEPricePair{},
-				rate,
-				tApp.GetHeader().Height,
-			)
-			require.NoError(t, err)
+			require.NoError(t, conversionErr)
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: [][]byte{extCommitBz},
-			})
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			_ = tApp.InitChain()
+
+			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Create all orders.
 			for _, order := range tc.ordersForFirstBlock {

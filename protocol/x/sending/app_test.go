@@ -6,13 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
-	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -33,6 +31,9 @@ import (
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 func TestMsgCreateTransfer(t *testing.T) {
@@ -173,22 +174,27 @@ func TestMsgCreateTransfer(t *testing.T) {
 				)
 				return genesis
 			}).WithAppOptions(appOpts).Build()
-			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
-			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
-			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
-				ctx,
-				map[uint32]ve.VEPricePair{},
-				rate,
-				tApp.GetHeader().Height,
-			)
-			require.NoError(t, err)
+			require.NoError(t, conversionErr)
 
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: [][]byte{extCommitBz},
-			})
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			_ = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			ctx := tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -425,22 +431,17 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
 			tApp := testapp.NewTestAppBuilder(t).WithNonDeterminismChecksEnabled(false).WithAppOptions(appOpts).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
-			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
-
-			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
-				ctx,
-				map[uint32]ve.VEPricePair{},
-				rate,
-				tApp.GetHeader().Height,
-			)
-			require.NoError(t, err)
-
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: [][]byte{extCommitBz},
-			})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
 
@@ -484,7 +485,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			// Check that no indexer events are emitted so far.
 			require.Empty(t, msgSender.GetOnchainMessages())
 			// Advance to block 3 for transactions to be delivered.
-			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 			// Check expected account balance.
 			accountBalanceAfterDeposit := tApp.App.BankKeeper.GetBalance(ctx, tc.accountAccAddress, tc.asset.Denom)
@@ -505,7 +506,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			// Check for expected indexer events.
 			expectedOnchainMessages := []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
 				&indexer_manager.IndexerTendermintBlock{
-					Height: 4,
+					Height: 3,
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
@@ -635,22 +636,28 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
 			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
-			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
-			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
-			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
-				ctx,
-				map[uint32]ve.VEPricePair{},
-				rate,
-				tApp.GetHeader().Height,
-			)
-			require.NoError(t, err)
+			require.NoError(t, conversionErr)
 
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: [][]byte{extCommitBz},
-			})
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			_ = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			ctx := tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
 
@@ -923,25 +930,30 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 				return genesis
 			}).Build()
 
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
 			startTime := time.Unix(10, 0).UTC()
-			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+			_ = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
 				BlockTime: startTime,
 			})
 
-			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
-
-			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
-				ctx,
-				map[uint32]ve.VEPricePair{},
-				rate,
-				tApp.GetHeader().Height,
-			)
-			require.NoError(t, err)
-
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: [][]byte{extCommitBz},
-				BlockTime:          startTime.Add((time.Duration(tc.secondsBetweenBlocks) * time.Second)),
+			ctx := tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+				BlockTime: startTime.Add((time.Duration(tc.secondsBetweenBlocks) * time.Second)),
 			})
 
 			// Verify withdrawals are blocked by trying to create a transfer message that withdraws funds.

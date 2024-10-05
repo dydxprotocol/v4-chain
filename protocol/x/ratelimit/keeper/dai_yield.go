@@ -16,6 +16,11 @@ import (
 
 // Assumes that it is called with valid inputs from vote extension logic.
 func (k Keeper) ProcessNewSDaiConversionRateUpdate(ctx sdk.Context, sDaiConversionRate *big.Int, blockHeight *big.Int) error {
+	fmt.Println("------------------------")
+	fmt.Println("ProcessNewSDaiConversionRateUpdate")
+	fmt.Println("sDaiConversionRate", sDaiConversionRate)
+	fmt.Println("blockHeight", blockHeight)
+
 	if sDaiConversionRate == nil || blockHeight == nil {
 		return errors.New("sDaiConversionRate or blockHeight cannot be nil")
 	}
@@ -69,6 +74,12 @@ func (k Keeper) ProcessNewSDaiConversionRateUpdate(ctx sdk.Context, sDaiConversi
 	if tDaiSupplyZero {
 		return nil
 	}
+
+	fmt.Println("Calling UpdateMintStateOnSDaiConversionRateUpdate")
+	fmt.Println("sDaiConversionRate", sDaiConversionRate)
+	fmt.Println("blockHeight", blockHeight)
+	fmt.Println("sDaiSupplyDenomAmount", sDaiSupplyDenomAmount)
+	fmt.Println("tDaiSupplyDenomAmount", tDaiSupplyDenomAmount)
 
 	return k.UpdateMintStateOnSDaiConversionRateUpdate(ctx)
 }
