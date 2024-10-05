@@ -137,7 +137,6 @@ func CreateSignedExtendedVoteInfo(veInfo SignedVEInfo) (cometabci.ExtendedVoteIn
 }
 
 func CreateNilVoteExtensionInfo(consAddress sdk.ConsAddress, power int64) (cometabci.ExtendedVoteInfo, error) {
-
 	voteInfo := cometabci.ExtendedVoteInfo{
 		Validator: cometabci.Validator{
 			Address: consAddress,

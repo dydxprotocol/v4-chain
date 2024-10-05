@@ -1445,7 +1445,6 @@ func TestVEWriter(t *testing.T) {
 		}, true)
 		require.NoError(t, err)
 		ratelimitKeeper.AssertNumberOfCalls(t, "ProcessNewSDaiConversionRateUpdate", 3)
-
 	})
 }
 
@@ -1509,7 +1508,6 @@ func TestCacheSeenExtendedVotes(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager, nil)

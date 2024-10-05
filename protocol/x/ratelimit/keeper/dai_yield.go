@@ -209,7 +209,6 @@ func (k Keeper) SetNewYieldIndex(
 }
 
 func (k Keeper) MintNewTDaiYield(ctx sdk.Context) (*big.Int, *big.Int, error) {
-
 	sDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.SDaiDenom)
 	sDaiSupplyDenomAmount := sDaiSupplyCoins.Amount.BigInt()
 	if sDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {

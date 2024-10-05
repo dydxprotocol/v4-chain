@@ -20,7 +20,6 @@ import (
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	abcicomet "github.com/cometbft/cometbft/abci/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -1245,7 +1244,7 @@ func TestBeginBlocker_Success(t *testing.T) {
 	}
 }
 
-func CreateValidExtendedCommitInfo(t *testing.T) *abcicomet.ExtendedCommitInfo {
+func CreateValidExtendedCommitInfo(t *testing.T) *cometabci.ExtendedCommitInfo {
 	valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
 		vetesting.NewDefaultSignedVeInfo(
 			constants.AliceConsAddress,
@@ -1255,8 +1254,8 @@ func CreateValidExtendedCommitInfo(t *testing.T) *abcicomet.ExtendedCommitInfo {
 	)
 	require.NoError(t, err)
 
-	return &abcicomet.ExtendedCommitInfo{
-		Votes: []abcicomet.ExtendedVoteInfo{valVoteInfo},
+	return &cometabci.ExtendedCommitInfo{
+		Votes: []cometabci.ExtendedVoteInfo{valVoteInfo},
 	}
 }
 

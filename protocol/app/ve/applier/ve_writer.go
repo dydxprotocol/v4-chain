@@ -143,7 +143,6 @@ func (vea *VEApplier) getAggregatePricesAndConversionRateFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
 ) (map[string]voteweighted.AggregatorPricePair, *big.Int, error) {
-
 	votes, err := aggregator.GetDaemonVotesFromBlock(
 		request.Txs,
 		vea.voteExtensionCodec,
@@ -292,7 +291,6 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 	writeToCache bool,
 ) error {
 	if sDaiConversionRate != nil {
-
 		if sDaiConversionRate.Sign() <= 0 {
 			return fmt.Errorf("invalid sDAI conversion rate: %s", sDaiConversionRate.String())
 		}

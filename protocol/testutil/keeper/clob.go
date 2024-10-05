@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	aggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
@@ -65,7 +64,7 @@ func NewClobKeepersTestContext(
 	memClob types.MemClob,
 	bankKeeper bankkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
-	voteAggregator aggregator.VoteAggregator,
+	voteAggregator veaggregator.VoteAggregator,
 ) (ks ClobKeepersTestContext) {
 	ks = NewClobKeepersTestContextWithUninitializedMemStore(t, memClob, bankKeeper, indexerEventManager, voteAggregator)
 
@@ -80,7 +79,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 	memClob types.MemClob,
 	bankKeeper bankkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
-	voteAggregator aggregator.VoteAggregator,
+	voteAggregator veaggregator.VoteAggregator,
 ) (ks ClobKeepersTestContext) {
 	var mockTimeProvider *mocks.TimeProvider
 	ks.Ctx = initKeepers(t, func(
@@ -162,7 +161,6 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 		)
 
 		if voteAggregator == nil {
-
 			voteAggregator = veaggregator.NewVeAggregator(
 				log.NewNopLogger(),
 				*ks.PricesKeeper,

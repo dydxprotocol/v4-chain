@@ -300,7 +300,6 @@ func (h *VoteExtensionHandler) getPeripheryPnlPriceData(
 	lastFundingRate *big.Int,
 	allExist bool,
 ) {
-
 	clobMidPrice = h.getClobMidPrice(ctx, market.MarketId)
 	smoothedPrice = h.getSmoothedPrice(market.MarketId)
 	lastFundingRate = h.getLastFundingRate(ctx, market.MarketId)

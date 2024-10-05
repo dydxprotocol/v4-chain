@@ -131,7 +131,6 @@ func validateIndividualVoteExtensionForProccessingProposal(
 	pricesKeeper PreBlockExecPricesKeeper,
 	ratelimitKeeper VoteExtensionRateLimitKeeper,
 ) error {
-
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
 		return nil
 	}
@@ -146,7 +145,6 @@ func validateIndividualVoteExtension(
 	pricesKeeper PreBlockExecPricesKeeper,
 	ratelimitKeeper VoteExtensionRateLimitKeeper,
 ) error {
-
 	if err := ValidateVEMarketsAndPrices(ctx, pricesKeeper, vote.VoteExtension, voteCodec); err != nil {
 		return err
 	}

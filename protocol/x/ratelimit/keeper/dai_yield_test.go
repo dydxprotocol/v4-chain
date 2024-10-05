@@ -19,7 +19,6 @@ import (
 )
 
 func TestProcessNewSDaiConversionRateUpdate(t *testing.T) {
-
 	testCases := []struct {
 		name string
 
