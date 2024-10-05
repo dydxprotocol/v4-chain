@@ -7,8 +7,6 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 
-
-
 option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types";
 
 // Msg defines the Msg service.

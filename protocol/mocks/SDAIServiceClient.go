@@ -18,7 +18,7 @@ type SDAIServiceClient struct {
 }
 
 // AddsDAIEvent provides a mock function with given fields: ctx, in, opts
-func (_m *SDAIServiceClient) AddsDAIEvent(ctx context.Context, in *api.AddsDAIEventsRequest, opts ...grpc.CallOption) (*api.AddsDAIEventsResponse, error) {
+func (_m *SDAIServiceClient) AddsDAIEvent(ctx context.Context, in *api.AddsDAIEventRequest, opts ...grpc.CallOption) (*api.AddsDAIEventResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -32,20 +32,20 @@ func (_m *SDAIServiceClient) AddsDAIEvent(ctx context.Context, in *api.AddsDAIEv
 		panic("no return value specified for AddsDAIEvent")
 	}
 
-	var r0 *api.AddsDAIEventsResponse
+	var r0 *api.AddsDAIEventResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *api.AddsDAIEventsRequest, ...grpc.CallOption) (*api.AddsDAIEventsResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *api.AddsDAIEventRequest, ...grpc.CallOption) (*api.AddsDAIEventResponse, error)); ok {
 		return rf(ctx, in, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *api.AddsDAIEventsRequest, ...grpc.CallOption) *api.AddsDAIEventsResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *api.AddsDAIEventRequest, ...grpc.CallOption) *api.AddsDAIEventResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*api.AddsDAIEventsResponse)
+			r0 = ret.Get(0).(*api.AddsDAIEventResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *api.AddsDAIEventsRequest, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *api.AddsDAIEventRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

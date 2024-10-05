@@ -137,7 +137,8 @@ type PerpetualParams struct {
 	LiquidityTier uint32 `protobuf:"varint,6,opt,name=liquidity_tier,json=liquidityTier,proto3" json:"liquidity_tier,omitempty"`
 	// The market type specifying if this perpetual is cross or isolated
 	MarketType PerpetualMarketType `protobuf:"varint,7,opt,name=market_type,json=marketType,proto3,enum=dydxprotocol.perpetuals.PerpetualMarketType" json:"market_type,omitempty"`
-	// The danger index is used to prioritze certain accounts and positions in liquidations
+	// The danger index is used to prioritze certain accounts and positions in
+	// liquidations
 	DangerIndexPpm uint32 `protobuf:"varint,8,opt,name=danger_index_ppm,json=dangerIndexPpm,proto3" json:"danger_index_ppm,omitempty"`
 	// The maximum insurance fund delta per block for isolated perpetual markets.
 	IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock uint64 `protobuf:"varint,9,opt,name=isolated_market_max_cumulative_insurance_fund_delta_per_block,json=isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,proto3" json:"isolated_market_max_cumulative_insurance_fund_delta_per_block,omitempty"`

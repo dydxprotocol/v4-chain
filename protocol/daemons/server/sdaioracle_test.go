@@ -25,7 +25,7 @@ func TestAddsDAIEvents_EmptyRequest(t *testing.T) {
 		sDAIEventManager,
 	)
 
-	resp, err := s.AddsDAIEvent(grpc.Ctx, &api.AddsDAIEventsRequest{})
+	resp, err := s.AddsDAIEvent(grpc.Ctx, &api.AddsDAIEventRequest{})
 	require.NoError(t, err)
 	require.Empty(t, resp)
 	require.Empty(t, sDAIEventManager.GetSDaiPrice())
@@ -45,7 +45,7 @@ func TestAddsDAIEvents_Error(t *testing.T) {
 		mockSDaiEventManager,
 	)
 
-	resp, err := s.AddsDAIEvent(grpc.Ctx, &api.AddsDAIEventsRequest{
+	resp, err := s.AddsDAIEvent(grpc.Ctx, &api.AddsDAIEventRequest{
 		ConversionRate: sdaitypes.TestSDAIEventRequest.ConversionRate,
 	})
 
@@ -66,11 +66,11 @@ func TestAddsDAIEvents(t *testing.T) {
 		sDAIEventManager,
 	)
 
-	expectedEvent := &api.AddsDAIEventsRequest{
+	expectedEvent := &api.AddsDAIEventRequest{
 		ConversionRate: sdaitypes.TestSDAIEventRequest.ConversionRate,
 	}
 
-	resp, err := s.AddsDAIEvent(grpc.Ctx, &api.AddsDAIEventsRequest{
+	resp, err := s.AddsDAIEvent(grpc.Ctx, &api.AddsDAIEventRequest{
 		ConversionRate: sdaitypes.TestSDAIEventRequest.ConversionRate,
 	})
 	require.NoError(t, err)
@@ -79,7 +79,7 @@ func TestAddsDAIEvents(t *testing.T) {
 	event := sDAIEventManager.GetSDaiPrice()
 	require.Equal(t, expectedEvent.ConversionRate, event.ConversionRate)
 
-	secondEvent := &api.AddsDAIEventsRequest{
+	secondEvent := &api.AddsDAIEventRequest{
 		ConversionRate: "1",
 	}
 

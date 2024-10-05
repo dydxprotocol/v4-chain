@@ -29,8 +29,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// UpdateSubaccountsListForDeleveragingDaemonRequest is a request message that contains a list of
-// perpetuals with the associated subaccounts that have open long and short positions
+// UpdateSubaccountsListForDeleveragingDaemonRequest is a request message that
+// contains a list of perpetuals with the associated subaccounts that have open
+// long and short positions
 type UpdateSubaccountsListForDeleveragingDaemonRequest struct {
 	// A map of perpetual id to subaccount open position info.
 	SubaccountOpenPositionInfo []types.SubaccountOpenPositionInfo `protobuf:"bytes,1,rep,name=subaccount_open_position_info,json=subaccountOpenPositionInfo,proto3" json:"subaccount_open_position_info"`

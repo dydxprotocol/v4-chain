@@ -369,7 +369,8 @@ func (m *GetSDAIPriceQueryResponse) GetPrice() string {
 	return ""
 }
 
-// GetAssetYieldIndexRequest is a request type for the GetAssetYieldIndex RPC method.
+// GetAssetYieldIndexRequest is a request type for the GetAssetYieldIndex RPC
+// method.
 type GetAssetYieldIndexQueryRequest struct {
 }
 
@@ -406,7 +407,8 @@ func (m *GetAssetYieldIndexQueryRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetAssetYieldIndexQueryRequest proto.InternalMessageInfo
 
-// GetSDAIPriceQueryResponse is a response type for the GetAssetYieldIndex RPC method.
+// GetSDAIPriceQueryResponse is a response type for the GetAssetYieldIndex RPC
+// method.
 type GetAssetYieldIndexQueryResponse struct {
 	AssetYieldIndex string `protobuf:"bytes,1,opt,name=asset_yield_index,json=assetYieldIndex,proto3" json:"asset_yield_index,omitempty"`
 }

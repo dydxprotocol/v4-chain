@@ -17,7 +17,7 @@ func TestGetInitialEvent(t *testing.T) {
 	t.Run("Empty request", func(t *testing.T) {
 		result, err := fetcher.GetInitialEvent(true)
 		require.NoError(t, err)
-		require.Equal(t, api.AddsDAIEventsRequest{}, result)
+		require.Equal(t, api.AddsDAIEventRequest{}, result)
 	})
 
 	t.Run("Successful query", func(t *testing.T) {

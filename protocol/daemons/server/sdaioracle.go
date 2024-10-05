@@ -26,9 +26,9 @@ func (server *Server) WithsDAIEventManager(
 // in a go-routine safe slice.
 func (s *Server) AddsDAIEvent(
 	ctx context.Context,
-	req *api.AddsDAIEventsRequest,
+	req *api.AddsDAIEventRequest,
 ) (
-	response *api.AddsDAIEventsResponse,
+	response *api.AddsDAIEventResponse,
 	err error,
 ) {
 	err = s.sDAIEventManager.AddsDAIEvent(req)
@@ -40,5 +40,5 @@ func (s *Server) AddsDAIEvent(
 	// Capture valid responses in metrics.
 	s.reportValidResponse(types.SDAIDaemonServiceName)
 
-	return &api.AddsDAIEventsResponse{}, nil
+	return &api.AddsDAIEventResponse{}, nil
 }

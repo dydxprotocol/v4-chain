@@ -17,14 +17,14 @@ func TestDefaultNewSDAIEventManager(t *testing.T) {
 func TestEmptyNewSDAIEventManager(t *testing.T) {
 	sdaiEventManager := sdaitypes.SetupMockEventManager(true)
 	actualEvents := sdaiEventManager.GetSDaiPrice()
-	require.EqualValues(t, api.AddsDAIEventsRequest{}, actualEvents)
+	require.EqualValues(t, api.AddsDAIEventRequest{}, actualEvents)
 }
 
 func TestSDAIEventManager_AddsDAIEvent(t *testing.T) {
 	sdaiEventManager := sdaitypes.SetupMockEventManager()
 
 	// Create a new event
-	event := &api.AddsDAIEventsRequest{
+	event := &api.AddsDAIEventRequest{
 		ConversionRate: sdaitypes.TestSDAIEventRequest.ConversionRate,
 	}
 

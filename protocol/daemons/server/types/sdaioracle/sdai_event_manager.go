@@ -14,62 +14,62 @@ import (
 var (
 	SDAIEventFetcher EventFetcher = &EthEventFetcher{}
 
-	TestSDAIEventRequest = api.AddsDAIEventsRequest{
+	TestSDAIEventRequest = api.AddsDAIEventRequest{
 		ConversionRate: "1006681181716810314385961731",
 	}
 )
 
 type MockEventFetcher struct{}
 
-func (m *MockEventFetcher) GetInitialEvent(empty bool) (api.AddsDAIEventsRequest, error) {
+func (m *MockEventFetcher) GetInitialEvent(empty bool) (api.AddsDAIEventRequest, error) {
 	if empty {
-		return api.AddsDAIEventsRequest{}, nil
+		return api.AddsDAIEventRequest{}, nil
 	}
 	return TestSDAIEventRequest, nil
 }
 
 type MockEventFetcherNoEvents struct{}
 
-func (m *MockEventFetcherNoEvents) GetInitialEvent(empty bool) (api.AddsDAIEventsRequest, error) {
-	return api.AddsDAIEventsRequest{}, nil
+func (m *MockEventFetcherNoEvents) GetInitialEvent(empty bool) (api.AddsDAIEventRequest, error) {
+	return api.AddsDAIEventRequest{}, nil
 }
 
 type EventFetcher interface {
-	GetInitialEvent(empty bool) (api.AddsDAIEventsRequest, error)
+	GetInitialEvent(empty bool) (api.AddsDAIEventRequest, error)
 }
 
 type EthEventFetcher struct{}
 
-func (r *EthEventFetcher) GetInitialEvent(empty bool) (api.AddsDAIEventsRequest, error) {
+func (r *EthEventFetcher) GetInitialEvent(empty bool) (api.AddsDAIEventRequest, error) {
 	if empty {
-		return api.AddsDAIEventsRequest{}, nil
+		return api.AddsDAIEventRequest{}, nil
 	}
 
 	ethClient, err := ethclient.Dial(types.ETHRPC)
 	if err != nil {
-		return api.AddsDAIEventsRequest{}, err
+		return api.AddsDAIEventRequest{}, err
 	}
 
 	rate, err := store.QueryDaiConversionRateWithRetries(ethClient, 3)
 	if err != nil {
-		return api.AddsDAIEventsRequest{}, err
+		return api.AddsDAIEventRequest{}, err
 	}
 
 	ethClient.Close()
 
-	return api.AddsDAIEventsRequest{ConversionRate: rate}, nil
+	return api.AddsDAIEventRequest{ConversionRate: rate}, nil
 }
 
 // SDAIEventManager interface defines the methods for managing sDAI events
 type SDAIEventManager interface {
-	AddsDAIEvent(event *api.AddsDAIEventsRequest) error
-	GetSDaiPrice() api.AddsDAIEventsRequest
+	AddsDAIEvent(event *api.AddsDAIEventRequest) error
+	GetSDaiPrice() api.AddsDAIEventRequest
 }
 
 // sDAIEventManagerImpl implements the SDAIEventManager interface
 type sDAIEventManagerImpl struct {
 	sync.Mutex
-	price api.AddsDAIEventsRequest
+	price api.AddsDAIEventRequest
 }
 
 // NewsDAIEventManager creates a new SDAIEventManager.
@@ -88,7 +88,7 @@ func NewsDAIEventManager(isEmpty ...bool) SDAIEventManager {
 	}
 }
 
-func (s *sDAIEventManagerImpl) AddsDAIEvent(event *api.AddsDAIEventsRequest) error {
+func (s *sDAIEventManagerImpl) AddsDAIEvent(event *api.AddsDAIEventRequest) error {
 	s.Lock()
 	defer s.Unlock()
 
@@ -96,7 +96,7 @@ func (s *sDAIEventManagerImpl) AddsDAIEvent(event *api.AddsDAIEventsRequest) err
 	return nil
 }
 
-func (s *sDAIEventManagerImpl) GetSDaiPrice() api.AddsDAIEventsRequest {
+func (s *sDAIEventManagerImpl) GetSDaiPrice() api.AddsDAIEventRequest {
 	s.Lock()
 	defer s.Unlock()
 

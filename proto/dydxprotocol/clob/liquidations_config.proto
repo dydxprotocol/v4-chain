@@ -13,7 +13,7 @@ message LiquidationsConfig {
 
   // The fraction of the remaining collateral taken as a validator fee.
   uint32 validator_fee_ppm = 2;
-  
+
   // The fraction of the remaining collateral taken as a liquidity fee.
   uint32 liquidity_fee_ppm = 3;
 

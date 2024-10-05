@@ -29,8 +29,8 @@ service Query {
       QueryGetWithdrawalAndTransfersBlockedInfoRequest)
       returns (QueryGetWithdrawalAndTransfersBlockedInfoResponse) {
     option (google.api.http).get =
-    "/dydxprotocol/subaccounts/withdrawals_and_transfers_blocked_info/"
-    "{perpetual_id}";
+        "/dydxprotocol/subaccounts/withdrawals_and_transfers_blocked_info/"
+        "{perpetual_id}";
   }
 
   // Queries the collateral pool account address for a perpetual id.

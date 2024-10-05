@@ -6,7 +6,6 @@ package api
 import (
 	context "context"
 	fmt "fmt"
-	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
@@ -30,22 +29,22 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // AddsDAIEventsRequest is a request message that contains a new
 // sDAI conversion rate.
-type AddsDAIEventsRequest struct {
+type AddsDAIEventRequest struct {
 	ConversionRate string `protobuf:"bytes,1,opt,name=conversion_rate,json=conversionRate,proto3" json:"conversion_rate,omitempty"`
 }
 
-func (m *AddsDAIEventsRequest) Reset()         { *m = AddsDAIEventsRequest{} }
-func (m *AddsDAIEventsRequest) String() string { return proto.CompactTextString(m) }
-func (*AddsDAIEventsRequest) ProtoMessage()    {}
-func (*AddsDAIEventsRequest) Descriptor() ([]byte, []int) {
+func (m *AddsDAIEventRequest) Reset()         { *m = AddsDAIEventRequest{} }
+func (m *AddsDAIEventRequest) String() string { return proto.CompactTextString(m) }
+func (*AddsDAIEventRequest) ProtoMessage()    {}
+func (*AddsDAIEventRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8d278ac9ea01817d, []int{0}
 }
-func (m *AddsDAIEventsRequest) XXX_Unmarshal(b []byte) error {
+func (m *AddsDAIEventRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AddsDAIEventsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AddsDAIEventRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AddsDAIEventsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AddsDAIEventRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -55,19 +54,19 @@ func (m *AddsDAIEventsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *AddsDAIEventsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddsDAIEventsRequest.Merge(m, src)
+func (m *AddsDAIEventRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddsDAIEventRequest.Merge(m, src)
 }
-func (m *AddsDAIEventsRequest) XXX_Size() int {
+func (m *AddsDAIEventRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *AddsDAIEventsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_AddsDAIEventsRequest.DiscardUnknown(m)
+func (m *AddsDAIEventRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddsDAIEventRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AddsDAIEventsRequest proto.InternalMessageInfo
+var xxx_messageInfo_AddsDAIEventRequest proto.InternalMessageInfo
 
-func (m *AddsDAIEventsRequest) GetConversionRate() string {
+func (m *AddsDAIEventRequest) GetConversionRate() string {
 	if m != nil {
 		return m.ConversionRate
 	}
@@ -75,21 +74,21 @@ func (m *AddsDAIEventsRequest) GetConversionRate() string {
 }
 
 // AddsDAIEventsResponse is a response message for AddsDAIEventsRequest.
-type AddsDAIEventsResponse struct {
+type AddsDAIEventResponse struct {
 }
 
-func (m *AddsDAIEventsResponse) Reset()         { *m = AddsDAIEventsResponse{} }
-func (m *AddsDAIEventsResponse) String() string { return proto.CompactTextString(m) }
-func (*AddsDAIEventsResponse) ProtoMessage()    {}
-func (*AddsDAIEventsResponse) Descriptor() ([]byte, []int) {
+func (m *AddsDAIEventResponse) Reset()         { *m = AddsDAIEventResponse{} }
+func (m *AddsDAIEventResponse) String() string { return proto.CompactTextString(m) }
+func (*AddsDAIEventResponse) ProtoMessage()    {}
+func (*AddsDAIEventResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8d278ac9ea01817d, []int{1}
 }
-func (m *AddsDAIEventsResponse) XXX_Unmarshal(b []byte) error {
+func (m *AddsDAIEventResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *AddsDAIEventsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AddsDAIEventResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_AddsDAIEventsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AddsDAIEventResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -99,21 +98,21 @@ func (m *AddsDAIEventsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
-func (m *AddsDAIEventsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AddsDAIEventsResponse.Merge(m, src)
+func (m *AddsDAIEventResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddsDAIEventResponse.Merge(m, src)
 }
-func (m *AddsDAIEventsResponse) XXX_Size() int {
+func (m *AddsDAIEventResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *AddsDAIEventsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_AddsDAIEventsResponse.DiscardUnknown(m)
+func (m *AddsDAIEventResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddsDAIEventResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AddsDAIEventsResponse proto.InternalMessageInfo
+var xxx_messageInfo_AddsDAIEventResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*AddsDAIEventsRequest)(nil), "dydxprotocol.daemons.sdaioracle.AddsDAIEventsRequest")
-	proto.RegisterType((*AddsDAIEventsResponse)(nil), "dydxprotocol.daemons.sdaioracle.AddsDAIEventsResponse")
+	proto.RegisterType((*AddsDAIEventRequest)(nil), "dydxprotocol.daemons.sdaioracle.AddsDAIEventRequest")
+	proto.RegisterType((*AddsDAIEventResponse)(nil), "dydxprotocol.daemons.sdaioracle.AddsDAIEventResponse")
 }
 
 func init() {
@@ -121,24 +120,23 @@ func init() {
 }
 
 var fileDescriptor_8d278ac9ea01817d = []byte{
-	// 268 bytes of a gzipped FileDescriptorProto
+	// 256 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xd2, 0x4a, 0xa9, 0x4c, 0xa9,
 	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x4f, 0x49, 0x4c, 0xcd, 0xcd, 0xcf, 0x2b,
 	0xd6, 0x2f, 0x4e, 0x49, 0xcc, 0xcc, 0x2f, 0x4a, 0x4c, 0xce, 0x49, 0x05, 0x33, 0xf5, 0xc0, 0x0a,
-	0x84, 0xe4, 0x91, 0xd5, 0xea, 0x41, 0xd5, 0xea, 0x21, 0xd4, 0x4a, 0x89, 0xa4, 0xe7, 0xa7, 0xe7,
-	0x83, 0x15, 0xe8, 0x83, 0x58, 0x10, 0x6d, 0x4a, 0xf6, 0x5c, 0x22, 0x8e, 0x29, 0x29, 0xc5, 0x2e,
-	0x8e, 0x9e, 0xae, 0x65, 0xa9, 0x79, 0x25, 0xc5, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x42,
-	0xea, 0x5c, 0xfc, 0xc9, 0xf9, 0x79, 0x65, 0xa9, 0x45, 0xc5, 0x99, 0xf9, 0x79, 0xf1, 0x45, 0x89,
-	0x25, 0xa9, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c, 0x41, 0x7c, 0x08, 0xe1, 0xa0, 0xc4, 0x92, 0x54,
-	0x25, 0x71, 0x2e, 0x51, 0x34, 0x03, 0x8a, 0x0b, 0xf2, 0xf3, 0x8a, 0x53, 0x8d, 0x7a, 0x18, 0xb9,
-	0xb8, 0x41, 0xc2, 0xc1, 0xa9, 0x45, 0x65, 0x99, 0xc9, 0xa9, 0x42, 0xb5, 0x5c, 0x3c, 0xc8, 0x0a,
-	0x85, 0x4c, 0xf5, 0x08, 0xb8, 0x58, 0x0f, 0x9b, 0xc3, 0xa4, 0xcc, 0x48, 0xd5, 0x06, 0x71, 0x8e,
-	0x53, 0xc6, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31, 0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1,
-	0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37, 0x1e, 0xcb, 0x31, 0x44, 0xf9, 0xa5, 0x67, 0x96,
-	0x64, 0x94, 0x26, 0xe9, 0x25, 0xe7, 0xe7, 0xea, 0x07, 0x97, 0x14, 0xa5, 0x26, 0xe6, 0xba, 0x65,
-	0xe6, 0x25, 0xe6, 0x25, 0xa7, 0xea, 0x06, 0xc0, 0x82, 0xbe, 0x18, 0x2c, 0xac, 0x9b, 0x9c, 0x91,
-	0x98, 0x99, 0xa7, 0x8f, 0x2f, 0x42, 0x12, 0x0b, 0x32, 0x93, 0xd8, 0xc0, 0x0a, 0x8c, 0x01, 0x01,
-	0x00, 0x00, 0xff, 0xff, 0xc4, 0x86, 0x7e, 0x62, 0xbe, 0x01, 0x00, 0x00,
+	0x84, 0xe4, 0x91, 0xd5, 0xea, 0x41, 0xd5, 0xea, 0x21, 0xd4, 0x2a, 0xd9, 0x71, 0x09, 0x3b, 0xa6,
+	0xa4, 0x14, 0xbb, 0x38, 0x7a, 0xba, 0x96, 0xa5, 0xe6, 0x95, 0x04, 0xa5, 0x16, 0x96, 0xa6, 0x16,
+	0x97, 0x08, 0xa9, 0x73, 0xf1, 0x27, 0xe7, 0xe7, 0x95, 0xa5, 0x16, 0x15, 0x67, 0xe6, 0xe7, 0xc5,
+	0x17, 0x25, 0x96, 0xa4, 0x4a, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0xf1, 0x21, 0x84, 0x83, 0x12,
+	0x4b, 0x52, 0x95, 0xc4, 0xb8, 0x44, 0x50, 0xf5, 0x17, 0x17, 0xe4, 0xe7, 0x15, 0xa7, 0x1a, 0x75,
+	0x31, 0x72, 0x71, 0x07, 0xbb, 0x38, 0x7a, 0x06, 0xa7, 0x16, 0x95, 0x65, 0x26, 0xa7, 0x0a, 0x55,
+	0x73, 0xf1, 0x20, 0xab, 0x13, 0x32, 0xd1, 0x23, 0xe0, 0x32, 0x3d, 0x2c, 0xce, 0x92, 0x32, 0x25,
+	0x51, 0x17, 0xc4, 0x31, 0x4e, 0x19, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0,
+	0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0x10,
+	0xe5, 0x97, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x1f, 0x5c, 0x52, 0x94,
+	0x9a, 0x98, 0xeb, 0x96, 0x99, 0x97, 0x98, 0x97, 0x9c, 0xaa, 0x1b, 0x00, 0x0b, 0xe0, 0x62, 0xb0,
+	0xb0, 0x6e, 0x72, 0x46, 0x62, 0x66, 0x9e, 0x3e, 0xbe, 0x60, 0x4f, 0x2c, 0xc8, 0x4c, 0x62, 0x03,
+	0x2b, 0x30, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x26, 0x8e, 0xd7, 0xf1, 0xa4, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -154,7 +152,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SDAIServiceClient interface {
 	// Sends a list of newly recognized sDAI events.
-	AddsDAIEvent(ctx context.Context, in *AddsDAIEventsRequest, opts ...grpc.CallOption) (*AddsDAIEventsResponse, error)
+	AddsDAIEvent(ctx context.Context, in *AddsDAIEventRequest, opts ...grpc.CallOption) (*AddsDAIEventResponse, error)
 }
 
 type sDAIServiceClient struct {
@@ -165,9 +163,9 @@ func NewSDAIServiceClient(cc grpc1.ClientConn) SDAIServiceClient {
 	return &sDAIServiceClient{cc}
 }
 
-func (c *sDAIServiceClient) AddsDAIEvent(ctx context.Context, in *AddsDAIEventsRequest, opts ...grpc.CallOption) (*AddsDAIEventsResponse, error) {
-	out := new(AddsDAIEventsResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.daemons.sdaioracle.sDAIService/AddsDAIEvent", in, out, opts...)
+func (c *sDAIServiceClient) AddsDAIEvent(ctx context.Context, in *AddsDAIEventRequest, opts ...grpc.CallOption) (*AddsDAIEventResponse, error) {
+	out := new(AddsDAIEventResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.daemons.sdaioracle.SDAIService/AddsDAIEvent", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -177,14 +175,14 @@ func (c *sDAIServiceClient) AddsDAIEvent(ctx context.Context, in *AddsDAIEventsR
 // SDAIServiceServer is the server API for SDAIService service.
 type SDAIServiceServer interface {
 	// Sends a list of newly recognized sDAI events.
-	AddsDAIEvent(context.Context, *AddsDAIEventsRequest) (*AddsDAIEventsResponse, error)
+	AddsDAIEvent(context.Context, *AddsDAIEventRequest) (*AddsDAIEventResponse, error)
 }
 
 // UnimplementedSDAIServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedSDAIServiceServer struct {
 }
 
-func (*UnimplementedSDAIServiceServer) AddsDAIEvent(ctx context.Context, req *AddsDAIEventsRequest) (*AddsDAIEventsResponse, error) {
+func (*UnimplementedSDAIServiceServer) AddsDAIEvent(ctx context.Context, req *AddsDAIEventRequest) (*AddsDAIEventResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddsDAIEvent not implemented")
 }
 
@@ -193,7 +191,7 @@ func RegisterSDAIServiceServer(s grpc1.Server, srv SDAIServiceServer) {
 }
 
 func _SDAIService_AddsDAIEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddsDAIEventsRequest)
+	in := new(AddsDAIEventRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -202,16 +200,16 @@ func _SDAIService_AddsDAIEvent_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.daemons.sdaioracle.sDAIService/AddsDAIEvent",
+		FullMethod: "/dydxprotocol.daemons.sdaioracle.SDAIService/AddsDAIEvent",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SDAIServiceServer).AddsDAIEvent(ctx, req.(*AddsDAIEventsRequest))
+		return srv.(SDAIServiceServer).AddsDAIEvent(ctx, req.(*AddsDAIEventRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 var _SDAIService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "dydxprotocol.daemons.sdaioracle.sDAIService",
+	ServiceName: "dydxprotocol.daemons.sdaioracle.SDAIService",
 	HandlerType: (*SDAIServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -223,7 +221,7 @@ var _SDAIService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "dydxprotocol/daemons/sdaioracle/sdai.proto",
 }
 
-func (m *AddsDAIEventsRequest) Marshal() (dAtA []byte, err error) {
+func (m *AddsDAIEventRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -233,12 +231,12 @@ func (m *AddsDAIEventsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AddsDAIEventsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *AddsDAIEventRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AddsDAIEventsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AddsDAIEventRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -253,7 +251,7 @@ func (m *AddsDAIEventsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *AddsDAIEventsResponse) Marshal() (dAtA []byte, err error) {
+func (m *AddsDAIEventResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -263,12 +261,12 @@ func (m *AddsDAIEventsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *AddsDAIEventsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *AddsDAIEventResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *AddsDAIEventsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AddsDAIEventResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -287,7 +285,7 @@ func encodeVarintSdai(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *AddsDAIEventsRequest) Size() (n int) {
+func (m *AddsDAIEventRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -300,7 +298,7 @@ func (m *AddsDAIEventsRequest) Size() (n int) {
 	return n
 }
 
-func (m *AddsDAIEventsResponse) Size() (n int) {
+func (m *AddsDAIEventResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -315,7 +313,7 @@ func sovSdai(x uint64) (n int) {
 func sozSdai(x uint64) (n int) {
 	return sovSdai(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *AddsDAIEventsRequest) Unmarshal(dAtA []byte) error {
+func (m *AddsDAIEventRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -338,10 +336,10 @@ func (m *AddsDAIEventsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AddsDAIEventsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: AddsDAIEventRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AddsDAIEventsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AddsDAIEventRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -397,7 +395,7 @@ func (m *AddsDAIEventsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *AddsDAIEventsResponse) Unmarshal(dAtA []byte) error {
+func (m *AddsDAIEventResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -420,10 +418,10 @@ func (m *AddsDAIEventsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: AddsDAIEventsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: AddsDAIEventResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AddsDAIEventsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AddsDAIEventResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

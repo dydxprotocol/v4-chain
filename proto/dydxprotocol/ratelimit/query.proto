@@ -33,18 +33,16 @@ service Query {
 
   // Get the price of sDAI.
   rpc GetSDAIPriceQuery(GetSDAIPriceQueryRequest)
-    returns (GetSDAIPriceQueryResponse) {
-  option (google.api.http).get =
-      "/dydxprotocol/v4/ratelimit/get_sdai_price";
+      returns (GetSDAIPriceQueryResponse) {
+    option (google.api.http).get = "/dydxprotocol/v4/ratelimit/get_sdai_price";
   }
 
   // Get the price of sDAI.
   rpc GetAssetYieldIndexQuery(GetAssetYieldIndexQueryRequest)
-    returns (GetAssetYieldIndexQueryResponse) {
-  option (google.api.http).get =
-      "/dydxprotocol/v4/ratelimit/get_asset_yield_index";
+      returns (GetAssetYieldIndexQueryResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/ratelimit/get_asset_yield_index";
   }
-
 }
 
 // ListLimitParamsRequest is a request type of the ListLimitParams RPC method.
@@ -85,10 +83,13 @@ message GetSDAIPriceQueryResponse {
   string price = 1; // Assuming price is returned as a string
 }
 
-// GetAssetYieldIndexRequest is a request type for the GetAssetYieldIndex RPC method.
+// GetAssetYieldIndexRequest is a request type for the GetAssetYieldIndex RPC
+// method.
 message GetAssetYieldIndexQueryRequest {}
 
-// GetSDAIPriceQueryResponse is a response type for the GetAssetYieldIndex RPC method.
+// GetSDAIPriceQueryResponse is a response type for the GetAssetYieldIndex RPC
+// method.
 message GetAssetYieldIndexQueryResponse {
-  string asset_yield_index = 1; // Handled as a string, should be converted to big.Rat.
+  string asset_yield_index =
+      1; // Handled as a string, should be converted to big.Rat.
 }

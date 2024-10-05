@@ -308,9 +308,9 @@ type MarketPriceUpdateEventV1 struct {
 	// price in dollars. For example if `Exponent == -5` then a `exponent_price`
 	// of `1,000,000,000` represents “$10,000`.
 	SpotPriceWithExponent uint64 `protobuf:"varint,1,opt,name=spot_price_with_exponent,json=spotPriceWithExponent,proto3" json:"spot_price_with_exponent,omitempty"`
-	// pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
-	// price in dollars. For example if `Exponent == -5` then a `exponent_price`
-	// of `1,000,000,000` represents “$10,000`.
+	// pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human
+	// readable price in dollars. For example if `Exponent == -5` then a
+	// `exponent_price` of `1,000,000,000` represents “$10,000`.
 	PnlPriceWithExponent uint64 `protobuf:"varint,2,opt,name=pnl_price_with_exponent,json=pnlPriceWithExponent,proto3" json:"pnl_price_with_exponent,omitempty"`
 }
 
@@ -1797,7 +1797,8 @@ type PerpetualMarketCreateEventV2 struct {
 	LiquidityTier uint32 `protobuf:"varint,10,opt,name=liquidity_tier,json=liquidityTier,proto3" json:"liquidity_tier,omitempty"`
 	// Market type of the perpetual.
 	MarketType types.PerpetualMarketType `protobuf:"varint,11,opt,name=market_type,json=marketType,proto3,enum=dydxprotocol.indexer.protocol.v1.PerpetualMarketType" json:"market_type,omitempty"`
-	// The danger index is used to prioritze certain accounts and positions in liquidations
+	// The danger index is used to prioritze certain accounts and positions in
+	// liquidations
 	DangerIndexPpm uint32 `protobuf:"varint,12,opt,name=danger_index_ppm,json=dangerIndexPpm,proto3" json:"danger_index_ppm,omitempty"`
 	// The maximum cumulative insurance fund delta per block for isolated markets.
 	IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock string `protobuf:"bytes,13,opt,name=isolated_market_max_cumulative_insurance_fund_delta_per_block,json=isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,proto3" json:"isolated_market_max_cumulative_insurance_fund_delta_per_block,omitempty"`
@@ -2332,7 +2333,8 @@ type UpdatePerpetualEventV1 struct {
 	// The liquidity_tier that this perpetual is associated with.
 	// Defined in perpetuals.perpetual
 	LiquidityTier uint32 `protobuf:"varint,5,opt,name=liquidity_tier,json=liquidityTier,proto3" json:"liquidity_tier,omitempty"`
-	// The danger index is used to prioritze certain accounts and positions in liquidations
+	// The danger index is used to prioritze certain accounts and positions in
+	// liquidations
 	DangerIndexPpm uint32 `protobuf:"varint,6,opt,name=danger_index_ppm,json=dangerIndexPpm,proto3" json:"danger_index_ppm,omitempty"`
 	// The maximum cumulative insurance fund delta per block for isolated markets.
 	IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock string `protobuf:"bytes,7,opt,name=isolated_market_max_cumulative_insurance_fund_delta_per_block,json=isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,proto3" json:"isolated_market_max_cumulative_insurance_fund_delta_per_block,omitempty"`

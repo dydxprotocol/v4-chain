@@ -13,7 +13,7 @@ type SDAIEventManager struct {
 }
 
 // AddsDAIEvent provides a mock function with given fields: event
-func (_m *SDAIEventManager) AddsDAIEvent(event *api.AddsDAIEventsRequest) error {
+func (_m *SDAIEventManager) AddsDAIEvent(event *api.AddsDAIEventRequest) error {
 	ret := _m.Called(event)
 
 	if len(ret) == 0 {
@@ -21,7 +21,7 @@ func (_m *SDAIEventManager) AddsDAIEvent(event *api.AddsDAIEventsRequest) error 
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*api.AddsDAIEventsRequest) error); ok {
+	if rf, ok := ret.Get(0).(func(*api.AddsDAIEventRequest) error); ok {
 		r0 = rf(event)
 	} else {
 		r0 = ret.Error(0)
@@ -31,18 +31,18 @@ func (_m *SDAIEventManager) AddsDAIEvent(event *api.AddsDAIEventsRequest) error 
 }
 
 // GetSDaiPrice provides a mock function with given fields:
-func (_m *SDAIEventManager) GetSDaiPrice() api.AddsDAIEventsRequest {
+func (_m *SDAIEventManager) GetSDaiPrice() api.AddsDAIEventRequest {
 	ret := _m.Called()
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSDaiPrice")
 	}
 
-	var r0 api.AddsDAIEventsRequest
-	if rf, ok := ret.Get(0).(func() api.AddsDAIEventsRequest); ok {
+	var r0 api.AddsDAIEventRequest
+	if rf, ok := ret.Get(0).(func() api.AddsDAIEventRequest); ok {
 		r0 = rf()
 	} else {
-		r0 = ret.Get(0).(api.AddsDAIEventsRequest)
+		r0 = ret.Get(0).(api.AddsDAIEventRequest)
 	}
 
 	return r0

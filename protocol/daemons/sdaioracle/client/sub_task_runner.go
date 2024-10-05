@@ -71,7 +71,7 @@ func (s *SubTaskRunnerImpl) RunsDAIDaemonTaskLoop(
 	)
 
 	// Send sDAI events to sDAI server.
-	if _, err = serviceClient.AddsDAIEvent(ctx, &api.AddsDAIEventsRequest{
+	if _, err = serviceClient.AddsDAIEvent(ctx, &api.AddsDAIEventRequest{
 		ConversionRate: sDAIConversionRate,
 	}); err != nil {
 		return fmt.Errorf("failed to add sDAI events: %w", err)
