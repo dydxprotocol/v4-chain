@@ -293,12 +293,8 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 ) error {
 	if sDaiConversionRate != nil {
 
-		if sDaiConversionRate.Sign() < 0 {
-			return fmt.Errorf("sDAI conversion rate cannot be negative: %s", sDaiConversionRate.String())
-		}
-
-		if sDaiConversionRate.Sign() == 0 {
-			return fmt.Errorf("sDAI conversion rate cannot be zero")
+		if sDaiConversionRate.Sign() <= 0 {
+			return fmt.Errorf("invalid sDAI conversion rate: %s", sDaiConversionRate.String())
 		}
 
 		err := vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()))

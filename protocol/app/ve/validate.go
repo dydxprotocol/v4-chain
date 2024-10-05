@@ -165,7 +165,6 @@ func ValidateVEMarketsAndPrices(
 	voteCodec codec.VoteExtensionCodec,
 ) error {
 	ve, err := voteCodec.Decode(veBytes)
-
 	if err != nil {
 		return err
 	}
