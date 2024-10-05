@@ -394,12 +394,6 @@ func (vea *VEApplier) shouldWritePriceToStore(
 	isValidSpot, isValidPnl := vea.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, priceUpdate)
 
 	if !isValidSpot && !isValidPnl {
-		vea.logger.Error(
-			"price update validation failed",
-			"market_id", marketId,
-			"spot_price", prices.SpotPrice.String(),
-			"pnl_price", prices.PnlPrice.String(),
-		)
 
 		return false, false
 	} else if !isValidSpot {
