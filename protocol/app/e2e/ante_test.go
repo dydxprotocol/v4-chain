@@ -157,7 +157,7 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 						},
 					},
 					constants.TestFeeCoins_5Cents,
-					120_000,
+					125_000,
 					ctx.ChainID(),
 					[]uint64{account.GetAccountNumber()},
 					[]uint64{sequenceNumber},
