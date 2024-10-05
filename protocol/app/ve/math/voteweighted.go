@@ -127,15 +127,6 @@ func MedianPrices(
 					PnlPrice:  ComputeMedian(info.PnlPrices, info.TotalWeight),
 				}
 
-				logger.Info(
-					"computed stake-weighted median prices for currency pair",
-					"currency_pair", pair,
-					"percent_submitted", percentSubmitted.String(),
-					"threshold", threshold.String(),
-					"final_spot_price", finalPrices[pair].SpotPrice.String(),
-					"final_pnl_price", finalPrices[pair].PnlPrice.String(),
-					"num_validators", len(info.SpotPrices),
-				)
 			} else {
 				logger.Info(
 					"not enough voting power to compute stake-weighted median prices for currency pair",

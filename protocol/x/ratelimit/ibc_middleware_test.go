@@ -149,13 +149,33 @@ func setupChainForIBC(
 						nil,
 					)
 					gSDaiAmount := new(big.Int).Mul(sDaiAmount, tenScaledByConversionDecimals)
-					genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
-						Address: sDaiPoolAccountAddressString,
-						Coins: sdktypes.NewCoins(sdktypes.NewCoin(
+
+					var existingBalance *banktypes.Balance
+					for i, balance := range genesisState.Balances {
+						if balance.Address == sDaiPoolAccountAddressString {
+							existingBalance = &genesisState.Balances[i]
+							break
+						}
+					}
+
+					if existingBalance == nil {
+						// If no existing balance, append new balance
+						genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
+							Address: sDaiPoolAccountAddressString,
+							Coins: sdktypes.NewCoins(sdktypes.NewCoin(
+								ratelimittypes.SDaiDenom,
+								sdkmath.NewIntFromBigInt(gSDaiAmount),
+							)),
+						})
+					} else {
+						// If existing balance found, increment the amount
+						existingCoin := existingBalance.Coins.AmountOf(ratelimittypes.SDaiDenom)
+						newAmount := existingCoin.Add(sdkmath.NewIntFromBigInt(gSDaiAmount))
+						existingBalance.Coins = sdktypes.NewCoins(sdktypes.NewCoin(
 							ratelimittypes.SDaiDenom,
-							sdkmath.NewIntFromBigInt(gSDaiAmount),
-						)),
-					})
+							newAmount,
+						))
+					}
 				}
 
 				for _, simAccount := range simAccounts {

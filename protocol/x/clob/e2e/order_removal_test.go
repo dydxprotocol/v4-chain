@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -28,8 +29,9 @@ import (
 
 func TestConditionalOrderRemoval(t *testing.T) {
 	tests := map[string]struct {
-		subaccounts []satypes.Subaccount
-		orders      []clobtypes.Order
+		subaccounts              []satypes.Subaccount
+		orders                   []clobtypes.Order
+		disableSDAConversionRate bool
 
 		// Optional withdraw message for under-collateralized tests.
 		withdrawal  *sendingtypes.MsgWithdrawFromSubaccount
@@ -175,6 +177,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_50003,
 			},
+			disableSDAConversionRate: true,
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
@@ -205,6 +208,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				// Does not cross with best bid.
 				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_50003,
 			},
+			disableSDAConversionRate: true,
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
@@ -225,6 +229,36 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
 			disableNonDeterminismChecks: true,
 		},
+		"sdai conversion rate makes under-collateralized conditional taker order collateralized": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_100000USD,
+				constants.Dave_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTBT10,
+				// Does not cross with best bid.
+				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_50003,
+			},
+			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
+				Sender:    constants.Dave_Num0,
+				Recipient: constants.DaveAccAddress.String(),
+				AssetId:   constants.TDai.Id,
+				Quantums:  10_000_000_000,
+			},
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_250_000,
+					PnlPrice:  5_000_250_000,
+				},
+			},
+
+			expectedOrderRemovals: []bool{
+				false,
+				false, // taker order fails add-to-orderbook collateralization check
+			},
+			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
+			disableNonDeterminismChecks: true,
+		},
 		"under-collateralized conditional maker is removed": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_10000USD,
@@ -233,6 +267,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_50003,
 			},
+			disableSDAConversionRate: true,
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
@@ -303,6 +338,9 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			if tc.disableSDAConversionRate {
+				rate = ""
+			}
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
@@ -372,7 +410,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
 						AccAddressForSigning: tc.withdrawal.Sender.Owner,
-						Gas:                  120_000,
+						Gas:                  130_000,
 						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
 					tc.withdrawal,
@@ -382,6 +420,14 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			}
 			// Advance to the next block, persisting removals in operations queue to state.
 			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+
+			subaccounts := tApp.App.SubaccountsKeeper.GetAllSubaccount(ctx)
+			for _, subaccount := range subaccounts {
+				fmt.Println("subaccount", subaccount.Id)
+				for _, assetPosition := range subaccount.AssetPositions {
+					fmt.Println("asset position", assetPosition.AssetId, assetPosition.Quantums.String())
+				}
+			}
 
 			if tc.subsequentOrder != nil {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(

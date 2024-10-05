@@ -141,8 +141,9 @@ func getSubaccountTDaiBalance(subaccount satypes.Subaccount) int64 {
 
 func TestFunding(t *testing.T) {
 	tests := map[string]struct {
-		testHumanOrders    []clobtest.TestHumanOrder
-		initialDaemonPrice map[uint32]string
+		testHumanOrders          []clobtest.TestHumanOrder
+		initialDaemonPrice       map[uint32]string
+		disableSDAConversionRate bool
 		// daemon price to be used in premium calculation
 		daemonPriceForPremium map[uint32]string
 		// oracle price for funding index calculation
@@ -223,6 +224,7 @@ func TestFunding(t *testing.T) {
 					Settlement: -964_000,
 				},
 			},
+			disableSDAConversionRate: true,
 		},
 		"daemon price above impact ask, negative funding, final funding rate clamped": {
 			testHumanOrders: []clobtest.TestHumanOrder{
@@ -297,6 +299,7 @@ func TestFunding(t *testing.T) {
 					Settlement: 100_500_000,
 				},
 			},
+			disableSDAConversionRate: true,
 		},
 		"daemon price between impact bid and ask, zero funding": {
 			testHumanOrders: []clobtest.TestHumanOrder{
@@ -353,6 +356,7 @@ func TestFunding(t *testing.T) {
 					Settlement:   0,
 				},
 			},
+			disableSDAConversionRate: true,
 		},
 	}
 
@@ -367,9 +371,13 @@ func TestFunding(t *testing.T) {
 					genesis.GenesisTime = GenesisTime
 					return genesis
 				}).Build()
+
 			ctx := tApp.InitChain()
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			if tc.disableSDAConversionRate {
+				rate = ""
+			}
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,

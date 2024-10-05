@@ -1,19 +1,18 @@
 package e2e_test
 
 import (
+	"math/big"
 	"math/rand"
 	"sync"
 	"sync/atomic"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 
 	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
@@ -27,6 +26,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 	"github.com/syndtr/goleveldb/leveldb/testutil"
+
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 var (
@@ -84,22 +86,18 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 		)
 		return genesis
 	}).WithNonDeterminismChecksEnabled(false).Build()
-	ctx := tApp.InitChain()
 
-	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+	rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
 
-	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-		&tApp.App.ConsumerKeeper,
-		ctx,
-		map[uint32]ve.VEPricePair{},
-		rate,
-		tApp.GetHeader().Height,
-	)
-	require.NoError(t, err)
+	require.NoError(t, conversionErr)
 
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
-		DeliverTxsOverride: [][]byte{extCommitBz},
-	})
+	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+	_ = tApp.InitChain()
+
+	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	accounts := make([]sdktypes.AccountI, len(simAccounts))
 	for i, simAccount := range simAccounts {
@@ -157,7 +155,7 @@ func TestParallelAnteHandler_ClobAndOther(t *testing.T) {
 						},
 					},
 					constants.TestFeeCoins_5Cents,
-					120_000,
+					125_000,
 					ctx.ChainID(),
 					[]uint64{account.GetAccountNumber()},
 					[]uint64{sequenceNumber},
