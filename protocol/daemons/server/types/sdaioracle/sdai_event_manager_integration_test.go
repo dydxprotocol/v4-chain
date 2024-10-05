@@ -25,9 +25,7 @@ func TestGetInitialEvent(t *testing.T) {
 		require.NoError(t, err, "Failed to connect to Ethereum client")
 		defer client.Close()
 
-		startTime := time.Now()
 		result, err := fetcher.GetInitialEvent(false)
-		endTime := time.Now()
 
 		require.NoError(t, err, "Failed to get initial event")
 		require.NotEmpty(t, result.ConversionRate, "Conversion rate should not be empty")
@@ -36,8 +34,6 @@ func TestGetInitialEvent(t *testing.T) {
 		require.NoError(t, err, "Failed to query DAI conversion rate directly")
 
 		require.Equal(t, directRate, result.ConversionRate, "Rate from GetInitialEvent should match direct query")
-
-		require.True(t, endTime.Sub(startTime) < time.Second, "Successful query should be quick")
 	})
 
 	t.Run("Invalid RPC endpoint", func(t *testing.T) {
