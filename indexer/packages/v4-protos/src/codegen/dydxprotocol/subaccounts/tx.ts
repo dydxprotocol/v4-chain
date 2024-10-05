@@ -4,17 +4,25 @@ import { DeepPartial } from "../../helpers";
 /** MsgClaimYieldForSubaccount is the Msg/ClaimYieldForSubaccount request type. */
 
 export interface MsgClaimYieldForSubaccount {
+  /** MsgClaimYieldForSubaccount is the Msg/ClaimYieldForSubaccount request type. */
   id?: SubaccountId;
 }
 /** MsgClaimYieldForSubaccount is the Msg/ClaimYieldForSubaccount request type. */
 
 export interface MsgClaimYieldForSubaccountSDKType {
+  /** MsgClaimYieldForSubaccount is the Msg/ClaimYieldForSubaccount request type. */
   id?: SubaccountIdSDKType;
 }
-/** MsgClaimYieldForSubaccountResponse is the Msg/ClaimYieldForSubaccount response type. */
+/**
+ * MsgClaimYieldForSubaccountResponse is the Msg/ClaimYieldForSubaccount
+ * response type.
+ */
 
 export interface MsgClaimYieldForSubaccountResponse {}
-/** MsgClaimYieldForSubaccountResponse is the Msg/ClaimYieldForSubaccount response type. */
+/**
+ * MsgClaimYieldForSubaccountResponse is the Msg/ClaimYieldForSubaccount
+ * response type.
+ */
 
 export interface MsgClaimYieldForSubaccountResponseSDKType {}
 

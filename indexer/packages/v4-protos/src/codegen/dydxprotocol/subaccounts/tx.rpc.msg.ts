@@ -4,7 +4,10 @@ import { MsgClaimYieldForSubaccount, MsgClaimYieldForSubaccountResponse } from "
 /** Msg defines the Msg service. */
 
 export interface Msg {
-  /** ClaimYieldForSubaccount claims the yield for the provided subaccount and persists it to state. */
+  /**
+   * ClaimYieldForSubaccount claims the yield for the provided subaccount and
+   * persists it to state.
+   */
   claimYieldForSubaccount(request: MsgClaimYieldForSubaccount): Promise<MsgClaimYieldForSubaccountResponse>;
 }
 export class MsgClientImpl implements Msg {

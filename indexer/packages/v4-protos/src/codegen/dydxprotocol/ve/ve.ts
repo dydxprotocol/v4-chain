@@ -38,7 +38,7 @@ export interface DaemonVoteExtensionSDKType {
   prices: PricePairSDKType[];
   /** sDaiConversionRate defines the conversion rate for sDAI. */
 
-  sDaiConversionRate: string;
+  s_dai_conversion_rate: string;
 }
 
 function createBasePricePair(): PricePair {

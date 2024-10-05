@@ -5,7 +5,11 @@ import { DeepPartial } from "../../../helpers";
  * sDAI conversion rate.
  */
 
-export interface AddsDAIEventsRequest {
+export interface AddsDAIEventRequest {
+  /**
+   * AddsDAIEventsRequest is a request message that contains a new
+   * sDAI conversion rate.
+   */
   conversionRate: string;
 }
 /**
@@ -13,24 +17,28 @@ export interface AddsDAIEventsRequest {
  * sDAI conversion rate.
  */
 
-export interface AddsDAIEventsRequestSDKType {
+export interface AddsDAIEventRequestSDKType {
+  /**
+   * AddsDAIEventsRequest is a request message that contains a new
+   * sDAI conversion rate.
+   */
   conversion_rate: string;
 }
 /** AddsDAIEventsResponse is a response message for AddsDAIEventsRequest. */
 
-export interface AddsDAIEventsResponse {}
+export interface AddsDAIEventResponse {}
 /** AddsDAIEventsResponse is a response message for AddsDAIEventsRequest. */
 
-export interface AddsDAIEventsResponseSDKType {}
+export interface AddsDAIEventResponseSDKType {}
 
-function createBaseAddsDAIEventsRequest(): AddsDAIEventsRequest {
+function createBaseAddsDAIEventRequest(): AddsDAIEventRequest {
   return {
     conversionRate: ""
   };
 }
 
-export const AddsDAIEventsRequest = {
-  encode(message: AddsDAIEventsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const AddsDAIEventRequest = {
+  encode(message: AddsDAIEventRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.conversionRate !== "") {
       writer.uint32(10).string(message.conversionRate);
     }
@@ -38,10 +46,10 @@ export const AddsDAIEventsRequest = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): AddsDAIEventsRequest {
+  decode(input: _m0.Reader | Uint8Array, length?: number): AddsDAIEventRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseAddsDAIEventsRequest();
+    const message = createBaseAddsDAIEventRequest();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -60,27 +68,27 @@ export const AddsDAIEventsRequest = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<AddsDAIEventsRequest>): AddsDAIEventsRequest {
-    const message = createBaseAddsDAIEventsRequest();
+  fromPartial(object: DeepPartial<AddsDAIEventRequest>): AddsDAIEventRequest {
+    const message = createBaseAddsDAIEventRequest();
     message.conversionRate = object.conversionRate ?? "";
     return message;
   }
 
 };
 
-function createBaseAddsDAIEventsResponse(): AddsDAIEventsResponse {
+function createBaseAddsDAIEventResponse(): AddsDAIEventResponse {
   return {};
 }
 
-export const AddsDAIEventsResponse = {
-  encode(_: AddsDAIEventsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const AddsDAIEventResponse = {
+  encode(_: AddsDAIEventResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): AddsDAIEventsResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): AddsDAIEventResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseAddsDAIEventsResponse();
+    const message = createBaseAddsDAIEventResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -95,8 +103,8 @@ export const AddsDAIEventsResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<AddsDAIEventsResponse>): AddsDAIEventsResponse {
-    const message = createBaseAddsDAIEventsResponse();
+  fromPartial(_: DeepPartial<AddsDAIEventResponse>): AddsDAIEventResponse {
+    const message = createBaseAddsDAIEventResponse();
     return message;
   }
 

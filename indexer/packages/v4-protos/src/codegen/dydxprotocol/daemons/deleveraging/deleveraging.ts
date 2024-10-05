@@ -2,16 +2,18 @@ import { SubaccountOpenPositionInfo, SubaccountOpenPositionInfoSDKType } from ".
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../../helpers";
 /**
- * UpdateSubaccountsListForDeleveragingDaemonRequest is a request message that contains a list of
- * perpetuals with the associated subaccounts that have open long and short positions
+ * UpdateSubaccountsListForDeleveragingDaemonRequest is a request message that
+ * contains a list of perpetuals with the associated subaccounts that have open
+ * long and short positions
  */
 
 export interface UpdateSubaccountsListForDeleveragingDaemonRequest {
   subaccountOpenPositionInfo: SubaccountOpenPositionInfo[];
 }
 /**
- * UpdateSubaccountsListForDeleveragingDaemonRequest is a request message that contains a list of
- * perpetuals with the associated subaccounts that have open long and short positions
+ * UpdateSubaccountsListForDeleveragingDaemonRequest is a request message that
+ * contains a list of perpetuals with the associated subaccounts that have open
+ * long and short positions
  */
 
 export interface UpdateSubaccountsListForDeleveragingDaemonRequestSDKType {
