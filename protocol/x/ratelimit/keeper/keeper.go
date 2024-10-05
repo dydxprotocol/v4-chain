@@ -442,7 +442,6 @@ func (k Keeper) GetSDAILastBlockUpdated(ctx sdk.Context) (blockHeight *big.Int, 
 
 // SetAssetYieldIndex sets the current asset yield index
 func (k Keeper) SetAssetYieldIndex(ctx sdk.Context, yieldIndex *big.Rat) {
-	fmt.Println("SETTING ASSET YIELD INDEX TO ", yieldIndex)
 	store := ctx.KVStore(k.storeKey)
 	bz, err := yieldIndex.GobEncode()
 	if err != nil {

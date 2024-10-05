@@ -88,9 +88,6 @@ func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPricesAndConversionRate(
 		ma.logger.Error("failed to get default sDai price")
 	}
 
-	fmt.Println("default")
-	fmt.Println(defaultPrices)
-
 	for _, vote := range votes {
 		consAddr := vote.ConsAddress.String()
 		voteExtension := vote.DaemonVoteExtension

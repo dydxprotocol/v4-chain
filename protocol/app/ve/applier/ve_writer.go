@@ -143,6 +143,7 @@ func (vea *VEApplier) getAggregatePricesAndConversionRateFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
 ) (map[string]voteweighted.AggregatorPricePair, *big.Int, error) {
+
 	votes, err := aggregator.GetDaemonVotesFromBlock(
 		request.Txs,
 		vea.voteExtensionCodec,
