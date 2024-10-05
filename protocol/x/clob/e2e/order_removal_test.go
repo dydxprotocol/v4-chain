@@ -177,6 +177,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_50003,
 			},
+			disableSDAConversionRate: true,
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
