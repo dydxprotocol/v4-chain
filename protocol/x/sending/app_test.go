@@ -214,7 +214,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
 					AccAddressForSigning: msgCreateTransfer.Transfer.Sender.Owner,
-					Gas:                  125_000,
+					Gas:                  130_000,
 					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},
 				&msgCreateTransfer,
