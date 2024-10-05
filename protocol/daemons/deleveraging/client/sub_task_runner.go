@@ -59,15 +59,10 @@ func (s *SubTaskRunnerImpl) RunDeleveragingDaemonTaskLoop(
 	subaccountOpenPositionInfo := daemonClient.GetSubaccountOpenPositionInfo(subaccounts)
 
 	// 3. Send the list of deleveraging subaccount ids to the daemon server.
-	err = daemonClient.SendDeleveragingSubaccountIds(
+	return daemonClient.SendDeleveragingSubaccountIds(
 		ctx,
 		subaccountOpenPositionInfo,
 	)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (c *Client) FetchSubaccountsAtBlockHeight(

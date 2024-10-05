@@ -5,7 +5,6 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/process"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
-	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	prepareutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -151,8 +150,6 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 
 			mockRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
 
-			veCache := vecache.NewVECache()
-
 			handler := process.ProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
 				mockClobKeeper,
@@ -162,7 +159,6 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				vecodec.NewDefaultExtendedCommitCodec(),
 				vecodec.NewDefaultVoteExtensionCodec(),
 				mockVEApplier,
-				veCache,
 				prepareutils.NoOpValidateVoteExtensionsFn,
 			)
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}

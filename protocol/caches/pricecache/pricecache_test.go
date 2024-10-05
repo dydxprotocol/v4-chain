@@ -21,9 +21,8 @@ func TestVEPriceCaching(t *testing.T) {
 		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
 			updates = append(updates, pricecache.PriceUpdate{
-				MarketId:  marketPrice.MarketId,
-				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+				MarketId: marketPrice.MarketId,
+				Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 			})
 		}
 		priceCache.SetPriceUpdates(ctx, updates, 1)
@@ -35,9 +34,8 @@ func TestVEPriceCaching(t *testing.T) {
 		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
 			updates = append(updates, pricecache.PriceUpdate{
-				MarketId:  marketPrice.MarketId,
-				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+				MarketId: marketPrice.MarketId,
+				Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 			})
 		}
 		priceCache.SetPriceUpdates(ctx, updates, 1)
@@ -46,9 +44,8 @@ func TestVEPriceCaching(t *testing.T) {
 		var newUpdates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
 			newUpdates = append(newUpdates, pricecache.PriceUpdate{
-				MarketId:  marketPrice.MarketId,
-				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+				MarketId: marketPrice.MarketId,
+				Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 			})
 		}
 		priceCache.SetPriceUpdates(ctx, newUpdates, 2)
@@ -60,9 +57,8 @@ func TestVEPriceCaching(t *testing.T) {
 		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
 			updates = append(updates, pricecache.PriceUpdate{
-				MarketId:  marketPrice.MarketId,
-				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+				MarketId: marketPrice.MarketId,
+				Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 			})
 		}
 		priceCache.SetPriceUpdates(ctx, updates, 1)
@@ -72,9 +68,8 @@ func TestVEPriceCaching(t *testing.T) {
 		var newUpdates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
 			newUpdates = append(newUpdates, pricecache.PriceUpdate{
-				MarketId:  marketPrice.MarketId,
-				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+				MarketId: marketPrice.MarketId,
+				Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 			})
 		}
 		priceCache.SetPriceUpdates(ctx, newUpdates, 1)
@@ -86,9 +81,8 @@ func TestVEPriceCaching(t *testing.T) {
 		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
 			updates = append(updates, pricecache.PriceUpdate{
-				MarketId:  marketPrice.MarketId,
-				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+				MarketId: marketPrice.MarketId,
+				Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 			})
 		}
 		priceCache.SetPriceUpdates(ctx, updates, 1)
@@ -97,9 +91,8 @@ func TestVEPriceCaching(t *testing.T) {
 		var newUpdates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidSingleMarketPriceUpdate {
 			newUpdates = append(newUpdates, pricecache.PriceUpdate{
-				MarketId:  marketPrice.MarketId,
-				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+				MarketId: marketPrice.MarketId,
+				Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 			})
 		}
 		priceCache.SetPriceUpdates(ctx, newUpdates, 1)
@@ -111,9 +104,8 @@ func TestVEPriceCaching(t *testing.T) {
 		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
 			updates = append(updates, pricecache.PriceUpdate{
-				MarketId:  marketPrice.MarketId,
-				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+				MarketId: marketPrice.MarketId,
+				Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 			})
 		}
 		priceCache.SetPriceUpdates(ctx, updates, 1)
@@ -125,9 +117,8 @@ func TestVEPriceCaching(t *testing.T) {
 		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
 			updates = append(updates, pricecache.PriceUpdate{
-				MarketId:  marketPrice.MarketId,
-				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+				MarketId: marketPrice.MarketId,
+				Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 			})
 		}
 		priceCache.SetPriceUpdates(ctx, updates, 1)
@@ -147,9 +138,8 @@ func TestVEPriceCaching(t *testing.T) {
 					var updates pricecache.PriceUpdates
 					for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
 						updates = append(updates, pricecache.PriceUpdate{
-							MarketId:  marketPrice.MarketId,
-							SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-							PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+							MarketId: marketPrice.MarketId,
+							Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 						})
 					}
 					priceCache.SetPriceUpdates(ctx.WithBlockHeight(int64(i)), updates, int32(i))
@@ -178,9 +168,8 @@ func TestVEPriceCaching(t *testing.T) {
 				var updates pricecache.PriceUpdates
 				for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
 					updates = append(updates, pricecache.PriceUpdate{
-						MarketId:  marketPrice.MarketId,
-						SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-						PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+						MarketId: marketPrice.MarketId,
+						Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 					})
 				}
 				priceCache.SetPriceUpdates(ctx.WithBlockHeight(int64(i)), updates, int32(i))
@@ -201,9 +190,8 @@ func TestVEPriceCaching(t *testing.T) {
 		var updates pricecache.PriceUpdates
 		for _, marketPrice := range constants.ValidUpdateMarketPrices.MarketPriceUpdates {
 			updates = append(updates, pricecache.PriceUpdate{
-				MarketId:  marketPrice.MarketId,
-				SpotPrice: big.NewInt(int64(marketPrice.SpotPrice)),
-				PnlPrice:  big.NewInt(int64(marketPrice.PnlPrice)),
+				MarketId: marketPrice.MarketId,
+				Price:    big.NewInt(int64(marketPrice.SpotPrice)),
 			})
 		}
 		priceCache.SetPriceUpdates(ctx.WithBlockHeight(100), updates, 5)

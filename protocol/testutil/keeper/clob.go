@@ -11,6 +11,7 @@ import (
 	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
+	bigintcache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/bigintcache"
 	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	deleveragingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/deleveraging"
@@ -179,6 +180,8 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			vecodec.NewDefaultVoteExtensionCodec(),
 			vecodec.NewDefaultExtendedCommitCodec(),
 			&pricecache.PriceUpdatesCacheImpl{},
+			&pricecache.PriceUpdatesCacheImpl{},
+			&bigintcache.BigIntCacheImpl{},
 			vecache.NewVECache(),
 		)
 

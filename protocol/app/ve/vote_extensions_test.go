@@ -63,10 +63,9 @@ func TestExtendVoteHandler(t *testing.T) {
 			extendVoteRequest: func() *cometabci.RequestExtendVote {
 				return nil
 			},
-			expectedResponse: nil,
-			expectedError:    true,
+			expectedError: true,
 		},
-		"price daemon returns no prices and conversion rate daemon returns no conversion rate, error thrown": {
+		"price daemon returns no prices and conversion rate daemon returns no conversion rate": {
 			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
 				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Return(
@@ -101,7 +100,11 @@ func TestExtendVoteHandler(t *testing.T) {
 				)
 				return mClobKeeper
 			},
-			expectedError: true,
+			expectedResponse: &vetypes.DaemonVoteExtension{
+				Prices:             []vetypes.PricePair{},
+				SDaiConversionRate: "",
+			},
+			expectedError: false,
 		},
 		"price daemon returns no prices but sdai daemon returns conversion rate, no error": {
 			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
@@ -908,7 +911,7 @@ func TestExtendVoteHandler(t *testing.T) {
 				SDaiConversionRate: "",
 			},
 		},
-		"price daemon returns no prices and conversion rate daemon returns conversion rate but block height is too new, error thrown": {
+		"price daemon returns no prices and conversion rate daemon returns conversion rate but block height is too new": {
 			pricesKeeper: func() *mocks.PreBlockExecPricesKeeper {
 				mPricesKeeper := &mocks.PreBlockExecPricesKeeper{}
 				mPricesKeeper.On("GetValidMarketSpotPriceUpdates", mock.Anything).Return(
@@ -943,7 +946,11 @@ func TestExtendVoteHandler(t *testing.T) {
 				)
 				return mClobKeeper
 			},
-			expectedError: true,
+			expectedResponse: &vetypes.DaemonVoteExtension{
+				Prices:             nil,
+				SDaiConversionRate: "",
+			},
+			expectedError: false,
 		},
 	}
 	var round int64 = 3

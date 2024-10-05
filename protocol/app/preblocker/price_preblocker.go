@@ -31,7 +31,10 @@ func NewDaemonPreBlockHandler(
 }
 
 // PreBlocker is called by the base app before the block is finalized.
-func (pbh *PreBlockHandler) PreBlocker(ctx sdk.Context, request *abci.RequestFinalizeBlock) (resp *sdk.ResponsePreBlock, err error) {
+func (pbh *PreBlockHandler) PreBlocker(
+	ctx sdk.Context,
+	request *abci.RequestFinalizeBlock,
+) (resp *sdk.ResponsePreBlock, err error) {
 	if request == nil {
 		return &sdk.ResponsePreBlock{}, fmt.Errorf(
 			"received nil RequestFinalizeBlock in prices preblocker: height %d",

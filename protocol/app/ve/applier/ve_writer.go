@@ -9,9 +9,9 @@ import (
 	aggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
+	bigintcache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/bigintcache"
 	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
-
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,8 +27,14 @@ type VEApplier struct {
 	// ratelimit keeper that is used to write sDAI conversion rate to state.
 	ratelimitKeeper VEApplierRatelimitKeeper
 
-	// finalPriceUpdateCache is the cache that stores the final prices
-	finalPriceUpdateCache pricecache.PriceUpdatesCache
+	// spotPriceUpdateCache is the cache that stores the final spot prices
+	spotPriceUpdateCache pricecache.PriceUpdatesCache
+
+	// pnlPriceUpdateCache is the cache that stores the final pnl prices
+	pnlPriceUpdateCache pricecache.PriceUpdatesCache
+
+	// sDaiConversionRateCache is the cache that stores the sDAI conversion rate
+	sDaiConversionRateCache bigintcache.BigIntCache
 
 	// veCache is the cache that is used to store the seen votes
 	veCache *vecache.VeCache
@@ -48,18 +54,22 @@ func NewVEApplier(
 	ratelimitKeeper VEApplierRatelimitKeeper,
 	voteExtensionCodec codec.VoteExtensionCodec,
 	extendedCommitCodec codec.ExtendedCommitCodec,
-	finalPriceUpdateCache pricecache.PriceUpdatesCache,
+	spotPriceUpdateCache pricecache.PriceUpdatesCache,
+	pnlPriceUpdateCache pricecache.PriceUpdatesCache,
+	sDaiConversionRateCache bigintcache.BigIntCache,
 	vecache *vecache.VeCache,
 ) *VEApplier {
 	return &VEApplier{
-		voteAggregator:        voteAggregator,
-		pricesKeeper:          pricesKeeper,
-		ratelimitKeeper:       ratelimitKeeper,
-		finalPriceUpdateCache: finalPriceUpdateCache,
-		logger:                logger,
-		veCache:               vecache,
-		voteExtensionCodec:    voteExtensionCodec,
-		extendedCommitCodec:   extendedCommitCodec,
+		voteAggregator:          voteAggregator,
+		pricesKeeper:            pricesKeeper,
+		ratelimitKeeper:         ratelimitKeeper,
+		spotPriceUpdateCache:    spotPriceUpdateCache,
+		pnlPriceUpdateCache:     pnlPriceUpdateCache,
+		sDaiConversionRateCache: sDaiConversionRateCache,
+		logger:                  logger,
+		veCache:                 vecache,
+		voteExtensionCodec:      voteExtensionCodec,
+		extendedCommitCodec:     extendedCommitCodec,
 	}
 }
 
@@ -71,13 +81,37 @@ func (vea *VEApplier) GetVECache() *vecache.VeCache {
 	return vea.veCache
 }
 
+func (vea *VEApplier) GetSpotPriceUpdateCache() pricecache.PriceUpdatesCache {
+	return vea.spotPriceUpdateCache
+}
+
+func (vea *VEApplier) GetPnlPriceUpdateCache() pricecache.PriceUpdatesCache {
+	return vea.pnlPriceUpdateCache
+}
+
+func (vea *VEApplier) GetSDaiConversionRateCache() bigintcache.BigIntCache {
+	return vea.sDaiConversionRateCache
+}
+func (vea *VEApplier) CheckCacheHasValidValues(
+	ctx sdk.Context,
+	request *abci.RequestFinalizeBlock,
+) bool {
+	return vea.spotPriceUpdateCache.HasValidValues(ctx.BlockHeight(), request.DecidedLastCommit.Round) &&
+		vea.pnlPriceUpdateCache.HasValidValues(ctx.BlockHeight(), request.DecidedLastCommit.Round) &&
+		vea.sDaiConversionRateCache.HasValidValue(ctx.BlockHeight(), request.DecidedLastCommit.Round)
+}
+
 func (vea *VEApplier) ApplyVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
 	writeToCache bool,
 ) error {
-	if vea.finalPriceUpdateCache.HasValidValues(ctx.BlockHeight(), request.DecidedLastCommit.Round) {
-		err := vea.writePricesToStoreFromCache(ctx)
+	if vea.CheckCacheHasValidValues(ctx, request) {
+		err := vea.writeSpotPricesToStoreFromCache(ctx)
+		if err != nil {
+			return err
+		}
+		err = vea.writePnlPricesToStoreFromCache(ctx)
 		if err != nil {
 			return err
 		}
@@ -109,6 +143,7 @@ func (vea *VEApplier) getAggregatePricesAndConversionRateFromVE(
 	ctx sdk.Context,
 	request *abci.RequestFinalizeBlock,
 ) (map[string]voteweighted.AggregatorPricePair, *big.Int, error) {
+
 	votes, err := aggregator.GetDaemonVotesFromBlock(
 		request.Txs,
 		vea.voteExtensionCodec,
@@ -138,59 +173,73 @@ func (vea *VEApplier) getAggregatePricesAndConversionRateFromVE(
 	return prices, conversionRate, nil
 }
 
-func (vea *VEApplier) writePricesToStoreFromCache(ctx sdk.Context) error {
-	pricesFromCache := vea.finalPriceUpdateCache.GetPriceUpdates()
+func (vea *VEApplier) writeSpotPricesToStoreFromCache(ctx sdk.Context) error {
+	pricesFromCache := vea.spotPriceUpdateCache.GetPriceUpdates()
 	for _, price := range pricesFromCache {
-		if price.SpotPrice == nil || price.PnlPrice == nil {
-			return fmt.Errorf("cache spot price or pnl price is nil. spot price is %v, pnl price is %v", price.SpotPrice, price.PnlPrice)
+		if price.Price == nil {
+			return fmt.Errorf("cache spot price is nil. spot price is %v", price.Price)
 		}
 
-		marketPriceUpdate := &pricestypes.MarketPriceUpdate{
+		spotPriceUpdate := &pricestypes.MarketSpotPriceUpdate{
 			MarketId:  price.MarketId,
-			SpotPrice: price.SpotPrice.Uint64(),
-			PnlPrice:  price.PnlPrice.Uint64(),
+			SpotPrice: price.Price.Uint64(),
 		}
 
-		if err := vea.pricesKeeper.UpdateSpotAndPnlMarketPrices(
-			ctx,
-			marketPriceUpdate,
-		); err != nil {
+		if err := vea.pricesKeeper.UpdateSpotPrice(ctx, spotPriceUpdate); err != nil {
 			vea.logger.Error(
-				"failed to set prices for currency pair",
+				"failed to set spot price for currency pair",
 				"market_id", price.MarketId,
 				"err", err,
 			)
-
 			return err
 		}
 
 		vea.logger.Info(
-			"set prices for currency pair",
+			"set spot price for currency pair",
 			"market_id", price.MarketId,
-			"spot_price", price.SpotPrice.Uint64(),
-			"pnl_price", price.PnlPrice.Uint64(),
+			"spot_price", price.Price.Uint64(),
+		)
+	}
+	return nil
+}
+
+func (vea *VEApplier) writePnlPricesToStoreFromCache(ctx sdk.Context) error {
+	pricesFromCache := vea.pnlPriceUpdateCache.GetPriceUpdates()
+	for _, price := range pricesFromCache {
+		if price.Price == nil {
+			return fmt.Errorf("cache pnl price is nil. pnl price is %v", price.Price)
+		}
+
+		pnlPriceUpdate := &pricestypes.MarketPnlPriceUpdate{
+			MarketId: price.MarketId,
+			PnlPrice: price.Price.Uint64(),
+		}
+
+		if err := vea.pricesKeeper.UpdatePnlPrice(ctx, pnlPriceUpdate); err != nil {
+			vea.logger.Error(
+				"failed to set pnl price for currency pair",
+				"market_id", price.MarketId,
+				"err", err,
+			)
+			return err
+		}
+
+		vea.logger.Info(
+			"set spot price for currency pair",
+			"market_id", price.MarketId,
+			"pnl_price", price.Price.Uint64(),
 		)
 	}
 	return nil
 }
 
 func (vea *VEApplier) writeConversionRateToStoreFromCache(ctx sdk.Context) error {
-	sDaiConversionRate, blockHeight := vea.finalPriceUpdateCache.GetConversionRateUpdateAndBlockHeight()
-
-	if sDaiConversionRate == nil || blockHeight == nil {
+	sDaiConversionRate := vea.sDaiConversionRateCache.GetValue()
+	if sDaiConversionRate == nil {
 		return nil
 	}
 
-	if blockHeight.Int64() != ctx.BlockHeight() {
-		return nil
-	}
-
-	err := vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(ctx, sDaiConversionRate, blockHeight)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()))
 }
 
 func (vea *VEApplier) WritePricesToStoreAndMaybeCache(
@@ -200,7 +249,8 @@ func (vea *VEApplier) WritePricesToStoreAndMaybeCache(
 	writeToCache bool,
 ) error {
 	marketParams := vea.pricesKeeper.GetAllMarketParams(ctx)
-	var finalPriceUpdates pricecache.PriceUpdates
+	var spotPriceUpdates pricecache.PriceUpdates
+	var pnlPriceUpdates pricecache.PriceUpdates
 	for _, market := range marketParams {
 		pair := market.Pair
 		pricePair, ok := prices[pair]
@@ -210,36 +260,26 @@ func (vea *VEApplier) WritePricesToStoreAndMaybeCache(
 
 		shouldWriteSpotPrice, shouldWritePnlPrice := vea.shouldWritePriceToStore(ctx, pricePair, market.Id)
 
-		if !shouldWriteSpotPrice && !shouldWritePnlPrice {
-			continue
-		}
-
-		if !shouldWriteSpotPrice {
-			pnlPriceUpdate, err := vea.writePnlPriceToStore(ctx, pricePair, market.Id)
-			if err != nil {
-				return err
-			}
-
-			finalPriceUpdates = append(finalPriceUpdates, pnlPriceUpdate)
-		} else if !shouldWritePnlPrice {
+		if shouldWriteSpotPrice {
 			spotPriceUpdate, err := vea.writeSpotPriceToStore(ctx, pricePair, market.Id)
 			if err != nil {
 				return err
 			}
+			spotPriceUpdates = append(spotPriceUpdates, spotPriceUpdate)
+		}
 
-			finalPriceUpdates = append(finalPriceUpdates, spotPriceUpdate)
-		} else {
-			pnlAndSpotPriceUpdate, err := vea.writePnlAndSpotPriceToStore(ctx, pricePair, market.Id)
+		if shouldWritePnlPrice {
+			pnlPriceUpdate, err := vea.writePnlPriceToStore(ctx, pricePair, market.Id)
 			if err != nil {
 				return err
 			}
-
-			finalPriceUpdates = append(finalPriceUpdates, pnlAndSpotPriceUpdate)
+			pnlPriceUpdates = append(pnlPriceUpdates, pnlPriceUpdate)
 		}
 	}
 
 	if writeToCache {
-		vea.finalPriceUpdateCache.SetPriceUpdates(ctx, finalPriceUpdates, round)
+		vea.spotPriceUpdateCache.SetPriceUpdates(ctx, spotPriceUpdates, round)
+		vea.pnlPriceUpdateCache.SetPriceUpdates(ctx, pnlPriceUpdates, round)
 	}
 
 	return nil
@@ -251,65 +291,23 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 	round int32,
 	writeToCache bool,
 ) error {
-	if sDaiConversionRate == nil {
-		return nil
-	}
+	if sDaiConversionRate != nil {
 
-	if sDaiConversionRate.Sign() < 0 {
-		return fmt.Errorf("sDAI conversion rate cannot be negative: %s", sDaiConversionRate.String())
-	}
+		if sDaiConversionRate.Sign() <= 0 {
+			return fmt.Errorf("invalid sDAI conversion rate: %s", sDaiConversionRate.String())
+		}
 
-	if sDaiConversionRate.Sign() == 0 {
-		return fmt.Errorf("sDAI conversion rate cannot be zero")
-	}
-
-	err := vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()))
-	if err != nil {
-		return err
+		err := vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()))
+		if err != nil {
+			return err
+		}
 	}
 
 	if writeToCache {
-		vea.finalPriceUpdateCache.SetSDaiConversionRateAndBlockHeight(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()), round)
+		vea.sDaiConversionRateCache.SetValue(ctx, sDaiConversionRate, round)
 	}
 
 	return nil
-}
-
-func (vea *VEApplier) writePnlAndSpotPriceToStore(
-	ctx sdk.Context,
-	pricePair voteweighted.AggregatorPricePair,
-	marketId uint32,
-) (pricecache.PriceUpdate, error) {
-	newPrice := &pricestypes.MarketPriceUpdate{
-		MarketId:  marketId,
-		SpotPrice: pricePair.SpotPrice.Uint64(),
-		PnlPrice:  pricePair.PnlPrice.Uint64(),
-	}
-
-	if err := vea.pricesKeeper.UpdateSpotAndPnlMarketPrices(ctx, newPrice); err != nil {
-		vea.logger.Error(
-			"failed to set price for currency pair",
-			"market_id", marketId,
-			"err", err,
-		)
-
-		return pricecache.PriceUpdate{}, err
-	}
-
-	vea.logger.Info(
-		"set price for currency pair",
-		"market_id", marketId,
-		"spot_price", newPrice.SpotPrice,
-		"pnl_price", newPrice.PnlPrice,
-	)
-
-	finalPriceUpdate := pricecache.PriceUpdate{
-		MarketId:  marketId,
-		SpotPrice: pricePair.SpotPrice,
-		PnlPrice:  pricePair.PnlPrice,
-	}
-
-	return finalPriceUpdate, nil
 }
 
 func (vea *VEApplier) writePnlPriceToStore(
@@ -333,9 +331,8 @@ func (vea *VEApplier) writePnlPriceToStore(
 	)
 
 	return pricecache.PriceUpdate{
-		MarketId:  marketId,
-		SpotPrice: nil,
-		PnlPrice:  pricePair.PnlPrice,
+		MarketId: marketId,
+		Price:    pricePair.PnlPrice,
 	}, nil
 }
 
@@ -360,9 +357,8 @@ func (vea *VEApplier) writeSpotPriceToStore(
 	)
 
 	return pricecache.PriceUpdate{
-		MarketId:  marketId,
-		SpotPrice: pricePair.SpotPrice,
-		PnlPrice:  nil,
+		MarketId: marketId,
+		Price:    pricePair.SpotPrice,
 	}, nil
 }
 
@@ -374,7 +370,7 @@ func (vea *VEApplier) shouldWritePriceToStore(
 	shouldWriteSpot bool,
 	shouldWritePnl bool,
 ) {
-	if prices.SpotPrice.Sign() == -1 {
+	if prices.SpotPrice.Sign() == -1 || prices.PnlPrice.Sign() == -1 {
 		vea.logger.Error(
 			"price is negative",
 			"market_id", marketId,
@@ -391,32 +387,19 @@ func (vea *VEApplier) shouldWritePriceToStore(
 		PnlPrice:  prices.PnlPrice.Uint64(),
 	}
 
-	isValidSpot, isValidPnl := vea.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, priceUpdate)
-
-	if !isValidSpot && !isValidPnl {
-		vea.logger.Error(
-			"price update validation failed",
-			"market_id", marketId,
-			"spot_price", prices.SpotPrice.String(),
-			"pnl_price", prices.PnlPrice.String(),
-		)
-
-		return false, false
-	} else if !isValidSpot {
-		return false, true
-	} else if !isValidPnl {
-		return true, false
-	}
-
-	return isValidSpot, isValidPnl
+	return vea.pricesKeeper.PerformStatefulPriceUpdateValidation(ctx, priceUpdate)
 }
 
-func (vea *VEApplier) GetCachedPrices() pricecache.PriceUpdates {
-	return vea.finalPriceUpdateCache.GetPriceUpdates()
+func (vea *VEApplier) GetCachedSpotPrices() pricecache.PriceUpdates {
+	return vea.spotPriceUpdateCache.GetPriceUpdates()
 }
 
-func (vea *VEApplier) GetCachedSDaiConversionRate() (*big.Int, *big.Int) {
-	return vea.finalPriceUpdateCache.GetConversionRateUpdateAndBlockHeight()
+func (vea *VEApplier) GetCachedPnlPrices() pricecache.PriceUpdates {
+	return vea.pnlPriceUpdateCache.GetPriceUpdates()
+}
+
+func (vea *VEApplier) GetCachedSDaiConversionRate() *big.Int {
+	return vea.sDaiConversionRateCache.GetValue()
 }
 
 func (vea *VEApplier) CacheSeenExtendedVotes(

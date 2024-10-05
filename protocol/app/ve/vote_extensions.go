@@ -194,10 +194,6 @@ func (h *VoteExtensionHandler) GetVEBytes(ctx sdk.Context) ([]byte, error) {
 	priceUpdates := h.getCurrentPricesForEachMarket(ctx)
 	sDAIConversionRate := h.getSDAIPriceUpdate(ctx)
 
-	if len(priceUpdates) == 0 && sDAIConversionRate == "" {
-		return nil, fmt.Errorf("no prices or conversion rate available")
-	}
-
 	voteExt := h.createVE(priceUpdates, sDAIConversionRate)
 
 	veBytes, err := h.voteCodec.Encode(voteExt)
@@ -278,6 +274,7 @@ func (h *VoteExtensionHandler) getCurrentPricesForEachMarket(
 		if !allExist {
 			continue
 		}
+
 		medianPnlPrice := h.getMedianPnlPrice(
 			new(big.Int).SetUint64(market.SpotPrice),
 			clobMidPrice,
@@ -303,28 +300,12 @@ func (h *VoteExtensionHandler) getPeripheryPnlPriceData(
 	lastFundingRate *big.Int,
 	allExist bool,
 ) {
+
 	clobMidPrice = h.getClobMidPrice(ctx, market.MarketId)
-	if clobMidPrice == nil {
-		vePrices[market.MarketId] = VEPricePair{
-			SpotPrice: market.SpotPrice,
-			PnlPrice:  market.SpotPrice,
-		}
-		allExist = false
-		return
-	}
-
 	smoothedPrice = h.getSmoothedPrice(market.MarketId)
-	if smoothedPrice == nil {
-		vePrices[market.MarketId] = VEPricePair{
-			SpotPrice: market.SpotPrice,
-			PnlPrice:  market.SpotPrice,
-		}
-		allExist = false
-		return
-	}
-
 	lastFundingRate = h.getLastFundingRate(ctx, market.MarketId)
-	if lastFundingRate == nil {
+
+	if clobMidPrice == nil || smoothedPrice == nil || lastFundingRate == nil {
 		vePrices[market.MarketId] = VEPricePair{
 			SpotPrice: market.SpotPrice,
 			PnlPrice:  market.SpotPrice,
