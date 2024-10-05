@@ -73,13 +73,7 @@ func (k Keeper) WithdrawSDaiFromTDai(
 		return err
 	}
 
-	err = k.sendSDaiAmountToUserAccount(ctx, userAddr, sDaiAmount)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return k.sendSDaiAmountToUserAccount(ctx, userAddr, sDaiAmount)
 }
 
 func (k Keeper) burnTDaiInUserAccount(

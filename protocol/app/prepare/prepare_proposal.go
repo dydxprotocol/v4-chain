@@ -217,12 +217,7 @@ func SetVE(
 		return err
 	}
 
-	err = txSetterUtils.Txs.SetExtInfoBz(extInfoBz)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return txSetterUtils.Txs.SetExtInfoBz(extInfoBz)
 }
 
 func FillRemainderWithOtherTxs(

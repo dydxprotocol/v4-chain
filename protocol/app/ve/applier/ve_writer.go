@@ -239,12 +239,7 @@ func (vea *VEApplier) writeConversionRateToStoreFromCache(ctx sdk.Context) error
 		return nil
 	}
 
-	err := vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()))
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()))
 }
 
 func (vea *VEApplier) WritePricesToStoreAndMaybeCache(
