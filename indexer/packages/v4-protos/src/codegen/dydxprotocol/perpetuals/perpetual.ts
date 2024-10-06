@@ -129,7 +129,10 @@ export interface PerpetualParams {
   /** The market type specifying if this perpetual is cross or isolated */
 
   marketType: PerpetualMarketType;
-  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+  /**
+   * The danger index is used to prioritze certain accounts and positions in
+   * liquidations
+   */
 
   dangerIndexPpm: number;
   /** The maximum insurance fund delta per block for isolated perpetual markets. */
@@ -174,7 +177,10 @@ export interface PerpetualParamsSDKType {
   /** The market type specifying if this perpetual is cross or isolated */
 
   market_type: PerpetualMarketTypeSDKType;
-  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+  /**
+   * The danger index is used to prioritze certain accounts and positions in
+   * liquidations
+   */
 
   danger_index_ppm: number;
   /** The maximum insurance fund delta per block for isolated perpetual markets. */

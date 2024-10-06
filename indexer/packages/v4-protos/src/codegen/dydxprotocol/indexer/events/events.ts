@@ -220,9 +220,9 @@ export interface MarketPriceUpdateEventV1 {
    */
   spotPriceWithExponent: Long;
   /**
-   * pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
-   * price in dollars. For example if `Exponent == -5` then a `exponent_price`
-   * of `1,000,000,000` represents “$10,000`.
+   * pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human
+   * readable price in dollars. For example if `Exponent == -5` then a
+   * `exponent_price` of `1,000,000,000` represents “$10,000`.
    */
 
   pnlPriceWithExponent: Long;
@@ -240,9 +240,9 @@ export interface MarketPriceUpdateEventV1SDKType {
    */
   spot_price_with_exponent: Long;
   /**
-   * pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
-   * price in dollars. For example if `Exponent == -5` then a `exponent_price`
-   * of `1,000,000,000` represents “$10,000`.
+   * pnl_price_with_exponent. Multiply by 10 ^ Exponent to get the human
+   * readable price in dollars. For example if `Exponent == -5` then a
+   * `exponent_price` of `1,000,000,000` represents “$10,000`.
    */
 
   pnl_price_with_exponent: Long;
@@ -1009,7 +1009,10 @@ export interface PerpetualMarketCreateEventV2 {
   /** Market type of the perpetual. */
 
   marketType: PerpetualMarketType;
-  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+  /**
+   * The danger index is used to prioritze certain accounts and positions in
+   * liquidations
+   */
 
   dangerIndexPpm: number;
   /** The maximum cumulative insurance fund delta per block for isolated markets. */
@@ -1088,7 +1091,10 @@ export interface PerpetualMarketCreateEventV2SDKType {
   /** Market type of the perpetual. */
 
   market_type: PerpetualMarketTypeSDKType;
-  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+  /**
+   * The danger index is used to prioritze certain accounts and positions in
+   * liquidations
+   */
 
   danger_index_ppm: number;
   /** The maximum cumulative insurance fund delta per block for isolated markets. */
@@ -1391,7 +1397,10 @@ export interface UpdatePerpetualEventV1 {
    */
 
   liquidityTier: number;
-  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+  /**
+   * The danger index is used to prioritze certain accounts and positions in
+   * liquidations
+   */
 
   dangerIndexPpm: number;
   /** The maximum cumulative insurance fund delta per block for isolated markets. */
@@ -1439,7 +1448,10 @@ export interface UpdatePerpetualEventV1SDKType {
    */
 
   liquidity_tier: number;
-  /** The danger index is used to prioritze certain accounts and positions in liquidations */
+  /**
+   * The danger index is used to prioritze certain accounts and positions in
+   * liquidations
+   */
 
   danger_index_ppm: number;
   /** The maximum cumulative insurance fund delta per block for isolated markets. */

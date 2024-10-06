@@ -105,19 +105,31 @@ export interface GetSDAIPriceQueryResponseSDKType {
   /** Assuming price is returned as a string */
   price: string;
 }
-/** GetAssetYieldIndexRequest is a request type for the GetAssetYieldIndex RPC method. */
+/**
+ * GetAssetYieldIndexRequest is a request type for the GetAssetYieldIndex RPC
+ * method.
+ */
 
 export interface GetAssetYieldIndexQueryRequest {}
-/** GetAssetYieldIndexRequest is a request type for the GetAssetYieldIndex RPC method. */
+/**
+ * GetAssetYieldIndexRequest is a request type for the GetAssetYieldIndex RPC
+ * method.
+ */
 
 export interface GetAssetYieldIndexQueryRequestSDKType {}
-/** GetSDAIPriceQueryResponse is a response type for the GetAssetYieldIndex RPC method. */
+/**
+ * GetSDAIPriceQueryResponse is a response type for the GetAssetYieldIndex RPC
+ * method.
+ */
 
 export interface GetAssetYieldIndexQueryResponse {
   /** Handled as a string, should be converted to big.Rat. */
   assetYieldIndex: string;
 }
-/** GetSDAIPriceQueryResponse is a response type for the GetAssetYieldIndex RPC method. */
+/**
+ * GetSDAIPriceQueryResponse is a response type for the GetAssetYieldIndex RPC
+ * method.
+ */
 
 export interface GetAssetYieldIndexQueryResponseSDKType {
   /** Handled as a string, should be converted to big.Rat. */
