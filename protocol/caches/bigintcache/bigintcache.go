@@ -2,12 +2,13 @@ package bigintcache
 
 import (
 	"math/big"
-	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PriceUpdatesCache is an interface that defines the methods for caching price updates
+// Make sure to use this in thread-safe scenarios (e.g., when flow is holding lock on
+// the entire app).
 //
 //go:generate mockery --name BigIntCache --filename mock_bigint_cache.go
 type BigIntCache interface {
@@ -25,7 +26,6 @@ type BigIntCacheImpl struct {
 	value  *big.Int
 	height int64
 	round  int32
-	mu     sync.RWMutex
 }
 
 func (veCache *BigIntCacheImpl) SetValue(
@@ -33,33 +33,23 @@ func (veCache *BigIntCacheImpl) SetValue(
 	value *big.Int,
 	round int32,
 ) {
-	veCache.mu.Lock()
-	defer veCache.mu.Unlock()
 	veCache.value = value
 	veCache.height = ctx.BlockHeight()
 	veCache.round = round
 }
 
 func (veCache *BigIntCacheImpl) GetValue() *big.Int {
-	veCache.mu.RLock()
-	defer veCache.mu.RUnlock()
 	return veCache.value
 }
 
 func (veCache *BigIntCacheImpl) GetHeight() int64 {
-	veCache.mu.RLock()
-	defer veCache.mu.RUnlock()
 	return veCache.height
 }
 
 func (veCache *BigIntCacheImpl) GetRound() int32 {
-	veCache.mu.RLock()
-	defer veCache.mu.RUnlock()
 	return veCache.round
 }
 
 func (veCache *BigIntCacheImpl) HasValidValue(currBlock int64, round int32) bool {
-	veCache.mu.RLock()
-	defer veCache.mu.RUnlock()
 	return (veCache.height == currBlock && veCache.round == round)
 }
