@@ -2,9 +2,7 @@ package bigintcache_test
 
 import (
 	"math/big"
-	"sync"
 	"testing"
-	"time"
 
 	bigintcache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/bigintcache"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
@@ -68,76 +66,6 @@ func TestBigIntCaching(t *testing.T) {
 		value := big.NewInt(9000)
 		cache.SetValue(ctx, value, 1)
 		require.False(t, cache.HasValidValue(8, 2))
-	})
-
-	t.Run("concurrent reads and writes", func(t *testing.T) {
-		var wg sync.WaitGroup
-		numGoroutines := 100
-
-		for i := 0; i < numGoroutines; i++ {
-			wg.Add(1)
-			go func(i int) {
-				defer wg.Done()
-				if i%2 == 0 {
-					// Even goroutines write
-					value := big.NewInt(int64(i * 1000))
-					cache.SetValue(ctx.WithBlockHeight(int64(i)), value, int32(i))
-				} else {
-					// Odd goroutines read
-					time.Sleep(time.Millisecond) // Slight delay to increase chances of interleaving
-					_ = cache.GetValue()
-					_ = cache.GetHeight()
-					_ = cache.GetRound()
-					_ = cache.HasValidValue(int64(i), int32(i))
-				}
-			}(i)
-		}
-
-		wg.Wait()
-	})
-
-	t.Run("concurrent writes", func(t *testing.T) {
-		var wg sync.WaitGroup
-		numWrites := 1000
-
-		for i := 0; i < numWrites; i++ {
-			wg.Add(1)
-			go func(i int) {
-				defer wg.Done()
-				value := big.NewInt(int64(i * 1000))
-				cache.SetValue(ctx.WithBlockHeight(int64(i)), value, int32(i))
-			}(i)
-		}
-
-		wg.Wait()
-
-		// Verify the final state
-		height := cache.GetHeight()
-		round := cache.GetRound()
-		require.True(t, height >= 0 && height < int64(numWrites))
-		require.True(t, round >= 0 && round < int32(numWrites))
-	})
-
-	t.Run("concurrent reads", func(t *testing.T) {
-		// Set initial state
-		initialValue := big.NewInt(1000000)
-		cache.SetValue(ctx.WithBlockHeight(100), initialValue, 5)
-
-		var wg sync.WaitGroup
-		numReads := 1000
-
-		for i := 0; i < numReads; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				require.Equal(t, initialValue, cache.GetValue())
-				require.Equal(t, int64(100), cache.GetHeight())
-				require.Equal(t, int32(5), cache.GetRound())
-				require.True(t, cache.HasValidValue(100, 5))
-			}()
-		}
-
-		wg.Wait()
 	})
 }
 

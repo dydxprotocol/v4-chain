@@ -2,12 +2,13 @@ package pricecache
 
 import (
 	"math/big"
-	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PriceUpdatesCache is an interface that defines the methods for caching price updates
+// Make sure to use this in thread-safe scenarios (e.g., when flow is holding lock on
+// the entire app).
 //
 //go:generate mockery --name PriceUpdatesCache --filename mock_price_updates_cache.go
 type PriceUpdatesCache interface {
@@ -25,7 +26,6 @@ type PriceUpdatesCacheImpl struct {
 	priceUpdates PriceUpdates
 	height       int64
 	round        int32
-	mu           sync.RWMutex
 }
 
 type PriceUpdate struct {
@@ -40,33 +40,23 @@ func (veCache *PriceUpdatesCacheImpl) SetPriceUpdates(
 	updates PriceUpdates,
 	round int32,
 ) {
-	veCache.mu.Lock()
-	defer veCache.mu.Unlock()
 	veCache.priceUpdates = updates
 	veCache.height = ctx.BlockHeight()
 	veCache.round = round
 }
 
 func (veCache *PriceUpdatesCacheImpl) GetPriceUpdates() PriceUpdates {
-	veCache.mu.RLock()
-	defer veCache.mu.RUnlock()
 	return veCache.priceUpdates
 }
 
 func (veCache *PriceUpdatesCacheImpl) GetHeight() int64 {
-	veCache.mu.RLock()
-	defer veCache.mu.RUnlock()
 	return veCache.height
 }
 
 func (veCache *PriceUpdatesCacheImpl) GetRound() int32 {
-	veCache.mu.RLock()
-	defer veCache.mu.RUnlock()
 	return veCache.round
 }
 
 func (veCache *PriceUpdatesCacheImpl) HasValidValues(currBlock int64, round int32) bool {
-	veCache.mu.RLock()
-	defer veCache.mu.RUnlock()
 	return (veCache.height == currBlock && veCache.round == round)
 }
