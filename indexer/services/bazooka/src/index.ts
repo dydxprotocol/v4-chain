@@ -265,14 +265,17 @@ async function partitionKafkaTopics(): Promise<void> {
 async function clearKafkaTopics(
   existingKafkaTopics: string[],
 ): Promise<void> {
-  await Promise.all(
-    _.map(KAFKA_TOPICS,
-      clearKafkaTopic.bind(null,
-        1,
-        config.CLEAR_KAFKA_TOPIC_RETRY_MS,
-        config.CLEAR_KAFKA_TOPIC_MAX_RETRIES,
-        existingKafkaTopics)),
-  );
+  // Concurrent calls to clear all topics caused the failure:
+  // TypeError: Cannot destructure property 'partitions' of 'high.pop(...)' as it is undefined.
+  for (const topic of KAFKA_TOPICS) {
+    await clearKafkaTopic(
+      1,
+      config.CLEAR_KAFKA_TOPIC_RETRY_MS,
+      config.CLEAR_KAFKA_TOPIC_MAX_RETRIES,
+      existingKafkaTopics,
+      topic,
+    );
+  }
 }
 
 export async function clearKafkaTopic(
