@@ -37,7 +37,12 @@ func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 	key := subaccount.Id.ToStateKey()
 
 	if subaccount.AssetYieldIndex == "" {
-		subaccount.AssetYieldIndex = "1/1"
+		assetYieldIndex, found := k.ratelimitKeeper.GetAssetYieldIndex(ctx)
+		if !found {
+			subaccount.AssetYieldIndex = "1/1"
+		} else {
+			subaccount.AssetYieldIndex = assetYieldIndex.String()
+		}
 	}
 
 	if len(subaccount.PerpetualPositions) == 0 && len(subaccount.AssetPositions) == 0 {

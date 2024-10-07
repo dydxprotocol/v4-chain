@@ -14,6 +14,7 @@ const (
 	FlagMaxDaemonUnhealthySeconds   = "max-daemon-unhealthy-seconds"
 
 	FlagSDAIDaemonEnabled        = "sDai-daemon-enabled"
+	FlagSDAIDaemonMockEnabled    = "sDAI-daemon-mock-enabled"
 	FlagSDAIDaemonLoopDelayMs    = "sDAI-daemon-loop-delay-ms"
 	FlagSDAIDaemonEthRpcEndpoint = "sDAI-daemon-eth-rpc-endpoint"
 
@@ -39,6 +40,8 @@ type SharedFlags struct {
 type SDAIFlags struct {
 	// Enabled toggles the DAI daemon on or off.
 	Enabled bool
+	// MockEnabled toggles the mock DAI daemon on or off.
+	MockEnabled bool
 	// LoopDelayMs configures the update frequency of the DAI daemon.
 	LoopDelayMs uint32
 	// EthRpcEndpoint is the endpoint for the Ethereum node where DAI data is queried.
@@ -84,6 +87,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			},
 			SDAI: SDAIFlags{
 				Enabled:        true,
+				MockEnabled:    false,
 				LoopDelayMs:    30_000,
 				EthRpcEndpoint: "https://eth-mainnet.g.alchemy.com/v2/-IfChTcasSLaAOyyJMXRe5BbTT3uHG6I",
 			},
@@ -133,6 +137,11 @@ func AddDaemonFlagsToCmd(
 		FlagSDAIDaemonEnabled,
 		df.SDAI.Enabled,
 		"Enable SDAI Daemon. Set to false for non-validator nodes.",
+	)
+	cmd.Flags().Bool(
+		FlagSDAIDaemonMockEnabled,
+		df.SDAI.MockEnabled,
+		"Enable mock SDAI Daemon.",
 	)
 	cmd.Flags().Uint32(
 		FlagSDAIDaemonLoopDelayMs,
@@ -203,6 +212,11 @@ func GetDaemonFlagValuesFromOptions(
 	if option := appOpts.Get(FlagSDAIDaemonEnabled); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
 			result.SDAI.Enabled = v
+		}
+	}
+	if option := appOpts.Get(FlagSDAIDaemonMockEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.SDAI.MockEnabled = v
 		}
 	}
 	if option := appOpts.Get(FlagSDAIDaemonLoopDelayMs); option != nil {

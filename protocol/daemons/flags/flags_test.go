@@ -48,6 +48,7 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	optsMap[flags.FlagDeleveragingDaemonQueryPageLimit] = uint64(3333)
 
 	optsMap[flags.FlagSDAIDaemonEnabled] = true
+	optsMap[flags.FlagSDAIDaemonMockEnabled] = true
 	optsMap[flags.FlagSDAIDaemonEthRpcEndpoint] = "test-eth-rpc-endpoint"
 	optsMap[flags.FlagSDAIDaemonLoopDelayMs] = uint32(5555)
 
@@ -78,6 +79,7 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 
 	// SDAI Daemon.
 	require.Equal(t, optsMap[flags.FlagSDAIDaemonEnabled], r.SDAI.Enabled)
+	require.Equal(t, optsMap[flags.FlagSDAIDaemonMockEnabled], r.SDAI.MockEnabled)
 	require.Equal(t, optsMap[flags.FlagSDAIDaemonEthRpcEndpoint], r.SDAI.EthRpcEndpoint)
 	require.Equal(t, optsMap[flags.FlagSDAIDaemonLoopDelayMs], r.SDAI.LoopDelayMs)
 
