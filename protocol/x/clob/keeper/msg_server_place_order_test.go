@@ -312,11 +312,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 			// Create test markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
 
-			// Create all subaccounts.
-			for _, subaccount := range tc.Subaccounts {
-				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
-			}
-
 			// Create liquidity tiers.
 			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
 
@@ -338,6 +333,11 @@ func TestPlaceOrder_Success(t *testing.T) {
 				perpetual.YieldIndex,
 			)
 			require.NoError(t, err)
+
+			// Create all subaccounts.
+			for _, subaccount := range tc.Subaccounts {
+				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
+			}
 
 			// Create ClobPair.
 			clobPair := constants.ClobPair_Btc

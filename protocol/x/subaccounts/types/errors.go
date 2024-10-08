@@ -37,10 +37,11 @@ var (
 	ErrGlobaYieldIndexNil                                 = errorsmod.Register(ModuleName, 104, "general yield index is nil")
 	ErrGlobalYieldIndexNegative                           = errorsmod.Register(ModuleName, 105, "general yield index is negative")
 	ErrYieldIndexUninitialized                            = errorsmod.Register(ModuleName, 106, "yield index for subaccount is badly initialised to empty string")
-	ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount = errorsmod.Register(ModuleName, 107, "general yield index is less than the current yield index")
-	ErrNoYieldToClaim                                     = errorsmod.Register(ModuleName, 108, "there is no yield to claim for subaccount")
-	ErrYieldClaimedNegative                               = errorsmod.Register(ModuleName, 109, "subaccount has negative total yield claim")
-	ErrTryingToDepositNegativeYield                       = errorsmod.Register(ModuleName, 110, "attempting to deposit negative yield into collateral pool")
+	ErrPerpYieldIndexUninitialized                        = errorsmod.Register(ModuleName, 107, "yield index for perpetual is badly initialised to empty string")
+	ErrGeneralYieldIndexSmallerThanYieldIndexInSubaccount = errorsmod.Register(ModuleName, 108, "general yield index is less than the current yield index")
+	ErrNoYieldToClaim                                     = errorsmod.Register(ModuleName, 109, "there is no yield to claim for subaccount")
+	ErrYieldClaimedNegative                               = errorsmod.Register(ModuleName, 110, "subaccount has negative total yield claim")
+	ErrTryingToDepositNegativeYield                       = errorsmod.Register(ModuleName, 111, "attempting to deposit negative yield into collateral pool")
 
 	// 200 - 299: subaccount id related.
 	ErrInvalidSubaccountIdNumber = errorsmod.Register(

@@ -688,7 +688,7 @@ func TestClaimYieldForSubaccount(t *testing.T) {
 				types.ModuleAddress.String(): 100_000_000_000,
 			},
 		},
-		"Fails yield claim: Perp yield index in subaccount badly initialized": {
+		"Success yield claim: Perp yield index in subaccount badly initialized so defaults to 0": {
 			assetPositions:            testutil.CreateTDaiAssetPosition(big.NewInt(100_000_000_000)), // $100,000
 			subaccountAssetYieldIndex: constants.AssetYieldIndex_Zero,
 			globalAssetYieldIndex:     big.NewRat(1, 1),
@@ -713,14 +713,14 @@ func TestClaimYieldForSubaccount(t *testing.T) {
 				},
 			},
 			msgClaimYieldForSubaccount: types.MsgClaimYieldForSubaccount{Id: &defaultSubaccountId},
-			expectedErr:                types.ErrYieldIndexUninitialized,
+			expectedErr:                nil,
 			expectedAssetYieldIndex:    big.NewRat(0, 2).String(),
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId:  uint32(0),
 					Quantums:     dtypes.NewInt(100_000_000),
 					FundingIndex: dtypes.NewInt(0),
-					YieldIndex:   "",
+					YieldIndex:   "1/2",
 				},
 			},
 			expectedAssetPositions: []*types.AssetPosition{

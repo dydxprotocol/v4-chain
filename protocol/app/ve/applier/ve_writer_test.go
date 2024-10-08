@@ -409,16 +409,27 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 		expectedLastBlockUpdated    *big.Int
 		expectedCacheConversionRate *big.Int
 	}{
-		"Valid conversion rate": {
+		"10^27 is valid but not written to state but is written to cache": {
 			initialSDaiPrice:            big.NewInt(500000),
 			initialLastBlockUpdated:     big.NewInt(100),
-			sDaiConversionRate:          big.NewInt(1000000),
+			sDaiConversionRate:          new(big.Int).Exp(big.NewInt(10), big.NewInt(27), nil),
 			round:                       1,
 			writeToCache:                true,
 			expectedError:               nil,
-			expectedSDaiPrice:           big.NewInt(1000000),
+			expectedSDaiPrice:           big.NewInt(500000),
+			expectedLastBlockUpdated:    big.NewInt(100),
+			expectedCacheConversionRate: new(big.Int).Exp(big.NewInt(10), big.NewInt(27), nil),
+		},
+		"Valid conversion rate": {
+			initialSDaiPrice:            big.NewInt(500000),
+			initialLastBlockUpdated:     big.NewInt(100),
+			sDaiConversionRate:          new(big.Int).Exp(big.NewInt(11), big.NewInt(27), nil),
+			round:                       1,
+			writeToCache:                true,
+			expectedError:               nil,
+			expectedSDaiPrice:           new(big.Int).Exp(big.NewInt(11), big.NewInt(27), nil),
 			expectedLastBlockUpdated:    big.NewInt(testHeight),
-			expectedCacheConversionRate: big.NewInt(1000000),
+			expectedCacheConversionRate: new(big.Int).Exp(big.NewInt(11), big.NewInt(27), nil),
 		},
 		"Nil conversion rate": {
 			initialSDaiPrice:            big.NewInt(500000),
@@ -456,11 +467,11 @@ func TestWriteSDaiConversionRateToStoreAndMaybeCache(t *testing.T) {
 		"Valid conversion rate, don't write to cache": {
 			initialSDaiPrice:            big.NewInt(500000),
 			initialLastBlockUpdated:     big.NewInt(100),
-			sDaiConversionRate:          big.NewInt(2000000),
+			sDaiConversionRate:          new(big.Int).Exp(big.NewInt(11), big.NewInt(27), nil),
 			round:                       2,
 			writeToCache:                false,
 			expectedError:               nil,
-			expectedSDaiPrice:           big.NewInt(2000000),
+			expectedSDaiPrice:           new(big.Int).Exp(big.NewInt(11), big.NewInt(27), nil),
 			expectedLastBlockUpdated:    big.NewInt(testHeight),
 			expectedCacheConversionRate: nil,
 		},
@@ -1186,6 +1197,12 @@ func TestVEWriter(t *testing.T) {
 	t.Run("Invalid block height in cache when trying to write to store sdai rate", func(t *testing.T) {
 		ctx = ctx.WithBlockHeight(5)
 
+		rate1, ok := big.NewInt(0).SetString("123456789000000000000000000000", 10)
+		require.True(t, ok)
+
+		rate2, ok := big.NewInt(0).SetString("111111111100000000000000000000", 10)
+		require.True(t, ok)
+
 		price1Bz := big.NewInt(100).Bytes()
 		price2Bz := big.NewInt(200).Bytes()
 
@@ -1209,7 +1226,7 @@ func TestVEWriter(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceConsAddress,
 				prices1,
-				"1234567890",
+				"123456789000000000000000000000",
 			),
 		)
 		require.NoError(t, err)
@@ -1218,7 +1235,7 @@ func TestVEWriter(t *testing.T) {
 			vetesting.NewDefaultSignedVeInfo(
 				constants.AliceConsAddress,
 				prices1,
-				"1111111111",
+				"111111111100000000000000000000",
 			),
 		)
 		require.NoError(t, err)
@@ -1251,7 +1268,7 @@ func TestVEWriter(t *testing.T) {
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
 					Prices:             prices1,
-					SDaiConversionRate: "1234567890",
+					SDaiConversionRate: "123456789000000000000000000000",
 				},
 				ConsAddress: constants.AliceConsAddress,
 			},
@@ -1260,13 +1277,13 @@ func TestVEWriter(t *testing.T) {
 				SpotPrice: big.NewInt(100),
 				PnlPrice:  big.NewInt(100),
 			},
-		}, big.NewInt(1234567890), nil).Once()
+		}, rate1, nil).Once()
 
 		voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", ctx, []aggregator.Vote{
 			{
 				DaemonVoteExtension: vetypes.DaemonVoteExtension{
 					Prices:             prices1,
-					SDaiConversionRate: "1111111111",
+					SDaiConversionRate: "111111111100000000000000000000",
 				},
 				ConsAddress: constants.AliceConsAddress,
 			},
@@ -1275,7 +1292,7 @@ func TestVEWriter(t *testing.T) {
 				SpotPrice: big.NewInt(100),
 				PnlPrice:  big.NewInt(100),
 			},
-		}, big.NewInt(1111111111), nil).Once()
+		}, rate2, nil).Once()
 
 		pricesKeeper.On("GetAllMarketParams", ctx).Return(
 			[]pricestypes.MarketParam{
@@ -1334,7 +1351,7 @@ func TestVEWriter(t *testing.T) {
 		require.Equal(t, map[string]uint64{constants.BtcUsdPair: 100}, cachedPnlPrices)
 
 		cachedSDAIRate := veApplier.GetCachedSDaiConversionRate()
-		require.Equal(t, big.NewInt(1234567890), cachedSDAIRate)
+		require.Equal(t, rate1, cachedSDAIRate)
 
 		// Second call should be using the cache and so not change the sdai rate
 		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
@@ -1347,7 +1364,7 @@ func TestVEWriter(t *testing.T) {
 		require.NoError(t, err)
 
 		cachedSDAIRate = veApplier.GetCachedSDaiConversionRate()
-		require.Equal(t, big.NewInt(1234567890), cachedSDAIRate)
+		require.Equal(t, rate1, cachedSDAIRate)
 
 		// Second call should be using the cache and so not change the sdai rate
 		err = veApplier.ApplyVE(ctx, &cometabci.RequestFinalizeBlock{
@@ -1360,7 +1377,7 @@ func TestVEWriter(t *testing.T) {
 		require.NoError(t, err)
 
 		cachedSDAIRate = veApplier.GetCachedSDaiConversionRate()
-		require.Equal(t, big.NewInt(1111111111), cachedSDAIRate)
+		require.Equal(t, rate2, cachedSDAIRate)
 
 		ctx = ctx.WithBlockHeight(6)
 

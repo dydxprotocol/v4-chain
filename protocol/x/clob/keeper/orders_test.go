@@ -1973,12 +1973,14 @@ func TestGetStatePosition_Success(t *testing.T) {
 			indexerEventManager := &mocks.IndexerEventManager{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager, nil)
 			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))
+
+			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
 			// Create subaccount if it's specified.
 			if tc.subaccount != nil {
 				ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, *tc.subaccount)
 			}
-			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
-			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 
 			// Create CLOB pairs.
 			clobPairs := []types.ClobPair{constants.ClobPair_Btc, constants.ClobPair_Eth}

@@ -77,14 +77,14 @@ func TestProcessNewSDaiConversionRateUpdate(t *testing.T) {
 			initialAssetYieldIndex:      "1/1",
 			initialPerpYieldIndexes:     []string{"0/1", "0/1"},
 
-			newSDaiConversionRate: keeper.ConvertStringToBigIntWithPanicOnErr("123456789123456789123456789"),
+			newSDaiConversionRate: keeper.ConvertStringToBigIntWithPanicOnErr("1234567891234567891234567890"),
 			newBlockHeight:        big.NewInt(types.SDAI_UPDATE_BLOCK_DELAY + 100),
 
-			expectedSDaiConversionRate:     keeper.ConvertStringToBigIntWithPanicOnErr("123456789123456789123456789"),
+			expectedSDaiConversionRate:     keeper.ConvertStringToBigIntWithPanicOnErr("1234567891234567891234567890"),
 			expectedLastUpdatedBlockHeight: big.NewInt(types.SDAI_UPDATE_BLOCK_DELAY + 100),
-			expectedTDAISupply:             keeper.ConvertStringToBigIntWithPanicOnErr("15241578780673"),
-			expectedAssetYieldIndex:        "15241578780673/9876543210",
-			expectedPerpYieldIndexes:       []string{"15231702237463/1975308642", "15231702237463/3292181070"},
+			expectedTDAISupply:             keeper.ConvertStringToBigIntWithPanicOnErr("152415787806736"),
+			expectedAssetYieldIndex:        "76207893903368/4938271605",
+			expectedPerpYieldIndexes:       []string{"76202955631763/987654321", "76202955631763/1646090535"},
 			expEvent:                       true,
 			expErr:                         false,
 			customSetup:                    func(ctx sdk.Context, k *keeper.Keeper) {},
@@ -278,7 +278,7 @@ func TestProcessNewSDaiConversionRateUpdate(t *testing.T) {
 			expectedPerpYieldIndexes: []string{"0/1", "0/1"},
 			expEvent:                 false,
 			expErr:                   true,
-			expErrMsg:                "sDai conversion rate must be positive: 0",
+			expErrMsg:                "sDai conversion rate must be greater than 1.0: 0",
 			customSetup:              func(ctx sdk.Context, k *keeper.Keeper) {},
 		},
 		{
@@ -299,7 +299,7 @@ func TestProcessNewSDaiConversionRateUpdate(t *testing.T) {
 			expectedPerpYieldIndexes: []string{"0/1", "0/1"},
 			expEvent:                 false,
 			expErr:                   true,
-			expErrMsg:                "sDai conversion rate must be positive: -1",
+			expErrMsg:                "sDai conversion rate must be greater than 1.0: -1",
 			customSetup:              func(ctx sdk.Context, k *keeper.Keeper) {},
 		},
 	}

@@ -17,6 +17,10 @@ var (
 	TestSDAIEventRequest = api.AddsDAIEventRequest{
 		ConversionRate: "1006681181716810314385961731",
 	}
+
+	TestSDAIEventRequestNoYield = api.AddsDAIEventRequest{
+		ConversionRate: "1000000000000000000000000000",
+	}
 )
 
 type MockEventFetcher struct{}
@@ -26,6 +30,15 @@ func (m *MockEventFetcher) GetInitialEvent(empty bool) (api.AddsDAIEventRequest,
 		return api.AddsDAIEventRequest{}, nil
 	}
 	return TestSDAIEventRequest, nil
+}
+
+type MockEventFetcherNoYield struct{}
+
+func (m *MockEventFetcherNoYield) GetInitialEvent(empty bool) (api.AddsDAIEventRequest, error) {
+	if empty {
+		return api.AddsDAIEventRequest{}, nil
+	}
+	return TestSDAIEventRequestNoYield, nil
 }
 
 type MockEventFetcherNoEvents struct{}
@@ -105,6 +118,15 @@ func (s *sDAIEventManagerImpl) GetSDaiPrice() api.AddsDAIEventRequest {
 
 func SetupMockEventManager(isEmpty ...bool) SDAIEventManager {
 	SDAIEventFetcher = &MockEventFetcher{}
+
+	if len(isEmpty) > 0 && isEmpty[0] {
+		return NewsDAIEventManager(true)
+	}
+	return NewsDAIEventManager()
+}
+
+func SetupMockEventManagerNoYield(isEmpty ...bool) SDAIEventManager {
+	SDAIEventFetcher = &MockEventFetcherNoYield{}
 
 	if len(isEmpty) > 0 && isEmpty[0] {
 		return NewsDAIEventManager(true)

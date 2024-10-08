@@ -280,8 +280,13 @@ func ValidateSDaiConversionRateValueInVE(
 
 func ValidateBigIntSDaiConversionRateValue(ctx sdk.Context, sDaiConversionRate *big.Int, ratelimitKeeper VoteExtensionRateLimitKeeper) error {
 	// TODO: Left in to exit early if the rate is not positive. Could remove this given below check.
-	if sDaiConversionRate.Sign() <= 0 {
-		return fmt.Errorf("sDai conversion rate must be positive: %s", sDaiConversionRate)
+	tenScaledBySDaiDecimals := new(big.Int).Exp(
+		big.NewInt(ratelimittypes.BASE_10),
+		big.NewInt(ratelimittypes.SDAI_DECIMALS),
+		nil,
+	)
+	if sDaiConversionRate.Cmp(tenScaledBySDaiDecimals) < 0 {
+		return fmt.Errorf("sDai conversion rate must be greater than 1.0: %s", sDaiConversionRate)
 	}
 
 	prevRate, found := ratelimitKeeper.GetSDAIPrice(ctx)

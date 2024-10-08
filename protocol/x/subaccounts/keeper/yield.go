@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -155,6 +156,7 @@ func calculateAssetYieldInQuoteQuantums(
 	}
 
 	if subaccount.AssetYieldIndex == "" {
+		fmt.Println("subaccount.AssetYieldIndex is empty")
 		return nil, types.ErrYieldIndexUninitialized
 	}
 
@@ -250,7 +252,8 @@ func getCurrentYieldIndexForPerp(
 	err error,
 ) {
 	if perp.YieldIndex == "" {
-		return nil, types.ErrYieldIndexUninitialized
+		fmt.Println("perp.YieldIndex is empty in getCurrentYieldIndexForPerp")
+		return nil, types.ErrPerpYieldIndexUninitialized
 	}
 
 	generalYieldIndex, success := new(big.Rat).SetString(perp.YieldIndex)
@@ -284,7 +287,8 @@ func calculatePerpetualYieldInQuoteQuantums(
 	}
 
 	if perpPosition.YieldIndex == "" {
-		return nil, types.ErrYieldIndexUninitialized
+		fmt.Println("perpPosition.YieldIndex is empty in calculatePerpetualYieldInQuoteQuantums")
+		return nil, types.ErrPerpYieldIndexUninitialized
 	}
 
 	currentYieldIndex, success := new(big.Rat).SetString(perpPosition.YieldIndex)

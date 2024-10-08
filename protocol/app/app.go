@@ -583,6 +583,8 @@ func New(
 	sDAIEventManager := sdaidaemontypes.NewsDAIEventManager(true)
 	if daemonFlags.SDAI.MockEnabled {
 		sDAIEventManager = sdaidaemontypes.SetupMockEventManager()
+	} else if daemonFlags.SDAI.MockNoYield {
+		sDAIEventManager = sdaidaemontypes.SetupMockEventManagerNoYield()
 	} else if !appFlags.NonValidatingFullNode && daemonFlags.SDAI.Enabled {
 		sDAIEventManager = sdaidaemontypes.NewsDAIEventManager()
 	}
