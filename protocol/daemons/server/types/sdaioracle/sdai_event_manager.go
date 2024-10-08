@@ -176,6 +176,15 @@ func SetupMockEventManager(isEmpty ...bool) SDAIEventManager {
 	SDAIEventFetcher = &MockEventFetcher{}
 
 	if len(isEmpty) > 0 && isEmpty[0] {
+		return NewsDAIEventManager(true)
+	}
+	return NewsDAIEventManager()
+}
+
+func SetupMockFixedYieldEventManager(isEmpty ...bool) SDAIEventManager {
+	SDAIEventFetcher = &MockEventFetcher{}
+
+	if len(isEmpty) > 0 && isEmpty[0] {
 		return NewsDAIMockEventManager(true)
 	}
 	return NewsDAIMockEventManager()

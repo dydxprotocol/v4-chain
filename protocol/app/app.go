@@ -1381,7 +1381,7 @@ func (app *App) RegisterDaemonWithHealthMonitor(
 
 func createSDAIEventManager(appFlags flags.Flags, daemonFlags daemonflags.DaemonFlags) sdaidaemontypes.SDAIEventManager {
 	if daemonFlags.SDAI.MockEnabled {
-		return sdaidaemontypes.SetupMockEventManager()
+		return sdaidaemontypes.SetupMockFixedYieldEventManager()
 	} else if daemonFlags.SDAI.MockNoYield {
 		return sdaidaemontypes.SetupMockEventManagerNoYield()
 	} else if !appFlags.NonValidatingFullNode && daemonFlags.SDAI.Enabled {
