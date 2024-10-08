@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -75,7 +74,7 @@ func (m SubaccountFilter) Authenticate(ctx sdk.Context, request types.Authentica
 	for _, subaccountNum := range requestSubaccountNums {
 		if _, ok := m.whitelist[subaccountNum]; !ok {
 			return errorsmod.Wrapf(
-				sdkerrors.ErrUnauthorized,
+				types.ErrSubaccountVerification,
 				"subaccount number %d not in whitelist %v",
 				subaccountNum,
 				m.whitelist,

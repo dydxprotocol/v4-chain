@@ -10,11 +10,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
-type SubAuthenticatorInitData struct {
-	Type   string `json:"type"`
-	Config []byte `json:"config"`
-}
-
 func subTrack(
 	ctx sdk.Context,
 	request types.AuthenticationRequest,
@@ -50,7 +45,7 @@ func onSubAuthenticatorsAdded(
 	authenticatorId string,
 	am *AuthenticatorManager,
 ) error {
-	var initDatas []SubAuthenticatorInitData
+	var initDatas []types.SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return errorsmod.Wrapf(err, "failed to unmarshal sub-authenticator init data")
 	}
@@ -97,7 +92,7 @@ func onSubAuthenticatorsRemoved(
 	authenticatorId string,
 	am *AuthenticatorManager,
 ) error {
-	var initDatas []SubAuthenticatorInitData
+	var initDatas []types.SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return err
 	}

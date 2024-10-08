@@ -6,11 +6,11 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -105,7 +105,7 @@ func (s *ClobPairIdFilterTest) TestFilter() {
 			if tt.match {
 				s.Require().NoError(err)
 			} else {
-				s.Require().ErrorIs(err, sdkerrors.ErrUnauthorized)
+				s.Require().ErrorIs(err, types.ErrClobPairIdVerification)
 			}
 		})
 	}

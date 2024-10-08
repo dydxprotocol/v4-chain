@@ -187,9 +187,9 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			// Convert the authenticators to InitializationData
-			initData := []authenticator.SubAuthenticatorInitData{}
+			initData := []types.SubAuthenticatorInitData{}
 			for _, auth := range tc.authenticators {
-				initData = append(initData, authenticator.SubAuthenticatorInitData{
+				initData = append(initData, types.SubAuthenticatorInitData{
 					Type:   auth.Type(),
 					Config: testData,
 				})
@@ -344,9 +344,9 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			// Convert the authenticators to InitializationData
-			initData := []authenticator.SubAuthenticatorInitData{}
+			initData := []types.SubAuthenticatorInitData{}
 			for _, auth := range tc.authenticators {
-				initData = append(initData, authenticator.SubAuthenticatorInitData{
+				initData = append(initData, types.SubAuthenticatorInitData{
 					Type:   auth.Type(),
 					Config: testData,
 				})
@@ -562,14 +562,14 @@ func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
 		}
 		return json.Marshal(spyData)
 	} else if len(csa.anyOf) > 0 {
-		var initData []authenticator.SubAuthenticatorInitData
+		var initData []types.SubAuthenticatorInitData
 		for _, subAuth := range csa.anyOf {
 			data, err := subAuth.buildInitData()
 			if err != nil {
 				return nil, err
 			}
 
-			initData = append(initData, authenticator.SubAuthenticatorInitData{
+			initData = append(initData, types.SubAuthenticatorInitData{
 				Type:   subAuth.Type(),
 				Config: data,
 			})
@@ -577,14 +577,14 @@ func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
 
 		return json.Marshal(initData)
 	} else if len(csa.allOf) > 0 {
-		var initData []authenticator.SubAuthenticatorInitData
+		var initData []types.SubAuthenticatorInitData
 		for _, subAuth := range csa.allOf {
 			data, err := subAuth.buildInitData()
 			if err != nil {
 				return nil, err
 			}
 
-			initData = append(initData, authenticator.SubAuthenticatorInitData{
+			initData = append(initData, types.SubAuthenticatorInitData{
 				Type:   subAuth.Type(),
 				Config: data,
 			})
@@ -901,14 +901,14 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 }
 
 func marshalAuth(ta testAuth, testData []byte) ([]byte, error) {
-	initData := []authenticator.SubAuthenticatorInitData{}
+	initData := []types.SubAuthenticatorInitData{}
 
 	for _, sub := range ta.subAuths {
 		subData, err := marshalAuth(sub, testData)
 		if err != nil {
 			return nil, err
 		}
-		initData = append(initData, authenticator.SubAuthenticatorInitData{
+		initData = append(initData, types.SubAuthenticatorInitData{
 			Type:   sub.authenticator.Type(),
 			Config: subData,
 		})

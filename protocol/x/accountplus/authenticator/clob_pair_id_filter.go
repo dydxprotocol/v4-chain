@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -77,7 +76,7 @@ func (m ClobPairIdFilter) Authenticate(ctx sdk.Context, request types.Authentica
 	for _, clobPairId := range requestOrderIds {
 		if _, ok := m.whitelist[clobPairId]; !ok {
 			return errorsmod.Wrapf(
-				sdkerrors.ErrUnauthorized,
+				types.ErrClobPairIdVerification,
 				"order id %d not in whitelist %v",
 				clobPairId,
 				m.whitelist,

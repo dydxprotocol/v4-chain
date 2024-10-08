@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgCompleteBridge_ValidateBasic(t *testing.T) {
+func TestMsgAddAuthenticator_ValidateBasic(t *testing.T) {
 	const messageFilterData = "/cosmos.bank.v1beta1.MsgMultiSend,/cosmos.bank.v1beta1.MsgSend"
 
 	tests := map[string]struct {
@@ -45,11 +45,27 @@ func TestMsgCompleteBridge_ValidateBasic(t *testing.T) {
 										{"Type":"SignatureVerification","Config":"%s"},
 										{"Type":"SignatureVerification","Config":"%s"},
 										{"Type":"SignatureVerification","Config":"%s"}
+										{"Type":"SignatureVerification","Config":"%s"},
+										{"Type":"SignatureVerification","Config":"%s"},
+										{"Type":"SignatureVerification","Config":"%s"},
+										{"Type":"SignatureVerification","Config":"%s"}
+										{"Type":"SignatureVerification","Config":"%s"},
+										{"Type":"SignatureVerification","Config":"%s"},
+										{"Type":"SignatureVerification","Config":"%s"},
+										{"Type":"SignatureVerification","Config":"%s"}
 									]
 								"
 							},
 						]`,
 						messageFilterData,
+						constants.AlicePrivateKey.PubKey().String(),
+						constants.BobPrivateKey.PubKey().String(),
+						constants.CarlPrivateKey.PubKey().String(),
+						constants.DavePrivateKey.PubKey().String(),
+						constants.AlicePrivateKey.PubKey().String(),
+						constants.BobPrivateKey.PubKey().String(),
+						constants.CarlPrivateKey.PubKey().String(),
+						constants.DavePrivateKey.PubKey().String(),
 						constants.AlicePrivateKey.PubKey().String(),
 						constants.BobPrivateKey.PubKey().String(),
 						constants.CarlPrivateKey.PubKey().String(),
