@@ -174,8 +174,8 @@ func (k Keeper) calculateTDaiAmount(sDaiAmount *big.Int, sDAIPrice *big.Int) *bi
 
 func (k Keeper) calculateTDaiAmountAndRoundUp(sDaiAmount *big.Int, sDAIPrice *big.Int) (*big.Int, error) {
 	scaledSDaiAmount := new(big.Int).Mul(sDaiAmount, sDAIPrice)
-	tenScaledBySDaiDecimals := getTenScaledBySDaiDecimals()
-	tDaiAmount, err := divideAndRoundUp(scaledSDaiAmount, tenScaledBySDaiDecimals)
+	oneScaledBySDaiDecimals := GetOneScaledBySDaiDecimals()
+	tDaiAmount, err := divideAndRoundUp(scaledSDaiAmount, oneScaledBySDaiDecimals)
 	if err != nil {
 		return nil, err
 	}

@@ -71,7 +71,7 @@ func TestGetTenScaledBySDaiDecimals(t *testing.T) {
 	if !ok {
 		panic("Could not set up test")
 	}
-	require.Equal(t, expectedInt, getTenScaledBySDaiDecimals())
+	require.Equal(t, expectedInt, GetOneScaledBySDaiDecimals())
 }
 
 func TestDivideAndRoundUp_Success(t *testing.T) {
