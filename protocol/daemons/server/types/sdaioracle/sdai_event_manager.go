@@ -85,6 +85,32 @@ type sDAIEventManagerImpl struct {
 	price api.AddsDAIEventRequest
 }
 
+type sDAIEventManagerMockImpl struct {
+	sync.Mutex
+	price api.AddsDAIEventRequest
+}
+
+func (s *sDAIEventManagerMockImpl) AddsDAIEvent(event *api.AddsDAIEventRequest) error {
+	return nil
+}
+
+func (s *sDAIEventManagerMockImpl) GetSDaiPrice() api.AddsDAIEventRequest {
+	return TestSDAIEventRequest
+}
+
+type sDAIEventManagerMockNoYieldImpl struct {
+	sync.Mutex
+	price api.AddsDAIEventRequest
+}
+
+func (s *sDAIEventManagerMockNoYieldImpl) AddsDAIEvent(event *api.AddsDAIEventRequest) error {
+	return nil
+}
+
+func (s *sDAIEventManagerMockNoYieldImpl) GetSDaiPrice() api.AddsDAIEventRequest {
+	return TestSDAIEventRequestNoYield
+}
+
 // NewsDAIEventManager creates a new SDAIEventManager.
 func NewsDAIEventManager(isEmpty ...bool) SDAIEventManager {
 	empty := false
@@ -97,6 +123,36 @@ func NewsDAIEventManager(isEmpty ...bool) SDAIEventManager {
 		log.Fatalf("Failed to get initial events: %v", err)
 	}
 	return &sDAIEventManagerImpl{
+		price: event,
+	}
+}
+
+func NewsDAIMockEventManager(isEmpty ...bool) SDAIEventManager {
+	empty := false
+	if len(isEmpty) > 0 && isEmpty[0] {
+		empty = true
+	}
+
+	event, err := SDAIEventFetcher.GetInitialEvent(empty)
+	if err != nil {
+		log.Fatalf("Failed to get initial events: %v", err)
+	}
+	return &sDAIEventManagerMockImpl{
+		price: event,
+	}
+}
+
+func NewsDAIMockNoYieldEventManager(isEmpty ...bool) SDAIEventManager {
+	empty := false
+	if len(isEmpty) > 0 && isEmpty[0] {
+		empty = true
+	}
+
+	event, err := SDAIEventFetcher.GetInitialEvent(empty)
+	if err != nil {
+		log.Fatalf("Failed to get initial events: %v", err)
+	}
+	return &sDAIEventManagerMockNoYieldImpl{
 		price: event,
 	}
 }
@@ -120,18 +176,18 @@ func SetupMockEventManager(isEmpty ...bool) SDAIEventManager {
 	SDAIEventFetcher = &MockEventFetcher{}
 
 	if len(isEmpty) > 0 && isEmpty[0] {
-		return NewsDAIEventManager(true)
+		return NewsDAIMockEventManager(true)
 	}
-	return NewsDAIEventManager()
+	return NewsDAIMockEventManager()
 }
 
 func SetupMockEventManagerNoYield(isEmpty ...bool) SDAIEventManager {
 	SDAIEventFetcher = &MockEventFetcherNoYield{}
 
 	if len(isEmpty) > 0 && isEmpty[0] {
-		return NewsDAIEventManager(true)
+		return NewsDAIMockNoYieldEventManager(true)
 	}
-	return NewsDAIEventManager()
+	return NewsDAIMockNoYieldEventManager()
 }
 
 func SetupMockEventManagerWithNoEvents() SDAIEventManager {
