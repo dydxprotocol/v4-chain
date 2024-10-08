@@ -355,5 +355,36 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 		saModuleTDaiBalance,
 	)
 
+	// test the sdai
+
+	cfg := network.DefaultConfig(nil)
+
+	chi := "1006681181716810314385961731"
+
+	time.Sleep(15 * time.Second)
+
+	rateQuery := "docker exec interchain-security-instance interchain-security-cd" +
+		" query ratelimit get-sdai-price "
+	data, _, err = network.QueryCustomNetwork(rateQuery)
+
+	require.NoError(s.T(), err)
+	var respSdai ratelimittypes.GetSDAIPriceQueryResponse
+	require.NoError(s.T(), cfg.Codec.UnmarshalJSON(data, &respSdai))
+
+	chiFloat, success := new(big.Float).SetString(chi)
+	require.True(s.T(), success, "Failed to parse chi as big.Float")
+
+	priceFloat, success := new(big.Float).SetString(respSdai.Price)
+	require.True(s.T(), success, "Failed to parse price as big.Float")
+
+	// Compare the big.Float values directly
+	comparison := new(big.Float).Quo(priceFloat, chiFloat)
+
+	minThreshold := big.NewFloat(0.99)
+	maxThreshold := big.NewFloat(1.16)
+
+	require.True(s.T(), comparison.Cmp(minThreshold) >= 0, "Price should be at least 99% of chi")
+	require.True(s.T(), comparison.Cmp(maxThreshold) <= 0, "Price should be at most 116% of chi")
+
 	network.CleanupCustomNetwork()
 }
