@@ -1233,9 +1233,16 @@ func New(
 
 	// Initialize authenticators
 	app.AuthenticatorManager = authenticator.NewAuthenticatorManager()
-	app.AuthenticatorManager.InitializeAuthenticators([]accountplusmoduletypes.Authenticator{
-		authenticator.NewSignatureVerification(app.AccountKeeper),
-	})
+	app.AuthenticatorManager.InitializeAuthenticators(
+		[]accountplusmoduletypes.Authenticator{
+			authenticator.NewAllOf(app.AuthenticatorManager),
+			authenticator.NewAnyOf(app.AuthenticatorManager),
+			authenticator.NewSignatureVerification(app.AccountKeeper),
+			authenticator.NewMessageFilter(),
+			authenticator.NewClobPairIdFilter(),
+			authenticator.NewSubaccountFilter(),
+		},
+	)
 	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
 		appCodec,
 		keys[accountplusmoduletypes.StoreKey],

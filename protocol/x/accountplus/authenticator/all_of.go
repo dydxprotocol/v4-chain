@@ -49,7 +49,7 @@ func (aoa AllOf) StaticGas() uint64 {
 }
 
 func (aoa AllOf) Initialize(config []byte) (types.Authenticator, error) {
-	var initDatas []SubAuthenticatorInitData
+	var initDatas []types.SubAuthenticatorInitData
 	if err := json.Unmarshal(config, &initDatas); err != nil {
 		return nil, errorsmod.Wrap(err, "failed to parse sub-authenticators initialization data")
 	}
@@ -99,7 +99,10 @@ func (aoa AllOf) Authenticate(ctx sdk.Context, request types.AuthenticationReque
 			request.Signature = signatures[i]
 		}
 		if err := auth.Authenticate(ctx, request); err != nil {
-			return err
+			return errorsmod.Wrap(
+				types.ErrAllOfVerification,
+				err.Error(),
+			)
 		}
 	}
 	return nil
