@@ -16,11 +16,6 @@ import (
 
 // Assumes that it is called with valid inputs from vote extension logic.
 func (k Keeper) ProcessNewSDaiConversionRateUpdate(ctx sdk.Context, sDaiConversionRate *big.Int, blockHeight *big.Int) error {
-	fmt.Println("------------------------")
-	fmt.Println("ProcessNewSDaiConversionRateUpdate")
-	fmt.Println("sDaiConversionRate", sDaiConversionRate)
-	fmt.Println("blockHeight", blockHeight)
-
 	if sDaiConversionRate == nil || blockHeight == nil {
 		return errors.New("sDaiConversionRate or blockHeight cannot be nil")
 	}
@@ -66,9 +61,6 @@ func (k Keeper) ProcessNewSDaiConversionRateUpdate(ctx sdk.Context, sDaiConversi
 	tDaiSupplyZero := tDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0
 
 	if sDaiSupplyZero && !tDaiSupplyZero {
-		fmt.Println("sDai supply is zero but tDai supply is not zero")
-		fmt.Println("sDai supply", sDaiSupplyDenomAmount)
-		fmt.Println("tDai supply", tDaiSupplyDenomAmount)
 		return errors.New("sDai supply is zero but tDai supply is not zero")
 	}
 
@@ -79,12 +71,6 @@ func (k Keeper) ProcessNewSDaiConversionRateUpdate(ctx sdk.Context, sDaiConversi
 	if tDaiSupplyZero {
 		return nil
 	}
-
-	fmt.Println("Calling UpdateMintStateOnSDaiConversionRateUpdate")
-	fmt.Println("sDaiConversionRate", sDaiConversionRate)
-	fmt.Println("blockHeight", blockHeight)
-	fmt.Println("sDaiSupplyDenomAmount", sDaiSupplyDenomAmount)
-	fmt.Println("tDaiSupplyDenomAmount", tDaiSupplyDenomAmount)
 
 	return k.UpdateMintStateOnSDaiConversionRateUpdate(ctx)
 }
@@ -145,6 +131,42 @@ func (k Keeper) UpdateMintStateOnSDaiConversionRateUpdate(ctx sdk.Context) error
 	return nil
 }
 
+func (k Keeper) MintNewTDaiYield(ctx sdk.Context) (*big.Int, *big.Int, error) {
+	sDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.SDaiDenom)
+	sDaiSupplyDenomAmount := sDaiSupplyCoins.Amount.BigInt()
+	if sDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {
+		return big.NewInt(0), big.NewInt(0), nil
+	}
+
+	tDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.TDaiDenom)
+	tDaiSupplyDenomAmount := tDaiSupplyCoins.Amount.BigInt()
+	if tDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {
+		return big.NewInt(0), big.NewInt(0), nil
+	}
+
+	tDAIAfterYield, err := k.GetTradingDAIFromSDAIAmount(ctx, sDaiSupplyDenomAmount)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if tDAIAfterYield.Cmp(tDaiSupplyDenomAmount) <= 0 {
+		return nil, nil, errorsmod.Wrap(
+			types.ErrInvalidSDAIConversionRate,
+			"TDai after mint is less than or equal to tDai before mint.",
+		)
+	}
+
+	tDaiDenomAmountToMint := tDAIAfterYield.Sub(tDAIAfterYield, tDaiSupplyDenomAmount)
+	tDaiToMintCoins := sdk.NewCoins(sdk.NewCoin(types.TDaiDenom, sdkmath.NewIntFromBigInt(tDaiDenomAmountToMint)))
+
+	err = k.bankKeeper.MintCoins(ctx, types.TDaiPoolAccount, tDaiToMintCoins)
+	if err != nil {
+		return nil, nil, errorsmod.Wrap(err, "failed to mint new trading DAI")
+	}
+
+	return tDaiSupplyDenomAmount, tDaiDenomAmountToMint, nil
+}
+
 func (k Keeper) ClaimInsuranceFundYields(ctx sdk.Context, tDaiSupplyDenomAmountBeforeNewEpoch *big.Int, tDaiDenomAmountMinted *big.Int) error {
 	perps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
 	insuranceFundsSeen := make(map[string]bool)
@@ -170,7 +192,6 @@ func (k Keeper) ClaimInsuranceFundYields(ctx sdk.Context, tDaiSupplyDenomAmountB
 		insuranceFundYieldToClaim := new(big.Int).Mul(insuranceFundDenomBalanceBigInt, tDaiDenomAmountMinted)
 		insuranceFundYieldToClaim.Div(insuranceFundYieldToClaim, tDaiSupplyDenomAmountBeforeNewEpoch)
 
-		// Ensure the insurance fund yield to mint is non-negative
 		if insuranceFundYieldToClaim.Sign() <= 0 {
 			continue
 		}
@@ -211,43 +232,4 @@ func (k Keeper) SetNewYieldIndex(
 
 	k.SetAssetYieldIndex(ctx, assetYieldIndex)
 	return nil
-}
-
-func (k Keeper) MintNewTDaiYield(ctx sdk.Context) (*big.Int, *big.Int, error) {
-	sDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.SDaiDenom)
-	sDaiSupplyDenomAmount := sDaiSupplyCoins.Amount.BigInt()
-	if sDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {
-		return big.NewInt(0), big.NewInt(0), nil
-	}
-
-	tDaiSupplyCoins := k.bankKeeper.GetSupply(ctx, types.TDaiDenom)
-	tDaiSupplyDenomAmount := tDaiSupplyCoins.Amount.BigInt()
-	if tDaiSupplyDenomAmount.Cmp(big.NewInt(0)) == 0 {
-		return big.NewInt(0), big.NewInt(0), nil
-	}
-
-	tDAIAfterYield, err := k.GetTradingDAIFromSDAIAmount(ctx, sDaiSupplyDenomAmount)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if tDAIAfterYield.Cmp(tDaiSupplyDenomAmount) <= 0 {
-		fmt.Println("TDai after mint is less than tDai before mint.")
-		fmt.Println("Before mint", tDaiSupplyDenomAmount)
-		fmt.Println("After mint", tDAIAfterYield)
-		return nil, nil, errorsmod.Wrap(
-			types.ErrInvalidSDAIConversionRate,
-			"TDai after mint is less than or equal to tDai before mint.",
-		)
-	}
-
-	tDaiDenomAmountToMint := tDAIAfterYield.Sub(tDAIAfterYield, tDaiSupplyDenomAmount)
-	tDaiToMintCoins := sdk.NewCoins(sdk.NewCoin(types.TDaiDenom, sdkmath.NewIntFromBigInt(tDaiDenomAmountToMint)))
-
-	err = k.bankKeeper.MintCoins(ctx, types.TDaiPoolAccount, tDaiToMintCoins)
-	if err != nil {
-		return nil, nil, errorsmod.Wrap(err, "failed to mint new trading DAI")
-	}
-
-	return tDaiSupplyDenomAmount, tDaiDenomAmountToMint, nil
 }

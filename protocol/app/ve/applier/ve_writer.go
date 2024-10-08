@@ -120,7 +120,6 @@ func (vea *VEApplier) ApplyVE(
 		if err != nil {
 			return err
 		}
-		return nil
 	} else {
 		prices, conversionRate, err := vea.getAggregatePricesAndConversionRateFromVE(ctx, request)
 		if err != nil {
@@ -136,8 +135,8 @@ func (vea *VEApplier) ApplyVE(
 		if err != nil {
 			return err
 		}
-		return nil
 	}
+	return nil
 }
 
 func (vea *VEApplier) getAggregatePricesAndConversionRateFromVE(
