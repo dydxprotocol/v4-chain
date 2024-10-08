@@ -292,12 +292,12 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 	writeToCache bool,
 ) error {
 	if sDaiConversionRate != nil {
-		tenScaledBySDaiDecimals := new(big.Int).Exp(
+		oneScaledBySDaiDecimals := new(big.Int).Exp(
 			big.NewInt(ratelimittypes.BASE_10),
 			big.NewInt(ratelimittypes.SDAI_DECIMALS),
 			nil,
 		)
-		if sDaiConversionRate.Cmp(tenScaledBySDaiDecimals) < 0 {
+		if sDaiConversionRate.Cmp(oneScaledBySDaiDecimals) < 0 {
 			return fmt.Errorf("invalid sDAI conversion rate: %s", sDaiConversionRate.String())
 		}
 
