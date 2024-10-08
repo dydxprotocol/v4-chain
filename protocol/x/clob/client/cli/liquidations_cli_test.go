@@ -114,25 +114,6 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 	goodTilBlock := uint32(0)
 	subticks := types.Subticks(50_000_000_000)
 
-	// Query both subaccounts.
-	testAccResp, testAccErr := sa_testutil.MsgQuerySubaccountExec(
-		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-		liqTestSubaccountNumberZero,
-	)
-	s.Require().NoError(testAccErr)
-
-	var testSubaccountResp satypes.QuerySubaccountResponse
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(testAccResp.Bytes(), &testSubaccountResp))
-	testSubaccountZero := testSubaccountResp.Subaccount
-
-	testAccResp, testAccErr = sa_testutil.MsgQuerySubaccountExec(
-		"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-		liqTestSubaccountNumberOne,
-	)
-	s.Require().NoError(testAccErr)
-	s.Require().NoError(s.cfg.Codec.UnmarshalJSON(testAccResp.Bytes(), &testSubaccountResp))
-	testSubaccountOne := testSubaccountResp.Subaccount
-
 	blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0"
 	data, _, _ := network.QueryCustomNetwork(blockHeightQuery)
 	var resp blocktypes.Block
