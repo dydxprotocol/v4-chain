@@ -29,16 +29,16 @@ func (k Keeper) ProcessNewSDaiConversionRateUpdate(ctx sdk.Context, sDaiConversi
 		return fmt.Errorf("blockHeight must be positive: %s", blockHeight)
 	}
 
-	tenScaledBySDaiDecimals := new(big.Int).Exp(
+	oneScaledBySDaiDecimals := new(big.Int).Exp(
 		big.NewInt(types.BASE_10),
 		big.NewInt(types.SDAI_DECIMALS),
 		nil,
 	)
-	if sDaiConversionRate.Cmp(tenScaledBySDaiDecimals) < 0 {
+	if sDaiConversionRate.Cmp(oneScaledBySDaiDecimals) < 0 {
 		return fmt.Errorf("sDai conversion rate must be greater than 1.0: %s", sDaiConversionRate)
 	}
 
-	if sDaiConversionRate.Cmp(tenScaledBySDaiDecimals) == 0 {
+	if sDaiConversionRate.Cmp(oneScaledBySDaiDecimals) == 0 {
 		return nil
 	}
 
