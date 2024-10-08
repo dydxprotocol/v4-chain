@@ -580,14 +580,7 @@ func New(
 
 	// Setup server for sDAI oracle prices.
 	// The in-memory data structure is shared by the x/ratelimit module and sdaioracle daemon.
-	sDAIEventManager := sdaidaemontypes.NewsDAIEventManager(true)
-	if daemonFlags.SDAI.MockEnabled {
-		sDAIEventManager = sdaidaemontypes.SetupMockEventManager()
-	} else if daemonFlags.SDAI.MockNoYield {
-		sDAIEventManager = sdaidaemontypes.SetupMockEventManagerNoYield()
-	} else if !appFlags.NonValidatingFullNode && daemonFlags.SDAI.Enabled {
-		sDAIEventManager = sdaidaemontypes.NewsDAIEventManager()
-	}
+	sDAIEventManager := createSDAIEventManager(appFlags, daemonFlags)
 
 	msgSender, indexerFlags := getIndexerFromOptions(appOpts, logger)
 	app.IndexerEventManager = indexer_manager.NewIndexerEventManager(
@@ -1384,6 +1377,17 @@ func (app *App) RegisterDaemonWithHealthMonitor(
 		)
 		panic(err)
 	}
+}
+
+func createSDAIEventManager(appFlags flags.Flags, daemonFlags daemonflags.DaemonFlags) sdaidaemontypes.SDAIEventManager {
+	if daemonFlags.SDAI.MockEnabled {
+		return sdaidaemontypes.SetupMockEventManager()
+	} else if daemonFlags.SDAI.MockNoYield {
+		return sdaidaemontypes.SetupMockEventManagerNoYield()
+	} else if !appFlags.NonValidatingFullNode && daemonFlags.SDAI.Enabled {
+		return sdaidaemontypes.NewsDAIEventManager()
+	}
+	return sdaidaemontypes.NewsDAIEventManager(true)
 }
 
 // DisableHealthMonitorForTesting disables the health monitor for testing.
