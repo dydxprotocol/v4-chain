@@ -13,7 +13,7 @@ import (
 	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -292,12 +292,8 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 	writeToCache bool,
 ) error {
 	if sDaiConversionRate != nil {
-		tenScaledBySDaiDecimals := new(big.Int).Exp(
-			big.NewInt(ratelimittypes.BASE_10),
-			big.NewInt(ratelimittypes.SDAI_DECIMALS),
-			nil,
-		)
-		if sDaiConversionRate.Cmp(tenScaledBySDaiDecimals) < 0 {
+		oneScaledBySDaiDecimals := ratelimitkeeper.GetOneScaledBySDaiDecimals()
+		if sDaiConversionRate.Cmp(oneScaledBySDaiDecimals) < 0 {
 			return fmt.Errorf("invalid sDAI conversion rate: %s", sDaiConversionRate.String())
 		}
 

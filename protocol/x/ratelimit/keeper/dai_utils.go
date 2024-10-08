@@ -10,17 +10,17 @@ import (
 )
 
 func divideAmountBySDaiDecimals(scaledSDaiAmount *big.Int) *big.Int {
-	tenScaledBySDaiDecimals := getTenScaledBySDaiDecimals()
+	oneScaledBySDaiDecimals := GetOneScaledBySDaiDecimals()
 
 	dividedAmount := new(big.Int).Div(
 		scaledSDaiAmount,
-		tenScaledBySDaiDecimals,
+		oneScaledBySDaiDecimals,
 	)
 
 	return dividedAmount
 }
 
-func getTenScaledBySDaiDecimals() *big.Int {
+func GetOneScaledBySDaiDecimals() *big.Int {
 	return new(big.Int).Exp(
 		big.NewInt(types.BASE_10),
 		big.NewInt(types.SDAI_DECIMALS),

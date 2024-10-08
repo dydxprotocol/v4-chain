@@ -12,8 +12,8 @@ import (
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
+	daiUtils "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -280,12 +280,8 @@ func ValidateSDaiConversionRateValueInVE(
 
 func ValidateBigIntSDaiConversionRateValue(ctx sdk.Context, sDaiConversionRate *big.Int, ratelimitKeeper VoteExtensionRateLimitKeeper) error {
 	// TODO: Left in to exit early if the rate is not positive. Could remove this given below check.
-	tenScaledBySDaiDecimals := new(big.Int).Exp(
-		big.NewInt(ratelimittypes.BASE_10),
-		big.NewInt(ratelimittypes.SDAI_DECIMALS),
-		nil,
-	)
-	if sDaiConversionRate.Cmp(tenScaledBySDaiDecimals) < 0 {
+	oneScaledBySDaiDecimals := daiUtils.GetOneScaledBySDaiDecimals()
+	if sDaiConversionRate.Cmp(oneScaledBySDaiDecimals) < 0 {
 		return fmt.Errorf("sDai conversion rate must be greater than 1.0: %s", sDaiConversionRate)
 	}
 
