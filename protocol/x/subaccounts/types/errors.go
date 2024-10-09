@@ -34,7 +34,7 @@ var (
 		ModuleName, 101, "multiple updates were specified for the same subaccountId")
 	ErrFailedToUpdateSubaccounts                          = errorsmod.Register(ModuleName, 102, "failed to apply subaccount updates")
 	ErrProductPositionNotUpdatable                        = errorsmod.Register(ModuleName, 103, "product position is not updatable")
-	ErrGlobaYieldIndexNil                                 = errorsmod.Register(ModuleName, 104, "general yield index is nil")
+	ErrGlobalYieldIndexNil                                = errorsmod.Register(ModuleName, 104, "general yield index is nil")
 	ErrGlobalYieldIndexNegative                           = errorsmod.Register(ModuleName, 105, "general yield index is negative")
 	ErrYieldIndexUninitialized                            = errorsmod.Register(ModuleName, 106, "yield index for subaccount is badly initialised to empty string")
 	ErrPerpYieldIndexUninitialized                        = errorsmod.Register(ModuleName, 107, "yield index for perpetual is badly initialised to empty string")

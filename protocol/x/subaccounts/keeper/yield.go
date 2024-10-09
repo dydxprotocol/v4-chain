@@ -144,7 +144,7 @@ func calculateAssetYieldInQuoteQuantums(
 	}
 
 	if generalYieldIndex == nil {
-		return nil, types.ErrGlobaYieldIndexNil
+		return nil, types.ErrGlobalYieldIndexNil
 	}
 
 	if generalYieldIndex.Cmp(big.NewRat(0, 1)) < 0 {
@@ -177,7 +177,7 @@ func calculateAssetYieldInQuoteQuantums(
 
 	yieldIndexQuotient := new(big.Rat).Quo(generalYieldIndex, currYieldIndexdivisor)
 	newAssetAmount := new(big.Rat).Mul(assetAmount, yieldIndexQuotient)
-	newYieldRat := assetAmount.Sub(newAssetAmount, assetAmount)
+	newYieldRat := new(big.Rat).Sub(newAssetAmount, assetAmount)
 
 	newYield = lib.BigRatRound(newYieldRat, false)
 
@@ -275,7 +275,7 @@ func calculatePerpetualYieldInQuoteQuantums(
 	}
 
 	if generalYieldIndex == nil {
-		return nil, types.ErrGlobaYieldIndexNil
+		return nil, types.ErrGlobalYieldIndexNil
 	}
 
 	if generalYieldIndex.Cmp(big.NewRat(0, 1)) < 0 {
