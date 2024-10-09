@@ -169,7 +169,7 @@ func (k Keeper) MintNewTDaiYield(ctx sdk.Context) (*big.Int, *big.Int, error) {
 
 func (k Keeper) ClaimInsuranceFundYields(ctx sdk.Context, tDaiSupplyDenomAmountBeforeNewEpoch *big.Int, tDaiDenomAmountMinted *big.Int) error {
 	perps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
-	insuranceFundsSeen := make(map[string]bool)
+	insuranceFundsSeen := make(map[string]struct{})
 
 	for _, perpetual := range perps {
 		insuranceFund, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetual.Params.Id)
@@ -181,7 +181,7 @@ func (k Keeper) ClaimInsuranceFundYields(ctx sdk.Context, tDaiSupplyDenomAmountB
 			continue
 		}
 
-		insuranceFundsSeen[insuranceFund.String()] = true
+		insuranceFundsSeen[insuranceFund.String()] = struct{}{}
 
 		insuranceFundDenomBalance := k.bankKeeper.GetBalance(ctx, insuranceFund, types.TDaiDenom)
 		if insuranceFundDenomBalance.IsZero() {
