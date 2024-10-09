@@ -60,7 +60,8 @@ func ProcessProposalHandler(
 		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
 		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on
 		// consensus round to do so.
-		if err := pricesKeeper.UpdateSmoothedSpotPrices(ctx, lib.Uint64LinearInterpolate); err != nil {
+		err := pricesKeeper.UpdateSmoothedSpotPrices(ctx, lib.Uint64LinearInterpolate)
+		if err != nil {
 			recordErrorMetricsWithLabel(metrics.UpdateSmoothedPrices)
 			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)
 		}
@@ -95,6 +96,7 @@ func ProcessProposalHandler(
 				ctx.Logger().Error("failed to decode and validate ve", "err", err)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
+			request.Txs = request.Txs[1:]
 		}
 
 		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), request, pricesKeeper)
@@ -155,6 +157,5 @@ func DecodeValidateAndCacheVE(
 	if err := veApplier.ApplyVE(ctx, request.Txs, true); err != nil {
 		ctx.Logger().Error("failed to cache VE prices", "err", err)
 	}
-	request.Txs = request.Txs[1:]
 	return nil
 }

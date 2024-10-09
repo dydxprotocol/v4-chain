@@ -37,10 +37,8 @@ func (k Keeper) UpdatePnlPrice(
 		metrics.Latency,
 	)
 
-	// Get necessary store.
 	marketPriceStore := k.getMarketPriceStore(ctx)
 
-	// Get market price.
 	marketPrice, err := k.GetMarketPrice(ctx, update.MarketId)
 	if err != nil {
 		return err

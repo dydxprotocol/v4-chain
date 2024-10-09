@@ -9,27 +9,37 @@ import (
 
 func (k Keeper) SetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(ctx sdk.Context, extendedCommitInfo *abcicomet.ExtendedCommitInfo) error {
 	// from cometbft so is either nil or is valid and > 2/3
-	if extendedCommitInfo != nil {
-		veCodec := vecodec.NewDefaultVoteExtensionCodec()
-		votes, err := veaggregator.FetchVotesFromExtCommitInfo(*extendedCommitInfo, veCodec)
-		if err != nil {
-			return err
-		}
+	if extendedCommitInfo == nil {
+		return nil
+	}
 
-		if len(votes) > 0 {
-			prices, conversionRate, err := k.VEApplier.VoteAggregator().AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx, votes)
-			if err == nil {
-				dummyBytes := []byte{}
-				err = k.VEApplier.WritePricesToStoreAndMaybeCache(ctx, prices, dummyBytes, false)
-				if err != nil {
-					return err
-				}
-				err = k.VEApplier.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, conversionRate, dummyBytes, false)
-				if err != nil {
-					return err
-				}
-			}
-		}
+	veCodec := vecodec.NewDefaultVoteExtensionCodec()
+	votes, err := veaggregator.FetchVotesFromExtCommitInfo(*extendedCommitInfo, veCodec)
+	if err != nil {
+		return err
+	}
+
+	if len(votes) == 0 {
+		return nil
+	}
+
+	prices, conversionRate, err := k.VEApplier.VoteAggregator().AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx, votes)
+
+	// Handle aggregation errors gracefully
+	if err != nil {
+		return nil
+	}
+
+	dummyBytes := []byte{}
+
+	err = k.VEApplier.WritePricesToStoreAndMaybeCache(ctx, prices, dummyBytes, false)
+	if err != nil {
+		return err
+	}
+
+	err = k.VEApplier.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, conversionRate, dummyBytes, false)
+	if err != nil {
+		return err
 	}
 
 	return nil

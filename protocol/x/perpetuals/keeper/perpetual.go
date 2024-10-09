@@ -1453,9 +1453,6 @@ func (k Keeper) setPerpetual(
 		perpetual.YieldIndex = "0/1"
 	}
 
-	fmt.Println("perpetual", perpetual)
-	fmt.Println("perpetual", perpetual.YieldIndex)
-
 	b := k.cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)

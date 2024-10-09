@@ -257,11 +257,14 @@ func ValidateSDaiConversionRateHeightInVE(
 ) error {
 	lastBlockUpdated, found := ratelimitKeeper.GetSDAILastBlockUpdated(ctx)
 
-	if found {
-		if ctx.BlockHeight()-lastBlockUpdated.Int64() < ratelimittypes.SDAI_UPDATE_BLOCK_DELAY {
-			return fmt.Errorf("sDai conversion rate height is not within the allowed delay of %d blocks", ratelimittypes.SDAI_UPDATE_BLOCK_DELAY)
-		}
+	if !found {
+		return nil
 	}
+
+	if ctx.BlockHeight()-lastBlockUpdated.Int64() < ratelimittypes.SDAI_UPDATE_BLOCK_DELAY {
+		return fmt.Errorf("sDai conversion rate height is not within the allowed delay of %d blocks", ratelimittypes.SDAI_UPDATE_BLOCK_DELAY)
+	}
+
 	return nil
 }
 

@@ -257,7 +257,6 @@ func (vea *VEApplier) WritePricesToStoreAndMaybeCache(
 		}
 
 		shouldWriteSpotPrice, shouldWritePnlPrice := vea.shouldWritePriceToStore(ctx, pricePair, market.Id)
-
 		if shouldWriteSpotPrice {
 			spotPriceUpdate, err := vea.writeSpotPriceToStore(ctx, pricePair, market.Id)
 			if err != nil {
@@ -289,16 +288,29 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 	txHash []byte,
 	writeToCache bool,
 ) error {
-	if sDaiConversionRate != nil {
-		oneScaledBySDaiDecimals := ratelimitkeeper.GetOneScaledBySDaiDecimals()
-		if sDaiConversionRate.Cmp(oneScaledBySDaiDecimals) < 0 {
-			return fmt.Errorf("invalid sDAI conversion rate: %s", sDaiConversionRate.String())
-		}
 
-		err := vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(ctx, sDaiConversionRate, big.NewInt(ctx.BlockHeight()))
-		if err != nil {
-			return err
+	if sDaiConversionRate == nil {
+		if writeToCache {
+			vea.sDaiConversionRateCache.SetValue(ctx, sDaiConversionRate, txHash)
 		}
+		return nil
+	}
+
+	oneScaledBySDaiDecimals := ratelimitkeeper.GetOneScaledBySDaiDecimals()
+	if sDaiConversionRate.Cmp(oneScaledBySDaiDecimals) < 0 {
+		return fmt.Errorf(
+			"invalid sDAI conversion rate: %s",
+			sDaiConversionRate.String(),
+		)
+	}
+
+	err := vea.ratelimitKeeper.ProcessNewSDaiConversionRateUpdate(
+		ctx,
+		sDaiConversionRate,
+		big.NewInt(ctx.BlockHeight()),
+	)
+	if err != nil {
+		return err
 	}
 
 	if writeToCache {
@@ -368,6 +380,17 @@ func (vea *VEApplier) shouldWritePriceToStore(
 	shouldWriteSpot bool,
 	shouldWritePnl bool,
 ) {
+
+	if prices.SpotPrice == nil || prices.PnlPrice == nil {
+		vea.logger.Error(
+			"price is nil",
+			"market_id", marketId,
+			"spot_price_nil", prices.SpotPrice == nil,
+			"pnl_price_nil", prices.PnlPrice == nil,
+		)
+		return false, false
+	}
+
 	if prices.SpotPrice.Sign() == -1 || prices.PnlPrice.Sign() == -1 {
 		vea.logger.Error(
 			"price is negative",

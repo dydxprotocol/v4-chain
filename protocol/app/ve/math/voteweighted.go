@@ -152,7 +152,13 @@ func computeAggregatedPricesForAllMarkets(
 	finalPrices := make(map[string]AggregatorPricePair)
 
 	for pair, info := range priceInfo {
-		pricePair, valid := computeAggregatedPriceForMarket(logger, pair, info, threshold, totalPower)
+		pricePair, valid := computeAggregatedPriceForMarket(
+			logger,
+			pair,
+			info,
+			threshold,
+			totalPower,
+		)
 		if !valid {
 			continue
 		}
@@ -172,7 +178,10 @@ func computeAggregatedPriceForMarket(
 
 	// The total voting power % that submitted a price update for the given currency pair
 	// must be greater than the threshold to be included in the final oracle price.
-	percentSubmitted := new(big.Rat).SetFrac(priceInfo.TotalWeight.BigInt(), totalPower.BigInt())
+	percentSubmitted := new(big.Rat).SetFrac(
+		priceInfo.TotalWeight.BigInt(),
+		totalPower.BigInt(),
+	)
 
 	if percentSubmitted.Cmp(threshold) <= 0 {
 		logger.Info(
@@ -226,7 +235,11 @@ func getConverstionRateInfoFromVotes(
 	}
 
 	for validatorAddr, validatorConversionRate := range veConversionRatesPerValidator {
-		validatorPower, err := getValidatorPowerByAddress(ctx, validatorStore, validatorAddr)
+		validatorPower, err := getValidatorPowerByAddress(
+			ctx,
+			validatorStore,
+			validatorAddr,
+		)
 		if err != nil {
 			logger.Info(
 				"failed to get validator power, skipping",
@@ -267,7 +280,10 @@ func computeFinalConversionRate(
 
 	// The total voting power % that submitted a conversion rate update
 	// must be greater than the threshold to set a new conversion rate.
-	percentSubmitted := new(big.Rat).SetFrac(conversionRateInfo.TotalWeight.BigInt(), totalPower.BigInt())
+	percentSubmitted := new(big.Rat).SetFrac(
+		conversionRateInfo.TotalWeight.BigInt(),
+		totalPower.BigInt(),
+	)
 
 	if percentSubmitted.Cmp(threshold) <= 0 {
 		logger.Info(
