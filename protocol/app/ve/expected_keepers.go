@@ -7,7 +7,6 @@ import (
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -50,5 +49,5 @@ type ExtendVotePerpetualsKeeper interface {
 }
 
 type VEApplierInterface interface {
-	ApplyVE(ctx sdk.Context, req *abci.RequestFinalizeBlock, writeToCache bool) error
+	ApplyVE(ctx sdk.Context, txs [][]byte, writeToCache bool) error
 }

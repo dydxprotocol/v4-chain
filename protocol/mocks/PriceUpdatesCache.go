@@ -13,24 +13,6 @@ type PriceUpdatesCache struct {
 	mock.Mock
 }
 
-// GetHeight provides a mock function with given fields:
-func (_m *PriceUpdatesCache) GetHeight() int64 {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetHeight")
-	}
-
-	var r0 int64
-	if rf, ok := ret.Get(0).(func() int64); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(int64)
-	}
-
-	return r0
-}
-
 // GetPriceUpdates provides a mock function with given fields:
 func (_m *PriceUpdatesCache) GetPriceUpdates() pricecache.PriceUpdates {
 	ret := _m.Called()
@@ -51,35 +33,17 @@ func (_m *PriceUpdatesCache) GetPriceUpdates() pricecache.PriceUpdates {
 	return r0
 }
 
-// GetRound provides a mock function with given fields:
-func (_m *PriceUpdatesCache) GetRound() int32 {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetRound")
-	}
-
-	var r0 int32
-	if rf, ok := ret.Get(0).(func() int32); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(int32)
-	}
-
-	return r0
-}
-
-// HasValidValues provides a mock function with given fields: currBlock, round
-func (_m *PriceUpdatesCache) HasValidValues(currBlock int64, round int32) bool {
-	ret := _m.Called(currBlock, round)
+// HasValidValues provides a mock function with given fields: currTxHash
+func (_m *PriceUpdatesCache) HasValidValues(currTxHash []byte) bool {
+	ret := _m.Called(currTxHash)
 
 	if len(ret) == 0 {
 		panic("no return value specified for HasValidValues")
 	}
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(int64, int32) bool); ok {
-		r0 = rf(currBlock, round)
+	if rf, ok := ret.Get(0).(func([]byte) bool); ok {
+		r0 = rf(currTxHash)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
@@ -87,9 +51,9 @@ func (_m *PriceUpdatesCache) HasValidValues(currBlock int64, round int32) bool {
 	return r0
 }
 
-// SetPriceUpdates provides a mock function with given fields: ctx, updates, round
-func (_m *PriceUpdatesCache) SetPriceUpdates(ctx types.Context, updates pricecache.PriceUpdates, round int32) {
-	_m.Called(ctx, updates, round)
+// SetPriceUpdates provides a mock function with given fields: ctx, updates, txHash
+func (_m *PriceUpdatesCache) SetPriceUpdates(ctx types.Context, updates pricecache.PriceUpdates, txHash []byte) {
+	_m.Called(ctx, updates, txHash)
 }
 
 // NewPriceUpdatesCache creates a new instance of PriceUpdatesCache. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

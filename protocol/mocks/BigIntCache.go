@@ -15,42 +15,6 @@ type BigIntCache struct {
 	mock.Mock
 }
 
-// GetHeight provides a mock function with given fields:
-func (_m *BigIntCache) GetHeight() int64 {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetHeight")
-	}
-
-	var r0 int64
-	if rf, ok := ret.Get(0).(func() int64); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(int64)
-	}
-
-	return r0
-}
-
-// GetRound provides a mock function with given fields:
-func (_m *BigIntCache) GetRound() int32 {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetRound")
-	}
-
-	var r0 int32
-	if rf, ok := ret.Get(0).(func() int32); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(int32)
-	}
-
-	return r0
-}
-
 // GetValue provides a mock function with given fields:
 func (_m *BigIntCache) GetValue() *big.Int {
 	ret := _m.Called()
@@ -71,17 +35,17 @@ func (_m *BigIntCache) GetValue() *big.Int {
 	return r0
 }
 
-// HasValidValue provides a mock function with given fields: currBlock, round
-func (_m *BigIntCache) HasValidValue(currBlock int64, round int32) bool {
-	ret := _m.Called(currBlock, round)
+// HasValidValue provides a mock function with given fields: currTxHash
+func (_m *BigIntCache) HasValidValue(currTxHash []byte) bool {
+	ret := _m.Called(currTxHash)
 
 	if len(ret) == 0 {
 		panic("no return value specified for HasValidValue")
 	}
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(int64, int32) bool); ok {
-		r0 = rf(currBlock, round)
+	if rf, ok := ret.Get(0).(func([]byte) bool); ok {
+		r0 = rf(currTxHash)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
@@ -89,9 +53,9 @@ func (_m *BigIntCache) HasValidValue(currBlock int64, round int32) bool {
 	return r0
 }
 
-// SetValue provides a mock function with given fields: ctx, value, round
-func (_m *BigIntCache) SetValue(ctx types.Context, value *big.Int, round int32) {
-	_m.Called(ctx, value, round)
+// SetValue provides a mock function with given fields: ctx, value, txHash
+func (_m *BigIntCache) SetValue(ctx types.Context, value *big.Int, txHash []byte) {
+	_m.Called(ctx, value, txHash)
 }
 
 // NewBigIntCache creates a new instance of BigIntCache. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

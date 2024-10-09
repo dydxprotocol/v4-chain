@@ -19,11 +19,12 @@ func (k Keeper) SetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(ctx sdk.Con
 		if len(votes) > 0 {
 			prices, conversionRate, err := k.VEApplier.VoteAggregator().AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx, votes)
 			if err == nil {
-				err = k.VEApplier.WritePricesToStoreAndMaybeCache(ctx, prices, 0, false)
+				dummyBytes := []byte{}
+				err = k.VEApplier.WritePricesToStoreAndMaybeCache(ctx, prices, dummyBytes, false)
 				if err != nil {
 					return err
 				}
-				err = k.VEApplier.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, conversionRate, 0, false)
+				err = k.VEApplier.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, conversionRate, dummyBytes, false)
 				if err != nil {
 					return err
 				}

@@ -1,6 +1,7 @@
 package pricecache
 
 import (
+	"bytes"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,11 +13,9 @@ import (
 //
 //go:generate mockery --name PriceUpdatesCache --filename mock_price_updates_cache.go
 type PriceUpdatesCache interface {
-	SetPriceUpdates(ctx sdk.Context, updates PriceUpdates, round int32)
+	SetPriceUpdates(ctx sdk.Context, updates PriceUpdates, txHash []byte)
 	GetPriceUpdates() PriceUpdates
-	GetHeight() int64
-	GetRound() int32
-	HasValidValues(currBlock int64, round int32) bool
+	HasValidValues(currTxHash []byte) bool
 }
 
 // Ensure PriceUpdatesCacheImpl implements PriceUpdatesCache
@@ -24,8 +23,7 @@ var _ PriceUpdatesCache = (*PriceUpdatesCacheImpl)(nil)
 
 type PriceUpdatesCacheImpl struct {
 	priceUpdates PriceUpdates
-	height       int64
-	round        int32
+	txHash       []byte
 }
 
 type PriceUpdate struct {
@@ -38,25 +36,16 @@ type PriceUpdates []PriceUpdate
 func (veCache *PriceUpdatesCacheImpl) SetPriceUpdates(
 	ctx sdk.Context,
 	updates PriceUpdates,
-	round int32,
+	txHash []byte,
 ) {
 	veCache.priceUpdates = updates
-	veCache.height = ctx.BlockHeight()
-	veCache.round = round
+	veCache.txHash = txHash
 }
 
 func (veCache *PriceUpdatesCacheImpl) GetPriceUpdates() PriceUpdates {
 	return veCache.priceUpdates
 }
 
-func (veCache *PriceUpdatesCacheImpl) GetHeight() int64 {
-	return veCache.height
-}
-
-func (veCache *PriceUpdatesCacheImpl) GetRound() int32 {
-	return veCache.round
-}
-
-func (veCache *PriceUpdatesCacheImpl) HasValidValues(currBlock int64, round int32) bool {
-	return (veCache.height == currBlock && veCache.round == round)
+func (veCache *PriceUpdatesCacheImpl) HasValidValues(currTxHash []byte) bool {
+	return bytes.Equal(veCache.txHash, currTxHash)
 }

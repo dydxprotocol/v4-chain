@@ -12,6 +12,8 @@ import (
 )
 
 var (
+	// SDAI Decimals - 18
+	// TDAI Decimals - 6
 	sDaiToTDaiDenomExponentDecimals = new(big.Int).Abs(
 		big.NewInt(types.SDaiDenomExponent - assettypes.TDaiDenomExponent),
 	)

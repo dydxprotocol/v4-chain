@@ -6,7 +6,6 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
@@ -24,7 +23,7 @@ type ProcessClobKeeper interface {
 }
 
 type ProcessProposalVEApplier interface {
-	ApplyVE(ctx sdk.Context, req *abci.RequestFinalizeBlock, writeToCache bool) error
+	ApplyVE(ctx sdk.Context, txs [][]byte, writeToCache bool) error
 }
 
 // ProcessStakingKeeper defines the expected staking keeper used for `ProcessProposal`.
