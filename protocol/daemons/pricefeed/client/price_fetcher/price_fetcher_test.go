@@ -816,7 +816,7 @@ func newTestPriceFetcherBufferedChannel() chan *PriceFetcherSubtaskResponse {
 	return bCh
 }
 
-// asserQueryHandlerCalledWithMarkets asserts that the query handler was called with the expected markets.
+// assertQueryHandlerCalledWithMarkets asserts that the query handler was called with the expected markets.
 func assertQueryHandlerCalledWithMarkets(
 	t *testing.T,
 	queryHandler *mocks.ExchangeQueryHandler,
