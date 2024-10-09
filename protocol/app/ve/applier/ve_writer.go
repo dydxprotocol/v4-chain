@@ -1,6 +1,7 @@
 package ve_writer
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"math/big"
 
@@ -95,19 +96,20 @@ func (vea *VEApplier) GetSDaiConversionRateCache() bigintcache.BigIntCache {
 }
 func (vea *VEApplier) CheckCacheHasValidValues(
 	ctx sdk.Context,
-	request *abci.RequestFinalizeBlock,
+	txHash []byte,
 ) bool {
-	return vea.spotPriceUpdateCache.HasValidValues(ctx.BlockHeight(), request.DecidedLastCommit.Round) &&
-		vea.pnlPriceUpdateCache.HasValidValues(ctx.BlockHeight(), request.DecidedLastCommit.Round) &&
-		vea.sDaiConversionRateCache.HasValidValue(ctx.BlockHeight(), request.DecidedLastCommit.Round)
+	return vea.spotPriceUpdateCache.HasValidValues(txHash) &&
+		vea.pnlPriceUpdateCache.HasValidValues(txHash) &&
+		vea.sDaiConversionRateCache.HasValidValue(txHash)
 }
 
 func (vea *VEApplier) ApplyVE(
 	ctx sdk.Context,
-	request *abci.RequestFinalizeBlock,
+	txs [][]byte,
 	writeToCache bool,
 ) error {
-	if vea.CheckCacheHasValidValues(ctx, request) {
+	txHash := vea.GetTxsHash(txs)
+	if vea.CheckCacheHasValidValues(ctx, txHash) {
 		err := vea.writeSpotPricesToStoreFromCache(ctx)
 		if err != nil {
 			return err
@@ -121,17 +123,17 @@ func (vea *VEApplier) ApplyVE(
 			return err
 		}
 	} else {
-		prices, conversionRate, err := vea.getAggregatePricesAndConversionRateFromVE(ctx, request)
+		prices, conversionRate, err := vea.getAggregatePricesAndConversionRateFromVE(ctx, txs)
 		if err != nil {
 			return err
 		}
 
-		err = vea.WritePricesToStoreAndMaybeCache(ctx, prices, request.DecidedLastCommit.Round, writeToCache)
+		err = vea.WritePricesToStoreAndMaybeCache(ctx, prices, txHash, writeToCache)
 		if err != nil {
 			return err
 		}
 
-		err = vea.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, conversionRate, request.DecidedLastCommit.Round, writeToCache)
+		err = vea.WriteSDaiConversionRateToStoreAndMaybeCache(ctx, conversionRate, txHash, writeToCache)
 		if err != nil {
 			return err
 		}
@@ -141,18 +143,16 @@ func (vea *VEApplier) ApplyVE(
 
 func (vea *VEApplier) getAggregatePricesAndConversionRateFromVE(
 	ctx sdk.Context,
-	request *abci.RequestFinalizeBlock,
+	txs [][]byte,
 ) (map[string]voteweighted.AggregatorPricePair, *big.Int, error) {
 	votes, err := aggregator.GetDaemonVotesFromBlock(
-		request.Txs,
+		txs,
 		vea.voteExtensionCodec,
 		vea.extendedCommitCodec,
 	)
 	if err != nil {
 		vea.logger.Error(
 			"failed to get extended commit info from proposal",
-			"height", request.Height,
-			"num_txs", len(request.Txs),
 			"err", err,
 		)
 
@@ -162,7 +162,6 @@ func (vea *VEApplier) getAggregatePricesAndConversionRateFromVE(
 	if err != nil {
 		vea.logger.Error(
 			"failed to aggregate prices",
-			"height", request.Height,
 			"err", err,
 		)
 
@@ -244,7 +243,7 @@ func (vea *VEApplier) writeConversionRateToStoreFromCache(ctx sdk.Context) error
 func (vea *VEApplier) WritePricesToStoreAndMaybeCache(
 	ctx sdk.Context,
 	prices map[string]voteweighted.AggregatorPricePair,
-	round int32,
+	txHash []byte,
 	writeToCache bool,
 ) error {
 	marketParams := vea.pricesKeeper.GetAllMarketParams(ctx)
@@ -277,8 +276,8 @@ func (vea *VEApplier) WritePricesToStoreAndMaybeCache(
 	}
 
 	if writeToCache {
-		vea.spotPriceUpdateCache.SetPriceUpdates(ctx, spotPriceUpdates, round)
-		vea.pnlPriceUpdateCache.SetPriceUpdates(ctx, pnlPriceUpdates, round)
+		vea.spotPriceUpdateCache.SetPriceUpdates(ctx, spotPriceUpdates, txHash)
+		vea.pnlPriceUpdateCache.SetPriceUpdates(ctx, pnlPriceUpdates, txHash)
 	}
 
 	return nil
@@ -287,7 +286,7 @@ func (vea *VEApplier) WritePricesToStoreAndMaybeCache(
 func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 	ctx sdk.Context,
 	sDaiConversionRate *big.Int,
-	round int32,
+	txHash []byte,
 	writeToCache bool,
 ) error {
 	if sDaiConversionRate != nil {
@@ -303,7 +302,7 @@ func (vea *VEApplier) WriteSDaiConversionRateToStoreAndMaybeCache(
 	}
 
 	if writeToCache {
-		vea.sDaiConversionRateCache.SetValue(ctx, sDaiConversionRate, round)
+		vea.sDaiConversionRateCache.SetValue(ctx, sDaiConversionRate, txHash)
 	}
 
 	return nil
@@ -422,4 +421,12 @@ func (vea *VEApplier) CacheSeenExtendedVotes(
 	vea.veCache.SetSeenVotesInCache(ctx, seenValidators)
 
 	return nil
+}
+
+func (vea *VEApplier) GetTxsHash(txs [][]byte) []byte {
+	hasher := sha256.New()
+	for _, tx := range txs {
+		hasher.Write(tx)
+	}
+	return hasher.Sum(nil)
 }

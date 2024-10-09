@@ -152,16 +152,7 @@ func DecodeValidateAndCacheVE(
 		return err
 	}
 
-	reqFinalizeBlock := &abci.RequestFinalizeBlock{
-		Txs:    request.Txs,
-		Height: request.Height,
-		DecidedLastCommit: abci.CommitInfo{
-			Round: ctx.CometInfo().GetLastCommit().Round(),
-			Votes: []abci.VoteInfo{},
-		},
-	}
-
-	if err := veApplier.ApplyVE(ctx, reqFinalizeBlock, true); err != nil {
+	if err := veApplier.ApplyVE(ctx, request.Txs, true); err != nil {
 		ctx.Logger().Error("failed to cache VE prices", "err", err)
 	}
 	request.Txs = request.Txs[1:]

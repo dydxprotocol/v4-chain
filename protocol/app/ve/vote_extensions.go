@@ -95,17 +95,8 @@ func (h *VoteExtensionHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 			return nil, err
 		}
 
-		reqFinalizeBlock := &abci.RequestFinalizeBlock{
-			Txs:    request.Txs,
-			Height: request.Height,
-			DecidedLastCommit: abci.CommitInfo{
-				Round: request.ProposedLastCommit.Round,
-				Votes: []abci.VoteInfo{},
-			},
-		}
-
 		// apply prices from prev block to ensure that the prices are up to date
-		if err := h.veApplier.ApplyVE(ctx, reqFinalizeBlock, true); err != nil {
+		if err := h.veApplier.ApplyVE(ctx, request.Txs, true); err != nil {
 			h.logger.Error(
 				"failed to aggregate oracle votes",
 				"height", request.Height,

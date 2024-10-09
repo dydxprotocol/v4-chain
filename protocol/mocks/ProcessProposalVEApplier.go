@@ -3,7 +3,6 @@
 package mocks
 
 import (
-	abcitypes "github.com/cometbft/cometbft/abci/types"
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -14,17 +13,17 @@ type ProcessProposalVEApplier struct {
 	mock.Mock
 }
 
-// ApplyVE provides a mock function with given fields: ctx, req, writeToCache
-func (_m *ProcessProposalVEApplier) ApplyVE(ctx types.Context, req *abcitypes.RequestFinalizeBlock, writeToCache bool) error {
-	ret := _m.Called(ctx, req, writeToCache)
+// ApplyVE provides a mock function with given fields: ctx, txs, writeToCache
+func (_m *ProcessProposalVEApplier) ApplyVE(ctx types.Context, txs [][]byte, writeToCache bool) error {
+	ret := _m.Called(ctx, txs, writeToCache)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ApplyVE")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *abcitypes.RequestFinalizeBlock, bool) error); ok {
-		r0 = rf(ctx, req, writeToCache)
+	if rf, ok := ret.Get(0).(func(types.Context, [][]byte, bool) error); ok {
+		r0 = rf(ctx, txs, writeToCache)
 	} else {
 		r0 = ret.Error(0)
 	}

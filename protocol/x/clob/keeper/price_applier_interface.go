@@ -11,8 +11,8 @@ import (
 )
 
 type VEApplierClobInterface interface {
-	WritePricesToStoreAndMaybeCache(ctx sdk.Context, prices map[string]voteweighted.AggregatorPricePair, round int32, writeToCache bool) error
-	WriteSDaiConversionRateToStoreAndMaybeCache(ctx sdk.Context, sDaiConversionRate *big.Int, round int32, writeToCache bool) error
+	WritePricesToStoreAndMaybeCache(ctx sdk.Context, prices map[string]voteweighted.AggregatorPricePair, txHash []byte, writeToCache bool) error
+	WriteSDaiConversionRateToStoreAndMaybeCache(ctx sdk.Context, sDaiConversionRate *big.Int, txHash []byte, writeToCache bool) error
 	VoteAggregator() aggregator.VoteAggregator
 	GetVECache() *vecache.VeCache
 	CacheSeenExtendedVotes(ctx sdk.Context, req *abcicomet.RequestCommit) error

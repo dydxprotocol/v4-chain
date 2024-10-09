@@ -80,9 +80,9 @@ func TestSetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(t *testing.T) {
 
 		mockVoteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", mock.Anything, mock.Anything).
 			Return(prices, conversionRate, nil).Once()
-		mockVEApplier.On("WritePricesToStoreAndMaybeCache", mock.Anything, prices, int32(0), false).
+		mockVEApplier.On("WritePricesToStoreAndMaybeCache", mock.Anything, prices, []byte{}, false).
 			Return(nil).Once()
-		mockVEApplier.On("WriteSDaiConversionRateToStoreAndMaybeCache", mock.Anything, conversionRate, int32(0), false).
+		mockVEApplier.On("WriteSDaiConversionRateToStoreAndMaybeCache", mock.Anything, conversionRate, []byte{}, false).
 			Return(nil).Once()
 
 		err := ks.ClobKeeper.SetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(ks.Ctx, extCommitInfo)
@@ -99,7 +99,7 @@ func TestSetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(t *testing.T) {
 
 		mockVoteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", mock.Anything, mock.Anything).
 			Return(prices, conversionRate, nil).Once()
-		mockVEApplier.On("WritePricesToStoreAndMaybeCache", mock.Anything, prices, int32(0), false).
+		mockVEApplier.On("WritePricesToStoreAndMaybeCache", mock.Anything, prices, []byte{}, false).
 			Return(fmt.Errorf("price write error")).Once()
 
 		err := ks.ClobKeeper.SetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(ks.Ctx, extCommitInfo)
@@ -116,9 +116,9 @@ func TestSetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(t *testing.T) {
 
 		mockVoteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", mock.Anything, mock.Anything).
 			Return(prices, conversionRate, nil).Once()
-		mockVEApplier.On("WritePricesToStoreAndMaybeCache", mock.Anything, prices, int32(0), false).
+		mockVEApplier.On("WritePricesToStoreAndMaybeCache", mock.Anything, prices, []byte{}, false).
 			Return(nil).Once()
-		mockVEApplier.On("WriteSDaiConversionRateToStoreAndMaybeCache", mock.Anything, conversionRate, int32(0), false).
+		mockVEApplier.On("WriteSDaiConversionRateToStoreAndMaybeCache", mock.Anything, conversionRate, []byte{}, false).
 			Return(fmt.Errorf("conversion rate write error")).Once()
 
 		err := ks.ClobKeeper.SetNextBlocksPricesAndSDAIRateFromExtendedCommitInfo(ks.Ctx, extCommitInfo)

@@ -80,17 +80,17 @@ func (_m *VEApplierClobInterface) VoteAggregator() aggregator.VoteAggregator {
 	return r0
 }
 
-// WritePricesToStoreAndMaybeCache provides a mock function with given fields: ctx, prices, round, writeToCache
-func (_m *VEApplierClobInterface) WritePricesToStoreAndMaybeCache(ctx types.Context, prices map[string]voteweighted.AggregatorPricePair, round int32, writeToCache bool) error {
-	ret := _m.Called(ctx, prices, round, writeToCache)
+// WritePricesToStoreAndMaybeCache provides a mock function with given fields: ctx, prices, txHash, writeToCache
+func (_m *VEApplierClobInterface) WritePricesToStoreAndMaybeCache(ctx types.Context, prices map[string]voteweighted.AggregatorPricePair, txHash []byte, writeToCache bool) error {
+	ret := _m.Called(ctx, prices, txHash, writeToCache)
 
 	if len(ret) == 0 {
 		panic("no return value specified for WritePricesToStoreAndMaybeCache")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, map[string]voteweighted.AggregatorPricePair, int32, bool) error); ok {
-		r0 = rf(ctx, prices, round, writeToCache)
+	if rf, ok := ret.Get(0).(func(types.Context, map[string]voteweighted.AggregatorPricePair, []byte, bool) error); ok {
+		r0 = rf(ctx, prices, txHash, writeToCache)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -98,17 +98,17 @@ func (_m *VEApplierClobInterface) WritePricesToStoreAndMaybeCache(ctx types.Cont
 	return r0
 }
 
-// WriteSDaiConversionRateToStoreAndMaybeCache provides a mock function with given fields: ctx, sDaiConversionRate, round, writeToCache
-func (_m *VEApplierClobInterface) WriteSDaiConversionRateToStoreAndMaybeCache(ctx types.Context, sDaiConversionRate *big.Int, round int32, writeToCache bool) error {
-	ret := _m.Called(ctx, sDaiConversionRate, round, writeToCache)
+// WriteSDaiConversionRateToStoreAndMaybeCache provides a mock function with given fields: ctx, sDaiConversionRate, txHash, writeToCache
+func (_m *VEApplierClobInterface) WriteSDaiConversionRateToStoreAndMaybeCache(ctx types.Context, sDaiConversionRate *big.Int, txHash []byte, writeToCache bool) error {
+	ret := _m.Called(ctx, sDaiConversionRate, txHash, writeToCache)
 
 	if len(ret) == 0 {
 		panic("no return value specified for WriteSDaiConversionRateToStoreAndMaybeCache")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *big.Int, int32, bool) error); ok {
-		r0 = rf(ctx, sDaiConversionRate, round, writeToCache)
+	if rf, ok := ret.Get(0).(func(types.Context, *big.Int, []byte, bool) error); ok {
+		r0 = rf(ctx, sDaiConversionRate, txHash, writeToCache)
 	} else {
 		r0 = ret.Error(0)
 	}

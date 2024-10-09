@@ -1,6 +1,7 @@
 package bigintcache
 
 import (
+	"bytes"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,11 +13,9 @@ import (
 //
 //go:generate mockery --name BigIntCache --filename mock_bigint_cache.go
 type BigIntCache interface {
-	SetValue(ctx sdk.Context, value *big.Int, round int32)
+	SetValue(ctx sdk.Context, value *big.Int, txHash []byte)
 	GetValue() *big.Int
-	GetHeight() int64
-	GetRound() int32
-	HasValidValue(currBlock int64, round int32) bool
+	HasValidValue(currTxHash []byte) bool
 }
 
 // Ensure BigIntCacheImpl implements BigIntCache
@@ -24,32 +23,23 @@ var _ BigIntCache = (*BigIntCacheImpl)(nil)
 
 type BigIntCacheImpl struct {
 	value  *big.Int
-	height int64
-	round  int32
+	txHash []byte
 }
 
 func (veCache *BigIntCacheImpl) SetValue(
 	ctx sdk.Context,
 	value *big.Int,
-	round int32,
+	txHash []byte,
 ) {
 	veCache.value = value
-	veCache.height = ctx.BlockHeight()
-	veCache.round = round
+	veCache.txHash = txHash
+
 }
 
 func (veCache *BigIntCacheImpl) GetValue() *big.Int {
 	return veCache.value
 }
 
-func (veCache *BigIntCacheImpl) GetHeight() int64 {
-	return veCache.height
-}
-
-func (veCache *BigIntCacheImpl) GetRound() int32 {
-	return veCache.round
-}
-
-func (veCache *BigIntCacheImpl) HasValidValue(currBlock int64, round int32) bool {
-	return (veCache.height == currBlock && veCache.round == round)
+func (veCache *BigIntCacheImpl) HasValidValue(currTxHash []byte) bool {
+	return bytes.Equal(veCache.txHash, currTxHash)
 }
