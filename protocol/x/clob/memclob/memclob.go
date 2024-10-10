@@ -103,7 +103,7 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	orderIdToCancel.MustBeShortTermOrder()
 
 	goodTilBlock := msgCancelOrder.GetGoodTilBlock()
-	validCancelExistence, cancelExistence := m.doesValidCancelOrderAlreadyExist(orderIdToCancel, goodTilBlock)
+	validCancelExistence, cancelExistence := m.doesValidCancelOrderAlreadyExist(ctx, orderIdToCancel, goodTilBlock)
 
 	if validCancelExistence {
 		return nil, types.ErrMemClobCancelAlreadyExists
@@ -2453,10 +2453,11 @@ func (m *MemClobPriceTimePriority) resizeReduceOnlyMatchIfNecessary(
 }
 
 func (m *MemClobPriceTimePriority) doesValidCancelOrderAlreadyExist(
+	ctx sdk.Context,
 	orderId types.OrderId,
 	goodTilBlock uint32,
 ) (validAndExists bool, cancelExists bool) {
-	oldCancellationGoodTilBlock, cancelExists := m.cancels.get(orderId)
+	oldCancellationGoodTilBlock, cancelExists := m.GetCancelOrder(ctx, orderId)
 	// valid if existing short-term cancel has the same or greater `goodTilBlock`
 	if cancelExists && oldCancellationGoodTilBlock >= goodTilBlock {
 		return true, true
