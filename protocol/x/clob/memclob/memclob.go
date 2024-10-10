@@ -137,19 +137,6 @@ func (m *MemClobPriceTimePriority) CreateOrderbook(
 	m.openOrders.createOrderbook(clobPairId, subticksPerTick, minOrderBaseQuantums)
 }
 
-func (m *MemClobPriceTimePriority) getClobPairMetadataForOrderbook(
-	clobPair types.ClobPair,
-) (
-	clobPairId types.ClobPairId,
-	subticksPerTick types.SubticksPerTick,
-	minOrderBaseQuantums satypes.BaseQuantums,
-) {
-	clobPairId = clobPair.GetClobPairId()
-	subticksPerTick = clobPair.GetClobPairSubticksPerTick()
-	minOrderBaseQuantums = clobPair.GetClobPairMinOrderBaseQuantums()
-	return
-}
-
 // CountSubaccountOrders will count the number of open short-term orders for a given subaccount.
 //
 // Must be invoked with `CheckTx` context.
@@ -2522,4 +2509,17 @@ func (m *MemClobPriceTimePriority) getCancelOrderOffchainUpdates(
 		}
 	}
 	return offchainUpdates
+}
+
+func (m *MemClobPriceTimePriority) getClobPairMetadataForOrderbook(
+	clobPair types.ClobPair,
+) (
+	clobPairId types.ClobPairId,
+	subticksPerTick types.SubticksPerTick,
+	minOrderBaseQuantums satypes.BaseQuantums,
+) {
+	clobPairId = clobPair.GetClobPairId()
+	subticksPerTick = clobPair.GetClobPairSubticksPerTick()
+	minOrderBaseQuantums = clobPair.GetClobPairMinOrderBaseQuantums()
+	return
 }
