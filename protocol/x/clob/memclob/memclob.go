@@ -133,12 +133,21 @@ func (m *MemClobPriceTimePriority) CreateOrderbook(
 	ctx sdk.Context,
 	clobPair types.ClobPair,
 ) {
-	clobPairId := clobPair.GetClobPairId()
-	subticksPerTick := clobPair.GetClobPairSubticksPerTick()
-	minOrderBaseQuantums := clobPair.GetClobPairMinOrderBaseQuantums()
-
-	// Create the in-memory orderbook for this `clobPairId`.
+	clobPairId, subticksPerTick, minOrderBaseQuantums := m.getClobPairMetadataForOrderbook(clobPair)
 	m.openOrders.createOrderbook(clobPairId, subticksPerTick, minOrderBaseQuantums)
+}
+
+func (m *MemClobPriceTimePriority) getClobPairMetadataForOrderbook(
+	clobPair types.ClobPair,
+) (
+	clobPairId types.ClobPairId,
+	subticksPerTick types.SubticksPerTick,
+	minOrderBaseQuantums satypes.BaseQuantums,
+) {
+	clobPairId = clobPair.GetClobPairId()
+	subticksPerTick = clobPair.GetClobPairSubticksPerTick()
+	minOrderBaseQuantums = clobPair.GetClobPairMinOrderBaseQuantums()
+	return
 }
 
 // CountSubaccountOrders will count the number of open short-term orders for a given subaccount.
