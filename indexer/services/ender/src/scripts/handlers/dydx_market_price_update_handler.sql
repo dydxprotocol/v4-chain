@@ -49,6 +49,13 @@ BEGIN
     oracle_price_record."pnlPrice" = pnl_price;
 
     INSERT INTO oracle_prices VALUES (oracle_price_record.*);
+    ON CONFLICT (id) DO UPDATE
+    SET
+        "effectiveAt" = EXCLUDED."effectiveAt",
+        "effectiveAtHeight" = EXCLUDED."effectiveAtHeight",
+        "marketId" = EXCLUDED."marketId",
+        "spotPrice" = EXCLUDED."spotPrice",
+        "pnlPrice" = EXCLUDED."pnlPrice";
 
     RETURN jsonb_build_object(
         'market',
