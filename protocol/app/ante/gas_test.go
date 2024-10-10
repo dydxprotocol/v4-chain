@@ -140,7 +140,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 		responseCode uint32
 		logMessage   string
 	}{
-		"Success - 5 cents usdc gas fee": {
+		"Success - 5 cents tdai gas fee": {
 			gasFee:       constants.TestFeeCoins_5Cents,
 			responseCode: errors.SuccessABCICode,
 		},
@@ -152,7 +152,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 			gasFee:       sdk.Coins{},
 			responseCode: sdkerrors.ErrInsufficientFee.ABCICode(),
 			logMessage: "insufficient fees; got:  required: 25000000000000000adv4tnt," +
-				"25000ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5: insufficient fee",
+				"25000utdai: insufficient fee",
 		},
 		"Failure: unsupported gas fee denom": {
 			gasFee: sdk.Coins{
@@ -161,7 +161,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 			},
 			responseCode: sdkerrors.ErrInsufficientFee.ABCICode(),
 			logMessage: "insufficient fees; got: 100000000btc-denom required: 25000000000000000adv4tnt," +
-				"25000ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5: insufficient fee",
+				"25000utdai: insufficient fee",
 		},
 	}
 	for name, tc := range tests {
@@ -170,7 +170,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 				FromAddress: constants.BobAccAddress.String(),
 				ToAddress:   constants.AliceAccAddress.String(),
 				Amount: []sdk.Coin{
-					sdk.NewCoin(assets.AssetUsdc.Denom, sdkmath.NewInt(1)),
+					sdk.NewCoin(assets.AssetTDai.Denom, sdkmath.NewInt(1)),
 				},
 			}
 
@@ -190,6 +190,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 			)
 
 			checkTx := tApp.CheckTx(msgSendCheckTx)
+
 			// Sanity check that gas was used.
 			require.Greater(t, checkTx.GasUsed, int64(0))
 			require.Equal(t, tc.responseCode, checkTx.Code)

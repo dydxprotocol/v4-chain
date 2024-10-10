@@ -1,0 +1,17 @@
+syntax = "proto3";
+package dydxprotocol.daemons.sdaioracle;
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/api";
+
+// SDAIService defines the gRPC service used by sDAI daemon.
+service SDAIService {
+  // Sends a list of newly recognized sDAI events.
+  rpc AddsDAIEvent(AddsDAIEventRequest) returns (AddsDAIEventResponse);
+}
+
+// AddsDAIEventsRequest is a request message that contains a new
+// sDAI conversion rate.
+message AddsDAIEventRequest { string conversion_rate = 1; }
+
+// AddsDAIEventsResponse is a response message for AddsDAIEventsRequest.
+message AddsDAIEventResponse {}

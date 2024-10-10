@@ -1,5 +1,5 @@
 import {
-  CandleResolution, PositionSide, USDC_ASSET_ID, USDC_SYMBOL,
+  CandleResolution, PositionSide, TDAI_ASSET_ID, TDAI_SYMBOL,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 
@@ -8,11 +8,11 @@ import { AssetPositionResponseObject, SparklineTimePeriod } from '../types';
 export const ZERO: Big = new Big(0);
 export const ONE: Big = new Big(1.0);
 
-export const ZERO_USDC_POSITION: AssetPositionResponseObject = {
+export const ZERO_TDAI_POSITION: AssetPositionResponseObject = {
   size: '0',
-  symbol: USDC_SYMBOL,
+  symbol: TDAI_SYMBOL,
   side: PositionSide.LONG,
-  assetId: USDC_ASSET_ID,
+  assetId: TDAI_ASSET_ID,
   subaccountNumber: 0,
 };
 

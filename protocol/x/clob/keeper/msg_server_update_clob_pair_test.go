@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	"cosmossdk.io/store/prefix"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
@@ -252,7 +253,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager, nil)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 

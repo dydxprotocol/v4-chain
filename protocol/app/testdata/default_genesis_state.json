@@ -3,12 +3,13 @@
     "assets": [
       {
         "id": 0,
-        "symbol": "USDC",
-        "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+        "symbol": "TDAI",
+        "denom": "utdai",
         "denom_exponent": -6,
         "has_market": false,
         "market_id": 0,
-        "atomic_resolution": -6
+        "atomic_resolution": -6,
+        "asset_yield_index": "1/1"
       }
     ]
   },
@@ -53,7 +54,7 @@
       "transfer_timeout_period": "3600s",
       "consumer_redistribution_fraction": "0.75",
       "historical_entries": "10000",
-      "unbonding_period": "1209600s",
+      "unbonding_period": "604800s",
       "reward_denoms": [],
       "provider_reward_denoms": [],
       "retry_delay_period": "3600s"
@@ -72,19 +73,14 @@
   "clob": {
     "clob_pairs": [],
     "liquidations_config": {
-      "max_liquidation_fee_ppm": 5000,
-      "position_block_limits": {
-        "min_position_notional_liquidated": "1000",
-        "max_position_portion_liquidated_ppm": 1000000
-      },
-      "subaccount_block_limits": {
-        "max_notional_liquidated": "100000000000000",
-        "max_quantums_insurance_lost": "100000000000000"
-      },
+      "insurance_fund_fee_ppm": 5000,
+      "validator_fee_ppm": 200000,
+      "liquidity_fee_ppm": 800000,
       "fillable_price_config": {
         "bankruptcy_adjustment_ppm": 1000000,
         "spread_to_maintenance_margin_ratio_ppm": 100000
-      }
+      },
+      "max_cumulative_insurance_fund_delta": "1000000000000"
     },
     "block_rate_limit_config": {
       "max_short_term_order_cancellations_per_n_blocks": [],
@@ -335,15 +331,15 @@
   "ratelimit": {
     "limit_params_list": [
       {
-        "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+        "denom": "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8",
         "limiters": [
           {
-            "baseline_minimum": "1000000000000",
+            "baseline_minimum": "1000000000000000000000000",
             "baseline_tvl_ppm": 10000,
             "period": "3600s"
           },
           {
-            "baseline_minimum": "10000000000000",
+            "baseline_minimum": "10000000000000000000000000",
             "baseline_tvl_ppm": 100000,
             "period": "86400s"
           }

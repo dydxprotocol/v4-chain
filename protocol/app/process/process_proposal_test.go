@@ -11,6 +11,7 @@ import (
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/mock"
 
@@ -122,7 +123,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, daemonPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
 			ctx = vetesting.GetVeEnabledCtx(ctx, 3)
 
 			ctx = ctx.WithCometInfo(
@@ -138,22 +139,26 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
-			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
+			daemonPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 
 			mockClobKeeper := &mocks.ProcessClobKeeper{}
 			mockClobKeeper.On("RecordMevMetricsIsEnabled").Return(true)
 			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-			mockPriceApplier := &mocks.ProcessProposalPriceApplier{}
-			mockPriceApplier.On("ApplyPricesFromVE", mock.Anything, mock.Anything).Return(nil)
+			mockVEApplier := &mocks.ProcessProposalVEApplier{}
+			mockVEApplier.On("ApplyVE", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+			mockRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+
 			handler := process.ProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
 				mockClobKeeper,
 				&mocks.ProcessPerpetualKeeper{},
 				pricesKeeper,
+				mockRatelimitKeeper,
 				vecodec.NewDefaultExtendedCommitCodec(),
 				vecodec.NewDefaultVoteExtensionCodec(),
-				mockPriceApplier,
+				mockVEApplier,
 				prepareutils.NoOpValidateVoteExtensionsFn,
 			)
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}

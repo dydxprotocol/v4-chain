@@ -26,7 +26,7 @@ var (
 	ErrMarketParamAlreadyExists       = errorsmod.Register(ModuleName, 204, "Market params already exists")
 
 	// 300 - 399: Price related errors.
-	ErrIndexPriceNotAvailable = errorsmod.Register(ModuleName, 300, "Index price is not available")
+	ErrDaemonPriceNotAvailable = errorsmod.Register(ModuleName, 300, "daemon price is not available")
 
 	// 400 - 499: Market price update related errors.
 	ErrInvalidMarketPriceUpdateStateless = errorsmod.Register(

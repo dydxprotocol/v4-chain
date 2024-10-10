@@ -41,7 +41,7 @@ func TestCancelOrder_PanicIfValidationSucceedsButOrderNotFound(t *testing.T) {
 			memClob := &mocks.MemClob{}
 			memClob.On("SetClobKeeper", mock.Anything).Return()
 			ks := keepertest.NewClobKeepersTestContext(
-				t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+				t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 			mockClobKeeper := &mocks.ClobKeeper{}
 			mockClobKeeper.On("PerformOrderCancellationStatefulValidation", ks.Ctx, mock.Anything, mock.Anything).Return(nil)
@@ -58,7 +58,7 @@ func TestCancelOrder_PanicIfValidationSucceedsButOrderNotFound(t *testing.T) {
 func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 	msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
 	orderToCancel := constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15
@@ -99,7 +99,7 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 func TestCancelOrder_ErrorLogIfGTBTTooLow(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 	msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
 	orderToCancel := constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15
@@ -159,7 +159,7 @@ func TestCancelOrder_Error(t *testing.T) {
 			).Return().Once()
 
 			ks := keepertest.NewClobKeepersTestContext(
-				t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+				t, memClob, &mocks.BankKeeper{}, indexerEventManager, nil)
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
 			ctx := ks.Ctx.WithBlockHeight(2)
@@ -200,7 +200,7 @@ func TestCancelOrder_Success(t *testing.T) {
 			indexerEventManager := &mocks.IndexerEventManager{}
 
 			ks := keepertest.NewClobKeepersTestContext(
-				t, memClob, &mocks.BankKeeper{}, indexerEventManager)
+				t, memClob, &mocks.BankKeeper{}, indexerEventManager, nil)
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
 			ctx := ks.Ctx.WithBlockHeight(2)

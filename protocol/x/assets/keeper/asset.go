@@ -24,6 +24,7 @@ func (k Keeper) CreateAsset(
 	hasMarket bool,
 	marketId uint32,
 	atomicResolution int32,
+	assetYieldIndex string,
 ) (types.Asset, error) {
 	if prevAsset, exists := k.GetAsset(ctx, assetId); exists {
 		return types.Asset{}, errorsmod.Wrapf(
@@ -33,28 +34,28 @@ func (k Keeper) CreateAsset(
 		)
 	}
 
-	if assetId == types.AssetUsdc.Id {
-		// Ensure assetId zero is always USDC. This is a protocol-wide invariant.
-		if denom != types.AssetUsdc.Denom {
-			return types.Asset{}, types.ErrUsdcMustBeAssetZero
+	if assetId == types.AssetTDai.Id {
+		// Ensure assetId zero is always TDai. This is a protocol-wide invariant.
+		if denom != types.AssetTDai.Denom {
+			return types.Asset{}, types.ErrTDaiMustBeAssetZero
 		}
 
-		// Confirm that USDC asset has the expected denom exponent (-6).
+		// Confirm that TDai asset has the expected denom exponent (-6).
 		// This is an important invariant before coin-to-quote-quantum conversion
 		// is correctly implemented. See CLOB-871 for details.
-		if denomExponent != types.AssetUsdc.DenomExponent {
+		if denomExponent != types.AssetTDai.DenomExponent {
 			return types.Asset{}, errorsmod.Wrapf(
-				types.ErrUnexpectedUsdcDenomExponent,
+				types.ErrUnexpectedTDaiDenomExponent,
 				"expected = %v, actual = %v",
-				types.AssetUsdc.DenomExponent,
+				types.AssetTDai.DenomExponent,
 				denomExponent,
 			)
 		}
 	}
 
-	// Ensure USDC is not created with a non-zero assetId. This is a protocol-wide invariant.
-	if assetId != types.AssetUsdc.Id && denom == types.AssetUsdc.Denom {
-		return types.Asset{}, types.ErrUsdcMustBeAssetZero
+	// Ensure TDai is not created with a non-zero assetId. This is a protocol-wide invariant.
+	if assetId != types.AssetTDai.Id && denom == types.AssetTDai.Denom {
+		return types.Asset{}, types.ErrTDaiMustBeAssetZero
 	}
 
 	// Ensure the denom is unique versus existing assets.
@@ -74,6 +75,7 @@ func (k Keeper) CreateAsset(
 		HasMarket:        hasMarket,
 		MarketId:         marketId,
 		AtomicResolution: atomicResolution,
+		AssetYieldIndex:  assetYieldIndex,
 	}
 
 	// Validate market
@@ -192,7 +194,7 @@ func (k Keeper) GetNetCollateral(
 	bigNetCollateralQuoteQuantums *big.Int,
 	err error,
 ) {
-	if id == types.AssetUsdc.Id {
+	if id == types.AssetTDai.Id {
 		return new(big.Int).Set(bigQuantums), nil
 	}
 
@@ -230,7 +232,7 @@ func (k Keeper) GetMarginRequirements(
 	err error,
 ) {
 	// QuoteBalance does not contribute to any margin requirements.
-	if id == types.AssetUsdc.Id {
+	if id == types.AssetTDai.Id {
 		return big.NewInt(0), big.NewInt(0), nil
 	}
 
@@ -315,6 +317,112 @@ func (k Keeper) ConvertAssetToCoin(
 	bigConvertedQuantums := bigRatConvertedQuantums.Num()
 
 	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(bigConvertedDenomAmount)), nil
+}
+
+// ConvertCoinToAsset converts the given `sdk.Coin` used in `x/bank` to
+// the corresponding `quantums` used in `x/asset` for the given `assetId`.
+// The conversion is done with the inverse formula of ConvertAssetToCoin:
+//
+//	quantums = coin_amount * 10^(denom_exponent - atomic_resolution)
+//
+// If the resulting `quantums` is not an integer, it is rounded down.
+// This ensures consistency with ConvertAssetToCoin and prevents
+// creation of assets from rounding up.
+func (k Keeper) ConvertCoinToAsset(
+	ctx sdk.Context,
+	assetId uint32,
+	coin sdk.Coin,
+) (
+	quantums *big.Int,
+	convertedDenom *big.Int,
+	err error,
+) {
+	asset, exists := k.GetAsset(ctx, assetId)
+	if !exists {
+		return nil, nil, errorsmod.Wrap(
+			types.ErrAssetDoesNotExist, lib.UintToString(assetId))
+	}
+
+	if lib.AbsInt32(asset.AtomicResolution) > types.MaxAssetUnitExponentAbs {
+		return nil, nil, errorsmod.Wrapf(
+			types.ErrInvalidAssetAtomicResolution,
+			"asset: %+v",
+			asset,
+		)
+	}
+
+	if lib.AbsInt32(asset.DenomExponent) > types.MaxAssetUnitExponentAbs {
+		return nil, nil, errorsmod.Wrapf(
+			types.ErrInvalidDenomExponent,
+			"asset: %+v",
+			asset,
+		)
+	}
+
+	bigRatQuantums := lib.BigMulPow10(
+		coin.Amount.BigInt(),
+		asset.DenomExponent-asset.AtomicResolution,
+	)
+
+	quantums = lib.BigRatRound(bigRatQuantums, false)
+
+	// If the result is zero, return a true zero for backwards compatibility
+	if quantums.Sign() == 0 {
+		return big.NewInt(0), big.NewInt(0), nil
+	}
+
+	bigRatConvertedDenomAmount := lib.BigMulPow10(
+		quantums,
+		asset.AtomicResolution-asset.DenomExponent,
+	)
+
+	convertedDenom = bigRatConvertedDenomAmount.Num()
+
+	return quantums, convertedDenom, nil
+}
+
+// ConvertAssetToFullCoin converts the given `assetId` and `quantums`
+// to the amount of full coins given by the atomic resolution.
+// fullCointAmount = quantums * 10^(atomic_resolution)
+//
+// If the resulting full coin amount is not an integer, it is rounded
+// down and `convertedQuantums` of the equal value is returned. If
+// quantums amount is negative or 0, returns 0 as a result.
+func (k Keeper) ConvertAssetToFullCoin(
+	ctx sdk.Context,
+	assetId uint32,
+	quantums *big.Int,
+) (
+	convertedQuantums *big.Int,
+	fullCoinAmount *big.Int,
+	err error,
+) {
+	asset, exists := k.GetAsset(ctx, assetId)
+	if !exists {
+		return nil, nil, errorsmod.Wrap(
+			types.ErrAssetDoesNotExist, lib.UintToString(assetId))
+	}
+
+	if lib.AbsInt32(asset.AtomicResolution) > types.MaxAssetUnitExponentAbs {
+		return nil, nil, errorsmod.Wrapf(
+			types.ErrInvalidAssetAtomicResolution,
+			"asset: %+v",
+			asset,
+		)
+	}
+
+	if quantums.Sign() <= 0 {
+		return big.NewInt(0), big.NewInt(0), nil
+	}
+
+	fullCoinAmount = lib.QuoteQuantumsToFullCoinAmount(quantums, asset.AtomicResolution)
+
+	convertedQuantums = lib.BigMulPow10(
+		fullCoinAmount,
+		asset.AtomicResolution,
+	).Num()
+
+	return convertedQuantums, fullCoinAmount, nil
 }
 
 // IsPositionUpdatable returns whether position of an asset is updatable.

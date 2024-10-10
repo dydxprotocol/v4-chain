@@ -18,6 +18,8 @@ const RAW_TABLE_COLUMNS: string = `
   \`openInterest\` string,
   \`quantumConversionExponent\` int,
   \`atomicResolution\` int,
+  \`dangerIndexPpm\` int,
+  \`isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock\` bigint,
   \`subticksPerTick\` int,
   \`stepBaseQuantums\` int,
   \`liquidityTierId\` int
@@ -35,6 +37,8 @@ const TABLE_COLUMNS: string = `
   ${castToDouble('openInterest')},
   "quantumConversionExponent",
   "atomicResolution",
+  "dangerIndexPpm",
+  "isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock",
   "subticksPerTick",
   "stepBaseQuantums",
   "liquidityTierId"

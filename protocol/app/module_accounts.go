@@ -7,6 +7,7 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
 	perpetualsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	ibcconsumertypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 	"golang.org/x/exp/maps"
@@ -22,7 +23,7 @@ var (
 	maccPerms = map[string][]string{
 		// -------- Native SDK module accounts --------
 		authtypes.FeeCollectorName:                    nil,
-		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner}, // Note: TDaiPoolAccount is another name for ibctransfertypes.ModuleName
 		ibcconsumertypes.ConsumerRedistributeName:     nil,
 		ibcconsumertypes.ConsumerToSendToProviderName: nil,
 		icatypes.ModuleName:                           nil,
@@ -31,6 +32,9 @@ var (
 		satypes.ModuleName: nil,
 		// insurance fund account manages insurance fund for liquidations.
 		perpetualsmoduletypes.InsuranceFundName: nil,
+		ratelimittypes.SDaiPoolAccount:          nil,
+		// liquidity fee module account holds tokens for liquidity fee.
+		satypes.LiquidityFeeModuleAddress: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all non-custom modules (except for gov) are blocked. This prevents

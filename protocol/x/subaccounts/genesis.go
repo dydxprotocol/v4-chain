@@ -1,6 +1,8 @@
 package subaccounts
 
 import (
+	"math/big"
+
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
@@ -15,6 +17,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// Set all the subaccounts
 	for _, elem := range genState.Subaccounts {
+		if elem.AssetYieldIndex == "" {
+			elem.AssetYieldIndex = big.NewRat(1, 1).String()
+		}
+
 		k.SetSubaccount(ctx, elem)
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
@@ -26,6 +32,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 					elem.PerpetualPositions,
 					elem.AssetPositions,
 					nil,
+					elem.AssetYieldIndex,
 				),
 			),
 		)

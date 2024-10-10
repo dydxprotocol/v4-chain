@@ -46,14 +46,19 @@ import {
   TimeInForce,
   TransactionCreateObject,
   TransferCreateObject,
+  YieldParamsCreateObject,
 } from '../../src/types';
 
 export const createdDateTime: DateTime = DateTime.utc();
 export const createdHeight: string = '2';
+export const createdHeightPlusOne: string = '3';
 export const invalidTicker: string = 'INVALID-INVALID';
 export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
 export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
+export const zeroAssetYieldIndex: string = '0/1';
+export const oneAssetYieldIndex: string = '1/1';
+export const defaultZeroPerpYieldIndex: string = '0/1';
 
 // ============== Subaccounts ==============
 
@@ -62,6 +67,7 @@ export const defaultSubaccount: SubaccountCreateObject = {
   subaccountNumber: 0,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
+  assetYieldIndex: zeroAssetYieldIndex,
 };
 
 export const defaultSubaccount2: SubaccountCreateObject = {
@@ -69,6 +75,7 @@ export const defaultSubaccount2: SubaccountCreateObject = {
   subaccountNumber: 1,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
+  assetYieldIndex: zeroAssetYieldIndex,
 };
 
 export const defaultSubaccount3: SubaccountCreateObject = {
@@ -76,6 +83,7 @@ export const defaultSubaccount3: SubaccountCreateObject = {
   subaccountNumber: 2,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
+  assetYieldIndex: zeroAssetYieldIndex,
 };
 
 export const defaultWalletAddress: string = 'defaultWalletAddress';
@@ -98,6 +106,7 @@ export const isolatedSubaccount: SubaccountCreateObject = {
   subaccountNumber: 128,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
+  assetYieldIndex: zeroAssetYieldIndex,
 };
 
 export const isolatedSubaccount2: SubaccountCreateObject = {
@@ -105,6 +114,7 @@ export const isolatedSubaccount2: SubaccountCreateObject = {
   subaccountNumber: 256,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
+  assetYieldIndex: zeroAssetYieldIndex,
 };
 
 export const isolatedSubaccountId: string = SubaccountTable.uuid(
@@ -120,7 +130,7 @@ export const isolatedSubaccountId2: string = SubaccountTable.uuid(
 
 export const defaultAsset: AssetCreateObject = {
   id: '0',
-  symbol: 'USDC',
+  symbol: 'TDAI',
   atomicResolution: -6,
   hasMarket: false,
 };
@@ -186,11 +196,14 @@ export const defaultPerpetualMarket: PerpetualMarketCreateObject = {
   openInterest: '400000',
   quantumConversionExponent: -8,
   atomicResolution: -10,
+  dangerIndexPpm: 1000000,
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: '0',
   subticksPerTick: 100,
   stepBaseQuantums: 10,
   liquidityTierId: 0,
   marketType: PerpetualMarketType.CROSS,
   baseOpenInterest: '100000',
+  perpYieldIndex: '0/1',
 };
 export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   id: '1',
@@ -205,11 +218,14 @@ export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   openInterest: '40000',
   quantumConversionExponent: -6,
   atomicResolution: -18,
+  dangerIndexPpm: 1000000,
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: '0',
   subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
   marketType: PerpetualMarketType.CROSS,
   baseOpenInterest: '100000',
+  perpYieldIndex: '0/1',
 };
 export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
   id: '2',
@@ -224,11 +240,14 @@ export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
   openInterest: '40000',
   quantumConversionExponent: -16,
   atomicResolution: -2,
+  dangerIndexPpm: 1000000,
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: '0',
   subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
   marketType: PerpetualMarketType.CROSS,
   baseOpenInterest: '100000',
+  perpYieldIndex: '0/1',
 };
 
 export const isolatedPerpetualMarket: PerpetualMarketCreateObject = {
@@ -244,11 +263,14 @@ export const isolatedPerpetualMarket: PerpetualMarketCreateObject = {
   openInterest: '40000',
   quantumConversionExponent: -16,
   atomicResolution: -2,
+  dangerIndexPpm: 1000000,
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: '1000000',
   subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
   marketType: PerpetualMarketType.ISOLATED,
   baseOpenInterest: '100000',
+  perpYieldIndex: '0/1',
 };
 
 export const isolatedPerpetualMarket2: PerpetualMarketCreateObject = {
@@ -264,11 +286,14 @@ export const isolatedPerpetualMarket2: PerpetualMarketCreateObject = {
   openInterest: '40000',
   quantumConversionExponent: -16,
   atomicResolution: -2,
+  dangerIndexPpm: 1000000,
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: '1000000',
   subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
   marketType: PerpetualMarketType.ISOLATED,
   baseOpenInterest: '100000',
+  perpYieldIndex: '0/1',
 };
 
 // ============== Orders ==============
@@ -439,6 +464,7 @@ export const defaultPerpetualPosition: PerpetualPositionCreateObject = {
   openEventId: defaultTendermintEventId,
   lastEventId: defaultTendermintEventId2,
   settledFunding: '200000',
+  perpYieldIndex: defaultZeroPerpYieldIndex,
 };
 
 export const defaultPerpetualPositionId: string = PerpetualPositionTable.uuid(
@@ -461,6 +487,7 @@ export const isolatedPerpetualPosition: PerpetualPositionCreateObject = {
   openEventId: defaultTendermintEventId,
   lastEventId: defaultTendermintEventId2,
   settledFunding: '200000',
+  perpYieldIndex: defaultZeroPerpYieldIndex,
 };
 
 export const isolatedPerpetualPositionId: string = PerpetualPositionTable.uuid(
@@ -776,4 +803,20 @@ export const nonBlockedComplianceData: ComplianceDataCreateObject = {
   blocked: false,
   riskScore: '10.00',
   updatedAt: createdDateTime.plus(1).toISO(),
+};
+
+// ========= Yield Params ==========
+
+export const defaultYieldParams1: YieldParamsCreateObject = {
+  sDAIPrice: '10000000',
+  assetYieldIndex: zeroAssetYieldIndex,
+  createdAtHeight: createdHeight,
+  createdAt: createdDateTime.toISO(),
+};
+
+export const defaultYieldParams2: YieldParamsCreateObject = {
+  sDAIPrice: '11000000',
+  assetYieldIndex: oneAssetYieldIndex,
+  createdAtHeight: createdHeightPlusOne,
+  createdAt: createdDateTime.plus(1).toISO(),
 };

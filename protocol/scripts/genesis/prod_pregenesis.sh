@@ -12,8 +12,8 @@ set -eo pipefail
 # Check for missing required arguments
 if [ -z "$1" ]; then
   echo "Error: Missing required argument DYDX_BINARY."
-  echo "Usage: $0 <DYDX_BINARY> [-s|--SEED_FAUCET_USDC]"
-  exit 1
+  echo "Usage: $0 <DYDX_BINARY> [-s|--SEED_FAUCET_TDAI]"
+  exit 
 fi
 
 # Capture the required argument

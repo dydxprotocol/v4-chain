@@ -47,6 +47,10 @@ message IndexerPerpetualPosition {
                              "protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+
+  // The current yield index last time this position was settled.
+  // Should be converted from string to big.Rat.
+  string perp_yield_index = 5;
 }
 
 // IndexerAssetPosition define an account’s positions of an `Asset`.

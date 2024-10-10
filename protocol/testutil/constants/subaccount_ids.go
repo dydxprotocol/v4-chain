@@ -49,4 +49,8 @@ var (
 		Owner:  types.MustBech32ifyAddressBytes(config.Bech32PrefixAccAddr, DaveAccAddress),
 		Number: 1,
 	}
+	Dave_Num2 = satypes.SubaccountId{
+		Owner:  types.MustBech32ifyAddressBytes(config.Bech32PrefixAccAddr, DaveAccAddress),
+		Number: 2,
+	}
 )

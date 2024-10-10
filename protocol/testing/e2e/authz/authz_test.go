@@ -72,7 +72,7 @@ func TestAuthz(t *testing.T) {
 							FromAddress: constants.AliceAccAddress.String(),
 							ToAddress:   constants.BobAccAddress.String(),
 							Amount: []sdk.Coin{
-								sdk.NewCoin(assetstypes.AssetUsdc.Denom, sdkmath.NewInt(1)),
+								sdk.NewCoin(assetstypes.AssetTDai.Denom, sdkmath.NewInt(1)),
 							},
 						},
 					),
@@ -88,12 +88,12 @@ func TestAuthz(t *testing.T) {
 				aliceBalance := tApp.App.BankKeeper.GetBalance(
 					ctx,
 					constants.AliceAccAddress,
-					assetstypes.AssetUsdc.Denom,
+					assetstypes.AssetTDai.Denom,
 				)
 				require.Equal(
 					t,
 					sdk.NewCoin(
-						assetstypes.AssetUsdc.Denom,
+						assetstypes.AssetTDai.Denom,
 						// Alice paid 5 cents in fees for MsgGrant.
 						sdkmath.NewInt(100000000000000000-50000-1),
 					),
@@ -102,12 +102,12 @@ func TestAuthz(t *testing.T) {
 				bobBalance := tApp.App.BankKeeper.GetBalance(
 					ctx,
 					constants.BobAccAddress,
-					assetstypes.AssetUsdc.Denom,
+					assetstypes.AssetTDai.Denom,
 				)
 				require.Equal(
 					t,
 					sdk.NewCoin(
-						assetstypes.AssetUsdc.Denom,
+						assetstypes.AssetTDai.Denom,
 						// Bob paid 5 cents in fees for MsgExec.
 						sdkmath.NewInt(100000000000000000-50000+1),
 					),

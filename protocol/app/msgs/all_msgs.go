@@ -157,6 +157,10 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParams":         {},
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
+		// subaccounts
+		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccount":         {},
+		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccountResponse": {},
+
 		// ibc.applications
 		"/ibc.applications.transfer.v1.MsgTransfer":             {},
 		"/ibc.applications.transfer.v1.MsgTransferResponse":     {},

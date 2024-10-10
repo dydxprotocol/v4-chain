@@ -21,6 +21,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			asset.HasMarket,
 			asset.MarketId,
 			asset.AtomicResolution,
+			asset.AssetYieldIndex,
 		)
 		if err != nil {
 			panic(err)

@@ -13,6 +13,7 @@ export interface SubaccountUpdate {
   subaccountId?: IndexerSubaccountId;
   updatedPerpetualPositions: IndexerPerpetualPosition[];
   updatedAssetPositions: IndexerAssetPosition[];
+  assetYieldIndex: string;
 }
 
 export interface OrderFillWithLiquidity {
@@ -21,10 +22,10 @@ export interface OrderFillWithLiquidity {
   liquidationOrder?: LiquidationOrderV1;
   /** Fill amount in base quantums. */
   fillAmount: Long;
-  /** Maker fee in USDC quantums. */
+  /** Maker fee in TDAI quantums. */
   makerFee: Long;
   /**
-   * Taker fee in USDC quantums. If the taker order is a liquidation, then this
+   * Taker fee in TDAI quantums. If the taker order is a liquidation, then this
    * represents the special liquidation fee, not the standard taker fee.
    */
   takerFee: Long;

@@ -2,9 +2,10 @@ package simulation_test
 
 import (
 	"encoding/json"
+	"testing"
+
 	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	testutil_rand "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
@@ -43,7 +44,7 @@ func TestRandomizedGenState(t *testing.T) {
 		banksim.RandomizedGenState(&simState)
 		simulation.RandomizedGenState(&simState)
 
-		totalUsdcSupply := sdkmath.NewInt(0)
+		totalTDaiSupply := sdkmath.NewInt(0)
 
 		var saGenesis types.GenesisState
 		simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &saGenesis)
@@ -61,10 +62,10 @@ func TestRandomizedGenState(t *testing.T) {
 				require.Len(t, sa.GetAssetPositions(), 1)
 
 				onlyAssetPosition := sa.GetAssetPositions()[0]
-				require.True(t, onlyAssetPosition.AssetId == asstypes.AssetUsdc.Id)
+				require.True(t, onlyAssetPosition.AssetId == asstypes.AssetTDai.Id)
 
 				bigQuantums := sdkmath.NewIntFromBigInt(onlyAssetPosition.GetBigQuantums())
-				totalUsdcSupply = totalUsdcSupply.Add(bigQuantums)
+				totalTDaiSupply = totalTDaiSupply.Add(bigQuantums)
 			}
 
 			require.False(t, sa.MarginEnabled)
@@ -79,7 +80,7 @@ func TestRandomizedGenState(t *testing.T) {
 
 		for _, balance := range bankGenesis.Balances {
 			if balance.Address == subaccountsAddress {
-				areBalancesEqual := totalUsdcSupply.Equal(balance.Coins[0].Amount)
+				areBalancesEqual := totalTDaiSupply.Equal(balance.Coins[0].Amount)
 				require.True(t, areBalancesEqual)
 				foundSubaccountsBalance = true
 				break
@@ -87,17 +88,17 @@ func TestRandomizedGenState(t *testing.T) {
 		}
 
 		require.True(t, foundSubaccountsBalance)
-		foundUsdc := false
+		foundTDai := false
 
 		for _, supply := range bankGenesis.Supply {
-			if supply.Denom == asstypes.AssetUsdc.Denom {
-				isSupplyEqual := totalUsdcSupply.Equal(supply.Amount)
+			if supply.Denom == asstypes.AssetTDai.Denom {
+				isSupplyEqual := totalTDaiSupply.Equal(supply.Amount)
 				require.True(t, isSupplyEqual)
-				foundUsdc = true
+				foundTDai = true
 				break
 			}
 		}
 
-		require.True(t, foundUsdc)
+		require.True(t, foundTDai)
 	}
 }

@@ -4,12 +4,16 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math/big"
 
 	"cosmossdk.io/core/comet"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
+	daiUtils "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -38,15 +42,16 @@ type ValidatorStore interface {
 
 // ---------------------------- VE VALIDATION ----------------------------
 
-func CleanAndValidateExtCommitInfo(
+func CleanAndValidateExtCommitInfoInPrepareProposal(
 	ctx sdk.Context,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
-	validateVEConsensusInfo ValidateVEConsensusInfoFn,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
+	veCache *vecache.VeCache,
 ) (cometabci.ExtendedCommitInfo, error) {
 	for i, vote := range extCommitInfo.Votes {
-		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pricesKeeper); err != nil {
+		if err := validateIndividualVoteExtensionWithVECache(ctx, vote, veCodec, pricesKeeper, ratelimitKeeper, veCache); err != nil {
 			ctx.Logger().Info(
 				"failed to validate vote extension - pruning vote",
 				"err", err,
@@ -61,12 +66,13 @@ func CleanAndValidateExtCommitInfo(
 	return extCommitInfo, nil
 }
 
-func ValidateExtendedCommitInfo(
+func ValidateExtendedCommitInfoInProcessProposal(
 	ctx sdk.Context,
 	height int64,
 	extCommitInfo cometabci.ExtendedCommitInfo,
 	veCodec codec.VoteExtensionCodec,
-	pk PreBlockExecPricesKeeper,
+	pricesKeeper PreBlockExecPricesKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
 	validateVEConsensusInfo ValidateVEConsensusInfoFn,
 ) error {
 	if err := validateVEConsensusInfo(ctx, extCommitInfo); err != nil {
@@ -79,9 +85,15 @@ func ValidateExtendedCommitInfo(
 	}
 
 	for _, vote := range extCommitInfo.Votes {
-		addr := sdk.ConsAddress(vote.Validator.Address)
+		addr := getConsAddressFromValidator(vote.Validator)
 
-		if err := validateIndividualVoteExtension(ctx, vote, veCodec, pk); err != nil {
+		if err := validateIndividualVoteExtensionForProccessingProposal(
+			ctx,
+			vote,
+			veCodec,
+			pricesKeeper,
+			ratelimitKeeper,
+		); err != nil {
 			ctx.Logger().Error(
 				"failed to validate vote extension",
 				"height", height,
@@ -94,18 +106,50 @@ func ValidateExtendedCommitInfo(
 	return nil
 }
 
-func validateIndividualVoteExtension(
+func validateIndividualVoteExtensionWithVECache(
 	ctx sdk.Context,
 	vote cometabci.ExtendedVoteInfo,
 	voteCodec codec.VoteExtensionCodec,
 	pricesKeeper PreBlockExecPricesKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
+	veCache *vecache.VeCache,
+) error {
+	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
+		return nil
+	}
+	if isSeen := IsVoteExtensionSeen(veCache, getConsAddressFromValidator(vote.Validator), ctx.BlockHeight()); !isSeen {
+		return fmt.Errorf("vote extension not seen")
+	}
 
+	return validateIndividualVoteExtension(ctx, vote, voteCodec, pricesKeeper, ratelimitKeeper)
+}
+
+func validateIndividualVoteExtensionForProccessingProposal(
+	ctx sdk.Context,
+	vote cometabci.ExtendedVoteInfo,
+	voteCodec codec.VoteExtensionCodec,
+	pricesKeeper PreBlockExecPricesKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
 ) error {
 	if vote.VoteExtension == nil && vote.ExtensionSignature == nil {
 		return nil
 	}
 
+	return validateIndividualVoteExtension(ctx, vote, voteCodec, pricesKeeper, ratelimitKeeper)
+}
+
+func validateIndividualVoteExtension(
+	ctx sdk.Context,
+	vote cometabci.ExtendedVoteInfo,
+	voteCodec codec.VoteExtensionCodec,
+	pricesKeeper PreBlockExecPricesKeeper,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
+) error {
 	if err := ValidateVEMarketsAndPrices(ctx, pricesKeeper, vote.VoteExtension, voteCodec); err != nil {
+		return err
+	}
+
+	if err := ValidateVeSDaiConversionRate(ctx, ratelimitKeeper, vote.VoteExtension, voteCodec); err != nil {
 		return err
 	}
 
@@ -119,7 +163,6 @@ func ValidateVEMarketsAndPrices(
 	voteCodec codec.VoteExtensionCodec,
 ) error {
 	ve, err := voteCodec.Decode(veBytes)
-
 	if err != nil {
 		return err
 	}
@@ -129,6 +172,37 @@ func ValidateVEMarketsAndPrices(
 	}
 
 	if err := ValidatePricesBytesSizeInVE(ctx, ve); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ValidateVeSDaiConversionRate(
+	ctx sdk.Context,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
+	veBytes []byte,
+	voteCodec codec.VoteExtensionCodec,
+) error {
+	ve, err := voteCodec.Decode(veBytes)
+
+	if err != nil {
+		return err
+	}
+
+	if ve.SDaiConversionRate == "" {
+		return nil
+	}
+
+	if err := ValidateSDaiConversionRateHeightInVE(ctx, ratelimitKeeper); err != nil {
+		return err
+	}
+
+	if err := ValidateSDaiConversionRateSizeInVE(ctx, ve); err != nil {
+		return err
+	}
+
+	if err := ValidateSDaiConversionRateValueInVE(ctx, ve, ratelimitKeeper); err != nil {
 		return err
 	}
 
@@ -164,6 +238,61 @@ func ValidatePricesBytesSizeInVE(
 			return fmt.Errorf("pnl price bytes are too long: %d", len(pricePair.PnlPrice))
 		}
 	}
+	return nil
+}
+
+func ValidateSDaiConversionRateSizeInVE(
+	ctx sdk.Context,
+	ve vetypes.DaemonVoteExtension,
+) error {
+	if len(ve.SDaiConversionRate) > constants.MaxSDaiConversionRateLengthCharacters {
+		return fmt.Errorf("sDai conversion rate length (%d) exceeds maximum allowed length (%d)", len(ve.SDaiConversionRate), constants.MaxSDaiConversionRateLengthCharacters)
+	}
+	return nil
+}
+
+func ValidateSDaiConversionRateHeightInVE(
+	ctx sdk.Context,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
+) error {
+	lastBlockUpdated, found := ratelimitKeeper.GetSDAILastBlockUpdated(ctx)
+
+	if !found {
+		return nil
+	}
+
+	if ctx.BlockHeight()-lastBlockUpdated.Int64() < ratelimittypes.SDAI_UPDATE_BLOCK_DELAY {
+		return fmt.Errorf("sDai conversion rate height is not within the allowed delay of %d blocks", ratelimittypes.SDAI_UPDATE_BLOCK_DELAY)
+	}
+
+	return nil
+}
+
+func ValidateSDaiConversionRateValueInVE(
+	ctx sdk.Context,
+	ve vetypes.DaemonVoteExtension,
+	ratelimitKeeper VoteExtensionRateLimitKeeper,
+) error {
+	sDaiConversionRate, ok := new(big.Int).SetString(ve.SDaiConversionRate, 10)
+	if !ok {
+		return fmt.Errorf("failed to convert sDai conversion rate to big.Int: %s", ve.SDaiConversionRate)
+	}
+
+	return ValidateBigIntSDaiConversionRateValue(ctx, sDaiConversionRate, ratelimitKeeper)
+}
+
+func ValidateBigIntSDaiConversionRateValue(ctx sdk.Context, sDaiConversionRate *big.Int, ratelimitKeeper VoteExtensionRateLimitKeeper) error {
+	// TODO: Left in to exit early if the rate is not positive. Could remove this given below check.
+	oneScaledBySDaiDecimals := daiUtils.GetOneScaledBySDaiDecimals()
+	if sDaiConversionRate.Cmp(oneScaledBySDaiDecimals) < 0 {
+		return fmt.Errorf("sDai conversion rate must be greater than 1.0: %s", sDaiConversionRate)
+	}
+
+	prevRate, found := ratelimitKeeper.GetSDAIPrice(ctx)
+	if found && sDaiConversionRate.Cmp(prevRate) <= 0 {
+		return fmt.Errorf("new sDai conversion rate (%s) is not greater than the previous rate (%s)", sDaiConversionRate, prevRate.String())
+	}
+
 	return nil
 }
 
@@ -419,4 +548,20 @@ func validateVoteAddress(
 func GetMaxMarketPairs(ctx sdk.Context, pricesKeeper PreBlockExecPricesKeeper) uint32 {
 	markets := pricesKeeper.GetAllMarketParams(ctx)
 	return uint32(len(markets))
+}
+
+func IsVoteExtensionSeen(veCache *vecache.VeCache, consAddress string, currHeight int64) bool {
+	consAddresses := veCache.GetSeenVotesInCache()
+	cacheHeight := veCache.GetHeight()
+	if currHeight != cacheHeight+1 || len(consAddresses) == 0 {
+		return true
+	}
+	_, ok := consAddresses[consAddress]
+	return ok
+}
+
+func getConsAddressFromValidator(
+	validator cometabci.Validator,
+) string {
+	return sdk.ConsAddress(validator.Address).String()
 }

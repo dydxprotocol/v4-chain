@@ -24,7 +24,7 @@ func TestShortTermCancelOrder_Success(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	indexerMessageSender := &mocks.IndexerEventManager{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerMessageSender)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerMessageSender, nil)
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	ctx := ks.Ctx.WithBlockHeight(14)
 	ctx = ctx.WithIsCheckTx(true)
@@ -58,7 +58,7 @@ func TestShortTermCancelOrder_SuccessfullySendsOffchainData(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	indexerMessageSender := &mocks.IndexerEventManager{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerMessageSender)
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerMessageSender, nil)
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	ctx := ks.Ctx.WithBlockHeight(14).WithTxBytes(constants.TestTxBytes)
 	ctx = ctx.WithIsCheckTx(true)
@@ -87,7 +87,7 @@ func TestShortTermCancelOrder_SuccessfullySendsOffchainData(t *testing.T) {
 func TestShortTermCancelOrder_ErrGoodTilBlockExceedsHeight(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	ctx := ks.Ctx.WithIsCheckTx(true)
 
@@ -107,7 +107,7 @@ func TestShortTermCancelOrder_ErrGoodTilBlockExceedsHeight(t *testing.T) {
 func TestShortTermCancelOrder_ErrGoodTilBlockExceedsShortBlockWindow(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 	ctx := ks.Ctx.WithIsCheckTx(true)
 
 	order := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
@@ -127,7 +127,7 @@ func TestShortTermCancelOrder_ErrGoodTilBlockExceedsShortBlockWindow(t *testing.
 func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 	memClob := &mocks.MemClob{}
 	memClob.On("SetClobKeeper", mock.Anything).Return()
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 	ctx := ks.Ctx.WithIsCheckTx(true)
 	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
 		Height:    14,

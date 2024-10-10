@@ -10,13 +10,16 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -30,8 +33,12 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/memclob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	cometabci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -112,8 +119,14 @@ func TestEndBlocker_Failure(t *testing.T) {
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager, nil)
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
+
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+			require.NoError(t, conversionErr)
+			ks.RatelimitKeeper.SetSDAIPrice(ctx, rate)
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))
 
 			for _, orderId := range tc.expiredStatefulOrderIds {
 				mockIndexerEventManager.On("AddBlockEvent",
@@ -644,12 +657,12 @@ func TestEndBlocker_Success(t *testing.T) {
 				"GetBalance",
 				mock.Anything,
 				perptypes.InsuranceFundModuleAddress,
-				constants.Usdc.Denom,
+				constants.TDai.Denom,
 			).Return(
-				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
+				sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
 			)
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager, nil)
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
 
 			// Set up prices keeper markets with default prices.
@@ -672,10 +685,13 @@ func TestEndBlocker_Success(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
-			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			err := keepertest.CreateTDaiAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
@@ -699,6 +715,8 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.MarketType,
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.DangerIndexPpm,
+						fmt.Sprintf("%d", constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 					),
 				),
 			).Once().Return()
@@ -732,6 +750,8 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.ClobPair_Eth.StepBaseQuantums,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.MarketType,
+						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.DangerIndexPpm,
+						fmt.Sprintf("%d", constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 					),
 				),
 			).Once().Return()
@@ -1037,7 +1057,25 @@ func TestLiquidateSubaccounts(t *testing.T) {
 				return genesis
 			}).Build()
 
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
 			// Create all existing orders.
 			existingOrderMsgs := make([]types.MsgPlaceOrder, len(tc.existingOrders))
 			for i, order := range tc.existingOrders {
@@ -1047,12 +1085,6 @@ func TestLiquidateSubaccounts(t *testing.T) {
 				resp := tApp.CheckTx(checkTx)
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
-
-			// Update the liquidatable subaccount IDs.
-			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				LiquidatableSubaccountIds: tc.liquidatableSubaccounts,
-			})
-			require.NoError(t, err)
 
 			// TODO(DEC-1971): Replace these test assertions with new verifications on operations queue.
 			// Verify test expectations.
@@ -1073,7 +1105,7 @@ func TestPrepareCheckState_WithProcessProposerMatchesEventsWithBadBlockHeight(t 
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 
 	ks := keepertest.NewClobKeepersTestContext(
-		t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop())
+		t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop(), nil)
 
 	// Set the process proposer matches events from the last block.
 	ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
@@ -1086,6 +1118,7 @@ func TestPrepareCheckState_WithProcessProposerMatchesEventsWithBadBlockHeight(t 
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
 			ks.ClobKeeper,
+			&cometabci.RequestCommit{},
 		)
 	})
 }
@@ -1099,7 +1132,7 @@ func TestCommitBlocker_WithProcessProposerMatchesEventsWithBadBlockHeight(t *tes
 	memClob.On("SetClobKeeper", mock.Anything).Return()
 
 	ks := keepertest.NewClobKeepersTestContext(
-		t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop())
+		t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop(), nil)
 
 	// Set the process proposer matches events from the last block.
 	ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
@@ -1112,6 +1145,7 @@ func TestCommitBlocker_WithProcessProposerMatchesEventsWithBadBlockHeight(t *tes
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
 			ks.ClobKeeper,
+			&cometabci.RequestCommit{},
 		)
 	})
 }
@@ -1187,7 +1221,7 @@ func TestBeginBlocker_Success(t *testing.T) {
 			memClob.On("SetClobKeeper", mock.Anything).Return()
 
 			ks := keepertest.NewClobKeepersTestContext(
-				t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop())
+				t, memClob, &mocks.BankKeeper{}, indexer_manager.NewIndexerEventManagerNoop(), nil)
 			ctx := ks.Ctx.WithBlockHeight(int64(20)).WithBlockTime(unixTimeTen)
 
 			if tc.setupState != nil {
@@ -1210,6 +1244,21 @@ func TestBeginBlocker_Success(t *testing.T) {
 	}
 }
 
+func CreateValidExtendedCommitInfo(t *testing.T) *cometabci.ExtendedCommitInfo {
+	valVoteInfo, err := vetesting.CreateSignedExtendedVoteInfo(
+		vetesting.NewDefaultSignedVeInfo(
+			constants.AliceConsAddress,
+			constants.ValidVEPrices,
+			"2006681181716810314385961731",
+		),
+	)
+	require.NoError(t, err)
+
+	return &cometabci.ExtendedCommitInfo{
+		Votes: []cometabci.ExtendedVoteInfo{valVoteInfo},
+	}
+}
+
 // TODO(CLOB-231): Add more test coverage to `PrepareCheckState` method.
 func TestPrepareCheckState(t *testing.T) {
 	tests := map[string]struct {
@@ -1223,9 +1272,8 @@ func TestPrepareCheckState(t *testing.T) {
 		processProposerMatchesEvents types.ProcessProposerMatchesEvents
 		// Memclob state.
 		placedOperations []types.Operation
-
-		// Parameters.
-		liquidatableSubaccounts []satypes.SubaccountId
+		// VE
+		useDefaultExtendCommitInfo bool
 
 		// Expectations.
 		expectedOperationsQueue []types.InternalOperation
@@ -1240,9 +1288,27 @@ func TestPrepareCheckState(t *testing.T) {
 			processProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				BlockHeight: 4,
 			},
-			placedOperations: []types.Operation{},
+			placedOperations:           []types.Operation{},
+			useDefaultExtendCommitInfo: false,
 
-			liquidatableSubaccounts: []satypes.SubaccountId{},
+			expectedOperationsQueue: []types.InternalOperation{},
+			expectedBids:            []memclob.OrderWithRemainingSize{},
+			expectedAsks:            []memclob.OrderWithRemainingSize{},
+		},
+		"Test VE price change": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_50PercentInitial_40PercentMaintenance,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			clobs:                     []types.ClobPair{constants.ClobPair_Btc},
+			preExistingStatefulOrders: []types.Order{},
+			processProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: 4,
+			},
+			placedOperations:           []types.Operation{},
+			useDefaultExtendCommitInfo: true,
 
 			expectedOperationsQueue: []types.InternalOperation{},
 			expectedBids:            []memclob.OrderWithRemainingSize{},
@@ -1278,7 +1344,7 @@ func TestPrepareCheckState(t *testing.T) {
 					constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16.MustGetOrder(),
 				),
 			},
-			liquidatableSubaccounts: []satypes.SubaccountId{},
+			useDefaultExtendCommitInfo: false,
 
 			expectedOperationsQueue: []types.InternalOperation{
 				types.NewShortTermOrderPlacementInternalOperation(
@@ -1322,8 +1388,8 @@ func TestPrepareCheckState(t *testing.T) {
 				"GetBalance",
 				mock.Anything,
 				perptypes.InsuranceFundModuleAddress,
-				constants.Usdc.Denom,
-			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
+				constants.TDai.Denom,
+			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(
 				"SendCoins",
 				mock.Anything,
@@ -1331,8 +1397,47 @@ func TestPrepareCheckState(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(nil)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(ratelimittypes.TDaiPoolAccount),
+				constants.TDai.Denom,
+			).Return(sdk.NewCoin(constants.TDai.Denom, sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(1_000_000_000_000))))
+
+			voteAggregator := &mocks.VoteAggregator{}
+			if tc.useDefaultExtendCommitInfo {
+				mockBankKeeper.On(
+					"GetSupply",
+					mock.Anything,
+					ratelimittypes.SDaiDenom,
+				).Return(
+					sdk.NewCoin(ratelimittypes.SDaiDenom, sdkmath.NewInt(0)),
+				).Once()
+				mockBankKeeper.On(
+					"GetSupply",
+					mock.Anything,
+					ratelimittypes.TDaiDenom,
+				).Return(
+					sdk.NewCoin(ratelimittypes.TDaiDenom, sdkmath.NewInt(0)),
+				).Once()
+
+				prices := map[string]voteweighted.AggregatorPricePair{
+					"BTC-USD": {SpotPrice: constants.Price5Big, PnlPrice: constants.Price5Big},
+				}
+				conversionRate := ratelimitkeeper.ConvertStringToBigIntWithPanicOnErr("2006681181716810314385961731")
+				voteAggregator.On("AggregateDaemonVEIntoFinalPricesAndConversionRate", mock.Anything, mock.Anything).
+					Return(prices, conversionRate, nil).Once()
+			}
+
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop(), voteAggregator)
+
 			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockHeight(int64(tc.processProposerMatchesEvents.BlockHeight))
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+			require.NoError(t, conversionErr)
+			ks.RatelimitKeeper.SetSDAIPrice(ctx, rate)
+			ks.RatelimitKeeper.SetAssetYieldIndex(ks.Ctx, big.NewRat(1, 1))
+
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
 
@@ -1341,7 +1446,7 @@ func TestPrepareCheckState(t *testing.T) {
 
 			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
 
-			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			err := keepertest.CreateTDaiAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
 			// Create all perpetuals.
@@ -1355,6 +1460,9 @@ func TestPrepareCheckState(t *testing.T) {
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
 					p.Params.MarketType,
+					p.Params.DangerIndexPpm,
+					p.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+					p.YieldIndex,
 				)
 				require.NoError(t, err)
 			}
@@ -1460,13 +1568,18 @@ func TestPrepareCheckState(t *testing.T) {
 				}
 			}
 
-			// Set the liquidatable subaccount IDs.
-			ks.ClobKeeper.DaemonLiquidationInfo.UpdateLiquidatableSubaccountIds(tc.liquidatableSubaccounts)
-
 			// Run the test.
+			defaultExtendCommitInfo := &cometabci.RequestCommit{}
+			if tc.useDefaultExtendCommitInfo {
+				defaultExtendCommitInfo = &cometabci.RequestCommit{
+					ExtendedCommitInfo: CreateValidExtendedCommitInfo(t),
+				}
+			}
+
 			clob.PrepareCheckState(
 				ctx,
 				ks.ClobKeeper,
+				defaultExtendCommitInfo,
 			)
 
 			// Verify test expectations.
@@ -1491,6 +1604,24 @@ func TestPrepareCheckState(t *testing.T) {
 				tc.expectedBids,
 				tc.expectedAsks,
 			)
+
+			if tc.useDefaultExtendCommitInfo {
+				actualSDaiPrice, found := ks.RatelimitKeeper.GetSDAIPrice(ctx)
+				require.True(t, found)
+				require.Equal(t, ratelimitkeeper.ConvertStringToBigIntWithPanicOnErr("2006681181716810314385961731"), actualSDaiPrice)
+
+				marketPrice, err := ks.PricesKeeper.GetMarketPrice(ctx, constants.MarketId0)
+				require.NoError(t, err)
+				require.Equal(t, marketPrice.SpotPrice, constants.Price5)
+
+				consAddresses := ks.ClobKeeper.VEApplier.GetVECache().GetSeenVotesInCache()
+				alice := sdk.ConsAddress(constants.AliceConsAddress).String()
+				_, ok := consAddresses[alice]
+				require.True(t, ok)
+
+				mockBankKeeper.AssertCalled(t, "GetSupply", mock.Anything, ratelimittypes.SDaiDenom)
+				voteAggregator.AssertCalled(t, "AggregateDaemonVEIntoFinalPricesAndConversionRate", mock.Anything, mock.Anything)
+			}
 		})
 	}
 }

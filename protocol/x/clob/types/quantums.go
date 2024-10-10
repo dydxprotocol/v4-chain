@@ -83,15 +83,15 @@ func GetAveragePriceSubticks(
 }
 
 // NotionalToCoinAmount returns the coin amount (e.g. `uatom`) that has equal worth to the notional (in quote quantums).
-// For example, given price of 9.5 USDC/ATOM, notional of 9_500_000 quote quantums, return 1_000_000 `uatom` (since
+// For example, given price of 9.5 TDAI/ATOM, notional of 9_500_000 quote quantums, return 1_000_000 `uatom` (since
 // `tokenDenomExp“=-6).
 // Note the return value is in coin amount, which is different from base quantums.
 //
 // Given the below by definitions:
 //
-//	quote_quantums * 10^quote_atomic_resolution = full_quote_coin_amount (e.g. 2_000_000 quote quantums * 10^-6 = 2 USDC)
+//	quote_quantums * 10^quote_atomic_resolution = full_quote_coin_amount (e.g. 2_000_000 quote quantums * 10^-6 = 2 TDAI)
 //	coin_amount * 10^denom_exponent = full_coin_amount (e.g. 1_000_000 uatom * 10^-6 = 1 ATOM)
-//	full_coin_amount * coin_price = full_quote_coin_amount (e.g. 1 ATOM * 9.5 USDC/ATOM = 9.5 USDC)
+//	full_coin_amount * coin_price = full_quote_coin_amount (e.g. 1 ATOM * 9.5 TDAI/ATOM = 9.5 TDAI)
 //
 // Therefore:
 //

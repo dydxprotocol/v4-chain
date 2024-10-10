@@ -1,11 +1,15 @@
 package clob_test
 
 import (
+	"fmt"
+	"math/big"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
@@ -13,6 +17,7 @@ import (
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -89,6 +94,24 @@ func TestTimelyPricing(t *testing.T) {
 				)
 				return genesis
 			}).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
 			ctx := tApp.InitChain()
 
 			// Create all orders and add to deliverTxsOverride
@@ -111,6 +134,7 @@ func TestTimelyPricing(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdate,
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -126,6 +150,11 @@ func TestTimelyPricing(t *testing.T) {
 					response abcitypes.ResponseFinalizeBlock,
 				) (haltchain bool) {
 					execResult := response.TxResults[1]
+					fmt.Println("ERR STATUEFUL ORDER COLLATERALIZAITON CHECK FAILED CODE", clobtypes.ErrStatefulOrderCollateralizationCheckFailed.ABCICode())
+					fmt.Println("execResult.Code", execResult.Code)
+					fmt.Println("execResult.Log", execResult.Log)
+					fmt.Println("tc.expectedErr", tc.expectedErr)
+
 					require.True(t, execResult.IsErr())
 					require.Equal(t, clobtypes.ErrStatefulOrderCollateralizationCheckFailed.ABCICode(), execResult.Code)
 					require.Contains(t, execResult.Log, tc.expectedErr)

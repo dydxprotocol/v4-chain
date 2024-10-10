@@ -245,6 +245,7 @@ func (untriggeredOrders *UntriggeredConditionalOrders) PollTriggeredConditionalO
 	untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice = newOrdersToTriggerWhenOraclePriceLTETriggerPrice
 
 	pessimisticGTESubticks := types.Subticks(lib.BigRatRound(oraclePriceSubticksRat, false).Uint64())
+
 	// For the gte array, find all orders that are triggered when oracle price goes greater
 	// than or equal to the trigger price.
 	newOrdersToTriggerWhenOraclePriceGTETriggerPrice := make([]types.Order, 0)

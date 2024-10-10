@@ -23,9 +23,9 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 
 import config from '../config';
-import { USDC_ASSET_ID, ZERO } from '../lib/constants';
+import { TDAI_ASSET_ID, ZERO } from '../lib/constants';
 import { redisClient } from './redis';
-import { SubaccountUsdcTransferMap } from './types';
+import { SubaccountTDaiTransferMap } from './types';
 
 /**
  * Normalizes a time to the nearest PNL_TICK_UPDATE_INTERVAL_MS.
@@ -106,15 +106,15 @@ export async function getPnlTicksCreateObjects(
   const [
     subaccountTotalTransfersMap,
     openPerpetualPositions,
-    usdcAssetPositions,
-    netUsdcTransfers,
+    tdaiAssetPositions,
+    netTDaiTransfers,
     markets,
     currentFundingIndexMap,
   ]: [
     SubaccountAssetNetTransferMap,
     SubaccountToPerpetualPositionsMap,
     { [subaccountId: string]: Big },
-    SubaccountUsdcTransferMap,
+    SubaccountTDaiTransferMap,
     PriceMap,
     FundingIndexMap,
   ] = await Promise.all([
@@ -132,14 +132,14 @@ export async function getPnlTicksCreateObjects(
         txId,
       },
     ),
-    AssetPositionTable.findUsdcPositionForSubaccounts(
+    AssetPositionTable.findTDaiPositionForSubaccounts(
       accountsToUpdate,
       {
         readReplica: true,
         txId,
       },
     ),
-    getUsdcTransfersSinceLastPnlTick(
+    getTDaiTransfersSinceLastPnlTick(
       accountsToUpdate,
       mostRecentPnlTicks,
       blockHeight,
@@ -160,8 +160,8 @@ export async function getPnlTicksCreateObjects(
       subaccountTotalTransfersMap,
       markets,
       Object.values(openPerpetualPositions[account] || {}),
-      usdcAssetPositions[account] || ZERO,
-      netUsdcTransfers[account] || ZERO,
+      tdaiAssetPositions[account] || ZERO,
+      netTDaiTransfers[account] || ZERO,
       pnlTicksToBeCreatedAt,
       blockHeight,
       blockTime,
@@ -255,8 +255,8 @@ export async function getBlockHeightToFundingIndexMap(
  * @param subaccountTotalTransfersMap: total historical transfers across all subaccounts
  * @param markets: latest market prices effectiveBeforeOrAt latestBlockHeight
  * @param openPerpetualPositionsForSubaccount: list of open perpetual positions for given subaccount
- * @param usdcPositionSize: USDC asset position of subaccount
- * @param usdcNetTransfersSinceLastPnlTick: net USDC transfers since last pnl tick
+ * @param tdaiPositionSize: TDAI asset position of subaccount
+ * @param tdaiNetTransfersSinceLastPnlTick: net TDAI transfers since last pnl tick
  * @param pnlTicksToBeCreatedAt: time at which new pnl tick will be created
  * @param latestBlockHeight: block height at which new pnl tick will be created
  * @param latestBlockTime: block time for above block height
@@ -268,8 +268,8 @@ export function getNewPnlTick(
   subaccountTotalTransfersMap: SubaccountAssetNetTransferMap,
   marketPrices: PriceMap,
   openPerpetualPositionsForSubaccount: PerpetualPositionFromDatabase[],
-  usdcPositionSize: Big,
-  usdcNetTransfersSinceLastPnlTick: Big,
+  tdaiPositionSize: Big,
+  tdaiNetTransfersSinceLastPnlTick: Big,
   pnlTicksToBeCreatedAt: DateTime,
   latestBlockHeight: string,
   latestBlockTime: IsoString,
@@ -278,7 +278,7 @@ export function getNewPnlTick(
   currentFundingIndexMap: FundingIndexMap,
 ): PnlTicksCreateObject {
   const currentEquity: Big = calculateEquity(
-    usdcPositionSize,
+    tdaiPositionSize,
     openPerpetualPositionsForSubaccount,
     marketPrices,
     lastUpdatedFundingIndexMap,
@@ -287,7 +287,7 @@ export function getNewPnlTick(
 
   const totalPnl: Big = calculateTotalPnl(
     currentEquity,
-    subaccountTotalTransfersMap[subaccountId][USDC_ASSET_ID],
+    subaccountTotalTransfersMap[subaccountId][TDAI_ASSET_ID],
   );
 
   const mostRecentPnlTick: PnlTicksCreateObject | undefined = mostRecentPnlTicks[subaccountId];
@@ -299,7 +299,7 @@ export function getNewPnlTick(
     currentEquity.div(mostRecentPnlTick.equity).gt(2) &&
     totalPnl.gte(10000) &&
     Big(mostRecentPnlTick.totalPnl).lt(-1000) &&
-    usdcNetTransfersSinceLastPnlTick === ZERO
+    tdaiNetTransfersSinceLastPnlTick === ZERO
   ) {
     logger.info({
       at: 'createPnlTicks#getNewPnlTick',
@@ -309,7 +309,7 @@ export function getNewPnlTick(
       previousTotalPnl: mostRecentPnlTick.totalPnl,
       currentEquity: currentEquity.toFixed(),
       currentTotalPnl: totalPnl.toFixed(),
-      usdcPositionSize,
+      tdaiPositionSize,
       openPerpetualPositionsForSubaccount: JSON.stringify(openPerpetualPositionsForSubaccount),
       currentMarkets: marketPrices,
     });
@@ -317,7 +317,7 @@ export function getNewPnlTick(
 
   return {
     totalPnl: totalPnl.toFixed(6),
-    netTransfers: usdcNetTransfersSinceLastPnlTick.toFixed(6),
+    netTransfers: tdaiNetTransfersSinceLastPnlTick.toFixed(6),
     subaccountId,
     createdAt: pnlTicksToBeCreatedAt.toISO(),
     equity: currentEquity.toFixed(6),
@@ -327,19 +327,19 @@ export function getNewPnlTick(
 }
 
 /**
- * Gets a map of subaccount id to net USDC transfers between lastUpdatedHeight and blockHeight
- * @param subaccountIds: list of subaccount ids to get net USDC transfers for.
+ * Gets a map of subaccount id to net TDAI transfers between lastUpdatedHeight and blockHeight
+ * @param subaccountIds: list of subaccount ids to get net TDAI transfers for.
  * @param mostRecentPnlTicks: most recent pnl tick for each subaccount.
- * @param blockHeight: block height to get net USDC transfers up to.
+ * @param blockHeight: block height to get net TDAI transfers up to.
  * @param txId: optional transaction id to use for query.
  */
-export async function getUsdcTransfersSinceLastPnlTick(
+export async function getTDaiTransfersSinceLastPnlTick(
   subaccountIds: string[],
   mostRecentPnlTicks: PnlTickForSubaccounts,
   blockHeight: string,
   txId?: number,
-): Promise<SubaccountUsdcTransferMap> {
-  const netTransfers: SubaccountUsdcTransferMap = {};
+): Promise<SubaccountTDaiTransferMap> {
+  const netTransfers: SubaccountTDaiTransferMap = {};
   const promises = [];
   for (const subaccountId of subaccountIds) {
     const mostRecentPnlTick: PnlTicksCreateObject | undefined = mostRecentPnlTicks[subaccountId];
@@ -351,8 +351,8 @@ export async function getUsdcTransfersSinceLastPnlTick(
       blockHeight,
       { readReplica: true, txId },
     ).then((transfers: TransferTable.AssetTransferMap) => {
-      if (USDC_ASSET_ID in transfers) {
-        netTransfers[subaccountId] = transfers[USDC_ASSET_ID];
+      if (TDAI_ASSET_ID in transfers) {
+        netTransfers[subaccountId] = transfers[TDAI_ASSET_ID];
       }
     });
     promises.push(transferPromise);
@@ -362,15 +362,15 @@ export async function getUsdcTransfersSinceLastPnlTick(
 }
 
 /**
- * Calculate the current equity of a subaccount based on USDC position size and open
+ * Calculate the current equity of a subaccount based on TDAI position size and open
  * perpetual positions and any unsettled funding payments.
- * @param usdcPositionSize
+ * @param tdaiPositionSize
  * @param positions
  * @param marketPrices
  */
 // TODO(IND-226): De-duplicate this with the same function in `comlink`
 export function calculateEquity(
-  usdcPositionSize: Big,
+  tdaiPositionSize: Big,
   positions: PerpetualPositionFromDatabase[],
   marketPrices: PriceMap,
   lastUpdatedFundingIndexMap: FundingIndexMap,
@@ -400,7 +400,7 @@ export function calculateEquity(
     ZERO,
   );
 
-  return signedPositionNotional.plus(usdcPositionSize).plus(totalUnsettledFundingPayment);
+  return signedPositionNotional.plus(tdaiPositionSize).plus(totalUnsettledFundingPayment);
 }
 
 /**

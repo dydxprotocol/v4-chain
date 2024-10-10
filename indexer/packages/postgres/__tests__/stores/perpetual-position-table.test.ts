@@ -31,6 +31,7 @@ import {
   defaultTendermintEventId,
   defaultTendermintEventId2,
   defaultTendermintEventId3,
+  defaultZeroPerpYieldIndex,
 } from '../helpers/constants';
 import { checkLengthAndContains } from './helpers';
 import _ from 'lodash';
@@ -75,6 +76,7 @@ describe('PerpetualPosition store', () => {
       openEventId: defaultTendermintEventId,
       lastEventId: defaultTendermintEventId2,
       settledFunding: '200000',
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     });
   });
 
@@ -387,6 +389,7 @@ describe('PerpetualPosition store', () => {
           closedAtHeight,
           closeEventId,
           settledFunding,
+          perpYieldIndex: defaultZeroPerpYieldIndex,
         },
       );
 
@@ -434,6 +437,7 @@ describe('PerpetualPosition store', () => {
             closedAtHeight,
             closeEventId,
             settledFunding,
+            perpYieldIndex: defaultZeroPerpYieldIndex,
           },
         );
 
@@ -466,6 +470,7 @@ describe('PerpetualPosition store', () => {
           closedAtHeight: defaultPerpetualPosition.createdAtHeight,
           closeEventId: defaultPerpetualPosition.openEventId,
           settledFunding: defaultPerpetualPosition.settledFunding,
+          perpYieldIndex: defaultZeroPerpYieldIndex,
         },
       )).rejects.toThrow(new ValidationError('Unable to close because position is closed'));
     });
@@ -577,6 +582,7 @@ describe('PerpetualPosition store', () => {
           settledFunding: '0',
           status: PerpetualPositionStatus.CLOSED,
           size: defaultPerpetualPosition.maxSize,
+          perpYieldIndex: defaultZeroPerpYieldIndex,
         },
       ],
       [
@@ -587,6 +593,7 @@ describe('PerpetualPosition store', () => {
           settledFunding: '0',
           status: PerpetualPositionStatus.CLOSED,
           size: Big(defaultPerpetualPosition.maxSize).plus(10).toString(),
+          perpYieldIndex: defaultZeroPerpYieldIndex,
         },
       ],
       [
@@ -600,6 +607,7 @@ describe('PerpetualPosition store', () => {
           closedAtHeight: defaultBlock2.blockHeight,
           closedAt: defaultBlock2.time,
           closeEventId: defaultPerpetualPosition.lastEventId,
+          perpYieldIndex: defaultZeroPerpYieldIndex,
         },
       ],
     ])('Successfully updates a position %s', async (
@@ -635,6 +643,7 @@ describe('PerpetualPosition store', () => {
         settledFunding: '0',
         status: PerpetualPositionStatus.CLOSED,
         size: position.maxSize,
+        perpYieldIndex: defaultZeroPerpYieldIndex,
       };
       const secondUpdateObject: PerpetualPositionSubaccountUpdateObject = {
         ...updateObject,

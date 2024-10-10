@@ -50,6 +50,16 @@ type AssetsKeeper interface {
 		coin sdk.Coin,
 		err error,
 	)
+	ConvertCoinToAsset(ctx sdk.Context, assetId uint32, coin sdk.Coin) (quantums *big.Int, convertedDenom *big.Int, err error)
+	ConvertAssetToFullCoin(
+		ctx sdk.Context,
+		assetId uint32,
+		quantums *big.Int,
+	) (
+		convertedQuantums *big.Int,
+		fullCoinAmount *big.Int,
+		err error,
+	)
 }
 
 type PerpetualsKeeper interface {
@@ -93,8 +103,13 @@ type BankKeeper interface {
 	) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
 type BlocktimeKeeper interface {
 	GetDowntimeInfoFor(ctx sdk.Context, duration time.Duration) blocktimetypes.AllDowntimeInfo_DowntimeInfo
+}
+
+type RatelimitKeeper interface {
+	GetAssetYieldIndex(ctx sdk.Context) (yieldIndex *big.Rat, found bool)
 }

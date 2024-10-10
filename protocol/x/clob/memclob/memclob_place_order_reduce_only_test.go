@@ -1328,9 +1328,7 @@ func TestPlaceOrder_ReduceOnly(t *testing.T) {
 				tc.placedMatchableOrders,
 				&order,
 				tc.expectedPendingMatches,
-				tc.expectedOrderStatus,
 				addOrderToOrderbookSize,
-				tc.expectedErr,
 				tc.collateralizationCheckFailures,
 				getStatePosition,
 			)
@@ -1606,9 +1604,7 @@ func TestPlaceOrder_LongTermReduceOnlyRemovals(t *testing.T) {
 				tc.placedMatchableOrders,
 				&order,
 				tc.expectedPendingMatches,
-				tc.expectedOrderStatus,
 				addOrderToOrderbookSize,
-				tc.expectedErr,
 				tc.collateralizationCheckFailures,
 				getStatePosition,
 			)

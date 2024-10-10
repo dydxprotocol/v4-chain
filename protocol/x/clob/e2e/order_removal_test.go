@@ -1,11 +1,15 @@
 package clob_test
 
 import (
+	"fmt"
+	"math/big"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtestutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -15,6 +19,7 @@ import (
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -24,8 +29,9 @@ import (
 
 func TestConditionalOrderRemoval(t *testing.T) {
 	tests := map[string]struct {
-		subaccounts []satypes.Subaccount
-		orders      []clobtypes.Order
+		subaccounts              []satypes.Subaccount
+		orders                   []clobtypes.Order
+		disableSDAConversionRate bool
 
 		// Optional withdraw message for under-collateralized tests.
 		withdrawal  *sendingtypes.MsgWithdrawFromSubaccount
@@ -171,10 +177,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
 				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_50003,
 			},
+			disableSDAConversionRate: true,
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  10_000_000_000,
 			},
 			priceUpdate: map[uint32]ve.VEPricePair{
@@ -201,10 +208,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				// Does not cross with best bid.
 				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_50003,
 			},
+			disableSDAConversionRate: true,
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  10_000_000_000,
 			},
 			priceUpdate: map[uint32]ve.VEPricePair{
@@ -221,6 +229,36 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
 			disableNonDeterminismChecks: true,
 		},
+		"sdai conversion rate makes under-collateralized conditional taker order collateralized": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_100000USD,
+				constants.Dave_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTBT10,
+				// Does not cross with best bid.
+				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_50003,
+			},
+			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
+				Sender:    constants.Dave_Num0,
+				Recipient: constants.DaveAccAddress.String(),
+				AssetId:   constants.TDai.Id,
+				Quantums:  10_000_000_000,
+			},
+			priceUpdate: map[uint32]ve.VEPricePair{
+				0: {
+					SpotPrice: 5_000_250_000,
+					PnlPrice:  5_000_250_000,
+				},
+			},
+
+			expectedOrderRemovals: []bool{
+				false,
+				false, // taker order fails add-to-orderbook collateralization check
+			},
+			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
+			disableNonDeterminismChecks: true,
+		},
 		"under-collateralized conditional maker is removed": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_10000USD,
@@ -229,10 +267,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			orders: []clobtypes.Order{
 				constants.ConditionalOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_50003,
 			},
+			disableSDAConversionRate: true,
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  500_000_000_000,
 			},
 			priceUpdate: map[uint32]ve.VEPricePair{
@@ -298,6 +337,24 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			}).WithNonDeterminismChecksEnabled(!tc.disableNonDeterminismChecks).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			if tc.disableSDAConversionRate {
+				rate = ""
+			}
+
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
+
 			// Create all orders.
 			deliverTxsOverride := make([][]byte, 0)
 			deliverTxsOverride = append(
@@ -323,10 +380,11 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
 			// Add the price update.
-			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdate,
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -334,7 +392,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
 			// Advance to the next block, updating the price.
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
@@ -352,7 +410,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
 						AccAddressForSigning: tc.withdrawal.Sender.Owner,
-						Gas:                  100_000,
+						Gas:                  130_000,
 						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
 					tc.withdrawal,
@@ -361,7 +419,15 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 			}
 			// Advance to the next block, persisting removals in operations queue to state.
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+
+			subaccounts := tApp.App.SubaccountsKeeper.GetAllSubaccount(ctx)
+			for _, subaccount := range subaccounts {
+				fmt.Println("subaccount", subaccount.Id)
+				for _, assetPosition := range subaccount.AssetPositions {
+					fmt.Println("asset position", assetPosition.AssetId, assetPosition.Quantums.String())
+				}
+			}
 
 			if tc.subsequentOrder != nil {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -374,7 +440,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			}
 
 			// Advance to the next block, persisting removals in operations queue to state.
-			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 
 			require.Equal(t, len(tc.orders), len(tc.expectedOrderRemovals))
 
@@ -702,6 +768,24 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				)
 				return genesis
 			}).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
 			ctx := tApp.InitChain()
 
 			// Create all orders and add to deliverTxsOverride
@@ -723,6 +807,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -743,6 +828,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdate,
+				"",
 				2,
 			)
 			require.NoError(t, err)
@@ -755,6 +841,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
+				"",
 				3,
 			)
 			require.NoError(t, err)
@@ -846,7 +933,7 @@ func TestOrderRemoval(t *testing.T) {
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  10_000_000_000,
 			},
 
@@ -867,7 +954,7 @@ func TestOrderRemoval(t *testing.T) {
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.DaveAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  10_000_000_000,
 			},
 
@@ -887,7 +974,7 @@ func TestOrderRemoval(t *testing.T) {
 			withdrawal: &sendingtypes.MsgWithdrawFromSubaccount{
 				Sender:    constants.Carl_Num0,
 				Recipient: constants.CarlAccAddress.String(),
-				AssetId:   constants.Usdc.Id,
+				AssetId:   constants.TDai.Id,
 				Quantums:  10_000_000_000,
 			},
 
@@ -942,6 +1029,30 @@ func TestOrderRemoval(t *testing.T) {
 				)
 				return genesis
 			}).WithNonDeterminismChecksEnabled(!tc.disableNonDeterminismChecks).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			if !(tApp.CrashingApp == nil) {
+				tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+				tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+			}
+
+			if !(tApp.NoCheckTxApp == nil) {
+				tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+				tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+			}
+
+			if !(tApp.ParallelApp == nil) {
+				tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+				tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+			}
+
 			ctx := tApp.InitChain()
 
 			// Create all orders.
@@ -969,7 +1080,7 @@ func TestOrderRemoval(t *testing.T) {
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
 						AccAddressForSigning: tc.withdrawal.Sender.Owner,
-						Gas:                  100_000,
+						Gas:                  120_000,
 						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
 					tc.withdrawal,
@@ -1036,6 +1147,24 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 		)
 		return genesis
 	}).Build()
+
+	rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+	require.NoError(t, conversionErr)
+
+	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+	tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+	tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+	tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
 	ctx := tApp.InitChain()
 
 	// Create a resting order for alice.
@@ -1091,6 +1220,7 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 		&tApp.App.ConsumerKeeper,
 		ctx,
 		map[uint32]ve.VEPricePair{},
+		"",
 		tApp.GetHeader().Height,
 	)
 	require.NoError(t, err)

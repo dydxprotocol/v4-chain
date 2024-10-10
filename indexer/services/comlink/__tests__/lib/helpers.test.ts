@@ -21,7 +21,7 @@ import {
   BlockTable,
   FundingIndexMap,
   FundingIndexUpdatesCreateObject,
-  USDC_SYMBOL,
+  TDAI_SYMBOL,
   PositionSide,
   helpers,
   PerpetualPositionStatus,
@@ -30,7 +30,7 @@ import {
   liquidityTierRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
-  adjustUSDCAssetPosition,
+  adjustTDAIAssetPosition,
   calculateEquityAndFreeCollateral,
   filterAssetPositions,
   filterPositionsByLatestEventIdPerPerpetual,
@@ -54,7 +54,7 @@ import {
   defaultTendermintEventId3,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import { AssetPositionsMap, PerpetualPositionWithFunding } from '../../src/types';
-import { ZERO, ZERO_USDC_POSITION } from '../../src/lib/constants';
+import { ZERO, ZERO_TDAI_POSITION } from '../../src/lib/constants';
 
 describe('helpers', () => {
   afterEach(async () => {
@@ -99,7 +99,7 @@ describe('helpers', () => {
     const perpetualPosition: PerpetualPositionFromDatabase = await
     PerpetualPositionTable.create(testConstants.defaultPerpetualPosition);
 
-    const usdcPositionSize: string = '175000';
+    const tdaiPositionSize: string = '175000';
 
     const [perpetualMarkets, markets]: [PerpetualMarketFromDatabase[],
       MarketFromDatabase[]] = await Promise.all([
@@ -126,7 +126,7 @@ describe('helpers', () => {
       [perpetualPosition],
       perpetualIdToMarket,
       marketIdToMarket,
-      usdcPositionSize,
+      tdaiPositionSize,
     );
 
     expect(equity).toEqual('325000');
@@ -144,7 +144,7 @@ describe('helpers', () => {
       size: '-10',
     });
 
-    const usdcPositionSize: string = '175000';
+    const tdaiPositionSize: string = '175000';
 
     const [perpetualMarkets, markets]: [PerpetualMarketFromDatabase[],
       MarketFromDatabase[]] = await Promise.all([
@@ -171,7 +171,7 @@ describe('helpers', () => {
       [perpetualPosition],
       perpetualIdToMarket,
       marketIdToMarket,
-      usdcPositionSize,
+      tdaiPositionSize,
     );
 
     expect(equity).toEqual('25000');
@@ -370,19 +370,19 @@ describe('helpers', () => {
     });
   });
 
-  describe('adjustUSDCAssetPosition', () => {
+  describe('adjustTDAIAssetPosition', () => {
     it.each([
       ['long', PositionSide.LONG, '1300', '1300'],
       ['short', PositionSide.SHORT, '700', '-700'],
-    ])('adjusts USDC position size in returned map, size: [%s]', (
+    ])('adjusts TDAI position size in returned map, size: [%s]', (
       _name: string,
       side: PositionSide,
       expectedPositionSize: string,
       expectedAdjustedPositionSize: string,
     ) => {
       const assetPositions: AssetPositionsMap = {
-        [USDC_SYMBOL]: {
-          ...ZERO_USDC_POSITION,
+        [TDAI_SYMBOL]: {
+          ...ZERO_TDAI_POSITION,
           side,
           size: '1000',
         },
@@ -398,16 +398,16 @@ describe('helpers', () => {
 
       const {
         assetPositionsMap,
-        adjustedUSDCAssetPositionSize,
+        adjustedTDAIAssetPositionSize,
       }: {
         assetPositionsMap: AssetPositionsMap,
-        adjustedUSDCAssetPositionSize: string
-      } = adjustUSDCAssetPosition(assetPositions, unsettledFunding);
+        adjustedTDAIAssetPositionSize: string
+      } = adjustTDAIAssetPosition(assetPositions, unsettledFunding);
 
       // Original asset positions object should be unchanged
       expect(assetPositions).toEqual({
-        [USDC_SYMBOL]: {
-          ...ZERO_USDC_POSITION,
+        [TDAI_SYMBOL]: {
+          ...ZERO_TDAI_POSITION,
           side,
           size: '1000',
         },
@@ -420,8 +420,8 @@ describe('helpers', () => {
         },
       });
       expect(assetPositionsMap).toEqual({
-        [USDC_SYMBOL]: {
-          ...ZERO_USDC_POSITION,
+        [TDAI_SYMBOL]: {
+          ...ZERO_TDAI_POSITION,
           side,
           size: expectedPositionSize,
         },
@@ -433,13 +433,13 @@ describe('helpers', () => {
           subaccountNumber: 0,
         },
       });
-      expect(adjustedUSDCAssetPositionSize).toEqual(expectedAdjustedPositionSize);
+      expect(adjustedTDAIAssetPositionSize).toEqual(expectedAdjustedPositionSize);
     });
 
     it.each([
       ['long', 'short', PositionSide.LONG, PositionSide.LONG, '300', '500', '800', '800'],
       ['short', 'long', PositionSide.SHORT, PositionSide.SHORT, '300', '-500', '800', '-800'],
-    ])('flips USDC position side, original side [%s], flipped side [%s]', (
+    ])('flips TDAI position side, original side [%s], flipped side [%s]', (
       _name: string,
       _secondName: string,
       side: PositionSide,
@@ -450,8 +450,8 @@ describe('helpers', () => {
       expectedAdjustedPositionSize: string,
     ) => {
       const assetPositions: AssetPositionsMap = {
-        [USDC_SYMBOL]: {
-          ...ZERO_USDC_POSITION,
+        [TDAI_SYMBOL]: {
+          ...ZERO_TDAI_POSITION,
           side,
           size: positionSize,
         },
@@ -466,16 +466,16 @@ describe('helpers', () => {
 
       const {
         assetPositionsMap,
-        adjustedUSDCAssetPositionSize,
+        adjustedTDAIAssetPositionSize,
       }: {
         assetPositionsMap: AssetPositionsMap,
-        adjustedUSDCAssetPositionSize: string
-      } = adjustUSDCAssetPosition(assetPositions, Big(unsettledFunding));
+        adjustedTDAIAssetPositionSize: string
+      } = adjustTDAIAssetPosition(assetPositions, Big(unsettledFunding));
 
       // Original asset positions object should be unchanged
       expect(assetPositions).toEqual({
-        [USDC_SYMBOL]: {
-          ...ZERO_USDC_POSITION,
+        [TDAI_SYMBOL]: {
+          ...ZERO_TDAI_POSITION,
           side,
           size: positionSize,
         },
@@ -488,8 +488,8 @@ describe('helpers', () => {
         },
       });
       expect(assetPositionsMap).toEqual({
-        [USDC_SYMBOL]: {
-          ...ZERO_USDC_POSITION,
+        [TDAI_SYMBOL]: {
+          ...ZERO_TDAI_POSITION,
           side: expectedSide,
           size: expectedPositionSize,
         },
@@ -501,13 +501,13 @@ describe('helpers', () => {
           subaccountNumber: 0,
         },
       });
-      expect(adjustedUSDCAssetPositionSize).toEqual(expectedAdjustedPositionSize);
+      expect(adjustedTDAIAssetPositionSize).toEqual(expectedAdjustedPositionSize);
     });
 
     it.each([
       ['long', '300', PositionSide.LONG],
       ['short', '-300', PositionSide.SHORT],
-    ])('adjusts USDC position when USDC position doesn\'t exist, side [%s]', (
+    ])('adjusts TDAI position when TDAI position doesn\'t exist, side [%s]', (
       _name: string,
       funding: string,
       expectedSide: PositionSide,
@@ -524,11 +524,11 @@ describe('helpers', () => {
 
       const {
         assetPositionsMap,
-        adjustedUSDCAssetPositionSize,
+        adjustedTDAIAssetPositionSize,
       }: {
         assetPositionsMap: AssetPositionsMap,
-        adjustedUSDCAssetPositionSize: string
-      } = adjustUSDCAssetPosition(assetPositions, Big(funding));
+        adjustedTDAIAssetPositionSize: string
+      } = adjustTDAIAssetPosition(assetPositions, Big(funding));
 
       // Original asset positions object should be unchanged
       expect(assetPositions).toEqual({
@@ -541,8 +541,8 @@ describe('helpers', () => {
         },
       });
       expect(assetPositionsMap).toEqual({
-        [USDC_SYMBOL]: {
-          ...ZERO_USDC_POSITION,
+        [TDAI_SYMBOL]: {
+          ...ZERO_TDAI_POSITION,
           side: expectedSide,
           size: Big(funding).abs().toString(),
         },
@@ -554,21 +554,21 @@ describe('helpers', () => {
           subaccountNumber: 0,
         },
       });
-      expect(adjustedUSDCAssetPositionSize).toEqual(funding);
+      expect(adjustedTDAIAssetPositionSize).toEqual(funding);
     });
 
     it.each([
       ['long', PositionSide.LONG, '300', '-300'],
       ['short', PositionSide.SHORT, '300', '300'],
-    ])('removes USDC position when resulting USDC position size is 0, side [%s]', (
+    ])('removes TDAI position when resulting TDAI position size is 0, side [%s]', (
       _name: string,
       side: PositionSide,
       positionSize: string,
       unsettledFunding: string,
     ) => {
       const assetPositions: AssetPositionsMap = {
-        [USDC_SYMBOL]: {
-          ...ZERO_USDC_POSITION,
+        [TDAI_SYMBOL]: {
+          ...ZERO_TDAI_POSITION,
           side,
           size: positionSize,
         },
@@ -583,16 +583,16 @@ describe('helpers', () => {
 
       const {
         assetPositionsMap,
-        adjustedUSDCAssetPositionSize,
+        adjustedTDAIAssetPositionSize,
       }: {
         assetPositionsMap: AssetPositionsMap,
-        adjustedUSDCAssetPositionSize: string
-      } = adjustUSDCAssetPosition(assetPositions, Big(unsettledFunding));
+        adjustedTDAIAssetPositionSize: string
+      } = adjustTDAIAssetPosition(assetPositions, Big(unsettledFunding));
 
       // Original asset positions object should be unchanged
       expect(assetPositions).toEqual({
-        [USDC_SYMBOL]: {
-          ...ZERO_USDC_POSITION,
+        [TDAI_SYMBOL]: {
+          ...ZERO_TDAI_POSITION,
           side,
           size: positionSize,
         },
@@ -613,7 +613,7 @@ describe('helpers', () => {
           subaccountNumber: 0,
         },
       });
-      expect(adjustedUSDCAssetPositionSize).toEqual(ZERO.toString());
+      expect(adjustedTDAIAssetPositionSize).toEqual(ZERO.toString());
     });
   });
 

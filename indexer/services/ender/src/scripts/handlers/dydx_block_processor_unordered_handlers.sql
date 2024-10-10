@@ -16,7 +16,7 @@ CREATE OR REPLACE FUNCTION dydx_block_processor_unordered_handlers(block jsonb) 
   a pipeline similar to how we return kafka events and then batch and emit them.
 */
 DECLARE
-    USDC_ASSET_ID constant text = '0';
+    TDAI_ASSET_ID constant text = '0';
 
     block_height int = (block->'height')::int;
     block_time timestamp = (block->>'time')::timestamp;
@@ -40,15 +40,15 @@ BEGIN
                 IF event_data->'order' IS NOT NULL THEN
                     rval[i] = jsonb_build_object(
                             'makerOrder',
-                            dydx_order_fill_handler_per_order('makerOrder', block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index), 'MAKER', 'LIMIT', USDC_ASSET_ID, event_data->>'makerCanceledOrderStatus'),
+                            dydx_order_fill_handler_per_order('makerOrder', block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index), 'MAKER', 'LIMIT', TDAI_ASSET_ID, event_data->>'makerCanceledOrderStatus'),
                             'order',
-                            dydx_order_fill_handler_per_order('order', block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index), 'TAKER', 'LIMIT', USDC_ASSET_ID, event_data->>'takerCanceledOrderStatus'));
+                            dydx_order_fill_handler_per_order('order', block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index), 'TAKER', 'LIMIT', TDAI_ASSET_ID, event_data->>'takerCanceledOrderStatus'));
                 ELSE
                     rval[i] = jsonb_build_object(
                             'makerOrder',
-                            dydx_liquidation_fill_handler_per_order('makerOrder', block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index), 'MAKER', 'LIQUIDATION', USDC_ASSET_ID),
+                            dydx_liquidation_fill_handler_per_order('makerOrder', block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index), 'MAKER', 'LIQUIDATION', TDAI_ASSET_ID),
                             'liquidationOrder',
-                            dydx_liquidation_fill_handler_per_order('liquidationOrder', block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index), 'TAKER', 'LIQUIDATED', USDC_ASSET_ID));
+                            dydx_liquidation_fill_handler_per_order('liquidationOrder', block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index), 'TAKER', 'LIQUIDATED', TDAI_ASSET_ID));
                 END IF;
             WHEN '"subaccount_update"'::jsonb THEN
                 rval[i] = dydx_subaccount_update_handler(block_height, block_time, event_data, event_index, transaction_index);
@@ -58,6 +58,8 @@ BEGIN
                 rval[i] = dydx_stateful_order_handler(block_height, block_time, event_data);
             WHEN '"deleveraging"'::jsonb THEN
                 rval[i] = dydx_deleveraging_handler(block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index));
+            WHEN '"yield_params"'::jsonb THEN
+                rval[i] = dydx_yield_params_handler(block_height, block_time, event_data);
             ELSE
                 NULL;
             END CASE;

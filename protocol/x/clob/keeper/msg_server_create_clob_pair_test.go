@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -64,6 +65,8 @@ func TestCreateClobPair(t *testing.T) {
 							testClobPair1.StepBaseQuantums,
 							testPerp1.Params.LiquidityTier,
 							testPerp1.Params.MarketType,
+							testPerp1.Params.DangerIndexPpm,
+							fmt.Sprintf("%d", testPerp1.Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 						),
 					),
 				).Return()
@@ -154,7 +157,7 @@ func TestCreateClobPair(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager, nil)
 			tc.setup(t, ks, mockIndexerEventManager)
 
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)

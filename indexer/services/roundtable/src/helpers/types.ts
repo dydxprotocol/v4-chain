@@ -1,6 +1,6 @@
 import Big from 'big.js';
 
-export interface SubaccountUsdcTransferMap {
+export interface SubaccountTDaiTransferMap {
   [subaccountId: string]: Big;
 }
 export interface AthenaTableDDLQueries {

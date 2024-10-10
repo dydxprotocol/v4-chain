@@ -21,19 +21,19 @@ func TestLiquidityTierValidate(t *testing.T) {
 		"Validates successfully": {
 			initialMarginPpm:       150_000,       // 15%
 			maintenanceFractionPpm: 800_000,       // 80% of IM
-			ImpactNotional:         3_333_000_000, // 3_333 USDC
+			ImpactNotional:         3_333_000_000, // 3_333 TDAI
 			expectedError:          nil,
 		},
 		"Failure: initial margin ppm exceeds max": {
 			initialMarginPpm:       1_000_001,     // above 100%
 			maintenanceFractionPpm: 800_000,       // 80% of IM
-			ImpactNotional:         1_000_000_000, // 1_000 USDC
+			ImpactNotional:         1_000_000_000, // 1_000 TDAI
 			expectedError:          types.ErrInitialMarginPpmExceedsMax,
 		},
 		"Failure: maintenance fraction ppm exceeds max": {
 			initialMarginPpm:       1_000_000,     // 100%
 			maintenanceFractionPpm: 1_000_001,     // above 100%
-			ImpactNotional:         1_000_000_000, // 1_000 USDC
+			ImpactNotional:         1_000_000_000, // 1_000 TDAI
 			expectedError:          types.ErrMaintenanceFractionPpmExceedsMax,
 		},
 		"Failure: impact notional is zero": {
@@ -45,7 +45,7 @@ func TestLiquidityTierValidate(t *testing.T) {
 		"Failure: lower cap is larger than upper cap": {
 			initialMarginPpm:       150_000,       // 15%
 			maintenanceFractionPpm: 800_000,       // 80% of IM
-			ImpactNotional:         3_333_000_000, // 3_333 USDC
+			ImpactNotional:         3_333_000_000, // 3_333 TDAI
 			openInterestLowerCap:   1_000_000,
 			openInterestUpperCap:   500_000,
 			expectedError:          types.ErrOpenInterestLowerCapLargerThanUpperCap,
@@ -53,7 +53,7 @@ func TestLiquidityTierValidate(t *testing.T) {
 		"Failure: lower cap is larger than upper cap (upper cap is zero)": {
 			initialMarginPpm:       150_000,       // 15%
 			maintenanceFractionPpm: 800_000,       // 80% of IM
-			ImpactNotional:         3_333_000_000, // 3_333 USDC
+			ImpactNotional:         3_333_000_000, // 3_333 TDAI
 			openInterestLowerCap:   1_000_000,
 			openInterestUpperCap:   0,
 			expectedError:          types.ErrOpenInterestLowerCapLargerThanUpperCap,

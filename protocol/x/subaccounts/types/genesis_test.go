@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"errors"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -55,6 +56,34 @@ func TestGenesisState_Validate(t *testing.T) {
 							Owner:  duplicateOwnerId,
 							Number: uint32(11),
 						},
+					},
+				},
+			},
+			expectedError: nil,
+		},
+		"valid with zero AssetYieldIndex": {
+			genState: &types.GenesisState{
+				Subaccounts: []types.Subaccount{
+					{
+						Id: &types.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						AssetYieldIndex: "1",
+					},
+				},
+			},
+			expectedError: nil,
+		},
+		"valid with positive AssetYieldIndex": {
+			genState: &types.GenesisState{
+				Subaccounts: []types.Subaccount{
+					{
+						Id: &types.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						AssetYieldIndex: "10",
 					},
 				},
 			},
@@ -150,7 +179,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						},
 						AssetPositions: []*types.AssetPosition{
 							{
-								AssetId:  1, // asset id must be zero (0 = USDC).
+								AssetId:  1, // asset id must be zero (0 = TDAI).
 								Quantums: dtypes.NewInt(1_000),
 							},
 						},
@@ -158,6 +187,46 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			expectedError: types.ErrAssetPositionNotSupported,
+		},
+		"invalid: AssetYieldIndex is not a rational number 1": {
+			genState: &types.GenesisState{
+				Subaccounts: []types.Subaccount{
+					{
+						Id: &types.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(127),
+						},
+						AssetPositions: []*types.AssetPosition{
+							{
+								AssetId:  0,
+								Quantums: dtypes.NewInt(1_000),
+							},
+						},
+						AssetYieldIndex: "12abc34",
+					},
+				},
+			},
+			expectedError: errors.New("could not convert string to big.Rat"),
+		},
+		"invalid: AssetYieldIndex is negative": {
+			genState: &types.GenesisState{
+				Subaccounts: []types.Subaccount{
+					{
+						Id: &types.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(127),
+						},
+						AssetPositions: []*types.AssetPosition{
+							{
+								AssetId:  0,
+								Quantums: dtypes.NewInt(1_000),
+							},
+						},
+						AssetYieldIndex: "-1/1",
+					},
+				},
+			},
+			expectedError: types.ErrNegativeAssetYieldIndexNotSupported,
 		},
 		"invalid: asset position quantum == 0": {
 			genState: &types.GenesisState{

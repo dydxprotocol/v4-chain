@@ -9,6 +9,9 @@ const (
 	// up to 32 bytes for the price and 1 byte for the sign (positive/negative).
 	MaximumPriceSizeInBytes = 33
 
+	// MaxSDaiConversionRateLengthCharacters is the maximum length of the sDai conversion rate in characters.
+	MaxSDaiConversionRateLengthCharacters = 35
+
 	// where in the proposal the injected VE's are located
 	DaemonInfoIndex    = 0
 	InjectedNonTxCount = 1

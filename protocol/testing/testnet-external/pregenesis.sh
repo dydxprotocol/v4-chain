@@ -8,7 +8,7 @@ set -eo pipefail
 # The script must be run from the root of the `v4` repo.
 #
 # example usage:
-# $ ./testing/testnet-external/pregenesis.sh ./build/dydxprotocold --SEED_FAUCET_USDC
+# $ ./testing/testnet-external/pregenesis.sh ./build/dydxprotocold --SEED_FAUCET_TDAI
 
 # To get the following information, first set up the validator keys locally. Then run:
 # Account address: `dydxprotocold keys show dydx-1-key -a`
@@ -18,7 +18,7 @@ set -eo pipefail
 # Check for missing required arguments
 if [ -z "$1" ]; then
   echo "Error: Missing required argument DYDX_BINARY."
-  echo "Usage: $0 <DYDX_BINARY> [-s|--SEED_FAUCET_USDC]"
+  echo "Usage: $0 <DYDX_BINARY> [-s|--SEED_FAUCET_TDAI]"
   exit 1
 fi
 
@@ -29,24 +29,24 @@ DYDX_BINARY="$1"
 shift
 
 # Initialize optional flags with default values
-SEED_FAUCET_USDC=false
+SEED_FAUCET_TDAI=false
 
 # Parse optional flags
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    -s|--SEED_FAUCET_USDC)
-      SEED_FAUCET_USDC=true
+    -s|--SEED_FAUCET_TDAI)
+      SEED_FAUCET_TDAI=true
       ;;
     *)
       echo "Error: Invalid option '$1'"
-      echo "Usage: $0 <DYDX_BINARY> [-s|--SEED_FAUCET_USDC]"
+      echo "Usage: $0 <DYDX_BINARY> [-s|--SEED_FAUCET_TDAI]"
       exit 1
       ;;
   esac
   shift
 done
 
-echo "Running with SEED_FAUCET_USDC=$SEED_FAUCET_USDC..."
+echo "Running with SEED_FAUCET_TDAI=$SEED_FAUCET_TDAI..."
 
 source "./testing/genesis.sh"
 CHAIN_ID="dydx-testnet-4"
@@ -60,8 +60,8 @@ TMP_CHAIN_DIR="/tmp/chain"
 TMP_EXCHANGE_CONFIG_JSON_DIR="/tmp/exchange_config"
 AWS_REGION="us-east-2"
 
-# initialize faucet with 1e13 micro USDC (10 million USDC). Only used when `SEED_FAUCET_USDC` is true.
-FAUCET_USDC_BALANCE=10000000000000
+# initialize faucet with 1e13 micro TDAI (10 million TDAI). Only used when `SEED_FAUCET_TDAI` is true.
+FAUCET_TDAI_BALANCE=10000000000000
 
 # Define monikers for each validator. These are made up strings and can be anything.
 # This also controls in which directory the validator's home will be located. i.e. `/tmp/chain/.dydx-1`
@@ -164,7 +164,7 @@ create_pregenesis_file() {
 	cp -R ./daemons/pricefeed/client/constants/testdata $TMP_EXCHANGE_CONFIG_JSON_DIR
 
 	# Do not pass in test accounts and faucet accounts to `edit_genesis`. This skips
-	# initializing USDC balance in the subacounts.
+	# initializing TDAI balance in the subacounts.
 	# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 	# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
 	# Note: `edit_genesis` must be called before `add-genesis-account`.
@@ -172,9 +172,9 @@ create_pregenesis_file() {
 	overwrite_genesis_public_testnet
 
 	FAUCET_BALANCE="${FAUCET_NATIVE_TOKEN_BALANCE}$NATIVE_TOKEN"
-	# If SEED_FAUCET_USDC is true, faucet is initalized with USDC balance in addition to native token balance.
-	if [ "$SEED_FAUCET_USDC" = true ]; then
-		FAUCET_BALANCE="${FAUCET_BALANCE},${FAUCET_USDC_BALANCE}$USDC_DENOM"
+	# If SEED_FAUCET_TDAI is true, faucet is initalized with TDAI balance in addition to native token balance.
+	if [ "$SEED_FAUCET_TDAI" = true ]; then
+		FAUCET_BALANCE="${FAUCET_BALANCE},${FAUCET_TDAI_BALANCE}$TDAI_DENOM"
 	fi
 	for acct in "${FAUCET_ACCOUNTS[@]}"; do
 		$DYDX_BINARY add-genesis-account "$acct" $FAUCET_BALANCE --home "$VAL_HOME_DIR"

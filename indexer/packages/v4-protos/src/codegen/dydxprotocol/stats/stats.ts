@@ -21,7 +21,7 @@ export interface BlockStats_Fill {
   /** Maker wallet address */
 
   maker: string;
-  /** Notional USDC filled in quantums */
+  /** Notional  filled in quantums */
 
   notional: Long;
 }
@@ -33,7 +33,7 @@ export interface BlockStats_FillSDKType {
   /** Maker wallet address */
 
   maker: string;
-  /** Notional USDC filled in quantums */
+  /** Notional  filled in quantums */
 
   notional: Long;
 }
@@ -88,30 +88,30 @@ export interface EpochStats_UserWithStatsSDKType {
 /** GlobalStats stores global stats */
 
 export interface GlobalStats {
-  /** Notional USDC traded in quantums */
+  /** Notional TDAI traded in quantums */
   notionalTraded: Long;
 }
 /** GlobalStats stores global stats */
 
 export interface GlobalStatsSDKType {
-  /** Notional USDC traded in quantums */
+  /** Notional TDAI traded in quantums */
   notional_traded: Long;
 }
 /** UserStats stores stats for a User */
 
 export interface UserStats {
-  /** Taker USDC in quantums */
+  /** Taker TDAI in quantums */
   takerNotional: Long;
-  /** Maker USDC in quantums */
+  /** Maker TDAI in quantums */
 
   makerNotional: Long;
 }
 /** UserStats stores stats for a User */
 
 export interface UserStatsSDKType {
-  /** Taker USDC in quantums */
+  /** Taker TDAI in quantums */
   taker_notional: Long;
-  /** Maker USDC in quantums */
+  /** Maker TDAI in quantums */
 
   maker_notional: Long;
 }

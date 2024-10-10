@@ -116,10 +116,10 @@ var (
 		25,
 		"Attempting to get price premium with a non-perpetual CLOB pair",
 	)
-	ErrZeroIndexPriceForPremiumCalculation = errorsmod.Register(
+	ErrZeroDaemonPriceForPremiumCalculation = errorsmod.Register(
 		ModuleName,
 		26,
-		"Index price is zero when calculating price premium",
+		"daemon price is zero when calculating price premium",
 	)
 	ErrInvalidClobPairParameter = errorsmod.Register(
 		ModuleName,
@@ -279,15 +279,10 @@ var (
 		1010,
 		"Liquidation order has size greater than max position notional specified in the liquidation config",
 	)
-	ErrLiquidationExceedsSubaccountMaxNotionalLiquidated = errorsmod.Register(
-		ModuleName,
-		1011,
-		"Liquidation exceeds the maximum notional amount that a single subaccount can have liquidated per block",
-	)
-	ErrLiquidationExceedsSubaccountMaxInsuranceLost = errorsmod.Register(
+	ErrLiquidationExceedsMaxInsuranceLost = errorsmod.Register(
 		ModuleName,
 		1012,
-		"Liquidation exceeds the maximum insurance fund payout amount for a given subaccount per block",
+		"Liquidation exceeds the maximum insurance fund payout amount per block",
 	)
 	ErrInsuranceFundHasInsufficientFunds = errorsmod.Register(
 		ModuleName,
@@ -510,7 +505,7 @@ var (
 	ErrAssetUpdateNotImplemented = errorsmod.Register(
 		ModuleName,
 		9001,
-		"Updates for assets other than USDC are not implemented",
+		"Updates for assets other than TDAI are not implemented",
 	)
 	ErrNotImplemented = errorsmod.Register(
 		ModuleName,

@@ -52,6 +52,13 @@ export interface Subaccount {
    */
 
   marginEnabled: boolean;
+  /**
+   * The current yield index is determined by the cumulative
+   * all-time history of the yield mechanism for assets.
+   * Starts at 0. This string should always be converted big.Rat.
+   */
+
+  assetYieldIndex: string;
 }
 /**
  * Subaccount defines a single sub-account for a given address.
@@ -79,6 +86,13 @@ export interface SubaccountSDKType {
    */
 
   margin_enabled: boolean;
+  /**
+   * The current yield index is determined by the cumulative
+   * all-time history of the yield mechanism for assets.
+   * Starts at 0. This string should always be converted big.Rat.
+   */
+
+  asset_yield_index: string;
 }
 
 function createBaseSubaccountId(): SubaccountId {
@@ -141,7 +155,8 @@ function createBaseSubaccount(): Subaccount {
     id: undefined,
     assetPositions: [],
     perpetualPositions: [],
-    marginEnabled: false
+    marginEnabled: false,
+    assetYieldIndex: ""
   };
 }
 
@@ -161,6 +176,10 @@ export const Subaccount = {
 
     if (message.marginEnabled === true) {
       writer.uint32(32).bool(message.marginEnabled);
+    }
+
+    if (message.assetYieldIndex !== "") {
+      writer.uint32(42).string(message.assetYieldIndex);
     }
 
     return writer;
@@ -191,6 +210,10 @@ export const Subaccount = {
           message.marginEnabled = reader.bool();
           break;
 
+        case 5:
+          message.assetYieldIndex = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -206,6 +229,7 @@ export const Subaccount = {
     message.assetPositions = object.assetPositions?.map(e => AssetPosition.fromPartial(e)) || [];
     message.perpetualPositions = object.perpetualPositions?.map(e => PerpetualPosition.fromPartial(e)) || [];
     message.marginEnabled = object.marginEnabled ?? false;
+    message.assetYieldIndex = object.assetYieldIndex ?? "";
     return message;
   }
 

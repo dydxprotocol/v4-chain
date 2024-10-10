@@ -31,7 +31,7 @@ class Post {
         this.composer = new composer_1.Composer();
         this.denoms = denoms;
         this.defaultGasPrice = stargate_1.GasPrice
-            .fromString(`0.025${denoms.USDC_GAS_DENOM !== undefined ? denoms.USDC_GAS_DENOM : denoms.USDC_DENOM}`);
+            .fromString(`0.025${denoms.TDAI_GAS_DENOM !== undefined ? denoms.TDAI_GAS_DENOM : denoms.TDAI_DENOM}`);
         this.defaultDydxGasPrice = stargate_1.GasPrice
             .fromString(`25000000000${denoms.CHAINTOKEN_GAS_DENOM !== undefined ? denoms.CHAINTOKEN_GAS_DENOM : denoms.CHAINTOKEN_DENOM}`);
     }
@@ -173,13 +173,13 @@ class Post {
         const fee = (0, stargate_1.calculateFee)(Math.floor(gasEstimate * constants_1.GAS_MULTIPLIER), gasPrice);
         // TODO(TRCL-2550): Temporary workaround before IBC denom is supported in '@cosmjs/stargate'.
         // The '@cosmjs/stargate' does not support denom with '/', so currently GAS_PRICE is
-        // represented in 'uusdc', and the output of `calculateFee` is in '', which is replaced
-        // below by USDC_DENOM string.
+        // represented in 'utdai', and the output of `calculateFee` is in '', which is replaced
+        // below by TDAI_DENOM string.
         const amount = lodash_1.default.map(fee.amount, (coin) => {
-            if (coin.denom === 'uusdc') {
+            if (coin.denom === 'utdai') {
                 return {
                     amount: coin.amount,
-                    denom: this.denoms.USDC_DENOM,
+                    denom: this.denoms.TDAI_DENOM,
                 };
             }
             return coin;
@@ -234,7 +234,7 @@ class Post {
         return this.send(subaccount.wallet, () => msgs, false, undefined, undefined, broadcastMode);
     }
     async sendToken(subaccount, recipient, coinDenom, quantums, zeroFee = true, broadcastMode) {
-        if (coinDenom !== this.denoms.CHAINTOKEN_DENOM && coinDenom !== this.denoms.USDC_DENOM) {
+        if (coinDenom !== this.denoms.CHAINTOKEN_DENOM && coinDenom !== this.denoms.TDAI_DENOM) {
             throw new Error('Unsupported coinDenom');
         }
         const msgs = new Promise((resolve) => {

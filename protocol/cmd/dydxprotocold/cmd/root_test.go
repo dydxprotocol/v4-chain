@@ -11,6 +11,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/dydxprotocold/cmd"
+	sdaidaemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/stretchr/testify/require"
 )
@@ -22,6 +23,7 @@ func TestNewRootCmd_UsesClientConfig(t *testing.T) {
 
 	// Set the client config to point to a fake chain id since this is a required option
 	{
+		sdaidaemontypes.SDAIEventFetcher = &sdaidaemontypes.MockEventFetcher{}
 		option := cmd.GetOptionWithCustomStartCmd()
 		rootCmd := cmd.NewRootCmd(option, tempDir)
 

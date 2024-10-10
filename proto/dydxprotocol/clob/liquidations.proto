@@ -25,12 +25,6 @@ message SubaccountLiquidationInfo {
   // An unsorted list of unique perpetual IDs that the subaccount has previously
   // liquidated.
   repeated uint32 perpetuals_liquidated = 1;
-  // The notional value (in quote quantums, determined by the oracle price) of
-  // all positions liquidated for this subaccount.
-  uint64 notional_liquidated = 2;
-  // The amount of funds that the insurance fund has lost
-  // covering this subaccount.
-  uint64 quantums_insurance_lost = 3;
 }
 
 // SubaccountOpenPositionInfo holds information about open positions for a

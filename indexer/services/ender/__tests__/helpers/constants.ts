@@ -36,11 +36,12 @@ import {
   TransferEventV1,
   UpdateClobPairEventV1,
   UpdatePerpetualEventV1,
+  UpdateYieldParamsEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
 
-import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS } from '../../src/constants';
+import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS, ZERO_ASSET_YIELD_INDEX } from '../../src/constants';
 import { SubaccountUpdate } from '../../src/lib/translated-types';
 import {
   ConsolidatedKafkaEvent,
@@ -51,6 +52,8 @@ import {
 } from '../../src/lib/types';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 
+export const defaultZeroPerpYieldIndex: string = '0/1';
+export const onePerpYieldIndex: string = '1/1';
 export const defaultMarketPriceUpdate: MarketEventV1 = {
   marketId: 0,
   priceUpdate: {
@@ -158,6 +161,8 @@ export const defaultPerpetualMarketCreateEventV2: PerpetualMarketCreateEventV2 =
   stepBaseQuantums: Long.fromValue(10, true),
   liquidityTier: 0,
   marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
+  dangerIndexPpm: 1000000,
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: '1000000',
 };
 
 export const defaultLiquidityTierUpsertEventV2: LiquidityTierUpsertEventV2 = {
@@ -165,7 +170,7 @@ export const defaultLiquidityTierUpsertEventV2: LiquidityTierUpsertEventV2 = {
   name: 'Large-Cap',
   initialMarginPpm: 50000,  // 5%
   maintenanceFractionPpm: 600000,  // 60% of IM = 3%
-  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
+  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 TDAI
   openInterestLowerCap: Long.fromValue(0, true),
   openInterestUpperCap: Long.fromValue(1_000_000_000_000, true),
 };
@@ -175,7 +180,7 @@ export const defaultLiquidityTierUpsertEventV1: LiquidityTierUpsertEventV1 = {
   name: 'Large-Cap',
   initialMarginPpm: 50000,  // 5%
   maintenanceFractionPpm: 600000,  // 60% of IM = 3%
-  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
+  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 TDAI
 };
 
 const defaultOpenInterestUpdate1: OpenInterestUpdate = {
@@ -198,6 +203,9 @@ export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
   marketId: 1,
   atomicResolution: -8,
   liquidityTier: 1,
+  dangerIndexPpm: 1000000,
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: '0',
+  perpYieldIndex: '0/1',
 };
 
 export const defaultUpdateClobPairEvent: UpdateClobPairEventV1 = {
@@ -216,6 +224,8 @@ export const defaultTime: Timestamp = {
   nanos: (defaultDateTime.toMillis() % SECONDS_IN_MILLIS) * MILLIS_IN_NANOS,
 };
 export const defaultTxHash: string = '0x32343534306431622d306461302d343831322d613730372d3965613162336162';
+
+export const defaultZeroAssetYieldIndex: string = '0/1';
 
 export const defaultSubaccountId: IndexerSubaccountId = {
   owner: testConstants.defaultAddress,
@@ -315,12 +325,14 @@ export const defaultEmptySubaccountUpdate: SubaccountUpdate = {
   subaccountId: defaultSubaccountId,
   updatedPerpetualPositions: [],
   updatedAssetPositions: [],
+  assetYieldIndex: ZERO_ASSET_YIELD_INDEX,
 };
 
 export const defaultEmptySubaccountUpdateEvent: SubaccountUpdateEventV1 = {
   subaccountId: defaultSubaccountId,
   updatedPerpetualPositions: [],
   updatedAssetPositions: [],
+  yieldIndex: defaultZeroAssetYieldIndex,
 };
 
 export const defaultWalletAddress: string = 'defaultWalletAddress';
@@ -447,4 +459,14 @@ export const defaultLongTermOrderPlacementEvent: StatefulOrderEventV1 = {
       goodTilBlockTime: 123,
     },
   },
+};
+
+export const defaultUpdateYieldParamsEvent1: UpdateYieldParamsEventV1 = {
+  sdaiPrice: '100000000',
+  assetYieldIndex: '0/1',
+};
+
+export const defaultUpdateYieldParamsEvent2: UpdateYieldParamsEventV1 = {
+  sdaiPrice: '110000000',
+  assetYieldIndex: '1/1',
 };

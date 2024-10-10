@@ -1,10 +1,19 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
+	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
+	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
+	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
+	bigintcache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/bigintcache"
+	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
+	deleveragingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/deleveraging"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -22,6 +31,7 @@ import (
 	feetierskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/keeper"
 	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	statskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/keeper"
 	subkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
@@ -40,6 +50,7 @@ type ClobKeepersTestContext struct {
 	AssetsKeeper      *asskeeper.Keeper
 	BlockTimeKeeper   *blocktimekeeper.Keeper
 	FeeTiersKeeper    *feetierskeeper.Keeper
+	RatelimitKeeper   *ratelimitkeeper.Keeper
 	PerpetualsKeeper  *perpkeeper.Keeper
 	StatsKeeper       *statskeeper.Keeper
 	SubaccountsKeeper *subkeeper.Keeper
@@ -53,8 +64,9 @@ func NewClobKeepersTestContext(
 	memClob types.MemClob,
 	bankKeeper bankkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
+	voteAggregator veaggregator.VoteAggregator,
 ) (ks ClobKeepersTestContext) {
-	ks = NewClobKeepersTestContextWithUninitializedMemStore(t, memClob, bankKeeper, indexerEventManager)
+	ks = NewClobKeepersTestContextWithUninitializedMemStore(t, memClob, bankKeeper, indexerEventManager, voteAggregator)
 
 	// Initialize the memstore.
 	ks.ClobKeeper.InitMemStore(ks.Ctx)
@@ -67,6 +79,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 	memClob types.MemClob,
 	bankKeeper bankkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
+	voteAggregator veaggregator.VoteAggregator,
 ) (ks ClobKeepersTestContext) {
 	var mockTimeProvider *mocks.TimeProvider
 	ks.Ctx = initKeepers(t, func(
@@ -110,6 +123,17 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			db,
 			cdc,
 		)
+		ks.RatelimitKeeper, _ = createRatelimitKeeper(
+			stateStore,
+			db,
+			cdc,
+			ks.BlockTimeKeeper,
+			bankKeeper,
+			ks.PerpetualsKeeper,
+			ks.AssetsKeeper,
+			indexerEventsTransientStoreKey,
+			true,
+		)
 		ks.SubaccountsKeeper, _ = createSubaccountsKeeper(
 			stateStore,
 			db,
@@ -117,10 +141,48 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.AssetsKeeper,
 			bankKeeper,
 			ks.PerpetualsKeeper,
+			ks.RatelimitKeeper,
 			ks.BlockTimeKeeper,
 			indexerEventsTransientStoreKey,
 			true,
 		)
+
+		mCCVStore := &mocks.CCValidatorStore{}
+		pricesAggregatorFn := voteweighted.MedianPrices(
+			log.NewNopLogger(),
+			mCCVStore,
+			voteweighted.DefaultPowerThreshold,
+		)
+
+		conversionRateAggregatorFn := voteweighted.MedianConversionRate(
+			log.NewNopLogger(),
+			mCCVStore,
+			voteweighted.DefaultPowerThreshold,
+		)
+
+		if voteAggregator == nil {
+			voteAggregator = veaggregator.NewVeAggregator(
+				log.NewNopLogger(),
+				*ks.PricesKeeper,
+				*ks.RatelimitKeeper,
+				pricesAggregatorFn,
+				conversionRateAggregatorFn,
+			)
+		}
+
+		veApplier := veapplier.NewVEApplier(
+			log.NewNopLogger(),
+			voteAggregator,
+			ks.PricesKeeper,
+			ks.RatelimitKeeper,
+			vecodec.NewDefaultVoteExtensionCodec(),
+			vecodec.NewDefaultExtendedCommitCodec(),
+			&pricecache.PriceUpdatesCacheImpl{},
+			&pricecache.PriceUpdatesCacheImpl{},
+			&bigintcache.BigIntCacheImpl{},
+			vecache.NewVECache(),
+		)
+
 		ks.ClobKeeper, ks.StoreKey, ks.MemKey = createClobKeeper(
 			stateStore,
 			db,
@@ -135,7 +197,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.StatsKeeper,
 			ks.SubaccountsKeeper,
 			indexerEventManager,
-			indexerEventsTransientStoreKey,
+			veApplier,
 		)
 		ks.Cdc = cdc
 
@@ -171,7 +233,7 @@ func createClobKeeper(
 	statsKeeper *statskeeper.Keeper,
 	saKeeper *subkeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
-	indexerEventsTransientStoreKey storetypes.StoreKey,
+	veApplier *veapplier.VEApplier,
 ) (*keeper.Keeper, storetypes.StoreKey, storetypes.StoreKey) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
@@ -204,7 +266,8 @@ func createClobKeeper(
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[sdk.Msg](),
-		liquidationtypes.NewDaemonLiquidationInfo(),
+		deleveragingtypes.NewDaemonDeleveragingInfo(),
+		veApplier,
 	)
 	k.SetAnteHandler(constants.EmptyAnteHandler)
 
@@ -273,6 +336,8 @@ func CreateNClobPair(
 					items[i].StepBaseQuantums,
 					perps[i].Params.LiquidityTier,
 					perps[i].Params.MarketType,
+					perps[i].Params.DangerIndexPpm,
+					fmt.Sprintf("%d", perps[i].Params.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock),
 				),
 			),
 		).Return()

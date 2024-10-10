@@ -55,7 +55,7 @@ func getDefaultGenesisEpochById(t *testing.T, id string) types.EpochInfo {
 }
 
 func TestShowEpochInfo(t *testing.T) {
-	genesis := "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
+	genesis := "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}]\" \"\""
 	network.DeployCustomNetwork(genesis)
 	cfg := network.DefaultConfig(nil)
 
@@ -108,7 +108,7 @@ func TestShowEpochInfo(t *testing.T) {
 
 func TestListEpochInfo(t *testing.T) {
 	//cfg := networkWithEpochInfoObjects(t)
-	genesis := "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
+	genesis := "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}]\" \"\""
 	network.DeployCustomNetwork(genesis)
 	cfg := network.DefaultConfig(nil)
 	networkStartTime := time.Now()

@@ -187,6 +187,7 @@ describe('perpetualMarketHandler', () => {
       const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromId('0');
       expect(perpetualMarket).toBeDefined();
       expectPerpetualMarket(perpetualMarket!, event);
+      expect(perpetualMarket!.perpYieldIndex).toEqual('0/1');
       expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
     });
   });

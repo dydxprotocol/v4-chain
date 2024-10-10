@@ -56,6 +56,7 @@ func TestLongTermOrderInitMemStore_Success(t *testing.T) {
 		memClob,
 		&mocks.BankKeeper{},
 		&mocks.IndexerEventManager{},
+		nil,
 	)
 
 	triggeredConditionalOrderStore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementStore(ks.Ctx)
@@ -130,7 +131,7 @@ func TestLongTermOrderInitMemStore_Success(t *testing.T) {
 func TestMustTriggerConditionalOrder(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 	// Set the tracer on the multistore to verify the performed writes are correct.
 	traceDecoder := &tracer.TraceDecoder{}
@@ -253,7 +254,7 @@ func TestMustTriggerConditionalOrder(t *testing.T) {
 func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 	orders := []types.Order{
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20,
@@ -435,7 +436,7 @@ func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 func TestGetSetDeleteLongTermOrderState_Replacements(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 	orders := []types.Order{
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -519,7 +520,7 @@ func TestGetSetDeleteLongTermOrderState_Replacements(t *testing.T) {
 func TestLongTermOrderState_ShortTermOrderPanics(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 	shortTermOrder := constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20
 	errorString := fmt.Sprintf(
 		"MustBeStatefulOrder: called with non-stateful order ID (%+v)",
@@ -1263,7 +1264,7 @@ func TestGetAddAndRemoveStatefulOrderTimeSlice(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state and test parameters.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 			// Set the tracer on the multistore to verify the performed writes are correct.
 			traceDecoder := &tracer.TraceDecoder{}
@@ -1434,7 +1435,7 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state and test parameters.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 			// Create all order IDs in state.
 			for timestamp, orderIds := range tc.timeSlicesToOrderIds {
@@ -1474,7 +1475,7 @@ func TestRemoveExpiredStatefulOrdersTimeSlices(t *testing.T) {
 func TestAddOrderToStatefulOrdersTimeSlice_PanicsIfAlreadyExists(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15
 	goodTilTime := constants.Time_21st_Feb_2021
@@ -1499,7 +1500,7 @@ func TestAddOrderToStatefulOrdersTimeSlice_PanicsIfAlreadyExists(t *testing.T) {
 func TestRemoveLongTermOrder_PanicsIfNotFound(t *testing.T) {
 	// Setup keeper state and test parameters.
 	memClob := memclob.NewMemClobPriceTimePriority(false)
-	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 	orderId := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId
 	require.PanicsWithValue(
@@ -1675,7 +1676,7 @@ func TestGetAllStatefulOrders(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state and test parameters.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 			for _, statefulOrderPlacement := range tc.statefulOrderPlacements {
 				ks.ClobKeeper.SetLongTermOrderPlacement(

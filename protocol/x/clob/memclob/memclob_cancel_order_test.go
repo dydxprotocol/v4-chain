@@ -25,7 +25,6 @@ func TestShortTermCancelOrder_CancelAlreadyExists(t *testing.T) {
 
 	// Create all unique orderbooks.
 	createAllOrderbooksForOrders(
-		t,
 		ctx,
 		memclob,
 		[]types.Order{order},
@@ -57,7 +56,6 @@ func TestShortTermCancelOrder_OrdersTilBlockExceedsCancels(t *testing.T) {
 
 	// Create all unique orderbooks.
 	createAllOrderbooksForOrders(
-		t,
 		ctx,
 		memclob,
 		[]types.Order{order},
@@ -256,7 +254,6 @@ func TestCancelOrder(t *testing.T) {
 
 			// Create all unique orderbooks.
 			createAllOrderbooksForOrders(
-				t,
 				ctx,
 				memclob,
 				append(tc.existingOrders, tc.order),
@@ -344,7 +341,6 @@ func TestCancelOrder_Telemetry(t *testing.T) {
 
 	// Create all unique orderbooks.
 	createAllOrderbooksForOrders(
-		t,
 		ctx,
 		memclob,
 		[]types.Order{orderOne, orderTwo},

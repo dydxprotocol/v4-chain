@@ -14,6 +14,9 @@ import (
 
 	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	bigintcache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/bigintcache"
+	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -104,7 +107,7 @@ import (
 
 	// VE
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
-	priceapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
+	veapplier "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/applier"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 
@@ -112,16 +115,18 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mempool"
 
 	// Daemons
+	deleveragingclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/client"
 	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
-	liquidationclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/client"
 	metricsclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/metrics/client"
 	pricefeedclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
 	pricefeed_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/types"
+	sdaiclient "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/sdaioracle/client"
 	daemonserver "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server"
 	daemonservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
-	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
+	deleveragingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/deleveraging"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
+	sdaidaemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 
 	// Modules
@@ -275,7 +280,7 @@ type App struct {
 
 	FeeTiersKeeper feetiersmodulekeeper.Keeper
 
-	PerpetualsKeeper *perpetualsmodulekeeper.Keeper
+	PerpetualsKeeper perpetualsmodulekeeper.Keeper
 
 	StatsKeeper statsmodulekeeper.Keeper
 
@@ -305,7 +310,8 @@ type App struct {
 	startDaemons func()
 
 	PriceFeedClient    *pricefeedclient.Client
-	LiquidationsClient *liquidationclient.Client
+	SDAIClient         *sdaiclient.Client
+	DeleveragingClient *deleveragingclient.Client
 
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 
@@ -329,6 +335,7 @@ func New(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
+	logger.Info("Starting app")
 	assertAppPreconditions()
 
 	// dYdX specific command-line flags.
@@ -567,11 +574,30 @@ func New(
 	)
 	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
 
+	// Get Daemon Flags.
+	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
+	logger.Info("Parsed Daemon flags", "Flags", daemonFlags)
+
+	// Setup server for sDAI oracle prices.
+	// The in-memory data structure is shared by the x/ratelimit module and sdaioracle daemon.
+	sDAIEventManager := createSDAIEventManager(appFlags, daemonFlags)
+
+	msgSender, indexerFlags := getIndexerFromOptions(appOpts, logger)
+	app.IndexerEventManager = indexer_manager.NewIndexerEventManager(
+		msgSender,
+		tkeys[indexer_manager.TransientStoreKey],
+		indexerFlags.SendOffchainData,
+	)
+
 	app.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
 		appCodec,
 		keys[ratelimitmoduletypes.StoreKey],
+		sDAIEventManager,
+		app.IndexerEventManager,
 		app.BankKeeper,
 		app.BlockTimeKeeper,
+		&app.PerpetualsKeeper,
+		&app.AssetsKeeper,
 		app.IBCKeeper.ChannelKeeper, // ICS4Wrapper
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
@@ -668,13 +694,6 @@ func New(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	/****  dYdX specific modules/setup ****/
-	msgSender, indexerFlags := getIndexerFromOptions(appOpts, logger)
-	app.IndexerEventManager = indexer_manager.NewIndexerEventManager(
-		msgSender,
-		tkeys[indexer_manager.TransientStoreKey],
-		indexerFlags.SendOffchainData,
-	)
-
 	app.GrpcStreamingManager = getGrpcStreamingManagerFromOptions(appFlags, logger)
 
 	timeProvider := &timelib.TimeProviderImpl{}
@@ -685,10 +704,6 @@ func New(
 	)
 	epochsModule := epochsmodule.NewAppModule(appCodec, app.EpochsKeeper)
 
-	// Get Daemon Flags.
-	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
-	logger.Info("Parsed Daemon flags", "Flags", daemonFlags)
-
 	// Create server that will ingest gRPC messages from daemon clients.
 	// Note that gRPC clients will block on new gRPC connection until the gRPC server is ready to
 	// accept new connections.
@@ -698,18 +713,22 @@ func New(
 		&daemontypes.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
 	)
+
+	// Setup the server for the sDAI events
+	app.Server.WithsDAIEventManager(sDAIEventManager)
+
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
 	// The in-memory data structure is shared by the x/prices module and PriceFeed daemon.
-	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
-	app.Server.WithPriceFeedMarketToExchangePrices(indexPriceCache)
+	daemonPriceCache := pricefeedtypes.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
+	app.Server.WithPriceFeedMarketToExchangePrices(daemonPriceCache)
 
-	// Setup server for liquidation messages. The server will wait for gRPC messages containing
-	// potentially liquidatable subaccounts and then encode them into an in-memory slice shared by
-	// the liquidations module.
-	// The in-memory data structure is shared by the x/clob module and liquidations daemon.
-	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
-	app.Server.WithDaemonLiquidationInfo(daemonLiquidationInfo)
+	// Setup server for deleveraging messages. The server will wait for gRPC messages containing
+	// subaccounts with open perp positions and then encode them into an in-memory slice shared by
+	// the deleveraging module.
+	// The in-memory data structure is shared by the x/clob module and deleveraging daemon.
+	daemonDeleveragingInfo := deleveragingtypes.NewDaemonDeleveragingInfo()
+	app.Server.WithDaemonDeleveragingInfo(daemonDeleveragingInfo)
 
 	app.DaemonHealthMonitor = daemonservertypes.NewHealthMonitor(
 		daemonservertypes.DaemonStartupGracePeriod,
@@ -727,12 +746,12 @@ func New(
 		// Start server for handling gRPC messages from daemons.
 		go app.Server.Start()
 
-		// Start liquidations client for sending potentially liquidatable subaccounts to the application.
-		if daemonFlags.Liquidation.Enabled {
-			app.LiquidationsClient = liquidationclient.NewClient(logger)
+		// Start deleveraging client for sending subaccounts with open positions to the application.
+		if daemonFlags.Deleveraging.Enabled {
+			app.DeleveragingClient = deleveragingclient.NewClient(logger)
 			go func() {
-				app.RegisterDaemonWithHealthMonitor(app.LiquidationsClient, maxDaemonUnhealthyDuration)
-				if err := app.LiquidationsClient.Start(
+				app.RegisterDaemonWithHealthMonitor(app.DeleveragingClient, maxDaemonUnhealthyDuration)
+				if err := app.DeleveragingClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
 					context.Background(),
@@ -766,6 +785,25 @@ func New(
 			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
 		}
 
+		// Start SDAI Daemon.
+		// Non-validating full-nodes have no need to run the sDAI daemon.
+		if !appFlags.NonValidatingFullNode && daemonFlags.SDAI.Enabled {
+			app.SDAIClient = sdaiclient.NewClient(logger)
+			go func() {
+				app.RegisterDaemonWithHealthMonitor(app.SDAIClient, maxDaemonUnhealthyDuration)
+				if err := app.SDAIClient.Start(
+					// The client will use `context.Background` so that it can have a different context from
+					// the main application.
+					context.Background(),
+					daemonFlags,
+					appFlags,
+					&daemontypes.GrpcClientImpl{},
+				); err != nil {
+					panic(err)
+				}
+			}()
+		}
+
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.
 		// TODO(CLOB-960) Don't start this goroutine if telemetry is disabled
@@ -796,7 +834,7 @@ func New(
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
 		appCodec,
 		keys[pricesmoduletypes.StoreKey],
-		indexPriceCache,
+		daemonPriceCache,
 		pricesmoduletypes.NewMarketToSmoothedSpotPrices(pricesmoduletypes.SmoothedPriceTrackingBlockHistoryLength),
 		timeProvider,
 		app.IndexerEventManager,
@@ -827,7 +865,7 @@ func New(
 	)
 	delayMsgModule := delaymsgmodule.NewAppModule(appCodec, app.DelayMsgKeeper)
 
-	app.PerpetualsKeeper = perpetualsmodulekeeper.NewKeeper(
+	app.PerpetualsKeeper = *perpetualsmodulekeeper.NewKeeper(
 		appCodec,
 		keys[perpetualsmoduletypes.StoreKey],
 		app.PricesKeeper,
@@ -840,7 +878,7 @@ func New(
 		},
 		tkeys[perpetualsmoduletypes.TransientStoreKey],
 	)
-	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper)
+	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, &app.PerpetualsKeeper)
 
 	app.StatsKeeper = *statsmodulekeeper.NewKeeper(
 		appCodec,
@@ -873,12 +911,56 @@ func New(
 		app.AssetsKeeper,
 		app.BankKeeper,
 		app.PerpetualsKeeper,
+		app.RatelimitKeeper,
 		app.BlockTimeKeeper,
 		app.IndexerEventManager,
 	)
 	subaccountsModule := subaccountsmodule.NewAppModule(
 		appCodec,
 		app.SubaccountsKeeper,
+	)
+
+	/****  ve daemon initializer ****/
+	app.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
+	app.extCodec = vecodec.NewDefaultExtendedCommitCodec()
+
+	veCache := vecache.NewVECache()
+
+	pricesAggregatorFn := voteweighted.MedianPrices(
+		logger,
+		app.ConsumerKeeper,
+		voteweighted.DefaultPowerThreshold,
+	)
+
+	conversionRateAggregatorFn := voteweighted.MedianConversionRate(
+		logger,
+		app.ConsumerKeeper,
+		voteweighted.DefaultPowerThreshold,
+	)
+
+	aggregator := veaggregator.NewVeAggregator(
+		logger,
+		app.PricesKeeper,
+		app.RatelimitKeeper,
+		pricesAggregatorFn,
+		conversionRateAggregatorFn,
+	)
+
+	spotPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+	pnlPriceUpdateCache := pricecache.PriceUpdatesCacheImpl{}
+	sDaiConversionRateCache := bigintcache.BigIntCacheImpl{}
+
+	veApplier := veapplier.NewVEApplier(
+		logger,
+		aggregator,
+		app.PricesKeeper,
+		app.RatelimitKeeper,
+		app.voteCodec,
+		app.extCodec,
+		&spotPriceUpdateCache,
+		&pnlPriceUpdateCache,
+		&sDaiConversionRateCache,
+		veCache,
 	)
 
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
@@ -911,7 +993,8 @@ func New(
 		txConfig.TxDecoder(),
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[sdk.Msg](),
-		daemonLiquidationInfo,
+		daemonDeleveragingInfo,
+		veApplier,
 	)
 	clobModule := clobmodule.NewAppModule(
 		appCodec,
@@ -943,38 +1026,13 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
-	/****  ve daemon initializer ****/
-	app.voteCodec = vecodec.NewDefaultVoteExtensionCodec()
-	app.extCodec = vecodec.NewDefaultExtendedCommitCodec()
-
-	aggregatorFn := voteweighted.Median(
-		logger,
-		app.ConsumerKeeper,
-		voteweighted.DefaultPowerThreshold,
-	)
-
-	aggregator := veaggregator.NewVeAggregator(
-		logger,
-		indexPriceCache,
-		app.PricesKeeper,
-		aggregatorFn,
-	)
-
-	priceApplier := priceapplier.NewPriceApplier(
-		logger,
-		aggregator,
-		app.PricesKeeper,
-		app.voteCodec,
-		app.extCodec,
-	)
-
 	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(
 		logger,
-		priceApplier,
+		veApplier,
 	)
 
 	if !appFlags.NonValidatingFullNode {
-		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, app.PerpetualsKeeper, app.ClobKeeper, priceApplier)
+		app.InitVoteExtensions(logger, app.voteCodec, app.PricesKeeper, &app.PerpetualsKeeper, app.ClobKeeper, &app.RatelimitKeeper, sDAIEventManager, veApplier)
 	}
 
 	/****  Module Options ****/
@@ -1222,9 +1280,10 @@ func New(
 				app.ClobKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
+				app.RatelimitKeeper,
+				veCache,
 				app.voteCodec,
 				app.extCodec,
-				veValidationFn,
 			),
 		)
 	}
@@ -1249,9 +1308,10 @@ func New(
 				app.ClobKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
+				app.RatelimitKeeper,
 				app.extCodec,
 				app.voteCodec,
-				priceApplier,
+				veApplier,
 				veValidationFn,
 			),
 		)
@@ -1319,6 +1379,17 @@ func (app *App) RegisterDaemonWithHealthMonitor(
 	}
 }
 
+func createSDAIEventManager(appFlags flags.Flags, daemonFlags daemonflags.DaemonFlags) sdaidaemontypes.SDAIEventManager {
+	if daemonFlags.SDAI.MockEnabled {
+		return sdaidaemontypes.SetupMockFixedYieldEventManager()
+	} else if daemonFlags.SDAI.MockNoYield {
+		return sdaidaemontypes.SetupMockEventManagerNoYield()
+	} else if !appFlags.NonValidatingFullNode && daemonFlags.SDAI.Enabled {
+		return sdaidaemontypes.NewsDAIEventManager()
+	}
+	return sdaidaemontypes.NewsDAIEventManager(true)
+}
+
 // DisableHealthMonitorForTesting disables the health monitor for testing.
 func (app *App) DisableHealthMonitorForTesting() {
 	app.DaemonHealthMonitor.DisableForTesting()
@@ -1358,7 +1429,9 @@ func (app *App) InitVoteExtensions(
 	pricesKeeper pricesmodulekeeper.Keeper,
 	perpetualsKeeper *perpetualsmodulekeeper.Keeper,
 	clobKeeper *clobmodulekeeper.Keeper,
-	priceApplier *priceapplier.PriceApplier,
+	rateLimitKeeper *ratelimitmodulekeeper.Keeper,
+	sDAIEventManager sdaidaemontypes.SDAIEventManager,
+	veApplier *veapplier.VEApplier,
 ) {
 	veHandler := ve.NewVoteExtensionHandler(
 		logger,
@@ -1366,7 +1439,9 @@ func (app *App) InitVoteExtensions(
 		pricesKeeper,
 		perpetualsKeeper,
 		clobKeeper,
-		priceApplier,
+		rateLimitKeeper,
+		sDAIEventManager,
+		veApplier,
 	)
 	app.SetExtendVoteHandler(veHandler.ExtendVoteHandler())
 	app.SetVerifyVoteExtensionHandler(veHandler.VerifyVoteExtensionHandler())
@@ -1410,10 +1485,10 @@ func (app *App) Precommitter(ctx sdk.Context) {
 }
 
 // PrepareCheckStater application updates after commit and before any check state is invoked.
-func (app *App) PrepareCheckStater(ctx sdk.Context) {
+func (app *App) PrepareCheckStater(ctx sdk.Context, req *abci.RequestCommit) {
 	ctx = ctx.WithExecMode(lib.ExecModePrepareCheckState)
 
-	if err := app.ModuleManager.PrepareCheckState(ctx); err != nil {
+	if err := app.ModuleManager.PrepareCheckState(ctx, req); err != nil {
 		panic(err)
 	}
 }

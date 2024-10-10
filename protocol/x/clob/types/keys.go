@@ -90,6 +90,10 @@ const (
 	// for a subaccount within the last block.
 	SubaccountLiquidationInfoKeyPrefix = "SaLiqInfo:"
 
+	// CumulativeInsuranceFundDeltaKeyPrefix is the prefix to retrieve the cumulative insurance
+	// fund delta
+	CumulativeInsuranceFundDeltaKeyPrefix = "CumInsFundDelta:"
+
 	// NextStatefulOrderBlockTransactionIndexKey is the transient store key that stores the next
 	// transaction index to use for the next newly-placed stateful order.
 	NextStatefulOrderBlockTransactionIndexKey = "NextTxIdx"

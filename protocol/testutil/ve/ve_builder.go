@@ -20,25 +20,28 @@ import (
 )
 
 type SignedVEInfo struct {
-	Val     sdk.ConsAddress
-	Power   int64
-	Prices  []vetypes.PricePair
-	Height  int64
-	Round   int64
-	ChainId string
+	Val                sdk.ConsAddress
+	Power              int64
+	Prices             []vetypes.PricePair
+	SDaiConversionRate string
+	Height             int64
+	Round              int64
+	ChainId            string
 }
 
 func NewDefaultSignedVeInfo(
 	val sdk.ConsAddress,
 	prices []vetypes.PricePair,
+	sdaiConversionRate string,
 ) SignedVEInfo {
 	return SignedVEInfo{
-		Val:     val,
-		Power:   500,
-		Prices:  prices,
-		Height:  3,
-		Round:   0,
-		ChainId: "localdydxprotocol",
+		Val:                val,
+		Power:              500,
+		Prices:             prices,
+		SDaiConversionRate: sdaiConversionRate,
+		Height:             3,
+		Round:              0,
+		ChainId:            "localdydxprotocol",
 	}
 }
 
@@ -72,12 +75,13 @@ func GetEmptyLocalLastCommit(
 	for _, validator := range validators {
 		ve, err := CreateSignedExtendedVoteInfo(
 			SignedVEInfo{
-				Val:     sdk.ConsAddress(validator.Address),
-				Power:   validator.GetPower(),
-				Prices:  []vetypes.PricePair{},
-				Height:  height,
-				Round:   round,
-				ChainId: chainId,
+				Val:                sdk.ConsAddress(validator.Address),
+				Power:              validator.GetPower(),
+				Prices:             []vetypes.PricePair{},
+				SDaiConversionRate: "",
+				Height:             height,
+				Round:              round,
+				ChainId:            chainId,
 			},
 		)
 
@@ -109,7 +113,7 @@ func CreateExtendedCommitInfo(
 // CreateExtendedVoteInfoWithPower CreateExtendedVoteInfo creates an extended vote info
 // with the given power, prices, timestamp and height.
 func CreateSignedExtendedVoteInfo(veInfo SignedVEInfo) (cometabci.ExtendedVoteInfo, error) {
-	ve, err := CreateVoteExtensionBytes(veInfo.Prices)
+	ve, err := CreateVoteExtensionBytes(veInfo.Prices, veInfo.SDaiConversionRate)
 	if err != nil {
 		return cometabci.ExtendedVoteInfo{}, err
 	}
@@ -132,11 +136,26 @@ func CreateSignedExtendedVoteInfo(veInfo SignedVEInfo) (cometabci.ExtendedVoteIn
 	return voteInfo, nil
 }
 
+func CreateNilVoteExtensionInfo(consAddress sdk.ConsAddress, power int64) (cometabci.ExtendedVoteInfo, error) {
+	voteInfo := cometabci.ExtendedVoteInfo{
+		Validator: cometabci.Validator{
+			Address: consAddress,
+			Power:   power,
+		},
+		VoteExtension:      nil,
+		BlockIdFlag:        cometproto.BlockIDFlagAbsent,
+		ExtensionSignature: nil,
+	}
+
+	return voteInfo, nil
+}
+
 // CreateVoteExtensionBytes creates a vote extension bytes with the given prices, timestamp and height.
 func CreateVoteExtensionBytes(
 	prices []vetypes.PricePair,
+	sdaiConversionRate string,
 ) ([]byte, error) {
-	voteExtension := CreateVoteExtension(prices)
+	voteExtension := CreateVoteExtension(prices, sdaiConversionRate)
 	voteExtensionBz, err := voteCodec.Encode(voteExtension)
 	if err != nil {
 		return nil, err
@@ -148,9 +167,11 @@ func CreateVoteExtensionBytes(
 // CreateVoteExtension creates a vote extension with the given prices, timestamp and height.
 func CreateVoteExtension(
 	prices []vetypes.PricePair,
+	sdaiConversionRate string,
 ) vetypes.DaemonVoteExtension {
 	return vetypes.DaemonVoteExtension{
-		Prices: prices,
+		Prices:             prices,
+		SDaiConversionRate: sdaiConversionRate,
 	}
 }
 
@@ -194,7 +215,7 @@ func GetEmptyProposedLastCommit() cometabci.CommitInfo {
 	}
 }
 
-func GetIndexPriceCacheEncodedPrice(price *big.Int) ([]byte, error) {
+func GetVECacheEncodedPrice(price *big.Int) ([]byte, error) {
 	if price.Sign() < 0 {
 		return nil, fmt.Errorf("price must be non-negative %v", price.String())
 	}
@@ -202,28 +223,16 @@ func GetIndexPriceCacheEncodedPrice(price *big.Int) ([]byte, error) {
 	return price.GobEncode()
 }
 
-func GetIndexPriceCacheDecodedPrice(priceBz []byte) (*big.Int, error) {
-	var price big.Int
-	err := price.GobDecode(priceBz)
-	if err != nil {
-		return nil, err
-	}
-
-	if price.Sign() < 0 {
-		return nil, fmt.Errorf("price must be non-negative %v", price.String())
-	}
-
-	return &price, nil
-}
-
 func CreateSingleValidatorExtendedCommitInfo(
 	consAddr sdk.ConsAddress,
 	prices []vetypes.PricePair,
+	sdaiConversionRate string,
 ) (cometabci.ExtendedCommitInfo, []byte, error) {
 	voteInfo, err := CreateSignedExtendedVoteInfo(
 		NewDefaultSignedVeInfo(
 			consAddr,
 			prices,
+			sdaiConversionRate,
 		),
 	)
 	if err != nil {
@@ -267,16 +276,17 @@ func GetInjectedExtendedCommitInfoForTestApp(
 	consumerKeeper *ccvkeeper.Keeper,
 	ctx sdk.Context,
 	prices map[uint32]ve.VEPricePair,
+	sdaiConversionRate string,
 	height int64,
 ) (cometabci.ExtendedCommitInfo, []byte, error) {
 	var pricesBz = make([]vetypes.PricePair, len(prices))
 	for marketId, price := range prices {
-		encodedSpotPrice, err := GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(price.SpotPrice))
+		encodedSpotPrice, err := GetVECacheEncodedPrice(new(big.Int).SetUint64(price.SpotPrice))
 		if err != nil {
 			return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to encode price: %w", err)
 		}
 
-		encodedPnlPrice, err := GetIndexPriceCacheEncodedPrice(new(big.Int).SetUint64(price.PnlPrice))
+		encodedPnlPrice, err := GetVECacheEncodedPrice(new(big.Int).SetUint64(price.PnlPrice))
 		if err != nil {
 			return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to encode price: %w", err)
 		}
@@ -293,12 +303,13 @@ func GetInjectedExtendedCommitInfoForTestApp(
 	var veSignedInfos []SignedVEInfo
 	for _, v := range validators {
 		veSignedInfos = append(veSignedInfos, SignedVEInfo{
-			Val:     sdk.ConsAddress(v.Address),
-			Power:   v.GetPower(),
-			Prices:  pricesBz,
-			Height:  height,
-			Round:   0,
-			ChainId: "localdydxprotocol",
+			Val:                sdk.ConsAddress(v.Address),
+			Power:              v.GetPower(),
+			Prices:             pricesBz,
+			SDaiConversionRate: sdaiConversionRate,
+			Height:             height,
+			Round:              0,
+			ChainId:            "localdydxprotocol",
 		})
 	}
 

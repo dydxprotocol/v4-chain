@@ -20,9 +20,9 @@ func TestAddDaemonFlagsToCmd(t *testing.T) {
 		flags.FlagPanicOnDaemonFailureEnabled,
 		flags.FlagMaxDaemonUnhealthySeconds,
 
-		flags.FlagLiquidationDaemonEnabled,
-		flags.FlagLiquidationDaemonLoopDelayMs,
-		flags.FlagLiquidationDaemonQueryPageLimit,
+		flags.FlagDeleveragingDaemonEnabled,
+		flags.FlagDeleveragingDaemonLoopDelayMs,
+		flags.FlagDeleveragingDaemonQueryPageLimit,
 
 		flags.FlagPriceDaemonEnabled,
 		flags.FlagPriceDaemonLoopDelayMs,
@@ -43,9 +43,15 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	optsMap[flags.FlagPanicOnDaemonFailureEnabled] = false
 	optsMap[flags.FlagMaxDaemonUnhealthySeconds] = uint32(1234)
 
-	optsMap[flags.FlagLiquidationDaemonEnabled] = true
-	optsMap[flags.FlagLiquidationDaemonLoopDelayMs] = uint32(2222)
-	optsMap[flags.FlagLiquidationDaemonQueryPageLimit] = uint64(3333)
+	optsMap[flags.FlagDeleveragingDaemonEnabled] = true
+	optsMap[flags.FlagDeleveragingDaemonLoopDelayMs] = uint32(2222)
+	optsMap[flags.FlagDeleveragingDaemonQueryPageLimit] = uint64(3333)
+
+	optsMap[flags.FlagSDAIDaemonEnabled] = true
+	optsMap[flags.FlagSDAIDaemonMockEnabled] = true
+	optsMap[flags.FlagSDAIDaemonMockNoYield] = true
+	optsMap[flags.FlagSDAIDaemonEthRpcEndpoint] = "test-eth-rpc-endpoint"
+	optsMap[flags.FlagSDAIDaemonLoopDelayMs] = uint32(5555)
 
 	optsMap[flags.FlagPriceDaemonEnabled] = true
 	optsMap[flags.FlagPriceDaemonLoopDelayMs] = uint32(4444)
@@ -67,10 +73,17 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 		r.Shared.MaxDaemonUnhealthySeconds,
 	)
 
-	// Liquidation Daemon.
-	require.Equal(t, optsMap[flags.FlagLiquidationDaemonEnabled], r.Liquidation.Enabled)
-	require.Equal(t, optsMap[flags.FlagLiquidationDaemonLoopDelayMs], r.Liquidation.LoopDelayMs)
-	require.Equal(t, optsMap[flags.FlagLiquidationDaemonQueryPageLimit], r.Liquidation.QueryPageLimit)
+	// Deleveraging Daemon.
+	require.Equal(t, optsMap[flags.FlagDeleveragingDaemonEnabled], r.Deleveraging.Enabled)
+	require.Equal(t, optsMap[flags.FlagDeleveragingDaemonLoopDelayMs], r.Deleveraging.LoopDelayMs)
+	require.Equal(t, optsMap[flags.FlagDeleveragingDaemonQueryPageLimit], r.Deleveraging.QueryPageLimit)
+
+	// SDAI Daemon.
+	require.Equal(t, optsMap[flags.FlagSDAIDaemonEnabled], r.SDAI.Enabled)
+	require.Equal(t, optsMap[flags.FlagSDAIDaemonMockEnabled], r.SDAI.MockEnabled)
+	require.Equal(t, optsMap[flags.FlagSDAIDaemonMockNoYield], r.SDAI.MockNoYield)
+	require.Equal(t, optsMap[flags.FlagSDAIDaemonEthRpcEndpoint], r.SDAI.EthRpcEndpoint)
+	require.Equal(t, optsMap[flags.FlagSDAIDaemonLoopDelayMs], r.SDAI.LoopDelayMs)
 
 	// Price Daemon.
 	require.Equal(t, optsMap[flags.FlagPriceDaemonEnabled], r.Price.Enabled)

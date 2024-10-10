@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"math/rand"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	perpetualsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
@@ -75,14 +76,34 @@ type SubaccountsKeeper interface {
 		amount *big.Int,
 		perpetualId uint32,
 	) error
+	TransferLiquidityFee(
+		ctx sdk.Context,
+		liquidityFeeQuoteQuantums *big.Int,
+		perpetualId uint32,
+	) error
+	TransferValidatorFee(
+		ctx sdk.Context,
+		validatorFeeQuoteQuantums *big.Int,
+		perpetualId uint32,
+	) error
 	GetCollateralPoolFromPerpetualId(
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (sdk.AccAddress, error)
+	GetSettledSubaccount(
+		ctx sdk.Context,
+		subaccount satypes.Subaccount,
+	) (
+		settledSubaccount satypes.Subaccount,
+		fundingPayments map[uint32]dtypes.SerializableInt,
+		yieldForSubaccount *big.Int,
+		err error,
+	)
 }
 
 type AssetsKeeper interface {
 	GetAsset(ctx sdk.Context, id uint32) (val assettypes.Asset, exists bool)
+	ConvertCoinToAsset(ctx sdk.Context, assetId uint32, coin sdk.Coin) (quantums *big.Int, convertedDenom *big.Int, err error)
 }
 
 type BlockTimeKeeper interface {
@@ -131,6 +152,9 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		id uint32,
 	) (val perpetualsmoduletypes.Perpetual, err error)
+	GetAllPerpetuals(ctx sdk.Context) (list []perpetualsmoduletypes.Perpetual)
+	GetAllLiquidityTiers(ctx sdk.Context) (list []perpetualsmoduletypes.LiquidityTier)
+	IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error)
 	GetPerpetualAndMarketPrice(
 		ctx sdk.Context,
 		perpetualId uint32,
@@ -147,10 +171,13 @@ type PerpetualsKeeper interface {
 	)
 	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)
 	GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error)
+	GetInsuranceFundName(ctx sdk.Context, perpetualId uint32) (string, error)
 }
 
 type PricesKeeper interface {
 	GetMarketParam(ctx sdk.Context, id uint32) (param pricestypes.MarketParam, exists bool)
+	GetAllMarketPrices(ctx sdk.Context) []pricestypes.MarketPrice
+	GetMarketPrice(ctx sdk.Context, id uint32) (pricestypes.MarketPrice, error)
 }
 
 type StatsKeeper interface {

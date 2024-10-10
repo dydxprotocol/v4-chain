@@ -7,19 +7,14 @@ import (
 
 var (
 	LiquidationsConfig_Default = LiquidationsConfig{
-		MaxLiquidationFeePpm: 5_000,
+		InsuranceFundFeePpm: 5_000,
+		ValidatorFeePpm:     200_000,
+		LiquidityFeePpm:     800_000,
 		FillablePriceConfig: FillablePriceConfig{
 			BankruptcyAdjustmentPpm:           lib.OneMillion,
 			SpreadToMaintenanceMarginRatioPpm: 100_000,
 		},
-		PositionBlockLimits: PositionBlockLimits{
-			MinPositionNotionalLiquidated:   1_000,
-			MaxPositionPortionLiquidatedPpm: 1_000_000,
-		},
-		SubaccountBlockLimits: SubaccountBlockLimits{
-			MaxNotionalLiquidated:    100_000_000_000_000,
-			MaxQuantumsInsuranceLost: 100_000_000_000_000,
-		},
+		MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 	}
 )
 

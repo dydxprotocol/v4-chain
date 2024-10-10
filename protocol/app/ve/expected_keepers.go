@@ -7,7 +7,6 @@ import (
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -32,6 +31,11 @@ type PreBlockExecPricesKeeper interface {
 	GetSmoothedSpotPrice(markedId uint32) (uint64, bool)
 }
 
+type VoteExtensionRateLimitKeeper interface {
+	GetSDAIPrice(ctx sdk.Context) (price *big.Int, found bool)
+	GetSDAILastBlockUpdated(ctx sdk.Context) (blockHeight *big.Int, found bool)
+}
+
 type ExtendVoteClobKeeper interface {
 	GetSingleMarketClobMetadata(ctx sdk.Context, clobPair clobtypes.ClobPair) clobtypes.ClobMetadata
 	GetClobPair(ctx sdk.Context, id clobtypes.ClobPairId) (val clobtypes.ClobPair, found bool)
@@ -44,10 +48,6 @@ type ExtendVotePerpetualsKeeper interface {
 	) (val perptypes.Perpetual, err error)
 }
 
-type ExtendVoteIndexPriceCache interface {
-	GetVEEncodedPrice(price *big.Int) ([]byte, error)
-}
-
-type VEPriceApplier interface {
-	ApplyPricesFromVE(ctx sdk.Context, req *abci.RequestFinalizeBlock) error
+type VEApplierInterface interface {
+	ApplyVE(ctx sdk.Context, txs [][]byte, writeToCache bool) error
 }

@@ -51,7 +51,7 @@ func GetDefaultTestAppOptions(homePath string, customFlags map[string]interface{
 	fao.Set(daemonflags.FlagPriceDaemonEnabled, false)
 
 	// Disable the Liquidation Daemon for all end-to-end and integration tests by default.
-	fao.Set(daemonflags.FlagLiquidationDaemonEnabled, false)
+	fao.Set(daemonflags.FlagDeleveragingDaemonEnabled, false)
 
 	// Populate the default value for gRPC.
 	fao.Set(appflags.GrpcAddress, config.DefaultGRPCAddress)

@@ -56,7 +56,7 @@ async function test(): Promise<void> {
 
     const simulatePayload = {
       subaccountNumber: 0,
-      amount: 20,   // In USDC i.e. $20.00
+      amount: 20,   // In TDAI i.e. $20.00
     };
     let stdFee = await simulateWithdraw(JSON.stringify(simulatePayload));
     console.log(stdFee);
@@ -85,6 +85,7 @@ async function test(): Promise<void> {
     tx = await deposit(stringVal);
     console.log(tx);
 
+    // Use sDAI denom for ibc transfers
     const squidPayload = `
     {
       "msgTypeUrl": "/ibc.applications.transfer.v1.MsgTransfer",
@@ -92,8 +93,8 @@ async function test(): Promise<void> {
           "sourcePort": "transfer",
           "sourceChannel": "channel-0",
           "token": {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
-              "amount": "10000000"
+              "denom": "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8",
+              "amount": "10000000000000000000"
           },
           "sender": "dydx16zfx8g4jg9vels3rsvcym490tkn5la304c57e9",
           "receiver": "noble16zfx8g4jg9vels3rsvcym490tkn5la305z0jpu",

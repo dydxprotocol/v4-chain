@@ -338,7 +338,6 @@ func TestRemoveOrderIfFilled(t *testing.T) {
 
 			// Create all unique orderbooks.
 			createAllOrderbooksForOrders(
-				t,
 				ctx,
 				memclob,
 				append(tc.existingOrders, tc.order),
@@ -615,7 +614,6 @@ func TestRemoveOrder(t *testing.T) {
 
 			// Create all unique orderbooks.
 			createAllOrderbooksForOrders(
-				t,
 				ctx,
 				memclob,
 				append(tc.existingOrders, tc.order),

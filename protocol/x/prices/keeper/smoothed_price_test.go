@@ -33,22 +33,22 @@ func alternatingErrInterpolator() func(v0 uint64, v1 uint64, ppm uint32) (uint64
 func TestUpdateSmoothedPrices(t *testing.T) {
 	tests := map[string]struct {
 		smoothedPrices        map[uint32]uint64
-		indexPrices           []*api.MarketPriceUpdate
+		daemonPrices          []*api.MarketPriceUpdate
 		expectedResult        map[uint32]uint64
 		linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error)
 		expectedErr           string
 	}{
-		"Empty result - No index prices, no smoothed prices": {
+		"Empty result - No daemon prices, no smoothed prices": {
 			expectedResult:        emptySmoothedPrices,
 			linearInterpolateFunc: lib.Uint64LinearInterpolate,
 		},
-		"Unchanged - No index prices": {
+		"Unchanged - No daemon prices": {
 			smoothedPrices:        constants.AtTimeTSingleExchangeSmoothedPrices,
 			expectedResult:        constants.AtTimeTSingleExchangeSmoothedPrices,
 			linearInterpolateFunc: lib.Uint64LinearInterpolate,
 		},
-		"Mixed updates and additions - mix of present and missing index prices, smoothed prices": {
-			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
+		"Mixed updates and additions - mix of present and missing daemon prices, smoothed prices": {
+			daemonPrices: constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedPrices: map[uint32]uint64{
 				constants.MarketId1: constants.Exchange1_Price1_TimeT.Price + 10,
 				constants.MarketId2: constants.Exchange2_Price2_TimeT.Price + 50,
@@ -64,19 +64,19 @@ func TestUpdateSmoothedPrices(t *testing.T) {
 			},
 			linearInterpolateFunc: lib.Uint64LinearInterpolate,
 		},
-		"Initializes smoothed prices with index prices": {
-			indexPrices:           constants.AtTimeTSingleExchangePriceUpdate,
+		"Initializes smoothed prices with daemon prices": {
+			daemonPrices:          constants.AtTimeTSingleExchangePriceUpdate,
 			expectedResult:        constants.AtTimeTSingleExchangeSmoothedPrices,
 			linearInterpolateFunc: lib.Uint64LinearInterpolate,
 		},
-		"All updated - multiple existing overlapped index and smoothed prices": {
-			indexPrices:           constants.AtTimeTSingleExchangePriceUpdate,
+		"All updated - multiple existing overlapped daemon and smoothed prices": {
+			daemonPrices:          constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedPrices:        constants.AtTimeTSingleExchangeSmoothedPricesPlus10,
 			expectedResult:        constants.AtTimeTSingleExchangeSmoothedPricesPlus7,
 			linearInterpolateFunc: lib.Uint64LinearInterpolate,
 		},
 		"Interpolation errors - returns error": {
-			indexPrices:           constants.AtTimeTSingleExchangePriceUpdate,
+			daemonPrices:          constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedPrices:        constants.AtTimeTSingleExchangeSmoothedPricesPlus10,
 			linearInterpolateFunc: errInterpolator,
 			expectedErr: "Error updating smoothed price for market 0: error while interpolating\n" +
@@ -87,7 +87,7 @@ func TestUpdateSmoothedPrices(t *testing.T) {
 			expectedResult: constants.AtTimeTSingleExchangeSmoothedPricesPlus10, // no change
 		},
 		"Single interpolation error - returns error, continues updating other markets": {
-			indexPrices:           constants.AtTimeTSingleExchangePriceUpdate,
+			daemonPrices:          constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedPrices:        constants.AtTimeTSingleExchangeSmoothedPricesPlus10,
 			linearInterpolateFunc: alternatingErrInterpolator(),
 			expectedErr: "Error updating smoothed price for market 1: error while interpolating\n" +
@@ -104,11 +104,11 @@ func TestUpdateSmoothedPrices(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, k, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, k, _, daemonPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			keepertest.CreateTestMarkets(t, ctx, k)
-			indexPriceCache.UpdatePrices(tc.indexPrices)
+			daemonPriceCache.UpdatePrices(tc.daemonPrices)
 			for market, smoothedPrice := range tc.smoothedPrices {
 				marketToSmoothedPrices.PushSmoothedSpotPrice(market, smoothedPrice)
 			}

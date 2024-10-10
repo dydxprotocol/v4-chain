@@ -53,7 +53,7 @@ Note, the '--from' flag is ignored as it is implied from [sender_key_or_address]
 					Number: argSenderNumber,
 				},
 				argRecipient,
-				assettypes.AssetUsdc.Id,
+				assettypes.AssetTDai.Id,
 				argAmount,
 			)
 

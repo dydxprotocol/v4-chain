@@ -1,12 +1,16 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/msgsender"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/off_chain_updates"
@@ -15,7 +19,9 @@ import (
 
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
@@ -244,6 +250,22 @@ func TestBatchCancelSingleCancelFunctionality(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
+
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
+
 			// Place first block orders and cancels
 			for _, order := range tc.firstBlockOrders {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, order) {
@@ -258,7 +280,7 @@ func TestBatchCancelSingleCancelFunctionality(t *testing.T) {
 			}
 
 			// Advance block
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 			// Place second block orders and cancels
 			for _, order := range tc.secondBlockOrders {
@@ -615,10 +637,25 @@ func TestBatchCancelBatchFunctionality(t *testing.T) {
 				)
 				return genesis
 			}).WithCrashingAppCheckTxNonDeterminismChecksEnabled(false).Build()
-			_ = tApp.InitChain()
+			ctx := tApp.InitChain()
+
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			_ = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			// Advance block to 10
-			ctx := tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})
 
 			// Place first block orders and cancels
 			for _, order := range tc.firstBlockOrders {
@@ -859,10 +896,27 @@ func TestBatchCancelOffchainUpdates(t *testing.T) {
 				)
 				return genesis
 			}).WithCrashingAppCheckTxNonDeterminismChecksEnabled(false).WithAppOptions(appOpts).Build()
-			_ = tApp.InitChain()
+
+			// Set up initial sdai price
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 			// Advance block to 10
-			ctx := tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(10, testapp.AdvanceToBlockOptions{})
+
 			// Clear any messages produced prior to these checkTx calls.
 			msgSender.Clear()
 

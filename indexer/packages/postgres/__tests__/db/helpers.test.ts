@@ -11,6 +11,7 @@ import {
   defaultPerpetualMarket,
   defaultPerpetualPosition,
   defaultPerpetualPositionId,
+  defaultZeroPerpYieldIndex,
 } from '../helpers/constants';
 import * as PerpetualPositionTable from '../../src/stores/perpetual-position-table';
 import * as MarketTable from '../../src/stores/market-table';
@@ -32,6 +33,7 @@ describe('helpers', () => {
       entryPrice: defaultPerpetualPosition.entryPrice as string,
       sumOpen: defaultPerpetualPosition.sumOpen as string,
       sumClose: defaultPerpetualPosition.sumClose as string,
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     };
 
     it('compute unsettled funding for long position', () => {

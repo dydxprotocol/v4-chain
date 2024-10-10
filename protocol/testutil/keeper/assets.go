@@ -22,17 +22,33 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
-// CreateUsdcAsset creates USDC in the assets module for tests.
-func CreateUsdcAsset(ctx sdk.Context, assetsKeeper *keeper.Keeper) error {
+// CreateTDaiAsset creates TDAI in the assets module for tests.
+func CreateTDaiAsset(ctx sdk.Context, assetsKeeper *keeper.Keeper) error {
 	_, err := assetsKeeper.CreateAsset(
 		ctx,
-		constants.Usdc.Id,
-		constants.Usdc.Symbol,
-		constants.Usdc.Denom,
-		constants.Usdc.DenomExponent,
-		constants.Usdc.HasMarket,
-		constants.Usdc.MarketId,
-		constants.Usdc.AtomicResolution,
+		constants.TDai.Id,
+		constants.TDai.Symbol,
+		constants.TDai.Denom,
+		constants.TDai.DenomExponent,
+		constants.TDai.HasMarket,
+		constants.TDai.MarketId,
+		constants.TDai.AtomicResolution,
+		constants.TDai.AssetYieldIndex,
+	)
+	return err
+}
+
+func CreateNonTDaiAsset(ctx sdk.Context, assetsKeeper *keeper.Keeper) error {
+	_, err := assetsKeeper.CreateAsset(
+		ctx,
+		constants.BtcUsd.Id,
+		constants.BtcUsd.Symbol,
+		constants.BtcUsd.Denom,
+		constants.BtcUsd.DenomExponent,
+		constants.BtcUsd.HasMarket,
+		constants.BtcUsd.MarketId,
+		constants.BtcUsd.AtomicResolution,
+		constants.BtcUsd.AssetYieldIndex,
 	)
 	return err
 }

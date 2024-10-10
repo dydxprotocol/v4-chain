@@ -141,6 +141,8 @@ func (k Keeper) ProcessSingleMatch(
 		ctx, matchWithOrders.MakerOrder.GetSubaccountId().Owner, false)
 
 	takerInsuranceFundDelta := new(big.Int)
+	validatorFeeQuoteQuantums := new(big.Int)
+	liquidityFeeQuoteQuantums := new(big.Int)
 	if takerMatchableOrder.IsLiquidation() {
 		// Liquidation orders do not pay trading fees because they already pay a liquidation fee.
 		takerFeePpm = 0
@@ -148,7 +150,7 @@ func (k Keeper) ProcessSingleMatch(
 		// the fee collector has insufficient funds to pay the maker rebate.
 		// TODO(CLOB-812): find a longer term solution to handle maker rebates for liquidations.
 		makerFeePpm = lib.Max(makerFeePpm, 0)
-		takerInsuranceFundDelta, err = k.validateMatchedLiquidation(
+		takerInsuranceFundDelta, validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, err = k.validateMatchedLiquidationAndGetFees(
 			ctx,
 			takerMatchableOrder,
 			perpetualId,
@@ -224,6 +226,8 @@ func (k Keeper) ProcessSingleMatch(
 		makerFeePpm,
 		bigFillQuoteQuantums,
 		takerInsuranceFundDelta,
+		validatorFeeQuoteQuantums,
+		liquidityFeeQuoteQuantums,
 	)
 
 	if err != nil {
@@ -241,12 +245,14 @@ func (k Keeper) ProcessSingleMatch(
 			return false, takerUpdateResult, makerUpdateResult, nil, err
 		}
 
-		k.UpdateSubaccountLiquidationInfo(
+		err = k.IncrementCumulativeInsuranceFundDelta(
 			ctx,
-			matchWithOrders.TakerOrder.GetSubaccountId(),
-			notionalLiquidatedQuoteQuantums,
+			perpetualId,
 			takerInsuranceFundDelta,
 		)
+		if err != nil {
+			return false, takerUpdateResult, makerUpdateResult, nil, err
+		}
 
 		labels := []gometrics.Label{
 			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
@@ -309,6 +315,8 @@ func (k Keeper) persistMatchedOrders(
 	makerFeePpm int32,
 	bigFillQuoteQuantums *big.Int,
 	insuranceFundDelta *big.Int,
+	validatorFeeQuoteQuantums *big.Int,
+	liquidityFeeQuoteQuantums *big.Int,
 ) (
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
@@ -323,7 +331,7 @@ func (k Keeper) persistMatchedOrders(
 	matchWithOrders.MakerFee = bigMakerFeeQuoteQuantums.Int64()
 	// Liquidation orders pay the liquidation fee instead of the standard taker fee
 	if matchWithOrders.TakerOrder.IsLiquidation() {
-		matchWithOrders.TakerFee = insuranceFundDelta.Int64()
+		matchWithOrders.TakerFee = insuranceFundDelta.Int64() + validatorFeeQuoteQuantums.Int64() + liquidityFeeQuoteQuantums.Int64()
 	} else {
 		matchWithOrders.TakerFee = bigTakerFeeQuoteQuantums.Int64()
 	}
@@ -360,6 +368,8 @@ func (k Keeper) persistMatchedOrders(
 	// Subtract quote balance delta with insurance fund payments.
 	if matchWithOrders.TakerOrder.IsLiquidation() {
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, insuranceFundDelta)
+		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, validatorFeeQuoteQuantums)
+		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, liquidityFeeQuoteQuantums)
 	}
 
 	// Create the subaccount update.
@@ -368,7 +378,7 @@ func (k Keeper) persistMatchedOrders(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
+					AssetId:          assettypes.AssetTDai.Id,
 					BigQuantumsDelta: bigTakerQuoteBalanceDelta,
 				},
 			},
@@ -384,7 +394,7 @@ func (k Keeper) persistMatchedOrders(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
+					AssetId:          assettypes.AssetTDai.Id,
 					BigQuantumsDelta: bigMakerQuoteBalanceDelta,
 				},
 			},
@@ -436,11 +446,22 @@ func (k Keeper) persistMatchedOrders(
 		return takerUpdateResult, makerUpdateResult, err
 	}
 
+	// Transfer the liquidity and validator fees
+	err = k.subaccountsKeeper.TransferLiquidityFee(ctx, liquidityFeeQuoteQuantums, perpetualId)
+	if err != nil {
+		return satypes.UpdateCausedError, satypes.UpdateCausedError, err
+	}
+
+	err = k.subaccountsKeeper.TransferValidatorFee(ctx, validatorFeeQuoteQuantums, perpetualId)
+	if err != nil {
+		return satypes.UpdateCausedError, satypes.UpdateCausedError, err
+	}
+
 	// Transfer the fee amount from subacounts module to fee collector module account.
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
 	if err := k.subaccountsKeeper.TransferFeesToFeeCollectorModule(
 		ctx,
-		assettypes.AssetUsdc.Id,
+		assettypes.AssetTDai.Id,
 		bigTotalFeeQuoteQuantums,
 		perpetualId,
 	); err != nil {
@@ -477,6 +498,8 @@ func (k Keeper) persistMatchedOrders(
 			bigTakerPerpetualQuantumsDelta,
 			bigMakerPerpetualQuantumsDelta,
 			insuranceFundDelta,
+			validatorFeeQuoteQuantums,
+			liquidityFeeQuoteQuantums,
 			isTakerLiquidation,
 			false,
 			perpetualId,

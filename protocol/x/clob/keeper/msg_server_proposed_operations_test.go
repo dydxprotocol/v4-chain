@@ -51,7 +51,7 @@ func TestProposedOperations(t *testing.T) {
 			memClob.On("SetClobKeeper", mock.Anything).Return()
 			mockKeeper := &mocks.ClobKeeper{}
 			ks := keepertest.NewClobKeepersTestContext(
-				t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+				t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{}, nil)
 
 			// Setup mocks.
 			blockHeight := int64(20)

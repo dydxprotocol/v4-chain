@@ -33,7 +33,7 @@ import {
 } from '../../src/helpers/kafka-helper';
 import { stats } from '@dydxprotocol-indexer/base';
 import { updateBlockCache } from '../../src/caches/block-cache';
-import { defaultPreviousHeight, defaultWalletAddress } from './constants';
+import { defaultPreviousHeight, defaultWalletAddress, defaultZeroPerpYieldIndex } from './constants';
 
 describe('kafka-helper', () => {
   describe('addPositionsToContents', () => {
@@ -53,6 +53,7 @@ describe('kafka-helper', () => {
       openEventId: testConstants.defaultTendermintEventId,
       lastEventId: testConstants.defaultTendermintEventId,
       settledFunding: '200000',
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     };
 
     const defaultPerpetualMarket: PerpetualMarketFromDatabase = {
@@ -498,6 +499,7 @@ describe('kafka-helper', () => {
       status: PerpetualPositionStatus.OPEN,
       size: '0.0001',
       lastEventId: Buffer.from('0'),
+      perpYieldIndex: defaultZeroPerpYieldIndex,
     };
 
     beforeAll(async () => {
@@ -584,6 +586,7 @@ describe('kafka-helper', () => {
         settledFunding: '200000',
         status: PerpetualPositionStatus.OPEN,
         size: '10',
+        perpYieldIndex: defaultZeroPerpYieldIndex,
       });
     });
 

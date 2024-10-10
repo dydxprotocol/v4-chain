@@ -111,7 +111,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 					Id:                 &constants.Alice_Num0,
 					PerpetualPositions: nil,
 					AssetPositions: []*types.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
@@ -122,7 +122,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          assettypes.AssetUsdc.Id,
+						AssetId:          assettypes.AssetTDai.Id,
 						BigQuantumsDelta: big.NewInt(100_000_000),
 					},
 				},
@@ -133,7 +133,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedStateTransition: &types.IsolatedPerpetualPositionStateTransition{
 				SubaccountId:  &constants.Alice_Num0,
 				PerpetualId:   uint32(3),
-				QuoteQuantums: constants.Usdc_Asset_10_000.GetBigQuantums(),
+				QuoteQuantums: constants.TDai_Asset_10_000.GetBigQuantums(),
 				Transition:    types.Closed,
 			},
 		},
@@ -147,7 +147,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 					},
 					AssetPositions: []*types.AssetPosition{
 						{
-							AssetId:  assettypes.AssetUsdc.Id,
+							AssetId:  assettypes.AssetTDai.Id,
 							Quantums: dtypes.NewInt(-40_000_000), // -$40
 						},
 					},
@@ -160,7 +160,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          assettypes.AssetUsdc.Id,
+						AssetId:          assettypes.AssetTDai.Id,
 						BigQuantumsDelta: big.NewInt(-50_000_000), // -$50
 					},
 				},
@@ -185,7 +185,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 					},
 					AssetPositions: []*types.AssetPosition{
 						{
-							AssetId:  assettypes.AssetUsdc.Id,
+							AssetId:  assettypes.AssetTDai.Id,
 							Quantums: dtypes.NewInt(-40_000_000), // -$65
 						},
 					},
@@ -198,7 +198,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          assettypes.AssetUsdc.Id,
+						AssetId:          assettypes.AssetTDai.Id,
 						BigQuantumsDelta: big.NewInt(-25_000_000), // -$25
 					},
 				},
@@ -217,7 +217,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 					},
 					AssetPositions: []*types.AssetPosition{
 						{
-							AssetId:  assettypes.AssetUsdc.Id,
+							AssetId:  assettypes.AssetTDai.Id,
 							Quantums: dtypes.NewInt(50_000_000), // $50
 						},
 					},
@@ -245,7 +245,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 					},
 					AssetPositions: []*types.AssetPosition{
 						{
-							AssetId:  assettypes.AssetUsdc.Id,
+							AssetId:  assettypes.AssetTDai.Id,
 							Quantums: dtypes.NewInt(-40_000_000), // -$40
 						},
 						{
@@ -262,7 +262,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          assettypes.AssetUsdc.Id,
+						AssetId:          assettypes.AssetTDai.Id,
 						BigQuantumsDelta: big.NewInt(-50_000_000), // -$50
 					},
 					{
@@ -277,7 +277,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedStateTransition: nil,
 			expectedErr:             types.ErrFailedToUpdateSubaccounts,
 		},
-		`Returns error if perpetual position was opened with non-usdc asset update`: {
+		`Returns error if perpetual position was opened with non-TDai asset update`: {
 			settledUpdateWithUpdatedSubaccount: keeper.SettledUpdate{
 				SettledSubaccount: types.Subaccount{
 					Id: &constants.Alice_Num0,
@@ -286,7 +286,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 					},
 					AssetPositions: []*types.AssetPosition{
 						{
-							AssetId:  assettypes.AssetUsdc.Id,
+							AssetId:  assettypes.AssetTDai.Id,
 							Quantums: dtypes.NewInt(50_000_000), // $50
 						},
 						{

@@ -8,40 +8,39 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 )
 
-// BigBaselineMinimum1Hr defines the minimum baseline USDC for the 1-hour rate-limit.
+// BigBaselineMinimum1Hr defines the minimum baseline sDai for the 1-hour rate-limit.
 var BigBaselineMinimum1Hr = new(big.Int).Mul(
 	big.NewInt(1_000_000), // 1m full coins
-	lib.BigPow10(-assettypes.UusdcDenomExponent),
+	lib.BigPow10(-SDaiDenomExponent),
 )
 
-// BigBaselineMinimum1Day defines the minimum baseline USDC for the 1-day rate-limit.
+// BigBaselineMinimum1Day defines the minimum baseline sDai for the 1-day rate-limit.
 var BigBaselineMinimum1Day = new(big.Int).Mul(
 	big.NewInt(10_000_000), // 10m full coins
-	lib.BigPow10(-assettypes.UusdcDenomExponent),
+	lib.BigPow10(-SDaiDenomExponent),
 )
 
-var DefaultUsdcHourlyLimter = Limiter{
+var DefaultSDaiHourlyLimter = Limiter{
 	Period:          3600 * time.Second,
 	BaselineMinimum: dtypes.NewIntFromBigInt(BigBaselineMinimum1Hr),
 	BaselineTvlPpm:  10_000, // 1%
 }
 
-var DefaultUsdcDailyLimiter = Limiter{
+var DefaultSDaiDailyLimiter = Limiter{
 	Period:          24 * time.Hour,
 	BaselineMinimum: dtypes.NewIntFromBigInt(BigBaselineMinimum1Day),
 	BaselineTvlPpm:  100_000, // 10%
 }
 
-// DefaultUsdcRateLimitParams returns default rate-limit params for USDC.
-func DefaultUsdcRateLimitParams() LimitParams {
+// DefaultSDaiRateLimitParams returns default rate-limit params for sDai.
+func DefaultSDaiRateLimitParams() LimitParams {
 	return LimitParams{
-		Denom: assettypes.UusdcDenom,
+		Denom: SDaiDenom,
 		Limiters: []Limiter{
-			DefaultUsdcHourlyLimter,
-			DefaultUsdcDailyLimiter,
+			DefaultSDaiHourlyLimter,
+			DefaultSDaiDailyLimiter,
 		},
 	}
 }

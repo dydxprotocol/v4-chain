@@ -12,12 +12,12 @@ import (
 // `sizeQuoteQuantums = subticks * baseQuantums * 10^quantumConversionExponent`
 // Substituting `baseQuantums` with a full coin of the base currency:
 //
-// `usdcPrice * 10^(-quoteAtomicResolution) = subticks * 10^(-baseAtomicResolution) *
+// `tdaiPrice * 10^(-quoteAtomicResolution) = subticks * 10^(-baseAtomicResolution) *
 // 10^quantumConversionExponent` (A)
 //
 // By construction of Prices module:
 //
-// `usdcPrice = marketPrice.Price * 10^marketPrice.Exponent` (B)
+// `tdaiPrice = marketPrice.Price * 10^marketPrice.Exponent` (B)
 //
 // Combining equations (A) & (B), we get:
 //
@@ -35,7 +35,7 @@ func PnlPriceToSubticks(
 		marketPrice.Exponent - clobPair.QuantumConversionExponent + baseAtomicResolution - quoteAtomicResolution,
 	)
 	return lib.BigMulPow10(
-		// TODO(DEC-1256): Use index price from the price daemon, instead of oracle price.
+		// TODO(DEC-1256): Use daemon price from the price daemon, instead of oracle price.
 		new(big.Int).SetUint64(marketPrice.PnlPrice),
 		exponent,
 	)
@@ -53,7 +53,7 @@ func SpotPriceToSubticks(
 		marketPrice.Exponent - clobPair.QuantumConversionExponent + baseAtomicResolution - quoteAtomicResolution,
 	)
 	return lib.BigMulPow10(
-		// TODO(DEC-1256): Use index price from the price daemon, instead of oracle price.
+		// TODO(DEC-1256): Use daemon price from the price daemon, instead of oracle price.
 		new(big.Int).SetUint64(marketPrice.SpotPrice),
 		exponent,
 	)
@@ -64,12 +64,12 @@ func SpotPriceToSubticks(
 // `sizeQuoteQuantums = subticks * baseQuantums * 10^quantumConversionExponent`
 // Substituting `baseQuantums` with a full coin of the base currency:
 //
-// `usdcPrice * 10^(-quoteAtomicResolution) = subticks * 10^(-baseAtomicResolution) *
+// `tdaiPrice * 10^(-quoteAtomicResolution) = subticks * 10^(-baseAtomicResolution) *
 // 10^quantumConversionExponent` (A)
 //
 // By construction of Prices module:
 //
-// `usdcPrice = marketPrice.Price * 10^marketPrice.Exponent` (B)
+// `tdaiPrice = marketPrice.Price * 10^marketPrice.Exponent` (B)
 //
 // Combining equations (A) & (B), we get:
 //
@@ -91,7 +91,7 @@ func SubticksToPrice(
 	)
 	return lib.BigRatRound(
 		lib.BigMulPow10(
-			// TODO(DEC-1256): Use index price from the price daemon, instead of oracle price.
+			// TODO(DEC-1256): Use daemon price from the price daemon, instead of oracle price.
 			new(big.Int).SetUint64(uint64(subticks)),
 			exponent,
 		),

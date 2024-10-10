@@ -6,7 +6,7 @@ export interface Asset {
   /** Unique, sequentially-generated. */
   id: number;
   /**
-   * The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+   * The human readable symbol of the `Asset` (e.g. `TDAI`, `ATOM`).
    * Must be uppercase, unique and correspond to the canonical symbol of the
    * full coin.
    */
@@ -48,6 +48,13 @@ export interface Asset {
    */
 
   atomicResolution: number;
+  /**
+   * The current yield index is determined by the cumulative
+   * all-time history of the yield mechanism for assets.
+   * Starts at 0. This string should always be converted big.Rat.
+   */
+
+  assetYieldIndex: string;
 }
 /** Asset defines a single exchangable asset. */
 
@@ -55,7 +62,7 @@ export interface AssetSDKType {
   /** Unique, sequentially-generated. */
   id: number;
   /**
-   * The human readable symbol of the `Asset` (e.g. `USDC`, `ATOM`).
+   * The human readable symbol of the `Asset` (e.g. `TDAI`, `ATOM`).
    * Must be uppercase, unique and correspond to the canonical symbol of the
    * full coin.
    */
@@ -97,6 +104,13 @@ export interface AssetSDKType {
    */
 
   atomic_resolution: number;
+  /**
+   * The current yield index is determined by the cumulative
+   * all-time history of the yield mechanism for assets.
+   * Starts at 0. This string should always be converted big.Rat.
+   */
+
+  asset_yield_index: string;
 }
 
 function createBaseAsset(): Asset {
@@ -107,7 +121,8 @@ function createBaseAsset(): Asset {
     denomExponent: 0,
     hasMarket: false,
     marketId: 0,
-    atomicResolution: 0
+    atomicResolution: 0,
+    assetYieldIndex: ""
   };
 }
 
@@ -139,6 +154,10 @@ export const Asset = {
 
     if (message.atomicResolution !== 0) {
       writer.uint32(56).sint32(message.atomicResolution);
+    }
+
+    if (message.assetYieldIndex !== "") {
+      writer.uint32(66).string(message.assetYieldIndex);
     }
 
     return writer;
@@ -181,6 +200,10 @@ export const Asset = {
           message.atomicResolution = reader.sint32();
           break;
 
+        case 8:
+          message.assetYieldIndex = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -199,6 +222,7 @@ export const Asset = {
     message.hasMarket = object.hasMarket ?? false;
     message.marketId = object.marketId ?? 0;
     message.atomicResolution = object.atomicResolution ?? 0;
+    message.assetYieldIndex = object.assetYieldIndex ?? "";
     return message;
   }
 

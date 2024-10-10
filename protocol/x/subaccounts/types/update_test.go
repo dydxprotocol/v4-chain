@@ -28,7 +28,7 @@ func TestGetErrorFromUpdateResults(t *testing.T) {
 				SubaccountId: types.SubaccountId{
 					Owner: "owner",
 				},
-				AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+				AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(1)),
 			}},
 			expectedErr: types.ErrFailedToUpdateSubaccounts,
 		},
@@ -39,7 +39,7 @@ func TestGetErrorFromUpdateResults(t *testing.T) {
 				SubaccountId: types.SubaccountId{
 					Owner: "owner",
 				},
-				AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+				AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(1)),
 			}},
 			expectPanic: true,
 		},

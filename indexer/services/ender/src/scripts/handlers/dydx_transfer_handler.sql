@@ -21,6 +21,7 @@ DECLARE
     asset_record assets%ROWTYPE;
     recipient_subaccount_record subaccounts%ROWTYPE;
     transfer_record transfers%ROWTYPE;
+    subaccount_count int;
 BEGIN
     asset_record."id" = event_data->>'assetId';
     SELECT * INTO asset_record FROM assets WHERE "id" = asset_record."id";
@@ -31,6 +32,14 @@ BEGIN
 
     IF event_data->'recipient'->'subaccountId' IS NOT NULL THEN
         transfer_record."recipientSubaccountId" = dydx_uuid_from_subaccount_id(event_data->'recipient'->'subaccountId');
+
+        SELECT COUNT(*) INTO subaccount_count FROM subaccounts WHERE "id" = transfer_record."recipientSubaccountId";
+        IF subaccount_count > 1 THEN
+            RAISE EXCEPTION 'Multiple subaccounts found with id: %', transfer_record."recipientSubaccountId";
+        ELSIF subaccount_count = 0 THEN
+            RAISE EXCEPTION 'Unable to find subaccount with database id (database id differs from subaccount id found in protocol): %', transfer_record."recipientSubaccountId";
+        END IF;
+        SELECT * INTO recipient_subaccount_record FROM subaccounts WHERE "id" = transfer_record."recipientSubaccountId";
 
         recipient_subaccount_record."id" = transfer_record."recipientSubaccountId";
         recipient_subaccount_record."address" = event_data->'recipient'->'subaccountId'->>'owner';

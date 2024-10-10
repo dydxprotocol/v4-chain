@@ -2,6 +2,7 @@ package clob_test
 
 import (
 	"fmt"
+	"math/big"
 	"sync"
 	"testing"
 	"time"
@@ -36,6 +37,9 @@ import (
 	stattypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
+
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 )
 
 var (
@@ -358,6 +362,12 @@ func TestHydrationInPreBlocker(t *testing.T) {
 		return genesis
 	}).WithNonDeterminismChecksEnabled(false).Build()
 
+	rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+	require.NoError(t, conversionErr)
+	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
 	// Let's add some pre-existing orders to state.
 	// Note that the order is not added to memclob.
 	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
@@ -371,8 +381,8 @@ func TestHydrationInPreBlocker(t *testing.T) {
 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
 	)
 
-	// Advance one block so that pre blocker is called and clob is hydrated.
 	_ = tApp.InitChain()
+	// Advance one block so that pre blocker is called and clob is hydrated.
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Order should exist in state
@@ -435,6 +445,12 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 		)
 		return genesis
 	}).WithNonDeterminismChecksEnabled(false).Build()
+
+	rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+	rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+	require.NoError(t, conversionErr)
+	tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
 	// 1. Let's add some pre-existing orders to state before clob is initialized.
 	tApp.App.ClobKeeper.SetLongTermOrderPlacement(
@@ -527,6 +543,7 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 
 	// Carl and Dave's state should get updated accordingly.
 	carl := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Carl_Num0)
+
 	require.Equal(t, satypes.Subaccount{
 		Id: &constants.Carl_Num0,
 		AssetPositions: []*satypes.AssetPosition{
@@ -540,8 +557,10 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 				PerpetualId:  0,
 				Quantums:     dtypes.NewInt(100_000_000),
 				FundingIndex: dtypes.NewInt(0),
+				YieldIndex:   big.NewRat(0, 1).String(),
 			},
 		},
+		AssetYieldIndex: big.NewRat(1, 1).String(),
 	}, carl)
 
 	dave := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Dave_Num0)
@@ -558,8 +577,10 @@ func TestHydrationWithMatchPreBlocker(t *testing.T) {
 				PerpetualId:  0,
 				Quantums:     dtypes.NewInt(-100_000_000),
 				FundingIndex: dtypes.NewInt(0),
+				YieldIndex:   big.NewRat(0, 1).String(),
 			},
 		},
+		AssetYieldIndex: big.NewRat(1, 1).String(),
 	}, dave)
 
 	require.Empty(t, tApp.App.ClobKeeper.MemClob.GetOperationsRaw(ctx))
@@ -595,7 +616,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 							Number: 0,
 						},
 						AssetPositions: []*satypes.AssetPosition{
-							&constants.Usdc_Asset_500_000,
+							&constants.TDai_Asset_500_000,
 						},
 					})
 				}
@@ -605,6 +626,21 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 	}).Build()
 
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
+		ctx,
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
+
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
+	})
 
 	expectedFills := make([]clobtypes.Order, 300)
 	expectedCancels := make([]clobtypes.Order, len(simAccounts)-len(expectedFills))
@@ -753,7 +789,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 	wgFinish.Wait()
 
 	// Advance the block and ensure that the appropriate orders were filled and cancelled.
-	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+	tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 	for _, expectedFill := range expectedFills {
 		exists, amount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, expectedFill.OrderId)
 		require.True(t, exists)
@@ -821,6 +857,7 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -877,6 +914,7 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -908,10 +946,30 @@ func TestStats(t *testing.T) {
 	}
 	tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 
+	// rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+	// rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+	// require.NoError(t, conversionErr)
+	// tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+	// tApp.App.RatelimitKeeper.CreateAndStoreNewDaiYieldEpochParams(tApp.App.NewUncachedContext(false, tmproto.Header{}))
+
 	// Epochs start at block height 2.
 	startTime := time.Unix(10, 0).UTC()
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
 		BlockTime: startTime,
+	})
+
+	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
+		ctx,
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
+
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
 	})
 
 	aliceAddress := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0).Id.MustGetAccAddress().String()

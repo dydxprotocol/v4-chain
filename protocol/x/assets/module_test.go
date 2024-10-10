@@ -90,10 +90,10 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	json, err := result.MarshalJSON()
 	require.NoError(t, err)
 
-	expected := `{"assets":[{"id":0,"symbol":"USDC","denom":`
-	expected += `"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",`
+	expected := `{"assets":[{"id":0,"symbol":"TDAI","denom":`
+	expected += `"utdai",`
 	expected += `"denom_exponent":-6,"has_market":false,`
-	expected += `"market_id":0,"atomic_resolution":-6}]}`
+	expected += `"market_id":0,"atomic_resolution":-6,"asset_yield_index":"1/1"}]}`
 	require.Equal(t, expected, string(json))
 }
 
@@ -124,9 +124,9 @@ func TestAppModuleBasic_ValidateGenesis(t *testing.T) {
 
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	msg := `{"assets":[{"id":0,"symbol":"USDC","denom":`
-	msg += `"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"`
-	msg += `,"denom_exponent":-6,"has_market":false,"atomic_resolution":-6}]}`
+	msg := `{"assets":[{"id":0,"symbol":"TDAI","denom":`
+	msg += `"utdai"`
+	msg += `,"denom_exponent":-6,"has_market":false,"atomic_resolution":-6,"asset_yield_index":"1/1"}]}`
 	h := json.RawMessage(msg)
 
 	err := am.ValidateGenesis(cdc, nil, h)
@@ -190,9 +190,9 @@ func TestAppModule_RegisterServices(t *testing.T) {
 func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
-	msg := `{"assets":[{"id":0,"symbol":"USDC","denom":`
-	msg += `"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",`
-	msg += `"denom_exponent":-6,"has_market":false,"atomic_resolution":-6}]}`
+	msg := `{"assets":[{"id":0,"symbol":"TDAI","denom":`
+	msg += `"utdai",`
+	msg += `"denom_exponent":-6,"has_market":false,"atomic_resolution":-6,"asset_yield_index":"1/1"}]}`
 	gs := json.RawMessage(msg)
 
 	am.InitGenesis(ctx, cdc, gs)
@@ -202,7 +202,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	require.Equal(t, uint32(0), assets[0].Id)
 	require.Equal(t,
-		"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+		"utdai",
 		assets[0].Denom,
 	)
 	require.False(t, assets[0].HasMarket)
@@ -210,10 +210,10 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.Equal(t, int32(-6), assets[0].AtomicResolution)
 
 	genesisJson := am.ExportGenesis(ctx, cdc)
-	expected := `{"assets":[{"id":0,"symbol":"USDC","denom":`
-	expected += `"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",`
+	expected := `{"assets":[{"id":0,"symbol":"TDAI","denom":`
+	expected += `"utdai",`
 	expected += `"denom_exponent":-6,"has_market":false,`
-	expected += `"market_id":0,"atomic_resolution":-6}]}`
+	expected += `"market_id":0,"atomic_resolution":-6,"asset_yield_index":"1/1"}]}`
 	require.Equal(t, expected, string(genesisJson))
 }
 

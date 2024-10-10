@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	v1types "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1/types"
@@ -17,6 +18,12 @@ func SubaccountIdToIndexerSubaccountId(
 		Owner:  subaccountId.Owner,
 		Number: subaccountId.Number,
 	}
+}
+
+func AssetYieldIndexToIndexerAssetYieldIndex(
+	assetYieldIndex *big.Rat,
+) string {
+	return assetYieldIndex.String()
 }
 
 func PerpetualPositionToIndexerPerpetualPosition(

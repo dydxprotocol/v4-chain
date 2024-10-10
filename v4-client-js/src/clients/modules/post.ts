@@ -71,7 +71,7 @@ export class Post {
       this.composer = new Composer();
       this.denoms = denoms;
       this.defaultGasPrice = GasPrice
-        .fromString(`0.025${denoms.USDC_GAS_DENOM !== undefined ? denoms.USDC_GAS_DENOM : denoms.USDC_DENOM}`);
+        .fromString(`0.025${denoms.TDAI_GAS_DENOM !== undefined ? denoms.TDAI_GAS_DENOM : denoms.TDAI_DENOM}`);
       this.defaultDydxGasPrice = GasPrice
         .fromString(`25000000000${denoms.CHAINTOKEN_GAS_DENOM !== undefined ? denoms.CHAINTOKEN_GAS_DENOM : denoms.CHAINTOKEN_DENOM}`);
     }
@@ -321,13 +321,13 @@ export class Post {
 
       // TODO(TRCL-2550): Temporary workaround before IBC denom is supported in '@cosmjs/stargate'.
       // The '@cosmjs/stargate' does not support denom with '/', so currently GAS_PRICE is
-      // represented in 'uusdc', and the output of `calculateFee` is in '', which is replaced
-      // below by USDC_DENOM string.
+      // represented in 'utdai', and the output of `calculateFee` is in '', which is replaced
+      // below by TDAI_DENOM string.
       const amount: Coin[] = _.map(fee.amount, (coin: Coin) => {
-        if (coin.denom === 'uusdc') {
+        if (coin.denom === 'utdai') {
           return {
             amount: coin.amount,
-            denom: this.denoms.USDC_DENOM,
+            denom: this.denoms.TDAI_DENOM,
           };
         }
         return coin;
@@ -549,7 +549,7 @@ export class Post {
       zeroFee: boolean = true,
       broadcastMode?: BroadcastMode,
     ): Promise<BroadcastTxAsyncResponse | BroadcastTxSyncResponse | IndexedTx> {
-      if (coinDenom !== this.denoms.CHAINTOKEN_DENOM && coinDenom !== this.denoms.USDC_DENOM) {
+      if (coinDenom !== this.denoms.CHAINTOKEN_DENOM && coinDenom !== this.denoms.TDAI_DENOM) {
         throw new Error('Unsupported coinDenom');
       }
 

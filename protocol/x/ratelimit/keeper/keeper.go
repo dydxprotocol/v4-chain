@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
@@ -19,15 +20,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gometrics "github.com/hashicorp/go-metrics"
+
+	sdaiserver "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 )
 
 type (
 	Keeper struct {
-		cdc             codec.BinaryCodec
-		storeKey        storetypes.StoreKey
-		bankKeeper      types.BankKeeper
-		blockTimeKeeper types.BlockTimeKeeper
-		ics4Wrapper     types.ICS4Wrapper
+		cdc                 codec.BinaryCodec
+		storeKey            storetypes.StoreKey
+		sDAIEventManager    sdaiserver.SDAIEventManager
+		indexerEventManager indexer_manager.IndexerEventManager
+		bankKeeper          types.BankKeeper
+		blockTimeKeeper     types.BlockTimeKeeper
+		perpetualsKeeper    types.PerpetualsKeeper
+		assetsKeeper        types.AssetsKeeper
+		ics4Wrapper         types.ICS4Wrapper
 
 		// the addresses capable of executing MsgSetLimitParams message.
 		authorities map[string]struct{}
@@ -37,19 +44,31 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	sDAIEventManager sdaiserver.SDAIEventManager,
+	indexerEventsManager indexer_manager.IndexerEventManager,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
+	perpetualsKeeper types.PerpetualsKeeper,
+	assetsKeeper types.AssetsKeeper,
 	ics4Wrapper types.ICS4Wrapper,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:             cdc,
-		storeKey:        storeKey,
-		bankKeeper:      bankKeeper,
-		blockTimeKeeper: blockTimeKeeper,
-		ics4Wrapper:     ics4Wrapper,
-		authorities:     lib.UniqueSliceToSet(authorities),
+		cdc:                 cdc,
+		storeKey:            storeKey,
+		sDAIEventManager:    sDAIEventManager,
+		indexerEventManager: indexerEventsManager,
+		bankKeeper:          bankKeeper,
+		blockTimeKeeper:     blockTimeKeeper,
+		perpetualsKeeper:    perpetualsKeeper,
+		assetsKeeper:        assetsKeeper,
+		ics4Wrapper:         ics4Wrapper,
+		authorities:         lib.UniqueSliceToSet(authorities),
 	}
+}
+
+func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
+	return k.indexerEventManager
 }
 
 // ProcessWithdrawal processes an outbound IBC transfer,
@@ -379,4 +398,78 @@ func (k Keeper) Logger(ctx sdk.Context) cosmoslog.Logger {
 	return ctx.Logger().With(cosmoslog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}
+func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
+	fmt.Println("InitializeForGenesis")
+	k.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
+}
+
+/* Functions related to the sDAI conversion */
+
+// SetSDAIPrice sets the price of sDAI in the store as a big.Int
+func (k Keeper) SetSDAIPrice(ctx sdk.Context, price *big.Int) {
+	store := ctx.KVStore(k.storeKey)
+	bz := price.Bytes()
+	store.Set([]byte(types.SDaiKeyPrefix), bz)
+}
+
+// GetSDAIPrice gets the price of sDAI from the store as a big.Int
+func (k Keeper) GetSDAIPrice(ctx sdk.Context) (price *big.Int, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.SDaiKeyPrefix))
+	if bz == nil {
+		return nil, false
+	}
+	price = new(big.Int).SetBytes(bz)
+	return price, true
+}
+
+func (k Keeper) SetSDAILastBlockUpdated(ctx sdk.Context, blockHeight *big.Int) {
+	store := ctx.KVStore(k.storeKey)
+	bz := blockHeight.Bytes()
+	store.Set([]byte(types.SDAILastBlockUpdate), bz)
+}
+
+// GetSDAIPrice gets the price of sDAI from the store as a big.Int
+func (k Keeper) GetSDAILastBlockUpdated(ctx sdk.Context) (blockHeight *big.Int, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.SDAILastBlockUpdate))
+	if bz == nil {
+		return nil, false
+	}
+	blockHeight = new(big.Int).SetBytes(bz)
+	return blockHeight, true
+}
+
+// SetAssetYieldIndex sets the current asset yield index
+func (k Keeper) SetAssetYieldIndex(ctx sdk.Context, yieldIndex *big.Rat) {
+	store := ctx.KVStore(k.storeKey)
+	bz, err := yieldIndex.GobEncode()
+	if err != nil {
+		panic("Could not decode yield index when setting asset yield index.")
+	}
+	store.Set([]byte(types.AssetYieldIndexPrefix), bz)
+}
+
+// GetSetAssetYieldIndex gets the current asset yield index
+func (k Keeper) GetAssetYieldIndex(ctx sdk.Context) (yieldIndex *big.Rat, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(types.AssetYieldIndexPrefix))
+	if bz == nil {
+		return nil, false
+	}
+	yieldIndex = new(big.Rat)
+	err := yieldIndex.GobDecode(bz)
+	if err != nil {
+		panic("Could not decode yield index when getting asset yield index.")
+	}
+	return yieldIndex, true
+}
+
+// functions for better testing
+func (k Keeper) GetSDAIEventManagerForTestingOnly() sdaiserver.SDAIEventManager {
+	return k.sDAIEventManager
+}
+
+func (k Keeper) GetStoreKeyForTestingOnly() storetypes.StoreKey {
+	return k.storeKey
+}

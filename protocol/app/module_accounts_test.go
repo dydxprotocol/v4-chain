@@ -5,6 +5,7 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
 	perpetualsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
@@ -23,6 +24,8 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 		icatypes.ModuleName:                        "dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8",
 		consumertypes.ConsumerRedistributeName:     "dydx1x69dz0c0emw8m2c6kp5v6c08kgjxmu30yn6p5y",
 		consumertypes.ConsumerToSendToProviderName: "dydx1ywtansy6ss0jtq8ckrcv6jzkps8yh8mf37gcch",
+		ratelimittypes.SDaiPoolAccount:             "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0",
+		satypes.LiquidityFeeModuleAddress:          "dydx1l4fct6xefgds6tsslrluwy2juuyaet369u29e7",
 	}
 
 	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()))
@@ -50,10 +53,12 @@ func TestMaccPerms(t *testing.T) {
 		"fee_collector":            nil,
 		"insurance_fund":           nil,
 		"subaccounts":              nil,
+		"sDAIPoolAccount":          nil,
 		"transfer":                 {"minter", "burner"},
 		"interchainaccounts":       nil,
 		"cons_redistribute":        nil,
 		"cons_to_send_to_provider": nil,
+		"liquidity_module":         nil,
 	}
 	require.Equal(t, expectedMaccPerms, maccPerms, "default macc perms list does not match expected")
 }
@@ -67,6 +72,8 @@ func TestModuleAccountAddrs(t *testing.T) {
 		"dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq": true, // x/clob.insuranceFund
 		"dydx1x69dz0c0emw8m2c6kp5v6c08kgjxmu30yn6p5y": true, // x/ccvconsumer.ConsumerRedistribute
 		"dydx1ywtansy6ss0jtq8ckrcv6jzkps8yh8mf37gcch": true, // x/ccvconsumer.ConsumerToSendToProvider
+		"dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0": true, // x/ratelimit.SDAIPoolAccount
+		"dydx1l4fct6xefgds6tsslrluwy2juuyaet369u29e7": true, // x/subaccount.LiquidityFeeModuleAddress
 	}
 
 	require.Equal(t, expectedModuleAccAddresses, app.ModuleAccountAddrs())

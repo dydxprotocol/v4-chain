@@ -60,11 +60,14 @@ type SubaccountsKeeper interface {
 		assetId uint32,
 		quantums *big.Int,
 	) (err error)
-	SetSubaccount(ctx sdk.Context, subaccount satypes.Subaccount)
 	GetSubaccount(
 		ctx sdk.Context,
 		id satypes.SubaccountId,
 	) (val satypes.Subaccount)
+	SetSubaccount(
+		ctx sdk.Context,
+		subaccount satypes.Subaccount,
+	)
 }
 
 // AccountKeeper defines the expected account keeper used for simulations.

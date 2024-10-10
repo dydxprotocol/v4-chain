@@ -19,7 +19,8 @@ import (
 var _ = strconv.IntSize
 
 func TestSubaccountQuerySingle(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, rateLimitKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+	rateLimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 	msgs := createNSubaccount(keeper, ctx, 2, big.NewInt(1_000))
 	for _, tc := range []struct {
 		desc     string
@@ -54,6 +55,7 @@ func TestSubaccountQuerySingle(t *testing.T) {
 					Owner:  "100000",
 					Number: msgs[1].Id.Number,
 				},
+				AssetYieldIndex: big.NewRat(1, 1).String(),
 			}},
 		},
 		{
@@ -67,6 +69,7 @@ func TestSubaccountQuerySingle(t *testing.T) {
 					Owner:  msgs[1].Id.Owner,
 					Number: uint32(100),
 				},
+				AssetYieldIndex: big.NewRat(1, 1).String(),
 			}},
 		},
 		{
@@ -90,7 +93,7 @@ func TestSubaccountQuerySingle(t *testing.T) {
 }
 
 func TestSubaccountQueryPaginated(t *testing.T) {
-	ctx, keeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	msgs := createNSubaccount(keeper, ctx, 5, big.NewInt(1_000))
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllSubaccountRequest {

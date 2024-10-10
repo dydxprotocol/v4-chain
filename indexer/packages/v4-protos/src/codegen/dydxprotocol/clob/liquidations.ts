@@ -1,6 +1,6 @@
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial, Long } from "../../helpers";
+import { DeepPartial } from "../../helpers";
 /**
  * PerpetualLiquidationInfo holds information about a liquidation that occurred
  * for a position held by a subaccount.
@@ -46,18 +46,6 @@ export interface SubaccountLiquidationInfo {
    * liquidated.
    */
   perpetualsLiquidated: number[];
-  /**
-   * The notional value (in quote quantums, determined by the oracle price) of
-   * all positions liquidated for this subaccount.
-   */
-
-  notionalLiquidated: Long;
-  /**
-   * The amount of funds that the insurance fund has lost
-   * covering this subaccount.
-   */
-
-  quantumsInsuranceLost: Long;
 }
 /**
  * SubaccountLiquidationInfo holds liquidation information per-subaccount in the
@@ -70,18 +58,6 @@ export interface SubaccountLiquidationInfoSDKType {
    * liquidated.
    */
   perpetuals_liquidated: number[];
-  /**
-   * The notional value (in quote quantums, determined by the oracle price) of
-   * all positions liquidated for this subaccount.
-   */
-
-  notional_liquidated: Long;
-  /**
-   * The amount of funds that the insurance fund has lost
-   * covering this subaccount.
-   */
-
-  quantums_insurance_lost: Long;
 }
 /**
  * SubaccountOpenPositionInfo holds information about open positions for a
@@ -163,9 +139,7 @@ export const PerpetualLiquidationInfo = {
 
 function createBaseSubaccountLiquidationInfo(): SubaccountLiquidationInfo {
   return {
-    perpetualsLiquidated: [],
-    notionalLiquidated: Long.UZERO,
-    quantumsInsuranceLost: Long.UZERO
+    perpetualsLiquidated: []
   };
 }
 
@@ -178,15 +152,6 @@ export const SubaccountLiquidationInfo = {
     }
 
     writer.ldelim();
-
-    if (!message.notionalLiquidated.isZero()) {
-      writer.uint32(16).uint64(message.notionalLiquidated);
-    }
-
-    if (!message.quantumsInsuranceLost.isZero()) {
-      writer.uint32(24).uint64(message.quantumsInsuranceLost);
-    }
-
     return writer;
   },
 
@@ -212,14 +177,6 @@ export const SubaccountLiquidationInfo = {
 
           break;
 
-        case 2:
-          message.notionalLiquidated = (reader.uint64() as Long);
-          break;
-
-        case 3:
-          message.quantumsInsuranceLost = (reader.uint64() as Long);
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -232,8 +189,6 @@ export const SubaccountLiquidationInfo = {
   fromPartial(object: DeepPartial<SubaccountLiquidationInfo>): SubaccountLiquidationInfo {
     const message = createBaseSubaccountLiquidationInfo();
     message.perpetualsLiquidated = object.perpetualsLiquidated?.map(e => e) || [];
-    message.notionalLiquidated = object.notionalLiquidated !== undefined && object.notionalLiquidated !== null ? Long.fromValue(object.notionalLiquidated) : Long.UZERO;
-    message.quantumsInsuranceLost = object.quantumsInsuranceLost !== undefined && object.quantumsInsuranceLost !== null ? Long.fromValue(object.quantumsInsuranceLost) : Long.UZERO;
     return message;
   }
 

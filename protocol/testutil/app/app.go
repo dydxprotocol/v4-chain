@@ -22,6 +22,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/dydxprotocold/cmd"
+	sdaitypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -150,6 +151,7 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 		logger, _ = testlog.TestLogger()
 	}
 	db := dbm.NewMemDB()
+	sdaitypes.SDAIEventFetcher = &sdaitypes.MockEventFetcher{}
 	dydxApp := app.New(
 		logger,
 		db,
@@ -168,6 +170,16 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 func DefaultGenesis() (genesis types.GenesisDoc) {
 	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
 	err := tmjson.Unmarshal([]byte(constants.GenesisState), &genesis)
+	if err != nil {
+		panic(err)
+	}
+	genesis.GenesisTime = time.Unix(0, 1)
+	return genesis
+}
+
+func NoVeGenesis() (genesis types.GenesisDoc) {
+	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+	err := tmjson.Unmarshal([]byte(constants.GenesisStateNoVe), &genesis)
 	if err != nil {
 		panic(err)
 	}
@@ -443,7 +455,7 @@ func (builder TestAppBuilder) Build() *TestApp {
 				tApp.builder.t.Fatal(err)
 				return nil
 			}
-			tApp.parallelApp = app
+			tApp.ParallelApp = app
 
 			tApp.builder.t.Cleanup(func() {
 				doneErr := shutdownFn()
@@ -471,7 +483,7 @@ func (builder TestAppBuilder) Build() *TestApp {
 				tApp.builder.t.Fatal(err)
 				return nil
 			}
-			tApp.noCheckTxApp = app
+			tApp.NoCheckTxApp = app
 
 			tApp.builder.t.Cleanup(func() {
 				doneErr := shutdownFn()
@@ -501,7 +513,7 @@ func (builder TestAppBuilder) Build() *TestApp {
 				tApp.builder.t.Fatal(err)
 				return nil
 			}
-			tApp.crashingApp = app
+			tApp.CrashingApp = app
 
 			tApp.builder.t.Cleanup(func() {
 				doneErr := shutdownFn()
@@ -519,7 +531,7 @@ func (builder TestAppBuilder) Build() *TestApp {
 			tApp.restartCrashingApp = func() {
 				// We shutdown the instance of the existing crashingApp.
 				doneOrRestartErr := shutdownFn()
-				tApp.crashingApp = nil
+				tApp.CrashingApp = nil
 
 				if err == nil {
 					app, shutdownFn, doneOrRestartErr = launchValidatorInDir(validatorHomeDir, filteredAppOptions)
@@ -536,7 +548,7 @@ func (builder TestAppBuilder) Build() *TestApp {
 				}
 
 				// Update the crashingApp pointer to the new instance of the application.
-				tApp.crashingApp = app
+				tApp.CrashingApp = app
 			}
 		}
 	}
@@ -566,9 +578,9 @@ type TestApp struct {
 	// TODO(CLOB-545): Hide App and copy the pointers to keepers to be prevent incorrect usage of App.CheckTx over
 	// TestApp.CheckTx.
 	App                *app.App
-	parallelApp        *app.App
-	noCheckTxApp       *app.App
-	crashingApp        *app.App
+	ParallelApp        *app.App
+	NoCheckTxApp       *app.App
+	CrashingApp        *app.App
 	restartCrashingApp func()
 	builder            TestAppBuilder
 	genesis            types.GenesisDoc
@@ -621,9 +633,9 @@ func (tApp *TestApp) initChainIfNeeded() {
 	}
 
 	if tApp.builder.enableNonDeterminismChecks {
-		initChain(tApp.builder.t, tApp.parallelApp, initChainRequest, initChainResponse.AppHash)
-		initChain(tApp.builder.t, tApp.noCheckTxApp, initChainRequest, initChainResponse.AppHash)
-		initChain(tApp.builder.t, tApp.crashingApp, initChainRequest, initChainResponse.AppHash)
+		initChain(tApp.builder.t, tApp.ParallelApp, initChainRequest, initChainResponse.AppHash)
+		initChain(tApp.builder.t, tApp.NoCheckTxApp, initChainRequest, initChainResponse.AppHash)
+		initChain(tApp.builder.t, tApp.CrashingApp, initChainRequest, initChainResponse.AppHash)
 	}
 
 	finalizeBlockRequest := abcitypes.RequestFinalizeBlock{
@@ -636,12 +648,12 @@ func (tApp *TestApp) initChainIfNeeded() {
 		tApp.builder.t.Fatalf("Failed to finalize block %+v, err %+v", finalizeBlockResponse, err)
 	}
 
-	_, err = tApp.App.Commit()
+	_, err = tApp.App.Commit(&abcitypes.RequestCommit{})
 	require.NoError(tApp.builder.t, err)
 	if tApp.builder.enableNonDeterminismChecks {
-		finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App)
-		finalizeBlockAndCommit(tApp.builder.t, tApp.noCheckTxApp, finalizeBlockRequest, tApp.App)
-		finalizeBlockAndCommit(tApp.builder.t, tApp.crashingApp, finalizeBlockRequest, tApp.App)
+		finalizeBlockAndCommit(tApp.builder.t, tApp.ParallelApp, finalizeBlockRequest, tApp.App)
+		finalizeBlockAndCommit(tApp.builder.t, tApp.NoCheckTxApp, finalizeBlockRequest, tApp.App)
+		finalizeBlockAndCommit(tApp.builder.t, tApp.CrashingApp, finalizeBlockRequest, tApp.App)
 	}
 
 	tApp.header = tmproto.Header{
@@ -779,7 +791,7 @@ func (tApp *TestApp) AdvanceToBlock(
 
 			// Check that all instances of the application can process the proposoal and come to the same result.
 			if tApp.builder.enableNonDeterminismChecks {
-				parallelProcessResponse, parallelProcessErr := tApp.parallelApp.ProcessProposal(&processRequest)
+				parallelProcessResponse, parallelProcessErr := tApp.ParallelApp.ProcessProposal(&processRequest)
 				require.Truef(
 					tApp.builder.t,
 					parallelProcessErr == nil && parallelProcessResponse.IsAccepted(),
@@ -788,7 +800,7 @@ func (tApp *TestApp) AdvanceToBlock(
 					parallelProcessResponse,
 					parallelProcessErr,
 				)
-				noCheckTxProcessResponse, noCheckTxProcessErr := tApp.noCheckTxApp.ProcessProposal(&processRequest)
+				noCheckTxProcessResponse, noCheckTxProcessErr := tApp.NoCheckTxApp.ProcessProposal(&processRequest)
 				require.Truef(
 					tApp.builder.t,
 					noCheckTxProcessErr == nil && noCheckTxProcessResponse.IsAccepted(),
@@ -797,7 +809,7 @@ func (tApp *TestApp) AdvanceToBlock(
 					noCheckTxProcessResponse,
 					noCheckTxProcessErr,
 				)
-				crashingProcessResponse, crashingProcessErr := tApp.crashingApp.ProcessProposal(&processRequest)
+				crashingProcessResponse, crashingProcessErr := tApp.CrashingApp.ProcessProposal(&processRequest)
 				require.Truef(
 					tApp.builder.t,
 					crashingProcessErr == nil && crashingProcessResponse.IsAccepted(),
@@ -872,14 +884,14 @@ func (tApp *TestApp) AdvanceToBlock(
 		}
 
 		// Commit the block.
-		_, err := tApp.App.Commit()
+		_, err := tApp.App.Commit(&abcitypes.RequestCommit{})
 		require.NoError(tApp.builder.t, err)
 
 		// Finalize and commit all the blocks for the non-determinism checkers.
 		if tApp.builder.enableNonDeterminismChecks {
-			finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App)
-			finalizeBlockAndCommit(tApp.builder.t, tApp.noCheckTxApp, finalizeBlockRequest, tApp.App)
-			finalizeBlockAndCommit(tApp.builder.t, tApp.crashingApp, finalizeBlockRequest, tApp.App)
+			finalizeBlockAndCommit(tApp.builder.t, tApp.ParallelApp, finalizeBlockRequest, tApp.App)
+			finalizeBlockAndCommit(tApp.builder.t, tApp.NoCheckTxApp, finalizeBlockRequest, tApp.App)
+			finalizeBlockAndCommit(tApp.builder.t, tApp.CrashingApp, finalizeBlockRequest, tApp.App)
 		}
 
 		// Recheck the remaining transactions in the mempool pruning any that have failed during recheck.
@@ -895,7 +907,7 @@ func (tApp *TestApp) AdvanceToBlock(
 			}
 
 			if tApp.builder.enableNonDeterminismChecks {
-				parallelRecheckTxResponse, parallelRecheckTxErr := tApp.parallelApp.CheckTx(&recheckTxRequest)
+				parallelRecheckTxResponse, parallelRecheckTxErr := tApp.ParallelApp.CheckTx(&recheckTxRequest)
 				require.Truef(
 					tApp.builder.t,
 					recheckTxResponse.Code == parallelRecheckTxResponse.Code &&
@@ -939,7 +951,7 @@ func finalizeBlockAndCommit(
 ) {
 	_, err := app.FinalizeBlock(&request)
 	require.NoError(t, err)
-	_, err = app.Commit()
+	_, err = app.Commit(&abcitypes.RequestCommit{})
 	require.NoError(t, err)
 
 	diffs := make([]string, 0)
@@ -1101,7 +1113,7 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 	if tApp.builder.enableNonDeterminismChecks {
 		// We expect the parallel app to always produce the same result since all in memory state should be
 		// consistent with tApp.App and produce the same result.
-		parallelRes, parallelErr := tApp.parallelApp.CheckTx(&req)
+		parallelRes, parallelErr := tApp.ParallelApp.CheckTx(&req)
 		require.Truef(
 			tApp.builder.t,
 			res.Code == parallelRes.Code && ((err == nil && parallelErr == nil) || (err != nil && parallelErr != nil)),
@@ -1114,7 +1126,7 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 
 		// The crashing app may or may not be able to get to a recoverable state that would produce equivalent
 		// results. For example short-term orders and cancellations will be lost from in-memory state.
-		crashingRes, crashingErr := tApp.crashingApp.CheckTx(&req)
+		crashingRes, crashingErr := tApp.CrashingApp.CheckTx(&req)
 		if tApp.builder.enableCrashingAppCheckTxNonDeterminismChecks {
 			require.Truef(
 				tApp.builder.t,
@@ -1227,6 +1239,9 @@ func launchValidatorInDir(
 	validatorHomeDir string,
 	appOptions map[string]interface{},
 ) (a *app.App, shutdownFn func() error, err error) {
+	// Ensure that global sdai event fetcher is mocked
+	sdaitypes.SDAIEventFetcher = &sdaitypes.MockEventFetcher{}
+
 	// Create a context that can be cancelled to stop the Cosmos App.
 	done := make(chan error, 1)
 	parentCtx, cancelFn := context.WithCancel(context.Background())
@@ -1283,7 +1298,7 @@ func launchValidatorInDir(
 		// TODO(CORE-29): Allow the daemons to be launched and cleaned-up successfully by default.
 		"--price-daemon-enabled",
 		"false",
-		"--liquidation-daemon-enabled",
+		"--deleveraging-daemon-enabled",
 		"false",
 	})
 

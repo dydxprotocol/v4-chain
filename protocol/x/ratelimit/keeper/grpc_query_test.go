@@ -7,7 +7,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	bank_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/bank"
-	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	ratelimitutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	cometbfttypes "github.com/cometbft/cometbft/types"
@@ -60,25 +60,25 @@ func TestCapacityByDenom(t *testing.T) {
 	}{
 		"Success, returns default limiter and baseline capacity": {
 			req: &types.QueryCapacityByDenomRequest{
-				Denom: assettypes.UusdcDenom,
+				Denom: types.SDaiDenom,
 			},
 			res: &types.QueryCapacityByDenomResponse{
 				LimiterCapacityList: []types.LimiterCapacity{
 					{
-						Limiter: types.DefaultUsdcHourlyLimter,
+						Limiter: types.DefaultSDaiHourlyLimter,
 						Capacity: dtypes.NewIntFromBigInt(
 							ratelimitutil.GetBaseline(
 								big.NewInt(0),
-								types.DefaultUsdcHourlyLimter,
+								types.DefaultSDaiHourlyLimter,
 							),
 						),
 					},
 					{
-						Limiter: types.DefaultUsdcDailyLimiter,
+						Limiter: types.DefaultSDaiDailyLimiter,
 						Capacity: dtypes.NewIntFromBigInt(
 							ratelimitutil.GetBaseline(
 								big.NewInt(0),
-								types.DefaultUsdcDailyLimiter,
+								types.DefaultSDaiDailyLimiter,
 							),
 						),
 					},
@@ -115,12 +115,12 @@ func TestCapacityByDenom(t *testing.T) {
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *banktypes.GenesisState) {
-						// Remove any USDC balance from genesis.
-						// Without additional USDC balance, this means all capacities are
+						// Remove any SDai balance from genesis.
+						// Without additional SDai balance, this means all capacities are
 						// initialized with minimum baseline.
 						genesisState.Balances = bank_testutil.FilterDenomFromBalances(
 							genesisState.Balances,
-							assettypes.UusdcDenom,
+							types.SDaiDenom,
 						)
 					},
 				)
@@ -167,4 +167,87 @@ func TestGetAllPendingSendPacket(t *testing.T) {
 			},
 		},
 	}, res)
+}
+
+func TestGetSDAIPriceQuery(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	for name, tc := range map[string]struct {
+		req *types.GetSDAIPriceQueryRequest
+		res *types.GetSDAIPriceQueryResponse
+		err error
+	}{
+		"Success": {
+			req: &types.GetSDAIPriceQueryRequest{},
+			res: &types.GetSDAIPriceQueryResponse{
+				Price: "1",
+			},
+			err: nil,
+		},
+		"Nil": {
+			req: nil,
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			k.SetSDAIPrice(ctx, big.NewInt(1))
+			res, err := k.GetSDAIPriceQuery(ctx, tc.req)
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.res, res)
+			}
+		})
+	}
+}
+
+func TestGetAssetYieldIndexQuery(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	for name, tc := range map[string]struct {
+		req *types.GetAssetYieldIndexQueryRequest
+		res *types.GetAssetYieldIndexQueryResponse
+		err error
+	}{
+		"Success": {
+			req: &types.GetAssetYieldIndexQueryRequest{},
+			res: &types.GetAssetYieldIndexQueryResponse{
+				AssetYieldIndex: "1/1",
+			},
+			err: nil,
+		},
+		"Invalid Request": {
+			req: nil,
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+		"AssetYieldIndex not found": {
+			req: &types.GetAssetYieldIndexQueryRequest{},
+			res: nil,
+			err: status.Error(codes.NotFound, "asset yield index not found"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if !(tc.req != nil && tc.res == nil) {
+				k.SetAssetYieldIndex(ctx, keeper.ConvertStringToBigRatWithPanicOnErr("1/1"))
+			} else {
+				store := ctx.KVStore(k.GetStoreKeyForTestingOnly())
+				store.Delete([]byte(types.AssetYieldIndexPrefix))
+			}
+			res, err := k.GetAssetYieldIndexQuery(ctx, tc.req)
+			if tc.err != nil {
+				require.Error(t, err)
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.res, res)
+			}
+		})
+	}
 }

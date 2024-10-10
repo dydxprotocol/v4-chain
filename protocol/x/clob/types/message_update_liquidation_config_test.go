@@ -23,12 +23,13 @@ func TestMsgUpdateLiquidationsConfig_ValidateBasic(t *testing.T) {
 			msg: types.MsgUpdateLiquidationsConfig{
 				Authority: constants.AliceAccAddress.String(),
 				LiquidationsConfig: types.LiquidationsConfig{
-					MaxLiquidationFeePpm: 5_000,
+					InsuranceFundFeePpm: 5_000,
+					ValidatorFeePpm:     200_000,
+					LiquidityFeePpm:     800_000,
 					FillablePriceConfig: types.FillablePriceConfig{
 						BankruptcyAdjustmentPpm: 0,
 					},
-					PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
-					SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
+					MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 				},
 			},
 			expectedError: "0 is not a valid BankruptcyAdjustmentPpm",

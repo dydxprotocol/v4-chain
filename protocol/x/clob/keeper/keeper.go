@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
+	deleveragingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/deleveraging"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
@@ -58,7 +58,9 @@ type (
 
 		placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg]
 
-		DaemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
+		DaemonDeleveragingInfo *deleveragingtypes.DaemonDeleveragingInfo
+
+		VEApplier VEApplierClobInterface
 	}
 )
 
@@ -87,7 +89,8 @@ func NewKeeper(
 	txDecoder sdk.TxDecoder,
 	clobFlags flags.ClobFlags,
 	placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg],
-	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
+	daemonDeleveragingInfo *deleveragingtypes.DaemonDeleveragingInfo,
+	veApplier VEApplierClobInterface,
 ) *Keeper {
 	keeper := &Keeper{
 		cdc:                          cdc,
@@ -118,7 +121,8 @@ func NewKeeper(
 		},
 		Flags:                       clobFlags,
 		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
-		DaemonLiquidationInfo:       daemonLiquidationInfo,
+		DaemonDeleveragingInfo:      daemonDeleveragingInfo,
+		VEApplier:                   veApplier,
 	}
 
 	// Provide the keeper to the MemClob.

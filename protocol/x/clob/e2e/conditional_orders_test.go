@@ -1,13 +1,16 @@
 package clob_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
 
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
@@ -17,6 +20,7 @@ import (
 	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -590,8 +594,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -621,8 +627,9 @@ func TestConditionalOrder(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -664,8 +671,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(-50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -707,8 +716,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -740,8 +751,9 @@ func TestConditionalOrder(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -789,8 +801,10 @@ func TestConditionalOrder(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -822,8 +836,9 @@ func TestConditionalOrder(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -875,8 +890,9 @@ func TestConditionalOrder(t *testing.T) {
 				{
 					Id: &constants.Alice_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_1,
+						&constants.TDai_Asset_1,
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -985,6 +1001,24 @@ func TestConditionalOrder(t *testing.T) {
 				)
 				return genesis
 			}).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
 			ctx := tApp.InitChain()
 
 			// Create all orders.
@@ -1016,6 +1050,7 @@ func TestConditionalOrder(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdateForFirstBlock,
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -1045,6 +1080,7 @@ func TestConditionalOrder(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdateForSecondBlock,
+				"",
 				tApp.GetHeader().Height-1, // prepare proposal gets called for block 2
 			)
 			require.NoError(t, err)
@@ -1074,6 +1110,7 @@ func TestConditionalOrder(t *testing.T) {
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdateForSecondBlock,
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -1872,8 +1909,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -1902,8 +1941,9 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -1944,8 +1984,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(-50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -1986,8 +2028,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(50_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -2018,8 +2062,9 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -2066,8 +2111,10 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(25_000_000),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -2098,8 +2145,9 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_10_000,
+						&constants.TDai_Asset_10_000,
 					},
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 		},
@@ -2179,7 +2227,27 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				)
 				return genesis
 			}).Build()
-			ctx := tApp.InitChain()
+
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+
+			require.NoError(t, conversionErr)
+
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			_ = tApp.InitChain()
+
+			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Create all orders.
 			for _, order := range tc.ordersForFirstBlock {
@@ -2193,7 +2261,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				}
 			}
 
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 			// First block should persist stateful orders to state.
 			for _, order := range tc.ordersForFirstBlock {
@@ -2205,7 +2273,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[2]; ok {
 				for orderId, triggered := range expectedTriggeredOrders {
-					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 2)
+					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 3)
 				}
 			}
 
@@ -2221,19 +2289,19 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				}
 			}
 
-			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[3]; ok {
 				for orderId, triggered := range expectedTriggeredOrders {
-					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 3)
+					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 4)
 				}
 			}
 
 			// Advance to the next block so that matches are proposed and persisted.
-			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[4]; ok {
 				for orderId, triggered := range expectedTriggeredOrders {
-					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 4)
+					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 5)
 				}
 			}
 
@@ -2362,6 +2430,20 @@ func TestConditionalOrderCancellation(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
+
 			// Create all orders.
 			deliverTxsOverride := make([][]byte, 0)
 			deliverTxsOverride = append(
@@ -2388,10 +2470,11 @@ func TestConditionalOrderCancellation(t *testing.T) {
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
 			// // Add the price update.
-			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.priceUpdate,
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -2399,7 +2482,7 @@ func TestConditionalOrderCancellation(t *testing.T) {
 			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
 			// Advance to the next block, updating the price.
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
@@ -2678,6 +2761,21 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
+
 			// Create all orders.
 			deliverTxsOverride := make([][]byte, 0)
 			deliverTxsOverride = append(
@@ -2703,17 +2801,18 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
 			// Add the price update.
-			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				tc.firstPriceUpdate,
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
 			deliverTxsOverride = append([][]byte{extCommitBz}, deliverTxsOverride...)
 
 			// Advance to the next block, updating the price.
-			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 				BlockTime:          tc.firstBlockTime,
 				DeliverTxsOverride: deliverTxsOverride,
 			})

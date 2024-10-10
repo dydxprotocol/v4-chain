@@ -28,7 +28,7 @@ import config from '../../../config';
 import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
-  adjustUSDCAssetPosition,
+  adjustTDAIAssetPosition,
   filterAssetPositions,
   getChildSubaccountIds,
   getFundingIndexMaps,
@@ -247,7 +247,7 @@ async function adjustAssetPositionsWithFunding(
     ).value();
 
   // If the latest block, and perpetual positions exist, calculate the unsettled funding
-  // for positions and adjust the returned USDC position
+  // for positions and adjust the returned TDAI position
   if (perpetualPositions.length > 0) {
     const {
       lastUpdatedFundingIndexMap,
@@ -262,13 +262,13 @@ async function adjustAssetPositionsWithFunding(
       lastUpdatedFundingIndexMap,
     );
 
-    // Adjust the USDC asset position
+    // Adjust the TDAI asset position
     const {
       assetPositionsMap: adjustedAssetPositionsMap,
     }: {
       assetPositionsMap: AssetPositionsMap,
-      adjustedUSDCAssetPositionSize: string,
-    } = adjustUSDCAssetPosition(assetPositionsMap, unsettledFunding);
+      adjustedTDAIAssetPositionSize: string,
+    } = adjustTDAIAssetPosition(assetPositionsMap, unsettledFunding);
     assetPositionsMap = adjustedAssetPositionsMap;
   }
 

@@ -37,12 +37,13 @@ const GenesisState = `{
       "assets": [
         {
           "atomic_resolution": -6,
-          "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+          "denom": "utdai",
           "denom_exponent": "-6",
           "has_market": false,
           "id": 0,
           "market_id": 0,
-          "symbol": "USDC"
+          "symbol": "TDAI",
+          "asset_yield_index": "1/1"
         }
       ]
     },
@@ -106,7 +107,7 @@ const GenesisState = `{
               "amount": "500000000000000000000000"
             },
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "100000000000000000"
             }
           ]
@@ -119,7 +120,7 @@ const GenesisState = `{
               "amount": "500000000000000000000000"
             },
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "100000000000000000"
             }
           ]
@@ -128,7 +129,7 @@ const GenesisState = `{
           "address": "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
           "coins": [
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "1300000000000000000"
             }
           ]
@@ -141,7 +142,7 @@ const GenesisState = `{
               "amount": "500000000000000000000000"
             },
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "100000000000000000"
             }
           ]
@@ -154,7 +155,7 @@ const GenesisState = `{
               "amount": "500000000000000000000000"
             },
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "100000000000000000"
             }
           ]
@@ -167,7 +168,7 @@ const GenesisState = `{
               "amount": "100000000000"
             },
             {
-              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "denom": "utdai",
               "amount": "900000000000000000"
             }
           ]
@@ -178,6 +179,15 @@ const GenesisState = `{
             {
               "denom": "adv4tnt",
               "amount": "1000000000"
+            }
+          ]
+        },
+        {
+          "address": "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0",
+          "coins": [
+            {
+              "denom": "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8",
+              "amount": "2600000000000000000000000000000"
             }
           ]
         }
@@ -416,15 +426,10 @@ const GenesisState = `{
           "bankruptcy_adjustment_ppm": 1000000,
           "spread_to_maintenance_margin_ratio_ppm": 100000
         },
-        "max_liquidation_fee_ppm": 5000,
-        "position_block_limits": {
-          "max_position_portion_liquidated_ppm": 1000000,
-          "min_position_notional_liquidated": 1000
-        },
-        "subaccount_block_limits": {
-          "max_notional_liquidated": 100000000000000,
-          "max_quantums_insurance_lost": 100000000000000
-        }
+        "insurance_fund_fee_ppm": 5000,
+        "validator_fee_ppm": 200000,
+        "liquidity_fee_ppm": 800000,
+        "max_cumulative_insurance_fund_delta": 1000000000000
       }
     },
     "crisis": {
@@ -700,7 +705,8 @@ const GenesisState = `{
             "market_id": 0,
             "ticker": "BTC-USD",
             "market_type": 0
-          }
+          },
+          "yield_index": "0/1"
         },
         {
           "params": {
@@ -711,7 +717,8 @@ const GenesisState = `{
             "market_id": 1,
             "ticker": "ETH-USD",
             "market_type": 0
-          }
+          },
+          "yield_index": "0/1"
         }
       ]
     },
@@ -1186,15 +1193,15 @@ const GenesisState = `{
     "ratelimit": {
       "limit_params_list": [
         {
-          "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+          "denom": "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8",
           "limiters": [
             {
-              "baseline_minimum": "1000000000000",
+              "baseline_minimum": "1000000000000000000000000",
               "baseline_tvl_ppm": 10000,
               "period": "3600s"
             },
             {
-              "baseline_minimum": "10000000000000",
+              "baseline_minimum": "10000000000000000000000000",
               "baseline_tvl_ppm": 100000,
               "period": "86400s"
             }
@@ -1233,7 +1240,8 @@ const GenesisState = `{
             "number": 0,
             "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"
           },
-          "margin_enabled": true
+          "margin_enabled": true,
+          "asset_yield_index": "1/1"
         },
         {
           "asset_positions": [
@@ -1247,7 +1255,8 @@ const GenesisState = `{
             "number": 0,
             "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs"
           },
-          "margin_enabled": true
+          "margin_enabled": true,
+          "asset_yield_index": "1/1"
         },
         {
           "asset_positions": [
@@ -1261,7 +1270,8 @@ const GenesisState = `{
             "number": 0,
             "owner": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70"
           },
-          "margin_enabled": true
+          "margin_enabled": true,
+          "asset_yield_index": "1/1"
         },
         {
           "asset_positions": [
@@ -1275,7 +1285,8 @@ const GenesisState = `{
             "number": 0,
             "owner": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn"
           },
-          "margin_enabled": true
+          "margin_enabled": true,
+          "asset_yield_index": "1/1"
         },
         {
           "asset_positions": [
@@ -1289,7 +1300,8 @@ const GenesisState = `{
             "number": 0,
             "owner": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m"
           },
-          "margin_enabled": true
+          "margin_enabled": true,
+          "asset_yield_index": "1/1"
         }
       ]
     },

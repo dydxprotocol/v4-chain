@@ -39,7 +39,7 @@ func createAppModule(t *testing.T) subaccounts.AppModule {
 func createAppModuleWithKeeper(t *testing.T) (subaccounts.AppModule, *sa_keeper.Keeper, sdk.Context) {
 	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	ctx, keeper, _, _, _, _, _, _, _ := keeper.SubaccountsKeepers(t, true)
+	ctx, keeper, _, _, _, _, _, _, _, _ := keeper.SubaccountsKeepers(t, true)
 
 	return subaccounts.NewAppModule(
 		appCodec,
@@ -83,7 +83,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	// due to it using an unexported method on the interface thus we use reflection to access the field
 	// directly that contains the registrations.
 	fv := reflect.ValueOf(registry).Elem().FieldByName("implInterfaces")
-	require.Len(t, fv.MapKeys(), 0)
+	require.Len(t, fv.MapKeys(), 2)
 }
 
 func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
@@ -212,9 +212,9 @@ func TestAppModule_RegisterServices(t *testing.T) {
 	mockMsgServer := new(mocks.Server)
 
 	mockConfigurator.On("QueryServer").Return(mockQueryServer)
-	// Since there's no MsgServer for Subaccounts module, configurator does not call `MsgServer`.
+	mockConfigurator.On("MsgServer").Return(mockMsgServer)
 	mockQueryServer.On("RegisterService", mock.Anything, mock.Anything).Return()
-	// Since there's no MsgServer for Subaccounts module, MsgServer does not call `RegisterServer`.
+	mockMsgServer.On("RegisterService", mock.Anything, mock.Anything).Return()
 
 	am := createAppModule(t)
 	am.RegisterServices(mockConfigurator)
@@ -228,7 +228,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	msg := `{"subaccounts": [{ "id": {"owner": "foo", "number": 127 },`
-	msg += `"asset_positions":[{"asset_id": 0, "index": 0, "quantums": "1000" }] }]}`
+	msg += `"asset_positions":[{"asset_id": 0, "index": 0, "quantums": "1000" }], "asset_yield_index": "1/1"}]}`
 	gs := json.RawMessage(msg)
 
 	am.InitGenesis(ctx, cdc, gs)
@@ -242,7 +242,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	genesisJson := am.ExportGenesis(ctx, cdc)
 	expected := `{"subaccounts":[{"id":{"owner":"foo","number":127},`
 	expected += `"asset_positions":[{"asset_id":0,"quantums":"1000","index":"0"}],`
-	expected += `"perpetual_positions":[],"margin_enabled":false}]}`
+	expected += `"perpetual_positions":[],"margin_enabled":false,"asset_yield_index":"1/1"}]}`
 	require.Equal(t, expected, string(genesisJson))
 }
 

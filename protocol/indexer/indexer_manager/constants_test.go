@@ -112,10 +112,12 @@ var assetPositions = v1.AssetPositionsToIndexerAssetPositions(
 		&constants.Long_Asset_1ETH,
 	},
 )
+var assetYieldIndex = constants.AssetYieldIndex_Zero
 var SubaccountEvent = indexerevents.SubaccountUpdateEventV1{
 	SubaccountId:              &subaccountId,
 	UpdatedPerpetualPositions: perpetualPositions,
 	UpdatedAssetPositions:     assetPositions,
+	YieldIndex:                assetYieldIndex,
 }
 
 var Alice_Num0_IndexerSubaccountId = v1.SubaccountIdToIndexerSubaccountId(constants.Alice_Num0)

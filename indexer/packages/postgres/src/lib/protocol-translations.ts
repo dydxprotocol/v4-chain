@@ -70,7 +70,7 @@ const ORDER_TYPE_TO_CONDITION_TYPE_MAP: Record<OrderType, IndexerOrder_Condition
 };
 
 /**
- * @param subticks - quote quantums/base quantums e.g. (1e-14 USDC/1e-10 BTC)
+ * @param subticks - quote quantums/base quantums e.g. (1e-14 TDAI/1e-10 BTC)
  * @returns - quote currency / base currency (human readable price)
  */
 export function subticksToPrice(
@@ -86,7 +86,7 @@ export function subticksToPrice(
 
 /**
  * @param price - quote currency / base currency (human readable price)
- * @returns - quote quantums/base quantums e.g. (1e-14 USDC/1e-10 BTC)
+ * @returns - quote quantums/base quantums e.g. (1e-14 TDAI/1e-10 BTC)
  */
 export function priceToSubticks(
   price: string,
@@ -117,7 +117,7 @@ export function getTickSize(
 /**
  * Given a funding index from the protocol, convert it to a human readable units such that when
  * multiplied by the position size in human-readable units of the base currency (e.g. 1 ETH, 1 BTC)
- * results in the funding payment in human-readable units of the quote currency (e.g. 1.2 USDC).
+ * results in the funding payment in human-readable units of the quote currency (e.g. 1.2 TDAI).
  * The funding index from the protocol is in parts-per-million, and of the units
  * quote-quantums / base quantums.
  * Formula for funding payment:

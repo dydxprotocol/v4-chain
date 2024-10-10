@@ -1,6 +1,7 @@
 package msgs_test
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
@@ -30,6 +31,10 @@ func TestAllTypeMessages(t *testing.T) {
 
 	// Sorting is needed since MapKeys() returns a random order.
 	sort.Strings(allTypes)
+
+	fmt.Println("ALL TYPES IS ", allTypes)
+
+	fmt.Println("MSG IS ", lib.GetSortedKeys[sort.StringSlice](msgs.AllTypeMessages))
 
 	// Assert.
 	require.Equal(t, allTypes, lib.GetSortedKeys[sort.StringSlice](msgs.AllTypeMessages))

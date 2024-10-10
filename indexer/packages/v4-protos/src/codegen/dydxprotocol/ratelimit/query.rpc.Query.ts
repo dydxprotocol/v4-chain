@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { ListLimitParamsRequest, ListLimitParamsResponse, QueryCapacityByDenomRequest, QueryCapacityByDenomResponse, QueryAllPendingSendPacketsRequest, QueryAllPendingSendPacketsResponse } from "./query";
+import { ListLimitParamsRequest, ListLimitParamsResponse, QueryCapacityByDenomRequest, QueryCapacityByDenomResponse, QueryAllPendingSendPacketsRequest, QueryAllPendingSendPacketsResponse, GetSDAIPriceQueryRequest, GetSDAIPriceQueryResponse, GetAssetYieldIndexQueryRequest, GetAssetYieldIndexQueryResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -13,6 +13,12 @@ export interface Query {
   /** Get all pending send packets */
 
   allPendingSendPackets(request?: QueryAllPendingSendPacketsRequest): Promise<QueryAllPendingSendPacketsResponse>;
+  /** Get the price of sDAI. */
+
+  getSDAIPriceQuery(request?: GetSDAIPriceQueryRequest): Promise<GetSDAIPriceQueryResponse>;
+  /** Get the price of sDAI. */
+
+  getAssetYieldIndexQuery(request?: GetAssetYieldIndexQueryRequest): Promise<GetAssetYieldIndexQueryResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -22,6 +28,8 @@ export class QueryClientImpl implements Query {
     this.listLimitParams = this.listLimitParams.bind(this);
     this.capacityByDenom = this.capacityByDenom.bind(this);
     this.allPendingSendPackets = this.allPendingSendPackets.bind(this);
+    this.getSDAIPriceQuery = this.getSDAIPriceQuery.bind(this);
+    this.getAssetYieldIndexQuery = this.getAssetYieldIndexQuery.bind(this);
   }
 
   listLimitParams(request: ListLimitParamsRequest = {}): Promise<ListLimitParamsResponse> {
@@ -42,6 +50,18 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryAllPendingSendPacketsResponse.decode(new _m0.Reader(data)));
   }
 
+  getSDAIPriceQuery(request: GetSDAIPriceQueryRequest = {}): Promise<GetSDAIPriceQueryResponse> {
+    const data = GetSDAIPriceQueryRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.ratelimit.Query", "GetSDAIPriceQuery", data);
+    return promise.then(data => GetSDAIPriceQueryResponse.decode(new _m0.Reader(data)));
+  }
+
+  getAssetYieldIndexQuery(request: GetAssetYieldIndexQueryRequest = {}): Promise<GetAssetYieldIndexQueryResponse> {
+    const data = GetAssetYieldIndexQueryRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.ratelimit.Query", "GetAssetYieldIndexQuery", data);
+    return promise.then(data => GetAssetYieldIndexQueryResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -57,6 +77,14 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     allPendingSendPackets(request?: QueryAllPendingSendPacketsRequest): Promise<QueryAllPendingSendPacketsResponse> {
       return queryService.allPendingSendPackets(request);
+    },
+
+    getSDAIPriceQuery(request?: GetSDAIPriceQueryRequest): Promise<GetSDAIPriceQueryResponse> {
+      return queryService.getSDAIPriceQuery(request);
+    },
+
+    getAssetYieldIndexQuery(request?: GetAssetYieldIndexQueryRequest): Promise<GetAssetYieldIndexQueryResponse> {
+      return queryService.getAssetYieldIndexQuery(request);
     }
 
   };

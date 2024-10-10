@@ -76,7 +76,7 @@ func (k Keeper) CreateMarket(
 
 // IsRecentlyAvailable returns true if the market was recently made available to the pricefeed daemon. A market is
 // considered recently available either if it was recently created, or if the pricefeed daemon was recently started. If
-// an index price does not exist for a recently available market, the protocol does not consider this an error
+// an daemon price does not exist for a recently available market, the protocol does not consider this an error
 // condition, as it is expected that the pricefeed daemon will eventually provide a price for the market within a
 // few seconds.
 func (k Keeper) IsRecentlyAvailable(ctx sdk.Context, marketId uint32) bool {

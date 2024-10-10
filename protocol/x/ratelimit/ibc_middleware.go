@@ -140,7 +140,21 @@ func (im IBCMiddleware) OnRecvPacket(
 	// TODO(CORE-855): Add an E2E test for this.
 	im.keeper.IncrementCapacitiesForDenom(ctx, ibcTransferPacketInfo.Denom, ibcTransferPacketInfo.Amount)
 
-	return im.app.OnRecvPacket(ctx, packet, relayer)
+	ack := im.app.OnRecvPacket(ctx, packet, relayer)
+
+	if !ack.Success() {
+		return ack
+	}
+
+	// We use hashed SDaiDenom, since Denom trace should be hashed after ParsePacketInfo.
+	if ibcTransferPacketInfo.Denom == types.SDaiDenom {
+		err := im.keeper.MintTradingDAIToUserAccount(ctx, ibcTransferPacketInfo.Receiver, ibcTransferPacketInfo.Amount)
+		if err != nil {
+			return channeltypes.NewErrorAcknowledgement(err)
+		}
+	}
+
+	return ack
 }
 
 // OnAcknowledgementPacket implements the IBCMiddleware interface
@@ -154,7 +168,12 @@ func (im IBCMiddleware) OnAcknowledgementPacket(
 		im.keeper.Logger(ctx).Error(fmt.Sprintf("ICS20 OnAckPacket failed: %s", err.Error()))
 		return err
 	}
-	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+	err := im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+	if err != nil {
+		return err
+	}
+
+	return im.keeper.RedoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(ctx, packet, acknowledgement)
 }
 
 // OnTimeoutPacket implements the IBCMiddleware interface
@@ -167,7 +186,12 @@ func (im IBCMiddleware) OnTimeoutPacket(
 		im.keeper.Logger(ctx).Error(fmt.Sprintf("ICS20 OnTimeoutPacket failed: %s", err.Error()))
 		return err
 	}
-	return im.app.OnTimeoutPacket(ctx, packet, relayer)
+	err := im.app.OnTimeoutPacket(ctx, packet, relayer)
+	if err != nil {
+		return err
+	}
+
+	return im.keeper.UndoMintTradingDAIIfAfterTimeoutIBCTransferPacket(ctx, packet)
 }
 
 // SendPacket implements the ICS4 Wrapper interface
@@ -200,6 +224,11 @@ func (im IBCMiddleware) WriteAcknowledgement(
 	ack exported.Acknowledgement,
 ) error {
 	return im.keeper.WriteAcknowledgement(ctx, chanCap, packet, ack)
+}
+
+// PreprocessSendPacket implements the ICS4WrapperWithPreprocess interface
+func (im IBCMiddleware) PreprocessSendPacket(ctx sdk.Context, packet []byte) error {
+	return im.keeper.PreprocessSendPacket(ctx, packet)
 }
 
 // GetAppVersion returns the application version of the underlying application

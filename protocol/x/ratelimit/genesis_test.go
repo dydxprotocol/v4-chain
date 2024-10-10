@@ -9,6 +9,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestInitGenesis(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	genState := types.DefaultGenesis()
+	ratelimit.InitGenesis(ctx, tApp.App.RatelimitKeeper, *genState)
+
+	// Verify the state after initialization
+	exportedGenState := ratelimit.ExportGenesis(ctx, tApp.App.RatelimitKeeper)
+	require.NotNil(t, exportedGenState)
+	require.Equal(t, genState, exportedGenState)
+}
+
 func TestGenesis(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()

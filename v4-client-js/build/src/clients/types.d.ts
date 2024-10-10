@@ -44,9 +44,9 @@ export interface BroadcastOptions {
     broadcastTimeoutMs: number;
 }
 export interface DenomConfig {
-    USDC_DENOM: string;
-    USDC_DECIMALS: number;
-    USDC_GAS_DENOM?: string;
+    TDAI_DENOM: string;
+    TDAI_DECIMALS: number;
+    TDAI_GAS_DENOM?: string;
     CHAINTOKEN_DENOM: string;
     CHAINTOKEN_DECIMALS: number;
     CHAINTOKEN_GAS_DENOM?: string;

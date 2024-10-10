@@ -29,11 +29,12 @@ func networkWithSubaccountObjects(t *testing.T, n int) []types.Subaccount {
 
 	for i := 0; i < n; i++ {
 		subaccount := types.Subaccount{
-			AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
+			AssetPositions: keepertest.CreateTDaiAssetPosition(big.NewInt(1_000)),
 			Id: &types.SubaccountId{
 				Owner:  strconv.Itoa(i),
 				Number: uint32(n),
 			},
+			AssetYieldIndex: "1/1",
 		}
 		nullify.Fill(&subaccount) //nolint:staticcheck
 		state.Subaccounts = append(state.Subaccounts, subaccount)
@@ -45,7 +46,7 @@ func networkWithSubaccountObjects(t *testing.T, n int) []types.Subaccount {
 }
 
 func getSubaccountGenesisShort() string {
-	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
+	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}]\" \"\""
 }
 
 func TestShowSubaccount(t *testing.T) {
@@ -102,7 +103,7 @@ func TestShowSubaccount(t *testing.T) {
 }
 
 func getSubaccountGenesisList() string {
-	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"0\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"1\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"2\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"3\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"4\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false}]\" \"\""
+	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"0\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"1\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"2\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"3\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"4\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}]\" \"\""
 }
 
 func removeNewlines(data []byte) []byte {

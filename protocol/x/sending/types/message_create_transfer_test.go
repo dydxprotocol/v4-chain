@@ -81,14 +81,14 @@ func TestMsgCreateTransfer_ValidateBasic(t *testing.T) {
 				Transfer: &types.Transfer{
 					Sender:    constants.Carl_Num0,
 					Recipient: constants.Carl_Num0,
-					AssetId:   assettypes.AssetUsdc.Id,
+					AssetId:   assettypes.AssetTDai.Id,
 					Amount:    uint64(500_000_000),
 				},
 			},
 			err: types.ErrSenderSameAsRecipient,
 		},
 		{
-			name: "Non-USDC asset transfer not supported",
+			name: "Non-TDai asset transfer not supported",
 			msg: types.MsgCreateTransfer{
 				Transfer: &types.Transfer{
 					Sender:    constants.Carl_Num0,
@@ -97,7 +97,7 @@ func TestMsgCreateTransfer_ValidateBasic(t *testing.T) {
 					Amount:    uint64(100),
 				},
 			},
-			err: types.ErrNonUsdcAssetTransferNotImplemented,
+			err: types.ErrNonTDaiAssetTransferNotImplemented,
 		},
 		{
 			name: "Invalid amount",
@@ -105,7 +105,7 @@ func TestMsgCreateTransfer_ValidateBasic(t *testing.T) {
 				Transfer: &types.Transfer{
 					Sender:    constants.Carl_Num0,
 					Recipient: constants.Dave_Num0,
-					AssetId:   assettypes.AssetUsdc.Id,
+					AssetId:   assettypes.AssetTDai.Id,
 					Amount:    uint64(0),
 				},
 			},

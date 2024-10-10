@@ -10,5 +10,4 @@ type PricesKeeper interface {
 		ctx sdk.Context,
 		id uint32,
 	) (market prices.MarketPrice, err error)
-	// Methods imported from prices should be defined here
 }

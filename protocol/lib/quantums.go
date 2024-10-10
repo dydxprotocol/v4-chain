@@ -140,7 +140,7 @@ func multiplyByPrice(
 //
 //	proratedFundingRate: prorated funding rate adjusted by time delta, in parts-per-million
 //	baseCurrencyAtomicResolution: atomic resolution of the base currency
-//	priceValue: index price of the perpetual market according to the pricesKeeper
+//	priceValue: daemon price of the perpetual market according to the pricesKeeper
 //	priceExponent: priceExponent of the market according to the pricesKeeper
 func FundingRateToIndex(
 	proratedFundingRate *big.Rat,
@@ -154,4 +154,26 @@ func FundingRateToIndex(
 		priceValue,
 		priceExponent,
 	)
+}
+
+// QuoteQuantumsToFullCoinAmount converts a base quantum amount to the
+// equivalent amount in full coins. Rounds down if result is not an integer.
+// Calculates the following:
+//
+// `fullCoinAmount = floor(bigQuantums * 10^(atomicResolution))`
+func QuoteQuantumsToFullCoinAmount(
+	bigQuantums *big.Int,
+	atomicResolution int32,
+) (
+	fullCoinAmount *big.Int,
+) {
+	ratResult := new(big.Rat).SetInt(bigQuantums)
+
+	ratResult.Mul(
+		ratResult,
+		RatPow10(atomicResolution),
+	)
+
+	fullCoinAmount = BigRatRound(ratResult, false)
+	return fullCoinAmount
 }

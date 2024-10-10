@@ -5,10 +5,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cometbft/cometbft/types"
@@ -681,6 +684,21 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
+
 			for _, allowedOrder := range tc.allowedOrders {
 				for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(allowedOrder)) {
 					resp := tApp.CheckTx(tx)
@@ -689,7 +707,7 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			}
 
 			if tc.advanceBlock {
-				ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			}
 
 			if tc.cancellation != nil {
@@ -700,7 +718,7 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			}
 
 			if tc.advanceBlock {
-				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.limitedOrder)) {
@@ -724,7 +742,7 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			}
 
 			// Ensure that any successful transactions can be delivered.
-			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 		})
 	}
 }
@@ -872,6 +890,21 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 				}).Build()
 
 			ctx := tApp.InitChain()
+
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.firstOrder)) {
 				resp := tApp.CheckTx(tx)
@@ -1186,12 +1219,27 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 
 			ctx := tApp.InitChain()
 
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
+
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.makerOrder)) {
 				resp := tApp.CheckTx(tx)
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			if tc.advanceBlock {
-				ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.takerOrder)) {
@@ -1199,7 +1247,7 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			if tc.advanceBlock {
-				ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.extraOrder)) {
@@ -1213,7 +1261,7 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 			}
 
 			// Ensure that any successful transactions can be delivered.
-			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
+			tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
 		})
 	}
 }

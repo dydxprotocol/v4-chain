@@ -13,12 +13,18 @@ const (
 	FlagPanicOnDaemonFailureEnabled = "panic-on-daemon-failure-enabled"
 	FlagMaxDaemonUnhealthySeconds   = "max-daemon-unhealthy-seconds"
 
+	FlagSDAIDaemonEnabled        = "sDai-daemon-enabled"
+	FlagSDAIDaemonMockEnabled    = "sDAI-daemon-mock-enabled"
+	FlagSDAIDaemonMockNoYield    = "sDAI-daemon-mock-no-yield"
+	FlagSDAIDaemonLoopDelayMs    = "sDAI-daemon-loop-delay-ms"
+	FlagSDAIDaemonEthRpcEndpoint = "sDAI-daemon-eth-rpc-endpoint"
+
 	FlagPriceDaemonEnabled     = "price-daemon-enabled"
 	FlagPriceDaemonLoopDelayMs = "price-daemon-loop-delay-ms"
 
-	FlagLiquidationDaemonEnabled        = "liquidation-daemon-enabled"
-	FlagLiquidationDaemonLoopDelayMs    = "liquidation-daemon-loop-delay-ms"
-	FlagLiquidationDaemonQueryPageLimit = "liquidation-daemon-query-page-limit"
+	FlagDeleveragingDaemonEnabled        = "deleveraging-daemon-enabled"
+	FlagDeleveragingDaemonLoopDelayMs    = "deleveraging-daemon-loop-delay-ms"
+	FlagDeleveragingDaemonQueryPageLimit = "deleveraging-daemon-query-page-limit"
 )
 
 // Shared flags contains configuration flags shared by all daemons.
@@ -31,11 +37,25 @@ type SharedFlags struct {
 	MaxDaemonUnhealthySeconds uint32
 }
 
-// LiquidationFlags contains configuration flags for the Liquidation Daemon.
-type LiquidationFlags struct {
-	// Enabled toggles the liquidation daemon on or off.
+// sDAIFlags contains configuration flags for the DAI Daemon.
+type SDAIFlags struct {
+	// Enabled toggles the DAI daemon on or off.
 	Enabled bool
-	// LoopDelayMs configures the update frequency of the liquidation daemon.
+	// MockEnabled toggles the mock DAI daemon on or off.
+	MockEnabled bool
+	// MockNoYield toggles the mock DAI daemon to not yield any events.
+	MockNoYield bool
+	// LoopDelayMs configures the update frequency of the DAI daemon.
+	LoopDelayMs uint32
+	// EthRpcEndpoint is the endpoint for the Ethereum node where DAI data is queried.
+	EthRpcEndpoint string
+}
+
+// DeleveragingFlags contains configuration flags for the Deleveraging Daemon.
+type DeleveragingFlags struct {
+	// Enabled toggles the deleveraging daemon on or off.
+	Enabled bool
+	// LoopDelayMs configures the update frequency of the deleveraging daemon.
 	LoopDelayMs uint32
 	// QueryPageLimit configures the pagination limit for fetching subaccounts.
 	QueryPageLimit uint64
@@ -51,9 +71,10 @@ type PriceFlags struct {
 
 // DaemonFlags contains the collected configuration flags for all daemons.
 type DaemonFlags struct {
-	Shared      SharedFlags
-	Liquidation LiquidationFlags
-	Price       PriceFlags
+	Shared       SharedFlags
+	SDAI         SDAIFlags
+	Price        PriceFlags
+	Deleveraging DeleveragingFlags
 }
 
 var defaultDaemonFlags *DaemonFlags
@@ -67,7 +88,14 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				PanicOnDaemonFailureEnabled: true,
 				MaxDaemonUnhealthySeconds:   5 * 60, // 5 minutes.
 			},
-			Liquidation: LiquidationFlags{
+			SDAI: SDAIFlags{
+				Enabled:        true,
+				MockEnabled:    false,
+				MockNoYield:    false,
+				LoopDelayMs:    30_000,
+				EthRpcEndpoint: "https://eth-mainnet.g.alchemy.com/v2/-IfChTcasSLaAOyyJMXRe5BbTT3uHG6I",
+			},
+			Deleveraging: DeleveragingFlags{
 				Enabled:        true,
 				LoopDelayMs:    1_600,
 				QueryPageLimit: 1_000,
@@ -108,21 +136,48 @@ func AddDaemonFlagsToCmd(
 		"Maximum allowable duration for which a daemon can be unhealthy.",
 	)
 
-	// Liquidation Daemon.
+	// SDai Daemon.
 	cmd.Flags().Bool(
-		FlagLiquidationDaemonEnabled,
-		df.Liquidation.Enabled,
-		"Enable Liquidation Daemon. Set to false for non-validator nodes.",
+		FlagSDAIDaemonEnabled,
+		df.SDAI.Enabled,
+		"Enable SDAI Daemon. Set to false for non-validator nodes.",
+	)
+	cmd.Flags().Bool(
+		FlagSDAIDaemonMockEnabled,
+		df.SDAI.MockEnabled,
+		"Enable mock SDAI Daemon.",
+	)
+	cmd.Flags().Bool(
+		FlagSDAIDaemonMockNoYield,
+		df.SDAI.MockNoYield,
+		"Enable mock SDAI Daemon to not yield any events.",
 	)
 	cmd.Flags().Uint32(
-		FlagLiquidationDaemonLoopDelayMs,
-		df.Liquidation.LoopDelayMs,
-		"Delay in milliseconds between running the Liquidation Daemon task loop.",
+		FlagSDAIDaemonLoopDelayMs,
+		df.SDAI.LoopDelayMs,
+		"Delay in milliseconds between running the sDAI Daemon task loop.",
+	)
+	cmd.Flags().String(
+		FlagSDAIDaemonEthRpcEndpoint,
+		df.SDAI.EthRpcEndpoint,
+		"Ethereum Node Rpc Endpoint",
+	)
+
+	// Deleveraging Daemon.
+	cmd.Flags().Bool(
+		FlagDeleveragingDaemonEnabled,
+		df.Deleveraging.Enabled,
+		"Enable Deleveraging Daemon. Set to false for non-validator nodes.",
+	)
+	cmd.Flags().Uint32(
+		FlagDeleveragingDaemonLoopDelayMs,
+		df.Deleveraging.LoopDelayMs,
+		"Delay in milliseconds between running the Deleveraging Daemon task loop.",
 	)
 	cmd.Flags().Uint64(
-		FlagLiquidationDaemonQueryPageLimit,
-		df.Liquidation.QueryPageLimit,
-		"Limit on the number of items to fetch per query in the Liquidation Daemon task loop.",
+		FlagDeleveragingDaemonQueryPageLimit,
+		df.Deleveraging.QueryPageLimit,
+		"Limit on the number of items to fetch per query in the Deleveraging Daemon task loop.",
 	)
 
 	// Price Daemon.
@@ -162,20 +217,47 @@ func GetDaemonFlagValuesFromOptions(
 		}
 	}
 
-	// Liquidation Daemon.
-	if option := appOpts.Get(FlagLiquidationDaemonEnabled); option != nil {
+	// SDai Daemon.
+	if option := appOpts.Get(FlagSDAIDaemonEnabled); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
-			result.Liquidation.Enabled = v
+			result.SDAI.Enabled = v
 		}
 	}
-	if option := appOpts.Get(FlagLiquidationDaemonLoopDelayMs); option != nil {
+	if option := appOpts.Get(FlagSDAIDaemonMockEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.SDAI.MockEnabled = v
+		}
+	}
+	if option := appOpts.Get(FlagSDAIDaemonMockNoYield); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.SDAI.MockNoYield = v
+		}
+	}
+	if option := appOpts.Get(FlagSDAIDaemonLoopDelayMs); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
-			result.Liquidation.LoopDelayMs = v
+			result.SDAI.LoopDelayMs = v
 		}
 	}
-	if option := appOpts.Get(FlagLiquidationDaemonQueryPageLimit); option != nil {
+	if option := appOpts.Get(FlagSDAIDaemonEthRpcEndpoint); option != nil {
+		if v, err := cast.ToStringE(option); err == nil && len(v) > 0 {
+			result.SDAI.EthRpcEndpoint = v
+		}
+	}
+
+	// Deleveraging Daemon.
+	if option := appOpts.Get(FlagDeleveragingDaemonEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.Deleveraging.Enabled = v
+		}
+	}
+	if option := appOpts.Get(FlagDeleveragingDaemonLoopDelayMs); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.Deleveraging.LoopDelayMs = v
+		}
+	}
+	if option := appOpts.Get(FlagDeleveragingDaemonQueryPageLimit); option != nil {
 		if v, err := cast.ToUint64E(option); err == nil {
-			result.Liquidation.QueryPageLimit = v
+			result.Deleveraging.QueryPageLimit = v
 		}
 	}
 

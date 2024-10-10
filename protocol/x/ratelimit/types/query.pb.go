@@ -287,6 +287,172 @@ func (m *QueryAllPendingSendPacketsResponse) GetPendingSendPackets() []PendingSe
 	return nil
 }
 
+// GetSDAIPriceRequest is a request type for the GetSDAIPrice RPC method.
+type GetSDAIPriceQueryRequest struct {
+}
+
+func (m *GetSDAIPriceQueryRequest) Reset()         { *m = GetSDAIPriceQueryRequest{} }
+func (m *GetSDAIPriceQueryRequest) String() string { return proto.CompactTextString(m) }
+func (*GetSDAIPriceQueryRequest) ProtoMessage()    {}
+func (*GetSDAIPriceQueryRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f2e2dd1cb27aa65a, []int{6}
+}
+func (m *GetSDAIPriceQueryRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetSDAIPriceQueryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetSDAIPriceQueryRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetSDAIPriceQueryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetSDAIPriceQueryRequest.Merge(m, src)
+}
+func (m *GetSDAIPriceQueryRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetSDAIPriceQueryRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetSDAIPriceQueryRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetSDAIPriceQueryRequest proto.InternalMessageInfo
+
+// GetSDAIPriceResponse is a response type for the GetSDAIPrice RPC method.
+type GetSDAIPriceQueryResponse struct {
+	Price string `protobuf:"bytes,1,opt,name=price,proto3" json:"price,omitempty"`
+}
+
+func (m *GetSDAIPriceQueryResponse) Reset()         { *m = GetSDAIPriceQueryResponse{} }
+func (m *GetSDAIPriceQueryResponse) String() string { return proto.CompactTextString(m) }
+func (*GetSDAIPriceQueryResponse) ProtoMessage()    {}
+func (*GetSDAIPriceQueryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f2e2dd1cb27aa65a, []int{7}
+}
+func (m *GetSDAIPriceQueryResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetSDAIPriceQueryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetSDAIPriceQueryResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetSDAIPriceQueryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetSDAIPriceQueryResponse.Merge(m, src)
+}
+func (m *GetSDAIPriceQueryResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetSDAIPriceQueryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetSDAIPriceQueryResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetSDAIPriceQueryResponse proto.InternalMessageInfo
+
+func (m *GetSDAIPriceQueryResponse) GetPrice() string {
+	if m != nil {
+		return m.Price
+	}
+	return ""
+}
+
+// GetAssetYieldIndexRequest is a request type for the GetAssetYieldIndex RPC
+// method.
+type GetAssetYieldIndexQueryRequest struct {
+}
+
+func (m *GetAssetYieldIndexQueryRequest) Reset()         { *m = GetAssetYieldIndexQueryRequest{} }
+func (m *GetAssetYieldIndexQueryRequest) String() string { return proto.CompactTextString(m) }
+func (*GetAssetYieldIndexQueryRequest) ProtoMessage()    {}
+func (*GetAssetYieldIndexQueryRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f2e2dd1cb27aa65a, []int{8}
+}
+func (m *GetAssetYieldIndexQueryRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetAssetYieldIndexQueryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetAssetYieldIndexQueryRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetAssetYieldIndexQueryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAssetYieldIndexQueryRequest.Merge(m, src)
+}
+func (m *GetAssetYieldIndexQueryRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetAssetYieldIndexQueryRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAssetYieldIndexQueryRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetAssetYieldIndexQueryRequest proto.InternalMessageInfo
+
+// GetSDAIPriceQueryResponse is a response type for the GetAssetYieldIndex RPC
+// method.
+type GetAssetYieldIndexQueryResponse struct {
+	AssetYieldIndex string `protobuf:"bytes,1,opt,name=asset_yield_index,json=assetYieldIndex,proto3" json:"asset_yield_index,omitempty"`
+}
+
+func (m *GetAssetYieldIndexQueryResponse) Reset()         { *m = GetAssetYieldIndexQueryResponse{} }
+func (m *GetAssetYieldIndexQueryResponse) String() string { return proto.CompactTextString(m) }
+func (*GetAssetYieldIndexQueryResponse) ProtoMessage()    {}
+func (*GetAssetYieldIndexQueryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f2e2dd1cb27aa65a, []int{9}
+}
+func (m *GetAssetYieldIndexQueryResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetAssetYieldIndexQueryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetAssetYieldIndexQueryResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetAssetYieldIndexQueryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAssetYieldIndexQueryResponse.Merge(m, src)
+}
+func (m *GetAssetYieldIndexQueryResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetAssetYieldIndexQueryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAssetYieldIndexQueryResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetAssetYieldIndexQueryResponse proto.InternalMessageInfo
+
+func (m *GetAssetYieldIndexQueryResponse) GetAssetYieldIndex() string {
+	if m != nil {
+		return m.AssetYieldIndex
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*ListLimitParamsRequest)(nil), "dydxprotocol.ratelimit.ListLimitParamsRequest")
 	proto.RegisterType((*ListLimitParamsResponse)(nil), "dydxprotocol.ratelimit.ListLimitParamsResponse")
@@ -294,6 +460,10 @@ func init() {
 	proto.RegisterType((*QueryCapacityByDenomResponse)(nil), "dydxprotocol.ratelimit.QueryCapacityByDenomResponse")
 	proto.RegisterType((*QueryAllPendingSendPacketsRequest)(nil), "dydxprotocol.ratelimit.QueryAllPendingSendPacketsRequest")
 	proto.RegisterType((*QueryAllPendingSendPacketsResponse)(nil), "dydxprotocol.ratelimit.QueryAllPendingSendPacketsResponse")
+	proto.RegisterType((*GetSDAIPriceQueryRequest)(nil), "dydxprotocol.ratelimit.GetSDAIPriceQueryRequest")
+	proto.RegisterType((*GetSDAIPriceQueryResponse)(nil), "dydxprotocol.ratelimit.GetSDAIPriceQueryResponse")
+	proto.RegisterType((*GetAssetYieldIndexQueryRequest)(nil), "dydxprotocol.ratelimit.GetAssetYieldIndexQueryRequest")
+	proto.RegisterType((*GetAssetYieldIndexQueryResponse)(nil), "dydxprotocol.ratelimit.GetAssetYieldIndexQueryResponse")
 }
 
 func init() {
@@ -301,41 +471,50 @@ func init() {
 }
 
 var fileDescriptor_f2e2dd1cb27aa65a = []byte{
-	// 540 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x93, 0x41, 0x6f, 0xd3, 0x30,
-	0x18, 0x86, 0x6b, 0xd8, 0x90, 0x30, 0x87, 0x0a, 0xd3, 0x8d, 0x2a, 0x4c, 0x61, 0x64, 0x42, 0x6c,
-	0x12, 0x4b, 0xd0, 0x5a, 0x21, 0xe0, 0x80, 0x44, 0x41, 0x48, 0x48, 0x3b, 0x94, 0x4e, 0x5c, 0xb8,
-	0x44, 0x6e, 0x62, 0x65, 0x16, 0xae, 0xed, 0xc5, 0x2e, 0x5a, 0x8f, 0x70, 0xe1, 0x8a, 0xc4, 0x9f,
-	0xe0, 0xcc, 0x89, 0x9f, 0xb0, 0x13, 0x9a, 0xc4, 0x85, 0x13, 0x42, 0x2d, 0x3f, 0x04, 0xc5, 0x49,
-	0x43, 0xba, 0x26, 0x11, 0xe3, 0x52, 0xd5, 0xf6, 0x6b, 0xbf, 0xcf, 0xf7, 0x7d, 0x6f, 0xa0, 0x13,
-	0x4e, 0xc2, 0x63, 0x19, 0x0b, 0x2d, 0x02, 0xc1, 0xbc, 0x18, 0x6b, 0xc2, 0xe8, 0x88, 0x6a, 0xef,
-	0x68, 0x4c, 0xe2, 0x89, 0x6b, 0x0e, 0xd0, 0x7a, 0x51, 0xe3, 0xe6, 0x1a, 0xab, 0x15, 0x89, 0x48,
-	0x98, 0x7d, 0x2f, 0xf9, 0x97, 0xaa, 0xad, 0x8d, 0x48, 0x88, 0x88, 0x11, 0x0f, 0x4b, 0xea, 0x61,
-	0xce, 0x85, 0xc6, 0x9a, 0x0a, 0xae, 0xb2, 0xd3, 0x9d, 0x0a, 0x3f, 0xf3, 0xeb, 0x4b, 0x1c, 0xe3,
-	0xd1, 0x5c, 0x7a, 0xbb, 0x42, 0x1a, 0x60, 0x89, 0x03, 0xaa, 0x33, 0x3a, 0xeb, 0x5e, 0x85, 0x4c,
-	0x12, 0x1e, 0x52, 0x1e, 0xf9, 0x8a, 0xf0, 0xd0, 0x97, 0x38, 0x78, 0x43, 0x74, 0x7a, 0xc3, 0x69,
-	0xc3, 0xf5, 0x7d, 0xaa, 0xf4, 0x7e, 0x22, 0xeb, 0x1b, 0xc7, 0x01, 0x39, 0x1a, 0x13, 0xa5, 0x1d,
-	0x09, 0xaf, 0x2f, 0x9d, 0x28, 0x29, 0xb8, 0x22, 0xe8, 0x15, 0xbc, 0x5a, 0x64, 0xf4, 0x19, 0x55,
-	0xba, 0x0d, 0x36, 0x2f, 0x6e, 0x5f, 0xd9, 0xdb, 0x72, 0xcb, 0x1b, 0xe4, 0x16, 0xde, 0xe9, 0xad,
-	0x9c, 0xfc, 0xbc, 0xd9, 0x18, 0x34, 0xd9, 0xdf, 0xad, 0xc4, 0xc9, 0xe9, 0xc0, 0x1b, 0x2f, 0x93,
-	0x56, 0x3f, 0xcd, 0x8a, 0xea, 0x4d, 0x9e, 0x11, 0x2e, 0x46, 0x19, 0x10, 0x6a, 0xc1, 0xd5, 0x30,
-	0x59, 0xb7, 0xc1, 0x26, 0xd8, 0xbe, 0x3c, 0x48, 0x17, 0xce, 0x3b, 0x00, 0x37, 0xca, 0x6f, 0x65,
-	0xb0, 0x18, 0xae, 0x19, 0x23, 0x12, 0xfb, 0xf3, 0x6e, 0x15, 0x81, 0xef, 0xd4, 0x02, 0x93, 0x38,
-	0x7f, 0x36, 0x85, 0xbe, 0xc6, 0x16, 0xb7, 0x0d, 0xf8, 0x16, 0xbc, 0x65, 0x10, 0x9e, 0x30, 0xd6,
-	0x4f, 0x3b, 0x7d, 0x40, 0x78, 0xd8, 0x37, 0x7d, 0xce, 0xfb, 0xf9, 0x01, 0x40, 0xa7, 0x4e, 0x95,
-	0xe3, 0xb6, 0x4a, 0xa6, 0xa5, 0x32, 0xda, 0x9d, 0x2a, 0xda, 0xa5, 0x17, 0x33, 0x5e, 0x24, 0x97,
-	0xac, 0xf6, 0xbe, 0xae, 0xc0, 0x55, 0x43, 0x82, 0x3e, 0x03, 0xd8, 0x3c, 0x33, 0x64, 0xe4, 0x56,
-	0x37, 0xa4, 0x2c, 0x27, 0x96, 0xf7, 0xcf, 0xfa, 0xb4, 0x42, 0xa7, 0xfb, 0xfe, 0xfb, 0xef, 0x4f,
-	0x17, 0x5c, 0x74, 0xd7, 0x5b, 0x48, 0xeb, 0xdb, 0xee, 0xc2, 0x27, 0xa0, 0xb4, 0x5f, 0xcc, 0x18,
-	0xfa, 0x02, 0x60, 0xf3, 0xcc, 0x88, 0x51, 0xa7, 0xca, 0xba, 0x26, 0x46, 0x56, 0xf7, 0x7c, 0x97,
-	0xce, 0x01, 0x9d, 0xc7, 0x6b, 0x38, 0xf1, 0x4d, 0x38, 0xd1, 0x37, 0x00, 0xd7, 0x4a, 0xc7, 0x8d,
-	0x1e, 0xd6, 0x52, 0xd4, 0x05, 0xc9, 0x7a, 0xf4, 0x3f, 0x57, 0xb3, 0x32, 0x1e, 0x9b, 0x32, 0x1e,
-	0xa0, 0xfb, 0x35, 0x65, 0x44, 0x44, 0xfb, 0x98, 0x31, 0xbf, 0x24, 0x86, 0xbd, 0xe0, 0x64, 0x6a,
-	0x83, 0xd3, 0xa9, 0x0d, 0x7e, 0x4d, 0x6d, 0xf0, 0x71, 0x66, 0x37, 0x4e, 0x67, 0x76, 0xe3, 0xc7,
-	0xcc, 0x6e, 0xbc, 0x7e, 0x11, 0x51, 0x7d, 0x38, 0x1e, 0xba, 0x81, 0x18, 0x79, 0x07, 0x3a, 0x26,
-	0x78, 0xf4, 0x9c, 0x72, 0xcc, 0x03, 0xb2, 0xdb, 0x9f, 0xbb, 0x28, 0xb3, 0xbd, 0x1b, 0x1c, 0x62,
-	0xca, 0xbd, 0xdc, 0xfb, 0xb8, 0x60, 0xad, 0x27, 0x92, 0xa8, 0xe1, 0x25, 0x73, 0xd6, 0xf9, 0x13,
-	0x00, 0x00, 0xff, 0xff, 0x29, 0x6d, 0x3f, 0x71, 0x90, 0x05, 0x00, 0x00,
+	// 682 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x93, 0x4f, 0x4f, 0xd4, 0x4e,
+	0x18, 0xc7, 0x77, 0x7e, 0x3f, 0xd1, 0x38, 0x1e, 0x36, 0x8c, 0x0b, 0xac, 0x95, 0x14, 0x2c, 0x31,
+	0x82, 0x4a, 0xcb, 0xbf, 0x20, 0x7a, 0x30, 0x01, 0x89, 0x84, 0x04, 0x93, 0x15, 0xe2, 0x41, 0x2f,
+	0x93, 0xa1, 0x9d, 0x94, 0x89, 0xdd, 0x99, 0xd2, 0x19, 0x0c, 0x7b, 0xd4, 0x8b, 0x57, 0x13, 0xdf,
+	0x84, 0x89, 0xf1, 0xe2, 0x6b, 0xf0, 0xc0, 0xc9, 0x90, 0x78, 0xf1, 0x64, 0x0c, 0xf8, 0x42, 0x4c,
+	0x67, 0x67, 0xd7, 0x2e, 0xdb, 0x16, 0xd7, 0xcb, 0x66, 0x3b, 0xcf, 0xf7, 0x79, 0x9e, 0xcf, 0x3c,
+	0xf3, 0x7c, 0xa1, 0x13, 0xb4, 0x82, 0xc3, 0x38, 0x11, 0x4a, 0xf8, 0x22, 0xf2, 0x12, 0xa2, 0x68,
+	0xc4, 0x9a, 0x4c, 0x79, 0xfb, 0x07, 0x34, 0x69, 0xb9, 0x3a, 0x80, 0x46, 0xb3, 0x1a, 0xb7, 0xab,
+	0xb1, 0x6a, 0xa1, 0x08, 0x85, 0x3e, 0xf7, 0xd2, 0x7f, 0x6d, 0xb5, 0x35, 0x1e, 0x0a, 0x11, 0x46,
+	0xd4, 0x23, 0x31, 0xf3, 0x08, 0xe7, 0x42, 0x11, 0xc5, 0x04, 0x97, 0x26, 0x3a, 0x53, 0xd0, 0x4f,
+	0xff, 0xe2, 0x98, 0x24, 0xa4, 0xd9, 0x91, 0xde, 0x2c, 0x90, 0xfa, 0x24, 0x26, 0x3e, 0x53, 0x86,
+	0xce, 0x9a, 0x2b, 0x90, 0xc5, 0x94, 0x07, 0x8c, 0x87, 0x58, 0x52, 0x1e, 0xe0, 0x98, 0xf8, 0x2f,
+	0xa9, 0x6a, 0x67, 0x38, 0x75, 0x38, 0xba, 0xc5, 0xa4, 0xda, 0x4a, 0x65, 0x0d, 0xdd, 0x71, 0x9b,
+	0xee, 0x1f, 0x50, 0xa9, 0x9c, 0x18, 0x8e, 0xf5, 0x45, 0x64, 0x2c, 0xb8, 0xa4, 0xe8, 0x19, 0x1c,
+	0xce, 0x32, 0xe2, 0x88, 0x49, 0x55, 0x07, 0x93, 0xff, 0x4f, 0x5f, 0x59, 0x98, 0x72, 0xf3, 0x07,
+	0xe4, 0x66, 0xea, 0xac, 0x5d, 0x38, 0xfa, 0x31, 0x51, 0xd9, 0xae, 0x46, 0x7f, 0x8e, 0xd2, 0x4e,
+	0xce, 0x22, 0xbc, 0xfe, 0x34, 0x1d, 0xf5, 0x23, 0x73, 0xa9, 0xb5, 0xd6, 0x3a, 0xe5, 0xa2, 0x69,
+	0x80, 0x50, 0x0d, 0x0e, 0x05, 0xe9, 0x77, 0x1d, 0x4c, 0x82, 0xe9, 0xcb, 0xdb, 0xed, 0x0f, 0xe7,
+	0x35, 0x80, 0xe3, 0xf9, 0x59, 0x06, 0x96, 0xc0, 0x11, 0xdd, 0x88, 0x26, 0xb8, 0x33, 0xad, 0x2c,
+	0xf0, 0xad, 0x52, 0x60, 0x9a, 0x74, 0xcb, 0xb6, 0xa1, 0xaf, 0x46, 0xbd, 0xc7, 0x1a, 0x7c, 0x0a,
+	0xde, 0xd0, 0x08, 0xab, 0x51, 0xd4, 0x68, 0x4f, 0x7a, 0x87, 0xf2, 0xa0, 0xa1, 0xe7, 0xdc, 0x9d,
+	0xe7, 0x5b, 0x00, 0x9d, 0x32, 0x55, 0x17, 0xb7, 0x96, 0xf3, 0x5a, 0xd2, 0xd0, 0xce, 0x14, 0xd1,
+	0xf6, 0x55, 0x34, 0xbc, 0x28, 0xee, 0x6b, 0xe5, 0x58, 0xb0, 0xbe, 0x41, 0xd5, 0xce, 0xfa, 0xea,
+	0x66, 0x23, 0x61, 0x3e, 0xd5, 0x50, 0x1d, 0xca, 0x79, 0x78, 0x2d, 0x27, 0x66, 0xd8, 0x6a, 0x70,
+	0x28, 0x4e, 0x4f, 0x3b, 0x2f, 0xa0, 0x3f, 0x9c, 0x49, 0x68, 0x6f, 0x50, 0xb5, 0x2a, 0x25, 0x55,
+	0xcf, 0x19, 0x8d, 0x82, 0x4d, 0x1e, 0xd0, 0xc3, 0x9e, 0xa2, 0x4f, 0xe0, 0x44, 0xa1, 0xc2, 0x94,
+	0xbe, 0x0d, 0x87, 0x49, 0x1a, 0xc7, 0xad, 0x54, 0x80, 0x59, 0xaa, 0x30, 0x6d, 0xaa, 0xa4, 0x37,
+	0x71, 0xe1, 0xd3, 0x25, 0x38, 0xa4, 0xb3, 0xd1, 0x07, 0x00, 0xab, 0x67, 0x96, 0x14, 0xb9, 0xc5,
+	0x0f, 0x9a, 0xb7, 0xe7, 0x96, 0xf7, 0xd7, 0xfa, 0x36, 0xaa, 0xb3, 0xf4, 0xe6, 0xdb, 0xaf, 0xf7,
+	0xff, 0xb9, 0xe8, 0xae, 0xd7, 0xe3, 0xb6, 0x57, 0x4b, 0x3d, 0x16, 0x96, 0x0a, 0x67, 0x3d, 0x82,
+	0x3e, 0x03, 0x58, 0x3d, 0xb3, 0xa2, 0x68, 0xb1, 0xa8, 0x75, 0x89, 0x0d, 0xac, 0xa5, 0xc1, 0x92,
+	0x06, 0x80, 0xee, 0xda, 0x63, 0xb7, 0x85, 0xb5, 0xb9, 0xd0, 0x57, 0x00, 0x47, 0x72, 0xd7, 0x15,
+	0xdd, 0x2f, 0xa5, 0x28, 0x33, 0x82, 0xf5, 0xe0, 0x5f, 0x52, 0xcd, 0x35, 0x1e, 0xea, 0x6b, 0xac,
+	0xa0, 0xe5, 0x92, 0x6b, 0x84, 0x54, 0x61, 0x12, 0x45, 0x38, 0xc7, 0x46, 0xe8, 0x23, 0x80, 0xc3,
+	0x7d, 0xfb, 0x8d, 0xe6, 0x8a, 0x88, 0x8a, 0x6c, 0x62, 0xcd, 0x0f, 0x90, 0x61, 0xd0, 0xe7, 0x35,
+	0xfa, 0x1d, 0x34, 0x73, 0x0e, 0xba, 0x0c, 0x08, 0xc3, 0xda, 0x59, 0xe8, 0x0b, 0x80, 0x63, 0x05,
+	0xc6, 0x41, 0xcb, 0x25, 0x04, 0x25, 0x5e, 0xb4, 0xee, 0x0d, 0x9c, 0x67, 0xf8, 0x57, 0x34, 0xff,
+	0x02, 0x9a, 0x3b, 0x6f, 0xf4, 0x67, 0x6d, 0xbc, 0xe6, 0x1f, 0x9d, 0xd8, 0xe0, 0xf8, 0xc4, 0x06,
+	0x3f, 0x4f, 0x6c, 0xf0, 0xee, 0xd4, 0xae, 0x1c, 0x9f, 0xda, 0x95, 0xef, 0xa7, 0x76, 0xe5, 0xc5,
+	0x66, 0xc8, 0xd4, 0xde, 0xc1, 0xae, 0xeb, 0x8b, 0xa6, 0xb7, 0xa3, 0x12, 0x4a, 0x9a, 0x8f, 0x19,
+	0x27, 0xdc, 0xa7, 0xb3, 0x8d, 0x4e, 0x7d, 0xa9, 0x8f, 0x67, 0xfd, 0x3d, 0xc2, 0xb8, 0xd7, 0xed,
+	0x7a, 0x98, 0x69, 0xaa, 0x5a, 0x31, 0x95, 0xbb, 0x17, 0x75, 0x6c, 0xf1, 0x77, 0x00, 0x00, 0x00,
+	0xff, 0xff, 0x95, 0x70, 0xd1, 0x86, 0xc5, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -356,6 +535,10 @@ type QueryClient interface {
 	CapacityByDenom(ctx context.Context, in *QueryCapacityByDenomRequest, opts ...grpc.CallOption) (*QueryCapacityByDenomResponse, error)
 	// Get all pending send packets
 	AllPendingSendPackets(ctx context.Context, in *QueryAllPendingSendPacketsRequest, opts ...grpc.CallOption) (*QueryAllPendingSendPacketsResponse, error)
+	// Get the price of sDAI.
+	GetSDAIPriceQuery(ctx context.Context, in *GetSDAIPriceQueryRequest, opts ...grpc.CallOption) (*GetSDAIPriceQueryResponse, error)
+	// Get the price of sDAI.
+	GetAssetYieldIndexQuery(ctx context.Context, in *GetAssetYieldIndexQueryRequest, opts ...grpc.CallOption) (*GetAssetYieldIndexQueryResponse, error)
 }
 
 type queryClient struct {
@@ -393,6 +576,24 @@ func (c *queryClient) AllPendingSendPackets(ctx context.Context, in *QueryAllPen
 	return out, nil
 }
 
+func (c *queryClient) GetSDAIPriceQuery(ctx context.Context, in *GetSDAIPriceQueryRequest, opts ...grpc.CallOption) (*GetSDAIPriceQueryResponse, error) {
+	out := new(GetSDAIPriceQueryResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.ratelimit.Query/GetSDAIPriceQuery", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAssetYieldIndexQuery(ctx context.Context, in *GetAssetYieldIndexQueryRequest, opts ...grpc.CallOption) (*GetAssetYieldIndexQueryResponse, error) {
+	out := new(GetAssetYieldIndexQueryResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.ratelimit.Query/GetAssetYieldIndexQuery", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// List all limit params.
@@ -401,6 +602,10 @@ type QueryServer interface {
 	CapacityByDenom(context.Context, *QueryCapacityByDenomRequest) (*QueryCapacityByDenomResponse, error)
 	// Get all pending send packets
 	AllPendingSendPackets(context.Context, *QueryAllPendingSendPacketsRequest) (*QueryAllPendingSendPacketsResponse, error)
+	// Get the price of sDAI.
+	GetSDAIPriceQuery(context.Context, *GetSDAIPriceQueryRequest) (*GetSDAIPriceQueryResponse, error)
+	// Get the price of sDAI.
+	GetAssetYieldIndexQuery(context.Context, *GetAssetYieldIndexQueryRequest) (*GetAssetYieldIndexQueryResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -415,6 +620,12 @@ func (*UnimplementedQueryServer) CapacityByDenom(ctx context.Context, req *Query
 }
 func (*UnimplementedQueryServer) AllPendingSendPackets(ctx context.Context, req *QueryAllPendingSendPacketsRequest) (*QueryAllPendingSendPacketsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllPendingSendPackets not implemented")
+}
+func (*UnimplementedQueryServer) GetSDAIPriceQuery(ctx context.Context, req *GetSDAIPriceQueryRequest) (*GetSDAIPriceQueryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSDAIPriceQuery not implemented")
+}
+func (*UnimplementedQueryServer) GetAssetYieldIndexQuery(ctx context.Context, req *GetAssetYieldIndexQueryRequest) (*GetAssetYieldIndexQueryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAssetYieldIndexQuery not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -475,6 +686,42 @@ func _Query_AllPendingSendPackets_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetSDAIPriceQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSDAIPriceQueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetSDAIPriceQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.ratelimit.Query/GetSDAIPriceQuery",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetSDAIPriceQuery(ctx, req.(*GetSDAIPriceQueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAssetYieldIndexQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAssetYieldIndexQueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAssetYieldIndexQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.ratelimit.Query/GetAssetYieldIndexQuery",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAssetYieldIndexQuery(ctx, req.(*GetAssetYieldIndexQueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.ratelimit.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -490,6 +737,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllPendingSendPackets",
 			Handler:    _Query_AllPendingSendPackets_Handler,
+		},
+		{
+			MethodName: "GetSDAIPriceQuery",
+			Handler:    _Query_GetSDAIPriceQuery_Handler,
+		},
+		{
+			MethodName: "GetAssetYieldIndexQuery",
+			Handler:    _Query_GetAssetYieldIndexQuery_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -683,6 +938,112 @@ func (m *QueryAllPendingSendPacketsResponse) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
+func (m *GetSDAIPriceQueryRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetSDAIPriceQueryRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetSDAIPriceQueryRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *GetSDAIPriceQueryResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetSDAIPriceQueryResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetSDAIPriceQueryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Price) > 0 {
+		i -= len(m.Price)
+		copy(dAtA[i:], m.Price)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Price)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetAssetYieldIndexQueryRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetAssetYieldIndexQueryRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetAssetYieldIndexQueryRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *GetAssetYieldIndexQueryResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetAssetYieldIndexQueryResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetAssetYieldIndexQueryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AssetYieldIndex) > 0 {
+		i -= len(m.AssetYieldIndex)
+		copy(dAtA[i:], m.AssetYieldIndex)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.AssetYieldIndex)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -766,6 +1127,50 @@ func (m *QueryAllPendingSendPacketsResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *GetSDAIPriceQueryRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *GetSDAIPriceQueryResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Price)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *GetAssetYieldIndexQueryRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *GetAssetYieldIndexQueryResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AssetYieldIndex)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -1188,6 +1593,270 @@ func (m *QueryAllPendingSendPacketsResponse) Unmarshal(dAtA []byte) error {
 			if err := m.PendingSendPackets[len(m.PendingSendPackets)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetSDAIPriceQueryRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetSDAIPriceQueryRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetSDAIPriceQueryRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetSDAIPriceQueryResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetSDAIPriceQueryResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetSDAIPriceQueryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Price = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetAssetYieldIndexQueryRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetAssetYieldIndexQueryRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetAssetYieldIndexQueryRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetAssetYieldIndexQueryResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetAssetYieldIndexQueryResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetAssetYieldIndexQueryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetYieldIndex", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AssetYieldIndex = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

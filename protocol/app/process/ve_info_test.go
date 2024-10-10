@@ -9,6 +9,7 @@ import (
 	prepareutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/mock"
@@ -41,7 +42,8 @@ func TestVEInjectionHandling(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, daemonPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+
 			ctx = vetesting.GetVeEnabledCtx(ctx, 3)
 			ctx = ctx.WithCometInfo(
 				vetesting.NewBlockInfo(
@@ -56,23 +58,26 @@ func TestVEInjectionHandling(t *testing.T) {
 			)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
-			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
+			daemonPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
 
 			mockClobKeeper := &mocks.ProcessClobKeeper{}
 			mockClobKeeper.On("RecordMevMetricsIsEnabled").Return(true)
 			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-			mockPriceApplier := &mocks.ProcessProposalPriceApplier{}
-			mockPriceApplier.On("ApplyPricesFromVE", mock.Anything, mock.Anything).Return(nil)
+			mockRatelimitKeeper := &mocks.VoteExtensionRateLimitKeeper{}
+
+			mockVEApplier := &mocks.ProcessProposalVEApplier{}
+			mockVEApplier.On("ApplyVE", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			handler := process.ProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
 				mockClobKeeper,
 				&mocks.ProcessPerpetualKeeper{},
 				pricesKeeper,
+				mockRatelimitKeeper,
 				vecodec.NewDefaultExtendedCommitCodec(),
 				vecodec.NewDefaultVoteExtensionCodec(),
-				mockPriceApplier,
+				mockVEApplier,
 				prepareutils.NoOpValidateVoteExtensionsFn,
 			)
 

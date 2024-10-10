@@ -17,6 +17,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	heap "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/heap"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -139,37 +140,46 @@ func (k Keeper) GetInsuranceFundBalanceInQuoteQuantums(
 ) (
 	balance *big.Int,
 ) {
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	tdaiAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetTDai.Id)
 	if !exists {
-		panic("GetInsuranceFundBalanceInQuoteQuantums: Usdc asset not found in state")
+		panic("GetInsuranceFundBalanceInQuoteQuantums: TDai asset not found in state")
 	}
 	insuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
 	if err != nil {
 		return nil
 	}
-	insuranceFundBalance := k.bankKeeper.GetBalance(
+	insuranceFundBalanceCoin := k.bankKeeper.GetBalance(
 		ctx,
 		insuranceFundAddr,
-		usdcAsset.Denom,
+		tdaiAsset.Denom,
 	)
 
-	// Return as big.Int.
-	return insuranceFundBalance.Amount.BigInt()
+	balance, _, err = k.assetsKeeper.ConvertCoinToAsset(ctx, tdaiAsset.Id, insuranceFundBalanceCoin)
+
+	if err != nil {
+		return nil
+	}
+
+	return balance
 }
 
 func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	tdaiAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetTDai.Id)
 	if !exists {
-		panic("GetCrossInsuranceFundBalance: Usdc asset not found in state")
+		panic("GetCrossInsuranceFundBalance: TDai asset not found in state")
 	}
-	insuranceFundBalance := k.bankKeeper.GetBalance(
+	insuranceFundBalanceCoin := k.bankKeeper.GetBalance(
 		ctx,
 		perptypes.InsuranceFundModuleAddress,
-		usdcAsset.Denom,
+		tdaiAsset.Denom,
 	)
 
-	// Return as big.Int.
-	return insuranceFundBalance.Amount.BigInt()
+	balance, _, err := k.assetsKeeper.ConvertCoinToAsset(ctx, tdaiAsset.Id, insuranceFundBalanceCoin)
+	if err != nil {
+		return nil
+	}
+
+	return balance
 }
 
 // CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
@@ -328,7 +338,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 
 	// Find subaccounts with open positions on the opposite side of the liquidated subaccount.
 	isDeleveragingLong := deltaQuantumsTotal.Sign() == -1
-	subaccountsWithOpenPositions := k.DaemonLiquidationInfo.GetSubaccountsWithOpenPositionsOnSide(
+	subaccountsWithOpenPositions := k.DaemonDeleveragingInfo.GetSubaccountsWithOpenPositionsOnSide(
 		perpetualId,
 		!isDeleveragingLong,
 	)
@@ -558,7 +568,7 @@ func (k Keeper) ProcessDeleveraging(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
+					AssetId:          assettypes.AssetTDai.Id,
 					BigQuantumsDelta: deleveragedSubaccountQuoteBalanceDelta,
 				},
 			},
@@ -574,7 +584,7 @@ func (k Keeper) ProcessDeleveraging(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
+					AssetId:          assettypes.AssetTDai.Id,
 					BigQuantumsDelta: offsettingSubaccountQuoteBalanceDelta,
 				},
 			},
@@ -630,6 +640,8 @@ func (k Keeper) ProcessDeleveraging(
 			deleveragedSubaccountPerpetualQuantumsDelta,
 			offsettingSubaccountPerpetualQuantumsDelta,
 			big.NewInt(0),
+			big.NewInt(0),
+			big.NewInt(0),
 			false, // IsLiquidation is false since this isn't a liquidation match.
 			true,  // IsDeleverage is true since this is a deleveraging match.
 			perpetualId,
@@ -640,12 +652,12 @@ func (k Keeper) ProcessDeleveraging(
 }
 
 // GetSubaccountsWithPositionsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
-// liquidations daemon to fetch subaccounts with open positions in final settlement markets. These subaccounts
+// deleveraging daemon to fetch subaccounts with open positions in final settlement markets. These subaccounts
 // will be deleveraged in either at the oracle price if non-negative TNC or at bankruptcy price if negative TNC. This
 // function is called in PrepareCheckState during the deleveraging step.
 func (k Keeper) GetSubaccountsWithPositionsInFinalSettlementMarkets(
 	ctx sdk.Context,
-) (subaccountsToDeleverage []subaccountToDeleverage) {
+) (subaccountsToDeleverage []heap.SubaccountToDeleverage) {
 	defer telemetry.MeasureSince(
 		time.Now(),
 		types.ModuleName,
@@ -659,11 +671,11 @@ func (k Keeper) GetSubaccountsWithPositionsInFinalSettlementMarkets(
 		}
 
 		finalSettlementPerpetualId := clobPair.MustGetPerpetualId()
-		subaccountsWithPosition := k.DaemonLiquidationInfo.GetSubaccountsWithOpenPositions(
+		subaccountsWithPosition := k.DaemonDeleveragingInfo.GetSubaccountsWithOpenPositions(
 			finalSettlementPerpetualId,
 		)
 		for _, subaccountId := range subaccountsWithPosition {
-			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
+			subaccountsToDeleverage = append(subaccountsToDeleverage, heap.SubaccountToDeleverage{
 				SubaccountId: subaccountId,
 				PerpetualId:  finalSettlementPerpetualId,
 			})
@@ -682,7 +694,7 @@ func (k Keeper) GetSubaccountsWithPositionsInFinalSettlementMarkets(
 // Returns an error if a deleveraging attempt returns an error.
 func (k Keeper) DeleverageSubaccounts(
 	ctx sdk.Context,
-	subaccountsToDeleverage []subaccountToDeleverage,
+	subaccountsToDeleverage []heap.SubaccountToDeleverage,
 ) error {
 	defer telemetry.MeasureSince(
 		time.Now(),

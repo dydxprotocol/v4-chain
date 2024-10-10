@@ -52,7 +52,7 @@ func TestPendingUpdates(t *testing.T) {
 			expectedUpdates: []satypes.Update{
 				{
 					SubaccountId: constants.Alice_Num0,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+					AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(-100)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -62,7 +62,7 @@ func TestPendingUpdates(t *testing.T) {
 				},
 				{
 					SubaccountId: constants.Alice_Num1,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(200)),
+					AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(200)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(1),
@@ -104,7 +104,7 @@ func TestPendingUpdates(t *testing.T) {
 				{
 					SubaccountId: constants.Bob_Num0,
 					// - 10_050 - (fee) 6
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-10_056)),
+					AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(-10_056)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -115,7 +115,7 @@ func TestPendingUpdates(t *testing.T) {
 				{
 					SubaccountId: constants.Alice_Num0,
 					// - 10_000 - (fee) 5
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-10005)),
+					AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(-10005)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -126,7 +126,7 @@ func TestPendingUpdates(t *testing.T) {
 				{
 					SubaccountId: constants.Alice_Num1,
 					// 20_000 - (fee) 4
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(19_996)),
+					AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(19_996)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(1),
@@ -164,7 +164,7 @@ func TestPendingUpdates(t *testing.T) {
 			expectedUpdates: []satypes.Update{
 				{
 					SubaccountId: constants.Alice_Num0,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-250)),
+					AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(-250)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -218,7 +218,7 @@ func TestPendingUpdates(t *testing.T) {
 				{
 					SubaccountId: constants.Alice_Num0,
 					// - 15_000 - 1_500 + 1_600 + 2_100 - (fee) 7
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-12_807)),
+					AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(-12_807)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),
@@ -272,7 +272,7 @@ func TestPendingUpdates(t *testing.T) {
 				{
 					SubaccountId: constants.Alice_Num0,
 					// - 15_000 - 1_500 + 1_600 + 2_100 + (fee) 3
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-12_800)),
+					AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(-12_800)),
 					PerpetualUpdates: []satypes.PerpetualUpdate{
 						{
 							PerpetualId:      uint32(0),

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -26,7 +27,7 @@ const (
 	BlockTimeDuration             = 2 * time.Second
 	NumBlocksPerMinute            = int64(time.Minute / BlockTimeDuration) // 30
 	BlockHeightAtFirstFundingTick = 1000
-	TestTransferUsdcForSettlement = 10_000_000_000_000
+	TestTransferTDaiForSettlement = 10_000_000_000_000
 	TestMarketId                  = 0
 )
 
@@ -106,24 +107,24 @@ var (
 			Transfer: &sendingtypes.Transfer{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.Alice_Num0,
-				AssetId:   assettypes.AssetUsdc.Id,
-				Amount:    TestTransferUsdcForSettlement,
+				AssetId:   assettypes.AssetTDai.Id,
+				Amount:    TestTransferTDaiForSettlement,
 			},
 		},
 		{
 			Transfer: &sendingtypes.Transfer{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.Bob_Num0,
-				AssetId:   assettypes.AssetUsdc.Id,
-				Amount:    TestTransferUsdcForSettlement,
+				AssetId:   assettypes.AssetTDai.Id,
+				Amount:    TestTransferTDaiForSettlement,
 			},
 		},
 		{
 			Transfer: &sendingtypes.Transfer{
 				Sender:    constants.Dave_Num0,
 				Recipient: constants.Carl_Num0,
-				AssetId:   assettypes.AssetUsdc.Id,
-				Amount:    TestTransferUsdcForSettlement,
+				AssetId:   assettypes.AssetTDai.Id,
+				Amount:    TestTransferTDaiForSettlement,
 			},
 		},
 	}
@@ -134,16 +135,17 @@ type expectedSettlements struct {
 	Settlement   int64
 }
 
-func getSubaccountUsdcBalance(subaccount satypes.Subaccount) int64 {
+func getSubaccountTDaiBalance(subaccount satypes.Subaccount) int64 {
 	return subaccount.AssetPositions[0].Quantums.BigInt().Int64()
 }
 
 func TestFunding(t *testing.T) {
 	tests := map[string]struct {
-		testHumanOrders   []clobtest.TestHumanOrder
-		initialIndexPrice map[uint32]string
-		// index price to be used in premium calculation
-		indexPriceForPremium map[uint32]string
+		testHumanOrders          []clobtest.TestHumanOrder
+		initialDaemonPrice       map[uint32]string
+		disableSDAConversionRate bool
+		// daemon price to be used in premium calculation
+		daemonPriceForPremium map[uint32]string
 		// oracle price for funding index calculation
 		oracelPriceForFundingIndex map[uint32]string
 		// address -> funding
@@ -151,7 +153,7 @@ func TestFunding(t *testing.T) {
 		expectedFundingPremiums       []perptypes.MarketPremiums
 		expectedFundingIndex          int64
 	}{
-		"Index price below impact bid, positive funding, longs pay shorts": {
+		"daemon price below impact bid, positive funding, longs pay shorts": {
 			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
@@ -181,10 +183,10 @@ func TestFunding(t *testing.T) {
 					HumanSize:  "0.2",
 				},
 			},
-			initialIndexPrice: map[uint32]string{
+			initialDaemonPrice: map[uint32]string{
 				TestMarketId: "28002",
 			},
-			indexPriceForPremium: map[uint32]string{
+			daemonPriceForPremium: map[uint32]string{
 				TestMarketId: "27960",
 			},
 			oracelPriceForFundingIndex: map[uint32]string{
@@ -222,8 +224,9 @@ func TestFunding(t *testing.T) {
 					Settlement: -964_000,
 				},
 			},
+			disableSDAConversionRate: true,
 		},
-		"Index price above impact ask, negative funding, final funding rate clamped": {
+		"daemon price above impact ask, negative funding, final funding rate clamped": {
 			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
@@ -253,10 +256,10 @@ func TestFunding(t *testing.T) {
 					HumanSize:  "0.2",
 				},
 			},
-			initialIndexPrice: map[uint32]string{
+			initialDaemonPrice: map[uint32]string{
 				0: "28002",
 			},
-			indexPriceForPremium: map[uint32]string{
+			daemonPriceForPremium: map[uint32]string{
 				0: "34000",
 			},
 			oracelPriceForFundingIndex: map[uint32]string{
@@ -296,8 +299,9 @@ func TestFunding(t *testing.T) {
 					Settlement: 100_500_000,
 				},
 			},
+			disableSDAConversionRate: true,
 		},
-		"Index price between impact bid and ask, zero funding": {
+		"daemon price between impact bid and ask, zero funding": {
 			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
@@ -327,10 +331,10 @@ func TestFunding(t *testing.T) {
 					HumanSize:  "0.2",
 				},
 			},
-			initialIndexPrice: map[uint32]string{
+			initialDaemonPrice: map[uint32]string{
 				0: "28002",
 			},
-			indexPriceForPremium: map[uint32]string{
+			daemonPriceForPremium: map[uint32]string{
 				0: "28003", // Between impact bid and ask
 			},
 			oracelPriceForFundingIndex: map[uint32]string{
@@ -352,13 +356,14 @@ func TestFunding(t *testing.T) {
 					Settlement:   0,
 				},
 			},
+			disableSDAConversionRate: true,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).
-				// UpdateIndexPrice only contacts the tApp.App.Server causing non-determinism in the
+				// UpdateDaemonPrice only contacts the tApp.App.Server causing non-determinism in the
 				// other App instances in TestApp used for non-determinism checking.
 				WithNonDeterminismChecksEnabled(false).
 				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
@@ -366,7 +371,26 @@ func TestFunding(t *testing.T) {
 					genesis.GenesisTime = GenesisTime
 					return genesis
 				}).Build()
+
 			ctx := tApp.InitChain()
+
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			if tc.disableSDAConversionRate {
+				rate = ""
+			}
+
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			// Place orders on the book.
 			for _, testHumanOrder := range tc.testHumanOrders {
@@ -383,15 +407,15 @@ func TestFunding(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
-			// Update initial index price. This price is meant to be within the impact price range,
+			// Update initial daemon price. This price is meant to be within the impact price range,
 			// leading to zero sampled premiums.
-			pricefeed_testutil.UpdateIndexPrice(
+			pricefeed_testutil.UpdateDaemonPrice(
 				t,
 				ctx,
 				tApp.App,
 				TestMarketId,
-				pricestest.MustHumanPriceToMarketPrice(tc.initialIndexPrice[TestMarketId], -5),
-				// Only index price past a certain threshold is used for premium calculation.
+				pricestest.MustHumanPriceToMarketPrice(tc.initialDaemonPrice[TestMarketId], -5),
+				// Only daemon price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
 			)
@@ -407,14 +431,14 @@ func TestFunding(t *testing.T) {
 			// Zero premium samples since we just entered a new `funding-tick` epoch.
 			require.Equal(t, uint32(0), premiumSamples.NumPremiums)
 
-			// Update index price for each validator so they use this price for premium calculation.
-			pricefeed_testutil.UpdateIndexPrice(
+			// Update daemon price for each validator so they use this price for premium calculation.
+			pricefeed_testutil.UpdateDaemonPrice(
 				t,
 				ctx,
 				tApp.App,
 				TestMarketId,
-				pricestest.MustHumanPriceToMarketPrice(tc.indexPriceForPremium[TestMarketId], -5),
-				// Only index price past a certain threshold is used for premium calculation.
+				pricestest.MustHumanPriceToMarketPrice(tc.daemonPriceForPremium[TestMarketId], -5),
+				// Only daemon price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
 			)
@@ -439,7 +463,7 @@ func TestFunding(t *testing.T) {
 				BlockTime: SecondFundingTick.Add(-BlockTimeDuration),
 			})
 
-			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
 				&tApp.App.ConsumerKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{
@@ -454,6 +478,7 @@ func TestFunding(t *testing.T) {
 						),
 					},
 				},
+				"",
 				tApp.GetHeader().Height,
 			)
 			require.NoError(t, err)
@@ -474,14 +499,14 @@ func TestFunding(t *testing.T) {
 			require.Equal(t, tc.expectedFundingIndex, btcPerp.FundingIndex.BigInt().Int64())
 
 			subaccsBeforeSettlement := []satypes.Subaccount{}
-			totalUsdcBalanceBeforeSettlement := int64(0)
+			totalTDaiBalanceBeforeSettlement := int64(0)
 			for _, expectedSettlements := range tc.expectedSubaccountSettlements {
 				subaccBeforeSettlement := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, expectedSettlements.SubaccountId)
 				// Before settlement, each perpetual position should have zero funding index, since these positions
 				// were opened when BTC perpetual has zero funding idnex.
 				require.Equal(t, int64(0), subaccBeforeSettlement.PerpetualPositions[0].FundingIndex.BigInt().Int64())
 				subaccsBeforeSettlement = append(subaccsBeforeSettlement, subaccBeforeSettlement)
-				totalUsdcBalanceBeforeSettlement += getSubaccountUsdcBalance(subaccBeforeSettlement)
+				totalTDaiBalanceBeforeSettlement += getSubaccountTDaiBalance(subaccBeforeSettlement)
 			}
 
 			// Send transfers from Dave to subaccounts that has positions, so that funding is settled for these accounts.
@@ -492,7 +517,7 @@ func TestFunding(t *testing.T) {
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
 						AccAddressForSigning: transfer.Transfer.Sender.Owner,
-						Gas:                  130_000,
+						Gas:                  135_000,
 						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
 					&transfer,
@@ -503,7 +528,7 @@ func TestFunding(t *testing.T) {
 
 			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight()+1), testapp.AdvanceToBlockOptions{})
 
-			totalUsdcBalanceAfterSettlement := int64(0)
+			totalTDaiBalanceAfterSettlement := int64(0)
 			for i, expectedSettlements := range tc.expectedSubaccountSettlements {
 				subaccAfterSettlement := tApp.App.SubaccountsKeeper.GetSubaccount(
 					ctx,
@@ -517,27 +542,27 @@ func TestFunding(t *testing.T) {
 					tc.expectedFundingIndex,
 					subaccAfterSettlement.PerpetualPositions[0].FundingIndex.BigInt().Int64(),
 				)
-				totalUsdcBalanceAfterSettlement += getSubaccountUsdcBalance(subaccAfterSettlement)
+				totalTDaiBalanceAfterSettlement += getSubaccountTDaiBalance(subaccAfterSettlement)
 
 				require.Equal(t,
-					getSubaccountUsdcBalance(subaccsBeforeSettlement[i])+expectedSettlements.Settlement,
-					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement,
+					getSubaccountTDaiBalance(subaccsBeforeSettlement[i])+expectedSettlements.Settlement,
+					getSubaccountTDaiBalance(subaccAfterSettlement)-TestTransferTDaiForSettlement,
 					"subaccount id: %v, expected settlement: %v, got settlement: %v,"+
 						"balance before settlement: %v, balance after (minus test transfer): %v",
 					expectedSettlements.SubaccountId,
 					expectedSettlements.Settlement,
-					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement-
-						getSubaccountUsdcBalance(subaccsBeforeSettlement[i]),
-					getSubaccountUsdcBalance(subaccsBeforeSettlement[i]),
-					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement,
+					getSubaccountTDaiBalance(subaccAfterSettlement)-TestTransferTDaiForSettlement-
+						getSubaccountTDaiBalance(subaccsBeforeSettlement[i]),
+					getSubaccountTDaiBalance(subaccsBeforeSettlement[i]),
+					getSubaccountTDaiBalance(subaccAfterSettlement)-TestTransferTDaiForSettlement,
 				)
 			}
 
 			// Check that the involved subaccounts has the same total balance before and after the transfer
 			// (besides transfers from Dave).
 			require.Equal(t,
-				totalUsdcBalanceBeforeSettlement,
-				totalUsdcBalanceAfterSettlement-TestTransferUsdcForSettlement*3,
+				totalTDaiBalanceBeforeSettlement,
+				totalTDaiBalanceAfterSettlement-TestTransferTDaiForSettlement*3,
 			)
 		})
 	}

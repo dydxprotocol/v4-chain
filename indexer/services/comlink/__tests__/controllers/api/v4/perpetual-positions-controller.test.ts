@@ -89,6 +89,7 @@ describe('perpetual-positions-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
+        perpYieldIndex: testConstants.defaultPerpetualPosition.perpYieldIndex!,
       };
 
       expect(response.body.positions).toEqual(
@@ -140,6 +141,7 @@ describe('perpetual-positions-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
+        perpYieldIndex: testConstants.defaultPerpetualPosition.perpYieldIndex!,
       };
 
       expect(response.body.positions).toEqual(
@@ -189,6 +191,7 @@ describe('perpetual-positions-controller#V4', () => {
         createdAt: testConstants.createdDateTime.toISO(),
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
+        perpYieldIndex: testConstants.defaultPerpetualPosition.perpYieldIndex!,
       };
 
       expect(response.body.positions).toEqual(

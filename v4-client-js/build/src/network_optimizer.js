@@ -18,8 +18,8 @@ class NetworkOptimizer {
         return (await Promise.all(endpointUrls.map((endpointUrl) => validator_client_1.ValidatorClient.connect(new types_1.ValidatorConfig(endpointUrl, chainId, {
             CHAINTOKEN_DENOM: 'placeholder',
             CHAINTOKEN_DECIMALS: 18,
-            USDC_DENOM: 'uusdc',
-            USDC_DECIMALS: 6,
+            TDAI_DENOM: 'utdai',
+            TDAI_DECIMALS: 6,
         }))
             .catch((_) => undefined)))).filter(exports.isTruthy);
     }

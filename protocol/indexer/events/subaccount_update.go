@@ -2,7 +2,7 @@ package events
 
 import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
+	v1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
@@ -13,6 +13,7 @@ func NewSubaccountUpdateEvent(
 	updatedPerpetualPositions []*satypes.PerpetualPosition,
 	updatedAssetPositions []*satypes.AssetPosition,
 	fundingPayments map[uint32]dtypes.SerializableInt,
+	assetYieldIndex string,
 ) *SubaccountUpdateEventV1 {
 	indexerSubaccountId := v1.SubaccountIdToIndexerSubaccountId(*subaccountId)
 	return &SubaccountUpdateEventV1{
@@ -22,5 +23,6 @@ func NewSubaccountUpdateEvent(
 			fundingPayments,
 		),
 		UpdatedAssetPositions: v1.AssetPositionsToIndexerAssetPositions(updatedAssetPositions),
+		YieldIndex:            assetYieldIndex,
 	}
 }

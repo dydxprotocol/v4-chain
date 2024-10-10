@@ -18,9 +18,9 @@ var (
 	ErrInvalidAccountAddress              = errorsmod.Register(ModuleName, 6, "Account address is invalid")
 	ErrEmptyModuleName                    = errorsmod.Register(ModuleName, 7, "Module name is empty")
 	ErrInvalidAuthority                   = errorsmod.Register(ModuleName, 8, "Authority is invalid")
-	ErrNonUsdcAssetTransferNotImplemented = errorsmod.Register(
+	ErrNonTDaiAssetTransferNotImplemented = errorsmod.Register(
 		ModuleName,
 		1101,
-		"Non-USDC asset transfer not implemented",
+		"Non-TDai asset transfer not implemented",
 	)
 )

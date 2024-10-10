@@ -1,13 +1,12 @@
 package clob_test
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/crypto/tmhash"
-
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
+	sdaiservertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
@@ -20,9 +19,12 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
 	testtx "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/tx"
+	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -31,6 +33,21 @@ import (
 func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
+
+	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
+		ctx,
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
+
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
+	})
 
 	// Place the order.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -41,7 +58,7 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 		resp := tApp.CheckTx(checkTx)
 		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 	// We should accept the cancellation since the order exists in state.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -68,7 +85,7 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 	}
 
 	// Advancing to the next block should succeed and have the order be cancelled and a new one not being placed.
-	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 	orders := tApp.App.ClobKeeper.GetAllPlacedStatefulOrders(ctx)
 	require.NotContains(t, orders, LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.Order.OrderId)
 }
@@ -78,6 +95,21 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
+
+	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
+		ctx,
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
+
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
+	})
 
 	// Place order
 	result := tApp.CheckTx(testapp.MustMakeCheckTx(
@@ -89,7 +121,7 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 	))
 	require.True(t, result.IsOK(), "Expected CheckTx to succeed. Response: %+v", result)
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 	// Place order which fully matches the first order
 	result = tApp.CheckTx(testapp.MustMakeCheckTx(
@@ -115,7 +147,7 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 	require.True(t, result.IsOK(), "Expected CheckTx to succeed. Response: %+v", result)
 
 	// DeliverTx should fail for cancellation tx
-	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+	ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
 		ValidateFinalizeBlock: func(
 			ctx sdktypes.Context,
 			request abcitypes.RequestFinalizeBlock,
@@ -162,7 +194,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 		"Test stateful order is cancelled when placed and cancelled in the same block": {
 			blockWithMessages: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg:          &LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
@@ -184,14 +216,14 @@ func TestCancelStatefulOrder(t *testing.T) {
 		"Test stateful order is cancelled when placed then cancelled in a future block": {
 			blockWithMessages: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{{
 						Msg:          &LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 						ExpectedIsOk: true,
 					}},
 				},
 				{
-					Block: 3,
+					Block: 4,
 					Msgs: []testmsgs.TestSdkMsg{{
 						Msg:          &constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15,
 						ExpectedIsOk: true,
@@ -207,7 +239,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 		"Test stateful order is cancelled when placed and then partially matched and cancelled in next block": {
 			blockWithMessages: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg:          &LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
@@ -216,7 +248,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 					},
 				},
 				{
-					Block: 3,
+					Block: 4,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg:          &PlaceOrder_Bob_Num0_Id0_Clob0_Sell4_Price10_GTB20,
@@ -237,7 +269,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 		"Test stateful order is placed when placed, cancelled, then re-placed with the same order id": {
 			blockWithMessages: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg:          &LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
@@ -250,7 +282,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 					},
 				},
 				{
-					Block: 3,
+					Block: 4,
 					Msgs: []testmsgs.TestSdkMsg{{
 						Msg:          &LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 						ExpectedIsOk: true,
@@ -266,7 +298,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 		"Test stateful order cancel for non existent order fails": {
 			blockWithMessages: []testmsgs.TestBlockWithMsgs{
 				{
-					Block: 2,
+					Block: 3,
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg:          &constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15,
@@ -286,6 +318,21 @@ func TestCancelStatefulOrder(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
+
+			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+				&tApp.App.ConsumerKeeper,
+				ctx,
+				map[uint32]ve.VEPricePair{},
+				rate,
+				tApp.GetHeader().Height,
+			)
+			require.NoError(t, err)
+
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{extCommitBz},
+			})
 
 			for _, blockWithMessages := range tc.blockWithMessages {
 				for _, testSdkMsg := range blockWithMessages.Msgs {
@@ -367,6 +414,21 @@ func TestLongTermOrderExpires(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
+	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+
+	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
+		&tApp.App.ConsumerKeeper,
+		ctx,
+		map[uint32]ve.VEPricePair{},
+		rate,
+		tApp.GetHeader().Height,
+	)
+	require.NoError(t, err)
+
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		DeliverTxsOverride: [][]byte{extCommitBz},
+	})
+
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 		ctx,
@@ -380,19 +442,19 @@ func TestLongTermOrderExpires(t *testing.T) {
 	}
 
 	// block time zero, not expired
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 	_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId)
 	require.True(t, found, "Order is not expired and should still be in state")
 
 	// block time ten, still not expired
-	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+	ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
 		BlockTime: time.Unix(10, 0).UTC(),
 	})
 	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId)
 	require.True(t, found, "Order is not expired and should still be in state")
 
 	// block time fifteen, expired
-	ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
+	ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
 		BlockTime: time.Unix(15, 0).UTC(),
 	})
 	_, found = tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId)
@@ -402,6 +464,8 @@ func TestLongTermOrderExpires(t *testing.T) {
 func TestPlaceLongTermOrder(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
+
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 
 	// subaccounts for indexer expectation assertions
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
@@ -418,7 +482,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			},
 			Side:         clobtypes.Order_SIDE_BUY,
 			Quantums:     10_000_000_000, // 1 BTC, assuming atomic resolution of -10
-			Subticks:     500_000_000,    // 50k USDC / BTC, assuming QCE of -8
+			Subticks:     500_000_000,    // 50k tDAI / BTC, assuming QCE of -8
 			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
 		},
 	)
@@ -607,6 +671,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Quantums: dtypes.NewInt(int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -614,7 +679,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Sub(
-									aliceSubaccount.GetUsdcPosition(),
+									aliceSubaccount.GetTDaiPosition(),
 									new(big.Int).SetInt64(
 										50_000_000_000+25_000_000, // taker fee of .5%
 									),
@@ -622,7 +687,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Bob_Num0,
@@ -632,6 +698,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Quantums: dtypes.NewInt(-int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -639,7 +706,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Add(
-									bobSubaccount.GetUsdcPosition(),
+									bobSubaccount.GetTDaiPosition(),
 									new(big.Int).SetInt64(
 										50_000_000_000+5_500_000, // maker rebate of .110%
 									),
@@ -647,7 +714,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 			ordersAndExpectationsPerBlock: []ordersAndExpectations{
@@ -743,7 +811,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
+															aliceSubaccount.GetTDaiPosition(),
 															new(big.Int).SetInt64(
 																50_000_000_000+25_000_000, // taker fee of .5%
 															),
@@ -752,6 +820,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -777,7 +846,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
+															bobSubaccount.GetTDaiPosition(),
 															new(big.Int).SetInt64(
 																50_000_000_000+5_500_000, // maker rebate of .110%
 															),
@@ -786,6 +855,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -940,6 +1010,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Quantums: dtypes.NewInt(int64(
 								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -947,7 +1018,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Sub(
-									aliceSubaccount.GetUsdcPosition(),
+									aliceSubaccount.GetTDaiPosition(),
 									new(big.Int).SetInt64(
 										50_000_000_000+25_000_000+ // taker fee of .5%
 											50_000_000_000-5_500_000, // maker rebate of .110%
@@ -956,7 +1027,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Bob_Num0,
@@ -968,6 +1040,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 									PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums(),
 							)),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -975,7 +1048,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Add(
-									bobSubaccount.GetUsdcPosition(),
+									bobSubaccount.GetTDaiPosition(),
 									new(big.Int).SetInt64(
 										50_000_000_000+5_500_000+ // maker rebate of .110% from first order
 											50_000_000_000-25_000_000, // taker fee of .5% from second order
@@ -984,7 +1057,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 
@@ -1090,7 +1164,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
+															aliceSubaccount.GetTDaiPosition(),
 															new(big.Int).SetInt64(
 																50_000_000_000+25_000_000, // taker fee of .5%
 															),
@@ -1099,6 +1173,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1124,7 +1199,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
+															bobSubaccount.GetTDaiPosition(),
 															new(big.Int).SetInt64(
 																50_000_000_000+5_500_000, // maker rebate of .110%
 															),
@@ -1133,6 +1208,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1259,7 +1335,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
+															bobSubaccount.GetTDaiPosition(),
 															new(big.Int).SetInt64(
 																50_000_000_000+5_500_000+ // maker rebate of .110% from first order
 																	50_000_000_000-25_000_000, // taker fee of .5% from second order
@@ -1269,6 +1345,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1295,7 +1372,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
+															aliceSubaccount.GetTDaiPosition(),
 															new(big.Int).SetInt64(
 																50_000_000_000+25_000_000+ // taker fee of .5% from first match
 																	50_000_000_000-5_500_000, // maker rebate of .110% from second match
@@ -1305,6 +1382,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1380,6 +1458,23 @@ func TestPlaceLongTermOrder(t *testing.T) {
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
 			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
+
+			// Set up initial sdai price
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+			require.NoError(t, conversionErr)
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.NoCheckTxApp.RatelimitKeeper.SetSDAIPrice(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.NoCheckTxApp.RatelimitKeeper.SetAssetYieldIndex(tApp.NoCheckTxApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
+			tApp.CrashingApp.RatelimitKeeper.SetSDAIPrice(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.CrashingApp.RatelimitKeeper.SetAssetYieldIndex(tApp.CrashingApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
+
 			ctx := tApp.InitChain()
 
 			for _, ordersAndExpectations := range tc.ordersAndExpectationsPerBlock {
@@ -1408,9 +1503,6 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					ordersAndExpectations.blockHeight,
 				)
 				msgSender.Clear()
-				messages := msgSender.GetOnchainMessages()
-				fmt.Println("Onchain messages", messages)
-
 				// Block Processing
 				ctx = tApp.AdvanceToBlock(ordersAndExpectations.blockHeight, testapp.AdvanceToBlockOptions{})
 				require.ElementsMatch(
@@ -1461,6 +1553,8 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 		Build()
 	ctx := tApp.InitChain()
 
+	tApp.App.RatelimitKeeper.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
+
 	// subaccounts for indexer expectation assertions
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
 	bobSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
@@ -1476,7 +1570,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 			},
 			Side:         clobtypes.Order_SIDE_BUY,
 			Quantums:     10_000_000_000, // 1 BTC, assuming atomic resolution of -10
-			Subticks:     500_000_000,    // 50k USDC / BTC, assuming QCE of -8
+			Subticks:     500_000_000,    // 50k tDAI / BTC, assuming QCE of -8
 			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
 		},
 	)
@@ -1545,6 +1639,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							Quantums: dtypes.NewInt(int64(
 								Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -1552,7 +1647,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Sub(
-									aliceSubaccount.GetUsdcPosition(),
+									aliceSubaccount.GetTDaiPosition(),
 									new(big.Int).SetInt64(
 										50_000_000_000+25_000_000, // taker fee of .5%
 									),
@@ -1560,7 +1655,8 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 				{
 					Id: &constants.Bob_Num0,
@@ -1570,6 +1666,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							Quantums: dtypes.NewInt(-int64(
 								Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
 						},
 					},
 					AssetPositions: []*satypes.AssetPosition{
@@ -1577,7 +1674,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Add(
-									bobSubaccount.GetUsdcPosition(),
+									bobSubaccount.GetTDaiPosition(),
 									new(big.Int).SetInt64(
 										50_000_000_000+5_500_000, // maker rebate of .110%
 									),
@@ -1585,7 +1682,8 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							),
 						},
 					},
-					MarginEnabled: true,
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(1, 1).String(),
 				},
 			},
 			ordersAndExpectationsPerBlock: []ordersAndExpectations{
@@ -1664,7 +1762,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
+															aliceSubaccount.GetTDaiPosition(),
 															new(big.Int).SetInt64(
 																50_000_000_000+25_000_000, // taker fee of .5%
 															),
@@ -1673,6 +1771,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1698,7 +1797,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
+															bobSubaccount.GetTDaiPosition(),
 															new(big.Int).SetInt64(
 																50_000_000_000+5_500_000, // maker rebate of .110%
 															),
@@ -1707,6 +1806,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 												},
 											},
 											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1780,6 +1880,12 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 				// Disable non-determinism checks since we mutate keeper state directly.
 				WithNonDeterminismChecksEnabled(false).
 				WithAppOptions(appOpts).Build()
+
+			rateString := sdaiservertypes.TestSDAIEventRequest.ConversionRate
+			rate, conversionErr := ratelimitkeeper.ConvertStringToBigInt(rateString)
+			require.NoError(t, conversionErr)
+			tApp.App.RatelimitKeeper.SetSDAIPrice(tApp.App.NewUncachedContext(false, tmproto.Header{}), rate)
+			tApp.App.RatelimitKeeper.SetAssetYieldIndex(tApp.App.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 			ctx := tApp.InitChain()
 
 			// Add the order with invalid time in force to state and orderbook.

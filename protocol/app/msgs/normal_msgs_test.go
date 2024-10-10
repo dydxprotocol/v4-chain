@@ -95,6 +95,10 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccount",
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse",
 
+		// subaccounts
+		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccount",
+		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccountResponse",
+
 		// ibc application module: ICA
 		"/ibc.applications.interchain_accounts.v1.InterchainAccount",
 

@@ -2,9 +2,12 @@ package price_encoder
 
 import (
 	"context"
-	"cosmossdk.io/log"
 	"errors"
 	"fmt"
+	"syscall"
+	"time"
+
+	"cosmossdk.io/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_function"
@@ -16,8 +19,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/prices"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
-	"syscall"
-	"time"
 )
 
 type PriceEncoder interface {
@@ -152,15 +153,15 @@ func (p PriceEncoderImpl) convertPriceUpdate(marketPriceTimestamp *types.MarketP
 			logger.Debug("price_encoder: Using price without adjustment or inversion", constants.PriceLogKey, price)
 		}
 	} else {
-		adjustByIndexPrice, numPricesMedianized := p.exchangeToMarketPrices.GetIndexPrice(
+		adjustByDaemonPrice, numPricesMedianized := p.exchangeToMarketPrices.GetDaemonPrice(
 			conversionDetails.AdjustByMarketDetails.MarketId,
 			time.Now().Add(-pricefeedtypes.MaxPriceAge),
 			lib.Median[uint64],
 		)
-		// If the index price is not valid due to insufficient pricing data, return an error.
+		// If the daemon price is not valid due to insufficient pricing data, return an error.
 		if numPricesMedianized < int(conversionDetails.AdjustByMarketDetails.MinExchanges) {
 			err = fmt.Errorf(
-				"Could not retrieve index price for market %v: "+
+				"Could not retrieve daemon price for market %v: "+
 					"expected median price from %v exchanges, but got %v exchanges",
 				conversionDetails.AdjustByMarketDetails.MarketId,
 				conversionDetails.AdjustByMarketDetails.MinExchanges,
@@ -171,27 +172,27 @@ func (p PriceEncoderImpl) convertPriceUpdate(marketPriceTimestamp *types.MarketP
 
 		// Add adjustment market metadata to logger.
 		logger = logger.With(
-			"adjustByIndexPrice",
-			adjustByIndexPrice,
+			"adjustByDaemonPrice",
+			adjustByDaemonPrice,
 			"adjustByExponent",
 			conversionDetails.AdjustByMarketDetails.Exponent,
 		)
 
 		if conversionDetails.Invert {
-			// price = adjustByIndexPrice / marketPriceTimestamp.Price
+			// price = adjustByDaemonPrice / marketPriceTimestamp.Price
 			price = prices.Divide(
-				adjustByIndexPrice,
+				adjustByDaemonPrice,
 				conversionDetails.AdjustByMarketDetails.Exponent,
 				marketPriceTimestamp.Price,
 				conversionDetails.Exponent,
 			)
 			logger.Debug("price_encoder: Inverting price with adjustment", constants.PriceLogKey, price)
 		} else {
-			// marketPriceTimestamp.Price * adjustByIndexPrice
+			// marketPriceTimestamp.Price * adjustByDaemonPrice
 			price = prices.Multiply(
 				marketPriceTimestamp.Price,
 				conversionDetails.Exponent,
-				adjustByIndexPrice,
+				adjustByDaemonPrice,
 				conversionDetails.AdjustByMarketDetails.Exponent,
 			)
 			logger.Debug("price_encoder: Multiplying price with adjustment", constants.PriceLogKey, price)
@@ -225,7 +226,7 @@ func (p *PriceEncoderImpl) UpdatePrice(marketPriceTimestamp *types.MarketPriceTi
 	if err != nil {
 		var logMethod = p.logger.Info
 		// When the price encoder starts, we expect that some conversions will fail as we are filling the cache with
-		// enough valid prices to generate a valid index price for our adjustment markets. In order to avoid spurious
+		// enough valid prices to generate a valid daemon price for our adjustment markets. In order to avoid spurious
 		// alerts, only emit error logs if the grace period has passed.
 		// There's a race condition here, and another one down below where we emit isPastGracePeriod as a log value, but
 		// that's ok. We don't need this to be perfect, we just need to avoid spurious alerts and have informative

@@ -28,11 +28,11 @@ func TestGetSubaccountUpdates(t *testing.T) {
 			expected: []satypes.Update{
 				{
 					SubaccountId: constants.Carl_Num0,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-500_000_000)),
+					AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(-500_000_000)),
 				},
 				{
 					SubaccountId: constants.Dave_Num0,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(500_000_000)),
+					AssetUpdates: testutil.CreateTDaiAssetUpdate(big.NewInt(500_000_000)),
 				},
 			},
 		},

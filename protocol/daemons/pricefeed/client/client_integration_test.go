@@ -3,8 +3,12 @@
 package client_test
 
 import (
-	"cosmossdk.io/log"
 	"fmt"
+	"net"
+	"sync"
+	"time"
+
+	"cosmossdk.io/log"
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client"
@@ -26,9 +30,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
-	"net"
-	"sync"
-	"time"
 
 	"testing"
 )

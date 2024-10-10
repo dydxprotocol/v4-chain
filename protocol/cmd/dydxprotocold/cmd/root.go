@@ -87,6 +87,7 @@ func NewRootCmdWithInterceptors(
 ) *cobra.Command {
 	initAppOptions := viper.New()
 	initAppOptions.Set(flags.FlagHome, tempDir())
+	initAppOptions.Set(protocolflags.NonValidatingFullNodeFlag, true)
 	tempApp := dydxapp.New(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
@@ -94,6 +95,7 @@ func NewRootCmdWithInterceptors(
 		true,
 		initAppOptions,
 	)
+
 	defer func() {
 		if err := tempApp.Close(); err != nil {
 			panic(err)

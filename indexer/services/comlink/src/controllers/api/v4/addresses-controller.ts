@@ -38,7 +38,7 @@ import config from '../../../config';
 import { complianceCheck } from '../../../lib/compliance-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
-  adjustUSDCAssetPosition,
+  adjustTDAIAssetPosition,
   calculateEquityAndFreeCollateral,
   filterAssetPositions,
   filterPositionsByLatestEventIdPerPerpetual,
@@ -542,11 +542,11 @@ async function getSubaccountResponse(
   );
   const {
     assetPositionsMap: adjustedAssetPositionsMap,
-    adjustedUSDCAssetPositionSize,
+    adjustedTDAIAssetPositionSize,
   }: {
     assetPositionsMap: AssetPositionsMap,
-    adjustedUSDCAssetPositionSize: string,
-  } = adjustUSDCAssetPosition(assetPositionsMap, unsettledFunding);
+    adjustedTDAIAssetPositionSize: string,
+  } = adjustTDAIAssetPosition(assetPositionsMap, unsettledFunding);
 
   const {
     equity,
@@ -558,7 +558,7 @@ async function getSubaccountResponse(
     filteredPerpetualPositions,
     perpetualMarketsMap,
     marketIdToMarket,
-    adjustedUSDCAssetPositionSize,
+    adjustedTDAIAssetPositionSize,
   );
 
   return subaccountToResponseObject({

@@ -63,10 +63,13 @@ export default class PerpetualMarketModel extends Model {
         'openInterest',
         'quantumConversionExponent',
         'atomicResolution',
+        'dangerIndexPpm',
+        'isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock',
         'subticksPerTick',
         'stepBaseQuantums',
         'liquidityTierId',
         'marketType',
+        'perpYieldIndex',
       ],
       properties: {
         id: { type: 'string', pattern: IntegerPattern },
@@ -81,11 +84,14 @@ export default class PerpetualMarketModel extends Model {
         openInterest: { type: 'string', pattern: NumericPattern },
         quantumConversionExponent: { type: 'integer' },
         atomicResolution: { type: 'integer' },
+        dangerIndexPpm: { type: 'integer' },
+        isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: { type: 'string', pattern: IntegerPattern },
         subticksPerTick: { type: 'integer' },
         stepBaseQuantums: { type: 'integer' },
         liquidityTierId: { type: 'integer' },
         marketType: { type: 'string' },
         baseOpenInterest: { type: 'string', pattern: NumericPattern },
+        perpYieldIndex: { type: 'string' },
       },
     };
   }
@@ -110,11 +116,14 @@ export default class PerpetualMarketModel extends Model {
       openInterest: 'string',
       quantumConversionExponent: 'integer',
       atomicResolution: 'integer',
+      dangerIndexPpm: 'integer',
+      isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: 'string',
       subticksPerTick: 'integer',
       stepBaseQuantums: 'integer',
       liquidityTierId: 'integer',
       marketType: 'string',
       baseOpenInterest: 'string',
+      perpYieldIndex: 'string',
     };
   }
 
@@ -142,6 +151,10 @@ export default class PerpetualMarketModel extends Model {
 
   atomicResolution!: number;
 
+  dangerIndexPpm!: number;
+
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock!: string;
+
   subticksPerTick!: number;
 
   stepBaseQuantums!: number;
@@ -151,4 +164,6 @@ export default class PerpetualMarketModel extends Model {
   marketType!: PerpetualMarketType;
 
   baseOpenInterest!: string;
+
+  perpYieldIndex!: string;
 }

@@ -25,7 +25,7 @@ func genSubaccountIdNumbers(r *rand.Rand) []uint32 {
 // RandomizedGenState generates a random GenesisState for `Subaccounts`.
 func RandomizedGenState(simState *module.SimulationState) {
 	// TODO(DEC-1049): update genesis state for other modules (i.e. bank and auth)
-	// so that invariant (i.e. subaccounts module account balance of USDC should
+	// so that invariant (i.e. subaccounts module account balance of TDai should
 	// always be > than total net collateral of all Subaccounts) is respected.
 
 	r := simState.Rand
@@ -33,8 +33,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 	// For each simulator account, create an associated subaccount.
 	allSubaccounts := make([]types.Subaccount, 0)
 
-	// Define the total USDC supply as the sum of all USDC quantums in all subaccounts.
-	totalUsdcSupply := sdkmath.NewInt(0)
+	// Define the total TDai supply as the sum of all TDai quantums in all subaccounts.
+	totalTDaiSupply := sdkmath.NewInt(0)
 
 	for _, acc := range simState.Accounts {
 		saIdNumbers := genSubaccountIdNumbers(r)
@@ -48,18 +48,18 @@ func RandomizedGenState(simState *module.SimulationState) {
 				},
 			}
 
-			// Toggle adding USDC asset position.
+			// Toggle adding TDai asset position.
 			if sim_helpers.RandBool(r) {
 				quantums := r.Uint64()
 				subacct.AssetPositions = []*types.AssetPosition{
 					{
-						AssetId:  asstypes.AssetUsdc.Id,
+						AssetId:  asstypes.AssetTDai.Id,
 						Quantums: dtypes.NewIntFromUint64(quantums),
 					},
 				}
 
 				bigQuantums := sdkmath.NewIntFromUint64(quantums)
-				totalUsdcSupply = totalUsdcSupply.Add(bigQuantums)
+				totalTDaiSupply = totalTDaiSupply.Add(bigQuantums)
 			}
 
 			// Purposely do NOT add PerpetualPositions. These positions should be created naturally
@@ -79,39 +79,39 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&subaccountsGenesis)
 
-	updateBankModuleGenesisState(simState, totalUsdcSupply)
+	updateBankModuleGenesisState(simState, totalTDaiSupply)
 }
 
 // updateBankModuleGenesisState updates the bank module's genesis state by
-// assigning the total supply of USDC to the balance of the `subaccounts` module.
-// This is necessary as the protocol assumes that that the sum of quantums in all USDC
-// AssetPositions is <= the total USDC balance of the subaccounts module, and `panic`s
+// assigning the total supply of TDai to the balance of the `subaccounts` module.
+// This is necessary as the protocol assumes that that the sum of quantums in all TDai
+// AssetPositions is <= the total TDai balance of the subaccounts module, and `panic`s
 // will occur when transferring fees to the `fee-collector` module during order processing
 // if this is not true.
-// This method assumes that USDC as a `Coin` in the bank module does not yet exist.
+// This method assumes that TDai as a `Coin` in the bank module does not yet exist.
 func updateBankModuleGenesisState(
 	simState *module.SimulationState,
-	totalUsdcSupply sdkmath.Int,
+	totalTDaiSupply sdkmath.Int,
 ) {
 	var bankGenesis banktypes.GenesisState
 	bankGenStateJson := simState.GenState[banktypes.ModuleName]
 	simState.Cdc.MustUnmarshalJSON(bankGenStateJson, &bankGenesis)
 
 	// Define the balance of the `subaccounts` module.
-	subaccountsUsdcBalance := banktypes.Balance{
+	subaccountsTDaiBalance := banktypes.Balance{
 		Address: types.ModuleAddress.String(),
 		Coins: []sdk.Coin{{
-			Denom:  asstypes.AssetUsdc.Denom,
-			Amount: totalUsdcSupply,
+			Denom:  asstypes.AssetTDai.Denom,
+			Amount: totalTDaiSupply,
 		}},
 	}
 
 	// Set the balance of the `subaccounts` module on the bank genesis.
-	bankGenesis.Balances = append(bankGenesis.Balances, subaccountsUsdcBalance)
+	bankGenesis.Balances = append(bankGenesis.Balances, subaccountsTDaiBalance)
 
-	// Set the total supply of USDC on the bank genesis.
+	// Set the total supply of TDai on the bank genesis.
 	bankGenesis.Supply = append(bankGenesis.Supply,
-		sdk.NewCoin(asstypes.AssetUsdc.Denom, totalUsdcSupply),
+		sdk.NewCoin(asstypes.AssetTDai.Denom, totalTDaiSupply),
 	)
 
 	// Update the bank module's genesis state.

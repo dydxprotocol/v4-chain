@@ -5,6 +5,7 @@ package keeper
 // See v4-chain/protocol/x/ratelimit/LICENSE and v4-chain/protocol/x/ratelimit/README.md for licensing information.
 
 import (
+	"encoding/json"
 	"math/big"
 
 	"cosmossdk.io/store/prefix"
@@ -13,6 +14,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
@@ -72,6 +74,40 @@ func (k Keeper) AcknowledgeIBCTransferPacket(
 	return nil
 }
 
+// Middleware implementation for OnAckPacket
+// It is called on the sender chain when a relayer relays back the acknowledgement from the receiver chain.
+// On the dYdX chain, this includes the “response” of the receiver chain for outbound transfer from dYdX.
+func (k Keeper) RedoMintTradingDAIIfAcknowledgeIBCTransferPacketFails(
+	ctx sdk.Context,
+	packet channeltypes.Packet,
+	acknowledgement []byte,
+) error {
+	// Check whether the ack was a success or error
+	ackResponse, err := util.UnpackAcknowledgementResponseForTransfer(ctx, k.Logger(ctx), acknowledgement)
+	if err != nil {
+		return err
+	}
+
+	// If the ack was successful return
+	if ackResponse.Status == types.AckResponseStatus_SUCCESS {
+		return nil
+	}
+
+	// Parse the denom, channelId, and amount from the packet
+	packetInfo, err := util.ParsePacketInfo(packet, types.PACKET_SEND)
+	if err != nil {
+		return err
+	}
+
+	// We use sDaiDenom, since denom is hashed when we parse
+	if packetInfo.Denom != types.SDaiDenom {
+		return nil
+	}
+
+	// Redeposit sDAI
+	return k.MintTradingDAIToUserAccount(ctx, packetInfo.Sender, packetInfo.Amount)
+}
+
 // Middleware implementation for OnTimeout
 // It is triggered by a relayer with MsgTimeout on the sender chain when timeoutHeight is
 // reached for a sent packet but acknowledgement has not been received. It should therefore
@@ -84,6 +120,20 @@ func (k Keeper) TimeoutIBCTransferPacket(ctx sdk.Context, packet channeltypes.Pa
 
 	k.UndoSendPacket(ctx, packetInfo.ChannelID, packet.Sequence, packetInfo.Denom, packetInfo.Amount)
 	return nil
+}
+
+func (k Keeper) UndoMintTradingDAIIfAfterTimeoutIBCTransferPacket(ctx sdk.Context, packet channeltypes.Packet) error {
+	packetInfo, err := util.ParsePacketInfo(packet, types.PACKET_SEND)
+	if err != nil {
+		return err
+	}
+
+	// We use sDaiDenom, since denom is hashed when we parse
+	if packetInfo.Denom != types.SDaiDenom {
+		return nil
+	}
+
+	return k.MintTradingDAIToUserAccount(ctx, packetInfo.Sender, packetInfo.Amount)
 }
 
 // If a SendPacket fails or times out, undo the capacity decrease that happened during the send
@@ -194,4 +244,24 @@ func (k Keeper) WriteAcknowledgement(
 // GetAppVersion wraps IBC ChannelKeeper's GetAppVersion function
 func (k Keeper) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
 	return k.ics4Wrapper.GetAppVersion(ctx, portID, channelID)
+}
+
+// PreprocessSendPacket implements the ICS4WrapperWithPreprocess interface
+func (k Keeper) PreprocessSendPacket(ctx sdk.Context, packet []byte) error {
+	var packetData transfertypes.FungibleTokenPacketData
+	if err := json.Unmarshal(packet, &packetData); err != nil {
+		return err
+	}
+
+	if packetData.Denom == types.SDaiBaseDenomFullPath {
+		amount, senderAddress, _, err := util.GetValidatedFungibleTokenPacketData(packetData)
+		if err != nil {
+			return err
+		}
+		err = k.WithdrawSDaiFromTDai(ctx, senderAddress, amount)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

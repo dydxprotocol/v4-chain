@@ -31,6 +31,7 @@ import {
   SubaccountUpdateEventV1,
   Timestamp,
   TransferEventV1,
+  UpdateYieldParamsEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { onMessage } from '../../src/lib/on-message';
@@ -49,6 +50,7 @@ import {
   defaultPreviousHeight,
   defaultSubaccountMessage,
   defaultPerpetualMarketCreateEventV1,
+  defaultUpdateYieldParamsEvent1,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import Long from 'long';
@@ -98,10 +100,23 @@ describe('on-message', () => {
         owner: '',
         number: 0,
       },
+      yieldIndex: '0/1',
     });
   const defaultSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
     SubaccountUpdateEventV1.encode(
       defaultSubaccountUpdateEvent,
+    ).finish(),
+  );
+  const errorSubaccountUpdateEvent: SubaccountUpdateEventV1 = SubaccountUpdateEventV1
+    .fromPartial({
+      subaccountId: {
+        owner: '',
+        number: 0,
+      },
+    });
+  const errorSubaccountUpdateEventBinary: Uint8Array = Uint8Array.from(
+    SubaccountUpdateEventV1.encode(
+      errorSubaccountUpdateEvent,
     ).finish(),
   );
 
@@ -139,6 +154,12 @@ describe('on-message', () => {
     ).finish(),
   );
 
+  const defaultUpdateYieldParamsEventBinary: Uint8Array = Uint8Array.from(
+    UpdateYieldParamsEventV1.encode(
+      defaultUpdateYieldParamsEvent1,
+    ).finish(),
+  );
+
   it('successfully processes block with transaction event', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
@@ -159,7 +180,6 @@ describe('on-message', () => {
     );
     const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
     const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
-
     await onMessage(kafkaMessage);
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
@@ -219,12 +239,23 @@ describe('on-message', () => {
     ]);
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
+    const eventIndex1: number = 1;
+    // NOTE: A transfer event writes to the subaccounts table.
+    // A subaccount row should always have an asset yield index.
+    // To ensure this, we need at least one subaccount update
+    // event before a transfer event.
     const events: IndexerTendermintEvent[] = [
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        defaultSubaccountUpdateEventBinary,
+        transactionIndex,
+        eventIndex,
+      ),
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
         defaultTransferEventBinary,
         transactionIndex,
-        eventIndex,
+        eventIndex1,
       ),
     ];
 
@@ -375,7 +406,7 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
-        defaultSubaccountUpdateEventBinary,
+        errorSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -402,18 +433,25 @@ describe('on-message', () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const eventIndex1: number = 1;
+    const eventIndex2: number = 2;
     const events: IndexerTendermintEvent[] = [
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        defaultSubaccountUpdateEventBinary,
+        transactionIndex,
+        eventIndex,
+      ),
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
         defaultTransferEventBinary,
         transactionIndex,
-        eventIndex,
+        eventIndex1,
       ),
       createIndexerTendermintEvent(
         'unknown',
         defaultTransferEventBinary,
         transactionIndex,
-        eventIndex1,
+        eventIndex2,
       ),
     ];
 
@@ -452,6 +490,42 @@ describe('on-message', () => {
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.MARKET,
         defaultMarketEventBinary,
+        transactionIndex,
+        eventIndex,
+      ),
+    ];
+
+    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+      defaultHeight,
+      defaultTime,
+      events,
+      [defaultTxHash],
+    );
+    const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
+    const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
+
+    await onMessage(kafkaMessage);
+    await Promise.all([
+      expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
+      expectTransactionWithHash([defaultTxHash]),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+    ]);
+
+    expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
+    expect(stats.timing).toHaveBeenCalledWith(
+      'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.processing_block_height', expect.any(Number));
+    expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
+      expect.any(Number), 1, { success: 'true' });
+  });
+
+  it('successfully processes block with yield params event', async () => {
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const events: IndexerTendermintEvent[] = [
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.YIELD_PARAMS,
+        defaultUpdateYieldParamsEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -645,12 +719,19 @@ describe('on-message', () => {
     ]);
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
+    const eventIndex1: number = 1;
     const events: IndexerTendermintEvent[] = [
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        defaultSubaccountUpdateEventBinary,
+        transactionIndex,
+        eventIndex,
+      ),
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.TRANSFER,
         defaultTransferEventBinary,
         transactionIndex,
-        eventIndex,
+        eventIndex1,
       ),
     ];
 
@@ -671,7 +752,7 @@ describe('on-message', () => {
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
 
-    expect(producerSendMock).toHaveBeenCalledTimes(2);
+    expect(producerSendMock).toHaveBeenCalledTimes(3);
     // First message batch sent should contain the first message
     expect(producerSendMock.mock.calls[0][0].messages).toHaveLength(1);
     // Second message batch should contain the second message

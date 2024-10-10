@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -57,9 +58,10 @@ func PrepareProposalHandler(
 	clobKeeper PrepareClobKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
+	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
+	veCache *vecache.VeCache,
 	veCodec codec.VoteExtensionCodec,
 	extCommitCodec codec.ExtendedCommitCodec,
-	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, request *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
 		var finalTxs [][]byte
@@ -95,9 +97,10 @@ func PrepareProposalHandler(
 		if err := SetVE(
 			txSetterUtils,
 			pricesKeeper,
+			ratelimitKeeper,
+			veCache,
 			veCodec,
 			extCommitCodec,
-			validateVoteExtensionFn,
 		); err != nil {
 			ctx.Logger().Error(
 				"failed to inject vote extensions into block",
@@ -180,9 +183,10 @@ func PrepareProposalHandler(
 func SetVE(
 	txSetterUtils TxSetterUtils,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
+	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
+	veCache *vecache.VeCache,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
-	validateVoteExtensionFn func(ctx sdk.Context, extCommitInfo abci.ExtendedCommitInfo) error,
 ) error {
 	if !veutils.AreVEEnabled(txSetterUtils.Ctx) {
 		return nil
@@ -193,30 +197,27 @@ func SetVE(
 		"height", txSetterUtils.Request.Height,
 	)
 
-	cleanExtCommitInfo, err := ve.CleanAndValidateExtCommitInfo(
+	cleanExtCommitInfo, err := ve.CleanAndValidateExtCommitInfoInPrepareProposal(
 		txSetterUtils.Ctx,
 		txSetterUtils.Request.LocalLastCommit,
 		voteCodec,
 		pricesKeeper,
-		validateVoteExtensionFn,
+		ratelimitKeeper,
+		veCache,
 	)
 
 	if err != nil {
 		return err
 	}
 	// Create the vote extension injection data which will be injected into the proposal. These contain the
-	// oracle data for the current block which will be committed to state in PreBlock.
+	// oracle data for the current block along with the sDAI conversion rate at the appropriate heights
+	// which will be committed to state in PreBlock.
 	extInfoBz, err := extCodec.Encode(cleanExtCommitInfo)
 	if err != nil {
 		return err
 	}
 
-	err = txSetterUtils.Txs.SetExtInfoBz(extInfoBz)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return txSetterUtils.Txs.SetExtInfoBz(extInfoBz)
 }
 
 func FillRemainderWithOtherTxs(

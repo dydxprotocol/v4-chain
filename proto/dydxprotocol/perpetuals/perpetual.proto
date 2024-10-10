@@ -20,16 +20,21 @@ message Perpetual {
 
   // Total size of open long contracts, measured in base_quantums.
   bytes open_interest = 3 [
-    (gogoproto.customtype) =
-        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.customtype) = "github.com/StreamFinance-Protocol/stream-chain/"
+                             "protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 
   bytes last_funding_rate = 4 [
-    (gogoproto.customtype) =
-        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.customtype) = "github.com/StreamFinance-Protocol/stream-chain/"
+                             "protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
-  ];  
+  ];
+
+  // The current yield index is determined by the cumulative
+  // all-time history of the yield mechanism. Starts at 0.
+  // This string should always be converted big.Rat.
+  string yield_index = 5;
 }
 
 enum PerpetualMarketType {
@@ -68,6 +73,13 @@ message PerpetualParams {
 
   // The market type specifying if this perpetual is cross or isolated
   PerpetualMarketType market_type = 7;
+
+  // The danger index is used to prioritze certain accounts and positions in
+  // liquidations
+  uint32 danger_index_ppm = 8;
+
+  // The maximum insurance fund delta per block for isolated perpetual markets.
+  uint64 isolated_market_max_cumulative_insurance_fund_delta_per_block = 9;
 }
 
 // MarketPremiums stores a list of premiums for a single perpetual market.
@@ -124,7 +136,7 @@ message LiquidityTier {
   uint64 base_position_notional = 5 [ deprecated = true ];
 
   // The impact notional amount (in quote quantums) is used to determine impact
-  // bid/ask prices and its recommended value is 500 USDC / initial margin
+  // bid/ask prices and its recommended value is 500 TDAI / initial margin
   // fraction.
   // - Impact bid price = average execution price for a market sell of the
   // impact notional value.

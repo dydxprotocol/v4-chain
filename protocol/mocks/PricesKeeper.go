@@ -113,12 +113,12 @@ func (_m *PricesKeeper) GetAllMarketPrices(ctx types.Context) []pricestypes.Mark
 	return r0
 }
 
-// GetMarketIdToValidIndexPrice provides a mock function with given fields: ctx
-func (_m *PricesKeeper) GetMarketIdToValidIndexPrice(ctx types.Context) map[uint32]pricestypes.MarketSpotPrice {
+// GetMarketIdToValidDaemonPrice provides a mock function with given fields: ctx
+func (_m *PricesKeeper) GetMarketIdToValidDaemonPrice(ctx types.Context) map[uint32]pricestypes.MarketSpotPrice {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetMarketIdToValidIndexPrice")
+		panic("no return value specified for GetMarketIdToValidDaemonPrice")
 	}
 
 	var r0 map[uint32]pricestypes.MarketSpotPrice

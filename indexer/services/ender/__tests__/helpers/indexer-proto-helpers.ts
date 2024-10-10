@@ -889,6 +889,7 @@ export const HARDCODED_PERPETUAL_MARKET_VALUES: Object = {
   nextFundingRate: '0',
   status: PerpetualMarketStatus.ACTIVE,
   openInterest: '0',
+  perpYieldIndex: '0/1',
 };
 
 export function expectPerpetualMarketV1(
@@ -905,6 +906,8 @@ export function expectPerpetualMarketV1(
     marketId: perpetual.marketId,
     quantumConversionExponent: perpetual.quantumConversionExponent,
     atomicResolution: perpetual.atomicResolution,
+    dangerIndexPpm: 1000000,
+    isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: '0',
     subticksPerTick: perpetual.subticksPerTick,
     stepBaseQuantums: Number(perpetual.stepBaseQuantums),
     liquidityTierId: perpetual.liquidityTier,
@@ -926,6 +929,9 @@ export function expectPerpetualMarketV2(
     marketId: perpetual.marketId,
     quantumConversionExponent: perpetual.quantumConversionExponent,
     atomicResolution: perpetual.atomicResolution,
+    dangerIndexPpm: perpetual.dangerIndexPpm,
+    isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock:
+      perpetual.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
     subticksPerTick: perpetual.subticksPerTick,
     stepBaseQuantums: Number(perpetual.stepBaseQuantums),
     liquidityTierId: perpetual.liquidityTier,

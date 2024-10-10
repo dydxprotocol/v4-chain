@@ -10,6 +10,7 @@ import (
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	error_lib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/error"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -41,9 +42,10 @@ func ProcessProposalHandler(
 	clobKeeper ProcessClobKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
+	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
 	extCodec codec.ExtendedCommitCodec,
 	veCodec codec.VoteExtensionCodec,
-	pricesApplier ProcessProposalPriceApplier,
+	veApplier ProcessProposalVEApplier,
 	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
 ) sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, request *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
@@ -58,7 +60,8 @@ func ProcessProposalHandler(
 		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
 		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on
 		// consensus round to do so.
-		if err := pricesKeeper.UpdateSmoothedSpotPrices(ctx, lib.Uint64LinearInterpolate); err != nil {
+		err := pricesKeeper.UpdateSmoothedSpotPrices(ctx, lib.Uint64LinearInterpolate)
+		if err != nil {
 			recordErrorMetricsWithLabel(metrics.UpdateSmoothedPrices)
 			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)
 		}
@@ -82,16 +85,18 @@ func ProcessProposalHandler(
 			if err := DecodeValidateAndCacheVE(
 				ctx,
 				request,
-				pricesApplier,
+				veApplier,
 				extCommitBz,
 				validateVoteExtensionFn,
 				pricesKeeper,
+				ratelimitKeeper,
 				veCodec,
 				extCodec,
 			); err != nil {
 				ctx.Logger().Error("failed to decode and validate ve", "err", err)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
+			request.Txs = request.Txs[1:]
 		}
 
 		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), request, pricesKeeper)
@@ -124,42 +129,33 @@ func ProcessProposalHandler(
 func DecodeValidateAndCacheVE(
 	ctx sdk.Context,
 	request *abci.RequestProcessProposal,
-	pricesApplier ProcessProposalPriceApplier,
+	veApplier ProcessProposalVEApplier,
 	extCommitBz []byte,
 	validateVoteExtensionFn ve.ValidateVEConsensusInfoFn,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
+	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
-
 ) error {
 	var extInfo abci.ExtendedCommitInfo
 	extInfo, err := extCodec.Decode(extCommitBz)
 	if err != nil {
 		return err
 	}
-	if err := ve.ValidateExtendedCommitInfo(
+	if err := ve.ValidateExtendedCommitInfoInProcessProposal(
 		ctx,
 		request.Height,
 		extInfo,
 		voteCodec,
 		pricesKeeper,
+		ratelimitKeeper,
 		validateVoteExtensionFn,
 	); err != nil {
 		return err
 	}
 
-	reqFinalizeBlock := &abci.RequestFinalizeBlock{
-		Txs:    request.Txs,
-		Height: request.Height,
-		DecidedLastCommit: abci.CommitInfo{
-			Round: ctx.CometInfo().GetLastCommit().Round(),
-			Votes: []abci.VoteInfo{},
-		},
-	}
-
-	if err := pricesApplier.ApplyPricesFromVE(ctx, reqFinalizeBlock); err != nil {
+	if err := veApplier.ApplyVE(ctx, request.Txs, true); err != nil {
 		ctx.Logger().Error("failed to cache VE prices", "err", err)
 	}
-	request.Txs = request.Txs[1:]
 	return nil
 }

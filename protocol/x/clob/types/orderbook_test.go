@@ -68,11 +68,6 @@ func TestString(t *testing.T) {
 
 			expectedString: "LiquidationRequiresDeleveraging",
 		},
-		"Order status is LiquidationExceededSubaccountMaxNotionalLiquidated": {
-			orderStatus: types.LiquidationExceededSubaccountMaxNotionalLiquidated,
-
-			expectedString: "LiquidationExceededSubaccountMaxNotionalLiquidated",
-		},
 		"Order status is LiquidationExceededSubaccountMaxInsuranceLost": {
 			orderStatus: types.LiquidationExceededSubaccountMaxInsuranceLost,
 

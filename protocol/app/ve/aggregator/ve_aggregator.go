@@ -1,18 +1,18 @@
 package aggregator
 
 import (
-	"fmt"
 	"math/big"
 
 	"cosmossdk.io/log"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
-	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
-	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	pk "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
+	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 )
 
 // Vote encapsulates the validator and oracle data contained within a vote extension.
@@ -33,11 +33,7 @@ type VoteAggregator interface {
 	// In order for a currency pair to be included in the final oracle price, the currency
 	// pair must be provided by a super-majority (2/3+) of validators. This is enforced by the
 	// price aggregator but can be replaced by the application.
-	AggregateDaemonVEIntoFinalPrices(ctx sdk.Context, votes []Vote) (map[string]veaggregator.AggregatorPricePair, error)
-
-	// GetPriceForValidator gets the prices reported by a given validator. This method depends
-	// on the prices from the latest set of aggregated votes.
-	GetPriceForValidator(validator sdk.ConsAddress) map[string]veaggregator.AggregatorPricePair
+	AggregateDaemonVEIntoFinalPricesAndConversionRate(ctx sdk.Context, votes []Vote) (map[string]veaggregator.AggregatorPricePair, *big.Int, error)
 }
 
 type MedianAggregator struct {
@@ -46,66 +42,132 @@ type MedianAggregator struct {
 	// keeper is used to fetch the marketParam object
 	pricesKeeper pk.Keeper
 
+	ratelimitKeeper ratelimitkeeper.Keeper
+
 	// prices is a map of validator address to a map of currency pair to price
 	perValidatorPrices map[string]map[string]veaggregator.AggregatorPricePair
 
-	aggregateFn veaggregator.AggregateFn
+	perValidatorSDaiConversionRate map[string]*big.Int
+
+	pricesAggregateFn veaggregator.PricesAggregateFn
+
+	conversionRateAggregateFn veaggregator.ConversionRateAggregateFn
 }
 
 func NewVeAggregator(
 	logger log.Logger,
-	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	pricekeeper pk.Keeper,
-	aggregateFn veaggregator.AggregateFn,
+	ratelimitKeeper ratelimitkeeper.Keeper,
+	pricesAggregateFn veaggregator.PricesAggregateFn,
+	conversionRateAggregateFn veaggregator.ConversionRateAggregateFn,
 ) VoteAggregator {
 	return &MedianAggregator{
-		logger:             logger,
-		perValidatorPrices: make(map[string]map[string]veaggregator.AggregatorPricePair),
-		aggregateFn:        aggregateFn,
-		pricesKeeper:       pricekeeper,
+		logger:                         logger,
+		perValidatorPrices:             make(map[string]map[string]veaggregator.AggregatorPricePair),
+		perValidatorSDaiConversionRate: make(map[string]*big.Int),
+		pricesAggregateFn:              pricesAggregateFn,
+		conversionRateAggregateFn:      conversionRateAggregateFn,
+		pricesKeeper:                   pricekeeper,
+		ratelimitKeeper:                ratelimitKeeper,
 	}
 }
 
-func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPrices(
+func (ma *MedianAggregator) AggregateDaemonVEIntoFinalPricesAndConversionRate(
 	ctx sdk.Context,
 	votes []Vote,
-) (map[string]veaggregator.AggregatorPricePair, error) {
+) (map[string]veaggregator.AggregatorPricePair, *big.Int, error) {
 	// wipe the previous prices
 	ma.perValidatorPrices = make(map[string]map[string]veaggregator.AggregatorPricePair)
+	lastCommittedPrices := ma.getLastCommittedPrices(ctx)
+	lastCommittedSDAIPrice, found := ma.ratelimitKeeper.GetSDAIPrice(ctx)
+	if !found {
+		ma.logger.Error("failed to get last committed sDai conversion rate")
+	}
 
 	for _, vote := range votes {
 		consAddr := vote.ConsAddress.String()
 		voteExtension := vote.DaemonVoteExtension
-		ma.addVoteToAggregator(ctx, consAddr, voteExtension)
+		deepCopyPrices := ma.deepCopyLastCommittedPrices(lastCommittedPrices)
+		ma.addVoteToAggregator(ctx, consAddr, voteExtension, deepCopyPrices, lastCommittedSDAIPrice)
 	}
 
-	prices, err := ma.aggregateFn(ctx, ma.perValidatorPrices)
+	prices, err := ma.pricesAggregateFn(ctx, ma.perValidatorPrices)
 	if err != nil {
 		ma.logger.Error(
 			"failed to aggregate prices",
 			"err", err,
 		)
-		return nil, err
+		return nil, nil, err
 	}
 
-	return prices, nil
+	sDaiConversionRate, err := ma.conversionRateAggregateFn(ctx, ma.perValidatorSDaiConversionRate)
+	if err != nil {
+		ma.logger.Error(
+			"failed to aggregate sDai conversion rate",
+			"err", err,
+		)
+		return nil, nil, err
+	}
+
+	return prices, sDaiConversionRate, nil
+}
+
+func (ma *MedianAggregator) getLastCommittedPrices(ctx sdk.Context) map[string]veaggregator.AggregatorPricePair {
+	lastCommittedPrices := make(map[string]veaggregator.AggregatorPricePair)
+
+	markets := ma.pricesKeeper.GetAllMarketParams(ctx)
+	marketPrices := ma.pricesKeeper.GetAllMarketPrices(ctx)
+
+	// Create a map of market prices by ID for easier lookup
+	pricesById := make(map[uint32]pricetypes.MarketPrice)
+	for _, marketPrice := range marketPrices {
+		pricesById[marketPrice.Id] = marketPrice
+	}
+
+	for _, market := range markets {
+		marketPrice, exists := pricesById[market.Id]
+		if !exists {
+			ma.logger.Error("failed to find matching price for market param", "market", market.Pair, "id", market.Id)
+			continue
+		}
+
+		lastCommittedPrices[market.Pair] = veaggregator.AggregatorPricePair{
+			SpotPrice: new(big.Int).SetUint64(marketPrice.SpotPrice),
+			PnlPrice:  new(big.Int).SetUint64(marketPrice.PnlPrice),
+		}
+	}
+
+	return lastCommittedPrices
+}
+
+func (ma *MedianAggregator) deepCopyLastCommittedPrices(lastCommittedPrices map[string]veaggregator.AggregatorPricePair) map[string]veaggregator.AggregatorPricePair {
+	copy := make(map[string]veaggregator.AggregatorPricePair)
+	for k, v := range lastCommittedPrices {
+		copy[k] = veaggregator.AggregatorPricePair{
+			SpotPrice: new(big.Int).Set(v.SpotPrice),
+			PnlPrice:  new(big.Int).Set(v.PnlPrice),
+		}
+	}
+	return copy
 }
 
 func (ma *MedianAggregator) addVoteToAggregator(
 	ctx sdk.Context,
 	address string,
 	ve vetypes.DaemonVoteExtension,
+	lastCommittedPrices map[string]veaggregator.AggregatorPricePair,
+	lastCommittedSDAIPrice *big.Int,
 ) {
-	if len(ve.Prices) == 0 {
-		return
-	}
-
-	prices := make(map[string]veaggregator.AggregatorPricePair, len(ve.Prices))
 	for _, pricePair := range ve.Prices {
 		var spotPrice, pnlPrice *big.Int
 
 		market, exists := ma.pricesKeeper.GetMarketParam(ctx, pricePair.MarketId)
 		if !exists {
+			continue
+		}
+
+		if _, ok := lastCommittedPrices[market.Pair]; !ok {
+			ma.logger.Error("market pair not found in last committed prices", "pair", market.Pair)
 			continue
 		}
 
@@ -123,54 +185,29 @@ func (ma *MedianAggregator) addVoteToAggregator(
 			}
 		}
 
-		if spotPrice == nil {
+		if spotPrice == nil || spotPrice.Sign() <= 0 {
 			continue
 		}
 
-		if pnlPrice == nil {
+		if pnlPrice == nil || pnlPrice.Sign() <= 0 {
 			pnlPrice = spotPrice
 		}
 
-		prices[market.Pair] = veaggregator.AggregatorPricePair{
+		lastCommittedPrices[market.Pair] = veaggregator.AggregatorPricePair{
 			SpotPrice: spotPrice,
 			PnlPrice:  pnlPrice,
 		}
 	}
-	ma.perValidatorPrices[address] = prices
-}
+	ma.perValidatorPrices[address] = lastCommittedPrices
 
-func (ma *MedianAggregator) GetPriceForValidator(validator sdk.ConsAddress) map[string]veaggregator.AggregatorPricePair {
-	return ma.perValidatorPrices[validator.String()]
-}
+	sDaiConversionRate := lastCommittedSDAIPrice
+	if ve.SDaiConversionRate != "" {
+		newConversionRate, ok := new(big.Int).SetString(ve.SDaiConversionRate, 10)
 
-func GetDaemonVotesFromBlock(
-	proposal [][]byte,
-	veCodec codec.VoteExtensionCodec,
-	extCommitCodec codec.ExtendedCommitCodec,
-) ([]Vote, error) {
-	if len(proposal) < constants.InjectedNonTxCount {
-		return nil, fmt.Errorf("proposal does not contain enough set messages (VE's, proposed operations, or premium votes): %d", len(proposal))
-	}
-
-	extCommitInfoBytes := proposal[constants.DaemonInfoIndex]
-
-	extCommitInfo, err := extCommitCodec.Decode(extCommitInfoBytes)
-	if err != nil {
-		return nil, fmt.Errorf("error decoding extended-commit-info: %w", err)
-	}
-
-	votes := make([]Vote, len(extCommitInfo.Votes))
-	for i, voteInfo := range extCommitInfo.Votes {
-		voteExtension, err := veCodec.Decode(voteInfo.VoteExtension)
-		if err != nil {
-			return nil, fmt.Errorf("error decoding vote-extension: %w", err)
-		}
-
-		votes[i] = Vote{
-			ConsAddress:         voteInfo.Validator.Address,
-			DaemonVoteExtension: voteExtension,
+		if ok {
+			sDaiConversionRate = newConversionRate
 		}
 	}
 
-	return votes, nil
+	ma.perValidatorSDaiConversionRate[address] = sDaiConversionRate
 }

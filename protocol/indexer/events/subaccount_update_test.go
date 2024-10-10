@@ -1,11 +1,12 @@
 package events_test
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
+	v1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -30,6 +31,7 @@ var (
 		&constants.Long_Asset_1ETH,
 	}
 	indexerAssetPositions = v1.AssetPositionsToIndexerAssetPositions(updatedAssetPositions)
+	assetYieldIndex       = big.NewRat(1, 1).String()
 )
 
 func TestNewSubaccountUpdateEvent_Success(t *testing.T) {
@@ -38,11 +40,13 @@ func TestNewSubaccountUpdateEvent_Success(t *testing.T) {
 		updatedPerpetualPositions,
 		updatedAssetPositions,
 		fundingPayments,
+		assetYieldIndex,
 	)
 	expectedSubaccountUpdateEventProto := &events.SubaccountUpdateEventV1{
 		SubaccountId:              &indexerSubaccountId,
 		UpdatedPerpetualPositions: indexerPerpetualPositions,
 		UpdatedAssetPositions:     indexerAssetPositions,
+		YieldIndex:                assetYieldIndex,
 	}
 	require.Equal(t, expectedSubaccountUpdateEventProto, subaccountUpdateEvent)
 }

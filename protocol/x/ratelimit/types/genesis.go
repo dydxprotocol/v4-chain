@@ -4,7 +4,7 @@ package types
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		LimitParamsList: []LimitParams{
-			DefaultUsdcRateLimitParams(),
+			DefaultSDaiRateLimitParams(),
 		},
 	}
 }

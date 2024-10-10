@@ -84,7 +84,7 @@ func (m *EquityTierLimitConfiguration) GetStatefulOrderEquityTiers() []EquityTie
 
 // Defines an equity tier limit.
 type EquityTierLimit struct {
-	// The total net collateral in USDC quote quantums of equity required.
+	// The total net collateral in TDAI quote quantums of equity required.
 	UsdTncRequired github_com_StreamFinance_Protocol_stream_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,1,opt,name=usd_tnc_required,json=usdTncRequired,proto3,customtype=github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt" json:"usd_tnc_required"`
 	// What the limit is for `usd_tnc_required`.
 	Limit uint32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`

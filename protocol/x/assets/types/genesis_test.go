@@ -21,11 +21,12 @@ func TestGenesisState_Validate(t *testing.T) {
 				Assets: []types.Asset{
 					{
 						Id:               0,
-						Symbol:           types.AssetUsdc.Symbol,
-						Denom:            types.AssetUsdc.Denom,
-						DenomExponent:    types.AssetUsdc.DenomExponent,
+						Symbol:           types.AssetTDai.Symbol,
+						Denom:            types.AssetTDai.Denom,
+						DenomExponent:    types.AssetTDai.DenomExponent,
 						HasMarket:        false,
 						AtomicResolution: lib.QuoteCurrencyAtomicResolution,
+						AssetYieldIndex:  "1/1",
 					},
 					{
 						Id:               1,
@@ -34,6 +35,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						HasMarket:        true,
 						MarketId:         0,
 						AtomicResolution: int32(-6),
+						AssetYieldIndex:  "1/1",
 					},
 				},
 			},
@@ -44,47 +46,50 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedErr: types.ErrNoAssetInGenesis,
 		},
-		"asset[0] not usdc": {
+		"asset[0] not tdai": {
 			genState: &types.GenesisState{
 				Assets: []types.Asset{
 					{
 						Id:               0,
-						Symbol:           types.AssetUsdc.Symbol,
-						Denom:            types.AssetUsdc.Denom,
-						DenomExponent:    types.AssetUsdc.DenomExponent,
+						Symbol:           types.AssetTDai.Symbol,
+						Denom:            types.AssetTDai.Denom,
+						DenomExponent:    types.AssetTDai.DenomExponent,
 						HasMarket:        true,
 						MarketId:         0,
 						AtomicResolution: int32(-6),
+						AssetYieldIndex:  "1/1",
 					},
 				},
 			},
-			expectedErr: types.ErrUsdcMustBeAssetZero,
+			expectedErr: types.ErrTDaiMustBeAssetZero,
 		},
-		"asset[0] is modified usdc": {
+		"asset[0] is modified tdai": {
 			genState: &types.GenesisState{
 				Assets: []types.Asset{
 					{
 						Id:               0,
-						Symbol:           types.AssetUsdc.Symbol,
-						Denom:            types.AssetUsdc.Denom,
-						DenomExponent:    types.AssetUsdc.DenomExponent,
+						Symbol:           types.AssetTDai.Symbol,
+						Denom:            types.AssetTDai.Denom,
+						DenomExponent:    types.AssetTDai.DenomExponent,
 						HasMarket:        true,
 						AtomicResolution: lib.QuoteCurrencyAtomicResolution,
+						AssetYieldIndex:  "1/1",
 					},
 				},
 			},
-			expectedErr: types.ErrUsdcMustBeAssetZero,
+			expectedErr: types.ErrTDaiMustBeAssetZero,
 		},
 		"duplicated asset id": {
 			genState: &types.GenesisState{
 				Assets: []types.Asset{
 					{
 						Id:               0,
-						Symbol:           types.AssetUsdc.Symbol,
-						Denom:            types.AssetUsdc.Denom,
-						DenomExponent:    types.AssetUsdc.DenomExponent,
+						Symbol:           types.AssetTDai.Symbol,
+						Denom:            types.AssetTDai.Denom,
+						DenomExponent:    types.AssetTDai.DenomExponent,
 						HasMarket:        false,
 						AtomicResolution: lib.QuoteCurrencyAtomicResolution,
+						AssetYieldIndex:  "1/1",
 					},
 					{
 						Id:               0,
@@ -92,6 +97,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						HasMarket:        true,
 						MarketId:         0,
 						AtomicResolution: int32(-6),
+						AssetYieldIndex:  "1/1",
 					},
 				},
 			},
@@ -102,20 +108,22 @@ func TestGenesisState_Validate(t *testing.T) {
 				Assets: []types.Asset{
 					{
 						Id:               0,
-						Symbol:           types.AssetUsdc.Symbol,
-						Denom:            types.AssetUsdc.Denom,
-						DenomExponent:    types.AssetUsdc.DenomExponent,
+						Symbol:           types.AssetTDai.Symbol,
+						Denom:            types.AssetTDai.Denom,
+						DenomExponent:    types.AssetTDai.DenomExponent,
 						HasMarket:        false,
 						AtomicResolution: lib.QuoteCurrencyAtomicResolution,
+						AssetYieldIndex:  "1/1",
 					},
 					{
 						Id:               1,
-						Symbol:           types.AssetUsdc.Symbol,
-						Denom:            types.AssetUsdc.Denom,
-						DenomExponent:    types.AssetUsdc.DenomExponent,
+						Symbol:           types.AssetTDai.Symbol,
+						Denom:            types.AssetTDai.Denom,
+						DenomExponent:    types.AssetTDai.DenomExponent,
 						HasMarket:        true,
 						MarketId:         0,
 						AtomicResolution: int32(-6),
+						AssetYieldIndex:  "1/1",
 					},
 				},
 			},
@@ -126,11 +134,12 @@ func TestGenesisState_Validate(t *testing.T) {
 				Assets: []types.Asset{
 					{
 						Id:               0,
-						Symbol:           types.AssetUsdc.Symbol,
-						Denom:            types.AssetUsdc.Denom,
-						DenomExponent:    types.AssetUsdc.DenomExponent,
+						Symbol:           types.AssetTDai.Symbol,
+						Denom:            types.AssetTDai.Denom,
+						DenomExponent:    types.AssetTDai.DenomExponent,
 						HasMarket:        false,
 						AtomicResolution: lib.QuoteCurrencyAtomicResolution,
+						AssetYieldIndex:  "1/1",
 					},
 					{
 						Id:               2,
@@ -138,6 +147,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						HasMarket:        true,
 						MarketId:         0,
 						AtomicResolution: int32(-6),
+						AssetYieldIndex:  "1/1",
 					},
 				},
 			},
@@ -148,11 +158,12 @@ func TestGenesisState_Validate(t *testing.T) {
 				Assets: []types.Asset{
 					{
 						Id:               0,
-						Symbol:           types.AssetUsdc.Symbol,
-						Denom:            types.AssetUsdc.Denom,
-						DenomExponent:    types.AssetUsdc.DenomExponent,
+						Symbol:           types.AssetTDai.Symbol,
+						Denom:            types.AssetTDai.Denom,
+						DenomExponent:    types.AssetTDai.DenomExponent,
 						HasMarket:        false,
 						AtomicResolution: lib.QuoteCurrencyAtomicResolution,
+						AssetYieldIndex:  "1/1",
 					},
 					{
 						Id:               1,
@@ -160,6 +171,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						HasMarket:        false,
 						MarketId:         1,
 						AtomicResolution: int32(-6),
+						AssetYieldIndex:  "1/1",
 					},
 				},
 			},

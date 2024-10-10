@@ -79,7 +79,7 @@ type BlockStats_Fill struct {
 	Taker string `protobuf:"bytes,1,opt,name=taker,proto3" json:"taker,omitempty"`
 	// Maker wallet address
 	Maker string `protobuf:"bytes,2,opt,name=maker,proto3" json:"maker,omitempty"`
-	// Notional USDC filled in quantums
+	// Notional  filled in quantums
 	Notional uint64 `protobuf:"varint,3,opt,name=notional,proto3" json:"notional,omitempty"`
 }
 
@@ -294,7 +294,7 @@ func (m *EpochStats_UserWithStats) GetStats() *UserStats {
 
 // GlobalStats stores global stats
 type GlobalStats struct {
-	// Notional USDC traded in quantums
+	// Notional TDAI traded in quantums
 	NotionalTraded uint64 `protobuf:"varint,1,opt,name=notional_traded,json=notionalTraded,proto3" json:"notional_traded,omitempty"`
 }
 
@@ -340,9 +340,9 @@ func (m *GlobalStats) GetNotionalTraded() uint64 {
 
 // UserStats stores stats for a User
 type UserStats struct {
-	// Taker USDC in quantums
+	// Taker TDAI in quantums
 	TakerNotional uint64 `protobuf:"varint,1,opt,name=taker_notional,json=takerNotional,proto3" json:"taker_notional,omitempty"`
-	// Maker USDC in quantums
+	// Maker TDAI in quantums
 	MakerNotional uint64 `protobuf:"varint,2,opt,name=maker_notional,json=makerNotional,proto3" json:"maker_notional,omitempty"`
 }
 

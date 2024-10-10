@@ -1,11 +1,13 @@
-package price_writer
+package ve_writer
 
 import (
+	"math/big"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type PriceApplierPricesKeeper interface {
+type VEApplierPricesKeeper interface {
 	PerformStatefulPriceUpdateValidation(
 		ctx sdk.Context,
 		marketPriceUpdates *types.MarketPriceUpdate,
@@ -35,4 +37,8 @@ type PriceApplierPricesKeeper interface {
 		market types.MarketParam,
 		exists bool,
 	)
+}
+
+type VEApplierRatelimitKeeper interface {
+	ProcessNewSDaiConversionRateUpdate(ctx sdk.Context, sDaiConversionRate *big.Int, blockHeight *big.Int) error
 }

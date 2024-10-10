@@ -11,6 +11,8 @@ export enum QueryableField {
   LIMIT = 'limit',
   ID = 'id',
   ADDRESS = 'address',
+  ASSET_YIELD_INDEX = 'assetYieldIndex',
+  PERP_YIELD_INDEX = 'perpYieldIndex',
   SUBACCOUNT_NUMBER = 'subaccountNumber',
   SUBACCOUNT_ID = 'subaccountId',
   SENDER_SUBACCOUNT_ID = 'senderSubaccountId',
@@ -84,6 +86,7 @@ export enum QueryableField {
   BLOCK_HEIGHT_BEFORE_OR_AT = 'blockHeightBeforeOrAt',
   STARTED_AT_BEFORE_OR_AT = 'startedAtBeforeOrAt',
   STARTED_AT_HEIGHT_BEFORE_OR_AT = 'startedAtHeightBeforeOrAt',
+  S_DAI_PRICE = 'sDAIPrice',
 }
 
 export interface QueryConfig {
@@ -96,6 +99,19 @@ export interface SubaccountQueryConfig extends QueryConfig {
   [QueryableField.SUBACCOUNT_NUMBER]?: number;
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
   [QueryableField.UPDATED_ON_OR_AFTER]?: string;
+  [QueryableField.ASSET_YIELD_INDEX]?: string;
+}
+
+export interface YieldParamsQueryConfig extends QueryConfig {
+  [QueryableField.ID]?: string[];
+  [QueryableField.CREATED_AT_HEIGHT]?: string[];
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string;
+  [QueryableField.CREATED_AFTER_HEIGHT]?: string;
+  [QueryableField.CREATED_AT]?: string;
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string;
+  [QueryableField.CREATED_AFTER]?: string;
+  [QueryableField.ASSET_YIELD_INDEX]?: string;
+  [QueryableField.S_DAI_PRICE]?: string;
 }
 
 export interface WalletQueryConfig extends QueryConfig {
@@ -110,6 +126,7 @@ export interface PerpetualPositionQueryConfig extends QueryConfig {
   [QueryableField.STATUS]?: PerpetualPositionStatus[];
   [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string;
   [QueryableField.CREATED_BEFORE_OR_AT]?: string;
+  [QueryableField.PERP_YIELD_INDEX]?: string;
 }
 
 export interface OrderQueryConfig extends QueryConfig {

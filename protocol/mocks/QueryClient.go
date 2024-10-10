@@ -3,10 +3,12 @@
 package mocks
 
 import (
-	api "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	api "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 
 	context "context"
+
+	deleveragingapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/deleveraging/api"
 
 	grpc "google.golang.org/grpc"
 
@@ -14,9 +16,9 @@ import (
 
 	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 
-	pricefeedapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
-
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 
 	subaccountstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 
@@ -176,6 +178,43 @@ func (_m *QueryClient) AllMarketPrices(ctx context.Context, in *pricestypes.Quer
 	return r0, r1
 }
 
+// AllPendingSendPackets provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) AllPendingSendPackets(ctx context.Context, in *ratelimittypes.QueryAllPendingSendPacketsRequest, opts ...grpc.CallOption) (*ratelimittypes.QueryAllPendingSendPacketsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AllPendingSendPackets")
+	}
+
+	var r0 *ratelimittypes.QueryAllPendingSendPacketsResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *ratelimittypes.QueryAllPendingSendPacketsRequest, ...grpc.CallOption) (*ratelimittypes.QueryAllPendingSendPacketsResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *ratelimittypes.QueryAllPendingSendPacketsRequest, ...grpc.CallOption) *ratelimittypes.QueryAllPendingSendPacketsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ratelimittypes.QueryAllPendingSendPacketsResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *ratelimittypes.QueryAllPendingSendPacketsRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // AllPerpetuals provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) AllPerpetuals(ctx context.Context, in *perpetualstypes.QueryAllPerpetualsRequest, opts ...grpc.CallOption) (*perpetualstypes.QueryAllPerpetualsResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -242,6 +281,43 @@ func (_m *QueryClient) BlockRateLimitConfiguration(ctx context.Context, in *clob
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.QueryBlockRateLimitConfigurationRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CapacityByDenom provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) CapacityByDenom(ctx context.Context, in *ratelimittypes.QueryCapacityByDenomRequest, opts ...grpc.CallOption) (*ratelimittypes.QueryCapacityByDenomResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CapacityByDenom")
+	}
+
+	var r0 *ratelimittypes.QueryCapacityByDenomResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *ratelimittypes.QueryCapacityByDenomRequest, ...grpc.CallOption) (*ratelimittypes.QueryCapacityByDenomResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *ratelimittypes.QueryCapacityByDenomRequest, ...grpc.CallOption) *ratelimittypes.QueryCapacityByDenomResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ratelimittypes.QueryCapacityByDenomResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *ratelimittypes.QueryCapacityByDenomRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -435,6 +511,80 @@ func (_m *QueryClient) EquityTierLimitConfiguration(ctx context.Context, in *clo
 	return r0, r1
 }
 
+// GetAssetYieldIndexQuery provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) GetAssetYieldIndexQuery(ctx context.Context, in *ratelimittypes.GetAssetYieldIndexQueryRequest, opts ...grpc.CallOption) (*ratelimittypes.GetAssetYieldIndexQueryResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAssetYieldIndexQuery")
+	}
+
+	var r0 *ratelimittypes.GetAssetYieldIndexQueryResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *ratelimittypes.GetAssetYieldIndexQueryRequest, ...grpc.CallOption) (*ratelimittypes.GetAssetYieldIndexQueryResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *ratelimittypes.GetAssetYieldIndexQueryRequest, ...grpc.CallOption) *ratelimittypes.GetAssetYieldIndexQueryResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ratelimittypes.GetAssetYieldIndexQueryResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *ratelimittypes.GetAssetYieldIndexQueryRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSDAIPriceQuery provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) GetSDAIPriceQuery(ctx context.Context, in *ratelimittypes.GetSDAIPriceQueryRequest, opts ...grpc.CallOption) (*ratelimittypes.GetSDAIPriceQueryResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSDAIPriceQuery")
+	}
+
+	var r0 *ratelimittypes.GetSDAIPriceQueryResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *ratelimittypes.GetSDAIPriceQueryRequest, ...grpc.CallOption) (*ratelimittypes.GetSDAIPriceQueryResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *ratelimittypes.GetSDAIPriceQueryRequest, ...grpc.CallOption) *ratelimittypes.GetSDAIPriceQueryResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ratelimittypes.GetSDAIPriceQueryResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *ratelimittypes.GetSDAIPriceQueryRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetWithdrawalAndTransfersBlockedInfo provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) GetWithdrawalAndTransfersBlockedInfo(ctx context.Context, in *subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoRequest, opts ...grpc.CallOption) (*subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -472,43 +622,6 @@ func (_m *QueryClient) GetWithdrawalAndTransfersBlockedInfo(ctx context.Context,
 	return r0, r1
 }
 
-// LiquidateSubaccounts provides a mock function with given fields: ctx, in, opts
-func (_m *QueryClient) LiquidateSubaccounts(ctx context.Context, in *api.LiquidateSubaccountsRequest, opts ...grpc.CallOption) (*api.LiquidateSubaccountsResponse, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, in)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	if len(ret) == 0 {
-		panic("no return value specified for LiquidateSubaccounts")
-	}
-
-	var r0 *api.LiquidateSubaccountsResponse
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) (*api.LiquidateSubaccountsResponse, error)); ok {
-		return rf(ctx, in, opts...)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) *api.LiquidateSubaccountsResponse); ok {
-		r0 = rf(ctx, in, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*api.LiquidateSubaccountsResponse)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, *api.LiquidateSubaccountsRequest, ...grpc.CallOption) error); ok {
-		r1 = rf(ctx, in, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // LiquidationsConfiguration provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) LiquidationsConfiguration(ctx context.Context, in *clobtypes.QueryLiquidationsConfigurationRequest, opts ...grpc.CallOption) (*clobtypes.QueryLiquidationsConfigurationResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -538,6 +651,43 @@ func (_m *QueryClient) LiquidationsConfiguration(ctx context.Context, in *clobty
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.QueryLiquidationsConfigurationRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListLimitParams provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) ListLimitParams(ctx context.Context, in *ratelimittypes.ListLimitParamsRequest, opts ...grpc.CallOption) (*ratelimittypes.ListLimitParamsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListLimitParams")
+	}
+
+	var r0 *ratelimittypes.ListLimitParamsResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *ratelimittypes.ListLimitParamsRequest, ...grpc.CallOption) (*ratelimittypes.ListLimitParamsResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *ratelimittypes.ListLimitParamsRequest, ...grpc.CallOption) *ratelimittypes.ListLimitParamsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ratelimittypes.ListLimitParamsResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *ratelimittypes.ListLimitParamsRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -954,7 +1104,7 @@ func (_m *QueryClient) SubaccountAll(ctx context.Context, in *subaccountstypes.Q
 }
 
 // UpdateMarketPrices provides a mock function with given fields: ctx, in, opts
-func (_m *QueryClient) UpdateMarketPrices(ctx context.Context, in *pricefeedapi.UpdateMarketPricesRequest, opts ...grpc.CallOption) (*pricefeedapi.UpdateMarketPricesResponse, error) {
+func (_m *QueryClient) UpdateMarketPrices(ctx context.Context, in *api.UpdateMarketPricesRequest, opts ...grpc.CallOption) (*api.UpdateMarketPricesResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -968,20 +1118,57 @@ func (_m *QueryClient) UpdateMarketPrices(ctx context.Context, in *pricefeedapi.
 		panic("no return value specified for UpdateMarketPrices")
 	}
 
-	var r0 *pricefeedapi.UpdateMarketPricesResponse
+	var r0 *api.UpdateMarketPricesResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *pricefeedapi.UpdateMarketPricesRequest, ...grpc.CallOption) (*pricefeedapi.UpdateMarketPricesResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *api.UpdateMarketPricesRequest, ...grpc.CallOption) (*api.UpdateMarketPricesResponse, error)); ok {
 		return rf(ctx, in, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *pricefeedapi.UpdateMarketPricesRequest, ...grpc.CallOption) *pricefeedapi.UpdateMarketPricesResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *api.UpdateMarketPricesRequest, ...grpc.CallOption) *api.UpdateMarketPricesResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*pricefeedapi.UpdateMarketPricesResponse)
+			r0 = ret.Get(0).(*api.UpdateMarketPricesResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *pricefeedapi.UpdateMarketPricesRequest, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *api.UpdateMarketPricesRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UpdateSubaccountsListForDeleveragingDaemon provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) UpdateSubaccountsListForDeleveragingDaemon(ctx context.Context, in *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonRequest, opts ...grpc.CallOption) (*deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateSubaccountsListForDeleveragingDaemon")
+	}
+
+	var r0 *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonRequest, ...grpc.CallOption) (*deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonRequest, ...grpc.CallOption) *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *deleveragingapi.UpdateSubaccountsListForDeleveragingDaemonRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

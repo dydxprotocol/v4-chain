@@ -30,6 +30,8 @@ func (k msgServer) UpdatePerpetualParams(
 		msg.PerpetualParams.MarketId,
 		msg.PerpetualParams.DefaultFundingPpm,
 		msg.PerpetualParams.LiquidityTier,
+		msg.PerpetualParams.DangerIndexPpm,
+		msg.PerpetualParams.IsolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
 	)
 	if err != nil {
 		return nil, err

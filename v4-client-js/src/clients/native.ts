@@ -60,9 +60,9 @@ export async function connectNetwork(
       chainId,
       faucetUrl,
       nobleValidatorUrl,
-      USDC_DENOM,
-      USDC_DECIMALS,
-      USDC_GAS_DENOM,
+      TDAI_DENOM,
+      TDAI_DECIMALS,
+      TDAI_GAS_DENOM,
       CHAINTOKEN_DENOM,
       CHAINTOKEN_DECIMALS,
       CHAINTOKEN_GAS_DENOM,
@@ -74,8 +74,8 @@ export async function connectNetwork(
       chainId === undefined) {
       throw new UserError('Missing required network params');
     }
-    if (USDC_DENOM === undefined ||
-      USDC_DECIMALS === undefined ||
+    if (TDAI_DENOM === undefined ||
+      TDAI_DECIMALS === undefined ||
       CHAINTOKEN_DENOM === undefined ||
       CHAINTOKEN_DECIMALS === undefined) {
       throw new UserError('Missing required token params');
@@ -83,9 +83,9 @@ export async function connectNetwork(
 
     const indexerConfig = new IndexerConfig(indexerUrl, websocketUrl);
     const validatorConfig = new ValidatorConfig(validatorUrl, chainId, {
-      USDC_DENOM,
-      USDC_DECIMALS,
-      USDC_GAS_DENOM,
+      TDAI_DENOM,
+      TDAI_DECIMALS,
+      TDAI_GAS_DENOM,
       CHAINTOKEN_DENOM,
       CHAINTOKEN_DECIMALS,
       CHAINTOKEN_GAS_DENOM,
@@ -544,7 +544,7 @@ export async function getAccountBalance(): Promise<String> {
     const address = globalThis.wallet.address!;
 
     const tx = await client.validatorClient.get
-      .getAccountBalance(address, client.validatorClient.config.denoms.USDC_DENOM);
+      .getAccountBalance(address, client.validatorClient.config.denoms.TDAI_DENOM);
     return encodeJson(tx);
   } catch (error) {
     return wrappedError(error);
@@ -1013,7 +1013,7 @@ export async function getNobleBalance(): Promise<String> {
         'client is not connected.',
       );
     }
-    const coin = await client.getAccountBalance('uusdc');
+    const coin = await client.getAccountBalance('utdai');
     return encodeJson(coin);
   } catch (error) {
     return wrappedError(error);
@@ -1074,7 +1074,7 @@ export async function withdrawToNobleIBC(payload: string): Promise<String> {
 
     const msg = client.withdrawFromSubaccountMessage(
       new SubaccountInfo(wallet, subaccountNumber),
-      parseFloat(amount).toFixed(client.validatorClient.config.denoms.USDC_DECIMALS),
+      parseFloat(amount).toFixed(client.validatorClient.config.denoms.TDAI_DECIMALS),
     );
     const ibcMsg: EncodeObject = {
       typeUrl: parsedIbcPayload.msgTypeUrl,

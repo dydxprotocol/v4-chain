@@ -16,6 +16,7 @@ import SparklinesController from './v4/sparklines-controller';
 import TimeController from './v4/time-controller';
 import TradesController from './v4/trades-controller';
 import TransfersController from './v4/transfers-controller';
+import YieldParamsController from './v4/yield-params-controller';
 
 // Keep routers in alphabetical order
 
@@ -36,5 +37,6 @@ router.use('/time', TimeController);
 router.use('/trades', TradesController);
 router.use('/transfers', TransfersController);
 router.use('/screen', ComplianceController);
+router.use('/yieldParams', YieldParamsController);
 
 export default router;

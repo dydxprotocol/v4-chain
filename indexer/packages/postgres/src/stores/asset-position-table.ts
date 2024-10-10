@@ -2,7 +2,7 @@ import Big from 'big.js';
 import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS, USDC_ASSET_ID } from '../constants';
+import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS, TDAI_ASSET_ID } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
@@ -16,7 +16,7 @@ import {
   Ordering,
   QueryableField,
   QueryConfig,
-  SubaccountUsdcMap,
+  SubaccountTDaiMap,
 } from '../types';
 
 export function uuid(subaccountId: string, assetId: string): string {
@@ -126,22 +126,22 @@ export async function findById(
     .returning('*');
 }
 
-function convertToSubaccountUsdcMap(
-  usdcPositions: AssetPositionFromDatabase[],
-): SubaccountUsdcMap {
-  return _.mapValues(_.keyBy(usdcPositions, 'subaccountId'), (asset) => {
+function convertToSubaccountTDaiMap(
+  tdaiPositions: AssetPositionFromDatabase[],
+): SubaccountTDaiMap {
+  return _.mapValues(_.keyBy(tdaiPositions, 'subaccountId'), (asset) => {
     return Big(asset.isLong ? asset.size : -asset.size);
   });
 }
 
-export async function findUsdcPositionForSubaccounts(
+export async function findTDaiPositionForSubaccounts(
   subaccountIds: string[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<{ [subaccountId: string]: Big }> {
   const positions: AssetPositionFromDatabase[] = await findAll(
     {
       subaccountId: subaccountIds,
-      assetId: [USDC_ASSET_ID],
+      assetId: [TDAI_ASSET_ID],
     },
     [],
     options,
@@ -149,5 +149,5 @@ export async function findUsdcPositionForSubaccounts(
   if (positions.length === 0) {
     return {};
   }
-  return convertToSubaccountUsdcMap(positions);
+  return convertToSubaccountTDaiMap(positions);
 }

@@ -2,14 +2,15 @@ package simulation
 
 import (
 	"fmt"
-	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"math"
 	"math/rand"
+
+	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
@@ -132,10 +133,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	clobGenesis.ClobPairs = clobPairs
 
+	validatorFee := genRandomPositivePpm(r, true)
+
 	clobGenesis.LiquidationsConfig = types.LiquidationsConfig{
-		// MaxLiquidationFeePpm determines the fee that subaccount usually pays for liquidating a position.
+		// InsuranceFundFeePpm determines the fee that subaccount usually pays for liquidating a position.
 		// This is typically a very small percentage, so skewing towards lower values here.
-		MaxLiquidationFeePpm: genRandomPositivePpm(r, true),
+		InsuranceFundFeePpm: genRandomPositivePpm(r, true),
+		ValidatorFeePpm:     validatorFee,
+		LiquidityFeePpm:     1_000_000 - validatorFee,
 		FillablePriceConfig: types.FillablePriceConfig{
 			BankruptcyAdjustmentPpm: uint32(
 				simtypes.RandIntBetween(r, int(lib.OneMillion), int(math.MaxUint32)),
@@ -146,18 +151,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			// so skewing towards lower values here.
 			SpreadToMaintenanceMarginRatioPpm: genRandomPositivePpm(r, true),
 		},
-		PositionBlockLimits: types.PositionBlockLimits{
-			MinPositionNotionalLiquidated: uint64(sim_helpers.GetRandomBucketValue(r, sim_helpers.MinPositionNotionalBuckets)),
-			// MaxPositionPortionLiquidatedPpm determines the maximum portion of a position
-			// that can be liquidated in a block.
-			// Since we may want to liquidate as quickly as possible to avoid losing any insurance fund,
-			// skewing towards larger values here.
-			MaxPositionPortionLiquidatedPpm: genRandomPositivePpm(r, false),
-		},
-		SubaccountBlockLimits: types.SubaccountBlockLimits{
-			MaxNotionalLiquidated:    uint64(sim_helpers.GetRandomBucketValue(r, sim_helpers.SubaccountBlockLimitsBuckets)),
-			MaxQuantumsInsuranceLost: uint64(sim_helpers.GetRandomBucketValue(r, sim_helpers.SubaccountBlockLimitsBuckets)),
-		},
+		MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 	}
 
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&clobGenesis)

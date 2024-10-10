@@ -1,5 +1,5 @@
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial, Long } from "../../helpers";
+import { Long, DeepPartial } from "../../helpers";
 /** LiquidationsConfig stores all configurable fields related to liquidations. */
 
 export interface LiquidationsConfig {
@@ -7,25 +7,22 @@ export interface LiquidationsConfig {
    * The maximum liquidation fee (in parts-per-million). This fee goes
    * 100% to the insurance fund.
    */
-  maxLiquidationFeePpm: number;
-  /**
-   * Limits around how much of a single position can be liquidated
-   * within a single block.
-   */
+  insuranceFundFeePpm: number;
+  /** The fraction of the remaining collateral taken as a validator fee. */
 
-  positionBlockLimits?: PositionBlockLimits;
-  /**
-   * Limits around how many quote quantums from a single subaccount can
-   * be liquidated within a single block.
-   */
+  validatorFeePpm: number;
+  /** The fraction of the remaining collateral taken as a liquidity fee. */
 
-  subaccountBlockLimits?: SubaccountBlockLimits;
+  liquidityFeePpm: number;
   /**
    * Config about how the fillable-price spread from the oracle price
    * increases based on the adjusted bankruptcy rating of the subaccount.
    */
 
   fillablePriceConfig?: FillablePriceConfig;
+  /** The maximum value that the cumulative insurance fund delta can take. */
+
+  maxCumulativeInsuranceFundDelta: Long;
 }
 /** LiquidationsConfig stores all configurable fields related to liquidations. */
 
@@ -34,101 +31,22 @@ export interface LiquidationsConfigSDKType {
    * The maximum liquidation fee (in parts-per-million). This fee goes
    * 100% to the insurance fund.
    */
-  max_liquidation_fee_ppm: number;
-  /**
-   * Limits around how much of a single position can be liquidated
-   * within a single block.
-   */
+  insurance_fund_fee_ppm: number;
+  /** The fraction of the remaining collateral taken as a validator fee. */
 
-  position_block_limits?: PositionBlockLimitsSDKType;
-  /**
-   * Limits around how many quote quantums from a single subaccount can
-   * be liquidated within a single block.
-   */
+  validator_fee_ppm: number;
+  /** The fraction of the remaining collateral taken as a liquidity fee. */
 
-  subaccount_block_limits?: SubaccountBlockLimitsSDKType;
+  liquidity_fee_ppm: number;
   /**
    * Config about how the fillable-price spread from the oracle price
    * increases based on the adjusted bankruptcy rating of the subaccount.
    */
 
   fillable_price_config?: FillablePriceConfigSDKType;
-}
-/**
- * PositionBlockLimits stores all configurable fields related to limits
- * around how much of a single position can be liquidated within a single block.
- */
+  /** The maximum value that the cumulative insurance fund delta can take. */
 
-export interface PositionBlockLimits {
-  /**
-   * The minimum amount of quantums to liquidate for each message (in
-   * quote quantums).
-   * Overridden by the maximum size of the position.
-   */
-  minPositionNotionalLiquidated: Long;
-  /**
-   * The maximum portion of the position liquidated (in parts-per-
-   * million). Overridden by min_position_notional_liquidated.
-   */
-
-  maxPositionPortionLiquidatedPpm: number;
-}
-/**
- * PositionBlockLimits stores all configurable fields related to limits
- * around how much of a single position can be liquidated within a single block.
- */
-
-export interface PositionBlockLimitsSDKType {
-  /**
-   * The minimum amount of quantums to liquidate for each message (in
-   * quote quantums).
-   * Overridden by the maximum size of the position.
-   */
-  min_position_notional_liquidated: Long;
-  /**
-   * The maximum portion of the position liquidated (in parts-per-
-   * million). Overridden by min_position_notional_liquidated.
-   */
-
-  max_position_portion_liquidated_ppm: number;
-}
-/**
- * SubaccountBlockLimits stores all configurable fields related to limits
- * around how many quote quantums from a single subaccount can
- * be liquidated within a single block.
- */
-
-export interface SubaccountBlockLimits {
-  /**
-   * The maximum notional amount that a single subaccount can have
-   * liquidated (in quote quantums) per block.
-   */
-  maxNotionalLiquidated: Long;
-  /**
-   * The maximum insurance-fund payout amount for a given subaccount
-   * per block. I.e. how much it can cover for that subaccount.
-   */
-
-  maxQuantumsInsuranceLost: Long;
-}
-/**
- * SubaccountBlockLimits stores all configurable fields related to limits
- * around how many quote quantums from a single subaccount can
- * be liquidated within a single block.
- */
-
-export interface SubaccountBlockLimitsSDKType {
-  /**
-   * The maximum notional amount that a single subaccount can have
-   * liquidated (in quote quantums) per block.
-   */
-  max_notional_liquidated: Long;
-  /**
-   * The maximum insurance-fund payout amount for a given subaccount
-   * per block. I.e. how much it can cover for that subaccount.
-   */
-
-  max_quantums_insurance_lost: Long;
+  max_cumulative_insurance_fund_delta: Long;
 }
 /**
  * FillablePriceConfig stores all configurable fields related to calculating
@@ -163,29 +81,34 @@ export interface FillablePriceConfigSDKType {
 
 function createBaseLiquidationsConfig(): LiquidationsConfig {
   return {
-    maxLiquidationFeePpm: 0,
-    positionBlockLimits: undefined,
-    subaccountBlockLimits: undefined,
-    fillablePriceConfig: undefined
+    insuranceFundFeePpm: 0,
+    validatorFeePpm: 0,
+    liquidityFeePpm: 0,
+    fillablePriceConfig: undefined,
+    maxCumulativeInsuranceFundDelta: Long.UZERO
   };
 }
 
 export const LiquidationsConfig = {
   encode(message: LiquidationsConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.maxLiquidationFeePpm !== 0) {
-      writer.uint32(8).uint32(message.maxLiquidationFeePpm);
+    if (message.insuranceFundFeePpm !== 0) {
+      writer.uint32(8).uint32(message.insuranceFundFeePpm);
     }
 
-    if (message.positionBlockLimits !== undefined) {
-      PositionBlockLimits.encode(message.positionBlockLimits, writer.uint32(18).fork()).ldelim();
+    if (message.validatorFeePpm !== 0) {
+      writer.uint32(16).uint32(message.validatorFeePpm);
     }
 
-    if (message.subaccountBlockLimits !== undefined) {
-      SubaccountBlockLimits.encode(message.subaccountBlockLimits, writer.uint32(26).fork()).ldelim();
+    if (message.liquidityFeePpm !== 0) {
+      writer.uint32(24).uint32(message.liquidityFeePpm);
     }
 
     if (message.fillablePriceConfig !== undefined) {
       FillablePriceConfig.encode(message.fillablePriceConfig, writer.uint32(34).fork()).ldelim();
+    }
+
+    if (!message.maxCumulativeInsuranceFundDelta.isZero()) {
+      writer.uint32(40).uint64(message.maxCumulativeInsuranceFundDelta);
     }
 
     return writer;
@@ -201,19 +124,23 @@ export const LiquidationsConfig = {
 
       switch (tag >>> 3) {
         case 1:
-          message.maxLiquidationFeePpm = reader.uint32();
+          message.insuranceFundFeePpm = reader.uint32();
           break;
 
         case 2:
-          message.positionBlockLimits = PositionBlockLimits.decode(reader, reader.uint32());
+          message.validatorFeePpm = reader.uint32();
           break;
 
         case 3:
-          message.subaccountBlockLimits = SubaccountBlockLimits.decode(reader, reader.uint32());
+          message.liquidityFeePpm = reader.uint32();
           break;
 
         case 4:
           message.fillablePriceConfig = FillablePriceConfig.decode(reader, reader.uint32());
+          break;
+
+        case 5:
+          message.maxCumulativeInsuranceFundDelta = (reader.uint64() as Long);
           break;
 
         default:
@@ -227,120 +154,11 @@ export const LiquidationsConfig = {
 
   fromPartial(object: DeepPartial<LiquidationsConfig>): LiquidationsConfig {
     const message = createBaseLiquidationsConfig();
-    message.maxLiquidationFeePpm = object.maxLiquidationFeePpm ?? 0;
-    message.positionBlockLimits = object.positionBlockLimits !== undefined && object.positionBlockLimits !== null ? PositionBlockLimits.fromPartial(object.positionBlockLimits) : undefined;
-    message.subaccountBlockLimits = object.subaccountBlockLimits !== undefined && object.subaccountBlockLimits !== null ? SubaccountBlockLimits.fromPartial(object.subaccountBlockLimits) : undefined;
+    message.insuranceFundFeePpm = object.insuranceFundFeePpm ?? 0;
+    message.validatorFeePpm = object.validatorFeePpm ?? 0;
+    message.liquidityFeePpm = object.liquidityFeePpm ?? 0;
     message.fillablePriceConfig = object.fillablePriceConfig !== undefined && object.fillablePriceConfig !== null ? FillablePriceConfig.fromPartial(object.fillablePriceConfig) : undefined;
-    return message;
-  }
-
-};
-
-function createBasePositionBlockLimits(): PositionBlockLimits {
-  return {
-    minPositionNotionalLiquidated: Long.UZERO,
-    maxPositionPortionLiquidatedPpm: 0
-  };
-}
-
-export const PositionBlockLimits = {
-  encode(message: PositionBlockLimits, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (!message.minPositionNotionalLiquidated.isZero()) {
-      writer.uint32(8).uint64(message.minPositionNotionalLiquidated);
-    }
-
-    if (message.maxPositionPortionLiquidatedPpm !== 0) {
-      writer.uint32(16).uint32(message.maxPositionPortionLiquidatedPpm);
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): PositionBlockLimits {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBasePositionBlockLimits();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.minPositionNotionalLiquidated = (reader.uint64() as Long);
-          break;
-
-        case 2:
-          message.maxPositionPortionLiquidatedPpm = reader.uint32();
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<PositionBlockLimits>): PositionBlockLimits {
-    const message = createBasePositionBlockLimits();
-    message.minPositionNotionalLiquidated = object.minPositionNotionalLiquidated !== undefined && object.minPositionNotionalLiquidated !== null ? Long.fromValue(object.minPositionNotionalLiquidated) : Long.UZERO;
-    message.maxPositionPortionLiquidatedPpm = object.maxPositionPortionLiquidatedPpm ?? 0;
-    return message;
-  }
-
-};
-
-function createBaseSubaccountBlockLimits(): SubaccountBlockLimits {
-  return {
-    maxNotionalLiquidated: Long.UZERO,
-    maxQuantumsInsuranceLost: Long.UZERO
-  };
-}
-
-export const SubaccountBlockLimits = {
-  encode(message: SubaccountBlockLimits, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (!message.maxNotionalLiquidated.isZero()) {
-      writer.uint32(8).uint64(message.maxNotionalLiquidated);
-    }
-
-    if (!message.maxQuantumsInsuranceLost.isZero()) {
-      writer.uint32(16).uint64(message.maxQuantumsInsuranceLost);
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): SubaccountBlockLimits {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSubaccountBlockLimits();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.maxNotionalLiquidated = (reader.uint64() as Long);
-          break;
-
-        case 2:
-          message.maxQuantumsInsuranceLost = (reader.uint64() as Long);
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<SubaccountBlockLimits>): SubaccountBlockLimits {
-    const message = createBaseSubaccountBlockLimits();
-    message.maxNotionalLiquidated = object.maxNotionalLiquidated !== undefined && object.maxNotionalLiquidated !== null ? Long.fromValue(object.maxNotionalLiquidated) : Long.UZERO;
-    message.maxQuantumsInsuranceLost = object.maxQuantumsInsuranceLost !== undefined && object.maxQuantumsInsuranceLost !== null ? Long.fromValue(object.maxQuantumsInsuranceLost) : Long.UZERO;
+    message.maxCumulativeInsuranceFundDelta = object.maxCumulativeInsuranceFundDelta !== undefined && object.maxCumulativeInsuranceFundDelta !== null ? Long.fromValue(object.maxCumulativeInsuranceFundDelta) : Long.UZERO;
     return message;
   }
 

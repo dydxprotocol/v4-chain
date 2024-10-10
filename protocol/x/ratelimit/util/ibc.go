@@ -21,6 +21,7 @@ import (
 // - channelID
 // - denom
 // - amount
+// - receiver
 //
 // This function is similar to Stride's implementation below except it ignores the `Sender`
 // and `Receiver` information.
@@ -43,13 +44,31 @@ func ParsePacketInfo(
 		denom = ParseDenomFromRecvPacket(packet, packetData)
 	}
 
-	// From `SetString` documentation:
-	// For base 0, the number prefix determines the actual base:
-	// A prefix of “0b” or “0B” selects base 2, “0”, “0o” or “0O” selects base 8, and “0x” or “0X” selects base 16.
-	// Otherwise, the selected base is 10 and no prefix is accepted.
+	amount, sender, receiver, err := GetValidatedFungibleTokenPacketData(packetData)
+	if err != nil {
+		return types.IBCTransferPacketInfo{}, err
+	}
+
+	packetInfo := types.IBCTransferPacketInfo{
+		ChannelID: channelID,
+		Denom:     denom,
+		Amount:    amount,
+		Receiver:  receiver,
+		Sender:    sender,
+	}
+
+	return packetInfo, nil
+}
+
+func GetValidatedFungibleTokenPacketData(packetData ibctransfertypes.FungibleTokenPacketData) (
+	*big.Int,
+	sdk.AccAddress,
+	sdk.AccAddress,
+	error,
+) {
 	amount, ok := new(big.Int).SetString(packetData.Amount, 0)
 	if !ok {
-		return types.IBCTransferPacketInfo{},
+		return nil, sdk.AccAddress(""), sdk.AccAddress(""),
 			errorsmod.Wrapf(
 				sdkerrors.ErrInvalidRequest,
 				"Unable to cast packet amount '%s' to big.Int",
@@ -57,13 +76,25 @@ func ParsePacketInfo(
 			)
 	}
 
-	packetInfo := types.IBCTransferPacketInfo{
-		ChannelID: channelID,
-		Denom:     denom,
-		Amount:    amount,
+	sender, err := sdk.AccAddressFromBech32(packetData.Sender)
+	if err != nil {
+		return nil, sdk.AccAddress(""), sdk.AccAddress(""),
+			errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"Unable to convert sender address",
+			)
 	}
 
-	return packetInfo, nil
+	receiver, err := sdk.AccAddressFromBech32(packetData.Receiver)
+	if err != nil {
+		return nil, sdk.AccAddress(""), sdk.AccAddress(""),
+			errorsmod.Wrapf(
+				sdkerrors.ErrInvalidRequest,
+				"Unable to convert receiver address",
+			)
+	}
+
+	return amount, sender, receiver, nil
 }
 
 // UnpackAcknowledgementResponseForTransfer unmarshals Acknowledgements for IBC transfers, determines the status of the

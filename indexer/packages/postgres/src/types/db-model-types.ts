@@ -18,6 +18,7 @@ export interface IdBasedModelFromDatabase {
 
 export interface SubaccountFromDatabase extends IdBasedModelFromDatabase {
   address: string,
+  assetYieldIndex: string,
   subaccountNumber: number,
   updatedAt: IsoString,
   updatedAtHeight: string,
@@ -43,6 +44,7 @@ export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase 
   closeEventId?: Buffer;
   lastEventId: Buffer;
   settledFunding: string;
+  perpYieldIndex: string;
 }
 
 export interface OrderFromDatabase extends IdBasedModelFromDatabase {
@@ -81,11 +83,14 @@ export interface PerpetualMarketFromDatabase {
   openInterest: string;
   quantumConversionExponent: number;
   atomicResolution: number;
+  dangerIndexPpm: number;
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: string;
   subticksPerTick: number;
   stepBaseQuantums: number;
   liquidityTierId: number;
   marketType: PerpetualMarketType;
   baseOpenInterest: string;
+  perpYieldIndex: string;
 }
 
 export interface FillFromDatabase {
@@ -223,6 +228,13 @@ export interface ComplianceDataFromDatabase {
   updatedAt: string;
 }
 
+export interface YieldParamsFromDatabase extends IdBasedModelFromDatabase {
+  sDAIPrice: string;
+  assetYieldIndex: string;
+  createdAt: IsoString;
+  createdAtHeight: string;
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string } };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:
@@ -231,7 +243,7 @@ export type PerpetualPositionsMap = { [perpetualMarketId: string]: PerpetualPosi
 export type PerpetualMarketsMap = { [perpetualMarketId: string]: PerpetualMarketFromDatabase };
 export type AssetsMap = { [assetId: string]: AssetFromDatabase };
 export type LiquidityTiersMap = { [liquidityTierId: number]: LiquidityTiersFromDatabase };
-export type SubaccountUsdcMap = { [subaccountId: string]: Big };
+export type SubaccountTDaiMap = { [subaccountId: string]: Big };
 export type AssetPositionsMap = { [subaccountId: string]: AssetPositionFromDatabase[] };
 export type MarketsMap = { [marketId: number]: MarketFromDatabase };
 export type OraclePricesMap = { [marketId: number]: OraclePriceFromDatabase[] };

@@ -13,11 +13,14 @@ export interface PerpetualMarketCreateObject {
   openInterest: string;
   quantumConversionExponent: number;
   atomicResolution: number;
+  dangerIndexPpm: number;
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock: string;
   subticksPerTick: number;
   stepBaseQuantums: number;
   liquidityTierId: number;
   marketType: PerpetualMarketType;
   baseOpenInterest: string;
+  perpYieldIndex: string;
 }
 
 export interface PerpetualMarketUpdateObject {
@@ -33,9 +36,12 @@ export interface PerpetualMarketUpdateObject {
   openInterest?: string;
   quantumConversionExponent?: number;
   atomicResolution?: number;
+  dangerIndexPpm?: number;
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock?: string;
   subticksPerTick?: number;
   stepBaseQuantums?: number;
   liquidityTierId?: number;
+  perpYieldIndex?: string;
 }
 
 export enum PerpetualMarketColumns {
@@ -51,9 +57,12 @@ export enum PerpetualMarketColumns {
   openInterest = 'openInterest',
   quantumConversionExponent = 'quantumConversionExponent',
   atomicResolution = 'atomicResolution',
+  dangerIndexPpm = 'dangerIndexPpm',
+  isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock = 'isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock',
   subticksPerTick = 'subticksPerTick',
   stepBaseQuantums = 'stepBaseQuantums',
   liquidityTierId = 'liquidityTierId',
+  perpYieldIndex = 'perpYieldIndex',
 }
 
 export enum PerpetualMarketStatus {

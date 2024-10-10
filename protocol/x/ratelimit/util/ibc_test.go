@@ -23,7 +23,6 @@ import (
 
 const (
 	transferPort  = "transfer"
-	uusdc         = "uuusdc"
 	channelOnHost = "channel-1"
 )
 
@@ -39,8 +38,8 @@ func TestParsePacketInfo(t *testing.T) {
 	denom := "denom"
 	amountString := "100"
 	amountInt := big.NewInt(100)
-	sender := "sender"
-	receiver := "receiver"
+	sender := "cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg"
+	receiver := "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5"
 
 	packetData, err := json.Marshal(ibctransfertypes.FungibleTokenPacketData{
 		Denom:    denom,
@@ -58,12 +57,21 @@ func TestParsePacketInfo(t *testing.T) {
 		Data:               packetData,
 	}
 
+	senderAddr, err := sdk.AccAddressFromBech32(sender)
+	require.NoError(t, err)
+
+	receiverAddr, err := sdk.AccAddressFromBech32(receiver)
+	require.NoError(t, err)
+
 	// Send 'denom' from channel-100 -> channel-200
 	expectedSendPacketInfo := types.IBCTransferPacketInfo{
 		ChannelID: sourceChannel,
 		Denom:     denom,
 		Amount:    amountInt,
+		Sender:    senderAddr,
+		Receiver:  receiverAddr,
 	}
+
 	actualSendPacketInfo, err := util.ParsePacketInfo(packet, types.PACKET_SEND)
 	require.NoError(t, err, "no error expected when parsing send packet")
 	require.Equal(t, expectedSendPacketInfo, actualSendPacketInfo, "send packet")
@@ -73,6 +81,8 @@ func TestParsePacketInfo(t *testing.T) {
 		ChannelID: destinationChannel,
 		Denom:     hashDenomTrace(fmt.Sprintf("transfer/%s/%s", destinationChannel, denom)),
 		Amount:    amountInt,
+		Sender:    senderAddr,
+		Receiver:  receiverAddr,
 	}
 	actualRecvPacketInfo, err := util.ParsePacketInfo(packet, types.PACKET_RECV)
 	require.NoError(t, err, "no error expected when parsing recv packet")
@@ -133,6 +143,76 @@ func TestUnpackAcknowledgementResponseForTransfer(t *testing.T) {
 			// Confirm the response and error status
 			require.Equal(t, tc.expectedStatus, ackResponse.Status, "Acknowledgement response status")
 			require.Equal(t, tc.packetError, ackResponse.Error, "AcknowledgementError")
+		})
+	}
+}
+
+func TestGetValidatedFungibleTokenPacketData(t *testing.T) {
+	testCases := []struct {
+		name           string
+		packetData     ibctransfertypes.FungibleTokenPacketData
+		expectedAmount *big.Int
+		expectedSender sdk.AccAddress
+		expectedRecv   sdk.AccAddress
+		expectedError  string
+	}{
+		{
+			name: "valid_packet_data",
+			packetData: ibctransfertypes.FungibleTokenPacketData{
+				Denom:    "atom",
+				Amount:   "100",
+				Sender:   "cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg",
+				Receiver: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			},
+			expectedAmount: big.NewInt(100),
+			expectedSender: sdk.MustAccAddressFromBech32("cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg"),
+			expectedRecv:   sdk.MustAccAddressFromBech32("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5"),
+		},
+		{
+			name: "invalid_amount",
+			packetData: ibctransfertypes.FungibleTokenPacketData{
+				Denom:    "atom",
+				Amount:   "invalid",
+				Sender:   "cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg",
+				Receiver: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			},
+			expectedError: "Unable to cast packet amount 'invalid' to big.Int",
+		},
+		{
+			name: "invalid_sender",
+			packetData: ibctransfertypes.FungibleTokenPacketData{
+				Denom:    "atom",
+				Amount:   "100",
+				Sender:   "invalid",
+				Receiver: "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+			},
+			expectedError: "Unable to convert sender address",
+		},
+		{
+			name: "invalid_receiver",
+			packetData: ibctransfertypes.FungibleTokenPacketData{
+				Denom:    "atom",
+				Amount:   "100",
+				Sender:   "cosmos1e0jnq2sun3dzjh8p2xq95kk0expwmd7shwjpfg",
+				Receiver: "invalid",
+			},
+			expectedError: "Unable to convert receiver address",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			amount, sender, receiver, err := util.GetValidatedFungibleTokenPacketData(tc.packetData)
+
+			if tc.expectedError != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedError)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedAmount, amount)
+				require.Equal(t, tc.expectedSender, sender)
+				require.Equal(t, tc.expectedRecv, receiver)
+			}
 		})
 	}
 }

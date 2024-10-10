@@ -191,6 +191,7 @@ export function convertPerpetualPosition(
     closeEventId,
     lastEventId,
     settledFunding,
+    perpYieldIndex,
   } = position;
 
   const updatedPosition: UpdatedPerpetualPositionSubaccountKafkaObject = {
@@ -209,6 +210,7 @@ export function convertPerpetualPosition(
     settledFunding,
     status,
     size,
+    perpYieldIndex,
   };
 
   return updatedPosition;
@@ -318,6 +320,9 @@ export function generatePerpetualMarketMessage(
         status: perpetualMarket.status,
         quantumConversionExponent: perpetualMarket.quantumConversionExponent,
         atomicResolution: perpetualMarket.atomicResolution,
+        dangerIndexPpm: perpetualMarket.dangerIndexPpm,
+        isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock:
+          perpetualMarket.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
         subticksPerTick: perpetualMarket.subticksPerTick,
         stepBaseQuantums: perpetualMarket.stepBaseQuantums,
         initialMarginFraction: helpers.ppmToString(Number(liquidityTier.initialMarginPpm)),

@@ -14,6 +14,7 @@ export { default as OrderModel } from './models/order-model';
 export { default as PerpetualMarketModel } from './models/perpetual-market-model';
 export { default as PerpetualPositionModel } from './models/perpetual-position-model';
 export { default as TransferModel } from './models/transfer-model';
+export { default as YieldParamsModel } from './models/yield-params-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';
@@ -33,6 +34,7 @@ export * as CandleTable from './stores/candle-table';
 export * as FundingIndexUpdatesTable from './stores/funding-index-updates-table';
 export * as LiquidityTiersTable from './stores/liquidity-tiers-table';
 export * as ComplianceTable from './stores/compliance-table';
+export * as YieldParamsTable from './stores/yield-params-table';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';

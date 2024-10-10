@@ -7,7 +7,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
-	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,8 +14,8 @@ import (
 )
 
 var (
-	altLimitParamsForUsdc = types.LimitParams{
-		Denom: assettypes.UusdcDenom,
+	altLimitParamsForSDai = types.LimitParams{
+		Denom: types.SDaiDenom,
 		Limiters: []types.Limiter{
 			{
 				Period:          3600 * time.Second,
@@ -53,18 +52,18 @@ func TestMsgSetLimitParams(t *testing.T) {
 			name: "Overwite default params with default params (no-op)",
 			input: &types.MsgSetLimitParams{
 				Authority:   lib.GovModuleAddress.String(),
-				LimitParams: types.DefaultUsdcRateLimitParams(),
+				LimitParams: types.DefaultSDaiRateLimitParams(),
 			},
-			expectedLimitParamsList: []types.LimitParams{types.DefaultUsdcRateLimitParams()},
+			expectedLimitParamsList: []types.LimitParams{types.DefaultSDaiRateLimitParams()},
 			expErr:                  false,
 		},
 		{
 			name: "Overwrite default params",
 			input: &types.MsgSetLimitParams{
 				Authority:   lib.GovModuleAddress.String(),
-				LimitParams: altLimitParamsForUsdc,
+				LimitParams: altLimitParamsForSDai,
 			},
-			expectedLimitParamsList: []types.LimitParams{altLimitParamsForUsdc},
+			expectedLimitParamsList: []types.LimitParams{altLimitParamsForSDai},
 			expErr:                  false,
 		},
 		{
@@ -75,16 +74,16 @@ func TestMsgSetLimitParams(t *testing.T) {
 			},
 			expectedLimitParamsList: []types.LimitParams{
 				stakeLimitParams,
-				types.DefaultUsdcRateLimitParams(),
+				types.DefaultSDaiRateLimitParams(),
 			},
 			expErr: false,
 		},
 		{
-			name: "Remove rate-limit for USDC",
+			name: "Remove rate-limit for SDai",
 			input: &types.MsgSetLimitParams{
 				Authority: lib.GovModuleAddress.String(),
 				LimitParams: types.LimitParams{
-					Denom:    assettypes.UusdcDenom,
+					Denom:    types.SDaiDenom,
 					Limiters: []types.Limiter{}, // Empty list removes rate-limit
 				},
 			},
@@ -95,7 +94,7 @@ func TestMsgSetLimitParams(t *testing.T) {
 			name: "invalid authority",
 			input: &types.MsgSetLimitParams{
 				Authority:   "invalid",
-				LimitParams: types.DefaultUsdcRateLimitParams(),
+				LimitParams: types.DefaultSDaiRateLimitParams(),
 			},
 			expErr:    true,
 			expErrMsg: "invalid authority",
