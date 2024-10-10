@@ -137,23 +137,18 @@ func (m *MemClobPriceTimePriority) CreateOrderbook(
 	m.openOrders.createOrderbook(clobPairId, subticksPerTick, minOrderBaseQuantums)
 }
 
-// CountSubaccountOrders will count the number of open short-term orders for a given subaccount.
-//
 // Must be invoked with `CheckTx` context.
 func (m *MemClobPriceTimePriority) CountSubaccountShortTermOrders(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 ) (count uint32) {
 	lib.AssertCheckTxMode(ctx)
-	for _, openOrdersPerClob := range m.openOrders.orderbooksMap {
-		for _, openOrdersPerClobAndSide := range openOrdersPerClob.SubaccountOpenClobOrders[subaccountId] {
-			for orderId := range openOrdersPerClobAndSide {
-				if orderId.IsShortTermOrder() {
-					count++
-				}
-			}
-		}
+	lib.AssertCheckTxMode(ctx)
+
+	for _, orderbook := range m.openOrders.orderbooksMap {
+		count += getShortTermOrderCountInOrderbook(orderbook, subaccountId)
 	}
+
 	return count
 }
 
@@ -2522,4 +2517,29 @@ func (m *MemClobPriceTimePriority) getClobPairMetadataForOrderbook(
 	subticksPerTick = clobPair.GetClobPairSubticksPerTick()
 	minOrderBaseQuantums = clobPair.GetClobPairMinOrderBaseQuantums()
 	return
+}
+
+func getShortTermOrderCountInOrderbook(
+	orderbook *types.Orderbook,
+	subaccountId satypes.SubaccountId,
+) (count uint32) {
+	subaccountOrders, exists := orderbook.SubaccountOpenClobOrders[subaccountId]
+	if !exists {
+		return 0
+	}
+
+	for _, ordersBySide := range subaccountOrders {
+		count += getShortTermOrderCount(ordersBySide)
+	}
+
+	return count
+}
+
+func getShortTermOrderCount(orders map[types.OrderId]bool) (count uint32) {
+	for orderId := range orders {
+		if orderId.IsShortTermOrder() {
+			count++
+		}
+	}
+	return count
 }
