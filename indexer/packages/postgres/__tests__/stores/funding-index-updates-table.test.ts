@@ -242,4 +242,38 @@ describe('funding index update store', () => {
       expect(fundingIndexMap[defaultPerpetualMarket2.id]).toEqual(Big(0));
     },
   );
+
+  it('Successfully finds funding index maps for multiple effectiveBeforeOrAtHeights', async () => {
+    const fundingIndexUpdates2: FundingIndexUpdatesCreateObject = {
+      ...defaultFundingIndexUpdate,
+      fundingIndex: '124',
+      effectiveAtHeight: updatedHeight,
+      effectiveAt: '1982-05-25T00:00:00.000Z',
+      eventId: defaultTendermintEventId2,
+    };
+    const fundingIndexUpdates3: FundingIndexUpdatesCreateObject = {
+      ...defaultFundingIndexUpdate,
+      eventId: defaultTendermintEventId3,
+      perpetualId: defaultPerpetualMarket2.id,
+    };
+    await Promise.all([
+      FundingIndexUpdatesTable.create(defaultFundingIndexUpdate),
+      FundingIndexUpdatesTable.create(fundingIndexUpdates2),
+      FundingIndexUpdatesTable.create(fundingIndexUpdates3),
+    ]);
+
+    const fundingIndexMaps: {[blockHeight:string]: FundingIndexMap} = await FundingIndexUpdatesTable
+      .findFundingIndexMaps(
+        ['3', '6'],
+      );
+
+    expect(fundingIndexMaps['3'][defaultFundingIndexUpdate.perpetualId])
+      .toEqual(Big(defaultFundingIndexUpdate.fundingIndex));
+    expect(fundingIndexMaps['3'][fundingIndexUpdates3.perpetualId])
+      .toEqual(Big(fundingIndexUpdates3.fundingIndex));
+    expect(fundingIndexMaps['6'][defaultFundingIndexUpdate.perpetualId])
+      .toEqual(Big(fundingIndexUpdates2.fundingIndex));
+    expect(fundingIndexMaps['6'][fundingIndexUpdates3.perpetualId])
+      .toEqual(Big(fundingIndexUpdates3.fundingIndex));
+  });
 });
