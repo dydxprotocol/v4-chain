@@ -99,51 +99,19 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	msgCancelOrder *types.MsgCancelOrder,
 ) (offchainUpdates *types.OffchainUpdates, err error) {
 	lib.AssertCheckTxMode(ctx)
-
 	orderIdToCancel := msgCancelOrder.GetOrderId()
-
-	// Stateful orders are not expected here.
 	orderIdToCancel.MustBeShortTermOrder()
 
-	// Retrieve the existing short-term cancel, if it exists.
-	oldCancellationGoodTilBlock, cancelAlreadyExists := m.cancels.get(orderIdToCancel)
 	goodTilBlock := msgCancelOrder.GetGoodTilBlock()
+	validCancelExistence, cancelExistence := m.doesValidCancelOrderAlreadyExist(orderIdToCancel, goodTilBlock)
 
-	// If the existing short-term cancel has the same or greater `goodTilBlock`, then there is
-	// nothing for us to do. Return an error.
-	if cancelAlreadyExists && oldCancellationGoodTilBlock >= goodTilBlock {
+	if validCancelExistence {
 		return nil, types.ErrMemClobCancelAlreadyExists
 	}
 
-	// If there exists a resting order on the book with a `GoodTilBlock` not-greater-than that of
-	// the short-term cancel, remove the order and add the order cancellation to the operations queue if necessary.
-	// TODO(DEC-824): Perform correct cancellation validation of stateful orders.
-	if levelOrder, orderExists := m.openOrders.orderIdToLevelOrder[orderIdToCancel]; orderExists &&
-		goodTilBlock >= levelOrder.Value.Order.GetGoodTilBlock() {
-		m.mustRemoveOrder(ctx, orderIdToCancel)
+	m.processCancelOrder(ctx, orderIdToCancel, goodTilBlock, cancelExistence)
 
-		telemetry.IncrCounter(1, types.ModuleName, metrics.CancelShortTermOrder, metrics.RemovedFromOrderBook)
-	}
-
-	// Remove the existing cancel, if any.
-	if cancelAlreadyExists {
-		m.cancels.remove(orderIdToCancel)
-	}
-
-	// Add the new order cancelation.
-	m.cancels.addShortTermCancel(orderIdToCancel, goodTilBlock)
-
-	offchainUpdates = types.NewOffchainUpdates()
-	if m.generateOffchainUpdates {
-		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-			ctx,
-			orderIdToCancel,
-			indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
-			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-		); success {
-			offchainUpdates.AddRemoveMessage(orderIdToCancel, message)
-		}
-	}
+	offchainUpdates = m.getCancelOrderOffchainUpdates(ctx, orderIdToCancel)
 
 	return offchainUpdates, nil
 }
@@ -2491,4 +2459,58 @@ func (m *MemClobPriceTimePriority) resizeReduceOnlyMatchIfNecessary(
 	absNewMatchSize := new(big.Int).Abs(newMatchSize)
 	maxMatchSize := lib.BigMin(absPositionSize, absNewMatchSize)
 	return satypes.BaseQuantums(maxMatchSize.Uint64())
+}
+
+func (m *MemClobPriceTimePriority) doesValidCancelOrderAlreadyExist(
+	orderId types.OrderId,
+	goodTilBlock uint32,
+) (validAndExists bool, cancelExists bool) {
+	oldCancellationGoodTilBlock, cancelExists := m.cancels.get(orderId)
+	// valid if existing short-term cancel has the same or greater `goodTilBlock`
+	if cancelExists && oldCancellationGoodTilBlock >= goodTilBlock {
+		return true, true
+	}
+	return false, cancelExists
+}
+
+func (m *MemClobPriceTimePriority) processCancelOrder(
+	ctx sdk.Context,
+	orderId types.OrderId,
+	goodTilBlock uint32,
+	doesOutofDateCancelExist bool,
+) {
+	// If there exists a resting order on the book with a `GoodTilBlock` not-greater-than that of
+	// the short-term cancel, remove the order and add the order cancellation to the operations queue if necessary.
+	if levelOrder, orderExists := m.openOrders.orderIdToLevelOrder[orderId]; orderExists &&
+		goodTilBlock >= levelOrder.Value.Order.GetGoodTilBlock() {
+		m.mustRemoveOrder(ctx, orderId)
+
+		telemetry.IncrCounter(1, types.ModuleName, metrics.CancelShortTermOrder, metrics.RemovedFromOrderBook)
+	}
+
+	// Remove the out of date existing cancel, if any.
+	if doesOutofDateCancelExist {
+		m.cancels.remove(orderId)
+	}
+
+	// Add the new order cancelation.
+	m.cancels.addShortTermCancel(orderId, goodTilBlock)
+}
+
+func (m *MemClobPriceTimePriority) getCancelOrderOffchainUpdates(
+	ctx sdk.Context,
+	orderId types.OrderId,
+) *types.OffchainUpdates {
+	offchainUpdates := types.NewOffchainUpdates()
+	if m.generateOffchainUpdates {
+		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+			ctx,
+			orderId,
+			indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+		); success {
+			offchainUpdates.AddRemoveMessage(orderId, message)
+		}
+	}
+	return offchainUpdates
 }
