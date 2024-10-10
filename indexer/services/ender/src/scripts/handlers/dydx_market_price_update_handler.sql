@@ -48,7 +48,7 @@ BEGIN
     oracle_price_record."spotPrice" = spot_price;
     oracle_price_record."pnlPrice" = pnl_price;
 
-    INSERT INTO oracle_prices VALUES (oracle_price_record.*);
+    INSERT INTO oracle_prices VALUES (oracle_price_record.*)
     ON CONFLICT (id) DO UPDATE
     SET
         "effectiveAt" = EXCLUDED."effectiveAt",
