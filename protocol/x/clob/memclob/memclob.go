@@ -601,185 +601,6 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 	return existingOffchainUpdates
 }
 
-func (m *MemClobPriceTimePriority) replayOrderRemoval(
-	ctx sdk.Context,
-	operation types.InternalOperation,
-	placedPreexistingStatefulOrderIds map[types.OrderId]struct{},
-	placedOrderRemovalOrderIds map[types.OrderId]struct{},
-	existingOffchainUpdates *types.OffchainUpdates,
-) *types.OffchainUpdates {
-	orderId := operation.GetOrderRemoval().OrderId
-
-	if _, found := placedPreexistingStatefulOrderIds[orderId]; found {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.ReplayOperations, metrics.SkipOrderRemovalAfterPlacement},
-			1,
-			orderId.GetOrderIdLabels(),
-		)
-		return existingOffchainUpdates
-	}
-
-	if _, found := placedOrderRemovalOrderIds[orderId]; found {
-		log.ErrorLog(
-			ctx,
-			"ReplayOperations: OrderRemoval operation for order which was already removed",
-			metrics.OrderId, orderId,
-			metrics.BlockHeight, ctx.BlockHeight()+1,
-		)
-		return existingOffchainUpdates
-	}
-
-	statefulOrderPlacement, found := m.clobKeeper.GetLongTermOrderPlacement(ctx, orderId)
-	if !found {
-		return existingOffchainUpdates
-	}
-
-	_, orderStatus, placeOrderOffchainUpdates, err := m.PlaceOrder(ctx, statefulOrderPlacement.Order)
-	placedOrderRemovalOrderIds[orderId] = struct{}{}
-	return m.GenerateOffchainUpdatesForReplayPlaceOrder(ctx, err, operation, statefulOrderPlacement.Order, orderStatus, placeOrderOffchainUpdates, existingOffchainUpdates)
-}
-
-func (m *MemClobPriceTimePriority) replayPreexistingStatefulOrder(
-	ctx sdk.Context,
-	operation types.InternalOperation,
-	placedPreexistingStatefulOrderIds map[types.OrderId]struct{},
-	placedOrderRemovalOrderIds map[types.OrderId]struct{},
-	existingOffchainUpdates *types.OffchainUpdates,
-) *types.OffchainUpdates {
-	orderId := operation.GetPreexistingStatefulOrder()
-	statefulOrderPlacement, found := m.clobKeeper.GetLongTermOrderPlacement(ctx, *orderId)
-	if !found {
-		return existingOffchainUpdates
-	}
-
-	if _, found := placedPreexistingStatefulOrderIds[*orderId]; found {
-		log.ErrorLog(
-			ctx,
-			"ReplayOperations: PreexistingStatefulOrder operation for order which was already placed",
-			metrics.OrderId, *orderId,
-			metrics.BlockHeight, ctx.BlockHeight()+1,
-		)
-		return existingOffchainUpdates
-	}
-
-	if _, found := placedOrderRemovalOrderIds[*orderId]; found {
-		log.ErrorLog(
-			ctx,
-			"ReplayOperations: PreexistingStatefulOrder preceded by Order Removal",
-			metrics.OrderId, *orderId,
-			metrics.BlockHeight, ctx.BlockHeight()+1,
-		)
-		return existingOffchainUpdates
-	}
-
-	_, orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.AddPreexistingStatefulOrder(ctx, &statefulOrderPlacement.Order, m)
-	placedPreexistingStatefulOrderIds[*orderId] = struct{}{}
-	return m.GenerateOffchainUpdatesForReplayPlaceOrder(ctx, err, operation, statefulOrderPlacement.Order, orderStatus, placeOrderOffchainUpdates, existingOffchainUpdates)
-}
-
-func (m *MemClobPriceTimePriority) replayShortTermOrderPlacement(
-	ctx sdk.Context,
-	operation types.InternalOperation,
-	shortTermOrderTxBytes map[types.OrderHash][]byte,
-	existingOffchainUpdates *types.OffchainUpdates,
-) *types.OffchainUpdates {
-	order := operation.GetShortTermOrderPlacement().Order
-	txBytes, exists := shortTermOrderTxBytes[order.GetOrderHash()]
-	if !exists || len(txBytes) == 0 {
-		panic(fmt.Sprintf("ReplayOperations: Short-Term order TX bytes not found for order %s", order.GetOrderTextString()))
-	}
-	ctx = ctx.WithTxBytes(txBytes)
-	msg := types.NewMsgPlaceOrder(order)
-	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.ReplayPlaceOrder(ctx, msg)
-
-	log.DebugLog(
-		ctx,
-		"Received new order",
-		"orderHash",
-		cmtlog.NewLazySprintf("%X", order.GetOrderHash()),
-		"msg",
-		msg,
-		"status",
-		orderStatus,
-		"orderSizeOptimisticallyFilledFromMatchingQuantums",
-		orderSizeOptimisticallyFilledFromMatchingQuantums,
-		"err",
-		err,
-		"block",
-		ctx.BlockHeight(),
-	)
-
-	return m.GenerateOffchainUpdatesForReplayPlaceOrder(ctx, err, operation, order, orderStatus, placeOrderOffchainUpdates, existingOffchainUpdates)
-}
-
-func (m *MemClobPriceTimePriority) recoverFromReplayOperationsPanic(ctx sdk.Context) {
-	if r := recover(); r != nil {
-		stackTrace := string(debug.Stack())
-		log.ErrorLog(
-			ctx,
-			"panic in replay operations",
-			log.StackTrace,
-			stackTrace,
-			log.Error,
-			r,
-		)
-	}
-}
-
-// GenerateOffchainUpdatesForReplayPlaceOrder is a helper function intended to be used in ReplayOperations.
-// It takes the results of a PlaceOrder function call, emits the according logs, and appends offchain updates for
-// the replay operation to the existingOffchainUpdates object.
-func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
-	ctx sdk.Context,
-	err error,
-	operation types.InternalOperation,
-	order types.Order,
-	orderStatus types.OrderStatus,
-	placeOrderOffchainUpdates *types.OffchainUpdates,
-	existingOffchainUpdates *types.OffchainUpdates,
-) *types.OffchainUpdates {
-	lib.AssertCheckTxMode(ctx)
-
-	orderId := order.OrderId
-	if err != nil {
-		var loggerString string
-		switch operation.Operation.(type) {
-		case *types.InternalOperation_ShortTermOrderPlacement:
-			loggerString = "ReplayOperations: PlaceOrder() returned an error"
-		case *types.InternalOperation_PreexistingStatefulOrder:
-			loggerString = "ReplayOperations: PlaceOrder() returned an error for a pre-existing stateful order."
-		case *types.InternalOperation_OrderRemoval:
-			loggerString = "ReplayOperations: PlaceOrder() returned an error for a removed stateful order which was re-placed."
-		}
-
-		log.DebugLog(
-			ctx,
-			loggerString,
-			log.Error, err,
-			log.Operation, operation,
-			log.Order, order,
-		)
-
-		// If the order is dropped while adding it to the book, return an off-chain order remove
-		// message for the order.
-		if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
-			if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-				ctx,
-				orderId,
-				orderStatus,
-				err,
-				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
-			); success {
-				existingOffchainUpdates.AddRemoveMessage(orderId, message)
-			}
-		}
-	} else if m.generateOffchainUpdates {
-		existingOffchainUpdates.Append(placeOrderOffchainUpdates)
-	}
-	return existingOffchainUpdates
-}
-
 // RemoveAndClearOperationsQueue is called during `Commit`/`PrepareCheckState`
 // to clear and remove all orders that exist in the provided local validator's OTP (`operationsToPropose`).
 // It performs the following steps:
@@ -3038,4 +2859,182 @@ func (m *MemClobPriceTimePriority) setBestAskGauge(
 			metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
 		},
 	)
+}
+func (m *MemClobPriceTimePriority) replayOrderRemoval(
+	ctx sdk.Context,
+	operation types.InternalOperation,
+	placedPreexistingStatefulOrderIds map[types.OrderId]struct{},
+	placedOrderRemovalOrderIds map[types.OrderId]struct{},
+	existingOffchainUpdates *types.OffchainUpdates,
+) *types.OffchainUpdates {
+	orderId := operation.GetOrderRemoval().OrderId
+
+	if _, found := placedPreexistingStatefulOrderIds[orderId]; found {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.ReplayOperations, metrics.SkipOrderRemovalAfterPlacement},
+			1,
+			orderId.GetOrderIdLabels(),
+		)
+		return existingOffchainUpdates
+	}
+
+	if _, found := placedOrderRemovalOrderIds[orderId]; found {
+		log.ErrorLog(
+			ctx,
+			"ReplayOperations: OrderRemoval operation for order which was already removed",
+			metrics.OrderId, orderId,
+			metrics.BlockHeight, ctx.BlockHeight()+1,
+		)
+		return existingOffchainUpdates
+	}
+
+	statefulOrderPlacement, found := m.clobKeeper.GetLongTermOrderPlacement(ctx, orderId)
+	if !found {
+		return existingOffchainUpdates
+	}
+
+	_, orderStatus, placeOrderOffchainUpdates, err := m.PlaceOrder(ctx, statefulOrderPlacement.Order)
+	placedOrderRemovalOrderIds[orderId] = struct{}{}
+	return m.GenerateOffchainUpdatesForReplayPlaceOrder(ctx, err, operation, statefulOrderPlacement.Order, orderStatus, placeOrderOffchainUpdates, existingOffchainUpdates)
+}
+
+func (m *MemClobPriceTimePriority) replayPreexistingStatefulOrder(
+	ctx sdk.Context,
+	operation types.InternalOperation,
+	placedPreexistingStatefulOrderIds map[types.OrderId]struct{},
+	placedOrderRemovalOrderIds map[types.OrderId]struct{},
+	existingOffchainUpdates *types.OffchainUpdates,
+) *types.OffchainUpdates {
+	orderId := operation.GetPreexistingStatefulOrder()
+	statefulOrderPlacement, found := m.clobKeeper.GetLongTermOrderPlacement(ctx, *orderId)
+	if !found {
+		return existingOffchainUpdates
+	}
+
+	if _, found := placedPreexistingStatefulOrderIds[*orderId]; found {
+		log.ErrorLog(
+			ctx,
+			"ReplayOperations: PreexistingStatefulOrder operation for order which was already placed",
+			metrics.OrderId, *orderId,
+			metrics.BlockHeight, ctx.BlockHeight()+1,
+		)
+		return existingOffchainUpdates
+	}
+
+	if _, found := placedOrderRemovalOrderIds[*orderId]; found {
+		log.ErrorLog(
+			ctx,
+			"ReplayOperations: PreexistingStatefulOrder preceded by Order Removal",
+			metrics.OrderId, *orderId,
+			metrics.BlockHeight, ctx.BlockHeight()+1,
+		)
+		return existingOffchainUpdates
+	}
+
+	_, orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.AddPreexistingStatefulOrder(ctx, &statefulOrderPlacement.Order, m)
+	placedPreexistingStatefulOrderIds[*orderId] = struct{}{}
+	return m.GenerateOffchainUpdatesForReplayPlaceOrder(ctx, err, operation, statefulOrderPlacement.Order, orderStatus, placeOrderOffchainUpdates, existingOffchainUpdates)
+}
+
+func (m *MemClobPriceTimePriority) replayShortTermOrderPlacement(
+	ctx sdk.Context,
+	operation types.InternalOperation,
+	shortTermOrderTxBytes map[types.OrderHash][]byte,
+	existingOffchainUpdates *types.OffchainUpdates,
+) *types.OffchainUpdates {
+	order := operation.GetShortTermOrderPlacement().Order
+	txBytes, exists := shortTermOrderTxBytes[order.GetOrderHash()]
+	if !exists || len(txBytes) == 0 {
+		panic(fmt.Sprintf("ReplayOperations: Short-Term order TX bytes not found for order %s", order.GetOrderTextString()))
+	}
+	ctx = ctx.WithTxBytes(txBytes)
+	msg := types.NewMsgPlaceOrder(order)
+	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.ReplayPlaceOrder(ctx, msg)
+
+	log.DebugLog(
+		ctx,
+		"Received new order",
+		"orderHash",
+		cmtlog.NewLazySprintf("%X", order.GetOrderHash()),
+		"msg",
+		msg,
+		"status",
+		orderStatus,
+		"orderSizeOptimisticallyFilledFromMatchingQuantums",
+		orderSizeOptimisticallyFilledFromMatchingQuantums,
+		"err",
+		err,
+		"block",
+		ctx.BlockHeight(),
+	)
+
+	return m.GenerateOffchainUpdatesForReplayPlaceOrder(ctx, err, operation, order, orderStatus, placeOrderOffchainUpdates, existingOffchainUpdates)
+}
+
+func (m *MemClobPriceTimePriority) recoverFromReplayOperationsPanic(ctx sdk.Context) {
+	if r := recover(); r != nil {
+		stackTrace := string(debug.Stack())
+		log.ErrorLog(
+			ctx,
+			"panic in replay operations",
+			log.StackTrace,
+			stackTrace,
+			log.Error,
+			r,
+		)
+	}
+}
+
+// GenerateOffchainUpdatesForReplayPlaceOrder is a helper function intended to be used in ReplayOperations.
+// It takes the results of a PlaceOrder function call, emits the according logs, and appends offchain updates for
+// the replay operation to the existingOffchainUpdates object.
+func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
+	ctx sdk.Context,
+	err error,
+	operation types.InternalOperation,
+	order types.Order,
+	orderStatus types.OrderStatus,
+	placeOrderOffchainUpdates *types.OffchainUpdates,
+	existingOffchainUpdates *types.OffchainUpdates,
+) *types.OffchainUpdates {
+	lib.AssertCheckTxMode(ctx)
+
+	orderId := order.OrderId
+	if err != nil {
+		var loggerString string
+		switch operation.Operation.(type) {
+		case *types.InternalOperation_ShortTermOrderPlacement:
+			loggerString = "ReplayOperations: PlaceOrder() returned an error"
+		case *types.InternalOperation_PreexistingStatefulOrder:
+			loggerString = "ReplayOperations: PlaceOrder() returned an error for a pre-existing stateful order."
+		case *types.InternalOperation_OrderRemoval:
+			loggerString = "ReplayOperations: PlaceOrder() returned an error for a removed stateful order which was re-placed."
+		}
+
+		log.DebugLog(
+			ctx,
+			loggerString,
+			log.Error, err,
+			log.Operation, operation,
+			log.Order, order,
+		)
+
+		// If the order is dropped while adding it to the book, return an off-chain order remove
+		// message for the order.
+		if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
+			if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
+				ctx,
+				orderId,
+				orderStatus,
+				err,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
+			); success {
+				existingOffchainUpdates.AddRemoveMessage(orderId, message)
+			}
+		}
+	} else if m.generateOffchainUpdates {
+		existingOffchainUpdates.Append(placeOrderOffchainUpdates)
+	}
+	return existingOffchainUpdates
 }
