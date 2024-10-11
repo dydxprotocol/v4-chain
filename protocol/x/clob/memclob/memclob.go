@@ -144,7 +144,6 @@ func (m *MemClobPriceTimePriority) CountSubaccountShortTermOrders(
 	subaccountId satypes.SubaccountId,
 ) (count uint32) {
 	lib.AssertCheckTxMode(ctx)
-	lib.AssertCheckTxMode(ctx)
 
 	for _, orderbook := range m.openOrders.orderbooksMap {
 		count += getShortTermOrderCountInOrderbook(orderbook, subaccountId)
@@ -1426,27 +1425,35 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 		metrics.Latency,
 	)
 
-	// Verify that the order exists.
+	levelOrder := m.verifyOrderExists(orderId)
+	m.openOrders.mustRemoveOrder(levelOrder)
+
+	m.removeShortTermOrderFromHashToBytesMappingIfNecessary(levelOrder)
+
+	if m.generateOrderbookUpdates {
+		m.sendOrderbookUpdate(ctx, levelOrder.Value.Order)
+	}
+}
+
+func (m *MemClobPriceTimePriority) verifyOrderExists(orderId types.OrderId) *types.LevelOrder {
 	levelOrder, exists := m.openOrders.orderIdToLevelOrder[orderId]
 	if !exists {
 		panic(fmt.Sprintf("mustRemoveOrder: order does not exist %v", orderId))
 	}
+	return levelOrder
+}
 
-	m.openOrders.mustRemoveOrder(levelOrder)
-
-	// If this is a Short-Term order and it's not in the operations queue, then remove it from
-	// `ShortTermOrderTxBytes`.
+func (m *MemClobPriceTimePriority) removeShortTermOrderFromHashToBytesMappingIfNecessary(levelOrder *types.LevelOrder) {
 	order := levelOrder.Value.Order
-	if order.IsShortTermOrder() &&
-		!m.operationsToPropose.IsOrderPlacementInOperationsQueue(order) {
-		m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
+	if !m.isOrderShortTermAndNoOrderPlacementInOpQueue(order) {
+		return
 	}
+	m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
+}
 
-	if m.generateOrderbookUpdates {
-		// Send an orderbook update to grpc streams.
-		orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
-	}
+func (m *MemClobPriceTimePriority) sendOrderbookUpdate(ctx sdk.Context, order types.Order) {
+	orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
+	m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 }
 
 // mustUpdateOrderbookStateWithMatchedMakerOrder updates the orderbook with a matched maker order.
