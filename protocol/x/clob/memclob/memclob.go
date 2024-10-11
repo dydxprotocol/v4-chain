@@ -1230,31 +1230,13 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 		panic("Total filled size of maker order greater than the order size")
 	}
 
-	// Send an orderbook update for the order's new total filled amount.
-	if m.generateOrderbookUpdates {
-		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
-	}
+	m.maybeSendOrderbookUpdate(ctx, makerOrder)
 
-	// If the order is fully filled, remove it from the orderbook.
 	// Note we shouldn't remove Short-Term order hashes from `ShortTermOrderTxBytes` here since
 	// the order was matched.
-	if newTotalFilledAmount == makerOrderBaseQuantums {
-		makerOrderId := makerOrder.OrderId
-		m.mustRemoveOrder(ctx, makerOrderId)
-	}
+	m.removeOrderIfFullyFilled(ctx, makerOrder, newTotalFilledAmount, makerOrderBaseQuantums)
 
-	if m.generateOffchainUpdates {
-		// Send an off-chain update message to the indexer to update the total filled size of the maker
-		// order.
-		if message, success := off_chain_updates.CreateOrderUpdateMessage(
-			ctx,
-			makerOrder.OrderId,
-			newTotalFilledAmount,
-		); success {
-			offchainUpdates.AddUpdateMessage(makerOrder.OrderId, message)
-		}
-	}
+	m.maybeAddOffchainUpdateMessage(ctx, makerOrder, newTotalFilledAmount, offchainUpdates)
 
 	return offchainUpdates
 }
@@ -3041,5 +3023,43 @@ func (m *MemClobPriceTimePriority) handlePreexistingStatefulOrderRemoval(
 
 	if m.openOrders.hasOrder(*otpOrderId) {
 		m.mustRemoveOrder(ctx, *otpOrderId)
+	}
+}
+
+func (m *MemClobPriceTimePriority) maybeAddOffchainUpdateMessage(
+	ctx sdk.Context,
+	makerOrder types.Order,
+	newTotalFilledAmount satypes.BaseQuantums,
+	offchainUpdates *types.OffchainUpdates,
+) {
+	if m.generateOffchainUpdates {
+		if message, success := off_chain_updates.CreateOrderUpdateMessage(
+			ctx,
+			makerOrder.OrderId,
+			newTotalFilledAmount,
+		); success {
+			offchainUpdates.AddUpdateMessage(makerOrder.OrderId, message)
+		}
+	}
+}
+
+func (m *MemClobPriceTimePriority) maybeSendOrderbookUpdate(
+	ctx sdk.Context,
+	makerOrder types.Order,
+) {
+	if m.generateOrderbookUpdates {
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
+	}
+}
+
+func (m *MemClobPriceTimePriority) removeOrderIfFullyFilled(
+	ctx sdk.Context,
+	makerOrder types.Order,
+	newTotalFilledAmount satypes.BaseQuantums,
+	makerOrderBaseQuantums satypes.BaseQuantums,
+) {
+	if newTotalFilledAmount == makerOrderBaseQuantums {
+		m.mustRemoveOrder(ctx, makerOrder.OrderId)
 	}
 }
