@@ -628,31 +628,9 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 	for _, operation := range localValidatorOperationsQueue {
 		switch operation.Operation.(type) {
 		case *types.InternalOperation_ShortTermOrderPlacement:
-			otpOrderId := operation.GetShortTermOrderPlacement().Order.OrderId
-			otpOrderHash := operation.GetShortTermOrderPlacement().Order.GetOrderHash()
-
-			// If the order exists in the book, remove it.
-			// Else, since the Short-Term order is no longer on the book or operations queue we
-			// should remove the order hash from `ShortTermOrderTxBytes`.
-			existingOrder, found := m.openOrders.getOrder(otpOrderId)
-			if found && existingOrder.GetOrderHash() == otpOrderHash {
-				m.mustRemoveOrder(ctx, otpOrderId)
-			} else {
-				order := operation.GetShortTermOrderPlacement().Order
-				m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
-			}
+			m.handleShortTermOrderPlacementRemoval(ctx, operation)
 		case *types.InternalOperation_PreexistingStatefulOrder:
-			otpOrderId := operation.GetPreexistingStatefulOrder()
-
-			// TODO(DEC-1974): The `PreexistingStatefulOrder` operation
-			// does not contain the order hash, so we cannot check if the
-			// order is the same as the one in the book (rather than a replacement).
-			// For consistency we should fix this, but currently it is not an issue as
-			// we would expect the replacement to always be included in the
-			// OTP, and therefore be removed in this loop as well.
-			if m.openOrders.hasOrder(*otpOrderId) {
-				m.mustRemoveOrder(ctx, *otpOrderId)
-			}
+			m.handlePreexistingStatefulOrderRemoval(ctx, operation)
 		}
 	}
 }
@@ -3037,4 +3015,31 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 		existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 	}
 	return existingOffchainUpdates
+}
+
+func (m *MemClobPriceTimePriority) handleShortTermOrderPlacementRemoval(
+	ctx sdk.Context,
+	operation types.InternalOperation,
+) {
+	otpOrderId := operation.GetShortTermOrderPlacement().Order.OrderId
+	otpOrderHash := operation.GetShortTermOrderPlacement().Order.GetOrderHash()
+
+	existingOrder, found := m.openOrders.getOrder(otpOrderId)
+	if found && existingOrder.GetOrderHash() == otpOrderHash {
+		m.mustRemoveOrder(ctx, otpOrderId)
+	} else {
+		order := operation.GetShortTermOrderPlacement().Order
+		m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
+	}
+}
+
+func (m *MemClobPriceTimePriority) handlePreexistingStatefulOrderRemoval(
+	ctx sdk.Context,
+	operation types.InternalOperation,
+) {
+	otpOrderId := operation.GetPreexistingStatefulOrder()
+
+	if m.openOrders.hasOrder(*otpOrderId) {
+		m.mustRemoveOrder(ctx, *otpOrderId)
+	}
 }
