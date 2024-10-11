@@ -250,7 +250,7 @@ test-slow:
 	$(MAKE) test-exchange-slow
 
 test-unit:
-	@VERSION=$(VERSION) go test -count=1 -mod=readonly -timeout 20m -tags='test_ledger_mock $(build_tags)' ./x/clob/...
+	@VERSION=$(VERSION) go test -count=1 -mod=readonly -timeout 20m -tags='test_ledger_mock $(build_tags)' ./...
 
 test-unit-specific:
 	@echo "Running specific test: $(TESTNAME) in file: $(FILE)"
