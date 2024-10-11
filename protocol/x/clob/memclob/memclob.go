@@ -1411,93 +1411,6 @@ func (m *MemClobPriceTimePriority) SetMemclobGauges(
 	m.setOperationsQueueGauges()
 }
 
-func (m *MemClobPriceTimePriority) setOperationsQueueGauges() {
-	m.setOperationsQueueLengthGauge()
-	m.setNumMatchedOrdersInQueueGauge()
-	m.setNumShortTermOrderTxBytesGauge()
-}
-
-func (m *MemClobPriceTimePriority) setOperationsQueueLengthGauge() {
-	telemetry.SetGauge(
-		float32(len(m.operationsToPropose.OperationsQueue)),
-		types.ModuleName,
-		metrics.OperationsQueueLength,
-	)
-}
-
-func (m *MemClobPriceTimePriority) setNumMatchedOrdersInQueueGauge() {
-	telemetry.SetGauge(
-		float32(len(m.operationsToPropose.OrderHashesInOperationsQueue)),
-		types.ModuleName,
-		metrics.NumMatchedOrdersInOperationsQueue,
-	)
-}
-
-func (m *MemClobPriceTimePriority) setNumShortTermOrderTxBytesGauge() {
-	telemetry.SetGauge(
-		float32(len(m.operationsToPropose.ShortTermOrderHashToTxBytes)),
-		types.ModuleName,
-		metrics.NumShortTermOrderTxBytes,
-	)
-}
-
-func (m *MemClobPriceTimePriority) setOrderbookGauges(
-	clobPairId types.ClobPairId,
-	orderbook *types.Orderbook,
-) {
-	m.setTotalOpenOrdersGauge(clobPairId, orderbook)
-	m.setBestBidGauge(clobPairId, orderbook)
-	m.setBestAskGauge(clobPairId, orderbook)
-}
-
-func (m *MemClobPriceTimePriority) setTotalOpenOrdersGauge(
-	clobPairId types.ClobPairId,
-	orderbook *types.Orderbook,
-) {
-	telemetry.SetGaugeWithLabels(
-		[]string{
-			types.ModuleName,
-			metrics.TotalOrdersInClob,
-		},
-		float32(orderbook.TotalOpenOrders),
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
-		},
-	)
-}
-
-func (m *MemClobPriceTimePriority) setBestBidGauge(
-	clobPairId types.ClobPairId,
-	orderbook *types.Orderbook,
-) {
-	telemetry.SetGaugeWithLabels(
-		[]string{
-			types.ModuleName,
-			metrics.BestBidClobPair,
-		},
-		float32(orderbook.BestBid),
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
-		},
-	)
-}
-
-func (m *MemClobPriceTimePriority) setBestAskGauge(
-	clobPairId types.ClobPairId,
-	orderbook *types.Orderbook,
-) {
-	telemetry.SetGaugeWithLabels(
-		[]string{
-			types.ModuleName,
-			metrics.BestAskClobPair,
-		},
-		float32(orderbook.BestAsk),
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
-		},
-	)
-}
-
 // mustRemoveOrder completely removes an order from all data structures for tracking
 // open orders in the memclob. If the order does not exist, this method will panic.
 // NOTE: `mustRemoveOrder` does _not_ remove cancels.
@@ -3071,4 +2984,91 @@ func (m *MemClobPriceTimePriority) initializeTakerOrderVariables(
 	}
 
 	return clobPairId, orderbook, takerIsBuy, takerSubaccountId, takerIsLiquidation, takerRemainingSize
+}
+
+func (m *MemClobPriceTimePriority) setOperationsQueueGauges() {
+	m.setOperationsQueueLengthGauge()
+	m.setNumMatchedOrdersInQueueGauge()
+	m.setNumShortTermOrderTxBytesGauge()
+}
+
+func (m *MemClobPriceTimePriority) setOperationsQueueLengthGauge() {
+	telemetry.SetGauge(
+		float32(len(m.operationsToPropose.OperationsQueue)),
+		types.ModuleName,
+		metrics.OperationsQueueLength,
+	)
+}
+
+func (m *MemClobPriceTimePriority) setNumMatchedOrdersInQueueGauge() {
+	telemetry.SetGauge(
+		float32(len(m.operationsToPropose.OrderHashesInOperationsQueue)),
+		types.ModuleName,
+		metrics.NumMatchedOrdersInOperationsQueue,
+	)
+}
+
+func (m *MemClobPriceTimePriority) setNumShortTermOrderTxBytesGauge() {
+	telemetry.SetGauge(
+		float32(len(m.operationsToPropose.ShortTermOrderHashToTxBytes)),
+		types.ModuleName,
+		metrics.NumShortTermOrderTxBytes,
+	)
+}
+
+func (m *MemClobPriceTimePriority) setOrderbookGauges(
+	clobPairId types.ClobPairId,
+	orderbook *types.Orderbook,
+) {
+	m.setTotalOpenOrdersGauge(clobPairId, orderbook)
+	m.setBestBidGauge(clobPairId, orderbook)
+	m.setBestAskGauge(clobPairId, orderbook)
+}
+
+func (m *MemClobPriceTimePriority) setTotalOpenOrdersGauge(
+	clobPairId types.ClobPairId,
+	orderbook *types.Orderbook,
+) {
+	telemetry.SetGaugeWithLabels(
+		[]string{
+			types.ModuleName,
+			metrics.TotalOrdersInClob,
+		},
+		float32(orderbook.TotalOpenOrders),
+		[]gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
+		},
+	)
+}
+
+func (m *MemClobPriceTimePriority) setBestBidGauge(
+	clobPairId types.ClobPairId,
+	orderbook *types.Orderbook,
+) {
+	telemetry.SetGaugeWithLabels(
+		[]string{
+			types.ModuleName,
+			metrics.BestBidClobPair,
+		},
+		float32(orderbook.BestBid),
+		[]gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
+		},
+	)
+}
+
+func (m *MemClobPriceTimePriority) setBestAskGauge(
+	clobPairId types.ClobPairId,
+	orderbook *types.Orderbook,
+) {
+	telemetry.SetGaugeWithLabels(
+		[]string{
+			types.ModuleName,
+			metrics.BestAskClobPair,
+		},
+		float32(orderbook.BestAsk),
+		[]gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId)),
+		},
+	)
 }
