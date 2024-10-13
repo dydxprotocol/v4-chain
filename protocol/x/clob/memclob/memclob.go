@@ -799,70 +799,42 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		metrics.ValidateOrder,
 		metrics.Latency,
 	)
-	orderId := order.OrderId
 
-	if orderId.IsShortTermOrder() {
-		// If the cancelation has an equal-to-or-greater `GoodTilBlock` than the new order, return an error.
-		// If the cancelation has a lesser `GoodTilBlock` than the new order, we do not remove the cancelation.
-		if cancelTilBlock, cancelExists := m.cancels.get(orderId); cancelExists && cancelTilBlock >= order.GetGoodTilBlock() {
-			return errorsmod.Wrapf(
-				types.ErrOrderIsCanceled,
-				"Order: %+v, Cancellation GoodTilBlock: %d",
-				order,
-				cancelTilBlock,
-			)
-		}
+	if err := m.validateOrderHasNotBeenCanceled(order); err != nil {
+		return err
 	}
 
-	existingRestingOrder, restingOrderExists := m.openOrders.getOrder(orderId)
-	existingMatchedOrder, matchedOrderExists := m.operationsToPropose.MatchedOrderIdToOrder[orderId]
-
-	// If an order with the same `OrderId` already exists on the orderbook (or was already matched),
-	// then we must validate that the new order's `GoodTilBlock` is greater-in-value than the old order.
-	// If greater, then it can be placed (replacing the old order if it was resting on the book).
-	// If equal-or-lesser, then it is dropped.
-	if restingOrderExists && existingRestingOrder.MustCmpReplacementOrder(&order) >= 0 {
-		return types.ErrInvalidReplacement
+	if err := m.validateReplacementOrder(order); err != nil {
+		return err
 	}
 
-	if matchedOrderExists && existingMatchedOrder.MustCmpReplacementOrder(&order) >= 0 {
-		return types.ErrInvalidReplacement
+	if err := m.validateReduceOnlyOrder(ctx, order); err != nil {
+		return err
 	}
-
-	// If the order is a reduce-only order, we should ensure that the sign of the order size is the opposite of
-	// the current position size. Note that we do not validate the size/quantity of the reduce only order fill,
-	// as that will be validated if the order is matched.
-	// The subaccount's current position size is defined as the current state size + any partial fills
-	// that might have occurred as a result of this reduce only order replacing another partially filled order.
-	// Partial fills should be already recorded in state since order matching is optimistic and writes to state.
-	if order.IsReduceOnly() {
-		existingPositionSize := m.clobKeeper.GetStatePosition(ctx, orderId.SubaccountId, order.GetClobPairId())
-		orderSize := order.GetBigQuantums()
-
-		// If the reduce-only order is not on the opposite side of the existing position size,
-		// cancel the order by returning an error.
-		if orderSize.Sign()*existingPositionSize.Sign() != -1 {
-			return types.ErrReduceOnlyWouldIncreasePositionSize
-		}
-	}
-
 	// Check if the order being replaced has at least `MinOrderBaseQuantums` of size remaining, otherwise the order
 	// is considered fully filled and cannot be placed/replaced.
-	orderbook := m.openOrders.mustGetOrderbook(order.GetClobPairId())
 	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
-	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
-		return errorsmod.Wrapf(
-			types.ErrOrderFullyFilled,
-			"Order remaining amount is less than `MinOrderBaseQuantums`. Remaining amount: %d. Order: %+v",
-			remainingAmount,
-			order.GetOrderTextString(),
-		)
+	if err := m.validateOrderSize(order, remainingAmount, hasRemainingAmount); err != nil {
+		return err
 	}
-
 	// Immediate-or-cancel and fill-or-kill orders may only be filled once. The remaining size becomes unfillable.
 	// This prevents the case where an IOC order is partially filled multiple times over the course of multiple blocks.
-	if order.RequiresImmediateExecution() && remainingAmount < order.GetBaseQuantums() {
-		// Prevent IOC/FOK orders from replacing partially filled orders.
+	if err := m.validateImmediateExecutionOrder(order, remainingAmount); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *MemClobPriceTimePriority) validateImmediateExecutionOrder(
+	order types.Order,
+	remainingAmount satypes.BaseQuantums,
+) error {
+	violatesImmediateExecution := order.RequiresImmediateExecution() && remainingAmount < order.GetBaseQuantums()
+
+	if violatesImmediateExecution {
+		_, restingOrderExists := m.openOrders.getOrder(order.OrderId)
+
 		if restingOrderExists {
 			return errorsmod.Wrapf(
 				types.ErrInvalidReplacement,
@@ -876,6 +848,97 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 			types.ErrImmediateExecutionOrderAlreadyFilled,
 			"Order: %s",
 			order.GetOrderTextString(),
+		)
+	}
+	return nil
+}
+
+func (m *MemClobPriceTimePriority) validateOrderSize(
+	order types.Order,
+	remainingAmount satypes.BaseQuantums,
+	hasRemainingAmount bool,
+) error {
+	orderbook := m.openOrders.mustGetOrderbook(order.GetClobPairId())
+	hasInSufficientRemainingSize := !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums
+
+	if hasInSufficientRemainingSize {
+		return errorsmod.Wrapf(
+			types.ErrOrderFullyFilled,
+			"Order remaining amount is less than `MinOrderBaseQuantums`. Remaining amount: %d. Order: %+v",
+			remainingAmount,
+			order.GetOrderTextString(),
+		)
+	}
+	return nil
+}
+
+// If the order is a reduce-only order, we should ensure that the sign of the order size is the opposite of
+// the current position size. Note that we do not validate the size/quantity of the reduce only order fill,
+// as that will be validated if the order is matched.
+// The subaccount's current position size is defined as the current state size + any partial fills
+// that might have occurred as a result of this reduce only order replacing another partially filled order.
+// Partial fills should be already recorded in state since order matching is optimistic and writes to state.
+func (m *MemClobPriceTimePriority) validateReduceOnlyOrder(
+	ctx sdk.Context,
+	order types.Order,
+) error {
+	orderId := order.OrderId
+
+	if !order.IsReduceOnly() {
+		return nil
+	}
+
+	existingPositionSize := m.clobKeeper.GetStatePosition(ctx, orderId.SubaccountId, order.GetClobPairId())
+	orderSize := order.GetBigQuantums()
+	isReduceOnlyOrderOnOppositeSideOfPosition := orderSize.Sign()*existingPositionSize.Sign() != -1
+
+	if isReduceOnlyOrderOnOppositeSideOfPosition {
+		return types.ErrReduceOnlyWouldIncreasePositionSize
+	}
+
+	return nil
+}
+
+func (m *MemClobPriceTimePriority) validateReplacementOrder(
+	order types.Order,
+) error {
+	orderId := order.OrderId
+
+	existingRestingOrder, restingOrderExists := m.openOrders.getOrder(orderId)
+	existingMatchedOrder, matchedOrderExists := m.operationsToPropose.MatchedOrderIdToOrder[orderId]
+
+	validRestingOrderExists := restingOrderExists && existingRestingOrder.MustCmpReplacementOrder(&order) >= 0
+	validMatchedOrderExists := matchedOrderExists && existingMatchedOrder.MustCmpReplacementOrder(&order) >= 0
+
+	if validRestingOrderExists {
+		return types.ErrInvalidReplacement
+	}
+
+	if validMatchedOrderExists {
+		return types.ErrInvalidReplacement
+	}
+
+	return nil
+}
+
+func (m *MemClobPriceTimePriority) validateOrderHasNotBeenCanceled(
+	order types.Order,
+) error {
+	orderId := order.OrderId
+
+	if !orderId.IsShortTermOrder() {
+		return nil
+	}
+
+	cancelTilBlock, cancelExists := m.cancels.get(orderId)
+	isValidCancel := cancelExists && cancelTilBlock >= order.GetGoodTilBlock()
+
+	if isValidCancel {
+		return errorsmod.Wrapf(
+			types.ErrOrderIsCanceled,
+			"Order: %+v, Cancellation GoodTilBlock: %d",
+			order,
+			cancelTilBlock,
 		)
 	}
 
