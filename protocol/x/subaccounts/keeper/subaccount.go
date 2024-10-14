@@ -825,19 +825,3 @@ func (k Keeper) GetAllRelevantPerpetuals(
 func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingManager {
 	return k.streamingManager
 }
-
-// SendFinalizedSubaccountUpdates sends the subaccount updates to the gRPC streaming manager.
-func (k Keeper) SendFinalizedSubaccountUpdates(
-	ctx sdk.Context,
-	subaccountUpdates []types.StreamSubaccountUpdate,
-) {
-	lib.AssertDeliverTxMode(ctx)
-	if len(subaccountUpdates) == 0 {
-		return
-	}
-	k.GetFullNodeStreamingManager().SendFinalizedSubaccountUpdates(
-		subaccountUpdates,
-		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-		ctx.ExecMode(),
-	)
-}

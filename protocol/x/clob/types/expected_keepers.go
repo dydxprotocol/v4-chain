@@ -85,10 +85,6 @@ type SubaccountsKeeper interface {
 		quantums *big.Int,
 		perpetualId uint32,
 	) error
-	SendFinalizedSubaccountUpdates(
-		ctx sdk.Context,
-		subaccountUpdates []satypes.StreamSubaccountUpdate,
-	)
 }
 
 type AssetsKeeper interface {

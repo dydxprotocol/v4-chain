@@ -42,11 +42,6 @@ type FullNodeStreamingManager interface {
 		takerOrder clobtypes.StreamTakerOrder,
 		ctx sdk.Context,
 	)
-	SendFinalizedSubaccountUpdates(
-		subaccountUpdates []satypes.StreamSubaccountUpdate,
-		blockHeight uint32,
-		execMode sdk.ExecMode,
-	)
 	SendSubaccountUpdate(
 		ctx sdk.Context,
 		subaccountUpdate satypes.StreamSubaccountUpdate,

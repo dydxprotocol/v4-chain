@@ -48,13 +48,6 @@ func (sm *NoopGrpcStreamingManager) SendTakerOrderStatus(
 ) {
 }
 
-func (sm *NoopGrpcStreamingManager) SendFinalizedSubaccountUpdates(
-	subaccountUpdates []satypes.StreamSubaccountUpdate,
-	blockHeight uint32,
-	execMode sdk.ExecMode,
-) {
-}
-
 func (sm *NoopGrpcStreamingManager) TracksSubaccountId(id satypes.SubaccountId) bool {
 	return false
 }
