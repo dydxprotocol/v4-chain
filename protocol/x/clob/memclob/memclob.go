@@ -870,29 +870,6 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookSubaccountUpdatesCheck(
 	return m.checkSubaccountUpdates(ctx, order.GetClobPairId(), subaccountId, subaccountOpenOrders)
 }
 
-func (m *MemClobPriceTimePriority) checkSubaccountUpdates(
-	ctx sdk.Context,
-	clobPairId types.ClobPairId,
-	subaccountId satypes.SubaccountId,
-	subaccountOpenOrders map[satypes.SubaccountId][]types.PendingOpenOrder,
-) types.OrderStatus {
-	_, successPerSubaccountUpdate := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
-		ctx,
-		clobPairId,
-		subaccountOpenOrders,
-	)
-	return updateResultToOrderStatus(successPerSubaccountUpdate[subaccountId])
-}
-
-func (m *MemClobPriceTimePriority) constructSubaccountOpenOrders(
-	subaccountId satypes.SubaccountId,
-	pendingOpenOrder types.PendingOpenOrder,
-) map[satypes.SubaccountId][]types.PendingOpenOrder {
-	subaccountOpenOrders := make(map[satypes.SubaccountId][]types.PendingOpenOrder)
-	subaccountOpenOrders[subaccountId] = []types.PendingOpenOrder{pendingOpenOrder}
-	return subaccountOpenOrders
-}
-
 // mustAddOrderToOrderbook will add the order to the resting orderbook.
 // This function will assume that all order validation has already been done.
 // If `forceToFrontOfLevel` is true, places the order at the head of the level,
@@ -3139,4 +3116,27 @@ func (m *MemClobPriceTimePriority) validateOrderHasNotBeenCanceled(
 	}
 
 	return nil
+}
+
+func (m *MemClobPriceTimePriority) checkSubaccountUpdates(
+	ctx sdk.Context,
+	clobPairId types.ClobPairId,
+	subaccountId satypes.SubaccountId,
+	subaccountOpenOrders map[satypes.SubaccountId][]types.PendingOpenOrder,
+) types.OrderStatus {
+	_, successPerSubaccountUpdate := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
+		ctx,
+		clobPairId,
+		subaccountOpenOrders,
+	)
+	return updateResultToOrderStatus(successPerSubaccountUpdate[subaccountId])
+}
+
+func (m *MemClobPriceTimePriority) constructSubaccountOpenOrders(
+	subaccountId satypes.SubaccountId,
+	pendingOpenOrder types.PendingOpenOrder,
+) map[satypes.SubaccountId][]types.PendingOpenOrder {
+	subaccountOpenOrders := make(map[satypes.SubaccountId][]types.PendingOpenOrder)
+	subaccountOpenOrders[subaccountId] = []types.PendingOpenOrder{pendingOpenOrder}
+	return subaccountOpenOrders
 }
