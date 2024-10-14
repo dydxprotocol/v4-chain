@@ -865,18 +865,32 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookSubaccountUpdatesCheck(
 	}
 
 	// Temporarily construct the subaccountOpenOrders with a single PendingOpenOrder.
-	subaccountOpenOrders := make(map[satypes.SubaccountId][]types.PendingOpenOrder)
-	subaccountOpenOrders[subaccountId] = []types.PendingOpenOrder{pendingOpenOrder}
+	subaccountOpenOrders := m.constructSubaccountOpenOrders(subaccountId, pendingOpenOrder)
 
-	// TODO(DEC-1896): AddOrderToOrderbookSubaccountUpdatesCheck should accept a single PendingOpenOrder as a
-	// parameter rather than the subaccountOpenOrders map.
+	return m.checkSubaccountUpdates(ctx, order.GetClobPairId(), subaccountId, subaccountOpenOrders)
+}
+
+func (m *MemClobPriceTimePriority) checkSubaccountUpdates(
+	ctx sdk.Context,
+	clobPairId types.ClobPairId,
+	subaccountId satypes.SubaccountId,
+	subaccountOpenOrders map[satypes.SubaccountId][]types.PendingOpenOrder,
+) types.OrderStatus {
 	_, successPerSubaccountUpdate := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx,
-		order.GetClobPairId(),
+		clobPairId,
 		subaccountOpenOrders,
 	)
-
 	return updateResultToOrderStatus(successPerSubaccountUpdate[subaccountId])
+}
+
+func (m *MemClobPriceTimePriority) constructSubaccountOpenOrders(
+	subaccountId satypes.SubaccountId,
+	pendingOpenOrder types.PendingOpenOrder,
+) map[satypes.SubaccountId][]types.PendingOpenOrder {
+	subaccountOpenOrders := make(map[satypes.SubaccountId][]types.PendingOpenOrder)
+	subaccountOpenOrders[subaccountId] = []types.PendingOpenOrder{pendingOpenOrder}
+	return subaccountOpenOrders
 }
 
 // mustAddOrderToOrderbook will add the order to the resting orderbook.
