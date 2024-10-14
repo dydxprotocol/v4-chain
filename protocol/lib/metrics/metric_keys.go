@@ -77,11 +77,13 @@ const (
 	GrpcSendResponseToSubscriberCount             = "grpc_send_response_to_subscriber_count"
 	GrpcStreamSubscriberCount                     = "grpc_stream_subscriber_count"
 	GrpcStreamNumUpdatesBuffered                  = "grpc_stream_num_updates_buffered"
+	GrpcStreamNumUpdatesBufferedHistogram         = "grpc_stream_num_updates_buffered_histogram"
 	GrpcFlushUpdatesLatency                       = "grpc_flush_updates_latency"
 	GrpcSubscriptionChannelLength                 = "grpc_subscription_channel_length"
 	GrpcStagedAllFinalizeBlockUpdatesCount        = "grpc_staged_all_finalize_block_updates_count"
 	GrpcStagedFillFinalizeBlockUpdatesCount       = "grpc_staged_finalize_block_fill_updates_count"
 	GrpcStagedSubaccountFinalizeBlockUpdatesCount = "grpc_staged_finalize_block_subaccount_updates_count"
+	SubscriptionId                                = "subscription_id"
 
 	EndBlocker    = "end_blocker"
 	EndBlockerLag = "end_blocker_lag"
