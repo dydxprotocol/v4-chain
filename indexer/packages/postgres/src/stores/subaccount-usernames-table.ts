@@ -103,10 +103,9 @@ export async function getSubaccountsWithoutUsernames(
   const queryString: string = `
     SELECT id as "subaccountId"
     FROM subaccounts
-    WHERE id NOT IN (
-      SELECT "subaccountId" FROM subaccount_usernames
-    )
-    AND subaccounts."subaccountNumber"=0
+    WHERE subaccounts."subaccountNumber" = 0
+    EXCEPT
+    SELECT "subaccountId" FROM subaccount_usernames;
   `;
 
   const result: {
