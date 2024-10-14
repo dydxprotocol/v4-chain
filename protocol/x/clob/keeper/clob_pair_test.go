@@ -21,7 +21,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
@@ -684,10 +683,6 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 		}
 	}
 
-	ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
-		0: {}, // leaving blank, orders here don't matter in particular since we clear the whole key
-	}
-
 	clobPair.Status = types.ClobPair_STATUS_FINAL_SETTLEMENT
 	err = ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair)
 	require.NoError(t, err)
@@ -711,10 +706,6 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 		},
 		ppme.RemovedStatefulOrderIds,
 	)
-
-	// Verify UntriggeredConditionalOrders is cleared.
-	_, found := ks.ClobKeeper.UntriggeredConditionalOrders[0]
-	require.False(t, found)
 }
 
 func TestUpdateClobPair(t *testing.T) {
