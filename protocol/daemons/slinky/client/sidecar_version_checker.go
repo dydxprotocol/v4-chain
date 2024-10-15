@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	MinSidecarVersion = "v2.1.0"
+	MinSidecarVersion = "v1.0.12"
 )
 
 // SidecarVersionChecker is a lightweight process run in a goroutine by the slinky client.

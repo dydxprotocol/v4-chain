@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -173,7 +172,6 @@ func (c *Client) RunMarketPairFetcher(ctx context.Context, appFlags appflags.Fla
 // RunSidecarVersionChecker periodically calls the sidecarVersionChecker to check if the running sidecar version
 // is at least a minimum acceptable version
 func (c *Client) RunSidecarVersionChecker(ctx context.Context) {
-	fmt.Println("Running SidecarVersionChecker")
 	err := c.sidecarVersionChecker.Start(ctx)
 	if err != nil {
 		c.logger.Error("Error initializing sidecarVersionChecker in slinky daemon: %w", err)

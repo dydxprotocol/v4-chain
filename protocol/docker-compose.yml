@@ -116,7 +116,7 @@ services:
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
   connect0:
-    image: ghcr.io/skip-mev/connect-sidecar:v2.0.1
+    image: ghcr.io/skip-mev/connect-sidecar:v2.1.0
     entrypoint: >
       sh -c "connect --marketmap-provider dydx_migration_api --oracle-config /etc/connect/oracle.json --log-std-out-level error"
     environment:
