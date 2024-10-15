@@ -1,6 +1,7 @@
 package listing
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -76,6 +77,10 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // GetTxCmd returns the root Tx command for the module. The subcommands of this root command are used by end-users to
