@@ -868,7 +868,7 @@ describe('helpers', () => {
         ),
       };
       const blockHeight2: string = '80';
-      const blockTime2: string = DateTime.fromISO(pnlTick.createdAt).plus({ hour: 1 }).toISO();
+      const blockTime2: string = DateTime.fromISO(pnlTick.createdAt).startOf('hour').plus({ minute: 61 }).toISO();
       const pnlTick3: PnlTicksFromDatabase = {
         ...testConstants.defaultPnlTick,
         id: PnlTicksTable.uuid(
@@ -880,7 +880,7 @@ describe('helpers', () => {
         createdAt: blockTime2,
       };
       const blockHeight3: string = '81';
-      const blockTime3: string = DateTime.fromISO(pnlTick.createdAt).plus({ minute: 61 }).toISO();
+      const blockTime3: string = DateTime.fromISO(pnlTick.createdAt).startOf('hour').plus({ minute: 62 }).toISO();
       const pnlTick4: PnlTicksFromDatabase = {
         ...testConstants.defaultPnlTick,
         id: PnlTicksTable.uuid(
