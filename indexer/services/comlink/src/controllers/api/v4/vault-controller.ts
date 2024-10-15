@@ -80,16 +80,19 @@ class VaultController extends Controller {
       vaultPositions,
       latestBlock,
       mainSubaccountEquity,
+      latestPnlTick,
     ] : [
       PnlTicksFromDatabase[],
       Map<string, VaultPosition>,
       BlockFromDatabase,
       string,
+      PnlTicksFromDatabase | undefined,
     ] = await Promise.all([
       getVaultSubaccountPnlTicks(vaultSubaccountIdsWithMainSubaccount, getResolution(resolution)),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
       getMainSubaccountEquity(),
+      getLatestPnlTick(vaultSubaccountIdsWithMainSubaccount),
     ]);
 
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
@@ -105,6 +108,7 @@ class VaultController extends Controller {
       currentEquity,
       filterOutIntervalTicks(aggregatedPnlTicks, getResolution(resolution)),
       latestBlock,
+      latestPnlTick,
     );
 
     return {
@@ -371,10 +375,23 @@ async function getVaultPositions(
     BlockTable.getLatest(),
   ]);
 
-  const latestFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
-    .findFundingIndexMap(
-      latestBlock.blockHeight,
-    );
+  const updatedAtHeights: string[] = _(subaccounts).map('updatedAtHeight').uniq().value();
+  const [
+    latestFundingIndexMap,
+    fundingIndexMaps,
+  ]: [
+    FundingIndexMap,
+    {[blockHeight: string]: FundingIndexMap}
+  ] = await Promise.all([
+    FundingIndexUpdatesTable
+      .findFundingIndexMap(
+        latestBlock.blockHeight,
+      ),
+    FundingIndexUpdatesTable
+      .findFundingIndexMaps(
+        updatedAtHeights,
+      ),
+  ]);
   const assetPositionsBySubaccount:
   { [subaccountId: string]: AssetPositionFromDatabase[] } = _.groupBy(
     assetPositions,
@@ -393,47 +410,49 @@ async function getVaultPositions(
   const vaultPositionsAndSubaccountId: {
     position: VaultPosition,
     subaccountId: string,
-  }[] = await Promise.all(
-    subaccounts.map(async (subaccount: SubaccountFromDatabase) => {
-      const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-        .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
-      if (perpetualMarket === undefined) {
-        throw new Error(
-          `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
+  }[] = subaccounts.map((subaccount: SubaccountFromDatabase) => {
+    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+      .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
+    if (perpetualMarket === undefined) {
+      throw new Error(
+        `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
           'perpetual market.');
-      }
-      const lastUpdatedFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
-        .findFundingIndexMap(
-          subaccount.updatedAtHeight,
-        );
-
-      const subaccountResponse: SubaccountResponseObject = getSubaccountResponse(
-        subaccount,
-        openPerpetualPositionsBySubaccount[subaccount.id] || [],
-        assetPositionsBySubaccount[subaccount.id] || [],
-        assets,
-        markets,
-        perpetualMarketRefresher.getPerpetualMarketsMap(),
-        latestBlock.blockHeight,
-        latestFundingIndexMap,
-        lastUpdatedFundingIndexMap,
+    }
+    const lastUpdatedFundingIndexMap: FundingIndexMap = fundingIndexMaps[
+      subaccount.updatedAtHeight
+    ];
+    if (lastUpdatedFundingIndexMap === undefined) {
+      throw new Error(
+        `No funding indices could be found for vault with subaccount ${subaccount.id}`,
       );
+    }
 
-      return {
-        position: {
-          ticker: perpetualMarket.ticker,
-          assetPosition: subaccountResponse.assetPositions[
-            assetIdToAsset[USDC_ASSET_ID].symbol
-          ],
-          perpetualPosition: subaccountResponse.openPerpetualPositions[
-            perpetualMarket.ticker
-          ] || undefined,
-          equity: subaccountResponse.equity,
-        },
-        subaccountId: subaccount.id,
-      };
-    }),
-  );
+    const subaccountResponse: SubaccountResponseObject = getSubaccountResponse(
+      subaccount,
+      openPerpetualPositionsBySubaccount[subaccount.id] || [],
+      assetPositionsBySubaccount[subaccount.id] || [],
+      assets,
+      markets,
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+      latestBlock.blockHeight,
+      latestFundingIndexMap,
+      lastUpdatedFundingIndexMap,
+    );
+
+    return {
+      position: {
+        ticker: perpetualMarket.ticker,
+        assetPosition: subaccountResponse.assetPositions[
+          assetIdToAsset[USDC_ASSET_ID].symbol
+        ],
+        perpetualPosition: subaccountResponse.openPerpetualPositions[
+          perpetualMarket.ticker
+        ] || undefined,
+        equity: subaccountResponse.equity,
+      },
+      subaccountId: subaccount.id,
+    };
+  });
 
   return new Map(vaultPositionsAndSubaccountId.map(
     (obj: { position: VaultPosition, subaccountId: string }) : [string, VaultPosition] => {
@@ -458,7 +477,17 @@ function getPnlTicksWithCurrentTick(
   equity: string,
   pnlTicks: PnlTicksFromDatabase[],
   latestBlock: BlockFromDatabase,
+  latestTick: PnlTicksFromDatabase | undefined = undefined,
 ): PnlTicksFromDatabase[] {
+  if (latestTick !== undefined) {
+    return pnlTicks.concat({
+      ...latestTick,
+      equity,
+      blockHeight: latestBlock.blockHeight,
+      blockTime: latestBlock.time,
+      createdAt: latestBlock.time,
+    });
+  }
   if (pnlTicks.length === 0) {
     return [];
   }
@@ -470,6 +499,23 @@ function getPnlTicksWithCurrentTick(
     createdAt: latestBlock.time,
   };
   return pnlTicks.concat([currentTick]);
+}
+
+export async function getLatestPnlTick(
+  vaultSubaccountIds: string[],
+): Promise<PnlTicksFromDatabase | undefined> {
+  const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getPnlTicksAtIntervals(
+    PnlTickInterval.hour,
+    config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS * 60 * 60,
+    vaultSubaccountIds,
+  );
+  // Aggregate and get pnl tick closest to the hour
+  const aggregatedTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(pnlTicks);
+  const filteredTicks: PnlTicksFromDatabase[] = filterOutIntervalTicks(
+    aggregatedTicks,
+    PnlTickInterval.hour,
+  );
+  return _.maxBy(filteredTicks, 'blockTime');
 }
 
 /**

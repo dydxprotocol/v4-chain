@@ -311,6 +311,10 @@
           "affiliateReferredTakerFees": {
             "type": "number",
             "format": "double"
+          },
+          "affiliateReferredMakerRebates": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
@@ -323,7 +327,8 @@
           "affiliateReferredNetProtocolEarnings",
           "affiliateReferredTotalVolume",
           "affiliateReferredMakerFees",
-          "affiliateReferredTakerFees"
+          "affiliateReferredTakerFees",
+          "affiliateReferredMakerRebates"
         ],
         "type": "object",
         "additionalProperties": false

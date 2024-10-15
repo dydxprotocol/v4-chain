@@ -6,7 +6,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
@@ -54,7 +53,7 @@ func (m MessageFilter) Track(ctx sdk.Context, request types.AuthenticationReques
 func (m MessageFilter) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	if _, ok := m.whitelist[sdk.MsgTypeURL(request.Msg)]; !ok {
 		return errorsmod.Wrapf(
-			sdkerrors.ErrUnauthorized,
+			types.ErrMessageTypeVerification,
 			"message types do not match. Got %s, Expected %v",
 			sdk.MsgTypeURL(request.Msg),
 			m.whitelist,
