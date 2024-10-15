@@ -11,10 +11,6 @@ import (
 	"github.com/skip-mev/connect/v2/service/servers/oracle/types"
 )
 
-const (
-	MinSidecarVersion = "v1.0.12"
-)
-
 // SidecarVersionChecker is a lightweight process run in a goroutine by the slinky client.
 // Its purpose is to query the running sidecar version and check if it is at least a minimum
 // acceptable version.
@@ -55,7 +51,6 @@ func (p *SidecarVersionCheckerImpl) CheckSidecarVersion(ctx context.Context) err
 		return err
 	}
 	current, err := version.NewVersion(slinkyResponse.Version)
-	fmt.Println("Sidecar version", current)
 	if err != nil {
 		return fmt.Errorf("failed to parse current version: %w", err)
 	}
@@ -67,11 +62,11 @@ func (p *SidecarVersionCheckerImpl) CheckSidecarVersion(ctx context.Context) err
 
 	// Compare versions
 	if current.LessThan(minimum) {
-		return fmt.Errorf("sidecar version %s is less than minimum required version %s", current, minimum)
+		return fmt.Errorf("Sidecar version %s is less than minimum required version %s. "+
+			"The node will shut down soon", current, minimum)
 	}
 
 	// Version is acceptable
 	p.logger.Info("Sidecar version check passed", "version", current)
 	return nil
-
 }

@@ -21,4 +21,5 @@ const (
 	SlinkyClientPriceFetcherDaemonModuleName          = "slinky-client-price-fetcher-daemon"
 	SlinkyClientMarketPairFetcherDaemonModuleName     = "slinky-client-market-pair-fetcher-daemon"
 	SlinkyClientSidecarVersionFetcherDaemonModuleName = "slinky-client-sidecar-version-fetcher-daemon"
+	MinSidecarVersion                                 = "v1.0.12"
 )

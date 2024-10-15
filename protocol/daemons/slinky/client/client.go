@@ -196,7 +196,7 @@ func (c *Client) RunSidecarVersionChecker(ctx context.Context) {
 }
 
 // StartNewClient creates and runs a Client.
-// The client creates the MarketPairFetcher and PriceFetcher,
+// The client creates the MarketPairFetcher, PriceFetcher, an SidecarVersionChecker,
 // connects to the required grpc services, and launches them in goroutines.
 // It is non-blocking and returns on successful startup.
 // If it hits a critical error in startup it panics.
