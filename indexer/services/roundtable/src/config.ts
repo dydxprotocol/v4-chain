@@ -61,7 +61,7 @@ export const configSchema = {
     default: 2 * ONE_MINUTE_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_UNCROSS_ORDERBOOK: parseInteger({
-    default: THIRTY_SECONDS_IN_MILLISECONDS,
+    default: 15 * ONE_SECOND_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_PNL_TICKS: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
@@ -70,7 +70,7 @@ export const configSchema = {
     default: 2 * ONE_MINUTE_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_ORDERBOOK_INSTRUMENTATION: parseInteger({
-    default: 5 * ONE_SECOND_IN_MILLISECONDS,
+    default: 1 * ONE_MINUTE_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_PNL_INSTRUMENTATION: parseInteger({
     default: ONE_HOUR_IN_MILLISECONDS,
