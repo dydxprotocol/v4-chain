@@ -170,11 +170,11 @@ func (c *Client) RunMarketPairFetcher(ctx context.Context, appFlags appflags.Fla
 }
 
 // RunSidecarVersionChecker periodically calls the sidecarVersionChecker to check if the running sidecar version
-// is at least a minimum acceptable version
+// is at least a minimum acceptable version.
 func (c *Client) RunSidecarVersionChecker(ctx context.Context) {
 	err := c.sidecarVersionChecker.Start(ctx)
 	if err != nil {
-		c.logger.Error("Error initializing sidecarVersionChecker in slinky daemon: %w", err)
+		c.logger.Error("Error initializing sidecarVersionChecker in slinky daemon", "error", err)
 		panic(err)
 	}
 	ticker := time.NewTicker(SlinkySidecarCheckDelay)
@@ -196,7 +196,7 @@ func (c *Client) RunSidecarVersionChecker(ctx context.Context) {
 }
 
 // StartNewClient creates and runs a Client.
-// The client creates the MarketPairFetcher, PriceFetcher, an SidecarVersionChecker,
+// The client creates the MarketPairFetcher, PriceFetcher, and SidecarVersionChecker,
 // connects to the required grpc services, and launches them in goroutines.
 // It is non-blocking and returns on successful startup.
 // If it hits a critical error in startup it panics.

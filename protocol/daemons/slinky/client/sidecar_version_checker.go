@@ -44,9 +44,9 @@ func (s *SidecarVersionCheckerImpl) Stop() {
 	_ = s.slinky.Stop()
 }
 
-func (p *SidecarVersionCheckerImpl) CheckSidecarVersion(ctx context.Context) error {
-	// get prices from slinky sidecar via GRPC
-	slinkyResponse, err := p.slinky.Version(ctx, &types.QueryVersionRequest{})
+func (s *SidecarVersionCheckerImpl) CheckSidecarVersion(ctx context.Context) error {
+	// Retrieve sidecar version via gRPC
+	slinkyResponse, err := s.slinky.Version(ctx, &types.QueryVersionRequest{})
 	if err != nil {
 		return err
 	}
@@ -67,6 +67,6 @@ func (p *SidecarVersionCheckerImpl) CheckSidecarVersion(ctx context.Context) err
 	}
 
 	// Version is acceptable
-	p.logger.Info("Sidecar version check passed", "version", current)
+	s.logger.Info("Sidecar version check passed", "version", current)
 	return nil
 }
