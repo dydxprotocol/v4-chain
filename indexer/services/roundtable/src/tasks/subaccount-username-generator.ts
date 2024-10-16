@@ -1,9 +1,9 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { UniqueViolationError } from '@dydxprotocol-indexer/postgres';
 import {
   SubaccountUsernamesTable,
   SubaccountsWithoutUsernamesResult,
 } from '@dydxprotocol-indexer/postgres';
+
 import config from '../config';
 import { generateUsername } from '../helpers/usernames-helper';
 
