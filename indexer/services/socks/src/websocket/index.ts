@@ -243,8 +243,6 @@ export class Index {
       return;
     }
 
-    this.connections[connectionId].messageId += 1;
-
     const messageStr = message.toString();
 
     let parsed: IncomingMessage;
@@ -282,6 +280,8 @@ export class Index {
           messageContents: safeJsonStringify(message),
         });
 
+        this.connections[connectionId].messageId += 1;
+
         // Do not wait for this.
         this.subscriptions.subscribe(
           this.connections[connectionId].ws,
@@ -310,6 +310,8 @@ export class Index {
           unsubscribeMessage.channel,
           unsubscribeMessage.id,
         );
+
+        this.connections[connectionId].messageId += 1;
 
         sendMessage(
           this.connections[connectionId].ws,
