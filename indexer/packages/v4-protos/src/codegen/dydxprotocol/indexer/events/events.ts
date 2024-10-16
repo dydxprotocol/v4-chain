@@ -1365,31 +1365,47 @@ export interface AddressTradingRewardSDKType {
 
   denom_amount: Uint8Array;
 }
-/** OpenInterestUpdateEventV1 is used for open interest update events */
+/**
+ * OpenInterestUpdateEventV1 is used for open interest update events
+ * Deprecated.
+ */
+
+/** @deprecated */
 
 export interface OpenInterestUpdateEventV1 {
-  /** The list of all open interest updates in the block. */
   openInterestUpdates: OpenInterestUpdate[];
 }
-/** OpenInterestUpdateEventV1 is used for open interest update events */
+/**
+ * OpenInterestUpdateEventV1 is used for open interest update events
+ * Deprecated.
+ */
+
+/** @deprecated */
 
 export interface OpenInterestUpdateEventV1SDKType {
-  /** The list of all open interest updates in the block. */
   open_interest_updates: OpenInterestUpdateSDKType[];
 }
-/** OpenInterestUpdate contains a single open interest update for a perpetual */
+/**
+ * OpenInterestUpdate contains a single open interest update for a perpetual
+ * Deprecated.
+ */
+
+/** @deprecated */
 
 export interface OpenInterestUpdate {
-  /** The ID of the perpetual market. */
   perpetualId: number;
   /** The new open interest value for the perpetual market. */
 
   openInterest: Uint8Array;
 }
-/** OpenInterestUpdate contains a single open interest update for a perpetual */
+/**
+ * OpenInterestUpdate contains a single open interest update for a perpetual
+ * Deprecated.
+ */
+
+/** @deprecated */
 
 export interface OpenInterestUpdateSDKType {
-  /** The ID of the perpetual market. */
   perpetual_id: number;
   /** The new open interest value for the perpetual market. */
 
