@@ -4594,7 +4594,11 @@ const GenesisState = `{
         "activation_threshold_quote_quantums": "1000000000"
       },
       "operator_params": {
-        "operator": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
+        "operator": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
+        "metadata": {
+          "name": "Governance",
+          "description": "Governance Module Account"
+        }
       },
       "owner_shares": [],
       "total_shares": {
