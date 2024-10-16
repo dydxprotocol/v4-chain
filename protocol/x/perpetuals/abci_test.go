@@ -28,10 +28,6 @@ func TestEndBlocker(t *testing.T) {
 					"MaybeProcessNewFundingSampleEpoch",
 					ctx,
 				).Return(nil)
-				mck.On(
-					"SendOIUpdatesToIndexer",
-					ctx,
-				)
 			},
 			expectedErr: nil,
 		},
