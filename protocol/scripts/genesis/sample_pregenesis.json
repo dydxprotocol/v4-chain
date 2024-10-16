@@ -2280,6 +2280,14 @@
           "POL/USD": {
             "provider_configs": [
               {
+                "binance_ws",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                },
+                "off_chain_ticker": "POLUSDT"
+              },
+              {
                 "name": "bybit_ws",
                 "normalize_by_pair": {
                   "Base": "USDT",
@@ -2309,10 +2317,9 @@
                 "Base": "POL",
                 "Quote": "USD"
               },
-              "decimals": "10",
-              "min_provider_count": "3",
-              "enabled": true,
-              "metadata_JSON": ""
+              "decimals": 10,
+              "min_provider_count": 3,
+              "enabled": true
             }
           },
           "SEI/USD": {

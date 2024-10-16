@@ -30,6 +30,10 @@ var (
 					Ticker:         "LINKUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
+				MARKET_POL_USD: {
+					Ticker:         "POLUSDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 				MARKET_CRV_USD: {
 					Ticker:         "CRVUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),

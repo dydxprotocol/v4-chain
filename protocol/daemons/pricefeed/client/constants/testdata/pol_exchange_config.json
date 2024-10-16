@@ -1,6 +1,11 @@
 {
   "exchanges": [
     {
+      "exchangeName": "Binance",
+      "ticker": "POLUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
       "exchangeName": "Bybit",
       "ticker": "POLUSDT",
       "adjustByMarket": "USDT-USD"

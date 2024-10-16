@@ -619,6 +619,7 @@ function edit_genesis() {
     dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.ticker.min_provider_count' -v '3'
     dasel put -t bool -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.ticker.enabled' -v 'true'
 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.provider_configs.[]' -v '{"name": "binance_ws", "off_chain_ticker": "POLUSDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.provider_configs.[]' -v '{"name": "bybit_ws", "off_chain_ticker": "POLUSDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.provider_configs.[]' -v '{"name": "coinbase_ws", "off_chain_ticker": "POL-USD"}'
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.provider_configs.[]' -v '{"name": "crypto_dot_com_ws", "off_chain_ticker": "POL_USD"}'

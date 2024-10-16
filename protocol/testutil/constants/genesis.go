@@ -2805,33 +2805,32 @@ const GenesisState = `{
               },
               "decimals": "10",
               "min_provider_count": "3",
-              "enabled": true,
-              "metadata_JSON": ""
+              "enabled": true
             },
             "provider_configs": [
+              {
+                "name": "binance_ws",
+                "off_chain_ticker": "POLUSDT",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                }
+              },
               {
                 "name": "bybit_ws",
                 "off_chain_ticker": "POLUSDT",
                 "normalize_by_pair": {
                   "Base": "USDT",
                   "Quote": "USD"
-                },
-                "invert": false,
-                "metadata_JSON": ""
+                }
               },
               {
                 "name": "coinbase_ws",
-                "off_chain_ticker": "POL-USD",
-                "normalize_by_pair": null,
-                "invert": false,
-                "metadata_JSON": ""
+                "off_chain_ticker": "POL-USD"
               },
               {
                 "name": "crypto_dot_com_ws",
-                "off_chain_ticker": "POL_USD",
-                "normalize_by_pair": null,
-                "invert": false,
-                "metadata_JSON": ""
+                "off_chain_ticker": "POL_USD"
               },
               {
                 "name": "okx_ws",
@@ -2839,9 +2838,7 @@ const GenesisState = `{
                 "normalize_by_pair": {
                   "Base": "USDT",
                   "Quote": "USD"
-                },
-                "invert": false,
-                "metadata_JSON": ""
+                }
               }
             ]
           },
@@ -3993,7 +3990,7 @@ const GenesisState = `{
           "pair": "LINK-USD"
         },
         {
-          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Bybit\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"POL-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"POL_USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"POL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"POL-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"POL_USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"POL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
           "exponent": -10,
           "id": 3,
           "min_exchanges": 1,

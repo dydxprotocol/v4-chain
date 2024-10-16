@@ -6130,7 +6130,7 @@
           "pair": "LINK-USD"
         },
         {
-          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Bybit\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"POL-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"POL_USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"POL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"POL-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"POL_USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"POL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
           "exponent": -10,
           "id": 3,
           "min_exchanges": 3,

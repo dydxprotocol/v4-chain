@@ -3322,7 +3322,7 @@
           "exponent": -10,
           "min_exchanges": 3,
           "min_price_change_ppm": 2500,
-          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Bybit\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"POL-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"POL_USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"POL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"POL-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"POL_USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"POL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
         },
         {
           "pair": "CRV-USD",
