@@ -5,6 +5,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 
 import { initializeAllCaches } from './caches/block-cache';
+import * as OrderbookMidPriceMemoryCache from './caches/orderbook-mid-price-memory-cache';
 import config from './config';
 import { connect } from './helpers/kafka/kafka-controller';
 import { createPostgresFunctions } from './helpers/postgres/postgres-functions';
@@ -28,8 +29,10 @@ async function startKafka(): Promise<void> {
   ]);
   // Ender does not need to refresh its caches in a loop because Ender is the only service that
   // writes to the key attributes of perpetual_markets, asset_refresher, and market_refresher
-  // The only exception are the aggregated properties of perpetual_markets
+  // The two exceptions are the aggregated properties of perpetual_markets and the
+  // OrderbookMidPriceMemoryCache
   await initializeAllCaches();
+  wrapBackgroundTask(OrderbookMidPriceMemoryCache.start(), true, 'startUpdateOrderbookMidPrices');
 
   await connect();
   await startConsumer();

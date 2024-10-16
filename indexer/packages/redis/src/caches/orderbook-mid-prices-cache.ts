@@ -1,3 +1,4 @@
+import { logger } from '@dydxprotocol-indexer/base';
 import Big from 'big.js';
 import { Callback, RedisClient } from 'redis';
 
@@ -34,11 +35,11 @@ export async function fetchAndCacheOrderbookMidPrices(
   const cacheKeyPricePairs = await Promise.all(
     tickers.map(async (ticker) => {
       const cacheKey = getOrderbookMidPriceCacheKey(ticker);
-      const midPrice = await getOrderBookMidPrice(cacheKey, client);
+      const midPrice = await getOrderBookMidPrice(ticker, client);
       if (midPrice !== undefined) {
         return { cacheKey, midPrice };
       }
-      return null; // Return null for undefined midPrice
+      return null;
     }),
   );
 
@@ -53,8 +54,17 @@ export async function fetchAndCacheOrderbookMidPrices(
 
   const nowSeconds = Math.floor(Date.now() / 1000); // Current time in seconds
   // Extract cache keys and prices
-  const priceCacheKeys = validPairs.map((pair) => pair.cacheKey);
   const priceValues = validPairs.map((pair) => pair.midPrice);
+  const priceCacheKeys = validPairs.map((pair) => {
+
+    logger.info({
+      at: 'orderbook-mid-prices-cache#fetchAndCacheOrderbookMidPrices',
+      message: 'Caching orderbook mid price',
+      cacheKey: pair.cacheKey,
+      midPrice: pair.midPrice,
+    });
+    return pair.cacheKey;
+  });
 
   return new Promise<void>((resolve, reject) => {
     client.evalsha(
