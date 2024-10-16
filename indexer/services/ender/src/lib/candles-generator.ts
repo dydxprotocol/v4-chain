@@ -26,6 +26,7 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 
 import { getCandle } from '../caches/candle-cache';
+import { getOrderbookMidPrice } from '../caches/orderbook-mid-price-memory-cache';
 import config from '../config';
 import { KafkaPublisher } from './kafka-publisher';
 import { ConsolidatedKafkaEvent, SingleTradeMessage } from './types';
@@ -169,7 +170,7 @@ export class CandlesGenerator {
     const promises: Promise<CandleFromDatabase | undefined>[] = [];
 
     const openInterestMap: OpenInterestMap = await this.getOpenInterestMap();
-    const orderbookMidPriceMap = await getOrderbookMidPriceMap();
+    const orderbookMidPriceMap = getOrderbookMidPriceMap();
     _.forEach(
       Object.values(perpetualMarketRefresher.getPerpetualMarketsMap()),
       (perpetualMarket: PerpetualMarketFromDatabase) => {
@@ -531,18 +532,13 @@ export class CandlesGenerator {
 /**
    * Get the cached orderbook mid price for a given ticker
 */
-export async function getOrderbookMidPriceMap(): Promise<{ [ticker: string]: OrderbookMidPrice }> {
+export function getOrderbookMidPriceMap(): { [ticker: string]: OrderbookMidPrice } {
   const start: number = Date.now();
   const perpetualMarkets = Object.values(perpetualMarketRefresher.getPerpetualMarketsMap());
 
-  const promises = perpetualMarkets.map(async (perpetualMarket: PerpetualMarketFromDatabase) => {
-    return Promise.resolve({ [perpetualMarket.ticker]: undefined });
-  });
-
-  const pricesArray = await Promise.all(promises);
   const priceMap: { [ticker: string]: OrderbookMidPrice } = {};
-  pricesArray.forEach((price) => {
-    Object.assign(priceMap, price);
+  perpetualMarkets.forEach((perpetualMarket: PerpetualMarketFromDatabase) => {
+    priceMap[perpetualMarket.ticker] = getOrderbookMidPrice(perpetualMarket.ticker);
   });
 
   stats.timing(`${config.SERVICE_NAME}.get_orderbook_mid_price_map.timing`, Date.now() - start);

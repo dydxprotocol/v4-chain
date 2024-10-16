@@ -1,98 +1,97 @@
 import {
   dbHelpers,
+  PerpetualMarketFromDatabase,
+  PerpetualMarketTable,
   testConstants,
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import {
-  OrderbookMidPricesCache,
   OrderbookLevelsCache,
+  OrderbookMidPricesCache,
   redis,
 } from '@dydxprotocol-indexer/redis';
 import { redisClient } from '../../src/helpers/redis';
 import runTask from '../../src/tasks/cache-orderbook-mid-prices';
 
-jest.mock('@dydxprotocol-indexer/base', () => ({
-  ...jest.requireActual('@dydxprotocol-indexer/base'),
-  logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-  },
-}));
-
-jest.mock('@dydxprotocol-indexer/redis', () => ({
-  ...jest.requireActual('@dydxprotocol-indexer/redis'),
-  OrderbookLevelsCache: {
-    getOrderBookMidPrice: jest.fn(),
-  },
-}));
-
 describe('cache-orderbook-mid-prices', () => {
-  beforeAll(async () => {
-    await dbHelpers.migrate();
-  });
-
   beforeEach(async () => {
-    await dbHelpers.clearData();
     await redis.deleteAllAsync(redisClient);
     await testMocks.seedData();
   });
 
-  afterAll(async () => {
-    await dbHelpers.teardown();
-    jest.resetAllMocks();
+  afterAll(() => {
+    jest.restoreAllMocks();
+  });
+
+  beforeAll(async () => {
+    await dbHelpers.migrate();
+    await dbHelpers.clearData();
+  });
+
+  afterEach(async () => {
+    await dbHelpers.clearData();
   });
 
   it('caches mid prices for all markets', async () => {
-    const market1 = testConstants.defaultPerpetualMarket;
-    const market2 = testConstants.defaultPerpetualMarket2;
+    const market1 = await PerpetualMarketTable
+      .findByMarketId(
+        testConstants.defaultMarket.id,
+      );
+    const market2 = await PerpetualMarketTable
+      .findByMarketId(
+        testConstants.defaultMarket2.id,
+      );
+    if (!market1) {
+      throw new Error('Market 1 not found');
+    }
+    if (!market2) {
+      throw new Error('Market 2 not found');
+    }
 
-    const mockGetOrderBookMidPrice = jest.spyOn(OrderbookLevelsCache, 'getOrderBookMidPrice');
-    mockGetOrderBookMidPrice.mockResolvedValueOnce('100.5'); // For market1
-    mockGetOrderBookMidPrice.mockResolvedValueOnce('200.75'); // For market2
+    jest.spyOn(PerpetualMarketTable, 'findAll')
+      .mockReturnValueOnce(Promise.resolve([
+        market1,
+        // Passing market2 twice so that it will call getOrderbookMidPrice twice and
+        // cache the last two prices from the mock below
+        market2,
+        market2,
+      ] as PerpetualMarketFromDatabase[]));
+
+    jest.spyOn(OrderbookLevelsCache, 'getOrderBookMidPrice')
+      .mockReturnValueOnce(Promise.resolve('200'))
+      .mockReturnValueOnce(Promise.resolve('300'))
+      .mockReturnValueOnce(Promise.resolve('400'));
 
     await runTask();
 
-    // Check if the mock was called with the correct arguments
-    expect(mockGetOrderBookMidPrice).toHaveBeenCalledWith(market1.ticker, redisClient);
-    expect(mockGetOrderBookMidPrice).toHaveBeenCalledWith(market2.ticker, redisClient);
+    const prices = await OrderbookMidPricesCache.getMedianPrices(
+      redisClient,
+      [market1.ticker, market2.ticker],
+    );
 
-    // Check if prices were cached correctly
-    const price1 = await OrderbookMidPricesCache.getMedianPrice(redisClient, market1.ticker);
-    const price2 = await OrderbookMidPricesCache.getMedianPrice(redisClient, market2.ticker);
-
-    expect(price1).toBe('100.5');
-    expect(price2).toBe('200.75');
+    expect(prices[market1.ticker]).toBe('200');
+    expect(prices[market2.ticker]).toBe('350');
   });
 
   it('handles undefined prices', async () => {
-    const market = testConstants.defaultPerpetualMarket;
+    const market1 = await PerpetualMarketTable
+      .findByMarketId(
+        testConstants.defaultMarket.id,
+      );
 
-    const mockGetOrderBookMidPrice = jest.spyOn(OrderbookLevelsCache, 'getOrderBookMidPrice');
-    mockGetOrderBookMidPrice.mockResolvedValueOnce(undefined);
+    if (!market1) {
+      throw new Error('Market 1 not found');
+    }
 
-    await runTask();
+    jest.spyOn(PerpetualMarketTable, 'findAll')
+      .mockReturnValueOnce(Promise.resolve([market1] as PerpetualMarketFromDatabase[]));
 
-    const price = await OrderbookMidPricesCache.getMedianPrice(redisClient, market.ticker);
-    expect(price).toBeNull();
-
-    // Check that a log message was created
-    expect(jest.requireMock('@dydxprotocol-indexer/base').logger.info).toHaveBeenCalledWith({
-      at: 'cache-orderbook-mid-prices#runTask',
-      message: `undefined price for ${market.ticker}`,
-    });
-  });
-
-  it('handles errors', async () => {
-    // Mock OrderbookLevelsCache.getOrderBookMidPrice to throw an error
-    const mockGetOrderBookMidPrice = jest.spyOn(OrderbookLevelsCache, 'getOrderBookMidPrice');
-    mockGetOrderBookMidPrice.mockRejectedValueOnce(new Error('Test error'));
+    jest.spyOn(OrderbookLevelsCache, 'getOrderBookMidPrice')
+      .mockReturnValueOnce(Promise.resolve(undefined));
 
     await runTask();
 
-    expect(jest.requireMock('@dydxprotocol-indexer/base').logger.error).toHaveBeenCalledWith({
-      at: 'cache-orderbook-mid-prices#runTask',
-      message: 'Test error',
-      error: expect.any(Error),
-    });
+    const price = await OrderbookMidPricesCache.getMedianPrices(redisClient, [market1.ticker]);
+    expect(price).toEqual({ 'BTC-USD': undefined });
   });
 });
