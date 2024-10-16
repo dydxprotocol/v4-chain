@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	// Each megavault share is worth 0.01 USDC.
-	QUOTE_QUANTUMS_PER_MEGAVAULT_SHARE = 10_000
+	// Each megavault share is worth 0.001 USDC.
+	QUOTE_QUANTUMS_PER_MEGAVAULT_SHARE = 1_000
 )
 
 var (
