@@ -39,7 +39,7 @@ describe('orderbook-mid-prices-cache', () => {
 
       expect(OrderbookLevelsCache.getOrderBookMidPrice).toHaveBeenCalledTimes(1);
       expect(OrderbookLevelsCache.getOrderBookMidPrice).toHaveBeenCalledWith(
-        `${ORDERBOOK_MID_PRICES_CACHE_KEY_PREFIX}${defaultTicker}`,
+        defaultTicker,
         client,
       );
 
@@ -150,6 +150,13 @@ describe('orderbook-mid-prices-cache', () => {
         client,
         [defaultTicker, defaultTicker, defaultTicker, defaultTicker],
       );
+
+      client.zrange(`${ORDERBOOK_MID_PRICES_CACHE_KEY_PREFIX}${defaultTicker}`,
+        0,
+        -1,
+        (err: Error, res: string[]) => {
+          expect(res).toHaveLength(4);
+        });
       expect(OrderbookLevelsCache.getOrderBookMidPrice).toHaveBeenCalledTimes(6);
 
       // Check the median price
