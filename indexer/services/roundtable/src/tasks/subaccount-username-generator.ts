@@ -1,9 +1,10 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   SubaccountUsernamesTable,
   SubaccountsWithoutUsernamesResult,
 } from '@dydxprotocol-indexer/postgres';
 
+import config from '../config';
 import { generateUsername } from '../helpers/usernames-helper';
 
 export default async function runTask(): Promise<void> {
@@ -21,13 +22,18 @@ export default async function runTask(): Promise<void> {
         subaccountId: subaccount.subaccountId,
       });
     } catch (e) {
-      logger.error({
-        at: 'subaccount-username-generator#runTask',
-        message: 'Failed to insert username for subaccount',
-        subaccountId: subaccount.subaccountId,
-        username,
-        error: e,
-      });
+      if (e instanceof Error && e.name === 'UniqueViolationError') {
+        stats.increment(
+          `${config.SERVICE_NAME}.subaccount-username-generator.collision`, 1);
+      } else {
+        logger.error({
+          at: 'subaccount-username-generator#runTask',
+          message: 'Failed to insert username for subaccount',
+          subaccountId: subaccount.subaccountId,
+          username,
+          error: e,
+        });
+      }
     }
   }
 }
