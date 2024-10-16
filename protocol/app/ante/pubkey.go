@@ -34,7 +34,7 @@ func (eped EmitPubKeyEventsDecorator) AnteHandle(
 
 	signers, err := sigTx.GetSigners()
 	if err != nil {
-		return sdk.Context{}, err
+		return ctx, err
 	}
 
 	signerStrs := make([]string, len(signers))
