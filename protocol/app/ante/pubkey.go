@@ -13,8 +13,7 @@ import (
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// SetPubKeyDecorator sets PubKeys in context for any signer which does not already have pubkey set
-// PubKeys must be set in context for all signers before any other sigverify decorators run
+// NewEmitPubKeyEventsDecorator emits events for each signer's public key.
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type EmitPubKeyEventsDecorator struct{}
 
@@ -22,7 +21,7 @@ func NewEmitPubKeyEventsDecorator() EmitPubKeyEventsDecorator {
 	return EmitPubKeyEventsDecorator{}
 }
 
-func (spkd EmitPubKeyEventsDecorator) AnteHandle(
+func (eped EmitPubKeyEventsDecorator) AnteHandle(
 	ctx sdk.Context,
 	tx sdk.Tx,
 	simulate bool,
