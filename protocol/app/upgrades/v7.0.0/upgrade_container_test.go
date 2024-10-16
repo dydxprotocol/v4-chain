@@ -115,21 +115,21 @@ func checkVaultParams(
 func postUpgradeMegavaultSharesCheck(node *containertest.Node, t *testing.T) {
 	// Alice equity = vault_0_equity * 1 + vault_1_equity * 1/3 + vault_2_equity * 123_456/556_677
 	// = 1_000 + 2_000 * 1/3 + 3_000 * 123_456/556_677
-	// ~= 2331.99
+	// ~= 2331.98605
 	// Bob equity = vault_1_equity * 1/3 + vault_2_equity * 433_221/556_677
 	// = 2_000 * 1/3 + 3_000 * 433_221/556_677
-	// ~= 3001.35
+	// ~= 3001.34728
 	// Carl equity = vault_1_equity * 1/3
 	// = 2_000 * 1/3
-	// ~= 666.67
-	// 1 USDC in equity should be granted 1 megavault share and round down to nearest integer.
+	// ~= 666.66667
+	// 0.001 USDC in equity should be granted 1 megavault share and round down to nearest integer.
 	expectedOwnerShares := map[string]*big.Int{
-		constants.AliceAccAddress.String(): big.NewInt(2_331),
-		constants.BobAccAddress.String():   big.NewInt(3_001),
-		constants.CarlAccAddress.String():  big.NewInt(666),
+		constants.AliceAccAddress.String(): big.NewInt(2_331_986),
+		constants.BobAccAddress.String():   big.NewInt(3_001_347),
+		constants.CarlAccAddress.String():  big.NewInt(666_666),
 	}
-	// 2331 + 3001 + 666 = 5998
-	expectedTotalShares := big.NewInt(5_998)
+	// 2_331_986 + 3_001_347 + 666_666 = 5_999_999
+	expectedTotalShares := big.NewInt(5_999_999)
 
 	// Check MegaVault total shares.
 	resp, err := containertest.Query(
