@@ -125,6 +125,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		sigVerification: accountplusante.NewCircuitBreakerDecorator(
 			options.Codec,
 			sdk.ChainAnteDecorators(
+				customante.NewEmitPubKeyEventsDecorator(),
 				accountplusante.NewAuthenticatorDecorator(
 					options.Codec,
 					options.AccountplusKeeper,

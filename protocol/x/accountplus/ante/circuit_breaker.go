@@ -12,19 +12,19 @@ import (
 type CircuitBreakerDecorator struct {
 	cdc                          codec.BinaryCodec
 	authenticatorAnteHandlerFlow sdk.AnteHandler
-	originalAnteHandlerFlow      sdk.AnteHandler
+	defaultAnteHandlerFlow       sdk.AnteHandler
 }
 
 // NewCircuitBreakerDecorator creates a new instance of CircuitBreakerDecorator with the provided parameters.
 func NewCircuitBreakerDecorator(
 	cdc codec.BinaryCodec,
-	auth sdk.AnteHandler,
-	classic sdk.AnteHandler,
+	authenticatorAnteHandlerFlow sdk.AnteHandler,
+	defaultAnteHandlerFlow sdk.AnteHandler,
 ) CircuitBreakerDecorator {
 	return CircuitBreakerDecorator{
 		cdc:                          cdc,
-		authenticatorAnteHandlerFlow: auth,
-		originalAnteHandlerFlow:      classic,
+		authenticatorAnteHandlerFlow: authenticatorAnteHandlerFlow,
+		defaultAnteHandlerFlow:       defaultAnteHandlerFlow,
 	}
 }
 
@@ -48,5 +48,5 @@ func (ad CircuitBreakerDecorator) AnteHandle(
 	}
 
 	// Return and call the AnteHandle function on all the original decorators.
-	return ad.originalAnteHandlerFlow(ctx, tx, simulate)
+	return ad.defaultAnteHandlerFlow(ctx, tx, simulate)
 }

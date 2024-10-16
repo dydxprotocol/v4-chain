@@ -56,6 +56,11 @@ func (sva SignatureVerification) Initialize(config []byte) (types.Authenticator,
 // Authenticate takes a SignaturesVerificationData struct and validates
 // each signer and signature using signature verification
 func (sva SignatureVerification) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
+	// First consume gas for verifying the signature
+	params := sva.ak.GetParams(ctx)
+	ctx.GasMeter().ConsumeGas(params.SigVerifyCostSecp256k1, "secp256k1 signature verification")
+
+	// after gas consumption continue to verify signatures
 	if request.Simulate || ctx.IsReCheckTx() {
 		return nil
 	}
