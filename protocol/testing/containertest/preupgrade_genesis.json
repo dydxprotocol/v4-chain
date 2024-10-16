@@ -1426,72 +1426,51 @@
               }
             ]
           },
-          "MATIC/USD": {
+          "POL/USD": {
             "ticker": {
               "currency_pair": {
-                "Base": "MATIC",
+                "Base": "POL",
                 "Quote": "USD"
               },
-              "decimals": 10,
-              "min_provider_count": 3,
-              "enabled": true
+              "decimals": "10",
+              "min_provider_count": "3",
+              "enabled": true,
+              "metadata_JSON": ""
             },
             "provider_configs": [
               {
-                "name": "binance_ws",
-                "off_chain_ticker": "MATICUSDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
                 "name": "bybit_ws",
-                "off_chain_ticker": "MATICUSDT",
+                "off_chain_ticker": "POLUSDT",
                 "normalize_by_pair": {
                   "Base": "USDT",
                   "Quote": "USD"
-                }
+                },
+                "invert": false,
+                "metadata_JSON": ""
               },
               {
                 "name": "coinbase_ws",
-                "off_chain_ticker": "MATIC-USD"
+                "off_chain_ticker": "POL-USD",
+                "normalize_by_pair": null,
+                "invert": false,
+                "metadata_JSON": ""
               },
               {
-                "name": "gate_ws",
-                "off_chain_ticker": "MATIC_USDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "huobi_ws",
-                "off_chain_ticker": "maticusdt",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "kraken_api",
-                "off_chain_ticker": "MATICUSD"
-              },
-              {
-                "name": "kucoin_ws",
-                "off_chain_ticker": "MATIC-USDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
+                "name": "crypto_dot_com_ws",
+                "off_chain_ticker": "POL_USD",
+                "normalize_by_pair": null,
+                "invert": false,
+                "metadata_JSON": ""
               },
               {
                 "name": "okx_ws",
-                "off_chain_ticker": "MATIC-USDT",
+                "off_chain_ticker": "POL-USDT",
                 "normalize_by_pair": {
                   "Base": "USDT",
                   "Quote": "USD"
-                }
+                },
+                "invert": false,
+                "metadata_JSON": ""
               }
             ]
           },
@@ -3368,7 +3347,7 @@
         },
         {
           "params": {
-            "ticker": "MATIC-USD",
+            "ticker": "POL-USD",
             "id": 3,
             "market_id": 3,
             "atomic_resolution": -5,
@@ -3799,12 +3778,12 @@
           "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"LINKUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"LINKUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LINK-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LINKUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LINK-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LINK-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
         },
         {
-          "pair": "MATIC-USD",
+          "pair": "POL-USD",
           "id": 3,
           "exponent": -10,
           "min_exchanges": 3,
           "min_price_change_ppm": 2500,
-          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"MATICUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"MATICUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MATIC-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"MATIC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"maticusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"MATICUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MATIC-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MATIC-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Bybit\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"POL-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"POL_USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"POL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
         },
         {
           "pair": "CRV-USD",

@@ -21,23 +21,23 @@ func init() {
 }
 
 const (
-	BtcUsdPair   = "BTC-USD"
-	EthUsdPair   = "ETH-USD"
-	MaticUsdPair = "MATIC-USD"
-	SolUsdPair   = "SOL-USD"
-	LtcUsdPair   = "LTC-USD"
-	IsoUsdPair   = "ISO-USD"
-	Iso2UsdPair  = "ISO2-USD"
+	BtcUsdPair  = "BTC-USD"
+	EthUsdPair  = "ETH-USD"
+	PolUsdPair  = "POL-USD"
+	SolUsdPair  = "SOL-USD"
+	LtcUsdPair  = "LTC-USD"
+	IsoUsdPair  = "ISO-USD"
+	Iso2UsdPair = "ISO2-USD"
 
-	BtcUsdExponent   = -5
-	EthUsdExponent   = -6
-	LinkUsdExponent  = -8
-	MaticUsdExponent = -9
-	CrvUsdExponent   = -10
-	SolUsdExponent   = -8
-	LtcUsdExponent   = -7
-	IsoUsdExponent   = -8
-	Iso2UsdExponent  = -7
+	BtcUsdExponent  = -5
+	EthUsdExponent  = -6
+	LinkUsdExponent = -8
+	PolUsdExponent  = -9
+	CrvUsdExponent  = -10
+	SolUsdExponent  = -8
+	LtcUsdExponent  = -7
+	IsoUsdExponent  = -8
+	Iso2UsdExponent = -7
 
 	CoinbaseExchangeName  = "Coinbase"
 	BinanceExchangeName   = "Binance"

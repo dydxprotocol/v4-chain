@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 
 	pf_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
@@ -310,7 +311,7 @@ func generateTestMarketPriceExponentMap() map[types.MarketId]types.Exponent {
 	marketExponents[exchange_config.MARKET_BTC_USD] = constants.BtcUsdExponent
 	marketExponents[exchange_config.MARKET_ETH_USD] = constants.EthUsdExponent
 	marketExponents[exchange_config.MARKET_LINK_USD] = constants.LinkUsdExponent
-	marketExponents[exchange_config.MARKET_MATIC_USD] = constants.MaticUsdExponent
+	marketExponents[exchange_config.MARKET_POL_USD] = constants.PolUsdExponent
 	marketExponents[exchange_config.MARKET_CRV_USD] = constants.CrvUsdExponent
 	marketExponents[unavailableId] = unavailableExponent
 	return marketExponents

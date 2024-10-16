@@ -30,8 +30,8 @@ var (
 					Ticker:         "LINKUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
-				MARKET_MATIC_USD: {
-					Ticker:         "MATICUSDT",
+				MARKET_POL_USD: {
+					Ticker:         "POLUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_CRV_USD: {
@@ -224,8 +224,8 @@ var (
 				MARKET_USDT_USD: {
 					Ticker: "USDTZUSD",
 				},
-				MARKET_MATIC_USD: {
-					Ticker: "MATICUSD",
+				MARKET_POL_USD: {
+					Ticker: "POLUSD",
 				},
 				MARKET_MKR_USD: {
 					Ticker: "MKRUSD",
@@ -242,8 +242,8 @@ var (
 					Ticker:         "DYDX_USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
-				MARKET_MATIC_USD: {
-					Ticker:         "MATIC_USDT",
+				MARKET_POL_USD: {
+					Ticker:         "POL_USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_CRV_USD: {
@@ -443,8 +443,8 @@ var (
 					Ticker:         "DOTUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
-				MARKET_MATIC_USD: {
-					Ticker:         "MATICUSDT",
+				MARKET_POL_USD: {
+					Ticker:         "POLUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_USDT_USD: {
@@ -460,8 +460,8 @@ var (
 		exchange_common.EXCHANGE_ID_HUOBI: {
 			Id: exchange_common.EXCHANGE_ID_HUOBI,
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
-				MARKET_MATIC_USD: {
-					Ticker:         "maticusdt",
+				MARKET_POL_USD: {
+					Ticker:         "polusdt",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_SOL_USD: {
@@ -554,8 +554,8 @@ var (
 					Ticker:         "LINK-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
-				MARKET_MATIC_USD: {
-					Ticker:         "MATIC-USDT",
+				MARKET_POL_USD: {
+					Ticker:         "POL-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_CRV_USD: {
@@ -700,8 +700,8 @@ var (
 					Ticker:         "LINK-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
-				MARKET_MATIC_USD: {
-					Ticker:         "MATIC-USDT",
+				MARKET_POL_USD: {
+					Ticker:         "POL-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_CRV_USD: {
@@ -834,8 +834,8 @@ var (
 				MARKET_LINK_USD: {
 					Ticker: "LINK-USD",
 				},
-				MARKET_MATIC_USD: {
-					Ticker: "MATIC-USD",
+				MARKET_POL_USD: {
+					Ticker: "POL-USD",
 				},
 				MARKET_CRV_USD: {
 					Ticker: "CRV-USD",
