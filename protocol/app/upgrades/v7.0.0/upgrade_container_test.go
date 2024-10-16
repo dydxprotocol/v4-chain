@@ -128,8 +128,8 @@ func postUpgradeMegavaultSharesCheck(node *containertest.Node, t *testing.T) {
 		constants.BobAccAddress.String():   big.NewInt(3_001_347),
 		constants.CarlAccAddress.String():  big.NewInt(666_666),
 	}
-	// 233_198 + 300_134 + 66_666 = 599_998
-	expectedTotalShares := big.NewInt(599_998)
+	// 2_331_986 + 3_001_347 + 666_666 = 5_999_999
+	expectedTotalShares := big.NewInt(5_999_999)
 
 	// Check MegaVault total shares.
 	resp, err := containertest.Query(
