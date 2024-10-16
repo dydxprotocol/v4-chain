@@ -30,10 +30,6 @@ var (
 					Ticker:         "LINKUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
-				MARKET_POL_USD: {
-					Ticker:         "POLUSDT",
-					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
-				},
 				MARKET_CRV_USD: {
 					Ticker:         "CRVUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
@@ -224,9 +220,6 @@ var (
 				MARKET_USDT_USD: {
 					Ticker: "USDTZUSD",
 				},
-				MARKET_POL_USD: {
-					Ticker: "POLUSD",
-				},
 				MARKET_MKR_USD: {
 					Ticker: "MKRUSD",
 				},
@@ -240,10 +233,6 @@ var (
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
 				MARKET_DYDX_USD: {
 					Ticker:         "DYDX_USDT",
-					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
-				},
-				MARKET_POL_USD: {
-					Ticker:         "POL_USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_CRV_USD: {
@@ -454,16 +443,16 @@ var (
 			},
 		},
 		exchange_common.EXCHANGE_ID_CRYPTO_COM: {
-			Id:                   exchange_common.EXCHANGE_ID_CRYPTO_COM,
-			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{},
+			Id: exchange_common.EXCHANGE_ID_CRYPTO_COM,
+			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				MARKET_POL_USD: {
+					Ticker: "POL_USD",
+				},
+			},
 		},
 		exchange_common.EXCHANGE_ID_HUOBI: {
 			Id: exchange_common.EXCHANGE_ID_HUOBI,
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
-				MARKET_POL_USD: {
-					Ticker:         "polusdt",
-					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
-				},
 				MARKET_SOL_USD: {
 					Ticker:         "solusdt",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
@@ -552,10 +541,6 @@ var (
 				},
 				MARKET_LINK_USD: {
 					Ticker:         "LINK-USDT",
-					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
-				},
-				MARKET_POL_USD: {
-					Ticker:         "POL-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_CRV_USD: {

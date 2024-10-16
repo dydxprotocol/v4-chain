@@ -16,7 +16,7 @@ const (
 	// by the pricefeed daemon. This number was chosen to supply the minimum number of prices required to
 	// compute an index price for a market, given exchange unavailability due to exchange geo-fencing,
 	// downtime, etc.
-	MinimumRequiredExchangesPerMarket = 5
+	MinimumRequiredExchangesPerMarket = 4
 )
 
 // GenerateExchangeConfigJson generates human-readable exchange config json for each market based on the contents
