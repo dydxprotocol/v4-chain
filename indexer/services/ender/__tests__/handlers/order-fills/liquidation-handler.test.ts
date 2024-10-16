@@ -132,7 +132,7 @@ describe('LiquidationHandler', () => {
     perpetualId: testConstants.defaultPerpetualMarket.id,
     side: PositionSide.LONG,
     status: PerpetualPositionStatus.OPEN,
-    size: '10',
+    size: '5',
     maxSize: '25',
     sumOpen: '10',
     entryPrice: '15000',
@@ -385,7 +385,7 @@ describe('LiquidationHandler', () => {
             defaultPerpetualPosition.openEventId,
           ),
           {
-            sumOpen: Big(defaultPerpetualPosition.size).plus(totalFilled).toFixed(),
+            sumOpen: Big(defaultPerpetualPosition.sumOpen!).plus(totalFilled).toFixed(),
             entryPrice: getWeightedAverage(
               defaultPerpetualPosition.entryPrice!,
               defaultPerpetualPosition.size,

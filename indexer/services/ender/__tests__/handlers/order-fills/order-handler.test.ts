@@ -133,7 +133,7 @@ describe('OrderHandler', () => {
     perpetualId: testConstants.defaultPerpetualMarket.id,
     side: PositionSide.LONG,
     status: PerpetualPositionStatus.OPEN,
-    size: '10',
+    size: '5',
     maxSize: '25',
     sumOpen: '10',
     entryPrice: '15000',
@@ -207,6 +207,7 @@ describe('OrderHandler', () => {
       {
         goodTilBlock: 15,
       },
+      false,
     ],
     [
       'goodTilBlockTime',
@@ -216,6 +217,17 @@ describe('OrderHandler', () => {
       {
         goodTilBlockTime: 1_000_005_000,
       },
+      false,
+    ],
+    [
+      'goodTilBlock',
+      {
+        goodTilBlock: 10,
+      },
+      {
+        goodTilBlock: 15,
+      },
+      true,
     ],
   ])(
     'creates fills and orders (with %s), sends vulcan messages for order updates and order ' +
@@ -224,6 +236,7 @@ describe('OrderHandler', () => {
       _name: string,
       makerGoodTilOneof: Partial<IndexerOrder>,
       takerGoodTilOneof: Partial<IndexerOrder>,
+      useNegativeSize: boolean,
     ) => {
       const transactionIndex: number = 0;
       const eventIndex: number = 0;
@@ -279,7 +292,10 @@ describe('OrderHandler', () => {
 
       // create PerpetualPositions
       await Promise.all([
-        PerpetualPositionTable.create(defaultPerpetualPosition),
+        PerpetualPositionTable.create({
+          ...defaultPerpetualPosition,
+          size: useNegativeSize ? '-5' : defaultPerpetualPosition.size,
+        }),
         PerpetualPositionTable.create({
           ...defaultPerpetualPosition,
           subaccountId: testConstants.defaultSubaccountId2,
@@ -432,7 +448,7 @@ describe('OrderHandler', () => {
             defaultPerpetualPosition.openEventId,
           ),
           {
-            sumOpen: Big(defaultPerpetualPosition.size).plus(totalFilled).toFixed(),
+            sumOpen: Big(defaultPerpetualPosition.sumOpen!).plus(totalFilled).toFixed(),
             entryPrice: getWeightedAverage(
               defaultPerpetualPosition.entryPrice!,
               defaultPerpetualPosition.size,
