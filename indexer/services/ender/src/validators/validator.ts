@@ -58,4 +58,13 @@ export abstract class Validator<T extends object> {
     txId: number,
     messageReceivedTimestamp: string,
   ): Handler<EventMessage>[];
+
+  /**
+   * Allows aribtrary logic to exclude events from being processed.
+   * Defaults to no events being excluded.
+   * @returns
+   */
+  public shouldExcludeEvent(): boolean {
+    return false;
+  }
 }

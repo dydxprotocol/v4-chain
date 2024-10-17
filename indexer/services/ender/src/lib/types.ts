@@ -61,6 +61,8 @@ export enum DydxIndexerSubtypes {
   UPSERT_VAULT = 'upsert_vault',
 }
 
+export const SKIPPED_EVENT_SUBTYPE = 'skipped_event';
+
 // Generic interface used for creating the Handler objects
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type EventMessage = any;

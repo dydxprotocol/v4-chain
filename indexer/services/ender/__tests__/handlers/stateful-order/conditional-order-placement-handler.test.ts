@@ -44,8 +44,11 @@ import Long from 'long';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ConditionalOrderPlacementHandler } from '../../../src/handlers/stateful-order/conditional-order-placement-handler';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
+import config from '../../../src/config';
 
 describe('conditionalOrderPlacementHandler', () => {
+  const prevSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
+
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
@@ -59,6 +62,7 @@ describe('conditionalOrderPlacementHandler', () => {
   });
 
   afterEach(async () => {
+    config.SKIP_STATEFUL_ORDER_UUIDS = prevSkippedOrderUUIDs;
     await dbHelpers.clearData();
     jest.clearAllMocks();
   });
@@ -225,5 +229,23 @@ describe('conditionalOrderPlacementHandler', () => {
       defaultOrder.orderId!.subaccountId!,
       order!,
     );
+  });
+
+  it.each([
+    ['transaction event', 0],
+    ['block event', -1],
+  ])('successfully skips order (as %s)', async (
+    _name: string,
+    transactionIndex: number,
+  ) => {
+    config.SKIP_STATEFUL_ORDER_UUIDS = OrderTable.orderIdToUuid(defaultOrder.orderId!);
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
+      defaultStatefulOrderEvent,
+      transactionIndex,
+    );
+
+    await onMessage(kafkaMessage);
+    const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
+    expect(order).toBeUndefined();
   });
 });

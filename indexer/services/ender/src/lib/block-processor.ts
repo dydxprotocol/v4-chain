@@ -37,7 +37,7 @@ import { KafkaPublisher } from './kafka-publisher';
 import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
 import {
   ConsolidatedKafkaEvent,
-  DydxIndexerSubtypes, EventMessage, EventProtoWithTypeAndVersion, GroupedEvents,
+  DydxIndexerSubtypes, EventMessage, EventProtoWithTypeAndVersion, GroupedEvents, SKIPPED_EVENT_SUBTYPE,
 } from './types';
 
 const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
@@ -216,11 +216,27 @@ export class BlockProcessor {
     );
     validator.validate();
     this.sqlEventPromises[eventProto.blockEventIndex] = validator.getEventForBlockProcessor();
-    const handlers: Handler<EventMessage>[] = validator.createHandlers(
+    let handlers: Handler<EventMessage>[] = validator.createHandlers(
       eventProto.indexerTendermintEvent,
       this.txId,
       this.messageReceivedTimestamp,
     );
+
+    if (validator.shouldExcludeEvent()) {
+      // If the event should be excluded from being processed, set the subtype to a special value
+      // for skipped events.
+      this.block.events[eventProto.blockEventIndex] = {
+        ...this.block.events[eventProto.blockEventIndex],
+        subtype: SKIPPED_EVENT_SUBTYPE,
+      };
+      // Set handlers to empty array if event is to be skipped.
+      handlers = [];
+      logger.info({
+        at: 'onMessage#shouldExcludeEvent',
+        message: 'Excluded event from processing',
+        eventProto,
+      });
+    }
 
     _.map(handlers, (handler: Handler<EventMessage>) => {
       if (SYNCHRONOUS_SUBTYPES.includes(eventProto.type as DydxIndexerSubtypes)) {

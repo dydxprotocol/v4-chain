@@ -6,6 +6,7 @@ import {
   parseSchema,
   baseConfigSchema,
   parseBoolean,
+  parseString,
 } from '@dydxprotocol-indexer/base';
 import {
   kafkaConfigSchema,
@@ -22,6 +23,13 @@ export const configSchema = {
   ...kafkaConfigSchema,
   SEND_WEBSOCKET_MESSAGES: parseBoolean({
     default: true,
+  }),
+  // Config var to skip processing stateful order events with specific uuids.
+  // Order UUIDs should be in a string delimited by commas.
+  // Only set if invalid order events are being included in a block and preventing ender from
+  // progressing.
+  SKIP_STATEFUL_ORDER_UUIDS: parseString({
+    default: '',
   }),
 };
 
