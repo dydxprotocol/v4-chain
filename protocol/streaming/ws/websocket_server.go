@@ -56,6 +56,9 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
+	// Set ws max message size to 10 mb.
+	conn.SetReadLimit(10 * 1024 * 1024)
+
 	// Parse clobPairIds from query parameters
 	clobPairIds, err := parseClobPairIds(r)
 	if err != nil {
