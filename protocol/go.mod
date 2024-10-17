@@ -62,6 +62,7 @@ require (
 	github.com/go-kit/log v0.2.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/go-metrics v0.5.3
+	github.com/hashicorp/go-version v1.7.0
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rs/zerolog v1.33.0
@@ -257,7 +258,6 @@ require (
 	github.com/hashicorp/go-plugin v1.6.0 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
-	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect

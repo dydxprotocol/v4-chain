@@ -60,7 +60,8 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=PriceUpdateGenerator --dir=./app/prepare/prices --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PriceFetcher --dir=./daemons/slinky/client --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=MarketPairFetcher --dir=./daemons/slinky/client --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=SidecarVersionChecker --dir=./daemons/slinky/client --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=OracleClient --dir=$(GOPATH)/pkg/mod/github.com/skip-mev/connect/v2@$(CONNECT_VERSION)/service/clients/oracle --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ExtendVoteHandler --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=UpdateMarketPriceTxDecoder --dir=./app/process --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=AssetsKeeper --dir=./x//types --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=AssetsKeeper --dir=./x/assets/types --recursive --output=./mocks
