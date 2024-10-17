@@ -124,15 +124,22 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		),
 		sigVerification: accountplusante.NewCircuitBreakerDecorator(
 			options.Codec,
-			accountplusante.NewAuthenticatorDecorator(
-				options.Codec,
-				options.AccountplusKeeper,
-				options.AccountKeeper,
-				options.SignModeHandler,
+			sdk.ChainAnteDecorators(
+				customante.NewEmitPubKeyEventsDecorator(),
+				accountplusante.NewAuthenticatorDecorator(
+					options.Codec,
+					options.AccountplusKeeper,
+					options.AccountKeeper,
+					options.SignModeHandler,
+				),
 			),
-			customante.NewSigVerificationDecorator(
-				options.AccountKeeper,
-				options.SignModeHandler,
+			sdk.ChainAnteDecorators(
+				ante.NewSetPubKeyDecorator(options.AccountKeeper),
+				ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
+				customante.NewSigVerificationDecorator(
+					options.AccountKeeper,
+					options.SignModeHandler,
+				),
 			),
 		),
 		consumeTxSizeGas: ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
@@ -142,8 +149,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			options.FeegrantKeeper,
 			options.TxFeeChecker,
 		),
-		setPubKey:     ante.NewSetPubKeyDecorator(options.AccountKeeper),
-		sigGasConsume: ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		clobRateLimit: clobante.NewRateLimitDecorator(options.ClobKeeper),
 		clob:          clobante.NewClobDecorator(options.ClobKeeper),
 		marketUpdates: customante.NewValidateMarketUpdateDecorator(
@@ -175,8 +180,6 @@ type lockingAnteHandler struct {
 	sigVerification          accountplusante.CircuitBreakerDecorator
 	consumeTxSizeGas         ante.ConsumeTxSizeGasDecorator
 	deductFee                ante.DeductFeeDecorator
-	setPubKey                ante.SetPubKeyDecorator
-	sigGasConsume            ante.SigGasConsumeDecorator
 	clobRateLimit            clobante.ClobRateLimitDecorator
 	clob                     clobante.ClobDecorator
 	marketUpdates            customante.ValidateMarketUpdateDecorator
@@ -252,13 +255,7 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	if ctx, err = h.consumeTxSizeGas.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
-	if ctx, err = h.setPubKey.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
-		return ctx, err
-	}
 	if ctx, err = h.validateSigCount.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
-		return ctx, err
-	}
-	if ctx, err = h.sigGasConsume.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
 	if ctx, err = h.replayProtection.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
@@ -422,13 +419,7 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	if ctx, err = h.deductFee.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
-	if ctx, err = h.setPubKey.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
-		return ctx, err
-	}
 	if ctx, err = h.validateSigCount.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
-		return ctx, err
-	}
-	if ctx, err = h.sigGasConsume.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
 	}
 	if ctx, err = h.replayProtection.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
