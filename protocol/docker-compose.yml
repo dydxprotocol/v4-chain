@@ -21,6 +21,8 @@ services:
       - "true"
       - --max-daemon-unhealthy-seconds
       - "4294967295" # Effectively disable the daemon monitor because bridge daemon is flaky in localnet.
+      - --grpc-streaming-enabled
+      - "true"
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
@@ -31,6 +33,7 @@ services:
     ports:
       - "26657:26657"
       - "9090:9090"
+      - "9092:9092" # full node streaming
       - "1317:1317"
 
   dydxprotocold1:

@@ -1,5 +1,7 @@
 package types
 
+import satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+
 // NewClobMatchFromMatchOrders creates a `ClobMatch` from the provided `MatchOrders`.
 func NewClobMatchFromMatchOrders(
 	msgMatchOrders *MatchOrders,
@@ -39,4 +41,28 @@ func (clobMatch *ClobMatch) GetAllOrderIds() (orderIds map[OrderId]struct{}) {
 		}
 	}
 	return orderIds
+}
+
+// GetAllSubaccountIds returns a set of subaccountIds involved in a ClobMatch.
+func (clobMatch *ClobMatch) GetAllSubaccountIds() (subaccountIds map[satypes.SubaccountId]struct{}) {
+	subaccountIds = make(map[satypes.SubaccountId]struct{})
+	if matchOrders := clobMatch.GetMatchOrders(); matchOrders != nil {
+		subaccountIds[matchOrders.GetTakerOrderId().SubaccountId] = struct{}{}
+		for _, makerFill := range matchOrders.GetFills() {
+			subaccountIds[makerFill.GetMakerOrderId().SubaccountId] = struct{}{}
+		}
+	}
+	if matchOrders := clobMatch.GetMatchPerpetualLiquidation(); matchOrders != nil {
+		subaccountIds[matchOrders.GetLiquidated()] = struct{}{}
+		for _, makerFill := range matchOrders.GetFills() {
+			subaccountIds[makerFill.GetMakerOrderId().SubaccountId] = struct{}{}
+		}
+	}
+	if matchOrders := clobMatch.GetMatchPerpetualDeleveraging(); matchOrders != nil {
+		subaccountIds[matchOrders.GetLiquidated()] = struct{}{}
+		for _, makerFill := range matchOrders.GetFills() {
+			subaccountIds[makerFill.GetOffsettingSubaccountId()] = struct{}{}
+		}
+	}
+	return subaccountIds
 }

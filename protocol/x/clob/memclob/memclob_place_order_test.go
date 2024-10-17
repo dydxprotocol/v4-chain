@@ -2834,14 +2834,11 @@ func TestPlaceOrder_PostOnly(t *testing.T) {
 				},
 			},
 			expectedRemainingAsks: []OrderWithRemainingSize{},
+			// Second order is not collat check'd since the first order generates a valid
+			// match, so the matching loop ends.
 			expectedCollatCheck: []expectedMatch{
 				{
 					makerOrder:      &constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB32,
-					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_PO,
-					matchedQuantums: 5,
-				},
-				{
-					makerOrder:      &constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
 					takerOrder:      &constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20_PO,
 					matchedQuantums: 5,
 				},

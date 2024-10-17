@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"time"
 
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -131,6 +133,35 @@ func (k Keeper) GetSubaccount(
 	return val
 }
 
+func (k Keeper) GetStreamSubaccountUpdate(
+	ctx sdk.Context,
+	id types.SubaccountId,
+	snapshot bool,
+) (val types.StreamSubaccountUpdate) {
+	subaccount := k.GetSubaccount(ctx, id)
+	assetPositions := make([]*types.SubaccountAssetPosition, len(subaccount.AssetPositions))
+	for i, ap := range subaccount.AssetPositions {
+		assetPositions[i] = &types.SubaccountAssetPosition{
+			AssetId:  ap.AssetId,
+			Quantums: ap.Quantums.BigInt().Uint64(),
+		}
+	}
+	perpetualPositions := make([]*types.SubaccountPerpetualPosition, len(subaccount.PerpetualPositions))
+	for i, pp := range subaccount.PerpetualPositions {
+		perpetualPositions[i] = &types.SubaccountPerpetualPosition{
+			PerpetualId: pp.PerpetualId,
+			Quantums:    pp.Quantums.BigInt().Uint64(),
+		}
+	}
+
+	return types.StreamSubaccountUpdate{
+		SubaccountId:              &id,
+		UpdatedAssetPositions:     assetPositions,
+		UpdatedPerpetualPositions: perpetualPositions,
+		Snapshot:                  snapshot,
+	}
+}
+
 // GetAllSubaccount returns all subaccount.
 // For more performant searching and iteration, use `ForEachSubaccount`.
 func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
@@ -253,6 +284,47 @@ func (k Keeper) getSettledUpdates(
 	return settledUpdates, subaccountIdToFundingPayments, nil
 }
 
+func GenerateStreamSubaccountUpdate(
+	settledUpdate types.SettledUpdate,
+	fundingPayments map[uint32]dtypes.SerializableInt,
+) types.StreamSubaccountUpdate {
+	// Get updated perpetual positions
+	updatedPerpetualPositions := salib.GetUpdatedPerpetualPositions(
+		settledUpdate,
+		fundingPayments,
+	)
+	// Convert updated perpetual positions to SubaccountPerpetualPosition type
+	perpetualPositions := make([]*types.SubaccountPerpetualPosition, len(updatedPerpetualPositions))
+	for i, pp := range updatedPerpetualPositions {
+		perpetualPositions[i] = &types.SubaccountPerpetualPosition{
+			PerpetualId: pp.PerpetualId,
+			Quantums:    pp.Quantums.BigInt().Uint64(),
+		}
+	}
+
+	updatedAssetPositions := salib.GetUpdatedAssetPositions(settledUpdate)
+	assetPositionsWithQuoteBalance := indexerevents.AddQuoteBalanceFromPerpetualPositions(
+		updatedPerpetualPositions,
+		updatedAssetPositions,
+	)
+
+	// Convert updated asset positions to SubaccountAssetPosition type
+	assetPositions := make([]*types.SubaccountAssetPosition, len(assetPositionsWithQuoteBalance))
+	for i, ap := range assetPositionsWithQuoteBalance {
+		assetPositions[i] = &types.SubaccountAssetPosition{
+			AssetId:  ap.AssetId,
+			Quantums: ap.Quantums.BigInt().Uint64(),
+		}
+	}
+
+	return types.StreamSubaccountUpdate{
+		SubaccountId:              settledUpdate.SettledSubaccount.Id,
+		UpdatedAssetPositions:     assetPositions,
+		UpdatedPerpetualPositions: perpetualPositions,
+		Snapshot:                  false,
+	}
+}
+
 // UpdateSubaccounts validates and applies all `updates` to the relevant subaccounts as long as this is a
 // valid state-transition for all subaccounts involved. All `updates` are made atomically, meaning that
 // all state-changes will either succeed or all will fail.
@@ -368,6 +440,17 @@ func (k Keeper) UpdateSubaccounts(
 				),
 			),
 		)
+
+		// If DeliverTx and GRPC streaming is on, emit a generated subaccount update to stream.
+		if lib.IsDeliverTxMode(ctx) && k.GetFullNodeStreamingManager().Enabled() {
+			if k.GetFullNodeStreamingManager().TracksSubaccountId(*u.SettledSubaccount.Id) {
+				subaccountUpdate := GenerateStreamSubaccountUpdate(u, fundingPayments)
+				k.GetFullNodeStreamingManager().SendSubaccountUpdate(
+					ctx,
+					subaccountUpdate,
+				)
+			}
+		}
 
 		// Emit an event indicating a funding payment was paid / received for each settled funding
 		// payment. Note that `fundingPaid` is positive if the subaccount paid funding,
@@ -737,4 +820,8 @@ func (k Keeper) GetAllRelevantPerpetuals(
 	}
 
 	return perpInfos, nil
+}
+
+func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingManager {
+	return k.streamingManager
 }
