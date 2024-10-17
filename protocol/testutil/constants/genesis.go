@@ -2803,8 +2803,8 @@ const GenesisState = `{
                 "Base": "POL",
                 "Quote": "USD"
               },
-              "decimals": "10",
-              "min_provider_count": "3",
+              "decimals": 10,
+              "min_provider_count": 3,
               "enabled": true
             },
             "provider_configs": [
