@@ -1,4 +1,4 @@
-package v_7_0_0
+package v_7_0
 
 import (
 	"context"

@@ -1,6 +1,6 @@
 //go:build all || container_test
 
-package v_7_0_0_test
+package v_7_0_test
 
 import (
 	"math/big"
@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	v_7_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v7.0.0"
+	v_7_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v7.0"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -38,7 +38,7 @@ func TestStateUpgrade(t *testing.T) {
 	preUpgradeSetups(node, t)
 	preUpgradeChecks(node, t)
 
-	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_7_0_0.UpgradeName)
+	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_7_0.UpgradeName)
 	require.NoError(t, err)
 
 	postUpgradeChecks(node, t)
