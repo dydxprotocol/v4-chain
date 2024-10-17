@@ -2557,83 +2557,6 @@ const GenesisState = `{
               }
             ]
           },
-          "MATIC/USD": {
-            "ticker": {
-              "currency_pair": {
-                "Base": "MATIC",
-                "Quote": "USD"
-              },
-              "decimals": 10,
-              "min_provider_count": 3,
-              "enabled": true
-            },
-            "provider_configs": [
-              {
-                "name": "binance_ws",
-                "off_chain_ticker": "MATICUSDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "bybit_ws",
-                "off_chain_ticker": "MATICUSDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "coinbase_ws",
-                "off_chain_ticker": "MATIC-USD"
-              },
-              {
-                "name": "gate_ws",
-                "off_chain_ticker": "MATIC_USDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "huobi_ws",
-                "off_chain_ticker": "maticusdt",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "kraken_api",
-                "off_chain_ticker": "MATICUSD"
-              },
-              {
-                "name": "kucoin_ws",
-                "off_chain_ticker": "MATIC-USDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "mexc_ws",
-                "off_chain_ticker": "MATICUSDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "okx_ws",
-                "off_chain_ticker": "MATIC-USDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              }
-            ]
-          },
           "MKR/USD": {
             "ticker": {
               "currency_pair": {
@@ -2867,6 +2790,51 @@ const GenesisState = `{
               {
                 "name": "okx_ws",
                 "off_chain_ticker": "PEPE-USDT",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                }
+              }
+            ]
+          },
+          "POL/USD": {
+            "ticker": {
+              "currency_pair": {
+                "Base": "POL",
+                "Quote": "USD"
+              },
+              "decimals": 10,
+              "min_provider_count": 3,
+              "enabled": true
+            },
+            "provider_configs": [
+              {
+                "name": "binance_ws",
+                "off_chain_ticker": "POLUSDT",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                }
+              },
+              {
+                "name": "bybit_ws",
+                "off_chain_ticker": "POLUSDT",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                }
+              },
+              {
+                "name": "coinbase_ws",
+                "off_chain_ticker": "POL-USD"
+              },
+              {
+                "name": "crypto_dot_com_ws",
+                "off_chain_ticker": "POL_USD"
+              },
+              {
+                "name": "okx_ws",
+                "off_chain_ticker": "POL-USDT",
                 "normalize_by_pair": {
                   "Base": "USDT",
                   "Quote": "USD"
@@ -4022,12 +3990,12 @@ const GenesisState = `{
           "pair": "LINK-USD"
         },
         {
-          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"MATICUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"MATICUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MATIC-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"MATIC_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"maticusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MATIC-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MATIC-USDT\"}]}",
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"POL-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"POL_USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"POL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
           "exponent": -10,
           "id": 3,
           "min_exchanges": 1,
           "min_price_change_ppm": 2000,
-          "pair": "MATIC-USD"
+          "pair": "POL-USD"
         },
         {
           "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"CRVUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"CRVUSD\\\"\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"CRVUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"CRV-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"CRV_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"crvusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"CRVUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"CRV-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"CRV-USDT\"}]}",

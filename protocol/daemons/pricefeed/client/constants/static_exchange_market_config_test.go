@@ -1,8 +1,9 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
@@ -27,9 +28,9 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 			id:                             exchange_config.MARKET_LINK_USD,
 			expectedExchangeConfigJsonFile: "link_exchange_config.json",
 		},
-		"MATIC exchange config": {
-			id:                             exchange_config.MARKET_MATIC_USD,
-			expectedExchangeConfigJsonFile: "matic_exchange_config.json",
+		"POL exchange config": {
+			id:                             exchange_config.MARKET_POL_USD,
+			expectedExchangeConfigJsonFile: "pol_exchange_config.json",
 		},
 		"CRV exchange config": {
 			id:                             exchange_config.MARKET_CRV_USD,
