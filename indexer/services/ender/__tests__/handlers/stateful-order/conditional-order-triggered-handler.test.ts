@@ -38,8 +38,11 @@ import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import { ConditionalOrderTriggeredHandler } from '../../../src/handlers/stateful-order/conditional-order-triggered-handler';
 import { defaultPerpetualMarket } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
+import config from '../../../src/config';
 
 describe('conditionalOrderTriggeredHandler', () => {
+  const prevSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
+
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
@@ -53,6 +56,7 @@ describe('conditionalOrderTriggeredHandler', () => {
   });
 
   afterEach(async () => {
+    config.SKIP_STATEFUL_ORDER_UUIDS = prevSkippedOrderUUIDs;
     await dbHelpers.clearData();
     jest.clearAllMocks();
   });
@@ -162,5 +166,41 @@ describe('conditionalOrderTriggeredHandler', () => {
     await expect(onMessage(kafkaMessage)).rejects.toThrowError(
       `Unable to update order status with orderId: ${orderId}`,
     );
+  });
+
+  it.each([
+    ['transaction event', 0],
+    ['block event', -1],
+  ])('successfully skips order trigger event (as %s)', async (
+    _name: string,
+    transactionIndex: number,
+  ) => {
+    config.SKIP_STATEFUL_ORDER_UUIDS = OrderTable.uuid(
+      testConstants.defaultOrderGoodTilBlockTime.subaccountId,
+      '0',
+      testConstants.defaultOrderGoodTilBlockTime.clobPairId,
+      testConstants.defaultOrderGoodTilBlockTime.orderFlags,
+    );
+    await OrderTable.create({
+      ...testConstants.defaultOrderGoodTilBlockTime,
+      orderFlags: conditionalOrderId.orderFlags.toString(),
+      status: OrderStatus.UNTRIGGERED,
+      triggerPrice: '1000',
+      clientId: '0',
+    });
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
+      defaultStatefulOrderEvent,
+      transactionIndex,
+    );
+
+    await onMessage(kafkaMessage);
+    const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
+
+    expect(order).toBeDefined();
+    expect(order).toEqual(expect.objectContaining({
+      status: OrderStatus.OPEN,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+    }));
   });
 });
