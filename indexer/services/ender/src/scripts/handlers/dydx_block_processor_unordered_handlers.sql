@@ -67,6 +67,8 @@ BEGIN
                 rval[i] = dydx_trading_rewards_handler(block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index));
             WHEN '"register_affiliate"'::jsonb THEN
                 rval[i] = dydx_register_affiliate_handler(block_height, event_data);
+            WHEN '"skipped_event"'::jsonb THEN
+                rval[i] = jsonb_build_object();
             ELSE
                 NULL;
             END CASE;
