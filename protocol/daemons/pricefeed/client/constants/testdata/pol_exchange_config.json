@@ -1,0 +1,27 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "POLUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "POLUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "POL-USD"
+    },
+    {
+      "exchangeName": "CryptoCom",
+      "ticker": "POL_USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "POL-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

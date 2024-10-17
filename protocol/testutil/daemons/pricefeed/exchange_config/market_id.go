@@ -10,8 +10,8 @@ const (
 	MARKET_ETH_USD types.MarketId = 1
 	// MARKET_LINK_USD is the id for the LINK-USD market pair.
 	MARKET_LINK_USD types.MarketId = 2
-	// MARKET_MATIC_USD is the id for the MATIC-USD market pair.
-	MARKET_MATIC_USD types.MarketId = 3
+	// MARKET_POL_USD is the id for the POL-USD market pair.
+	MARKET_POL_USD types.MarketId = 3
 	// MARKET_CRV_USD is the id for the CRV-USD market pair.
 	MARKET_CRV_USD types.MarketId = 4
 	// MARKET_SOL_USD is the id for the SOL-USD market pair.
