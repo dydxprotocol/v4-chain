@@ -824,22 +824,6 @@ func TestPlaceLongTermOrder(t *testing.T) {
 									EventIndex:          2,
 									Version:             indexerevents.OrderFillEventVersion,
 								},
-								{
-									Subtype: indexerevents.SubtypeOpenInterestUpdate,
-									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
-										BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
-									},
-									Version: indexerevents.OpenInterestUpdateVersion,
-									DataBytes: indexer_manager.GetBytes(
-										&indexerevents.OpenInterestUpdateEventV1{
-											OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
-												{
-													PerpetualId:  Clob_0.MustGetPerpetualId(),
-													OpenInterest: dtypes.NewInt(10_000_000_000),
-												},
-											},
-										}),
-								},
 							},
 							TxHashes: []string{
 								string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
@@ -1167,22 +1151,6 @@ func TestPlaceLongTermOrder(t *testing.T) {
 									EventIndex:          2,
 									Version:             indexerevents.OrderFillEventVersion,
 								},
-								{
-									Subtype: indexerevents.SubtypeOpenInterestUpdate,
-									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
-										BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
-									},
-									Version: indexerevents.OpenInterestUpdateVersion,
-									DataBytes: indexer_manager.GetBytes(
-										&indexerevents.OpenInterestUpdateEventV1{
-											OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
-												{
-													PerpetualId:  Clob_0.MustGetPerpetualId(),
-													OpenInterest: dtypes.NewInt(10_000_000_000),
-												},
-											},
-										}),
-								},
 							},
 							TxHashes: []string{
 								string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
@@ -1336,22 +1304,6 @@ func TestPlaceLongTermOrder(t *testing.T) {
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 									EventIndex:          2,
 									Version:             indexerevents.OrderFillEventVersion,
-								},
-								{
-									Subtype: indexerevents.SubtypeOpenInterestUpdate,
-									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
-										BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
-									},
-									Version: indexerevents.OpenInterestUpdateVersion,
-									DataBytes: indexer_manager.GetBytes(
-										&indexerevents.OpenInterestUpdateEventV1{
-											OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
-												{
-													PerpetualId:  Clob_0.MustGetPerpetualId(),
-													OpenInterest: dtypes.NewInt(20_000_000_000),
-												},
-											},
-										}),
 								},
 							},
 							TxHashes: []string{
@@ -1734,22 +1686,6 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 									EventIndex:          2,
 									Version:             indexerevents.OrderFillEventVersion,
-								},
-								{
-									Subtype: indexerevents.SubtypeOpenInterestUpdate,
-									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
-										BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
-									},
-									Version: indexerevents.OpenInterestUpdateVersion,
-									DataBytes: indexer_manager.GetBytes(
-										&indexerevents.OpenInterestUpdateEventV1{
-											OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
-												{
-													PerpetualId:  Clob_0.MustGetPerpetualId(),
-													OpenInterest: dtypes.NewInt(10_000_000_000),
-												},
-											},
-										}),
 								},
 							},
 							TxHashes: []string{
