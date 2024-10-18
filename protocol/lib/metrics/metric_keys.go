@@ -73,9 +73,8 @@ const (
 	FullNodeGrpc                                  = "full_node_grpc"
 	GrpcSendOrderbookUpdatesLatency               = "grpc_send_orderbook_updates_latency"
 	GrpcSendOrderbookSnapshotLatency              = "grpc_send_orderbook_snapshot_latency"
-	GrpcSendSubaccountSnapshotLatency             = "grpc_send_subaccount_snapshot_latency"
+	GrpcSendSubaccountUpdateCount                 = "grpc_send_subaccount_update_count"
 	GrpcSendOrderbookFillsLatency                 = "grpc_send_orderbook_fills_latency"
-	GrpcSendFinalizedSubaccountUpdatesLatency     = "grpc_send_finalized_subaccount_updates_latency"
 	GrpcAddUpdateToBufferCount                    = "grpc_add_update_to_buffer_count"
 	GrpcAddToSubscriptionChannelCount             = "grpc_add_to_subscription_channel_count"
 	GrpcSendResponseToSubscriberCount             = "grpc_send_response_to_subscriber_count"
@@ -86,6 +85,7 @@ const (
 	GrpcStagedAllFinalizeBlockUpdatesCount        = "grpc_staged_all_finalize_block_updates_count"
 	GrpcStagedFillFinalizeBlockUpdatesCount       = "grpc_staged_finalize_block_fill_updates_count"
 	GrpcStagedSubaccountFinalizeBlockUpdatesCount = "grpc_staged_finalize_block_subaccount_updates_count"
+	SubscriptionId                                = "subscription_id"
 
 	EndBlocker    = "end_blocker"
 	EndBlockerLag = "end_blocker_lag"
