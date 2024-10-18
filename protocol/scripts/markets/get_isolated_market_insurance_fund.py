@@ -1,6 +1,6 @@
+import argparse
 import requests
 import subprocess
-import math
 
 """
 Instructions:
@@ -13,16 +13,11 @@ Instructions:
 
     `cd v4-chain/protocol && make clean && make build`
 
-3. Update the ENDPOINT and BINARY_PATH variables with the URL of the endpoint to fetch the markets 
-   and your local path to the `dydxprotocold` binary.
+3. Run the script using the correct endpoint and binary path:
 
-example: 
- * https://dydx-ops-rest.kingnodes.com
- * https://test-dydx-rest.kingnodes.com
-
-4. Run the script:
-
-    `python3 get_isolated_market_insurance_fund.py`
+    `python3 get_isolated_market_insurance_fund.py \
+        --endpoint=https://dydx-ops-rest.kingnodes.com \
+        --binary_path=/Users/taehoonlee/v4-chain/protocol/build/dydxprotocold`
 """
 
 ENDPOINT = "https://dydx-ops-rest.kingnodes.com"
@@ -136,6 +131,8 @@ def get_insurance_fund_address_for_markets(binary_path, market_ids):
         # Construct the command
         command = [binary_path, "q", "module-name-to-address", "insurance_fund:" + str(market_id)]
         address = run_dydxprotocold(command)
+        if not address:
+            throw(f"Failed to get insurance fund address for market_id: {market_id}")
         market_id_to_address.append((market_id, address))
 
     return market_id_to_address
@@ -145,7 +142,7 @@ def get_bank_balance(market_id_to_address, base_endpoint_url):
 
     address_to_balance = {}
 
-    for market_id, address in market_id_to_address:
+    for _, address in market_id_to_address:
         try:
             # Make the GET request
             response = requests.get(url + address)
@@ -154,14 +151,16 @@ def get_bank_balance(market_id_to_address, base_endpoint_url):
             # Parse the JSON response
             data = response.json()
             balances = data.get('balances', [])
-            assert(len(balances) <= 1)
             bank_balance = 0
+
+            if len(balances) > 1:
+                raise ValueError("Expected at most one balance entry.")
             if len(balances) == 1:
-                assert(balances[0].get('denom') == 'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5')
+                if balances[0].get('denom') != 'ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5':
+                    raise ValueError("Unexpected 'denom' value in balances.")
                 bank_balance = int(balances[0].get('amount'))
                 bank_balance = bank_balance / (10 ** 6)
             address_to_balance[address] = bank_balance
-
 
         except requests.RequestException as e:
             print(f"Request failed: {e}")
@@ -190,8 +189,16 @@ def print_market_info(market_id_to_address, address_to_balance, id_to_pair):
         )
 
 
-id_to_pair = get_id_to_pair(ENDPOINT)
-market_ids = get_isolated_market_ids(ENDPOINT)
-market_id_to_address = get_insurance_fund_address_for_markets(BINARY_PATH, market_ids)
-address_to_balance = get_bank_balance(market_id_to_address, ENDPOINT)
-print_market_info(market_id_to_address, address_to_balance, id_to_pair)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Get insurance fund balances for all isolated markets.')
+    parser.add_argument('--endpoint', required=True, help='The endpoint URL to fetch the markets.')
+    parser.add_argument('--binary_path', required=True, help='The local path to the `dydxprotocold` binary.')
+    args = parser.parse_args()
+    endpoint = args.endpoint
+    binary_path = args.binary_path
+
+    id_to_pair = get_id_to_pair(endpoint)
+    market_ids = get_isolated_market_ids(endpoint)
+    market_id_to_address = get_insurance_fund_address_for_markets(binary_path, market_ids)
+    address_to_balance = get_bank_balance(market_id_to_address, endpoint)
+    print_market_info(market_id_to_address, address_to_balance, id_to_pair)
