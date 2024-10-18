@@ -69,6 +69,8 @@ BEGIN
                 rval[i] = dydx_funding_handler(block_height, block_time, event_data, event_index, transaction_index);
             WHEN '"upsert_vault"'::jsonb THEN
                 rval[i] = dydx_vault_upsert_handler(block_time, event_data);
+            WHEN '"skipped_event"'::jsonb THEN
+                rval[i] = jsonb_build_object();
             ELSE
                 NULL;
             END CASE;
