@@ -13,15 +13,12 @@ Instructions:
 
     `cd v4-chain/protocol && make clean && make build`
 
-3. Run the script using the correct endpoint and binary path:
+3. Run the script using the correct endpoint and binary path. Example:
 
-    `python3 get_isolated_market_insurance_fund.py \
+    `python3 scripts/markets/get_isolated_market_insurance_fund.py \
         --endpoint=https://dydx-ops-rest.kingnodes.com \
         --binary_path=/Users/taehoonlee/v4-chain/protocol/build/dydxprotocold`
 """
-
-ENDPOINT = "https://dydx-ops-rest.kingnodes.com"
-BINARY_PATH = "/Users/taehoonlee/v4-chain/protocol/build/dydxprotocold"
 
 def get_id_to_pair(base_endpoint_url):
     endpoint_url = base_endpoint_url + "/dydxprotocol/prices/params/market"
