@@ -311,7 +311,7 @@ describe('transferHandler', () => {
     expect(wallet).toEqual(defaultWallet);
   });
 
-  it('creates new deposit for previously non-existent subaccount', async () => {
+  it('creates new deposit for previously non-existent subaccount (also non-existent recipient wallet)', async () => {
     const transactionIndex: number = 0;
 
     const depositEvent: TransferEventV1 = defaultDepositEvent;
@@ -348,16 +348,23 @@ describe('transferHandler', () => {
       newTransfer,
       asset,
     );
-    // Confirm the wallet was created
-    const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
+    // Confirm the wallet was created for the sender and recipient
+    const walletSender: WalletFromDatabase | undefined = await WalletTable.findById(
       defaultWalletAddress,
+    );
+    const walletRecipient: WalletFromDatabase | undefined = await WalletTable.findById(
+      defaultDepositEvent.recipient!.subaccountId!.owner,
     );
     const newRecipientSubaccount: SubaccountFromDatabase | undefined = await
     SubaccountTable.findById(
       defaultRecipientSubaccountId,
     );
     expect(newRecipientSubaccount).toBeDefined();
-    expect(wallet).toEqual(defaultWallet);
+    expect(walletSender).toEqual(defaultWallet);
+    expect(walletRecipient).toEqual({
+      ...defaultWallet,
+      address: defaultDepositEvent.recipient!.subaccountId!.owner,
+    });
   });
 
   it('creates new withdrawal for existing subaccount', async () => {
