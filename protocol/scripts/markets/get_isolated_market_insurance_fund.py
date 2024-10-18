@@ -129,7 +129,7 @@ def get_insurance_fund_address_for_markets(binary_path, market_ids):
         command = [binary_path, "q", "module-name-to-address", "insurance_fund:" + str(market_id)]
         address = run_dydxprotocold(command)
         if not address:
-            throw(f"Failed to get insurance fund address for market_id: {market_id}")
+            raise Exception(f"Failed to get insurance fund address for market_id: {market_id}")
         market_id_to_address.append((market_id, address))
 
     return market_id_to_address
