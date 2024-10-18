@@ -153,7 +153,7 @@ func (sm *FullNodeStreamingManagerImpl) Enabled() bool {
 }
 
 func (sm *FullNodeStreamingManagerImpl) EmitMetrics() {
-	metrics.SetGauge(
+	metrics.AddSample(
 		metrics.GrpcStreamNumUpdatesBuffered,
 		float32(len(sm.streamUpdateCache)),
 	)
@@ -162,9 +162,10 @@ func (sm *FullNodeStreamingManagerImpl) EmitMetrics() {
 		float32(len(sm.orderbookSubscriptions)),
 	)
 	for _, subscription := range sm.orderbookSubscriptions {
-		metrics.AddSample(
+		metrics.AddSampleWithLabels(
 			metrics.GrpcSubscriptionChannelLength,
 			float32(len(subscription.updatesChannel)),
+			metrics.GetLabelForIntValue(metrics.SubscriptionId, int(subscription.subscriptionId)),
 		)
 	}
 }
@@ -234,9 +235,10 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	// Use current goroutine to consistently poll subscription channel for updates
 	// to send through stream.
 	for updates := range subscription.updatesChannel {
-		metrics.IncrCounter(
+		metrics.IncrCounterWithLabels(
 			metrics.GrpcSendResponseToSubscriberCount,
 			1,
+			metrics.GetLabelForIntValue(metrics.SubscriptionId, int(subscription.subscriptionId)),
 		)
 		err = subscription.messageSender.Send(
 			&clobtypes.StreamOrderbookUpdatesResponse{
@@ -372,9 +374,17 @@ func (sm *FullNodeStreamingManagerImpl) sendStreamUpdates(
 		return
 	}
 
+	metrics.IncrCounterWithLabels(
+		metrics.GrpcAddToSubscriptionChannelCount,
+		1,
+		metrics.GetLabelForIntValue(metrics.SubscriptionId, int(subscriptionId)),
+	)
+
 	select {
 	case subscription.updatesChannel <- streamUpdates:
 	default:
+		// Buffer is full. Emit metric and drop subscription.
+		sm.EmitMetrics()
 		sm.logger.Error(
 			fmt.Sprintf(
 				"Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
@@ -398,6 +408,11 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdate(
 	if !lib.IsDeliverTxMode(ctx) {
 		return
 	}
+
+	metrics.IncrCounter(
+		metrics.GrpcSendSubaccountUpdateCount,
+		1,
+	)
 
 	// If `DeliverTx`, updates should be staged to be streamed after consensus finalizes on a block.
 	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
@@ -705,9 +720,9 @@ func (sm *FullNodeStreamingManagerImpl) AddOrderUpdatesToCache(
 
 	sm.cacheStreamUpdatesByClobPairWithLock(updates, clobPairIds)
 
+	sm.EmitMetrics()
 	// Remove all subscriptions and wipe the buffer if buffer overflows.
 	sm.RemoveSubscriptionsAndClearBufferIfFull()
-	sm.EmitMetrics()
 }
 
 // AddSubaccountUpdatesToCache adds a series of updates to the full node streaming cache.
@@ -726,8 +741,8 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 
 	sm.cacheStreamUpdatesBySubaccountWithLock(updates, subaccountIds)
 
-	sm.RemoveSubscriptionsAndClearBufferIfFull()
 	sm.EmitMetrics()
+	sm.RemoveSubscriptionsAndClearBufferIfFull()
 }
 
 // RemoveSubscriptionsAndClearBufferIfFull removes all subscriptions and wipes the buffer if buffer overflows.
@@ -743,6 +758,7 @@ func (sm *FullNodeStreamingManagerImpl) RemoveSubscriptionsAndClearBufferIfFull(
 		}
 		sm.streamUpdateCache = nil
 		sm.streamUpdateSubscriptionCache = nil
+		sm.EmitMetrics()
 	}
 }
 
@@ -778,13 +794,16 @@ func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 	// If the buffer is full, drop the subscription.
 	for id, updates := range subscriptionUpdates {
 		if subscription, ok := sm.orderbookSubscriptions[id]; ok {
-			metrics.IncrCounter(
+			metrics.IncrCounterWithLabels(
 				metrics.GrpcAddToSubscriptionChannelCount,
 				1,
+				metrics.GetLabelForIntValue(metrics.SubscriptionId, int(id)),
 			)
 			select {
 			case subscription.updatesChannel <- updates:
 			default:
+				// Buffer is full. Emit metric and drop subscription.
+				sm.EmitMetrics()
 				idsToRemove = append(idsToRemove, id)
 			}
 		}
