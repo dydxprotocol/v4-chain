@@ -10,9 +10,6 @@ import (
 )
 
 func TestRegisterAffiliateInvalidSigner(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-	ctx := tApp.InitChain()
-
 	testCases := []struct {
 		name          string
 		referee       string
@@ -45,6 +42,9 @@ func TestRegisterAffiliateInvalidSigner(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+
 			msgRegisterAffiliate := types.MsgRegisterAffiliate{
 				Referee:   tc.referee,
 				Affiliate: tc.affiliate,

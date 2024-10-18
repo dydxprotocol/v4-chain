@@ -1113,6 +1113,28 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
+	// Initialize authenticators
+	app.AuthenticatorManager = authenticator.NewAuthenticatorManager()
+	app.AuthenticatorManager.InitializeAuthenticators(
+		[]accountplusmoduletypes.Authenticator{
+			authenticator.NewAllOf(app.AuthenticatorManager),
+			authenticator.NewAnyOf(app.AuthenticatorManager),
+			authenticator.NewSignatureVerification(app.AccountKeeper),
+			authenticator.NewMessageFilter(),
+			authenticator.NewClobPairIdFilter(),
+			authenticator.NewSubaccountFilter(),
+		},
+	)
+	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
+		appCodec,
+		keys[accountplusmoduletypes.StoreKey],
+		app.AuthenticatorManager,
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+	)
+	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
+
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
 	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
@@ -1231,28 +1253,6 @@ func New(
 		app.PerpetualsKeeper,
 		app.VaultKeeper,
 	)
-
-	// Initialize authenticators
-	app.AuthenticatorManager = authenticator.NewAuthenticatorManager()
-	app.AuthenticatorManager.InitializeAuthenticators(
-		[]accountplusmoduletypes.Authenticator{
-			authenticator.NewAllOf(app.AuthenticatorManager),
-			authenticator.NewAnyOf(app.AuthenticatorManager),
-			authenticator.NewSignatureVerification(app.AccountKeeper),
-			authenticator.NewMessageFilter(),
-			authenticator.NewClobPairIdFilter(),
-			authenticator.NewSubaccountFilter(),
-		},
-	)
-	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
-		appCodec,
-		keys[accountplusmoduletypes.StoreKey],
-		app.AuthenticatorManager,
-		[]string{
-			lib.GovModuleAddress.String(),
-		},
-	)
-	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 
 	/****  Module Options ****/
 
