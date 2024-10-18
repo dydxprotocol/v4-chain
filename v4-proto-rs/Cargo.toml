@@ -1,0 +1,19 @@
+[package]
+name = "v4-proto-rs"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0"
+
+[lib]
+doctest = false
+
+[dependencies]
+cosmos-sdk-proto = "0.21.1"
+tonic = { version = "0.11", features = ["tls", "tls-roots", "transport", "channel"] }
+prost = "0.12"
+prost-types = "0.12"
+
+[build-dependencies]
+tonic-buf-build = "0.2.1"
+prost-build = "0.12" # keep the version the same as in tonic-buf-build
+tonic-build = "0.11" # keep the version the same as in tonic-buf-build
