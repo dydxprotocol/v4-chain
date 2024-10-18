@@ -37,6 +37,13 @@ type SubaccountsKeeper interface {
 	) (
 		val satypes.Subaccount,
 	)
+	GetStreamSubaccountUpdate(
+		ctx sdk.Context,
+		id satypes.SubaccountId,
+		snapshot bool,
+	) (
+		val satypes.StreamSubaccountUpdate,
+	)
 	GetAllSubaccount(
 		ctx sdk.Context,
 	) (
