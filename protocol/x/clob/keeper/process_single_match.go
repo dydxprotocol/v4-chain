@@ -143,6 +143,8 @@ func (k Keeper) ProcessSingleMatch(
 	takerInsuranceFundDelta := new(big.Int)
 	validatorFeeQuoteQuantums := new(big.Int)
 	liquidityFeeQuoteQuantums := new(big.Int)
+	routerTakerFeePpm := int32(0)
+	routerMakerFeePpm := int32(0)
 	if takerMatchableOrder.IsLiquidation() {
 		// Liquidation orders do not pay trading fees because they already pay a liquidation fee.
 		takerFeePpm = 0
@@ -160,6 +162,13 @@ func (k Keeper) ProcessSingleMatch(
 
 		if err != nil {
 			return false, takerUpdateResult, makerUpdateResult, nil, err
+		}
+	} else {
+		if matchWithOrders.TakerOrder.MustGetOrder().RouterSubaccountId != nil {
+			routerTakerFeePpm = matchWithOrders.TakerOrder.MustGetOrder().RouterFeePpm
+		}
+		if matchWithOrders.MakerOrder.MustGetOrder().RouterSubaccountId != nil {
+			routerMakerFeePpm = matchWithOrders.MakerOrder.MustGetOrder().RouterFeePpm
 		}
 	}
 
@@ -228,6 +237,8 @@ func (k Keeper) ProcessSingleMatch(
 		takerInsuranceFundDelta,
 		validatorFeeQuoteQuantums,
 		liquidityFeeQuoteQuantums,
+		routerTakerFeePpm,
+		routerMakerFeePpm,
 	)
 
 	if err != nil {
@@ -317,6 +328,8 @@ func (k Keeper) persistMatchedOrders(
 	insuranceFundDelta *big.Int,
 	validatorFeeQuoteQuantums *big.Int,
 	liquidityFeeQuoteQuantums *big.Int,
+	routerTakerFeePpm int32,
+	routerMakerFeePpm int32,
 ) (
 	takerUpdateResult satypes.UpdateResult,
 	makerUpdateResult satypes.UpdateResult,
@@ -328,12 +341,15 @@ func (k Keeper) persistMatchedOrders(
 	bigTakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, takerFeePpm, true)
 	bigMakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, makerFeePpm, true)
 
-	matchWithOrders.MakerFee = bigMakerFeeQuoteQuantums.Int64()
+	bigRouterTakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, routerTakerFeePpm, true)
+	bigRouterMakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, routerMakerFeePpm, true)
+
+	matchWithOrders.MakerFee = bigMakerFeeQuoteQuantums.Int64() + bigRouterMakerFeeQuoteQuantums.Int64()
 	// Liquidation orders pay the liquidation fee instead of the standard taker fee
 	if matchWithOrders.TakerOrder.IsLiquidation() {
 		matchWithOrders.TakerFee = insuranceFundDelta.Int64() + validatorFeeQuoteQuantums.Int64() + liquidityFeeQuoteQuantums.Int64()
 	} else {
-		matchWithOrders.TakerFee = bigTakerFeeQuoteQuantums.Int64()
+		matchWithOrders.TakerFee = bigTakerFeeQuoteQuantums.Int64() + bigRouterTakerFeeQuoteQuantums.Int64()
 	}
 
 	// If the taker is a liquidation order, it should never pay fees.
@@ -364,6 +380,9 @@ func (k Keeper) persistMatchedOrders(
 	// Subtract quote balance delta with fees paid.
 	bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, bigTakerFeeQuoteQuantums)
 	bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, bigMakerFeeQuoteQuantums)
+
+	bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, bigRouterTakerFeeQuoteQuantums)
+	bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, bigRouterMakerFeeQuoteQuantums)
 
 	// Subtract quote balance delta with insurance fund payments.
 	if matchWithOrders.TakerOrder.IsLiquidation() {
@@ -406,6 +425,31 @@ func (k Keeper) persistMatchedOrders(
 			},
 			SubaccountId: matchWithOrders.MakerOrder.GetSubaccountId(),
 		},
+	}
+
+	if !isTakerLiquidation {
+		if matchWithOrders.TakerOrder.MustGetOrder().RouterSubaccountId != nil && bigRouterTakerFeeQuoteQuantums.Sign() != 0 {
+			updates = append(updates, satypes.Update{
+				AssetUpdates: []satypes.AssetUpdate{
+					{
+						AssetId:          assettypes.AssetTDai.Id,
+						BigQuantumsDelta: bigRouterTakerFeeQuoteQuantums,
+					},
+				},
+				SubaccountId: *matchWithOrders.TakerOrder.MustGetOrder().RouterSubaccountId,
+			})
+		}
+		if matchWithOrders.MakerOrder.MustGetOrder().RouterSubaccountId != nil && bigRouterMakerFeeQuoteQuantums.Sign() != 0 {
+			updates = append(updates, satypes.Update{
+				AssetUpdates: []satypes.AssetUpdate{
+					{
+						AssetId:          assettypes.AssetTDai.Id,
+						BigQuantumsDelta: bigRouterMakerFeeQuoteQuantums,
+					},
+				},
+				SubaccountId: *matchWithOrders.MakerOrder.MustGetOrder().RouterSubaccountId,
+			})
+		}
 	}
 
 	// Apply the update.
