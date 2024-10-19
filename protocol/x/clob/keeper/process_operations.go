@@ -48,42 +48,7 @@ func (k Keeper) ProcessProposerOperations(
 
 	// Collect the list of order ids filled and set the field in the `ProcessProposerMatchesEvents` object.
 	processProposerMatchesEvents := k.GenerateProcessProposerMatchesEvents(ctx, operations)
-
-	// Remove fully filled orders from state.
-	for _, orderId := range processProposerMatchesEvents.OrderIdsFilledInLastBlock {
-		if orderId.IsShortTermOrder() {
-			continue
-		}
-
-		orderPlacement, placementExists := k.GetLongTermOrderPlacement(ctx, orderId)
-		if placementExists {
-			fillAmountExists, orderStateFillAmount, _ := k.GetOrderFillAmount(ctx, orderId)
-			if !fillAmountExists {
-				panic("ProcessProposerOperations: Order fill amount does not exist in state")
-			}
-			if orderStateFillAmount > orderPlacement.Order.GetBaseQuantums() {
-				panic("ProcessProposerOperations: Order fill amount exceeds order amount")
-			}
-
-			// If the order is fully filled, remove it from state.
-			if orderStateFillAmount == orderPlacement.Order.GetBaseQuantums() {
-				k.MustRemoveStatefulOrder(ctx, orderId)
-				telemetry.IncrCounterWithLabels(
-					[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
-					1,
-					append(
-						orderPlacement.Order.GetOrderLabels(),
-						metrics.GetLabelForStringValue(metrics.RemovalReason, types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED.String()),
-					),
-				)
-
-				processProposerMatchesEvents.RemovedStatefulOrderIds = append(
-					processProposerMatchesEvents.RemovedStatefulOrderIds,
-					orderId,
-				)
-			}
-		}
-	}
+	k.removeFullyFilledStatefulOrdersFromState(ctx, &processProposerMatchesEvents)
 
 	// Update the memstore with list of orderIds filled during this block.
 	// During commit, all orders that have been fully filled during this block will be removed from the memclob.
@@ -92,9 +57,7 @@ func (k Keeper) ProcessProposerOperations(
 		processProposerMatchesEvents,
 	)
 
-	// Emit stats about the proposed operations.
-	operationsStats := types.StatMsgProposedOperations(rawOperations)
-	operationsStats.EmitStats(metrics.DeliverTx)
+	k.emitProposedOperationsStats(rawOperations)
 
 	return nil
 }
@@ -827,4 +790,79 @@ func (k Keeper) GenerateProcessProposerMatchesEvents(
 		ConditionalOrderIdsTriggeredInLastBlock: []types.OrderId{},
 		BlockHeight:                             lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 	}
+}
+
+func (k Keeper) emitProposedOperationsStats(rawOperations []types.OperationRaw) {
+	operationsStats := types.StatMsgProposedOperations(rawOperations)
+	operationsStats.EmitStats(metrics.DeliverTx)
+}
+
+func (k Keeper) removeFullyFilledStatefulOrdersFromState(
+	ctx sdk.Context,
+	processProposerMatchesEvents *types.ProcessProposerMatchesEvents,
+) {
+	for _, orderId := range processProposerMatchesEvents.OrderIdsFilledInLastBlock {
+		if orderId.IsShortTermOrder() {
+			continue
+		}
+
+		orderPlacement, placementExists := k.GetLongTermOrderPlacement(ctx, orderId)
+		if placementExists {
+			k.checkAndRemoveStatefulOrderIfFilled(
+				ctx,
+				orderId,
+				orderPlacement,
+				processProposerMatchesEvents,
+			)
+		}
+	}
+}
+
+func (k Keeper) checkAndRemoveStatefulOrderIfFilled(
+	ctx sdk.Context,
+	orderId types.OrderId,
+	orderPlacement types.LongTermOrderPlacement,
+	processProposerMatchesEvents *types.ProcessProposerMatchesEvents,
+) {
+	fillAmountExists, orderStateFillAmount, _ := k.GetOrderFillAmount(ctx, orderId)
+	orderAmount := orderPlacement.Order.GetBaseQuantums()
+
+	if !fillAmountExists {
+		panic("ProcessProposerOperations: Order fill amount does not exist in state")
+	}
+
+	if orderStateFillAmount > orderAmount {
+		panic("ProcessProposerOperations: Order fill amount exceeds order amount")
+	}
+
+	if orderStateFillAmount == orderAmount {
+		k.removeFilleStatefuldOrder(
+			ctx,
+			orderId,
+			orderPlacement,
+			processProposerMatchesEvents,
+		)
+	}
+}
+
+func (k Keeper) removeFilleStatefuldOrder(
+	ctx sdk.Context,
+	orderId types.OrderId,
+	orderPlacement types.LongTermOrderPlacement,
+	processProposerMatchesEvents *types.ProcessProposerMatchesEvents,
+) {
+	k.MustRemoveStatefulOrder(ctx, orderId)
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
+		1,
+		append(
+			orderPlacement.Order.GetOrderLabels(),
+			metrics.GetLabelForStringValue(metrics.RemovalReason, types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED.String()),
+		),
+	)
+
+	processProposerMatchesEvents.RemovedStatefulOrderIds = append(
+		processProposerMatchesEvents.RemovedStatefulOrderIds,
+		orderId,
+	)
 }
