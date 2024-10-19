@@ -249,179 +249,6 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	return offchainUpdates
 }
 
-func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrdersPostMatch(
-	ctx sdk.Context,
-	takerOrder types.MatchableOrder,
-	subaccountTotalMatchedQuantums map[satypes.SubaccountId]*big.Int,
-	offchainUpdates *types.OffchainUpdates,
-) {
-	allSubaccounts := lib.GetSortedKeys[satypes.SortedSubaccountIds](subaccountTotalMatchedQuantums)
-	for _, subaccountId := range allSubaccounts {
-		cancelledOffchainUpdates := m.maybeCancelReduceOnlyOrders(
-			ctx,
-			subaccountId,
-			takerOrder.GetClobPairId(),
-			subaccountTotalMatchedQuantums[subaccountId],
-		)
-		offchainUpdates.Append(cancelledOffchainUpdates)
-	}
-}
-
-func (m *MemClobPriceTimePriority) addTakerOrderToOperationsQueueIfNeeded(
-	takerOrder types.MatchableOrder,
-	ctx sdk.Context,
-) {
-	if takerOrder.IsLiquidation() {
-		return
-	}
-
-	taker := takerOrder.MustGetOrder()
-	if taker.IsStatefulOrder() {
-		m.operationsToPropose.MustAddStatefulOrderPlacementToOperationsQueue(taker)
-	} else {
-		m.operationsToPropose.MustAddShortTermOrderTxBytes(taker, ctx.TxBytes())
-		m.operationsToPropose.MustAddShortTermOrderPlacementToOperationsQueue(taker)
-	}
-
-}
-
-func (m *MemClobPriceTimePriority) processMakerFills(
-	ctx sdk.Context,
-	newMakerFills []types.MakerFill,
-	takerOrder types.MatchableOrder,
-	matchedMakerOrderIdToOrder map[types.OrderId]types.Order,
-	subaccountTotalMatchedQuantums map[satypes.SubaccountId]*big.Int,
-	offchainUpdates *types.OffchainUpdates,
-) []types.MakerFillWithOrder {
-	makerFillWithOrders := make([]types.MakerFillWithOrder, 0, len(newMakerFills))
-	for _, newFill := range newMakerFills {
-		matchedMakerOrder := m.mustGetMatchedOrderForMakerFill(newFill, matchedMakerOrderIdToOrder, &makerFillWithOrders)
-		m.maybeAddMatchedMakerOrderToOperationsQueue(matchedMakerOrder)
-		matchedQuantums := m.getMakerFillMatchQuantums(newFill, matchedMakerOrder)
-		matchOffchainUpdates := m.mustUpdateOrderbookStateWithMatchedMakerOrder(
-			ctx,
-			matchedMakerOrder,
-		)
-		offchainUpdates.Append(matchOffchainUpdates)
-		m.updateSubaccountMatchedQuantums(matchedMakerOrder, takerOrder, matchedQuantums, subaccountTotalMatchedQuantums)
-	}
-	return makerFillWithOrders
-}
-
-func (m *MemClobPriceTimePriority) updateSubaccountMatchedQuantums(
-	matchedMakerOrder types.Order,
-	takerOrder types.MatchableOrder,
-	matchedQuantums satypes.BaseQuantums,
-	subaccountTotalMatchedQuantums map[satypes.SubaccountId]*big.Int,
-) {
-	for _, order := range []types.MatchableOrder{&matchedMakerOrder, takerOrder} {
-		bigTotalMatchedQuantums, exists := subaccountTotalMatchedQuantums[order.GetSubaccountId()]
-		if !exists {
-			bigTotalMatchedQuantums = big.NewInt(0)
-		}
-
-		bigMatchedQuantums := matchedQuantums.ToBigInt()
-		if order.IsBuy() {
-			bigTotalMatchedQuantums = bigTotalMatchedQuantums.Add(bigTotalMatchedQuantums, bigMatchedQuantums)
-		} else {
-			bigTotalMatchedQuantums = bigTotalMatchedQuantums.Sub(bigTotalMatchedQuantums, bigMatchedQuantums)
-		}
-
-		subaccountTotalMatchedQuantums[order.GetSubaccountId()] = bigTotalMatchedQuantums
-	}
-}
-
-func (m *MemClobPriceTimePriority) getMakerFillMatchQuantums(
-	newFill types.MakerFill,
-	matchedMakerOrder types.Order,
-) satypes.BaseQuantums {
-	matchedQuantums := satypes.BaseQuantums(newFill.GetFillAmount())
-	if matchedQuantums == 0 {
-		panic(fmt.Sprintf(
-			"mustUpdateMemclobStateWithMatches: Fill has 0 quantums. Fill %v and maker order %v",
-			newFill,
-			matchedMakerOrder,
-		))
-	}
-	return matchedQuantums
-}
-
-func (m *MemClobPriceTimePriority) mustGetMatchedOrderForMakerFill(
-	makerFill types.MakerFill,
-	matchedMakerOrderIdToOrder map[types.OrderId]types.Order,
-	makerFillWithOrders *[]types.MakerFillWithOrder,
-) (matchedMakerOrder types.Order) {
-	matchedMakerOrder, exists := matchedMakerOrderIdToOrder[makerFill.MakerOrderId]
-	if !exists {
-		panic(
-			fmt.Sprintf(
-				"mustUpdateMemclobStateWithMatches: matched maker order %s does not exist in `matchedMakerOrderIdToOrder`",
-				matchedMakerOrder.GetOrderTextString(),
-			),
-		)
-	}
-
-	*makerFillWithOrders = append(
-		*makerFillWithOrders,
-		types.MakerFillWithOrder{
-			Order:     matchedMakerOrder,
-			MakerFill: makerFill,
-		},
-	)
-	return matchedMakerOrder
-}
-
-func (m *MemClobPriceTimePriority) maybeAddMatchedMakerOrderToOperationsQueue(
-	matchedMakerOrder types.Order,
-) {
-	// Skip adding order placement in the operations queue if it already exists.
-	if m.operationsToPropose.IsOrderPlacementInOperationsQueue(
-		matchedMakerOrder,
-	) {
-		return
-	}
-
-	// Add the maker order placement to the operations queue.
-	if matchedMakerOrder.IsStatefulOrder() {
-		m.operationsToPropose.MustAddStatefulOrderPlacementToOperationsQueue(
-			matchedMakerOrder,
-		)
-	} else {
-		m.operationsToPropose.MustAddShortTermOrderPlacementToOperationsQueue(
-			matchedMakerOrder,
-		)
-	}
-
-}
-
-func (m *MemClobPriceTimePriority) updateMatchedOrders(
-	matchedOrderHashToOrder map[types.OrderHash]types.MatchableOrder,
-) {
-	for _, matchedOrder := range matchedOrderHashToOrder {
-		if matchedOrder.IsLiquidation() {
-			continue
-		}
-
-		order := matchedOrder.MustGetOrder()
-		if m.doesMoreRecentOrderExist(order) {
-			panic(
-				"mustUpdateMemclobStateWithMatches: newly matched order is lesser than existing order " +
-					"Newly matched order %v, existing order %v",
-			)
-		}
-
-		m.operationsToPropose.MatchedOrderIdToOrder[order.OrderId] = order
-	}
-}
-
-func (m *MemClobPriceTimePriority) doesMoreRecentOrderExist(
-	order types.Order,
-) bool {
-	orderId := order.OrderId
-	other, exists := m.operationsToPropose.MatchedOrderIdToOrder[orderId]
-	return exists && order.MustCmpReplacementOrder(&other) < 0
-}
-
 // GetOperationsRaw fetches the operations to propose in the next block in raw format
 // for placement into MsgProposedOperations.
 func (m *MemClobPriceTimePriority) GetOperationsRaw(ctx sdk.Context) (
@@ -3196,4 +3023,177 @@ func (m *MemClobPriceTimePriority) constructSubaccountOpenOrders(
 	subaccountOpenOrders := make(map[satypes.SubaccountId][]types.PendingOpenOrder)
 	subaccountOpenOrders[subaccountId] = []types.PendingOpenOrder{pendingOpenOrder}
 	return subaccountOpenOrders
+}
+
+func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrdersPostMatch(
+	ctx sdk.Context,
+	takerOrder types.MatchableOrder,
+	subaccountTotalMatchedQuantums map[satypes.SubaccountId]*big.Int,
+	offchainUpdates *types.OffchainUpdates,
+) {
+	allSubaccounts := lib.GetSortedKeys[satypes.SortedSubaccountIds](subaccountTotalMatchedQuantums)
+	for _, subaccountId := range allSubaccounts {
+		cancelledOffchainUpdates := m.maybeCancelReduceOnlyOrders(
+			ctx,
+			subaccountId,
+			takerOrder.GetClobPairId(),
+			subaccountTotalMatchedQuantums[subaccountId],
+		)
+		offchainUpdates.Append(cancelledOffchainUpdates)
+	}
+}
+
+func (m *MemClobPriceTimePriority) addTakerOrderToOperationsQueueIfNeeded(
+	takerOrder types.MatchableOrder,
+	ctx sdk.Context,
+) {
+	if takerOrder.IsLiquidation() {
+		return
+	}
+
+	taker := takerOrder.MustGetOrder()
+	if taker.IsStatefulOrder() {
+		m.operationsToPropose.MustAddStatefulOrderPlacementToOperationsQueue(taker)
+	} else {
+		m.operationsToPropose.MustAddShortTermOrderTxBytes(taker, ctx.TxBytes())
+		m.operationsToPropose.MustAddShortTermOrderPlacementToOperationsQueue(taker)
+	}
+
+}
+
+func (m *MemClobPriceTimePriority) processMakerFills(
+	ctx sdk.Context,
+	newMakerFills []types.MakerFill,
+	takerOrder types.MatchableOrder,
+	matchedMakerOrderIdToOrder map[types.OrderId]types.Order,
+	subaccountTotalMatchedQuantums map[satypes.SubaccountId]*big.Int,
+	offchainUpdates *types.OffchainUpdates,
+) []types.MakerFillWithOrder {
+	makerFillWithOrders := make([]types.MakerFillWithOrder, 0, len(newMakerFills))
+	for _, newFill := range newMakerFills {
+		matchedMakerOrder := m.mustGetMatchedOrderForMakerFill(newFill, matchedMakerOrderIdToOrder, &makerFillWithOrders)
+		m.maybeAddMatchedMakerOrderToOperationsQueue(matchedMakerOrder)
+		matchedQuantums := m.getMakerFillMatchQuantums(newFill, matchedMakerOrder)
+		matchOffchainUpdates := m.mustUpdateOrderbookStateWithMatchedMakerOrder(
+			ctx,
+			matchedMakerOrder,
+		)
+		offchainUpdates.Append(matchOffchainUpdates)
+		m.updateSubaccountMatchedQuantums(matchedMakerOrder, takerOrder, matchedQuantums, subaccountTotalMatchedQuantums)
+	}
+	return makerFillWithOrders
+}
+
+func (m *MemClobPriceTimePriority) updateSubaccountMatchedQuantums(
+	matchedMakerOrder types.Order,
+	takerOrder types.MatchableOrder,
+	matchedQuantums satypes.BaseQuantums,
+	subaccountTotalMatchedQuantums map[satypes.SubaccountId]*big.Int,
+) {
+	for _, order := range []types.MatchableOrder{&matchedMakerOrder, takerOrder} {
+		bigTotalMatchedQuantums, exists := subaccountTotalMatchedQuantums[order.GetSubaccountId()]
+		if !exists {
+			bigTotalMatchedQuantums = big.NewInt(0)
+		}
+
+		bigMatchedQuantums := matchedQuantums.ToBigInt()
+		if order.IsBuy() {
+			bigTotalMatchedQuantums = bigTotalMatchedQuantums.Add(bigTotalMatchedQuantums, bigMatchedQuantums)
+		} else {
+			bigTotalMatchedQuantums = bigTotalMatchedQuantums.Sub(bigTotalMatchedQuantums, bigMatchedQuantums)
+		}
+
+		subaccountTotalMatchedQuantums[order.GetSubaccountId()] = bigTotalMatchedQuantums
+	}
+}
+
+func (m *MemClobPriceTimePriority) getMakerFillMatchQuantums(
+	newFill types.MakerFill,
+	matchedMakerOrder types.Order,
+) satypes.BaseQuantums {
+	matchedQuantums := satypes.BaseQuantums(newFill.GetFillAmount())
+	if matchedQuantums == 0 {
+		panic(fmt.Sprintf(
+			"mustUpdateMemclobStateWithMatches: Fill has 0 quantums. Fill %v and maker order %v",
+			newFill,
+			matchedMakerOrder,
+		))
+	}
+	return matchedQuantums
+}
+
+func (m *MemClobPriceTimePriority) mustGetMatchedOrderForMakerFill(
+	makerFill types.MakerFill,
+	matchedMakerOrderIdToOrder map[types.OrderId]types.Order,
+	makerFillWithOrders *[]types.MakerFillWithOrder,
+) (matchedMakerOrder types.Order) {
+	matchedMakerOrder, exists := matchedMakerOrderIdToOrder[makerFill.MakerOrderId]
+	if !exists {
+		panic(
+			fmt.Sprintf(
+				"mustUpdateMemclobStateWithMatches: matched maker order %s does not exist in `matchedMakerOrderIdToOrder`",
+				matchedMakerOrder.GetOrderTextString(),
+			),
+		)
+	}
+
+	*makerFillWithOrders = append(
+		*makerFillWithOrders,
+		types.MakerFillWithOrder{
+			Order:     matchedMakerOrder,
+			MakerFill: makerFill,
+		},
+	)
+	return matchedMakerOrder
+}
+
+func (m *MemClobPriceTimePriority) maybeAddMatchedMakerOrderToOperationsQueue(
+	matchedMakerOrder types.Order,
+) {
+	// Skip adding order placement in the operations queue if it already exists.
+	if m.operationsToPropose.IsOrderPlacementInOperationsQueue(
+		matchedMakerOrder,
+	) {
+		return
+	}
+
+	// Add the maker order placement to the operations queue.
+	if matchedMakerOrder.IsStatefulOrder() {
+		m.operationsToPropose.MustAddStatefulOrderPlacementToOperationsQueue(
+			matchedMakerOrder,
+		)
+	} else {
+		m.operationsToPropose.MustAddShortTermOrderPlacementToOperationsQueue(
+			matchedMakerOrder,
+		)
+	}
+
+}
+
+func (m *MemClobPriceTimePriority) updateMatchedOrders(
+	matchedOrderHashToOrder map[types.OrderHash]types.MatchableOrder,
+) {
+	for _, matchedOrder := range matchedOrderHashToOrder {
+		if matchedOrder.IsLiquidation() {
+			continue
+		}
+
+		order := matchedOrder.MustGetOrder()
+		if m.doesMoreRecentOrderExist(order) {
+			panic(
+				"mustUpdateMemclobStateWithMatches: newly matched order is lesser than existing order " +
+					"Newly matched order %v, existing order %v",
+			)
+		}
+
+		m.operationsToPropose.MatchedOrderIdToOrder[order.OrderId] = order
+	}
+}
+
+func (m *MemClobPriceTimePriority) doesMoreRecentOrderExist(
+	order types.Order,
+) bool {
+	orderId := order.OrderId
+	other, exists := m.operationsToPropose.MatchedOrderIdToOrder[orderId]
+	return exists && order.MustCmpReplacementOrder(&other) < 0
 }
