@@ -219,12 +219,8 @@ func (k Keeper) PersistOrderRemovalToState(
 		// TODO (CLOB-877)
 		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 
-		// The order should be post-only
-		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_POST_ONLY {
-			return errorsmod.Wrap(
-				types.ErrUnexpectedTimeInForce,
-				"Order is not post-only.",
-			)
+		if err := k.ensureOrderIsPostOnly(orderToRemove); err != nil {
+			return err
 		}
 	case types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE:
 		// TODO (CLOB-877)
@@ -233,41 +229,16 @@ func (k Keeper) PersistOrderRemovalToState(
 		// TODO (CLOB-877)
 		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 
-		// The order should be FOK
-		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_FILL_OR_KILL {
-			return errorsmod.Wrap(
-				types.ErrUnexpectedTimeInForce,
-				"Order is not fill-or-kill.",
-			)
+		if err := k.ensureOrderIsFOKAndNotFullyFilled(ctx, orderToRemove); err != nil {
+			return err
 		}
 
-		// The order should not be fully filled.
-		_, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
-		if !hasRemainingAmount {
-			return errorsmod.Wrap(
-				types.ErrOrderFullyFilled,
-				"Fill-or-kill order is fully filled.",
-			)
-		}
 	case types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK:
 		// TODO (CLOB-877)
 		k.statUnverifiedOrderRemoval(ctx, orderRemoval, orderToRemove)
 
-		// The order should be IOC.
-		if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_IOC {
-			return errorsmod.Wrap(
-				types.ErrUnexpectedTimeInForce,
-				"Order is not immediate-or-cancel.",
-			)
-		}
-
-		// The order should not be fully filled.
-		_, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
-		if !hasRemainingAmount {
-			return errorsmod.Wrapf(
-				types.ErrOrderFullyFilled,
-				"Immediate-or-cancel order is fully filled.",
-			)
+		if err := k.ensureOrderIsIOCAndNotFullyFilled(ctx, orderToRemove); err != nil {
+			return err
 		}
 	case types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED:
 		// Order removal reason fully filled is only used within indexer services.
@@ -316,32 +287,8 @@ func (k Keeper) PersistOrderRemovalToState(
 		)
 	}
 
-	// Remove the stateful order from state.
 	k.MustRemoveStatefulOrder(ctx, orderIdToRemove)
-
-	// Emit an on-chain indexer event for Stateful Order Removal.
-	k.GetIndexerEventManager().AddTxnEvent(
-		ctx,
-		indexerevents.SubtypeStatefulOrder,
-		indexerevents.StatefulOrderEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewStatefulOrderRemovalEvent(
-				orderIdToRemove,
-				indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-					orderRemoval.RemovalReason,
-				),
-			),
-		),
-	)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
-		1,
-		append(
-			orderIdToRemove.GetOrderIdLabels(),
-			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
-		),
-	)
+	k.updateOrderRemovalIndexerAndStatUpdates(ctx, orderIdToRemove, orderRemoval)
 	return nil
 }
 
@@ -898,4 +845,121 @@ func (k Keeper) persistClobMatchToState(
 		)
 	}
 	return nil
+}
+
+func (k Keeper) ensureOrderIsFOKAndNotFullyFilled(
+	ctx sdk.Context,
+	orderToRemove types.Order,
+) error {
+	if err := k.ensureOrderIsFOK(orderToRemove); err != nil {
+		return err
+	}
+
+	if err := k.ensureOrderIsNotFullyFilled(
+		ctx,
+		orderToRemove,
+		"Fill-or-kill order is fully filled.",
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) ensureOrderIsIOCAndNotFullyFilled(
+	ctx sdk.Context,
+	orderToRemove types.Order,
+) error {
+	if err := k.ensureOrderIsIOC(orderToRemove); err != nil {
+		return err
+	}
+
+	// The order should not be fully filled.
+	if err := k.ensureOrderIsNotFullyFilled(
+		ctx,
+		orderToRemove,
+		"Immediate-or-cancel order is fully filled.",
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) ensureOrderIsPostOnly(
+	orderToRemove types.Order,
+) error {
+	if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_POST_ONLY {
+		return errorsmod.Wrap(
+			types.ErrUnexpectedTimeInForce,
+			"Order is not post-only.",
+		)
+	}
+	return nil
+}
+
+func (k Keeper) ensureOrderIsFOK(
+	orderToRemove types.Order,
+) error {
+	if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_FILL_OR_KILL {
+		return errorsmod.Wrap(
+			types.ErrUnexpectedTimeInForce,
+			"Order is not fill-or-kill.",
+		)
+	}
+	return nil
+}
+
+func (k Keeper) ensureOrderIsNotFullyFilled(
+	ctx sdk.Context,
+	orderToRemove types.Order,
+	errMsg string,
+) error {
+	_, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
+	if !hasRemainingAmount {
+		return errorsmod.Wrap(
+			types.ErrOrderFullyFilled,
+			errMsg,
+		)
+	}
+	return nil
+}
+
+func (k Keeper) ensureOrderIsIOC(
+	orderToRemove types.Order,
+) error {
+	if orderToRemove.TimeInForce != types.Order_TIME_IN_FORCE_IOC {
+		return errorsmod.Wrap(
+			types.ErrUnexpectedTimeInForce,
+			"Order is not immediate-or-cancel.",
+		)
+	}
+	return nil
+}
+
+func (k Keeper) updateOrderRemovalIndexerAndStatUpdates(
+	ctx sdk.Context,
+	orderIdToRemove types.OrderId,
+	orderRemoval types.OrderRemoval,
+) {
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeStatefulOrder,
+		indexerevents.StatefulOrderEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewStatefulOrderRemovalEvent(
+				orderIdToRemove,
+				indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
+					orderRemoval.RemovalReason,
+				),
+			),
+		),
+	)
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.ProcessOperations, metrics.StatefulOrderRemoved, metrics.Count},
+		1,
+		append(
+			orderIdToRemove.GetOrderIdLabels(),
+			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
+		),
+	)
 }
