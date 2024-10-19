@@ -86,54 +86,8 @@ func (k Keeper) ProcessInternalOperations(
 			return err
 		}
 
-		switch castedOperation := operation.Operation.(type) {
-		case *types.InternalOperation_Match:
-			clobMatch := castedOperation.Match
-			if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
-				return errorsmod.Wrapf(
-					err,
-					"ProcessInternalOperations: Failed to process clobMatch: %+v",
-					clobMatch,
-				)
-			}
-		case *types.InternalOperation_ShortTermOrderPlacement:
-			order := castedOperation.ShortTermOrderPlacement.GetOrder()
-			if err := k.PerformStatefulOrderValidation(
-				ctx,
-				&order,
-				lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-				false,
-			); err != nil {
-				return err
-			}
-			placedShortTermOrders[order.GetOrderId()] = order
-		case *types.InternalOperation_OrderRemoval:
-			orderRemoval := castedOperation.OrderRemoval
-
-			if err := k.PersistOrderRemovalToState(ctx, *orderRemoval); err != nil {
-				return errorsmod.Wrapf(
-					types.ErrInvalidOrderRemoval,
-					"Order Removal (%+v) invalid. Error: %+v",
-					*orderRemoval,
-					err,
-				)
-			}
-		case *types.InternalOperation_PreexistingStatefulOrder:
-			// When we fetch operations to propose, preexisting stateful orders are not included
-			// in the operations queue.
-			panic(
-				fmt.Sprintf(
-					"ProcessInternalOperations: Preexisting Stateful Orders should not exist in operations queue: %+v",
-					castedOperation.PreexistingStatefulOrder,
-				),
-			)
-		default:
-			panic(
-				fmt.Sprintf(
-					"ProcessInternalOperations: Unrecognized operation type for operation: %+v",
-					operation.GetInternalOperationTextString(),
-				),
-			)
+		if err := k.processSingleOperation(ctx, operation, placedShortTermOrders); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -865,4 +819,83 @@ func (k Keeper) removeFilleStatefuldOrder(
 		processProposerMatchesEvents.RemovedStatefulOrderIds,
 		orderId,
 	)
+}
+
+func (k Keeper) processSingleOperation(
+	ctx sdk.Context,
+	operation types.InternalOperation,
+	placedShortTermOrders map[types.OrderId]types.Order,
+) error {
+	switch castedOperation := operation.Operation.(type) {
+	case *types.InternalOperation_Match:
+		return k.persistClobMatchToState(ctx, castedOperation.Match, placedShortTermOrders)
+	case *types.InternalOperation_ShortTermOrderPlacement:
+		return k.validateAndProcessShortTermOrder(ctx, castedOperation.ShortTermOrderPlacement, placedShortTermOrders)
+	case *types.InternalOperation_OrderRemoval:
+		return k.persistOrderRemovalToState(ctx, castedOperation.OrderRemoval)
+	case *types.InternalOperation_PreexistingStatefulOrder:
+		// When we fetch operations to propose, preexisting stateful orders are not included
+		// in the operations queue.
+		panic(
+			fmt.Sprintf(
+				"ProcessInternalOperations: Preexisting Stateful Orders should not exist in operations queue: %+v",
+				castedOperation.PreexistingStatefulOrder,
+			),
+		)
+	default:
+		panic(
+			fmt.Sprintf(
+				"ProcessInternalOperations: Unrecognized operation type for operation: %+v",
+				operation.GetInternalOperationTextString(),
+			),
+		)
+	}
+}
+
+func (k Keeper) persistOrderRemovalToState(
+	ctx sdk.Context,
+	orderRemoval *types.OrderRemoval,
+) error {
+	if err := k.PersistOrderRemovalToState(ctx, *orderRemoval); err != nil {
+		return errorsmod.Wrapf(
+			types.ErrInvalidOrderRemoval,
+			"Order Removal (%+v) invalid. Error: %+v",
+			*orderRemoval,
+			err,
+		)
+	}
+	return nil
+}
+
+func (k Keeper) validateAndProcessShortTermOrder(
+	ctx sdk.Context,
+	shortTermOrderPlacement *types.MsgPlaceOrder,
+	placedShortTermOrders map[types.OrderId]types.Order,
+) error {
+	order := shortTermOrderPlacement.GetOrder()
+	if err := k.PerformStatefulOrderValidation(
+		ctx,
+		&order,
+		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		false,
+	); err != nil {
+		return err
+	}
+	placedShortTermOrders[order.GetOrderId()] = order
+	return nil
+}
+
+func (k Keeper) persistClobMatchToState(
+	ctx sdk.Context,
+	clobMatch *types.ClobMatch,
+	placedShortTermOrders map[types.OrderId]types.Order,
+) error {
+	if err := k.PersistMatchToState(ctx, clobMatch, placedShortTermOrders); err != nil {
+		return errorsmod.Wrapf(
+			err,
+			"ProcessInternalOperations: Failed to process clobMatch: %+v",
+			clobMatch,
+		)
+	}
+	return nil
 }
