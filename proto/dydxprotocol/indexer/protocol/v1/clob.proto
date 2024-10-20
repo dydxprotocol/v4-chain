@@ -150,6 +150,12 @@ message IndexerOrder {
   // Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
+
+  // Router fee ppm for the order.
+  int32 router_fee_ppm = 12;
+
+  // Router subaccount ID for the order.
+  IndexerSubaccountId router_subaccount_id = 13 [ (gogoproto.nullable) = false ];
 }
 
 // Status of the CLOB.

@@ -579,6 +579,12 @@ export interface IndexerOrder {
    */
 
   conditionalOrderTriggerSubticks: Long;
+  /** Router fee ppm for the order. */
+
+  routerFeePpm: number;
+  /** Router subaccount ID for the order. */
+
+  routerSubaccountId?: IndexerSubaccountId;
 }
 /**
  * IndexerOrderV1 represents a single order belonging to a `Subaccount`
@@ -649,6 +655,12 @@ export interface IndexerOrderSDKType {
    */
 
   conditional_order_trigger_subticks: Long;
+  /** Router fee ppm for the order. */
+
+  router_fee_ppm: number;
+  /** Router subaccount ID for the order. */
+
+  router_subaccount_id?: IndexerSubaccountIdSDKType;
 }
 
 function createBaseIndexerOrderId(): IndexerOrderId {
@@ -738,7 +750,9 @@ function createBaseIndexerOrder(): IndexerOrder {
     reduceOnly: false,
     clientMetadata: 0,
     conditionType: 0,
-    conditionalOrderTriggerSubticks: Long.UZERO
+    conditionalOrderTriggerSubticks: Long.UZERO,
+    routerFeePpm: 0,
+    routerSubaccountId: undefined
   };
 }
 
@@ -786,6 +800,14 @@ export const IndexerOrder = {
 
     if (!message.conditionalOrderTriggerSubticks.isZero()) {
       writer.uint32(88).uint64(message.conditionalOrderTriggerSubticks);
+    }
+
+    if (message.routerFeePpm !== 0) {
+      writer.uint32(96).int32(message.routerFeePpm);
+    }
+
+    if (message.routerSubaccountId !== undefined) {
+      IndexerSubaccountId.encode(message.routerSubaccountId, writer.uint32(106).fork()).ldelim();
     }
 
     return writer;
@@ -844,6 +866,14 @@ export const IndexerOrder = {
           message.conditionalOrderTriggerSubticks = (reader.uint64() as Long);
           break;
 
+        case 12:
+          message.routerFeePpm = reader.int32();
+          break;
+
+        case 13:
+          message.routerSubaccountId = IndexerSubaccountId.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -866,6 +896,8 @@ export const IndexerOrder = {
     message.clientMetadata = object.clientMetadata ?? 0;
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
+    message.routerFeePpm = object.routerFeePpm ?? 0;
+    message.routerSubaccountId = object.routerSubaccountId !== undefined && object.routerSubaccountId !== null ? IndexerSubaccountId.fromPartial(object.routerSubaccountId) : undefined;
     return message;
   }
 

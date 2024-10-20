@@ -383,6 +383,8 @@ func (k Keeper) persistMatchedOrders(
 			insuranceFundDelta,
 			validatorFeeQuoteQuantums,
 			liquidityFeeQuoteQuantums,
+			bigRouterTakerFeeQuoteQuantums,
+			bigRouterMakerFeeQuoteQuantums,
 			isTakerLiquidation,
 			false,
 			perpetualId,
