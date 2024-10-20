@@ -373,146 +373,49 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	liquidatedSubaccountId := matchDeleveraging.GetLiquidated()
 	perpetualId := matchDeleveraging.GetPerpetualId()
 
-	// Validate that the provided subaccount can be deleveraged.
-	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
-		ctx,
-		liquidatedSubaccountId,
-		perpetualId,
-	)
+	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId, perpetualId)
 	if err != nil {
-		panic(
-			fmt.Sprintf(
-				"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
-					"SubaccountId %+v, error %+v",
-				liquidatedSubaccountId,
-				err,
-			),
-		)
+		panic(fmt.Sprintf("PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. SubaccountId %+v, error %+v", liquidatedSubaccountId, err))
 	}
 
-	if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
-		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
-		return errorsmod.Wrapf(
-			types.ErrInvalidDeleveragedSubaccount,
-			"Subaccount %+v failed deleveraging validation",
-			liquidatedSubaccountId,
-		)
+	if err := k.validateDeleveragePricing(
+		liquidatedSubaccountId,
+		matchDeleveraging,
+		shouldDeleverageAtBankruptcyPrice,
+		shouldDeleverageAtOraclePrice,
+	); err != nil {
+		return err
 	}
 
-	if matchDeleveraging.IsFinalSettlement != shouldDeleverageAtOraclePrice {
-		// Throw error if the isFinalSettlement flag does not match the expected value. This prevents misuse or lack
-		// of use of the isFinalSettlement flag. The isFinalSettlement flag should be set to true if-and-only-if the
-		// subaccount has non-negative TNC and the market is in final settlement. Otherwise, it must be false.
-		return errorsmod.Wrapf(
-			types.ErrDeleveragingIsFinalSettlementFlagMismatch,
-			"MatchPerpetualDeleveraging %+v has isFinalSettlement flag (%v), expected (%v)",
-			matchDeleveraging,
-			matchDeleveraging.IsFinalSettlement,
-			shouldDeleverageAtOraclePrice,
-		)
+	position, deltaBaseQuantumsIsNegative, err := k.getPositionAndDeltaSign(ctx, liquidatedSubaccountId, perpetualId)
+	if err != nil {
+		return err
 	}
-
-	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
-	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
-	if !exists {
-		return errorsmod.Wrapf(
-			types.ErrNoOpenPositionForPerpetual,
-			"Subaccount %+v does not have an open position for perpetual %+v",
-			liquidatedSubaccountId,
-			perpetualId,
-		)
-	}
-	deltaBaseQuantumsIsNegative := position.GetIsLong()
 
 	// If there are zero-fill deleveraging operations, this is a sentinel value to indicate a subaccount could not be
 	// liquidated or deleveraged and still has negative equity. Mark the current block number in state to indicate a
 	// negative TNC subaccount was seen.
 	if len(matchDeleveraging.GetFills()) == 0 {
-		if !shouldDeleverageAtBankruptcyPrice {
-			return errorsmod.Wrapf(
-				types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
-				fmt.Sprintf(
-					"PersistMatchDeleveragingToState: zero-fill deleveraging operation included for subaccount %+v"+
-						" and perpetual %d but subaccount isn't negative TNC",
-					liquidatedSubaccountId,
-					perpetualId,
-				),
-			)
-		}
-
-		metrics.IncrCountMetricWithLabels(
-			types.ModuleName,
-			metrics.SubaccountsNegativeTncSubaccountSeen,
-			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
-			metrics.GetLabelForBoolValue(metrics.IsLong, position.GetIsLong()),
-			metrics.GetLabelForBoolValue(metrics.DeliverTx, true),
-		)
-		if err = k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
+		return k.setNegativeTNCSubaccountSeenIfZeroFillDeleverage(
 			ctx,
+			liquidatedSubaccountId,
 			perpetualId,
-			lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-		); err != nil {
-			return err
-		}
-		return nil
+			position,
+			shouldDeleverageAtBankruptcyPrice,
+		)
 	}
 
 	for _, fill := range matchDeleveraging.GetFills() {
-		deltaBaseQuantums := new(big.Int).SetUint64(fill.FillAmount)
-		if deltaBaseQuantumsIsNegative {
-			deltaBaseQuantums.Neg(deltaBaseQuantums)
-		}
-
-		deltaQuoteQuantums, err := k.getDeleveragingQuoteQuantumsDelta(
+		if err := k.processDeleveragingFill(
 			ctx,
-			perpetualId,
+			&fill,
 			liquidatedSubaccountId,
-			deltaBaseQuantums,
+			perpetualId,
+			deltaBaseQuantumsIsNegative,
 			matchDeleveraging.IsFinalSettlement,
-		)
-		if err != nil {
+		); err != nil {
 			return err
 		}
-
-		if err := k.ProcessDeleveraging(
-			ctx,
-			liquidatedSubaccountId,
-			fill.OffsettingSubaccountId,
-			perpetualId,
-			deltaBaseQuantums,
-			deltaQuoteQuantums,
-		); err != nil {
-			return errorsmod.Wrapf(
-				types.ErrInvalidDeleveragingFill,
-				"Failed to process deleveraging fill: %+v. liquidatedSubaccountId: %+v, "+
-					"perpetualId: %v, deltaBaseQuantums: %v, deltaQuoteQuantums: %v, error: %v",
-				fill,
-				liquidatedSubaccountId,
-				perpetualId,
-				deltaBaseQuantums,
-				deltaQuoteQuantums,
-				err,
-			)
-		}
-
-		// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
-		// if the branched state is discarded, so batching is not necessary.
-		k.GetIndexerEventManager().AddTxnEvent(
-			ctx,
-			indexerevents.SubtypeDeleveraging,
-			indexerevents.DeleveragingEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewDeleveragingEvent(
-					liquidatedSubaccountId,
-					fill.OffsettingSubaccountId,
-					perpetualId,
-					satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
-					satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
-					deltaBaseQuantums.Sign() > 0,
-					matchDeleveraging.IsFinalSettlement,
-				),
-			),
-		)
 	}
 
 	return nil
@@ -1022,6 +925,130 @@ func (k Keeper) updateSubaccountsStateAfterLiquidationMakerFillAndEmitFillEvents
 	}
 
 	k.emitLiquidationOrderFillEvent(ctx, &matchWithOrders)
+
+	return nil
+}
+
+func (k Keeper) validateDeleveragePricing(
+	liquidatedSubaccountId satypes.SubaccountId,
+	matchDeleveraging *types.MatchPerpetualDeleveraging,
+	shouldDeleverageAtBankruptcyPrice bool,
+	shouldDeleverageAtOraclePrice bool,
+) error {
+	if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
+		return errorsmod.Wrapf(
+			types.ErrInvalidDeleveragedSubaccount,
+			"Subaccount %+v failed deleveraging validation",
+			liquidatedSubaccountId,
+		)
+	}
+
+	if matchDeleveraging.IsFinalSettlement != shouldDeleverageAtOraclePrice {
+		return errorsmod.Wrapf(
+			types.ErrDeleveragingIsFinalSettlementFlagMismatch,
+			"MatchPerpetualDeleveraging %+v has isFinalSettlement flag (%v), expected (%v)",
+			matchDeleveraging, matchDeleveraging.IsFinalSettlement,
+			shouldDeleverageAtOraclePrice,
+		)
+	}
+
+	return nil
+}
+
+func (k Keeper) getPositionAndDeltaSign(
+	ctx sdk.Context,
+	liquidatedSubaccountId satypes.SubaccountId,
+	perpetualId uint32,
+) (*satypes.PerpetualPosition, bool, error) {
+	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
+	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
+	if !exists {
+		return &satypes.PerpetualPosition{}, false, errorsmod.Wrapf(types.ErrNoOpenPositionForPerpetual, "Subaccount %+v does not have an open position for perpetual %+v", liquidatedSubaccountId, perpetualId)
+	}
+	return position, position.GetIsLong(), nil
+}
+
+func (k Keeper) setNegativeTNCSubaccountSeenIfZeroFillDeleverage(
+	ctx sdk.Context,
+	liquidatedSubaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	position *satypes.PerpetualPosition,
+	shouldDeleverageAtBankruptcyPrice bool,
+) error {
+
+	if !shouldDeleverageAtBankruptcyPrice {
+		return errorsmod.Wrapf(
+			types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
+			"PersistMatchDeleveragingToState: zero-fill deleveraging operation included for subaccount %+v and perpetual %d but subaccount isn't negative TNC",
+			liquidatedSubaccountId,
+			perpetualId,
+		)
+	}
+
+	metrics.IncrCountMetricWithLabels(
+		types.ModuleName,
+		metrics.SubaccountsNegativeTncSubaccountSeen,
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+		metrics.GetLabelForBoolValue(metrics.IsLong, position.GetIsLong()),
+		metrics.GetLabelForBoolValue(metrics.DeliverTx, true),
+	)
+
+	if err := k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(ctx, perpetualId, lib.MustConvertIntegerToUint32(ctx.BlockHeight())); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) emitDeleveragingEvent(
+	ctx sdk.Context,
+	liquidatedSubaccountId satypes.SubaccountId,
+	offsettingSubaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	deltaBaseQuantums *big.Int,
+	deltaQuoteQuantums *big.Int,
+	isFinalSettlement bool,
+) {
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeDeleveraging,
+		indexerevents.DeleveragingEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewDeleveragingEvent(
+				liquidatedSubaccountId,
+				offsettingSubaccountId,
+				perpetualId,
+				satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
+				satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
+				deltaBaseQuantums.Sign() > 0,
+				isFinalSettlement,
+			),
+		),
+	)
+}
+
+func (k Keeper) processDeleveragingFill(
+	ctx sdk.Context,
+	fill *types.MatchPerpetualDeleveraging_Fill,
+	liquidatedSubaccountId satypes.SubaccountId,
+	perpetualId uint32,
+	deltaBaseQuantumsIsNegative bool,
+	isFinalSettlement bool,
+) error {
+	deltaBaseQuantums := new(big.Int).SetUint64(fill.FillAmount)
+	if deltaBaseQuantumsIsNegative {
+		deltaBaseQuantums.Neg(deltaBaseQuantums)
+	}
+
+	deltaQuoteQuantums, err := k.getDeleveragingQuoteQuantumsDelta(ctx, perpetualId, liquidatedSubaccountId, deltaBaseQuantums, isFinalSettlement)
+	if err != nil {
+		return err
+	}
+
+	if err := k.ProcessDeleveraging(ctx, liquidatedSubaccountId, fill.OffsettingSubaccountId, perpetualId, deltaBaseQuantums, deltaQuoteQuantums); err != nil {
+		return errorsmod.Wrapf(types.ErrInvalidDeleveragingFill, "Failed to process deleveraging fill: %+v. liquidatedSubaccountId: %+v, perpetualId: %v, deltaBaseQuantums: %v, deltaQuoteQuantums: %v, error: %v", fill, liquidatedSubaccountId, perpetualId, deltaBaseQuantums, deltaQuoteQuantums, err)
+	}
+
+	k.emitDeleveragingEvent(ctx, liquidatedSubaccountId, fill.OffsettingSubaccountId, perpetualId, deltaBaseQuantums, deltaQuoteQuantums, isFinalSettlement)
 
 	return nil
 }
