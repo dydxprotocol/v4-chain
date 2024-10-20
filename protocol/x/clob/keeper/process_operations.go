@@ -332,69 +332,20 @@ func (k Keeper) PersistMatchLiquidationToState(
 		return err
 	}
 
-	takerOrder, err := k.GetLiquidationOrderForPerpetual(
-		ctx,
-		matchLiquidation.Liquidated,
-		matchLiquidation.PerpetualId,
-	)
+	takerOrder, err := k.getAndValidateLiquidationTakerOrder(ctx, matchLiquidation)
 	if err != nil {
 		return err
 	}
 
-	// Perform stateless validation on the liquidation order.
-	if err := k.ValidateLiquidationOrderAgainstProposedLiquidation(ctx, takerOrder, matchLiquidation); err != nil {
-		return err
-	}
-
 	for _, fill := range matchLiquidation.GetFills() {
-		// Fetch the maker order from either short term orders or state.
-		makerOrder, err := k.FetchOrderFromOrderId(ctx, fill.MakerOrderId, ordersMap)
-		if err != nil {
+		if err := k.updateSubaccountsStateAfterLiquidationMakerFillAndEmitFillEvents(
+			ctx,
+			&fill,
+			takerOrder,
+			ordersMap,
+		); err != nil {
 			return err
 		}
-
-		matchWithOrders := types.MatchWithOrders{
-			MakerOrder: &makerOrder,
-			TakerOrder: takerOrder,
-			FillAmount: satypes.BaseQuantums(fill.FillAmount),
-		}
-
-		// Write the position updates and state fill amounts for this match.
-		// Note stateless validation on the constructed `matchWithOrders` is performed within this function.
-		_, _, _, _, err = k.ProcessSingleMatch(
-			ctx,
-			&matchWithOrders,
-		)
-		if err != nil {
-			return err
-		}
-
-		makerExists, totalFilledMaker, _ := k.GetOrderFillAmount(ctx, matchWithOrders.MakerOrder.MustGetOrder().OrderId)
-		if !makerExists {
-			panic(
-				fmt.Sprintf("PersistMatchLiquidationToState: Order fill amount not found for maker order: %+v",
-					matchWithOrders.MakerOrder.MustGetOrder().OrderId,
-				),
-			)
-		}
-
-		// Send on-chain update for the liquidation. The events are stored in a TransientStore which should be rolled-back
-		// if the branched state is discarded, so batching is not necessary.
-		k.GetIndexerEventManager().AddTxnEvent(
-			ctx,
-			indexerevents.SubtypeOrderFill,
-			indexerevents.OrderFillEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewLiquidationOrderFillEvent(
-					matchWithOrders.MakerOrder.MustGetOrder(),
-					matchWithOrders.TakerOrder,
-					matchWithOrders.FillAmount,
-					matchWithOrders.MakerFee,
-					matchWithOrders.TakerFee,
-					totalFilledMaker,
-				),
-			),
-		)
 	}
 
 	// Update the keeper transient store if-and-only-if the liquidation is valid.
@@ -997,5 +948,80 @@ func (k Keeper) checkImmediateExecutionTakerOrder(ctx sdk.Context, takerOrder ty
 			takerOrder.GetOrderTextString(),
 		)
 	}
+	return nil
+}
+
+func (k Keeper) getAndValidateLiquidationTakerOrder(
+	ctx sdk.Context,
+	matchLiquidation *types.MatchPerpetualLiquidation,
+) (*types.LiquidationOrder, error) {
+	takerOrder, err := k.GetLiquidationOrderForPerpetual(
+		ctx,
+		matchLiquidation.Liquidated,
+		matchLiquidation.PerpetualId,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.ValidateLiquidationOrderAgainstProposedLiquidation(ctx, takerOrder, matchLiquidation); err != nil {
+		return nil, err
+	}
+
+	return takerOrder, nil
+}
+
+func (k Keeper) emitLiquidationOrderFillEvent(ctx sdk.Context, matchWithOrders *types.MatchWithOrders) {
+	makerExists, totalFilledMaker, _ := k.GetOrderFillAmount(ctx, matchWithOrders.MakerOrder.MustGetOrder().OrderId)
+	if !makerExists {
+		panic(fmt.Sprintf("PersistMatchLiquidationToState: Order fill amount not found for maker order: %+v",
+			matchWithOrders.MakerOrder.MustGetOrder().OrderId,
+		))
+	}
+
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeOrderFill,
+		indexerevents.OrderFillEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewLiquidationOrderFillEvent(
+				matchWithOrders.MakerOrder.MustGetOrder(),
+				matchWithOrders.TakerOrder,
+				matchWithOrders.FillAmount,
+				matchWithOrders.MakerFee,
+				matchWithOrders.TakerFee,
+				totalFilledMaker,
+			),
+		),
+	)
+}
+
+func (k Keeper) updateSubaccountsStateAfterLiquidationMakerFillAndEmitFillEvents(
+	ctx sdk.Context,
+	fill *types.MakerFill,
+	takerOrder *types.LiquidationOrder,
+	ordersMap map[types.OrderId]types.Order,
+) error {
+	makerOrder, err := k.FetchOrderFromOrderId(ctx, fill.MakerOrderId, ordersMap)
+	if err != nil {
+		return err
+	}
+
+	matchWithOrders := types.MatchWithOrders{
+		MakerOrder: &makerOrder,
+		TakerOrder: takerOrder,
+		FillAmount: satypes.BaseQuantums(fill.FillAmount),
+	}
+
+	_, _, _, _, err = k.ProcessSingleMatch(
+		ctx,
+		&matchWithOrders,
+	)
+	if err != nil {
+		return err
+	}
+
+	k.emitLiquidationOrderFillEvent(ctx, &matchWithOrders)
+
 	return nil
 }
