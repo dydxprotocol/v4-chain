@@ -299,87 +299,22 @@ func (k Keeper) PersistMatchOrdersToState(
 	matchOrders *types.MatchOrders,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
-	takerOrderId := matchOrders.GetTakerOrderId()
-	// Fetch the taker order from either short term orders or state
-	takerOrder, err := k.FetchOrderFromOrderId(ctx, takerOrderId, ordersMap)
+
+	takerOrder, err := k.fetchAndValidateTakerOrder(ctx, matchOrders, ordersMap)
 	if err != nil {
 		return err
 	}
 
-	// Taker order cannot be post only.
-	if takerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_POST_ONLY {
-		return errorsmod.Wrapf(
-			types.ErrInvalidMatchOrder,
-			"Taker order %+v cannot be post only.",
-			takerOrder.GetOrderTextString(),
-		)
-	}
-
-	if takerOrder.RequiresImmediateExecution() {
-		_, fillAmount, _ := k.GetOrderFillAmount(ctx, takerOrder.OrderId)
-		if fillAmount != 0 {
-			return errorsmod.Wrapf(
-				types.ErrImmediateExecutionOrderAlreadyFilled,
-				"Order %s",
-				takerOrder.GetOrderTextString(),
-			)
-		}
-	}
-
 	makerFills := matchOrders.GetFills()
 	for _, makerFill := range makerFills {
-		// Fetch the maker order from either short term orders or state.
-		makerOrder, err := k.FetchOrderFromOrderId(ctx, makerFill.MakerOrderId, ordersMap)
-		if err != nil {
-			return err
-		}
-
-		matchWithOrders := types.MatchWithOrders{
-			TakerOrder: &takerOrder,
-			MakerOrder: &makerOrder,
-			FillAmount: satypes.BaseQuantums(makerFill.GetFillAmount()),
-		}
-
-		_, _, _, _, err = k.ProcessSingleMatch(ctx, &matchWithOrders)
-		if err != nil {
-			return err
-		}
-
-		// Send on-chain update for the match. The events are stored in a TransientStore which should be rolled-back
-		// if the branched state is discarded, so batching is not necessary.
-
-		makerExists, totalFilledMaker, _ := k.GetOrderFillAmount(ctx, matchWithOrders.MakerOrder.MustGetOrder().OrderId)
-		takerExists, totalFilledTaker, _ := k.GetOrderFillAmount(ctx, matchWithOrders.TakerOrder.MustGetOrder().OrderId)
-		if !makerExists {
-			panic(
-				fmt.Sprintf("PersistMatchOrdersToState: Order fill amount not found for maker order: %+v",
-					matchWithOrders.MakerOrder.MustGetOrder().OrderId,
-				),
-			)
-		}
-		if !takerExists {
-			panic(
-				fmt.Sprintf("PersistMatchOrdersToState: Order fill amount not found for taker order: %+v",
-					matchWithOrders.TakerOrder.MustGetOrder().OrderId,
-				),
-			)
-		}
-		k.GetIndexerEventManager().AddTxnEvent(
+		if err := k.updateSubaccountsStateAfterMakerFillAndEmitFillEvents(
 			ctx,
-			indexerevents.SubtypeOrderFill,
-			indexerevents.OrderFillEventVersion,
-			indexer_manager.GetBytes(
-				indexerevents.NewOrderFillEvent(
-					matchWithOrders.MakerOrder.MustGetOrder(),
-					matchWithOrders.TakerOrder.MustGetOrder(),
-					matchWithOrders.FillAmount,
-					matchWithOrders.MakerFee,
-					matchWithOrders.TakerFee,
-					totalFilledMaker,
-					totalFilledTaker,
-				),
-			),
-		)
+			&makerFill,
+			&takerOrder,
+			ordersMap,
+		); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -962,4 +897,105 @@ func (k Keeper) updateOrderRemovalIndexerAndStatUpdates(
 			metrics.GetLabelForStringValue(metrics.RemovalReason, orderRemoval.GetRemovalReason().String()),
 		),
 	)
+}
+
+func (k Keeper) updateSubaccountsStateAfterMakerFillAndEmitFillEvents(
+	ctx sdk.Context,
+	makerFill *types.MakerFill,
+	takerOrder *types.Order,
+	ordersMap map[types.OrderId]types.Order,
+) error {
+	makerOrder, err := k.FetchOrderFromOrderId(ctx, makerFill.MakerOrderId, ordersMap)
+	if err != nil {
+		return err
+	}
+
+	matchWithOrders := types.MatchWithOrders{
+		TakerOrder: takerOrder,
+		MakerOrder: &makerOrder,
+		FillAmount: satypes.BaseQuantums(makerFill.GetFillAmount()),
+	}
+
+	_, _, _, _, err = k.ProcessSingleMatch(ctx, &matchWithOrders)
+	if err != nil {
+		return err
+	}
+
+	k.emitOrderFillEvent(ctx, &matchWithOrders)
+
+	return nil
+}
+
+func (k Keeper) emitOrderFillEvent(ctx sdk.Context, matchWithOrders *types.MatchWithOrders) {
+	makerExists, totalFilledMaker, _ := k.GetOrderFillAmount(ctx, matchWithOrders.MakerOrder.MustGetOrder().OrderId)
+	takerExists, totalFilledTaker, _ := k.GetOrderFillAmount(ctx, matchWithOrders.TakerOrder.MustGetOrder().OrderId)
+
+	if !makerExists {
+		panic(fmt.Sprintf("PersistMatchOrdersToState: Order fill amount not found for maker order: %+v",
+			matchWithOrders.MakerOrder.MustGetOrder().OrderId,
+		))
+	}
+
+	if !takerExists {
+		panic(fmt.Sprintf("PersistMatchOrdersToState: Order fill amount not found for taker order: %+v",
+			matchWithOrders.TakerOrder.MustGetOrder().OrderId,
+		))
+	}
+
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeOrderFill,
+		indexerevents.OrderFillEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewOrderFillEvent(
+				matchWithOrders.MakerOrder.MustGetOrder(),
+				matchWithOrders.TakerOrder.MustGetOrder(),
+				matchWithOrders.FillAmount,
+				matchWithOrders.MakerFee,
+				matchWithOrders.TakerFee,
+				totalFilledMaker,
+				totalFilledTaker,
+			),
+		),
+	)
+}
+
+func (k Keeper) fetchAndValidateTakerOrder(
+	ctx sdk.Context,
+	matchOrders *types.MatchOrders,
+	ordersMap map[types.OrderId]types.Order,
+) (types.Order, error) {
+	takerOrderId := matchOrders.GetTakerOrderId()
+	takerOrder, err := k.FetchOrderFromOrderId(ctx, takerOrderId, ordersMap)
+	if err != nil {
+		return types.Order{}, err
+	}
+
+	if takerOrder.GetTimeInForce() == types.Order_TIME_IN_FORCE_POST_ONLY {
+		return types.Order{}, errorsmod.Wrapf(
+			types.ErrInvalidMatchOrder,
+			"Taker order %+v cannot be post only.",
+			takerOrder.GetOrderTextString(),
+		)
+	}
+
+	if takerOrder.RequiresImmediateExecution() {
+		if err := k.checkImmediateExecutionTakerOrder(ctx, takerOrder); err != nil {
+			return types.Order{}, err
+		}
+	}
+
+	return takerOrder, nil
+}
+
+func (k Keeper) checkImmediateExecutionTakerOrder(ctx sdk.Context, takerOrder types.Order) error {
+	_, fillAmount, _ := k.GetOrderFillAmount(ctx, takerOrder.OrderId)
+	if fillAmount != 0 {
+		return errorsmod.Wrapf(
+			types.ErrImmediateExecutionOrderAlreadyFilled,
+			"Order %s",
+			takerOrder.GetOrderTextString(),
+		)
+	}
+	return nil
 }
