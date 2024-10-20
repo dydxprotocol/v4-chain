@@ -50,82 +50,24 @@ func (k Keeper) ProcessSingleMatch(
 	err error,
 ) {
 	if matchWithOrders.TakerOrder.IsLiquidation() {
-		defer func() {
-			if errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) && !takerUpdateResult.IsSuccess() {
-				takerSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, matchWithOrders.TakerOrder.GetSubaccountId())
-				takerTnc, takerIMR, takerMMR, _ := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
-					ctx,
-					satypes.Update{SubaccountId: *takerSubaccount.Id},
-				)
-				log.ErrorLog(ctx,
-					"collateralization check failed for liquidation",
-					"takerSubaccount", fmt.Sprintf("%+v", takerSubaccount),
-					"takerTNC", takerTnc,
-					"takerIMR", takerIMR,
-					"takerMMR", takerMMR,
-					"liquidationOrder", fmt.Sprintf("%+v", matchWithOrders.TakerOrder),
-					"makerOrder", fmt.Sprintf("%+v", matchWithOrders.MakerOrder),
-					"fillAmount", matchWithOrders.FillAmount,
-					"result", takerUpdateResult,
-				)
-			}
-		}()
+		defer k.logLiquidationError(ctx, matchWithOrders, &takerUpdateResult, &err)
 	}
 
-	// Perform stateless validation on the match.
-	if err := matchWithOrders.Validate(); err != nil {
-		return false, takerUpdateResult, makerUpdateResult, nil, errorsmod.Wrapf(
-			err,
-			"ProcessSingleMatch: Invalid MatchWithOrders: %+v",
-			matchWithOrders,
-		)
+	if err := k.performStatelessValidationOnMatch(matchWithOrders); err != nil {
+		return false, takerUpdateResult, makerUpdateResult, nil, err
 	}
 
 	offchainUpdates = types.NewOffchainUpdates()
-	makerMatchableOrder := matchWithOrders.MakerOrder
-	takerMatchableOrder := matchWithOrders.TakerOrder
 	fillAmount := matchWithOrders.FillAmount
 
-	// Retrieve the ClobPair from state.
-	clobPairId := makerMatchableOrder.GetClobPairId()
-	clobPair, found := k.GetClobPair(ctx, clobPairId)
-	if !found {
-		return false, takerUpdateResult, makerUpdateResult, nil, types.ErrInvalidClob
-	}
-
-	// Verify that the `fillAmount` is divisible by the `StepBaseQuantums` of the `clobPair`.
-	if fillAmount.ToUint64()%clobPair.StepBaseQuantums != 0 {
-		return false,
-			takerUpdateResult,
-			makerUpdateResult,
-			nil,
-			types.ErrFillAmountNotDivisibleByStepSize
-	}
-
-	// Define local variable relevant to retrieving QuoteQuantums based on the fill amount.
-	makerSubticks := makerMatchableOrder.GetOrderSubticks()
-
-	// Calculate the number of quote quantums for the match based on the maker order subticks.
-	bigFillQuoteQuantums, err := getFillQuoteQuantums(clobPair, makerSubticks, fillAmount)
+	clobPair, err := k.getClobPair(ctx, matchWithOrders)
 	if err != nil {
 		return false, takerUpdateResult, makerUpdateResult, nil, err
 	}
 
-	if bigFillQuoteQuantums.Sign() == 0 {
-		// Note: If `subticks`, `baseQuantums`, are small enough, `quantumConversionExponent` is negative,
-		// it's possible to have zero `quoteQuantums` for a non-zero amount of `baseQuantums`.
-		// This could mean that it's possible that a maker sell order on the book
-		// at a very unfavorable price (subticks) could receive `0` `quoteQuantums` amount.
-		log.ErrorLog(
-			ctx,
-			"Match resulted in zero quote quantums",
-			"MakerOrder",
-			fmt.Sprintf("%+v", matchWithOrders.MakerOrder),
-			"TakerOrder",
-			fmt.Sprintf("%+v", matchWithOrders.TakerOrder),
-			"FillAmount",
-			matchWithOrders.FillAmount.ToUint64(),
-		)
+	bigFillQuoteQuantums, err := k.calculateBigFillQuoteQuantums(ctx, clobPair, matchWithOrders)
+	if err != nil {
+		return false, takerUpdateResult, makerUpdateResult, nil, err
 	}
 
 	// Retrieve the associated perpetual id for the `ClobPair`.
@@ -134,94 +76,28 @@ func (k Keeper) ProcessSingleMatch(
 		return false, takerUpdateResult, makerUpdateResult, nil, err
 	}
 
-	// Calculate taker and maker fee ppms.
-	takerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
-		ctx, matchWithOrders.TakerOrder.GetSubaccountId().Owner, true)
-	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(
-		ctx, matchWithOrders.MakerOrder.GetSubaccountId().Owner, false)
-
-	takerInsuranceFundDelta := new(big.Int)
-	validatorFeeQuoteQuantums := new(big.Int)
-	liquidityFeeQuoteQuantums := new(big.Int)
-	routerTakerFeePpm := int32(0)
-	routerMakerFeePpm := int32(0)
-	if takerMatchableOrder.IsLiquidation() {
-		// Liquidation orders do not pay trading fees because they already pay a liquidation fee.
-		takerFeePpm = 0
-		// Temporarily cap maker rebates to 0 for liquidations. This is to prevent an issue where
-		// the fee collector has insufficient funds to pay the maker rebate.
-		// TODO(CLOB-812): find a longer term solution to handle maker rebates for liquidations.
-		makerFeePpm = lib.Max(makerFeePpm, 0)
-		takerInsuranceFundDelta, validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, err = k.validateMatchedLiquidationAndGetFees(
-			ctx,
-			takerMatchableOrder,
-			perpetualId,
-			fillAmount,
-			makerMatchableOrder.GetOrderSubticks(),
-		)
-
-		if err != nil {
-			return false, takerUpdateResult, makerUpdateResult, nil, err
-		}
-	} else {
-		if matchWithOrders.TakerOrder.MustGetOrder().RouterSubaccountId != nil {
-			routerTakerFeePpm = matchWithOrders.TakerOrder.MustGetOrder().RouterFeePpm
-		}
-		if matchWithOrders.MakerOrder.MustGetOrder().RouterSubaccountId != nil {
-			routerMakerFeePpm = matchWithOrders.MakerOrder.MustGetOrder().RouterFeePpm
-		}
+	takerFeePpm,
+		makerFeePpm,
+		routerTakerFeePpm,
+		routerMakerFeePpm,
+		takerInsuranceFundDelta,
+		validatorFeeQuoteQuantums,
+		liquidityFeeQuoteQuantums,
+		err := k.calculateFees(ctx, matchWithOrders, perpetualId)
+	if err != nil {
+		return false, takerUpdateResult, makerUpdateResult, nil, err
 	}
 
-	// Calculate the new fill amounts and pruneable block heights for the orders.
-	var curTakerFillAmount satypes.BaseQuantums
-	var curTakerPruneableBlockHeight uint32
-	var newTakerTotalFillAmount satypes.BaseQuantums
-	var curMakerFillAmount satypes.BaseQuantums
-	var curMakerPruneableBlockHeight uint32
-	var newMakerTotalFillAmount satypes.BaseQuantums
-
-	// Liquidation orders can only be placed when a subaccount is liquidatable
-	// and cannot be replayed, therefore we don't need to track their filled amount in state.
-	if !takerMatchableOrder.IsLiquidation() {
-		// Retrieve the current fillAmount and current pruneableBlockHeight for the taker order.
-		// If the order has never been filled before, these will both be `0`.
-		_,
-			curTakerFillAmount,
-			curTakerPruneableBlockHeight = k.GetOrderFillAmount(
-			ctx,
-			matchWithOrders.TakerOrder.MustGetOrder().OrderId,
-		)
-
-		// Verify the orders have sufficient remaining quantums, and calculate the new total fill amount.
-		newTakerTotalFillAmount, err = getUpdatedOrderFillAmount(
-			matchWithOrders.TakerOrder.MustGetOrder().OrderId,
-			matchWithOrders.TakerOrder.GetBaseQuantums(),
-			curTakerFillAmount,
-			fillAmount,
-		)
-
-		if err != nil {
-			return false, takerUpdateResult, makerUpdateResult, nil, err
-		}
+	newTakerTotalFillAmount,
+		curTakerPruneableBlockHeight,
+		err := k.calculateTakerFillAmounts(ctx, matchWithOrders, fillAmount)
+	if err != nil {
+		return false, takerUpdateResult, makerUpdateResult, nil, err
 	}
 
-	// Retrieve the current fillAmount and current pruneableBlockHeight for the maker order.
-	// If the order has never been filled before, these will both be `0`.
-	_,
-		curMakerFillAmount,
-		curMakerPruneableBlockHeight = k.GetOrderFillAmount(
-		ctx,
-		matchWithOrders.MakerOrder.MustGetOrder().OrderId,
-	)
-
-	// Verify the orders have sufficient remaining quantums, and calculate the new total fill amount.
-	newMakerTotalFillAmount, err = getUpdatedOrderFillAmount(
-		matchWithOrders.MakerOrder.MustGetOrder().OrderId,
-		matchWithOrders.MakerOrder.GetBaseQuantums(),
-		curMakerFillAmount,
-		fillAmount,
-	)
-
+	newMakerTotalFillAmount,
+		curMakerPruneableBlockHeight,
+		err := k.calculateMakerFillAmounts(ctx, matchWithOrders, fillAmount)
 	if err != nil {
 		return false, takerUpdateResult, makerUpdateResult, nil, err
 	}
@@ -247,46 +123,9 @@ func (k Keeper) ProcessSingleMatch(
 
 	// Update subaccount total quantums liquidated and total insurance fund lost for liquidation orders.
 	if matchWithOrders.TakerOrder.IsLiquidation() {
-		notionalLiquidatedQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
-			ctx,
-			perpetualId,
-			fillAmount.ToBigInt(),
-		)
-		if err != nil {
+		if err := k.updateLiquidationMetricsAndCummalativeInsuranceFundDelta(ctx, matchWithOrders, perpetualId, fillAmount, takerInsuranceFundDelta); err != nil {
 			return false, takerUpdateResult, makerUpdateResult, nil, err
 		}
-
-		err = k.IncrementCumulativeInsuranceFundDelta(
-			ctx,
-			perpetualId,
-			takerInsuranceFundDelta,
-		)
-		if err != nil {
-			return false, takerUpdateResult, makerUpdateResult, nil, err
-		}
-
-		labels := []gometrics.Label{
-			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
-			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
-		}
-		if matchWithOrders.TakerOrder.IsBuy() {
-			labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Buy))
-		} else {
-			labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Sell))
-		}
-
-		// Stat quote quantums liquidated.
-		gometrics.AddSampleWithLabels(
-			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Filled, metrics.QuoteQuantums},
-			metrics.GetMetricValueFromBigInt(notionalLiquidatedQuoteQuantums),
-			labels,
-		)
-		// Stat insurance fund delta.
-		gometrics.AddSampleWithLabels(
-			[]string{metrics.Liquidations, metrics.InsuranceFundDelta},
-			metrics.GetMetricValueFromBigInt(new(big.Int).Abs(takerInsuranceFundDelta)),
-			append(labels, metrics.GetLabelForBoolValue(metrics.Positive, takerInsuranceFundDelta.Sign() == 1)),
-		)
 	}
 
 	// Liquidation orders can only be placed when a subaccount is liquidatable
@@ -637,4 +476,185 @@ func getUpdatedOrderFillAmount(
 	}
 
 	return satypes.BaseQuantums(bigNewFillAmount.Uint64()), nil
+}
+
+func (k Keeper) logLiquidationError(
+	ctx sdk.Context,
+	matchWithOrders *types.MatchWithOrders,
+	takerUpdateResult *satypes.UpdateResult,
+	err *error,
+) {
+	if errors.Is(*err, satypes.ErrFailedToUpdateSubaccounts) && !takerUpdateResult.IsSuccess() {
+		takerSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, matchWithOrders.TakerOrder.GetSubaccountId())
+		takerTnc, takerIMR, takerMMR, _ := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+			ctx,
+			satypes.Update{SubaccountId: *takerSubaccount.Id},
+		)
+		log.ErrorLog(ctx,
+			"collateralization check failed for liquidation",
+			"takerSubaccount", fmt.Sprintf("%+v", takerSubaccount),
+			"takerTNC", takerTnc,
+			"takerIMR", takerIMR,
+			"takerMMR", takerMMR,
+			"liquidationOrder", fmt.Sprintf("%+v", matchWithOrders.TakerOrder),
+			"makerOrder", fmt.Sprintf("%+v", matchWithOrders.MakerOrder),
+			"fillAmount", matchWithOrders.FillAmount,
+			"result", *takerUpdateResult,
+		)
+	}
+}
+
+func (k Keeper) performStatelessValidationOnMatch(
+	matchWithOrders *types.MatchWithOrders,
+) error {
+	if err := matchWithOrders.Validate(); err != nil {
+		return errorsmod.Wrapf(
+			err,
+			"ProcessSingleMatch: Invalid MatchWithOrders: %+v",
+			matchWithOrders,
+		)
+	}
+	return nil
+}
+
+func (k Keeper) getClobPair(ctx sdk.Context, matchWithOrders *types.MatchWithOrders) (types.ClobPair, error) {
+	clobPairId := matchWithOrders.MakerOrder.GetClobPairId()
+	clobPair, found := k.GetClobPair(ctx, clobPairId)
+	if !found {
+		return types.ClobPair{}, types.ErrInvalidClob
+	}
+	return clobPair, nil
+}
+
+func (k Keeper) calculateBigFillQuoteQuantums(ctx sdk.Context, clobPair types.ClobPair, matchWithOrders *types.MatchWithOrders) (*big.Int, error) {
+	makerSubticks := matchWithOrders.MakerOrder.GetOrderSubticks()
+	fillAmount := matchWithOrders.FillAmount
+
+	if fillAmount.ToUint64()%clobPair.StepBaseQuantums != 0 {
+		return nil, types.ErrFillAmountNotDivisibleByStepSize
+	}
+
+	bigFillQuoteQuantums, err := getFillQuoteQuantums(clobPair, makerSubticks, fillAmount)
+	if err != nil {
+		return nil, err
+	}
+
+	if bigFillQuoteQuantums.Sign() == 0 {
+		log.ErrorLog(
+			ctx,
+			"Match resulted in zero quote quantums",
+			"MakerOrder", fmt.Sprintf("%+v", matchWithOrders.MakerOrder),
+			"TakerOrder", fmt.Sprintf("%+v", matchWithOrders.TakerOrder),
+			"FillAmount", matchWithOrders.FillAmount.ToUint64(),
+		)
+	}
+
+	return bigFillQuoteQuantums, nil
+}
+
+func (k Keeper) calculateFees(ctx sdk.Context, matchWithOrders *types.MatchWithOrders, perpetualId uint32) (int32, int32, int32, int32, *big.Int, *big.Int, *big.Int, error) {
+	takerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(ctx, matchWithOrders.TakerOrder.GetSubaccountId().Owner, true)
+	makerFeePpm := k.feeTiersKeeper.GetPerpetualFeePpm(ctx, matchWithOrders.MakerOrder.GetSubaccountId().Owner, false)
+
+	takerInsuranceFundDelta := new(big.Int)
+	validatorFeeQuoteQuantums := new(big.Int)
+	liquidityFeeQuoteQuantums := new(big.Int)
+	routerTakerFeePpm := int32(0)
+	routerMakerFeePpm := int32(0)
+
+	if matchWithOrders.TakerOrder.IsLiquidation() {
+		takerFeePpm = 0
+		makerFeePpm = lib.Max(makerFeePpm, 0)
+		var err error
+		takerInsuranceFundDelta, validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, err = k.validateMatchedLiquidationAndGetFees(
+			ctx,
+			matchWithOrders.TakerOrder,
+			perpetualId,
+			matchWithOrders.FillAmount,
+			matchWithOrders.MakerOrder.GetOrderSubticks(),
+		)
+		if err != nil {
+			return 0, 0, 0, 0, nil, nil, nil, err
+		}
+	} else {
+		if matchWithOrders.TakerOrder.MustGetOrder().RouterSubaccountId != nil {
+			routerTakerFeePpm = matchWithOrders.TakerOrder.MustGetOrder().RouterFeePpm
+		}
+		if matchWithOrders.MakerOrder.MustGetOrder().RouterSubaccountId != nil {
+			routerMakerFeePpm = matchWithOrders.MakerOrder.MustGetOrder().RouterFeePpm
+		}
+	}
+
+	return takerFeePpm, makerFeePpm, routerTakerFeePpm, routerMakerFeePpm, takerInsuranceFundDelta, validatorFeeQuoteQuantums, liquidityFeeQuoteQuantums, nil
+}
+
+func (k Keeper) calculateMakerFillAmounts(ctx sdk.Context, matchWithOrders *types.MatchWithOrders, fillAmount satypes.BaseQuantums) (satypes.BaseQuantums, uint32, error) {
+	_, curMakerFillAmount, curMakerPruneableBlockHeight := k.GetOrderFillAmount(ctx, matchWithOrders.MakerOrder.MustGetOrder().OrderId)
+
+	newMakerTotalFillAmount, err := getUpdatedOrderFillAmount(
+		matchWithOrders.MakerOrder.MustGetOrder().OrderId,
+		matchWithOrders.MakerOrder.GetBaseQuantums(),
+		curMakerFillAmount,
+		fillAmount,
+	)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return newMakerTotalFillAmount, curMakerPruneableBlockHeight, nil
+}
+
+func (k Keeper) updateLiquidationMetricsAndCummalativeInsuranceFundDelta(ctx sdk.Context, matchWithOrders *types.MatchWithOrders, perpetualId uint32, fillAmount satypes.BaseQuantums, takerInsuranceFundDelta *big.Int) error {
+	notionalLiquidatedQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, fillAmount.ToBigInt())
+	if err != nil {
+		return err
+	}
+
+	err = k.IncrementCumulativeInsuranceFundDelta(ctx, perpetualId, takerInsuranceFundDelta)
+	if err != nil {
+		return err
+	}
+
+	labels := []gometrics.Label{
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+		metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
+	}
+	if matchWithOrders.TakerOrder.IsBuy() {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Buy))
+	} else {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Sell))
+	}
+
+	gometrics.AddSampleWithLabels(
+		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Filled, metrics.QuoteQuantums},
+		metrics.GetMetricValueFromBigInt(notionalLiquidatedQuoteQuantums),
+		labels,
+	)
+	gometrics.AddSampleWithLabels(
+		[]string{metrics.Liquidations, metrics.InsuranceFundDelta},
+		metrics.GetMetricValueFromBigInt(new(big.Int).Abs(takerInsuranceFundDelta)),
+		append(labels, metrics.GetLabelForBoolValue(metrics.Positive, takerInsuranceFundDelta.Sign() == 1)),
+	)
+
+	return nil
+}
+
+func (k Keeper) calculateTakerFillAmounts(ctx sdk.Context, matchWithOrders *types.MatchWithOrders, fillAmount satypes.BaseQuantums) (satypes.BaseQuantums, uint32, error) {
+	if matchWithOrders.TakerOrder.IsLiquidation() {
+		return 0, 0, nil
+	}
+
+	_, curTakerFillAmount, curTakerPruneableBlockHeight := k.GetOrderFillAmount(ctx, matchWithOrders.TakerOrder.MustGetOrder().OrderId)
+
+	newTakerTotalFillAmount, err := getUpdatedOrderFillAmount(
+		matchWithOrders.TakerOrder.MustGetOrder().OrderId,
+		matchWithOrders.TakerOrder.GetBaseQuantums(),
+		curTakerFillAmount,
+		fillAmount,
+	)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return newTakerTotalFillAmount, curTakerPruneableBlockHeight, nil
 }
