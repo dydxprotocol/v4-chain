@@ -329,6 +329,7 @@ async function getVaultSubaccountPnlTicks(
 async function getVaultPositions(
   vaultSubaccounts: VaultMapping,
 ): Promise<Map<string, VaultPosition>> {
+  const start: number = Date.now();
   const vaultSubaccountIds: string[] = _.keys(vaultSubaccounts);
   if (vaultSubaccountIds.length === 0) {
     return new Map();
@@ -380,6 +381,9 @@ async function getVaultPositions(
     BlockTable.getLatest(),
   ]);
 
+  console.log(`Get subaccounts, assets, positions, markets, latest block ${Date.now() - start}ms`);
+
+  const startFunding: number = Date.now();
   const updatedAtHeights: string[] = _(subaccounts).map('updatedAtHeight').uniq().value();
   const [
     latestFundingIndexMap,
@@ -397,6 +401,8 @@ async function getVaultPositions(
         updatedAtHeights,
       ),
   ]);
+  console.log(`Get funding index maps ${Date.now() - startFunding}ms`);
+
   const assetPositionsBySubaccount:
   { [subaccountId: string]: AssetPositionFromDatabase[] } = _.groupBy(
     assetPositions,
@@ -412,6 +418,7 @@ async function getVaultPositions(
     AssetColumns.id,
   );
 
+  const startAggregate: number = Date.now();
   const vaultPositionsAndSubaccountId: {
     position: VaultPosition,
     subaccountId: string,
@@ -458,6 +465,7 @@ async function getVaultPositions(
       latestFundingIndexMap,
       lastUpdatedFundingIndexMap,
     );
+    console.log(`Consolidating vault data ${Date.now() - startAggregate}ms`);
 
     return {
       position: {
@@ -585,7 +593,11 @@ async function getFundingIndexMapsChunked(
   }).sort();
   const aggregateFundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = {};
   for(const chunk of getHeightWindows(updatedAtHeightsNum)) {
-    console.log(`Chunk: ${chunk}`);
+    logger.info({
+      at: 'getFundingIndexMaps#chunked',
+      message: `Getting chunk of funding index maps`,
+      chunk,
+    })
     const fundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = await FundingIndexUpdatesTable.findFundingIndexMaps(
       chunk.map((heightNum: number): string => { return heightNum.toString() }),
     );
