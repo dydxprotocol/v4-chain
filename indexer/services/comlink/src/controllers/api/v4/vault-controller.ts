@@ -557,6 +557,24 @@ function getResolution(resolution: PnlTickInterval = PnlTickInterval.day): PnlTi
   return resolution;
 }
 
+async function getFundingIndexMapsChunked(
+  updatedAtHeights: string[]
+): Promise<{[blockHeight: string]: FundingIndexMap}> {
+  const updatedAtHeightsNum: number[] = updatedAtHeights.map((height: string): number => {
+    return parseInt(height, 10);
+  }).sort();
+  const aggregateFundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = {};
+  for(const chunk of _.chunk(updatedAtHeightsNum, config.VAULT_FETCH_FUNDING_INDEX_CHUNK_SIZE)) {
+    const fundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = await FundingIndexUpdatesTable.findFundingIndexMaps(
+      chunk.map((heightNum: number): string => { return heightNum.toString() }),
+    );
+    for (const height of _.keys(fundingIndexMaps)) {
+      aggregateFundingIndexMaps[height] = fundingIndexMaps[height];
+    }
+  }
+  return aggregateFundingIndexMaps;
+}
+
 async function getVaultMapping(): Promise<VaultMapping> {
   const vaults: VaultFromDatabase[] = await VaultTable.findAll(
     {},
