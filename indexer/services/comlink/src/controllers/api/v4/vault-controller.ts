@@ -71,7 +71,11 @@ class VaultController extends Controller {
   async getMegavaultHistoricalPnl(
     @Query() resolution?: PnlTickInterval,
   ): Promise<MegavaultHistoricalPnlResponse> {
+    const start: number = Date.now();
     const vaultSubaccounts: VaultMapping = await getVaultMapping();
+    console.log(`Fetch vaults ${Date.now() - start}ms`);
+
+    const startFetch: number = Date.now();
     const vaultSubaccountIdsWithMainSubaccount: string[] = _
       .keys(vaultSubaccounts)
       .concat([MEGAVAULT_SUBACCOUNT_ID]);
@@ -94,6 +98,7 @@ class VaultController extends Controller {
       getMainSubaccountEquity(),
       getLatestPnlTick(vaultSubaccountIdsWithMainSubaccount),
     ]);
+    console.log(`Fetch ticks, positions, block, main equity, latest pnl ${Date.now() - startFetch}ms`);
 
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
     const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(vaultPnlTicks);
@@ -580,6 +585,7 @@ async function getFundingIndexMapsChunked(
   }).sort();
   const aggregateFundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = {};
   for(const chunk of _.chunk(updatedAtHeightsNum, config.VAULT_FETCH_FUNDING_INDEX_CHUNK_SIZE)) {
+    console.log(`Chunk: ${chunk}`);
     const fundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = await FundingIndexUpdatesTable.findFundingIndexMaps(
       chunk.map((heightNum: number): string => { return heightNum.toString() }),
     );
@@ -607,3 +613,18 @@ async function getVaultMapping(): Promise<VaultMapping> {
 }
 
 export default router;
+
+explain analyze SELECT
+      DISTINCT ON ("perpetualId", "searchHeight") "perpetualId", "searchHeight",
+      "funding_index_updates".*
+    FROM
+      "funding_index_updates",
+      unnest(ARRAY[17822278,17822281,17822285,17822289,17822293,17846925,17853363,17876719,18626082]) AS "searchHeight"
+    WHERE
+      "effectiveAtHeight" > 17822278 AND
+      "effectiveAtHeight" < 18626082 AND
+      "effectiveAtHeight" <= "searchHeight"
+    ORDER BY
+      "perpetualId",
+      "searchHeight",
+      "effectiveAtHeight";
