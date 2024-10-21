@@ -7,6 +7,7 @@ on:  # yamllint disable-line rule:truthy
         - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
   push:
     branches:
+      - 'td/**'
       - 'release/protocol/v[0-9]+.[0-9]+.x'  # e.g. release/protocol/v0.1.x
       - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
 
