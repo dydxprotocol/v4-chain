@@ -73,9 +73,12 @@ class VaultController extends Controller {
   ): Promise<MegavaultHistoricalPnlResponse> {
     const start: number = Date.now();
     const vaultSubaccounts: VaultMapping = await getVaultMapping();
-    console.log(`Fetch vaults ${Date.now() - start}ms`);
+    stats.timing(
+      `${config.SERVICE_NAME}.${controllerName}.fetch_vaults.timing`,
+      Date.now() - start,
+    );
 
-    const startFetch: number = Date.now();
+    const startTicksPositions: number = Date.now();
     const vaultSubaccountIdsWithMainSubaccount: string[] = _
       .keys(vaultSubaccounts)
       .concat([MEGAVAULT_SUBACCOUNT_ID]);
@@ -98,7 +101,10 @@ class VaultController extends Controller {
       getMainSubaccountEquity(),
       getLatestPnlTick(vaultSubaccountIdsWithMainSubaccount),
     ]);
-    console.log(`Fetch ticks, positions, block, main equity, latest pnl ${Date.now() - startFetch}ms`);
+    stats.timing(
+      `${config.SERVICE_NAME}.${controllerName}.fetch_ticks_positions_equity.timing`,
+      Date.now() - startTicksPositions,
+    );
 
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
     const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(vaultPnlTicks);
@@ -380,8 +386,10 @@ async function getVaultPositions(
     ),
     BlockTable.getLatest(),
   ]);
-
-  console.log(`Get subaccounts, assets, positions, markets, latest block ${Date.now() - start}ms`);
+  stats.timing(
+    `${config.SERVICE_NAME}.${controllerName}.positions.fetch_subaccounts_positions.timing`,
+    Date.now() - start,
+  );
 
   const startFunding: number = Date.now();
   const updatedAtHeights: string[] = _(subaccounts).map('updatedAtHeight').uniq().value();
@@ -398,7 +406,10 @@ async function getVaultPositions(
       ),
     getFundingIndexMapsChunked(updatedAtHeights),
   ]);
-  console.log(`Get funding index maps ${Date.now() - startFunding}ms`);
+  stats.timing(
+    `${config.SERVICE_NAME}.${controllerName}.positions.fetch_funding.timing`,
+    Date.now() - startFunding,
+  );
 
   const assetPositionsBySubaccount:
   { [subaccountId: string]: AssetPositionFromDatabase[] } = _.groupBy(
@@ -415,7 +426,6 @@ async function getVaultPositions(
     AssetColumns.id,
   );
 
-  const startAggregate: number = Date.now();
   const vaultPositionsAndSubaccountId: {
     position: VaultPosition,
     subaccountId: string,
@@ -447,7 +457,6 @@ async function getVaultPositions(
       latestFundingIndexMap,
       lastUpdatedFundingIndexMap,
     );
-    console.log(`Consolidating vault data ${Date.now() - startAggregate}ms`);
 
     return {
       position: {
@@ -567,6 +576,12 @@ function getResolution(resolution: PnlTickInterval = PnlTickInterval.day): PnlTi
   return resolution;
 }
 
+/**
+ * Gets funding index maps in a chunked fashion to reduce database load and aggregates into a
+ * a map of funding index maps.
+ * @param updatedAtHeights 
+ * @returns 
+ */
 async function getFundingIndexMapsChunked(
   updatedAtHeights: string[]
 ): Promise<{[blockHeight: string]: FundingIndexMap}> {
@@ -575,11 +590,6 @@ async function getFundingIndexMapsChunked(
   }).sort();
   const aggregateFundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = {};
   for(const chunk of getHeightWindows(updatedAtHeightsNum)) {
-    logger.info({
-      at: 'getFundingIndexMaps#chunked',
-      message: `Getting chunk of funding index maps`,
-      chunk,
-    })
     const fundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = await FundingIndexUpdatesTable.findFundingIndexMaps(
       chunk.map((heightNum: number): string => { return heightNum.toString() }),
     );
@@ -590,6 +600,12 @@ async function getFundingIndexMapsChunked(
   return aggregateFundingIndexMaps;
 }
 
+/**
+ * Separates an array of heights into a chunks based on a window size. Each chunk should only
+ * contain heights within a certain number of blocks of each other.
+ * @param heights 
+ * @returns 
+ */
 function getHeightWindows(
   heights: number[],
 ): number[][] {
@@ -631,7 +647,7 @@ async function getVaultMapping(): Promise<VaultMapping> {
       vaultMapping[subaccountId],
     );
     if (perpetual === undefined) {
-      logger.error({
+      logger.warning({
         at: 'VaultController#getVaultPositions',
         message: `Vault clob pair id ${vaultMapping[subaccountId]} does not correspond to a ` +
           'perpetual market.',
