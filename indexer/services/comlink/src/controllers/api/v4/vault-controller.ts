@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   PnlTicksFromDatabase,
   PnlTicksTable,
@@ -410,7 +410,22 @@ async function getVaultPositions(
   const vaultPositionsAndSubaccountId: {
     position: VaultPosition,
     subaccountId: string,
-  }[] = subaccounts.map((subaccount: SubaccountFromDatabase) => {
+  }[] = subaccounts.filter(
+    (subaccount: SubaccountFromDatabase): boolean => {
+      const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+        .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
+        if (perpetualMarket === undefined) {
+          logger.error({
+            at: 'VaultController#getVaultPositions',
+            message: `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
+              'perpetual market.',
+            subaccount,
+          });
+          return false;
+        }
+        return true;
+    }
+  ).map((subaccount: SubaccountFromDatabase) => {
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
     if (perpetualMarket === undefined) {
