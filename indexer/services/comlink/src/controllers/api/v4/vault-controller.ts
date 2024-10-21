@@ -419,22 +419,7 @@ async function getVaultPositions(
   const vaultPositionsAndSubaccountId: {
     position: VaultPosition,
     subaccountId: string,
-  }[] = subaccounts.filter(
-    (subaccount: SubaccountFromDatabase): boolean => {
-      const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-        .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
-        if (perpetualMarket === undefined) {
-          logger.error({
-            at: 'VaultController#getVaultPositions',
-            message: `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
-              'perpetual market.',
-            subaccount,
-          });
-          return false;
-        }
-        return true;
-    }
-  ).map((subaccount: SubaccountFromDatabase) => {
+  }[] = subaccounts.map((subaccount: SubaccountFromDatabase) => {
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
     if (perpetualMarket === undefined) {
@@ -633,7 +618,7 @@ async function getVaultMapping(): Promise<VaultMapping> {
     [],
     {},
   );
-  return _.zipObject(
+  const vaultMapping: VaultMapping = _.zipObject(
     vaults.map((vault: VaultFromDatabase): string => {
       return SubaccountTable.uuid(vault.address, 0);
     }),
@@ -641,6 +626,21 @@ async function getVaultMapping(): Promise<VaultMapping> {
       return vault.clobPairId;
     }),
   );
+  for (const subaccountId of _.keys(vaultMapping)) {
+    const perpetual: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromClobPairId(
+      vaultMapping[subaccountId],
+    );
+    if (perpetual === undefined) {
+      logger.error({
+        at: 'VaultController#getVaultPositions',
+        message: `Vault clob pair id ${vaultMapping[subaccountId]} does not correspond to a ` +
+          'perpetual market.',
+        subaccountId,
+      });
+      delete vaultMapping[subaccountId];
+    }
+  }
+  return vaultMapping;
 }
 
 export default router;
