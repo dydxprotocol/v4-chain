@@ -396,10 +396,7 @@ async function getVaultPositions(
       .findFundingIndexMap(
         latestBlock.blockHeight,
       ),
-    FundingIndexUpdatesTable
-      .findFundingIndexMaps(
-        updatedAtHeights,
-      ),
+    getFundingIndexMapsChunked(updatedAtHeights),
   ]);
   console.log(`Get funding index maps ${Date.now() - startFunding}ms`);
 
