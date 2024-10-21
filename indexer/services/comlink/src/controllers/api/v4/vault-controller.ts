@@ -584,7 +584,7 @@ async function getFundingIndexMapsChunked(
     return parseInt(height, 10);
   }).sort();
   const aggregateFundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = {};
-  for(const chunk of _.chunk(updatedAtHeightsNum, config.VAULT_FETCH_FUNDING_INDEX_CHUNK_SIZE)) {
+  for(const chunk of getHeightWindows(updatedAtHeightsNum)) {
     console.log(`Chunk: ${chunk}`);
     const fundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = await FundingIndexUpdatesTable.findFundingIndexMaps(
       chunk.map((heightNum: number): string => { return heightNum.toString() }),
@@ -594,6 +594,28 @@ async function getFundingIndexMapsChunked(
     }
   }
   return aggregateFundingIndexMaps;
+}
+
+function getHeightWindows(
+  heights: number[],
+): number[][] {
+  if (heights.length == 0) {
+    return [];
+  }
+  const windows: number[][] = [];
+  let windowStart: number = heights[0];
+  let currentWindow: number[] = [];
+  for(const height of heights) {
+    if (height - windowStart < config.VAULT_FETCH_FUNDING_INDEX_BLOCK_WINDOWS) {
+      currentWindow.push(height);
+    } else {
+      windows.push(currentWindow);
+      currentWindow = [height];
+      windowStart = height;
+    }
+  }
+  windows.push(currentWindow);
+  return windows;
 }
 
 async function getVaultMapping(): Promise<VaultMapping> {
@@ -613,18 +635,3 @@ async function getVaultMapping(): Promise<VaultMapping> {
 }
 
 export default router;
-
-explain analyze SELECT
-      DISTINCT ON ("perpetualId", "searchHeight") "perpetualId", "searchHeight",
-      "funding_index_updates".*
-    FROM
-      "funding_index_updates",
-      unnest(ARRAY[17822278,17822281,17822285,17822289,17822293,17846925,17853363,17876719,18626082]) AS "searchHeight"
-    WHERE
-      "effectiveAtHeight" > 17822278 AND
-      "effectiveAtHeight" < 18626082 AND
-      "effectiveAtHeight" <= "searchHeight"
-    ORDER BY
-      "perpetualId",
-      "searchHeight",
-      "effectiveAtHeight";
