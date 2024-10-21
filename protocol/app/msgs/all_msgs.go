@@ -157,6 +157,16 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParams":         {},
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
+		// vest
+		"/dydxprotocol.vest.MsgSetVestEntry":            {},
+		"/dydxprotocol.vest.MsgSetVestEntryResponse":    {},
+		"/dydxprotocol.vest.MsgDeleteVestEntry":         {},
+		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": {},
+
+		// rewards
+		"/dydxprotocol.rewards.MsgUpdateParams":         {},
+		"/dydxprotocol.rewards.MsgUpdateParamsResponse": {},
+
 		// subaccounts
 		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccount":         {},
 		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccountResponse": {},

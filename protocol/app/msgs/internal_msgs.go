@@ -10,8 +10,10 @@ import (
 	perpetuals "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimit "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	rewards "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	sending "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	stats "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
+	vest "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -125,6 +127,10 @@ var (
 		"/dydxprotocol.ratelimit.MsgSetLimitParams":         &ratelimit.MsgSetLimitParams{},
 		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": nil,
 
+		// rewards
+		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},
+		"/dydxprotocol.rewards.MsgUpdateParamsResponse": nil,
+
 		// sending
 		"/dydxprotocol.sending.MsgSendFromModuleToAccount":         &sending.MsgSendFromModuleToAccount{},
 		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse": nil,
@@ -132,5 +138,11 @@ var (
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         &stats.MsgUpdateParams{},
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": nil,
+
+		// vest
+		"/dydxprotocol.vest.MsgSetVestEntry":            &vest.MsgSetVestEntry{},
+		"/dydxprotocol.vest.MsgSetVestEntryResponse":    nil,
+		"/dydxprotocol.vest.MsgDeleteVestEntry":         &vest.MsgDeleteVestEntry{},
+		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": nil,
 	}
 )

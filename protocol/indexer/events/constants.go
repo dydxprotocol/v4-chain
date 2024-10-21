@@ -19,6 +19,7 @@ const (
 	SubtypeDeleveraging       = "deleveraging"
 	SubtypeOpenInterestUpdate = "open_interest_update"
 	SubtypeYieldParams        = "yield_params"
+	SubtypeTradingReward      = "trading_reward"
 )
 
 const (
@@ -37,6 +38,7 @@ const (
 	DeleveragingEventVersion      uint32 = 1
 	OpenInterestUpdateVersion     uint32 = 1
 	UpdateYieldParamsEventVersion uint32 = 1
+	TradingRewardVersion          uint32 = 1
 )
 
 var OnChainEventSubtypes = []string{
@@ -53,4 +55,5 @@ var OnChainEventSubtypes = []string{
 	SubtypeUpdateClobPair,
 	SubtypeDeleveraging,
 	SubtypeYieldParams,
+	SubtypeTradingReward,
 }

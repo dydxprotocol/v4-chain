@@ -272,7 +272,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	params := k.GetParams(ctx)
 
 	// Calculate value of `F`.
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetTDai.Id)
 	if !exists {
 		return fmt.Errorf("failed to get USDC asset")
 	}

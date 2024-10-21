@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -20,6 +19,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 func RewardsKeepers(
@@ -132,9 +132,8 @@ func GetTradingRewardEventsFromIndexerTendermintBlock(
 		if event.Subtype != indexerevents.SubtypeTradingReward {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var rewardEvent indexerevents.TradingRewardsEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &rewardEvent)
+		err := proto.Unmarshal(event.DataBytes, &rewardEvent)
 		if err != nil {
 			panic(err)
 		}
