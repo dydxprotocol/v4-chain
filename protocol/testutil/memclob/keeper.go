@@ -506,9 +506,15 @@ func (f *FakeMemClobKeeper) SendOrderbookUpdates(
 ) {
 }
 
-func (f *FakeMemClobKeeper) SendOrderbookFillUpdates(
+func (f *FakeMemClobKeeper) SendOrderbookFillUpdate(
 	ctx sdk.Context,
-	orderbookFills []types.StreamOrderbookFill,
+	orderbookFill types.StreamOrderbookFill,
+) {
+}
+
+func (f *FakeMemClobKeeper) SendTakerOrderStatus(
+	ctx sdk.Context,
+	takerOrder types.StreamTakerOrder,
 ) {
 }
 

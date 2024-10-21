@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
@@ -250,9 +252,31 @@ func (k *Keeper) SetAnteHandler(anteHandler sdk.AnteHandler) {
 	k.antehandler = anteHandler
 }
 
+func (k Keeper) GetSubaccountSnapshotsForInitStreams(
+	ctx sdk.Context,
+) (
+	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
+) {
+	lib.AssertCheckTxMode(ctx)
+
+	return k.GetFullNodeStreamingManager().GetSubaccountSnapshotsForInitStreams(
+		func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate {
+			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(
+				ctx,
+				subaccountId,
+				true,
+			)
+			return &subaccountUpdate
+		},
+	)
+}
+
 // InitializeNewStreams initializes new streams for all uninitialized clob pairs
 // by sending the corresponding orderbook snapshots.
-func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
+func (k Keeper) InitializeNewStreams(
+	ctx sdk.Context,
+	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
+) {
 	streamingManager := k.GetFullNodeStreamingManager()
 
 	streamingManager.InitializeNewStreams(
@@ -262,12 +286,13 @@ func (k Keeper) InitializeNewStreams(ctx sdk.Context) {
 				clobPairId,
 			)
 		},
+		subaccountSnapshots,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)
 }
 
-// SendOrderbookUpdates sends the offchain updates to the gRPC streaming manager.
+// SendOrderbookUpdates sends the offchain updates to the Full Node streaming manager.
 func (k Keeper) SendOrderbookUpdates(
 	ctx sdk.Context,
 	offchainUpdates *types.OffchainUpdates,
@@ -278,23 +303,29 @@ func (k Keeper) SendOrderbookUpdates(
 
 	k.GetFullNodeStreamingManager().SendOrderbookUpdates(
 		offchainUpdates,
-		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-		ctx.ExecMode(),
+		ctx,
 	)
 }
 
-// SendOrderbookFillUpdates sends the orderbook fills to the gRPC streaming manager.
-func (k Keeper) SendOrderbookFillUpdates(
+// SendOrderbookFillUpdate sends the orderbook fills to the Full Node streaming manager.
+func (k Keeper) SendOrderbookFillUpdate(
 	ctx sdk.Context,
-	orderbookFills []types.StreamOrderbookFill,
+	orderbookFill types.StreamOrderbookFill,
 ) {
-	if len(orderbookFills) == 0 {
-		return
-	}
-	k.GetFullNodeStreamingManager().SendOrderbookFillUpdates(
-		orderbookFills,
-		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-		ctx.ExecMode(),
+	k.GetFullNodeStreamingManager().SendOrderbookFillUpdate(
+		orderbookFill,
+		ctx,
 		k.PerpetualIdToClobPairId,
+	)
+}
+
+// SendTakerOrderStatus sends the taker order with its status to the Full Node streaming manager.
+func (k Keeper) SendTakerOrderStatus(
+	ctx sdk.Context,
+	takerOrder types.StreamTakerOrder,
+) {
+	k.GetFullNodeStreamingManager().SendTakerOrderStatus(
+		takerOrder,
+		ctx,
 	)
 }

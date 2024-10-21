@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -33,6 +34,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/client"
 	cosmosflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -233,6 +235,7 @@ import (
 	// Full Node Streaming
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/ws"
 )
 
 var (
@@ -344,7 +347,9 @@ type App struct {
 
 	IndexerEventManager      indexer_manager.IndexerEventManager
 	FullNodeStreamingManager streamingtypes.FullNodeStreamingManager
-	Server                   *daemonserver.Server
+	WebsocketStreamingServer *ws.WebsocketServer
+
+	Server *daemonserver.Server
 
 	// startDaemons encapsulates the logic that starts all daemons and daemon services. This function contains a
 	// closure of all relevant data structures that are shared with various keepers. Daemon services startup is
@@ -390,11 +395,6 @@ func New(
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
-	if appFlags.OptimisticExecutionEnabled {
-		// TODO(OTE-573): Remove warning once OE is fully supported.
-		logger.Warn("Optimistic execution is enabled. This is a test feature not intended for production use!")
-	}
-
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
 	encodingConfig := GetEncodingConfig()
@@ -407,7 +407,18 @@ func New(
 
 	// Enable optimistic block execution.
 	if appFlags.OptimisticExecutionEnabled {
-		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+		logger.Info("optimistic execution is enabled.")
+		if appFlags.OptimisticExecutionTestAbortRate > 0 {
+			logger.Warn(fmt.Sprintf(
+				"Test flag optimistic-execution-test-abort-rate is set: %v\n",
+				appFlags.OptimisticExecutionTestAbortRate,
+			))
+		}
+		baseAppOptions = append(
+			baseAppOptions,
+			baseapp.SetOptimisticExecution(
+				oe.WithAbortRate(int(appFlags.OptimisticExecutionTestAbortRate)),
+			))
 	}
 
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
@@ -464,6 +475,7 @@ func New(
 		statsmoduletypes.TransientStoreKey,
 		rewardsmoduletypes.TransientStoreKey,
 		indexer_manager.TransientStoreKey,
+		streaming.StreamingManagerTransientStoreKey,
 		perpetualsmoduletypes.TransientStoreKey,
 	)
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, clobmoduletypes.MemStoreKey)
@@ -491,6 +503,9 @@ func New(
 			}
 			if app.FullNodeStreamingManager != nil {
 				app.FullNodeStreamingManager.Stop()
+			}
+			if app.WebsocketStreamingServer != nil {
+				app.WebsocketStreamingServer.Shutdown()
 			}
 			return nil
 		},
@@ -752,7 +767,12 @@ func New(
 		indexerFlags.SendOffchainData,
 	)
 
-	app.FullNodeStreamingManager = getFullNodeStreamingManagerFromOptions(appFlags, logger)
+	app.FullNodeStreamingManager, app.WebsocketStreamingServer = getFullNodeStreamingManagerFromOptions(
+		appFlags,
+		appCodec,
+		logger,
+		tkeys[streaming.StreamingManagerTransientStoreKey],
+	)
 
 	timeProvider := &timelib.TimeProviderImpl{}
 
@@ -1061,6 +1081,7 @@ func New(
 		app.BlockTimeKeeper,
 		app.RevShareKeeper,
 		app.IndexerEventManager,
+		app.FullNodeStreamingManager,
 	)
 	subaccountsModule := subaccountsmodule.NewAppModule(
 		appCodec,
@@ -2016,16 +2037,40 @@ func getIndexerFromOptions(
 // from the specified options. This function will default to returning a no-op instance.
 func getFullNodeStreamingManagerFromOptions(
 	appFlags flags.Flags,
+	cdc codec.Codec,
 	logger log.Logger,
-) (manager streamingtypes.FullNodeStreamingManager) {
+	streamingManagerTransientStoreKey storetypes.StoreKey,
+) (manager streamingtypes.FullNodeStreamingManager, wsServer *ws.WebsocketServer) {
+	logger = logger.With(log.ModuleKey, "full-node-streaming")
 	if appFlags.GrpcStreamingEnabled {
-		logger.Info("GRPC streaming is enabled")
-		return streaming.NewFullNodeStreamingManager(
+		logger.Info("Full node streaming is enabled")
+		if appFlags.FullNodeStreamingSnapshotInterval > 0 {
+			logger.Info("Interval snapshots enabled")
+		}
+		manager := streaming.NewFullNodeStreamingManager(
 			logger,
 			appFlags.GrpcStreamingFlushIntervalMs,
 			appFlags.GrpcStreamingMaxBatchSize,
 			appFlags.GrpcStreamingMaxChannelBufferSize,
+			appFlags.FullNodeStreamingSnapshotInterval,
+			streamingManagerTransientStoreKey,
+			cdc,
 		)
+
+		// Start websocket server.
+		if appFlags.WebsocketStreamingEnabled {
+			port := appFlags.WebsocketStreamingPort
+			logger.Info("Websocket full node streaming is enabled")
+			wsServer = ws.NewWebsocketServer(
+				manager,
+				cdc,
+				logger,
+				port,
+			)
+			wsServer.Start()
+		}
+
+		return manager, wsServer
 	}
-	return streaming.NewNoopGrpcStreamingManager()
+	return streaming.NewNoopGrpcStreamingManager(), wsServer
 }

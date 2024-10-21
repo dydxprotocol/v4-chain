@@ -132,6 +132,12 @@ func (o *Order) MustGetOrder() Order {
 	return *o
 }
 
+// MustGetLiquidationOrder always panics since Order is not a Liquidation Order.
+// This function is necessary for the `Order` type to implement the `MatchableOrder` interface.
+func (o *Order) MustGetLiquidationOrder() LiquidationOrder {
+	panic("MustGetLiquidationOrder: Order is not a liquidation order")
+}
+
 // MustGetLiquidatedPerpetualId always panics since there is no underlying perpetual ID for a `Order`.
 // This function is necessary for the `Order` type to implement the `MatchableOrder` interface.
 func (o *Order) MustGetLiquidatedPerpetualId() uint32 {

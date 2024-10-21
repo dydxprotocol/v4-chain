@@ -100,9 +100,13 @@ type MemClobKeeper interface {
 		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,
 	)
-	SendOrderbookFillUpdates(
+	SendOrderbookFillUpdate(
 		ctx sdk.Context,
-		orderbookFills []StreamOrderbookFill,
+		orderbookFill StreamOrderbookFill,
+	)
+	SendTakerOrderStatus(
+		ctx sdk.Context,
+		takerOrder StreamTakerOrder,
 	)
 	AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx sdk.Context,

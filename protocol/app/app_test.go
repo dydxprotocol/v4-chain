@@ -111,6 +111,7 @@ func TestAppIsFullyInitialized(t *testing.T) {
 				"BridgeClient",
 				"SlinkyClient",
 				"oraclePrometheusServer",
+				"WebsocketStreamingServer",
 
 				// Any default constructed type can be considered initialized if the default is what is
 				// expected. getUninitializedStructFields relies on fields being the non-default and
