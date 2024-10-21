@@ -69,6 +69,9 @@ export enum QueryableField {
   CREATED_ON_OR_AFTER_BLOCK_HEIGHT = 'createdOnOrAfterBlockHeight',
   ORDER_FLAGS = 'orderFlags',
   CLIENT_METADATA = 'clientMetadata',
+  ROUTER_FEE_PPM = 'routerFeePpm',
+  ROUTER_FEE_SUBACCOUNT_OWNER = 'routerFeeSubaccountOwner',
+  ROUTER_FEE_SUBACCOUNT_NUMBER = 'routerFeeSubaccountNumber',
   LIQUIDITY_TIER_ID = 'liquidityTierId',
   FEE = 'fee',
   TRIGGER_PRICE = 'triggerPrice',
@@ -147,6 +150,9 @@ export interface OrderQueryConfig extends QueryConfig {
   [QueryableField.ORDER_FLAGS]?: string;
   [QueryableField.CLIENT_METADATA]?: string;
   [QueryableField.TRIGGER_PRICE]?: string;
+  [QueryableField.ROUTER_FEE_PPM]?: string;
+  [QueryableField.ROUTER_FEE_SUBACCOUNT_OWNER]?: string;
+  [QueryableField.ROUTER_FEE_SUBACCOUNT_NUMBER]?: string;
 }
 
 export interface PerpetualMarketQueryConfig extends QueryConfig {

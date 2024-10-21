@@ -336,6 +336,8 @@ func TestOrderToIndexerOrderV1(t *testing.T) {
 				ClientMetadata:                  shortTermOrder.ClientMetadata,
 				ConditionType:                   v1.OrderConditionTypeToIndexerOrderConditionType(shortTermOrder.ConditionType),
 				ConditionalOrderTriggerSubticks: shortTermOrder.ConditionalOrderTriggerSubticks,
+				RouterFeePpm:                    int32(0),
+				RouterSubaccountId:              v1.HandleEmptyRouterSubaccountId(shortTermOrder),
 			},
 		},
 		"Maps stateful order to IndexerOrderV1": {
@@ -361,6 +363,8 @@ func TestOrderToIndexerOrderV1(t *testing.T) {
 				ClientMetadata:                  statefulOrder.ClientMetadata,
 				ConditionType:                   v1.OrderConditionTypeToIndexerOrderConditionType(statefulOrder.ConditionType),
 				ConditionalOrderTriggerSubticks: statefulOrder.ConditionalOrderTriggerSubticks,
+				RouterFeePpm:                    int32(0),
+				RouterSubaccountId:              v1.HandleEmptyRouterSubaccountId(shortTermOrder),
 			},
 		},
 	}

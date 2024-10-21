@@ -21,6 +21,6 @@ var OrderFlags;
     OrderFlags[OrderFlags["SHORT_TERM"] = 0] = "SHORT_TERM";
     OrderFlags[OrderFlags["LONG_TERM"] = 64] = "LONG_TERM";
     OrderFlags[OrderFlags["CONDITIONAL"] = 32] = "CONDITIONAL";
-})(OrderFlags = exports.OrderFlags || (exports.OrderFlags = {}));
+})(OrderFlags || (exports.OrderFlags = OrderFlags = {}));
 __exportStar(require("./modules/proto-includes"), exports);
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidHlwZXMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi9zcmMvY2xpZW50cy90eXBlcy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7OztBQTJCQSxzRUFBc0U7QUFDdEUsSUFBWSxVQUlYO0FBSkQsV0FBWSxVQUFVO0lBQ3BCLHVEQUFjLENBQUE7SUFDZCxzREFBYyxDQUFBO0lBQ2QsMERBQWdCLENBQUE7QUFDbEIsQ0FBQyxFQUpXLFVBQVUsR0FBVixrQkFBVSxLQUFWLGtCQUFVLFFBSXJCO0FBaUVELDJEQUF5QyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidHlwZXMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi9zcmMvY2xpZW50cy90eXBlcy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7OztBQTJCQSxzRUFBc0U7QUFDdEUsSUFBWSxVQUlYO0FBSkQsV0FBWSxVQUFVO0lBQ3BCLHVEQUFjLENBQUE7SUFDZCxzREFBYyxDQUFBO0lBQ2QsMERBQWdCLENBQUE7QUFDbEIsQ0FBQyxFQUpXLFVBQVUsMEJBQVYsVUFBVSxRQUlyQjtBQW9FRCwyREFBeUMifQ==

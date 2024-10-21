@@ -504,6 +504,9 @@ export function redisOrderToResponseObject(
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(clobPairId)!,
     orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
     clientMetadata: redisOrder.order!.clientMetadata.toString(),
+    routerFeePpm: redisOrder.order!.routerFeePpm.toString(),
+    routerFeeSubaccountOwner: redisOrder.order!.routerSubaccountId?.owner ?? '',
+    routerFeeSubaccountNumber: redisOrder.order!.routerSubaccountId?.number?.toString() ?? '',
     subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
   };
 }

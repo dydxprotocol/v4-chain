@@ -138,7 +138,7 @@ func OrderToIndexerOrder(
 	}
 }
 
-func handleEmptyRouterSubaccountId(order clobtypes.Order) v1types.IndexerSubaccountId {
+func HandleEmptyRouterSubaccountId(order clobtypes.Order) v1types.IndexerSubaccountId {
 	if order.RouterSubaccountId == nil {
 		return v1types.IndexerSubaccountId{
 			Owner:  authtypes.NewModuleAddress("NULL_ROUTER_ADDRESS").String(),
@@ -167,7 +167,7 @@ func orderToIndexerOrder_GoodTilBlock(
 		ConditionType:                   OrderConditionTypeToIndexerOrderConditionType(order.ConditionType),
 		ConditionalOrderTriggerSubticks: order.ConditionalOrderTriggerSubticks,
 		RouterFeePpm:                    order.RouterFeePpm,
-		RouterSubaccountId:              handleEmptyRouterSubaccountId(order),
+		RouterSubaccountId:              HandleEmptyRouterSubaccountId(order),
 	}
 }
 
@@ -187,7 +187,7 @@ func orderToIndexerOrder_GoodTilBlockTime(
 		ConditionType:                   OrderConditionTypeToIndexerOrderConditionType(order.ConditionType),
 		ConditionalOrderTriggerSubticks: order.ConditionalOrderTriggerSubticks,
 		RouterFeePpm:                    order.RouterFeePpm,
-		RouterSubaccountId:              handleEmptyRouterSubaccountId(order),
+		RouterSubaccountId:              HandleEmptyRouterSubaccountId(order),
 	}
 }
 

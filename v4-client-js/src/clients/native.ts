@@ -268,6 +268,10 @@ export async function placeOrder(
     const marketInfo = json.marketInfo as MarketInfo;
     const currentHeight = json.currentHeight as number;
 
+    const routerFeePpm = json.routerFeePpm ?? 0;
+    const routerFeeSubaccountOwner = json.routerFeeSubaccountOwner;
+    const routerFeeSubaccountNumber = json.routerFeeSubaccountNumber;
+
     const subaccount = new SubaccountInfo(wallet, subaccountNumber);
     const tx = await client.placeOrder(
       subaccount,
@@ -285,6 +289,9 @@ export async function placeOrder(
       triggerPrice,
       marketInfo,
       currentHeight,
+      routerFeePpm,
+      routerFeeSubaccountOwner,
+      routerFeeSubaccountNumber,
     );
     return encodeJson(tx);
   } catch (error) {
@@ -731,6 +738,9 @@ export async function signRawPlaceOrder(
   goodTilBlock: number,
   goodTilBlockTime: number,
   clientMetadata: number,
+  routerFeePpm: number = 0,
+  routerFeeSubaccountOwner: string = '',
+  routerFeeSubaccountNumber: number = 0,
 ): Promise<string> {
   try {
     const client = globalThis.client;
@@ -757,6 +767,11 @@ export async function signRawPlaceOrder(
         timeInForce,
         reduceOnly,
         clientMetadata ?? 0,
+        undefined,
+        undefined,
+        routerFeePpm,
+        routerFeeSubaccountOwner,
+        routerFeeSubaccountNumber,
       );
       resolve([msg]);
     });
@@ -785,6 +800,9 @@ export async function signPlaceOrder(
   execution: OrderExecution,
   postOnly: boolean,
   reduceOnly: boolean,
+  routerFeePpm: number = 0,
+  routerFeeSubaccountOwner: string = '',
+  routerFeeSubaccountNumber: number = 0,
 ): Promise<string> {
   try {
     const client = globalThis.client;
@@ -810,6 +828,9 @@ export async function signPlaceOrder(
       execution,
       postOnly,
       reduceOnly,
+      routerFeePpm,
+      routerFeeSubaccountOwner,
+      routerFeeSubaccountNumber,
     );
     return signed;
   } catch (error) {

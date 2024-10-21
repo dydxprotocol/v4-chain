@@ -116,7 +116,7 @@ export declare class CompositeClient {
      * at any point.
      * @returns The transaction hash.
      */
-    placeShortTermOrder(subaccount: SubaccountInfo, marketId: string, side: OrderSide, price: number, size: number, clientId: number, goodTilBlock: number, timeInForce: Order_TimeInForce, reduceOnly: boolean): Promise<BroadcastTxAsyncResponse | BroadcastTxSyncResponse | IndexedTx>;
+    placeShortTermOrder(subaccount: SubaccountInfo, marketId: string, side: OrderSide, price: number, size: number, clientId: number, goodTilBlock: number, timeInForce: Order_TimeInForce, reduceOnly: boolean, routerFeePpm?: number, routerFeeSubaccountOwner?: string, routerFeeSubaccountNumber?: number): Promise<BroadcastTxAsyncResponse | BroadcastTxSyncResponse | IndexedTx>;
     /**
        * @description Place an order with human readable input.
        *
@@ -148,7 +148,7 @@ export declare class CompositeClient {
        * at any point.
        * @returns The transaction hash.
        */
-    placeOrder(subaccount: SubaccountInfo, marketId: string, type: OrderType, side: OrderSide, price: number, size: number, clientId: number, timeInForce?: OrderTimeInForce, goodTilTimeInSeconds?: number, execution?: OrderExecution, postOnly?: boolean, reduceOnly?: boolean, triggerPrice?: number, marketInfo?: MarketInfo, currentHeight?: number): Promise<BroadcastTxAsyncResponse | BroadcastTxSyncResponse | IndexedTx>;
+    placeOrder(subaccount: SubaccountInfo, marketId: string, type: OrderType, side: OrderSide, price: number, size: number, clientId: number, timeInForce?: OrderTimeInForce, goodTilTimeInSeconds?: number, execution?: OrderExecution, postOnly?: boolean, reduceOnly?: boolean, triggerPrice?: number, marketInfo?: MarketInfo, currentHeight?: number, routerFeePpm?: number, routerFeeSubaccountOwner?: string, routerFeeSubaccountNumber?: number): Promise<BroadcastTxAsyncResponse | BroadcastTxSyncResponse | IndexedTx>;
     /**
        * @description Calculate and create the place order message
        *
@@ -315,6 +315,6 @@ export declare class CompositeClient {
        * @returns The message
        */
     sendTokenMessage(wallet: LocalWallet, amount: string, recipient: string): EncodeObject;
-    signPlaceOrder(subaccount: SubaccountInfo, marketId: string, type: OrderType, side: OrderSide, price: number, size: number, clientId: number, timeInForce: OrderTimeInForce, goodTilTimeInSeconds: number, execution: OrderExecution, postOnly: boolean, reduceOnly: boolean): Promise<string>;
+    signPlaceOrder(subaccount: SubaccountInfo, marketId: string, type: OrderType, side: OrderSide, price: number, size: number, clientId: number, timeInForce: OrderTimeInForce, goodTilTimeInSeconds: number, execution: OrderExecution, postOnly: boolean, reduceOnly: boolean, routerFeePpm?: number, routerFeeSubaccountOwner?: string, routerFeeSubaccountNumber?: number): Promise<string>;
     signCancelOrder(subaccount: SubaccountInfo, clientId: number, orderFlags: OrderFlags, clobPairId: number, goodTilBlock: number, goodTilBlockTime: number): Promise<string>;
 }

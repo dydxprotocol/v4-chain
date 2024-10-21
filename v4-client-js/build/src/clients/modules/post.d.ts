@@ -81,7 +81,7 @@ export declare class Post {
      * @returns The Fee for broadcasting a transaction.
      */
     private simulateTransaction;
-    placeOrder(subaccount: SubaccountInfo, clientId: number, clobPairId: number, side: Order_Side, quantums: Long, subticks: Long, timeInForce: Order_TimeInForce, orderFlags: number, reduceOnly: boolean, goodTilBlock?: number, goodTilBlockTime?: number, clientMetadata?: number, conditionType?: Order_ConditionType, conditionalOrderTriggerSubticks?: Long, broadcastMode?: BroadcastMode): Promise<BroadcastTxAsyncResponse | BroadcastTxSyncResponse | IndexedTx>;
+    placeOrder(subaccount: SubaccountInfo, clientId: number, clobPairId: number, side: Order_Side, quantums: Long, subticks: Long, timeInForce: Order_TimeInForce, orderFlags: number, reduceOnly: boolean, goodTilBlock?: number, goodTilBlockTime?: number, clientMetadata?: number, conditionType?: Order_ConditionType, conditionalOrderTriggerSubticks?: Long, routerFeePpm?: number, routerFeeSubaccountOwner?: string, routerFeeSubaccountNumber?: number, broadcastMode?: BroadcastMode): Promise<BroadcastTxAsyncResponse | BroadcastTxSyncResponse | IndexedTx>;
     placeOrderObject(subaccount: SubaccountInfo, placeOrder: IPlaceOrder, broadcastMode?: BroadcastMode): Promise<BroadcastTxAsyncResponse | BroadcastTxSyncResponse | IndexedTx>;
     cancelOrder(subaccount: SubaccountInfo, clientId: number, orderFlags: OrderFlags, clobPairId: number, goodTilBlock?: number, goodTilBlockTime?: number, broadcastMode?: BroadcastMode): Promise<BroadcastTxAsyncResponse | BroadcastTxSyncResponse | IndexedTx>;
     cancelOrderObject(subaccount: SubaccountInfo, cancelOrder: ICancelOrder, broadcastMode?: BroadcastMode): Promise<BroadcastTxAsyncResponse | BroadcastTxSyncResponse | IndexedTx>;

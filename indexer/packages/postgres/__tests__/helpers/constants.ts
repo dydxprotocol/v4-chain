@@ -313,6 +313,7 @@ export const defaultOrder: OrderCreateObject = {
   goodTilBlock: '100',
   orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
   clientMetadata: '0',
+  routerFeePpm: '0',
   updatedAt: '2023-01-22T00:00:00.000Z',
   updatedAtHeight: '1',
 };
@@ -332,6 +333,7 @@ export const isolatedMarketOrder: OrderCreateObject = {
   goodTilBlock: '100',
   orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
   clientMetadata: '0',
+  routerFeePpm: '0',
   updatedAt: '2023-01-22T00:00:00.000Z',
   updatedAtHeight: '1',
 };

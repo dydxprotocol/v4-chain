@@ -22,7 +22,10 @@ const RAW_TABLE_COLUMNS: string = `
   \`goodTilBlock\` bigint,
   \`goodTilBlockTime\` string,
   \`createdAtHeight\` bigint,
-  \`clientMetadata\` bigint
+  \`clientMetadata\` bigint,
+  \`routerFeePpm\` bigint,
+  \`routerFeeSubaccountOwner\` string,
+  \`routerFeeSubaccountNumber\` bigint
 `;
 const TABLE_COLUMNS: string = `
   "id",
@@ -41,7 +44,10 @@ const TABLE_COLUMNS: string = `
   "goodTilBlock",
   goodTilBlockTime,
   "createdAtHeight",
-  "clientMetadata"
+  "clientMetadata",
+  "routerFeePpm",
+  "routerFeeSubaccountOwner",
+  "routerFeeSubaccountNumber"
 `;
 
 export function generateRawTable(tablePrefix: string, rdsExportIdentifier: string): string {

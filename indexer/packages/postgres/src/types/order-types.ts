@@ -65,6 +65,9 @@ export interface OrderCreateObject {
   // createdAtHeight is optional because short term orders do not have a createdAtHeight.
   createdAtHeight?: string;
   clientMetadata: string;
+  routerFeePpm: string;
+  routerFeeSubaccountOwner?: string;
+  routerFeeSubaccountNumber?: string;
   triggerPrice?: string,
 }
 
@@ -85,6 +88,9 @@ export interface OrderUpdateObject {
   goodTilBlock?: string | null;
   goodTilBlockTime?: string | null;
   clientMetadata?: string;
+  routerFeePpm?: string;
+  routerFeeSubaccountOwner?: string;
+  routerFeeSubaccountNumber?: string;
   triggerPrice?: string;
 }
 
@@ -111,4 +117,7 @@ export enum OrderColumns {
   createdAtHeight = 'createdAtHeight',
   clientMetadata = 'clientMetadata',
   triggerPrice = 'triggerPrice',
+  routerFeePpm = 'routerFeePpm',
+  routerFeeSubaccountOwner = 'routerFeeSubaccountOwner',
+  routerFeeSubaccountNumber = 'routerFeeSubaccountNumber',
 }

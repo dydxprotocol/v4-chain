@@ -20,5 +20,5 @@ __exportStar(require("./clients/constants"), exports);
 var ClobPairId;
 (function (ClobPairId) {
     ClobPairId[ClobPairId["PERPETUAL_PAIR_BTC_USD"] = 0] = "PERPETUAL_PAIR_BTC_USD";
-})(ClobPairId = exports.ClobPairId || (exports.ClobPairId = {}));
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidHlwZXMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvdHlwZXMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFPQSxrREFBZ0M7QUFDaEMsc0RBQW9DO0FBaUNwQyxJQUFZLFVBRVg7QUFGRCxXQUFZLFVBQVU7SUFDcEIsK0VBQTBCLENBQUE7QUFDNUIsQ0FBQyxFQUZXLFVBQVUsR0FBVixrQkFBVSxLQUFWLGtCQUFVLFFBRXJCIn0=
+})(ClobPairId || (exports.ClobPairId = ClobPairId = {}));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidHlwZXMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvdHlwZXMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFPQSxrREFBZ0M7QUFDaEMsc0RBQW9DO0FBaUNwQyxJQUFZLFVBRVg7QUFGRCxXQUFZLFVBQVU7SUFDcEIsK0VBQTBCLENBQUE7QUFDNUIsQ0FBQyxFQUZXLFVBQVUsMEJBQVYsVUFBVSxRQUVyQiJ9

@@ -495,6 +495,16 @@ var (
 		6002,
 		"Conditional order is untriggered",
 	)
+	ErrInvalidRouterFeePpm = errorsmod.Register(
+		ModuleName,
+		6003,
+		"Router fee ppm is invalid",
+	)
+	ErrInvalidRouterSubaccountId = errorsmod.Register(
+		ModuleName,
+		6004,
+		"Router subaccount ID is invalid",
+	)
 
 	// Errors for unimplemented and disabled functionality.
 	ErrAssetOrdersNotImplemented = errorsmod.Register(

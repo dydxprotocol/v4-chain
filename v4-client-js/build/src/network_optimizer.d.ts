@@ -1,4 +1,4 @@
-export declare const isTruthy: <T>(n?: false | 0 | T | null | undefined) => n is T;
+export declare const isTruthy: <T>(n?: T | false | null | undefined | 0) => n is T;
 export declare class NetworkOptimizer {
     private validatorClients;
     private indexerClients;

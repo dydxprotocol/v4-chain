@@ -71,6 +71,9 @@ export default class OrderModel extends BaseModel {
         'orderFlags',
         'createdAtHeight',
         'clientMetadata',
+        'routerFeePpm',
+        'routerFeeSubaccountOwner',
+        'routerFeeSubaccountNumber',
         'triggerPrice',
         'updatedAt',
         'updatedAtHeight',
@@ -93,6 +96,9 @@ export default class OrderModel extends BaseModel {
         goodTilBlockTime: { type: ['string', 'null'], default: null, format: 'date-time' },
         createdAtHeight: { type: ['string', 'null'], default: null, pattern: IntegerPattern },
         clientMetadata: { type: 'string', pattern: IntegerPattern },
+        routerFeePpm: { type: 'string', pattern: IntegerPattern },
+        routerFeeSubaccountOwner: { type: ['string', 'null'], default: null },
+        routerFeeSubaccountNumber: { type: ['string', 'null'], default: null, pattern: IntegerPattern },
         triggerPrice: { type: ['string', 'null'], default: null, pattern: NonNegativeNumericPattern },
         updatedAt: { type: 'string', format: 'date-time' },
         updatedAtHeight: { type: 'string', pattern: IntegerPattern },
@@ -125,6 +131,9 @@ export default class OrderModel extends BaseModel {
       goodTilBlockTime: 'date-time',
       createdAtHeight: 'string',
       clientMetadata: 'string',
+      routerFeePpm: 'string',
+      routerFeeSubaccountOwner: 'string',
+      routerFeeSubaccountNumber: 'string',
       triggerPrice: 'string',
       updatedAt: 'date-time',
       updatedAtHeight: 'string',
@@ -166,6 +175,12 @@ export default class OrderModel extends BaseModel {
   createdAtHeight?: string;
 
   clientMetadata!: string;
+
+  routerFeePpm!: string;
+
+  routerFeeSubaccountOwner?: string;
+
+  routerFeeSubaccountNumber?: string;
 
   triggerPrice?: string;
 

@@ -54,6 +54,9 @@ BEGIN
         order_record."createdAtHeight" = block_height;
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
+        order_record."routerFeePpm" = coalesce((order_->'routerFeePpm')::bigint, 0);
+        order_record."routerFeeSubaccountOwner" = order_->>'routerFeeSubaccountOwner';
+        order_record."routerFeeSubaccountNumber" = (order_->'routerFeeSubaccountNumber')::bigint;
 
         CASE
             WHEN event_data->'conditionalOrderPlacement' IS NOT NULL THEN
@@ -87,7 +90,10 @@ BEGIN
                        "updatedAtHeight" = order_record."updatedAtHeight",
                        "type" = order_record."type",
                        "status" = order_record."status",
-                       "triggerPrice" = order_record."triggerPrice"
+                       "triggerPrice" = order_record."triggerPrice",
+                       "routerFeePpm" = order_record."routerFeePpm",
+                       "routerFeeSubaccountOwner" = order_record."routerFeeSubaccountOwner",
+                       "routerFeeSubaccountNumber" = order_record."routerFeeSubaccountNumber"
         RETURNING * INTO order_record;
 
         RETURN jsonb_build_object(

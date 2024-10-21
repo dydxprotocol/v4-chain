@@ -19,6 +19,14 @@ import {
   MsgWithdrawFromSubaccount,
 } from './proto-includes';
 
+// import {
+//   OrderId,
+//   Order,
+//   Order_ConditionType,
+//   Order_Side,
+//   Order_TimeInForce,
+// } from '../../../../../indexer/packages/v4-protos/src/codegen/dydxprotocol/clob/order';
+
 protobuf.util.Long = Long;
 protobuf.configure();
 
@@ -39,12 +47,20 @@ export class Composer {
     clientMetadata: number,
     conditionType: Order_ConditionType = Order_ConditionType.CONDITION_TYPE_UNSPECIFIED,
     conditionalOrderTriggerSubticks: Long = Long.fromInt(0),
+    routerFeePpm: number,
+    routerFeeSubaccountOwner: string,
+    routerFeeSubaccountNumber: number,
   ): EncodeObject {
     this.validateGoodTilBlockAndTime(orderFlags, goodTilBlock, goodTilBlockTime);
 
     const subaccountId: SubaccountId = {
       owner: address,
       number: subaccountNumber,
+    };
+
+    const routerFeeSubaccountId: SubaccountId = {
+      owner: routerFeeSubaccountOwner,
+      number: routerFeeSubaccountNumber,
     };
 
     const orderId: OrderId = {
@@ -63,6 +79,9 @@ export class Composer {
       timeInForce,
       reduceOnly,
       clientMetadata: clientMetadata ?? 0,
+      routerFeePpm,
+      routerFeeSubaccountOwner,
+      routerFeeSubaccountNumber,
       conditionType,
       conditionalOrderTriggerSubticks,
     };

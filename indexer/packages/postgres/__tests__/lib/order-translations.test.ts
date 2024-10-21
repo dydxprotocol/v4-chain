@@ -55,6 +55,11 @@ describe('orderTranslations', () => {
         clientMetadata: 0,
         conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
         conditionalOrderTriggerSubticks: Long.fromValue(0, true),
+        routerFeePpm: 0,
+        routerSubaccountId: {
+          owner: "dydx1xxxxxx",
+          number: 0,
+        },
       };
       const indexerOrder: IndexerOrder = await convertToIndexerOrder(order, defaultPerpetualMarket);
       expect(indexerOrder).toEqual(expectedOrder);
@@ -87,6 +92,11 @@ describe('orderTranslations', () => {
       conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS,
       // 19_000 * 1e-10 / 1e-6 / 1e-8 = 190_000_000
       conditionalOrderTriggerSubticks: Long.fromValue(190_000_000, true),
+      routerFeePpm: 0,
+      routerSubaccountId: {
+        owner: "dydx1xxxxxx",
+        number: 0,
+      },
     };
     const indexerOrder: IndexerOrder = await convertToIndexerOrder(order, defaultPerpetualMarket);
     expect(indexerOrder).toEqual(expectedOrder);

@@ -40,6 +40,11 @@ export const order: IndexerOrder = {
   clientMetadata: 0,
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
+  routerFeePpm: 0,
+  routerSubaccountId: {
+    owner: "dydx1xxxxxx",
+    number: 0,
+  },
 };
 export const orderGoodTilBlockTIme: IndexerOrder = {
   ...order,
