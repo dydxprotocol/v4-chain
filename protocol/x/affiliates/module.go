@@ -1,6 +1,7 @@
 package affiliates
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -25,6 +26,7 @@ var (
 	_ module.HasGenesisBasics = AppModuleBasic{}
 
 	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.HasEndBlocker    = AppModule{}
 	_ module.HasConsensusVersion = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
@@ -143,9 +145,10 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // be set to 1.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-func (am AppModule) EndBlock(ctx sdk.Context) {
+func (am AppModule) EndBlock(ctx context.Context) error {
 	EndBlocker(
 		lib.UnwrapSDKContext(ctx, types.ModuleName),
 		&am.keeper,
 	)
+	return nil
 }

@@ -7,17 +7,13 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
-
-type SubAuthenticatorInitData struct {
-	Type   string `json:"type"`
-	Config []byte `json:"config"`
-}
 
 func subTrack(
 	ctx sdk.Context,
-	request AuthenticationRequest,
-	subAuthenticators []Authenticator,
+	request types.AuthenticationRequest,
+	subAuthenticators []types.Authenticator,
 ) error {
 	baseId := request.AuthenticatorId
 	for id, auth := range subAuthenticators {
@@ -49,7 +45,7 @@ func onSubAuthenticatorsAdded(
 	authenticatorId string,
 	am *AuthenticatorManager,
 ) error {
-	var initDatas []SubAuthenticatorInitData
+	var initDatas []types.SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return errorsmod.Wrapf(err, "failed to unmarshal sub-authenticator init data")
 	}
@@ -96,7 +92,7 @@ func onSubAuthenticatorsRemoved(
 	authenticatorId string,
 	am *AuthenticatorManager,
 ) error {
-	var initDatas []SubAuthenticatorInitData
+	var initDatas []types.SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
 		return err
 	}

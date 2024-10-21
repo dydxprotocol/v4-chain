@@ -60,3 +60,18 @@ type RevSharesForFill struct {
 	FeeSourceToRevSharePpm   map[RevShareFeeSource]uint32
 	AllRevShares             []RevShare
 }
+
+func (r RevShareType) String() string {
+	switch r {
+	case REV_SHARE_TYPE_UNSPECIFIED:
+		return "REV_SHARE_TYPE_UNSPECIFIED"
+	case REV_SHARE_TYPE_MARKET_MAPPER:
+		return "REV_SHARE_TYPE_MARKET_MAPPER"
+	case REV_SHARE_TYPE_UNCONDITIONAL:
+		return "REV_SHARE_TYPE_UNCONDITIONAL"
+	case REV_SHARE_TYPE_AFFILIATE:
+		return "REV_SHARE_TYPE_AFFILIATE"
+	default:
+		return "UNKNOWN"
+	}
+}

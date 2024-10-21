@@ -6,17 +6,15 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
-const SEPARATOR = ","
-
-var _ Authenticator = &MessageFilter{}
+var _ types.Authenticator = &MessageFilter{}
 
 // MessageFilter filters incoming messages based on a predefined JSON pattern.
 // It allows for complex pattern matching to support advanced authentication flows.
 type MessageFilter struct {
-	msgTypes []string
+	whitelist map[string]struct{}
 }
 
 // NewMessageFilter creates a new MessageFilter with the provided EncodingConfig.
@@ -35,34 +33,37 @@ func (m MessageFilter) StaticGas() uint64 {
 }
 
 // Initialize sets up the authenticator with the given data, which should be a valid JSON pattern for message filtering.
-func (m MessageFilter) Initialize(config []byte) (Authenticator, error) {
-	m.msgTypes = strings.Split(string(config), SEPARATOR)
+func (m MessageFilter) Initialize(config []byte) (types.Authenticator, error) {
+	strSlice := strings.Split(string(config), SEPARATOR)
+
+	m.whitelist = make(map[string]struct{})
+	for _, messageType := range strSlice {
+		m.whitelist[messageType] = struct{}{}
+	}
 	return m, nil
 }
 
 // Track is a no-op in this implementation but can be used to track message handling.
-func (m MessageFilter) Track(ctx sdk.Context, request AuthenticationRequest) error {
+func (m MessageFilter) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 
 // Authenticate checks if the provided message conforms to the set JSON pattern.
 // It returns an AuthenticationResult based on the evaluation.
-func (m MessageFilter) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
-	for _, msgType := range m.msgTypes {
-		if request.Msg.TypeURL == msgType {
-			return nil
-		}
+func (m MessageFilter) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
+	if _, ok := m.whitelist[sdk.MsgTypeURL(request.Msg)]; !ok {
+		return errorsmod.Wrapf(
+			types.ErrMessageTypeVerification,
+			"message types do not match. Got %s, Expected %v",
+			sdk.MsgTypeURL(request.Msg),
+			m.whitelist,
+		)
 	}
-	return errorsmod.Wrapf(
-		sdkerrors.ErrUnauthorized,
-		"message types do not match. Got %s, Expected %v",
-		request.Msg.TypeURL,
-		m.msgTypes,
-	)
+	return nil
 }
 
 // ConfirmExecution confirms the execution of a message. Currently, it always confirms.
-func (m MessageFilter) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
+func (m MessageFilter) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return nil
 }
 

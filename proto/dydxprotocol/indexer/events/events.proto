@@ -534,14 +534,18 @@ message AddressTradingReward {
 }
 
 // OpenInterestUpdateEventV1 is used for open interest update events
+// Deprecated.
 message OpenInterestUpdateEventV1 {
   // The list of all open interest updates in the block.
+  option deprecated = true;
   repeated OpenInterestUpdate open_interest_updates = 1;
 }
 
 // OpenInterestUpdate contains a single open interest update for a perpetual
+// Deprecated.
 message OpenInterestUpdate {
   // The ID of the perpetual market.
+  option deprecated = true;
   uint32 perpetual_id = 1;
 
   // The new open interest value for the perpetual market.

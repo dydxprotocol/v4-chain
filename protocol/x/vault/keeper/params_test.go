@@ -389,6 +389,7 @@ func TestGetSetOperatorParams(t *testing.T) {
 		t,
 		vaulttypes.OperatorParams{
 			Operator: constants.GovAuthority,
+			Metadata: vaulttypes.DefaultOperatorParams().Metadata,
 		},
 		params,
 	)
@@ -396,6 +397,10 @@ func TestGetSetOperatorParams(t *testing.T) {
 	// Set operator to Alice.
 	newParams := vaulttypes.OperatorParams{
 		Operator: constants.AliceAccAddress.String(),
+		Metadata: vaulttypes.OperatorMetadata{
+			Name:        "Alice",
+			Description: "Alice is a community-elected individual",
+		},
 	}
 	err := k.SetOperatorParams(ctx, newParams)
 	require.NoError(t, err)

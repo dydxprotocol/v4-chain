@@ -5,8 +5,8 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib/marketmap"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+	slinkytypes "github.com/skip-mev/connect/v2/pkg/types"
+	marketmaptypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 

@@ -1,18 +1,13 @@
 package authenticator_test
 
 import (
-	"math/rand"
 	"os"
 	"testing"
-	"time"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 
 	"github.com/stretchr/testify/suite"
 
@@ -20,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
 )
 
 type SigVerifyAuthenticationSuite struct {
@@ -246,7 +242,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 	for _, tc := range tests {
 		s.Run(tc.Description, func() {
 			// Generate a transaction based on the test cases
-			tx, _ := GenTx(
+			tx, _ := testtx.GenTx(
 				s.Ctx,
 				s.EncodingConfig.TxConfig,
 				tc.TestData.Msgs,
@@ -257,6 +253,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 				tc.TestData.AccSeqs,
 				tc.TestData.Signers,
 				tc.TestData.Signatures,
+				nil,
 			)
 			ak := s.tApp.App.AccountKeeper
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
@@ -266,7 +263,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 
 			if tc.TestData.ShouldSucceedGettingData {
 				// request for the first message
-				request, err := authenticator.GenerateAuthenticationRequest(
+				request, err := lib.GenerateAuthenticationRequest(
 					s.Ctx,
 					s.tApp.App.AppCodec(),
 					ak,
@@ -293,7 +290,7 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 					s.Require().Error(err)
 				}
 			} else {
-				_, err := authenticator.GenerateAuthenticationRequest(
+				_, err := lib.GenerateAuthenticationRequest(
 					s.Ctx,
 					s.tApp.App.AppCodec(),
 					ak,
@@ -311,96 +308,4 @@ func (s *SigVerifyAuthenticationSuite) TestSignatureAuthenticator() {
 			}
 		})
 	}
-}
-
-func MakeTxBuilder(ctx sdk.Context,
-	gen client.TxConfig,
-	msgs []sdk.Msg,
-	feeAmt sdk.Coins,
-	gas uint64,
-	chainID string,
-	accNums,
-	accSeqs []uint64,
-	signers []cryptotypes.PrivKey,
-	signatures []cryptotypes.PrivKey,
-) (client.TxBuilder, error) {
-	sigs := make([]signing.SignatureV2, len(signatures))
-
-	// create a random length memo
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
-	signMode, err := authsigning.APISignModeToInternal(gen.SignModeHandler().DefaultMode())
-	if err != nil {
-		return nil, err
-	}
-
-	// 1st round: set SignatureV2 with empty signatures, to set correct
-	// signer infos.
-	for i, p := range signers {
-		sigs[i] = signing.SignatureV2{
-			PubKey: p.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode: signMode,
-			},
-			Sequence: accSeqs[i],
-		}
-	}
-
-	tx := gen.NewTxBuilder()
-	err = tx.SetMsgs(msgs...)
-	if err != nil {
-		return nil, err
-	}
-	err = tx.SetSignatures(sigs...)
-	if err != nil {
-		return nil, err
-	}
-	tx.SetMemo(memo)
-	tx.SetFeeAmount(feeAmt)
-	tx.SetGasLimit(gas)
-
-	// 2nd round: once all signer infos are set, every signer can sign.
-	for i, p := range signatures {
-		signerData := authsigning.SignerData{
-			ChainID:       chainID,
-			AccountNumber: accNums[i],
-			Sequence:      accSeqs[i],
-		}
-		signBytes, err := authsigning.GetSignBytesAdapter(
-			ctx, gen.SignModeHandler(), signMode, signerData, tx.GetTx())
-		if err != nil {
-			panic(err)
-		}
-		sig, err := p.Sign(signBytes)
-		if err != nil {
-			panic(err)
-		}
-		sigs[i].Data.(*signing.SingleSignatureData).Signature = sig
-	}
-
-	err = tx.SetSignatures(sigs...)
-	if err != nil {
-		panic(err)
-	}
-	return tx, nil
-}
-
-// GenTx generates a signed mock transaction.
-func GenTx(
-	ctx sdk.Context,
-	gen client.TxConfig,
-	msgs []sdk.Msg,
-	feeAmt sdk.Coins,
-	gas uint64,
-	chainID string,
-	accNums,
-	accSeqs []uint64,
-	signers []cryptotypes.PrivKey,
-	signatures []cryptotypes.PrivKey,
-) (sdk.Tx, error) {
-	tx, err := MakeTxBuilder(ctx, gen, msgs, feeAmt, gas, chainID, accNums, accSeqs, signers, signatures)
-	if err != nil {
-		return nil, err
-	}
-	return tx.GetTx(), nil
 }

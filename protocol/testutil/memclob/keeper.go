@@ -508,9 +508,9 @@ func (f *FakeMemClobKeeper) SendOrderbookUpdates(
 ) {
 }
 
-func (f *FakeMemClobKeeper) SendOrderbookFillUpdates(
+func (f *FakeMemClobKeeper) SendOrderbookFillUpdate(
 	ctx sdk.Context,
-	orderbookFills []types.StreamOrderbookFill,
+	orderbookFill types.StreamOrderbookFill,
 ) {
 }
 
@@ -527,4 +527,8 @@ func (f *FakeMemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	order types.PendingOpenOrder,
 ) satypes.UpdateResult {
 	return satypes.Success
+}
+
+func (f *FakeMemClobKeeper) MaybeValidateAuthenticators(ctx sdk.Context, txBytes []byte) error {
+	return nil
 }

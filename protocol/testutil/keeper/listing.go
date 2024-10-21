@@ -14,7 +14,8 @@ import (
 	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	perpetualskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
+	marketmapkeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 
 	"testing"
@@ -55,7 +56,13 @@ func ListingKeepers(
 				stateStore,
 				db,
 				cdc,
-				registry)
+				registry,
+			)
+			accountPlusKeeper, _, _ := createAccountPlusKeeper(
+				stateStore,
+				db,
+				cdc,
+			)
 			bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountsKeeper)
 			stakingKeeper, _ := createStakingKeeper(
 				stateStore,
@@ -153,6 +160,7 @@ func ListingKeepers(
 				affiliatesKeeper,
 				subaccountsKeeper,
 				revShareKeeper,
+				accountPlusKeeper,
 				indexerEventManager,
 				transientStoreKey,
 			)
@@ -165,6 +173,7 @@ func ListingKeepers(
 				perpetualsKeeper,
 				clobKeeper,
 				marketMapKeeper,
+				vaultKeeper,
 			)
 
 			return []GenesisInitializer{keeper}
@@ -182,6 +191,7 @@ func createListingKeeper(
 	perpetualsKeeper *perpetualskeeper.Keeper,
 	clobKeeper *clobkeeper.Keeper,
 	marketMapKeeper *marketmapkeeper.Keeper,
+	vaultkeeper *vaultkeeper.Keeper,
 ) (
 	*keeper.Keeper,
 	storetypes.StoreKey,
@@ -201,6 +211,7 @@ func createListingKeeper(
 		clobKeeper,
 		marketMapKeeper,
 		perpetualsKeeper,
+		vaultkeeper,
 	)
 
 	return k, storeKey, mockTimeProvider

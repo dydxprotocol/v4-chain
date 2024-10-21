@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -219,24 +218,6 @@ func TestPlaceOrder(t *testing.T) {
 								),
 							),
 						},
-						{
-							Subtype: indexerevents.SubtypeOpenInterestUpdate,
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
-								BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
-							},
-							Version: indexerevents.OpenInterestUpdateVersion,
-							DataBytes: indexer_manager.GetBytes(
-								&indexerevents.OpenInterestUpdateEventV1{
-									OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
-										{
-											PerpetualId: Clob_0.MustGetPerpetualId(),
-											OpenInterest: dtypes.NewIntFromUint64(
-												PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetBigQuantums().Uint64(),
-											),
-										},
-									},
-								}),
-						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
 						OperationsQueue: []clobtypes.OperationRaw{
@@ -399,24 +380,6 @@ func TestPlaceOrder(t *testing.T) {
 								),
 							),
 						},
-						{
-							Subtype: indexerevents.SubtypeOpenInterestUpdate,
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
-								BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
-							},
-							Version: indexerevents.OpenInterestUpdateVersion,
-							DataBytes: indexer_manager.GetBytes(
-								&indexerevents.OpenInterestUpdateEventV1{
-									OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
-										{
-											PerpetualId: Clob_0.MustGetPerpetualId(),
-											OpenInterest: dtypes.NewIntFromUint64(
-												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBigQuantums().Uint64(),
-											),
-										},
-									},
-								}),
-						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
 						OperationsQueue: []clobtypes.OperationRaw{
@@ -578,24 +541,6 @@ func TestPlaceOrder(t *testing.T) {
 									big.NewInt(0),
 								),
 							),
-						},
-						{
-							Subtype: indexerevents.SubtypeOpenInterestUpdate,
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
-								BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
-							},
-							Version: indexerevents.OpenInterestUpdateVersion,
-							DataBytes: indexer_manager.GetBytes(
-								&indexerevents.OpenInterestUpdateEventV1{
-									OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
-										{
-											PerpetualId: Clob_0.MustGetPerpetualId(),
-											OpenInterest: dtypes.NewIntFromUint64(
-												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBigQuantums().Uint64(),
-											),
-										},
-									},
-								}),
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{

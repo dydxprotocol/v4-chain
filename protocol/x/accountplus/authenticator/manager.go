@@ -1,29 +1,33 @@
 package authenticator
 
-import "sort"
+import (
+	"sort"
+
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
+)
 
 // AuthenticatorManager is a manager for all registered authenticators.
 type AuthenticatorManager struct {
-	registeredAuthenticators map[string]Authenticator
+	registeredAuthenticators map[string]types.Authenticator
 	orderedKeys              []string // slice to keep track of the keys in sorted order
 }
 
 // NewAuthenticatorManager creates a new AuthenticatorManager.
 func NewAuthenticatorManager() *AuthenticatorManager {
 	return &AuthenticatorManager{
-		registeredAuthenticators: make(map[string]Authenticator),
+		registeredAuthenticators: make(map[string]types.Authenticator),
 		orderedKeys:              []string{},
 	}
 }
 
 // ResetAuthenticators resets all registered authenticators.
 func (am *AuthenticatorManager) ResetAuthenticators() {
-	am.registeredAuthenticators = make(map[string]Authenticator)
+	am.registeredAuthenticators = make(map[string]types.Authenticator)
 	am.orderedKeys = []string{}
 }
 
 // InitializeAuthenticators initializes authenticators. If already initialized, it will not overwrite.
-func (am *AuthenticatorManager) InitializeAuthenticators(initialAuthenticators []Authenticator) {
+func (am *AuthenticatorManager) InitializeAuthenticators(initialAuthenticators []types.Authenticator) {
 	if len(am.registeredAuthenticators) > 0 {
 		return
 	}
@@ -35,7 +39,7 @@ func (am *AuthenticatorManager) InitializeAuthenticators(initialAuthenticators [
 }
 
 // RegisterAuthenticator adds a new authenticator to the map of registered authenticators.
-func (am *AuthenticatorManager) RegisterAuthenticator(authenticator Authenticator) {
+func (am *AuthenticatorManager) RegisterAuthenticator(authenticator types.Authenticator) {
 	if _, exists := am.registeredAuthenticators[authenticator.Type()]; !exists {
 		am.orderedKeys = append(am.orderedKeys, authenticator.Type())
 		sort.Strings(am.orderedKeys) // Re-sort keys after addition
@@ -44,7 +48,7 @@ func (am *AuthenticatorManager) RegisterAuthenticator(authenticator Authenticato
 }
 
 // UnregisterAuthenticator removes an authenticator from the map of registered authenticators.
-func (am *AuthenticatorManager) UnregisterAuthenticator(authenticator Authenticator) {
+func (am *AuthenticatorManager) UnregisterAuthenticator(authenticator types.Authenticator) {
 	if _, exists := am.registeredAuthenticators[authenticator.Type()]; exists {
 		delete(am.registeredAuthenticators, authenticator.Type())
 		// Remove the key from orderedKeys
@@ -58,8 +62,8 @@ func (am *AuthenticatorManager) UnregisterAuthenticator(authenticator Authentica
 }
 
 // GetRegisteredAuthenticators returns the list of registered authenticators in sorted order.
-func (am *AuthenticatorManager) GetRegisteredAuthenticators() []Authenticator {
-	var authenticators []Authenticator
+func (am *AuthenticatorManager) GetRegisteredAuthenticators() []types.Authenticator {
+	var authenticators []types.Authenticator
 	for _, key := range am.orderedKeys {
 		authenticators = append(authenticators, am.registeredAuthenticators[key])
 	}
@@ -73,7 +77,7 @@ func (am *AuthenticatorManager) IsAuthenticatorTypeRegistered(authenticatorType 
 }
 
 // GetAuthenticatorByType returns the base implementation of the authenticator type.
-func (am *AuthenticatorManager) GetAuthenticatorByType(authenticatorType string) Authenticator {
+func (am *AuthenticatorManager) GetAuthenticatorByType(authenticatorType string) types.Authenticator {
 	if authenticator, exists := am.registeredAuthenticators[authenticatorType]; exists {
 		return authenticator
 	}

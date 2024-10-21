@@ -8,6 +8,20 @@ var (
 	// AllTypeMessages is a list of all messages and types that are used in the app.
 	// This list comes from the app's `InterfaceRegistry`.
 	AllTypeMessages = map[string]struct{}{
+		// connect marketmap messages
+		"/connect.marketmap.v2.MsgCreateMarkets":                   {},
+		"/connect.marketmap.v2.MsgCreateMarketsResponse":           {},
+		"/connect.marketmap.v2.MsgParams":                          {},
+		"/connect.marketmap.v2.MsgParamsResponse":                  {},
+		"/connect.marketmap.v2.MsgRemoveMarkets":                   {},
+		"/connect.marketmap.v2.MsgRemoveMarketsResponse":           {},
+		"/connect.marketmap.v2.MsgRemoveMarketAuthorities":         {},
+		"/connect.marketmap.v2.MsgRemoveMarketAuthoritiesResponse": {},
+		"/connect.marketmap.v2.MsgUpdateMarkets":                   {},
+		"/connect.marketmap.v2.MsgUpdateMarketsResponse":           {},
+		"/connect.marketmap.v2.MsgUpsertMarkets":                   {},
+		"/connect.marketmap.v2.MsgUpsertMarketsResponse":           {},
+
 		// auth
 		"/cosmos.auth.v1beta1.BaseAccount":      {},
 		"/cosmos.auth.v1beta1.ModuleAccount":    {},
@@ -155,6 +169,16 @@ var (
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":     {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":         {},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse": {},
+
+		// accountplus
+		"/dydxprotocol.accountplus.MsgAddAuthenticator":            {},
+		"/dydxprotocol.accountplus.MsgAddAuthenticatorResponse":    {},
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticator":         {},
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticatorResponse": {},
+		"/dydxprotocol.accountplus.MsgSetActiveState":              {},
+		"/dydxprotocol.accountplus.MsgSetActiveStateResponse":      {},
+		"/dydxprotocol.accountplus.TxExtension":                    {},
+
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         {},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},
@@ -258,13 +282,14 @@ var (
 		"/dydxprotocol.vault.MsgRetrieveFromVaultResponse":          {},
 		"/dydxprotocol.vault.MsgSetVaultParams":                     {},
 		"/dydxprotocol.vault.MsgSetVaultParamsResponse":             {},
+		"/dydxprotocol.vault.MsgSetVaultQuotingParams":              {}, // deprecated
 		"/dydxprotocol.vault.MsgUnlockShares":                       {},
 		"/dydxprotocol.vault.MsgUnlockSharesResponse":               {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         {},
 		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": {},
 		"/dydxprotocol.vault.MsgUpdateOperatorParams":               {},
 		"/dydxprotocol.vault.MsgUpdateOperatorParamsResponse":       {},
-		"/dydxprotocol.vault.MsgUpdateParams":                       {},
+		"/dydxprotocol.vault.MsgUpdateParams":                       {}, // deprecated
 		"/dydxprotocol.vault.MsgWithdrawFromMegavault":              {},
 		"/dydxprotocol.vault.MsgWithdrawFromMegavaultResponse":      {},
 
@@ -378,18 +403,6 @@ var (
 		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse":              {},
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":                            {},
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse":                    {},
-
-		// slinky marketmap messages
-		"/slinky.marketmap.v1.MsgCreateMarkets":                   {},
-		"/slinky.marketmap.v1.MsgCreateMarketsResponse":           {},
-		"/slinky.marketmap.v1.MsgParams":                          {},
-		"/slinky.marketmap.v1.MsgParamsResponse":                  {},
-		"/slinky.marketmap.v1.MsgRemoveMarketAuthorities":         {},
-		"/slinky.marketmap.v1.MsgRemoveMarketAuthoritiesResponse": {},
-		"/slinky.marketmap.v1.MsgUpdateMarkets":                   {},
-		"/slinky.marketmap.v1.MsgUpdateMarketsResponse":           {},
-		"/slinky.marketmap.v1.MsgUpsertMarkets":                   {},
-		"/slinky.marketmap.v1.MsgUpsertMarketsResponse":           {},
 	}
 
 	// DisallowMsgs are messages that cannot be externally submitted.

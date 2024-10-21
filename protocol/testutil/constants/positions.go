@@ -99,6 +99,13 @@ var (
 		big.NewInt(0),
 		big.NewInt(0),
 	)
+	// SOL positions
+	PerpetualPosition_OneSolLong = *testutil.CreateSinglePerpetualPosition(
+		2,
+		big.NewInt(100_000_000_000), // 1 SOL
+		big.NewInt(0),
+		big.NewInt(0),
+	)
 	// Long position for arbitrary isolated market
 	PerpetualPosition_OneISOLong = *testutil.CreateSinglePerpetualPosition(
 		3,

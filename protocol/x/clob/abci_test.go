@@ -530,7 +530,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -563,7 +563,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				constants.ClobPair_Eth.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Eth),
@@ -1170,7 +1170,7 @@ func TestPrepareCheckState(t *testing.T) {
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobs {
-				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -1211,8 +1211,15 @@ func TestPrepareCheckState(t *testing.T) {
 				case *types.Operation_ShortTermOrderPlacement:
 					order := operation.GetShortTermOrderPlacement()
 					tempCtx, writeCache := setupCtx.CacheContext()
-					tempCtx = tempCtx.WithTxBytes(order.Order.GetOrderHash().ToBytes())
-					_, _, err := ks.ClobKeeper.PlaceShortTermOrder(
+
+					txBuilder := constants.TestEncodingCfg.TxConfig.NewTxBuilder()
+					err := txBuilder.SetMsgs(operation.GetShortTermOrderPlacement())
+					require.NoError(t, err)
+					bytes, err := constants.TestEncodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+					require.NoError(t, err)
+					tempCtx = tempCtx.WithTxBytes(bytes)
+
+					_, _, err = ks.ClobKeeper.PlaceShortTermOrder(
 						tempCtx,
 						order,
 					)

@@ -1,4 +1,4 @@
-package authenticator
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -8,6 +8,11 @@ import (
 type InitializedAuthenticator struct {
 	Id            uint64
 	Authenticator Authenticator
+}
+
+type SubAuthenticatorInitData struct {
+	Type   string `json:"type"`
+	Config []byte `json:"config"`
 }
 
 // Authenticator is an interface that encapsulates all authentication functionalities essential for

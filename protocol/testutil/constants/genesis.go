@@ -442,6 +442,14 @@ const GenesisState = `{
       "validator_historical_rewards": [],
       "validator_slash_events": []
     },
+    "dydxaccountplus": {
+      "accounts": [],
+      "params": {
+        "is_smart_account_active": false
+      },
+      "next_authenticator_id": "0",
+      "authenticator_data": []
+    },
     "epochs": {
       "epoch_info_list": [
         {
@@ -873,7 +881,12 @@ const GenesisState = `{
       }
     },
     "listing": {
-      "hard_cap_for_markets": 0
+      "hard_cap_for_markets": 500,
+      "listing_vault_deposit_params": {
+        "new_vault_deposit_amount": "10000000000",
+        "main_vault_deposit_amount": "0",
+        "num_blocks_to_lock_shares": 2592000
+      }
 	},
     "perpetuals": {
       "liquidity_tiers": [
@@ -2544,83 +2557,6 @@ const GenesisState = `{
               }
             ]
           },
-          "MATIC/USD": {
-            "ticker": {
-              "currency_pair": {
-                "Base": "MATIC",
-                "Quote": "USD"
-              },
-              "decimals": 10,
-              "min_provider_count": 3,
-              "enabled": true
-            },
-            "provider_configs": [
-              {
-                "name": "binance_ws",
-                "off_chain_ticker": "MATICUSDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "bybit_ws",
-                "off_chain_ticker": "MATICUSDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "coinbase_ws",
-                "off_chain_ticker": "MATIC-USD"
-              },
-              {
-                "name": "gate_ws",
-                "off_chain_ticker": "MATIC_USDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "huobi_ws",
-                "off_chain_ticker": "maticusdt",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "kraken_api",
-                "off_chain_ticker": "MATICUSD"
-              },
-              {
-                "name": "kucoin_ws",
-                "off_chain_ticker": "MATIC-USDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "mexc_ws",
-                "off_chain_ticker": "MATICUSDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              },
-              {
-                "name": "okx_ws",
-                "off_chain_ticker": "MATIC-USDT",
-                "normalize_by_pair": {
-                  "Base": "USDT",
-                  "Quote": "USD"
-                }
-              }
-            ]
-          },
           "MKR/USD": {
             "ticker": {
               "currency_pair": {
@@ -2854,6 +2790,51 @@ const GenesisState = `{
               {
                 "name": "okx_ws",
                 "off_chain_ticker": "PEPE-USDT",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                }
+              }
+            ]
+          },
+          "POL/USD": {
+            "ticker": {
+              "currency_pair": {
+                "Base": "POL",
+                "Quote": "USD"
+              },
+              "decimals": 10,
+              "min_provider_count": 3,
+              "enabled": true
+            },
+            "provider_configs": [
+              {
+                "name": "binance_ws",
+                "off_chain_ticker": "POLUSDT",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                }
+              },
+              {
+                "name": "bybit_ws",
+                "off_chain_ticker": "POLUSDT",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                }
+              },
+              {
+                "name": "coinbase_ws",
+                "off_chain_ticker": "POL-USD"
+              },
+              {
+                "name": "crypto_dot_com_ws",
+                "off_chain_ticker": "POL_USD"
+              },
+              {
+                "name": "okx_ws",
+                "off_chain_ticker": "POL-USDT",
                 "normalize_by_pair": {
                   "Base": "USDT",
                   "Quote": "USD"
@@ -4002,19 +3983,19 @@ const GenesisState = `{
         },
         {
           "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"LINKUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"LINKUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LINK-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"LINK_USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"linkusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LINKUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LINK-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LINK-USDT\"}]}",
-          "exponent": -8,
+          "exponent": -9,
           "id": 2,
           "min_exchanges": 1,
           "min_price_change_ppm": 2000,
           "pair": "LINK-USD"
         },
         {
-          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"MATICUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"MATICUSD\\\"\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MATIC-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"MATIC_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"maticusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MATIC-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MATIC-USDT\"}]}",
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"POL-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"POL_USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"POL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
           "exponent": -10,
           "id": 3,
           "min_exchanges": 1,
           "min_price_change_ppm": 2000,
-          "pair": "MATIC-USD"
+          "pair": "POL-USD"
         },
         {
           "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"CRVUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"CRVUSD\\\"\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"CRVUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"CRV-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"CRV_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"crvusdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"CRVUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"CRV-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"CRV-USDT\"}]}",
@@ -4170,7 +4151,7 @@ const GenesisState = `{
         },
         {
           "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"MKRUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"MKRUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tMKRUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MKR-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"MKR_USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"mkrusdt\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MKR-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MKR-USDT\"}]}",
-          "exponent": -7,
+          "exponent": -6,
           "id": 23,
           "min_exchanges": 1,
           "min_price_change_ppm": 2000,
@@ -4186,7 +4167,7 @@ const GenesisState = `{
         },
         {
           "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"XLMUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"XLMUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tXLMUSD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"XLM-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"XLM_USDT\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXLMZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"XLM-USDT\"},{\"exchangeName\":\"Okx\",\"ticker\":\"XLM-USDT\"}]}",
-          "exponent": -11,
+          "exponent": -10,
           "id": 25,
           "min_exchanges": 1,
           "min_price_change_ppm": 2000,
@@ -4261,7 +4242,7 @@ const GenesisState = `{
           "price": 1500000000
         },
         {
-          "exponent": -8,
+          "exponent": -9,
           "id": 2,
           "price": 700000000
         },
@@ -4366,7 +4347,7 @@ const GenesisState = `{
           "price": 2200000000
         },
         {
-          "exponent": -7,
+          "exponent": -6,
           "id": 23,
           "price": 7100000000
         },
@@ -4376,7 +4357,7 @@ const GenesisState = `{
           "price": 7000000000
         },
         {
-          "exponent": -11,
+          "exponent": -10,
           "id": 25,
           "price": 10000000000
         },
@@ -4581,7 +4562,11 @@ const GenesisState = `{
         "activation_threshold_quote_quantums": "1000000000"
       },
       "operator_params": {
-        "operator": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
+        "operator": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
+        "metadata": {
+          "name": "Governance",
+          "description": "Governance Module Account"
+        }
       },
       "owner_shares": [],
       "total_shares": {

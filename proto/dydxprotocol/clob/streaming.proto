@@ -12,5 +12,6 @@ message StagedFinalizeBlockEvent {
   oneof event {
     StreamOrderbookFill order_fill = 1;
     dydxprotocol.subaccounts.StreamSubaccountUpdate subaccount_update = 2;
+    StreamOrderbookUpdate orderbook_update = 3;
   }
 }

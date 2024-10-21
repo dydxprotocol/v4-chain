@@ -40,23 +40,19 @@ func (k Keeper) ModifyMarketParam(
 	}
 
 	// Validate update is permitted.
-	if updatedMarketParam.Exponent != existingParam.Exponent {
-		return types.MarketParam{},
-			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.UintToString(updatedMarketParam.Id))
-	}
 	for _, market := range k.GetAllMarketParams(ctx) {
 		if market.Pair == updatedMarketParam.Pair && market.Id != updatedMarketParam.Id {
-			return types.MarketParam{}, errorsmod.Wrapf(types.ErrMarketParamPairAlreadyExists, updatedMarketParam.Pair)
+			return types.MarketParam{}, errorsmod.Wrap(types.ErrMarketParamPairAlreadyExists, updatedMarketParam.Pair)
 		}
 	}
 
 	// Validate that modified market param has a corresponding ticker in MarketMap
 	cp, err := slinky.MarketPairToCurrencyPair(updatedMarketParam.Pair)
 	if err != nil {
-		return types.MarketParam{}, errorsmod.Wrapf(types.ErrMarketPairConversionFailed, updatedMarketParam.Pair)
+		return types.MarketParam{}, errorsmod.Wrap(types.ErrMarketPairConversionFailed, updatedMarketParam.Pair)
 	}
 	if _, err := k.MarketMapKeeper.GetMarket(ctx, cp.String()); err != nil {
-		return types.MarketParam{}, errorsmod.Wrapf(types.ErrTickerNotFoundInMarketMap, cp.String())
+		return types.MarketParam{}, errorsmod.Wrap(types.ErrTickerNotFoundInMarketMap, cp.String())
 	}
 
 	// Store the modified market param.

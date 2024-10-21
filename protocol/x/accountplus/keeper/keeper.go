@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"strings"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -53,7 +55,14 @@ func (k Keeper) GetAllAccountStates(ctx sdk.Context) ([]types.AccountState, erro
 
 	accounts := []types.AccountState{}
 	for ; iterator.Valid(); iterator.Next() {
-		accountState, found := k.GetAccountState(ctx, iterator.Key())
+		key := iterator.Key()
+
+		// Temporary workaround to exclude smart account kv pairs.
+		if bytes.HasPrefix(key, []byte(types.SmartAccountKeyPrefix)) {
+			continue
+		}
+
+		accountState, found := k.GetAccountState(ctx, key)
 		if !found {
 			return accounts, errors.New("Could not get account state for address: " + sdk.AccAddress(iterator.Key()).String())
 		}
@@ -73,7 +82,66 @@ func (k Keeper) SetGenesisState(ctx sdk.Context, data types.GenesisState) error 
 		k.SetAccountState(ctx, address, account)
 	}
 
+	k.SetParams(ctx, data.Params)
+	k.SetNextAuthenticatorId(ctx, data.NextAuthenticatorId)
+
+	for _, data := range data.GetAuthenticatorData() {
+		address := data.GetAddress()
+		for _, authenticator := range data.GetAuthenticators() {
+			k.SetAuthenticator(ctx, address, authenticator.Id, authenticator)
+		}
+	}
+
 	return nil
+}
+
+// GetAllAuthenticatorData is used in genesis export to export all the authenticator for all accounts
+func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorData, error) {
+	var accountAuthenticators []types.AuthenticatorData
+
+	parse := func(key []byte, value []byte) error {
+		var authenticator types.AccountAuthenticator
+		err := k.cdc.Unmarshal(value, &authenticator)
+		if err != nil {
+			return err
+		}
+
+		// Key is of format `SA/A/{accountAddr}/{authenticatorId}`.
+		// Extract account address from key.
+		accountAddr := strings.Split(string(key), "/")[2]
+
+		// Check if this entry is for a new address or the same as the last one processed
+		if len(accountAuthenticators) == 0 ||
+			accountAuthenticators[len(accountAuthenticators)-1].Address != accountAddr {
+			// If it's a new address, create a new AuthenticatorData entry
+			accountAuthenticators = append(accountAuthenticators, types.AuthenticatorData{
+				Address:        accountAddr,
+				Authenticators: []types.AccountAuthenticator{authenticator},
+			})
+		} else {
+			// If it's the same address, append the authenticator to the last entry in the list
+			lastIndex := len(accountAuthenticators) - 1
+			accountAuthenticators[lastIndex].Authenticators = append(
+				accountAuthenticators[lastIndex].Authenticators,
+				authenticator,
+			)
+		}
+
+		return nil
+	}
+
+	// Iterate over all entries in the store using a prefix iterator
+	iterator := storetypes.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte(types.AuthenticatorKeyPrefix))
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		err := parse(iterator.Key(), iterator.Value())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return accountAuthenticators, nil
 }
 
 func GetAccountPlusStateWithTimestampNonceDetails(

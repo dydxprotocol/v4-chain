@@ -174,10 +174,20 @@ func (k Keeper) GetMarketIdToValidIndexPrice(
 	ret := make(map[uint32]types.MarketPrice)
 	for _, marketParam := range allMarketParams {
 		if indexPrice, exists := marketIdToValidIndexPrice[marketParam.Id]; exists {
+			exponent, err := k.GetExponent(ctx, marketParam.Pair)
+			if err != nil {
+				k.Logger(ctx).Error(
+					"failed to get exponent for market",
+					"market id", marketParam.Id,
+					"market pair", marketParam.Pair,
+					"error", err,
+				)
+				continue
+			}
 			ret[marketParam.Id] = types.MarketPrice{
 				Id:       marketParam.Id,
 				Price:    indexPrice,
-				Exponent: marketParam.Exponent,
+				Exponent: exponent,
 			}
 		}
 	}

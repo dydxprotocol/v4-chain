@@ -4,7 +4,7 @@ import (
 	"time"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	oracleconfig "github.com/skip-mev/slinky/oracle/config"
+	oracleconfig "github.com/skip-mev/connect/v2/oracle/config"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )

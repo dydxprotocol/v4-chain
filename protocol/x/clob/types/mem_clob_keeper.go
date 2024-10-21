@@ -102,9 +102,9 @@ type MemClobKeeper interface {
 		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,
 	)
-	SendOrderbookFillUpdates(
+	SendOrderbookFillUpdate(
 		ctx sdk.Context,
-		orderbookFills []StreamOrderbookFill,
+		orderbookFill StreamOrderbookFill,
 	)
 	SendTakerOrderStatus(
 		ctx sdk.Context,
@@ -115,4 +115,5 @@ type MemClobKeeper interface {
 		subaccountId satypes.SubaccountId,
 		order PendingOpenOrder,
 	) satypes.UpdateResult
+	MaybeValidateAuthenticators(ctx sdk.Context, txBytes []byte) error
 }

@@ -16,6 +16,7 @@ import (
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	accountplus "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	affiliates "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -106,12 +107,15 @@ var (
 
 	// Custom modules
 	InternalMsgSamplesDydxCustom = map[string]sdk.Msg{
-
 		// affiliates
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiers":             &affiliates.MsgUpdateAffiliateTiers{},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateTiersResponse":     nil,
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelist":         &affiliates.MsgUpdateAffiliateWhitelist{},
 		"/dydxprotocol.affiliates.MsgUpdateAffiliateWhitelistResponse": nil,
+
+		// accountplus
+		"/dydxprotocol.accountplus.MsgSetActiveState":         &accountplus.MsgSetActiveState{},
+		"/dydxprotocol.accountplus.MsgSetActiveStateResponse": nil,
 
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         &blocktime.MsgUpdateDowntimeParams{},

@@ -6,20 +6,21 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
 
 type AllOf struct {
-	SubAuthenticators   []Authenticator
+	SubAuthenticators   []types.Authenticator
 	am                  *AuthenticatorManager
 	signatureAssignment SignatureAssignment
 }
 
-var _ Authenticator = &AllOf{}
+var _ types.Authenticator = &AllOf{}
 
 func NewAllOf(am *AuthenticatorManager) AllOf {
 	return AllOf{
 		am:                  am,
-		SubAuthenticators:   []Authenticator{},
+		SubAuthenticators:   []types.Authenticator{},
 		signatureAssignment: Single,
 	}
 }
@@ -27,7 +28,7 @@ func NewAllOf(am *AuthenticatorManager) AllOf {
 func NewPartitionedAllOf(am *AuthenticatorManager) AllOf {
 	return AllOf{
 		am:                  am,
-		SubAuthenticators:   []Authenticator{},
+		SubAuthenticators:   []types.Authenticator{},
 		signatureAssignment: Partitioned,
 	}
 }
@@ -47,8 +48,8 @@ func (aoa AllOf) StaticGas() uint64 {
 	return totalGas
 }
 
-func (aoa AllOf) Initialize(config []byte) (Authenticator, error) {
-	var initDatas []SubAuthenticatorInitData
+func (aoa AllOf) Initialize(config []byte) (types.Authenticator, error) {
+	var initDatas []types.SubAuthenticatorInitData
 	if err := json.Unmarshal(config, &initDatas); err != nil {
 		return nil, errorsmod.Wrap(err, "failed to parse sub-authenticators initialization data")
 	}
@@ -74,7 +75,7 @@ func (aoa AllOf) Initialize(config []byte) (Authenticator, error) {
 	return aoa, nil
 }
 
-func (aoa AllOf) Authenticate(ctx sdk.Context, request AuthenticationRequest) error {
+func (aoa AllOf) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	if len(aoa.SubAuthenticators) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
@@ -98,17 +99,20 @@ func (aoa AllOf) Authenticate(ctx sdk.Context, request AuthenticationRequest) er
 			request.Signature = signatures[i]
 		}
 		if err := auth.Authenticate(ctx, request); err != nil {
-			return err
+			return errorsmod.Wrap(
+				types.ErrAllOfVerification,
+				err.Error(),
+			)
 		}
 	}
 	return nil
 }
 
-func (aoa AllOf) Track(ctx sdk.Context, request AuthenticationRequest) error {
+func (aoa AllOf) Track(ctx sdk.Context, request types.AuthenticationRequest) error {
 	return subTrack(ctx, request, aoa.SubAuthenticators)
 }
 
-func (aoa AllOf) ConfirmExecution(ctx sdk.Context, request AuthenticationRequest) error {
+func (aoa AllOf) ConfirmExecution(ctx sdk.Context, request types.AuthenticationRequest) error {
 	var signatures [][]byte
 	var err error
 	if aoa.signatureAssignment == Partitioned {

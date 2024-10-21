@@ -476,7 +476,7 @@ importers:
       cors: ^2.8.5
       dd-trace: ^3.32.1
       dotenv-flow: ^3.2.0
-      dydx-widdershins: ^4.0.7
+      dydx-widdershins: ^4.0.8
       express: ^4.18.1
       express-request-id: ^1.4.0
       express-validator: ^6.14.2
@@ -514,7 +514,7 @@ importers:
       cors: 2.8.5
       dd-trace: 3.32.1
       dotenv-flow: 3.2.0
-      dydx-widdershins: 4.0.7
+      dydx-widdershins: 4.0.8
       express: 4.18.1
       express-request-id: 1.4.1
       express-validator: 6.14.2
@@ -6837,7 +6837,7 @@ packages:
       typescript: 4.9.5
       validator: 13.7.0
       yamljs: 0.3.0
-      yargs: 17.5.1
+      yargs: 17.7.2
     dev: false
 
   /@tsoa/runtime/5.0.0:
@@ -8290,7 +8290,6 @@ packages:
       strip-ansi: 6.0.1
       wrap-ansi: 7.0.0
     dev: false
-    optional: true
 
   /co/4.6.0:
     resolution: {integrity: sha512-QVb0dM5HvG+uaxitm8wONl7jltx8dqhfU33DcqtOZcLSVIKSDDLDi7+0LbAKiyI8hD9u42m2YxXSkMGWThaecQ==}
@@ -8844,8 +8843,8 @@ packages:
     dev: false
     optional: true
 
-  /dydx-widdershins/4.0.7:
-    resolution: {integrity: sha512-uHC9p1fvmRuJed/lvA6C70F0IFcKdFjCt5MZKCmP79e5l51sqn4DsPp3fRY/o4zCIr3GWjhULZbF5uPPH4p+sw==}
+  /dydx-widdershins/4.0.8:
+    resolution: {integrity: sha512-fisnybZb7TpCoV80YKWi8XLykUzwCGtv9NCIizIRkacLd8KqCJjRdquR+nlaza3bSl+kJic1Suw9yfgBq3P92Q==}
     hasBin: true
     dependencies:
       dot: 1.1.3
@@ -13128,7 +13127,7 @@ packages:
       oas-kit-common: 1.0.8
       reftools: 1.1.9
       yaml: 1.10.2
-      yargs: 17.5.1
+      yargs: 17.7.2
     dev: false
 
   /oas-schema-walker/1.1.5:
@@ -14801,7 +14800,7 @@ packages:
       oas-validator: 5.0.8
       reftools: 1.1.9
       yaml: 1.10.2
-      yargs: 17.5.1
+      yargs: 17.7.2
     transitivePeerDependencies:
       - encoding
     dev: false
@@ -15719,15 +15718,9 @@ packages:
       decamelize: 1.2.0
     dev: false
 
-  /yargs-parser/21.0.1:
-    resolution: {integrity: sha512-9BK1jFpLzJROCI5TzwZL/TU4gqjK5xiHV/RfWLOahrjAko/e4DJkRDZQXfvqAsiZzzYhgAzbgz6lg48jcm4GLg==}
-    engines: {node: '>=12'}
-
   /yargs-parser/21.1.1:
     resolution: {integrity: sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==}
     engines: {node: '>=12'}
-    dev: false
-    optional: true
 
   /yargs/12.0.5:
     resolution: {integrity: sha512-Lhz8TLaYnxq/2ObqHDql8dX8CJi97oHxrjUcYtzKbbykPtVW9WB+poxI+NM2UIzsMgNCZTIf0AQwsjK5yMAqZw==}
@@ -15771,7 +15764,7 @@ packages:
       require-directory: 2.1.1
       string-width: 4.2.3
       y18n: 5.0.8
-      yargs-parser: 21.0.1
+      yargs-parser: 21.1.1
 
   /yargs/17.7.2:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
@@ -15785,7 +15778,6 @@ packages:
       y18n: 5.0.8
       yargs-parser: 21.1.1
     dev: false
-    optional: true
 
   /yn/3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}

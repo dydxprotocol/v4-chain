@@ -1,4 +1,4 @@
-package authenticator
+package lib
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -16,39 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-//
-// These structs define the data structure for authentication, used with AuthenticationRequest struct.
-//
-
-// SignModeData represents the signing modes with direct bytes and textual representation.
-type SignModeData struct {
-	Direct  []byte `json:"sign_mode_direct"`
-	Textual string `json:"sign_mode_textual"`
-}
-
-// LocalAny holds a message with its type URL and byte value. This is necessary because the type Any fails
-// to serialize and deserialize properly in nested contexts.
-type LocalAny struct {
-	TypeURL string `json:"type_url"`
-	Value   []byte `json:"value"`
-}
-
-// SimplifiedSignatureData contains lists of signers and their corresponding signatures.
-type SimplifiedSignatureData struct {
-	Signers    []sdk.AccAddress `json:"signers"`
-	Signatures [][]byte         `json:"signatures"`
-}
-
-// ExplicitTxData encapsulates key transaction data like chain ID, account info, and messages.
-type ExplicitTxData struct {
-	ChainID         string     `json:"chain_id"`
-	AccountNumber   uint64     `json:"account_number"`
-	AccountSequence uint64     `json:"sequence"`
-	TimeoutHeight   uint64     `json:"timeout_height"`
-	Msgs            []LocalAny `json:"msgs"`
-	Memo            string     `json:"memo"`
-}
 
 // GetSignerAndSignatures gets an array of signer and an array of signatures from the transaction
 // checks they're the same length and returns both.
@@ -121,36 +88,22 @@ func getSignerData(ctx sdk.Context, ak authante.AccountKeeper, account sdk.AccAd
 
 // extractExplicitTxData makes the transaction data concrete for the authentication request. This is necessary to
 // pass the parsed data to the cosmwasm authenticator.
-func extractExplicitTxData(tx sdk.Tx, signerData authsigning.SignerData) (ExplicitTxData, error) {
+func extractExplicitTxData(tx sdk.Tx, signerData authsigning.SignerData) (types.ExplicitTxData, error) {
 	timeoutTx, ok := tx.(sdk.TxWithTimeoutHeight)
 	if !ok {
-		return ExplicitTxData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
+		return types.ExplicitTxData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithTimeoutHeight")
 	}
 	memoTx, ok := tx.(sdk.TxWithMemo)
 	if !ok {
-		return ExplicitTxData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
+		return types.ExplicitTxData{}, errorsmod.Wrap(sdkerrors.ErrInvalidType, "failed to cast tx to TxWithMemo")
 	}
 
-	// Encode messages as Anys and manually convert them to a struct we can serialize to json for cosmwasm.
-	txMsgs := tx.GetMsgs()
-	msgs := make([]LocalAny, len(txMsgs))
-	for i, txMsg := range txMsgs {
-		encodedMsg, err := types.NewAnyWithValue(txMsg)
-		if err != nil {
-			return ExplicitTxData{}, errorsmod.Wrap(err, "failed to encode msg")
-		}
-		msgs[i] = LocalAny{
-			TypeURL: encodedMsg.TypeUrl,
-			Value:   encodedMsg.Value,
-		}
-	}
-
-	return ExplicitTxData{
+	return types.ExplicitTxData{
 		ChainID:         signerData.ChainID,
 		AccountNumber:   signerData.AccountNumber,
 		AccountSequence: signerData.Sequence,
 		TimeoutHeight:   timeoutTx.GetTimeoutHeight(),
-		Msgs:            msgs,
+		Msgs:            tx.GetMsgs(),
 		Memo:            memoTx.GetMemo(),
 	}, nil
 }
@@ -202,15 +155,15 @@ func GenerateAuthenticationRequest(
 	tx sdk.Tx,
 	msgIndex int,
 	simulate bool,
-) (AuthenticationRequest, error) {
+) (types.AuthenticationRequest, error) {
 	// Only supporting one signer per message. This will be enforced in sdk v0.50
 	signers, _, err := cdc.GetMsgV1Signers(msg)
 	if err != nil {
-		return AuthenticationRequest{}, err
+		return types.AuthenticationRequest{}, err
 	}
 	signer := sdk.AccAddress(signers[0])
 	if !signer.Equals(account) {
-		return AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid signer")
+		return types.AuthenticationRequest{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid signer")
 	}
 
 	// Get the signers and signatures from the transaction. A signer can only have one signature, so if it
@@ -219,7 +172,7 @@ func GenerateAuthenticationRequest(
 	// to change this in the future
 	txSigners, txSignatures, err := GetSignerAndSignatures(tx)
 	if err != nil {
-		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signers and signatures")
+		return types.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signers and signatures")
 	}
 
 	// Get the signer data for the account. This is needed in the SignDoc
@@ -228,17 +181,17 @@ func GenerateAuthenticationRequest(
 	// Get the concrete transaction data to be passed to the authenticators
 	txData, err := extractExplicitTxData(tx, signerData)
 	if err != nil {
-		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get explicit tx data")
+		return types.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get explicit tx data")
 	}
 
 	// Get the signatures for the transaction and execute replay protection
 	signatures, msgSignature, err := extractSignatures(txSigners, txSignatures, account)
 	if err != nil {
-		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signatures")
+		return types.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signatures")
 	}
 
 	// Build the authentication request
-	authRequest := AuthenticationRequest{
+	authRequest := types.AuthenticationRequest{
 		Account:    account,
 		FeePayer:   feePayer,
 		FeeGranter: feeGranter,
@@ -247,10 +200,10 @@ func GenerateAuthenticationRequest(
 		MsgIndex:   uint64(msgIndex),
 		Signature:  msgSignature,
 		TxData:     txData,
-		SignModeTxData: SignModeData{
+		SignModeTxData: types.SignModeData{
 			Direct: []byte("signBytes"),
 		},
-		SignatureData: SimplifiedSignatureData{
+		SignatureData: types.SimplifiedSignatureData{
 			Signers:    txSigners,
 			Signatures: signatures,
 		},
@@ -272,11 +225,11 @@ func GenerateAuthenticationRequest(
 		tx,
 	)
 	if err != nil {
-		return AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
+		return types.AuthenticationRequest{}, errorsmod.Wrap(err, "failed to get signBytes")
 	}
 
 	// TODO: Add other sign modes. Specifically json when it becomes available
-	authRequest.SignModeTxData = SignModeData{
+	authRequest.SignModeTxData = types.SignModeData{
 		Direct: signBytes,
 	}
 
