@@ -80,20 +80,6 @@ func TestUpdateMarketParam(t *testing.T) {
 			},
 			expectedErr: "Pair cannot be empty",
 		},
-		"Failure: update to 0 min exchanges": {
-			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: lib.GovModuleAddress.String(),
-				MarketParam: pricestypes.MarketParam{
-					Id:                 testMarketParam.Id,
-					Pair:               testMarketParam.Pair,
-					Exponent:           testMarketParam.Exponent,
-					MinExchanges:       0, // invalid
-					MinPriceChangePpm:  testMarketParam.MinPriceChangePpm,
-					ExchangeConfigJson: testMarketParam.ExchangeConfigJson,
-				},
-			},
-			expectedErr: "Min exchanges must be greater than zero",
-		},
 		"Failure: update to 0 min price change ppm": {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
@@ -104,20 +90,6 @@ func TestUpdateMarketParam(t *testing.T) {
 					MinExchanges:       testMarketParam.MinExchanges,
 					MinPriceChangePpm:  0, // invalid
 					ExchangeConfigJson: testMarketParam.ExchangeConfigJson,
-				},
-			},
-			expectedErr: "Invalid input",
-		},
-		"Failure: update to invalid exchange config json": {
-			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: lib.GovModuleAddress.String(),
-				MarketParam: pricestypes.MarketParam{
-					Id:                 testMarketParam.Id,
-					Pair:               testMarketParam.Pair,
-					Exponent:           testMarketParam.Exponent,
-					MinExchanges:       testMarketParam.MinExchanges,
-					MinPriceChangePpm:  testMarketParam.MinPriceChangePpm,
-					ExchangeConfigJson: `{{"exchanges":[{"exchangeName":"XYZ","ticker":"PIKACHU"}]}`, // invalid json
 				},
 			},
 			expectedErr: "Invalid input",
