@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -122,6 +123,10 @@ func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
 			return nil, fmt.Errorf("invalid subaccount number: %s, expected subaccount_id format: owner/number", parts[1])
 		}
 
+		if number < 0 || number > math.MaxInt32 {
+			return nil, fmt.Errorf("invalid subaccount number: %s", parts[1])
+		}
+
 		subaccountIds = append(subaccountIds, &satypes.SubaccountId{
 			Owner:  parts[0],
 			Number: uint32(number),
@@ -143,6 +148,9 @@ func parseClobPairIds(r *http.Request) ([]uint32, error) {
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
 			return nil, fmt.Errorf("invalid clobPairId: %s", idStr)
+		}
+		if id < 0 || id > math.MaxInt32 {
+			return nil, fmt.Errorf("invalid clob pair id: %s", idStr)
 		}
 		clobPairIds = append(clobPairIds, uint32(id))
 	}

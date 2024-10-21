@@ -5,8 +5,6 @@ import (
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	// upgrade "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8_0"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	"github.com/stretchr/testify/suite"
