@@ -19,7 +19,7 @@ export interface MarketParam {
    * represents ``$10,000`. Therefore `10 ^ Exponent` represents the smallest
    * price step (in dollars) that can be recorded.
    * 
-   * Deprecated since v7.1.x. This value is now determined from the marketmap.
+   * Deprecated since v8.x. This value is now determined from the marketmap.
    */
 
   /** @deprecated */
@@ -28,6 +28,8 @@ export interface MarketParam {
   /**
    * The minimum number of exchanges that should be reporting a live price for
    * a price update to be considered valid.
+   * 
+   * Deprecated since v8.x. This value is now determined from the marketmap.
    */
 
   minExchanges: number;
@@ -40,6 +42,8 @@ export interface MarketParam {
   /**
    * A string of json that encodes the configuration for resolving the price
    * of this market on various exchanges.
+   * 
+   * Deprecated since v8.x. The exchange config is now determined from the marketmap.
    */
 
   exchangeConfigJson: string;
@@ -63,7 +67,7 @@ export interface MarketParamSDKType {
    * represents ``$10,000`. Therefore `10 ^ Exponent` represents the smallest
    * price step (in dollars) that can be recorded.
    * 
-   * Deprecated since v7.1.x. This value is now determined from the marketmap.
+   * Deprecated since v8.x. This value is now determined from the marketmap.
    */
 
   /** @deprecated */
@@ -72,6 +76,8 @@ export interface MarketParamSDKType {
   /**
    * The minimum number of exchanges that should be reporting a live price for
    * a price update to be considered valid.
+   * 
+   * Deprecated since v8.x. This value is now determined from the marketmap.
    */
 
   min_exchanges: number;
@@ -84,6 +90,8 @@ export interface MarketParamSDKType {
   /**
    * A string of json that encodes the configuration for resolving the price
    * of this market on various exchanges.
+   * 
+   * Deprecated since v8.x. The exchange config is now determined from the marketmap.
    */
 
   exchange_config_json: string;
