@@ -17,6 +17,11 @@ const (
 	StoreKey = ModuleName
 )
 
+// Prefix for account state.
+const (
+	AccountStateKeyPrefix = "AS/"
+)
+
 // Below key prefixes are for smart account implementation.
 const (
 	// SmartAccountKeyPrefix is the prefix key for all smart account store state.

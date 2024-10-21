@@ -1,12 +1,11 @@
 package keeper
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"strings"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,6 +37,14 @@ func NewKeeper(
 	}
 }
 
+func (k Keeper) GetStoreKey() storetypes.StoreKey {
+	return k.storeKey
+}
+
+func (k Keeper) GetCdc() codec.BinaryCodec {
+	return k.cdc
+}
+
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With(log.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
@@ -46,26 +53,22 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
 }
 
-// Get all account details pairs in store
+// Get all AccountStates from kvstore
 func (k Keeper) GetAllAccountStates(ctx sdk.Context) ([]types.AccountState, error) {
 	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(store, []byte(types.AccountStateKeyPrefix))
 
-	iterator := storetypes.KVStorePrefixIterator(store, nil)
+	iterator := prefixStore.Iterator(nil, nil)
 	defer iterator.Close()
 
 	accounts := []types.AccountState{}
 	for ; iterator.Valid(); iterator.Next() {
-		key := iterator.Key()
-
-		// Temporary workaround to exclude smart account kv pairs.
-		if bytes.HasPrefix(key, []byte(types.SmartAccountKeyPrefix)) {
-			continue
+		var accountState types.AccountState
+		err := k.cdc.Unmarshal(iterator.Value(), &accountState)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal account state: %w", err)
 		}
 
-		accountState, found := k.GetAccountState(ctx, key)
-		if !found {
-			return accounts, errors.New("Could not get account state for address: " + sdk.AccAddress(iterator.Key()).String())
-		}
 		accounts = append(accounts, accountState)
 	}
 
@@ -144,7 +147,7 @@ func (k Keeper) GetAllAuthenticatorData(ctx sdk.Context) ([]types.AuthenticatorD
 	return accountAuthenticators, nil
 }
 
-func GetAccountPlusStateWithTimestampNonceDetails(
+func AccountStateFromTimestampNonceDetails(
 	address sdk.AccAddress,
 	tsNonce uint64,
 ) types.AccountState {
@@ -162,8 +165,8 @@ func (k Keeper) GetAccountState(
 	ctx sdk.Context,
 	address sdk.AccAddress,
 ) (types.AccountState, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(address.Bytes())
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AccountStateKeyPrefix))
+	bz := prefixStore.Get(address.Bytes())
 	if bz == nil {
 		return types.AccountState{}, false
 	}
@@ -185,9 +188,9 @@ func (k Keeper) SetAccountState(
 	address sdk.AccAddress,
 	accountState types.AccountState,
 ) {
-	store := ctx.KVStore(k.storeKey)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.AccountStateKeyPrefix))
 	bz := k.cdc.MustMarshal(&accountState)
-	store.Set(address.Bytes(), bz)
+	prefixStore.Set(address.Bytes(), bz)
 }
 
 func (k Keeper) HasAuthority(authority string) bool {

@@ -53,6 +53,52 @@ func (s *KeeperTestSuite) SetupTest() {
 	)
 }
 
+func (s *KeeperTestSuite) TestKeeper_Set_Get_GetAllAccountState() {
+	ctx := s.Ctx
+	address := "address1"
+
+	// SetAccountState
+	s.tApp.App.AccountPlusKeeper.SetAccountState(
+		ctx,
+		sdk.AccAddress([]byte(address)),
+		types.AccountState{
+			Address: address,
+			TimestampNonceDetails: types.TimestampNonceDetails{
+				TimestampNonces: []uint64{1, 2, 3},
+				MaxEjectedNonce: 0,
+			},
+		},
+	)
+
+	// GetAccountState
+	_, found := s.tApp.App.AccountPlusKeeper.GetAccountState(ctx, sdk.AccAddress([]byte(address)))
+	s.Require().True(found, "Account state not found")
+
+	// GetAllAccountStates
+	accountStates, err := s.tApp.App.AccountPlusKeeper.GetAllAccountStates(ctx)
+	s.Require().NoError(err, "Should not error when getting all account states")
+	s.Require().Equal(len(accountStates), 1, "Incorrect number of AccountStates retrieved")
+
+	// Add one more AccountState and check GetAllAccountStates
+	// SetAccountState
+	address2 := "address2"
+	s.tApp.App.AccountPlusKeeper.SetAccountState(
+		ctx,
+		sdk.AccAddress([]byte(address2)),
+		types.AccountState{
+			Address: address2,
+			TimestampNonceDetails: types.TimestampNonceDetails{
+				TimestampNonces: []uint64{1, 2, 3},
+				MaxEjectedNonce: 0,
+			},
+		},
+	)
+
+	accountStates2, err := s.tApp.App.AccountPlusKeeper.GetAllAccountStates(ctx)
+	s.Require().NoError(err, "Should not error when getting all account states")
+	s.Require().Equal(len(accountStates2), 2, "Incorrect number of AccountStates retrieved")
+}
+
 func (s *KeeperTestSuite) TestKeeper_AddAuthenticator() {
 	ctx := s.Ctx
 
