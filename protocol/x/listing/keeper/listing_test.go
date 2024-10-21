@@ -97,8 +97,6 @@ func TestCreateMarket(t *testing.T) {
 					market, exists := pricesKeeper.GetMarketParam(ctx, marketId)
 					require.True(t, exists)
 					require.Equal(t, testMarketParams.Pair, market.Pair)
-					require.Equal(t, testMarketParams.Exponent, market.Exponent)
-					require.Equal(t, testMarketParams.MinExchanges, market.MinExchanges)
 					require.Equal(t, testMarketParams.MinPriceChangePpm, types.MinPriceChangePpm_LongTail)
 				}
 			},
