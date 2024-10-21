@@ -19,11 +19,13 @@ message MarketParam {
   // represents ``$10,000`. Therefore `10 ^ Exponent` represents the smallest
   // price step (in dollars) that can be recorded.
   //
-  // Deprecated since v7.1.x. This value is now determined from the marketmap.
+  // Deprecated since v8.x. This value is now determined from the marketmap.
   sint32 exponent = 3 [ deprecated = true ];
 
   // The minimum number of exchanges that should be reporting a live price for
   // a price update to be considered valid.
+  //
+  // Deprecated since v8.x. This value is now determined from the marketmap.
   uint32 min_exchanges = 4;
 
   // The minimum allowable change in `price` value that would cause a price
@@ -32,5 +34,7 @@ message MarketParam {
 
   // A string of json that encodes the configuration for resolving the price
   // of this market on various exchanges.
+  //
+  // Deprecated since v8.x. The exchange config is now determined from the marketmap.
   string exchange_config_json = 6;
 }
