@@ -22,9 +22,11 @@ import (
 	perpetualsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
 	ratelimitmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit"
+	rewardsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards"
 	sendingmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending"
 	statsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats"
 	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
+	vestmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -87,7 +89,6 @@ func TestAppIsFullyInitialized(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(tc.customFlags).Build()
 			tApp.InitChain()
 			uninitializedFields := getUninitializedStructFields(reflect.ValueOf(*tApp.App))
-
 			expectedUninitializedFields := []string{
 				// Note that the daemon clients are currently hard coded as disabled in GetDefaultTestAppOptions.
 				// Normally they would be only disabled for non-validating full nodes or for nodes where any
@@ -187,6 +188,8 @@ func TestModuleBasics(t *testing.T) {
 		statsmodule.AppModuleBasic{},
 		subaccountsmodule.AppModuleBasic{},
 		clobmodule.AppModuleBasic{},
+		vestmodule.AppModuleBasic{},
+		rewardsmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
 		delaymsgmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},

@@ -272,9 +272,9 @@ func (k Keeper) ProcessRewardsForBlock(
 	params := k.GetParams(ctx)
 
 	// Calculate value of `F`.
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetTDai.Id)
+	tdaiAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetTDai.Id)
 	if !exists {
-		return fmt.Errorf("failed to get USDC asset")
+		return fmt.Errorf("failed to get TDAI asset")
 	}
 	rewardTokenPrice, err := k.pricesKeeper.GetMarketPrice(ctx, params.GetMarketId())
 	if err != nil {
@@ -289,7 +289,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	)
 	bigRatRewardTokenAmount := clobtypes.NotionalToCoinAmount(
 		totalRewardWeight,
-		usdcAsset.AtomicResolution,
+		tdaiAsset.AtomicResolution,
 		params.DenomExponent,
 		rewardTokenPrice,
 	)
@@ -301,7 +301,6 @@ func (k Keeper) ProcessRewardsForBlock(
 
 	// Calculate value of `T`, the reward tokens balance in the `treasury_account`.
 	rewardTokenBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryModuleAddress, params.Denom)
-
 	// Get tokenToDistribute as the min(F, T).
 	tokensToDistribute := lib.BigMin(rewardTokenBalance.Amount.BigInt(), bigIntRewardTokenAmount)
 	// Measure distributed token amount.

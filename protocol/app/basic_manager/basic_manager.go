@@ -25,10 +25,11 @@ import (
 	perpetualsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
 	ratelimitmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit"
+	rewardsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards"
 	sendingmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending"
 	statsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats"
 	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
-
+	vestmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest"
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
@@ -70,6 +71,8 @@ var (
 		statsmodule.AppModuleBasic{},
 		subaccountsmodule.AppModuleBasic{},
 		clobmodule.AppModuleBasic{},
+		vestmodule.AppModuleBasic{},
+		rewardsmodule.AppModuleBasic{},
 		delaymsgmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
