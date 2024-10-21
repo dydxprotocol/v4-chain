@@ -43,7 +43,7 @@ export interface MarketParam {
    * A string of json that encodes the configuration for resolving the price
    * of this market on various exchanges.
    * 
-   * Deprecated since v8.x. The exchange config is now determined from the marketmap.
+   * Deprecated since v8.x. This is now determined from the marketmap.
    */
 
   exchangeConfigJson: string;
@@ -91,7 +91,7 @@ export interface MarketParamSDKType {
    * A string of json that encodes the configuration for resolving the price
    * of this market on various exchanges.
    * 
-   * Deprecated since v8.x. The exchange config is now determined from the marketmap.
+   * Deprecated since v8.x. This is now determined from the marketmap.
    */
 
   exchange_config_json: string;

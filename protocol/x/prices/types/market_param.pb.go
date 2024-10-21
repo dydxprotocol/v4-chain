@@ -49,7 +49,7 @@ type MarketParam struct {
 	// A string of json that encodes the configuration for resolving the price
 	// of this market on various exchanges.
 	//
-	// Deprecated since v8.x. The exchange config is now determined from the marketmap.
+	// Deprecated since v8.x. This is now determined from the marketmap.
 	ExchangeConfigJson string `protobuf:"bytes,6,opt,name=exchange_config_json,json=exchangeConfigJson,proto3" json:"exchange_config_json,omitempty"`
 }
 
