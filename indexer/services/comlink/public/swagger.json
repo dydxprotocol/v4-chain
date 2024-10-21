@@ -702,6 +702,9 @@
           "clientMetadata": {
             "type": "string"
           },
+          "triggerPrice": {
+            "type": "string"
+          },
           "routerFeePpm": {
             "type": "string"
           },
@@ -709,9 +712,6 @@
             "type": "string"
           },
           "routerFeeSubaccountNumber": {
-            "type": "string"
-          },
-          "triggerPrice": {
             "type": "string"
           },
           "timeInForce": {
@@ -751,8 +751,6 @@
           "orderFlags",
           "clientMetadata",
           "routerFeePpm",
-          "routerFeeSubaccountOwner",
-          "routerFeeSubaccountNumber",
           "timeInForce",
           "status",
           "postOnly",

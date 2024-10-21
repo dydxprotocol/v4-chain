@@ -1399,10 +1399,10 @@ fetch('https://dydx-testnet.imperator.co/v4/orders?address=string&subaccountNumb
     "goodTilBlockTime": "string",
     "createdAtHeight": "string",
     "clientMetadata": "string",
+    "triggerPrice": "string",
     "routerFeePpm": "string",
     "routerFeeSubaccountOwner": "string",
     "routerFeeSubaccountNumber": "string",
-    "triggerPrice": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -1442,10 +1442,10 @@ Status Code **200**
 |» goodTilBlockTime|string|false|none|none|
 |» createdAtHeight|string|false|none|none|
 |» clientMetadata|string|true|none|none|
-|» routerFeePpm|string|true|none|none|
-|» routerFeeSubaccountOwner|string|true|none|none|
-|» routerFeeSubaccountNumber|string|true|none|none|
 |» triggerPrice|string|false|none|none|
+|» routerFeePpm|string|true|none|none|
+|» routerFeeSubaccountOwner|string|false|none|none|
+|» routerFeeSubaccountNumber|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -1597,10 +1597,10 @@ fetch('https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNumber?addres
     "goodTilBlockTime": "string",
     "createdAtHeight": "string",
     "clientMetadata": "string",
+    "triggerPrice": "string",
     "routerFeePpm": "string",
     "routerFeeSubaccountOwner": "string",
     "routerFeeSubaccountNumber": "string",
-    "triggerPrice": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -1640,10 +1640,10 @@ Status Code **200**
 |» goodTilBlockTime|string|false|none|none|
 |» createdAtHeight|string|false|none|none|
 |» clientMetadata|string|true|none|none|
-|» routerFeePpm|string|true|none|none|
-|» routerFeeSubaccountOwner|string|true|none|none|
-|» routerFeeSubaccountNumber|string|true|none|none|
 |» triggerPrice|string|false|none|none|
+|» routerFeePpm|string|true|none|none|
+|» routerFeeSubaccountOwner|string|false|none|none|
+|» routerFeeSubaccountNumber|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -1767,6 +1767,9 @@ fetch('https://dydx-testnet.imperator.co/v4/orders/{orderId}',
   "createdAtHeight": "string",
   "clientMetadata": "string",
   "triggerPrice": "string",
+  "routerFeePpm": "string",
+  "routerFeeSubaccountOwner": "string",
+  "routerFeeSubaccountNumber": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -3749,10 +3752,10 @@ or
   "goodTilBlockTime": "string",
   "createdAtHeight": "string",
   "clientMetadata": "string",
+  "triggerPrice": "string",
   "routerFeePpm": "string",
   "routerFeeSubaccountOwner": "string",
   "routerFeeSubaccountNumber": "string",
-  "triggerPrice": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -3783,10 +3786,10 @@ or
 |goodTilBlockTime|string|false|none|none|
 |createdAtHeight|string|false|none|none|
 |clientMetadata|string|true|none|none|
+|triggerPrice|string|false|none|none|
 |routerFeePpm|string|true|none|none|
 |routerFeeSubaccountOwner|string|false|none|none|
 |routerFeeSubaccountNumber|string|false|none|none|
-|triggerPrice|string|false|none|none|
 |timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |status|[APIOrderStatus](#schemaapiorderstatus)|true|none|none|
 |postOnly|boolean|true|none|none|
