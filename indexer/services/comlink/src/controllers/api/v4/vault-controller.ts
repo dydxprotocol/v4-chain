@@ -579,20 +579,22 @@ function getResolution(resolution: PnlTickInterval = PnlTickInterval.day): PnlTi
 /**
  * Gets funding index maps in a chunked fashion to reduce database load and aggregates into a
  * a map of funding index maps.
- * @param updatedAtHeights 
- * @returns 
+ * @param updatedAtHeights
+ * @returns
  */
 async function getFundingIndexMapsChunked(
-  updatedAtHeights: string[]
+  updatedAtHeights: string[],
 ): Promise<{[blockHeight: string]: FundingIndexMap}> {
   const updatedAtHeightsNum: number[] = updatedAtHeights.map((height: string): number => {
     return parseInt(height, 10);
   }).sort();
   const aggregateFundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = {};
-  for(const chunk of getHeightWindows(updatedAtHeightsNum)) {
-    const fundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = await FundingIndexUpdatesTable.findFundingIndexMaps(
-      chunk.map((heightNum: number): string => { return heightNum.toString() }),
-    );
+  for (const chunk of getHeightWindows(updatedAtHeightsNum)) {
+    const fundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = await
+    FundingIndexUpdatesTable
+      .findFundingIndexMaps(
+        chunk.map((heightNum: number): string => { return heightNum.toString(); }),
+      );
     for (const height of _.keys(fundingIndexMaps)) {
       aggregateFundingIndexMaps[height] = fundingIndexMaps[height];
     }
@@ -603,19 +605,19 @@ async function getFundingIndexMapsChunked(
 /**
  * Separates an array of heights into a chunks based on a window size. Each chunk should only
  * contain heights within a certain number of blocks of each other.
- * @param heights 
- * @returns 
+ * @param heights
+ * @returns
  */
 function getHeightWindows(
   heights: number[],
 ): number[][] {
-  if (heights.length == 0) {
+  if (heights.length === 0) {
     return [];
   }
   const windows: number[][] = [];
   let windowStart: number = heights[0];
   let currentWindow: number[] = [];
-  for(const height of heights) {
+  for (const height of heights) {
     if (height - windowStart < config.VAULT_FETCH_FUNDING_INDEX_BLOCK_WINDOWS) {
       currentWindow.push(height);
     } else {
@@ -643,9 +645,10 @@ async function getVaultMapping(): Promise<VaultMapping> {
     }),
   );
   for (const subaccountId of _.keys(vaultMapping)) {
-    const perpetual: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromClobPairId(
-      vaultMapping[subaccountId],
-    );
+    const perpetual: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+      .getPerpetualMarketFromClobPairId(
+        vaultMapping[subaccountId],
+      );
     if (perpetual === undefined) {
       logger.warning({
         at: 'VaultController#getVaultPositions',
