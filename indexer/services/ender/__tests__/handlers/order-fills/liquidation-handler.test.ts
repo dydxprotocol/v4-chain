@@ -462,6 +462,7 @@ describe('LiquidationHandler', () => {
         goodTilBlock: existingGoodTilBlock,
         goodTilBlockTime: existingGoodTilBlockTime,
         clientMetadata: '0',
+        routerFeePpm: '0',
         updatedAt: DateTime.fromMillis(0).toISO(),
         updatedAtHeight: '0',
       };
@@ -680,6 +681,7 @@ describe('LiquidationHandler', () => {
         goodTilBlock: existingGoodTilBlock,
         goodTilBlockTime: existingGoodTilBlockTime,
         clientMetadata: '0',
+        routerFeePpm: '0',
         updatedAt: DateTime.fromMillis(0).toISO(),
         updatedAtHeight: '0',
       };

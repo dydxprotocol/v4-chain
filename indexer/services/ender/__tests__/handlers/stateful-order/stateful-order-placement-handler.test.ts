@@ -235,6 +235,7 @@ describe('statefulOrderPlacementHandler', () => {
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(defaultOrder),
       createdAtHeight: '1',
       clientMetadata: '0',
+      routerFeePpm: '0',
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: '0',
     });
