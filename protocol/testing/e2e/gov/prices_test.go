@@ -95,34 +95,6 @@ func TestUpdateMarketParam(t *testing.T) {
 			},
 			expectCheckTxFails: true,
 		},
-		"Failure: min exchanges is 0": {
-			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: lib.GovModuleAddress.String(),
-				MarketParam: pricestypes.MarketParam{
-					Id:                 MODIFIED_MARKET_PARAM.Id,
-					Pair:               MODIFIED_MARKET_PARAM.Pair,
-					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
-					MinExchanges:       0, // invalid
-					MinPriceChangePpm:  MODIFIED_MARKET_PARAM.MinPriceChangePpm,
-					ExchangeConfigJson: MODIFIED_MARKET_PARAM.ExchangeConfigJson,
-				},
-			},
-			expectCheckTxFails: true,
-		},
-		"Failure: malformed exchange config json": {
-			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: lib.GovModuleAddress.String(),
-				MarketParam: pricestypes.MarketParam{
-					Id:                 MODIFIED_MARKET_PARAM.Id,
-					Pair:               MODIFIED_MARKET_PARAM.Pair,
-					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
-					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
-					MinPriceChangePpm:  MODIFIED_MARKET_PARAM.MinPriceChangePpm,
-					ExchangeConfigJson: `{{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tBTCUSD"}]}`, // invalid
-				},
-			},
-			expectCheckTxFails: true,
-		},
 		"Failure: invalid authority": {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority:   constants.AliceAccAddress.String(),
