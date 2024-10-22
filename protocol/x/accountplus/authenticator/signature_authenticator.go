@@ -58,6 +58,7 @@ func (sva SignatureVerification) Initialize(config []byte) (types.Authenticator,
 func (sva SignatureVerification) Authenticate(ctx sdk.Context, request types.AuthenticationRequest) error {
 	// First consume gas for verifying the signature
 	params := sva.ak.GetParams(ctx)
+	// Signature verification only accepts secp256k1 signatures so consume static gas here.
 	ctx.GasMeter().ConsumeGas(params.SigVerifyCostSecp256k1, "secp256k1 signature verification")
 
 	// after gas consumption continue to verify signatures

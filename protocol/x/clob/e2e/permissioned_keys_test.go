@@ -1238,6 +1238,12 @@ func TestPlaceOrder_PermissionedKeys_Success(t *testing.T) {
 				constants.Order_Alice_Num0_Id1_Clob1_Sell5_Price15_GTB20_IOC.OrderId: 0,
 			},
 		},
+		// Short term maker orders are explicitly removed when the permissioned key is removed. This
+		// is because short term orders go through another round of ante handler check during `DeliverTx`
+		// and we have to maintain the invariant that the operations queue is always valid.
+		//
+		// On contrast, stateful orders don't go through ante handlers and therefore we can allow these orders
+		// to be matched optimistically.
 		"Stateful maker order can be matched even if permissioned key is removed": {
 			smartAccountEnabled: true,
 			blocks: []TestBlockWithMsgs{
