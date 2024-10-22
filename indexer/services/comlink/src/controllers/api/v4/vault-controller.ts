@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   PnlTicksFromDatabase,
   PnlTicksTable,
@@ -71,7 +71,14 @@ class VaultController extends Controller {
   async getMegavaultHistoricalPnl(
     @Query() resolution?: PnlTickInterval,
   ): Promise<MegavaultHistoricalPnlResponse> {
+    const start: number = Date.now();
     const vaultSubaccounts: VaultMapping = await getVaultMapping();
+    stats.timing(
+      `${config.SERVICE_NAME}.${controllerName}.fetch_vaults.timing`,
+      Date.now() - start,
+    );
+
+    const startTicksPositions: number = Date.now();
     const vaultSubaccountIdsWithMainSubaccount: string[] = _
       .keys(vaultSubaccounts)
       .concat([MEGAVAULT_SUBACCOUNT_ID]);
@@ -94,6 +101,10 @@ class VaultController extends Controller {
       getMainSubaccountEquity(),
       getLatestPnlTick(vaultSubaccountIdsWithMainSubaccount),
     ]);
+    stats.timing(
+      `${config.SERVICE_NAME}.${controllerName}.fetch_ticks_positions_equity.timing`,
+      Date.now() - startTicksPositions,
+    );
 
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
     const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(vaultPnlTicks);
@@ -324,6 +335,7 @@ async function getVaultSubaccountPnlTicks(
 async function getVaultPositions(
   vaultSubaccounts: VaultMapping,
 ): Promise<Map<string, VaultPosition>> {
+  const start: number = Date.now();
   const vaultSubaccountIds: string[] = _.keys(vaultSubaccounts);
   if (vaultSubaccountIds.length === 0) {
     return new Map();
@@ -374,7 +386,12 @@ async function getVaultPositions(
     ),
     BlockTable.getLatest(),
   ]);
+  stats.timing(
+    `${config.SERVICE_NAME}.${controllerName}.positions.fetch_subaccounts_positions.timing`,
+    Date.now() - start,
+  );
 
+  const startFunding: number = Date.now();
   const updatedAtHeights: string[] = _(subaccounts).map('updatedAtHeight').uniq().value();
   const [
     latestFundingIndexMap,
@@ -387,11 +404,13 @@ async function getVaultPositions(
       .findFundingIndexMap(
         latestBlock.blockHeight,
       ),
-    FundingIndexUpdatesTable
-      .findFundingIndexMaps(
-        updatedAtHeights,
-      ),
+    getFundingIndexMapsChunked(updatedAtHeights),
   ]);
+  stats.timing(
+    `${config.SERVICE_NAME}.${controllerName}.positions.fetch_funding.timing`,
+    Date.now() - startFunding,
+  );
+
   const assetPositionsBySubaccount:
   { [subaccountId: string]: AssetPositionFromDatabase[] } = _.groupBy(
     assetPositions,
@@ -557,13 +576,68 @@ function getResolution(resolution: PnlTickInterval = PnlTickInterval.day): PnlTi
   return resolution;
 }
 
+/**
+ * Gets funding index maps in a chunked fashion to reduce database load and aggregates into a
+ * a map of funding index maps.
+ * @param updatedAtHeights
+ * @returns
+ */
+async function getFundingIndexMapsChunked(
+  updatedAtHeights: string[],
+): Promise<{[blockHeight: string]: FundingIndexMap}> {
+  const updatedAtHeightsNum: number[] = updatedAtHeights.map((height: string): number => {
+    return parseInt(height, 10);
+  }).sort();
+  const aggregateFundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = {};
+  await Promise.all(getHeightWindows(updatedAtHeightsNum).map(
+    async (heightWindow: number[]): Promise<void> => {
+      const fundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = await
+      FundingIndexUpdatesTable
+        .findFundingIndexMaps(
+          heightWindow.map((heightNum: number): string => { return heightNum.toString(); }),
+        );
+      for (const height of _.keys(fundingIndexMaps)) {
+        aggregateFundingIndexMaps[height] = fundingIndexMaps[height];
+      }
+    }));
+  return aggregateFundingIndexMaps;
+}
+
+/**
+ * Separates an array of heights into a chunks based on a window size. Each chunk should only
+ * contain heights within a certain number of blocks of each other.
+ * @param heights
+ * @returns
+ */
+function getHeightWindows(
+  heights: number[],
+): number[][] {
+  if (heights.length === 0) {
+    return [];
+  }
+  const windows: number[][] = [];
+  let windowStart: number = heights[0];
+  let currentWindow: number[] = [];
+  for (const height of heights) {
+    if (height - windowStart < config.VAULT_FETCH_FUNDING_INDEX_BLOCK_WINDOWS) {
+      currentWindow.push(height);
+    } else {
+      windows.push(currentWindow);
+      currentWindow = [height];
+      windowStart = height;
+    }
+  }
+  windows.push(currentWindow);
+  return windows;
+}
+
 async function getVaultMapping(): Promise<VaultMapping> {
   const vaults: VaultFromDatabase[] = await VaultTable.findAll(
     {},
     [],
     {},
   );
-  return _.zipObject(
+  const vaultMapping: VaultMapping = _.zipObject(
     vaults.map((vault: VaultFromDatabase): string => {
       return SubaccountTable.uuid(vault.address, 0);
     }),
@@ -571,6 +645,24 @@ async function getVaultMapping(): Promise<VaultMapping> {
       return vault.clobPairId;
     }),
   );
+  const validVaultMapping: VaultMapping = {};
+  for (const subaccountId of _.keys(vaultMapping)) {
+    const perpetual: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+      .getPerpetualMarketFromClobPairId(
+        vaultMapping[subaccountId],
+      );
+    if (perpetual === undefined) {
+      logger.warning({
+        at: 'VaultController#getVaultPositions',
+        message: `Vault clob pair id ${vaultMapping[subaccountId]} does not correspond to a ` +
+          'perpetual market.',
+        subaccountId,
+      });
+      continue;
+    }
+    validVaultMapping[subaccountId] = vaultMapping[subaccountId];
+  }
+  return vaultMapping;
 }
 
 export default router;

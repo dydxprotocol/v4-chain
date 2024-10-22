@@ -139,7 +139,7 @@ VAULT_ACCOUNTS=(
 	"dydx1c0m5x87llaunl5sgv3q5vd7j5uha26d2q2r2q0" # BTC vault
 	"dydx14rplxdyycc6wxmgl8fggppgq4774l70zt6phkw" # ETH vault
 	"dydx190te44zcctdgk0qmqtenve2m00g3r2dn7ntd72" # LINK vault
-	"dydx1a83cjn83vqh5ss2vccg6uuaeky7947xldp9r2e" # MATIC vault
+	"dydx1a83cjn83vqh5ss2vccg6uuaeky7947xldp9r2e" # POL vault
 	"dydx1nkz8xcar6sxedw0yva6jzjplw7hfg6pp6e7h0l" # CRV vault
 )
 # Number of each vault above, which for CLOB vaults is the ID of the clob pair it quotes on.
@@ -147,7 +147,7 @@ VAULT_NUMBERS=(
 	0 # BTC clob pair ID
 	1 # ETH clob pair ID
 	2 # LINK clob pair ID
-	3 # MATIC clob pair ID
+	3 # POL clob pair ID
 	4 # CRV clob pair ID
 )
 

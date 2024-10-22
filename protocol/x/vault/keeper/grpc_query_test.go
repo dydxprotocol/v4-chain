@@ -27,6 +27,7 @@ func TestQueryParams(t *testing.T) {
 				DefaultQuotingParams: types.DefaultQuotingParams(),
 				OperatorParams: types.OperatorParams{
 					Operator: constants.GovAuthority,
+					Metadata: types.DefaultOperatorParams().Metadata,
 				},
 			},
 			err: nil,

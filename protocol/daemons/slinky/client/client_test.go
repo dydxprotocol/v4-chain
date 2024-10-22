@@ -52,7 +52,7 @@ func TestClient(t *testing.T) {
 	}()
 
 	slinky.On("Stop").Return(nil)
-	slinky.On("Start", mock.Anything).Return(nil).Once()
+	slinky.On("Start", mock.Anything).Return(nil).Twice()
 	slinky.On("Prices", mock.Anything, mock.Anything).
 		Return(&types.QueryPricesResponse{
 			Prices: map[string]string{
@@ -60,8 +60,14 @@ func TestClient(t *testing.T) {
 			},
 			Timestamp: time.Now(),
 		}, nil)
+	slinky.On("Version", mock.Anything, mock.Anything).
+		Return(&types.QueryVersionResponse{
+			Version: client.MinSidecarVersion,
+		}, nil)
+
 	client.SlinkyPriceFetchDelay = time.Millisecond
 	client.SlinkyMarketParamFetchDelay = time.Millisecond
+	client.SlinkySidecarCheckDelay = time.Millisecond
 	cli = client.StartNewClient(
 		context.Background(),
 		slinky,
@@ -73,7 +79,9 @@ func TestClient(t *testing.T) {
 	)
 	waitTime := time.Second * 5
 	require.Eventually(t, func() bool {
-		return cli.GetMarketPairHC().HealthCheck() == nil && cli.GetPriceHC().HealthCheck() == nil
+		return cli.GetMarketPairHC().HealthCheck() == nil &&
+			cli.GetPriceHC().HealthCheck() == nil &&
+			cli.GetSidecarVersionHC().HealthCheck() == nil
 	}, waitTime, time.Millisecond*500, "Slinky daemon failed to become healthy within %s", waitTime)
 	cli.Stop()
 }

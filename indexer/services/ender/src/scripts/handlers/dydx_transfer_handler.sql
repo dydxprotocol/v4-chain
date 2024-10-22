@@ -46,6 +46,11 @@ BEGIN
             SET
                 "updatedAtHeight" = recipient_subaccount_record."updatedAtHeight",
                 "updatedAt" = recipient_subaccount_record."updatedAt";
+
+        recipient_wallet_record."address" = event_data->'recipient'->'subaccountId'->>'owner';
+        recipient_wallet_record."totalTradingRewards" = '0';
+        recipient_wallet_record."totalVolume" = '0';
+        INSERT INTO wallets VALUES (recipient_wallet_record.*) ON CONFLICT DO NOTHING;
     END IF;
 
     IF event_data->'sender'->'subaccountId' IS NOT NULL THEN

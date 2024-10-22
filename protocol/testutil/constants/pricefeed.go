@@ -658,8 +658,8 @@ var (
 		},
 		{
 			Id:           MarketId11,
-			Pair:         MaticUsdPair,
-			Exponent:     MaticUsdExponent,
+			Pair:         PolUsdPair,
+			Exponent:     PolUsdExponent,
 			MinExchanges: 1,
 		},
 	}
@@ -684,7 +684,7 @@ var (
 		MarketId8:  EthUsdExponent,
 		MarketId9:  LtcUsdExponent,
 		MarketId10: SolUsdExponent,
-		MarketId11: MaticUsdExponent,
+		MarketId11: PolUsdExponent,
 	}
 
 	TestExchangeQueryConfigs = map[string]*daemonClientTypes.ExchangeQueryConfig{

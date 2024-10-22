@@ -35,7 +35,7 @@ type FullNodeStreamingManagerImpl struct {
 
 	// orderbookSubscriptions maps subscription IDs to their respective orderbook subscriptions.
 	orderbookSubscriptions map[uint32]*OrderbookSubscription
-	nextSubscriptionId     uint32
+	activeSubscriptionIds  map[uint32]bool
 
 	// stream will batch and flush out messages every 10 ms.
 	ticker *time.Ticker
@@ -106,7 +106,7 @@ func NewFullNodeStreamingManager(
 	fullNodeStreamingManager := &FullNodeStreamingManagerImpl{
 		logger:                 logger,
 		orderbookSubscriptions: make(map[uint32]*OrderbookSubscription),
-		nextSubscriptionId:     0,
+		activeSubscriptionIds:  make(map[uint32]bool),
 
 		ticker:                              time.NewTicker(time.Duration(flushIntervalMs) * time.Millisecond),
 		done:                                make(chan bool),
@@ -153,7 +153,7 @@ func (sm *FullNodeStreamingManagerImpl) Enabled() bool {
 }
 
 func (sm *FullNodeStreamingManagerImpl) EmitMetrics() {
-	metrics.SetGauge(
+	metrics.AddSample(
 		metrics.GrpcStreamNumUpdatesBuffered,
 		float32(len(sm.streamUpdateCache)),
 	)
@@ -162,11 +162,22 @@ func (sm *FullNodeStreamingManagerImpl) EmitMetrics() {
 		float32(len(sm.orderbookSubscriptions)),
 	)
 	for _, subscription := range sm.orderbookSubscriptions {
-		metrics.AddSample(
+		metrics.AddSampleWithLabels(
 			metrics.GrpcSubscriptionChannelLength,
 			float32(len(subscription.updatesChannel)),
+			metrics.GetLabelForIntValue(metrics.SubscriptionId, int(subscription.subscriptionId)),
 		)
 	}
+}
+
+// getNextAvailableSubscriptionId returns next available subscription id. Assumes the
+// lock has been acquired.
+func (sm *FullNodeStreamingManagerImpl) getNextAvailableSubscriptionId() uint32 {
+	id := uint32(0)
+	for _, inUse := sm.activeSubscriptionIds[id]; inUse; _, inUse = sm.activeSubscriptionIds[id] {
+		id = id + uint32(1)
+	}
+	return id
 }
 
 // Subscribe subscribes to the orderbook updates stream.
@@ -187,8 +198,11 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	for i, subaccountId := range subaccountIds {
 		sIds[i] = *subaccountId
 	}
+
+	subscriptionId := sm.getNextAvailableSubscriptionId()
+
 	subscription := &OrderbookSubscription{
-		subscriptionId: sm.nextSubscriptionId,
+		subscriptionId: subscriptionId,
 		initialized:    &atomic.Bool{}, // False by default.
 		clobPairIds:    clobPairIds,
 		subaccountIds:  sIds,
@@ -203,7 +217,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		}
 		sm.clobPairIdToSubscriptionIdMapping[clobPairId] = append(
 			sm.clobPairIdToSubscriptionIdMapping[clobPairId],
-			sm.nextSubscriptionId,
+			subscription.subscriptionId,
 		)
 	}
 	for _, subaccountId := range sIds {
@@ -214,7 +228,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		}
 		sm.subaccountIdToSubscriptionIdMapping[subaccountId] = append(
 			sm.subaccountIdToSubscriptionIdMapping[subaccountId],
-			sm.nextSubscriptionId,
+			subscription.subscriptionId,
 		)
 	}
 
@@ -227,16 +241,17 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		),
 	)
 	sm.orderbookSubscriptions[subscription.subscriptionId] = subscription
-	sm.nextSubscriptionId++
+	sm.activeSubscriptionIds[subscription.subscriptionId] = true
 	sm.EmitMetrics()
 	sm.Unlock()
 
 	// Use current goroutine to consistently poll subscription channel for updates
 	// to send through stream.
 	for updates := range subscription.updatesChannel {
-		metrics.IncrCounter(
+		metrics.IncrCounterWithLabels(
 			metrics.GrpcSendResponseToSubscriberCount,
 			1,
+			metrics.GetLabelForIntValue(metrics.SubscriptionId, int(subscription.subscriptionId)),
 		)
 		err = subscription.messageSender.Send(
 			&clobtypes.StreamOrderbookUpdatesResponse{
@@ -278,6 +293,7 @@ func (sm *FullNodeStreamingManagerImpl) removeSubscription(
 	}
 	close(subscription.updatesChannel)
 	delete(sm.orderbookSubscriptions, subscriptionIdToRemove)
+	delete(sm.activeSubscriptionIds, subscriptionIdToRemove)
 
 	// Iterate over the clobPairIdToSubscriptionIdMapping to remove the subscriptionIdToRemove
 	for pairId, subscriptionIds := range sm.clobPairIdToSubscriptionIdMapping {
@@ -372,9 +388,17 @@ func (sm *FullNodeStreamingManagerImpl) sendStreamUpdates(
 		return
 	}
 
+	metrics.IncrCounterWithLabels(
+		metrics.GrpcAddToSubscriptionChannelCount,
+		1,
+		metrics.GetLabelForIntValue(metrics.SubscriptionId, int(subscriptionId)),
+	)
+
 	select {
 	case subscription.updatesChannel <- streamUpdates:
 	default:
+		// Buffer is full. Emit metric and drop subscription.
+		sm.EmitMetrics()
 		sm.logger.Error(
 			fmt.Sprintf(
 				"Streaming subscription id %+v channel full capacity. Dropping subscription connection.",
@@ -398,6 +422,11 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdate(
 	if !lib.IsDeliverTxMode(ctx) {
 		return
 	}
+
+	metrics.IncrCounter(
+		metrics.GrpcSendSubaccountUpdateCount,
+		1,
+	)
 
 	// If `DeliverTx`, updates should be staged to be streamed after consensus finalizes on a block.
 	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
@@ -705,9 +734,9 @@ func (sm *FullNodeStreamingManagerImpl) AddOrderUpdatesToCache(
 
 	sm.cacheStreamUpdatesByClobPairWithLock(updates, clobPairIds)
 
+	sm.EmitMetrics()
 	// Remove all subscriptions and wipe the buffer if buffer overflows.
 	sm.RemoveSubscriptionsAndClearBufferIfFull()
-	sm.EmitMetrics()
 }
 
 // AddSubaccountUpdatesToCache adds a series of updates to the full node streaming cache.
@@ -726,8 +755,8 @@ func (sm *FullNodeStreamingManagerImpl) AddSubaccountUpdatesToCache(
 
 	sm.cacheStreamUpdatesBySubaccountWithLock(updates, subaccountIds)
 
-	sm.RemoveSubscriptionsAndClearBufferIfFull()
 	sm.EmitMetrics()
+	sm.RemoveSubscriptionsAndClearBufferIfFull()
 }
 
 // RemoveSubscriptionsAndClearBufferIfFull removes all subscriptions and wipes the buffer if buffer overflows.
@@ -743,6 +772,7 @@ func (sm *FullNodeStreamingManagerImpl) RemoveSubscriptionsAndClearBufferIfFull(
 		}
 		sm.streamUpdateCache = nil
 		sm.streamUpdateSubscriptionCache = nil
+		sm.EmitMetrics()
 	}
 }
 
@@ -778,13 +808,16 @@ func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 	// If the buffer is full, drop the subscription.
 	for id, updates := range subscriptionUpdates {
 		if subscription, ok := sm.orderbookSubscriptions[id]; ok {
-			metrics.IncrCounter(
+			metrics.IncrCounterWithLabels(
 				metrics.GrpcAddToSubscriptionChannelCount,
 				1,
+				metrics.GetLabelForIntValue(metrics.SubscriptionId, int(id)),
 			)
 			select {
 			case subscription.updatesChannel <- updates:
 			default:
+				// Buffer is full. Emit metric and drop subscription.
+				sm.EmitMetrics()
 				idsToRemove = append(idsToRemove, id)
 			}
 		}
