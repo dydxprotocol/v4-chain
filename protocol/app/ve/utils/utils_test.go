@@ -192,7 +192,7 @@ func TestGetVEDecodedPrice(t *testing.T) {
 
 func TestGetValCmtPubKeyFromVote(t *testing.T) {
 	ctx := sdktypes.Context{}
-	mockValidatorStore := &mocks.ValidatorPubKeyStore{}
+	mockValidatorStore := &mocks.ValidatorStore{}
 
 	testValPower := int64(1000)
 	testVal := valutils.BuildTestValidator("alice", math.NewInt(testValPower))
