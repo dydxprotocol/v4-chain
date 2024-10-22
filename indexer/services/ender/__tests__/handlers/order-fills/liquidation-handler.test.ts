@@ -244,6 +244,7 @@ describe('LiquidationHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
       });
 
       const takerSubticks: number = 15_000_000;
@@ -499,6 +500,7 @@ describe('LiquidationHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
       });
       const liquidationOrder: LiquidationOrderV1 = createLiquidationOrder({
         subaccountId: defaultSubaccountId2,
@@ -718,6 +720,7 @@ describe('LiquidationHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
       });
       const liquidationOrder: LiquidationOrderV1 = createLiquidationOrder({
         subaccountId: defaultSubaccountId2,
@@ -862,6 +865,7 @@ describe('LiquidationHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
       reduceOnly: false,
       clientMetadata: 0,
+      routerFeePpm: 0,
     });
 
     const takerSubticks: number = 150_000;
@@ -1007,6 +1011,7 @@ describe('LiquidationHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
       reduceOnly: true,
       clientMetadata: 0,
+      routerFeePpm: 0,
     });
 
     const liquidationOrder: LiquidationOrderV1 = LiquidationOrderV1
@@ -1082,6 +1087,7 @@ describe('LiquidationHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
         reduceOnly: false,
         clientMetadata: 0,
+        routerFeePpm: 0,
       }),
     ],
     [
@@ -1097,6 +1103,7 @@ describe('LiquidationHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
         reduceOnly: false,
         clientMetadata: 0,
+        routerFeePpm: 0,
       }),
     ],
   ])('LiquidationOrderFillEvent fails makerOrder validation', async (

@@ -405,6 +405,8 @@ export function createOrder({
   timeInForce,
   reduceOnly,
   clientMetadata,
+  routerFeePpm,
+  routerFeeSubaccountId,
 }: {
   subaccountId: IndexerSubaccountId,
   clientId: number,
@@ -417,6 +419,9 @@ export function createOrder({
   timeInForce: IndexerOrder_TimeInForce,
   reduceOnly: boolean,
   clientMetadata: number,
+  routerFeePpm: number,
+  routerFeeSubaccountId?: IndexerSubaccountId,
+
 }): IndexerOrder {
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   let orderJSON: any = {
@@ -432,6 +437,8 @@ export function createOrder({
     timeInForce,
     reduceOnly,
     clientMetadata,
+    routerFeePpm,
+    routerFeeSubaccountId,
   };
   if (goodTilOneof.goodTilBlock !== undefined) {
     orderJSON = {
