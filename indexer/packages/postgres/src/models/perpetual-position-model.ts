@@ -79,6 +79,7 @@ export default class PerpetualPositionModel extends Model {
         'openEventId',
         'lastEventId',
         'settledFunding',
+        'cumulativeEntryPrice',
       ],
       properties: {
         id: { type: 'string', format: 'uuid' },
@@ -97,6 +98,7 @@ export default class PerpetualPositionModel extends Model {
         createdAtHeight: { type: 'string', pattern: IntegerPattern },
         closedAtHeight: { type: ['string', 'null'], default: null, pattern: IntegerPattern },
         settledFunding: { type: 'string', pattern: NumericPattern },
+        cumulativeEntryPrice: { type: 'string', pattern: NonNegativeNumericPattern, default: '0' },
       },
     };
   }
@@ -128,6 +130,7 @@ export default class PerpetualPositionModel extends Model {
       closeEventId: 'hex-string',
       lastEventId: 'hex-string',
       settledFunding: 'string',
+      cumulativeEntryPrice: 'string',
     };
   }
 
@@ -168,4 +171,6 @@ export default class PerpetualPositionModel extends Model {
   lastEventId!: Buffer;
 
   settledFunding!: string;
+
+  cumulativeEntryPrice!: string;
 }

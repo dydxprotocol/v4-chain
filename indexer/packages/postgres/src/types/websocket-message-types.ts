@@ -56,6 +56,7 @@ export interface PerpetualPositionSubaccountMessageContents {
   sumClose: string,
   realizedPnl?: string,
   unrealizedPnl?: string,
+  cumulativeEntryPrice: string,
 }
 
 export interface AssetPositionSubaccountMessageContents {

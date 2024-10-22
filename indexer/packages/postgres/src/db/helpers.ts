@@ -90,7 +90,7 @@ export function getUnrealizedPnl(
   }
   return (
     Big(position.size).times(
-      Big(market.oraclePrice!).minus(position.entryPrice),
+      Big(market.oraclePrice!).minus(position.cumulativeEntryPrice),
     )
   ).toFixed();
 }

@@ -419,6 +419,7 @@ describe('PerpetualPosition store', () => {
           maxSize: tinyMaxSize,
           sumOpen: tinySize,
           entryPrice: tinyPrice,
+          cumulativeEntryPrice: tinyPrice,
         });
 
         const closedAt: IsoString = DateTime.utc().toISO();

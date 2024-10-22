@@ -52,6 +52,7 @@ export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase 
   closeEventId?: Buffer,
   lastEventId: Buffer,
   settledFunding: string,
+  cumulativeEntryPrice: string,
 }
 
 export interface OrderFromDatabase extends IdBasedModelFromDatabase {

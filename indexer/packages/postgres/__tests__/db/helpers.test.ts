@@ -32,6 +32,7 @@ describe('helpers', () => {
       entryPrice: defaultPerpetualPosition.entryPrice as string,
       sumOpen: defaultPerpetualPosition.sumOpen as string,
       sumClose: defaultPerpetualPosition.sumClose as string,
+      cumulativeEntryPrice: defaultPerpetualPosition.cumulativeEntryPrice as string,
     };
 
     it('compute unsettled funding for long position', () => {

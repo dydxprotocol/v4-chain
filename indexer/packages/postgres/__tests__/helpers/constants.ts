@@ -518,6 +518,7 @@ export const defaultPerpetualPosition: PerpetualPositionCreateObject = {
   openEventId: defaultTendermintEventId,
   lastEventId: defaultTendermintEventId2,
   settledFunding: '200000',
+  cumulativeEntryPrice: '20000',
 };
 
 export const defaultPerpetualPositionId: string = PerpetualPositionTable.uuid(
@@ -540,6 +541,7 @@ export const isolatedPerpetualPosition: PerpetualPositionCreateObject = {
   openEventId: defaultTendermintEventId,
   lastEventId: defaultTendermintEventId2,
   settledFunding: '200000',
+  cumulativeEntryPrice: '1.5',
 };
 
 export const isolatedPerpetualPositionId: string = PerpetualPositionTable.uuid(
