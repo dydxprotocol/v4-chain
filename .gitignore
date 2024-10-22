@@ -8,6 +8,8 @@ v4-proto-py/v4_proto
 v4-proto-js/build
 v4-proto-js/node_modules
 v4-proto-js/src
+v4-proto-rs/target
+v4-proto-rs/Cargo.lock
 
 .idea
 .vscode
