@@ -131,7 +131,7 @@ func TestTimelyPricing(t *testing.T) {
 
 			// Add the price update to deliverTxsOverride
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.priceUpdate,
 				"",

@@ -1085,7 +1085,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -1283,7 +1283,7 @@ func TestCancelShortTermOrder(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -1884,7 +1884,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,

@@ -155,7 +155,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -302,7 +302,7 @@ func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -551,7 +551,7 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -583,7 +583,7 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 			if tc.advanceAfterCancelOrder {
 				// Don't deliver the transactions ensuring that it is re-added via Recheck
 				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-					&tApp.App.ConsumerKeeper,
+					tApp.App.StakingKeeper,
 					ctx,
 					map[uint32]ve.VEPricePair{},
 					"",
@@ -608,7 +608,7 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 			if tc.advanceAfterCancelOrder {
 				// Don't deliver the transactions ensuring that it is re-added via Recheck
 				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-					&tApp.App.ConsumerKeeper,
+					tApp.App.StakingKeeper,
 					ctx,
 					map[uint32]ve.VEPricePair{},
 					"",
@@ -679,7 +679,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 			ctx := tApp.InitChain()
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -700,7 +700,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 			if tc.advanceBlock {
 				// Don't deliver the transaction ensuring that it is re-added via Recheck
 				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-					&tApp.App.ConsumerKeeper,
+					tApp.App.StakingKeeper,
 					ctx,
 					map[uint32]ve.VEPricePair{},
 					"",
@@ -723,7 +723,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 			if tc.advanceBlock {
 				// Don't deliver the transaction ensuring that it is re-added via Recheck
 				_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-					&tApp.App.ConsumerKeeper,
+					tApp.App.StakingKeeper,
 					ctx,
 					map[uint32]ve.VEPricePair{},
 					"",
@@ -799,7 +799,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *te
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5,
 	)
 	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-		&tApp.App.ConsumerKeeper,
+		tApp.App.StakingKeeper,
 		ctx,
 		map[uint32]ve.VEPricePair{},
 		"",
@@ -889,7 +889,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,

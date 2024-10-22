@@ -74,7 +74,7 @@ func (app *App) scheduleForkUpgrade(ctx sdk.Context) {
 			if err := app.UpgradeKeeper.ScheduleUpgrade(ctx, upgradePlan); err != nil {
 				panic(
 					fmt.Errorf(
-						"Hard Fork: failed to schedule upgrade %s during BeginBlock at height %d: %w",
+						"hard fork: failed to schedule upgrade %s during BeginBlock at height %d: %w",
 						upgradePlan.Name,
 						ctx.BlockHeight(),
 						err,

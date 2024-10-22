@@ -630,7 +630,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-		&tApp.App.ConsumerKeeper,
+		tApp.App.StakingKeeper,
 		ctx,
 		map[uint32]ve.VEPricePair{},
 		rate,
@@ -854,7 +854,7 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 				},
 			)
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				"",
@@ -911,7 +911,7 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 			proposal.Txs[1] = tc.proposedOperationsTx
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				"",
@@ -960,7 +960,7 @@ func TestStats(t *testing.T) {
 
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-		&tApp.App.ConsumerKeeper,
+		tApp.App.StakingKeeper,
 		ctx,
 		map[uint32]ve.VEPricePair{},
 		rate,

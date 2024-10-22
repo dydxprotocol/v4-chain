@@ -68,7 +68,7 @@ func (b BlockAdvancementWithErrors) AdvanceToBlock(
 	deliverTxsOverride := b.BlockAdvancement.getDeliverTxs(ctx, tApp.App)
 	if len(deliverTxsOverride) > 0 {
 		_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-			&tApp.App.ConsumerKeeper,
+			tApp.App.StakingKeeper,
 			ctx,
 			map[uint32]ve.VEPricePair{},
 			"",

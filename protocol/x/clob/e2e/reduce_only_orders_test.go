@@ -607,7 +607,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 			// priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
 			// require.NoError(t, err)
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.priceUpdateForFirstBlock,
 				"",
@@ -660,7 +660,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 			// require.NoError(t, err)
 
 			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.priceUpdateForFirstBlock,
 				"",

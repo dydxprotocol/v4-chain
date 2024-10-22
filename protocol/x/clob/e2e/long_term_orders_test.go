@@ -37,7 +37,7 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-		&tApp.App.ConsumerKeeper,
+		tApp.App.StakingKeeper,
 		ctx,
 		map[uint32]ve.VEPricePair{},
 		rate,
@@ -99,7 +99,7 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-		&tApp.App.ConsumerKeeper,
+		tApp.App.StakingKeeper,
 		ctx,
 		map[uint32]ve.VEPricePair{},
 		rate,
@@ -322,7 +322,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -417,7 +417,7 @@ func TestLongTermOrderExpires(t *testing.T) {
 	rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-		&tApp.App.ConsumerKeeper,
+		tApp.App.StakingKeeper,
 		ctx,
 		map[uint32]ve.VEPricePair{},
 		rate,

@@ -11,12 +11,12 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
-	ccvkeeper "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/keeper"
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type SignedVEInfo struct {
@@ -66,7 +66,7 @@ func CreateSignedExtendedCommitInfo(
 }
 
 func GetEmptyLocalLastCommit(
-	validators []ccvtypes.CrossChainValidator,
+	validators []stakingtypes.Validator,
 	height int64,
 	round int64,
 	chainId string,
@@ -75,8 +75,8 @@ func GetEmptyLocalLastCommit(
 	for _, validator := range validators {
 		ve, err := CreateSignedExtendedVoteInfo(
 			SignedVEInfo{
-				Val:                sdk.ConsAddress(validator.Address),
-				Power:              validator.GetPower(),
+				Val:                sdk.ConsAddress(validator.ConsensusPubkey.GetValue()),
+				Power:              validator.Tokens.Int64(),
 				Prices:             []vetypes.PricePair{},
 				SDaiConversionRate: "",
 				Height:             height,
@@ -273,7 +273,7 @@ func marshalDelimited(msg proto.Message) ([]byte, error) {
 }
 
 func GetInjectedExtendedCommitInfoForTestApp(
-	consumerKeeper *ccvkeeper.Keeper,
+	stakingKeeper *stakingkeeper.Keeper,
 	ctx sdk.Context,
 	prices map[uint32]ve.VEPricePair,
 	sdaiConversionRate string,
@@ -298,13 +298,16 @@ func GetInjectedExtendedCommitInfoForTestApp(
 		}
 	}
 
-	validators := consumerKeeper.GetAllCCValidator(ctx)
+	validators, err := stakingKeeper.GetBondedValidatorsByPower(ctx)
+	if err != nil {
+		return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to get bonded validators: %w", err)
+	}
 
 	var veSignedInfos []SignedVEInfo
 	for _, v := range validators {
 		veSignedInfos = append(veSignedInfos, SignedVEInfo{
-			Val:                sdk.ConsAddress(v.Address),
-			Power:              v.GetPower(),
+			Val:                sdk.ConsAddress(v.ConsensusPubkey.GetValue()),
+			Power:              v.Tokens.Int64(),
 			Prices:             pricesBz,
 			SDaiConversionRate: sdaiConversionRate,
 			Height:             height,

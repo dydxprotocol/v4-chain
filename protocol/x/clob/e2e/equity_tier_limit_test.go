@@ -687,7 +687,7 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -894,7 +894,7 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -1222,7 +1222,7 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,

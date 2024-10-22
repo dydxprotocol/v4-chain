@@ -721,6 +721,11 @@ func (tApp *TestApp) AdvanceToBlock(
 		deliverTxs := options.DeliverTxsOverride
 
 		if deliverTxs == nil {
+			validators, err := tApp.App.StakingKeeper.GetBondedValidatorsByPower(tApp.App.NewContextLegacy(true, tApp.header))
+			if err != nil {
+				tApp.builder.t.Fatalf("Failed to get bonded validators: %v", err)
+			}
+
 			// Prepare the proposal and process it.
 			prepareRequest := abcitypes.RequestPrepareProposal{
 				Txs:                tApp.passingCheckTxs,
@@ -730,7 +735,7 @@ func (tApp *TestApp) AdvanceToBlock(
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
 				LocalLastCommit: vetestutil.GetEmptyLocalLastCommit(
-					tApp.App.ConsumerKeeper.GetAllCCValidator(tApp.App.NewContextLegacy(true, tApp.header)),
+					validators,
 					tApp.App.LastBlockHeight(),
 					0,
 					"localdydxprotocol",
@@ -1162,6 +1167,10 @@ func (tApp *TestApp) panicIfChainIsHalted() {
 func (tApp *TestApp) PrepareProposal() (*abcitypes.ResponsePrepareProposal, error) {
 	tApp.mtx.RLock()
 	defer tApp.mtx.RUnlock()
+	validators, err := tApp.App.StakingKeeper.GetBondedValidatorsByPower(tApp.App.NewContextLegacy(true, tApp.header))
+	if err != nil {
+		return nil, err
+	}
 	return tApp.App.PrepareProposal(&abcitypes.RequestPrepareProposal{
 		Txs:                tApp.passingCheckTxs,
 		MaxTxBytes:         math.MaxInt64,
@@ -1170,7 +1179,7 @@ func (tApp *TestApp) PrepareProposal() (*abcitypes.ResponsePrepareProposal, erro
 		NextValidatorsHash: tApp.header.NextValidatorsHash,
 		ProposerAddress:    tApp.header.ProposerAddress,
 		LocalLastCommit: vetestutil.GetEmptyLocalLastCommit(
-			tApp.App.ConsumerKeeper.GetAllCCValidator(tApp.App.NewContextLegacy(true, tApp.header)),
+			validators,
 			tApp.App.LastBlockHeight()-1, // we are preparing proposal in the context of the previous block
 			0,
 			"localdydxprotocol",

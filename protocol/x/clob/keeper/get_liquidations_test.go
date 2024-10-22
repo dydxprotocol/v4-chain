@@ -184,7 +184,7 @@ func TestChangePriceVE_CauseNegativeTNC(t *testing.T) {
 			// Add the price update.
 			deliverTxsOverride := make([][]byte, 0)
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.priceUpdate,
 				"",

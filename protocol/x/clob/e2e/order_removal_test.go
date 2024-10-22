@@ -343,7 +343,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			}
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -381,7 +381,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 
 			// Add the price update.
 			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.priceUpdate,
 				"",
@@ -804,7 +804,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 
 			// Add the price update to deliverTxsOverride
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				"",
@@ -825,7 +825,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			}
 
 			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.priceUpdate,
 				"",
@@ -838,7 +838,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			})
 
 			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				"",
@@ -1217,7 +1217,7 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 	// Local operations queue would be [placement(Alice_Order), ..., removal(Alice_Order)].
 	// Let's say block proposer does not include these operations. Make sure we don't panic in this case.
 	_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-		&tApp.App.ConsumerKeeper,
+		tApp.App.StakingKeeper,
 		ctx,
 		map[uint32]ve.VEPricePair{},
 		"",
