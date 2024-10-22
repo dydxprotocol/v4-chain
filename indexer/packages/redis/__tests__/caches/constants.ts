@@ -41,10 +41,8 @@ export const order: IndexerOrder = {
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
   routerFeePpm: 0,
-  routerSubaccountId: {
-    owner: "dydx1xxxxxx",
-    number: 0,
-  },
+  routerFeeSubaccountOwner: "dydx1xxxxxx",
+  routerFeeSubaccountNumber: 0,
 };
 export const orderGoodTilBlockTIme: IndexerOrder = {
   ...order,

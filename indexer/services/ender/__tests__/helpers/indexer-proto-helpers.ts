@@ -406,7 +406,8 @@ export function createOrder({
   reduceOnly,
   clientMetadata,
   routerFeePpm,
-  routerFeeSubaccountId,
+  routerFeeSubaccountOwner,
+  routerFeeSubaccountNumber,
 }: {
   subaccountId: IndexerSubaccountId,
   clientId: number,
@@ -420,8 +421,8 @@ export function createOrder({
   reduceOnly: boolean,
   clientMetadata: number,
   routerFeePpm: number,
-  routerFeeSubaccountId?: IndexerSubaccountId,
-
+  routerFeeSubaccountOwner: string,
+  routerFeeSubaccountNumber: number,
 }): IndexerOrder {
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   let orderJSON: any = {
@@ -438,7 +439,8 @@ export function createOrder({
     reduceOnly,
     clientMetadata,
     routerFeePpm,
-    routerFeeSubaccountId,
+    routerFeeSubaccountOwner,
+    routerFeeSubaccountNumber,
   };
   if (goodTilOneof.goodTilBlock !== undefined) {
     orderJSON = {
@@ -638,8 +640,8 @@ export async function expectOrderInDatabase({
   goodTilBlockTime?: string,
   clientMetadata: string,
   routerFeePpm: string,
-  routerFeeSubaccountOwner: string | null,
-  routerFeeSubaccountNumber: string | null,
+  routerFeeSubaccountOwner?: string,
+  routerFeeSubaccountNumber?: string,
   updatedAt: IsoString,
   updatedAtHeight: string,
 }): Promise<void> {
@@ -665,8 +667,8 @@ export async function expectOrderInDatabase({
     goodTilBlockTime: goodTilBlockTime ?? null,
     clientMetadata,
     routerFeePpm,
-    routerFeeSubaccountOwner,
-    routerFeeSubaccountNumber,
+    routerFeeSubaccountOwner: routerFeeSubaccountOwner ?? '',
+    routerFeeSubaccountNumber: routerFeeSubaccountNumber ?? '0',
     updatedAt,
     updatedAtHeight,
   }));

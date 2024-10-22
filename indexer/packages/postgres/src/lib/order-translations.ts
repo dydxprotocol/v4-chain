@@ -72,10 +72,10 @@ export function convertToIndexerOrderWithSubaccount(
     conditionType: orderTypeToProtocolConditionType(order.type),
     conditionalOrderTriggerSubticks: triggerSubticks,
     routerFeePpm: Number(order.routerFeePpm),
-    routerSubaccountId: {
-      owner: order.routerFeeSubaccountOwner!,
-      number: Number(order.routerFeeSubaccountNumber!),
-    },
+    routerFeeSubaccountOwner: order.routerFeeSubaccountOwner ?? '',
+    routerFeeSubaccountNumber: order.routerFeeSubaccountNumber !== null && order.routerFeeSubaccountNumber !== undefined
+      ? Number(order.routerFeeSubaccountNumber)
+      : 0,
   };
 
   return indexerOrder;

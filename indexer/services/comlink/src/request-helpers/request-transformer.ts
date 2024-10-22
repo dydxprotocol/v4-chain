@@ -507,8 +507,8 @@ export function redisOrderToResponseObject(
     orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
     clientMetadata: redisOrder.order!.clientMetadata.toString(),
     routerFeePpm: redisOrder.order!.routerFeePpm.toString(),
-    routerFeeSubaccountOwner: redisOrder.order!.routerSubaccountId?.owner ?? undefined,
-    routerFeeSubaccountNumber: redisOrder.order!.routerSubaccountId?.number?.toString() ?? undefined,
+    routerFeeSubaccountOwner: redisOrder.order!.routerFeeSubaccountOwner ?? undefined,
+    routerFeeSubaccountNumber: redisOrder.order!.routerFeeSubaccountNumber?.toString() ?? undefined,
     subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
   };
 }
