@@ -27,6 +27,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -486,6 +487,25 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
 		},
 	)
+	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: *aliceSubaccount.Id,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+				ClobPairId:   0,
+			},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     10_000_000_000, // 1 BTC, assuming atomic resolution of -10
+			Subticks:     500_000_000,    // 50k tDAI / BTC, assuming QCE of -8
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
+			RouterFeePpm: 1_000,
+			RouterSubaccountId: &satypes.SubaccountId{
+				Owner:  authtypes.NewModuleAddress("NULL_ROUTER_ADDRESS").String(),
+				Number: 0,
+			},
+		},
+	)
 	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5 := *clobtypes.NewMsgPlaceOrder(
 		clobtypes.Order{
 			OrderId: clobtypes.OrderId{
@@ -542,6 +562,14 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			AccAddressForSigning: constants.Alice_Num0.Owner,
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+	)
+	CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: constants.Alice_Num0.Owner,
+		},
+		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee,
 	)
 	CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5 := testapp.MustMakeCheckTx(
 		ctx,
@@ -906,6 +934,293 @@ func TestPlaceLongTermOrder(t *testing.T) {
 										},
 										clobtestutils.NewMatchOperationRaw(
 											&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+											[]clobtypes.MakerFill{
+												{
+													FillAmount: PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.
+														Order.GetBaseQuantums().ToUint64(),
+													MakerOrderId: PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+												},
+											},
+										),
+									},
+								}))),
+							},
+						},
+					)},
+				},
+			},
+		},
+		"Test matching an order fully as taker with router fee": {
+			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order,
+			orderShouldRestOnOrderbook: false,
+			expectedOrderFillAmount:    0, // order is fully-filled and removed from state
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: Clob_0.MustGetPerpetualId(),
+							Quantums: dtypes.NewInt(int64(
+								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order.GetQuantums())),
+							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
+						},
+					},
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId: 0,
+							Quantums: dtypes.NewIntFromBigInt(
+								new(big.Int).Sub(
+									aliceSubaccount.GetTDaiPosition(),
+									new(big.Int).SetInt64(
+										50_000_000_000+25_000_000+50_000_000, // taker fee of .05% + router fee of .1%
+									),
+								),
+							),
+						},
+					},
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(1, 1).String(),
+				},
+				{
+					Id: &constants.Bob_Num0,
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: Clob_0.MustGetPerpetualId(),
+							Quantums: dtypes.NewInt(-int64(
+								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order.GetQuantums())),
+							FundingIndex: dtypes.NewInt(0),
+							YieldIndex:   big.NewRat(0, 1).String(),
+						},
+					},
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId: 0,
+							Quantums: dtypes.NewIntFromBigInt(
+								new(big.Int).Add(
+									bobSubaccount.GetTDaiPosition(),
+									new(big.Int).SetInt64(
+										50_000_000_000+5_500_000, // maker rebate of .0110%
+									),
+								),
+							),
+						},
+					},
+					MarginEnabled:   true,
+					AssetYieldIndex: big.NewRat(1, 1).String(),
+				},
+			},
+			ordersAndExpectationsPerBlock: []ordersAndExpectations{
+				{
+					blockHeight: 2,
+					orderMsgs: []clobtypes.MsgPlaceOrder{
+						PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20,
+						LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee,
+					},
+					// Short term order placement results in Create and Update with 0 fill amount
+					expectedOffchainMessagesCheckTx: []msgsender.Message{
+						off_chain_updates.MustCreateOrderPlaceMessage(
+							ctx,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
+						).AddHeader(msgsender.MessageHeader{
+							Key:   msgsender.TransactionHashHeaderKey,
+							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
+						}),
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							ctx,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							0,
+						).AddHeader(msgsender.MessageHeader{
+							Key:   msgsender.TransactionHashHeaderKey,
+							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
+						}),
+					},
+					// Short term order update for fill amount, stateful order update for fill amount
+					// Note there are no headers because these events are generated in PrepareCheckState
+					expectedOffchainMessagesAfterBlock: []msgsender.Message{
+						// maker
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							ctx,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+						),
+						// taker
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							ctx,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order.OrderId,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order.GetBaseQuantums(),
+						),
+					},
+					// Stateful order placement
+					expectedOnchainMessagesAfterBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
+						&indexer_manager.IndexerTendermintBlock{
+							Height: 2,
+							Time:   ctx.BlockTime(),
+							Events: []*indexer_manager.IndexerTendermintEvent{
+								{
+									Subtype:             indexerevents.SubtypeStatefulOrder,
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          0,
+									Version:             indexerevents.StatefulOrderEventVersion,
+									DataBytes: indexer_manager.GetBytes(
+										indexerevents.NewLongTermOrderPlacementEvent(
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order,
+										),
+									),
+								},
+							},
+							TxHashes: []string{
+								string(lib.GetTxHash(
+									CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Tx,
+								)),
+							},
+						},
+					)},
+				},
+				{
+					blockHeight: 3,
+					expectedOnchainMessagesAfterBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
+						&indexer_manager.IndexerTendermintBlock{
+							Height: 3,
+							Time:   ctx.BlockTime(),
+							Events: []*indexer_manager.IndexerTendermintEvent{
+								// taker subaccount state transition
+								{
+									Subtype: indexerevents.SubtypeSubaccountUpdate,
+									DataBytes: indexer_manager.GetBytes(
+										indexerevents.NewSubaccountUpdateEvent(
+											&constants.Alice_Num0,
+											[]*satypes.PerpetualPosition{
+												{
+													PerpetualId: Clob_0.MustGetPerpetualId(),
+													Quantums: dtypes.NewInt(int64(
+														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order.GetQuantums())),
+													FundingIndex: dtypes.NewInt(0),
+												},
+											},
+											[]*satypes.AssetPosition{
+												{
+													AssetId: 0,
+													Quantums: dtypes.NewIntFromBigInt(
+														new(big.Int).Sub(
+															aliceSubaccount.GetTDaiPosition(),
+															new(big.Int).SetInt64(
+																50_000_000_000+25_000_000+50_000_000, // taker fee of .5% + router fee of .1%
+															),
+														),
+													),
+												},
+											},
+											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
+										),
+									),
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          0,
+									Version:             indexerevents.SubaccountUpdateEventVersion,
+								},
+								// maker subaccount state transition
+								{
+									Subtype: indexerevents.SubtypeSubaccountUpdate,
+									DataBytes: indexer_manager.GetBytes(
+										indexerevents.NewSubaccountUpdateEvent(
+											&constants.Bob_Num0,
+											[]*satypes.PerpetualPosition{
+												{
+													PerpetualId: Clob_0.MustGetPerpetualId(),
+													Quantums: dtypes.NewInt(-int64(
+														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order.GetQuantums())),
+													FundingIndex: dtypes.NewInt(0),
+												},
+											},
+											[]*satypes.AssetPosition{
+												{
+													AssetId: 0,
+													Quantums: dtypes.NewIntFromBigInt(
+														new(big.Int).Add(
+															bobSubaccount.GetTDaiPosition(),
+															new(big.Int).SetInt64(
+																50_000_000_000+5_500_000, // maker rebate of .110%
+															),
+														),
+													),
+												},
+											},
+											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
+										),
+									),
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          1,
+									Version:             indexerevents.SubaccountUpdateEventVersion,
+								},
+								{
+									Subtype: indexerevents.SubtypeSubaccountUpdate,
+									DataBytes: indexer_manager.GetBytes(
+										indexerevents.NewSubaccountUpdateEvent(
+											&satypes.SubaccountId{
+												Owner:  authtypes.NewModuleAddress("NULL_ROUTER_ADDRESS").String(),
+												Number: 0,
+											},
+											nil,
+											[]*satypes.AssetPosition{
+												{
+													AssetId:  0,
+													Quantums: dtypes.NewInt(50_000_000), // taker fee of .5% + router fee of .1%
+												},
+											},
+											nil, // no funding payments
+											constants.AssetYieldIndex_Zero,
+										),
+									),
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          2,
+									Version:             indexerevents.SubaccountUpdateEventVersion,
+								},
+								{
+									Subtype: indexerevents.SubtypeOrderFill,
+									DataBytes: indexer_manager.GetBytes(
+										indexerevents.NewOrderFillEvent(
+											PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order,
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order.GetBaseQuantums(),
+											-5_500_000,
+											25_000_000+50_000_000,
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order.GetBaseQuantums(),
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order.GetBaseQuantums(),
+										),
+									),
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          3,
+									Version:             indexerevents.OrderFillEventVersion,
+								},
+								{
+									Subtype: indexerevents.SubtypeOpenInterestUpdate,
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_BlockEvent_{
+										BlockEvent: indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+									},
+									Version: indexerevents.OpenInterestUpdateVersion,
+									DataBytes: indexer_manager.GetBytes(
+										&indexerevents.OpenInterestUpdateEventV1{
+											OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
+												{
+													PerpetualId:  Clob_0.MustGetPerpetualId(),
+													OpenInterest: dtypes.NewInt(10_000_000_000),
+												},
+											},
+										}),
+								},
+							},
+							TxHashes: []string{
+								string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
+									OperationsQueue: []clobtypes.OperationRaw{
+										{
+											Operation: &clobtypes.OperationRaw_ShortTermOrderPlacement{
+												ShortTermOrderPlacement: CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx,
+											},
+										},
+										clobtestutils.NewMatchOperationRaw(
+											&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5_RouterFee.Order,
 											[]clobtypes.MakerFill{
 												{
 													FillAmount: PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.

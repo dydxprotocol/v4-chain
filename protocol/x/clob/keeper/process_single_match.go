@@ -180,6 +180,10 @@ func (k Keeper) persistMatchedOrders(
 	bigTakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, takerFeePpm, true)
 	bigMakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, makerFeePpm, true)
 
+	fmt.Println("Big fill quote quantums: ", bigFillQuoteQuantums)
+	fmt.Println("routerTakerFeePpm: ", routerTakerFeePpm)
+	fmt.Println("routerMakerFeePpm: ", routerMakerFeePpm)
+
 	bigRouterTakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, routerTakerFeePpm, true)
 	bigRouterMakerFeeQuoteQuantums := lib.BigIntMulSignedPpm(bigFillQuoteQuantums, routerMakerFeePpm, true)
 
@@ -268,6 +272,7 @@ func (k Keeper) persistMatchedOrders(
 
 	if !isTakerLiquidation {
 		if matchWithOrders.TakerOrder.MustGetOrder().RouterSubaccountId != nil && bigRouterTakerFeeQuoteQuantums.Sign() != 0 {
+			fmt.Printf("bigRouterTakerFeeQuoteQuantums: %v\n", bigRouterTakerFeeQuoteQuantums)
 			updates = append(updates, satypes.Update{
 				AssetUpdates: []satypes.AssetUpdate{
 					{
@@ -279,6 +284,7 @@ func (k Keeper) persistMatchedOrders(
 			})
 		}
 		if matchWithOrders.MakerOrder.MustGetOrder().RouterSubaccountId != nil && bigRouterMakerFeeQuoteQuantums.Sign() != 0 {
+			fmt.Printf("bigRouterMakerFeeQuoteQuantums: %v\n", bigRouterMakerFeeQuoteQuantums)
 			updates = append(updates, satypes.Update{
 				AssetUpdates: []satypes.AssetUpdate{
 					{

@@ -63,6 +63,17 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: false,
 		},
+		"Can place a new buy order on an orderbook with bids with router fee, and best bid is updated": {
+			existingOrders: []types.MatchableOrder{
+				&constants.Order_Bob_Num0_Id3_Clob1_Buy10_Price10_GTB20,
+			},
+			collateralizationCheck: satypes.Success,
+
+			order: constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22_RouterFee,
+
+			expectedOrderStatus:    types.Success,
+			expectedToReplaceOrder: false,
+		},
 		"Can place a new sell order on an orderbook with asks, and best ask is updated": {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num0_Id5_Clob1_Sell25_Price15_GTB20,

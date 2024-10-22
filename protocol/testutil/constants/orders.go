@@ -4,6 +4,8 @@ import (
 	"math"
 
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 var (
@@ -455,6 +457,18 @@ var (
 		Quantums:     20,
 		Subticks:     35,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 22},
+	}
+	Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22_RouterFee = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Bob_Num0, ClientId: 4, ClobPairId: 1},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     20,
+		Subticks:     35,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 22},
+		RouterFeePpm: 1_000,
+		RouterSubaccountId: &satypes.SubaccountId{
+			Owner:  authtypes.NewModuleAddress("NULL_ROUTER_ADDRESS").String(),
+			Number: 0,
+		},
 	}
 	Order_Bob_Num0_Id5_Clob0_Buy20_Price10_GTB22 = clobtypes.Order{
 		OrderId:      clobtypes.OrderId{SubaccountId: Bob_Num0, ClientId: 5, ClobPairId: 0},

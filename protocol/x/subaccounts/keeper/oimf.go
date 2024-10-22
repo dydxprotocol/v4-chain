@@ -57,7 +57,7 @@ func GetDeltaOpenInterestFromUpdates(
 	if updateType != types.Match {
 		return nil
 	}
-	if len(settledUpdates) != 2 {
+	if len(settledUpdates) != 2 && len(settledUpdates) != 3 {
 		panic(
 			fmt.Sprintf(
 				types.ErrMatchUpdatesMustHaveTwoUpdates,
@@ -100,8 +100,8 @@ func GetDeltaOpenInterestFromUpdates(
 	}
 
 	baseQuantumsDelta := big.NewInt(0)
-	for _, u := range settledUpdates {
-		deltaLong := getDeltaLongFromSettledUpdate(u, updatedPerpId)
+	for i := 0; i < 2; i++ { // Only process the first two updates
+		deltaLong := getDeltaLongFromSettledUpdate(settledUpdates[i], updatedPerpId)
 		baseQuantumsDelta.Add(
 			baseQuantumsDelta,
 			deltaLong,
