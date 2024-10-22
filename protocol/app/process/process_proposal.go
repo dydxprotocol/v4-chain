@@ -40,6 +40,7 @@ var (
 func ProcessProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper ProcessClobKeeper,
+	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
 	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,

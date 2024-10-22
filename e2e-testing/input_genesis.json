@@ -226,7 +226,7 @@
         "transfer_timeout_period": "3600s",
         "consumer_redistribution_fraction": "0.75",
         "historical_entries": "10000",
-        "unbonding_period": "1209600s",
+        "unbonding_period": "1814400s",
         "reward_denoms": [],
         "provider_reward_denoms": [],
         "retry_delay_period": "3600s"
@@ -2399,6 +2399,7 @@
       "constitution": "",
       "starting_proposal_id": "1"
     },
+    "govplus": {},
     "interchainaccounts": {
       "controller_genesis_state": {
         "active_channels": [],

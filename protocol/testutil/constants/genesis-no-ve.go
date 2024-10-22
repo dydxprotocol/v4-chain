@@ -214,7 +214,7 @@ const GenesisStateNoVe = `{
         "transfer_timeout_period": "3600s",
         "consumer_redistribution_fraction": "0.75",
         "historical_entries": "10000",
-        "unbonding_period": "1209600s",
+        "unbonding_period": "1814400s",
         "reward_denoms": [],
         "provider_reward_denoms": [],
         "retry_delay_period": "3600s"
@@ -527,6 +527,25 @@ const GenesisStateNoVe = `{
       ],
       "next_delayed_message_id": 1
     },
+    "distribution": {
+      "delegator_starting_infos": [],
+      "delegator_withdraw_infos": [],
+      "fee_pool": {
+        "community_pool": []
+      },
+      "outstanding_rewards": [],
+      "params": {
+        "base_proposer_reward": "0.000000000000000000",
+        "bonus_proposer_reward": "0.000000000000000000",
+        "community_tax": "0.020000000000000000",
+        "withdraw_addr_enabled": true
+      },
+      "previous_proposer": "",
+      "validator_accumulated_commissions": [],
+      "validator_current_rewards": [],
+      "validator_historical_rewards": [],
+      "validator_slash_events": []
+    },
     "epochs": {
       "epoch_info_list": [
         {
@@ -642,6 +661,40 @@ const GenesisStateNoVe = `{
     "genutil": {
       "gen_txs": []
     },
+    "gov": {
+      "deposits": [],
+      "params": {
+        "burn_proposal_deposit_prevote": false,
+        "burn_vote_quorum": false,
+        "burn_vote_veto": true,
+        "max_deposit_period": "172800s",
+        "min_deposit": [
+          {
+            "amount": "10000000",
+            "denom": "adv4tnt"
+          }
+        ],
+        "min_initial_deposit_ratio": "0.000000000000000000",
+        "proposal_cancel_ratio": "1.000000000000000000",
+        "quorum": "0.334000000000000000",
+        "threshold": "0.500000000000000000",
+        "veto_threshold": "0.334000000000000000",
+		    "min_deposit_ratio": "0.010000000000000000",
+        "expedited_voting_period": "86400s",
+        "expedited_threshold": "0.750000000000000000",
+        "expedited_min_deposit": [
+          {
+            "amount": "50000000",
+            "denom": "adv4tnt"
+          }
+        ],
+        "voting_period": "172800s"
+      },
+      "proposals": [],
+      "starting_proposal_id": "1",
+      "votes": []
+    },
+    "govplus": {},
    "ibc": {
       "channel_genesis": {
         "ack_sequences": [],
@@ -1229,6 +1282,23 @@ const GenesisStateNoVe = `{
         "slash_fraction_downtime": "0.000000000000000000"
       },
       "signing_infos": []
+    },
+    "staking": {
+      "delegations": [],
+      "exported": false,
+      "last_total_power": "0",
+      "last_validator_powers": [],
+      "params": {
+        "bond_denom": "adv4tnt",
+        "historical_entries": 10000,
+        "max_entries": 7,
+        "max_validators": 100,
+        "min_commission_rate": "0.000000000000000000",
+        "unbonding_time": "1814400s"
+      },
+      "redelegations": [],
+      "unbonding_delegations": [],
+      "validators": []
     },
     "stats": {
       "params": {

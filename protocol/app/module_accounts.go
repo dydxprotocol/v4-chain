@@ -2,6 +2,9 @@ package app
 
 import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
@@ -25,6 +28,10 @@ var (
 	maccPerms = map[string][]string{
 		// -------- Native SDK module accounts --------
 		authtypes.FeeCollectorName:                    nil,
+		distrtypes.ModuleName:                         nil,
+		stakingtypes.BondedPoolName:                   {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:                {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                           {authtypes.Burner},
 		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner}, // Note: TDaiPoolAccount is another name for ibctransfertypes.ModuleName
 		ibcconsumertypes.ConsumerRedistributeName:     nil,
 		ibcconsumertypes.ConsumerToSendToProviderName: nil,
@@ -51,6 +58,9 @@ var (
 	// unexpected violation of invariants (for example, https://github.com/cosmos/cosmos-sdk/issues/4795)
 	blockedModuleAccounts = map[string]bool{
 		authtypes.FeeCollectorName:                    true,
+		distrtypes.ModuleName:                         true,
+		stakingtypes.BondedPoolName:                   true,
+		stakingtypes.NotBondedPoolName:                true,
 		ibctransfertypes.ModuleName:                   true,
 		ibcconsumertypes.ConsumerRedistributeName:     true,
 		ibcconsumertypes.ConsumerToSendToProviderName: true,

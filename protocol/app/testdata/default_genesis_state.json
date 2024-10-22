@@ -104,6 +104,25 @@
     "delayed_messages": [],
     "next_delayed_message_id": 0
   },
+  "distribution": {
+    "delegator_starting_infos": [],
+    "delegator_withdraw_infos": [],
+    "fee_pool": {
+      "community_pool": []
+    },
+    "outstanding_rewards": [],
+    "params": {
+      "base_proposer_reward": "0.000000000000000000",
+      "bonus_proposer_reward": "0.000000000000000000",
+      "community_tax": "0.020000000000000000",
+      "withdraw_addr_enabled": true
+    },
+    "previous_proposer": "",
+    "validator_accumulated_commissions": [],
+    "validator_current_rewards": [],
+    "validator_historical_rewards": [],
+    "validator_slash_events": []
+  },
   "epochs": {
     "epoch_info_list": [
       {
@@ -222,6 +241,45 @@
   "genutil": {
     "gen_txs": []
   },
+  "gov": {
+    "starting_proposal_id": "1",
+    "deposits": [],
+    "votes": [],
+    "proposals": [],
+    "deposit_params": null,
+    "voting_params": null,
+    "tally_params": null,
+    "params": {
+      "min_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ],
+      "max_deposit_period": "172800s",
+      "voting_period": "172800s",
+      "quorum": "0.334000000000000000",
+      "threshold": "0.500000000000000000",
+      "veto_threshold": "0.334000000000000000",
+      "min_initial_deposit_ratio": "0.000000000000000000",
+      "proposal_cancel_ratio": "1.000000000000000000",
+      "proposal_cancel_dest": "",
+      "expedited_voting_period": "86400s",
+      "expedited_threshold": "0.750000000000000000",
+      "expedited_min_deposit": [
+        {
+          "denom": "stake",
+          "amount": "50000000"
+        }
+      ],
+      "burn_vote_quorum": false,
+      "burn_proposal_deposit_prevote": false,
+      "burn_vote_veto": true,
+      "min_deposit_ratio": "0.010000000000000000"
+    },
+    "constitution": ""
+  },
+  "govplus": {},
   "ibc": {
     "client_genesis": {
       "clients": [],
@@ -367,6 +425,23 @@
     },
     "signing_infos": [],
     "missed_blocks": []
+  },
+  "staking": {
+    "params": {
+      "unbonding_time": "1209600s",
+      "max_validators": 100,
+      "max_entries": 7,
+      "historical_entries": 10000,
+      "bond_denom": "stake",
+      "min_commission_rate": "0.000000000000000000"
+    },
+    "last_total_power": "0",
+    "last_validator_powers": [],
+    "validators": [],
+    "delegations": [],
+    "unbonding_delegations": [],
+    "redelegations": [],
+    "exported": false
   },
   "stats": {
     "params": {

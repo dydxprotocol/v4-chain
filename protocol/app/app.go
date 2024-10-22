@@ -76,14 +76,25 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
@@ -150,7 +161,9 @@ import (
 	feetiersmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers"
 	feetiersmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/keeper"
 	feetiersmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
-
+	govplusmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus"
+	govplusmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/keeper"
+	govplusmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
 	perpetualsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	perpetualsmodulekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	perpetualsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
@@ -256,12 +269,14 @@ type App struct {
 	AuthzKeeper      authzkeeper.Keeper
 	BankKeeper       bankkeeper.Keeper
 	CapabilityKeeper *capabilitykeeper.Keeper
-
-	SlashingKeeper slashingkeeper.Keeper
-	CrisisKeeper   *crisiskeeper.Keeper
-	UpgradeKeeper  *upgradekeeper.Keeper
-	ParamsKeeper   paramskeeper.Keeper
-	ConsumerKeeper ibcconsumerkeeper.Keeper
+	StakingKeeper    *stakingkeeper.Keeper
+	SlashingKeeper   slashingkeeper.Keeper
+	DistrKeeper      distrkeeper.Keeper
+	GovKeeper        *govkeeper.Keeper
+	CrisisKeeper     *crisiskeeper.Keeper
+	UpgradeKeeper    *upgradekeeper.Keeper
+	ParamsKeeper     paramskeeper.Keeper
+	ConsumerKeeper   ibcconsumerkeeper.Keeper
 	// IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCKeeper             *ibckeeper.Keeper
 	ICAHostKeeper         icahostkeeper.Keeper
@@ -270,6 +285,7 @@ type App struct {
 	RatelimitKeeper       ratelimitmodulekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
+	GovPlusKeeper         govplusmodulekeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper         capabilitykeeper.ScopedKeeper
@@ -376,8 +392,11 @@ func New(
 		authtypes.StoreKey,
 		authzkeeper.StoreKey,
 		banktypes.StoreKey,
+		stakingtypes.StoreKey,
 		crisistypes.StoreKey,
+		distrtypes.StoreKey,
 		slashingtypes.StoreKey,
+		govtypes.StoreKey,
 		paramstypes.StoreKey,
 		consensusparamtypes.StoreKey,
 		upgradetypes.StoreKey,
@@ -403,6 +422,7 @@ func New(
 		sendingmoduletypes.StoreKey,
 		delaymsgmoduletypes.StoreKey,
 		epochsmoduletypes.StoreKey,
+		govplusmoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
@@ -489,11 +509,31 @@ func New(
 		logger,
 	)
 
+	app.StakingKeeper = stakingkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		lib.GovModuleAddress.String(),
+		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+	)
+
+	app.DistrKeeper = distrkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		authtypes.FeeCollectorName,
+		lib.GovModuleAddress.String(),
+	)
+
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
 		legacyAmino,
 		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
-		&app.ConsumerKeeper,
+		app.StakingKeeper,
 		lib.GovModuleAddress.String(),
 	)
 
@@ -514,6 +554,12 @@ func New(
 		app.AccountKeeper,
 	)
 
+	// register the staking hooks
+	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
+	app.StakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
+	)
+
 	// get skipUpgradeHeights from the app options
 	skipUpgradeHeights := map[int64]bool{}
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
@@ -529,6 +575,41 @@ func New(
 		app.BaseApp,
 		lib.GovModuleAddress.String(),
 	)
+
+	// ... other modules keepers
+
+	// Register the proposal types
+	// Deprecated: Avoid adding new handlers, instead use the new proposal flow
+	// by granting the governance module the right to execute the message.
+	// See: https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/x/gov/spec/01_concepts.md#proposal-messages
+	govRouter := govv1beta1.NewRouter()
+	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
+	govConfig := govtypes.DefaultConfig()
+	/*
+		Example of setting gov params:
+		govConfig.MaxMetadataLen = 10000
+	*/
+	govKeeper := govkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		app.MsgServiceRouter(),
+		govConfig,
+		lib.GovModuleAddress.String(),
+	)
+
+	app.GovKeeper = govKeeper.SetHooks(
+		govtypes.NewMultiGovHooks(
+		// register the governance hooks
+		),
+	)
+
+	// Set legacy router for backwards compatibility with gov v1beta1
+	govKeeper.SetLegacyRouter(govRouter)
 
 	// pre-initialize ConsumerKeeper to satsfy ibckeeper.NewKeeper
 	// which would panic on nil or zero keeper
@@ -554,7 +635,7 @@ func New(
 		appCodec,
 		keys[ibcexported.StoreKey],
 		app.getSubspace(ibcexported.ModuleName),
-		app.ConsumerKeeper,
+		app.StakingKeeper,
 		app.UpgradeKeeper,
 		scopedIBCKeeper,
 		lib.GovModuleAddress.String(),
@@ -677,7 +758,7 @@ func New(
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),
-		&app.ConsumerKeeper,
+		app.StakingKeeper,
 		app.SlashingKeeper,
 		addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr),
 		runtime.ProvideCometInfoService(),
@@ -1069,6 +1150,17 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
+	app.GovPlusKeeper = *govplusmodulekeeper.NewKeeper(
+		appCodec,
+		app.StakingKeeper,
+		keys[govplusmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
+	govPlusModule := govplusmodule.NewAppModule(appCodec, app.GovPlusKeeper)
+
 	app.pricePreBlocker = *daemonpreblocker.NewDaemonPreBlockHandler(
 		logger,
 		veApplier,
@@ -1088,7 +1180,7 @@ func New(
 	// must be passed by reference here.
 	app.ModuleManager = module.NewManager(
 		genutil.NewAppModule(
-			app.AccountKeeper, app.ConsumerKeeper, app.BaseApp,
+			app.AccountKeeper, app.StakingKeeper, app.BaseApp,
 			encodingConfig.TxConfig,
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.getSubspace(authtypes.ModuleName)),
@@ -1097,14 +1189,30 @@ func New(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.getSubspace(crisistypes.ModuleName)),
+		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.getSubspace(govtypes.ModuleName)),
 		slashing.NewAppModule(
 			appCodec,
 			app.SlashingKeeper,
 			app.AccountKeeper,
 			app.BankKeeper,
-			app.ConsumerKeeper,
+			app.StakingKeeper,
 			app.getSubspace(slashingtypes.ModuleName),
 			app.interfaceRegistry,
+		),
+		distr.NewAppModule(
+			appCodec,
+			app.DistrKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.StakingKeeper,
+			app.getSubspace(distrtypes.ModuleName),
+		),
+		staking.NewAppModule(
+			appCodec,
+			app.StakingKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.getSubspace(stakingtypes.ModuleName),
 		),
 		upgrade.NewAppModule(app.UpgradeKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr)),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -1125,6 +1233,7 @@ func New(
 		subaccountsModule,
 		clobModule,
 		sendingModule,
+		govPlusModule,
 		delayMsgModule,
 		epochsModule,
 		rateLimitModule,
@@ -1144,13 +1253,16 @@ func New(
 		authz.ModuleName,                // Delete expired grants.
 		epochsmoduletypes.ModuleName,
 		capabilitytypes.ModuleName,
+		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
+		stakingtypes.ModuleName,
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
+		govtypes.ModuleName,
 		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		feegrant.ModuleName,
@@ -1168,6 +1280,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 	)
 
@@ -1177,9 +1290,12 @@ func New(
 
 	app.ModuleManager.SetOrderEndBlockers(
 		crisistypes.ModuleName,
+		govtypes.ModuleName,
+		stakingtypes.ModuleName,
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
+		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -1203,6 +1319,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		epochsmoduletypes.ModuleName,
+		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
@@ -1218,7 +1335,10 @@ func New(
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
+		distrtypes.ModuleName,
+		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
+		govtypes.ModuleName,
 		crisistypes.ModuleName,
 		ibcexported.ModuleName,
 		genutiltypes.ModuleName,
@@ -1242,6 +1362,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
@@ -1253,8 +1374,10 @@ func New(
 		epochsmoduletypes.ModuleName,
 		capabilitytypes.ModuleName,
 		banktypes.ModuleName,
-
+		distrtypes.ModuleName,
+		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
+		govtypes.ModuleName,
 		crisistypes.ModuleName,
 		ibcexported.ModuleName,
 		genutiltypes.ModuleName,
@@ -1278,6 +1401,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		authz.ModuleName,
 		// Auth must be migrated after staking.
@@ -1350,6 +1474,7 @@ func New(
 			process.FullNodeProcessProposalHandler(
 				txConfig,
 				app.ClobKeeper,
+				app.StakingKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
 			),
@@ -1359,6 +1484,7 @@ func New(
 			process.ProcessProposalHandler(
 				txConfig,
 				app.ClobKeeper,
+				app.StakingKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
 				app.RatelimitKeeper,
@@ -1725,7 +1851,10 @@ func initParamsKeeper(
 
 	paramsKeeper.Subspace(authtypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)
+	paramsKeeper.Subspace(stakingtypes.ModuleName)
+	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
+	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable()) //nolint:staticcheck
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibcconsumertypes.ModuleName)
 
