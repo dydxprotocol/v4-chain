@@ -1,4 +1,4 @@
-package ethos_testutils
+package validator_testutils
 
 import (
 	"cosmossdk.io/math"
@@ -47,7 +47,7 @@ func BuildAndMockTestValidator(
 	return val
 }
 
-func NewGetAllCCValidatorMockReturn(
+func NewTotalBondedTokensMockReturn(
 	ctx sdk.Context,
 	names []string,
 ) *mocks.ValidatorStore {
