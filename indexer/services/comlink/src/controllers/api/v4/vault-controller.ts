@@ -662,7 +662,7 @@ async function getVaultMapping(): Promise<VaultMapping> {
     }
     validVaultMapping[subaccountId] = vaultMapping[subaccountId];
   }
-  return vaultMapping;
+  return validVaultMapping;
 }
 
 export default router;
