@@ -16,6 +16,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
@@ -34,7 +35,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
 
 var (
@@ -60,8 +60,8 @@ func TestKeeperTestSuite(t *testing.T) {
 	testifysuite.Run(t, new(KeeperTestSuite))
 }
 
-func createSignersByAddress(t *testing.T, val *ccvtypes.CrossChainValidator) (string, cmttypes.PrivValidator, *cmttypes.Validator) {
-	consAddress := sdktypes.ConsAddress(val.Address)
+func createSignersByAddress(t *testing.T, val *stakingtypes.Validator) (string, cmttypes.PrivValidator, *cmttypes.Validator) {
+	consAddress := sdktypes.ConsAddress(val.ConsensusPubkey.GetValue())
 	privKey := constants.GetPrivKeyFromConsAddress(consAddress)
 	edPriv := ed25519.PrivKey(privKey.Bytes())
 	priv := cmttypes.MockPV{
@@ -215,8 +215,11 @@ func setupChainForIBC(
 
 	txConfig := tApp.App.GetTxConfig()
 
-	// convert ccv validators to standard validators
-	vals := tApp.App.ConsumerKeeper.GetAllCCValidator(ctx)
+	// convert cosmos sdk validators to cmt validators
+	vals, err := tApp.App.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	if err != nil {
+		panic(err)
+	}
 	validators := make([]*cmttypes.Validator, len(vals))
 	signers := make(map[string]cmttypes.PrivValidator, len(validators))
 	for i, val := range vals {

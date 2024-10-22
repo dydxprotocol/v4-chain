@@ -8,6 +8,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
 	testutil "github.com/ethos-works/ethos/ethos-chain/testutil/integration"
 )
 
@@ -74,6 +75,11 @@ func (app *App) GetIBCKeeper() *ibckeeper.Keeper {
 // GetScopedIBCKeeper implements the TestingApp interface.
 func (app *App) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return app.ScopedIBCKeeper
+}
+
+// GetStakingKeeper implements the TestingApp interface.
+func (app *App) GetStakingKeeper() ibctestingtypes.StakingKeeper {
+	return *app.StakingKeeper
 }
 
 // GetTxConfig implements the TestingApp interface.
