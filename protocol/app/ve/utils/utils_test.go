@@ -10,7 +10,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	ethosutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ethos"
 	cometabcitypes "github.com/cometbft/cometbft/abci/types"
-
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cometbftproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -209,7 +208,7 @@ func TestGetValCmtPubKeyFromVote(t *testing.T) {
 	t.Run("Successful public key retrieval", func(t *testing.T) {
 		mockValidatorStore.On("GetCCValidator", mock.Anything, mock.Anything).Return(testVal, true).Once()
 
-		pubKey, err := veutils.GetValCmtPubKeyFromVote(ctx, mockVote, mockValidatorStore)
+		pubKey, err := veutils.GetValPubKeyFromVote(ctx, mockVote, mockValidatorStore)
 		require.NoError(t, err)
 		require.NotNil(t, pubKey)
 
@@ -228,7 +227,7 @@ func TestGetValCmtPubKeyFromVote(t *testing.T) {
 
 		mockValidatorStore.On("GetCCValidator", mock.Anything, mock.Anything).Return(ccvtypes.CrossChainValidator{}, false).Once()
 
-		_, err := veutils.GetValCmtPubKeyFromVote(ctx, unknownVote, mockValidatorStore)
+		_, err := veutils.GetValPubKeyFromVote(ctx, unknownVote, mockValidatorStore)
 		require.Error(t, err)
 		require.IsType(t, &veutils.ValidatorNotFoundError{}, err)
 	})
@@ -247,7 +246,7 @@ func TestGetValCmtPubKeyFromVote(t *testing.T) {
 
 		mockValidatorStore.On("GetCCValidator", mock.Anything, mock.Anything).Return(invalidVal, true).Once()
 
-		_, err := veutils.GetValCmtPubKeyFromVote(ctx, mockVote, mockValidatorStore)
+		_, err := veutils.GetValPubKeyFromVote(ctx, mockVote, mockValidatorStore)
 		require.Error(t, err)
 		require.IsType(t, &veutils.ValidatorNotFoundError{}, err)
 	})
@@ -259,7 +258,7 @@ func TestGetValCmtPubKeyFromVote(t *testing.T) {
 		}
 		mockValidatorStore.On("GetCCValidator", mock.Anything, mock.Anything).Return(invalidVal, true).Once()
 
-		_, err := veutils.GetValCmtPubKeyFromVote(ctx, mockVote, mockValidatorStore)
+		_, err := veutils.GetValPubKeyFromVote(ctx, mockVote, mockValidatorStore)
 		require.Error(t, err)
 		require.IsType(t, &veutils.ValidatorNotFoundError{}, err)
 	})

@@ -1,74 +1,88 @@
 package ethos_testutils
 
 import (
+	"cosmossdk.io/math"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func BuildCCValidator(name string, power int64) ccvtypes.CrossChainValidator {
+func BuildTestValidator(name string, bondedTokens math.Int) stakingtypes.ValidatorI {
 	switch name {
 	case "alice":
-		val, _ := ccvtypes.NewCCValidator(
-			constants.AliceEthosAddressBz,
-			power,
-			constants.AliceEthosPubKey,
-		)
+		val := stakingtypes.Validator{
+			Tokens:          bondedTokens,
+			Status:          stakingtypes.Bonded,
+			OperatorAddress: string(constants.AliceConsAddress),
+		}
 		return val
 	case "bob":
-		val, _ := ccvtypes.NewCCValidator(
-			constants.BobEthosAddressBz,
-			power,
-			constants.BobEthosPubKey,
-		)
+		val := stakingtypes.Validator{
+			Tokens:          bondedTokens,
+			Status:          stakingtypes.Bonded,
+			OperatorAddress: string(constants.BobConsAddress),
+		}
 		return val
 	case "carl":
-		val, _ := ccvtypes.NewCCValidator(
-			constants.CarlEthosAddressBz,
-			power,
-			constants.CarlEthosPubKey,
-		)
+		val := stakingtypes.Validator{
+			Tokens:          bondedTokens,
+			Status:          stakingtypes.Bonded,
+			OperatorAddress: string(constants.CarlConsAddress),
+		}
 		return val
 	default:
-		return ccvtypes.CrossChainValidator{}
+		return stakingtypes.Validator{}
 	}
 }
 
-func BuildAndMockCCValidator(
+func BuildAndMockTestValidator(
 	ctx sdk.Context,
 	name string,
-	power int64,
-	mCCVStore *mocks.CCValidatorStore,
-) ccvtypes.CrossChainValidator {
-	val := BuildCCValidator(name, power)
-	mCCVStore.On("GetCCValidator", ctx, val.Address).Return(val, true)
+	power math.Int,
+	mValStore *mocks.ValidatorStore,
+) stakingtypes.ValidatorI {
+	val := BuildTestValidator(name, power)
+	mValStore.On("ValidatorByConsAddr", ctx, GetConsAddressByName(name)).Return(val, nil)
 	return val
 }
 
 func NewGetAllCCValidatorMockReturn(
 	ctx sdk.Context,
 	names []string,
-) *mocks.CCValidatorStore {
-	mCCVStore := &mocks.CCValidatorStore{}
-	var vals []ccvtypes.CrossChainValidator
+) *mocks.ValidatorStore {
+	mValStore := &mocks.ValidatorStore{}
 	for _, name := range names {
-		vals = append(vals, BuildAndMockCCValidator(ctx, name, 500, mCCVStore))
+		BuildAndMockTestValidator(ctx, name, math.NewInt(500), mValStore)
 	}
-	mCCVStore.On("GetAllCCValidator", ctx).Return(vals)
-	return mCCVStore
+	mValStore.On("TotalBondedTokens", ctx).Return(math.NewInt(500*int64(len(names))), nil)
+	return mValStore
 }
 
-func NewGetAllCCValidatorMockReturnWithPowers(
+func NewTotalBondedTokensValidatorMockReturnWithPowers(
 	ctx sdk.Context,
 	names []string,
 	powers map[string]int64,
-) *mocks.CCValidatorStore {
-	mCCVStore := &mocks.CCValidatorStore{}
-	var vals []ccvtypes.CrossChainValidator
+) *mocks.ValidatorStore {
+	mValStore := &mocks.ValidatorStore{}
+	totalPower := math.NewInt(0)
 	for _, name := range names {
-		vals = append(vals, BuildAndMockCCValidator(ctx, name, powers[name], mCCVStore))
+		BuildAndMockTestValidator(ctx, name, math.NewInt(powers[name]), mValStore)
+		totalPower = totalPower.Add(math.NewInt(powers[name]))
 	}
-	mCCVStore.On("GetAllCCValidator", ctx).Return(vals)
-	return mCCVStore
+	mValStore.On("TotalBondedTokens", ctx).Return(totalPower, nil)
+	return mValStore
+}
+
+func GetConsAddressByName(name string) sdk.ConsAddress {
+	switch name {
+	case "alice":
+		return constants.AliceConsAddress
+	case "bob":
+		return constants.BobConsAddress
+	case "carl":
+		return constants.CarlConsAddress
+	default:
+		return nil
+	}
 }

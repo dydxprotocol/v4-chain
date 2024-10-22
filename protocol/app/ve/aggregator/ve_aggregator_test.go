@@ -42,7 +42,7 @@ func SetupTest(t *testing.T, vals []string, errorString string, initialSDAIPrice
 	mTimeProvider.On("Now").Return(constants.TimeT)
 	keepertest.CreateTestMarkets(t, ctx, pk)
 
-	mCCVStore := ethosutils.NewGetAllCCValidatorMockReturn(ctx, vals)
+	mValStore := ethosutils.NewGetAllCCValidatorMockReturn(ctx, vals)
 
 	var pricesAggregatorFn voteweighted.PricesAggregateFn
 	var conversionRateAggregatorFn voteweighted.ConversionRateAggregateFn
@@ -54,7 +54,7 @@ func SetupTest(t *testing.T, vals []string, errorString string, initialSDAIPrice
 	} else {
 		pricesAggregatorFn = voteweighted.MedianPrices(
 			ctx.Logger(),
-			mCCVStore,
+			mValStore,
 			voteweighted.DefaultPowerThreshold,
 		)
 	}
@@ -66,7 +66,7 @@ func SetupTest(t *testing.T, vals []string, errorString string, initialSDAIPrice
 	} else {
 		conversionRateAggregatorFn = voteweighted.MedianConversionRate(
 			ctx.Logger(),
-			mCCVStore,
+			mValStore,
 			voteweighted.DefaultPowerThreshold,
 		)
 	}

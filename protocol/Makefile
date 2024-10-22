@@ -256,6 +256,10 @@ test-unit-specific:
 	@echo "Running specific test: $(TESTNAME) in file: $(FILE)"
 	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' -timeout 20m -run "$(TESTNAME)" $(FILE)
 
+test-unit-file:
+	@echo "Running specific test: $(TESTNAME) in file: $(FILE)"
+	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' -timeout 20m $(FILE)
+
 test-unit-verbose:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -tags='test_ledger_mock $(build_tags)' -v -count=1 -failfast -cover ./...
 

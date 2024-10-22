@@ -2,6 +2,7 @@ package ve_utils
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"math/big"
 
@@ -9,12 +10,9 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
-
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
 
 type ValidatorNotFoundError struct {
@@ -26,7 +24,7 @@ func (e *ValidatorNotFoundError) Error() string {
 }
 
 type ValidatorStore interface {
-	GetCCValidator(ctx sdk.Context, addr []byte) (ccvtypes.CrossChainValidator, bool)
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
 func AreVEEnabled(ctx sdk.Context) bool {
@@ -90,43 +88,22 @@ func MarshalDelimited(msg proto.Message) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func GetValCmtPubKeyFromVote(
+func GetValPubKeyFromVote(
 	ctx sdk.Context,
 	vote cometabci.ExtendedVoteInfo,
 	validatorStore ValidatorStore,
 ) (crypto.PubKey, error) {
 	valConsAddr := sdk.ConsAddress(vote.Validator.Address)
-	validator, exists := validatorStore.GetCCValidator(ctx, vote.Validator.Address)
-	if !exists {
-		return nil, &ValidatorNotFoundError{Address: vote.Validator.Address}
-	}
 
-	pubKey, err := GetPubKeyByConsAddr(validator)
+	pubKeyProto, err := validatorStore.GetPubKeyByConsAddr(ctx, valConsAddr)
 	if err != nil {
-		return nil, &ValidatorNotFoundError{Address: vote.Validator.Address}
+		return nil, &ValidatorNotFoundError{Address: valConsAddr}
 	}
 
-	cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKey)
+	cmtPubKey, err := cryptoenc.PubKeyFromProto(pubKeyProto)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert validator %X public key: %w", valConsAddr, err)
 	}
+
 	return cmtPubKey, nil
-}
-
-func GetPubKeyByConsAddr(ccvalidator ccvtypes.CrossChainValidator) (cmtprotocrypto.PublicKey, error) {
-	if ccvalidator.Pubkey == nil {
-		return cmtprotocrypto.PublicKey{}, fmt.Errorf("public key is nil")
-	}
-
-	consPubKey, err := ccvalidator.ConsPubKey()
-	if err != nil {
-		return cmtprotocrypto.PublicKey{}, fmt.Errorf("could not get pubkey for val %s: %w", ccvalidator.String(), err)
-	}
-
-	tmPubKey, err := cryptocodec.ToCmtProtoPublicKey(consPubKey)
-	if err != nil {
-		return cmtprotocrypto.PublicKey{}, err
-	}
-
-	return tmPubKey, nil
 }
