@@ -242,6 +242,7 @@ export async function findFundingIndexMaps(
     .sort();
   // Get the min height to limit the search to blocks 4 hours or before the min height.
   const minHeight: number = heightNumbers[0];
+  const maxheight: number = heightNumbers[heightNumbers.length - 1];
 
   const result: {
     rows: FundingIndexUpdatesFromDatabaseWithSearchHeight[],
@@ -255,6 +256,7 @@ export async function findFundingIndexMaps(
       unnest(ARRAY[${heightNumbers.join(',')}]) AS "searchHeight"
     WHERE
       "effectiveAtHeight" > ${Big(minHeight).minus(FOUR_HOUR_OF_BLOCKS).toFixed()} AND
+      "effectiveAtHeight" <= ${Big(maxheight)} AND
       "effectiveAtHeight" <= "searchHeight"
     ORDER BY
       "perpetualId",
