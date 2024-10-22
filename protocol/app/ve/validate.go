@@ -2,7 +2,6 @@ package ve
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"math/big"
@@ -10,14 +9,13 @@ import (
 	"cosmossdk.io/core/comet"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	daiUtils "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -31,13 +29,6 @@ type ValidateVEConsensusInfoFn func(
 	ctx sdk.Context,
 	extInfo cometabci.ExtendedCommitInfo,
 ) error
-
-// ValidatorStore defines the interface contract require for verifying vote
-// extension signatures. Typically, this will be implemented by the x/staking
-// module, which has knowledge of the CometBFT public key.
-type ValidatorStore interface {
-	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
-}
 
 // ---------------------------- VE VALIDATION ----------------------------
 
@@ -309,7 +300,7 @@ func pruneVoteFromExtCommitInfo(
 // ---------------------------- CONSENSUS VALIDATION ----------------------------
 
 // NewDefaultValidateVoteExtensionsFn returns a new DefaultValidateVoteExtensionsFn.
-func NewValidateVEConsensusInfo(validatorStore ValidatorStore) ValidateVEConsensusInfoFn {
+func NewValidateVEConsensusInfo(validatorStore voteweighted.ValidatorStore) ValidateVEConsensusInfoFn {
 	return func(ctx sdk.Context, info cometabci.ExtendedCommitInfo) error {
 		return ValidateVEConsensusInfo(ctx, validatorStore, info)
 	}
@@ -322,7 +313,7 @@ func NewValidateVEConsensusInfo(validatorStore ValidatorStore) ValidateVEConsens
 // power is received.
 func ValidateVEConsensusInfo(
 	ctx sdk.Context,
-	valStore ValidatorStore,
+	valStore voteweighted.ValidatorStore,
 	extCommit cometabci.ExtendedCommitInfo,
 ) error {
 	currentHeight := ctx.HeaderInfo().Height

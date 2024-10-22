@@ -39,7 +39,6 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=ExtendVotePerpetualsKeeper --dir=./app/ve --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ExtendVoteClobKeeper --dir=./app/ve --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ValidatorStore --dir=./app/ve/math --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=ValidatorPubKeyStore --dir=./app/ve/utils --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=VEApplierPricesKeeper --dir=./app/ve/applier --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=VEApplierRatelimitKeeper --dir=./app/ve/applier --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=VoteAggregator --dir=./app/ve/aggregator --recursive --output=./mocks

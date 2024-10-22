@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"sort"
 
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"cosmossdk.io/log"
@@ -15,6 +17,7 @@ import (
 type ValidatorStore interface {
 	ValidatorByConsAddr(ctx context.Context, addr sdk.ConsAddress) (stakingtypes.ValidatorI, error)
 	TotalBondedTokens(ctx context.Context) (math.Int, error)
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
 type AggregatorPricePair struct {
