@@ -644,6 +644,7 @@ async function getVaultMapping(): Promise<VaultMapping> {
       return vault.clobPairId;
     }),
   );
+  const validVaultMapping: VaultMapping = {};
   for (const subaccountId of _.keys(vaultMapping)) {
     const perpetual: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(
@@ -656,10 +657,10 @@ async function getVaultMapping(): Promise<VaultMapping> {
           'perpetual market.',
         subaccountId,
       });
-      delete vaultMapping[subaccountId];
+      validVaultMapping[subaccountId] = vaultMapping[subaccountId];
     }
   }
-  return vaultMapping;
+  return validVaultMapping;
 }
 
 export default router;
