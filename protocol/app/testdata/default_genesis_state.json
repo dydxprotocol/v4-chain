@@ -44,28 +44,6 @@
       ]
     }
   },
-  "ccvconsumer": {
-    "params": {
-      "enabled": false,
-      "blocks_per_distribution_transmission": "1000",
-      "distribution_transmission_channel": "",
-      "provider_fee_pool_addr_str": "",
-      "ccv_timeout_period": "2419200s",
-      "transfer_timeout_period": "3600s",
-      "consumer_redistribution_fraction": "0.75",
-      "historical_entries": "10000",
-      "unbonding_period": "604800s",
-      "reward_denoms": [],
-      "provider_reward_denoms": [],
-      "retry_delay_period": "3600s"
-    },
-    "new_chain": false,
-    "provider": {
-      "client_state": null,
-      "consensus_state": null,
-      "initial_val_set": []
-    }
-  },
   "capability": {
     "index": "1",
     "owners": []
