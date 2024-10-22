@@ -2,14 +2,13 @@ package ve_utils
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"math/big"
 
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
@@ -21,10 +20,6 @@ type ValidatorNotFoundError struct {
 
 func (e *ValidatorNotFoundError) Error() string {
 	return fmt.Sprintf("validator %X not found", e.Address)
-}
-
-type ValidatorPubKeyStore interface {
-	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
 func AreVEEnabled(ctx sdk.Context) bool {
@@ -91,7 +86,7 @@ func MarshalDelimited(msg proto.Message) ([]byte, error) {
 func GetValPubKeyFromVote(
 	ctx sdk.Context,
 	vote cometabci.ExtendedVoteInfo,
-	validatorStore ValidatorPubKeyStore,
+	validatorStore voteweighted.ValidatorStore,
 ) (crypto.PubKey, error) {
 	valConsAddr := sdk.ConsAddress(vote.Validator.Address)
 

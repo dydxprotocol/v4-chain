@@ -4,32 +4,36 @@ import (
 	"cosmossdk.io/math"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func BuildTestValidator(name string, bondedTokens math.Int) stakingtypes.ValidatorI {
+	alicePubKey, _ := codectypes.NewAnyWithValue(constants.AlicePubKey)
+	bobPubKey, _ := codectypes.NewAnyWithValue(constants.BobPubKey)
+	carlPubKey, _ := codectypes.NewAnyWithValue(constants.CarlPubKey)
 	switch name {
 	case "alice":
 		val := stakingtypes.Validator{
 			Tokens:          bondedTokens,
 			Status:          stakingtypes.Bonded,
-			OperatorAddress: string(constants.AliceConsAddress),
+			ConsensusPubkey: alicePubKey,
 		}
 		return val
 	case "bob":
 		val := stakingtypes.Validator{
 			Tokens:          bondedTokens,
 			Status:          stakingtypes.Bonded,
-			OperatorAddress: string(constants.BobConsAddress),
+			ConsensusPubkey: bobPubKey,
 		}
 		return val
 	case "carl":
 		val := stakingtypes.Validator{
 			Tokens:          bondedTokens,
 			Status:          stakingtypes.Bonded,
-			OperatorAddress: string(constants.CarlConsAddress),
+			ConsensusPubkey: carlPubKey,
 		}
 		return val
 	default:
