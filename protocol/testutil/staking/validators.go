@@ -5,6 +5,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 

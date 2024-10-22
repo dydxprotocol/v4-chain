@@ -12,8 +12,8 @@ import (
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	ethosutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ethos"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	valutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/staking"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	cometabci "github.com/cometbft/cometbft/abci/types"
@@ -42,7 +42,7 @@ func SetupTest(t *testing.T, vals []string, errorString string, initialSDAIPrice
 	mTimeProvider.On("Now").Return(constants.TimeT)
 	keepertest.CreateTestMarkets(t, ctx, pk)
 
-	mValStore := ethosutils.NewGetAllCCValidatorMockReturn(ctx, vals)
+	mValStore := valutils.NewTotalBondedTokensMockReturn(ctx, vals)
 
 	var pricesAggregatorFn voteweighted.PricesAggregateFn
 	var conversionRateAggregatorFn voteweighted.ConversionRateAggregateFn

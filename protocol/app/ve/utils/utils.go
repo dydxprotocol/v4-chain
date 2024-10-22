@@ -23,7 +23,7 @@ func (e *ValidatorNotFoundError) Error() string {
 	return fmt.Sprintf("validator %X not found", e.Address)
 }
 
-type ValidatorStore interface {
+type ValidatorPubKeyStore interface {
 	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 }
 
@@ -91,7 +91,7 @@ func MarshalDelimited(msg proto.Message) ([]byte, error) {
 func GetValPubKeyFromVote(
 	ctx sdk.Context,
 	vote cometabci.ExtendedVoteInfo,
-	validatorStore ValidatorStore,
+	validatorStore ValidatorPubKeyStore,
 ) (crypto.PubKey, error) {
 	valConsAddr := sdk.ConsAddress(vote.Validator.Address)
 

@@ -351,6 +351,9 @@ func getValidatorPowerByAddress(
 	validatorAddr string,
 ) (math.Int, error) {
 	address, err := sdk.ConsAddressFromBech32(validatorAddr)
+	if err != nil {
+		return math.NewInt(0), err
+	}
 	validator, err := validatorStore.ValidatorByConsAddr(ctx, address)
 	if err != nil {
 		return math.NewInt(0), err
