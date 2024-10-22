@@ -657,10 +657,11 @@ async function getVaultMapping(): Promise<VaultMapping> {
           'perpetual market.',
         subaccountId,
       });
-      validVaultMapping[subaccountId] = vaultMapping[subaccountId];
+      continue;
     }
+    validVaultMapping[subaccountId] = vaultMapping[subaccountId];
   }
-  return validVaultMapping;
+  return vaultMapping;
 }
 
 export default router;

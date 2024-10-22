@@ -256,7 +256,7 @@ export async function findFundingIndexMaps(
       unnest(ARRAY[${heightNumbers.join(',')}]) AS "searchHeight"
     WHERE
       "effectiveAtHeight" > ${Big(minHeight).minus(FOUR_HOUR_OF_BLOCKS).toFixed()} AND
-      "effectiveAtHeight" < ${Big(maxheight)} AND
+      "effectiveAtHeight" <= ${Big(maxheight)} AND
       "effectiveAtHeight" <= "searchHeight"
     ORDER BY
       "perpetualId",
