@@ -589,16 +589,17 @@ async function getFundingIndexMapsChunked(
     return parseInt(height, 10);
   }).sort();
   const aggregateFundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = {};
-  for (const chunk of getHeightWindows(updatedAtHeightsNum)) {
+  await Promise.all(getHeightWindows(updatedAtHeightsNum).map(
+   async (heightWindow: number[]): Promise<void> => {
     const fundingIndexMaps: {[blockHeight: string]: FundingIndexMap} = await
-    FundingIndexUpdatesTable
+      FundingIndexUpdatesTable
       .findFundingIndexMaps(
-        chunk.map((heightNum: number): string => { return heightNum.toString(); }),
+        heightWindow.map((heightNum: number): string => { return heightNum.toString(); }),
       );
     for (const height of _.keys(fundingIndexMaps)) {
       aggregateFundingIndexMaps[height] = fundingIndexMaps[height];
     }
-  }
+  }));
   return aggregateFundingIndexMaps;
 }
 
