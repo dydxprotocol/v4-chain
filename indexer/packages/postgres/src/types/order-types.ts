@@ -1,48 +1,48 @@
 /* ------- ORDER TYPES ------- */
 
-import { IsoString } from './utility-types';
+import { IsoString } from "./utility-types";
 
 export enum OrderSide {
-  BUY = 'BUY',
-  SELL = 'SELL',
+  BUY = "BUY",
+  SELL = "SELL",
 }
 
 export enum OrderStatus {
-  OPEN = 'OPEN',
-  FILLED = 'FILLED',
-  CANCELED = 'CANCELED',
-  BEST_EFFORT_CANCELED = 'BEST_EFFORT_CANCELED',
-  UNTRIGGERED = 'UNTRIGGERED',
+  OPEN = "OPEN",
+  FILLED = "FILLED",
+  CANCELED = "CANCELED",
+  BEST_EFFORT_CANCELED = "BEST_EFFORT_CANCELED",
+  UNTRIGGERED = "UNTRIGGERED",
 }
 
 export enum OrderType {
-  LIMIT = 'LIMIT',
-  MARKET = 'MARKET',
-  STOP_LIMIT = 'STOP_LIMIT',
-  STOP_MARKET = 'STOP_MARKET',
-  TRAILING_STOP = 'TRAILING_STOP',
-  TAKE_PROFIT = 'TAKE_PROFIT',
-  TAKE_PROFIT_MARKET = 'TAKE_PROFIT_MARKET',
-  HARD_TRADE = 'HARD_TRADE',
-  FAILED_HARD_TRADE = 'FAILED_HARD_TRADE',
-  TRANSFER_PLACEHOLDER = 'TRANSFER_PLACEHOLDER',
+  LIMIT = "LIMIT",
+  MARKET = "MARKET",
+  STOP_LIMIT = "STOP_LIMIT",
+  STOP_MARKET = "STOP_MARKET",
+  TRAILING_STOP = "TRAILING_STOP",
+  TAKE_PROFIT = "TAKE_PROFIT",
+  TAKE_PROFIT_MARKET = "TAKE_PROFIT_MARKET",
+  HARD_TRADE = "HARD_TRADE",
+  FAILED_HARD_TRADE = "FAILED_HARD_TRADE",
+  TRANSFER_PLACEHOLDER = "TRANSFER_PLACEHOLDER",
 }
 
 export enum TimeInForce {
   // GTT represents Good-Til-Time, where an order will first match with existing orders on the book
   // and any remaining size will be added to the book as a maker order, which will expire at a
   // given expiry time.
-  GTT = 'GTT',
+  GTT = "GTT",
   // FOK represents Fill-Or-KILl where it's enforced that an order will either be filled
   // completely and immediately by maker orders on the book or canceled if the entire amount can't
   // be filled.
-  FOK = 'FOK',
+  FOK = "FOK",
   // IOC represents Immediate-Or-Cancel, where it's enforced that an order only be matched with
   // maker orders on the book. If the order has remaining size after matching with existing orders
   // on the book, the remaining size is not placed on the book.
-  IOC = 'IOC',
+  IOC = "IOC",
   // POST_ONLY is where it's enforced that an order only be placed on the book as a maker order.
-  POST_ONLY = 'POST_ONLY',
+  POST_ONLY = "POST_ONLY",
 }
 
 export interface OrderCreateObject {
@@ -68,7 +68,7 @@ export interface OrderCreateObject {
   routerFeePpm: string;
   routerFeeSubaccountOwner?: string;
   routerFeeSubaccountNumber?: string;
-  triggerPrice?: string,
+  triggerPrice?: string;
 }
 
 export interface OrderUpdateObject {
@@ -95,29 +95,29 @@ export interface OrderUpdateObject {
 }
 
 export enum OrderColumns {
-  id = 'id',
-  subaccountId = 'subaccountId',
-  clientId = 'clientId',
-  clobPairId = 'clobPairId',
-  side = 'side',
-  size = 'size',
-  totalFilled = 'totalFilled',
-  price = 'price',
-  type = 'type',
-  status = 'status',
-  timeInForce = 'timeInForce',
-  reduceOnly = 'reduceOnly',
-  goodTilBlock = 'goodTilBlock',
-  goodTilBlockTime = 'goodTilBlockTime',
-  perpetualId = 'perpetualId',
-  openEventId = 'openEventId',
-  orderFlags = 'orderFlags',
-  updatedAt = 'updatedAt',
-  updatedAtHeight = 'updatedAtHeight',
-  createdAtHeight = 'createdAtHeight',
-  clientMetadata = 'clientMetadata',
-  triggerPrice = 'triggerPrice',
-  routerFeePpm = 'routerFeePpm',
-  routerFeeSubaccountOwner = 'routerFeeSubaccountOwner',
-  routerFeeSubaccountNumber = 'routerFeeSubaccountNumber',
+  id = "id",
+  subaccountId = "subaccountId",
+  clientId = "clientId",
+  clobPairId = "clobPairId",
+  side = "side",
+  size = "size",
+  totalFilled = "totalFilled",
+  price = "price",
+  type = "type",
+  status = "status",
+  timeInForce = "timeInForce",
+  reduceOnly = "reduceOnly",
+  goodTilBlock = "goodTilBlock",
+  goodTilBlockTime = "goodTilBlockTime",
+  perpetualId = "perpetualId",
+  openEventId = "openEventId",
+  orderFlags = "orderFlags",
+  updatedAt = "updatedAt",
+  updatedAtHeight = "updatedAtHeight",
+  createdAtHeight = "createdAtHeight",
+  clientMetadata = "clientMetadata",
+  triggerPrice = "triggerPrice",
+  routerFeePpm = "routerFeePpm",
+  routerFeeSubaccountOwner = "routerFeeSubaccountOwner",
+  routerFeeSubaccountNumber = "routerFeeSubaccountNumber",
 }

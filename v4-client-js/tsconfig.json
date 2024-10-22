@@ -11,10 +11,14 @@
     "scripts",
     "src", 
     "codegen.js",
-    "node_modules/@dydxprotocol/v4-proto/**/**.ts"
+    "../v4-proto-js/**/**.ts"
   ],
   "compilerOptions": {
     "outDir": "build",
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+     "baseUrl": "./",  
+     "paths": {
+         "@dydxprotocol/v4-proto/*": ["../v4-proto-js/*"]
+       }
   }
 }

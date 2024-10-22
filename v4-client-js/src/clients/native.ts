@@ -2,26 +2,39 @@
     Native app can call JS functions with primitives.
 */
 
-import { EncodeObject } from '@cosmjs/proto-signing';
-import { accountFromAny } from '@cosmjs/stargate';
-import { Order_Side, Order_TimeInForce } from '@dydxprotocol/v4-proto/src/codegen/dydxprotocol/clob/order';
-import * as AuthModule from 'cosmjs-types/cosmos/auth/v1beta1/query';
-import Long from 'long';
-
-import { BECH32_PREFIX, GAS_MULTIPLIER, NOBLE_BECH32_PREFIX } from '../lib/constants';
-import { UserError } from '../lib/errors';
-import { ByteArrayEncoding, encodeJson } from '../lib/helpers';
-import { deriveHDKeyFromEthereumSignature } from '../lib/onboarding';
-import { NetworkOptimizer } from '../network_optimizer';
-import { CompositeClient, MarketInfo } from './composite-client';
+import { EncodeObject } from "@cosmjs/proto-signing";
+import { accountFromAny } from "@cosmjs/stargate";
 import {
-  Network, OrderType, OrderSide, OrderTimeInForce, OrderExecution, IndexerConfig, ValidatorConfig,
-} from './constants';
-import { FaucetClient } from './faucet-client';
-import LocalWallet from './modules/local-wallet';
-import { NobleClient } from './noble-client';
-import { SubaccountInfo } from './subaccount';
-import { OrderFlags } from './types';
+  Order_Side,
+  Order_TimeInForce,
+} from "@dydxprotocol/v4-proto/src/codegen/dydxprotocol/clob/order";
+import * as AuthModule from "cosmjs-types/cosmos/auth/v1beta1/query";
+import Long from "long";
+
+import {
+  BECH32_PREFIX,
+  GAS_MULTIPLIER,
+  NOBLE_BECH32_PREFIX,
+} from "../lib/constants";
+import { UserError } from "../lib/errors";
+import { ByteArrayEncoding, encodeJson } from "../lib/helpers";
+import { deriveHDKeyFromEthereumSignature } from "../lib/onboarding";
+import { NetworkOptimizer } from "../network_optimizer";
+import { CompositeClient, MarketInfo } from "./composite-client";
+import {
+  Network,
+  OrderType,
+  OrderSide,
+  OrderTimeInForce,
+  OrderExecution,
+  IndexerConfig,
+  ValidatorConfig,
+} from "./constants";
+import { FaucetClient } from "./faucet-client";
+import LocalWallet from "./modules/local-wallet";
+import { NobleClient } from "./noble-client";
+import { SubaccountInfo } from "./subaccount";
+import { OrderFlags } from "./types";
 
 declare global {
   // eslint-disable-next-line vars-on-top, no-var
@@ -37,9 +50,7 @@ declare global {
   var nobleWallet: LocalWallet | undefined;
 }
 
-export async function connectClient(
-  network: Network,
-): Promise<string> {
+export async function connectClient(network: Network): Promise<string> {
   try {
     globalThis.client = await CompositeClient.connect(network);
     return encodeJson(network);
@@ -48,9 +59,7 @@ export async function connectClient(
   }
 }
 
-export async function connectNetwork(
-  paramsJSON: string,
-): Promise<string> {
+export async function connectNetwork(paramsJSON: string): Promise<string> {
   try {
     const params = JSON.parse(paramsJSON);
     const {
@@ -68,17 +77,21 @@ export async function connectNetwork(
       CHAINTOKEN_GAS_DENOM,
     } = params;
 
-    if (indexerUrl === undefined ||
+    if (
+      indexerUrl === undefined ||
       websocketUrl === undefined ||
       validatorUrl === undefined ||
-      chainId === undefined) {
-      throw new UserError('Missing required network params');
+      chainId === undefined
+    ) {
+      throw new UserError("Missing required network params");
     }
-    if (TDAI_DENOM === undefined ||
+    if (
+      TDAI_DENOM === undefined ||
       TDAI_DECIMALS === undefined ||
       CHAINTOKEN_DENOM === undefined ||
-      CHAINTOKEN_DECIMALS === undefined) {
-      throw new UserError('Missing required token params');
+      CHAINTOKEN_DECIMALS === undefined
+    ) {
+      throw new UserError("Missing required token params");
     }
 
     const indexerConfig = new IndexerConfig(indexerUrl, websocketUrl);
@@ -90,7 +103,7 @@ export async function connectNetwork(
       CHAINTOKEN_DECIMALS,
       CHAINTOKEN_GAS_DENOM,
     });
-    const config = new Network('native', indexerConfig, validatorConfig);
+    const config = new Network("native", indexerConfig, validatorConfig);
     globalThis.client = await CompositeClient.connect(config);
     if (faucetUrl !== undefined) {
       globalThis.faucetClient = new FaucetClient(faucetUrl);
@@ -98,7 +111,8 @@ export async function connectNetwork(
       globalThis.faucetClient = null;
     }
     globalThis.nobleClient = new NobleClient(nobleValidatorUrl);
-    if (globalThis.nobleWallet) await globalThis.nobleClient.connect(globalThis.nobleWallet);
+    if (globalThis.nobleWallet)
+      await globalThis.nobleClient.connect(globalThis.nobleWallet);
 
     return encodeJson(config);
   } catch (e) {
@@ -106,14 +120,12 @@ export async function connectNetwork(
   }
 }
 
-export async function connectWallet(
-  mnemonic: string,
-): Promise<string> {
+export async function connectWallet(mnemonic: string): Promise<string> {
   try {
     globalThis.wallet = await LocalWallet.fromMnemonic(mnemonic, BECH32_PREFIX);
     globalThis.nobleWallet = await LocalWallet.fromMnemonic(
       mnemonic,
-      NOBLE_BECH32_PREFIX,
+      NOBLE_BECH32_PREFIX
     );
     await globalThis.nobleClient?.connect(globalThis.nobleWallet);
 
@@ -126,7 +138,7 @@ export async function connectWallet(
 
 export async function connect(
   network: Network,
-  mnemonic: string,
+  mnemonic: string
 ): Promise<string> {
   try {
     await connectClient(network);
@@ -136,7 +148,9 @@ export async function connect(
   }
 }
 
-export async function deriveMnemomicFromEthereumSignature(signature: string): Promise<string> {
+export async function deriveMnemomicFromEthereumSignature(
+  signature: string
+): Promise<string> {
   try {
     const { mnemonic } = deriveHDKeyFromEthereumSignature(signature);
     const wallet = await LocalWallet.fromMnemonic(mnemonic, BECH32_PREFIX);
@@ -153,7 +167,9 @@ export async function getHeight(): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const block = await globalThis.client?.validatorClient.get.latestBlock();
     return encodeJson(block);
@@ -166,7 +182,9 @@ export async function getFeeTiers(): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const feeTiers = await globalThis.client?.validatorClient.get.getFeeTiers();
     return encodeJson(feeTiers);
@@ -179,9 +197,12 @@ export async function getUserFeeTier(address: string): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
-    const feeTiers = await globalThis.client?.validatorClient.get.getUserFeeTier(address);
+    const feeTiers =
+      await globalThis.client?.validatorClient.get.getUserFeeTier(address);
     return encodeJson(feeTiers);
   } catch (e) {
     return wrappedError(e);
@@ -192,10 +213,12 @@ export async function getEquityTiers(): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
-    const equityTiers = await globalThis.client?.validatorClient.get
-      .getEquityTierLimitConfiguration();
+    const equityTiers =
+      await globalThis.client?.validatorClient.get.getEquityTierLimitConfiguration();
     return encodeJson(equityTiers, ByteArrayEncoding.BIGINT);
   } catch (e) {
     return wrappedError(e);
@@ -206,57 +229,60 @@ export async function getPerpetualMarkets(): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
-    const markets = await globalThis.client?.indexerClient.markets.getPerpetualMarkets();
+    const markets =
+      await globalThis.client?.indexerClient.markets.getPerpetualMarkets();
     return encodeJson(markets);
   } catch (e) {
     return wrappedError(e);
   }
 }
 
-export async function placeOrder(
-  payload: string,
-): Promise<string> {
+export async function placeOrder(payload: string): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
     const json = JSON.parse(payload);
 
     const subaccountNumber = json.subaccountNumber;
     if (subaccountNumber === undefined) {
-      throw new UserError('subaccountNumber is not set');
+      throw new UserError("subaccountNumber is not set");
     }
     const marketId = json.marketId;
     if (marketId === undefined) {
-      throw new UserError('marketId is not set');
+      throw new UserError("marketId is not set");
     }
     const type = json.type;
     if (type === undefined) {
-      throw new UserError('type is not set');
+      throw new UserError("type is not set");
     }
     const side = json.side;
     if (side === undefined) {
-      throw new UserError('side is not set');
+      throw new UserError("side is not set");
     }
     const price = json.price;
     if (price === undefined) {
-      throw new UserError('price is not set');
+      throw new UserError("price is not set");
     }
     // trigger_price: number,   // not used for MARKET and LIMIT
     const size = json.size;
     if (size === undefined) {
-      throw new UserError('size is not set');
+      throw new UserError("size is not set");
     }
     const clientId = json.clientId;
     if (clientId === undefined) {
-      throw new UserError('clientId is not set');
+      throw new UserError("clientId is not set");
     }
     const timeInForce = json.timeInForce;
     const goodTilTimeInSeconds = json.goodTilTimeInSeconds;
@@ -291,7 +317,7 @@ export async function placeOrder(
       currentHeight,
       routerFeePpm,
       routerFeeSubaccountOwner,
-      routerFeeSubaccountNumber,
+      routerFeeSubaccountNumber
     );
     return encodeJson(tx);
   } catch (error) {
@@ -304,35 +330,35 @@ export function wrappedError(error: Error): string {
   return `{"error": ${text}}`;
 }
 
-export async function cancelOrder(
-  payload: string,
-): Promise<string> {
+export async function cancelOrder(payload: string): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectNetwork() first');
+      throw new UserError(
+        "client is not connected. Call connectNetwork() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
     const json = JSON.parse(payload);
 
     const subaccountNumber = json.subaccountNumber;
     if (subaccountNumber === undefined) {
-      throw new UserError('subaccountNumber is not set');
+      throw new UserError("subaccountNumber is not set");
     }
     const clientId = json.clientId;
     if (clientId === undefined) {
-      throw new UserError('clientId is not set');
+      throw new UserError("clientId is not set");
     }
     const orderFlags = json.orderFlags;
     if (orderFlags === undefined) {
-      throw new UserError('orderFlags is not set');
+      throw new UserError("orderFlags is not set");
     }
     const clobPairId = json.clobPairId;
     if (clobPairId === undefined) {
-      throw new UserError('clobPairId is not set');
+      throw new UserError("clobPairId is not set");
     }
     const goodTilBlock = json.goodTilBlock;
     const goodTilBlockTime = json.goodTilBlockTime;
@@ -344,7 +370,7 @@ export async function cancelOrder(
       orderFlags,
       clobPairId,
       goodTilBlock !== 0 ? goodTilBlock : undefined,
-      goodTilBlockTime !== 0 ? goodTilBlockTime : undefined,
+      goodTilBlockTime !== 0 ? goodTilBlockTime : undefined
     );
     return encodeJson(tx);
   } catch (error) {
@@ -352,68 +378,65 @@ export async function cancelOrder(
   }
 }
 
-export async function deposit(
-  payload: string,
-): Promise<string> {
+export async function deposit(payload: string): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectNetwork() first');
+      throw new UserError(
+        "client is not connected. Call connectNetwork() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
 
     const json = JSON.parse(payload);
     const subaccountNumber = json.subaccountNumber;
     if (subaccountNumber === undefined) {
-      throw new UserError('subaccountNumber is not set');
+      throw new UserError("subaccountNumber is not set");
     }
     const amount = json.amount;
     if (amount === undefined) {
-      throw new UserError('amount is not set');
+      throw new UserError("amount is not set");
     }
 
     const subaccount = new SubaccountInfo(wallet, subaccountNumber);
-    const tx = await client.depositToSubaccount(
-      subaccount,
-      amount,
-    );
+    const tx = await client.depositToSubaccount(subaccount, amount);
     return encodeJson(tx);
   } catch (error) {
     return wrappedError(error);
   }
 }
 
-export async function withdraw(
-  payload: string,
-): Promise<string> {
+export async function withdraw(payload: string): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectNetwork() first');
+      throw new UserError(
+        "client is not connected. Call connectNetwork() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
 
     const json = JSON.parse(payload);
     const subaccountNumber = json.subaccountNumber;
     if (subaccountNumber === undefined) {
-      throw new UserError('subaccountNumber is not set');
+      throw new UserError("subaccountNumber is not set");
     }
     const amount = json.amount;
     if (amount === undefined) {
-      throw new UserError('amount is not set');
+      throw new UserError("amount is not set");
     }
 
     const subaccount = new SubaccountInfo(wallet, subaccountNumber);
     const tx = await client.withdrawFromSubaccount(
       subaccount,
       amount,
-      json.recipient,
+      json.recipient
     );
     return encodeJson(tx);
   } catch (error) {
@@ -421,30 +444,34 @@ export async function withdraw(
   }
 }
 
-export async function faucet(
-  payload: string,
-): Promise<string> {
+export async function faucet(payload: string): Promise<string> {
   try {
     const faucetClient = globalThis.faucetClient;
     if (!faucetClient) {
-      throw new UserError('faucetClient is not connected. Call connectNetwork() first');
+      throw new UserError(
+        "faucetClient is not connected. Call connectNetwork() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
 
     const json = JSON.parse(payload);
     const subaccountNumber = json.subaccountNumber;
     if (subaccountNumber === undefined) {
-      throw new UserError('subaccountNumber is not set');
+      throw new UserError("subaccountNumber is not set");
     }
     const amount = json.amount;
     if (amount === undefined) {
-      throw new UserError('amount is not set');
+      throw new UserError("amount is not set");
     }
 
-    const response = await faucetClient.fill(wallet.address!, subaccountNumber, amount);
+    const response = await faucetClient.fill(
+      wallet.address!,
+      subaccountNumber,
+      amount
+    );
 
     return encodeJson(response);
   } catch (error) {
@@ -455,19 +482,22 @@ export async function faucet(
 export async function withdrawToIBC(
   subaccountNumber: number,
   amount: string,
-  payload: string,
+  payload: string
 ): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
 
-    const decode = (str: string):string => Buffer.from(str, 'base64').toString('binary');
+    const decode = (str: string): string =>
+      Buffer.from(str, "base64").toString("binary");
     const decoded = decode(payload);
 
     const json = JSON.parse(decoded);
@@ -478,10 +508,15 @@ export async function withdrawToIBC(
     };
 
     const subaccount = new SubaccountInfo(wallet, subaccountNumber);
-    const subaccountMsg = client.withdrawFromSubaccountMessage(subaccount, amount);
+    const subaccountMsg = client.withdrawFromSubaccountMessage(
+      subaccount,
+      amount
+    );
 
     const msgs = [subaccountMsg, ibcMsg];
-    const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) => resolve(msgs));
+    const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) =>
+      resolve(msgs)
+    );
 
     const tx = await client.send(
       wallet,
@@ -490,7 +525,7 @@ export async function withdrawToIBC(
       },
       false,
       undefined,
-      undefined,
+      undefined
     );
     return encodeJson(tx);
   } catch (error) {
@@ -498,39 +533,41 @@ export async function withdrawToIBC(
   }
 }
 
-export async function transferNativeToken(
-  payload: string,
-): Promise<string> {
+export async function transferNativeToken(payload: string): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
 
     const json = JSON.parse(payload);
     const amount = json.amount;
     if (amount === undefined) {
-      throw new UserError('amount is not set');
+      throw new UserError("amount is not set");
     }
 
     const msg: EncodeObject = client.sendTokenMessage(
       wallet,
       amount,
-      json.recipient,
+      json.recipient
     );
     const msgs = [msg];
-    const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) => resolve(msgs));
+    const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) =>
+      resolve(msgs)
+    );
 
     const tx = await client.send(
       wallet,
       () => {
         return encodeObjects;
       },
-      false,
+      false
     );
     return encodeJson(tx);
   } catch (error) {
@@ -542,16 +579,20 @@ export async function getAccountBalance(): Promise<String> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
     const address = globalThis.wallet.address!;
 
-    const tx = await client.validatorClient.get
-      .getAccountBalance(address, client.validatorClient.config.denoms.TDAI_DENOM);
+    const tx = await client.validatorClient.get.getAccountBalance(
+      address,
+      client.validatorClient.config.denoms.TDAI_DENOM
+    );
     return encodeJson(tx);
   } catch (error) {
     return wrappedError(error);
@@ -562,11 +603,13 @@ export async function getAccountBalances(): Promise<String> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
     const address = globalThis.wallet.address!;
 
@@ -577,18 +620,18 @@ export async function getAccountBalances(): Promise<String> {
   }
 }
 
-export async function getUserStats(
-  payload: string,
-): Promise<String> {
+export async function getUserStats(payload: string): Promise<String> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const json = JSON.parse(payload);
     const address = json.address;
     if (address === undefined) {
-      throw new UserError('address is not set');
+      throw new UserError("address is not set");
     }
 
     const tx = await client.validatorClient.get.getUserStats(address);
@@ -598,85 +641,83 @@ export async function getUserStats(
   }
 }
 
-export async function simulateDeposit(
-  payload: string,
-): Promise<string> {
+export async function simulateDeposit(payload: string): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
     const json = JSON.parse(payload);
     const subaccountNumber = json.subaccountNumber;
     if (subaccountNumber === undefined) {
-      throw new UserError('subaccountNumber is not set');
+      throw new UserError("subaccountNumber is not set");
     }
     const amount = json.amount;
     if (amount === undefined) {
-      throw new UserError('amount is not set');
+      throw new UserError("amount is not set");
     }
 
     const subaccount = new SubaccountInfo(wallet, subaccountNumber);
     const msg: EncodeObject = client.depositToSubaccountMessage(
       subaccount,
-      amount,
+      amount
     );
     const msgs: EncodeObject[] = [msg];
-    const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) => resolve(msgs));
-
-    const stdFee = await client.simulate(
-      globalThis.wallet,
-      () => {
-        return encodeObjects;
-      },
+    const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) =>
+      resolve(msgs)
     );
+
+    const stdFee = await client.simulate(globalThis.wallet, () => {
+      return encodeObjects;
+    });
     return JSON.stringify(stdFee);
   } catch (error) {
     return wrappedError(error);
   }
 }
 
-export async function simulateWithdraw(
-  payload: string,
-): Promise<string> {
+export async function simulateWithdraw(payload: string): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
     const json = JSON.parse(payload);
     const subaccountNumber = json.subaccountNumber;
     if (subaccountNumber === undefined) {
-      throw new UserError('subaccountNumber is not set');
+      throw new UserError("subaccountNumber is not set");
     }
     const amount = json.amount;
     if (amount === undefined) {
-      throw new UserError('amount is not set');
+      throw new UserError("amount is not set");
     }
 
     const subaccount = new SubaccountInfo(wallet, subaccountNumber);
     const msg: EncodeObject = client.withdrawFromSubaccountMessage(
       subaccount,
       amount,
-      json.recipient,
+      json.recipient
     );
     const msgs: EncodeObject[] = [msg];
-    const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) => resolve(msgs));
-
-    const stdFee = await client.simulate(
-      globalThis.wallet,
-      () => {
-        return encodeObjects;
-      },
+    const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) =>
+      resolve(msgs)
     );
+
+    const stdFee = await client.simulate(globalThis.wallet, () => {
+      return encodeObjects;
+    });
     return encodeJson(stdFee);
   } catch (error) {
     return wrappedError(error);
@@ -684,41 +725,42 @@ export async function simulateWithdraw(
 }
 
 export async function simulateTransferNativeToken(
-  payload: string,
+  payload: string
 ): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
     const json = JSON.parse(payload);
     const recipient = json.recipient;
     if (recipient === undefined) {
-      throw new UserError('recipient is not set');
+      throw new UserError("recipient is not set");
     }
     const amount = json.amount;
     if (amount === undefined) {
-      throw new UserError('amount is not set');
+      throw new UserError("amount is not set");
     }
 
     const msg: EncodeObject = client.sendTokenMessage(
       wallet,
       amount,
-      json.recipient,
+      json.recipient
     );
     const msgs: EncodeObject[] = [msg];
-    const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) => resolve(msgs));
-
-    const stdFee = await client.simulate(
-      globalThis.wallet,
-      () => {
-        return encodeObjects;
-      },
+    const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) =>
+      resolve(msgs)
     );
+
+    const stdFee = await client.simulate(globalThis.wallet, () => {
+      return encodeObjects;
+    });
     return encodeJson(stdFee);
   } catch (error) {
     return wrappedError(error);
@@ -739,17 +781,19 @@ export async function signRawPlaceOrder(
   goodTilBlockTime: number,
   clientMetadata: number,
   routerFeePpm: number = 0,
-  routerFeeSubaccountOwner: string = '',
-  routerFeeSubaccountNumber: number = 0,
+  routerFeeSubaccountOwner: string = "",
+  routerFeeSubaccountNumber: number = 0
 ): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
 
     const msgs: Promise<EncodeObject[]> = new Promise((resolve) => {
@@ -771,16 +815,12 @@ export async function signRawPlaceOrder(
         undefined,
         routerFeePpm,
         routerFeeSubaccountOwner,
-        routerFeeSubaccountNumber,
+        routerFeeSubaccountNumber
       );
       resolve([msg]);
     });
-    const signed = await client.sign(
-      wallet,
-      () => msgs,
-      true,
-    );
-    return Buffer.from(signed).toString('base64');
+    const signed = await client.sign(wallet, () => msgs, true);
+    return Buffer.from(signed).toString("base64");
   } catch (error) {
     return wrappedError(error);
   }
@@ -801,17 +841,19 @@ export async function signPlaceOrder(
   postOnly: boolean,
   reduceOnly: boolean,
   routerFeePpm: number = 0,
-  routerFeeSubaccountOwner: string = '',
-  routerFeeSubaccountNumber: number = 0,
+  routerFeeSubaccountOwner: string = "",
+  routerFeeSubaccountNumber: number = 0
 ): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
 
     const subaccount = new SubaccountInfo(wallet, subaccountNumber);
@@ -830,7 +872,7 @@ export async function signPlaceOrder(
       reduceOnly,
       routerFeePpm,
       routerFeeSubaccountOwner,
-      routerFeeSubaccountNumber,
+      routerFeeSubaccountNumber
     );
     return signed;
   } catch (error) {
@@ -844,16 +886,18 @@ export async function signCancelOrder(
   orderFlags: OrderFlags,
   clobPairId: number,
   goodTilBlock: number,
-  goodTilBlockTime: number,
+  goodTilBlockTime: number
 ): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
 
     const subaccount = new SubaccountInfo(wallet, subaccountNumber);
@@ -863,7 +907,7 @@ export async function signCancelOrder(
       orderFlags,
       clobPairId,
       goodTilBlock,
-      goodTilBlockTime,
+      goodTilBlockTime
     );
     return signed;
   } catch (error) {
@@ -871,27 +915,32 @@ export async function signCancelOrder(
   }
 }
 
-export async function encodeAccountRequestData(address: string): Promise<string> {
+export async function encodeAccountRequestData(
+  address: string
+): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
       const requestData: Uint8Array = Uint8Array.from(
-        AuthModule.QueryAccountRequest.encode({ address }).finish(),
+        AuthModule.QueryAccountRequest.encode({ address }).finish()
       );
-      resolve(Buffer.from(requestData).toString('hex'));
+      resolve(Buffer.from(requestData).toString("hex"));
     } catch (error) {
       reject(error);
     }
   });
 }
 
-export async function decodeAccountResponseValue(value: string): Promise<string> {
+export async function decodeAccountResponseValue(
+  value: string
+): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
-      const rawData = Buffer.from(value, 'base64');
-      const rawAccount = AuthModule.QueryAccountResponse.decode(rawData).account;
+      const rawData = Buffer.from(value, "base64");
+      const rawAccount =
+        AuthModule.QueryAccountResponse.decode(rawData).account;
       // The promise should have been rejected if the rawAccount was undefined.
       if (rawAccount === undefined) {
-        throw Error('rawAccount is undefined');
+        throw Error("rawAccount is undefined");
       }
       const account = accountFromAny(rawAccount);
       resolve(encodeJson(account));
@@ -901,7 +950,9 @@ export async function decodeAccountResponseValue(value: string): Promise<string>
   });
 }
 
-export async function getOptimalNode(endpointUrlsAsJson: string): Promise<string> {
+export async function getOptimalNode(
+  endpointUrlsAsJson: string
+): Promise<string> {
   /*
     param:
       endpointUrlsAsJson:
@@ -917,7 +968,10 @@ export async function getOptimalNode(endpointUrlsAsJson: string): Promise<string
     const endpointUrls = param.endpointUrls;
     const chainId = param.chainId;
     const networkOptimizer = new NetworkOptimizer();
-    const optimalUrl = await networkOptimizer.findOptimalNode(endpointUrls, chainId);
+    const optimalUrl = await networkOptimizer.findOptimalNode(
+      endpointUrls,
+      chainId
+    );
     const url = {
       url: optimalUrl,
     };
@@ -927,7 +981,9 @@ export async function getOptimalNode(endpointUrlsAsJson: string): Promise<string
   }
 }
 
-export async function getOptimalIndexer(endpointUrlsAsJson: string): Promise<string> {
+export async function getOptimalIndexer(
+  endpointUrlsAsJson: string
+): Promise<string> {
   /*
     param:
       endpointUrlsAsJson:
@@ -951,34 +1007,25 @@ export async function getOptimalIndexer(endpointUrlsAsJson: string): Promise<str
   }
 }
 
-export async function getRewardsParams(): Promise<string> {
-  try {
-    const client = globalThis.client;
-    if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
-    }
-    const rewardsParams = await globalThis.client?.validatorClient.get.getRewardsParams();
-    return encodeJson(rewardsParams);
-  } catch (e) {
-    return wrappedError(e);
-  }
-}
-
 export async function getDelegatorDelegations(
-  payload: string,
+  payload: string
 ): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const json = JSON.parse(payload);
     const address = json.address;
     if (address === undefined) {
-      throw new UserError('address is not set');
+      throw new UserError("address is not set");
     }
-    const delegations = await globalThis
-      .client?.validatorClient.get.getDelegatorDelegations(address);
+    const delegations =
+      await globalThis.client?.validatorClient.get.getDelegatorDelegations(
+        address
+      );
     return encodeJson(delegations);
   } catch (e) {
     return wrappedError(e);
@@ -986,38 +1033,42 @@ export async function getDelegatorDelegations(
 }
 
 export async function getDelegatorUnbondingDelegations(
-  payload: string,
+  payload: string
 ): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const json = JSON.parse(payload);
     const address = json.address;
     if (address === undefined) {
-      throw new UserError('address is not set');
+      throw new UserError("address is not set");
     }
-    const delegations = await globalThis
-      .client?.validatorClient.get.getDelegatorUnbondingDelegations(address);
+    const delegations =
+      await globalThis.client?.validatorClient.get.getDelegatorUnbondingDelegations(
+        address
+      );
     return encodeJson(delegations);
   } catch (e) {
     return wrappedError(e);
   }
 }
 
-export async function getMarketPrice(
-  payload: string,
-): Promise<string> {
+export async function getMarketPrice(payload: string): Promise<string> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const json = JSON.parse(payload);
     const marketId = json.marketId;
     if (marketId === undefined) {
-      throw new UserError('marketId is not set');
+      throw new UserError("marketId is not set");
     }
     const marketPrice = await client.validatorClient.get.getPrice(marketId);
     return encodeJson(marketPrice);
@@ -1030,11 +1081,9 @@ export async function getNobleBalance(): Promise<String> {
   try {
     const client = globalThis.nobleClient;
     if (client === undefined || !client.isConnected) {
-      throw new UserError(
-        'client is not connected.',
-      );
+      throw new UserError("client is not connected.");
     }
-    const coin = await client.getAccountBalance('utdai');
+    const coin = await client.getAccountBalance("utdai");
     return encodeJson(coin);
   } catch (error) {
     return wrappedError(error);
@@ -1045,9 +1094,7 @@ export async function sendNobleIBC(squidPayload: string): Promise<String> {
   try {
     const client = globalThis.nobleClient;
     if (client === undefined || !client.isConnected) {
-      throw new UserError(
-        'client is not connected.',
-      );
+      throw new UserError("client is not connected.");
     }
 
     const json = JSON.parse(squidPayload);
@@ -1059,11 +1106,12 @@ export async function sendNobleIBC(squidPayload: string): Promise<String> {
     const fee = await client.simulateTransaction([ibcMsg]);
 
     // take out fee from amount before sweeping
-    const amount = parseInt(ibcMsg.value.token.amount, 10) -
+    const amount =
+      parseInt(ibcMsg.value.token.amount, 10) -
       Math.floor(parseInt(fee.amount[0].amount, 10) * GAS_MULTIPLIER);
 
     if (amount <= 0) {
-      throw new UserError('noble balance does not cover fees');
+      throw new UserError("noble balance does not cover fees");
     }
 
     ibcMsg.value.token.amount = amount.toString();
@@ -1078,24 +1126,29 @@ export async function withdrawToNobleIBC(payload: string): Promise<String> {
   try {
     const client = globalThis.client;
     if (client === undefined) {
-      throw new UserError('client is not connected. Call connectClient() first');
+      throw new UserError(
+        "client is not connected. Call connectClient() first"
+      );
     }
     const wallet = globalThis.wallet;
     if (wallet === undefined) {
-      throw new UserError('wallet is not set. Call connectWallet() first');
+      throw new UserError("wallet is not set. Call connectWallet() first");
     }
     const json = JSON.parse(payload);
 
     const { subaccountNumber, amount, ibcPayload } = json ?? {};
 
-    const decode = (str: string):string => Buffer.from(str, 'base64').toString('binary');
+    const decode = (str: string): string =>
+      Buffer.from(str, "base64").toString("binary");
     const decoded = decode(ibcPayload);
 
     const parsedIbcPayload = JSON.parse(decoded);
 
     const msg = client.withdrawFromSubaccountMessage(
       new SubaccountInfo(wallet, subaccountNumber),
-      parseFloat(amount).toFixed(client.validatorClient.config.denoms.TDAI_DECIMALS),
+      parseFloat(amount).toFixed(
+        client.validatorClient.config.denoms.TDAI_DECIMALS
+      )
     );
     const ibcMsg: EncodeObject = {
       typeUrl: parsedIbcPayload.msgTypeUrl,
@@ -1105,11 +1158,11 @@ export async function withdrawToNobleIBC(payload: string): Promise<String> {
     const tx = await client.send(
       wallet,
       () => Promise.resolve([msg, ibcMsg]),
-      false,
+      false
     );
 
     return encodeJson({
-      txHash: `0x${Buffer.from(tx?.hash).toString('hex')}`,
+      txHash: `0x${Buffer.from(tx?.hash).toString("hex")}`,
     });
   } catch (error) {
     return wrappedError(error);
@@ -1120,9 +1173,7 @@ export async function cctpWithdraw(squidPayload: string): Promise<String> {
   try {
     const client = globalThis.nobleClient;
     if (client === undefined || !client.isConnected) {
-      throw new UserError(
-        'client is not connected.',
-      );
+      throw new UserError("client is not connected.");
     }
 
     const json = JSON.parse(squidPayload);
@@ -1134,11 +1185,12 @@ export async function cctpWithdraw(squidPayload: string): Promise<String> {
     const fee = await client.simulateTransaction([ibcMsg]);
 
     // take out fee from amount before sweeping
-    const amount = parseInt(ibcMsg.value.amount, 10) -
+    const amount =
+      parseInt(ibcMsg.value.amount, 10) -
       Math.floor(parseInt(fee.amount[0].amount, 10) * GAS_MULTIPLIER);
 
     if (amount <= 0) {
-      throw new Error('noble balance does not cover fees');
+      throw new Error("noble balance does not cover fees");
     }
 
     ibcMsg.value.amount = amount.toString();

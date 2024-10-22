@@ -1,8 +1,8 @@
-import { EncodeObject } from '@cosmjs/proto-signing';
-import { MsgSend } from 'cosmjs-types/cosmos/bank/v1beta1/tx';
-import { Coin } from 'cosmjs-types/cosmos/base/v1beta1/coin';
-import Long from 'long';
-import protobuf from 'protobufjs';
+import { EncodeObject } from "@cosmjs/proto-signing";
+import { MsgSend } from "cosmjs-types/cosmos/bank/v1beta1/tx";
+import { Coin } from "cosmjs-types/cosmos/base/v1beta1/coin";
+import Long from "long";
+import protobuf from "protobufjs";
 
 import {
   OrderId,
@@ -17,7 +17,7 @@ import {
   Transfer,
   MsgDepositToSubaccount,
   MsgWithdrawFromSubaccount,
-} from './proto-includes';
+} from "./proto-includes";
 
 // import {
 //   OrderId,
@@ -49,16 +49,20 @@ export class Composer {
     conditionalOrderTriggerSubticks: Long = Long.fromInt(0),
     routerFeePpm: number,
     routerFeeSubaccountOwner: string,
-    routerFeeSubaccountNumber: number,
+    routerFeeSubaccountNumber: number
   ): EncodeObject {
-    this.validateGoodTilBlockAndTime(orderFlags, goodTilBlock, goodTilBlockTime);
+    this.validateGoodTilBlockAndTime(
+      orderFlags,
+      goodTilBlock,
+      goodTilBlockTime
+    );
 
     const subaccountId: SubaccountId = {
       owner: address,
       number: subaccountNumber,
     };
 
-    const routerFeeSubaccountId: SubaccountId = {
+    const routerSubaccountId: SubaccountId = {
       owner: routerFeeSubaccountOwner,
       number: routerFeeSubaccountNumber,
     };
@@ -80,8 +84,7 @@ export class Composer {
       reduceOnly,
       clientMetadata: clientMetadata ?? 0,
       routerFeePpm,
-      routerFeeSubaccountOwner,
-      routerFeeSubaccountNumber,
+      routerSubaccountId,
       conditionType,
       conditionalOrderTriggerSubticks,
     };
@@ -89,7 +92,7 @@ export class Composer {
       order,
     };
     return {
-      typeUrl: '/dydxprotocol.clob.MsgPlaceOrder',
+      typeUrl: "/dydxprotocol.clob.MsgPlaceOrder",
       value: msg,
     };
   }
@@ -101,9 +104,13 @@ export class Composer {
     clobPairId: number,
     orderFlags: number,
     goodTilBlock: number,
-    goodTilBlockTime: number,
+    goodTilBlockTime: number
   ): EncodeObject {
-    this.validateGoodTilBlockAndTime(orderFlags, goodTilBlock, goodTilBlockTime);
+    this.validateGoodTilBlockAndTime(
+      orderFlags,
+      goodTilBlock,
+      goodTilBlockTime
+    );
 
     const subaccountId: SubaccountId = {
       owner: address,
@@ -124,7 +131,7 @@ export class Composer {
     };
 
     return {
-      typeUrl: '/dydxprotocol.clob.MsgCancelOrder',
+      typeUrl: "/dydxprotocol.clob.MsgCancelOrder",
       value: msg,
     };
   }
@@ -135,7 +142,7 @@ export class Composer {
     recipientAddress: string,
     recipientSubaccountNumber: number,
     assetId: number,
-    amount: Long,
+    amount: Long
   ): EncodeObject {
     const sender: SubaccountId = {
       owner: address,
@@ -158,7 +165,7 @@ export class Composer {
     };
 
     return {
-      typeUrl: '/dydxprotocol.sending.MsgCreateTransfer',
+      typeUrl: "/dydxprotocol.sending.MsgCreateTransfer",
       value: msg,
     };
   }
@@ -167,7 +174,7 @@ export class Composer {
     address: string,
     subaccountNumber: number,
     assetId: number,
-    quantums: Long,
+    quantums: Long
   ): EncodeObject {
     const recipient: SubaccountId = {
       owner: address,
@@ -182,7 +189,7 @@ export class Composer {
     };
 
     return {
-      typeUrl: '/dydxprotocol.sending.MsgDepositToSubaccount',
+      typeUrl: "/dydxprotocol.sending.MsgDepositToSubaccount",
       value: msg,
     };
   }
@@ -192,7 +199,7 @@ export class Composer {
     subaccountNumber: number,
     assetId: number,
     quantums: Long,
-    recipient: string = address,
+    recipient: string = address
   ): EncodeObject {
     const sender: SubaccountId = {
       owner: address,
@@ -207,7 +214,7 @@ export class Composer {
     };
 
     return {
-      typeUrl: '/dydxprotocol.sending.MsgWithdrawFromSubaccount',
+      typeUrl: "/dydxprotocol.sending.MsgWithdrawFromSubaccount",
       value: msg,
     };
   }
@@ -216,7 +223,7 @@ export class Composer {
     address: string,
     recipient: string,
     coinDenom: string,
-    quantums: string,
+    quantums: string
   ): EncodeObject {
     const coin: Coin = {
       denom: coinDenom,
@@ -230,7 +237,7 @@ export class Composer {
     };
 
     return {
-      typeUrl: '/cosmos.bank.v1beta1.MsgSend',
+      typeUrl: "/cosmos.bank.v1beta1.MsgSend",
       value: msg,
     };
   }
@@ -238,12 +245,12 @@ export class Composer {
   public validateGoodTilBlockAndTime(
     orderFlags: number,
     goodTilBlock: number,
-    goodTilBlockTime: number,
+    goodTilBlockTime: number
   ): void {
     if (orderFlags === 0 && goodTilBlock === 0) {
-      throw new Error('goodTilBlock must be set if orderFlags is 0');
+      throw new Error("goodTilBlock must be set if orderFlags is 0");
     } else if (orderFlags !== 0 && goodTilBlockTime === 0) {
-      throw new Error('goodTilBlockTime must be set if orderFlags is not 0');
+      throw new Error("goodTilBlockTime must be set if orderFlags is not 0");
     }
   }
 }
