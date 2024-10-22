@@ -451,7 +451,7 @@ describe('vault-controller#V4', () => {
       });
     });
 
-    it('Get /megavault/positions with 2 vault subaccount, 1 with no perpetual', async () => {
+    it('Get /megavault/positions with 2 vault subaccount, 1 with no perpetual, 1 invalid', async () => {
       await Promise.all([
         VaultTable.create({
           ...testConstants.defaultVault,
@@ -462,6 +462,11 @@ describe('vault-controller#V4', () => {
           ...testConstants.defaultVault,
           address: testConstants.vaultAddress,
           clobPairId: testConstants.defaultPerpetualMarket2.clobPairId,
+        }),
+        VaultTable.create({
+          ...testConstants.defaultVault,
+          address: 'invalid',
+          clobPairId: '999',
         }),
       ]);
       const response: request.Response = await sendRequest({
