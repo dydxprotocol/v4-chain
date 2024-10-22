@@ -617,6 +617,9 @@ export async function expectOrderInDatabase({
   goodTilBlock,
   goodTilBlockTime,
   clientMetadata,
+  routerFeePpm,
+  routerFeeSubaccountOwner,
+  routerFeeSubaccountNumber,
   updatedAt,
   updatedAtHeight,
 }: {
@@ -634,6 +637,9 @@ export async function expectOrderInDatabase({
   goodTilBlock?: string,
   goodTilBlockTime?: string,
   clientMetadata: string,
+  routerFeePpm: string,
+  routerFeeSubaccountOwner: string | null,
+  routerFeeSubaccountNumber: string | null,
   updatedAt: IsoString,
   updatedAtHeight: string,
 }): Promise<void> {
@@ -658,6 +664,9 @@ export async function expectOrderInDatabase({
     goodTilBlock: goodTilBlock ?? null,
     goodTilBlockTime: goodTilBlockTime ?? null,
     clientMetadata,
+    routerFeePpm,
+    routerFeeSubaccountOwner,
+    routerFeeSubaccountNumber,
     updatedAt,
     updatedAtHeight,
   }));

@@ -320,6 +320,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: null,
+        routerFeeSubaccountNumber: null,
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -340,6 +343,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: null,
+        routerFeeSubaccountNumber: null,
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -662,6 +668,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: null,
+        routerFeeSubaccountNumber: null,
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -682,6 +691,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: null,
+        routerFeeSubaccountNumber: null,
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -952,6 +964,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: null,
+        routerFeeSubaccountNumber: null,
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -972,6 +987,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: null,
+        routerFeeSubaccountNumber: null,
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -1173,6 +1191,9 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
+      routerFeePpm: '0',
+      routerFeeSubaccountOwner: null,
+      routerFeeSubaccountNumber: null,
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
@@ -1194,6 +1215,9 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
       clientMetadata: takerOrderProto.clientMetadata.toString(),
+      routerFeePpm: '0',
+      routerFeeSubaccountOwner: null,
+      routerFeeSubaccountNumber: null,
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
@@ -1381,6 +1405,9 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
+      routerFeePpm: '0',
+      routerFeeSubaccountOwner: null,
+      routerFeeSubaccountNumber: null,
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
@@ -1401,6 +1428,9 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
       clientMetadata: takerOrderProto.clientMetadata.toString(),
+      routerFeePpm: '0',
+      routerFeeSubaccountOwner: null,
+      routerFeeSubaccountNumber: null,
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });

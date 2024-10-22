@@ -3,6 +3,7 @@ package dydxprotocol.indexer.protocol.v1;
 
 import "dydxprotocol/indexer/protocol/v1/subaccount.proto";
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1/types";
 
@@ -154,8 +155,10 @@ message IndexerOrder {
   // Router fee ppm for the order.
   int32 router_fee_ppm = 12;
 
-  // Router subaccount ID for the order.
-  IndexerSubaccountId router_subaccount_id = 13 [ (gogoproto.nullable) = false ];
+  // Router fee subaccount owner.
+  string router_fee_subaccount_owner = 13 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // Router fee subaccount number.
+  uint32 router_fee_subaccount_number = 14;
 }
 
 // Status of the CLOB.

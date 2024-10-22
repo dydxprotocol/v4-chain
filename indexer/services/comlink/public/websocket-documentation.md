@@ -180,6 +180,9 @@ export interface OrderSubaccountMessageContents {
   removalReason?: string;
   createdAtHeight?: string;
   clientMetadata: string;
+  routerFeePpm: string;
+  routerFeeSubaccountOwner?: string;
+  routerFeeSubaccountNumber?: string;
   triggerPrice?: string;
   updatedAt?: IsoString;
   updatedAtHeight?: string;

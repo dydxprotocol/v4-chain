@@ -309,6 +309,9 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: null,
+        routerFeeSubaccountNumber: null,
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -548,6 +551,9 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: null,
+        routerFeeSubaccountNumber: null,
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -768,6 +774,9 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: null,
+        routerFeeSubaccountNumber: null,
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -926,6 +935,9 @@ describe('LiquidationHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
+      routerFeePpm: '0',
+      routerFeeSubaccountOwner: null,
+      routerFeeSubaccountNumber: null,
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
