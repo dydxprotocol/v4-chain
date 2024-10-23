@@ -8,7 +8,6 @@ import (
 )
 
 func TestMarketParam_Validate(t *testing.T) {
-	validExchangeConfigJson := `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"}]}`
 	testCases := []struct {
 		name      string
 		input     types.MarketParam
@@ -17,52 +16,26 @@ func TestMarketParam_Validate(t *testing.T) {
 		{
 			name: "Valid MarketParam",
 			input: types.MarketParam{
-				Pair:               "BTC-USD",
-				MinExchanges:       1,
-				MinPriceChangePpm:  1_000,
-				ExchangeConfigJson: validExchangeConfigJson,
+				Pair:              "BTC-USD",
+				MinPriceChangePpm: 1_000,
 			},
 			expErrMsg: "",
 		},
 		{
 			name: "Empty pair",
 			input: types.MarketParam{
-				Pair:               "",
-				MinExchanges:       1,
-				MinPriceChangePpm:  1_000,
-				ExchangeConfigJson: validExchangeConfigJson,
+				Pair:              "",
+				MinPriceChangePpm: 1_000,
 			},
 			expErrMsg: "Pair cannot be empty",
 		},
 		{
 			name: "Invalid MinPriceChangePpm",
 			input: types.MarketParam{
-				Pair:               "BTC-USD",
-				MinExchanges:       1,
-				MinPriceChangePpm:  0,
-				ExchangeConfigJson: validExchangeConfigJson,
+				Pair:              "BTC-USD",
+				MinPriceChangePpm: 0,
 			},
 			expErrMsg: "Min price change in parts-per-million must be greater than 0",
-		},
-		{
-			name: "Empty ExchangeConfigJson",
-			input: types.MarketParam{
-				Pair:               "BTC-USD",
-				MinExchanges:       1,
-				MinPriceChangePpm:  1_000,
-				ExchangeConfigJson: "",
-			},
-			expErrMsg: "ExchangeConfigJson string is not valid",
-		},
-		{
-			name: "Typo in ExchangeConfigJson",
-			input: types.MarketParam{
-				Pair:               "BTC-USD",
-				MinExchanges:       1,
-				MinPriceChangePpm:  1_000,
-				ExchangeConfigJson: `{"exchanges":[]`, // missing a bracket
-			},
-			expErrMsg: "ExchangeConfigJson string is not valid",
 		},
 	}
 

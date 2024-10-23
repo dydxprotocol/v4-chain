@@ -1,15 +1,15 @@
 package types_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/client/testutil"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/client/testutil"
 
 	types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
-	validExchangeConfigJson := `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"}]}`
 	tests := []struct {
 		desc        string
 		msg         types.MsgCreateOracleMarket
@@ -36,10 +36,8 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 			msg: types.MsgCreateOracleMarket{
 				Authority: testutil.ValidAuthority,
 				Params: types.MarketParam{
-					Pair:               "BTC-USD",
-					MinExchanges:       1,
-					MinPriceChangePpm:  1_000,
-					ExchangeConfigJson: validExchangeConfigJson,
+					Pair:              "BTC-USD",
+					MinPriceChangePpm: 1_000,
 				},
 			},
 			expectedErr: "",
@@ -49,10 +47,8 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 			msg: types.MsgCreateOracleMarket{
 				Authority: testutil.ValidAuthority,
 				Params: types.MarketParam{
-					Pair:               "",
-					MinExchanges:       1,
-					MinPriceChangePpm:  1_000,
-					ExchangeConfigJson: validExchangeConfigJson,
+					Pair:              "",
+					MinPriceChangePpm: 1_000,
 				},
 			},
 			expectedErr: "Pair cannot be empty",
@@ -62,39 +58,11 @@ func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 			msg: types.MsgCreateOracleMarket{
 				Authority: testutil.ValidAuthority,
 				Params: types.MarketParam{
-					Pair:               "BTC-USD",
-					MinExchanges:       1,
-					MinPriceChangePpm:  0,
-					ExchangeConfigJson: validExchangeConfigJson,
+					Pair:              "BTC-USD",
+					MinPriceChangePpm: 0,
 				},
 			},
 			expectedErr: "Min price change in parts-per-million must be greater than 0",
-		},
-		{
-			desc: "Empty ExchangeConfigJson",
-			msg: types.MsgCreateOracleMarket{
-				Authority: testutil.ValidAuthority,
-				Params: types.MarketParam{
-					Pair:               "BTC-USD",
-					MinExchanges:       1,
-					MinPriceChangePpm:  1_000,
-					ExchangeConfigJson: "",
-				},
-			},
-			expectedErr: "ExchangeConfigJson string is not valid",
-		},
-		{
-			desc: "Typo in ExchangeConfigJson",
-			msg: types.MsgCreateOracleMarket{
-				Authority: testutil.ValidAuthority,
-				Params: types.MarketParam{
-					Pair:               "BTC-USD",
-					MinExchanges:       1,
-					MinPriceChangePpm:  1_000,
-					ExchangeConfigJson: `{"exchanges":[]`, // missing a bracket
-				},
-			},
-			expectedErr: "ExchangeConfigJson string is not valid",
 		},
 	}
 

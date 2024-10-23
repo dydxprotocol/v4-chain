@@ -109,11 +109,9 @@ func TestBadMarketData(t *testing.T) {
 	_, err := keeper.CreateMarket(
 		ctx,
 		types.MarketParam{
-			Id:                 uint32(0),
-			Pair:               "00",
-			MinExchanges:       1,
-			MinPriceChangePpm:  1,
-			ExchangeConfigJson: "{}",
+			Id:                uint32(0),
+			Pair:              "00",
+			MinPriceChangePpm: 1,
 		},
 		types.MarketPrice{})
 	require.Error(t, err)

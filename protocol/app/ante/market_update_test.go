@@ -265,12 +265,10 @@ var (
 	}
 
 	testMarketParams = prices_types.MarketParam{
-		Id:                 0,
-		Pair:               "TESTING-USD",
-		Exponent:           -8,
-		MinExchanges:       1,
-		MinPriceChangePpm:  10,
-		ExchangeConfigJson: `{"test_config_placeholder":{}}`,
+		Id:                0,
+		Pair:              "TESTING-USD",
+		Exponent:          -8,
+		MinPriceChangePpm: 10,
 	}
 )
 

@@ -3,8 +3,9 @@ package types_test
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -195,31 +196,6 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 			}},
 			expectedMarketParamErrors: map[types.MarketId]error{
 				1: errors.New("invalid market param 1: Pair cannot be empty: Invalid input"),
-			},
-			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
-			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
-		},
-		"Invalid: invalid exchangeConfigJson (empty, fails marketParams.Validate)": {
-			marketParams: []prices_types.MarketParam{{
-				Id:                 1,
-				Exponent:           -2,
-				Pair:               "BTC-USD",
-				MinExchanges:       1,
-				MinPriceChangePpm:  1,
-				ExchangeConfigJson: "",
-			}},
-			expectedMarketParamErrors: map[types.MarketId]error{
-				1: errors.New("ExchangeConfigJson string is not valid"),
-			},
-			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
-			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
-		},
-		"Invalid: invalid exchangeConfigJson (not json, fails marketParams.Validate)": {
-			marketParams: []prices_types.MarketParam{
-				validMarketParamWithExchangeConfig("invalid"),
-			},
-			expectedMarketParamErrors: map[types.MarketId]error{
-				1: errors.New("ExchangeConfigJson string is not valid"),
 			},
 			expectedMutableMarketConfigs:   testEmptyMarketConfigs,
 			expectedMutableExchangeConfigs: testEmptyExchangeMarketConfigs,
