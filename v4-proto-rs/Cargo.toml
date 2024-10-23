@@ -14,14 +14,13 @@ default = ["grpc-transport"]
 grpc-transport = ["tonic/transport"]
 
 [dependencies]
-cosmos-sdk-proto = "0.25.0"
+cosmos-sdk-proto = { version = "0.25.0", default-features = false, features = ["grpc"] }
 prost = { version = "0.13", default-features = false }
 prost-types = "0.13"
-
-# optional
-tonic = { version = "0.12", optional = true, default-features = false, features = ["codegen", "prost"] }
+tonic = { version = "0.12", default-features = false, features = ["codegen", "prost"] }
 
 [build-dependencies]
+regex = "1.11.0"
 tonic-buf-build = { git = "https://github.com/v0-e/tonic-buf-build", rev = "eaa38fb83bd696cf6d91494ff1f92445b461b009" }
 prost-build = "0.13" # keep the version the same as in tonic-buf-build
 tonic-build = "0.12" # keep the version the same as in tonic-buf-build

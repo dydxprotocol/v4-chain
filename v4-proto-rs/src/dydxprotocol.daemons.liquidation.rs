@@ -64,6 +64,7 @@ pub mod liquidation_service_client {
     pub struct LiquidationServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
+    #[cfg(feature = "grpc-transport")]
     impl LiquidationServiceClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>

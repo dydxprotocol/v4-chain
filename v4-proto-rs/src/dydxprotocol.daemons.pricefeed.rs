@@ -82,6 +82,7 @@ pub mod price_feed_service_client {
     pub struct PriceFeedServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
+    #[cfg(feature = "grpc-transport")]
     impl PriceFeedServiceClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>

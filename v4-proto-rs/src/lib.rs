@@ -3,8 +3,8 @@ pub use cosmos_sdk_proto;
 
 include!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/_includes.rs"));
 
-use prost::Name;
 use cosmos_sdk_proto::Any;
+use prost::Name;
 
 pub trait ToAny: Name + Sized {
     /// Converts the type to `prost_types::Any`.
