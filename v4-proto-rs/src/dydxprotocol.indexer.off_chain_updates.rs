@@ -196,15 +196,18 @@ impl ::prost::Name for OrderUpdateV1 {
         "/dydxprotocol.indexer.off_chain_updates.OrderUpdateV1".into()
     }
 }
-/// OrderReplace messages contain the replacement order.
+/// OrderReplace messages contain the old order ID and the replacement order.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct OrderReplaceV1 {
+    /// vault replaces orders with a different order ID
     #[prost(message, optional, tag = "1")]
+    pub old_order_id: ::core::option::Option<super::protocol::v1::IndexerOrderId>,
+    #[prost(message, optional, tag = "2")]
     pub order: ::core::option::Option<super::protocol::v1::IndexerOrder>,
-    #[prost(enumeration = "order_place_v1::OrderPlacementStatus", tag = "2")]
+    #[prost(enumeration = "order_place_v1::OrderPlacementStatus", tag = "3")]
     pub placement_status: i32,
-    #[prost(message, optional, tag = "3")]
+    #[prost(message, optional, tag = "4")]
     pub time_stamp: ::core::option::Option<::prost_types::Timestamp>,
 }
 impl ::prost::Name for OrderReplaceV1 {

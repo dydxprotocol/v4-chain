@@ -330,6 +330,9 @@ pub struct OrderFillEventV1 {
     /// Total filled of the taker order in base quantums.
     #[prost(uint64, tag = "8")]
     pub total_filled_taker: u64,
+    /// rev share for affiliates in USDC quantums.
+    #[prost(uint64, tag = "9")]
+    pub affiliate_rev_share: u64,
     /// The type of order fill this event represents.
     #[prost(oneof = "order_fill_event_v1::TakerOrder", tags = "2, 4")]
     pub taker_order: ::core::option::Option<order_fill_event_v1::TakerOrder>,
@@ -587,11 +590,16 @@ pub mod stateful_order_event_v1 {
                 .into()
         }
     }
-    /// A long term order placement contains an order.
+    /// A long term order replacement contains an old order ID and the new order.
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct LongTermOrderReplacementV1 {
+        /// vault replaces orders with a different order ID
         #[prost(message, optional, tag = "1")]
+        pub old_order_id: ::core::option::Option<
+            super::super::protocol::v1::IndexerOrderId,
+        >,
+        #[prost(message, optional, tag = "2")]
         pub order: ::core::option::Option<super::super::protocol::v1::IndexerOrder>,
     }
     impl ::prost::Name for LongTermOrderReplacementV1 {
@@ -622,7 +630,7 @@ pub mod stateful_order_event_v1 {
         #[prost(message, tag = "7")]
         LongTermOrderPlacement(LongTermOrderPlacementV1),
         #[prost(message, tag = "8")]
-        OrderReplace(LongTermOrderReplacementV1),
+        OrderReplacement(LongTermOrderReplacementV1),
     }
 }
 impl ::prost::Name for StatefulOrderEventV1 {
@@ -961,10 +969,10 @@ impl ::prost::Name for AddressTradingReward {
     }
 }
 /// OpenInterestUpdateEventV1 is used for open interest update events
+/// Deprecated.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct OpenInterestUpdateEventV1 {
-    /// The list of all open interest updates in the block.
     #[prost(message, repeated, tag = "1")]
     pub open_interest_updates: ::prost::alloc::vec::Vec<OpenInterestUpdate>,
 }
@@ -979,10 +987,10 @@ impl ::prost::Name for OpenInterestUpdateEventV1 {
     }
 }
 /// OpenInterestUpdate contains a single open interest update for a perpetual
+/// Deprecated.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct OpenInterestUpdate {
-    /// The ID of the perpetual market.
     #[prost(uint32, tag = "1")]
     pub perpetual_id: u32,
     /// The new open interest value for the perpetual market.
@@ -1042,5 +1050,50 @@ impl ::prost::Name for LiquidityTierUpsertEventV2 {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.indexer.events.LiquidityTierUpsertEventV2".into()
+    }
+}
+/// Event emitted when a referee is registered with an affiliate.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct RegisterAffiliateEventV1 {
+    /// Address of the referee being registered.
+    #[prost(string, tag = "1")]
+    pub referee: ::prost::alloc::string::String,
+    /// Address of the affiliate associated with the referee.
+    #[prost(string, tag = "2")]
+    pub affiliate: ::prost::alloc::string::String,
+}
+impl ::prost::Name for RegisterAffiliateEventV1 {
+    const NAME: &'static str = "RegisterAffiliateEventV1";
+    const PACKAGE: &'static str = "dydxprotocol.indexer.events";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.indexer.events.RegisterAffiliateEventV1".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.indexer.events.RegisterAffiliateEventV1".into()
+    }
+}
+/// Event emitted when a vault is created / updated.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UpsertVaultEventV1 {
+    /// Address of the vault.
+    #[prost(string, tag = "1")]
+    pub address: ::prost::alloc::string::String,
+    /// Clob pair Id associated with the vault.
+    #[prost(uint32, tag = "2")]
+    pub clob_pair_id: u32,
+    /// Status of the vault.
+    #[prost(enumeration = "super::protocol::v1::VaultStatus", tag = "3")]
+    pub status: i32,
+}
+impl ::prost::Name for UpsertVaultEventV1 {
+    const NAME: &'static str = "UpsertVaultEventV1";
+    const PACKAGE: &'static str = "dydxprotocol.indexer.events";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.indexer.events.UpsertVaultEventV1".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.indexer.events.UpsertVaultEventV1".into()
     }
 }

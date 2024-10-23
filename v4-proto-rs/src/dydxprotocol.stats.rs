@@ -181,6 +181,28 @@ impl ::prost::Name for UserStats {
         "/dydxprotocol.stats.UserStats".into()
     }
 }
+/// CachedStakeAmount stores the last calculated total staked amount for address
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct CachedStakeAmount {
+    /// Last calculated total staked amount by the delegator (in coin amount).
+    #[prost(bytes = "vec", tag = "1")]
+    pub staked_amount: ::prost::alloc::vec::Vec<u8>,
+    /// Block time at which the calculation is cached (in Unix Epoch seconds)
+    /// Rounded down to nearest second.
+    #[prost(int64, tag = "2")]
+    pub cached_at: i64,
+}
+impl ::prost::Name for CachedStakeAmount {
+    const NAME: &'static str = "CachedStakeAmount";
+    const PACKAGE: &'static str = "dydxprotocol.stats";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.stats.CachedStakeAmount".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.stats.CachedStakeAmount".into()
+    }
+}
 /// QueryParamsRequest is a request type for the Params RPC method.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

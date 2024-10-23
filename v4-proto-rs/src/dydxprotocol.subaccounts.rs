@@ -41,6 +41,9 @@ pub struct PerpetualPosition {
     /// settled.
     #[prost(bytes = "vec", tag = "3")]
     pub funding_index: ::prost::alloc::vec::Vec<u8>,
+    /// The quote_balance of the `Perpetual`.
+    #[prost(bytes = "vec", tag = "4")]
+    pub quote_balance: ::prost::alloc::vec::Vec<u8>,
 }
 impl ::prost::Name for PerpetualPosition {
     const NAME: &'static str = "PerpetualPosition";
@@ -103,6 +106,85 @@ impl ::prost::Name for Subaccount {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.subaccounts.Subaccount".into()
+    }
+}
+/// StreamSubaccountUpdate provides information on a subaccount update. Used in
+/// the full node GRPC stream.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamSubaccountUpdate {
+    #[prost(message, optional, tag = "1")]
+    pub subaccount_id: ::core::option::Option<SubaccountId>,
+    /// updated_perpetual_positions will each be for unique perpetuals.
+    #[prost(message, repeated, tag = "2")]
+    pub updated_perpetual_positions: ::prost::alloc::vec::Vec<
+        SubaccountPerpetualPosition,
+    >,
+    /// updated_asset_positions will each be for unique assets.
+    #[prost(message, repeated, tag = "3")]
+    pub updated_asset_positions: ::prost::alloc::vec::Vec<SubaccountAssetPosition>,
+    /// Snapshot indicates if the response is from a snapshot of the subaccount.
+    /// All updates should be ignored until snapshot is received.
+    /// If the snapshot is true, then all previous entries should be
+    /// discarded and the subaccount should be resynced.
+    /// For a snapshot subaccount update, the `updated_perpetual_positions` and
+    /// `updated_asset_positions` fields will contain the full state of the
+    /// subaccount.
+    #[prost(bool, tag = "4")]
+    pub snapshot: bool,
+}
+impl ::prost::Name for StreamSubaccountUpdate {
+    const NAME: &'static str = "StreamSubaccountUpdate";
+    const PACKAGE: &'static str = "dydxprotocol.subaccounts";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.subaccounts.StreamSubaccountUpdate".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.subaccounts.StreamSubaccountUpdate".into()
+    }
+}
+/// SubaccountPerpetualPosition provides information on a subaccount's updated
+/// perpetual positions.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SubaccountPerpetualPosition {
+    /// The `Id` of the `Perpetual`.
+    #[prost(uint32, tag = "1")]
+    pub perpetual_id: u32,
+    /// The size of the position in base quantums.
+    #[prost(uint64, tag = "2")]
+    pub quantums: u64,
+}
+impl ::prost::Name for SubaccountPerpetualPosition {
+    const NAME: &'static str = "SubaccountPerpetualPosition";
+    const PACKAGE: &'static str = "dydxprotocol.subaccounts";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.subaccounts.SubaccountPerpetualPosition".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.subaccounts.SubaccountPerpetualPosition".into()
+    }
+}
+/// SubaccountAssetPosition provides information on a subaccount's updated asset
+/// positions.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SubaccountAssetPosition {
+    /// The `Id` of the `Asset`.
+    #[prost(uint32, tag = "1")]
+    pub asset_id: u32,
+    /// The absolute size of the position in base quantums.
+    #[prost(uint64, tag = "2")]
+    pub quantums: u64,
+}
+impl ::prost::Name for SubaccountAssetPosition {
+    const NAME: &'static str = "SubaccountAssetPosition";
+    const PACKAGE: &'static str = "dydxprotocol.subaccounts";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.subaccounts.SubaccountAssetPosition".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.subaccounts.SubaccountAssetPosition".into()
     }
 }
 /// GenesisState defines the subaccounts module's genesis state.
