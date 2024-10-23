@@ -4,13 +4,14 @@ pub use cosmos_sdk_proto;
 include!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/_includes.rs"));
 
 use prost::Name;
+use cosmos_sdk_proto::Any;
 
 pub trait ToAny: Name + Sized {
     /// Converts the type to `prost_types::Any`.
-    fn to_any(self) -> prost_types::Any {
+    fn to_any(self) -> Any {
         let value = self.encode_to_vec();
         let type_url = Self::type_url();
-        prost_types::Any { type_url, value }
+        Any { type_url, value }
     }
 }
 
@@ -23,8 +24,8 @@ mod test {
     use crate::dydxprotocol::clob::MsgCancelOrder;
 
     #[test]
+    /// Tests the conversion of `MsgCancelOrder` to `cosmos_sdk_proto::Any`.
     pub fn test_any_conversion() {
-        /// Tests the conversion of `MsgCancelOrder` to `prost_types::Any`.
         let msg = MsgCancelOrder {
             order_id: None,
             good_til_oneof: None,
@@ -35,8 +36,8 @@ mod test {
     }
 
     #[test]
+    /// Tests the conversion of `MsgSend` to `cosmos_sdk_proto::Any`.
     pub fn test_any_conversion_wrapped() {
-        /// Tests the conversion of `MsgSend` to `prost_types::Any`.
         let msg = MsgSend::default();
         let any = msg.to_any();
         let url = "/cosmos.bank.v1beta1.MsgSend";
