@@ -3,7 +3,6 @@
 /// representing price values, resolving markets on individual exchanges, and
 /// generating price updates. This configuration is specific to the quote
 /// currency.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MarketParam {
     /// Unique, sequentially-generated value.
@@ -45,8 +44,7 @@ impl ::prost::Name for MarketParam {
     }
 }
 /// MarketPrice is used by the application to store/retrieve oracle price.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct MarketPrice {
     /// Unique, sequentially-generated value that matches `MarketParam`.
     #[prost(uint32, tag = "1")]
@@ -74,7 +72,6 @@ impl ::prost::Name for MarketPrice {
     }
 }
 /// GenesisState defines the prices module's genesis state.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GenesisState {
     #[prost(message, repeated, tag = "1")]
@@ -94,8 +91,7 @@ impl ::prost::Name for GenesisState {
 }
 /// QueryMarketPriceRequest is request type for the Query/Params `MarketPrice`
 /// RPC method.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct QueryMarketPriceRequest {
     #[prost(uint32, tag = "1")]
     pub id: u32,
@@ -112,8 +108,7 @@ impl ::prost::Name for QueryMarketPriceRequest {
 }
 /// QueryMarketPriceResponse is response type for the Query/Params `MarketPrice`
 /// RPC method.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct QueryMarketPriceResponse {
     #[prost(message, optional, tag = "1")]
     pub market_price: ::core::option::Option<MarketPrice>,
@@ -130,7 +125,6 @@ impl ::prost::Name for QueryMarketPriceResponse {
 }
 /// QueryAllMarketPricesRequest is request type for the Query/Params
 /// `AllMarketPrices` RPC method.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryAllMarketPricesRequest {
     #[prost(message, optional, tag = "1")]
@@ -150,7 +144,6 @@ impl ::prost::Name for QueryAllMarketPricesRequest {
 }
 /// QueryAllMarketPricesResponse is response type for the Query/Params
 /// `AllMarketPrices` RPC method.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryAllMarketPricesResponse {
     #[prost(message, repeated, tag = "1")]
@@ -172,8 +165,7 @@ impl ::prost::Name for QueryAllMarketPricesResponse {
 }
 /// QueryMarketParamsRequest is request type for the Query/Params `MarketParams`
 /// RPC method.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct QueryMarketParamRequest {
     #[prost(uint32, tag = "1")]
     pub id: u32,
@@ -190,7 +182,6 @@ impl ::prost::Name for QueryMarketParamRequest {
 }
 /// QueryMarketParamResponse is response type for the Query/Params `MarketParams`
 /// RPC method.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryMarketParamResponse {
     #[prost(message, optional, tag = "1")]
@@ -208,7 +199,6 @@ impl ::prost::Name for QueryMarketParamResponse {
 }
 /// QueryAllMarketParamsRequest is request type for the Query/Params
 /// `AllMarketParams` RPC method.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryAllMarketParamsRequest {
     #[prost(message, optional, tag = "1")]
@@ -228,7 +218,6 @@ impl ::prost::Name for QueryAllMarketParamsRequest {
 }
 /// QueryAllMarketParamsResponse is response type for the Query/Params
 /// `AllMarketParams` RPC method.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct QueryAllMarketParamsResponse {
     #[prost(message, repeated, tag = "1")]
@@ -250,7 +239,13 @@ impl ::prost::Name for QueryAllMarketParamsResponse {
 }
 /// Generated client implementations.
 pub mod query_client {
-    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     /// Query defines the gRPC querier service.
@@ -273,8 +268,8 @@ pub mod query_client {
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
-        T::ResponseBody: Body<Data = Bytes> + Send + 'static,
-        <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
     {
         pub fn new(inner: T) -> Self {
             let inner = tonic::client::Grpc::new(inner);
@@ -299,7 +294,7 @@ pub mod query_client {
             >,
             <T as tonic::codegen::Service<
                 http::Request<tonic::body::BoxBody>,
-            >>::Error: Into<StdError> + Send + Sync,
+            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             QueryClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -346,8 +341,7 @@ pub mod query_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
@@ -372,8 +366,7 @@ pub mod query_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
@@ -398,8 +391,7 @@ pub mod query_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
@@ -424,8 +416,7 @@ pub mod query_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
@@ -442,7 +433,6 @@ pub mod query_client {
 }
 /// MsgCreateOracleMarket is a message used by x/gov for creating a new oracle
 /// market.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgCreateOracleMarket {
     /// The address that controls the module.
@@ -463,8 +453,7 @@ impl ::prost::Name for MsgCreateOracleMarket {
     }
 }
 /// MsgCreateOracleMarketResponse defines the CreateOracleMarket response type.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct MsgCreateOracleMarketResponse {}
 impl ::prost::Name for MsgCreateOracleMarketResponse {
     const NAME: &'static str = "MsgCreateOracleMarketResponse";
@@ -477,7 +466,6 @@ impl ::prost::Name for MsgCreateOracleMarketResponse {
     }
 }
 /// MsgUpdateMarketPrices is a request type for the UpdateMarketPrices method.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgUpdateMarketPrices {
     #[prost(message, repeated, tag = "1")]
@@ -488,8 +476,7 @@ pub struct MsgUpdateMarketPrices {
 /// Nested message and enum types in `MsgUpdateMarketPrices`.
 pub mod msg_update_market_prices {
     /// MarketPrice represents a price update for a single market
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Message)]
+    #[derive(Clone, Copy, PartialEq, ::prost::Message)]
     pub struct MarketPrice {
         /// The id of market to update
         #[prost(uint32, tag = "1")]
@@ -521,8 +508,7 @@ impl ::prost::Name for MsgUpdateMarketPrices {
 }
 /// MsgUpdateMarketPricesResponse defines the MsgUpdateMarketPrices response
 /// type.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct MsgUpdateMarketPricesResponse {}
 impl ::prost::Name for MsgUpdateMarketPricesResponse {
     const NAME: &'static str = "MsgUpdateMarketPricesResponse";
@@ -536,7 +522,6 @@ impl ::prost::Name for MsgUpdateMarketPricesResponse {
 }
 /// MsgUpdateMarketParam is a message used by x/gov for updating the parameters
 /// of an oracle market.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgUpdateMarketParam {
     #[prost(string, tag = "1")]
@@ -556,8 +541,7 @@ impl ::prost::Name for MsgUpdateMarketParam {
     }
 }
 /// MsgUpdateMarketParamResponse defines the UpdateMarketParam response type.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct MsgUpdateMarketParamResponse {}
 impl ::prost::Name for MsgUpdateMarketParamResponse {
     const NAME: &'static str = "MsgUpdateMarketParamResponse";
@@ -571,7 +555,13 @@ impl ::prost::Name for MsgUpdateMarketParamResponse {
 }
 /// Generated client implementations.
 pub mod msg_client {
-    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     /// Msg defines the Msg service.
@@ -594,8 +584,8 @@ pub mod msg_client {
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
-        T::ResponseBody: Body<Data = Bytes> + Send + 'static,
-        <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
     {
         pub fn new(inner: T) -> Self {
             let inner = tonic::client::Grpc::new(inner);
@@ -620,7 +610,7 @@ pub mod msg_client {
             >,
             <T as tonic::codegen::Service<
                 http::Request<tonic::body::BoxBody>,
-            >>::Error: Into<StdError> + Send + Sync,
+            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             MsgClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -668,8 +658,7 @@ pub mod msg_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
@@ -696,8 +685,7 @@ pub mod msg_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
@@ -725,8 +713,7 @@ pub mod msg_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;

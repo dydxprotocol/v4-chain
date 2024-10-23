@@ -60,34 +60,28 @@ impl OrderRemovalReason {
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
-            OrderRemovalReason::Unspecified => "ORDER_REMOVAL_REASON_UNSPECIFIED",
-            OrderRemovalReason::Expired => "ORDER_REMOVAL_REASON_EXPIRED",
-            OrderRemovalReason::UserCanceled => "ORDER_REMOVAL_REASON_USER_CANCELED",
-            OrderRemovalReason::Undercollateralized => {
-                "ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED"
-            }
-            OrderRemovalReason::InternalError => "ORDER_REMOVAL_REASON_INTERNAL_ERROR",
-            OrderRemovalReason::SelfTradeError => "ORDER_REMOVAL_REASON_SELF_TRADE_ERROR",
-            OrderRemovalReason::PostOnlyWouldCrossMakerOrder => {
+            Self::Unspecified => "ORDER_REMOVAL_REASON_UNSPECIFIED",
+            Self::Expired => "ORDER_REMOVAL_REASON_EXPIRED",
+            Self::UserCanceled => "ORDER_REMOVAL_REASON_USER_CANCELED",
+            Self::Undercollateralized => "ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED",
+            Self::InternalError => "ORDER_REMOVAL_REASON_INTERNAL_ERROR",
+            Self::SelfTradeError => "ORDER_REMOVAL_REASON_SELF_TRADE_ERROR",
+            Self::PostOnlyWouldCrossMakerOrder => {
                 "ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER"
             }
-            OrderRemovalReason::ImmediateOrCancelWouldRestOnBook => {
+            Self::ImmediateOrCancelWouldRestOnBook => {
                 "ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK"
             }
-            OrderRemovalReason::FokOrderCouldNotBeFullyFulled => {
+            Self::FokOrderCouldNotBeFullyFulled => {
                 "ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED"
             }
-            OrderRemovalReason::ReduceOnlyResize => {
-                "ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE"
-            }
-            OrderRemovalReason::IndexerExpired => "ORDER_REMOVAL_REASON_INDEXER_EXPIRED",
-            OrderRemovalReason::Replaced => "ORDER_REMOVAL_REASON_REPLACED",
-            OrderRemovalReason::FullyFilled => "ORDER_REMOVAL_REASON_FULLY_FILLED",
-            OrderRemovalReason::EquityTier => "ORDER_REMOVAL_REASON_EQUITY_TIER",
-            OrderRemovalReason::FinalSettlement => {
-                "ORDER_REMOVAL_REASON_FINAL_SETTLEMENT"
-            }
-            OrderRemovalReason::ViolatesIsolatedSubaccountConstraints => {
+            Self::ReduceOnlyResize => "ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE",
+            Self::IndexerExpired => "ORDER_REMOVAL_REASON_INDEXER_EXPIRED",
+            Self::Replaced => "ORDER_REMOVAL_REASON_REPLACED",
+            Self::FullyFilled => "ORDER_REMOVAL_REASON_FULLY_FILLED",
+            Self::EquityTier => "ORDER_REMOVAL_REASON_EQUITY_TIER",
+            Self::FinalSettlement => "ORDER_REMOVAL_REASON_FINAL_SETTLEMENT",
+            Self::ViolatesIsolatedSubaccountConstraints => {
                 "ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS"
             }
         }

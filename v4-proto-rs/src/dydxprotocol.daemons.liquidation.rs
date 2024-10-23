@@ -3,7 +3,6 @@
 /// subaccount ids that potentially need to be liquidated. The list of subaccount
 /// ids should not contain duplicates. The application should re-verify these
 /// subaccount ids against current state before liquidating their positions.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct LiquidateSubaccountsRequest {
     /// The block height at which the liquidation daemon is processing.
@@ -37,8 +36,7 @@ impl ::prost::Name for LiquidateSubaccountsRequest {
 }
 /// LiquidateSubaccountsResponse is a response message for
 /// LiquidateSubaccountsRequest.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct LiquidateSubaccountsResponse {}
 impl ::prost::Name for LiquidateSubaccountsResponse {
     const NAME: &'static str = "LiquidateSubaccountsResponse";
@@ -52,7 +50,13 @@ impl ::prost::Name for LiquidateSubaccountsResponse {
 }
 /// Generated client implementations.
 pub mod liquidation_service_client {
-    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     /// LiquidationService defines the gRPC service used by liquidation daemon.
@@ -75,8 +79,8 @@ pub mod liquidation_service_client {
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
-        T::ResponseBody: Body<Data = Bytes> + Send + 'static,
-        <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
     {
         pub fn new(inner: T) -> Self {
             let inner = tonic::client::Grpc::new(inner);
@@ -101,7 +105,7 @@ pub mod liquidation_service_client {
             >,
             <T as tonic::codegen::Service<
                 http::Request<tonic::body::BoxBody>,
-            >>::Error: Into<StdError> + Send + Sync,
+            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             LiquidationServiceClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -148,8 +152,7 @@ pub mod liquidation_service_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
