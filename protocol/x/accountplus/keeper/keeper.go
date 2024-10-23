@@ -55,10 +55,10 @@ func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
 
 // Get all AccountStates from kvstore
 func (k Keeper) GetAllAccountStates(ctx sdk.Context) ([]types.AccountState, error) {
-	store := ctx.KVStore(k.storeKey)
-	prefixStore := prefix.NewStore(store, []byte(types.AccountStateKeyPrefix))
-
-	iterator := prefixStore.Iterator(nil, nil)
+	iterator := storetypes.KVStorePrefixIterator(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.AccountStateKeyPrefix),
+	)
 	defer iterator.Close()
 
 	accounts := []types.AccountState{}

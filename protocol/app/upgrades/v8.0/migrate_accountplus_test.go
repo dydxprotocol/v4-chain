@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	"github.com/stretchr/testify/suite"
 )
@@ -17,7 +18,7 @@ type UpgradeTestSuite struct {
 	Ctx  sdk.Context
 }
 
-func TestUpgradeTestSuite(t *testing.T) {
+func TestMigrateAccountplusAccountState(t *testing.T) {
 	suite.Run(t, new(UpgradeTestSuite))
 }
 
@@ -66,6 +67,16 @@ func (s *UpgradeTestSuite) TestUpgrade_MigrateAccountplusAccountState() {
 
 		// Check that the new prefixed key exists
 		bzNew := prefixStore.Get(accAddress)
+		var actualAccountState types.AccountState
+		s.tApp.App.AccountPlusKeeper.GetCdc().MustUnmarshal(bzNew, &actualAccountState)
+		expectedAccountState := accountplustypes.AccountState{
+			Address: addr,
+			TimestampNonceDetails: accountplustypes.TimestampNonceDetails{
+				TimestampNonces: []uint64{1, 2, 3},
+				MaxEjectedNonce: 0,
+			},
+		}
 		s.Require().NotNil(bzNew, "Prefixed AccountState should exist for %s", addr)
+		s.Require().Equal(expectedAccountState, actualAccountState, "Incorrect AccountState after migration for %s", addr)
 	}
 }
