@@ -2,11 +2,11 @@ package validator_testutils
 
 import (
 	"cosmossdk.io/math"
+	lib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -60,7 +60,7 @@ func NewTotalBondedTokensMockReturn(
 	for _, name := range names {
 		BuildAndMockTestValidator(ctx, name, math.NewInt(500), mValStore)
 	}
-	mValStore.On("TotalBondedTokens", ctx).Return(math.NewInt(500*int64(len(names))), nil)
+	mValStore.On("TotalBondedTokens", ctx).Return(ConvertPowerToTokens(500*int64(len(names))), nil)
 	return mValStore
 }
 
@@ -70,12 +70,12 @@ func NewTotalBondedTokensValidatorMockReturnWithPowers(
 	powers map[string]int64,
 ) *mocks.ValidatorStore {
 	mValStore := &mocks.ValidatorStore{}
-	totalPower := math.NewInt(0)
+	totalPower := int64(0)
 	for _, name := range names {
 		BuildAndMockTestValidator(ctx, name, math.NewInt(powers[name]), mValStore)
-		totalPower = totalPower.Add(math.NewInt(powers[name]))
+		totalPower += powers[name]
 	}
-	mValStore.On("TotalBondedTokens", ctx).Return(totalPower, nil)
+	mValStore.On("TotalBondedTokens", ctx).Return(ConvertPowerToTokens(totalPower), nil)
 	return mValStore
 }
 
@@ -90,4 +90,9 @@ func GetConsAddressByName(name string) sdk.ConsAddress {
 	default:
 		return nil
 	}
+}
+
+func ConvertPowerToTokens(power int64) math.Int {
+	powerReduction := lib.PowerReduction
+	return math.NewInt(power).Mul(powerReduction)
 }

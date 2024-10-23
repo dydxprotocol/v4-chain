@@ -4,8 +4,6 @@ import (
 	"math/big"
 	"testing"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	preblocker "github.com/StreamFinance-Protocol/stream-chain/protocol/app/preblocker"
@@ -18,6 +16,8 @@ import (
 	bigintcache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/bigintcache"
 	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
+	valutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
@@ -486,7 +486,7 @@ func (s *PreBlockTestSuite) mockValStoreAndTotalBondedTokensCall(validators []st
 	for _, valName := range validators {
 		s.buildAndMockValidator(valName, math.NewInt(1))
 	}
-	s.valStore.On("TotalBondedTokens", s.ctx).Return(math.NewInt(int64(len(validators))), nil)
+	s.valStore.On("TotalBondedTokens", s.ctx).Return(valutils.ConvertPowerToTokens(int64(len(validators))), nil)
 }
 
 func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
