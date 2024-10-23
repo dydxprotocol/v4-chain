@@ -20,6 +20,11 @@ func migrateAccountplusAccountState(ctx sdk.Context, k accountpluskeeper.Keeper)
 	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
+	var keysToDelete [][]byte
+	var accountStatesToSet []struct {
+		address      sdk.AccAddress
+		accountState accountplustypes.AccountState
+	}
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
 
@@ -34,10 +39,21 @@ func migrateAccountplusAccountState(ctx sdk.Context, k accountpluskeeper.Keeper)
 			panic(fmt.Sprintf("failed to unmarshal AccountState for key %X: %s", key, err))
 		}
 
-		// SetAccountState stores with prefix
-		k.SetAccountState(ctx, key, accountState)
+		accountStatesToSet = append(accountStatesToSet, struct {
+			address      sdk.AccAddress
+			accountState accountplustypes.AccountState
+		}{key, accountState})
 
-		// Delete unprefixed key
+		keysToDelete = append(keysToDelete, key)
+	}
+
+	// Set prefixed keys
+	for _, item := range accountStatesToSet {
+		k.SetAccountState(ctx, item.address, item.accountState)
+	}
+
+	// Delete unprefixed keys
+	for _, key := range keysToDelete {
 		store.Delete(key)
 	}
 

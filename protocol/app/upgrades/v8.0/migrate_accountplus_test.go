@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	accountplustypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	"github.com/stretchr/testify/suite"
 )
@@ -67,7 +66,7 @@ func (s *UpgradeTestSuite) TestUpgrade_MigrateAccountplusAccountState() {
 
 		// Check that the new prefixed key exists
 		bzNew := prefixStore.Get(accAddress)
-		var actualAccountState types.AccountState
+		var actualAccountState accountplustypes.AccountState
 		s.tApp.App.AccountPlusKeeper.GetCdc().MustUnmarshal(bzNew, &actualAccountState)
 		expectedAccountState := accountplustypes.AccountState{
 			Address: addr,
