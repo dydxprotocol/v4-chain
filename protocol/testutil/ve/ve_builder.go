@@ -7,6 +7,7 @@ import (
 
 	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	cometabci "github.com/cometbft/cometbft/abci/types"
@@ -76,7 +77,7 @@ func GetEmptyLocalLastCommit(
 		ve, err := CreateSignedExtendedVoteInfo(
 			SignedVEInfo{
 				Val:                sdk.ConsAddress(validator.ConsensusPubkey.GetValue()),
-				Power:              validator.Tokens.Int64(),
+				Power:              voteweighted.GetPowerFromBondedTokens(validator.Tokens),
 				Prices:             []vetypes.PricePair{},
 				SDaiConversionRate: "",
 				Height:             height,
@@ -307,7 +308,7 @@ func GetInjectedExtendedCommitInfoForTestApp(
 	for _, v := range validators {
 		veSignedInfos = append(veSignedInfos, SignedVEInfo{
 			Val:                sdk.ConsAddress(v.ConsensusPubkey.GetValue()),
-			Power:              v.Tokens.Int64(),
+			Power:              voteweighted.GetPowerFromBondedTokens(v.Tokens),
 			Prices:             pricesBz,
 			SDaiConversionRate: sdaiConversionRate,
 			Height:             height,

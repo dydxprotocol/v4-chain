@@ -5,13 +5,12 @@ import (
 	"math/big"
 	"sort"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type ValidatorStore interface {
@@ -71,11 +70,13 @@ func MedianPrices(
 			vePricesPerValidator,
 		)
 
-		totalPower, err := validatorStore.TotalBondedTokens(ctx)
+		totalBondedTokens, err := validatorStore.TotalBondedTokens(ctx)
 		if err != nil {
 			// This should never error.
 			panic(err)
 		}
+
+		totalPower := math.NewInt(GetPowerFromBondedTokens(totalBondedTokens))
 
 		return computeAggregatedPricesForAllMarkets(
 			logger,
@@ -225,11 +226,13 @@ func MedianConversionRate(
 			veConversionRatesPerValidator,
 		)
 
-		totalPower, err := validatorStore.TotalBondedTokens(ctx)
+		totalBondedTokens, err := validatorStore.TotalBondedTokens(ctx)
 		if err != nil {
 			// This should never error.
 			panic(err)
 		}
+
+		totalPower := math.NewInt(GetPowerFromBondedTokens(totalBondedTokens))
 
 		return computeFinalConversionRate(logger, conversionRateInfo, threshold, totalPower)
 	}
@@ -364,4 +367,11 @@ func getValidatorPowerByAddress(
 
 	validatorBondedTokens := validator.GetBondedTokens()
 	return validatorBondedTokens, nil
+}
+
+func GetPowerFromBondedTokens(
+	tokens math.Int,
+) int64 {
+	powerReduction := constants.PowerReduction
+	return sdk.TokensToConsensusPower(tokens, powerReduction)
 }
