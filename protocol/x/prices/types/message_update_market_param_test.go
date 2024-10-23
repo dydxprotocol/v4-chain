@@ -42,7 +42,6 @@ func TestMsgUpdateMarketParam_ValidateBasic(t *testing.T) {
 				Authority: testutil.ValidAuthority,
 				MarketParam: types.MarketParam{
 					Pair:              "",
-					MinExchanges:      1,
 					MinPriceChangePpm: 1_000,
 				},
 			},
@@ -53,7 +52,6 @@ func TestMsgUpdateMarketParam_ValidateBasic(t *testing.T) {
 				Authority: testutil.ValidAuthority,
 				MarketParam: types.MarketParam{
 					Pair:              "test",
-					MinExchanges:      2,
 					MinPriceChangePpm: 0,
 				},
 			},
