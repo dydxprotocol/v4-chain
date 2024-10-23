@@ -9,13 +9,19 @@ license = "LicenseRef-dYdX-Custom"
 [lib]
 doctest = false
 
+[features]
+default = ["grpc-transport"]
+grpc-transport = ["tonic/transport"]
+
 [dependencies]
-cosmos-sdk-proto = "0.21.1"
-tonic = { version = "0.11", features = ["tls", "tls-roots", "transport", "channel"] }
-prost = "0.12"
-prost-types = "0.12"
+cosmos-sdk-proto = "0.25.0"
+prost = { version = "0.13", default-features = false }
+prost-types = "0.13"
+
+# optional
+tonic = { version = "0.12", optional = true, default-features = false, features = ["codegen", "prost"] }
 
 [build-dependencies]
-tonic-buf-build = "0.2.1"
-prost-build = "0.12" # keep the version the same as in tonic-buf-build
-tonic-build = "0.11" # keep the version the same as in tonic-buf-build
+tonic-buf-build = { git = "https://github.com/v0-e/tonic-buf-build", rev = "eaa38fb83bd696cf6d91494ff1f92445b461b009" }
+prost-build = "0.13" # keep the version the same as in tonic-buf-build
+tonic-build = "0.12" # keep the version the same as in tonic-buf-build
