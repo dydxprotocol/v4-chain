@@ -2,8 +2,7 @@
 /// GenesisState defines the sending module's genesis state.
 ///
 /// this line is used by starport scaffolding # genesis/proto/state
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct GenesisState {}
 impl ::prost::Name for GenesisState {
     const NAME: &'static str = "GenesisState";
@@ -17,7 +16,13 @@ impl ::prost::Name for GenesisState {
 }
 /// Generated client implementations.
 pub mod query_client {
-    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     /// Query defines the gRPC querier service.
@@ -25,6 +30,7 @@ pub mod query_client {
     pub struct QueryClient<T> {
         inner: tonic::client::Grpc<T>,
     }
+    #[cfg(feature = "grpc-transport")]
     impl QueryClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
@@ -40,8 +46,8 @@ pub mod query_client {
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
-        T::ResponseBody: Body<Data = Bytes> + Send + 'static,
-        <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
     {
         pub fn new(inner: T) -> Self {
             let inner = tonic::client::Grpc::new(inner);
@@ -66,7 +72,7 @@ pub mod query_client {
             >,
             <T as tonic::codegen::Service<
                 http::Request<tonic::body::BoxBody>,
-            >>::Error: Into<StdError> + Send + Sync,
+            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             QueryClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -104,7 +110,6 @@ pub mod query_client {
     }
 }
 /// Transfer represents a single transfer between two subaccounts.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Transfer {
     /// The sender subaccount ID.
@@ -132,7 +137,6 @@ impl ::prost::Name for Transfer {
 }
 /// MsgDepositToSubaccount represents a single transfer from an `x/bank`
 /// account to an `x/subaccounts` subaccount.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgDepositToSubaccount {
     /// The sender wallet address.
@@ -160,7 +164,6 @@ impl ::prost::Name for MsgDepositToSubaccount {
 }
 /// MsgWithdrawFromSubaccount represents a single transfer from an
 /// `x/subaccounts` subaccount to an `x/bank` account.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgWithdrawFromSubaccount {
     /// The sender subaccount ID.
@@ -190,7 +193,6 @@ impl ::prost::Name for MsgWithdrawFromSubaccount {
 /// to an `x/bank` account (can be either a module account address or a user
 /// account address).
 /// Should only be executed by governance.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgSendFromModuleToAccount {
     #[prost(string, tag = "1")]
@@ -217,7 +219,6 @@ impl ::prost::Name for MsgSendFromModuleToAccount {
     }
 }
 /// MsgCreateTransfer is a request type used for initiating new transfers.
-#[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct MsgCreateTransfer {
     #[prost(message, optional, tag = "1")]
@@ -234,8 +235,7 @@ impl ::prost::Name for MsgCreateTransfer {
     }
 }
 /// MsgCreateTransferResponse is a response type used for new transfers.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct MsgCreateTransferResponse {}
 impl ::prost::Name for MsgCreateTransferResponse {
     const NAME: &'static str = "MsgCreateTransferResponse";
@@ -249,8 +249,7 @@ impl ::prost::Name for MsgCreateTransferResponse {
 }
 /// MsgDepositToSubaccountResponse is a response type used for new
 /// account-to-subaccount transfers.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct MsgDepositToSubaccountResponse {}
 impl ::prost::Name for MsgDepositToSubaccountResponse {
     const NAME: &'static str = "MsgDepositToSubaccountResponse";
@@ -264,8 +263,7 @@ impl ::prost::Name for MsgDepositToSubaccountResponse {
 }
 /// MsgWithdrawFromSubaccountResponse is a response type used for new
 /// subaccount-to-account transfers.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct MsgWithdrawFromSubaccountResponse {}
 impl ::prost::Name for MsgWithdrawFromSubaccountResponse {
     const NAME: &'static str = "MsgWithdrawFromSubaccountResponse";
@@ -279,8 +277,7 @@ impl ::prost::Name for MsgWithdrawFromSubaccountResponse {
 }
 /// MsgSendFromModuleToAccountResponse is a response type used for new
 /// module-to-account transfers.
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct MsgSendFromModuleToAccountResponse {}
 impl ::prost::Name for MsgSendFromModuleToAccountResponse {
     const NAME: &'static str = "MsgSendFromModuleToAccountResponse";
@@ -294,7 +291,13 @@ impl ::prost::Name for MsgSendFromModuleToAccountResponse {
 }
 /// Generated client implementations.
 pub mod msg_client {
-    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    #![allow(
+        unused_variables,
+        dead_code,
+        missing_docs,
+        clippy::wildcard_imports,
+        clippy::let_unit_value,
+    )]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
     /// Msg defines the Msg service.
@@ -302,6 +305,7 @@ pub mod msg_client {
     pub struct MsgClient<T> {
         inner: tonic::client::Grpc<T>,
     }
+    #[cfg(feature = "grpc-transport")]
     impl MsgClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
@@ -317,8 +321,8 @@ pub mod msg_client {
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
-        T::ResponseBody: Body<Data = Bytes> + Send + 'static,
-        <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
     {
         pub fn new(inner: T) -> Self {
             let inner = tonic::client::Grpc::new(inner);
@@ -343,7 +347,7 @@ pub mod msg_client {
             >,
             <T as tonic::codegen::Service<
                 http::Request<tonic::body::BoxBody>,
-            >>::Error: Into<StdError> + Send + Sync,
+            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
         {
             MsgClient::new(InterceptedService::new(inner, interceptor))
         }
@@ -390,8 +394,7 @@ pub mod msg_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
@@ -417,8 +420,7 @@ pub mod msg_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
@@ -446,8 +448,7 @@ pub mod msg_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
@@ -475,8 +476,7 @@ pub mod msg_client {
                 .ready()
                 .await
                 .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
+                    tonic::Status::unknown(
                         format!("Service was not ready: {}", e.into()),
                     )
                 })?;
