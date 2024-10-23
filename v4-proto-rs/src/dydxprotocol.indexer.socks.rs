@@ -194,3 +194,27 @@ impl ::prost::Name for CandleMessage {
         "/dydxprotocol.indexer.socks.CandleMessage".into()
     }
 }
+/// Message to be sent through the 'to-websockets-block-height` kafka topic.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct BlockHeightMessage {
+    /// Block height where the contents occur.
+    #[prost(string, tag = "1")]
+    pub block_height: ::prost::alloc::string::String,
+    /// ISO formatted time of the block height.
+    #[prost(string, tag = "2")]
+    pub time: ::prost::alloc::string::String,
+    /// Version of the websocket message.
+    #[prost(string, tag = "3")]
+    pub version: ::prost::alloc::string::String,
+}
+impl ::prost::Name for BlockHeightMessage {
+    const NAME: &'static str = "BlockHeightMessage";
+    const PACKAGE: &'static str = "dydxprotocol.indexer.socks";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.indexer.socks.BlockHeightMessage".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.indexer.socks.BlockHeightMessage".into()
+    }
+}

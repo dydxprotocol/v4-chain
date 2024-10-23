@@ -287,6 +287,36 @@ impl ::prost::Name for EquityTierLimit {
         "/dydxprotocol.clob.EquityTierLimit".into()
     }
 }
+/// ClobStagedFinalizeBlockEvent defines a CLOB event staged during
+/// FinalizeBlock.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ClobStagedFinalizeBlockEvent {
+    /// event is the staged event.
+    #[prost(oneof = "clob_staged_finalize_block_event::Event", tags = "1")]
+    pub event: ::core::option::Option<clob_staged_finalize_block_event::Event>,
+}
+/// Nested message and enum types in `ClobStagedFinalizeBlockEvent`.
+pub mod clob_staged_finalize_block_event {
+    /// event is the staged event.
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Event {
+        /// create_clob_pair indicates a new CLOB pair creation.
+        #[prost(message, tag = "1")]
+        CreateClobPair(super::ClobPair),
+    }
+}
+impl ::prost::Name for ClobStagedFinalizeBlockEvent {
+    const NAME: &'static str = "ClobStagedFinalizeBlockEvent";
+    const PACKAGE: &'static str = "dydxprotocol.clob";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.clob.ClobStagedFinalizeBlockEvent".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.clob.ClobStagedFinalizeBlockEvent".into()
+    }
+}
 /// LiquidationsConfig stores all configurable fields related to liquidations.
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -807,9 +837,8 @@ pub mod order {
         /// any newly-placed post only orders that would cross with other maker
         /// orders.
         PostOnly = 2,
-        /// TIME_IN_FORCE_FILL_OR_KILL enforces that an order will either be filled
-        /// completely and immediately by maker orders on the book or canceled if the
-        /// entire amount can‘t be matched.
+        /// TIME_IN_FORCE_FILL_OR_KILL has been deprecated and will be removed in
+        /// future versions.
         FillOrKill = 3,
     }
     impl TimeInForce {
@@ -934,6 +963,39 @@ impl ::prost::Name for TransactionOrdering {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.clob.TransactionOrdering".into()
+    }
+}
+/// StreamLiquidationOrder represents an protocol-generated IOC liquidation
+/// order. Used in full node streaming.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamLiquidationOrder {
+    /// Information about this liquidation order.
+    #[prost(message, optional, tag = "1")]
+    pub liquidation_info: ::core::option::Option<PerpetualLiquidationInfo>,
+    /// CLOB pair ID of the CLOB pair the liquidation order will be matched
+    /// against.
+    #[prost(uint32, tag = "2")]
+    pub clob_pair_id: u32,
+    /// True if this is a buy order liquidating a short position, false if vice
+    /// versa.
+    #[prost(bool, tag = "3")]
+    pub is_buy: bool,
+    /// The number of base quantums for this liquidation order.
+    #[prost(uint64, tag = "4")]
+    pub quantums: u64,
+    /// The subticks this liquidation order will be submitted at.
+    #[prost(uint64, tag = "5")]
+    pub subticks: u64,
+}
+impl ::prost::Name for StreamLiquidationOrder {
+    const NAME: &'static str = "StreamLiquidationOrder";
+    const PACKAGE: &'static str = "dydxprotocol.clob";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.clob.StreamLiquidationOrder".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.clob.StreamLiquidationOrder".into()
     }
 }
 /// ClobMatch represents an operations queue entry around all different types
@@ -1302,6 +1364,9 @@ pub mod order_removal {
         /// REMOVAL_REASON_FULLY_FILLED represents a removal of an order that
         ///   would lead to the subaccount violating isolated subaccount constraints.
         ViolatesIsolatedSubaccountConstraints = 8,
+        /// REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED represents a removal of an order
+        /// that was placed using an expired permissioned key.
+        PermissionedKeyExpired = 9,
     }
     impl RemovalReason {
         /// String value of the enum field names used in the ProtoBuf definition.
@@ -1329,6 +1394,9 @@ pub mod order_removal {
                 RemovalReason::ViolatesIsolatedSubaccountConstraints => {
                     "REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS"
                 }
+                RemovalReason::PermissionedKeyExpired => {
+                    "REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED"
+                }
             }
         }
         /// Creates an enum from field names used in the ProtoBuf definition.
@@ -1350,6 +1418,9 @@ pub mod order_removal {
                 "REMOVAL_REASON_FULLY_FILLED" => Some(Self::FullyFilled),
                 "REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS" => {
                     Some(Self::ViolatesIsolatedSubaccountConstraints)
+                }
+                "REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED" => {
+                    Some(Self::PermissionedKeyExpired)
                 }
                 _ => None,
             }
@@ -2208,18 +2279,21 @@ impl ::prost::Name for InternalOperation {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct ProcessProposerMatchesEvents {
+    #[deprecated]
     #[prost(message, repeated, tag = "1")]
     pub placed_long_term_order_ids: ::prost::alloc::vec::Vec<OrderId>,
     #[prost(message, repeated, tag = "2")]
     pub expired_stateful_order_ids: ::prost::alloc::vec::Vec<OrderId>,
     #[prost(message, repeated, tag = "3")]
     pub order_ids_filled_in_last_block: ::prost::alloc::vec::Vec<OrderId>,
+    #[deprecated]
     #[prost(message, repeated, tag = "4")]
     pub placed_stateful_cancellation_order_ids: ::prost::alloc::vec::Vec<OrderId>,
     #[prost(message, repeated, tag = "5")]
     pub removed_stateful_order_ids: ::prost::alloc::vec::Vec<OrderId>,
     #[prost(message, repeated, tag = "6")]
     pub conditional_order_ids_triggered_in_last_block: ::prost::alloc::vec::Vec<OrderId>,
+    #[deprecated]
     #[prost(message, repeated, tag = "7")]
     pub placed_conditional_order_ids: ::prost::alloc::vec::Vec<OrderId>,
     #[prost(uint32, tag = "8")]
@@ -2530,6 +2604,9 @@ pub struct StreamOrderbookUpdatesRequest {
     /// Clob pair ids to stream orderbook updates for.
     #[prost(uint32, repeated, tag = "1")]
     pub clob_pair_id: ::prost::alloc::vec::Vec<u32>,
+    /// Subaccount ids to stream subaccount updates for.
+    #[prost(message, repeated, tag = "2")]
+    pub subaccount_ids: ::prost::alloc::vec::Vec<super::subaccounts::SubaccountId>,
 }
 impl ::prost::Name for StreamOrderbookUpdatesRequest {
     const NAME: &'static str = "StreamOrderbookUpdatesRequest";
@@ -2546,16 +2623,9 @@ impl ::prost::Name for StreamOrderbookUpdatesRequest {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StreamOrderbookUpdatesResponse {
-    /// Orderbook updates for the clob pair.
+    /// Batch of updates for the clob pair.
     #[prost(message, repeated, tag = "1")]
     pub updates: ::prost::alloc::vec::Vec<StreamUpdate>,
-    /// ---Additional fields used to debug issues---
-    /// Block height of the updates.
-    #[prost(uint32, tag = "2")]
-    pub block_height: u32,
-    /// Exec mode of the updates.
-    #[prost(uint32, tag = "3")]
-    pub exec_mode: u32,
 }
 impl ::prost::Name for StreamOrderbookUpdatesResponse {
     const NAME: &'static str = "StreamOrderbookUpdatesResponse";
@@ -2572,22 +2642,32 @@ impl ::prost::Name for StreamOrderbookUpdatesResponse {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StreamUpdate {
+    /// Block height of the update.
+    #[prost(uint32, tag = "1")]
+    pub block_height: u32,
+    /// Exec mode of the update.
+    #[prost(uint32, tag = "2")]
+    pub exec_mode: u32,
     /// Contains one of an StreamOrderbookUpdate,
-    /// StreamOrderbookFill.
-    #[prost(oneof = "stream_update::UpdateMessage", tags = "1, 2")]
+    /// StreamOrderbookFill, StreamTakerOrderStatus.
+    #[prost(oneof = "stream_update::UpdateMessage", tags = "3, 4, 5, 6")]
     pub update_message: ::core::option::Option<stream_update::UpdateMessage>,
 }
 /// Nested message and enum types in `StreamUpdate`.
 pub mod stream_update {
     /// Contains one of an StreamOrderbookUpdate,
-    /// StreamOrderbookFill.
+    /// StreamOrderbookFill, StreamTakerOrderStatus.
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum UpdateMessage {
-        #[prost(message, tag = "1")]
+        #[prost(message, tag = "3")]
         OrderbookUpdate(super::StreamOrderbookUpdate),
-        #[prost(message, tag = "2")]
+        #[prost(message, tag = "4")]
         OrderFill(super::StreamOrderbookFill),
+        #[prost(message, tag = "5")]
+        TakerOrder(super::StreamTakerOrder),
+        #[prost(message, tag = "6")]
+        SubaccountUpdate(super::super::subaccounts::StreamSubaccountUpdate),
     }
 }
 impl ::prost::Name for StreamUpdate {
@@ -2605,18 +2685,18 @@ impl ::prost::Name for StreamUpdate {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StreamOrderbookUpdate {
+    /// Snapshot indicates if the response is from a snapshot of the orderbook.
+    /// All updates should be ignored until snapshot is recieved.
+    /// If the snapshot is true, then all previous entries should be
+    /// discarded and the orderbook should be resynced.
+    #[prost(bool, tag = "1")]
+    pub snapshot: bool,
     /// Orderbook updates for the clob pair. Can contain order place, removals,
     /// or updates.
-    #[prost(message, repeated, tag = "1")]
+    #[prost(message, repeated, tag = "2")]
     pub updates: ::prost::alloc::vec::Vec<
         super::indexer::off_chain_updates::OffChainUpdateV1,
     >,
-    /// Snapshot indicates if the response is from a snapshot of the orderbook.
-    /// This is true for the initial response and false for all subsequent updates.
-    /// Note that if the snapshot is true, then all previous entries should be
-    /// discarded and the orderbook should be resynced.
-    #[prost(bool, tag = "2")]
-    pub snapshot: bool,
 }
 impl ::prost::Name for StreamOrderbookUpdate {
     const NAME: &'static str = "StreamOrderbookUpdate";
@@ -2634,7 +2714,7 @@ impl ::prost::Name for StreamOrderbookUpdate {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct StreamOrderbookFill {
     /// Clob match. Provides information on which orders were matched
-    /// and the type of order. Fill amounts here are relative.
+    /// and the type of order.
     #[prost(message, optional, tag = "1")]
     pub clob_match: ::core::option::Option<ClobMatch>,
     /// All orders involved in the specified clob match. Used to look up
@@ -2642,7 +2722,7 @@ pub struct StreamOrderbookFill {
     #[prost(message, repeated, tag = "2")]
     pub orders: ::prost::alloc::vec::Vec<Order>,
     /// Resulting fill amounts for each order in the orders array.
-    #[prost(uint64, repeated, packed = "false", tag = "3")]
+    #[prost(uint64, repeated, tag = "3")]
     pub fill_amounts: ::prost::alloc::vec::Vec<u64>,
 }
 impl ::prost::Name for StreamOrderbookFill {
@@ -2653,6 +2733,76 @@ impl ::prost::Name for StreamOrderbookFill {
     }
     fn type_url() -> ::prost::alloc::string::String {
         "/dydxprotocol.clob.StreamOrderbookFill".into()
+    }
+}
+/// StreamTakerOrder provides information on a taker order that was attempted
+/// to be matched on the orderbook.
+/// It is intended to be used only in full node streaming.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamTakerOrder {
+    /// Information on the taker order after it is matched on the book,
+    /// either successfully or unsuccessfully.
+    #[prost(message, optional, tag = "3")]
+    pub taker_order_status: ::core::option::Option<StreamTakerOrderStatus>,
+    /// The taker order that was matched on the orderbook. Can be a
+    /// regular order or a liquidation order.
+    #[prost(oneof = "stream_taker_order::TakerOrder", tags = "1, 2")]
+    pub taker_order: ::core::option::Option<stream_taker_order::TakerOrder>,
+}
+/// Nested message and enum types in `StreamTakerOrder`.
+pub mod stream_taker_order {
+    /// The taker order that was matched on the orderbook. Can be a
+    /// regular order or a liquidation order.
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum TakerOrder {
+        #[prost(message, tag = "1")]
+        Order(super::Order),
+        #[prost(message, tag = "2")]
+        LiquidationOrder(super::StreamLiquidationOrder),
+    }
+}
+impl ::prost::Name for StreamTakerOrder {
+    const NAME: &'static str = "StreamTakerOrder";
+    const PACKAGE: &'static str = "dydxprotocol.clob";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.clob.StreamTakerOrder".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.clob.StreamTakerOrder".into()
+    }
+}
+/// StreamTakerOrderStatus is a representation of a taker order
+/// after it is attempted to be matched on the orderbook.
+/// It is intended to be used only in full node streaming.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamTakerOrderStatus {
+    /// The state of the taker order after attempting to match it against the
+    /// orderbook. Possible enum values can be found here:
+    /// <https://github.com/dydxprotocol/v4-chain/blob/main/protocol/x/clob/types/orderbook.go#L105>
+    #[prost(uint32, tag = "1")]
+    pub order_status: u32,
+    /// The amount of remaining (non-matched) base quantums of this taker order.
+    #[prost(uint64, tag = "2")]
+    pub remaining_quantums: u64,
+    /// The amount of base quantums that were *optimistically* filled for this
+    /// taker order when the order is matched against the orderbook. Note that if
+    /// any quantums of this order were optimistically filled or filled in state
+    /// before this invocation of the matching loop, this value will not include
+    /// them.
+    #[prost(uint64, tag = "3")]
+    pub optimistically_filled_quantums: u64,
+}
+impl ::prost::Name for StreamTakerOrderStatus {
+    const NAME: &'static str = "StreamTakerOrderStatus";
+    const PACKAGE: &'static str = "dydxprotocol.clob";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.clob.StreamTakerOrderStatus".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.clob.StreamTakerOrderStatus".into()
     }
 }
 /// Generated client implementations.
@@ -2980,5 +3130,37 @@ pub mod query_client {
                 );
             self.inner.server_streaming(req, path, codec).await
         }
+    }
+}
+/// StagedFinalizeBlockEvent is an event staged during `FinalizeBlock`.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StagedFinalizeBlockEvent {
+    /// Contains one of StreamOrderbookFill, StreamSubaccountUpdate.
+    #[prost(oneof = "staged_finalize_block_event::Event", tags = "1, 2, 3")]
+    pub event: ::core::option::Option<staged_finalize_block_event::Event>,
+}
+/// Nested message and enum types in `StagedFinalizeBlockEvent`.
+pub mod staged_finalize_block_event {
+    /// Contains one of StreamOrderbookFill, StreamSubaccountUpdate.
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Event {
+        #[prost(message, tag = "1")]
+        OrderFill(super::StreamOrderbookFill),
+        #[prost(message, tag = "2")]
+        SubaccountUpdate(super::super::subaccounts::StreamSubaccountUpdate),
+        #[prost(message, tag = "3")]
+        OrderbookUpdate(super::StreamOrderbookUpdate),
+    }
+}
+impl ::prost::Name for StagedFinalizeBlockEvent {
+    const NAME: &'static str = "StagedFinalizeBlockEvent";
+    const PACKAGE: &'static str = "dydxprotocol.clob";
+    fn full_name() -> ::prost::alloc::string::String {
+        "dydxprotocol.clob.StagedFinalizeBlockEvent".into()
+    }
+    fn type_url() -> ::prost::alloc::string::String {
+        "/dydxprotocol.clob.StagedFinalizeBlockEvent".into()
     }
 }

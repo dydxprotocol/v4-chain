@@ -15,6 +15,12 @@ pub mod cosmos_proto {
     include!("cosmos_proto.rs");
 }
 pub mod dydxprotocol {
+    pub mod accountplus {
+        include!("dydxprotocol.accountplus.rs");
+    }
+    pub mod affiliates {
+        include!("dydxprotocol.affiliates.rs");
+    }
     pub mod assets {
         include!("dydxprotocol.assets.rs");
     }
@@ -75,6 +81,9 @@ pub mod dydxprotocol {
             include!("dydxprotocol.indexer.socks.rs");
         }
     }
+    pub mod listing {
+        include!("dydxprotocol.listing.rs");
+    }
     pub mod perpetuals {
         include!("dydxprotocol.perpetuals.rs");
     }
@@ -83,6 +92,9 @@ pub mod dydxprotocol {
     }
     pub mod ratelimit {
         include!("dydxprotocol.ratelimit.rs");
+    }
+    pub mod revshare {
+        include!("dydxprotocol.revshare.rs");
     }
     pub mod rewards {
         include!("dydxprotocol.rewards.rs");
