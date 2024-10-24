@@ -20,7 +20,7 @@ import {
   PerpetualMarketsMap,
   PerpetualPositionFromDatabase,
   PerpetualPositionSubaccountMessageContents,
-  PositionSide,
+  PositionSide, protocolTranslations,
   SubaccountMessageContents,
   SubaccountTable,
   TradingMarketMessageContents,
@@ -328,6 +328,7 @@ export function generatePerpetualMarketMessage(
         atomicResolution: perpetualMarket.atomicResolution,
         subticksPerTick: perpetualMarket.subticksPerTick,
         stepBaseQuantums: perpetualMarket.stepBaseQuantums,
+        marketType: perpetualMarket.marketType,
         initialMarginFraction: helpers.ppmToString(Number(liquidityTier.initialMarginPpm)),
         maintenanceMarginFraction: helpers.ppmToString(
           helpers.getMaintenanceMarginPpm(
@@ -337,6 +338,14 @@ export function generatePerpetualMarketMessage(
         ),
         openInterestLowerCap: liquidityTier.openInterestLowerCap,
         openInterestUpperCap: liquidityTier.openInterestUpperCap,
+        tickSize: protocolTranslations.getTickSize(perpetualMarket),
+        stepSize: protocolTranslations.getStepSize(perpetualMarket),
+        priceChange24H: perpetualMarket.priceChange24H,
+        volume24H: perpetualMarket.volume24H,
+        trades24H: perpetualMarket.trades24H,
+        nextFundingRate: perpetualMarket.nextFundingRate,
+        openInterest: perpetualMarket.openInterest,
+        baseOpenInterest: perpetualMarket.baseOpenInterest,
       };
     })
     .value();
