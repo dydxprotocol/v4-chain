@@ -1,0 +1,16 @@
+name: Deploy indxer to Staging Environment
+
+on:
+  push:
+    branches:
+      -pipeline-test-main-replica
+    paths:
+      - 'packages/indexer/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+        
+    steps:
+      - name: Echo Hello World
+        run: echo "Hello World"
