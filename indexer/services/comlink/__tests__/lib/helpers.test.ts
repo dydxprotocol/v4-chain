@@ -857,7 +857,7 @@ describe('helpers', () => {
       );
     });
 
-    it('aggregates multiple pnl ticks same height', () => {
+    it('aggregates multiple pnl ticks same height and de-dupes ticks', () => {
       const pnlTick: PnlTicksFromDatabase = {
         ...testConstants.defaultPnlTick,
         id: PnlTicksTable.uuid(

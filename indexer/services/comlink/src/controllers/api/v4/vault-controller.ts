@@ -641,6 +641,14 @@ function getHeightWindows(
   return windows;
 }
 
+/**
+ * Aggregates vault pnl ticks per hour, filtering out pnl ticks made up of less ticks than expected.
+ * Expected number of pnl ticks is calculated from the number of vaults that were created before
+ * the pnl tick was created.
+ * @param vaultPnlTicks Pnl ticks to aggregate.
+ * @param vaults List of all valid vaults.
+ * @returns 
+ */
 function aggregateVaultPnlTicks(
   vaultPnlTicks: PnlTicksFromDatabase[],
   vaults: VaultFromDatabase[],
@@ -651,11 +659,13 @@ function aggregateVaultPnlTicks(
     (createdAt: string) => { return DateTime.fromISO(createdAt); }
   ).sort((a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; });
   return aggregatedPnlTicks.filter((aggregatedTick: AggregatedPnlTick) => {
+    // Get number of vaults created before the pnl tick was created by binary-searching for the
+    // index of the pnl ticks createdAt in a sorted array of vault createdAt times.
     const numVaultsCreated: number = bounds.le(
       vaultCreationTimes,
       DateTime.fromISO(aggregatedTick.pnlTick.createdAt),
       (a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; }
-    );
+    ) + 1;
     // Number of ticks should be strictly greater than number of vaults created before it
     // as there should be a tick for the main vault subaccount.
     return aggregatedTick.numTicks > numVaultsCreated;
