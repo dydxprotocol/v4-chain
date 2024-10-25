@@ -666,7 +666,7 @@ function aggregateVaultPnlTicks(
       vaultCreationTimes,
       DateTime.fromISO(aggregatedTick.pnlTick.createdAt),
       (a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; },
-    ) + 1;
+    );
     console.log(`Num vaults created: ${numVaultsCreated}, num ticks: ${aggregatedTick.numTicks}, createdAt: ${aggregatedTick.pnlTick.createdAt}`)
     // Number of ticks should be strictly greater than number of vaults created before it
     // as there should be a tick for the main vault subaccount.
