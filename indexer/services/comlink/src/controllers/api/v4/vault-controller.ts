@@ -658,6 +658,7 @@ function aggregateVaultPnlTicks(
   const vaultCreationTimes: DateTime[] = _.map(vaults, 'createdAt').map(
     (createdAt: string) => { return DateTime.fromISO(createdAt); },
   ).sort((a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; });
+  console.log(JSON.stringify(vaultCreationTimes));
   return aggregatedPnlTicks.filter((aggregatedTick: AggregatedPnlTick) => {
     // Get number of vaults created before the pnl tick was created by binary-searching for the
     // index of the pnl ticks createdAt in a sorted array of vault createdAt times.
@@ -666,6 +667,7 @@ function aggregateVaultPnlTicks(
       DateTime.fromISO(aggregatedTick.pnlTick.createdAt),
       (a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; },
     ) + 1;
+    console.log(`Num vaults created: ${numVaultsCreated}, num ticks: ${aggregatedTick.numTicks}, createdAt: ${aggregatedTick.pnlTick.createdAt}`)
     // Number of ticks should be strictly greater than number of vaults created before it
     // as there should be a tick for the main vault subaccount.
     return aggregatedTick.numTicks > numVaultsCreated;
