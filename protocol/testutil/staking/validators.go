@@ -87,6 +87,8 @@ func GetConsAddressByName(name string) sdk.ConsAddress {
 		return constants.BobConsAddress
 	case "carl":
 		return constants.CarlConsAddress
+	case "dave":
+		return constants.DaveConsAddress
 	default:
 		return nil
 	}

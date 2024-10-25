@@ -726,7 +726,13 @@ func (tApp *TestApp) AdvanceToBlock(
 				tApp.builder.t.Fatalf("Failed to get bonded validators: %v", err)
 			}
 
-			// Prepare the proposal and process it.
+			localLastCommit := vetestutil.GetEmptyLocalLastCommit(
+				validators,
+				tApp.App.LastBlockHeight(),
+				0,
+				"localdydxprotocol",
+			)
+
 			prepareRequest := abcitypes.RequestPrepareProposal{
 				Txs:                tApp.passingCheckTxs,
 				MaxTxBytes:         math.MaxInt64,
@@ -734,12 +740,7 @@ func (tApp *TestApp) AdvanceToBlock(
 				Time:               tApp.header.Time,
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
-				LocalLastCommit: vetestutil.GetEmptyLocalLastCommit(
-					validators,
-					tApp.App.LastBlockHeight(),
-					0,
-					"localdydxprotocol",
-				),
+				LocalLastCommit:    localLastCommit,
 			}
 			if options.RequestPrepareProposalTxsOverride != nil {
 				prepareRequest.Txs = options.RequestPrepareProposalTxsOverride
@@ -771,6 +772,8 @@ func (tApp *TestApp) AdvanceToBlock(
 				prepareResponse.Txs = options.RequestProcessProposalTxsOverride
 			}
 
+			proposedLastCommit := vetestutil.GetEmptyProposedLastCommit()
+
 			processRequest := abcitypes.RequestProcessProposal{
 				Txs:                prepareResponse.Txs,
 				Hash:               tApp.header.AppHash,
@@ -778,7 +781,7 @@ func (tApp *TestApp) AdvanceToBlock(
 				Time:               tApp.header.Time,
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
-				ProposedLastCommit: vetestutil.GetEmptyProposedLastCommit(),
+				ProposedLastCommit: proposedLastCommit,
 			}
 			processResponse, processErr := tApp.App.ProcessProposal(&processRequest)
 

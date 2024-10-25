@@ -1,6 +1,7 @@
 package process
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
@@ -58,17 +59,22 @@ func ProcessProposalHandler(
 			metrics.Latency,
 		)
 
+		fmt.Println("PROCESS PROPOSAL HANDLER CALLED", request)
+
 		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
 		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on
 		// consensus round to do so.
 		err := pricesKeeper.UpdateSmoothedSpotPrices(ctx, lib.Uint64LinearInterpolate)
 		if err != nil {
+			fmt.Println("UPDATE SMOOTHED PRICES FAILED", err)
 			recordErrorMetricsWithLabel(metrics.UpdateSmoothedPrices)
 			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)
 		}
 
 		if veutils.AreVEEnabled(ctx) {
+			fmt.Println("VE ENABLED")
 			if len(request.Txs) < constants.MinTxsCountWithVE {
+				fmt.Println("VE ENABLED BUT MISSING COMMIT INFO")
 				ctx.Logger().Error("failed to process proposal: missing commit info", "num_txs", len(request.Txs))
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
@@ -94,6 +100,7 @@ func ProcessProposalHandler(
 				veCodec,
 				extCodec,
 			); err != nil {
+				fmt.Println("DECODE VALIDATE AND CACHE VE FAILED", err)
 				ctx.Logger().Error("failed to decode and validate ve", "err", err)
 				return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 			}
@@ -102,6 +109,7 @@ func ProcessProposalHandler(
 
 		txs, err := DecodeProcessProposalTxs(txConfig.TxDecoder(), request, pricesKeeper)
 		if err != nil {
+			fmt.Println("DECODE PROCESS PROPOSAL TXS FAILED", err)
 			error_lib.LogErrorWithOptionalContext(ctx, "DecodeProcessProposalTxs failed", err)
 			recordErrorMetricsWithLabel(metrics.Decode)
 			return rejectResponse, nil
@@ -110,6 +118,7 @@ func ProcessProposalHandler(
 		err = txs.Validate()
 
 		if err != nil {
+			fmt.Println("DECODE PROCESS PROPOSAL TXS VALIDATE FAILED", err)
 			error_lib.LogErrorWithOptionalContext(ctx, "DecodeProcessProposalTxs.Validate failed", err)
 			recordErrorMetricsWithLabel(metrics.Validate)
 			return rejectResponse, nil
@@ -138,11 +147,14 @@ func DecodeValidateAndCacheVE(
 	voteCodec codec.VoteExtensionCodec,
 	extCodec codec.ExtendedCommitCodec,
 ) error {
+	fmt.Println("DECODE VALIDATE AND CACHE VE CALLED")
 	var extInfo abci.ExtendedCommitInfo
 	extInfo, err := extCodec.Decode(extCommitBz)
 	if err != nil {
+		fmt.Println("DECODE EXTENDED COMMIT INFO FAILED", err)
 		return err
 	}
+	fmt.Println("DECODE EXTENDED COMMIT INFO SUCCESS")
 	if err := ve.ValidateExtendedCommitInfoInProcessProposal(
 		ctx,
 		request.Height,
@@ -152,10 +164,12 @@ func DecodeValidateAndCacheVE(
 		ratelimitKeeper,
 		validateVoteExtensionFn,
 	); err != nil {
+		fmt.Println("VALIDATE EXTENDED COMMIT INFO IN PROCESS PROPOSAL FAILED", err)
 		return err
 	}
-
+	fmt.Println("VALIDATE EXTENDED COMMIT INFO IN PROCESS PROPOSAL SUCCESS")
 	if err := veApplier.ApplyVE(ctx, request.Txs, true); err != nil {
+		fmt.Println("APPLY VE FAILED", err)
 		ctx.Logger().Error("failed to cache VE prices", "err", err)
 	}
 	return nil

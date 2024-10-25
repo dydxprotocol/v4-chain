@@ -2,6 +2,7 @@ package voteweighted
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"sort"
 
@@ -97,6 +98,8 @@ func getMarketToPriceInfoFromVotes(
 	allMarketsPriceInfo := make(map[string]PriceInfo)
 
 	for validatorAddr, validatorPrices := range vePricesPerValidator {
+
+		fmt.Println("VALIDATOR ADDRESS", validatorAddr)
 
 		validatorPower, err := getValidatorPowerByAddress(ctx, validatorStore, validatorAddr)
 		if err != nil {
@@ -245,12 +248,17 @@ func getConverstionRateInfoFromVotes(
 	veConversionRatesPerValidator map[string]*big.Int,
 ) ConverstionRateInfo {
 
+	fmt.Println("GET CONVERSION RATE INFO FROM VOTES STARTED")
+
 	conversionRateInfo := ConverstionRateInfo{
 		ConversionRates: make([]PricePerValidator, 0),
 		TotalWeight:     math.ZeroInt(),
 	}
 
 	for validatorAddr, validatorConversionRate := range veConversionRatesPerValidator {
+		fmt.Println("VALIDATOR ADDRESS", validatorAddr)
+		fmt.Println("VALIDATOR CONVERSION RATE", validatorConversionRate)
+
 		validatorPower, err := getValidatorPowerByAddress(
 			ctx,
 			validatorStore,
@@ -356,14 +364,24 @@ func getValidatorPowerByAddress(
 	validatorStore ValidatorStore,
 	validatorAddr string,
 ) (math.Int, error) {
+	fmt.Println("GETTING VALIDATOR POWER: VALIDATOR ADDRESS AS STING", validatorAddr)
+	// this is issue: you are parsing in string, which is expected to be basic addy.
+	// however, now, it is the acutal valoper address
 	address, err := sdk.ConsAddressFromBech32(validatorAddr)
 	if err != nil {
 		return math.NewInt(0), err
 	}
+	fmt.Println("GETTING VALIDATOR POWER CONS ADDR:", address)
+	fmt.Println("GETTING VALIDATOR POWER CONS ADDR AS STRING:", address.String())
+	fmt.Println("VALIDATOR STORE", validatorStore)
 	validator, err := validatorStore.ValidatorByConsAddr(ctx, address)
+	fmt.Println("GETTING VALIDATOR POWER: VALIDATOR", validator)
+	fmt.Println("GETTING VALIDATOR POWER: ERROR", err)
 	if err != nil {
 		return math.NewInt(0), err
 	}
+
+	fmt.Println("SUCCESSFULLY RETRIEVED VALIDATOR")
 
 	validatorBondedTokens := validator.GetBondedTokens()
 	return validatorBondedTokens, nil

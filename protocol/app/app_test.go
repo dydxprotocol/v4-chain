@@ -46,7 +46,6 @@ import (
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	consumer "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/typ.v4/slices"
 )
@@ -190,7 +189,6 @@ func TestModuleBasics(t *testing.T) {
 		transfer.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
-		consumer.AppModuleBasic{},
 
 		// Custom modules
 		pricesmodule.AppModuleBasic{},

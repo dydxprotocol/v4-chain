@@ -104,7 +104,7 @@ const GenesisState = `{
           "coins": [
             {
               "denom": "adv4tnt",
-              "amount": "500000000000000000000000"
+              "amount": "1000000000000000000000000"
             },
             {
               "denom": "utdai",
@@ -117,7 +117,7 @@ const GenesisState = `{
           "coins": [
             {
               "denom": "adv4tnt",
-              "amount": "500000000000000000000000"
+              "amount": "1000000000000000000000000"
             },
             {
               "denom": "utdai",
@@ -139,7 +139,7 @@ const GenesisState = `{
           "coins": [
             {
               "denom": "adv4tnt",
-              "amount": "500000000000000000000000"
+              "amount": "1000000000000000000000000"
             },
             {
               "denom": "utdai",
@@ -152,7 +152,7 @@ const GenesisState = `{
           "coins": [
             {
               "denom": "adv4tnt",
-              "amount": "500000000000000000000000"
+              "amount": "1000000000000000000000000"
             },
             {
               "denom": "utdai",

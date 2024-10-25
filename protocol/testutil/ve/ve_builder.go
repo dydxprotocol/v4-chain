@@ -73,11 +73,17 @@ func GetEmptyLocalLastCommit(
 	chainId string,
 ) cometabci.ExtendedCommitInfo {
 	var votes []cometabci.ExtendedVoteInfo
+	fmt.Println("GETEMPTYLOCALLASTCOMMIT STARTED")
 	for _, validator := range validators {
+		valConsAddr := constants.GetConsAddressFromStringValidatorAddress(validator.OperatorAddress)
+		fmt.Println("SUCCESSFULLY GOT VALIDATOR ADDRESS IN GET EMPTY LOCAL LAST COMMIT", valConsAddr)
+		votingPower := voteweighted.GetPowerFromBondedTokens(validator.Tokens)
+		fmt.Println("SUCCESSFULLY GOT VOTING POWER IN GET EMPTY LOCAL LAST COMMIT", votingPower)
+
 		ve, err := CreateSignedExtendedVoteInfo(
 			SignedVEInfo{
-				Val:                sdk.ConsAddress(validator.ConsensusPubkey.GetValue()),
-				Power:              voteweighted.GetPowerFromBondedTokens(validator.Tokens),
+				Val:                valConsAddr,
+				Power:              votingPower,
 				Prices:             []vetypes.PricePair{},
 				SDaiConversionRate: "",
 				Height:             height,
@@ -91,7 +97,9 @@ func GetEmptyLocalLastCommit(
 		}
 		votes = append(votes, ve)
 	}
+	fmt.Println("VOTES", votes)
 	extCommitInfo, _, _ := CreateExtendedCommitInfo(votes)
+	fmt.Println("EXTENDED COMMIT INFO ", extCommitInfo)
 	return extCommitInfo
 }
 
@@ -193,22 +201,29 @@ func GetEmptyProposedLastCommit() cometabci.CommitInfo {
 		Votes: []cometabci.VoteInfo{
 			{
 				Validator: cometabci.Validator{
-					Address: constants.CarlEthosConsAddress,
-					Power:   500,
+					Address: constants.AliceConsAddress,
+					Power:   500000,
 				},
 				BlockIdFlag: cometproto.BlockIDFlagCommit,
 			},
 			{
 				Validator: cometabci.Validator{
-					Address: constants.AliceEthosConsAddress,
-					Power:   500,
+					Address: constants.CarlConsAddress,
+					Power:   500000,
 				},
 				BlockIdFlag: cometproto.BlockIDFlagCommit,
 			},
 			{
 				Validator: cometabci.Validator{
-					Address: constants.BobEthosConsAddress,
-					Power:   500,
+					Address: constants.DaveConsAddress,
+					Power:   500000,
+				},
+				BlockIdFlag: cometproto.BlockIDFlagCommit,
+			},
+			{
+				Validator: cometabci.Validator{
+					Address: constants.BobConsAddress,
+					Power:   500000,
 				},
 				BlockIdFlag: cometproto.BlockIDFlagCommit,
 			},
@@ -301,14 +316,21 @@ func GetInjectedExtendedCommitInfoForTestApp(
 
 	validators, err := stakingKeeper.GetBondedValidatorsByPower(ctx)
 	if err != nil {
+		fmt.Println("MASSIVE FAILURE IN GETTING BONDED VALIDATORS")
 		return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to get bonded validators: %w", err)
 	}
 
+	fmt.Println("MASSIVEVALIDATORS", validators)
+
 	var veSignedInfos []SignedVEInfo
-	for _, v := range validators {
+	for _, validator := range validators {
+		valConsAddr := constants.GetConsAddressFromStringValidatorAddress(validator.OperatorAddress)
+
+		fmt.Println("IN LOOP VALIDATOR", validator.OperatorAddress)
+		fmt.Println("VALCONSADDR", valConsAddr)
 		veSignedInfos = append(veSignedInfos, SignedVEInfo{
-			Val:                sdk.ConsAddress(v.ConsensusPubkey.GetValue()),
-			Power:              voteweighted.GetPowerFromBondedTokens(v.Tokens),
+			Val:                valConsAddr,
+			Power:              voteweighted.GetPowerFromBondedTokens(validator.Tokens),
 			Prices:             pricesBz,
 			SDaiConversionRate: sdaiConversionRate,
 			Height:             height,

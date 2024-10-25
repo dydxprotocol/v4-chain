@@ -7,15 +7,15 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	valutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/staking"
 	cometabcitypes "github.com/cometbft/cometbft/abci/types"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cometbftproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
@@ -196,6 +196,11 @@ func TestGetValCmtPubKeyFromVote(t *testing.T) {
 
 	testValPower := int64(1000)
 	testVal := valutils.BuildTestValidator("alice", math.NewInt(testValPower))
+	testValPubKey, err := testVal.ConsPubKey()
+	require.NoError(t, err)
+	protoPubKey, err := cryptocodec.ToCmtProtoPublicKey(testValPubKey)
+	require.NoError(t, err)
+
 	testValConsAddr := constants.AliceConsAddress
 
 	mockVote := cometabcitypes.ExtendedVoteInfo{
@@ -206,18 +211,19 @@ func TestGetValCmtPubKeyFromVote(t *testing.T) {
 	}
 
 	t.Run("Successful public key retrieval", func(t *testing.T) {
-		mockValidatorStore.On("ValidatorByConsAddr", mock.Anything, testValConsAddr).Return(testVal, nil).Once()
+
+		mockValidatorStore.On("GetPubKeyByConsAddr", mock.Anything, testValConsAddr).Return(protoPubKey, nil).Once()
 
 		pubKey, err := veutils.GetValPubKeyFromVote(ctx, mockVote, mockValidatorStore)
 		require.NoError(t, err)
 		require.NotNil(t, pubKey)
 
-		expectedPubKey := constants.AliceEthosPubKey
+		expectedPubKey := constants.AlicePubKey
 		require.Equal(t, expectedPubKey.Bytes(), pubKey.Bytes())
 	})
 
 	t.Run("Validator not found", func(t *testing.T) {
-		unknownConsAddr := constants.BobEthosConsAddress
+		unknownConsAddr := constants.BobConsAddress
 		unknownVote := cometabcitypes.ExtendedVoteInfo{
 			Validator: cometabcitypes.Validator{
 				Address: unknownConsAddr,
@@ -225,7 +231,7 @@ func TestGetValCmtPubKeyFromVote(t *testing.T) {
 			},
 		}
 
-		mockValidatorStore.On("ValidatorByConsAddr", mock.Anything, mock.Anything).Return(stakingtypes.Validator{}, fmt.Errorf("error")).Once()
+		mockValidatorStore.On("GetPubKeyByConsAddr", mock.Anything, mock.Anything).Return(cmtprotocrypto.PublicKey{}, fmt.Errorf("error")).Once()
 
 		_, err := veutils.GetValPubKeyFromVote(ctx, unknownVote, mockValidatorStore)
 		require.Error(t, err)
@@ -233,34 +239,17 @@ func TestGetValCmtPubKeyFromVote(t *testing.T) {
 	})
 
 	t.Run("Invalid public key: validator not found error", func(t *testing.T) {
-		invalidPubkey := &codectypes.Any{
-			TypeUrl: "invalid/type/url",
-			Value:   []byte(""),
+		invalidCmtPubKey := cmtprotocrypto.PublicKey{
+			Sum: &cmtprotocrypto.PublicKey_Ed25519{
+				Ed25519: []byte("invalid"),
+			},
 		}
 
-		invalidVal := stakingtypes.Validator{
-			Status:          testVal.GetStatus(),
-			ConsensusPubkey: invalidPubkey,
-			Tokens:          testVal.GetBondedTokens(),
-		}
-
-		mockValidatorStore.On("ValidatorByConsAddr", mock.Anything, mock.Anything).Return(invalidVal, nil).Once()
+		mockValidatorStore.On("GetPubKeyByConsAddr", mock.Anything, mock.Anything).Return(invalidCmtPubKey, nil).Once()
 
 		_, err := veutils.GetValPubKeyFromVote(ctx, mockVote, mockValidatorStore)
 		require.Error(t, err)
-		require.IsType(t, &veutils.ValidatorNotFoundError{}, err)
-	})
-
-	t.Run("Invalid public key: public key is nil", func(t *testing.T) {
-		invalidVal := stakingtypes.Validator{
-			Tokens: testVal.GetTokens(),
-			Status: testVal.GetStatus(),
-		}
-		mockValidatorStore.On("ValidatorByConsAddr", mock.Anything, mock.Anything).Return(invalidVal, nil).Once()
-
-		_, err := veutils.GetValPubKeyFromVote(ctx, mockVote, mockValidatorStore)
-		require.Error(t, err)
-		require.IsType(t, &veutils.ValidatorNotFoundError{}, err)
+		require.ErrorContains(t, err, "failed to convert validator")
 	})
 }
 
