@@ -58,7 +58,9 @@ import {
   defaultTendermintEventId2,
   defaultTendermintEventId3,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
-import { AggregatedPnlTick, AssetPositionsMap, PerpetualPositionWithFunding, SubaccountResponseObject } from '../../src/types';
+import {
+  AggregatedPnlTick, AssetPositionsMap, PerpetualPositionWithFunding, SubaccountResponseObject,
+} from '../../src/types';
 import { ZERO, ZERO_USDC_POSITION } from '../../src/lib/constants';
 import { DateTime } from 'luxon';
 
@@ -849,7 +851,7 @@ describe('helpers', () => {
         aggregatedPnlTicks,
       ).toEqual(
         [expect.objectContaining(
-          { 
+          {
             pnlTick: expect.objectContaining(testConstants.defaultPnlTick),
             numTicks: 1,
           },
@@ -917,10 +919,10 @@ describe('helpers', () => {
         blockHeight: blockHeight4,
         blockTime: blockTime4,
         createdAt: blockTime4,
-      }
+      };
 
       const aggregatedPnlTicks: AggregatedPnlTick[] = aggregateHourlyPnlTicks(
-        [pnlTick, pnlTick2, pnlTick3, pnlTick4],
+        [pnlTick, pnlTick2, pnlTick3, pnlTick4, pnlTick5],
       );
       expect(aggregatedPnlTicks).toEqual(
         expect.arrayContaining([

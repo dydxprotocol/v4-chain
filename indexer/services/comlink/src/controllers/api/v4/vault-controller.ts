@@ -27,6 +27,7 @@ import {
   MEGAVAULT_SUBACCOUNT_ID,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
+import bounds from 'binary-searching';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import _ from 'lodash';
@@ -58,7 +59,6 @@ import {
   VaultsHistoricalPnlRequest,
   AggregatedPnlTick,
 } from '../../../types';
-import bounds from 'binary-searching';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'vault-controller';
@@ -311,7 +311,7 @@ router.get(
         Date.now() - start,
       );
     }
-  }
+  },
 );
 
 async function getVaultSubaccountPnlTicks(
@@ -647,7 +647,7 @@ function getHeightWindows(
  * the pnl tick was created.
  * @param vaultPnlTicks Pnl ticks to aggregate.
  * @param vaults List of all valid vaults.
- * @returns 
+ * @returns
  */
 function aggregateVaultPnlTicks(
   vaultPnlTicks: PnlTicksFromDatabase[],
@@ -656,7 +656,7 @@ function aggregateVaultPnlTicks(
   // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
   const aggregatedPnlTicks: AggregatedPnlTick[] = aggregateHourlyPnlTicks(vaultPnlTicks);
   const vaultCreationTimes: DateTime[] = _.map(vaults, 'createdAt').map(
-    (createdAt: string) => { return DateTime.fromISO(createdAt); }
+    (createdAt: string) => { return DateTime.fromISO(createdAt); },
   ).sort((a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; });
   return aggregatedPnlTicks.filter((aggregatedTick: AggregatedPnlTick) => {
     // Get number of vaults created before the pnl tick was created by binary-searching for the
@@ -664,12 +664,12 @@ function aggregateVaultPnlTicks(
     const numVaultsCreated: number = bounds.le(
       vaultCreationTimes,
       DateTime.fromISO(aggregatedTick.pnlTick.createdAt),
-      (a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; }
+      (a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; },
     ) + 1;
     // Number of ticks should be strictly greater than number of vaults created before it
     // as there should be a tick for the main vault subaccount.
     return aggregatedTick.numTicks > numVaultsCreated;
-  }).map((aggregatedPnlTick: AggregatedPnlTick) => { return aggregatedPnlTick.pnlTick });
+  }).map((aggregatedPnlTick: AggregatedPnlTick) => { return aggregatedPnlTick.pnlTick; });
 }
 
 async function getVaultMapping(): Promise<VaultMapping> {

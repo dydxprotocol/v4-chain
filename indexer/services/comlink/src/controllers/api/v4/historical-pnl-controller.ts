@@ -11,6 +11,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
+import _ from 'lodash';
 import {
   Controller, Get, Query, Route,
 } from 'tsoa';
@@ -31,7 +32,6 @@ import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { pnlTicksToResponseObject } from '../../../request-helpers/request-transformer';
 import { PnlTicksRequest, HistoricalPnlResponse, ParentSubaccountPnlTicksRequest } from '../../../types';
-import _ from 'lodash';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'historical-pnl-controller';

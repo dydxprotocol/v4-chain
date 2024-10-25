@@ -717,6 +717,6 @@ export function aggregateHourlyPnlTicks(
     return {
       pnlTick: hourlyPnlTicks.get(hour) as PnlTicksFromDatabase,
       numTicks: (hourlySubaccountIds.get(hour) as Set<string>).size,
-    }
+    };
   });
 }
