@@ -223,6 +223,10 @@ export interface TradingPerpetualMarketMessage {
   volume24H?: string,
   trades24H?: number,
   nextFundingRate?: string,
+
+  // Derived fields
+  tickSize?: string,
+  stepSize?: string,
 }
 
 export type OraclePriceMarketMessageContentsMapping = {
