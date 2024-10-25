@@ -3,7 +3,7 @@ name = "dydx-proto-rust"
 version = "0.1.0"
 edition = "2021"
 description = "Compiled dYdX protobuf files"
-repository = "https://github.com/dydxprotocol/v4-chain"
+repository = "https://github.com/dydxprotocol/v4-chain/tree/main/v4-proto-rs"
 license = "LicenseRef-dYdX-Custom"
 
 [lib]
