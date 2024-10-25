@@ -25,9 +25,17 @@ allow = [
     "ISC",
     "Unicode-DFS-2016",
     "OpenSSL",
+    "LicenseRef-dYdX-Custom",
 ]
 confidence-threshold = 0.8
 exceptions = []
+
+[[licenses.clarify]]
+crate = "dydx-proto-rust"
+expression = "LicenseRef-dYdX-Custom"
+license-files = [
+    { path = "LICENSE", hash = 0x30bcd1e3 },
+]
 
 [[licenses.clarify]]
 name = "ring"
