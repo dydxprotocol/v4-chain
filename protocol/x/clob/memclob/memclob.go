@@ -2527,19 +2527,19 @@ func (m *MemClobPriceTimePriority) initializeTakerOrderVariables(
 	ctx sdk.Context,
 	newTakerOrder types.MatchableOrder,
 ) (
-	types.ClobPairId,
-	*types.Orderbook,
-	bool,
-	satypes.SubaccountId,
-	bool,
-	satypes.BaseQuantums) {
-	clobPairId := newTakerOrder.GetClobPairId()
-	orderbook := m.openOrders.mustGetOrderbook(clobPairId)
-	takerIsBuy := newTakerOrder.IsBuy()
-	takerSubaccountId := newTakerOrder.GetSubaccountId()
-	takerIsLiquidation := newTakerOrder.IsLiquidation()
+	clobPairId types.ClobPairId,
+	orderbook *types.Orderbook,
+	takerIsBuy bool,
+	takerSubaccountId satypes.SubaccountId,
+	takerIsLiquidation bool,
+	takerRemainingSize satypes.BaseQuantums,
+) {
+	clobPairId = newTakerOrder.GetClobPairId()
+	orderbook = m.openOrders.mustGetOrderbook(clobPairId)
+	takerIsBuy = newTakerOrder.IsBuy()
+	takerSubaccountId = newTakerOrder.GetSubaccountId()
+	takerIsLiquidation = newTakerOrder.IsLiquidation()
 
-	var takerRemainingSize satypes.BaseQuantums
 	if takerIsLiquidation {
 		takerRemainingSize = newTakerOrder.GetBaseQuantums()
 	} else {
@@ -2964,8 +2964,8 @@ func (m *MemClobPriceTimePriority) validateReplacementOrder(
 	existingRestingOrder, restingOrderExists := m.openOrders.getOrder(orderId)
 	existingMatchedOrder, matchedOrderExists := m.operationsToPropose.MatchedOrderIdToOrder[orderId]
 
-	validRestingOrderExists := restingOrderExists && existingRestingOrder.MustCmpReplacementOrder(&order) >= 0
-	validMatchedOrderExists := matchedOrderExists && existingMatchedOrder.MustCmpReplacementOrder(&order) >= 0
+	validRestingOrderExists := restingOrderExists && (existingRestingOrder.MustCmpReplacementOrder(&order) > 0 || existingRestingOrder.IsIdenticalTo(&order))
+	validMatchedOrderExists := matchedOrderExists && (existingMatchedOrder.MustCmpReplacementOrder(&order) > 0 || existingMatchedOrder.IsIdenticalTo(&order))
 
 	if validRestingOrderExists {
 		return types.ErrInvalidReplacement

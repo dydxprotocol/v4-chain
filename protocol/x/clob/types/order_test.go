@@ -188,15 +188,10 @@ func TestOrder_MustCmpReplacementOrder(t *testing.T) {
 			y: types.Order{GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 2}},
 			r: -1,
 		},
-		"Short-Term Hash -1": {
+		"Short-Term Hash 0": {
 			x: types.Order{GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1}, Subticks: 1},
 			y: types.Order{GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1}, Subticks: 2},
-			r: -1,
-		},
-		"Short-Term Hash 1": {
-			x: types.Order{GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1}, Subticks: 2},
-			y: types.Order{GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1}, Subticks: 1},
-			r: 1,
+			r: 0,
 		},
 		"Short-Term Equal": {
 			x: types.Order{GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 2}},
@@ -225,7 +220,7 @@ func TestOrder_MustCmpReplacementOrder(t *testing.T) {
 			},
 			r: -1,
 		},
-		"Long-Term Hash -1": {
+		"Long-Term Hash 0": {
 			x: types.Order{
 				Subticks:     1,
 				OrderId:      types.OrderId{OrderFlags: types.OrderIdFlags_LongTerm},
@@ -236,9 +231,9 @@ func TestOrder_MustCmpReplacementOrder(t *testing.T) {
 				OrderId:      types.OrderId{OrderFlags: types.OrderIdFlags_LongTerm},
 				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 1},
 			},
-			r: -1,
+			r: 0,
 		},
-		"Long-Term Hash 1": {
+		"Long-Term Hash alternative 0": {
 			x: types.Order{
 				Subticks:     2,
 				OrderId:      types.OrderId{OrderFlags: types.OrderIdFlags_LongTerm},
@@ -249,7 +244,7 @@ func TestOrder_MustCmpReplacementOrder(t *testing.T) {
 				OrderId:      types.OrderId{OrderFlags: types.OrderIdFlags_LongTerm},
 				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 1},
 			},
-			r: 1,
+			r: 0,
 		},
 		"Long-Term Equal": {
 			x: types.Order{
@@ -284,7 +279,7 @@ func TestOrder_MustCmpReplacementOrder(t *testing.T) {
 			},
 			r: -1,
 		},
-		"Conditional Hash -1": {
+		"Conditional Hash 0": {
 			x: types.Order{
 				Subticks:     2,
 				OrderId:      types.OrderId{OrderFlags: types.OrderIdFlags_Conditional},
@@ -295,20 +290,7 @@ func TestOrder_MustCmpReplacementOrder(t *testing.T) {
 				OrderId:      types.OrderId{OrderFlags: types.OrderIdFlags_Conditional},
 				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 1},
 			},
-			r: -1,
-		},
-		"Conditional Hash 1": {
-			x: types.Order{
-				Subticks:     1,
-				OrderId:      types.OrderId{OrderFlags: types.OrderIdFlags_Conditional},
-				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 1},
-			},
-			y: types.Order{
-				Subticks:     2,
-				OrderId:      types.OrderId{OrderFlags: types.OrderIdFlags_Conditional},
-				GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 1},
-			},
-			r: 1,
+			r: 0,
 		},
 		"Conditional Equal": {
 			x: types.Order{

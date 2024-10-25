@@ -784,12 +784,12 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				},
 			},
 		},
-		"Fail: Replacement order has equal GTB to existing order": {
+		"Success: Replacement order has equal GTB to existing order": {
 			blocks: []blockOrdersAndExpectations{
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
-						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
+						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
 					},
 					orderIdsExpectations: map[clobtypes.OrderId]orderIdExpectations{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
