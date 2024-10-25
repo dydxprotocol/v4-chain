@@ -560,9 +560,10 @@ func (k Keeper) PersistMatchOrdersToState(
 			makerOrders,
 		)
 
-		k.GetFullNodeStreamingManager().StageFinalizeBlockFill(
-			ctx,
+		k.GetFullNodeStreamingManager().SendOrderbookFillUpdate(
 			streamOrderbookFill,
+			ctx,
+			k.PerpetualIdToClobPairId,
 		)
 	}
 
@@ -670,9 +671,10 @@ func (k Keeper) PersistMatchLiquidationToState(
 			takerOrder,
 			makerOrders,
 		)
-		k.GetFullNodeStreamingManager().StageFinalizeBlockFill(
-			ctx,
+		k.GetFullNodeStreamingManager().SendOrderbookFillUpdate(
 			streamOrderbookFill,
+			ctx,
+			k.PerpetualIdToClobPairId,
 		)
 	}
 	return nil
@@ -750,7 +752,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	// negative TNC subaccount was seen.
 	if len(matchDeleveraging.GetFills()) == 0 {
 		if !shouldDeleverageAtBankruptcyPrice {
-			return errorsmod.Wrapf(
+			return errorsmod.Wrap(
 				types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
 				fmt.Sprintf(
 					"PersistMatchDeleveragingToState: zero-fill deleveraging operation included for subaccount %+v"+
@@ -843,11 +845,9 @@ func (k Keeper) PersistMatchDeleveragingToState(
 					},
 				},
 			}
-			k.SendOrderbookFillUpdates(
+			k.SendOrderbookFillUpdate(
 				ctx,
-				[]types.StreamOrderbookFill{
-					streamOrderbookFill,
-				},
+				streamOrderbookFill,
 			)
 		}
 	}

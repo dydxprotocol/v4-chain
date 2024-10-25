@@ -158,11 +158,12 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 // MaybeCreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
 func (m *MemClobPriceTimePriority) MaybeCreateOrderbook(
 	clobPair types.ClobPair,
-) {
+) (created bool) {
 	if _, exists := m.orderbooks[clobPair.GetClobPairId()]; exists {
-		return
+		return false
 	}
 	m.CreateOrderbook(clobPair)
+	return true
 }
 
 // CreateOrderbook is used for updating memclob internal data structures to mark an orderbook as created.
@@ -402,7 +403,7 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 		)
 		clobMatch := internalOperation.GetMatch()
 		orderbookMatchFill := m.GenerateStreamOrderbookFill(ctx, *clobMatch, takerOrder, makerOrders)
-		m.clobKeeper.SendOrderbookFillUpdates(ctx, []types.StreamOrderbookFill{orderbookMatchFill})
+		m.clobKeeper.SendOrderbookFillUpdate(ctx, orderbookMatchFill)
 	}
 
 	// Build a slice of all subaccounts which had matches this matching loop, and sort them for determinism.
@@ -1622,6 +1623,24 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 				},
 			)
 			continue
+		}
+
+		// Perform a lightweight check on maker orders that use the new smart account authentication flow.
+		// Note that this only applies to short term orders since short term orders go through the ante
+		// handlers one more time during `DeliverTx`.
+		if makerOrder.Order.IsShortTermOrder() {
+			txBytes := m.operationsToPropose.MustGetShortTermOrderTxBytes(makerOrder.Order)
+			err := m.clobKeeper.MaybeValidateAuthenticators(ctx, txBytes)
+			if err != nil {
+				makerOrdersToRemove = append(
+					makerOrdersToRemove,
+					OrderWithRemovalReason{
+						Order:         makerOrder.Order,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_PERMISSIONED_KEY_EXPIRED,
+					},
+				)
+				continue
+			}
 		}
 
 		makerRemainingSize, makerHasRemainingSize := m.GetOrderRemainingAmount(ctx, makerOrder.Order)

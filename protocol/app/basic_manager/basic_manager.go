@@ -42,7 +42,7 @@ import (
 	subaccountsmodule "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
 	vaultmodule "github.com/dydxprotocol/v4-chain/protocol/x/vault"
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
-	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
+	marketmapmodule "github.com/skip-mev/connect/v2/x/marketmap"
 
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +16,7 @@ import (
 	keeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 )
 
-func TimestampNonceKeepers(t testing.TB) (
+func AccountPlusKeepers(t testing.TB) (
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 	storeKey storetypes.StoreKey,
@@ -32,7 +32,7 @@ func TimestampNonceKeepers(t testing.TB) (
 		) []GenesisInitializer {
 			// Define necessary keepers here for unit tests
 			keeper, storeKey, mockTimeProvider =
-				createTimestampNonceKeeper(stateStore, db, cdc)
+				createAccountPlusKeeper(stateStore, db, cdc)
 
 			return []GenesisInitializer{keeper}
 		},
@@ -41,7 +41,7 @@ func TimestampNonceKeepers(t testing.TB) (
 	return ctx, keeper, storeKey, mockTimeProvider
 }
 
-func createTimestampNonceKeeper(
+func createAccountPlusKeeper(
 	stateStore storetypes.CommitMultiStore,
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,

@@ -10,11 +10,68 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
+
+// MaybeValidateAuthenticators checks if the transaction has authenticators specified and if so,
+// validates them. It returns an error if the authenticators are not valid or removed from state.
+func (k Keeper) MaybeValidateAuthenticators(ctx sdk.Context, tx sdk.Tx) error {
+	// Check if the tx had authenticator specified.
+	specified, txOptions := lib.HasSelectedAuthenticatorTxExtensionSpecified(tx, k.cdc)
+	if !specified {
+		return nil
+	}
+
+	// The tx had authenticators specified.
+	// First make sure smart account flow is enabled.
+	if active := k.GetIsSmartAccountActive(ctx); !active {
+		return types.ErrSmartAccountNotActive
+	}
+
+	// Make sure txn is a SigVerifiableTx and get signers from the tx.
+	sigVerifiableTx, ok := tx.(authsigning.SigVerifiableTx)
+	if !ok {
+		return errors.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+	}
+
+	signers, err := sigVerifiableTx.GetSigners()
+	if err != nil {
+		return err
+	}
+
+	if len(signers) != 1 {
+		return errors.Wrap(types.ErrTxnHasMultipleSigners, "only one signer is allowed")
+	}
+
+	account := sdk.AccAddress(signers[0])
+
+	// Retrieve the selected authenticators from the extension and make sure they are valid, i.e. they
+	// are registered and not removed from state.
+	//
+	// Note that we only verify the existence of the authenticators here without actually
+	// runnning them. This is because all current authenticators are stateless and do not read/modify any states.
+	selectedAuthenticators := txOptions.GetSelectedAuthenticators()
+	for _, authenticatorId := range selectedAuthenticators {
+		_, err := k.GetInitializedAuthenticatorForAccount(
+			ctx,
+			account,
+			authenticatorId,
+		)
+		if err != nil {
+			return errors.Wrapf(
+				err,
+				"selected authenticator (%s, %d) is not registered or removed from state",
+				account.String(),
+				authenticatorId,
+			)
+		}
+	}
+	return nil
+}
 
 // AddAuthenticator adds an authenticator to an account, this function is used to add multiple
 // authenticators such as SignatureVerifications and AllOfs
@@ -39,19 +96,27 @@ func (k Keeper) AddAuthenticator(
 	}
 
 	k.SetNextAuthenticatorId(ctx, id+1)
-
-	store := prefix.NewStore(
-		ctx.KVStore(k.storeKey),
-		[]byte(types.AuthenticatorKeyPrefix),
-	)
 	authenticator := types.AccountAuthenticator{
 		Id:     id,
 		Type:   authenticatorType,
 		Config: config,
 	}
-	b := k.cdc.MustMarshal(&authenticator)
-	store.Set(types.KeyAccountId(account, id), b)
+	k.SetAuthenticator(ctx, account.String(), id, authenticator)
 	return id, nil
+}
+
+func (k Keeper) SetAuthenticator(
+	ctx sdk.Context,
+	account string,
+	authenticatorId uint64,
+	authenticator types.AccountAuthenticator,
+) {
+	store := prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.AuthenticatorKeyPrefix),
+	)
+	b := k.cdc.MustMarshal(&authenticator)
+	store.Set(types.BuildKey(account, authenticatorId), b)
 }
 
 // RemoveAuthenticator removes an authenticator from an account
@@ -144,11 +209,11 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	ctx sdk.Context,
 	account sdk.AccAddress,
 	selectedAuthenticator uint64,
-) (authenticator.InitializedAuthenticator, error) {
+) (types.InitializedAuthenticator, error) {
 	// Get the authenticator data from the store
 	authenticatorFromStore, err := k.GetSelectedAuthenticatorData(ctx, account, selectedAuthenticator)
 	if err != nil {
-		return authenticator.InitializedAuthenticator{}, err
+		return types.InitializedAuthenticator{}, err
 	}
 
 	uninitializedAuthenticator := k.authenticatorManager.GetAuthenticatorByType(authenticatorFromStore.Type)
@@ -160,13 +225,14 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 			"account asscoicated authenticator not registered in manager",
 			"type", authenticatorFromStore.Type,
 			"id", selectedAuthenticator,
+			"account", account.String(),
 		)
 
-		return authenticator.InitializedAuthenticator{},
+		return types.InitializedAuthenticator{},
 			errors.Wrapf(
 				sdkerrors.ErrLogic,
-				"authenticator id %d failed to initialize, authenticator type %s not registered in manager",
-				selectedAuthenticator, authenticatorFromStore.Type,
+				"authenticator id %d failed to initialize for account %s, authenticator type %s not registered in manager",
+				selectedAuthenticator, account.String(), authenticatorFromStore.Type,
 			)
 	}
 	// Ensure that initialization of each authenticator works as expected
@@ -174,23 +240,23 @@ func (k Keeper) GetInitializedAuthenticatorForAccount(
 	// NOTE: The authenticator manager returns a struct that is reused
 	initializedAuthenticator, err := uninitializedAuthenticator.Initialize(authenticatorFromStore.Config)
 	if err != nil {
-		return authenticator.InitializedAuthenticator{},
+		return types.InitializedAuthenticator{},
 			errors.Wrapf(
 				err,
-				"authenticator %d with type %s failed to initialize",
-				selectedAuthenticator, authenticatorFromStore.Type,
+				"authenticator %d with type %s failed to initialize for account %s",
+				selectedAuthenticator, authenticatorFromStore.Type, account.String(),
 			)
 	}
 	if initializedAuthenticator == nil {
-		return authenticator.InitializedAuthenticator{},
+		return types.InitializedAuthenticator{},
 			errors.Wrapf(
 				types.ErrInitializingAuthenticator,
-				"authenticator.Initialize returned nil for %d with type %s",
-				selectedAuthenticator, authenticatorFromStore.Type,
+				"authenticator.Initialize returned nil for %d with type %s for account %s",
+				selectedAuthenticator, authenticatorFromStore.Type, account.String(),
 			)
 	}
 
-	finalAuthenticator := authenticator.InitializedAuthenticator{
+	finalAuthenticator := types.InitializedAuthenticator{
 		Id:            authenticatorFromStore.Id,
 		Authenticator: initializedAuthenticator,
 	}

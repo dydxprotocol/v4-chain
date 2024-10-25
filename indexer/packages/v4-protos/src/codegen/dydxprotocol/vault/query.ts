@@ -1,7 +1,7 @@
 import { VaultType, VaultTypeSDKType, VaultId, VaultIdSDKType } from "./vault";
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
 import { NumShares, NumSharesSDKType, ShareUnlock, ShareUnlockSDKType, OwnerShare, OwnerShareSDKType } from "./share";
-import { Params, ParamsSDKType, QuotingParams, QuotingParamsSDKType, OperatorParams, OperatorParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
+import { QuotingParams, QuotingParamsSDKType, OperatorParams, OperatorParamsSDKType, VaultParams, VaultParamsSDKType } from "./params";
 import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
@@ -14,20 +14,12 @@ export interface QueryParamsRequestSDKType {}
 /** QueryParamsResponse is a response type for the Params RPC method. */
 
 export interface QueryParamsResponse {
-  /** Deprecated since v6.x in favor of default_quoting_params. */
-
-  /** @deprecated */
-  params?: Params;
   defaultQuotingParams?: QuotingParams;
   operatorParams?: OperatorParams;
 }
 /** QueryParamsResponse is a response type for the Params RPC method. */
 
 export interface QueryParamsResponseSDKType {
-  /** Deprecated since v6.x in favor of default_quoting_params. */
-
-  /** @deprecated */
-  params?: ParamsSDKType;
   default_quoting_params?: QuotingParamsSDKType;
   operator_params?: OperatorParamsSDKType;
 }
@@ -344,7 +336,6 @@ export const QueryParamsRequest = {
 
 function createBaseQueryParamsResponse(): QueryParamsResponse {
   return {
-    params: undefined,
     defaultQuotingParams: undefined,
     operatorParams: undefined
   };
@@ -352,16 +343,12 @@ function createBaseQueryParamsResponse(): QueryParamsResponse {
 
 export const QueryParamsResponse = {
   encode(message: QueryParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.params !== undefined) {
-      Params.encode(message.params, writer.uint32(10).fork()).ldelim();
-    }
-
     if (message.defaultQuotingParams !== undefined) {
-      QuotingParams.encode(message.defaultQuotingParams, writer.uint32(18).fork()).ldelim();
+      QuotingParams.encode(message.defaultQuotingParams, writer.uint32(10).fork()).ldelim();
     }
 
     if (message.operatorParams !== undefined) {
-      OperatorParams.encode(message.operatorParams, writer.uint32(26).fork()).ldelim();
+      OperatorParams.encode(message.operatorParams, writer.uint32(18).fork()).ldelim();
     }
 
     return writer;
@@ -377,14 +364,10 @@ export const QueryParamsResponse = {
 
       switch (tag >>> 3) {
         case 1:
-          message.params = Params.decode(reader, reader.uint32());
-          break;
-
-        case 2:
           message.defaultQuotingParams = QuotingParams.decode(reader, reader.uint32());
           break;
 
-        case 3:
+        case 2:
           message.operatorParams = OperatorParams.decode(reader, reader.uint32());
           break;
 
@@ -399,7 +382,6 @@ export const QueryParamsResponse = {
 
   fromPartial(object: DeepPartial<QueryParamsResponse>): QueryParamsResponse {
     const message = createBaseQueryParamsResponse();
-    message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
     message.defaultQuotingParams = object.defaultQuotingParams !== undefined && object.defaultQuotingParams !== null ? QuotingParams.fromPartial(object.defaultQuotingParams) : undefined;
     message.operatorParams = object.operatorParams !== undefined && object.operatorParams !== null ? OperatorParams.fromPartial(object.operatorParams) : undefined;
     return message;

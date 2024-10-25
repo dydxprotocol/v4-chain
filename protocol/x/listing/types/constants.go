@@ -14,4 +14,6 @@ const (
 	DefaultQuantumConversionExponent = -9
 
 	ResolutionOffset = -6
+
+	DefaultMarketsHardCap = 500
 )

@@ -5,6 +5,7 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -14,7 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/marketmap"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmaptypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 )
 
 // genNumMarkets returns randomized num markets.
@@ -47,8 +48,10 @@ func genMarketExponent(r *rand.Rand, isReasonableGenesis bool) int {
 // genMarketName return randomized market name.
 func genMarketName(r *rand.Rand, existingMarketNames map[string]bool) string {
 	marketName := simtypes.RandStringOfLength(r, simtypes.RandIntBetween(r, 3, 6)) + "-USD"
+	marketName = strings.ToUpper(marketName)
 	for existingMarketNames[marketName] {
 		marketName = simtypes.RandStringOfLength(r, simtypes.RandIntBetween(r, 3, 6)) + "-USD"
+		marketName = strings.ToUpper(marketName)
 	}
 	return marketName
 }

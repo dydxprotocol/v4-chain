@@ -590,7 +590,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobs {
-				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ctx,
 					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
@@ -623,7 +623,16 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			// Create all existing orders.
 			for _, order := range tc.existingOrders {
-				_, _, err := ks.ClobKeeper.PlaceShortTermOrder(ctx, &types.MsgPlaceOrder{Order: order})
+				msg := &types.MsgPlaceOrder{Order: order}
+
+				txBuilder := constants.TestEncodingCfg.TxConfig.NewTxBuilder()
+				err := txBuilder.SetMsgs(msg)
+				require.NoError(t, err)
+				bytes, err := constants.TestEncodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+				require.NoError(t, err)
+				ctx = ctx.WithTxBytes(bytes)
+
+				_, _, err = ks.ClobKeeper.PlaceShortTermOrder(ctx, msg)
 				require.NoError(t, err)
 			}
 
@@ -632,6 +641,14 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			ctx.MultiStore().SetTracer(traceDecoder)
 
 			msg := &types.MsgPlaceOrder{Order: tc.order}
+
+			txBuilder := constants.TestEncodingCfg.TxConfig.NewTxBuilder()
+			err = txBuilder.SetMsgs(msg)
+			require.NoError(t, err)
+			bytes, err := constants.TestEncodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+			require.NoError(t, err)
+			ctx = ctx.WithTxBytes(bytes)
+
 			orderSizeOptimisticallyFilledFromMatching,
 				orderStatus,
 				err := ks.ClobKeeper.PlaceShortTermOrder(ctx, msg)
@@ -834,7 +851,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 
 			// Create all CLOBs.
 			for _, clobPair := range tc.clobs {
-				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ctx,
 					clobPair.Id,
 					clobPair.GetPerpetualClobMetadata().PerpetualId,
@@ -965,7 +982,7 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 			),
 		),
 	).Once().Return()
-	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+	_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 		ctx,
 		constants.ClobPair_Btc.Id,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -1022,7 +1039,7 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 			),
 		),
 	).Once().Return()
-	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+	_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 		ks.Ctx,
 		constants.ClobPair_Btc.Id,
 		clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -1779,7 +1796,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 						),
 					),
 				).Once().Return()
-				_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+				_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 					ks.Ctx,
 					cp.Id,
 					perpetualId,
@@ -1836,7 +1853,7 @@ func TestGetStatePosition_PanicsOnInvalidClob(t *testing.T) {
 
 // 	// Create CLOB pair.
 // 	clobPair := constants.ClobPair_Asset
-// 	clobKeeper.CreatePerpetualClobPair(
+// 	clobKeeper.CreatePerpetualClobPairAndMemStructs(
 // 		ctx,
 // 		clobPair.Metadata.(*types.ClobPair_PerpetualClobMetadata),
 // 		satypes.BaseQuantums(clobPair.StepBaseQuantums),
@@ -1997,7 +2014,7 @@ func TestInitStatefulOrders(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ks.Ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -2167,7 +2184,7 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -2297,7 +2314,7 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),

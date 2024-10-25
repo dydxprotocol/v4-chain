@@ -87,10 +87,6 @@ type SubaccountsKeeper interface {
 		revSharesForFill revsharetypes.RevSharesForFill,
 		fillForProcess FillForProcess,
 	) error
-	SendFinalizedSubaccountUpdates(
-		ctx sdk.Context,
-		subaccountUpdates []satypes.StreamSubaccountUpdate,
-	)
 }
 
 type AssetsKeeper interface {
@@ -183,4 +179,8 @@ type RevShareKeeper interface {
 
 type AffiliatesKeeper interface {
 	GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error)
+}
+
+type AccountPlusKeeper interface {
+	MaybeValidateAuthenticators(ctx sdk.Context, tx sdk.Tx) error
 }

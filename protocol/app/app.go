@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -33,6 +34,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/client"
 	cosmosflags "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -196,9 +198,9 @@ import (
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
 	vestmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
-	marketmapmodulekeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmapmodule "github.com/skip-mev/connect/v2/x/marketmap"
+	marketmapmodulekeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
+	marketmapmoduletypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 
 	// IBC
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
@@ -223,16 +225,16 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 
 	// Slinky
-	slinkyproposals "github.com/skip-mev/slinky/abci/proposals"
-	"github.com/skip-mev/slinky/abci/strategies/aggregator"
-	compression "github.com/skip-mev/slinky/abci/strategies/codec"
-	"github.com/skip-mev/slinky/abci/strategies/currencypair"
-	"github.com/skip-mev/slinky/abci/ve"
-	oracleconfig "github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/pkg/math/voteweighted"
-	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
-	servicemetrics "github.com/skip-mev/slinky/service/metrics"
-	promserver "github.com/skip-mev/slinky/service/servers/prometheus"
+	slinkyproposals "github.com/skip-mev/connect/v2/abci/proposals"
+	"github.com/skip-mev/connect/v2/abci/strategies/aggregator"
+	compression "github.com/skip-mev/connect/v2/abci/strategies/codec"
+	"github.com/skip-mev/connect/v2/abci/strategies/currencypair"
+	"github.com/skip-mev/connect/v2/abci/ve"
+	oracleconfig "github.com/skip-mev/connect/v2/oracle/config"
+	"github.com/skip-mev/connect/v2/pkg/math/voteweighted"
+	oracleclient "github.com/skip-mev/connect/v2/service/clients/oracle"
+	servicemetrics "github.com/skip-mev/connect/v2/service/metrics"
+	promserver "github.com/skip-mev/connect/v2/service/servers/prometheus"
 
 	// Full Node Streaming
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
@@ -413,7 +415,17 @@ func New(
 	// Enable optimistic block execution.
 	if appFlags.OptimisticExecutionEnabled {
 		logger.Info("optimistic execution is enabled.")
-		baseAppOptions = append(baseAppOptions, baseapp.SetOptimisticExecution())
+		if appFlags.OptimisticExecutionTestAbortRate > 0 {
+			logger.Warn(fmt.Sprintf(
+				"Test flag optimistic-execution-test-abort-rate is set: %v\n",
+				appFlags.OptimisticExecutionTestAbortRate,
+			))
+		}
+		baseAppOptions = append(
+			baseAppOptions,
+			baseapp.SetOptimisticExecution(
+				oe.WithAbortRate(int(appFlags.OptimisticExecutionTestAbortRate)),
+			))
 	}
 
 	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
@@ -876,6 +888,7 @@ func New(
 				)
 				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetMarketPairHC(), maxDaemonUnhealthyDuration)
 				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetPriceHC(), maxDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient.GetSidecarVersionHC(), maxDaemonUnhealthyDuration)
 			}
 		}
 
@@ -1100,6 +1113,28 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
+	// Initialize authenticators
+	app.AuthenticatorManager = authenticator.NewAuthenticatorManager()
+	app.AuthenticatorManager.InitializeAuthenticators(
+		[]accountplusmoduletypes.Authenticator{
+			authenticator.NewAllOf(app.AuthenticatorManager),
+			authenticator.NewAnyOf(app.AuthenticatorManager),
+			authenticator.NewSignatureVerification(app.AccountKeeper),
+			authenticator.NewMessageFilter(),
+			authenticator.NewClobPairIdFilter(),
+			authenticator.NewSubaccountFilter(),
+		},
+	)
+	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
+		appCodec,
+		keys[accountplusmoduletypes.StoreKey],
+		app.AuthenticatorManager,
+		[]string{
+			lib.GovModuleAddress.String(),
+		},
+	)
+	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
+
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
 	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
@@ -1127,6 +1162,7 @@ func New(
 		app.StatsKeeper,
 		app.RewardsKeeper,
 		app.AffiliatesKeeper,
+		app.AccountPlusKeeper,
 		app.IndexerEventManager,
 		app.FullNodeStreamingManager,
 		txConfig.TxDecoder(),
@@ -1206,6 +1242,7 @@ func New(
 		app.ClobKeeper,
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
+		app.VaultKeeper,
 	)
 	listingModule := listingmodule.NewAppModule(
 		appCodec,
@@ -1214,22 +1251,8 @@ func New(
 		app.ClobKeeper,
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
+		app.VaultKeeper,
 	)
-
-	// Initialize authenticators
-	app.AuthenticatorManager = authenticator.NewAuthenticatorManager()
-	app.AuthenticatorManager.InitializeAuthenticators([]authenticator.Authenticator{
-		authenticator.NewSignatureVerification(app.AccountKeeper),
-	})
-	app.AccountPlusKeeper = *accountplusmodulekeeper.NewKeeper(
-		appCodec,
-		keys[accountplusmoduletypes.StoreKey],
-		app.AuthenticatorManager,
-		[]string{
-			lib.GovModuleAddress.String(),
-		},
-	)
-	accountplusModule := accountplusmodule.NewAppModule(appCodec, app.AccountPlusKeeper)
 
 	/****  Module Options ****/
 
@@ -2098,6 +2121,7 @@ func getFullNodeStreamingManagerFromOptions(
 			appFlags.GrpcStreamingMaxChannelBufferSize,
 			appFlags.FullNodeStreamingSnapshotInterval,
 			streamingManagerTransientStoreKey,
+			cdc,
 		)
 
 		// Start websocket server.

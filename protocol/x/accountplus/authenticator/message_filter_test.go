@@ -6,12 +6,13 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -100,7 +101,7 @@ func (s *MessageFilterTest) TestBankSend() {
 			sigModeHandler := s.EncodingConfig.TxConfig.SignModeHandler()
 			tx, err := s.GenSimpleTx([]sdk.Msg{tt.msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(
+			request, err := lib.GenerateAuthenticationRequest(
 				s.Ctx,
 				s.tApp.App.AppCodec(),
 				ak,
@@ -120,7 +121,7 @@ func (s *MessageFilterTest) TestBankSend() {
 			if tt.match {
 				s.Require().NoError(err)
 			} else {
-				s.Require().ErrorIs(err, sdkerrors.ErrUnauthorized)
+				s.Require().ErrorIs(err, types.ErrMessageTypeVerification)
 			}
 		})
 	}

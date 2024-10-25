@@ -107,7 +107,7 @@ create_validators() {
 		cat <<<"$new_file" >"$VAL_CONFIG_DIR"/node_key.json
 
 		edit_config "$VAL_CONFIG_DIR"
-		use_slinky "$VAL_CONFIG_DIR"
+		use_connect "$VAL_CONFIG_DIR"
 
 		# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 		# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
@@ -167,11 +167,11 @@ setup_cosmovisor() {
 	done
 }
 
-use_slinky() {
+use_connect() {
   CONFIG_FOLDER=$1
   # Enable slinky daemon
   dasel put -t bool -f "$CONFIG_FOLDER"/app.toml 'oracle.enabled' -v true
-	dasel put -t string -f "$VAL_CONFIG_DIR"/app.toml 'oracle.oracle_address' -v 'slinky0:8080'
+	dasel put -t string -f "$VAL_CONFIG_DIR"/app.toml 'oracle.oracle_address' -v 'connect0:8080'
 }
 
 # TODO(DEC-1894): remove this function once we migrate off of persistent peers.

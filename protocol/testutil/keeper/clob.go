@@ -17,6 +17,7 @@ import (
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	accountpluskeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	affiliateskeeper "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/keeper"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
@@ -33,7 +34,7 @@ import (
 	subkeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmapkeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -51,6 +52,7 @@ type ClobKeepersTestContext struct {
 	SubaccountsKeeper *subkeeper.Keeper
 	AffiliatesKeeper  *affiliateskeeper.Keeper
 	VaultKeeper       *vaultkeeper.Keeper
+	AccountPlusKeeper *accountpluskeeper.Keeper
 	StoreKey          storetypes.StoreKey
 	MemKey            storetypes.StoreKey
 	Cdc               *codec.ProtoCodec
@@ -91,7 +93,13 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			stateStore,
 			db,
 			cdc,
-			registry)
+			registry,
+		)
+		ks.AccountPlusKeeper, _, _ = createAccountPlusKeeper(
+			stateStore,
+			db,
+			cdc,
+		)
 
 		stakingKeeper, _ := createStakingKeeper(
 			stateStore,
@@ -191,6 +199,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			ks.AffiliatesKeeper,
 			ks.SubaccountsKeeper,
 			revShareKeeper,
+			ks.AccountPlusKeeper,
 			indexerEventManager,
 			indexerEventsTransientStoreKey,
 		)
@@ -231,6 +240,7 @@ func createClobKeeper(
 	affiliatesKeeper types.AffiliatesKeeper,
 	saKeeper *subkeeper.Keeper,
 	revShareKeeper types.RevShareKeeper,
+	accountplusKeeper types.AccountPlusKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey, storetypes.StoreKey) {
@@ -262,6 +272,7 @@ func createClobKeeper(
 		statsKeeper,
 		rewardsKeeper,
 		affiliatesKeeper,
+		accountplusKeeper,
 		indexerEventManager,
 		streaming.NewNoopGrpcStreamingManager(),
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
@@ -282,7 +293,7 @@ func CreateTestClobPairs(
 	clobPairs []types.ClobPair,
 ) {
 	for _, clobPair := range clobPairs {
-		_, err := clobKeeper.CreatePerpetualClobPair(
+		_, err := clobKeeper.CreatePerpetualClobPairAndMemStructs(
 			ctx,
 			clobPair.Id,
 			clobPair.MustGetPerpetualId(),
@@ -341,7 +352,7 @@ func CreateNClobPair(
 			),
 		).Return()
 
-		_, err := keeper.CreatePerpetualClobPair(
+		_, err := keeper.CreatePerpetualClobPairAndMemStructs(
 			ctx,
 			items[i].Id,
 			clobtest.MustPerpetualId(items[i]),

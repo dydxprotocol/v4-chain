@@ -11,6 +11,20 @@ import (
 
 func TestNormalMsgs_Key(t *testing.T) {
 	expectedMsgs := []string{
+		// connect marketmap messages
+		"/connect.marketmap.v2.MsgCreateMarkets",
+		"/connect.marketmap.v2.MsgCreateMarketsResponse",
+		"/connect.marketmap.v2.MsgParams",
+		"/connect.marketmap.v2.MsgParamsResponse",
+		"/connect.marketmap.v2.MsgRemoveMarketAuthorities",
+		"/connect.marketmap.v2.MsgRemoveMarketAuthoritiesResponse",
+		"/connect.marketmap.v2.MsgRemoveMarkets",
+		"/connect.marketmap.v2.MsgRemoveMarketsResponse",
+		"/connect.marketmap.v2.MsgUpdateMarkets",
+		"/connect.marketmap.v2.MsgUpdateMarketsResponse",
+		"/connect.marketmap.v2.MsgUpsertMarkets",
+		"/connect.marketmap.v2.MsgUpsertMarketsResponse",
+
 		// auth
 		"/cosmos.auth.v1beta1.BaseAccount",
 		"/cosmos.auth.v1beta1.ModuleAccount",
@@ -117,6 +131,13 @@ func TestNormalMsgs_Key(t *testing.T) {
 		// upgrade
 		"/cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal",
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
+
+		// accountplus
+		"/dydxprotocol.accountplus.MsgAddAuthenticator",
+		"/dydxprotocol.accountplus.MsgAddAuthenticatorResponse",
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticator",
+		"/dydxprotocol.accountplus.MsgRemoveAuthenticatorResponse",
+		"/dydxprotocol.accountplus.TxExtension",
 
 		// affiliates
 		"/dydxprotocol.affiliates.MsgRegisterAffiliate",
@@ -232,18 +253,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.lightclients.tendermint.v1.ConsensusState",
 		"/ibc.lightclients.tendermint.v1.Header",
 		"/ibc.lightclients.tendermint.v1.Misbehaviour",
-
-		// slinky marketmap messages
-		"/slinky.marketmap.v1.MsgCreateMarkets",
-		"/slinky.marketmap.v1.MsgCreateMarketsResponse",
-		"/slinky.marketmap.v1.MsgParams",
-		"/slinky.marketmap.v1.MsgParamsResponse",
-		"/slinky.marketmap.v1.MsgRemoveMarketAuthorities",
-		"/slinky.marketmap.v1.MsgRemoveMarketAuthoritiesResponse",
-		"/slinky.marketmap.v1.MsgUpdateMarkets",
-		"/slinky.marketmap.v1.MsgUpdateMarketsResponse",
-		"/slinky.marketmap.v1.MsgUpsertMarkets",
-		"/slinky.marketmap.v1.MsgUpsertMarketsResponse",
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.NormalMsgs))

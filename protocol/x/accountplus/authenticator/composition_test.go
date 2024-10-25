@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -16,7 +15,9 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/testutils"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
@@ -65,6 +66,7 @@ func (s *AggregatedAuthenticatorsTest) SetupTest() {
 		Confirm:        testutils.Always,
 	}
 	s.spyAuth = testutils.NewSpyAuthenticator(
+		s.tApp.App.AppCodec(),
 		s.tApp.App.GetKVStoreKey()[types.StoreKey],
 	)
 
@@ -88,7 +90,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 	// Define test cases
 	type testCase struct {
 		name             string
-		authenticators   []authenticator.Authenticator
+		authenticators   []types.Authenticator
 		expectInit       bool
 		expectSuccessful bool
 		expectConfirm    bool
@@ -97,84 +99,84 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 	testCases := []testCase{
 		{
 			name:             "alwaysApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove},
+			authenticators:   []types.Authenticator{s.alwaysApprove, s.neverApprove},
 			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove},
+			authenticators:   []types.Authenticator{s.neverApprove, s.neverApprove},
 			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove},
+			authenticators:   []types.Authenticator{s.alwaysApprove, s.alwaysApprove},
 			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.alwaysApprove},
+			authenticators:   []types.Authenticator{s.neverApprove, s.alwaysApprove},
 			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
+			authenticators:   []types.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
 			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
+			authenticators:   []types.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
 			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
+			authenticators:   []types.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
 			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
+			authenticators:   []types.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
 			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + neverApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
+			authenticators:   []types.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
 			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "approveAndBlock",
-			authenticators:   []authenticator.Authenticator{s.approveAndBlock},
+			authenticators:   []types.Authenticator{s.approveAndBlock},
 			expectInit:       false,
 			expectSuccessful: true,
 			expectConfirm:    false,
 		},
 		{
 			name:             "rejectAndConfirm",
-			authenticators:   []authenticator.Authenticator{s.rejectAndConfirm},
+			authenticators:   []types.Authenticator{s.rejectAndConfirm},
 			expectInit:       false,
 			expectSuccessful: false,
 			expectConfirm:    true,
 		},
 		{
 			name:             "approveAndBlock + rejectAndConfirm",
-			authenticators:   []authenticator.Authenticator{s.approveAndBlock, s.rejectAndConfirm},
+			authenticators:   []types.Authenticator{s.approveAndBlock, s.rejectAndConfirm},
 			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
@@ -185,9 +187,9 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			// Convert the authenticators to InitializationData
-			initData := []authenticator.SubAuthenticatorInitData{}
+			initData := []types.SubAuthenticatorInitData{}
 			for _, auth := range tc.authenticators {
-				initData = append(initData, authenticator.SubAuthenticatorInitData{
+				initData = append(initData, types.SubAuthenticatorInitData{
 					Type:   auth.Type(),
 					Config: testData,
 				})
@@ -212,7 +214,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOf() {
 				// sample tx
 				tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 				s.Require().NoError(err)
-				request, err := authenticator.GenerateAuthenticationRequest(
+				request, err := lib.GenerateAuthenticationRequest(
 					s.Ctx,
 					s.tApp.App.AppCodec(),
 					ak,
@@ -246,7 +248,7 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 	// Define test cases
 	type testCase struct {
 		name             string
-		authenticators   []authenticator.Authenticator
+		authenticators   []types.Authenticator
 		expectInit       bool
 		expectSuccessful bool
 		expectConfirm    bool
@@ -255,84 +257,84 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 	testCases := []testCase{
 		{
 			name:             "alwaysApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove},
+			authenticators:   []types.Authenticator{s.alwaysApprove, s.neverApprove},
 			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove},
+			authenticators:   []types.Authenticator{s.neverApprove, s.neverApprove},
 			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove},
+			authenticators:   []types.Authenticator{s.alwaysApprove, s.alwaysApprove},
 			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.alwaysApprove},
+			authenticators:   []types.Authenticator{s.neverApprove, s.alwaysApprove},
 			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
+			authenticators:   []types.Authenticator{s.alwaysApprove, s.alwaysApprove, s.alwaysApprove},
 			expectInit:       true,
 			expectSuccessful: true,
 			expectConfirm:    true,
 		},
 		{
 			name:             "alwaysApprove + alwaysApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
+			authenticators:   []types.Authenticator{s.alwaysApprove, s.alwaysApprove, s.neverApprove},
 			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "alwaysApprove + neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
+			authenticators:   []types.Authenticator{s.alwaysApprove, s.neverApprove, s.alwaysApprove},
 			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove + alwaysApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
+			authenticators:   []types.Authenticator{s.neverApprove, s.neverApprove, s.alwaysApprove},
 			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "neverApprove + neverApprove + neverApprove",
-			authenticators:   []authenticator.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
+			authenticators:   []types.Authenticator{s.neverApprove, s.neverApprove, s.neverApprove},
 			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
 		},
 		{
 			name:             "approveAndBlock",
-			authenticators:   []authenticator.Authenticator{s.approveAndBlock},
+			authenticators:   []types.Authenticator{s.approveAndBlock},
 			expectInit:       false,
 			expectSuccessful: true,
 			expectConfirm:    false,
 		},
 		{
 			name:             "rejectAndConfirm",
-			authenticators:   []authenticator.Authenticator{s.rejectAndConfirm},
+			authenticators:   []types.Authenticator{s.rejectAndConfirm},
 			expectInit:       false,
 			expectSuccessful: false,
 			expectConfirm:    true,
 		},
 		{
 			name:             "approveAndBlock + rejectAndConfirm",
-			authenticators:   []authenticator.Authenticator{s.approveAndBlock, s.rejectAndConfirm},
+			authenticators:   []types.Authenticator{s.approveAndBlock, s.rejectAndConfirm},
 			expectInit:       true,
 			expectSuccessful: false,
 			expectConfirm:    false,
@@ -342,9 +344,9 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			// Convert the authenticators to InitializationData
-			initData := []authenticator.SubAuthenticatorInitData{}
+			initData := []types.SubAuthenticatorInitData{}
 			for _, auth := range tc.authenticators {
-				initData = append(initData, authenticator.SubAuthenticatorInitData{
+				initData = append(initData, types.SubAuthenticatorInitData{
 					Type:   auth.Type(),
 					Config: testData,
 				})
@@ -371,7 +373,7 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 				tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 				s.Require().NoError(err)
 				cdc := s.tApp.App.AppCodec()
-				request, err := authenticator.GenerateAuthenticationRequest(
+				request, err := lib.GenerateAuthenticationRequest(
 					s.Ctx,
 					cdc,
 					ak,
@@ -400,7 +402,7 @@ func (s *AggregatedAuthenticatorsTest) TestAllOf() {
 
 type testAuth struct {
 	name          string
-	authenticator authenticator.Authenticator
+	authenticator types.Authenticator
 	subAuths      []testAuth
 }
 
@@ -414,7 +416,7 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			names = append(names, s.name)
 		}
 		name := prefix + "(" + strings.Join(names, ", ") + ")"
-		var auth authenticator.Authenticator
+		var auth types.Authenticator
 		if prefix == "AnyOf" {
 			auth = s.AnyOfAuth
 		} else {
@@ -483,7 +485,7 @@ func (s *AggregatedAuthenticatorsTest) TestComposedAuthenticator() {
 			// sample tx
 			tx, err := s.GenSimpleTx([]sdk.Msg{msg}, []cryptotypes.PrivKey{s.TestPrivKeys[0]})
 			s.Require().NoError(err)
-			request, err := authenticator.GenerateAuthenticationRequest(
+			request, err := lib.GenerateAuthenticationRequest(
 				s.Ctx,
 				s.tApp.App.AppCodec(),
 				ak,
@@ -560,14 +562,14 @@ func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
 		}
 		return json.Marshal(spyData)
 	} else if len(csa.anyOf) > 0 {
-		var initData []authenticator.SubAuthenticatorInitData
+		var initData []types.SubAuthenticatorInitData
 		for _, subAuth := range csa.anyOf {
 			data, err := subAuth.buildInitData()
 			if err != nil {
 				return nil, err
 			}
 
-			initData = append(initData, authenticator.SubAuthenticatorInitData{
+			initData = append(initData, types.SubAuthenticatorInitData{
 				Type:   subAuth.Type(),
 				Config: data,
 			})
@@ -575,14 +577,14 @@ func (csa *CompositeSpyAuth) buildInitData() ([]byte, error) {
 
 		return json.Marshal(initData)
 	} else if len(csa.allOf) > 0 {
-		var initData []authenticator.SubAuthenticatorInitData
+		var initData []types.SubAuthenticatorInitData
 		for _, subAuth := range csa.allOf {
 			data, err := subAuth.buildInitData()
 			if err != nil {
 				return nil, err
 			}
 
-			initData = append(initData, authenticator.SubAuthenticatorInitData{
+			initData = append(initData, types.SubAuthenticatorInitData{
 				Type:   subAuth.Type(),
 				Config: data,
 			})
@@ -648,7 +650,7 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 
-		var auth authenticator.Authenticator
+		var auth types.Authenticator
 		if tc.compositeAuth.isAllOf() {
 			auth, err = s.AllOfAuth.Initialize(data)
 			s.Require().NoError(err)
@@ -665,21 +667,18 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
 		}
 
-		encodedMsg, err := codectypes.NewAnyWithValue(msg)
-		s.Require().NoError(err, "Should encode Any value successfully")
-
 		// mock the authentication request
-		authReq := authenticator.AuthenticationRequest{
+		authReq := types.AuthenticationRequest{
 			AuthenticatorId: tc.id,
 			Account:         s.TestAccAddress[0],
 			FeePayer:        s.TestAccAddress[0],
 			FeeGranter:      nil,
 			Fee:             sdk.NewCoins(),
-			Msg:             authenticator.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
+			Msg:             msg,
 			MsgIndex:        0,
 			Signature:       []byte{1, 1, 1, 1, 1},
-			SignModeTxData:  authenticator.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
-			SignatureData: authenticator.SimplifiedSignatureData{
+			SignModeTxData:  types.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
+			SignatureData: types.SimplifiedSignatureData{
 				Signers:    []sdk.AccAddress{s.TestAccAddress[0]},
 				Signatures: [][]byte{{1, 1, 1, 1, 1}},
 			},
@@ -699,7 +698,11 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 			expectedAuthReq := authReq
 			expectedAuthReq.AuthenticatorId = tc.expectedIds[i]
 
-			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
+			spy := testutils.SpyAuthenticator{
+				KvStoreKey: s.spyAuth.KvStoreKey,
+				Name:       name,
+				Cdc:        constants.TestEncodingCfg.Codec,
+			}
 			latestCalls := spy.GetLatestCalls(s.Ctx)
 
 			spyData, err := json.Marshal(testutils.SpyAuthenticatorData{Name: name})
@@ -713,17 +716,33 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 				},
 				latestCalls.OnAuthenticatorAdded,
 			)
-			s.Require().Equal(expectedAuthReq, latestCalls.Authenticate)
+			s.Require().Equal(
+				testutils.SpyAuthenticateRequest{
+					AuthenticatorId: expectedAuthReq.AuthenticatorId,
+					Account:         expectedAuthReq.Account,
+					Msg:             s.tApp.App.AppCodec().MustMarshal(expectedAuthReq.Msg),
+					MsgIndex:        expectedAuthReq.MsgIndex,
+				},
+				latestCalls.Authenticate,
+			)
 			s.Require().Equal(
 				testutils.SpyTrackRequest{
 					AuthenticatorId: expectedAuthReq.AuthenticatorId,
 					Account:         expectedAuthReq.Account,
-					Msg:             expectedAuthReq.Msg,
+					Msg:             s.tApp.App.AppCodec().MustMarshal(expectedAuthReq.Msg),
 					MsgIndex:        expectedAuthReq.MsgIndex,
 				},
 				latestCalls.Track,
 			)
-			s.Require().Equal(expectedAuthReq, latestCalls.ConfirmExecution)
+			s.Require().Equal(
+				testutils.SpyConfirmExecutionRequest{
+					AuthenticatorId: expectedAuthReq.AuthenticatorId,
+					Account:         expectedAuthReq.Account,
+					Msg:             s.tApp.App.AppCodec().MustMarshal(expectedAuthReq.Msg),
+					MsgIndex:        expectedAuthReq.MsgIndex,
+				},
+				latestCalls.ConfirmExecution,
+			)
 			s.Require().Equal(
 				testutils.SpyRemoveRequest{
 					Account:         expectedAuthReq.Account,
@@ -817,7 +836,7 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 		data, err := tc.compositeAuth.buildInitData()
 		s.Require().NoError(err)
 
-		var auth authenticator.Authenticator
+		var auth types.Authenticator
 		if tc.compositeAuth.isAllOf() {
 			auth, err = s.AllOfAuth.Initialize(data)
 			s.Require().NoError(err)
@@ -834,19 +853,16 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 			Amount:      sdk.NewCoins(sdk.NewInt64Coin("foo", 1)),
 		}
 
-		encodedMsg, err := codectypes.NewAnyWithValue(msg)
-		s.Require().NoError(err, "Should encode Any value successfully")
-
 		// mock the authentication request
-		authReq := authenticator.AuthenticationRequest{
+		authReq := types.AuthenticationRequest{
 			AuthenticatorId: "1",
 			Account:         s.TestAccAddress[0],
 			FeePayer:        s.TestAccAddress[0],
-			Msg:             authenticator.LocalAny{TypeURL: encodedMsg.TypeUrl, Value: encodedMsg.Value},
+			Msg:             msg,
 			MsgIndex:        0,
 			Signature:       []byte{1, 1, 1, 1, 1},
-			SignModeTxData:  authenticator.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
-			SignatureData: authenticator.SimplifiedSignatureData{
+			SignModeTxData:  types.SignModeData{Direct: []byte{1, 1, 1, 1, 1}},
+			SignatureData: types.SimplifiedSignatureData{
 				Signers:    []sdk.AccAddress{s.TestAccAddress[0]},
 				Signatures: [][]byte{{1, 1, 1, 1, 1}},
 			},
@@ -858,7 +874,11 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 		s.Require().NoError(auth.ConfirmExecution(s.Ctx, authReq))
 
 		for i, name := range tc.names {
-			spy := testutils.SpyAuthenticator{KvStoreKey: s.spyAuth.KvStoreKey, Name: name}
+			spy := testutils.SpyAuthenticator{
+				KvStoreKey: s.spyAuth.KvStoreKey,
+				Name:       name,
+				Cdc:        constants.TestEncodingCfg.Codec,
+			}
 			latestCalls := spy.GetLatestCalls(s.Ctx)
 			latestConfirmExecuion := latestCalls.ConfirmExecution
 
@@ -881,14 +901,14 @@ func (s *AggregatedAuthenticatorsTest) TestAnyOfNotWritingFailedSubAuthState() {
 }
 
 func marshalAuth(ta testAuth, testData []byte) ([]byte, error) {
-	initData := []authenticator.SubAuthenticatorInitData{}
+	initData := []types.SubAuthenticatorInitData{}
 
 	for _, sub := range ta.subAuths {
 		subData, err := marshalAuth(sub, testData)
 		if err != nil {
 			return nil, err
 		}
-		initData = append(initData, authenticator.SubAuthenticatorInitData{
+		initData = append(initData, types.SubAuthenticatorInitData{
 			Type:   sub.authenticator.Type(),
 			Config: subData,
 		})

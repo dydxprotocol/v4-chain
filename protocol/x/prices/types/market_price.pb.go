@@ -28,6 +28,9 @@ type MarketPrice struct {
 	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Static value. The exponent of the price. See the comment on the duplicate
 	// MarketParam field for more information.
+	//
+	// As of v7.1.x, this value is determined from the marketmap instead of
+	// needing to match the MarketParam field.
 	Exponent int32 `protobuf:"zigzag32,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
 	// The variable value that is updated by oracle price updates. `0` if it has
 	// never been updated, `>0` otherwise.

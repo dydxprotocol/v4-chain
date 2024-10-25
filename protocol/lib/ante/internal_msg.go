@@ -15,6 +15,7 @@ import (
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	accountplus "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	affiliates "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -71,6 +72,9 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*upgrade.MsgSoftwareUpgrade,
 
 		// ------- Custom modules
+		// accountplus
+		*accountplus.MsgSetActiveState,
+
 		// blocktime
 		*blocktime.MsgUpdateDowntimeParams,
 

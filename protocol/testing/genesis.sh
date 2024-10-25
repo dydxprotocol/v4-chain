@@ -23,7 +23,7 @@ DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_VAULT=1000000000
 MEGAVAULT_MAIN_VAULT_ACCOUNT_ADDR="dydx18tkxrnrkqc2t0lr3zxr5g6a4hdvqksylxqje4r"
-DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE=1000000000000 # 1 million USDC
+DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE=0 # 0 USDC
 NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
 COIN_NAME="dYdX V4 Testnet Token"
 # Each testnet validator has 1 million whole coins of native token.
@@ -137,7 +137,7 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].id' -v '0'
 	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].name' -v 'Large-Cap'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].initial_margin_ppm' -v '50000' # 5%
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].initial_margin_ppm' -v '20000' # 2%
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].maintenance_fraction_ppm' -v '600000' # 60% of IM
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].impact_notional' -v '10000000000' # 10_000 USDC (500 USDC / 5%)
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[0].open_interest_lower_cap' -v '0' # OIMF doesn't apply to Large-Cap
@@ -242,9 +242,9 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[2].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[2].params.market_type' -v '1'
 
-	# Perpetual: MATIC-USD
+	# Perpetual: POL-USD
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.perpetuals.[]' -v "{}"
-	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.ticker' -v 'MATIC-USD'
+	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.ticker' -v 'POL-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.id' -v '3'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.market_id' -v '3'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.atomic_resolution' -v '-5'
@@ -607,26 +607,23 @@ function edit_genesis() {
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.LINK/USD.provider_configs.[]' -v '{"name": "okx_ws", "off_chain_ticker": "LINK-USDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
 
 
-    # Marketmap: MATIC-USD
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD' -v "{}"
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker' -v "{}" 
+    # Marketmap: POL-USD
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD' -v "{}"
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.ticker' -v "{}" 
 
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker.currency_pair' -v "{}"
-    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker.currency_pair.Base' -v 'MATIC'
-    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker.currency_pair.Quote' -v 'USD'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.ticker.currency_pair' -v "{}"
+    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.ticker.currency_pair.Base' -v 'POL'
+    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.ticker.currency_pair.Quote' -v 'USD'
 
-    dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker.decimals' -v '10'
-    dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker.min_provider_count' -v '3'
-    dasel put -t bool -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.ticker.enabled' -v 'true'
+    dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.ticker.decimals' -v '10'
+    dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.ticker.min_provider_count' -v '3'
+    dasel put -t bool -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.ticker.enabled' -v 'true'
 
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.provider_configs.[]' -v '{"name": "binance_ws", "off_chain_ticker": "MATICUSDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.provider_configs.[]' -v '{"name": "bybit_ws", "off_chain_ticker": "MATICUSDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.provider_configs.[]' -v '{"name": "coinbase_ws", "off_chain_ticker": "MATIC-USD"}'
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.provider_configs.[]' -v '{"name": "gate_ws", "off_chain_ticker": "MATIC_USDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.provider_configs.[]' -v '{"name": "huobi_ws", "off_chain_ticker": "maticusdt", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.provider_configs.[]' -v '{"name": "kraken_api", "off_chain_ticker": "MATICUSD"}'
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.provider_configs.[]' -v '{"name": "kucoin_ws", "off_chain_ticker": "MATIC-USDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
-    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.MATIC/USD.provider_configs.[]' -v '{"name": "okx_ws", "off_chain_ticker": "MATIC-USDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.provider_configs.[]' -v '{"name": "binance_ws", "off_chain_ticker": "POLUSDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.provider_configs.[]' -v '{"name": "bybit_ws", "off_chain_ticker": "POLUSDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.provider_configs.[]' -v '{"name": "coinbase_ws", "off_chain_ticker": "POL-USD"}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.provider_configs.[]' -v '{"name": "crypto_dot_com_ws", "off_chain_ticker": "POL_USD"}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.POL/USD.provider_configs.[]' -v '{"name": "okx_ws", "off_chain_ticker": "POL-USDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}}'
 
 
     # Marketmap: CRV-USD
@@ -1322,9 +1319,9 @@ function edit_genesis() {
 	link_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/link_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[2].exchange_config_json' -v "$link_exchange_config_json"
 
-	# Market: MATIC-USD
+	# Market: POL-USD
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
-	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[3].pair' -v 'MATIC-USD'
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[3].pair' -v 'POL-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[3].id' -v '3'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[3].exponent' -v '-10'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[3].min_exchanges' -v '3'
@@ -1332,10 +1329,10 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[3].id' -v '3'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[3].exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[3].price' -v '6665746387'          # $0.6666 = 1 MATIC.
-	# MATIC Exchange Config
-	matic_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/matic_exchange_config.json" | jq -c '.')
-	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[3].exchange_config_json' -v "$matic_exchange_config_json"
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[3].price' -v '3703925550'          # $0.370 = 1 POL.
+	# POL Exchange Config
+	pol_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/pol_exchange_config.json" | jq -c '.')
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[3].exchange_config_json' -v "$pol_exchange_config_json"
 
 	# Market: CRV-USD
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
@@ -1827,9 +1824,11 @@ function edit_genesis() {
 		acct_idx=$(($acct_idx + 1))
 	done
 	# Update subaccounts module for megavault main vault account.
-	add_subaccount "$GENESIS" "$acct_idx" "$MEGAVAULT_MAIN_VAULT_ACCOUNT_ADDR" "$DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE"
-	total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE))
-	acct_idx=$(($acct_idx + 1))
+	if [ "$DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE" -gt 0 ]; then
+		add_subaccount "$GENESIS" "$acct_idx" "$MEGAVAULT_MAIN_VAULT_ACCOUNT_ADDR" "$DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE"
+		total_accounts_quote_balance=$(($total_accounts_quote_balance + $DEFAULT_MEGAVAULT_MAIN_VAULT_QUOTE_BALANCE))
+		acct_idx=$(($acct_idx + 1))
+	fi
 
 	next_bank_idx=0
 	if (( total_accounts_quote_balance > 0 )); then
@@ -1896,7 +1895,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].subticks_per_tick' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[2].quantum_conversion_exponent' -v '-9'
 
-	# Clob: MATIC-USD
+	# Clob: POL-USD
 	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[3].id' -v '3'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[3].status' -v "$INITIAL_CLOB_PAIR_STATUS"
@@ -2258,11 +2257,21 @@ function edit_genesis() {
 	# ICA Controller Params
 	update_ica_controller_params
 
+	# Listing
+	# Set hard cap for markets
+	dasel put -t int -f "$GENESIS" ".app_state.listing.hard_cap_for_markets" -v '500'
+	# Set default listing vault deposit params
+	dasel put -t string -f "$GENESIS" ".app_state.listing.listing_vault_deposit_params.new_vault_deposit_amount" -v "10000000000" # 10_000 USDC
+	dasel put -t string -f "$GENESIS" ".app_state.listing.listing_vault_deposit_params.main_vault_deposit_amount" -v "0" # 0 USDC
+	dasel put -t int -f "$GENESIS" ".app_state.listing.listing_vault_deposit_params.num_blocks_to_lock_shares" -v '2592000' # 30 days
+
 	# Vaults
 	# Set default quoting params.
 	dasel put -t int -f "$GENESIS" ".app_state.vault.default_quoting_params.spread_min_ppm" -v '3000'
 	# Set operator params.
 	dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.operator" -v 'dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky'
+	dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.metadata.name" -v 'Governance'
+	dasel put -t string -f "$GENESIS" ".app_state.vault.operator_params.metadata.description" -v 'Governance Module Account'
 	# Set total shares and owner shares.
 	if [ -z "${INPUT_TEST_ACCOUNTS[0]}" ]; then
 		vault_owner_address='dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4' # alice as default vault owner

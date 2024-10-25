@@ -25,7 +25,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	marketmapkeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
 	"github.com/stretchr/testify/require"
 )
 

@@ -14,7 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/skip-mev/slinky/abci/ve"
+	"github.com/skip-mev/connect/v2/abci/ve"
 )
 
 var (

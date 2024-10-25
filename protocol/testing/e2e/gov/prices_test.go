@@ -14,7 +14,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmaptypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -67,13 +67,13 @@ func TestUpdateMarketParam(t *testing.T) {
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
 		},
-		"Failure: exponent is updated": {
+		"Failure: new pair name does not exist in marketmap": {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 MODIFIED_MARKET_PARAM.Id,
-					Pair:               MODIFIED_MARKET_PARAM.Pair,
-					Exponent:           MODIFIED_MARKET_PARAM.Exponent + 1, // update to exponent is not permitted.
+					Pair:               "nonexistent-pair",
+					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
 					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
 					MinPriceChangePpm:  MODIFIED_MARKET_PARAM.MinPriceChangePpm,
 					ExchangeConfigJson: MODIFIED_MARKET_PARAM.ExchangeConfigJson,

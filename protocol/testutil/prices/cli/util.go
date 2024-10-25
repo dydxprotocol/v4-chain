@@ -8,7 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
+	marketmaptypes "github.com/skip-mev/connect/v2/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 
