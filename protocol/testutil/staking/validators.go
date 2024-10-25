@@ -49,6 +49,7 @@ func BuildAndMockTestValidator(
 ) stakingtypes.ValidatorI {
 	val := BuildTestValidator(name, power)
 	mValStore.On("ValidatorByConsAddr", ctx, GetConsAddressByName(name)).Return(val, nil)
+	mValStore.On("GetValidator", ctx, GetValAddressByName(name)).Return(val, nil)
 	return val
 }
 
@@ -89,6 +90,21 @@ func GetConsAddressByName(name string) sdk.ConsAddress {
 		return constants.CarlConsAddress
 	case "dave":
 		return constants.DaveConsAddress
+	default:
+		return nil
+	}
+}
+
+func GetValAddressByName(name string) sdk.ValAddress {
+	switch name {
+	case "alice":
+		return constants.AliceValAddress
+	case "bob":
+		return constants.BobValAddress
+	case "carl":
+		return constants.CarlValAddress
+	case "dave":
+		return constants.DaveValAddress
 	default:
 		return nil
 	}

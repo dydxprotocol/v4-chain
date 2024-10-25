@@ -48,6 +48,34 @@ func (_m *ValidatorStore) GetPubKeyByConsAddr(_a0 context.Context, _a1 types.Con
 	return r0, r1
 }
 
+// GetValidator provides a mock function with given fields: ctx, valAddr
+func (_m *ValidatorStore) GetValidator(ctx context.Context, valAddr types.ValAddress) (stakingtypes.Validator, error) {
+	ret := _m.Called(ctx, valAddr)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetValidator")
+	}
+
+	var r0 stakingtypes.Validator
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.ValAddress) (stakingtypes.Validator, error)); ok {
+		return rf(ctx, valAddr)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, types.ValAddress) stakingtypes.Validator); ok {
+		r0 = rf(ctx, valAddr)
+	} else {
+		r0 = ret.Get(0).(stakingtypes.Validator)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, types.ValAddress) error); ok {
+		r1 = rf(ctx, valAddr)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // TotalBondedTokens provides a mock function with given fields: ctx
 func (_m *ValidatorStore) TotalBondedTokens(ctx context.Context) (math.Int, error) {
 	ret := _m.Called(ctx)

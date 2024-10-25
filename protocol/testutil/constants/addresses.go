@@ -1,8 +1,6 @@
 package constants
 
 import (
-	"fmt"
-
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -42,20 +40,3 @@ var (
 	BobEthosAddressBz   = BobEthosPrivateKey.PubKey().Address().Bytes()
 	CarlEthosAddressBz  = CarlEthosPrivateKey.PubKey().Address().Bytes()
 )
-
-var hello = printLOL()
-
-func printLOL() string {
-	fmt.Println("ALICE ADDRESS", AliceConsAddress.String())
-	fmt.Println("BOB ADDRESS", BobConsAddress.String())
-	fmt.Println("CARL ADDRESS", CarlConsAddress.String())
-	fmt.Println("DAVE ADDRESS", DaveConsAddress.String())
-	fmt.Println("--------------------------------")
-	fmt.Println("ALICE ACC ADDRESS", AliceAccAddress.String())
-	fmt.Println("BOB ACC ADDRESS", BobAccAddress.String())
-	fmt.Println("CARL ACC ADDRESS", CarlAccAddress.String())
-	fmt.Println("DAVE ACC ADDRESS", DaveAccAddress.String())
-	fmt.Println("--------------------------------")
-	fmt.Println("LOL")
-	return "hi"
-}

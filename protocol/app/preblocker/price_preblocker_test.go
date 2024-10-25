@@ -55,7 +55,7 @@ func TestPreBlockTestSuite(t *testing.T) {
 }
 
 func (s *PreBlockTestSuite) SetupTest() {
-	s.validator = constants.AliceEthosConsAddress
+	s.validator = constants.AliceConsAddress
 
 	ctx, _, pricesKeeper, _, _, _, _, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(s.T(), true)
 
@@ -472,23 +472,6 @@ func (s *PreBlockTestSuite) setMarketPrices() []pricestypes.MarketParamPrice {
 	}
 }
 
-func (s *PreBlockTestSuite) buildAndMockValidator(name string, bondedTokens math.Int) stakingtypes.ValidatorI {
-	val := stakingtypes.Validator{
-		Tokens: bondedTokens,
-		Status: stakingtypes.Bonded,
-	}
-	s.valStore.On("ValidatorByConsAddr", s.ctx, s.getValidatorConsAddr(name)).Return(val, nil)
-	return val
-}
-
-func (s *PreBlockTestSuite) mockValStoreAndTotalBondedTokensCall(validators []string) {
-
-	for _, valName := range validators {
-		s.buildAndMockValidator(valName, math.NewInt(1))
-	}
-	s.valStore.On("TotalBondedTokens", s.ctx).Return(valutils.ConvertPowerToTokens(int64(len(validators))), nil)
-}
-
 func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
 	validators []string,
 	prices []vetypes.PricePair,
@@ -502,10 +485,35 @@ func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
 	return s.getExtendedCommitInfoBz(votes)
 }
 
+func (s *PreBlockTestSuite) mockValStoreAndTotalBondedTokensCall(validators []string) {
+
+	for _, valName := range validators {
+		s.buildAndMockValidator(valName, math.NewInt(1))
+	}
+	s.valStore.On("TotalBondedTokens", s.ctx).Return(valutils.ConvertPowerToTokens(int64(len(validators))), nil)
+}
+
+func (s *PreBlockTestSuite) buildAndMockValidator(name string, bondedTokens math.Int) stakingtypes.ValidatorI {
+	val := stakingtypes.Validator{
+		Tokens: bondedTokens,
+		Status: stakingtypes.Bonded,
+	}
+	s.valStore.On("GetValidator", s.ctx, s.getValidatorValAddress(name)).Return(val, nil)
+	return val
+}
+
 func (s *PreBlockTestSuite) getValidatorConsAddr(name string) sdk.ConsAddress {
 	if name == "alice" {
-		return constants.AliceEthosConsAddress
+		return constants.AliceConsAddress
 	} else {
-		return constants.BobEthosConsAddress
+		return constants.BobConsAddress
+	}
+}
+
+func (s *PreBlockTestSuite) getValidatorValAddress(name string) sdk.ValAddress {
+	if name == "alice" {
+		return constants.AliceValAddress
+	} else {
+		return constants.BobValAddress
 	}
 }

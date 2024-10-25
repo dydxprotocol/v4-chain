@@ -1,7 +1,6 @@
 package clob_test
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
-	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
 
@@ -1021,94 +1019,7 @@ func TestConditionalOrder(t *testing.T) {
 			tApp.ParallelApp.RatelimitKeeper.SetSDAIPrice(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), rate)
 			tApp.ParallelApp.RatelimitKeeper.SetAssetYieldIndex(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), big.NewRat(1, 1))
 
-			fmt.Println("----PARALLEL APP BEFORE INIT-----")
-
-			allAssets := tApp.ParallelApp.AssetsKeeper.GetAllAssets(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}))
-			fmt.Println("ALL ASSETS", allAssets)
-
-			supply := tApp.ParallelApp.BankKeeper.GetSupply(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}), assettypes.TDaiDenom)
-			fmt.Println("SUPPLY", supply)
-
-			allDelegations, err := tApp.ParallelApp.StakingKeeper.GetAllDelegations(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}))
-			for _, delegator := range allDelegations {
-				fmt.Println("INITIAL DELEGATOR", delegator)
-				fmt.Println("INITIAL DELEGATOR ADDR: ", delegator.DelegatorAddress)
-			}
-
-			allValidators, err := tApp.ParallelApp.StakingKeeper.GetAllValidators(tApp.ParallelApp.NewUncachedContext(false, tmproto.Header{}))
-			for _, validator := range allValidators {
-				fmt.Println("INITIAL VALIDATOR", validator)
-				fmt.Println("INITIAL VALIDATOR ADDR", validator.OperatorAddress)
-				fmt.Println("INITIAL VALIDATOR BONDED", validator.Tokens)
-			}
-
 			ctx := tApp.InitChain()
-
-			// fmt.Println("----PARALLEL APP-----")
-
-			// allAssets = tApp.ParallelApp.AssetsKeeper.GetAllAssets(ctx)
-			// fmt.Println("ALL ASSETS", allAssets)
-
-			// supply = tApp.ParallelApp.BankKeeper.GetSupply(ctx, assettypes.TDaiDenom)
-			// fmt.Println("SUPPLY", supply)
-
-			// allDelegations, err = tApp.ParallelApp.StakingKeeper.GetAllDelegations(ctx)
-			// for _, delegator := range allDelegations {
-			// 	fmt.Println("INITIAL DELEGATOR", delegator)
-			// 	fmt.Println("INITIAL DELEGATOR ADDR: ", delegator.DelegatorAddress)
-			// }
-
-			// allValidators, err = tApp.ParallelApp.StakingKeeper.GetAllValidators(ctx)
-			// for _, validator := range allValidators {
-			// 	fmt.Println("INITIAL VALIDATOR", validator)
-			// 	fmt.Println("INITIAL VALIDATOR ADDR", validator.OperatorAddress)
-			// 	fmt.Println("INITIAL VALIDATOR BONDED", validator.Tokens)
-			// }
-
-			// fmt.Println("----NORMAL APP-----")
-
-			// allDelegations, err = tApp.App.StakingKeeper.GetAllDelegations(ctx)
-			// for _, delegator := range allDelegations {
-			// 	fmt.Println("INITIAL DELEGATOR", delegator)
-			// 	fmt.Println("INITIAL DELEGATOR ADDR: ", delegator.DelegatorAddress)
-			// }
-
-			// allValidators, err = tApp.App.StakingKeeper.GetAllValidators(ctx)
-			// for _, validator := range allValidators {
-			// 	fmt.Println("INITIAL VALIDATOR", validator)
-			// 	fmt.Println("INITIAL VALIDATOR ADDR", validator.OperatorAddress)
-			// 	fmt.Println("INITIAL VALIDATOR BONDED", validator.Tokens)
-			// }
-
-			// fmt.Println("----CRASHING APP-----")
-
-			// allDelegations, err = tApp.CrashingApp.StakingKeeper.GetAllDelegations(ctx)
-			// for _, delegator := range allDelegations {
-			// 	fmt.Println("INITIAL DELEGATOR", delegator)
-			// 	fmt.Println("INITIAL DELEGATOR ADDR: ", delegator.DelegatorAddress)
-			// }
-
-			// allValidators, err = tApp.CrashingApp.StakingKeeper.GetAllValidators(ctx)
-			// for _, validator := range allValidators {
-			// 	fmt.Println("INITIAL VALIDATOR", validator)
-			// 	fmt.Println("INITIAL VALIDATOR ADDR", validator.OperatorAddress)
-			// 	fmt.Println("INITIAL VALIDATOR BONDED", validator.Tokens)
-			// }
-
-			// fmt.Println("----NO CHECK TX APP-----")
-
-			// allDelegations, err = tApp.NoCheckTxApp.StakingKeeper.GetAllDelegations(ctx)
-			// for _, delegator := range allDelegations {
-			// 	fmt.Println("INITIAL DELEGATOR", delegator)
-			// 	fmt.Println("INITIAL DELEGATOR ADDR: ", delegator.DelegatorAddress)
-			// }
-
-			// allValidators, err = tApp.NoCheckTxApp.StakingKeeper.GetAllValidators(ctx)
-			// for _, validator := range allValidators {
-			// 	fmt.Println("INITIAL VALIDATOR", validator)
-			// 	fmt.Println("INITIAL VALIDATOR ADDR", validator.OperatorAddress)
-			// 	fmt.Println("INITIAL VALIDATOR BONDED", validator.Tokens)
-			// }
 
 			// Create all orders.
 			deliverTxsOverride := make([][]byte, 0)

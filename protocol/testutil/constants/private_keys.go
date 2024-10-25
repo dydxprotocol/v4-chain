@@ -65,32 +65,6 @@ var (
 	}
 )
 
-var LOL = getLoL()
-
-func getLoL() string {
-	fmt.Println("ALICE VALIDATOR ADDRESS", AliceValidatorAddress)
-	fmt.Println("ALICE CONS ADDRESS", AliceConsAddress)
-	fmt.Println("ALICE VALIDATOR ADDRESS AS STRING", AliceValidatorAddress.String())
-	fmt.Println("ALICE CONS ADDRESS AS STRING", AliceConsAddress.String())
-	fmt.Println("--------------------------------")
-	fmt.Println("BOB VALIDATOR ADDRESS", BobValidatorAddress)
-	fmt.Println("BOB CONS ADDRESS", BobConsAddress)
-	fmt.Println("BOB VALIDATOR ADDRESS AS STRING", BobValidatorAddress.String())
-	fmt.Println("BOB CONS ADDRESS AS STRING", BobConsAddress.String())
-	fmt.Println("--------------------------------")
-	fmt.Println("CARL VALIDATOR ADDRESS", CarlValidatorAddress)
-	fmt.Println("CARL CONS ADDRESS", CarlConsAddress)
-	fmt.Println("CARL VALIDATOR ADDRESS AS STRING", CarlValidatorAddress.String())
-	fmt.Println("CARL CONS ADDRESS AS STRING", CarlConsAddress.String())
-	fmt.Println("--------------------------------")
-	fmt.Println("DAVE VALIDATOR ADDRESS", DaveValidatorAddress)
-	fmt.Println("DAVE CONS ADDRESS", DaveConsAddress)
-	fmt.Println("DAVE VALIDATOR ADDRESS AS STRING", DaveValidatorAddress.String())
-	fmt.Println("DAVE CONS ADDRESS AS STRING", DaveConsAddress.String())
-
-	return "LOL"
-}
-
 func buildPrivKeyFromKeyString(privKey string) cryptotypes.PrivKey {
 	privKeyBytes, err := base64.StdEncoding.DecodeString(privKey)
 	if err != nil {
@@ -168,7 +142,6 @@ func GetConsAddressFromValidatorAddress(validatorAddr sdk.ValAddress) sdk.ConsAd
 }
 
 func GetConsAddressFromStringValidatorAddress(validatorAddr string) sdk.ConsAddress {
-	fmt.Println("VALIDATOR ADDRESS", validatorAddr)
 	consAddr, exists := valAddrToConsAddrMap[validatorAddr]
 	if !exists {
 		panic(fmt.Errorf("unable to look-up cons address, val %s does not match any well known account", validatorAddr))

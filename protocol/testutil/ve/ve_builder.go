@@ -73,12 +73,9 @@ func GetEmptyLocalLastCommit(
 	chainId string,
 ) cometabci.ExtendedCommitInfo {
 	var votes []cometabci.ExtendedVoteInfo
-	fmt.Println("GETEMPTYLOCALLASTCOMMIT STARTED")
 	for _, validator := range validators {
 		valConsAddr := constants.GetConsAddressFromStringValidatorAddress(validator.OperatorAddress)
-		fmt.Println("SUCCESSFULLY GOT VALIDATOR ADDRESS IN GET EMPTY LOCAL LAST COMMIT", valConsAddr)
 		votingPower := voteweighted.GetPowerFromBondedTokens(validator.Tokens)
-		fmt.Println("SUCCESSFULLY GOT VOTING POWER IN GET EMPTY LOCAL LAST COMMIT", votingPower)
 
 		ve, err := CreateSignedExtendedVoteInfo(
 			SignedVEInfo{
@@ -97,9 +94,7 @@ func GetEmptyLocalLastCommit(
 		}
 		votes = append(votes, ve)
 	}
-	fmt.Println("VOTES", votes)
 	extCommitInfo, _, _ := CreateExtendedCommitInfo(votes)
-	fmt.Println("EXTENDED COMMIT INFO ", extCommitInfo)
 	return extCommitInfo
 }
 
@@ -316,18 +311,13 @@ func GetInjectedExtendedCommitInfoForTestApp(
 
 	validators, err := stakingKeeper.GetBondedValidatorsByPower(ctx)
 	if err != nil {
-		fmt.Println("MASSIVE FAILURE IN GETTING BONDED VALIDATORS")
 		return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to get bonded validators: %w", err)
 	}
-
-	fmt.Println("MASSIVEVALIDATORS", validators)
 
 	var veSignedInfos []SignedVEInfo
 	for _, validator := range validators {
 		valConsAddr := constants.GetConsAddressFromStringValidatorAddress(validator.OperatorAddress)
 
-		fmt.Println("IN LOOP VALIDATOR", validator.OperatorAddress)
-		fmt.Println("VALCONSADDR", valConsAddr)
 		veSignedInfos = append(veSignedInfos, SignedVEInfo{
 			Val:                valConsAddr,
 			Power:              voteweighted.GetPowerFromBondedTokens(validator.Tokens),
