@@ -37,6 +37,7 @@ import {
   subaccountToResponseObject,
 } from '../request-helpers/request-transformer';
 import {
+  AggregatedPnlTick,
   AssetById,
   AssetPositionResponseObject,
   AssetPositionsMap,
@@ -675,17 +676,23 @@ export function getSubaccountResponse(
 /**
  * Aggregates a list of PnL ticks, combining any PnL ticks for the same hour by summing
  * the equity, totalPnl, and net transfers.
- * Returns a map of block height to the resulting PnL tick.
+ * Returns a map of aggregated pnl ticks and the number of ticks the aggreated tick is made up of.
  * @param pnlTicks
  * @returns
  */
 export function aggregateHourlyPnlTicks(
   pnlTicks: PnlTicksFromDatabase[],
-): PnlTicksFromDatabase[] {
+): AggregatedPnlTick[] {
   const hourlyPnlTicks: Map<string, PnlTicksFromDatabase> = new Map();
+  const hourlySubaccountIds: Map<string, Set<string>> = new Map();
   for (const pnlTick of pnlTicks) {
     const truncatedTime: string = DateTime.fromISO(pnlTick.createdAt).startOf('hour').toISO();
     if (hourlyPnlTicks.has(truncatedTime)) {
+      const subaccountIds: Set<string> = hourlySubaccountIds.get(truncatedTime) as Set<string>;
+      if (subaccountIds.has(pnlTick.subaccountId)) {
+        continue;
+      }
+      subaccountIds.add(pnlTick.subaccountId);
       const aggregatedTick: PnlTicksFromDatabase = hourlyPnlTicks.get(
         truncatedTime,
       ) as PnlTicksFromDatabase;
@@ -700,9 +707,16 @@ export function aggregateHourlyPnlTicks(
           ).toString(),
         },
       );
+      hourlySubaccountIds.set(truncatedTime, subaccountIds);
     } else {
       hourlyPnlTicks.set(truncatedTime, pnlTick);
+      hourlySubaccountIds.set(truncatedTime, new Set([pnlTick.subaccountId]));
     }
   }
-  return Array.from(hourlyPnlTicks.values());
+  return Array.from(hourlyPnlTicks.keys()).map((hour: string): AggregatedPnlTick => {
+    return {
+      pnlTick: hourlyPnlTicks.get(hour) as PnlTicksFromDatabase,
+      numTicks: (hourlySubaccountIds.get(hour) as Set<string>).size,
+    }
+  });
 }

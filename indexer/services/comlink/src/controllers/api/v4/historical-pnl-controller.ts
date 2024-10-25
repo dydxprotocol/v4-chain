@@ -31,6 +31,7 @@ import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { pnlTicksToResponseObject } from '../../../request-helpers/request-transformer';
 import { PnlTicksRequest, HistoricalPnlResponse, ParentSubaccountPnlTicksRequest } from '../../../types';
+import _ from 'lodash';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'historical-pnl-controller';
@@ -156,7 +157,10 @@ class HistoricalPnlController extends Controller {
     }
 
     // aggregate pnlTicks for all subaccounts grouped by blockHeight
-    const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(pnlTicks);
+    const aggregatedPnlTicks: PnlTicksFromDatabase[] = _.map(
+      aggregateHourlyPnlTicks(pnlTicks),
+      'pnlTick',
+    );
 
     return {
       historicalPnl: aggregatedPnlTicks.map(

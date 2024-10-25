@@ -56,13 +56,15 @@ import {
   SubaccountResponseObject,
   MegavaultHistoricalPnlRequest,
   VaultsHistoricalPnlRequest,
+  AggregatedPnlTick,
 } from '../../../types';
+import bounds from 'binary-searching';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'vault-controller';
 
 interface VaultMapping {
-  [subaccountId: string]: string,
+  [subaccountId: string]: VaultFromDatabase,
 }
 
 @Route('vault/v1')
@@ -99,7 +101,7 @@ class VaultController extends Controller {
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
       getMainSubaccountEquity(),
-      getLatestPnlTick(vaultSubaccountIdsWithMainSubaccount),
+      getLatestPnlTick(vaultSubaccountIdsWithMainSubaccount, _.values(vaultSubaccounts)),
     ]);
     stats.timing(
       `${config.SERVICE_NAME}.${controllerName}.fetch_ticks_positions_equity.timing`,
@@ -107,7 +109,10 @@ class VaultController extends Controller {
     );
 
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
-    const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(vaultPnlTicks);
+    const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateVaultPnlTicks(
+      vaultPnlTicks,
+      _.values(vaultSubaccounts),
+    );
 
     const currentEquity: string = Array.from(vaultPositions.values())
       .map((position: VaultPosition): string => {
@@ -154,7 +159,7 @@ class VaultController extends Controller {
       .mapValues((pnlTicks: PnlTicksFromDatabase[], subaccountId: string): VaultHistoricalPnl => {
         const market: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
           .getPerpetualMarketFromClobPairId(
-            vaultSubaccounts[subaccountId],
+            vaultSubaccounts[subaccountId].clobPairId,
           );
 
         if (market === undefined) {
@@ -306,7 +311,8 @@ router.get(
         Date.now() - start,
       );
     }
-  });
+  }
+);
 
 async function getVaultSubaccountPnlTicks(
   vaultSubaccountIds: string[],
@@ -431,7 +437,7 @@ async function getVaultPositions(
     subaccountId: string,
   }[] = subaccounts.map((subaccount: SubaccountFromDatabase) => {
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-      .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id]);
+      .getPerpetualMarketFromClobPairId(vaultSubaccounts[subaccount.id].clobPairId);
     if (perpetualMarket === undefined) {
       throw new Error(
         `Vault clob pair id ${vaultSubaccounts[subaccount.id]} does not correspond to a ` +
@@ -522,6 +528,7 @@ function getPnlTicksWithCurrentTick(
 
 export async function getLatestPnlTick(
   vaultSubaccountIds: string[],
+  vaults: VaultFromDatabase[],
 ): Promise<PnlTicksFromDatabase | undefined> {
   const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getPnlTicksAtIntervals(
     PnlTickInterval.hour,
@@ -529,7 +536,10 @@ export async function getLatestPnlTick(
     vaultSubaccountIds,
   );
   // Aggregate and get pnl tick closest to the hour
-  const aggregatedTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(pnlTicks);
+  const aggregatedTicks: PnlTicksFromDatabase[] = aggregateVaultPnlTicks(
+    pnlTicks,
+    vaults,
+  );
   const filteredTicks: PnlTicksFromDatabase[] = filterOutIntervalTicks(
     aggregatedTicks,
     PnlTickInterval.hour,
@@ -631,6 +641,27 @@ function getHeightWindows(
   return windows;
 }
 
+function aggregateVaultPnlTicks(
+  vaultPnlTicks: PnlTicksFromDatabase[],
+  vaults: VaultFromDatabase[],
+): PnlTicksFromDatabase[] {
+  // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
+  const aggregatedPnlTicks: AggregatedPnlTick[] = aggregateHourlyPnlTicks(vaultPnlTicks);
+  const vaultCreationTimes: DateTime[] = _.map(vaults, 'createdAt').map(
+    (createdAt: string) => { return DateTime.fromISO(createdAt); }
+  ).sort((a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; });
+  return aggregatedPnlTicks.filter((aggregatedTick: AggregatedPnlTick) => {
+    const numVaultsCreated: number = bounds.le(
+      vaultCreationTimes,
+      DateTime.fromISO(aggregatedTick.pnlTick.createdAt),
+      (a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; }
+    );
+    // Number of ticks should be strictly greater than number of vaults created before it
+    // as there should be a tick for the main vault subaccount.
+    return aggregatedTick.numTicks > numVaultsCreated;
+  }).map((aggregatedPnlTick: AggregatedPnlTick) => { return aggregatedPnlTick.pnlTick });
+}
+
 async function getVaultMapping(): Promise<VaultMapping> {
   const vaults: VaultFromDatabase[] = await VaultTable.findAll(
     {},
@@ -641,15 +672,13 @@ async function getVaultMapping(): Promise<VaultMapping> {
     vaults.map((vault: VaultFromDatabase): string => {
       return SubaccountTable.uuid(vault.address, 0);
     }),
-    vaults.map((vault: VaultFromDatabase): string => {
-      return vault.clobPairId;
-    }),
+    vaults,
   );
   const validVaultMapping: VaultMapping = {};
   for (const subaccountId of _.keys(vaultMapping)) {
     const perpetual: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(
-        vaultMapping[subaccountId],
+        vaultMapping[subaccountId].clobPairId,
       );
     if (perpetual === undefined) {
       logger.warning({
