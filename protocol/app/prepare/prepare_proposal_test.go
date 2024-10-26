@@ -88,11 +88,6 @@ func TestPrepareProposalHandler(t *testing.T) {
 		),
 	)
 
-	// nilVoteInfoAlice, _ := vetesting.CreateNilVoteExtensionInfo(
-	// 	constants.AliceConsAddress,
-	// 	500,
-	// )
-
 	nilVoteInfoBob, _ := vetesting.CreateNilVoteExtensionInfo(
 		constants.BobAddressBz,
 		500,
@@ -761,9 +756,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 
 			setMockResponses(mPricesKeeper, mRatelimitKeeper, mClobKeeper, mPerpKeeper, tc)
 
-			ctx, priceKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
-
-			fmt.Println("XXX ALL MARKET PRICES XXX", priceKeeper.GetAllMarketPrices(ctx))
+			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			if tc.veEnabled {
 				ctx = vetesting.GetVeEnabledCtx(ctx, tc.height)
@@ -872,10 +865,6 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			mockClobKeeper := mocks.PrepareClobKeeper{}
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 				Return(constants.ValidEmptyMsgProposedOperations)
-
-			mockConsumerKeeper := mocks.PrepareConsumerKeeper{}
-			mockConsumerKeeper.On("GetCCValidator", mock.Anything, mock.Anything).
-				Return(constants.ValidEmptyCrossChainValidator, true)
 
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 

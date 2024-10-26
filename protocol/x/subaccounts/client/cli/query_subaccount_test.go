@@ -40,8 +40,6 @@ func networkWithSubaccountObjects(t *testing.T, n int) []types.Subaccount {
 		state.Subaccounts = append(state.Subaccounts, subaccount)
 	}
 
-	fmt.Println("state.Subaccounts", state.Subaccounts)
-
 	return state.Subaccounts
 }
 

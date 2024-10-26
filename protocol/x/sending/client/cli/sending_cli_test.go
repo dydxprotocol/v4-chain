@@ -42,7 +42,6 @@ func (s *SendingIntegrationTestSuite) SetupTest() {
 
 	// Generated from the above Mnemonic.
 	s.validatorAddress = constants.AliceAccAddress
-	fmt.Println("Validator address", s.validatorAddress)
 
 	// Configure test network.
 	s.cfg = network.DefaultConfig(nil)

@@ -15,7 +15,7 @@ import (
 func main() {
 	// Set the desired Bech32 prefix for accounts
 	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount("ethosvaloper", "ethosvaloperpub")
+	config.SetBech32PrefixForAccount("valoper", "valoperpub")
 
 	// Initialize a codec that is required for Keyring
 	registry := types.NewInterfaceRegistry()

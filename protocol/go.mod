@@ -61,7 +61,6 @@ require (
 	github.com/cosmos/rosetta v0.50.3
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/ethereum/go-ethereum v1.14.6
-	github.com/ethos-works/ethos/ethos-chain v0.0.0-00010101000000-000000000000
 	github.com/go-kit/log v0.2.1
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/ory/dockertest/v3 v3.10.0
@@ -448,9 +447,6 @@ replace (
 
 	// Use Stream fork of IBC-go
 	github.com/cosmos/ibc-go/v8 => github.com/StreamFinance-Protocol/ibc-go/v8 v8.0.0-20240924001133-d8a98ed67527
-
-	github.com/ethos-works/ethos-avs => ./ethos/ethos-avs
-	github.com/ethos-works/ethos/ethos-chain => ./ethos/ethos-chain
 
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.18.0
 	github.com/prometheus/client_model => github.com/prometheus/client_model v0.6.0

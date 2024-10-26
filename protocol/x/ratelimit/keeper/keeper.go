@@ -399,7 +399,6 @@ func (k Keeper) Logger(ctx sdk.Context) cosmoslog.Logger {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-	fmt.Println("InitializeForGenesis")
 	k.SetAssetYieldIndex(ctx, big.NewRat(1, 1))
 }
 

@@ -2,14 +2,11 @@ package app
 
 import (
 	storetypes "cosmossdk.io/store/types"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
-	clobkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/keeper"
 	"github.com/cosmos/cosmos-sdk/client"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
-	testutil "github.com/ethos-works/ethos/ethos-chain/testutil/integration"
 )
 
 // GetKey returns the KVStoreKey for the provided store key.
@@ -41,48 +38,22 @@ func (app *App) GetSubspace(moduleName string) paramstypes.Subspace {
 	return subspace
 }
 
-// ConsumerApp interface implementations for integration tests
-
-// GetTestBankKeeper implements the ConsumerApp interface.
-func (app *App) GetTestBankKeeper() testutil.TestBankKeeper {
-	return app.BankKeeper
-}
-
-// GetTestAccountKeeper implements the ConsumerApp interface.
-func (app *App) GetTestAccountKeeper() testutil.TestAccountKeeper {
-	return app.AccountKeeper
-}
-
-// GetTestSlashingKeeper implements the ConsumerApp interface.
-func (app *App) GetTestSlashingKeeper() testutil.TestSlashingKeeper {
-	return app.SlashingKeeper
-}
-
-// GetTestEvidenceKeeper implements the ConsumerApp interface.
-func (app *App) GetTestEvidenceKeeper() evidencekeeper.Keeper {
-	return app.EvidenceKeeper
-}
-
-func (app *App) GetTestClobKeeper() clobkeeper.Keeper {
-	return *app.ClobKeeper
-}
-
-// GetIBCKeeper implements the TestingApp interface.
+// GetIBCKeeper implements the TestingApp interface used in IBC tests.
 func (app *App) GetIBCKeeper() *ibckeeper.Keeper {
 	return app.IBCKeeper
 }
 
-// GetScopedIBCKeeper implements the TestingApp interface.
+// GetScopedIBCKeeper implements the TestingApp interface used in IBC tests.
 func (app *App) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return app.ScopedIBCKeeper
 }
 
-// GetStakingKeeper implements the TestingApp interface.
+// GetStakingKeeper implements the TestingApp interface  used in IBC tests.
 func (app *App) GetStakingKeeper() ibctestingtypes.StakingKeeper {
 	return *app.StakingKeeper
 }
 
-// GetTxConfig implements the TestingApp interface.
+// GetTxConfig implements the TestingApp interface used in IBC tests.
 func (app *App) GetTxConfig() client.TxConfig {
 	return app.txConfig
 }

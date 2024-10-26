@@ -1,7 +1,6 @@
 package clob_test
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -150,10 +149,6 @@ func TestTimelyPricing(t *testing.T) {
 					response abcitypes.ResponseFinalizeBlock,
 				) (haltchain bool) {
 					execResult := response.TxResults[1]
-					fmt.Println("ERR STATUEFUL ORDER COLLATERALIZAITON CHECK FAILED CODE", clobtypes.ErrStatefulOrderCollateralizationCheckFailed.ABCICode())
-					fmt.Println("execResult.Code", execResult.Code)
-					fmt.Println("execResult.Log", execResult.Log)
-					fmt.Println("tc.expectedErr", tc.expectedErr)
 
 					require.True(t, execResult.IsErr())
 					require.Equal(t, clobtypes.ErrStatefulOrderCollateralizationCheckFailed.ABCICode(), execResult.Code)

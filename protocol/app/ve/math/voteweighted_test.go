@@ -1,7 +1,6 @@
 package voteweighted_test
 
 import (
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -928,8 +927,6 @@ func TestMedianPrices(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
-
-			fmt.Println("VALIDATORS IN TESTCASE", tc.validators)
 
 			mValStore := valutils.NewTotalBondedTokensValidatorMockReturnWithPowers(ctx, tc.validators, tc.powers)
 

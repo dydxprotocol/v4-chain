@@ -31,12 +31,4 @@ var (
 	// Collateral pool addresses for isolated perpetuals.
 	IsoCollateralPoolAddress  = authtypes.NewModuleAddress(satypes.ModuleName + ":3")
 	Iso2CollateralPoolAddress = authtypes.NewModuleAddress(satypes.ModuleName + ":4")
-
-	AliceEthosConsAddress = sdk.ConsAddress(AliceEthosPrivateKey.PubKey().Address())
-	BobEthosConsAddress   = sdk.ConsAddress(BobEthosPrivateKey.PubKey().Address())
-	CarlEthosConsAddress  = sdk.ConsAddress(CarlEthosPrivateKey.PubKey().Address())
-
-	AliceEthosAddressBz = AliceEthosPrivateKey.PubKey().Address().Bytes()
-	BobEthosAddressBz   = BobEthosPrivateKey.PubKey().Address().Bytes()
-	CarlEthosAddressBz  = CarlEthosPrivateKey.PubKey().Address().Bytes()
 )

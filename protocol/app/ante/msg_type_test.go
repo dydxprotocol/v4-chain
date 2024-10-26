@@ -352,8 +352,6 @@ func TestValidateMsgType_UnsupportedMsg(t *testing.T) {
 			if tc.addUnsupportedMsg {
 				// Run test for each unsupported msg
 				unsupportedSampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.UnsupportedMsgSamples)
-				fmt.Println("UNSUPPORTED MSG SAMPLES")
-				fmt.Println(unsupportedSampleMsgs)
 				for _, sampleMsg := range unsupportedSampleMsgs {
 					testName := fmt.Sprintf(testNameFormat, name, mode, sampleMsg.Name)
 					testMsgs := append(slices.Clone(tc.msgs), sampleMsg.Msg)

@@ -20,18 +20,10 @@ var (
 	CarlPrivateKey  = privateKeyFromMnenomic(CarlMnenomic)
 	DavePrivateKey  = privateKeyFromMnenomic(DaveMnenomic)
 
-	AliceEthosPrivateKey = buildPrivKeyFromKeyString("TRJgf7lkTjs/sj43pyweEOanyV7H7fhnVivOi0A4yjW6NjXgCCilX3TshiA8CT/nHxz3brtLh9B/z2fJ4I9N6w==")
-	BobEthosPrivateKey   = buildPrivKeyFromKeyString("OFR4w+FC6EMw5fAGTrHVexyPrjzQ7QfqgZOMgVf0izlCUb6Jh7oDJim9jXP1E0koJWUfXhD+pLPgSMZ0YKu7eg==")
-	CarlEthosPrivateKey  = buildPrivKeyFromKeyString("3YaBAZLA+sl/E73lLfbFbG0u6DYm33ayr/0UpCt/vFBSLkZ/X6a1ZR0fy7fGWbN0ogP4Xc8rSx9dnvcZnqrqKw==")
-
 	AlicePubKey = AlicePrivateKey.PubKey()
 	BobPubKey   = BobPrivateKey.PubKey()
 	CarlPubKey  = CarlPrivateKey.PubKey()
 	DavePubKey  = DavePrivateKey.PubKey()
-
-	AliceEthosPubKey = AliceEthosPrivateKey.PubKey()
-	BobEthosPubKey   = BobEthosPrivateKey.PubKey()
-	CarlEthosPubKey  = CarlEthosPrivateKey.PubKey()
 
 	privateKeyMap = map[string]cryptotypes.PrivKey{
 		AliceAccAddress.String(): AlicePrivateKey,
@@ -41,13 +33,10 @@ var (
 	}
 
 	privateConsMap = map[string]cryptotypes.PrivKey{
-		AliceConsAddress.String():      AlicePrivateKey,
-		BobConsAddress.String():        BobPrivateKey,
-		CarlConsAddress.String():       CarlPrivateKey,
-		DaveConsAddress.String():       DavePrivateKey,
-		AliceEthosConsAddress.String(): AliceEthosPrivateKey,
-		BobEthosConsAddress.String():   BobEthosPrivateKey,
-		CarlEthosConsAddress.String():  CarlEthosPrivateKey,
+		AliceConsAddress.String(): AlicePrivateKey,
+		BobConsAddress.String():   BobPrivateKey,
+		CarlConsAddress.String():  CarlPrivateKey,
+		DaveConsAddress.String():  DavePrivateKey,
 	}
 
 	privateKeyValidatorMap = map[string]cryptotypes.PrivKey{

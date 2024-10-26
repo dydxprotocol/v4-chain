@@ -13,7 +13,6 @@ import (
 	clobante "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/ante"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	consumerkeeper "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/keeper"
 
 	"sync"
 
@@ -26,11 +25,10 @@ import (
 // struct embedding to include the normal cosmos-sdk `HandlerOptions`.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	Codec          codec.Codec
-	AuthStoreKey   storetypes.StoreKey
-	ClobKeeper     clobtypes.ClobKeeper
-	IBCKeeper      ibckeeper.Keeper
-	ConsumerKeeper consumerkeeper.Keeper
+	Codec        codec.Codec
+	AuthStoreKey storetypes.StoreKey
+	ClobKeeper   clobtypes.ClobKeeper
+	IBCKeeper    ibckeeper.Keeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence

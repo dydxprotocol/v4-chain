@@ -1,7 +1,6 @@
 package msgs_test
 
 import (
-	"fmt"
 	"reflect"
 	"sort"
 	"testing"
@@ -45,7 +44,6 @@ func TestAllTypeMessages_SumOfDistinctLists(t *testing.T) {
 		msgs.UnsupportedMsgSamples,
 		msgs.NormalMsgs,
 	)
-	fmt.Println("EXPECTED ALL TYPE MSGS: ", expectedAllTypeMsgs)
 
 	require.Equal(
 		t,

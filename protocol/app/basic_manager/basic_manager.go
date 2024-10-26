@@ -41,7 +41,6 @@ import (
 
 	// Upgrades
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	ibcconsumer "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer"
 )
 
 var (
@@ -73,7 +72,6 @@ var (
 		transfer.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
-		ibcconsumer.AppModuleBasic{},
 
 		// Custom modules
 		pricesmodule.AppModuleBasic{},
