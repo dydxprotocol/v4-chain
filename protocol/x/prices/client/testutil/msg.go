@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	pricescli "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -18,8 +17,10 @@ func MsgQueryAllMarketParamExec(clientCtx client.Context) (testutil.BufferWriter
 }
 
 // MsgQueryAllMarketPriceExec lists all markets prices in `Prices`.
-func MsgQueryAllMarketPriceExec() ([]byte, error) {
-	query := "docker exec interchain-security-instance interchain-security-cd query prices list-market-price"
-	data, _, err := network.QueryCustomNetwork(query)
-	return data, err
+func MsgQueryAllMarketPriceExec(clientCtx client.Context) (testutil.BufferWriter, error) {
+	return clitestutil.ExecTestCLICmd(
+		clientCtx,
+		pricescli.CmdListMarketPrice(),
+		[]string{},
+	)
 }

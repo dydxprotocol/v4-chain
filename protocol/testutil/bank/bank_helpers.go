@@ -1,10 +1,13 @@
 package bank
 
 import (
+	"fmt"
+
 	sdkmath "cosmossdk.io/math"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -15,7 +18,7 @@ import (
 // GetModuleAccTDaiBalance is a test utility function to query TDAI balance
 // of a module account from the bank module.
 func GetModuleAccTDaiBalance(
-	valAddress string,
+	val *network.Validator,
 	codec codec.Codec,
 	moduleName string,
 ) (
@@ -23,26 +26,18 @@ func GetModuleAccTDaiBalance(
 	err error,
 ) {
 	moduleAddress := authtypes.NewModuleAddress(moduleName)
-
-	query := "docker exec interchain-security-instance interchain-security-cd" +
-		" query bank balances " + moduleAddress.String()
-	transferOut, _, err := network.QueryCustomNetwork(query)
+	resp, err := testutil.GetRequest(fmt.Sprintf(
+		"%s/cosmos/bank/v1beta1/balances/%s",
+		val.APIAddress,
+		moduleAddress,
+	))
 	if err != nil {
 		return 0, err
 	}
 
-	// resp, err := testutil.GetRequest(fmt.Sprintf(
-	// 	"%s/cosmos/bank/v1beta1/balances/%s",
-	// 	val.APIAddress,
-	// 	moduleAddress,
-	// ))
-	// if err != nil {
-	// 	return 0, err
-	// }
-
 	var balRes banktypes.QueryAllBalancesResponse
 
-	err = codec.UnmarshalJSON(transferOut, &balRes)
+	err = codec.UnmarshalJSON(resp, &balRes)
 	if err != nil {
 		return 0, err
 	}
