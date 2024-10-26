@@ -15,6 +15,7 @@ import {
   VaultTable,
   MEGAVAULT_MODULE_ADDRESS,
   MEGAVAULT_SUBACCOUNT_ID,
+  TransferTable,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
 import request from 'supertest';
@@ -215,6 +216,11 @@ describe('vault-controller#V4', () => {
         AssetPositionTable.upsert({
           ...testConstants.defaultAssetPosition,
           subaccountId: MEGAVAULT_SUBACCOUNT_ID,
+        }),
+        TransferTable.create({
+          ...testConstants.defaultTransfer,
+          recipientSubaccountId: MEGAVAULT_SUBACCOUNT_ID,
+          createdAt: twoDaysAgo.toISO(),
         }),
       ]);
 
