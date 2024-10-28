@@ -41,7 +41,7 @@ func (k Keeper) ProcessTimestampNonce(ctx sdk.Context, acc sdk.AccountI, tsNonce
 	accountState, found := k.GetAccountState(ctx, address)
 	if !found {
 		// initialize accountplus state with ts nonce details
-		k.SetAccountState(ctx, address, GetAccountPlusStateWithTimestampNonceDetails(address, tsNonce))
+		k.SetAccountState(ctx, address, AccountStateFromTimestampNonceDetails(address, tsNonce))
 	} else {
 		EjectStaleTimestampNonces(&accountState, blockTs)
 		tsNonceAccepted := AttemptTimestampNonceUpdate(tsNonce, &accountState)
@@ -56,9 +56,10 @@ func (k Keeper) ProcessTimestampNonce(ctx sdk.Context, acc sdk.AccountI, tsNonce
 // Inplace eject all stale timestamps.
 func EjectStaleTimestampNonces(accountState *types.AccountState, referenceTs uint64) {
 	tsNonceDetails := &accountState.TimestampNonceDetails
+	oldestAllowedTs := referenceTs - MaxTimeInPastMs
 	var newTsNonces []uint64
 	for _, tsNonce := range tsNonceDetails.TimestampNonces {
-		if tsNonce >= referenceTs-MaxTimeInPastMs {
+		if tsNonce >= oldestAllowedTs {
 			newTsNonces = append(newTsNonces, tsNonce)
 		} else {
 			if tsNonce > tsNonceDetails.MaxEjectedNonce {
@@ -115,9 +116,5 @@ func isLargerThanSmallestValue(value uint64, values []uint64) (bool, int) {
 		}
 	}
 
-	if value > values[minIndex] {
-		return true, minIndex
-	} else {
-		return false, minIndex
-	}
+	return value > values[minIndex], minIndex
 }
