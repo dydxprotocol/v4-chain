@@ -60,13 +60,9 @@ func (k Keeper) CreateMarket(
 	market, err := k.PricesKeeper.CreateMarket(
 		sdkCtx,
 		pricestypes.MarketParam{
-			Id:   marketId,
-			Pair: ticker,
-			// Set the price exponent to the negative of the number of decimals
-			Exponent:           int32(marketMapDetails.Ticker.Decimals) * -1,
-			MinExchanges:       uint32(marketMapDetails.Ticker.MinProviderCount),
-			MinPriceChangePpm:  types.MinPriceChangePpm_LongTail,
-			ExchangeConfigJson: "{}", // Placeholder. TODO (TRA-513): Deprecate this field
+			Id:                marketId,
+			Pair:              ticker,
+			MinPriceChangePpm: types.MinPriceChangePpm_LongTail,
 		},
 		pricestypes.MarketPrice{
 			Id:       marketId,

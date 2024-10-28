@@ -20,21 +20,15 @@ import (
 
 var (
 	GENESIS_MARKET_PARAM = pricestypes.MarketParam{
-		Id:                 0,
-		Pair:               "btc-adv4tnt",
-		Exponent:           -8,
-		MinExchanges:       2,
-		MinPriceChangePpm:  1_000,
-		ExchangeConfigJson: "{}",
+		Id:                0,
+		Pair:              "btc-adv4tnt",
+		MinPriceChangePpm: 1_000,
 	}
 
 	MODIFIED_MARKET_PARAM = pricestypes.MarketParam{
-		Id:                 GENESIS_MARKET_PARAM.Id,
-		Pair:               GENESIS_MARKET_PARAM.Pair,
-		Exponent:           GENESIS_MARKET_PARAM.Exponent, // exponent cannot be updated
-		MinExchanges:       3,
-		MinPriceChangePpm:  2_002,
-		ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tBTCUSD"}]}`,
+		Id:                GENESIS_MARKET_PARAM.Id,
+		Pair:              GENESIS_MARKET_PARAM.Pair,
+		MinPriceChangePpm: 2_002,
 	}
 )
 
@@ -57,12 +51,9 @@ func TestUpdateMarketParam(t *testing.T) {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
-					Id:                 MODIFIED_MARKET_PARAM.Id + 1, // id does not exist
-					Pair:               MODIFIED_MARKET_PARAM.Pair,
-					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
-					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
-					MinPriceChangePpm:  MODIFIED_MARKET_PARAM.MinPriceChangePpm,
-					ExchangeConfigJson: MODIFIED_MARKET_PARAM.ExchangeConfigJson,
+					Id:                MODIFIED_MARKET_PARAM.Id + 1, // id does not exist
+					Pair:              MODIFIED_MARKET_PARAM.Pair,
+					MinPriceChangePpm: MODIFIED_MARKET_PARAM.MinPriceChangePpm,
 				},
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
@@ -71,12 +62,9 @@ func TestUpdateMarketParam(t *testing.T) {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
-					Id:                 MODIFIED_MARKET_PARAM.Id,
-					Pair:               "nonexistent-pair",
-					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
-					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
-					MinPriceChangePpm:  MODIFIED_MARKET_PARAM.MinPriceChangePpm,
-					ExchangeConfigJson: MODIFIED_MARKET_PARAM.ExchangeConfigJson,
+					Id:                MODIFIED_MARKET_PARAM.Id,
+					Pair:              "nonexistent-pair",
+					MinPriceChangePpm: MODIFIED_MARKET_PARAM.MinPriceChangePpm,
 				},
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
@@ -85,40 +73,9 @@ func TestUpdateMarketParam(t *testing.T) {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
-					Id:                 MODIFIED_MARKET_PARAM.Id,
-					Pair:               "", // invalid
-					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
-					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
-					MinPriceChangePpm:  MODIFIED_MARKET_PARAM.MinPriceChangePpm,
-					ExchangeConfigJson: MODIFIED_MARKET_PARAM.ExchangeConfigJson,
-				},
-			},
-			expectCheckTxFails: true,
-		},
-		"Failure: min exchanges is 0": {
-			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: lib.GovModuleAddress.String(),
-				MarketParam: pricestypes.MarketParam{
-					Id:                 MODIFIED_MARKET_PARAM.Id,
-					Pair:               MODIFIED_MARKET_PARAM.Pair,
-					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
-					MinExchanges:       0, // invalid
-					MinPriceChangePpm:  MODIFIED_MARKET_PARAM.MinPriceChangePpm,
-					ExchangeConfigJson: MODIFIED_MARKET_PARAM.ExchangeConfigJson,
-				},
-			},
-			expectCheckTxFails: true,
-		},
-		"Failure: malformed exchange config json": {
-			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: lib.GovModuleAddress.String(),
-				MarketParam: pricestypes.MarketParam{
-					Id:                 MODIFIED_MARKET_PARAM.Id,
-					Pair:               MODIFIED_MARKET_PARAM.Pair,
-					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
-					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
-					MinPriceChangePpm:  MODIFIED_MARKET_PARAM.MinPriceChangePpm,
-					ExchangeConfigJson: `{{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tBTCUSD"}]}`, // invalid
+					Id:                MODIFIED_MARKET_PARAM.Id,
+					Pair:              "", // invalid
+					MinPriceChangePpm: MODIFIED_MARKET_PARAM.MinPriceChangePpm,
 				},
 			},
 			expectCheckTxFails: true,
@@ -177,10 +134,7 @@ func TestUpdateMarketParam(t *testing.T) {
 						marketParamPrice := pricestest.GenerateMarketParamPrice(
 							pricestest.WithId(GENESIS_MARKET_PARAM.Id),
 							pricestest.WithPair(GENESIS_MARKET_PARAM.Pair),
-							pricestest.WithExponent(GENESIS_MARKET_PARAM.Exponent),
-							pricestest.WithMinExchanges(GENESIS_MARKET_PARAM.MinExchanges),
 							pricestest.WithMinPriceChangePpm(GENESIS_MARKET_PARAM.MinPriceChangePpm),
-							pricestest.WithExchangeConfigJson(GENESIS_MARKET_PARAM.ExchangeConfigJson),
 						)
 						genesisState.MarketParams = []pricestypes.MarketParam{marketParamPrice.Param}
 						genesisState.MarketPrices = []pricestypes.MarketPrice{marketParamPrice.Price}

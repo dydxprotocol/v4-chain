@@ -36,16 +36,20 @@ type MarketParam struct {
 	// represents “$10,000`. Therefore `10 ^ Exponent` represents the smallest
 	// price step (in dollars) that can be recorded.
 	//
-	// Deprecated since v7.1.x. This value is now determined from the marketmap.
+	// Deprecated since v8.x. This value is now determined from the marketmap.
 	Exponent int32 `protobuf:"zigzag32,3,opt,name=exponent,proto3" json:"exponent,omitempty"` // Deprecated: Do not use.
 	// The minimum number of exchanges that should be reporting a live price for
 	// a price update to be considered valid.
+	//
+	// Deprecated since v8.x. This value is now determined from the marketmap.
 	MinExchanges uint32 `protobuf:"varint,4,opt,name=min_exchanges,json=minExchanges,proto3" json:"min_exchanges,omitempty"`
 	// The minimum allowable change in `price` value that would cause a price
 	// update on the network. Measured as `1e-6` (parts per million).
 	MinPriceChangePpm uint32 `protobuf:"varint,5,opt,name=min_price_change_ppm,json=minPriceChangePpm,proto3" json:"min_price_change_ppm,omitempty"`
 	// A string of json that encodes the configuration for resolving the price
 	// of this market on various exchanges.
+	//
+	// Deprecated since v8.x. This is now determined from the marketmap.
 	ExchangeConfigJson string `protobuf:"bytes,6,opt,name=exchange_config_json,json=exchangeConfigJson,proto3" json:"exchange_config_json,omitempty"`
 }
 

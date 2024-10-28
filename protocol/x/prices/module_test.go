@@ -128,8 +128,8 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 		},
 		"Bad state: duplicate market param id": {
 			genesisJson: `{"market_params": [` +
-				`{"id":0,"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1,"exchangeConfigJson":"{}"},` +
-				`{"id":0,"pair": "LINK-USD","minExchanges":1,"minPriceChangePpm":1,"exchangeConfigJson":"{}"}` +
+				`{"id":0,"pair": "DENT-USD","minPriceChangePpm":1},` +
+				`{"id":0,"pair": "LINK-USD","minPriceChangePpm":1}` +
 				`]}`,
 			expectedErr: "duplicated market param id",
 		},
@@ -138,8 +138,7 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 			expectedErr: errorsmod.Wrap(pricestypes.ErrInvalidInput, "Pair cannot be empty").Error(),
 		},
 		"Bad state: Mismatch between params and prices": {
-			genesisJson: `{"market_params": [{"pair": "DENT-USD","minExchanges":1,"minPriceChangePpm":1,` +
-				`"exchangeConfigJson":"{}"}]}`,
+			genesisJson: `{"market_params": [{"pair": "DENT-USD","minPriceChangePpm":1}]}`,
 			expectedErr: "expected the same number of market prices and market params",
 		},
 	}

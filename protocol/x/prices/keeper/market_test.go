@@ -144,14 +144,6 @@ func TestCreateMarket_Errors(t *testing.T) {
 			price:             constants.FiveBillion,
 			expectedErr:       errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
 		},
-		"Min exchanges cannot be zero": {
-			pair:               constants.BtcUsdPair,
-			minExchanges:       uint32(0), // cannot be zero
-			minPriceChangePpm:  uint32(50),
-			price:              constants.FiveBillion,
-			exchangeConfigJson: validExchangeConfigJson,
-			expectedErr:        types.ErrZeroMinExchanges.Error(),
-		},
 		"Market param and price ids don't match": {
 			pair:                                  constants.BtcUsdPair,
 			minExchanges:                          uint32(2),
