@@ -150,7 +150,7 @@ func (k Keeper) GetStreamSubaccountUpdate(
 	for i, pp := range subaccount.PerpetualPositions {
 		perpetualPositions[i] = &types.SubaccountPerpetualPosition{
 			PerpetualId: pp.PerpetualId,
-			Quantums:    pp.Quantums.BigInt().Uint64(),
+			Quantums:    pp.Quantums.BigInt().Int64(),
 		}
 	}
 
@@ -298,7 +298,7 @@ func GenerateStreamSubaccountUpdate(
 	for i, pp := range updatedPerpetualPositions {
 		perpetualPositions[i] = &types.SubaccountPerpetualPosition{
 			PerpetualId: pp.PerpetualId,
-			Quantums:    pp.Quantums.BigInt().Uint64(),
+			Quantums:    pp.Quantums.BigInt().Int64(),
 		}
 	}
 
