@@ -1,16 +1,15 @@
 name: Deploy indexer to staging
 
 on:
-  push:
-    branches:
-      -pipeline-indexer-staging
-    paths:
-      - 'packages/indexer/**'
+  pull_request:
+    types:
+      - closed
 
 jobs:
-  deploy:
+  on-merge:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'pipeline-main-replica'
     runs-on: ubuntu-latest
-        
+
     steps:
       - name: Echo Hello World
         run: echo "Hello World"
