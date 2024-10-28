@@ -3,7 +3,7 @@ name: Deploy indxer to Staging Environment
 on:
   push:
     branches:
-      -pipeline-test-main-replica
+      -pipeline-indexer-staging
     paths:
       - 'packages/indexer/**'
 
