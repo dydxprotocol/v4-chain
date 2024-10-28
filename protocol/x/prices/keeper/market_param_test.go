@@ -222,25 +222,6 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 			exchangeConfigJson: validExchangeConfigJson,
 			expectedErr:        errorsmod.Wrap(types.ErrInvalidInput, constants.ErrorMsgInvalidMinPriceChange).Error(),
 		},
-		"Min exchanges cannot be zero": {
-			pair:               constants.BtcUsdPair,
-			minExchanges:       uint32(0), // cannot be zero
-			minPriceChangePpm:  uint32(50),
-			exchangeConfigJson: validExchangeConfigJson,
-			expectedErr:        types.ErrZeroMinExchanges.Error(),
-		},
-		"Empty exchange config json string": {
-			pair:               constants.BtcUsdPair,
-			minExchanges:       uint32(1),
-			minPriceChangePpm:  uint32(50),
-			exchangeConfigJson: "",
-			expectedErr: errorsmod.Wrapf(
-				types.ErrInvalidInput,
-				"ExchangeConfigJson string is not valid: err=%v, input=%v",
-				"unexpected end of JSON input",
-				"",
-			).Error(),
-		},
 		"Updating pair fails due to pair already existing": {
 			targetId:           0,
 			pair:               "1-1",

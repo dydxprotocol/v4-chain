@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"errors"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -25,18 +24,14 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: &types.GenesisState{
 				MarketParams: []types.MarketParam{
 					{
-						Id:                 0,
-						Pair:               constants.BtcUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
+						Id:                0,
+						Pair:              constants.BtcUsdPair,
+						MinPriceChangePpm: 1,
 					},
 					{
-						Id:                 1,
-						Pair:               constants.EthUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
+						Id:                1,
+						Pair:              constants.EthUsdPair,
+						MinPriceChangePpm: 1,
 					},
 				},
 				MarketPrices: []types.MarketPrice{
@@ -52,42 +47,18 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedError: nil,
 		},
-		"invalid: empty ExchangeConfigJson": {
-			genState: &types.GenesisState{
-				MarketParams: []types.MarketParam{
-					{
-						Id:                 0,
-						Pair:               constants.BtcUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: "",
-					},
-				},
-				MarketPrices: []types.MarketPrice{
-					{
-						Id:    0,
-						Price: constants.FiveBillion,
-					},
-				},
-			},
-			expectedError: errors.New("ExchangeConfigJson string is not valid"),
-		},
 		"invalid: duplicate market param ids": {
 			genState: &types.GenesisState{
 				MarketParams: []types.MarketParam{
 					{
-						Id:                 0,
-						Pair:               constants.BtcUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
+						Id:                0,
+						Pair:              constants.BtcUsdPair,
+						MinPriceChangePpm: 1,
 					},
 					{
-						Id:                 0,
-						Pair:               constants.EthUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
+						Id:                0,
+						Pair:              constants.EthUsdPair,
+						MinPriceChangePpm: 1,
 					},
 				},
 			},
@@ -97,9 +68,8 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: &types.GenesisState{
 				MarketParams: []types.MarketParam{
 					{
-						Id:                 0,
-						Pair:               "",
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
+						Id:   0,
+						Pair: "",
 					},
 				},
 			},
@@ -109,18 +79,14 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: &types.GenesisState{
 				MarketParams: []types.MarketParam{
 					{
-						Id:                 0,
-						Pair:               constants.BtcUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
+						Id:                0,
+						Pair:              constants.BtcUsdPair,
+						MinPriceChangePpm: 1,
 					},
 					{
-						Id:                 1,
-						Pair:               constants.EthUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
+						Id:                1,
+						Pair:              constants.EthUsdPair,
+						MinPriceChangePpm: 1,
 					},
 				},
 				MarketPrices: []types.MarketPrice{
@@ -136,18 +102,14 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: &types.GenesisState{
 				MarketParams: []types.MarketParam{
 					{
-						Id:                 0,
-						Pair:               constants.BtcUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
+						Id:                0,
+						Pair:              constants.BtcUsdPair,
+						MinPriceChangePpm: 1,
 					},
 					{
-						Id:                 1,
-						Pair:               constants.EthUsdPair,
-						MinExchanges:       1,
-						MinPriceChangePpm:  1,
-						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
+						Id:                1,
+						Pair:              constants.EthUsdPair,
+						MinPriceChangePpm: 1,
 					},
 				},
 				MarketPrices: []types.MarketPrice{
