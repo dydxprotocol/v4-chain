@@ -1,4 +1,4 @@
-name: Deploy indxer to Staging Environment
+name: Deploy indexer to staging
 
 on:
   push:

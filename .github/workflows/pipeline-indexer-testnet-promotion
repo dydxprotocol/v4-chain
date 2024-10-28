@@ -1,5 +1,4 @@
-name: Deploy indxer to Staging Environment
-
+name: Snapshot indexer staging
 
 on:
   schedule:
