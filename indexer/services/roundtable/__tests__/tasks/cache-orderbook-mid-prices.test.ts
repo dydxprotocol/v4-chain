@@ -4,6 +4,7 @@ import {
   PerpetualMarketTable,
   testConstants,
   testMocks,
+  perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OrderbookLevelsCache,
@@ -17,6 +18,7 @@ describe('cache-orderbook-mid-prices', () => {
   beforeEach(async () => {
     await redis.deleteAllAsync(redisClient);
     await testMocks.seedData();
+    await perpetualMarketRefresher.updatePerpetualMarkets();
   });
 
   afterAll(() => {
@@ -30,6 +32,7 @@ describe('cache-orderbook-mid-prices', () => {
 
   afterEach(async () => {
     await dbHelpers.clearData();
+    await perpetualMarketRefresher.clear();
   });
 
   it('caches mid prices for all markets', async () => {
@@ -41,21 +44,13 @@ describe('cache-orderbook-mid-prices', () => {
       .findByMarketId(
         testConstants.defaultMarket2.id,
       );
-    if (!market1) {
-      throw new Error('Market 1 not found');
+    const market3 = await PerpetualMarketTable
+      .findByMarketId(
+        testConstants.defaultMarket3.id,
+      );
+    if (!market1 || !market2 || !market3) {
+      throw new Error('Test market not found');
     }
-    if (!market2) {
-      throw new Error('Market 2 not found');
-    }
-
-    jest.spyOn(PerpetualMarketTable, 'findAll')
-      .mockReturnValueOnce(Promise.resolve([
-        market1,
-        // Passing market2 twice so that it will call getOrderbookMidPrice twice and
-        // cache the last two prices from the mock below
-        market2,
-        market2,
-      ] as PerpetualMarketFromDatabase[]));
 
     jest.spyOn(OrderbookLevelsCache, 'getOrderBookMidPrice')
       .mockReturnValueOnce(Promise.resolve('200'))
@@ -63,14 +58,16 @@ describe('cache-orderbook-mid-prices', () => {
       .mockReturnValueOnce(Promise.resolve('400'));
 
     await runTask();
+    expect(OrderbookLevelsCache.getOrderBookMidPrice).toHaveBeenCalledTimes(5);
 
     const prices = await OrderbookMidPricesCache.getMedianPrices(
       redisClient,
-      [market1.ticker, market2.ticker],
+      [market1.ticker, market2.ticker, market3.ticker],
     );
 
     expect(prices[market1.ticker]).toBe('200');
-    expect(prices[market2.ticker]).toBe('350');
+    expect(prices[market2.ticker]).toBe('300');
+    expect(prices[market3.ticker]).toBe('400');
   });
 
   it('handles undefined prices', async () => {
