@@ -264,6 +264,11 @@ export interface PnlTicksResponseObject {
   blockTime: IsoString,
 }
 
+export interface AggregatedPnlTick{
+  pnlTick: PnlTicksResponseObject,
+  numTicks: number,
+}
+
 /* ------- TRADE TYPES ------- */
 
 export interface TradeResponse extends PaginationResponse {

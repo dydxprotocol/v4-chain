@@ -11,6 +11,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
+import _ from 'lodash';
 import {
   Controller, Get, Query, Route,
 } from 'tsoa';
@@ -156,7 +157,10 @@ class HistoricalPnlController extends Controller {
     }
 
     // aggregate pnlTicks for all subaccounts grouped by blockHeight
-    const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(pnlTicks);
+    const aggregatedPnlTicks: PnlTicksFromDatabase[] = _.map(
+      aggregateHourlyPnlTicks(pnlTicks),
+      'pnlTick',
+    );
 
     return {
       historicalPnl: aggregatedPnlTicks.map(
