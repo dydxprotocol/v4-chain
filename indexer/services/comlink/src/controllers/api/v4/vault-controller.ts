@@ -702,6 +702,13 @@ function aggregateVaultPnlTicks(
       DateTime.fromISO(aggregatedTick.pnlTick.createdAt),
       (a: DateTime, b: DateTime) => { return a.diff(b).milliseconds; },
     );
+    logger.info({
+      at: 'VaultController#aggregateVaultPnlTicks',
+      message: 'Comparing aggregated pnl tick to expected ticks',
+      vaultCreationTimes,
+      numVaultsCreated,
+      aggregatedTick,
+    });
     // Number of ticks should be greater than number of vaults created before it as there should be
     // a tick for the main vault subaccount.
     return aggregatedTick.numTicks >= numVaultsCreated;
