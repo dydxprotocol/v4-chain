@@ -59,7 +59,7 @@ export interface StreamSubaccountUpdateSDKType {
 export interface SubaccountPerpetualPosition {
   /** The `Id` of the `Perpetual`. */
   perpetualId: number;
-  /** The size of the position in base quantums. */
+  /** The size of the position in base quantums. Negative means short. */
 
   quantums: Long;
 }
@@ -71,7 +71,7 @@ export interface SubaccountPerpetualPosition {
 export interface SubaccountPerpetualPositionSDKType {
   /** The `Id` of the `Perpetual`. */
   perpetual_id: number;
-  /** The size of the position in base quantums. */
+  /** The size of the position in base quantums. Negative means short. */
 
   quantums: Long;
 }
@@ -178,7 +178,7 @@ export const StreamSubaccountUpdate = {
 function createBaseSubaccountPerpetualPosition(): SubaccountPerpetualPosition {
   return {
     perpetualId: 0,
-    quantums: Long.UZERO
+    quantums: Long.ZERO
   };
 }
 
@@ -189,7 +189,7 @@ export const SubaccountPerpetualPosition = {
     }
 
     if (!message.quantums.isZero()) {
-      writer.uint32(16).uint64(message.quantums);
+      writer.uint32(16).int64(message.quantums);
     }
 
     return writer;
@@ -209,7 +209,7 @@ export const SubaccountPerpetualPosition = {
           break;
 
         case 2:
-          message.quantums = (reader.uint64() as Long);
+          message.quantums = (reader.int64() as Long);
           break;
 
         default:
@@ -224,7 +224,7 @@ export const SubaccountPerpetualPosition = {
   fromPartial(object: DeepPartial<SubaccountPerpetualPosition>): SubaccountPerpetualPosition {
     const message = createBaseSubaccountPerpetualPosition();
     message.perpetualId = object.perpetualId ?? 0;
-    message.quantums = object.quantums !== undefined && object.quantums !== null ? Long.fromValue(object.quantums) : Long.UZERO;
+    message.quantums = object.quantums !== undefined && object.quantums !== null ? Long.fromValue(object.quantums) : Long.ZERO;
     return message;
   }
 
