@@ -6,7 +6,7 @@ Cargo.toml
 
 ```toml
 [dependencies]
-dydx-proto-rust = "0.1"
+dydx-proto = "0.1"
 ```
 
 *Note:* by default, rust stub files are not rebuilt (see Q&A below)

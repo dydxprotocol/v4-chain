@@ -31,7 +31,7 @@ confidence-threshold = 0.8
 exceptions = []
 
 [[licenses.clarify]]
-crate = "dydx-proto-rust"
+crate = "dydx-proto"
 expression = "LicenseRef-dYdX-Custom"
 license-files = [
     { path = "LICENSE", hash = 0x30bcd1e3 },
