@@ -58,7 +58,9 @@ import {
   defaultTendermintEventId2,
   defaultTendermintEventId3,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
-import { AssetPositionsMap, PerpetualPositionWithFunding, SubaccountResponseObject } from '../../src/types';
+import {
+  AggregatedPnlTick, AssetPositionsMap, PerpetualPositionWithFunding, SubaccountResponseObject,
+} from '../../src/types';
 import { ZERO, ZERO_USDC_POSITION } from '../../src/lib/constants';
 import { DateTime } from 'luxon';
 
@@ -844,15 +846,20 @@ describe('helpers', () => {
         ),
       };
 
-      const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks([pnlTick]);
+      const aggregatedPnlTicks: AggregatedPnlTick[] = aggregateHourlyPnlTicks([pnlTick]);
       expect(
         aggregatedPnlTicks,
       ).toEqual(
-        [expect.objectContaining({ ...testConstants.defaultPnlTick })],
+        [expect.objectContaining(
+          {
+            pnlTick: expect.objectContaining(testConstants.defaultPnlTick),
+            numTicks: 1,
+          },
+        )],
       );
     });
 
-    it('aggregates multiple pnl ticks same height', () => {
+    it('aggregates multiple pnl ticks same height and de-dupes ticks', () => {
       const pnlTick: PnlTicksFromDatabase = {
         ...testConstants.defaultPnlTick,
         id: PnlTicksTable.uuid(
@@ -862,6 +869,7 @@ describe('helpers', () => {
       };
       const pnlTick2: PnlTicksFromDatabase = {
         ...testConstants.defaultPnlTick,
+        subaccountId: testConstants.defaultSubaccountId2,
         id: PnlTicksTable.uuid(
           testConstants.defaultSubaccountId2,
           testConstants.defaultPnlTick.createdAt,
@@ -883,8 +891,9 @@ describe('helpers', () => {
       const blockTime3: string = DateTime.fromISO(pnlTick.createdAt).plus({ minute: 61 }).toISO();
       const pnlTick4: PnlTicksFromDatabase = {
         ...testConstants.defaultPnlTick,
+        subaccountId: testConstants.defaultSubaccountId2,
         id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
+          testConstants.defaultSubaccountId2,
           blockTime3,
         ),
         equity: '1',
@@ -894,29 +903,52 @@ describe('helpers', () => {
         blockTime: blockTime3,
         createdAt: blockTime3,
       };
+      const blockHeight4: string = '82';
+      const blockTime4: string = DateTime.fromISO(pnlTick.createdAt).startOf('hour').plus({ minute: 63 }).toISO();
+      // should be de-duped
+      const pnlTick5: PnlTicksFromDatabase = {
+        ...testConstants.defaultPnlTick,
+        subaccountId: testConstants.defaultSubaccountId2,
+        id: PnlTicksTable.uuid(
+          testConstants.defaultSubaccountId2,
+          blockTime4,
+        ),
+        equity: '1',
+        totalPnl: '2',
+        netTransfers: '3',
+        blockHeight: blockHeight4,
+        blockTime: blockTime4,
+        createdAt: blockTime4,
+      };
 
-      const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateHourlyPnlTicks(
-        [pnlTick, pnlTick2, pnlTick3, pnlTick4],
+      const aggregatedPnlTicks: AggregatedPnlTick[] = aggregateHourlyPnlTicks(
+        [pnlTick, pnlTick2, pnlTick3, pnlTick4, pnlTick5],
       );
       expect(aggregatedPnlTicks).toEqual(
         expect.arrayContaining([
           // Combined pnl tick at initial hour
           expect.objectContaining({
-            equity: (parseFloat(testConstants.defaultPnlTick.equity) +
-            parseFloat(pnlTick2.equity)).toString(),
-            totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) +
-                parseFloat(pnlTick2.totalPnl)).toString(),
-            netTransfers: (parseFloat(testConstants.defaultPnlTick.netTransfers) +
-                parseFloat(pnlTick2.netTransfers)).toString(),
+            pnlTick: expect.objectContaining({
+              equity: (parseFloat(testConstants.defaultPnlTick.equity) +
+              parseFloat(pnlTick2.equity)).toString(),
+              totalPnl: (parseFloat(testConstants.defaultPnlTick.totalPnl) +
+                  parseFloat(pnlTick2.totalPnl)).toString(),
+              netTransfers: (parseFloat(testConstants.defaultPnlTick.netTransfers) +
+                  parseFloat(pnlTick2.netTransfers)).toString(),
+            }),
+            numTicks: 2,
           }),
           // Combined pnl tick at initial hour + 1 hour and initial hour + 1 hour, 1 minute
           expect.objectContaining({
-            equity: (parseFloat(pnlTick3.equity) +
-            parseFloat(pnlTick4.equity)).toString(),
-            totalPnl: (parseFloat(pnlTick3.totalPnl) +
-                parseFloat(pnlTick4.totalPnl)).toString(),
-            netTransfers: (parseFloat(pnlTick3.netTransfers) +
-                parseFloat(pnlTick4.netTransfers)).toString(),
+            pnlTick: expect.objectContaining({
+              equity: (parseFloat(pnlTick3.equity) +
+              parseFloat(pnlTick4.equity)).toString(),
+              totalPnl: (parseFloat(pnlTick3.totalPnl) +
+                  parseFloat(pnlTick4.totalPnl)).toString(),
+              netTransfers: (parseFloat(pnlTick3.netTransfers) +
+                  parseFloat(pnlTick4.netTransfers)).toString(),
+            }),
+            numTicks: 2,
           }),
         ]),
       );

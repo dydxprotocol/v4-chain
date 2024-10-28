@@ -15,6 +15,7 @@ import {
   VaultTable,
   MEGAVAULT_MODULE_ADDRESS,
   MEGAVAULT_SUBACCOUNT_ID,
+  TransferTable,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
 import request from 'supertest';
@@ -181,11 +182,12 @@ describe('vault-controller#V4', () => {
       [
         'hourly resolution',
         '?resolution=hour',
-        [1, undefined, 2, 3, 4],
-        [undefined, 6, 7, 8, 9],
-        [11, undefined, 12, 13, 14],
+        [1, 2, 3, 4],
+        [undefined, 7, 8, 9],
+        [11, 12, 13, 14],
       ],
-    ])('Get /megavault/historicalPnl with 2 vault subaccounts and main subaccount (%s)', async (
+    ])('Get /megavault/historicalPnl with 2 vault subaccounts and main subaccount (%s), ' +
+       'excludes tick with missing vault ticks', async (
       _name: string,
       queryParam: string,
       expectedTicksIndex1: (number | undefined)[],
@@ -202,15 +204,23 @@ describe('vault-controller#V4', () => {
           ...testConstants.defaultVault,
           address: testConstants.defaultAddress,
           clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+          createdAt: twoDaysAgo.toISO(),
         }),
+        // Single tick for this vault will be excluded from result.
         VaultTable.create({
           ...testConstants.defaultVault,
           address: testConstants.vaultAddress,
           clobPairId: testConstants.defaultPerpetualMarket2.clobPairId,
+          createdAt: almostTwoDaysAgo.toISO(),
         }),
         AssetPositionTable.upsert({
           ...testConstants.defaultAssetPosition,
           subaccountId: MEGAVAULT_SUBACCOUNT_ID,
+        }),
+        TransferTable.create({
+          ...testConstants.defaultTransfer,
+          recipientSubaccountId: MEGAVAULT_SUBACCOUNT_ID,
+          createdAt: twoDaysAgo.toISO(),
         }),
       ]);
 
@@ -559,6 +569,7 @@ describe('vault-controller#V4', () => {
         ...testConstants.defaultPnlTick,
         subaccountId: testConstants.vaultSubaccountId,
       }),
+      // Invalid pnl tick to be excluded as only a single pnl tick but 2 pnl ticks should exist.
       PnlTicksTable.create({
         ...testConstants.defaultPnlTick,
         subaccountId: testConstants.vaultSubaccountId,
