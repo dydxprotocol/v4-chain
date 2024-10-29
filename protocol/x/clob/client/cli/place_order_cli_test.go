@@ -11,6 +11,7 @@ import (
 	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/bank"
@@ -18,11 +19,16 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	cli_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/client/testutil"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
+	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sa_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/client/testutil"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -124,20 +130,20 @@ func (s *PlaceOrderIntegrationTestSuite) SetupSuite() {
 		sastate.Subaccounts,
 		satypes.Subaccount{
 			Id: &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: subaccountNumberZero},
-			AssetPositions: []satypes.AssetPosition{
+			AssetPositions: []*satypes.AssetPosition{
 				{
 					AssetId:  0,
-					Quantums: sdkmath.NewInt(initialQuoteBalance),
+					Quantums: dtypes.NewInt(initialQuoteBalance),
 				},
 			},
 			PerpetualPositions: []*satypes.PerpetualPosition{},
 		},
 		satypes.Subaccount{
 			Id: &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: subaccountNumberOne},
-			AssetPositions: []satypes.AssetPosition{
+			AssetPositions: []*satypes.AssetPosition{
 				{
 					AssetId:  0,
-					Quantums: sdkmath.NewInt(initialQuoteBalance),
+					Quantums: dtypes.NewInt(initialQuoteBalance),
 				},
 			},
 			PerpetualPositions: []*satypes.PerpetualPosition{},

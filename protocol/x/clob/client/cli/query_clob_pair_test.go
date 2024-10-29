@@ -14,6 +14,8 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/nullify"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"

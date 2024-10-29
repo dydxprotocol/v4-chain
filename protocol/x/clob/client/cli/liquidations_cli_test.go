@@ -14,10 +14,15 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
+	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sa_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/client/testutil"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 
@@ -137,7 +142,7 @@ func (s *LiquidationsIntegrationTestSuite) SetupSuite() {
 			AssetPositions: []*satypes.AssetPosition{
 				{
 					AssetId:  0,
-					Quantums: sdkmath.NewInt(100_000_000_000),
+					Quantums: dtypes.NewInt(100_000_000_000),
 				},
 			},
 			PerpetualPositions: []*satypes.PerpetualPosition{},
@@ -147,7 +152,7 @@ func (s *LiquidationsIntegrationTestSuite) SetupSuite() {
 			AssetPositions: []*satypes.AssetPosition{
 				{
 					AssetId:  0,
-					Quantums: sdkmath.NewInt(-45_001_000_000),
+					Quantums: dtypes.NewInt(-45_001_000_000),
 				},
 			},
 			PerpetualPositions: []*satypes.PerpetualPosition{
@@ -307,7 +312,7 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 	subticks := types.Subticks(50_000_000_000)
 
 	// Place the maker order that should be filled by the liquidation order.
-	_, err = clob_testutil.MsgPlaceOrderExec(
+	_, err = cli_testutil.MsgPlaceOrderExec(
 		ctx,
 		s.validatorAddress,
 		liqTestSubaccountNumberZero,
@@ -365,7 +370,7 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 
 	subaccountOneInitialQuoteBalance := int64(-45_001_000_000)
 	liquidationFee := fillSizeQuoteQuantums *
-		int64(types.LiquidationsConfig_Default.MaxLiquidationFeePpm) /
+		int64(types.LiquidationsConfig_NoFee.LiquidityFeePpm+types.LiquidationsConfig_NoFee.ValidatorFeePpm) /
 		int64(lib.OneMillion)
 	s.Require().Equal(
 		new(big.Int).SetInt64(subaccountOneInitialQuoteBalance+fillSizeQuoteQuantums-liquidationFee),

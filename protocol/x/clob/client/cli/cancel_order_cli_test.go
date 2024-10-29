@@ -3,31 +3,38 @@
 package cli_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/big"
 	"testing"
 
 	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
-
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/bank"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	cli_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/client/testutil"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
+	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimitcli "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/client/cli"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	sa_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/client/testutil"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -61,41 +68,41 @@ func GetBalanceAfterYield(clientCtx client.Context, initialBalance *big.Int) (ba
 		return 0, err
 	}
 
-// 	var resp ratelimittypes.GetSDAIPriceQueryResponse
-// 	err = json.Unmarshal(data, &resp)
-// 	if err != nil {
-// 		return 0, err
-// 	}
+	var resp ratelimittypes.GetSDAIPriceQueryResponse
+	err = json.Unmarshal(data.Bytes(), &resp)
+	if err != nil {
+		return 0, err
+	}
 
-// 	priceFloat, success := new(big.Float).SetString(resp.Price)
-// 	if !success {
-// 		return 0, fmt.Errorf("failed to parse price as big.Float")
-// 	}
+	priceFloat, success := new(big.Float).SetString(resp.Price)
+	if !success {
+		return 0, fmt.Errorf("failed to parse price as big.Float")
+	}
 
-// 	precision := new(big.Int).Exp(
-// 		big.NewInt(ratelimittypes.BASE_10),
-// 		big.NewInt(ratelimittypes.SDAI_DECIMALS),
-// 		nil,
-// 	)
+	precision := new(big.Int).Exp(
+		big.NewInt(ratelimittypes.BASE_10),
+		big.NewInt(ratelimittypes.SDAI_DECIMALS),
+		nil,
+	)
 
-// 	// Convert initialBalance to big.Float
-// 	initialBalanceFloat := new(big.Float).SetInt(initialBalance)
+	// Convert initialBalance to big.Float
+	initialBalanceFloat := new(big.Float).SetInt(initialBalance)
 
-// 	// Multiply price by initialBalance
-// 	result := new(big.Float).Mul(priceFloat, initialBalanceFloat)
+	// Multiply price by initialBalance
+	result := new(big.Float).Mul(priceFloat, initialBalanceFloat)
 
-// 	// Convert precision to big.Float
-// 	precisionFloat := new(big.Float).SetInt(precision)
+	// Convert precision to big.Float
+	precisionFloat := new(big.Float).SetInt(precision)
 
-// 	// Divide the result by precision
-// 	result.Quo(result, precisionFloat)
+	// Divide the result by precision
+	result.Quo(result, precisionFloat)
 
-// 	// Convert result to int64
-// 	balanceFloat, _ := result.Float64()
-// 	balance = int64(balanceFloat)
+	// Convert result to int64
+	balanceFloat, _ := result.Float64()
+	balance = int64(balanceFloat)
 
-// 	return balance, nil
-// }
+	return balance, nil
+}
 
 func TestCancelOrderIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, &CancelOrderIntegrationTestSuite{})
@@ -172,10 +179,10 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 				Owner:  s.validatorAddress.String(),
 				Number: 0,
 			},
-			AssetPositions: []satypes.AssetPosition{
+			AssetPositions: []*satypes.AssetPosition{
 				{
 					AssetId:  0,
-					Quantums: sdkmath.NewInt(1000000000),
+					Quantums: dtypes.NewInt(1000000000),
 				},
 			},
 			PerpetualPositions: []*satypes.PerpetualPosition{},
@@ -185,10 +192,10 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 				Owner:  s.validatorAddress.String(),
 				Number: 1,
 			},
-			AssetPositions: []satypes.AssetPosition{
+			AssetPositions: []*satypes.AssetPosition{
 				{
 					AssetId:  0,
-					Quantums: sdkmath.NewInt(1000000000),
+					Quantums: dtypes.NewInt(1000000000),
 				},
 			},
 			PerpetualPositions: []*satypes.PerpetualPosition{},
@@ -566,6 +573,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 
 	// Query both subaccounts.
 	accResp, accErr := sa_testutil.MsgQuerySubaccountExec(
+		ctx,
 		s.validatorAddress,
 		cancelsSubaccountNumberZero,
 	)
@@ -576,6 +584,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 	subaccountZero := subaccountResp.Subaccount
 
 	accResp, accErr = sa_testutil.MsgQuerySubaccountExec(
+		ctx,
 		s.validatorAddress,
 		cancelsSubaccountNumberOne,
 	)
@@ -584,47 +593,47 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 	s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))
 	subaccountOne := subaccountResp.Subaccount
 
-// 	// Compute the fill price so as to know how much QuoteBalance should be remaining.
-// 	fillSizeQuoteQuantums := types.FillAmountToQuoteQuantums(
-// 		subticks,
-// 		quantums,
-// 		constants.ClobPair_Btc.QuantumConversionExponent,
-// 	).Int64()
+	// Compute the fill price so as to know how much QuoteBalance should be remaining.
+	fillSizeQuoteQuantums := types.FillAmountToQuoteQuantums(
+		subticks,
+		quantums,
+		constants.ClobPair_Btc.QuantumConversionExponent,
+	).Int64()
 
 	cancelsInitialQuoteBalanceAfterYield, err := GetBalanceAfterYield(ctx, new(big.Int).SetInt64(cancelsInitialQuoteBalance))
 	s.Require().NoError(err)
 
-// 	// Assert that both Subaccounts have the appropriate state.
-// 	// Order could be maker or taker after Uncross, so assert that account could have been either.
-// 	takerFee := fillSizeQuoteQuantums *
-// 		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].TakerFeePpm) /
-// 		int64(lib.OneMillion)
-// 	makerFee := fillSizeQuoteQuantums *
-// 		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].MakerFeePpm) /
-// 		int64(lib.OneMillion)
+	// Assert that both Subaccounts have the appropriate state.
+	// Order could be maker or taker after Uncross, so assert that account could have been either.
+	takerFee := fillSizeQuoteQuantums *
+		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].TakerFeePpm) /
+		int64(lib.OneMillion)
+	makerFee := fillSizeQuoteQuantums *
+		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].MakerFeePpm) /
+		int64(lib.OneMillion)
 
-// 	s.Require().Contains(
-// 		[]*big.Int{
-// 			new(big.Int).SetInt64(cancelsInitialQuoteBalanceAfterYield - fillSizeQuoteQuantums - takerFee),
-// 			new(big.Int).SetInt64(cancelsInitialQuoteBalanceAfterYield - fillSizeQuoteQuantums - makerFee),
-// 		},
-// 		subaccountZero.GetTDaiPosition(),
-// 	)
-// 	s.Require().Len(subaccountZero.PerpetualPositions, 1)
-// 	s.Require().Equal(quantums.ToBigInt(), subaccountZero.PerpetualPositions[0].GetBigQuantums())
+	s.Require().Contains(
+		[]*big.Int{
+			new(big.Int).SetInt64(cancelsInitialQuoteBalanceAfterYield - fillSizeQuoteQuantums - takerFee),
+			new(big.Int).SetInt64(cancelsInitialQuoteBalanceAfterYield - fillSizeQuoteQuantums - makerFee),
+		},
+		subaccountZero.GetTDaiPosition(),
+	)
+	s.Require().Len(subaccountZero.PerpetualPositions, 1)
+	s.Require().Equal(quantums.ToBigInt(), subaccountZero.PerpetualPositions[0].GetBigQuantums())
 
-// 	s.Require().Contains(
-// 		[]*big.Int{
-// 			new(big.Int).SetInt64(cancelsInitialQuoteBalanceAfterYield + fillSizeQuoteQuantums - takerFee),
-// 			new(big.Int).SetInt64(cancelsInitialQuoteBalanceAfterYield + fillSizeQuoteQuantums - makerFee),
-// 		},
-// 		subaccountOne.GetTDaiPosition(),
-// 	)
-// 	s.Require().Len(subaccountOne.PerpetualPositions, 1)
-// 	s.Require().Equal(new(big.Int).Neg(
-// 		quantums.ToBigInt()),
-// 		subaccountOne.PerpetualPositions[0].GetBigQuantums(),
-// 	)
+	s.Require().Contains(
+		[]*big.Int{
+			new(big.Int).SetInt64(cancelsInitialQuoteBalanceAfterYield + fillSizeQuoteQuantums - takerFee),
+			new(big.Int).SetInt64(cancelsInitialQuoteBalanceAfterYield + fillSizeQuoteQuantums - makerFee),
+		},
+		subaccountOne.GetTDaiPosition(),
+	)
+	s.Require().Len(subaccountOne.PerpetualPositions, 1)
+	s.Require().Equal(new(big.Int).Neg(
+		quantums.ToBigInt()),
+		subaccountOne.PerpetualPositions[0].GetBigQuantums(),
+	)
 
 	// Check that the `subaccounts` module account has expected remaining TDAI balance.
 	saModuleTDaiBalance, err := testutil_bank.GetModuleAccTDaiBalance(
