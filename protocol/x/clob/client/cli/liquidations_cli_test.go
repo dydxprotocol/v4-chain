@@ -204,103 +204,6 @@ func (s *LiquidationsIntegrationTestSuite) SetupSuite() {
 // QuoteBalance and PerpetualPositions, along with the balances of the Subaccounts module,
 // Distribution module, and insurance fund.
 func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
-	// goodTilBlock := uint32(0)
-	// subticks := types.Subticks(50_000_000_000)
-
-	// blockHeightQuery := "docker exec interchain-security-instance interchain-security-cd query block --type=height 0"
-	// data, _, _ := network.QueryCustomNetwork(blockHeightQuery)
-	// var resp blocktypes.Block
-	// require.NoError(s.T(), s.cfg.Codec.UnmarshalJSON(data, &resp))
-	// blockHeight := resp.LastCommit.Height
-
-	// goodTilBlock = uint32(blockHeight) + types.ShortBlockWindow
-	// goodTilBlockStr := strconv.Itoa(int(goodTilBlock))
-
-	// buyTx := "docker exec interchain-security-instance interchain-security-cd" +
-	// 	" tx clob place-order dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
-	// 	" 0 1 0 1 100000000 50000000000 " + goodTilBlockStr +
-	// 	" --from dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6" +
-	// 	" --chain-id consu --home /consu/validatoralice --keyring-backend test -y"
-	// _, _, err := network.QueryCustomNetwork(buyTx)
-	// s.Require().NoError(err)
-
-	// time.Sleep(5 * time.Second)
-
-	// // Query both subaccounts.
-	// accResp, accErr := sa_testutil.MsgQuerySubaccountExec(
-	// 	"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-	// 	liqTestSubaccountNumberZero,
-	// )
-	// s.Require().NoError(accErr)
-
-	// var subaccountResp satypes.QuerySubaccountResponse
-	// s.Require().NoError(s.cfg.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))
-	// subaccountZero := subaccountResp.Subaccount
-
-	// accResp, accErr = sa_testutil.MsgQuerySubaccountExec(
-	// 	"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-	// 	liqTestSubaccountNumberOne,
-	// )
-	// s.Require().NoError(accErr)
-
-	// s.Require().NoError(s.cfg.Codec.UnmarshalJSON(accResp.Bytes(), &subaccountResp))
-	// subaccountOne := subaccountResp.Subaccount
-
-	// // Compute the fill price so as to know how much QuoteBalance should be remaining.
-	// fillSizeQuoteQuantums := types.FillAmountToQuoteQuantums(
-	// 	subticks,
-	// 	liqTestMakerOrderQuantums,
-	// 	constants.ClobPair_Btc.QuantumConversionExponent,
-	// ).Int64()
-
-	// // Assert that both Subaccounts have the appropriate state.
-	// takerFee := fillSizeQuoteQuantums * int64(constants.PerpetualFeeParams.Tiers[0].TakerFeePpm) / int64(lib.OneMillion)
-	// makerFee := fillSizeQuoteQuantums * int64(constants.PerpetualFeeParams.Tiers[0].MakerFeePpm) / int64(lib.OneMillion)
-	// subaccountZeroInitialQuoteBalance := constants.TDai_Asset_100_000.GetBigQuantums().Int64()
-
-	// s.Require().Contains(
-	// 	[]*big.Int{
-	// 		new(big.Int).SetInt64(subaccountZeroInitialQuoteBalance - fillSizeQuoteQuantums - takerFee),
-	// 		new(big.Int).SetInt64(subaccountZeroInitialQuoteBalance - fillSizeQuoteQuantums - makerFee),
-	// 	},
-	// 	subaccountZero.GetTDaiPosition(),
-	// )
-	// s.Require().Len(subaccountZero.PerpetualPositions, 1)
-	// s.Require().Equal(liqTestMakerOrderQuantums.ToBigInt(), subaccountZero.PerpetualPositions[0].GetBigQuantums())
-
-	// subaccountOneInitialQuoteBalance := int64(-45_001_000_000)
-	// liquidationFee := fillSizeQuoteQuantums *
-	// 	int64(types.LiquidationsConfig_Default.InsuranceFundFeePpm) /
-	// 	int64(lib.OneMillion)
-	// s.Require().Equal(
-	// 	new(big.Int).SetInt64(subaccountOneInitialQuoteBalance+fillSizeQuoteQuantums-liquidationFee),
-	// 	subaccountOne.GetTDaiPosition(),
-	// )
-	// s.Require().Empty(subaccountOne.PerpetualPositions)
-
-	// // Check that the `subaccounts` module account has expected remaining TDAI balance.
-	// saModuleTDaiBalance, err := testutil_bank.GetModuleAccTDaiBalance(
-	// 	"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-	// 	s.cfg.Codec,
-	// 	satypes.ModuleName,
-	// )
-	// s.Require().NoError(err)
-	// s.Require().Equal(
-	// 	initialSubaccountModuleAccBalance-makerFee-liquidationFee,
-	// 	saModuleTDaiBalance,
-	// )
-
-	// // Check that the insurance fund has expected TDai balance.
-	// insuranceFundBalance, err := testutil_bank.GetModuleAccTDaiBalance(
-	// 	"dydx1eeeggku6dzk3mv7wph3zq035rhtd890smfq5z6",
-	// 	s.cfg.Codec,
-	// 	perptypes.InsuranceFundName,
-	// )
-
-	// s.Require().NoError(err)
-	// s.Require().Equal(liquidationFee, insuranceFundBalance)
-	// network.CleanupCustomNetwork()
-
 	val := s.network.Validators[0]
 	ctx := val.ClientCtx
 
@@ -370,7 +273,7 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 
 	subaccountOneInitialQuoteBalance := int64(-45_001_000_000)
 	liquidationFee := fillSizeQuoteQuantums *
-		int64(types.LiquidationsConfig_NoFee.LiquidityFeePpm+types.LiquidationsConfig_NoFee.ValidatorFeePpm) /
+		int64(types.LiquidationsConfig_Default.InsuranceFundFeePpm) /
 		int64(lib.OneMillion)
 	s.Require().Equal(
 		new(big.Int).SetInt64(subaccountOneInitialQuoteBalance+fillSizeQuoteQuantums-liquidationFee),
