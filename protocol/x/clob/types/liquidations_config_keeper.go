@@ -16,6 +16,17 @@ var (
 		},
 		MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
 	}
+
+	LiquidationsConfig_NoFee = LiquidationsConfig{
+		InsuranceFundFeePpm: 5_000,
+		ValidatorFeePpm:     0,
+		LiquidityFeePpm:     0,
+		FillablePriceConfig: FillablePriceConfig{
+			BankruptcyAdjustmentPpm:           lib.OneMillion,
+			SpreadToMaintenanceMarginRatioPpm: 100_000,
+		},
+		MaxCumulativeInsuranceFundDelta: uint64(1_000_000_000_000),
+	}
 )
 
 // LiquidationsConfigKeeper is an interface that encapsulates all reads and writes to the

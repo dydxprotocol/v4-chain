@@ -2,11 +2,17 @@ package testutil
 
 import (
 	"fmt"
+	"math/big"
+	"testing"
 
+	sdkmath "cosmossdk.io/math"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	clobcli "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -70,4 +76,37 @@ func MsgCancelOrderExec(
 	)
 
 	return clitestutil.ExecTestCLICmd(clientCtx, clobcli.CmdCancelOrder(), args)
+}
+
+func CreateBankGenesisState(
+	t testing.TB,
+	cfg network.Config,
+) []byte {
+	bankGenState := banktypes.GenesisState{
+		Balances: []banktypes.Balance{
+			{
+				Address: "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
+				Coins: []sdk.Coin{
+					sdk.NewInt64Coin(
+						"utdai",
+						10000000000,
+					),
+				},
+			},
+			{
+				Address: "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0",
+				Coins: []sdk.Coin{
+					{
+						Denom:  "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8",
+						Amount: sdkmath.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(22), nil)),
+					},
+				},
+			},
+		},
+	}
+
+	bankbuf, err := cfg.Codec.MarshalJSON(&bankGenState)
+	require.NoError(t, err)
+
+	return bankbuf
 }
