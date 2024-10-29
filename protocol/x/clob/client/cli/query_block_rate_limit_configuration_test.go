@@ -23,27 +23,6 @@ var (
 	}
 )
 
-// func TestCmdGetBlockRateLimitConfiguration(t *testing.T) {
-// 	fmt.Println("TestCmdGetBlockRateLimitConfiguration")
-// 	networkWithClobPairObjects(t, 2)
-
-// 	cfg := network.DefaultConfig(nil)
-// 	query := "docker exec interchain-security-instance interchain-security-cd" +
-// 		" query clob get-block-rate-limit-config"
-// 	data, _, err := network.QueryCustomNetwork(query)
-
-// 	require.NoError(t, err)
-// 	var resp types.QueryBlockRateLimitConfigurationResponse
-// 	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
-// 	require.NotNil(t, resp.BlockRateLimitConfig)
-// 	require.Equal(
-// 		t,
-// 		emptyConfig,
-// 		resp.BlockRateLimitConfig,
-// 	)
-// 	network.CleanupCustomNetwork()
-// }
-
 func TestCmdGetBlockRateLimitConfiguration(t *testing.T) {
 	net, _ := networkWithClobPairObjects(t, 2)
 	ctx := net.Validators[0].ClientCtx
