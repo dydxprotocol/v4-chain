@@ -1618,7 +1618,8 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().id' -v "${TEST_USD_MARKET_ID}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().exponent' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().price' -v '10000000'          # $100 = 1 TEST.
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().spot_price' -v '10000000'          # $100 = 1 TEST.
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().pnl_price' -v '10000000'  
 	# TEST Exchange Config
 	test_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/test_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.last().exchange_config_json' -v "$test_exchange_config_json"
