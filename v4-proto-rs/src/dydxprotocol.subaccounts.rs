@@ -145,9 +145,9 @@ pub struct SubaccountPerpetualPosition {
     /// The `Id` of the `Perpetual`.
     #[prost(uint32, tag = "1")]
     pub perpetual_id: u32,
-    /// The size of the position in base quantums.
-    #[prost(uint64, tag = "2")]
-    pub quantums: u64,
+    /// The size of the position in base quantums. Negative means short.
+    #[prost(int64, tag = "2")]
+    pub quantums: i64,
 }
 impl ::prost::Name for SubaccountPerpetualPosition {
     const NAME: &'static str = "SubaccountPerpetualPosition";

@@ -16,12 +16,14 @@ pub struct MarketParam {
     /// represents ``$10,000`. Therefore `10 ^ Exponent` represents the smallest
     /// price step (in dollars) that can be recorded.
     ///
-    /// Deprecated since v7.1.x. This value is now determined from the marketmap.
+    /// Deprecated since v8.x. This value is now determined from the marketmap.
     #[deprecated]
     #[prost(sint32, tag = "3")]
     pub exponent: i32,
     /// The minimum number of exchanges that should be reporting a live price for
     /// a price update to be considered valid.
+    ///
+    /// Deprecated since v8.x. This value is now determined from the marketmap.
     #[prost(uint32, tag = "4")]
     pub min_exchanges: u32,
     /// The minimum allowable change in `price` value that would cause a price
@@ -30,6 +32,8 @@ pub struct MarketParam {
     pub min_price_change_ppm: u32,
     /// A string of json that encodes the configuration for resolving the price
     /// of this market on various exchanges.
+    ///
+    /// Deprecated since v8.x. This is now determined from the marketmap.
     #[prost(string, tag = "6")]
     pub exchange_config_json: ::prost::alloc::string::String,
 }
