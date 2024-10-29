@@ -67,6 +67,8 @@ function edit_genesis() {
 		# Default to 200 million full coins.
 		REWARDS_VESTER_ACCOUNT_BALANCE="200000000$EIGHTEEN_ZEROS"
 	fi
+
+	echo "$NATIVE_TOKEN"
 	
 	# Genesis time
 	dasel put -t string -f "$GENESIS" '.genesis_time' -v "$GENESIS_TIME"
@@ -752,7 +754,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].id' -v '13'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].spot_price' -v '5852293335'          # $5.852 = 1 UNI.
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].pnl_price' -v '5852293356'          # $5.852 = 1 UNI.
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].pnl_price' -v '5852293335'          # $5.852 = 1 UNI.
 	# UNI Exchange Config
 	uni_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/uni_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[13].exchange_config_json' -v "$uni_exchange_config_json"
@@ -1507,9 +1509,12 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[5].limit' -v '200'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[5].usd_tnc_required' -v '100000000000'
 
+	# Staking
+	# Update staking module bond denom.
+	dasel put -t string -f "$GENESIS" '.app_state.staking.params.bond_denom' -v "$NATIVE_TOKEN"
 
-  # Fee Tiers
-  # Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
+	# Fee Tiers
+	# Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.next_delayed_message_id' -v '1'
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
