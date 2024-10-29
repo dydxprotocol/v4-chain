@@ -9,6 +9,8 @@ v4-proto-js/build
 v4-proto-js/node_modules
 v4-proto-js/src
 
+v4-client-js/build
+
 .idea
 **/.DS_Store
 protocol/ethos/
