@@ -8,11 +8,13 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
+	pricestestutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/client/testutil"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/h2non/gock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,6 +27,12 @@ func setupNetwork(
 	*network.Network,
 	client.Context,
 ) {
+
+	// Gock setup.
+	defer gock.Off()         // Flush pending mocks after test execution.
+	gock.DisableNetworking() // Disables real networking.xw
+	pricestestutil.SetupSDaiResponse(t)
+
 	t.Helper()
 	cfg := network.DefaultConfig(nil)
 

@@ -791,23 +791,25 @@ func New(
 
 		// Non-validating full-nodes have no need to run the price daemon.
 		if !appFlags.NonValidatingFullNode {
-			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
-			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
-			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
-			// periodically sent via gRPC to a shared socket with the server.
-			app.PriceFeedClient = pricefeedclient.StartNewClient(
-				// The client will use `context.Background` so that it can have a different context from
-				// the main application.
-				context.Background(),
-				daemonFlags,
-				appFlags,
-				logger,
-				&daemontypes.GrpcClientImpl{},
-				exchangeQueryConfig,
-				constants.StaticExchangeDetails,
-				&pricefeedclient.SubTaskRunnerImpl{},
-			)
-			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
+			if daemonFlags.Price.Enabled {
+				exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
+				// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
+				// are retrieved via third-party APIs like Binance and then are encoded in-memory and
+				// periodically sent via gRPC to a shared socket with the server.
+				app.PriceFeedClient = pricefeedclient.StartNewClient(
+					// The client will use `context.Background` so that it can have a different context from
+					// the main application.
+					context.Background(),
+					daemonFlags,
+					appFlags,
+					logger,
+					&daemontypes.GrpcClientImpl{},
+					exchangeQueryConfig,
+					constants.StaticExchangeDetails,
+					&pricefeedclient.SubTaskRunnerImpl{},
+				)
+				app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
+			}
 		}
 
 		// Start SDAI Daemon.

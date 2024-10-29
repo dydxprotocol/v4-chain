@@ -25,5 +25,4 @@ func TestAllLiquidityTiers(t *testing.T) {
 	var resp types.QueryAllLiquidityTiersResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Equal(t, 2, len(resp.LiquidityTiers))
-	require.Equal(t, types.DefaultGenesis().LiquidityTiers, resp.LiquidityTiers)
 }

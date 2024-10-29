@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
-	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	ratelimitutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
@@ -28,7 +27,7 @@ func TestQueryCapacityByDenom(t *testing.T) {
 		cli.CmdQueryCapacityByDenom(),
 		[]string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			assettypes.AssetUsdc.Denom,
+			types.SDaiDenom,
 		})
 
 	require.NoError(t, err)

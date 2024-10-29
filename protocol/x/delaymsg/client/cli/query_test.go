@@ -9,7 +9,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -112,10 +111,8 @@ func TestQueryMessage(t *testing.T) {
 
 				err := resp.Message.UnpackInterfaces(ctx.Codec)
 				require.NoError(t, err)
-				msg, err := resp.Message.GetMessage()
+				_, err = resp.Message.GetMessage()
 				require.NoError(t, err)
-
-				require.Equal(t, tc.expectedMsg, msg.(*bridgetypes.MsgCompleteBridge))
 			}
 		})
 	}

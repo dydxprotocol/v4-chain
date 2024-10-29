@@ -17,12 +17,15 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
+	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/client/testutil"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/suite"
+
+	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 )
 
 var (
@@ -217,7 +220,9 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_AllEmptyResponses_NoPriceUpda
 	// Setup.
 	ts := s.T()
 
+	// Setup gock responses.
 	testutil.SetupExchangeResponses(ts, testutil.EmptyResponses_AllExchanges)
+	testutil.SetupSDaiResponse(ts)
 
 	// Run.
 	s.network = network.New(ts, s.cfg)
@@ -230,8 +235,9 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPrice
 	// Setup.
 	ts := s.T()
 
-	// Add logging to see what's going on in circleCI.
+	// Setup gock responses.
 	testutil.SetupExchangeResponses(ts, testutil.PartialResponses_AllExchanges_Eth9001)
+	testutil.SetupSDaiResponse(ts)
 
 	// Run.
 	s.network = network.New(ts, s.cfg)
@@ -243,9 +249,13 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPrice
 func (s *PricesIntegrationTestSuite) TestCLIPrices_AllValidResponses_ValidPriceUpdate() {
 	// Setup.
 	ts := s.T()
+
 	testutil.SetupExchangeResponses(ts, testutil.FullResponses_AllExchanges_Btc101_Eth9001)
+	testutil.SetupSDaiResponse(ts)
+
 	// Run.
 	s.network = network.New(ts, s.cfg)
+
 	// Verify.
 	s.expectMarketPricesWithTimeout(expectedPricesWithFullUpdate, 30*time.Second)
 }
