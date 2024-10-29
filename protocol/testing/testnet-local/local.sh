@@ -75,10 +75,12 @@ VAULT_NUMBERS=(
 	1 # ETH clob pair ID
 )
 
+PREUPGRADE_BINARY_PATH="/bin/dydxprotocold_preupgrade"
+
 # Define dependencies for this script.
 # `jq` and `dasel` are used to manipulate json and yaml files respectively.
 install_prerequisites() {
-	apk add dasel jq
+	apk add curl dasel jq
 }
 
 # Create all validators for the chain including a full-node.
@@ -93,7 +95,7 @@ create_validators() {
 		VAL_CONFIG_DIR="$VAL_HOME_DIR/config"
 
 		# Initialize the chain and validator files.
-		dydxprotocold init "${MONIKERS[$i]}" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+		$PREUPGRADE_BINARY_PATH init "${MONIKERS[$i]}" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
 		# Overwrite the randomly generated `priv_validator_key.json` with a key generated deterministically from the mnemonic.
 		dydxprotocold tendermint gen-priv-key --home "$VAL_HOME_DIR" --mnemonic "${MNEMONICS[$i]}"
@@ -126,7 +128,7 @@ create_validators() {
 			dydxprotocold add-genesis-account "$acct" 900000000000000000$USDC_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 
-		dydxprotocold gentx "${MONIKERS[$i]}" $TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT$NATIVE_TOKEN --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+		$PREUPGRADE_BINARY_PATH gentx "${MONIKERS[$i]}" $TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT$NATIVE_TOKEN --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
 		# Copy the gentx to a shared directory.
 		cp -a "$VAL_CONFIG_DIR/gentx/." /tmp/gentx
@@ -157,13 +159,24 @@ create_validators() {
 	done
 }
 
+setup_preupgrade_binary() {
+	tar_url='https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2Fv5.2.0/dydxprotocold-v5.2.0-linux-amd64.tar.gz'
+	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
+	mkdir -p /tmp/dydxprotocold
+	curl -vL $tar_url -o $tar_path
+	dydxprotocold_path=$(tar -xvf $tar_path --directory /tmp/dydxprotocold)
+	mv /tmp/dydxprotocold/$dydxprotocold_path $PREUPGRADE_BINARY_PATH
+}
+
 setup_cosmovisor() {
 	for i in "${!MONIKERS[@]}"; do
 		VAL_HOME_DIR="$HOME/chain/.${MONIKERS[$i]}"
 		export DAEMON_NAME=dydxprotocold
 		export DAEMON_HOME="$HOME/chain/.${MONIKERS[$i]}"
 
-		cosmovisor init /bin/dydxprotocold
+		cosmovisor init $PREUPGRADE_BINARY_PATH
+		mkdir -p "$VAL_HOME_DIR/cosmovisor/upgrades/v6.0.0/bin/"
+		ln -s /bin/dydxprotocold "$VAL_HOME_DIR/cosmovisor/upgrades/v6.0.0/bin/dydxprotocold"
 	done
 }
 
@@ -193,5 +206,6 @@ edit_config() {
 }
 
 install_prerequisites
+setup_preupgrade_binary
 create_validators
 setup_cosmovisor
