@@ -89,7 +89,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 	)
 
 	nilVoteInfoBob, _ := vetesting.CreateNilVoteExtensionInfo(
-		constants.BobAddressBz,
+		constants.BobConsAddress,
 		500,
 	)
 

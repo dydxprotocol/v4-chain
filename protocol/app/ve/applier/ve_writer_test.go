@@ -608,7 +608,7 @@ func TestVEWriter(t *testing.T) {
 		}
 
 		_, extCommitInfoBz, err := vetesting.CreateSingleValidatorExtendedCommitInfo(
-			constants.AliceConsAddress,
+			constants.AliceConsAddressEddsa,
 			prices,
 			"",
 		)
@@ -671,7 +671,7 @@ func TestVEWriter(t *testing.T) {
 		}
 
 		_, extCommitInfoBz, err := vetesting.CreateSingleValidatorExtendedCommitInfo(
-			constants.AliceConsAddress,
+			constants.AliceConsAddressEddsa,
 			prices,
 			"",
 		)
