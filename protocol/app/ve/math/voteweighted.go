@@ -362,8 +362,7 @@ func getValidatorPowerByAddress(
 		return math.NewInt(0), err
 	}
 
-	valAddr := sdk.ValAddress(address.Bytes())
-	validator, err := validatorStore.GetValidator(ctx, valAddr)
+	validator, err := validatorStore.ValidatorByConsAddr(ctx, address)
 
 	if err != nil {
 		return math.NewInt(0), err

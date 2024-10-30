@@ -9,8 +9,7 @@ export * from '../lib/constants';
 export const DEV_CHAIN_ID = 'dydxprotocol-testnet';
 export const STAGING_CHAIN_ID = 'dydxprotocol-testnet';
 export const TESTNET_CHAIN_ID = 'dydx-testnet-4';
-//export const LOCAL_CHAIN_ID = 'localdydxprotocol';
-export const LOCAL_CHAIN_ID = 'consu';
+export const LOCAL_CHAIN_ID = 'localdydxprotocol';
 
 // ------------ API URLs ------------
 export enum IndexerApiHost {

@@ -4,7 +4,7 @@ export * from '../lib/constants';
 export declare const DEV_CHAIN_ID = "dydxprotocol-testnet";
 export declare const STAGING_CHAIN_ID = "dydxprotocol-testnet";
 export declare const TESTNET_CHAIN_ID = "dydx-testnet-4";
-export declare const LOCAL_CHAIN_ID = "consu";
+export declare const LOCAL_CHAIN_ID = "localdydxprotocol";
 export declare enum IndexerApiHost {
     TESTNET = "https://dydx-testnet.imperator.co",
     LOCAL = "http://localhost:3002"
