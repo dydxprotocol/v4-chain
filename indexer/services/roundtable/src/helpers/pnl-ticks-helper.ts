@@ -1,6 +1,8 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   AssetPositionTable,
+  BlockFromDatabase,
+  BlockTable,
   FundingIndexMap,
   FundingIndexUpdatesTable,
   helpers,
@@ -50,11 +52,15 @@ export function normalizeStartTime(
  * @param blockHeight: consider transfers up until this block height.
  */
 export async function getPnlTicksCreateObjects(
-  blockHeight: string,
-  blockTime: IsoString,
   txId: number,
 ): Promise<PnlTicksCreateObject[]> {
   const startGetPnlTicksCreateObjects: number = Date.now();
+  const latestBlock: BlockFromDatabase = await BlockTable.getLatest({
+    readReplica: true,
+    txId,
+  });
+  const blockHeight: string = latestBlock.blockHeight;
+  const blockTime: string = latestBlock.time;
   const pnlTicksToBeCreatedAt: DateTime = DateTime.utc();
   const [
     mostRecentPnlTicks,

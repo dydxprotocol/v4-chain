@@ -477,6 +477,8 @@ describe('pnl-ticks-helper', () => {
 
   it('getNewPnlTicks with prior pnl ticks', async () => {
     config.PNL_TICK_UPDATE_INTERVAL_MS = 3_600_000;
+    const blockHeight: string = '5';
+    const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO();
     const ticksForSubaccounts: PnlTickForSubaccounts = {
       [testConstants.defaultSubaccountId]: {
         ...testConstants.defaultPnlTick,
@@ -487,8 +489,6 @@ describe('pnl-ticks-helper', () => {
       ticksForSubaccounts,
       redisClient,
     );
-    const blockHeight: string = '5';
-    const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO();
     await BlockTable.create({
       blockHeight,
       time: blockTime,
@@ -497,7 +497,7 @@ describe('pnl-ticks-helper', () => {
     const txId: number = await Transaction.start();
     jest.spyOn(DateTime, 'utc').mockImplementation(() => dateTime);
     const newTicksToCreate: PnlTicksCreateObject[] = await
-    getPnlTicksCreateObjects(blockHeight, blockTime, txId);
+    getPnlTicksCreateObjects(txId);
     await Transaction.rollback(txId);
     expect(newTicksToCreate.length).toEqual(1);
     expect(newTicksToCreate).toEqual(
@@ -517,12 +517,16 @@ describe('pnl-ticks-helper', () => {
 
   it('getNewPnlTicks without prior pnl ticks', async () => {
     jest.spyOn(DateTime, 'utc').mockImplementation(() => dateTime);
-    await TransferTable.create(testConstants.defaultTransfer);
-    const txId: number = await Transaction.start();
     const blockHeight: string = '5';
     const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO();
+    await TransferTable.create(testConstants.defaultTransfer);
+    await BlockTable.create({
+      blockHeight,
+      time: blockTime,
+    });
+    const txId: number = await Transaction.start();
     const newTicksToCreate: PnlTicksCreateObject[] = await
-    getPnlTicksCreateObjects(blockHeight, blockTime, txId);
+    getPnlTicksCreateObjects(txId);
     await Transaction.rollback(txId);
     expect(newTicksToCreate.length).toEqual(2);
     expect(newTicksToCreate).toEqual(
