@@ -72,8 +72,9 @@ describe('orders', () => {
 
       await placeOrder(order.mnemonic, modifiedOrder);
     }
-    const candleStart: string | null = helpers.calculateNormalizedCandleStartTime(
-      DateTime.utc() as any,
+
+    const candleStart: IsoString = helpers.calculateNormalizedCandleStartTime(
+      DateTime.utc(),
       CandleResolution.ONE_MINUTE,
     ).toISO();
 
