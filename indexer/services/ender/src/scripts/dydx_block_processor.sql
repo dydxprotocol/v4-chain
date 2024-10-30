@@ -18,6 +18,8 @@ DECLARE
     rval jsonb[];
     rval_to_merge jsonb[];
 BEGIN
+    SET LOCAL client_min_messages TO NOTICE;
+    
     PERFORM dydx_create_initial_rows_for_tendermint_block(block_height, block_time, block->'txHashes', block->'events');
 
     /** In genesis, handle ordered events first, then unordered events. In other blocks, handle unordered events first, then ordered events. */

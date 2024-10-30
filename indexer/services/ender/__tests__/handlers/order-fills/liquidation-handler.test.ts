@@ -244,6 +244,9 @@ describe('LiquidationHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       });
 
       const takerSubticks: number = 15_000_000;
@@ -308,6 +311,9 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: '""',
+        routerFeeSubaccountNumber: '0',
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -462,6 +468,7 @@ describe('LiquidationHandler', () => {
         goodTilBlock: existingGoodTilBlock,
         goodTilBlockTime: existingGoodTilBlockTime,
         clientMetadata: '0',
+        routerFeePpm: '0',
         updatedAt: DateTime.fromMillis(0).toISO(),
         updatedAtHeight: '0',
       };
@@ -498,6 +505,9 @@ describe('LiquidationHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       });
       const liquidationOrder: LiquidationOrderV1 = createLiquidationOrder({
         subaccountId: defaultSubaccountId2,
@@ -545,6 +555,9 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: '""',
+        routerFeeSubaccountNumber: '0',
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -680,6 +693,7 @@ describe('LiquidationHandler', () => {
         goodTilBlock: existingGoodTilBlock,
         goodTilBlockTime: existingGoodTilBlockTime,
         clientMetadata: '0',
+        routerFeePpm: '0',
         updatedAt: DateTime.fromMillis(0).toISO(),
         updatedAtHeight: '0',
       };
@@ -716,6 +730,9 @@ describe('LiquidationHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       });
       const liquidationOrder: LiquidationOrderV1 = createLiquidationOrder({
         subaccountId: defaultSubaccountId2,
@@ -763,6 +780,9 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: '""',
+        routerFeeSubaccountNumber: '0',
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -860,6 +880,9 @@ describe('LiquidationHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
       reduceOnly: false,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0,
     });
 
     const takerSubticks: number = 150_000;
@@ -920,6 +943,9 @@ describe('LiquidationHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
+      routerFeePpm: '0',
+      routerFeeSubaccountOwner: '""',
+      routerFeeSubaccountNumber: '0',
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
@@ -1005,6 +1031,9 @@ describe('LiquidationHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
       reduceOnly: true,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0,
     });
 
     const liquidationOrder: LiquidationOrderV1 = LiquidationOrderV1
@@ -1080,6 +1109,9 @@ describe('LiquidationHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
         reduceOnly: false,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       }),
     ],
     [
@@ -1095,6 +1127,9 @@ describe('LiquidationHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
         reduceOnly: false,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       }),
     ],
   ])('LiquidationOrderFillEvent fails makerOrder validation', async (

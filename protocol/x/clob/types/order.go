@@ -76,8 +76,7 @@ func (o *Order) GetOrderSubticks() Subticks {
 // 0 if x = y
 // -1 if x < y
 // The orders are compared primarily by `GoodTilBlock` for Short-Term orders and `GoodTilBlockTime`
-// for stateful orders. If the order expirations are equal, then they are compared by their SHA256 hash.
-// Note that this function panics if the order IDs are not equal.
+// for stateful orders. Note that this function panics if the order IDs are not equal.
 func (x *Order) MustCmpReplacementOrder(y *Order) int {
 	if x.OrderId != y.OrderId {
 		panic(
@@ -108,10 +107,13 @@ func (x *Order) MustCmpReplacementOrder(y *Order) int {
 		return -1
 	}
 
-	// If both orders have the same expiration, use the SHA256 hash for comparison.
+	return 0
+}
+
+func (x *Order) IsIdenticalTo(y *Order) bool {
 	xHash := x.GetOrderHash()
 	yHash := y.GetOrderHash()
-	return bytes.Compare(xHash[:], yHash[:])
+	return bytes.Equal(xHash[:], yHash[:])
 }
 
 // GetSubaccountId returns the subaccount ID that placed this order.

@@ -473,6 +473,8 @@ export function postgresOrderToResponseObject(
     createdAtHeight: order.createdAtHeight ?? undefined,
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(order.clobPairId)!,
     triggerPrice: order.triggerPrice ?? undefined,
+    routerFeeSubaccountNumber: order.routerFeeSubaccountNumber ?? undefined,
+    routerFeeSubaccountOwner: order.routerFeeSubaccountOwner ?? undefined,
     subaccountNumber,
   };
 }
@@ -504,6 +506,9 @@ export function redisOrderToResponseObject(
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(clobPairId)!,
     orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
     clientMetadata: redisOrder.order!.clientMetadata.toString(),
+    routerFeePpm: redisOrder.order!.routerFeePpm.toString(),
+    routerFeeSubaccountOwner: redisOrder.order!.routerFeeSubaccountOwner ?? undefined,
+    routerFeeSubaccountNumber: redisOrder.order!.routerFeeSubaccountNumber?.toString() ?? undefined,
     subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
   };
 }

@@ -125,6 +125,9 @@ export interface OrderSubaccountMessageContents {
   // This will only be set for stateful orders
   createdAtHeight?: string;
   clientMetadata: string;
+  routerFeePpm: string;
+  routerFeeSubaccountOwner?: string;
+  routerFeeSubaccountNumber?: string;
 }
 
 export interface FillSubaccountMessageContents {

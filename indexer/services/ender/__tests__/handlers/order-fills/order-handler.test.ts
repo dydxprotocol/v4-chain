@@ -247,6 +247,9 @@ describe('OrderHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
         reduceOnly: false,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       });
 
       const takerSubticks: number = 15_000_000;
@@ -263,6 +266,9 @@ describe('OrderHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       });
 
       const fillAmount: number = 1_000_000;
@@ -318,6 +324,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: '""',
+        routerFeeSubaccountNumber: '0',
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -338,6 +347,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: '""',
+        routerFeeSubaccountNumber: '0',
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -547,6 +559,7 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
           clientMetadata: '0',
+          routerFeePpm: '0',
           updatedAt: DateTime.fromMillis(0).toISO(),
           updatedAtHeight: '0',
         }),
@@ -567,6 +580,7 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
+          routerFeePpm: '0',
           updatedAt: DateTime.fromMillis(0).toISO(),
           updatedAtHeight: '0',
         }),
@@ -599,6 +613,9 @@ describe('OrderHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       });
       const takerOrderProto: IndexerOrder = createOrder({
         subaccountId: defaultSubaccountId2,
@@ -612,6 +629,9 @@ describe('OrderHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
         reduceOnly: false,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       });
 
       const fillAmount: number = 1_000_000;
@@ -656,6 +676,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: '""',
+        routerFeeSubaccountNumber: '0',
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -676,6 +699,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: '""',
+        routerFeeSubaccountNumber: '0',
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -833,6 +859,7 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
           clientMetadata: '0',
+          routerFeePpm: '0',
           updatedAt: DateTime.fromMillis(0).toISO(),
           updatedAtHeight: '0',
         }),
@@ -853,6 +880,9 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
+          routerFeePpm: '0',
+          routerFeeSubaccountOwner: 'dydx1xxxx',
+          routerFeeSubaccountNumber: '0',
           updatedAt: DateTime.fromMillis(0).toISO(),
           updatedAtHeight: '0',
         }),
@@ -885,6 +915,9 @@ describe('OrderHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
         reduceOnly: false,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       });
       const takerOrderProto: IndexerOrder = createOrder({
         subaccountId: defaultSubaccountId2,
@@ -898,6 +931,9 @@ describe('OrderHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       });
 
       const fillAmount: number = 1_000_000;
@@ -940,6 +976,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: '""',
+        routerFeeSubaccountNumber: '0',
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -960,6 +999,9 @@ describe('OrderHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
         clientMetadata: takerOrderProto.clientMetadata.toString(),
+        routerFeePpm: '0',
+        routerFeeSubaccountOwner: '""',
+        routerFeeSubaccountNumber: '0',
         updatedAt: defaultDateTime.toISO(),
         updatedAtHeight: defaultHeight.toString(),
       });
@@ -1074,6 +1116,9 @@ describe('OrderHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
       reduceOnly: false,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0,
     });
 
     const takerSubticks: number = 150_000;
@@ -1092,6 +1137,9 @@ describe('OrderHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
       reduceOnly: true,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0,
     });
 
     // create initial PerpetualPositions with closed previous positions
@@ -1159,6 +1207,9 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
+      routerFeePpm: '0',
+      routerFeeSubaccountOwner: '""',
+      routerFeeSubaccountNumber: '0',
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
@@ -1180,6 +1231,9 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
       clientMetadata: takerOrderProto.clientMetadata.toString(),
+      routerFeePpm: '0',
+      routerFeeSubaccountOwner: '""',
+      routerFeeSubaccountNumber: '0',
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
@@ -1272,6 +1326,9 @@ describe('OrderHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
       reduceOnly: false,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0,
     });
 
     const takerSubticks: number = 150_000;
@@ -1290,6 +1347,9 @@ describe('OrderHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
       reduceOnly: true,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0,
     });
 
     // create initial PerpetualPositions with closed previous positions
@@ -1363,6 +1423,9 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
       clientMetadata: makerOrderProto.clientMetadata.toString(),
+      routerFeePpm: '0',
+      routerFeeSubaccountOwner: '""',
+      routerFeeSubaccountNumber: '0',
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
@@ -1383,6 +1446,9 @@ describe('OrderHandler', () => {
       goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
       clientMetadata: takerOrderProto.clientMetadata.toString(),
+      routerFeePpm: '0',
+      routerFeeSubaccountOwner: '""',
+      routerFeeSubaccountNumber: '0',
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
@@ -1496,6 +1562,9 @@ describe('OrderHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       }),
     ],
     [
@@ -1511,6 +1580,9 @@ describe('OrderHandler', () => {
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
         reduceOnly: true,
         clientMetadata: 0,
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: '',
+        routerFeeSubaccountNumber: 0,
       }),
     ],
   ])('fillOrderEvent fails validation', async (makerOrderProto: IndexerOrder | undefined) => {
@@ -1529,6 +1601,9 @@ describe('OrderHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
       reduceOnly: true,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0,
     });
 
     const fillAmount: number = 1_000_000;
@@ -1580,6 +1655,9 @@ describe('OrderHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
       reduceOnly: false,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0,
     });
 
     const takerSubticks: number = 150_000;
@@ -1598,6 +1676,9 @@ describe('OrderHandler', () => {
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
       reduceOnly: true,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0, 
     });
 
     const fillAmount: number = takerQuantums;
@@ -1692,6 +1773,9 @@ describe('OrderHandler', () => {
       timeInForce,
       reduceOnly: false,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0,
     });
 
     const takerSubticks: number = 150_000;
@@ -1710,6 +1794,9 @@ describe('OrderHandler', () => {
       timeInForce,
       reduceOnly: true,
       clientMetadata: 0,
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: '',
+      routerFeeSubaccountNumber: 0,
     });
 
     const makerOrderId: string = OrderTable.orderIdToUuid(makerOrderProto.orderId!);

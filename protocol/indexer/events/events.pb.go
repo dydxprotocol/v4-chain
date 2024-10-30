@@ -523,13 +523,11 @@ func (m *MarketModifyEventV1) GetBase() *MarketBaseEventV1 {
 
 // SourceOfFunds is the source of funds in a transfer event.
 type SourceOfFunds struct {
-	//	one of below
-	//
+	//  one of below
 	// - a subaccount ID
 	// - a wallet address
 	//
 	// Types that are valid to be assigned to Source:
-	//
 	//	*SourceOfFunds_SubaccountId
 	//	*SourceOfFunds_Address
 	Source isSourceOfFunds_Source `protobuf_oneof:"source"`
