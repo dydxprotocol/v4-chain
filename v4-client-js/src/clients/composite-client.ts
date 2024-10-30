@@ -1002,7 +1002,7 @@ export class CompositeClient {
       });
     });
     const signature = await this.sign(
-      wallet,
+      subaccount.wallet,
       () => msgs,
       true,
     );
