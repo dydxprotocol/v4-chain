@@ -8,7 +8,7 @@ import {
   SocketClient,
   SubaccountInfo,
   ValidatorClient,
-} from "@dydxprotocol/v4-client-js";
+} from "@dydxprotocol/v4-client-js/src";
 import {
   DYDX_LOCAL_ADDRESS,
   DYDX_LOCAL_ADDRESS_2,
@@ -69,10 +69,12 @@ describe("orders", () => {
       await placeOrder(order.mnemonic, modifiedOrder);
     }
 
-    const candleStart: string = helpers.calculateNormalizedCandleStartTime(
-      DateTime.utc(),
-      CandleResolution.ONE_MINUTE,
-    ).toISO();
+    const candleStart: string = helpers
+      .calculateNormalizedCandleStartTime(
+        DateTime.utc(),
+        CandleResolution.ONE_MINUTE
+      )
+      .toISO();
 
     await utils.sleep(10000); // wait 10s for orders to be placed & matched
     const [wallet, wallet2] = await Promise.all([

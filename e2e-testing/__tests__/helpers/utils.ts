@@ -1,4 +1,8 @@
-import { IPlaceOrder, Network, SocketClient } from "@dydxprotocol/v4-client-js";
+import {
+  IPlaceOrder,
+  Network,
+  SocketClient,
+} from "@dydxprotocol/v4-client-js/src";
 import { exec } from "child_process";
 import Long from "long";
 
@@ -36,8 +40,7 @@ export function connectAndValidateSocketClient(
         const data = JSON.parse(message.data as string);
         validateMessage(data, mySocket);
       }
-    },
-    () => {}
+    }
   );
   mySocket.connect();
 }
