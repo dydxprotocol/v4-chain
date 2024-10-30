@@ -498,7 +498,7 @@ func (s *PreBlockTestSuite) buildAndMockValidator(name string, bondedTokens math
 		Tokens: bondedTokens,
 		Status: stakingtypes.Bonded,
 	}
-	s.valStore.On("GetValidator", s.ctx, s.getValidatorValAddress(name)).Return(val, nil)
+	s.valStore.On("ValidatorByConsAddr", s.ctx, s.getValidatorConsAddr(name)).Return(val, nil)
 	return val
 }
 

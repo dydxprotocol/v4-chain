@@ -76,9 +76,13 @@ function edit_genesis() {
 	# Consensus params
 	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '4194304'
 	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_gas' -v '-1'
+	dasel put -t string -f "$GENESIS" '.consensus_params.abci.vote_extensions_enable_height' -v '1'
 
 	# Update crisis module.
 	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
+
+	# Enable vote extensions
+	dasel put -t string -f "$GENESIS" '.consensus.params.abci.vote_extensions_enable_height' -v '1'
 
 	# Update gov module.
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"

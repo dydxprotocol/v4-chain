@@ -2,6 +2,7 @@ package voteweighted
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"sort"
 
@@ -18,6 +19,7 @@ type ValidatorStore interface {
 	TotalBondedTokens(ctx context.Context) (math.Int, error)
 	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
 	GetValidator(ctx context.Context, valAddr sdk.ValAddress) (stakingtypes.Validator, error)
+	GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 }
 
 type AggregatorPricePair struct {
@@ -359,11 +361,15 @@ func getValidatorPowerByAddress(
 ) (math.Int, error) {
 	address, err := sdk.ConsAddressFromBech32(validatorAddr)
 	if err != nil {
+		fmt.Println("err ConsAddressFromBech32", err)
 		return math.NewInt(0), err
 	}
 
-	valAddr := sdk.ValAddress(address.Bytes())
-	validator, err := validatorStore.GetValidator(ctx, valAddr)
+	validator, err := validatorStore.ValidatorByConsAddr(ctx, address)
+	fmt.Println("address", address)
+	fmt.Println("validatorAddr", validatorAddr)
+	fmt.Println("validator", validator)
+	fmt.Println("err", err)
 
 	if err != nil {
 		return math.NewInt(0), err
