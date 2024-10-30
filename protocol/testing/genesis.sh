@@ -13,10 +13,13 @@ EIGHTEEN_ZEROS="$NINE_ZEROS$NINE_ZEROS"
 # Obtained from `authtypes.NewModuleAddress(subaccounttypes.ModuleName)`.
 SUBACCOUNTS_MODACC_ADDR="dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6"
 REWARDS_VESTER_ACCOUNT_ADDR="dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp"
+SDAIPOOL_ACCOUNT_ADDR="dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0"
 
 TDAI_DENOM="utdai"
 REWARD_TOKEN="adv4tnt"
 NATIVE_TOKEN="adv4tnt" # public testnet token
+SDAI_DENOM="ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8"
+DEFAULT_SDAIPOOL_BALANCE=2600000000000000000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
@@ -1137,6 +1140,13 @@ function edit_genesis() {
 		next_bank_idx=$(($next_bank_idx+1))
 
 	fi
+
+	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${SDAIPOOL_ACCOUNT_ADDR}"
+	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${SDAI_DENOM}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "$DEFAULT_SDAIPOOL_BALANCE"
+	next_bank_idx=$(($next_bank_idx+1))
 
 	# Set denom metadata
 	set_denom_metadata "$NATIVE_TOKEN" "$NATIVE_TOKEN_WHOLE_COIN" "$COIN_NAME"
