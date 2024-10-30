@@ -20,6 +20,7 @@ import * as utils from "./helpers/utils";
 import Big from "big.js";
 import { DYDX_LOCAL_ADDRESS, DYDX_LOCAL_MNEMONIC } from "./helpers/constants";
 import { connectAndValidateSocketClient } from "./helpers/utils";
+import { config } from "yargs";
 
 describe("transfers", () => {
   it("test deposit", async () => {
@@ -28,11 +29,12 @@ describe("transfers", () => {
       DYDX_LOCAL_MNEMONIC,
       BECH32_PREFIX
     );
-    const indexerClient = new IndexerClient(Network.local().indexerConfig);
+
+    const indexerConfig = Network.local().indexerConfig;
+    const indexerClient = new IndexerClient(indexerConfig);
     const validatorClient = await ValidatorClient.connect(
       Network.local().validatorConfig
     );
-
     const heightResp: HeightResponse = await indexerClient.utility.getHeight();
     const height: number = heightResp.height;
 
