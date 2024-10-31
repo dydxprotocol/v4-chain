@@ -215,6 +215,11 @@ message Order {
   // Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
+
+  // Router fee ppm for the order.
+  int32 router_fee_ppm = 12;
+
+  dydxprotocol.subaccounts.SubaccountId router_subaccount_id = 13;
 }
 
 // TransactionOrdering represents a unique location in the block where a

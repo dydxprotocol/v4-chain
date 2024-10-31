@@ -19,26 +19,33 @@ import (
 	delaymsgmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg"
 	epochsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs"
 	feetiersmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers"
+	govplusmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus"
 	perpetualsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
 	ratelimitmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit"
+	rewardsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards"
 	sendingmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending"
 	statsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats"
 	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
+	vestmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/ibc-go/modules/capability"
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	consumer "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/typ.v4/slices"
 )
@@ -87,7 +94,6 @@ func TestAppIsFullyInitialized(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(tc.customFlags).Build()
 			tApp.InitChain()
 			uninitializedFields := getUninitializedStructFields(reflect.ValueOf(*tApp.App))
-
 			expectedUninitializedFields := []string{
 				// Note that the daemon clients are currently hard coded as disabled in GetDefaultTestAppOptions.
 				// Normally they would be only disabled for non-validating full nodes or for nodes where any
@@ -165,6 +171,13 @@ func TestModuleBasics(t *testing.T) {
 		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		bank.AppModuleBasic{},
 		capability.AppModuleBasic{},
+		staking.AppModuleBasic{},
+		distr.AppModuleBasic{},
+		gov.NewAppModuleBasic(
+			[]govclient.ProposalHandler{
+				paramsclient.ProposalHandler,
+			},
+		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		custommodule.SlashingModuleBasic{},
@@ -176,7 +189,6 @@ func TestModuleBasics(t *testing.T) {
 		transfer.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
-		consumer.AppModuleBasic{},
 
 		// Custom modules
 		pricesmodule.AppModuleBasic{},
@@ -187,7 +199,10 @@ func TestModuleBasics(t *testing.T) {
 		statsmodule.AppModuleBasic{},
 		subaccountsmodule.AppModuleBasic{},
 		clobmodule.AppModuleBasic{},
+		vestmodule.AppModuleBasic{},
+		rewardsmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
+		govplusmodule.AppModuleBasic{},
 		delaymsgmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
 		ratelimitmodule.AppModuleBasic{},

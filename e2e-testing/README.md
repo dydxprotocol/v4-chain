@@ -5,6 +5,12 @@ issues in the E2E testing notion.
 
 ### Instructions
 
+Go to the indexer directory and run `pnpm install` to install the dependencies.
+Then, run `pnpm build:all` to build the indexer.
+
+Similar, go to the v4-client-js directory and run `pnpm install` to install the dependencies.
+Then, run `pnpm build` to build the v4-client-js.
+
 Spin up a containerized environment running both the network and Indexer services:
 
 In one terminal, run

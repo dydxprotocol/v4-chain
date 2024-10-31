@@ -12,8 +12,8 @@ import (
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	ethosutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ethos"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	valutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/staking"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	cometabci "github.com/cometbft/cometbft/abci/types"
@@ -42,7 +42,7 @@ func SetupTest(t *testing.T, vals []string, errorString string, initialSDAIPrice
 	mTimeProvider.On("Now").Return(constants.TimeT)
 	keepertest.CreateTestMarkets(t, ctx, pk)
 
-	mCCVStore := ethosutils.NewGetAllCCValidatorMockReturn(ctx, vals)
+	mValStore := valutils.NewTotalBondedTokensMockReturn(ctx, vals)
 
 	var pricesAggregatorFn voteweighted.PricesAggregateFn
 	var conversionRateAggregatorFn voteweighted.ConversionRateAggregateFn
@@ -54,7 +54,7 @@ func SetupTest(t *testing.T, vals []string, errorString string, initialSDAIPrice
 	} else {
 		pricesAggregatorFn = voteweighted.MedianPrices(
 			ctx.Logger(),
-			mCCVStore,
+			mValStore,
 			voteweighted.DefaultPowerThreshold,
 		)
 	}
@@ -66,7 +66,7 @@ func SetupTest(t *testing.T, vals []string, errorString string, initialSDAIPrice
 	} else {
 		conversionRateAggregatorFn = voteweighted.MedianConversionRate(
 			ctx.Logger(),
-			mCCVStore,
+			mValStore,
 			voteweighted.DefaultPowerThreshold,
 		)
 	}
@@ -117,7 +117,7 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single daemon data, empty conversion rate": {
 			validators: []string{"alice"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -147,7 +147,7 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single daemon data with conversion rate": {
 			validators: []string{"alice"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, "1000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, "1000000"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -177,7 +177,7 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates, single validator, no conversion rate": {
 			validators: []string{"alice"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -206,7 +206,7 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates, single validator with conversion rate": {
 			validators: []string{"alice"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -236,8 +236,8 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single price update, from two validators, without conversion rate": {
 			validators: []string{"alice", "bob"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidSingleVEPrice, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidSingleVEPrice, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -267,8 +267,8 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single price update, from two validators with different conversion rates": {
 			validators: []string{"alice", "bob"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -298,8 +298,8 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single price update, from two validators with same conversion rate": {
 			validators: []string{"alice", "bob"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000000"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -329,8 +329,8 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates, from two validators with no conversion rate": {
 			validators: []string{"alice", "bob"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -360,8 +360,8 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates, from two validators with one conversion rate": {
 			validators: []string{"alice", "bob"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -391,8 +391,8 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates, from two validators with different conversion rate": {
 			validators: []string{"alice", "bob"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -422,8 +422,8 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates, from two validators with same conversion rate": {
 			validators: []string{"alice", "bob"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -453,9 +453,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single price update, from multiple validators, without conversion rate": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidSingleVEPrice, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidSingleVEPrice, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidSingleVEPrice, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidSingleVEPrice, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -485,9 +485,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single price update, from multiple validators all conversion rates different": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000002"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -517,9 +517,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single price update, from multiple validators two out of three conversion rates the same": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000002"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -549,9 +549,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single price update, from multiple validators all conversion rates the same": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -581,9 +581,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates, from multiple validators with all empty conversion rates": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPrices, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -613,9 +613,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates, from multiple validators with 2/3 conversion rates empty": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPrices, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -645,9 +645,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates, from multiple validators all conversion rates different": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -677,7 +677,7 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single price update from multiple validators with no conversion rate but not enough voting power": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, ""),
 			},
 			expectedPrices:             map[string]voteweighted.AggregatorPricePair{},
 			expectedSDaiConversionRate: nil,
@@ -686,7 +686,7 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Single price update from multiple validators with conversion rate but not enough voting power": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
 			},
 			expectedPrices:             map[string]voteweighted.AggregatorPricePair{},
 			expectedSDaiConversionRate: nil,
@@ -695,7 +695,7 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates from multiple validators with no conversion rate but not enough voting power": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, ""),
 			},
 			expectedPrices:             map[string]voteweighted.AggregatorPricePair{},
 			expectedSDaiConversionRate: nil,
@@ -704,7 +704,7 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates from multiple validators with conversion rate but not enough voting power": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
 			},
 			expectedPrices:             map[string]voteweighted.AggregatorPricePair{},
 			expectedSDaiConversionRate: nil,
@@ -713,8 +713,8 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple prices from exactly 2/3 validators with no conversion rate": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, ""),
 			},
 			expectedPrices:             map[string]voteweighted.AggregatorPricePair{},
 			expectedSDaiConversionRate: nil,
@@ -723,8 +723,8 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple prices from exactly2/3 validators with conversion rate": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
 			},
 			expectedPrices:             map[string]voteweighted.AggregatorPricePair{},
 			expectedSDaiConversionRate: nil,
@@ -733,9 +733,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple prices from multiple validators with no conversion rate but not enough voting power for some prices": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidSingleVEPrice, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidSingleVEPrice, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidSingleVEPrice, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidSingleVEPrice, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -765,9 +765,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple prices from multiple validators with conversion rate but not enough voting power for some prices and conversion rate": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidSingleVEPrice, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidSingleVEPrice, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -797,9 +797,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple prices from multiple validators with conversion rate but not enough voting power for some prices and enough for conversion rate": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidSingleVEPrice, "1000000000000000000000000001"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -829,9 +829,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Continues when the validator's prices are malformed with no conversion rate": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -861,9 +861,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Continues when the validator's prices are malformed with some conversion rates, but not enough voting power": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPricesWithOneInvalid, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPricesWithOneInvalid, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -893,9 +893,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Continues when the validator's prices are malformed with some conversion rates with exactly 2/3 voting power": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPricesWithOneInvalid, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPricesWithOneInvalid, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPricesWithOneInvalid, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPricesWithOneInvalid, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPricesWithOneInvalid, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -925,9 +925,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates from >2/3 but not all validators with no conversion rates": {
 			validators: []string{"alice", "bob", "carl", "dave"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPrices, ""),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -957,9 +957,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Markets don't exist and sDAI price is set": {
 			validators: []string{"alice", "bob", "carl", "dave"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPricesWithNoMarkets, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPricesWithNoMarkets, ""),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPricesWithNoMarkets, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPricesWithNoMarkets, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPricesWithNoMarkets, ""),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPricesWithNoMarkets, ""),
 			},
 			initialSDAIPrice: new(big.Int).SetUint64(50000),
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
@@ -990,9 +990,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Default PnL price to Spot price": {
 			validators: []string{"alice", "bob", "carl", "dave"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPricesOnlySpot, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPricesOnlySpot, "1000000000000000000000000002"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPricesOnlySpot, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPricesOnlySpot, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPricesOnlySpot, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPricesOnlySpot, "1000000000000000000000000002"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -1022,9 +1022,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates from >2/3 but not all validators with some different conversion rates": {
 			validators: []string{"alice", "bob", "carl", "dave"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -1054,9 +1054,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: Multiple price updates from >2/3 but not all validators with all different conversion rates": {
 			validators: []string{"alice", "bob", "carl", "dave"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -1086,9 +1086,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: No prices from multiple validators but all conversion rates valid": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, []vetypes.PricePair{}, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, []vetypes.PricePair{}, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, []vetypes.PricePair{}, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, []vetypes.PricePair{}, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, []vetypes.PricePair{}, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, []vetypes.PricePair{}, "1000000000000000000000000002"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -1118,9 +1118,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Success: No prices from multiple validators but >2/3 conversion rates valid": {
 			validators: []string{"alice", "bob", "carl", "dave"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, []vetypes.PricePair{}, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, []vetypes.PricePair{}, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, []vetypes.PricePair{}, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, []vetypes.PricePair{}, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, []vetypes.PricePair{}, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, []vetypes.PricePair{}, "1000000000000000000000000002"),
 			},
 			expectedPrices: map[string]voteweighted.AggregatorPricePair{
 				constants.BtcUsdPair: {
@@ -1151,9 +1151,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Failure: Correctly returns error for a failure to aggregate prices": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
 			},
 			expectedPrices:             nil,
 			expectedSDaiConversionRate: nil,
@@ -1162,9 +1162,9 @@ func TestAggregateDaemonVEIntoFinalPricesAndConversionRate(t *testing.T) {
 		"Failure: Correctly returns error for a failure to aggregate sDai conversion rate": {
 			validators: []string{"alice", "bob", "carl"},
 			voteInfos: []cometabci.ExtendedVoteInfo{
-				mustCreateSignedExtendedVoteInfo(t, constants.AliceEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
-				mustCreateSignedExtendedVoteInfo(t, constants.BobEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
-				mustCreateSignedExtendedVoteInfo(t, constants.CarlEthosConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
+				mustCreateSignedExtendedVoteInfo(t, constants.AliceConsAddress, constants.ValidVEPrices, "1000000000000000000000000000"),
+				mustCreateSignedExtendedVoteInfo(t, constants.BobConsAddress, constants.ValidVEPrices, "1000000000000000000000000001"),
+				mustCreateSignedExtendedVoteInfo(t, constants.CarlConsAddress, constants.ValidVEPrices, "1000000000000000000000000002"),
 			},
 			expectedPrices:             nil,
 			expectedSDaiConversionRate: nil,

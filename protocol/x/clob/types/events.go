@@ -25,6 +25,8 @@ const (
 	AttributeKeyInsuranceFundDeltaQuoteQuantums         = "insurance_fund_delta_quote_quantums"
 	AttributeKeyValidatorFeeQuoteQuantums               = "validator_fee_quote_quantums"
 	AttributeKeyLiquidityFeeQuoteQuantums               = "liquidity_fee_quote_quantums"
+	AttributeKeyTakerRouterFeeQuoteQuantums             = "taker_router_fee_quote_quantums"
+	AttributeKeyMakerRouterFeeQuoteQuantums             = "maker_router_fee_quote_quantums"
 	AttributeKeyIsLiquidation                           = "is_liquidation"
 	AttributeKeyIsDeleverage                            = "is_deleverage"
 	AttributeKeyPerpetualId                             = "perpetual_id"
@@ -43,6 +45,8 @@ func NewCreateMatchEvent(
 	insuranceFundDelta *big.Int,
 	validatorFeeQuoteQuantums *big.Int,
 	liquidityFeeQuoteQuantums *big.Int,
+	takerRouterFeeQuoteQuantums *big.Int,
+	makerRouterFeeQuoteQuantums *big.Int,
 	isLiquidation bool,
 	isDeleverage bool,
 	perpetualId uint32,
@@ -62,6 +66,8 @@ func NewCreateMatchEvent(
 		sdk.NewAttribute(AttributeKeyInsuranceFundDeltaQuoteQuantums, insuranceFundDelta.String()),
 		sdk.NewAttribute(AttributeKeyValidatorFeeQuoteQuantums, validatorFeeQuoteQuantums.String()),
 		sdk.NewAttribute(AttributeKeyLiquidityFeeQuoteQuantums, liquidityFeeQuoteQuantums.String()),
+		sdk.NewAttribute(AttributeKeyTakerRouterFeeQuoteQuantums, takerRouterFeeQuoteQuantums.String()),
+		sdk.NewAttribute(AttributeKeyMakerRouterFeeQuoteQuantums, makerRouterFeeQuoteQuantums.String()),
 		sdk.NewAttribute(AttributeKeyIsLiquidation, fmt.Sprint(isLiquidation)),
 		sdk.NewAttribute(AttributeKeyIsDeleverage, fmt.Sprint(isDeleverage)),
 		sdk.NewAttribute(AttributeKeyPerpetualId, fmt.Sprint(perpetualId)),

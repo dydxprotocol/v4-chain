@@ -9,18 +9,15 @@ import (
 	"cosmossdk.io/core/comet"
 	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	codec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
 	daiUtils "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	cometabci "github.com/cometbft/cometbft/abci/types"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
 
 // ValidateVoteExtensionsFn defines the function for validating vote extensions. This
@@ -32,13 +29,6 @@ type ValidateVEConsensusInfoFn func(
 	ctx sdk.Context,
 	extInfo cometabci.ExtendedCommitInfo,
 ) error
-
-// ValidatorStore defines the interface contract require for verifying vote
-// extension signatures. Typically, this will be implemented by the x/staking
-// module, which has knowledge of the CometBFT public key.
-type ValidatorStore interface {
-	GetCCValidator(ctx sdk.Context, addr []byte) (ccvtypes.CrossChainValidator, bool)
-}
 
 // ---------------------------- VE VALIDATION ----------------------------
 
@@ -310,7 +300,7 @@ func pruneVoteFromExtCommitInfo(
 // ---------------------------- CONSENSUS VALIDATION ----------------------------
 
 // NewDefaultValidateVoteExtensionsFn returns a new DefaultValidateVoteExtensionsFn.
-func NewValidateVEConsensusInfo(validatorStore ValidatorStore) ValidateVEConsensusInfoFn {
+func NewValidateVEConsensusInfo(validatorStore voteweighted.ValidatorStore) ValidateVEConsensusInfoFn {
 	return func(ctx sdk.Context, info cometabci.ExtendedCommitInfo) error {
 		return ValidateVEConsensusInfo(ctx, validatorStore, info)
 	}
@@ -323,7 +313,7 @@ func NewValidateVEConsensusInfo(validatorStore ValidatorStore) ValidateVEConsens
 // power is received.
 func ValidateVEConsensusInfo(
 	ctx sdk.Context,
-	valStore ValidatorStore,
+	valStore voteweighted.ValidatorStore,
 	extCommit cometabci.ExtendedCommitInfo,
 ) error {
 	currentHeight := ctx.HeaderInfo().Height
@@ -363,15 +353,16 @@ func ValidateVEConsensusInfo(
 		// from the store, but comet considered the validator as active and included them in the commit since there
 		// is a 1 block delay between the validator set update on the app and comet.
 		sumVP += vote.Validator.Power
-		cmtPubKey, err := veutils.GetValCmtPubKeyFromVote(ctx, vote, valStore)
+		cmtPubKey, err := veutils.GetValPubKeyFromVote(ctx, vote, valStore)
 		if err != nil {
 			var notFoundErr *veutils.ValidatorNotFoundError
 			if errors.As(err, &notFoundErr) {
 				continue
-			} else {
-				return fmt.Errorf("failed to convert validator: %w", err)
 			}
+
+			return fmt.Errorf("failed to convert validator %X public key: %w", vote.Validator.Address, err)
 		}
+
 		cve := cmtproto.CanonicalVoteExtension{
 			Extension: vote.VoteExtension,
 			Height:    currentHeight - 1, // the vote extension was signed in the previous height
@@ -472,20 +463,6 @@ func validateExtCommitVoteCount(
 		)
 	}
 	return nil
-}
-
-// GetPubKeyByConsAddr returns the public key of a validator given the consensus addr.
-func GetPubKeyByConsAddr(ccvalidator ccvtypes.CrossChainValidator) (cmtprotocrypto.PublicKey, error) {
-	consPubKey, err := ccvalidator.ConsPubKey()
-	if err != nil {
-		return cmtprotocrypto.PublicKey{}, fmt.Errorf("could not get pubkey for val %s: %w", ccvalidator.String(), err)
-	}
-	tmPubKey, err := cryptocodec.ToCmtProtoPublicKey(consPubKey)
-	if err != nil {
-		return cmtprotocrypto.PublicKey{}, err
-	}
-
-	return tmPubKey, nil
 }
 
 func validateVotesSignerInfo(valExtCommitInfo cometabci.ExtendedCommitInfo, cmtLastCommit comet.CommitInfo) error {

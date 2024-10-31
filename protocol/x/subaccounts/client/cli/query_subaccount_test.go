@@ -10,18 +10,22 @@ import (
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/nullify"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 // Prevent strconv unused error
 var _ = strconv.IntSize
 
-func networkWithSubaccountObjects(t *testing.T, n int) []types.Subaccount {
+func networkWithSubaccountObjects(t *testing.T, n int) (*network.Network, []types.Subaccount) {
 	t.Helper()
 	cfg := network.DefaultConfig(nil)
 	state := types.GenesisState{}
@@ -29,34 +33,27 @@ func networkWithSubaccountObjects(t *testing.T, n int) []types.Subaccount {
 
 	for i := 0; i < n; i++ {
 		subaccount := types.Subaccount{
-			AssetPositions: keepertest.CreateTDaiAssetPosition(big.NewInt(1_000)),
 			Id: &types.SubaccountId{
 				Owner:  strconv.Itoa(i),
 				Number: uint32(n),
 			},
+			AssetPositions:  keepertest.CreateTDaiAssetPosition(big.NewInt(1_000)),
 			AssetYieldIndex: "1/1",
 		}
 		nullify.Fill(&subaccount) //nolint:staticcheck
 		state.Subaccounts = append(state.Subaccounts, subaccount)
 	}
+	buf, err := cfg.Codec.MarshalJSON(&state)
+	require.NoError(t, err)
+	cfg.GenesisState[types.ModuleName] = buf
 
-	fmt.Println("state.Subaccounts", state.Subaccounts)
-
-	return state.Subaccounts
-}
-
-func getSubaccountGenesisShort() string {
-	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"0\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"number\\\": \\\"2\\\", \\\"owner\\\": \\\"1\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}]\" \"\""
+	return network.New(t, cfg), state.Subaccounts
 }
 
 func TestShowSubaccount(t *testing.T) {
-	objs := networkWithSubaccountObjects(t, 2)
-	cfg := network.DefaultConfig(nil)
+	net, objs := networkWithSubaccountObjects(t, 2)
 
-	genesisChanges := getSubaccountGenesisShort()
-	network.DeployCustomNetwork(genesisChanges)
-
-	// ctx := net.Validators[0].ClientCtx
+	ctx := net.Validators[0].ClientCtx
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -76,6 +73,22 @@ func TestShowSubaccount(t *testing.T) {
 			args:   common,
 			obj:    objs[0],
 		},
+		{
+			desc:   "not found owner",
+			owner:  "abdefg",
+			number: objs[0].Id.Number,
+
+			args: common,
+			err:  status.Error(codes.NotFound, "not found"),
+		},
+		{
+			desc:   "not found number",
+			owner:  objs[0].Id.Owner,
+			number: uint32(0),
+
+			args: common,
+			err:  status.Error(codes.NotFound, "not found"),
+		},
 	} {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
@@ -83,72 +96,53 @@ func TestShowSubaccount(t *testing.T) {
 				tc.owner,
 				strconv.Itoa(int(tc.number)),
 			}
-
-			fmt.Println("Args:", args)
-			subQuery := "docker exec interchain-security-instance interchain-security-cd" +
-				" query subaccounts show-subaccount " + args[0] + " " + args[1]
-			data, _, err := network.QueryCustomNetwork(subQuery)
-			require.NoError(t, err)
-			var resp types.QuerySubaccountResponse
-			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
-			require.NotNil(t, resp.Subaccount)
-			require.Equal(t,
-				nullify.Fill(&tc.obj),          //nolint:staticcheck
-				nullify.Fill(&resp.Subaccount), //nolint:staticcheck
-			)
+			args = append(args, tc.args...)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowSubaccount(), args)
+			if tc.err != nil {
+				stat, ok := status.FromError(tc.err)
+				require.True(t, ok)
+				require.ErrorIs(t, stat.Err(), tc.err)
+			} else {
+				require.NoError(t, err)
+				var resp types.QuerySubaccountResponse
+				require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+				require.NotNil(t, resp.Subaccount)
+				require.Equal(t,
+					nullify.Fill(&tc.obj),          //nolint:staticcheck
+					nullify.Fill(&resp.Subaccount), //nolint:staticcheck
+				)
+			}
 		})
 	}
-
-	network.CleanupCustomNetwork()
-}
-
-func getSubaccountGenesisList() string {
-	return "\".app_state.subaccounts.subaccounts = [{\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"0\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"1\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"2\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"3\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}, {\\\"asset_positions\\\": [{\\\"quantums\\\": \\\"1000\\\"}], \\\"id\\\": {\\\"owner\\\": \\\"4\\\", \\\"number\\\": \\\"5\\\"}, \\\"margin_enabled\\\": false, \\\"asset_yield_index\\\": \\\"1/1\\\"}]\" \"\""
-}
-
-func removeNewlines(data []byte) []byte {
-	var result []byte
-	for _, b := range data {
-		if b != '\n' && b != '\r' { // Handle both Unix and Windows line endings
-			result = append(result, b)
-		}
-	}
-	return result
 }
 
 func TestListSubaccount(t *testing.T) {
-	objs := networkWithSubaccountObjects(t, 5)
-	cfg := network.DefaultConfig(nil)
+	net, objs := networkWithSubaccountObjects(t, 5)
 
-	genesisChanges := getSubaccountGenesisList()
-	network.DeployCustomNetwork(genesisChanges)
-
-	request := func(next []byte, offset, limit uint64, total bool) string {
-		args := ""
+	ctx := net.Validators[0].ClientCtx
+	request := func(next []byte, offset, limit uint64, total bool) []string {
+		args := []string{
+			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+		}
 		if next == nil {
-			args += fmt.Sprintf(" --%s=%d", flags.FlagOffset, offset)
+			args = append(args, fmt.Sprintf("--%s=%d", flags.FlagOffset, offset))
 		} else {
-			args += fmt.Sprintf(" --%s=%s", flags.FlagPageKey, removeNewlines(next))
+			args = append(args, fmt.Sprintf("--%s=%s", flags.FlagPageKey, next))
 		}
-		args += fmt.Sprintf(" --%s=%d", flags.FlagLimit, limit)
+		args = append(args, fmt.Sprintf("--%s=%d", flags.FlagLimit, limit))
 		if total {
-			args += fmt.Sprintf(" --%s", flags.FlagCountTotal)
+			args = append(args, fmt.Sprintf("--%s", flags.FlagCountTotal))
 		}
-
-		args += " --node tcp://253:26658 -o json"
 		return args
 	}
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
 		for i := 0; i < len(objs); i += step {
 			args := request(nil, uint64(i), uint64(step), false)
-			subQuery := "docker exec interchain-security-instance interchain-security-cd" +
-				" query subaccounts list-subaccount" + args
-			data, _, err := network.QueryCustomNetwork(subQuery)
-
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListSubaccount(), args)
 			require.NoError(t, err)
 			var resp types.QuerySubaccountAllResponse
-			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 			require.LessOrEqual(t, len(resp.Subaccount), step)
 			require.Subset(t,
 				nullify.Fill(objs),            //nolint:staticcheck
@@ -161,12 +155,10 @@ func TestListSubaccount(t *testing.T) {
 		var next []byte
 		for i := 0; i < len(objs); i += step {
 			args := request(next, 0, uint64(step), false)
-			subQuery := "docker exec interchain-security-instance interchain-security-cd" +
-				" query subaccounts list-subaccount " + args
-			data, _, err := network.QueryCustomNetwork(subQuery)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListSubaccount(), args)
 			require.NoError(t, err)
 			var resp types.QuerySubaccountAllResponse
-			require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 			require.LessOrEqual(t, len(resp.Subaccount), step)
 			require.Subset(t,
 				nullify.Fill(objs),            //nolint:staticcheck
@@ -177,12 +169,10 @@ func TestListSubaccount(t *testing.T) {
 	})
 	t.Run("Total", func(t *testing.T) {
 		args := request(nil, 0, uint64(len(objs)), true)
-		subQuery := "docker exec interchain-security-instance interchain-security-cd" +
-			" query subaccounts list-subaccount " + args
-		data, _, err := network.QueryCustomNetwork(subQuery)
+		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListSubaccount(), args)
 		require.NoError(t, err)
 		var resp types.QuerySubaccountAllResponse
-		require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+		require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		require.NoError(t, err)
 		require.Equal(t, len(objs), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
@@ -190,6 +180,4 @@ func TestListSubaccount(t *testing.T) {
 			nullify.Fill(resp.Subaccount), //nolint:staticcheck
 		)
 	})
-
-	network.CleanupCustomNetwork()
 }

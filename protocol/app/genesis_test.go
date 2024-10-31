@@ -2,9 +2,10 @@ package app_test
 
 import (
 	"encoding/json"
-	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"os"
 	"testing"
+
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 
 	"github.com/stretchr/testify/require"
 )

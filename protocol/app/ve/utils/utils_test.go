@@ -2,24 +2,23 @@ package ve_utils_test
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 	"testing"
+
+	"cosmossdk.io/math"
 
 	veutils "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/utils"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	ethosutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ethos"
+	valutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/staking"
 	cometabcitypes "github.com/cometbft/cometbft/abci/types"
-
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cometbftproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -193,11 +192,16 @@ func TestGetVEDecodedPrice(t *testing.T) {
 
 func TestGetValCmtPubKeyFromVote(t *testing.T) {
 	ctx := sdktypes.Context{}
-	mockValidatorStore := &mocks.CCValidatorStore{}
+	mockValidatorStore := &mocks.ValidatorStore{}
 
 	testValPower := int64(1000)
-	testVal := ethosutils.BuildCCValidator("alice", testValPower)
-	testValConsAddr := sdktypes.ConsAddress(testVal.Address)
+	testVal := valutils.BuildTestValidator("alice", math.NewInt(testValPower))
+	testValPubKey, err := testVal.ConsPubKey()
+	require.NoError(t, err)
+	protoPubKey, err := cryptocodec.ToCmtProtoPublicKey(testValPubKey)
+	require.NoError(t, err)
+
+	testValConsAddr := constants.AliceConsAddress
 
 	mockVote := cometabcitypes.ExtendedVoteInfo{
 		Validator: cometabcitypes.Validator{
@@ -207,18 +211,19 @@ func TestGetValCmtPubKeyFromVote(t *testing.T) {
 	}
 
 	t.Run("Successful public key retrieval", func(t *testing.T) {
-		mockValidatorStore.On("GetCCValidator", mock.Anything, mock.Anything).Return(testVal, true).Once()
 
-		pubKey, err := veutils.GetValCmtPubKeyFromVote(ctx, mockVote, mockValidatorStore)
+		mockValidatorStore.On("GetPubKeyByConsAddr", mock.Anything, testValConsAddr).Return(protoPubKey, nil).Once()
+
+		pubKey, err := veutils.GetValPubKeyFromVote(ctx, mockVote, mockValidatorStore)
 		require.NoError(t, err)
 		require.NotNil(t, pubKey)
 
-		expectedPubKey := constants.AliceEthosPubKey
+		expectedPubKey := constants.AlicePubKey
 		require.Equal(t, expectedPubKey.Bytes(), pubKey.Bytes())
 	})
 
 	t.Run("Validator not found", func(t *testing.T) {
-		unknownConsAddr := constants.BobEthosConsAddress
+		unknownConsAddr := constants.BobConsAddress
 		unknownVote := cometabcitypes.ExtendedVoteInfo{
 			Validator: cometabcitypes.Validator{
 				Address: unknownConsAddr,
@@ -226,100 +231,26 @@ func TestGetValCmtPubKeyFromVote(t *testing.T) {
 			},
 		}
 
-		mockValidatorStore.On("GetCCValidator", mock.Anything, mock.Anything).Return(ccvtypes.CrossChainValidator{}, false).Once()
+		mockValidatorStore.On("GetPubKeyByConsAddr", mock.Anything, mock.Anything).Return(cmtprotocrypto.PublicKey{}, fmt.Errorf("error")).Once()
 
-		_, err := veutils.GetValCmtPubKeyFromVote(ctx, unknownVote, mockValidatorStore)
+		_, err := veutils.GetValPubKeyFromVote(ctx, unknownVote, mockValidatorStore)
 		require.Error(t, err)
 		require.IsType(t, &veutils.ValidatorNotFoundError{}, err)
 	})
 
 	t.Run("Invalid public key: validator not found error", func(t *testing.T) {
-		invalidPubkey := &codectypes.Any{
-			TypeUrl: "invalid/type/url",
-			Value:   []byte(""),
-		}
-
-		invalidVal := ccvtypes.CrossChainValidator{
-			Address: testVal.Address,
-			Pubkey:  invalidPubkey,
-			Power:   testVal.Power,
-		}
-
-		mockValidatorStore.On("GetCCValidator", mock.Anything, mock.Anything).Return(invalidVal, true).Once()
-
-		_, err := veutils.GetValCmtPubKeyFromVote(ctx, mockVote, mockValidatorStore)
-		require.Error(t, err)
-		require.IsType(t, &veutils.ValidatorNotFoundError{}, err)
-	})
-
-	t.Run("Invalid public key: public key is nil", func(t *testing.T) {
-		invalidVal := ccvtypes.CrossChainValidator{
-			Address: testVal.Address,
-			Power:   testVal.Power,
-		}
-		mockValidatorStore.On("GetCCValidator", mock.Anything, mock.Anything).Return(invalidVal, true).Once()
-
-		_, err := veutils.GetValCmtPubKeyFromVote(ctx, mockVote, mockValidatorStore)
-		require.Error(t, err)
-		require.IsType(t, &veutils.ValidatorNotFoundError{}, err)
-	})
-}
-
-func TestGetPubKeyByConsAddr(t *testing.T) {
-	testValidator := ethosutils.BuildCCValidator("alice", 100)
-
-	tests := []struct {
-		name        string
-		ccValidator ccvtypes.CrossChainValidator
-		expectError bool
-		errorString string
-	}{
-		{
-			name:        "valid public key",
-			ccValidator: testValidator,
-			expectError: false,
-		},
-		{
-			name: "nil public key",
-			ccValidator: ccvtypes.CrossChainValidator{
-				Address: testValidator.Address,
-				Pubkey:  nil,
-				Power:   testValidator.Power,
+		invalidCmtPubKey := cmtprotocrypto.PublicKey{
+			Sum: &cmtprotocrypto.PublicKey_Ed25519{
+				Ed25519: []byte("invalid"),
 			},
-			expectError: true,
-			errorString: "public key is nil",
-		},
-		{
-			name: "invalid public key",
-			ccValidator: ccvtypes.CrossChainValidator{
-				Address: testValidator.Address,
-				Pubkey:  codectypes.UnsafePackAny(42),
-				Power:   testValidator.Power,
-			},
-			expectError: true,
-			errorString: "could not get pubkey for val",
-		},
-	}
+		}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			result, err := veutils.GetPubKeyByConsAddr(tc.ccValidator)
+		mockValidatorStore.On("GetPubKeyByConsAddr", mock.Anything, mock.Anything).Return(invalidCmtPubKey, nil).Once()
 
-			if tc.expectError {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.errorString)
-				require.Equal(t, cmtprotocrypto.PublicKey{}, result)
-			} else {
-				require.NoError(t, err)
-				require.NotNil(t, result)
-				require.IsType(t, cmtprotocrypto.PublicKey{}, result)
-				expectedPubKeyProto := tc.ccValidator.Pubkey.GetCachedValue().(cryptotypes.PubKey)
-				expectedPubKey, err := cryptocodec.ToCmtProtoPublicKey(expectedPubKeyProto)
-				require.NoError(t, err)
-				require.Equal(t, expectedPubKey, result)
-			}
-		})
-	}
+		_, err := veutils.GetValPubKeyFromVote(ctx, mockVote, mockValidatorStore)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "failed to convert validator")
+	})
 }
 
 func TestGetVEEncodedPrice(t *testing.T) {

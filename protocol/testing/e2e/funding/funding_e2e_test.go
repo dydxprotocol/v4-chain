@@ -380,7 +380,7 @@ func TestFunding(t *testing.T) {
 			}
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -464,7 +464,7 @@ func TestFunding(t *testing.T) {
 			})
 
 			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{
 					0: {

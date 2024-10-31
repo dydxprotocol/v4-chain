@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,22 +21,20 @@ var (
 )
 
 func TestCmdGetEquityTierLimitConfig(t *testing.T) {
-	fmt.Println("TestCmdGetEquityTierLimitConfig")
-	networkWithClobPairObjects(t, 2)
+	net, _ := networkWithClobPairObjects(t, 2)
+	ctx := net.Validators[0].ClientCtx
+	common := []string{
+		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+	}
 
-	cfg := network.DefaultConfig(nil)
-	query := "docker exec interchain-security-instance interchain-security-cd" +
-		" query clob get-equity-tier-limit-config"
-	data, _, err := network.QueryCustomNetwork(query)
-
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdGetEquityTierLimitConfig(), common)
 	require.NoError(t, err)
 	var resp types.QueryEquityTierLimitConfigurationResponse
-	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.NotNil(t, resp.EquityTierLimitConfig)
 	require.Equal(
 		t,
 		emptyEquityTierLimitConfig,
 		resp.EquityTierLimitConfig,
 	)
-	network.CleanupCustomNetwork()
 }

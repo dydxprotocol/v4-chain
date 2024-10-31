@@ -978,6 +978,7 @@ func TestWithdrawalGating_ChainOutage(t *testing.T) {
 				}
 				msg = &transferMsg
 			}
+
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
 				ctx,
 				tApp.App,

@@ -9,9 +9,15 @@ import {
 } from '../helpers/constants';
 import { OrderFromDatabase } from '../../src';
 import {
-  IndexerOrder, IndexerOrder_ConditionType, IndexerOrder_Side, IndexerOrder_TimeInForce,
+  IndexerOrder,
+  IndexerOrder_ConditionType,
+  IndexerOrder_Side,
+  IndexerOrder_TimeInForce,
 } from '@dydxprotocol-indexer/v4-protos';
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  ORDER_FLAG_CONDITIONAL,
+  ORDER_FLAG_LONG_TERM,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
 import { convertToIndexerOrder } from '../../src/lib/order-translations';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
@@ -47,16 +53,22 @@ describe('orderTranslations', () => {
           orderFlags: ORDER_FLAG_LONG_TERM,
         },
         side: IndexerOrder_Side.SIDE_BUY,
-        quantums: Long.fromValue(250_000_000_000, true),  // 25 / 1e-10 = 250_000_000_000
-        subticks: Long.fromValue(200_000_000, true),  // 20_000 * 1e-10 / 1e-6 / 1e-8 = 200_000_000
-        goodTilBlockTime: 1674345600,  // 2023-01-22T00:00:00.000Z
+        quantums: Long.fromValue(250_000_000_000, true), // 25 / 1e-10 = 250_000_000_000
+        subticks: Long.fromValue(200_000_000, true), // 20_000 * 1e-10 / 1e-6 / 1e-8 = 200_000_000
+        goodTilBlockTime: 1674345600, // 2023-01-22T00:00:00.000Z
         timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
         reduceOnly: false,
         clientMetadata: 0,
         conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
         conditionalOrderTriggerSubticks: Long.fromValue(0, true),
+        routerFeePpm: 0,
+        routerFeeSubaccountOwner: 'dydx1xxxxxx',
+        routerFeeSubaccountNumber: 0,
       };
-      const indexerOrder: IndexerOrder = await convertToIndexerOrder(order, defaultPerpetualMarket);
+      const indexerOrder: IndexerOrder = await convertToIndexerOrder(
+        order,
+        defaultPerpetualMarket,
+      );
       expect(indexerOrder).toEqual(expectedOrder);
     });
   });
@@ -78,17 +90,23 @@ describe('orderTranslations', () => {
         orderFlags: ORDER_FLAG_CONDITIONAL,
       },
       side: IndexerOrder_Side.SIDE_BUY,
-      quantums: Long.fromValue(250_000_000_000, true),  // 25 / 1e-10 = 250_000_000_000
-      subticks: Long.fromValue(200_000_000, true),  // 20_000 * 1e-10 / 1e-6 / 1e-8 = 200_000_000
-      goodTilBlockTime: 1674345600,  // 2023-01-22T00:00:00.000Z
+      quantums: Long.fromValue(250_000_000_000, true), // 25 / 1e-10 = 250_000_000_000
+      subticks: Long.fromValue(200_000_000, true), // 20_000 * 1e-10 / 1e-6 / 1e-8 = 200_000_000
+      goodTilBlockTime: 1674345600, // 2023-01-22T00:00:00.000Z
       timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
       reduceOnly: false,
       clientMetadata: 0,
       conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS,
       // 19_000 * 1e-10 / 1e-6 / 1e-8 = 190_000_000
       conditionalOrderTriggerSubticks: Long.fromValue(190_000_000, true),
+      routerFeePpm: 0,
+      routerFeeSubaccountOwner: 'dydx1xxxxxx',
+      routerFeeSubaccountNumber: 0,
     };
-    const indexerOrder: IndexerOrder = await convertToIndexerOrder(order, defaultPerpetualMarket);
+    const indexerOrder: IndexerOrder = await convertToIndexerOrder(
+      order,
+      defaultPerpetualMarket,
+    );
     expect(indexerOrder).toEqual(expectedOrder);
   });
 });

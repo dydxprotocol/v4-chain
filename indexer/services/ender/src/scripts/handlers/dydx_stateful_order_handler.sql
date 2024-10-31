@@ -22,6 +22,9 @@ DECLARE
     order_record orders%ROWTYPE;
     subaccount_record subaccounts%ROWTYPE;
 BEGIN
+
+    RAISE NOTICE 'order_record structure: %', to_json(order_record);
+
     /** TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent. */
     IF event_data->'orderPlace' IS NOT NULL OR event_data->'longTermOrderPlacement' IS NOT NULL OR event_data->'conditionalOrderPlacement' IS NOT NULL THEN
         order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order');
@@ -54,6 +57,9 @@ BEGIN
         order_record."createdAtHeight" = block_height;
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
+        order_record."routerFeePpm" = coalesce((order_->'routerFeePpm')::bigint, 0);
+        order_record."routerFeeSubaccountOwner" = order_->>'routerFeeSubaccountOwner';
+        order_record."routerFeeSubaccountNumber" = (order_->'routerFeeSubaccountNumber')::bigint;
 
         CASE
             WHEN event_data->'conditionalOrderPlacement' IS NOT NULL THEN
@@ -68,26 +74,29 @@ BEGIN
                 order_record."status" = 'OPEN';
         END CASE;
 
-        INSERT INTO orders VALUES (order_record.*) ON CONFLICT ("id") DO
-            UPDATE SET
-                       "subaccountId" = order_record."subaccountId",
-                       "clientId" = order_record."clientId",
-                       "clobPairId" = order_record."clobPairId",
-                       "side" = order_record."side",
-                       "size" = order_record."size",
-                       "totalFilled" = order_record."totalFilled",
-                       "price" = order_record."price",
-                       "timeInForce" = order_record."timeInForce",
-                       "reduceOnly" = order_record."reduceOnly",
-                       "orderFlags" = order_record."orderFlags",
-                       "goodTilBlockTime" = order_record."goodTilBlockTime",
-                       "clientMetadata" = order_record."clientMetadata",
-                       "createdAtHeight" = order_record."createdAtHeight",
-                       "updatedAt" = order_record."updatedAt",
-                       "updatedAtHeight" = order_record."updatedAtHeight",
-                       "type" = order_record."type",
-                       "status" = order_record."status",
-                       "triggerPrice" = order_record."triggerPrice"
+        INSERT INTO orders VALUES (order_record.*) 
+        ON CONFLICT ("id") DO UPDATE SET
+            "subaccountId" = EXCLUDED."subaccountId",
+            "clientId" = EXCLUDED."clientId",
+            "clobPairId" = EXCLUDED."clobPairId",
+            "side" = EXCLUDED."side",
+            "size" = EXCLUDED."size",
+            "totalFilled" = EXCLUDED."totalFilled",
+            "price" = EXCLUDED."price",
+            "timeInForce" = EXCLUDED."timeInForce",
+            "reduceOnly" = EXCLUDED."reduceOnly",
+            "orderFlags" = EXCLUDED."orderFlags",
+            "goodTilBlockTime" = EXCLUDED."goodTilBlockTime",
+            "clientMetadata" = EXCLUDED."clientMetadata",
+            "routerFeePpm" = EXCLUDED."routerFeePpm",
+            "routerFeeSubaccountOwner" = EXCLUDED."routerFeeSubaccountOwner",
+            "routerFeeSubaccountNumber" = EXCLUDED."routerFeeSubaccountNumber",
+            "createdAtHeight" = EXCLUDED."createdAtHeight",
+            "updatedAt" = EXCLUDED."updatedAt",
+            "updatedAtHeight" = EXCLUDED."updatedAtHeight",
+            "type" = EXCLUDED."type",
+            "status" = EXCLUDED."status",
+            "triggerPrice" = EXCLUDED."triggerPrice"
         RETURNING * INTO order_record;
 
         RETURN jsonb_build_object(

@@ -63,6 +63,17 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: false,
 		},
+		"Can place a new buy order on an orderbook with bids with router fee, and best bid is updated": {
+			existingOrders: []types.MatchableOrder{
+				&constants.Order_Bob_Num0_Id3_Clob1_Buy10_Price10_GTB20,
+			},
+			collateralizationCheck: satypes.Success,
+
+			order: constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22_RouterFee,
+
+			expectedOrderStatus:    types.Success,
+			expectedToReplaceOrder: false,
+		},
 		"Can place a new sell order on an orderbook with asks, and best ask is updated": {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num0_Id5_Clob1_Sell25_Price15_GTB20,
@@ -255,15 +266,16 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			expectedOrderStatus:    types.Success,
 			expectedToReplaceOrder: true,
 		},
-		"Replacing an order fails if OrderHash is less than existing order but GoodTilBlock is the same": {
+		"Replacing an order Succeeds if OrderHash is less than existing order but GoodTilBlock is the same": {
 			existingOrders: []types.MatchableOrder{
 				&constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
 			},
 
 			order: constants.Order_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
 
-			expectedErr:            types.ErrInvalidReplacement,
-			expectedToReplaceOrder: false,
+			collateralizationCheck: satypes.Success,
+			expectedOrderStatus:    types.Success,
+			expectedToReplaceOrder: true,
 		},
 		"Replacing an order succeeds if OrderHash is greater than existing order but GoodTilBlock is the same": {
 			existingOrders: []types.MatchableOrder{
@@ -353,7 +365,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				// If this is an order replacement and it was successful, we assert that the old order being replaced
 				// is no longer on the book.
 				matchableOrderOrder := matchableOrder.MustGetOrder()
-				if matchableOrderOrder.OrderId == tc.order.OrderId && tc.order.MustCmpReplacementOrder(&matchableOrderOrder) > 0 {
+				if matchableOrderOrder.OrderId == tc.order.OrderId && (tc.order.MustCmpReplacementOrder(&matchableOrderOrder) > 0 || (tc.order.MustCmpReplacementOrder(&matchableOrderOrder) == 0 && !tc.order.IsIdenticalTo(&matchableOrderOrder))) {
 					continue
 				}
 

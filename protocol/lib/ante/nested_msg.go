@@ -8,6 +8,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 const DYDX_MSG_PREFIX = "/" + constants.AppName
@@ -18,7 +19,9 @@ func IsNestedMsg(msg sdk.Msg) bool {
 	case
 		// ------- CosmosSDK default modules
 		// authz
-		*authz.MsgExec:
+		*authz.MsgExec,
+		// gov
+		*gov.MsgSubmitProposal:
 		return true
 	}
 	return false
@@ -87,6 +90,8 @@ func validateInnerMsg(msg sdk.Msg) error {
 // getInnerMsgs returns the inner msgs of the given msg.
 func getInnerMsgs(msg sdk.Msg) ([]sdk.Msg, error) {
 	switch msg := msg.(type) {
+	case *gov.MsgSubmitProposal:
+		return msg.GetMsgs()
 	case *authz.MsgExec:
 		return msg.GetMessages()
 	default:

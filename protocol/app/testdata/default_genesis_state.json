@@ -44,28 +44,6 @@
       ]
     }
   },
-  "ccvconsumer": {
-    "params": {
-      "enabled": false,
-      "blocks_per_distribution_transmission": "1000",
-      "distribution_transmission_channel": "",
-      "provider_fee_pool_addr_str": "",
-      "ccv_timeout_period": "2419200s",
-      "transfer_timeout_period": "3600s",
-      "consumer_redistribution_fraction": "0.75",
-      "historical_entries": "10000",
-      "unbonding_period": "604800s",
-      "reward_denoms": [],
-      "provider_reward_denoms": [],
-      "retry_delay_period": "3600s"
-    },
-    "new_chain": false,
-    "provider": {
-      "client_state": null,
-      "consensus_state": null,
-      "initial_val_set": []
-    }
-  },
   "capability": {
     "index": "1",
     "owners": []
@@ -103,6 +81,25 @@
   "delaymsg": {
     "delayed_messages": [],
     "next_delayed_message_id": 0
+  },
+  "distribution": {
+    "delegator_starting_infos": [],
+    "delegator_withdraw_infos": [],
+    "fee_pool": {
+      "community_pool": []
+    },
+    "outstanding_rewards": [],
+    "params": {
+      "base_proposer_reward": "0.000000000000000000",
+      "bonus_proposer_reward": "0.000000000000000000",
+      "community_tax": "0.020000000000000000",
+      "withdraw_addr_enabled": true
+    },
+    "previous_proposer": "",
+    "validator_accumulated_commissions": [],
+    "validator_current_rewards": [],
+    "validator_historical_rewards": [],
+    "validator_slash_events": []
   },
   "epochs": {
     "epoch_info_list": [
@@ -222,6 +219,45 @@
   "genutil": {
     "gen_txs": []
   },
+  "gov": {
+    "starting_proposal_id": "1",
+    "deposits": [],
+    "votes": [],
+    "proposals": [],
+    "deposit_params": null,
+    "voting_params": null,
+    "tally_params": null,
+    "params": {
+      "min_deposit": [
+        {
+          "denom": "stake",
+          "amount": "10000000"
+        }
+      ],
+      "max_deposit_period": "172800s",
+      "voting_period": "172800s",
+      "quorum": "0.334000000000000000",
+      "threshold": "0.500000000000000000",
+      "veto_threshold": "0.334000000000000000",
+      "min_initial_deposit_ratio": "0.000000000000000000",
+      "proposal_cancel_ratio": "1.000000000000000000",
+      "proposal_cancel_dest": "",
+      "expedited_voting_period": "86400s",
+      "expedited_threshold": "0.750000000000000000",
+      "expedited_min_deposit": [
+        {
+          "denom": "stake",
+          "amount": "50000000"
+        }
+      ],
+      "burn_vote_quorum": false,
+      "burn_proposal_deposit_prevote": false,
+      "burn_vote_veto": true,
+      "min_deposit_ratio": "0.010000000000000000"
+    },
+    "constitution": ""
+  },
+  "govplus": {},
   "ibc": {
     "client_genesis": {
       "clients": [],
@@ -328,6 +364,15 @@
       }
     ]
   },
+  "rewards": {
+      "params": {
+        "treasury_account":"rewards_treasury",
+        "denom":"adv4tnt",
+        "denom_exponent":-18,
+        "market_id":1,
+        "fee_multiplier_ppm":990000
+    }
+  },
   "ratelimit": {
     "limit_params_list": [
       {
@@ -359,6 +404,23 @@
     "signing_infos": [],
     "missed_blocks": []
   },
+  "staking": {
+    "params": {
+      "unbonding_time": "1209600s",
+      "max_validators": 100,
+      "max_entries": 7,
+      "historical_entries": 10000,
+      "bond_denom": "stake",
+      "min_commission_rate": "0.000000000000000000"
+    },
+    "last_total_power": "0",
+    "last_validator_powers": [],
+    "validators": [],
+    "delegations": [],
+    "unbonding_delegations": [],
+    "redelegations": [],
+    "exported": false
+  },
   "stats": {
     "params": {
       "window_duration": "2592000s"
@@ -376,5 +438,23 @@
     },
     "total_escrowed": []
   },
-  "upgrade": {}
+  "upgrade": {},
+  "vest": {
+    "vest_entries": [
+      {
+        "denom": "adv4tnt",
+        "end_time": "2025-01-01T00:00:00Z",
+        "start_time": "2023-01-01T00:00:00Z",
+        "treasury_account": "community_treasury",
+        "vester_account": "community_vester"
+      },
+      {
+        "denom": "adv4tnt",
+        "end_time": "2025-01-01T00:00:00Z",
+        "start_time": "2023-01-01T00:00:00Z",
+        "treasury_account": "rewards_treasury",
+        "vester_account": "rewards_vester"
+      }
+    ]
+  }
 }

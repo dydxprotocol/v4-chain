@@ -104,5 +104,13 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 		}
 	}
 
+	if msg.Order.RouterFeePpm < 0 || msg.Order.RouterFeePpm > 1000000 {
+		return errorsmod.Wrapf(ErrInvalidRouterFeePpm, "router fee ppm must be between 0 and 1000000")
+	}
+
+	if msg.Order.RouterFeePpm > 0 && msg.Order.RouterSubaccountId == nil {
+		return errorsmod.Wrapf(ErrInvalidRouterSubaccountId, "router subaccount ID must be set if router fee ppm is greater than 0")
+	}
+
 	return nil
 }

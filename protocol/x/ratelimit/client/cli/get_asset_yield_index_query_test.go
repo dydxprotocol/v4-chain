@@ -3,11 +3,14 @@
 package cli_test
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,14 +19,14 @@ var _ = strconv.IntSize
 var defaultAssetYieldIndex = "1/1"
 
 func TestGetAssetYieldIndexQuery(t *testing.T) {
-	cfg := network.DefaultConfig(nil)
+	net, ctx := setupNetwork(t)
 
-	assetYieldIndexQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
-		" query ratelimit get-asset-yield-index"
-	data, _, err := network.QueryCustomNetwork(assetYieldIndexQuery)
+	common := []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
 
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdGetAssetYieldIndexQuery(), common)
 	require.NoError(t, err)
+
 	var resp types.GetAssetYieldIndexQueryResponse
-	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Equal(t, defaultAssetYieldIndex, resp.AssetYieldIndex)
 }

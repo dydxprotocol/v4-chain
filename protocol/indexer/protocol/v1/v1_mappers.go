@@ -9,6 +9,7 @@ import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func SubaccountIdToIndexerSubaccountId(
@@ -137,6 +138,20 @@ func OrderToIndexerOrder(
 	}
 }
 
+func HandleEmptyRouterSubaccountIdForOwner(order clobtypes.Order) string {
+	if order.RouterSubaccountId == nil {
+		return authtypes.NewModuleAddress("NULL_ROUTER_ADDRESS").String()
+	}
+	return order.RouterSubaccountId.Owner
+}
+
+func HandleEmptyRouterSubaccountIdForNumber(order clobtypes.Order) uint32 {
+	if order.RouterSubaccountId == nil {
+		return 0
+	}
+	return order.RouterSubaccountId.Number
+}
+
 func orderToIndexerOrder_GoodTilBlock(
 	order clobtypes.Order,
 	goodTilBlock v1types.IndexerOrder_GoodTilBlock,
@@ -152,6 +167,9 @@ func orderToIndexerOrder_GoodTilBlock(
 		ClientMetadata:                  order.ClientMetadata,
 		ConditionType:                   OrderConditionTypeToIndexerOrderConditionType(order.ConditionType),
 		ConditionalOrderTriggerSubticks: order.ConditionalOrderTriggerSubticks,
+		RouterFeePpm:                    order.RouterFeePpm,
+		RouterFeeSubaccountOwner:        HandleEmptyRouterSubaccountIdForOwner(order),
+		RouterFeeSubaccountNumber:       HandleEmptyRouterSubaccountIdForNumber(order),
 	}
 }
 
@@ -170,6 +188,9 @@ func orderToIndexerOrder_GoodTilBlockTime(
 		ClientMetadata:                  order.ClientMetadata,
 		ConditionType:                   OrderConditionTypeToIndexerOrderConditionType(order.ConditionType),
 		ConditionalOrderTriggerSubticks: order.ConditionalOrderTriggerSubticks,
+		RouterFeePpm:                    order.RouterFeePpm,
+		RouterFeeSubaccountOwner:        HandleEmptyRouterSubaccountIdForOwner(order),
+		RouterFeeSubaccountNumber:       HandleEmptyRouterSubaccountIdForNumber(order),
 	}
 }
 

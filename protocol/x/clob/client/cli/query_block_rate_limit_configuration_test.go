@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/client/cli"
 )
 
 var (
@@ -21,22 +24,20 @@ var (
 )
 
 func TestCmdGetBlockRateLimitConfiguration(t *testing.T) {
-	fmt.Println("TestCmdGetBlockRateLimitConfiguration")
-	networkWithClobPairObjects(t, 2)
+	net, _ := networkWithClobPairObjects(t, 2)
+	ctx := net.Validators[0].ClientCtx
+	common := []string{
+		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+	}
 
-	cfg := network.DefaultConfig(nil)
-	query := "docker exec interchain-security-instance interchain-security-cd" +
-		" query clob get-block-rate-limit-config"
-	data, _, err := network.QueryCustomNetwork(query)
-
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdGetBlockRateLimitConfiguration(), common)
 	require.NoError(t, err)
 	var resp types.QueryBlockRateLimitConfigurationResponse
-	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.NotNil(t, resp.BlockRateLimitConfig)
 	require.Equal(
 		t,
 		emptyConfig,
 		resp.BlockRateLimitConfig,
 	)
-	network.CleanupCustomNetwork()
 }

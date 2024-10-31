@@ -1,11 +1,12 @@
 package types
 
 import (
+	"sync"
+	"time"
+
 	"cosmossdk.io/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 	libtime "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
-	"sync"
-	"time"
 )
 
 // errorStreak tracks two relevant statistics for an error streak returned by a HealthCheckable - the timestamp of the

@@ -69,6 +69,7 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 			handler := process.FullNodeProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
 				mockClobKeeper,
+				&mocks.ProcessStakingKeeper{},
 				&mocks.ProcessPerpetualKeeper{},
 				pricesKeeper,
 			)

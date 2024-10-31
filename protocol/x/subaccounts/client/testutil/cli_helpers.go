@@ -1,32 +1,28 @@
 package testutil
 
 import (
-	"bytes"
 	"fmt"
-	"os/exec"
 
+	sacli "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/client/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 )
 
 // MsgQuerySubaccountExec executes a query for the given subaccount id.
 func MsgQuerySubaccountExec(
-	owner string,
+	clientCtx client.Context,
+	owner sdk.AccAddress,
 	number uint32,
 ) (testutil.BufferWriter, error) {
-	queryCmd := exec.Command(
-		"bash",
-		"-c",
-		"docker exec interchain-security-instance interchain-security-cd"+
-			" query subaccounts show-subaccount "+owner+" "+fmt.Sprint(number)+
-			" --node tcp://7.7.8.253:26658 -o json",
+	return clitestutil.ExecTestCLICmd(
+		clientCtx,
+		sacli.CmdShowSubaccount(),
+		[]string{
+			owner.String(),
+			fmt.Sprint(number),
+		},
 	)
-	var transferOut bytes.Buffer
-	var stdTransferErr bytes.Buffer
-	queryCmd.Stdout = &transferOut
-	queryCmd.Stderr = &stdTransferErr
-	err := queryCmd.Run()
-	if err != nil {
-		return nil, err
-	}
-	return &transferOut, nil
 }

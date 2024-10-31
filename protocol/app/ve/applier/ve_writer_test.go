@@ -608,7 +608,7 @@ func TestVEWriter(t *testing.T) {
 		}
 
 		_, extCommitInfoBz, err := vetesting.CreateSingleValidatorExtendedCommitInfo(
-			constants.AliceConsAddress,
+			constants.AliceConsAddressEddsa,
 			prices,
 			"",
 		)
@@ -671,7 +671,7 @@ func TestVEWriter(t *testing.T) {
 		}
 
 		_, extCommitInfoBz, err := vetesting.CreateSingleValidatorExtendedCommitInfo(
-			constants.AliceConsAddress,
+			constants.AliceConsAddressEddsa,
 			prices,
 			"",
 		)
@@ -839,7 +839,6 @@ func TestVEWriter(t *testing.T) {
 	})
 
 	t.Run("doesn't update prices for cached values", func(t *testing.T) {
-		fmt.Println("STARTED TEST")
 		ctx = ctx.WithBlockHeight(5)
 
 		price1Bz := big.NewInt(100).Bytes()
@@ -919,8 +918,6 @@ func TestVEWriter(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		fmt.Println("AFTER FIRST CALL")
-
 		spotPriceUpdates := veApplier.GetCachedSpotPrices()
 		pnlPriceUpdates := veApplier.GetCachedPnlPrices()
 
@@ -961,8 +958,6 @@ func TestVEWriter(t *testing.T) {
 			},
 		}, nil, nil).Once()
 
-		fmt.Println("MOCKED AGAIN. BEFORE SECOND CALL")
-
 		// Second call with the same round and height
 		err = veApplier.ApplyVE(
 			ctx,
@@ -970,8 +965,6 @@ func TestVEWriter(t *testing.T) {
 			true,
 		)
 		require.NoError(t, err)
-
-		fmt.Println("AFTER SECOND CALL")
 
 		spotPriceUpdates = veApplier.GetCachedSpotPrices()
 		pnlPriceUpdates = veApplier.GetCachedPnlPrices()
@@ -1439,10 +1432,6 @@ func TestVEWriter(t *testing.T) {
 			}
 		}
 		// clear cache
-		spotPriceUpdatesTest := veApplier.GetCachedSpotPrices()
-		pnlPriceUpdatesTest := veApplier.GetCachedPnlPrices()
-		fmt.Println("spotPriceUpdatesTest", spotPriceUpdatesTest)
-		fmt.Println("pnlPriceUpdatesTest", pnlPriceUpdatesTest)
 		rate1, ok := big.NewInt(0).SetString("123456789000000000000000000000", 10)
 		require.True(t, ok)
 

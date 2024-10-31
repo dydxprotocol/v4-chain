@@ -37,9 +37,25 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.crisis.v1beta1.MsgUpdateParams",
 		"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse",
 
+		// distribution
+		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
+		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse",
+		"/cosmos.distribution.v1beta1.MsgUpdateParams",
+		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse",
+
+		// gov
+		"/cosmos.gov.v1.MsgExecLegacyContent",
+		"/cosmos.gov.v1.MsgExecLegacyContentResponse",
+		"/cosmos.gov.v1.MsgUpdateParams",
+		"/cosmos.gov.v1.MsgUpdateParamsResponse",
+
 		// slashing
 		"/cosmos.slashing.v1beta1.MsgUpdateParams",
 		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse",
+
+		// staking
+		"/cosmos.staking.v1beta1.MsgUpdateParams",
+		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse",
 
 		// upgrade
 		"/cosmos.upgrade.v1beta1.MsgCancelUpgrade",
@@ -71,6 +87,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
 
+		// govplus
+		"/dydxprotocol.govplus.MsgSlashValidator",
+		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
+
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
@@ -91,6 +111,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.ratelimit.MsgSetLimitParams",
 		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse",
 
+		// rewards
+		"/dydxprotocol.rewards.MsgUpdateParams",
+		"/dydxprotocol.rewards.MsgUpdateParamsResponse",
+
 		// sending
 		"/dydxprotocol.sending.MsgSendFromModuleToAccount",
 		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse",
@@ -98,6 +122,12 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams",
 		"/dydxprotocol.stats.MsgUpdateParamsResponse",
+
+		// vest
+		"/dydxprotocol.vest.MsgDeleteVestEntry",
+		"/dydxprotocol.vest.MsgDeleteVestEntryResponse",
+		"/dydxprotocol.vest.MsgSetVestEntry",
+		"/dydxprotocol.vest.MsgSetVestEntryResponse",
 
 		// ibc
 		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe",

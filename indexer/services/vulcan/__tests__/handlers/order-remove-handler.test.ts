@@ -397,6 +397,11 @@ describe('OrderRemoveHandler', () => {
             updatedAt: removedOrder.updatedAt,
             updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
+            routerFeePpm: removedRedisOrder.order!.routerFeePpm.toString(),
+            routerFeeSubaccountOwner:
+              removedRedisOrder.order!.routerFeeSubaccountOwner,
+            routerFeeSubaccountNumber:
+              removedRedisOrder.order!.routerFeeSubaccountNumber.toString(),
             triggerPrice,
           },
         ],
@@ -538,6 +543,11 @@ describe('OrderRemoveHandler', () => {
             updatedAt: removedOrder.updatedAt,
             updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
+            routerFeePpm: removedRedisOrder.order!.routerFeePpm.toString(),
+            routerFeeSubaccountOwner:
+              removedRedisOrder.order!.routerFeeSubaccountOwner,
+            routerFeeSubaccountNumber:
+              removedRedisOrder.order!.routerFeeSubaccountNumber.toString(),
             triggerPrice,
           },
         ],
@@ -679,6 +689,11 @@ describe('OrderRemoveHandler', () => {
             updatedAt: removedOrder.updatedAt,
             updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
+            routerFeePpm: removedRedisOrder.order!.routerFeePpm.toString(),
+            routerFeeSubaccountOwner:
+              removedRedisOrder.order!.routerFeeSubaccountOwner,
+            routerFeeSubaccountNumber:
+              removedRedisOrder.order!.routerFeeSubaccountNumber.toString(),
             triggerPrice,
           }],
         };
@@ -821,6 +836,11 @@ describe('OrderRemoveHandler', () => {
             updatedAt: removedOrder.updatedAt,
             updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
+            routerFeePpm: removedRedisOrder.order!.routerFeePpm.toString(),
+            routerFeeSubaccountOwner:
+              removedRedisOrder.order!.routerFeeSubaccountOwner,
+            routerFeeSubaccountNumber:
+              removedRedisOrder.order!.routerFeeSubaccountNumber.toString(),
             triggerPrice,
           }],
         };
@@ -1131,6 +1151,9 @@ describe('OrderRemoveHandler', () => {
           updatedAt: removedOrder.updatedAt,
           updatedAtHeight: removedOrder.updatedAtHeight,
           clientMetadata: removedOrder.clientMetadata.toString(),
+          routerFeePpm: removedRedisOrder.order!.routerFeePpm.toString(),
+          routerFeeSubaccountOwner: removedRedisOrder.order!.routerFeeSubaccountOwner,
+          routerFeeSubaccountNumber: removedRedisOrder.order!.routerFeeSubaccountNumber.toString(),
           triggerPrice,
         }],
       };
@@ -1248,6 +1271,9 @@ describe('OrderRemoveHandler', () => {
           updatedAt: removedOrder.updatedAt,
           updatedAtHeight: removedOrder.updatedAtHeight,
           clientMetadata: removedOrder.clientMetadata.toString(),
+          routerFeePpm: removedRedisOrder.order!.routerFeePpm.toString(),
+          routerFeeSubaccountOwner: removedRedisOrder.order!.routerFeeSubaccountOwner,
+          routerFeeSubaccountNumber: removedRedisOrder.order!.routerFeeSubaccountNumber.toString(),
           triggerPrice,
         }],
       };
@@ -1373,6 +1399,9 @@ describe('OrderRemoveHandler', () => {
           updatedAt: removedOrder.updatedAt,
           updatedAtHeight: removedOrder.updatedAtHeight,
           clientMetadata: removedOrder.clientMetadata.toString(),
+          routerFeePpm: removedRedisOrder.order!.routerFeePpm.toString(),
+          routerFeeSubaccountOwner: removedRedisOrder.order!.routerFeeSubaccountOwner,
+          routerFeeSubaccountNumber: removedRedisOrder.order!.routerFeeSubaccountNumber.toString(),
           triggerPrice,
         }],
       };
@@ -1514,6 +1543,9 @@ describe('OrderRemoveHandler', () => {
           updatedAt: removedOrder.updatedAt,
           updatedAtHeight: removedOrder.updatedAtHeight,
           clientMetadata: removedOrder.clientMetadata.toString(),
+          routerFeePpm: removedRedisOrder.order!.routerFeePpm.toString(),
+          routerFeeSubaccountOwner: removedRedisOrder.order!.routerFeeSubaccountOwner,
+          routerFeeSubaccountNumber: removedRedisOrder.order!.routerFeeSubaccountNumber.toString(),
           triggerPrice,
         }],
       };
@@ -1651,6 +1683,11 @@ describe('OrderRemoveHandler', () => {
             updatedAt: removedOrder.updatedAt,
             updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: testConstants.defaultOrderGoodTilBlockTime.clientMetadata.toString(),
+            routerFeePpm: removedRedisOrder.order!.routerFeePpm.toString(),
+            routerFeeSubaccountOwner:
+              removedRedisOrder.order!.routerFeeSubaccountOwner,
+            routerFeeSubaccountNumber:
+              removedRedisOrder.order!.routerFeeSubaccountNumber.toString(),
           },
         ],
       };

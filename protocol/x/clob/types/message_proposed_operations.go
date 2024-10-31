@@ -191,7 +191,7 @@ func (validator *operationsQueueValidator) validateShortTermOrderPlacementOperat
 	// For orders with the same orderId placed within this block, verify replacement order priority.
 	if prevOrder, placedPreviously := validator.ordersPlacedInBlock[orderId]; placedPreviously {
 		// No duplicate order placements allowed.
-		if prevOrder.MustCmpReplacementOrder(&order) == 0 {
+		if prevOrder.IsIdenticalTo(&order) {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
 				"Duplicate Order %s",

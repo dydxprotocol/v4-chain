@@ -1181,6 +1181,8 @@ func (k Keeper) GetStatePosition(ctx sdk.Context, subaccountId satypes.Subaccoun
 	// corresponding to `perpetualId`, a position size of zero is returned.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	position, _ := subaccount.GetPerpetualPositionForId(perpetualId)
+
+	// This should panic if the position does not exist.
 	return position.GetBigQuantums()
 }
 

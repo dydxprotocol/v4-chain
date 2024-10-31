@@ -8,7 +8,6 @@ import (
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
 
 // ProcessClobKeeper defines the expected clob keeper used for `ProcessProposal`.
@@ -45,8 +44,4 @@ type ProcessPerpetualKeeper interface {
 		err error,
 	)
 	GetPerpetual(ctx sdk.Context, id uint32) (val perptypes.Perpetual, err error)
-}
-
-type ProcessConsumerKeeper interface {
-	GetCCValidator(ctx sdk.Context, addr []byte) (ccvtypes.CrossChainValidator, bool)
 }

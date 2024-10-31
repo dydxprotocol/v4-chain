@@ -209,35 +209,11 @@ clean:
 include sims.mk
 include ./mocks/Makefile
 
-GO_BIN_DIR := $(HOME)/go/bin
-SCRIPT_DIR := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-compile-e2e-setup:
-	cd $(SCRIPT_DIR)/ethos/ethos-chain/tests/e2e && go install
-	mv $(GO_BIN_DIR)/e2e $(SCRIPT_DIR)/ethos/ethos-chain/e2e-setup
-
-compile-testing-files: compile-e2e-setup
-	make -f ethos/ethos-chain/Makefile install-ics-cd
-
-e2e-setup: compile-testing-files
-	@echo "Setting up environment..."
-	@cd ethos/ethos-chain && ./e2e-setup -setup 
-	
-custom-e2e-setup: compile-testing-files
-	@echo "Setting up environment..."
-	echo "logging custom genesis"
-	echo $(GENESIS)
-	@cd ethos/ethos-chain && ./e2e-setup -setup true $(GENESIS)
-
-delete-anvil:
-	@echo "deleting anvil"
-	cd ethos/ethos-chain/tests/e2e/testnet-scripts && chmod +x delete-anvil.sh && ./delete-anvil.sh 
-
 remove-container:
 	@echo "removing containers"
 	cd ../e2e-testing && pnpm clean
 
 test: test-unit
-
 
 test-ci: test-unit-and-integration
 
@@ -256,12 +232,15 @@ test-unit-specific:
 	@echo "Running specific test: $(TESTNAME) in file: $(FILE)"
 	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' -timeout 20m -run "$(TESTNAME)" $(FILE)
 
+test-unit-file:
+	@echo "Running specific test: $(TESTNAME) in file: $(FILE)"
+	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' -timeout 20m $(FILE)
+
 test-unit-verbose:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -tags='test_ledger_mock $(build_tags)' -v -count=1 -failfast -cover ./...
 
 specific-unit: 
 	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' -p 1 -timeout 20m -run "TestGetNetCollateralAndMarginRequirements" ./x/subaccounts/keeper/...
-
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -race -tags='test_ledger_mock $(build_tags)' ./...
@@ -278,16 +257,11 @@ test-cover-slow:
 test-exchange-slow:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock exchange_tests $(build_tags)' -p 1 -count=1 github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/handler -run "TestQueryingActualExchanges"
 
-test-unit-and-integration: e2e-setup delete-anvil
-	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m ./...
-	$(MAKE) remove-container
+test-unit-and-integration:
+	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
 
 specific-test: 
-	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m -run "TestMaybeGetLiquidationOrder" ./x/clob/keeper/...
-
-
-test-unit-and-integration-linux: e2e-setup-linux 
-	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' -p 1 -timeout 80m ./x/ratelimit/client/cli/...
 
 benchmark:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='$(build_tags)' -bench=. ./...
@@ -439,9 +413,6 @@ localnet-init:
 	# Build the base image.
 	make localnet-build
 
-build-e2e-ethos-test:
-	cd ethos/ethos-chain && docker build -t cosmos-ics:local -f Dockerfile.ics ../
-	docker run -d --name interchain-security-instance --cap-add=NET_ADMIN --privileged cosmos-ics:local /bin/bash /testnet-scripts/beacon.sh
 localnet-compose-up:
 	@echo "Launching localnet at commit ${GIT_COMMIT_HASH}"
 	@docker build . -t local:dydxprotocol -f testing/testnet-local/Dockerfile --no-cache

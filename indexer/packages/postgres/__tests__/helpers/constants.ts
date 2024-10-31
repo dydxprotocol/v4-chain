@@ -313,6 +313,7 @@ export const defaultOrder: OrderCreateObject = {
   goodTilBlock: '100',
   orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
   clientMetadata: '0',
+  routerFeePpm: '0',
   updatedAt: '2023-01-22T00:00:00.000Z',
   updatedAtHeight: '1',
 };
@@ -332,6 +333,7 @@ export const isolatedMarketOrder: OrderCreateObject = {
   goodTilBlock: '100',
   orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
   clientMetadata: '0',
+  routerFeePpm: '0',
   updatedAt: '2023-01-22T00:00:00.000Z',
   updatedAtHeight: '1',
 };
@@ -343,6 +345,8 @@ export const defaultOrderGoodTilBlockTime: OrderCreateObject = {
   goodTilBlockTime: '2023-01-22T00:00:00.000Z',
   createdAtHeight: '1',
   orderFlags: ORDER_FLAG_LONG_TERM.toString(),
+  routerFeeSubaccountOwner: 'dydx1xxxxxx',
+  routerFeeSubaccountNumber: '0',
 };
 
 export const defaultConditionalOrder: OrderCreateObject = {
@@ -351,6 +355,8 @@ export const defaultConditionalOrder: OrderCreateObject = {
   clientId: '3',
   orderFlags: ORDER_FLAG_CONDITIONAL.toString(),
   triggerPrice: '19000',
+  routerFeeSubaccountOwner: 'dydx1xxxxxx',
+  routerFeeSubaccountNumber: '0',
 };
 
 export const defaultOrderId: string = OrderTable.uuid(
@@ -676,15 +682,15 @@ export const isolatedMarket2: MarketCreateObject = {
 export const defaultLiquidityTier: LiquidityTiersCreateObject = {
   id: 0,
   name: 'Large-Cap',
-  initialMarginPpm: '50000',  // 5%
-  maintenanceFractionPpm: '600000',  // 60%
+  initialMarginPpm: '50000', // 5%
+  maintenanceFractionPpm: '600000', // 60%
 };
 
 export const defaultLiquidityTier2: LiquidityTiersCreateObject = {
   id: 1,
   name: 'Mid-Cap',
-  initialMarginPpm: '100000',  // 10%
-  maintenanceFractionPpm: '500000',  // 50%
+  initialMarginPpm: '100000', // 10%
+  maintenanceFractionPpm: '500000', // 50%
   openInterestLowerCap: '0',
   openInterestUpperCap: '5000000',
 };

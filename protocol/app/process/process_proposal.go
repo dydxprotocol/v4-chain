@@ -40,6 +40,7 @@ var (
 func ProcessProposalHandler(
 	txConfig client.TxConfig,
 	clobKeeper ProcessClobKeeper,
+	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ve.PreBlockExecPricesKeeper,
 	ratelimitKeeper ve.VoteExtensionRateLimitKeeper,
@@ -153,7 +154,6 @@ func DecodeValidateAndCacheVE(
 	); err != nil {
 		return err
 	}
-
 	if err := veApplier.ApplyVE(ctx, request.Txs, true); err != nil {
 		ctx.Logger().Error("failed to cache VE prices", "err", err)
 	}

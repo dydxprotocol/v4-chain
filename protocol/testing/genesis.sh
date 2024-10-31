@@ -13,10 +13,13 @@ EIGHTEEN_ZEROS="$NINE_ZEROS$NINE_ZEROS"
 # Obtained from `authtypes.NewModuleAddress(subaccounttypes.ModuleName)`.
 SUBACCOUNTS_MODACC_ADDR="dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6"
 REWARDS_VESTER_ACCOUNT_ADDR="dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp"
+SDAIPOOL_ACCOUNT_ADDR="dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0"
 
 TDAI_DENOM="utdai"
 REWARD_TOKEN="adv4tnt"
 NATIVE_TOKEN="adv4tnt" # public testnet token
+SDAI_DENOM="ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8"
+DEFAULT_SDAIPOOL_BALANCE=2600000000000000000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
@@ -67,6 +70,8 @@ function edit_genesis() {
 		# Default to 200 million full coins.
 		REWARDS_VESTER_ACCOUNT_BALANCE="200000000$EIGHTEEN_ZEROS"
 	fi
+
+	echo "$NATIVE_TOKEN"
 	
 	# Genesis time
 	dasel put -t string -f "$GENESIS" '.genesis_time' -v "$GENESIS_TIME"
@@ -74,9 +79,14 @@ function edit_genesis() {
 	# Consensus params
 	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '4194304'
 	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_gas' -v '-1'
+	dasel put -t string -f "$GENESIS" '.consensus_params.abci.vote_extensions_enable_height' -v '1'
+	dasel put -t string -f "$GENESIS" '.consensus.params.abci.vote_extensions_enable_height' -v '1'
 
 	# Update crisis module.
 	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
+
+	# Enable vote extensions
+	dasel put -t string -f "$GENESIS" '.consensus.params.abci.vote_extensions_enable_height' -v '1'
 
 	# Update gov module.
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
@@ -752,7 +762,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].id' -v '13'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].exponent' -v '-9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].spot_price' -v '5852293335'          # $5.852 = 1 UNI.
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].pnl_price' -v '5852293356'          # $5.852 = 1 UNI.
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].pnl_price' -v '5852293335'          # $5.852 = 1 UNI.
 	# UNI Exchange Config
 	uni_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/uni_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[13].exchange_config_json' -v "$uni_exchange_config_json"
@@ -1131,6 +1141,13 @@ function edit_genesis() {
 
 	fi
 
+	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${SDAIPOOL_ACCOUNT_ADDR}"
+	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${SDAI_DENOM}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "$DEFAULT_SDAIPOOL_BALANCE"
+	next_bank_idx=$(($next_bank_idx+1))
+
 	# Set denom metadata
 	set_denom_metadata "$NATIVE_TOKEN" "$NATIVE_TOKEN_WHOLE_COIN" "$COIN_NAME"
 
@@ -1507,9 +1524,12 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[5].limit' -v '200'
 	dasel put -t string -f "$GENESIS" '.app_state.clob.equity_tier_limit_config.stateful_order_equity_tiers.[5].usd_tnc_required' -v '100000000000'
 
+	# Staking
+	# Update staking module bond denom.
+	dasel put -t string -f "$GENESIS" '.app_state.staking.params.bond_denom' -v "$NATIVE_TOKEN"
 
-  # Fee Tiers
-  # Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
+	# Fee Tiers
+	# Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.next_delayed_message_id' -v '1'
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
@@ -1618,7 +1638,8 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().id' -v "${TEST_USD_MARKET_ID}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().exponent' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().price' -v '10000000'          # $100 = 1 TEST.
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().spot_price' -v '10000000'          # $100 = 1 TEST.
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.last().pnl_price' -v '10000000'  
 	# TEST Exchange Config
 	test_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/test_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.last().exchange_config_json' -v "$test_exchange_config_json"

@@ -2,6 +2,7 @@ package ratelimit_test
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 	"testing"
@@ -11,11 +12,12 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	"github.com/cometbft/cometbft/crypto/ed25519"
+	cometbfted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
@@ -34,7 +36,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 )
 
 var (
@@ -60,17 +61,49 @@ func TestKeeperTestSuite(t *testing.T) {
 	testifysuite.Run(t, new(KeeperTestSuite))
 }
 
-func createSignersByAddress(t *testing.T, val *ccvtypes.CrossChainValidator) (string, cmttypes.PrivValidator, *cmttypes.Validator) {
-	consAddress := sdktypes.ConsAddress(val.Address)
-	privKey := constants.GetPrivKeyFromConsAddress(consAddress)
-	edPriv := ed25519.PrivKey(privKey.Bytes())
+// func createSignersByAddressSecp256k1(t *testing.T, val *stakingtypes.Validator) (string, cmttypes.PrivValidator, *cmttypes.Validator) {
+// 	originalPrivKey := constants.GetPrivKeyFromValidatorAddressString(val.OperatorAddress)
+
+// 	// Ensure the original private key is of type Secp256k1
+// 	secpPrivKey, ok := originalPrivKey.(*secp256k1.PrivKey)
+// 	if !ok {
+// 		panic(fmt.Sprintf("Unexpected private key type: %T", originalPrivKey))
+// 	}
+
+// 	// Use the Secp256k1 private key directly
+// 	priv := cmttypes.MockPV{
+// 		PrivKey: secp256k1comet.PrivKey(secpPrivKey.Bytes()),
+// 	}
+
+// 	pubKey, err := priv.GetPubKey()
+// 	require.NoError(t, err)
+// 	validator := cmttypes.NewValidator(pubKey, 500000)
+
+// 	return pubKey.Address().String(), priv, validator
+// }
+
+func createSignersByAddressEddsa(t *testing.T, val *stakingtypes.Validator) (string, cmttypes.PrivValidator, *cmttypes.Validator) {
+
+	// Retrieve the EdDSA private key from a map or function
+	originalPrivKey := constants.GetEddsaPrivKeyFromValidatorAddressString(val.OperatorAddress)
+
+	// Ensure the public key is of the correct type
+	pubKey := originalPrivKey.PubKey()
+	ed25519PubKey, ok := pubKey.(cometbfted25519.PubKey)
+	if !ok {
+		panic(fmt.Sprintf("Unexpected public key type: %T", pubKey))
+	}
+
+	// Create a validator using the public key
+	validator := cmttypes.NewValidator(ed25519PubKey, 500000)
+
+	// Wrap the private key if necessary
 	priv := cmttypes.MockPV{
-		PrivKey: edPriv,
+		PrivKey: originalPrivKey,
 	}
 
 	pubKey, err := priv.GetPubKey()
 	require.NoError(t, err)
-	validator := cmttypes.NewValidator(pubKey, 500)
 
 	return pubKey.Address().String(), priv, validator
 }
@@ -111,7 +144,15 @@ func setupChainForIBC(
 
 	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cmttypes.GenesisDoc) {
 		// for IBC testing, disable vote extensions
-		genesis = testapp.NoVeGenesis()
+		if chainID == "localdydxprotocol-1" {
+			genesis = testapp.NoVeGenesisIBCTest1()
+		} else if chainID == "localdydxprotocol-2" {
+			genesis = testapp.NoVeGenesisIBCTest2()
+		} else if chainID == "localdydxprotocol-3" {
+			genesis = testapp.NoVeGenesisIBCTest3()
+		} else {
+			genesis = testapp.NoVeGenesis()
+		}
 		genesis.ChainID = chainID // Update chain_id to chainID
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
@@ -215,12 +256,15 @@ func setupChainForIBC(
 
 	txConfig := tApp.App.GetTxConfig()
 
-	// convert ccv validators to standard validators
-	vals := tApp.App.ConsumerKeeper.GetAllCCValidator(ctx)
+	// convert cosmos sdk validators to cmt validators
+	vals, err := tApp.App.StakingKeeper.GetBondedValidatorsByPower(ctx)
+	if err != nil {
+		panic(err)
+	}
 	validators := make([]*cmttypes.Validator, len(vals))
 	signers := make(map[string]cmttypes.PrivValidator, len(validators))
 	for i, val := range vals {
-		address, priv, validator := createSignersByAddress(t, &val)
+		address, priv, validator := createSignersByAddressEddsa(t, &val)
 		validators[i] = validator
 		signers[address] = priv
 	}

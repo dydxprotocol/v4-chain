@@ -45,9 +45,11 @@ import (
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	rewardstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	stattypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	vesttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/mempool"
@@ -187,6 +189,36 @@ func NoVeGenesis() (genesis types.GenesisDoc) {
 	return genesis
 }
 
+func NoVeGenesisIBCTest1() (genesis types.GenesisDoc) {
+	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+	err := tmjson.Unmarshal([]byte(constants.GenesisStateNoVeIBC1), &genesis)
+	if err != nil {
+		panic(err)
+	}
+	genesis.GenesisTime = time.Unix(0, 1)
+	return genesis
+}
+
+func NoVeGenesisIBCTest2() (genesis types.GenesisDoc) {
+	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+	err := tmjson.Unmarshal([]byte(constants.GenesisStateNoVeIBC2), &genesis)
+	if err != nil {
+		panic(err)
+	}
+	genesis.GenesisTime = time.Unix(0, 1)
+	return genesis
+}
+
+func NoVeGenesisIBCTest3() (genesis types.GenesisDoc) {
+	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+	err := tmjson.Unmarshal([]byte(constants.GenesisStateNoVeIBC3), &genesis)
+	if err != nil {
+		panic(err)
+	}
+	genesis.GenesisTime = time.Unix(0, 1)
+	return genesis
+}
+
 // GenesisStates is a type constraint for all well known genesis state types.
 type GenesisStates interface {
 	authtypes.GenesisState |
@@ -194,6 +226,8 @@ type GenesisStates interface {
 		perptypes.GenesisState |
 		feetiertypes.GenesisState |
 		stattypes.GenesisState |
+		vesttypes.GenesisState |
+		rewardstypes.GenesisState |
 		blocktimetypes.GenesisState |
 		clobtypes.GenesisState |
 		pricestypes.GenesisState |
@@ -234,6 +268,10 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = feetiertypes.ModuleName
 	case pricestypes.GenesisState:
 		moduleName = pricestypes.ModuleName
+	case rewardstypes.GenesisState:
+		moduleName = rewardstypes.ModuleName
+	case vesttypes.GenesisState:
+		moduleName = vesttypes.ModuleName
 	case stattypes.GenesisState:
 		moduleName = stattypes.ModuleName
 	case satypes.GenesisState:
@@ -713,7 +751,18 @@ func (tApp *TestApp) AdvanceToBlock(
 		deliverTxs := options.DeliverTxsOverride
 
 		if deliverTxs == nil {
-			// Prepare the proposal and process it.
+			validators, err := tApp.App.StakingKeeper.GetBondedValidatorsByPower(tApp.App.NewContextLegacy(true, tApp.header))
+			if err != nil {
+				tApp.builder.t.Fatalf("Failed to get bonded validators: %v", err)
+			}
+
+			localLastCommit := vetestutil.GetEmptyLocalLastCommit(
+				validators,
+				tApp.App.LastBlockHeight(),
+				0,
+				"localdydxprotocol",
+			)
+
 			prepareRequest := abcitypes.RequestPrepareProposal{
 				Txs:                tApp.passingCheckTxs,
 				MaxTxBytes:         math.MaxInt64,
@@ -721,12 +770,7 @@ func (tApp *TestApp) AdvanceToBlock(
 				Time:               tApp.header.Time,
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
-				LocalLastCommit: vetestutil.GetEmptyLocalLastCommit(
-					tApp.App.ConsumerKeeper.GetAllCCValidator(tApp.App.NewContextLegacy(true, tApp.header)),
-					tApp.App.LastBlockHeight(),
-					0,
-					"localdydxprotocol",
-				),
+				LocalLastCommit:    localLastCommit,
 			}
 			if options.RequestPrepareProposalTxsOverride != nil {
 				prepareRequest.Txs = options.RequestPrepareProposalTxsOverride
@@ -758,6 +802,8 @@ func (tApp *TestApp) AdvanceToBlock(
 				prepareResponse.Txs = options.RequestProcessProposalTxsOverride
 			}
 
+			proposedLastCommit := vetestutil.GetEmptyProposedLastCommit()
+
 			processRequest := abcitypes.RequestProcessProposal{
 				Txs:                prepareResponse.Txs,
 				Hash:               tApp.header.AppHash,
@@ -765,7 +811,7 @@ func (tApp *TestApp) AdvanceToBlock(
 				Time:               tApp.header.Time,
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
-				ProposedLastCommit: vetestutil.GetEmptyProposedLastCommit(),
+				ProposedLastCommit: proposedLastCommit,
 			}
 			processResponse, processErr := tApp.App.ProcessProposal(&processRequest)
 
@@ -1154,6 +1200,10 @@ func (tApp *TestApp) panicIfChainIsHalted() {
 func (tApp *TestApp) PrepareProposal() (*abcitypes.ResponsePrepareProposal, error) {
 	tApp.mtx.RLock()
 	defer tApp.mtx.RUnlock()
+	validators, err := tApp.App.StakingKeeper.GetBondedValidatorsByPower(tApp.App.NewContextLegacy(true, tApp.header))
+	if err != nil {
+		return nil, err
+	}
 	return tApp.App.PrepareProposal(&abcitypes.RequestPrepareProposal{
 		Txs:                tApp.passingCheckTxs,
 		MaxTxBytes:         math.MaxInt64,
@@ -1162,7 +1212,7 @@ func (tApp *TestApp) PrepareProposal() (*abcitypes.ResponsePrepareProposal, erro
 		NextValidatorsHash: tApp.header.NextValidatorsHash,
 		ProposerAddress:    tApp.header.ProposerAddress,
 		LocalLastCommit: vetestutil.GetEmptyLocalLastCommit(
-			tApp.App.ConsumerKeeper.GetAllCCValidator(tApp.App.NewContextLegacy(true, tApp.header)),
+			validators,
 			tApp.App.LastBlockHeight()-1, // we are preparing proposal in the context of the previous block
 			0,
 			"localdydxprotocol",

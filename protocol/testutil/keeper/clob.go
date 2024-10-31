@@ -147,16 +147,16 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			true,
 		)
 
-		mCCVStore := &mocks.CCValidatorStore{}
+		mValStore := &mocks.ValidatorStore{}
 		pricesAggregatorFn := voteweighted.MedianPrices(
 			log.NewNopLogger(),
-			mCCVStore,
+			mValStore,
 			voteweighted.DefaultPowerThreshold,
 		)
 
 		conversionRateAggregatorFn := voteweighted.MedianConversionRate(
 			log.NewNopLogger(),
-			mCCVStore,
+			mValStore,
 			voteweighted.DefaultPowerThreshold,
 		)
 

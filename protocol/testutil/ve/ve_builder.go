@@ -7,16 +7,17 @@ import (
 
 	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	vecodec "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/codec"
+	voteweighted "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	vetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	cometproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
-	ccvkeeper "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/keeper"
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type SignedVEInfo struct {
@@ -66,17 +67,20 @@ func CreateSignedExtendedCommitInfo(
 }
 
 func GetEmptyLocalLastCommit(
-	validators []ccvtypes.CrossChainValidator,
+	validators []stakingtypes.Validator,
 	height int64,
 	round int64,
 	chainId string,
 ) cometabci.ExtendedCommitInfo {
 	var votes []cometabci.ExtendedVoteInfo
 	for _, validator := range validators {
+		valConsAddr := constants.GetConsAddressFromStringValidatorAddress(validator.OperatorAddress)
+		votingPower := voteweighted.GetPowerFromBondedTokens(validator.Tokens)
+
 		ve, err := CreateSignedExtendedVoteInfo(
 			SignedVEInfo{
-				Val:                sdk.ConsAddress(validator.Address),
-				Power:              validator.GetPower(),
+				Val:                valConsAddr,
+				Power:              votingPower,
 				Prices:             []vetypes.PricePair{},
 				SDaiConversionRate: "",
 				Height:             height,
@@ -192,22 +196,29 @@ func GetEmptyProposedLastCommit() cometabci.CommitInfo {
 		Votes: []cometabci.VoteInfo{
 			{
 				Validator: cometabci.Validator{
-					Address: constants.CarlEthosConsAddress,
-					Power:   500,
+					Address: constants.AliceConsAddress,
+					Power:   500000,
 				},
 				BlockIdFlag: cometproto.BlockIDFlagCommit,
 			},
 			{
 				Validator: cometabci.Validator{
-					Address: constants.AliceEthosConsAddress,
-					Power:   500,
+					Address: constants.CarlConsAddress,
+					Power:   500000,
 				},
 				BlockIdFlag: cometproto.BlockIDFlagCommit,
 			},
 			{
 				Validator: cometabci.Validator{
-					Address: constants.BobEthosConsAddress,
-					Power:   500,
+					Address: constants.DaveConsAddress,
+					Power:   500000,
+				},
+				BlockIdFlag: cometproto.BlockIDFlagCommit,
+			},
+			{
+				Validator: cometabci.Validator{
+					Address: constants.BobConsAddress,
+					Power:   500000,
 				},
 				BlockIdFlag: cometproto.BlockIDFlagCommit,
 			},
@@ -273,7 +284,7 @@ func marshalDelimited(msg proto.Message) ([]byte, error) {
 }
 
 func GetInjectedExtendedCommitInfoForTestApp(
-	consumerKeeper *ccvkeeper.Keeper,
+	stakingKeeper *stakingkeeper.Keeper,
 	ctx sdk.Context,
 	prices map[uint32]ve.VEPricePair,
 	sdaiConversionRate string,
@@ -298,13 +309,18 @@ func GetInjectedExtendedCommitInfoForTestApp(
 		}
 	}
 
-	validators := consumerKeeper.GetAllCCValidator(ctx)
+	validators, err := stakingKeeper.GetBondedValidatorsByPower(ctx)
+	if err != nil {
+		return cometabci.ExtendedCommitInfo{}, nil, fmt.Errorf("failed to get bonded validators: %w", err)
+	}
 
 	var veSignedInfos []SignedVEInfo
-	for _, v := range validators {
+	for _, validator := range validators {
+		valConsAddr := constants.GetConsAddressFromStringValidatorAddress(validator.OperatorAddress)
+
 		veSignedInfos = append(veSignedInfos, SignedVEInfo{
-			Val:                sdk.ConsAddress(v.Address),
-			Power:              v.GetPower(),
+			Val:                valConsAddr,
+			Power:              voteweighted.GetPowerFromBondedTokens(validator.Tokens),
 			Prices:             pricesBz,
 			SDaiConversionRate: sdaiConversionRate,
 			Height:             height,

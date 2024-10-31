@@ -1047,7 +1047,7 @@ func TestConditionalOrder(t *testing.T) {
 			deliverTxsOverride = append(deliverTxsOverride, constants.EmptyMsgAddPremiumVotesTxBytes)
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.priceUpdateForFirstBlock,
 				"",
@@ -1077,7 +1077,7 @@ func TestConditionalOrder(t *testing.T) {
 			}
 
 			extCommitInfo, _, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.priceUpdateForSecondBlock,
 				"",
@@ -1107,7 +1107,7 @@ func TestConditionalOrder(t *testing.T) {
 			}
 
 			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.priceUpdateForSecondBlock,
 				"",
@@ -2432,7 +2432,7 @@ func TestConditionalOrderCancellation(t *testing.T) {
 
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -2471,7 +2471,7 @@ func TestConditionalOrderCancellation(t *testing.T) {
 
 			// // Add the price update.
 			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.priceUpdate,
 				"",
@@ -2764,7 +2764,7 @@ func TestConditionalOrderExpiration(t *testing.T) {
 			rate := sdaiservertypes.TestSDAIEventRequest.ConversionRate
 
 			_, extCommitBz, err := vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				map[uint32]ve.VEPricePair{},
 				rate,
@@ -2802,7 +2802,7 @@ func TestConditionalOrderExpiration(t *testing.T) {
 
 			// Add the price update.
 			_, extCommitBz, err = vetesting.GetInjectedExtendedCommitInfoForTestApp(
-				&tApp.App.ConsumerKeeper,
+				tApp.App.StakingKeeper,
 				ctx,
 				tc.firstPriceUpdate,
 				"",

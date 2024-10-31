@@ -53,6 +53,23 @@ var (
 		"/cosmos.crypto.secp256k1.PubKey":           {},
 		"/cosmos.crypto.secp256r1.PubKey":           {},
 
+		// distribution
+		"/cosmos.distribution.v1beta1.CommunityPoolSpendProposal":             {},
+		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend":                  {},
+		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse":          {},
+		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool":         {},
+		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse": {},
+		"/cosmos.distribution.v1beta1.MsgFundCommunityPool":                   {},
+		"/cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse":           {},
+		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":                  {},
+		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse":          {},
+		"/cosmos.distribution.v1beta1.MsgUpdateParams":                        {},
+		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse":                {},
+		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":             {},
+		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse":     {},
+		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission":         {},
+		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse": {},
+
 		// evidence
 		"/cosmos.evidence.v1beta1.Equivocation":              {},
 		"/cosmos.evidence.v1beta1.MsgSubmitEvidence":         {},
@@ -69,6 +86,31 @@ var (
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowanceResponse": {},
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance":          {},
 
+		// gov
+		"/cosmos.gov.v1.MsgCancelProposal":              {},
+		"/cosmos.gov.v1.MsgCancelProposalResponse":      {},
+		"/cosmos.gov.v1.MsgDeposit":                     {},
+		"/cosmos.gov.v1.MsgDepositResponse":             {},
+		"/cosmos.gov.v1.MsgExecLegacyContent":           {},
+		"/cosmos.gov.v1.MsgExecLegacyContentResponse":   {},
+		"/cosmos.gov.v1.MsgSubmitProposal":              {},
+		"/cosmos.gov.v1.MsgSubmitProposalResponse":      {},
+		"/cosmos.gov.v1.MsgUpdateParams":                {},
+		"/cosmos.gov.v1.MsgUpdateParamsResponse":        {},
+		"/cosmos.gov.v1.MsgVote":                        {},
+		"/cosmos.gov.v1.MsgVoteResponse":                {},
+		"/cosmos.gov.v1.MsgVoteWeighted":                {},
+		"/cosmos.gov.v1.MsgVoteWeightedResponse":        {},
+		"/cosmos.gov.v1beta1.MsgDeposit":                {},
+		"/cosmos.gov.v1beta1.MsgDepositResponse":        {},
+		"/cosmos.gov.v1beta1.MsgSubmitProposal":         {},
+		"/cosmos.gov.v1beta1.MsgSubmitProposalResponse": {},
+		"/cosmos.gov.v1beta1.MsgVote":                   {},
+		"/cosmos.gov.v1beta1.MsgVoteResponse":           {},
+		"/cosmos.gov.v1beta1.MsgVoteWeighted":           {},
+		"/cosmos.gov.v1beta1.MsgVoteWeightedResponse":   {},
+		"/cosmos.gov.v1beta1.TextProposal":              {},
+
 		// params
 		"/cosmos.params.v1beta1.ParameterChangeProposal": {},
 
@@ -77,6 +119,23 @@ var (
 		"/cosmos.slashing.v1beta1.MsgUnjailResponse":       {},
 		"/cosmos.slashing.v1beta1.MsgUpdateParams":         {},
 		"/cosmos.slashing.v1beta1.MsgUpdateParamsResponse": {},
+
+		// staking
+		"/cosmos.staking.v1beta1.MsgBeginRedelegate":                   {},
+		"/cosmos.staking.v1beta1.MsgBeginRedelegateResponse":           {},
+		"/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation":         {},
+		"/cosmos.staking.v1beta1.MsgCancelUnbondingDelegationResponse": {},
+		"/cosmos.staking.v1beta1.MsgCreateValidator":                   {},
+		"/cosmos.staking.v1beta1.MsgCreateValidatorResponse":           {},
+		"/cosmos.staking.v1beta1.MsgDelegate":                          {},
+		"/cosmos.staking.v1beta1.MsgDelegateResponse":                  {},
+		"/cosmos.staking.v1beta1.MsgEditValidator":                     {},
+		"/cosmos.staking.v1beta1.MsgEditValidatorResponse":             {},
+		"/cosmos.staking.v1beta1.MsgUndelegate":                        {},
+		"/cosmos.staking.v1beta1.MsgUndelegateResponse":                {},
+		"/cosmos.staking.v1beta1.MsgUpdateParams":                      {},
+		"/cosmos.staking.v1beta1.MsgUpdateParamsResponse":              {},
+		"/cosmos.staking.v1beta1.StakeAuthorization":                   {},
 
 		// tx
 		"/cosmos.tx.v1beta1.Tx": {},
@@ -121,6 +180,10 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         {},
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
 
+		// govplus
+		"/dydxprotocol.govplus.MsgSlashValidator":         {},
+		"/dydxprotocol.govplus.MsgSlashValidatorResponse": {},
+
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":       {},
@@ -156,6 +219,16 @@ var (
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         {},
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
+
+		// vest
+		"/dydxprotocol.vest.MsgSetVestEntry":            {},
+		"/dydxprotocol.vest.MsgSetVestEntryResponse":    {},
+		"/dydxprotocol.vest.MsgDeleteVestEntry":         {},
+		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": {},
+
+		// rewards
+		"/dydxprotocol.rewards.MsgUpdateParams":         {},
+		"/dydxprotocol.rewards.MsgUpdateParamsResponse": {},
 
 		// subaccounts
 		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccount":         {},

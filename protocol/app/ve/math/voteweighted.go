@@ -1,20 +1,25 @@
 package voteweighted
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 	"sort"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	constants "github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type CCValidatorStore interface {
-	GetAllCCValidator(ctx sdk.Context) []types.CrossChainValidator
-	GetCCValidator(ctx sdk.Context, addr []byte) (types.CrossChainValidator, bool)
+type ValidatorStore interface {
+	ValidatorByConsAddr(ctx context.Context, addr sdk.ConsAddress) (stakingtypes.ValidatorI, error)
+	TotalBondedTokens(ctx context.Context) (math.Int, error)
+	GetPubKeyByConsAddr(context.Context, sdk.ConsAddress) (cmtprotocrypto.PublicKey, error)
+	GetValidator(ctx context.Context, valAddr sdk.ValAddress) (stakingtypes.Validator, error)
+	GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 }
 
 type AggregatorPricePair struct {
@@ -41,7 +46,7 @@ type (
 
 	// VoteWeightPrice defines a price update that includes the stake weight of the validator.
 	PricePerValidator struct {
-		VoteWeight int64
+		VoteWeight math.Int
 		Price      *big.Int
 	}
 
@@ -53,7 +58,7 @@ type (
 
 func MedianPrices(
 	logger log.Logger,
-	validatorStore CCValidatorStore,
+	validatorStore ValidatorStore,
 	threshold *big.Rat,
 ) PricesAggregateFn {
 	return func(
@@ -68,7 +73,13 @@ func MedianPrices(
 			vePricesPerValidator,
 		)
 
-		totalPower := GetTotalPower(ctx, validatorStore)
+		totalBondedTokens, err := validatorStore.TotalBondedTokens(ctx)
+		if err != nil {
+			// This should never error.
+			panic(err)
+		}
+
+		totalPower := math.NewInt(GetPowerFromBondedTokens(totalBondedTokens))
 
 		return computeAggregatedPricesForAllMarkets(
 			logger,
@@ -82,20 +93,22 @@ func MedianPrices(
 func getMarketToPriceInfoFromVotes(
 	ctx sdk.Context,
 	logger log.Logger,
-	validatorStore CCValidatorStore,
+	validatorStore ValidatorStore,
 	vePricesPerValidator map[string]map[string]AggregatorPricePair,
 ) map[string]PriceInfo {
 
 	allMarketsPriceInfo := make(map[string]PriceInfo)
 
 	for validatorAddr, validatorPrices := range vePricesPerValidator {
+
 		validatorPower, err := getValidatorPowerByAddress(ctx, validatorStore, validatorAddr)
 		if err != nil {
-			logger.Info(
-				"failed to get validator power, skipping",
+			logger.Error(
+				"failed to retrieve validator from store; skipping validator prices",
 				"validator_address", validatorAddr,
 				"err", err,
 			)
+
 			continue
 		}
 
@@ -135,7 +148,7 @@ func getMarketToPriceInfoFromVotes(
 				},
 			)
 
-			currMarketPriceInfo.TotalWeight = currMarketPriceInfo.TotalWeight.Add(math.NewInt(validatorPower))
+			currMarketPriceInfo.TotalWeight = currMarketPriceInfo.TotalWeight.Add(validatorPower)
 			allMarketsPriceInfo[market] = currMarketPriceInfo
 		}
 	}
@@ -202,7 +215,7 @@ func computeAggregatedPriceForMarket(
 
 func MedianConversionRate(
 	logger log.Logger,
-	validatorStore CCValidatorStore,
+	validatorStore ValidatorStore,
 	threshold *big.Rat,
 ) ConversionRateAggregateFn {
 	return func(
@@ -216,7 +229,13 @@ func MedianConversionRate(
 			veConversionRatesPerValidator,
 		)
 
-		totalPower := GetTotalPower(ctx, validatorStore)
+		totalBondedTokens, err := validatorStore.TotalBondedTokens(ctx)
+		if err != nil {
+			// This should never error.
+			panic(err)
+		}
+
+		totalPower := math.NewInt(GetPowerFromBondedTokens(totalBondedTokens))
 
 		return computeFinalConversionRate(logger, conversionRateInfo, threshold, totalPower)
 	}
@@ -225,7 +244,7 @@ func MedianConversionRate(
 func getConverstionRateInfoFromVotes(
 	ctx sdk.Context,
 	logger log.Logger,
-	validatorStore CCValidatorStore,
+	validatorStore ValidatorStore,
 	veConversionRatesPerValidator map[string]*big.Int,
 ) ConverstionRateInfo {
 
@@ -265,7 +284,7 @@ func getConverstionRateInfoFromVotes(
 			},
 		)
 
-		conversionRateInfo.TotalWeight = conversionRateInfo.TotalWeight.Add(math.NewInt(validatorPower))
+		conversionRateInfo.TotalWeight = conversionRateInfo.TotalWeight.Add(validatorPower)
 	}
 
 	return conversionRateInfo
@@ -319,7 +338,7 @@ func ComputeMedian(prices []PricePerValidator, totalWeight math.Int) *big.Int {
 
 	sum := math.ZeroInt()
 	for i, price := range prices {
-		sum = sum.Add(math.NewInt(price.VoteWeight))
+		sum = sum.Add(price.VoteWeight)
 
 		if sum.GT(halfWeight) || (isEven && sum.Equal(halfWeight)) {
 			if isEven && sum.Equal(halfWeight) && i+1 < len(prices) {
@@ -337,19 +356,28 @@ func ComputeMedian(prices []PricePerValidator, totalWeight math.Int) *big.Int {
 
 func getValidatorPowerByAddress(
 	ctx sdk.Context,
-	validatorStore CCValidatorStore,
+	validatorStore ValidatorStore,
 	validatorAddr string,
-) (int64, error) {
-	addr, err := sdk.ConsAddressFromBech32(validatorAddr)
+) (math.Int, error) {
+	address, err := sdk.ConsAddressFromBech32(validatorAddr)
 	if err != nil {
-		return 0, err
+		fmt.Println("err ConsAddressFromBech32", err)
+		return math.NewInt(0), err
 	}
 
-	validator, found := validatorStore.GetCCValidator(ctx, addr.Bytes())
-	if !found {
-		return 0, fmt.Errorf("validator not found")
+	validator, err := validatorStore.ValidatorByConsAddr(ctx, address)
+
+	if err != nil {
+		return math.NewInt(0), err
 	}
 
-	validatorPower := validator.GetPower()
-	return validatorPower, nil
+	validatorBondedTokens := validator.GetBondedTokens()
+	return validatorBondedTokens, nil
+}
+
+func GetPowerFromBondedTokens(
+	tokens math.Int,
+) int64 {
+	powerReduction := constants.PowerReduction
+	return sdk.TokensToConsensusPower(tokens, powerReduction)
 }

@@ -6,60 +6,79 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 )
 
 // Prevent strconv unused error
 var _ = strconv.IntSize
 
-func TestQueryParams(t *testing.T) {
+func setupNetwork(
+	t *testing.T,
+) (
+	*network.Network,
+	client.Context,
+) {
+	t.Helper()
 	cfg := network.DefaultConfig(nil)
 
-	statsQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
-		" query stats get-params"
-	data, _, err := network.QueryCustomNetwork(statsQuery)
+	// Init state.
+	state := types.GenesisState{}
+	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
+
+	state = *types.DefaultGenesis()
+
+	buf, err := cfg.Codec.MarshalJSON(&state)
+	require.NoError(t, err)
+	cfg.GenesisState[types.ModuleName] = buf
+	net := network.New(t, cfg)
+	ctx := net.Validators[0].ClientCtx
+
+	return net, ctx
+}
+
+func TestQueryParams(t *testing.T) {
+	net, ctx := setupNetwork(t)
+
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryParams(), []string{})
 
 	require.NoError(t, err)
 	var resp types.QueryParamsResponse
-	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }
 
 func TestQueryStatsMetadata(t *testing.T) {
-	cfg := network.DefaultConfig(nil)
+	net, ctx := setupNetwork(t)
 
-	statsQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
-		" query stats get-stats-metadata"
-	data, _, err := network.QueryCustomNetwork(statsQuery)
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryStatsMetadata(), []string{})
 
 	require.NoError(t, err)
 	var resp types.QueryStatsMetadataResponse
-	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 }
 
 func TestQueryGlobalStats(t *testing.T) {
-	cfg := network.DefaultConfig(nil)
+	net, ctx := setupNetwork(t)
 
-	statsQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
-		" query stats get-global-stats"
-	data, _, err := network.QueryCustomNetwork(statsQuery)
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryGlobalStats(), []string{})
 
 	require.NoError(t, err)
 	var resp types.QueryGlobalStatsResponse
-	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 }
 
 func TestQueryUserStats(t *testing.T) {
-	cfg := network.DefaultConfig(nil)
+	net, ctx := setupNetwork(t)
 
-	statsQuery := "docker exec interchain-security-instance-setup interchain-security-cd" +
-		" query stats get-user-stats alice"
-	data, _, err := network.QueryCustomNetwork(statsQuery)
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryUserStats(), []string{"alice"})
 
 	require.NoError(t, err)
 	var resp types.QueryUserStatsResponse
-	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 }

@@ -3,22 +3,26 @@
 package cli_test
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 )
 
 func TestParams(t *testing.T) {
-	cfg := network.DefaultConfig(nil)
+	net, _, _ := networkWithLiquidityTierAndPerpetualObjects(t, 2, 2)
+	ctx := net.Validators[0].ClientCtx
 
-	perpQuery := "docker exec interchain-security-instance-setup interchain-security-cd query perpetuals get-params"
-	data, _, err := network.QueryCustomNetwork(perpQuery)
+	common := []string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryParams(), common)
 	require.NoError(t, err)
 
 	var resp types.QueryParamsResponse
-	require.NoError(t, cfg.Codec.UnmarshalJSON(data, &resp))
+	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
 }

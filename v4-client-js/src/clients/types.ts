@@ -49,6 +49,9 @@ export interface IPlaceOrder extends IBasicOrder {
   clientMetadata: number;
   conditionType?: Order_ConditionType,
   conditionalOrderTriggerSubticks?: Long,
+  routerFeePpm?: number,
+  routerFeeSubaccountOwner?: string,
+  routerFeeSubaccountNumber?: number,
 }
 
 export interface ICancelOrder extends IBasicOrder {

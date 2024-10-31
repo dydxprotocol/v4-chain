@@ -17,12 +17,15 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
+	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/client/testutil"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/suite"
+
+	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 )
 
 var (
@@ -76,6 +79,7 @@ type PricesIntegrationTestSuite struct {
 
 	validatorAddress sdk.AccAddress
 	cfg              network.Config
+	network          *network.Network
 }
 
 func TestPricesIntegrationTestSuite(t *testing.T) {
@@ -123,7 +127,37 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 	// Set min gas prices to zero so that we can submit transactions with zero gas price.
 	s.cfg.MinGasPrices = fmt.Sprintf("0%s", sdk.DefaultBondDenom)
 
-	// // Gock setup.
+	// Setting genesis state for Prices.
+
+	state := genesisState
+
+	buf, err := s.cfg.Codec.MarshalJSON(&state)
+
+	s.NoError(err)
+
+	s.cfg.GenesisState[types.ModuleName] = buf
+
+	// Ensure that no funding-related epochs will occur during this test.
+
+	epstate := constants.GenerateEpochGenesisStateWithoutFunding()
+
+	feeTiersState := feetierstypes.GenesisState{}
+
+	feeTiersState.Params = constants.PerpetualFeeParams
+
+	feeTiersBuf, err := s.cfg.Codec.MarshalJSON(&feeTiersState)
+
+	s.Require().NoError(err)
+
+	s.cfg.GenesisState[feetierstypes.ModuleName] = feeTiersBuf
+
+	epbuf, err := s.cfg.Codec.MarshalJSON(&epstate)
+
+	s.Require().NoError(err)
+
+	s.cfg.GenesisState[epochstypes.ModuleName] = epbuf
+
+	// Gock setup.
 	defer gock.Off()         // Flush pending mocks after test execution.
 	gock.DisableNetworking() // Disables real networking.
 	gock.InterceptClient(&client.HttpClient)
@@ -144,11 +178,15 @@ func (s *PricesIntegrationTestSuite) expectMarketPricesWithTimeout(prices map[ui
 
 		time.Sleep(100 * time.Millisecond)
 
-		resp, err := testutil.MsgQueryAllMarketPriceExec()
+		val := s.network.Validators[0]
+
+		ctx := val.ClientCtx
+
+		resp, err := testutil.MsgQueryAllMarketPriceExec(ctx)
 		s.Require().NoError(err)
 
 		var allMarketPricesQueryResponse types.QueryAllMarketPricesResponse
-		s.Require().NoError(s.cfg.Codec.UnmarshalJSON(resp, &allMarketPricesQueryResponse))
+		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(resp.Bytes(), &allMarketPricesQueryResponse))
 
 		if len(allMarketPricesQueryResponse.MarketPrices) != len(prices) {
 			continue
@@ -182,41 +220,42 @@ func (s *PricesIntegrationTestSuite) TestCLIPrices_AllEmptyResponses_NoPriceUpda
 	// Setup.
 	ts := s.T()
 
+	// Setup gock responses.
 	testutil.SetupExchangeResponses(ts, testutil.EmptyResponses_AllExchanges)
+	testutil.SetupSDaiResponse(ts)
 
-	// // Run.
-	// s.network = network.New(ts, s.cfg)
-	genesis := "\".app_state.epochs.epoch_info_list = [{\\\"name\\\": \\\"funding-sample\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"funding-tick\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"stats-epoch\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}] | .app_state.feetiers.params = {\\\"tiers\\\": [{\\\"name\\\": \\\"1\\\", \\\"maker_fee_ppm\\\": \\\"200\\\", \\\"taker_fee_ppm\\\": \\\"500\\\"}]}\" \"--deleveraging-daemon-enabled=false --price-daemon-enabled=true --price-daemon-loop-delay-ms=1000\""
-	network.DeployCustomNetwork(genesis)
+	// Run.
+	s.network = network.New(ts, s.cfg)
 
 	// Verify.
 	s.expectMarketPricesWithTimeout(expectedPricesWithNoUpdates, 30*time.Second)
-
-	network.CleanupCustomNetwork()
 }
 
 func (s *PricesIntegrationTestSuite) TestCLIPrices_PartialResponses_PartialPriceUpdate() {
 	// Setup.
 	ts := s.T()
 
-	// Add logging to see what's going on in circleCI.
+	// Setup gock responses.
 	testutil.SetupExchangeResponses(ts, testutil.PartialResponses_AllExchanges_Eth9001)
+	testutil.SetupSDaiResponse(ts)
 
-	genesis := "\".app_state.epochs.epoch_info_list = [{\\\"name\\\": \\\"funding-sample\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"funding-tick\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"stats-epoch\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}] | .app_state.feetiers.params = {\\\"tiers\\\": [{\\\"name\\\": \\\"1\\\", \\\"maker_fee_ppm\\\": \\\"200\\\", \\\"taker_fee_ppm\\\": \\\"500\\\"}]}\" \"--deleveraging-daemon-enabled=false --price-daemon-enabled=true --price-daemon-loop-delay-ms=1000\""
-	network.DeployCustomNetwork(genesis)
+	// Run.
+	s.network = network.New(ts, s.cfg)
 
 	// Verify.
 	s.expectMarketPricesWithTimeout(expectedPricesWithPartialUpdate, 30*time.Second)
-	network.CleanupCustomNetwork()
 }
 
 func (s *PricesIntegrationTestSuite) TestCLIPrices_AllValidResponses_ValidPriceUpdate() {
 	// Setup.
 	ts := s.T()
+
 	testutil.SetupExchangeResponses(ts, testutil.FullResponses_AllExchanges_Btc101_Eth9001)
-	genesis := "\".app_state.epochs.epoch_info_list = [{\\\"name\\\": \\\"funding-sample\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"funding-tick\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}, {\\\"name\\\": \\\"stats-epoch\\\", \\\"next_tick\\\": \\\"1747543084\\\", \\\"duration\\\": \\\"31536000\\\", \\\"current_epoch\\\": \\\"0\\\", \\\"current_epoch_start_block\\\": \\\"0\\\", \\\"fast_forward_next_tick\\\": false}] | .app_state.feetiers.params = {\\\"tiers\\\": [{\\\"name\\\": \\\"1\\\", \\\"maker_fee_ppm\\\": \\\"200\\\", \\\"taker_fee_ppm\\\": \\\"500\\\"}]}\" \"--deleveraging-daemon-enabled=false --price-daemon-enabled=true --price-daemon-loop-delay-ms=1000\""
-	network.DeployCustomNetwork(genesis)
+	testutil.SetupSDaiResponse(ts)
+
+	// Run.
+	s.network = network.New(ts, s.cfg)
+
 	// Verify.
 	s.expectMarketPricesWithTimeout(expectedPricesWithFullUpdate, 30*time.Second)
-	network.CleanupCustomNetwork()
 }

@@ -8,8 +8,8 @@ import (
 	"cosmossdk.io/math"
 	vemath "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/math"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	ethosutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ethos"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	valutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/staking"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,7 +38,7 @@ func TestMedianPrices(t *testing.T) {
 				"alice": 500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: constants.Price5Big,
 						PnlPrice:  constants.Price5Big,
@@ -60,19 +60,19 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5000),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5001),
 						PnlPrice:  big.NewInt(5001),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5002),
 						PnlPrice:  big.NewInt(5002),
@@ -93,13 +93,13 @@ func TestMedianPrices(t *testing.T) {
 				"bob":   500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5000),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5001),
 						PnlPrice:  big.NewInt(5001),
@@ -120,13 +120,13 @@ func TestMedianPrices(t *testing.T) {
 				"bob":   500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5000),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: nil,
 						PnlPrice:  nil,
@@ -143,19 +143,19 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5000),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: nil,
 						PnlPrice:  nil,
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5002),
 						PnlPrice:  big.NewInt(5002),
@@ -172,19 +172,19 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: nil,
 						PnlPrice:  nil,
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: nil,
 						PnlPrice:  nil,
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: nil,
 						PnlPrice:  nil,
@@ -201,19 +201,19 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: constants.Price5Big,
 						PnlPrice:  constants.Price5Big,
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: constants.Price5Big,
 						PnlPrice:  constants.Price5Big,
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: constants.Price5Big,
 						PnlPrice:  constants.Price5Big,
@@ -233,7 +233,7 @@ func TestMedianPrices(t *testing.T) {
 				"alice": 500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: constants.Price5Big,
 						PnlPrice:  constants.Price5Big,
@@ -263,7 +263,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: constants.Price5Big,
 						PnlPrice:  constants.Price5Big,
@@ -273,7 +273,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  constants.Price6Big,
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: constants.Price5Big,
 						PnlPrice:  constants.Price5Big,
@@ -283,7 +283,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  constants.Price6Big,
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: constants.Price5Big,
 						PnlPrice:  constants.Price5Big,
@@ -313,7 +313,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5000),
@@ -323,7 +323,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(6000),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5001),
 						PnlPrice:  big.NewInt(5001),
@@ -333,7 +333,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(6001),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5002),
 						PnlPrice:  big.NewInt(5002),
@@ -363,7 +363,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5000),
@@ -373,7 +373,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(6000),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(8500),
 						PnlPrice:  big.NewInt(8500),
@@ -383,7 +383,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(7250),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4500),
 						PnlPrice:  big.NewInt(4500),
@@ -413,7 +413,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5000),
@@ -423,7 +423,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(6000),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5000),
@@ -444,19 +444,19 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  300,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5000),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(6000),
 						PnlPrice:  big.NewInt(6000),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(7000),
 						PnlPrice:  big.NewInt(7000),
@@ -478,7 +478,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  1,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4000),
 						PnlPrice:  big.NewInt(4000),
@@ -488,7 +488,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(5000),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(8500),
 						PnlPrice:  big.NewInt(8500),
@@ -498,7 +498,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(7250),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4500),
 						PnlPrice:  big.NewInt(4500),
@@ -528,7 +528,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  80,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4000),
 						PnlPrice:  big.NewInt(4000),
@@ -538,7 +538,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(5000),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4002),
 						PnlPrice:  big.NewInt(4002),
@@ -548,7 +548,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(5002),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4004),
 						PnlPrice:  big.NewInt(4004),
@@ -578,19 +578,19 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  100,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5001),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5001),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5001),
@@ -612,13 +612,13 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  100,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5001),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5001),
@@ -635,19 +635,19 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  100,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4000),
 						PnlPrice:  big.NewInt(800),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4000),
 						PnlPrice:  big.NewInt(8000),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4000),
 						PnlPrice:  big.NewInt(8000),
@@ -669,7 +669,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  500,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5001),
@@ -679,7 +679,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(6001),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(8500),
 						PnlPrice:  big.NewInt(8501),
@@ -689,7 +689,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(7251),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4500),
 						PnlPrice:  big.NewInt(4501),
@@ -719,7 +719,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  100,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5001),
@@ -729,7 +729,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(6001),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(5000),
 						PnlPrice:  big.NewInt(5001),
@@ -750,7 +750,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  1,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4000),
 						PnlPrice:  big.NewInt(4005),
@@ -760,7 +760,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(5005),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(8500),
 						PnlPrice:  big.NewInt(8505),
@@ -770,7 +770,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(7255),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4500),
 						PnlPrice:  big.NewInt(4505),
@@ -800,7 +800,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  80,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4000),
 						PnlPrice:  big.NewInt(4005),
@@ -810,7 +810,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(5005),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4002),
 						PnlPrice:  big.NewInt(4007),
@@ -820,7 +820,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(5007),
 					},
 				},
-				constants.CarlEthosConsAddress.String(): {
+				constants.CarlConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4004),
 						PnlPrice:  big.NewInt(4009),
@@ -850,7 +850,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  5000000,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4000),
 						PnlPrice:  big.NewInt(4005),
@@ -860,7 +860,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(5005),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4002),
 						PnlPrice:  big.NewInt(4007),
@@ -890,7 +890,7 @@ func TestMedianPrices(t *testing.T) {
 				"carl":  500000000000000,
 			},
 			validatorPrices: map[string]map[string]vemath.AggregatorPricePair{
-				constants.AliceEthosConsAddress.String(): {
+				constants.AliceConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4000),
 						PnlPrice:  big.NewInt(4005),
@@ -900,7 +900,7 @@ func TestMedianPrices(t *testing.T) {
 						PnlPrice:  big.NewInt(5005),
 					},
 				},
-				constants.BobEthosConsAddress.String(): {
+				constants.BobConsAddress.String(): {
 					constants.BtcUsdPair: {
 						SpotPrice: big.NewInt(4002),
 						PnlPrice:  big.NewInt(4007),
@@ -928,11 +928,11 @@ func TestMedianPrices(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
-			mCCVStore := ethosutils.NewGetAllCCValidatorMockReturnWithPowers(ctx, tc.validators, tc.powers)
+			mValStore := valutils.NewTotalBondedTokensValidatorMockReturnWithPowers(ctx, tc.validators, tc.powers)
 
 			medianFn := vemath.MedianPrices(
 				log.NewNopLogger(),
-				mCCVStore,
+				mValStore,
 				vemath.DefaultPowerThreshold,
 			)
 
@@ -967,7 +967,7 @@ func TestMedianConversionRate(t *testing.T) {
 				"alice": 500,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(5000),
+				constants.AliceConsAddress.String(): big.NewInt(5000),
 			},
 			expectedConversionRate: big.NewInt(5000),
 		},
@@ -978,8 +978,8 @@ func TestMedianConversionRate(t *testing.T) {
 				"bob":   500,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(5000),
-				constants.BobEthosConsAddress.String():   big.NewInt(5001),
+				constants.AliceConsAddress.String(): big.NewInt(5000),
+				constants.BobConsAddress.String():   big.NewInt(5001),
 			},
 			expectedConversionRate: big.NewInt(5000),
 		},
@@ -991,9 +991,9 @@ func TestMedianConversionRate(t *testing.T) {
 				"carl":  500,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(5000),
-				constants.BobEthosConsAddress.String():   big.NewInt(5001),
-				constants.CarlEthosConsAddress.String():  big.NewInt(5002),
+				constants.AliceConsAddress.String(): big.NewInt(5000),
+				constants.BobConsAddress.String():   big.NewInt(5001),
+				constants.CarlConsAddress.String():  big.NewInt(5002),
 			},
 			expectedConversionRate: big.NewInt(5001),
 		},
@@ -1004,8 +1004,8 @@ func TestMedianConversionRate(t *testing.T) {
 				"bob":   500,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(5000),
-				constants.BobEthosConsAddress.String():   nil,
+				constants.AliceConsAddress.String(): big.NewInt(5000),
+				constants.BobConsAddress.String():   nil,
 			},
 			expectedConversionRate: nil,
 		},
@@ -1017,9 +1017,9 @@ func TestMedianConversionRate(t *testing.T) {
 				"carl":  500,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(5000),
-				constants.BobEthosConsAddress.String():   nil,
-				constants.CarlEthosConsAddress.String():  big.NewInt(5002),
+				constants.AliceConsAddress.String(): big.NewInt(5000),
+				constants.BobConsAddress.String():   nil,
+				constants.CarlConsAddress.String():  big.NewInt(5002),
 			},
 			expectedConversionRate: nil,
 		},
@@ -1031,9 +1031,9 @@ func TestMedianConversionRate(t *testing.T) {
 				"carl":  5000000,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(5000),
-				constants.BobEthosConsAddress.String():   nil,
-				constants.CarlEthosConsAddress.String():  big.NewInt(5002),
+				constants.AliceConsAddress.String(): big.NewInt(5000),
+				constants.BobConsAddress.String():   nil,
+				constants.CarlConsAddress.String():  big.NewInt(5002),
 			},
 			expectedConversionRate: big.NewInt(5000),
 		},
@@ -1045,9 +1045,9 @@ func TestMedianConversionRate(t *testing.T) {
 				"carl":  500000000000000,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(5000),
-				constants.BobEthosConsAddress.String():   nil,
-				constants.CarlEthosConsAddress.String():  big.NewInt(5002),
+				constants.AliceConsAddress.String(): big.NewInt(5000),
+				constants.BobConsAddress.String():   nil,
+				constants.CarlConsAddress.String():  big.NewInt(5002),
 			},
 			expectedConversionRate: big.NewInt(5000),
 		},
@@ -1059,9 +1059,9 @@ func TestMedianConversionRate(t *testing.T) {
 				"carl":  500,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): nil,
-				constants.BobEthosConsAddress.String():   nil,
-				constants.CarlEthosConsAddress.String():  nil,
+				constants.AliceConsAddress.String(): nil,
+				constants.BobConsAddress.String():   nil,
+				constants.CarlConsAddress.String():  nil,
 			},
 			expectedConversionRate: nil,
 		},
@@ -1073,9 +1073,9 @@ func TestMedianConversionRate(t *testing.T) {
 				"carl":  500,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): constants.Price5Big,
-				constants.BobEthosConsAddress.String():   constants.Price5Big,
-				constants.CarlEthosConsAddress.String():  constants.Price5Big,
+				constants.AliceConsAddress.String(): constants.Price5Big,
+				constants.BobConsAddress.String():   constants.Price5Big,
+				constants.CarlConsAddress.String():  constants.Price5Big,
 			},
 			expectedConversionRate: constants.Price5Big,
 		},
@@ -1087,8 +1087,8 @@ func TestMedianConversionRate(t *testing.T) {
 				"carl":  500,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(5000),
-				constants.BobEthosConsAddress.String():   big.NewInt(5000),
+				constants.AliceConsAddress.String(): big.NewInt(5000),
+				constants.BobConsAddress.String():   big.NewInt(5000),
 			},
 			expectedConversionRate: nil,
 		},
@@ -1100,9 +1100,9 @@ func TestMedianConversionRate(t *testing.T) {
 				"carl":  300,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(5000),
-				constants.BobEthosConsAddress.String():   big.NewInt(6000),
-				constants.CarlEthosConsAddress.String():  big.NewInt(7000),
+				constants.AliceConsAddress.String(): big.NewInt(5000),
+				constants.BobConsAddress.String():   big.NewInt(6000),
+				constants.CarlConsAddress.String():  big.NewInt(7000),
 			},
 			expectedConversionRate: big.NewInt(6500),
 		},
@@ -1114,9 +1114,9 @@ func TestMedianConversionRate(t *testing.T) {
 				"carl":  1,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(4000),
-				constants.BobEthosConsAddress.String():   big.NewInt(8500),
-				constants.CarlEthosConsAddress.String():  big.NewInt(4500),
+				constants.AliceConsAddress.String(): big.NewInt(4000),
+				constants.BobConsAddress.String():   big.NewInt(8500),
+				constants.CarlConsAddress.String():  big.NewInt(4500),
 			},
 			expectedConversionRate: big.NewInt(4000),
 		},
@@ -1128,9 +1128,9 @@ func TestMedianConversionRate(t *testing.T) {
 				"carl":  80,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(4000),
-				constants.BobEthosConsAddress.String():   big.NewInt(4002),
-				constants.CarlEthosConsAddress.String():  big.NewInt(4004),
+				constants.AliceConsAddress.String(): big.NewInt(4000),
+				constants.BobConsAddress.String():   big.NewInt(4002),
+				constants.CarlConsAddress.String():  big.NewInt(4004),
 			},
 			expectedConversionRate: big.NewInt(4002),
 		},
@@ -1141,9 +1141,9 @@ func TestMedianConversionRate(t *testing.T) {
 				"bob":   50,
 			},
 			validatorConversionRates: map[string]*big.Int{
-				constants.AliceEthosConsAddress.String(): big.NewInt(4000),
-				constants.BobEthosConsAddress.String():   big.NewInt(4002),
-				constants.CarlEthosConsAddress.String():  big.NewInt(4004),
+				constants.AliceConsAddress.String(): big.NewInt(4000),
+				constants.BobConsAddress.String():   big.NewInt(4002),
+				constants.CarlConsAddress.String():  big.NewInt(4004),
 			},
 			expectedConversionRate: big.NewInt(4000),
 		},
@@ -1153,11 +1153,11 @@ func TestMedianConversionRate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
 
-			mCCVStore := ethosutils.NewGetAllCCValidatorMockReturnWithPowers(ctx, tc.validators, tc.powers)
+			mValStore := valutils.NewTotalBondedTokensValidatorMockReturnWithPowers(ctx, tc.validators, tc.powers)
 
 			medianFn := vemath.MedianConversionRate(
 				log.NewNopLogger(),
-				mCCVStore,
+				mValStore,
 				vemath.DefaultPowerThreshold,
 			)
 
@@ -1177,79 +1177,79 @@ func TestComputeMedian(t *testing.T) {
 	}{
 		"single price": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 100, Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(100), Price: big.NewInt(5000)},
 			},
 			totalWeight: math.NewInt(100),
 			expected:    big.NewInt(5000),
 		},
 		"two prices, equal weight": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 50, Price: big.NewInt(5000)},
-				{VoteWeight: 50, Price: big.NewInt(6000)},
+				{VoteWeight: math.NewInt(50), Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(50), Price: big.NewInt(6000)},
 			},
 			totalWeight: math.NewInt(100),
 			expected:    big.NewInt(5500),
 		},
 		"three prices, equal weight": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 33, Price: big.NewInt(5000)},
-				{VoteWeight: 33, Price: big.NewInt(6000)},
-				{VoteWeight: 33, Price: big.NewInt(7000)},
+				{VoteWeight: math.NewInt(33), Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(33), Price: big.NewInt(6000)},
+				{VoteWeight: math.NewInt(33), Price: big.NewInt(7000)},
 			},
 			totalWeight: math.NewInt(99),
 			expected:    big.NewInt(6000),
 		},
 		"three prices, unequal weight": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 20, Price: big.NewInt(5000)},
-				{VoteWeight: 30, Price: big.NewInt(6000)},
-				{VoteWeight: 51, Price: big.NewInt(7000)},
+				{VoteWeight: math.NewInt(20), Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(30), Price: big.NewInt(6000)},
+				{VoteWeight: math.NewInt(51), Price: big.NewInt(7000)},
 			},
 			totalWeight: math.NewInt(101),
 			expected:    big.NewInt(7000),
 		},
 		"five prices, varied weights": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 10, Price: big.NewInt(5000)},
-				{VoteWeight: 20, Price: big.NewInt(5500)},
-				{VoteWeight: 30, Price: big.NewInt(6000)},
-				{VoteWeight: 25, Price: big.NewInt(6500)},
-				{VoteWeight: 15, Price: big.NewInt(7000)},
+				{VoteWeight: math.NewInt(10), Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(20), Price: big.NewInt(5500)},
+				{VoteWeight: math.NewInt(30), Price: big.NewInt(6000)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(6500)},
+				{VoteWeight: math.NewInt(15), Price: big.NewInt(7000)},
 			},
 			totalWeight: math.NewInt(100),
 			expected:    big.NewInt(6000),
 		},
 		"prices not in order": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 30, Price: big.NewInt(6000)},
-				{VoteWeight: 20, Price: big.NewInt(5000)},
-				{VoteWeight: 50, Price: big.NewInt(5500)},
+				{VoteWeight: math.NewInt(30), Price: big.NewInt(6000)},
+				{VoteWeight: math.NewInt(20), Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(50), Price: big.NewInt(5500)},
 			},
 			totalWeight: math.NewInt(100),
 			expected:    big.NewInt(5500),
 		},
 		"even number of prices, unequal weights": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 25, Price: big.NewInt(5000)},
-				{VoteWeight: 25, Price: big.NewInt(5500)},
-				{VoteWeight: 30, Price: big.NewInt(6000)},
-				{VoteWeight: 20, Price: big.NewInt(6500)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(5500)},
+				{VoteWeight: math.NewInt(30), Price: big.NewInt(6000)},
+				{VoteWeight: math.NewInt(20), Price: big.NewInt(6500)},
 			},
 			totalWeight: math.NewInt(100),
 			expected:    big.NewInt(5750), // Average of 5500 and 6000
 		},
 		"large weights": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 1000000, Price: big.NewInt(5000)},
-				{VoteWeight: 2000000, Price: big.NewInt(6000)},
-				{VoteWeight: 3000000, Price: big.NewInt(7000)},
+				{VoteWeight: math.NewInt(1000000), Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(2000000), Price: big.NewInt(6000)},
+				{VoteWeight: math.NewInt(3000000), Price: big.NewInt(7000)},
 			},
 			totalWeight: math.NewInt(6000000),
 			expected:    big.NewInt(6500),
 		},
 		"single price with large weight": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 1000000, Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(1000000), Price: big.NewInt(5000)},
 			},
 			totalWeight: math.NewInt(1000000),
 			expected:    big.NewInt(5000),
@@ -1261,31 +1261,31 @@ func TestComputeMedian(t *testing.T) {
 		},
 		"even total weight, two middle values": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 25, Price: big.NewInt(5000)},
-				{VoteWeight: 25, Price: big.NewInt(6000)},
-				{VoteWeight: 25, Price: big.NewInt(7000)},
-				{VoteWeight: 25, Price: big.NewInt(8000)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(6000)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(7000)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(8000)},
 			},
 			totalWeight: math.NewInt(100),
 			expected:    big.NewInt(6500), // Average of 6000 and 7000
 		},
 		"even total weight, multiple prices with same weight": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 20, Price: big.NewInt(5000)},
-				{VoteWeight: 20, Price: big.NewInt(5500)},
-				{VoteWeight: 20, Price: big.NewInt(6000)},
-				{VoteWeight: 20, Price: big.NewInt(6500)},
-				{VoteWeight: 20, Price: big.NewInt(7000)},
+				{VoteWeight: math.NewInt(20), Price: big.NewInt(5000)},
+				{VoteWeight: math.NewInt(20), Price: big.NewInt(5500)},
+				{VoteWeight: math.NewInt(20), Price: big.NewInt(6000)},
+				{VoteWeight: math.NewInt(20), Price: big.NewInt(6500)},
+				{VoteWeight: math.NewInt(20), Price: big.NewInt(7000)},
 			},
 			totalWeight: math.NewInt(100),
 			expected:    big.NewInt(6000), // Average of 5500 and 6500
 		},
 		"rounds down price for median with even total weight": {
 			prices: []vemath.PricePerValidator{
-				{VoteWeight: 25, Price: big.NewInt(1)},
-				{VoteWeight: 25, Price: big.NewInt(2)},
-				{VoteWeight: 25, Price: big.NewInt(3)},
-				{VoteWeight: 25, Price: big.NewInt(4)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(1)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(2)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(3)},
+				{VoteWeight: math.NewInt(25), Price: big.NewInt(4)},
 			},
 			totalWeight: math.NewInt(100),
 			expected:    big.NewInt(2),

@@ -17,7 +17,10 @@ import {
   YieldParamsFromDatabase,
   YieldParamsTable,
 } from '@dydxprotocol-indexer/postgres';
-import { OrderbookLevels, redisTestConstants } from '@dydxprotocol-indexer/redis';
+import {
+  OrderbookLevels,
+  redisTestConstants,
+} from '@dydxprotocol-indexer/redis';
 import {
   IndexerOrder_TimeInForce,
   RedisOrder,
@@ -31,7 +34,10 @@ import {
   redisOrderToResponseObject,
   yieldParamsToResponseObject,
 } from '../../../src/request-helpers/request-transformer';
-import { OrderResponseObject, YieldParamsResponseObject } from '../../../src/types';
+import {
+  OrderResponseObject,
+  YieldParamsResponseObject,
+} from '../../../src/types';
 
 describe('request-transformer', () => {
   const ticker: string = testConstants.defaultPerpetualMarket.ticker;
@@ -56,41 +62,43 @@ describe('request-transformer', () => {
       const perpetualMarket: PerpetualMarketFromDatabase = testConstants.defaultPerpetualMarket;
       const market: MarketFromDatabase = testConstants.defaultMarket;
       const liquidityTier: LiquidityTiersFromDatabase = testConstants.defaultLiquidityTier;
-      expect(perpetualMarketToResponseObject(perpetualMarket, liquidityTier, market)).toEqual(
-        {
-          clobPairId: perpetualMarket.clobPairId,
-          ticker: perpetualMarket.ticker,
-          status: perpetualMarket.status,
-          spotPrice: market.spotPrice,
-          pnlPrice: market.pnlPrice,
-          priceChange24H: perpetualMarket.priceChange24H,
-          volume24H: perpetualMarket.volume24H,
-          trades24H: perpetualMarket.trades24H,
-          nextFundingRate: perpetualMarket.nextFundingRate,
-          initialMarginFraction: helpers.ppmToString(Number(liquidityTier.initialMarginPpm)),
-          maintenanceMarginFraction: helpers.ppmToString(
-            helpers.getMaintenanceMarginPpm(
-              Number(liquidityTier.initialMarginPpm),
-              Number(liquidityTier.maintenanceFractionPpm),
-            ),
+      expect(
+        perpetualMarketToResponseObject(perpetualMarket, liquidityTier, market),
+      ).toEqual({
+        clobPairId: perpetualMarket.clobPairId,
+        ticker: perpetualMarket.ticker,
+        status: perpetualMarket.status,
+        spotPrice: market.spotPrice,
+        pnlPrice: market.pnlPrice,
+        priceChange24H: perpetualMarket.priceChange24H,
+        volume24H: perpetualMarket.volume24H,
+        trades24H: perpetualMarket.trades24H,
+        nextFundingRate: perpetualMarket.nextFundingRate,
+        initialMarginFraction: helpers.ppmToString(
+          Number(liquidityTier.initialMarginPpm),
+        ),
+        maintenanceMarginFraction: helpers.ppmToString(
+          helpers.getMaintenanceMarginPpm(
+            Number(liquidityTier.initialMarginPpm),
+            Number(liquidityTier.maintenanceFractionPpm),
           ),
-          openInterest: perpetualMarket.openInterest,
-          atomicResolution: perpetualMarket.atomicResolution,
-          dangerIndexPpm: perpetualMarket.dangerIndexPpm,
-          isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock:
-            perpetualMarket.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
-          quantumConversionExponent: perpetualMarket.quantumConversionExponent,
-          tickSize: Big(10).pow(-2).toFixed(), // 100 * 1e-8 * 1e-6 / 10e-10 = 1e-2
-          stepSize: Big(10).pow(-9).toFixed(), // 10 * 1e-10 = 1e-9
-          stepBaseQuantums: perpetualMarket.stepBaseQuantums,
-          subticksPerTick: perpetualMarket.subticksPerTick,
-          marketType: perpetualMarket.marketType,
-          openInterestLowerCap: liquidityTier.openInterestLowerCap,
-          openInterestUpperCap: liquidityTier.openInterestUpperCap,
-          baseOpenInterest: perpetualMarket.baseOpenInterest,
-          perpYieldIndex: perpetualMarket.perpYieldIndex,
-        },
-      );
+        ),
+        openInterest: perpetualMarket.openInterest,
+        atomicResolution: perpetualMarket.atomicResolution,
+        dangerIndexPpm: perpetualMarket.dangerIndexPpm,
+        isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock:
+          perpetualMarket.isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock,
+        quantumConversionExponent: perpetualMarket.quantumConversionExponent,
+        tickSize: Big(10).pow(-2).toFixed(), // 100 * 1e-8 * 1e-6 / 10e-10 = 1e-2
+        stepSize: Big(10).pow(-9).toFixed(), // 10 * 1e-10 = 1e-9
+        stepBaseQuantums: perpetualMarket.stepBaseQuantums,
+        subticksPerTick: perpetualMarket.subticksPerTick,
+        marketType: perpetualMarket.marketType,
+        openInterestLowerCap: liquidityTier.openInterestLowerCap,
+        openInterestUpperCap: liquidityTier.openInterestUpperCap,
+        baseOpenInterest: perpetualMarket.baseOpenInterest,
+        perpYieldIndex: perpetualMarket.perpYieldIndex,
+      });
     });
   });
 
@@ -98,17 +106,43 @@ describe('request-transformer', () => {
     const perpetualMarket: PerpetualMarketFromDatabase = testConstants.defaultPerpetualMarket;
     const orderbookLevels: OrderbookLevels = {
       bids: [
-        { humanPrice: '300.0', quantums: '1000000000', lastUpdated: redisTestConstants.defaultLastUpdated },
-        { humanPrice: '250.0', quantums: '350000', lastUpdated: redisTestConstants.defaultLastUpdated },
-        { humanPrice: '150.0', quantums: '300', lastUpdated: redisTestConstants.defaultLastUpdated },
+        {
+          humanPrice: '300.0',
+          quantums: '1000000000',
+          lastUpdated: redisTestConstants.defaultLastUpdated,
+        },
+        {
+          humanPrice: '250.0',
+          quantums: '350000',
+          lastUpdated: redisTestConstants.defaultLastUpdated,
+        },
+        {
+          humanPrice: '150.0',
+          quantums: '300',
+          lastUpdated: redisTestConstants.defaultLastUpdated,
+        },
       ],
       asks: [
-        { humanPrice: '400.0', quantums: '200000000000', lastUpdated: redisTestConstants.defaultLastUpdated },
-        { humanPrice: '550.0', quantums: '450000', lastUpdated: redisTestConstants.defaultLastUpdated },
-        { humanPrice: '760.0', quantums: '6000', lastUpdated: redisTestConstants.defaultLastUpdated },
+        {
+          humanPrice: '400.0',
+          quantums: '200000000000',
+          lastUpdated: redisTestConstants.defaultLastUpdated,
+        },
+        {
+          humanPrice: '550.0',
+          quantums: '450000',
+          lastUpdated: redisTestConstants.defaultLastUpdated,
+        },
+        {
+          humanPrice: '760.0',
+          quantums: '6000',
+          lastUpdated: redisTestConstants.defaultLastUpdated,
+        },
       ],
     };
-    expect(OrderbookLevelsToResponseObject(orderbookLevels, perpetualMarket)).toEqual({
+    expect(
+      OrderbookLevelsToResponseObject(orderbookLevels, perpetualMarket),
+    ).toEqual({
       bids: [
         { price: '300.0', size: '0.1' }, // 1,000,000,000 * 1e-10
         { price: '250.0', size: '0.000035' }, // 350,000 * 1e-10
@@ -132,7 +166,7 @@ describe('request-transformer', () => {
         filledOrder,
         {
           [testConstants.defaultSubaccountId]:
-            testConstants.defaultSubaccount.subaccountNumber,
+              testConstants.defaultSubaccount.subaccountNumber,
         },
         redisTestConstants.defaultRedisOrder,
       );
@@ -160,23 +194,28 @@ describe('request-transformer', () => {
         timeInForce: apiTranslations.orderTIFToAPITIF(expectedRedisOrderTIF),
         postOnly: apiTranslations.isOrderTIFPostOnly(expectedRedisOrderTIF),
         reduceOnly: redisTestConstants.defaultRedisOrder.order!.reduceOnly,
-        goodTilBlock: protocolTranslations.getGoodTilBlock(
-          redisTestConstants.defaultRedisOrder.order!,
-        )?.toString(),
+        goodTilBlock: protocolTranslations
+          .getGoodTilBlock(redisTestConstants.defaultRedisOrder.order!)
+          ?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(
           redisTestConstants.defaultRedisOrder.order!,
         ),
-        clientMetadata: redisTestConstants.defaultRedisOrder.order!.clientMetadata.toString(),
+        clientMetadata:
+          redisTestConstants.defaultRedisOrder.order!.clientMetadata.toString(),
       });
     });
 
     it('successfully converts a postgres order to a response object', () => {
-      const responseObject: OrderResponseObject | undefined = postgresAndRedisOrderToResponseObject(
-        order,
-        {
-          [testConstants.defaultSubaccountId]:
-            testConstants.defaultSubaccount.subaccountNumber,
-        },
+      const subaccountMap = {
+        [testConstants.defaultSubaccountId]:
+          testConstants.defaultSubaccount.subaccountNumber,
+      };
+
+      const responseObject: OrderResponseObject | undefined = (
+        postgresAndRedisOrderToResponseObject(
+          order,
+          subaccountMap,
+        )
       );
 
       expect(responseObject).not.toBeUndefined();
@@ -184,7 +223,10 @@ describe('request-transformer', () => {
         redisOrderToResponseObject(redisTestConstants.defaultRedisOrder),
       );
       expect(responseObject).toEqual(
-        postgresOrderToResponseObject(order, testConstants.defaultSubaccount.subaccountNumber),
+        postgresOrderToResponseObject(
+          order,
+          testConstants.defaultSubaccount.subaccountNumber,
+        ),
       );
     });
 
@@ -193,14 +235,17 @@ describe('request-transformer', () => {
         undefined,
         {
           [testConstants.defaultSubaccountId]:
-            testConstants.defaultSubaccount.subaccountNumber,
+              testConstants.defaultSubaccount.subaccountNumber,
         },
         redisTestConstants.defaultRedisOrder,
       );
 
       expect(responseObject).not.toBeUndefined();
       expect(responseObject).not.toEqual(
-        postgresOrderToResponseObject(order, testConstants.defaultSubaccount.subaccountNumber),
+        postgresOrderToResponseObject(
+          order,
+          testConstants.defaultSubaccount.subaccountNumber,
+        ),
       );
       expect(responseObject).toEqual(
         redisOrderToResponseObject(redisTestConstants.defaultRedisOrder),
@@ -212,7 +257,7 @@ describe('request-transformer', () => {
         undefined,
         {
           [testConstants.defaultSubaccountId]:
-            testConstants.defaultSubaccount.subaccountNumber,
+              testConstants.defaultSubaccount.subaccountNumber,
         },
         null,
       );
@@ -222,81 +267,70 @@ describe('request-transformer', () => {
   });
 
   describe('postgresOrderToResponseObject', () => {
-    it(
-      'successfully converts a postgres order with null `goodTilBlockTime` to a response object',
-      () => {
-        const responseObject: OrderResponseObject = postgresOrderToResponseObject(
-          order,
-          testConstants.defaultSubaccount.subaccountNumber,
-        );
+    it('successfully converts a postgres order with null `goodTilBlockTime` to a response object', () => {
+      const responseObject: OrderResponseObject = postgresOrderToResponseObject(
+        order,
+        testConstants.defaultSubaccount.subaccountNumber,
+      );
 
-        expect(responseObject).toEqual({
-          ...order,
-          timeInForce: apiTranslations.orderTIFToAPITIF(order.timeInForce),
-          postOnly: apiTranslations.isOrderTIFPostOnly(order.timeInForce),
-          ticker,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
-        });
-      },
-    );
+      expect(responseObject).toEqual({
+        ...order,
+        timeInForce: apiTranslations.orderTIFToAPITIF(order.timeInForce),
+        postOnly: apiTranslations.isOrderTIFPostOnly(order.timeInForce),
+        ticker,
+        subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+      });
+    });
 
-    it(
-      'successfully converts a postgres order with null `goodTilBlock` to a response object',
-      () => {
-        const orderWithGoodTilBlockTime: OrderFromDatabase = {
-          ...testConstants.defaultOrderGoodTilBlockTime,
-          id: testConstants.defaultOrderId,
-        };
-        const responseObject: OrderResponseObject = postgresOrderToResponseObject(
-          orderWithGoodTilBlockTime,
-          testConstants.defaultSubaccount.subaccountNumber,
-        );
+    it('successfully converts a postgres order with null `goodTilBlock` to a response object', () => {
+      const orderWithGoodTilBlockTime: OrderFromDatabase = {
+        ...testConstants.defaultOrderGoodTilBlockTime,
+        id: testConstants.defaultOrderId,
+      };
+      const responseObject: OrderResponseObject = postgresOrderToResponseObject(
+        orderWithGoodTilBlockTime,
+        testConstants.defaultSubaccount.subaccountNumber,
+      );
 
-        expect(responseObject).toEqual({
-          ...orderWithGoodTilBlockTime,
-          timeInForce: apiTranslations.orderTIFToAPITIF(order.timeInForce),
-          postOnly: apiTranslations.isOrderTIFPostOnly(order.timeInForce),
-          ticker,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
-        });
-      },
-    );
+      expect(responseObject).toEqual({
+        ...orderWithGoodTilBlockTime,
+        timeInForce: apiTranslations.orderTIFToAPITIF(order.timeInForce),
+        postOnly: apiTranslations.isOrderTIFPostOnly(order.timeInForce),
+        ticker,
+        subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+      });
+    });
   });
 
   describe('yieldParamsToResponseObject', () => {
-    it(
-      'successfully converts yield params from DB to response object',
-      () => {
+    it('successfully converts yield params from DB to response object', () => {
+      const yieldParamsFromDatabase: YieldParamsFromDatabase = {
+        id: YieldParamsTable.uuid(
+          testConstants.defaultYieldParams1.createdAtHeight,
+        ),
+        sDAIPrice: testConstants.defaultYieldParams1.sDAIPrice,
+        assetYieldIndex: testConstants.defaultYieldParams1.assetYieldIndex,
+        createdAt: testConstants.defaultYieldParams1.createdAt,
+        createdAtHeight: testConstants.defaultYieldParams1.createdAtHeight,
+      };
 
-        const yieldParamsFromDatabase: YieldParamsFromDatabase = {
-          id: YieldParamsTable.uuid(testConstants.defaultYieldParams1.createdAtHeight),
-          sDAIPrice: testConstants.defaultYieldParams1.sDAIPrice,
-          assetYieldIndex: testConstants.defaultYieldParams1.assetYieldIndex,
-          createdAt: testConstants.defaultYieldParams1.createdAt,
-          createdAtHeight: testConstants.defaultYieldParams1.createdAtHeight,
-        };
+      const responseObject: YieldParamsResponseObject = yieldParamsToResponseObject(
+        yieldParamsFromDatabase,
+      );
 
-        const responseObject: YieldParamsResponseObject = yieldParamsToResponseObject(
-          yieldParamsFromDatabase,
-        );
-
-        expect(responseObject).toEqual({
-          id: yieldParamsFromDatabase.id,
-          sDAIPrice: yieldParamsFromDatabase.sDAIPrice,
-          assetYieldIndex: yieldParamsFromDatabase.assetYieldIndex,
-          createdAt: yieldParamsFromDatabase.createdAt,
-          createdAtHeight: yieldParamsFromDatabase.createdAtHeight,
-        });
-      },
-    );
+      expect(responseObject).toEqual({
+        id: yieldParamsFromDatabase.id,
+        sDAIPrice: yieldParamsFromDatabase.sDAIPrice,
+        assetYieldIndex: yieldParamsFromDatabase.assetYieldIndex,
+        createdAt: yieldParamsFromDatabase.createdAt,
+        createdAtHeight: yieldParamsFromDatabase.createdAtHeight,
+      });
+    });
   });
 
   describe('redisOrderToResponseObject', () => {
     it.each([
-      [
-        'default order',
-        redisTestConstants.defaultRedisOrder,
-      ],
+      ['default order', redisTestConstants.defaultRedisOrder],
       [
         'FOK TimeinForce, Reduce-only true',
         {
@@ -341,36 +375,45 @@ describe('request-transformer', () => {
           },
         },
       ],
-    ])('successfully converts a redis order to a response object: %s', (
-      _name: string,
-      redisOrder: RedisOrder,
-    ) => {
-      const responseObject: OrderResponseObject = redisOrderToResponseObject(redisOrder);
-      const expectedRedisOrderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
-        redisOrder.order!.timeInForce,
-      );
+    ])(
+      'successfully converts a redis order to a response object: %s',
+      (_name: string, redisOrder: RedisOrder) => {
+        const responseObject: OrderResponseObject = redisOrderToResponseObject(redisOrder);
+        const expectedRedisOrderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
+          redisOrder.order!.timeInForce,
+        );
 
-      expect(responseObject).toEqual({
-        id: redisOrder.id,
-        subaccountId: redisTestConstants.defaultSubaccountUuid,
-        clientId: redisOrder.order!.orderId!.clientId.toString(),
-        clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
-        side: protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
-        size: redisTestConstants.defaultSize,
-        totalFilled: '0',
-        price: redisTestConstants.defaultPrice,
-        type: OrderType.LIMIT,
-        status: BestEffortOpenedStatus.BEST_EFFORT_OPENED,
-        timeInForce: apiTranslations.orderTIFToAPITIF(expectedRedisOrderTIF),
-        postOnly: apiTranslations.isOrderTIFPostOnly(expectedRedisOrderTIF),
-        reduceOnly: redisOrder.order!.reduceOnly,
-        orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
-        goodTilBlock: protocolTranslations.getGoodTilBlock(redisOrder.order!)?.toString(),
-        goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
-        ticker,
-        clientMetadata: redisOrder.order!.clientMetadata.toString(),
-        subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
-      });
-    });
+        expect(responseObject).toEqual({
+          id: redisOrder.id,
+          subaccountId: redisTestConstants.defaultSubaccountUuid,
+          clientId: redisOrder.order!.orderId!.clientId.toString(),
+          clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+          side: protocolTranslations.protocolOrderSideToOrderSide(
+            redisOrder.order!.side,
+          ),
+          size: redisTestConstants.defaultSize,
+          totalFilled: '0',
+          price: redisTestConstants.defaultPrice,
+          type: OrderType.LIMIT,
+          status: BestEffortOpenedStatus.BEST_EFFORT_OPENED,
+          timeInForce: apiTranslations.orderTIFToAPITIF(expectedRedisOrderTIF),
+          postOnly: apiTranslations.isOrderTIFPostOnly(expectedRedisOrderTIF),
+          reduceOnly: redisOrder.order!.reduceOnly,
+          orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
+          goodTilBlock: protocolTranslations
+            .getGoodTilBlock(redisOrder.order!)
+            ?.toString(),
+          goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(
+            redisOrder.order!,
+          ),
+          ticker,
+          clientMetadata: redisOrder.order!.clientMetadata.toString(),
+          subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
+          routerFeePpm: '0',
+          routerFeeSubaccountNumber: '0',
+          routerFeeSubaccountOwner: 'dydx1xxxxxx',
+        });
+      },
+    );
   });
 });

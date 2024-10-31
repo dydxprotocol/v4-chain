@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	preblocker "github.com/StreamFinance-Protocol/stream-chain/protocol/app/preblocker"
 	ve "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve"
 	veaggregator "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ve/aggregator"
@@ -15,11 +16,12 @@ import (
 	bigintcache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/bigintcache"
 	pricecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/pricecache"
 	vecache "github.com/StreamFinance-Protocol/stream-chain/protocol/caches/vecache"
+	valutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	ethosutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ethos"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	pricestest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/prices"
 	vetesting "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ve"
@@ -28,7 +30,6 @@ import (
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ccvtypes "github.com/ethos-works/ethos/ethos-chain/x/ccv/consumer/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -43,7 +44,7 @@ type PreBlockTestSuite struct {
 	daemonPriceCache  *pricefeedtypes.MarketToExchangePrices
 	veApplier         *veapplier.VEApplier
 	handler           *preblocker.PreBlockHandler
-	ccvStore          *mocks.CCValidatorStore
+	valStore          *mocks.ValidatorStore
 	voteCodec         vecodec.VoteExtensionCodec
 	extCodec          vecodec.ExtendedCommitCodec
 	logger            log.Logger
@@ -54,7 +55,7 @@ func TestPreBlockTestSuite(t *testing.T) {
 }
 
 func (s *PreBlockTestSuite) SetupTest() {
-	s.validator = constants.AliceEthosConsAddress
+	s.validator = constants.AliceConsAddress
 
 	ctx, _, pricesKeeper, _, _, _, _, ratelimitKeeper, _, _ := keepertest.SubaccountsKeepers(s.T(), true)
 
@@ -70,18 +71,18 @@ func (s *PreBlockTestSuite) SetupTest() {
 
 	s.logger = log.NewTestLogger(s.T())
 
-	mCCVStore := &mocks.CCValidatorStore{}
-	s.ccvStore = mCCVStore
+	mValStore := &mocks.ValidatorStore{}
+	s.valStore = mValStore
 
 	pricesAggregatorFn := voteweighted.MedianPrices(
 		s.logger,
-		s.ccvStore,
+		s.valStore,
 		voteweighted.DefaultPowerThreshold,
 	)
 
 	conversionRateAggregatorFn := voteweighted.MedianConversionRate(
 		s.logger,
-		s.ccvStore,
+		s.valStore,
 		voteweighted.DefaultPowerThreshold,
 	)
 
@@ -177,7 +178,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			"",
 		)
 
-		s.mockCCVStoreGetAllValidatorsCall([]string{"alice", "bob"})
+		s.mockValStoreAndTotalBondedTokensCall([]string{"alice", "bob"})
 
 		prePrices := s.getAllMarketPrices()
 
@@ -234,7 +235,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			"",
 		)
 
-		s.mockCCVStoreGetAllValidatorsCall([]string{"alice", "bob"})
+		s.mockValStoreAndTotalBondedTokensCall([]string{"alice", "bob"})
 
 		_, err = s.handler.PreBlocker(s.ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
@@ -313,7 +314,7 @@ func (s *PreBlockTestSuite) TestPreBlocker() {
 			"",
 		)
 
-		s.mockCCVStoreGetAllValidatorsCall([]string{"alice", "bob"})
+		s.mockValStoreAndTotalBondedTokensCall([]string{"alice", "bob"})
 
 		_, err = s.handler.PreBlocker(s.ctx, &cometabci.RequestFinalizeBlock{
 			Txs: [][]byte{extCommitBz, {1, 2, 3, 4}, {1, 2, 3, 4}},
@@ -471,21 +472,6 @@ func (s *PreBlockTestSuite) setMarketPrices() []pricestypes.MarketParamPrice {
 	}
 }
 
-func (s *PreBlockTestSuite) buildAndMockCCValidator(name string, power int64) ccvtypes.CrossChainValidator {
-	val := ethosutils.BuildCCValidator(name, power)
-	s.ccvStore.On("GetCCValidator", s.ctx, val.Address).Return(val, true)
-	return val
-}
-
-func (s *PreBlockTestSuite) mockCCVStoreGetAllValidatorsCall(validators []string) {
-	var vals []ccvtypes.CrossChainValidator
-	for _, valName := range validators {
-		val := s.buildAndMockCCValidator(valName, 1)
-		vals = append(vals, val)
-	}
-	s.ccvStore.On("GetAllCCValidator", s.ctx).Return(vals)
-}
-
 func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
 	validators []string,
 	prices []vetypes.PricePair,
@@ -499,10 +485,35 @@ func (s *PreBlockTestSuite) getVoteExtensionsForValidatorsWithSamePrices(
 	return s.getExtendedCommitInfoBz(votes)
 }
 
+func (s *PreBlockTestSuite) mockValStoreAndTotalBondedTokensCall(validators []string) {
+
+	for _, valName := range validators {
+		s.buildAndMockValidator(valName, math.NewInt(1))
+	}
+	s.valStore.On("TotalBondedTokens", s.ctx).Return(valutils.ConvertPowerToTokens(int64(len(validators))), nil)
+}
+
+func (s *PreBlockTestSuite) buildAndMockValidator(name string, bondedTokens math.Int) stakingtypes.ValidatorI {
+	val := stakingtypes.Validator{
+		Tokens: bondedTokens,
+		Status: stakingtypes.Bonded,
+	}
+	s.valStore.On("ValidatorByConsAddr", s.ctx, s.getValidatorConsAddr(name)).Return(val, nil)
+	return val
+}
+
 func (s *PreBlockTestSuite) getValidatorConsAddr(name string) sdk.ConsAddress {
 	if name == "alice" {
-		return constants.AliceEthosConsAddress
+		return constants.AliceConsAddress
 	} else {
-		return constants.BobEthosConsAddress
+		return constants.BobConsAddress
+	}
+}
+
+func (s *PreBlockTestSuite) getValidatorValAddress(name string) sdk.ValAddress {
+	if name == "alice" {
+		return constants.AliceValAddress
+	} else {
+		return constants.BobValAddress
 	}
 }

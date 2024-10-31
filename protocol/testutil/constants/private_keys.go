@@ -3,9 +3,11 @@ package constants
 import (
 	"encoding/base64"
 	"fmt"
+	"log"
 
 	"crypto/ed25519"
 
+	cometbfted25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -20,18 +22,20 @@ var (
 	CarlPrivateKey  = privateKeyFromMnenomic(CarlMnenomic)
 	DavePrivateKey  = privateKeyFromMnenomic(DaveMnenomic)
 
-	AliceEthosPrivateKey = buildPrivKeyFromKeyString("TRJgf7lkTjs/sj43pyweEOanyV7H7fhnVivOi0A4yjW6NjXgCCilX3TshiA8CT/nHxz3brtLh9B/z2fJ4I9N6w==")
-	BobEthosPrivateKey   = buildPrivKeyFromKeyString("OFR4w+FC6EMw5fAGTrHVexyPrjzQ7QfqgZOMgVf0izlCUb6Jh7oDJim9jXP1E0koJWUfXhD+pLPgSMZ0YKu7eg==")
-	CarlEthosPrivateKey  = buildPrivKeyFromKeyString("3YaBAZLA+sl/E73lLfbFbG0u6DYm33ayr/0UpCt/vFBSLkZ/X6a1ZR0fy7fGWbN0ogP4Xc8rSx9dnvcZnqrqKw==")
+	AlicePrivateKeyEddsa = loadPrivKeyFromBase64("65frslxv5ig0KSNKlJOHT2FKTkOzkb/66eDPsiBaNUtiIBHHzbn1n58YVTFAuvP/kVTZFhFPp/nLO+3sPsKtAw==")
+	BobPrivateKeyEddsa   = loadPrivKeyFromBase64("QL39Lu2bfmgfea0SwI891fXqEqOsLWjdhtniTs9U0Wz4/xiKiCqpBj6IP3rIRr04nHoSCJ5T3m715HenPF8OnQ==")
+	CarlPrivateKeyEddsa  = loadPrivKeyFromBase64("E079rll4qMCWBRrHUw3IkGQBZCQQ921HaQl8m0HloSvK0t+zVboTYjjWK14oL9jCPJn/nX4IBgIdjGZEeIF5jg==")
+	DavePrivateKeyEddsa  = loadPrivKeyFromBase64("FaPbbz/gB/Id6GKYv9M/rwsUziScfbUiIObEWLeCpYrIbb2RF9n+GAATUju5aNspAkkvj+Bf/TlcGd8H6bX3oA==")
+
+	AliceConsAddressEddsa, _ = sdk.ConsAddressFromBech32("dydxvalcons1zf9csp5ygq95cqyxh48w3qkuckmpealrw2ug4d")
+	BobConsAddressEddsa, _   = sdk.ConsAddressFromBech32("dydxvalcons1s7wykslt83kayxuaktep9fw8qxe5n73ucftkh4")
+	CarlConsAddressEddsa, _  = sdk.ConsAddressFromBech32("dydxvalcons1vy0nrh7l4rtezrsakaadz4mngwlpdmhy64h0ls")
+	DaveConsAddressEddsa, _  = sdk.ConsAddressFromBech32("dydxvalcons1stjspktkshgcsv8sneqk2vs2ws0nw2wr272vtt")
 
 	AlicePubKey = AlicePrivateKey.PubKey()
 	BobPubKey   = BobPrivateKey.PubKey()
 	CarlPubKey  = CarlPrivateKey.PubKey()
 	DavePubKey  = DavePrivateKey.PubKey()
-
-	AliceEthosPubKey = AliceEthosPrivateKey.PubKey()
-	BobEthosPubKey   = BobEthosPrivateKey.PubKey()
-	CarlEthosPubKey  = CarlEthosPrivateKey.PubKey()
 
 	privateKeyMap = map[string]cryptotypes.PrivKey{
 		AliceAccAddress.String(): AlicePrivateKey,
@@ -40,16 +44,49 @@ var (
 		DaveAccAddress.String():  DavePrivateKey,
 	}
 
-	privateConsMap = map[string]cryptotypes.PrivKey{
-		AliceConsAddress.String():      AlicePrivateKey,
-		BobConsAddress.String():        BobPrivateKey,
-		CarlConsAddress.String():       CarlPrivateKey,
-		DaveConsAddress.String():       DavePrivateKey,
-		AliceEthosConsAddress.String(): AliceEthosPrivateKey,
-		BobEthosConsAddress.String():   BobEthosPrivateKey,
-		CarlEthosConsAddress.String():  CarlEthosPrivateKey,
+	privateConsMap = map[string]cometbfted25519.PrivKey{
+		AliceConsAddressEddsa.String(): AlicePrivateKeyEddsa,
+		BobConsAddressEddsa.String():   BobPrivateKeyEddsa,
+		CarlConsAddressEddsa.String():  CarlPrivateKeyEddsa,
+		DaveConsAddressEddsa.String():  DavePrivateKeyEddsa,
+	}
+
+	privateKeyValidatorMap = map[string]cryptotypes.PrivKey{
+		AliceValidatorAddress.String(): AlicePrivateKey,
+		BobValidatorAddress.String():   BobPrivateKey,
+		CarlValidatorAddress.String():  CarlPrivateKey,
+		DaveValidatorAddress.String():  DavePrivateKey,
+	}
+
+	eddsaPrivateKeyValidatorMap = map[string]cometbfted25519.PrivKey{
+		AliceValidatorAddress.String(): AlicePrivateKeyEddsa,
+		BobValidatorAddress.String():   BobPrivateKeyEddsa,
+		CarlValidatorAddress.String():  CarlPrivateKeyEddsa,
+		DaveValidatorAddress.String():  DavePrivateKeyEddsa,
+	}
+
+	valAddrToConsAddrMap = map[string]sdk.ConsAddress{
+		AliceValidatorAddress.String(): AliceConsAddress,
+		BobValidatorAddress.String():   BobConsAddress,
+		CarlValidatorAddress.String():  CarlConsAddress,
+		DaveValidatorAddress.String():  DaveConsAddress,
+	}
+
+	valAddrToConsAddrEddsaMap = map[string]sdk.ConsAddress{
+		AliceValidatorAddress.String(): AliceConsAddressEddsa,
+		BobValidatorAddress.String():   BobConsAddressEddsa,
+		CarlValidatorAddress.String():  CarlConsAddressEddsa,
+		DaveValidatorAddress.String():  DaveConsAddressEddsa,
 	}
 )
+
+func loadPrivKeyFromBase64(encodedKey string) cometbfted25519.PrivKey {
+	privKeyBytes, err := base64.StdEncoding.DecodeString(encodedKey)
+	if err != nil {
+		log.Fatalf("failed to decode private key: %v", err)
+	}
+	return cometbfted25519.PrivKey(privKeyBytes)
+}
 
 func buildPrivKeyFromKeyString(privKey string) cryptotypes.PrivKey {
 	privKeyBytes, err := base64.StdEncoding.DecodeString(privKey)
@@ -81,7 +118,7 @@ func GetPublicKeyFromAddress(accAddress string) cryptotypes.PubKey {
 	privKey, exists := privateKeyMap[accAddress]
 	if !exists {
 		panic(fmt.Errorf(
-			"unable to look-up private key, acc %s does not match any well known account",
+			"unable to look-up public key, acc %s does not match any well known account",
 			accAddress))
 	}
 	return privKey.PubKey()
@@ -99,7 +136,8 @@ func GetPrivateKeyFromAddress(accAddress string) cryptotypes.PrivKey {
 	return privKey
 }
 
-func GetPrivKeyFromConsAddress(consAddr sdk.ConsAddress) cryptotypes.PrivKey {
+func GetPrivKeyFromConsAddress(consAddr sdk.ConsAddress) cometbfted25519.PrivKey {
+
 	privKey, exists := privateConsMap[consAddr.String()]
 	if !exists {
 		panic(fmt.Errorf(
@@ -107,4 +145,52 @@ func GetPrivKeyFromConsAddress(consAddr sdk.ConsAddress) cryptotypes.PrivKey {
 			consAddr))
 	}
 	return privKey
+}
+
+func GetPrivKeyFromValidatorAddress(validatorAddr sdk.ValAddress) cryptotypes.PrivKey {
+	privKey, exists := privateKeyValidatorMap[validatorAddr.String()]
+	if !exists {
+		panic(fmt.Errorf(
+			"unable to look-up private key, val address %s does not match any well known account",
+			validatorAddr))
+	}
+	return privKey
+}
+
+func GetPrivKeyFromValidatorAddressString(validatorAddrString string) cryptotypes.PrivKey {
+
+	privKey, exists := privateKeyValidatorMap[validatorAddrString]
+	if !exists {
+		panic(fmt.Errorf(
+			"unable to look-up private key, val address string %s does not match any well known account",
+			validatorAddrString))
+	}
+	return privKey
+}
+
+func GetEddsaPrivKeyFromValidatorAddressString(validatorAddrString string) cometbfted25519.PrivKey {
+
+	privKey, exists := eddsaPrivateKeyValidatorMap[validatorAddrString]
+	if !exists {
+		panic(fmt.Errorf(
+			"unable to look-up private key, cons address string %s does not match any well known account",
+			validatorAddrString))
+	}
+	return privKey
+}
+
+func GetConsAddressFromValidatorAddress(validatorAddr sdk.ValAddress) sdk.ConsAddress {
+	consAddr, exists := valAddrToConsAddrMap[validatorAddr.String()]
+	if !exists {
+		panic(fmt.Errorf("unable to look-up cons address, val %s does not match any well known account", validatorAddr))
+	}
+	return consAddr
+}
+
+func GetConsAddressFromStringValidatorAddress(validatorAddr string) sdk.ConsAddress {
+	consAddr, exists := valAddrToConsAddrEddsaMap[validatorAddr]
+	if !exists {
+		panic(fmt.Errorf("unable to look-up cons address, val %s does not match any well known account", validatorAddr))
+	}
+	return consAddr
 }
