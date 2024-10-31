@@ -10,10 +10,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
-func (k msgServer) UpgradeMarketFromIsolatedToCross(
+func (k msgServer) UpgradeIsolatedPerpetualToCross(
 	goCtx context.Context,
-	msg *types.MsgUpgradeMarketFromIsolatedToCross,
-) (*types.MsgUpgradeMarketFromIsolatedToCrossResponse, error) {
+	msg *types.MsgUpgradeIsolatedPerpetualToCross,
+) (*types.MsgUpgradeIsolatedPerpetualToCrossResponse, error) {
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -43,6 +43,8 @@ func (k msgServer) UpgradeMarketFromIsolatedToCross(
 		return nil, err
 	}
 
+	isolatedInsuranceFundBalance := k.Keeper.
+
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assettypes.AssetUsdc.Id,
@@ -63,5 +65,5 @@ func (k msgServer) UpgradeMarketFromIsolatedToCross(
 
 	// TODO Propagate changes to indexer
 
-	return &types.MsgUpgradeMarketFromIsolatedToCrossResponse{}, nil
+	return &types.MsgUpgradeIsolatedPerpetualToCrossResponse{}, nil
 }

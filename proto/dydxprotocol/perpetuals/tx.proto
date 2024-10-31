@@ -25,8 +25,8 @@ service Msg {
       returns (MsgUpdatePerpetualParamsResponse);
   // UpdateParams updates the parameters of perpetuals module.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
-  // UpgradeMarketFromIsolatedToCross upgrades a perpetual from isolated to cross margin.
-  rpc UpgradeMarketFromIsolatedToCross(MsgUpgradeMarketFromIsolatedToCross) returns (MsgUpgradeMarketFromIsolatedToCrossResponse);
+  // UpgradeIsolatedPerpetualToCross upgrades a perpetual from isolated to cross margin.
+  rpc UpgradeIsolatedPerpetualToCross(MsgUpgradeIsolatedPerpetualToCross) returns (MsgUpgradeIsolatedPerpetualToCrossResponse);
 }
 
 // MsgCreatePerpetual is a message used by x/gov to create a new perpetual.
@@ -106,9 +106,9 @@ message MsgUpdateParams {
 // MsgUpdateParamsResponse defines the UpdateParams response type.
 message MsgUpdateParamsResponse {}
 
-// MsgUpgradeMarketFromIsolatedToCross is used to upgrade a market from isolated
-// margin to cross margin.
-message MsgUpgradeMarketFromIsolatedToCross {
+// MsgUpgradeIsolatedPerpetualToCross is used to upgrade a market from
+// isolated margin to cross margin.
+message MsgUpgradeIsolatedPerpetualToCross {
 	// Authority is the address that controls the module.
   option (cosmos.msg.v1.signer) = "authority";
   
@@ -118,5 +118,6 @@ message MsgUpgradeMarketFromIsolatedToCross {
   uint32 perpetual_id = 2; 
 }
 
-// MsgUpgradeMarketFromIsolatedToCrossResponse defines the UpgradeMarketFromIsolatedToCross response type.
-message MsgUpgradeMarketFromIsolatedToCrossResponse {}
+// MsgUpgradeIsolatedPerpetualToCrossResponse defines the
+// UpgradeIsolatedPerpetualToCross response type.
+message MsgUpgradeIsolatedPerpetualToCrossResponse {}

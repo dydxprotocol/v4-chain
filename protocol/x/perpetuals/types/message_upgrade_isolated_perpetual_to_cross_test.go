@@ -7,19 +7,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgUpgradeMarketFromIsolatedToCross_ValidateBasic(t *testing.T) {
+func TestMsgUpgradeIsolatedPerpetualToCross_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
-		msg         types.MsgUpgradeMarketFromIsolatedToCross
+		msg         types.MsgUpgradeIsolatedPerpetualToCross
 		expectedErr string
 	}{
 		"Success": {
-			msg: types.MsgUpgradeMarketFromIsolatedToCross{
+			msg: types.MsgUpgradeIsolatedPerpetualToCross{
 				Authority:   validAuthority,
 				PerpetualId: 1,
 			},
 		},
 		"Failure: Invalid authority": {
-			msg: types.MsgUpgradeMarketFromIsolatedToCross{
+			msg: types.MsgUpgradeIsolatedPerpetualToCross{
 				Authority: "",
 			},
 			expectedErr: "Authority is invalid",

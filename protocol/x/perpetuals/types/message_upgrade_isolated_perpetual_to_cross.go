@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ sdk.Msg = &MsgUpgradeMarketFromIsolatedToCross{}
+var _ sdk.Msg = &MsgUpgradeIsolatedPerpetualToCross{}
 
-func (msg *MsgUpgradeMarketFromIsolatedToCross) ValidateBasic() error {
+func (msg *MsgUpgradeIsolatedPerpetualToCross) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return errorsmod.Wrap(
 			ErrInvalidAuthority,
