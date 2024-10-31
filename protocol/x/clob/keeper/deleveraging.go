@@ -167,6 +167,25 @@ func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int)
 	return insuranceFundBalance.Amount.BigInt()
 }
 
+func (k Keeper) TransferIsolatedInsuranceFundsToCross(ctx sdk.Context, perpetualId uint32) (balance *big.Int) {
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		panic("GetInsuranceFundBalance: Usdc asset not found in state")
+	}
+	insuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
+	if err != nil {
+		return nil
+	}
+	insuranceFundBalance := k.bankKeeper.GetBalance(
+		ctx,
+		insuranceFundAddr,
+		usdcAsset.Denom,
+	)
+
+	// Return as big.Int.
+	return insuranceFundBalance.Amount.BigInt()
+}
+
 // CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
 // This function returns two booleans, shouldDeleverageAtBankruptcyPrice and shouldDeleverageAtOraclePrice.
 // - shouldDeleverageAtBankruptcyPrice is true if the subaccount has negative TNC.

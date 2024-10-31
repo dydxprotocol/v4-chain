@@ -118,6 +118,10 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		perpetual Perpetual,
 	) error
+	GetInsuranceFundModuleAddress(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (sdk.AccAddress, error)
 }
 
 // OpenInterestDelta represents a (perpId, openInterestDelta) tuple.
