@@ -1,4 +1,4 @@
-import * as SubaccountTable from "../../src/stores/subaccount-table";
+import * as SubaccountTable from '../../src/stores/subaccount-table';
 import {
   defaultConditionalOrder,
   defaultConditionalOrderId,
@@ -6,23 +6,23 @@ import {
   defaultOrderId,
   defaultPerpetualMarket,
   defaultSubaccount,
-} from "../helpers/constants";
-import { OrderFromDatabase } from "../../src";
+} from '../helpers/constants';
+import { OrderFromDatabase } from '../../src';
 import {
   IndexerOrder,
   IndexerOrder_ConditionType,
   IndexerOrder_Side,
   IndexerOrder_TimeInForce,
-} from "@dydxprotocol-indexer/v4-protos";
+} from '@dydxprotocol-indexer/v4-protos';
 import {
   ORDER_FLAG_CONDITIONAL,
   ORDER_FLAG_LONG_TERM,
-} from "@dydxprotocol-indexer/v4-proto-parser";
-import Long from "long";
-import { convertToIndexerOrder } from "../../src/lib/order-translations";
-import { clearData, migrate, teardown } from "../../src/helpers/db-helpers";
+} from '@dydxprotocol-indexer/v4-proto-parser';
+import Long from 'long';
+import { convertToIndexerOrder } from '../../src/lib/order-translations';
+import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 
-describe("orderTranslations", () => {
+describe('orderTranslations', () => {
   beforeAll(async () => {
     await migrate();
   });
@@ -35,8 +35,8 @@ describe("orderTranslations", () => {
     await teardown();
   });
 
-  describe("convertToIndexerOrder", () => {
-    it("successfully converts to indexer order", async () => {
+  describe('convertToIndexerOrder', () => {
+    it('successfully converts to indexer order', async () => {
       await SubaccountTable.create(defaultSubaccount);
       const order: OrderFromDatabase = {
         ...defaultOrderGoodTilBlockTime,
@@ -62,18 +62,18 @@ describe("orderTranslations", () => {
         conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
         conditionalOrderTriggerSubticks: Long.fromValue(0, true),
         routerFeePpm: 0,
-        routerFeeSubaccountOwner: "dydx1xxxxxx",
+        routerFeeSubaccountOwner: 'dydx1xxxxxx',
         routerFeeSubaccountNumber: 0,
       };
       const indexerOrder: IndexerOrder = await convertToIndexerOrder(
         order,
-        defaultPerpetualMarket
+        defaultPerpetualMarket,
       );
       expect(indexerOrder).toEqual(expectedOrder);
     });
   });
 
-  it("successfully converts conditional to indexer order", async () => {
+  it('successfully converts conditional to indexer order', async () => {
     await SubaccountTable.create(defaultSubaccount);
     const order: OrderFromDatabase = {
       ...defaultConditionalOrder,
@@ -100,12 +100,12 @@ describe("orderTranslations", () => {
       // 19_000 * 1e-10 / 1e-6 / 1e-8 = 190_000_000
       conditionalOrderTriggerSubticks: Long.fromValue(190_000_000, true),
       routerFeePpm: 0,
-      routerFeeSubaccountOwner: "dydx1xxxxxx",
+      routerFeeSubaccountOwner: 'dydx1xxxxxx',
       routerFeeSubaccountNumber: 0,
     };
     const indexerOrder: IndexerOrder = await convertToIndexerOrder(
       order,
-      defaultPerpetualMarket
+      defaultPerpetualMarket,
     );
     expect(indexerOrder).toEqual(expectedOrder);
   });

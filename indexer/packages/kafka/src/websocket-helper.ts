@@ -88,7 +88,8 @@ export function generateSubaccountMessageContents(
         clientMetadata: redisOrder.order!.clientMetadata.toString(),
         routerFeePpm: redisOrder.order!.routerFeePpm.toString(),
         routerFeeSubaccountOwner: redisOrder.order!.routerFeeSubaccountOwner ?? undefined,
-        routerFeeSubaccountNumber: redisOrder.order!.routerFeeSubaccountNumber?.toString() ?? undefined,
+        routerFeeSubaccountNumber: redisOrder.order!.routerFeeSubaccountNumber?.toString() ??
+          undefined,
         triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
       },
     ],

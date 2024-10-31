@@ -1678,7 +1678,7 @@ describe('OrderHandler', () => {
       clientMetadata: 0,
       routerFeePpm: 0,
       routerFeeSubaccountOwner: '',
-      routerFeeSubaccountNumber: 0, 
+      routerFeeSubaccountNumber: 0,
     });
 
     const fillAmount: number = takerQuantums;

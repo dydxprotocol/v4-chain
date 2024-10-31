@@ -34,7 +34,11 @@ export function validateOrderAndReturnErrorMessage(order: IndexerOrder): string 
     return 'Router fee ppm must be between 0 and 1000000';
   }
 
-  if ((order.routerFeeSubaccountOwner === undefined || order.routerFeeSubaccountNumber === undefined) && order.routerFeePpm > 0) {
+  if (
+    (order.routerFeeSubaccountOwner === undefined ||
+    order.routerFeeSubaccountNumber === undefined) &&
+    order.routerFeePpm > 0
+  ) {
     return 'Router subaccount ID must be set if router fee ppm is greater than 0';
   }
 
