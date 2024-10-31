@@ -256,6 +256,9 @@ func (k Keeper) UpgradeIsolatedPerpetualToCross(
 	id uint32,
 ) error {
 	err := k.clobKeeper.TransferIsolatedInsuranceFundToCross(ctx, id)
+	if err != nil {
+		return err
+	}
 
 	_, err = k.SetPerpetualMarketType(
 		ctx,
