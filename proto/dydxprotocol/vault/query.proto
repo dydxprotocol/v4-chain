@@ -51,8 +51,10 @@ service Query {
   // Queries withdrawal info for megavault.
   rpc MegavaultWithdrawalInfo(QueryMegavaultWithdrawalInfoRequest)
       returns (QueryMegavaultWithdrawalInfoResponse) {
-    option (google.api.http).get =
-        "/dydxprotocol/vault/megavault/withdrawal_info";
+    option (google.api.http) = {
+      post : "/dydxprotocol/vault/megavault/withdrawal_info"
+      body : "*"
+    };
   }
 }
 
