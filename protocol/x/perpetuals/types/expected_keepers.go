@@ -33,6 +33,12 @@ type PerpetualsClobKeeper interface {
 		isActive bool,
 		err error,
 	)
+	TransferIsolatedInsuranceFundToCross(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (
+		err error,
+	)
 }
 
 // EpochsKeeper defines the expected epochs keeper to get epoch info.

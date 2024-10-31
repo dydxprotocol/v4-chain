@@ -91,6 +91,7 @@ type SubaccountsKeeper interface {
 
 type AssetsKeeper interface {
 	GetAsset(ctx sdk.Context, id uint32) (val assettypes.Asset, exists bool)
+	ConvertAssetToCoin(ctx sdk.Context, assetId uint32, quantums *big.Int) (*big.Int, sdk.Coin, error)
 }
 
 type BlockTimeKeeper interface {
@@ -157,6 +158,7 @@ type AccountKeeper interface {
 type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 type RewardsKeeper interface {
