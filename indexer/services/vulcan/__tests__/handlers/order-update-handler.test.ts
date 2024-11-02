@@ -5,7 +5,7 @@ import {
   redis,
   redisTestConstants,
   StatefulOrderUpdatesCache,
-} from '@klyraprotocol-indexerr/redis';
+} from '@klyraprotocol-indexer/redis';
 import {
   expectOpenOrderIds,
   expectOrderbookLevelCache,
@@ -20,14 +20,14 @@ import {
   protocolTranslations,
   testConstants,
   testMocks,
-} from '@klyraprotocol-indexerr/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   logger,
   stats,
   STATS_FUNCTION_NAME,
   wrapBackgroundTask,
-} from '@klyraprotocol-indexerr/base';
-import { synchronizeWrapBackgroundTask } from '@klyraprotocol-indexerr/dev';
+} from '@klyraprotocol-indexer/base';
+import { synchronizeWrapBackgroundTask } from '@klyraprotocol-indexer/dev';
 import {
   IndexerOrder,
   OrderbookMessage,
@@ -35,19 +35,19 @@ import {
   OrderPlaceV1_OrderPlacementStatus,
   RedisOrder,
   OrderUpdateV1,
-} from '@klyraprotocol-indexerr/v4-protos';
-import * as redisPackage from '@klyraprotocol-indexerr/redis';
+} from '@klyraprotocol-indexer/v4-protos';
+import * as redisPackage from '@klyraprotocol-indexer/redis';
 import {
   ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
   producer,
-} from '@klyraprotocol-indexerr/kafka';
+} from '@klyraprotocol-indexer/kafka';
 import { ProducerRecord } from 'kafkajs';
 import { expectWebsocketOrderbookMessage } from '../helpers/websocket-helpers';
 import { OrderbookSide } from '../../src/lib/types';
 import Long from 'long';
 
-jest.mock('@klyraprotocol-indexerr/base', () => ({
-  ...jest.requireActual('@klyraprotocol-indexerr/base'),
+jest.mock('@klyraprotocol-indexer/base', () => ({
+  ...jest.requireActual('@klyraprotocol-indexer/base'),
   wrapBackgroundTask: jest.fn(),
 }));
 

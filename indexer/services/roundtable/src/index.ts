@@ -1,5 +1,5 @@
-import { logger, startBugsnag, wrapBackgroundTask } from '@klyraprotocol-indexerr/base';
-import { producer } from '@klyraprotocol-indexerr/kafka';
+import { logger, startBugsnag, wrapBackgroundTask } from '@klyraprotocol-indexer/base';
+import { producer } from '@klyraprotocol-indexer/kafka';
 
 import config from './config';
 import { complianceProvider } from './helpers/compliance-clients';

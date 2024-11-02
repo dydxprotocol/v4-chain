@@ -1,4 +1,4 @@
-import { redis as redislib } from '@klyraprotocol-indexerr/redis';
+import { redis as redislib } from '@klyraprotocol-indexer/redis';
 import {
   RedisClient,
 } from 'redis';

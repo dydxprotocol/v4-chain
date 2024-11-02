@@ -1,4 +1,4 @@
-import { logger } from '@klyraprotocol-indexerr/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import { Partitioners, Producer } from 'kafkajs';
 
 import { kafka } from './kafka';
