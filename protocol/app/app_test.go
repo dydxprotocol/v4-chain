@@ -131,38 +131,38 @@ func TestAppPanicsWithGrpcDisabled(t *testing.T) {
 	require.Panics(t, func() { testapp.DefaultTestApp(customFlags) })
 }
 func TestBaseApp(t *testing.T) {
-	dydxApp := testapp.DefaultTestApp(nil)
-	require.NotNil(t, dydxApp.GetBaseApp(), "Expected non-nil BaseApp")
+	klyraApp := testapp.DefaultTestApp(nil)
+	require.NotNil(t, klyraApp.GetBaseApp(), "Expected non-nil BaseApp")
 }
 
 func TestLegacyAmino(t *testing.T) {
-	dydxApp := testapp.DefaultTestApp(nil)
-	require.NotNil(t, dydxApp.LegacyAmino(), "Expected non-nil LegacyAmino")
+	klyraApp := testapp.DefaultTestApp(nil)
+	require.NotNil(t, klyraApp.LegacyAmino(), "Expected non-nil LegacyAmino")
 }
 
 func TestAppCodec(t *testing.T) {
-	dydxApp := testapp.DefaultTestApp(nil)
-	require.NotNil(t, dydxApp.AppCodec(), "Expected non-nil AppCodec")
+	klyraApp := testapp.DefaultTestApp(nil)
+	require.NotNil(t, klyraApp.AppCodec(), "Expected non-nil AppCodec")
 }
 
 func TestInterfaceRegistry(t *testing.T) {
-	dydxApp := testapp.DefaultTestApp(nil)
-	require.NotNil(t, dydxApp.InterfaceRegistry(), "Expected non-nil InterfaceRegistry")
+	klyraApp := testapp.DefaultTestApp(nil)
+	require.NotNil(t, klyraApp.InterfaceRegistry(), "Expected non-nil InterfaceRegistry")
 }
 
 func TestTxConfig(t *testing.T) {
-	dydxApp := testapp.DefaultTestApp(nil)
-	require.NotNil(t, dydxApp.TxConfig(), "Expected non-nil TxConfig")
+	klyraApp := testapp.DefaultTestApp(nil)
+	require.NotNil(t, klyraApp.TxConfig(), "Expected non-nil TxConfig")
 }
 
 func TestDefaultGenesis(t *testing.T) {
-	dydxApp := testapp.DefaultTestApp(nil)
-	require.NotNil(t, dydxApp.DefaultGenesis(), "Expected non-nil DefaultGenesis")
+	klyraApp := testapp.DefaultTestApp(nil)
+	require.NotNil(t, klyraApp.DefaultGenesis(), "Expected non-nil DefaultGenesis")
 }
 
 func TestSimulationManager(t *testing.T) {
-	dydxApp := testapp.DefaultTestApp(nil)
-	require.Nil(t, dydxApp.SimulationManager(), "Expected nil SimulationManager")
+	klyraApp := testapp.DefaultTestApp(nil)
+	require.Nil(t, klyraApp.SimulationManager(), "Expected nil SimulationManager")
 }
 
 func TestModuleBasics(t *testing.T) {

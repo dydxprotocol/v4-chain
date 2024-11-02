@@ -7,7 +7,7 @@ import { accountFromAny } from "@cosmjs/stargate";
 import {
   Order_Side,
   Order_TimeInForce,
-} from "@dydxprotocol/v4-proto/src/codegen/dydxprotocol/clob/order";
+} from "@klyraprotocol/v4-proto/src/codegen/klyraprotocol/clob/order";
 import * as AuthModule from "cosmjs-types/cosmos/auth/v1beta1/query";
 import Long from "long";
 

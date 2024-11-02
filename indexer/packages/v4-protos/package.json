@@ -1,10 +1,10 @@
 {
-  "name": "@dydxprotocol-indexer/v4-protos",
+  "name": "@klyraprotocol-indexer/v4-protos",
   "version": "0.0.1",
   "description": "",
   "main": "build/index.js",
   "devDependencies": {
-    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/dev": "workspace:^0.0.1",
     "@osmonauts/telescope": "0.80.0",
     "@protobufs/cosmos": "^0.0.11",
     "@protobufs/gogoproto": "^0.0.10",

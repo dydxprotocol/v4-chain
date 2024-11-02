@@ -27,7 +27,7 @@ type FakeRoutableMsg struct {
 // registered MsgUpdateParams message type. This is done so that we can bypass the handler check and trigger
 // the ValidateBasic error.
 func (msg *FakeRoutableMsg) XXX_MessageName() string {
-	return "dydxprotocol.perpetuals.MsgUpdateParams"
+	return "klyraprotocol.perpetuals.MsgUpdateParams"
 }
 
 // implementing XXX_Size along with XXX_Marshal proto interface methods allows us to simulate an encoding failure.

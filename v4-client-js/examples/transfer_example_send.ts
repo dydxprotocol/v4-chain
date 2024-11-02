@@ -8,11 +8,11 @@ import { Network } from '../src/clients/constants';
 import LocalWallet from '../src/clients/modules/local-wallet';
 import { SubaccountInfo } from '../src/clients/subaccount';
 import { ValidatorClient } from '../src/clients/validator-client';
-import { DYDX_TEST_MNEMONIC } from './constants';
+import { KLYRA_TEST_MNEMONIC } from './constants';
 
 async function test(): Promise<void> {
   const wallet = await LocalWallet.fromMnemonic(
-    DYDX_TEST_MNEMONIC,
+    KLYRA_TEST_MNEMONIC,
     BECH32_PREFIX,
   );
   console.log(wallet);

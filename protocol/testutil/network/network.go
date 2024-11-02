@@ -151,12 +151,12 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 				appOptions,
 				baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 				baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
-				baseapp.SetChainID("dydxprotocol"),
+				baseapp.SetChainID("klyraprotocol"),
 			)
 		},
 		GenesisState:    basic_manager.ModuleBasics.DefaultGenesis(encoding.Codec),
 		TimeoutCommit:   2 * time.Second,
-		ChainID:         "dydxprotocol",
+		ChainID:         "klyraprotocol",
 		NumValidators:   1,
 		BondDenom:       sdk.DefaultBondDenom,
 		MinGasPrices:    fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom),
@@ -173,7 +173,7 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 // NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
 func NewTestNetworkFixture() network.TestFixture {
 	appOptions := appoptions.GetDefaultTestAppOptionsFromTempDirectory("", nil)
-	dydxApp := app.New(
+	klyraApp := app.New(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
 		nil,
@@ -195,12 +195,12 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	return network.TestFixture{
 		AppConstructor: appCtr,
-		GenesisState:   dydxApp.DefaultGenesis(),
+		GenesisState:   klyraApp.DefaultGenesis(),
 		EncodingConfig: testutil.TestEncodingConfig{
-			InterfaceRegistry: dydxApp.InterfaceRegistry(),
-			Codec:             dydxApp.AppCodec(),
-			TxConfig:          dydxApp.TxConfig(),
-			Amino:             dydxApp.LegacyAmino(),
+			InterfaceRegistry: klyraApp.InterfaceRegistry(),
+			Codec:             klyraApp.AppCodec(),
+			TxConfig:          klyraApp.TxConfig(),
+			Amino:             klyraApp.LegacyAmino(),
 		},
 	}
 }

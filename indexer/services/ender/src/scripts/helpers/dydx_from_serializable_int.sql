@@ -1,7 +1,6 @@
-CREATE OR REPLACE FUNCTION dydx_from_serializable_int(serializable_int jsonb) RETURNS numeric AS $$
+CREATE OR REPLACE FUNCTION klyra_from_serializable_int(serializable_int jsonb) RETURNS numeric AS $$
 /**
   Converts a JSON.stringify byte array representing a SerializableInt
-  (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/protocol/dtypes/serializable_int.go#L84) to a numeric.
    Note that the underlying SerializableInt encoding format uses the big.Int GobEncoding
   (https://github.com/golang/go/blob/886fba5/src/math/big/intmarsh.go#L18)
   which is represented as [versionAndSignByte bigEndianByte0 bigEndianByte1 ... bigEndianByte2]

@@ -1,10 +1,10 @@
-import { KafkaTopics } from '@dydxprotocol-indexer/kafka';
+import { KafkaTopics } from '@klyraprotocol-indexer/kafka';
 import {
   Liquidity,
   PerpetualPositionColumns,
   PerpetualPositionFromDatabase,
   SubaccountMessageContents,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   StatefulOrderEventV1,
   IndexerTendermintEvent,
@@ -35,13 +35,12 @@ import {
   DeleveragingEventV1,
   OpenInterestUpdateEventV1,
   UpdateYieldParamsEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import { IHeaders } from 'kafkajs';
 import Long from 'long';
 
-// Type sourced from protocol:
-// https://github.com/dydxprotocol/v4-chain/blob/main/protocol/indexer/events/constants.go
-export enum DydxIndexerSubtypes {
+
+export enum KlyraIndexerSubtypes {
   ORDER_FILL = 'order_fill',
   SUBACCOUNT_UPDATE = 'subaccount_update',
   TRANSFER = 'transfer',
@@ -69,97 +68,97 @@ export type EventProtoWithTypeAndVersion = {
   version: number,
   blockEventIndex: number,
 } & ({
-  type: DydxIndexerSubtypes.ORDER_FILL,
+  type: KlyraIndexerSubtypes.ORDER_FILL,
   eventProto: OrderFillEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+  type: KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
   eventProto: SubaccountUpdateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.TRANSFER,
+  type: KlyraIndexerSubtypes.TRANSFER,
   eventProto: TransferEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.MARKET,
+  type: KlyraIndexerSubtypes.MARKET,
   eventProto: MarketEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.STATEFUL_ORDER,
+  type: KlyraIndexerSubtypes.STATEFUL_ORDER,
   eventProto: StatefulOrderEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.FUNDING,
+  type: KlyraIndexerSubtypes.FUNDING,
   eventProto: FundingEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.ASSET,
+  type: KlyraIndexerSubtypes.ASSET,
   eventProto: AssetCreateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+  type: KlyraIndexerSubtypes.PERPETUAL_MARKET,
   eventProto: PerpetualMarketCreateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+  type: KlyraIndexerSubtypes.PERPETUAL_MARKET,
   eventProto: PerpetualMarketCreateEventV2,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+  type: KlyraIndexerSubtypes.LIQUIDITY_TIER,
   eventProto: LiquidityTierUpsertEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+  type: KlyraIndexerSubtypes.LIQUIDITY_TIER,
   eventProto: LiquidityTierUpsertEventV2,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+  type: KlyraIndexerSubtypes.UPDATE_PERPETUAL,
   eventProto: UpdatePerpetualEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
+  type: KlyraIndexerSubtypes.UPDATE_CLOB_PAIR,
   eventProto: UpdateClobPairEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.DELEVERAGING,
+  type: KlyraIndexerSubtypes.DELEVERAGING,
   eventProto: DeleveragingEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
+  type: KlyraIndexerSubtypes.OPEN_INTEREST_UPDATE,
   eventProto: OpenInterestUpdateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
 } | {
-  type: DydxIndexerSubtypes.YIELD_PARAMS,
+  type: KlyraIndexerSubtypes.YIELD_PARAMS,
   eventProto: UpdateYieldParamsEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,

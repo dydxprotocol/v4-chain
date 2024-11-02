@@ -146,28 +146,28 @@ func TestAppModuleBasic_RegisterGRPCGatewayRoutes(t *testing.T) {
 
 	// Expect NextDelayedMessageId route registered
 	recorder := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/dydxprotocol/v4/delaymsg/next_id", nil)
+	req, err := http.NewRequest("GET", "/klyraprotocol/v4/delaymsg/next_id", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
 
 	// Expect Messages route registered
 	recorder = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/dydxprotocol/v4/delaymsg/message/0", nil)
+	req, err = http.NewRequest("GET", "/klyraprotocol/v4/delaymsg/message/0", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
 
 	// Expect BlockMessageIds route registered
 	recorder = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/dydxprotocol/v4/delaymsg/block/message_ids/100", nil)
+	req, err = http.NewRequest("GET", "/klyraprotocol/v4/delaymsg/block/message_ids/100", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
 
 	// Expect unexpected route not registered
 	recorder = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/dydxprotocol/v4/delaymsg/foo/bar/baz", nil)
+	req, err = http.NewRequest("GET", "/klyraprotocol/v4/delaymsg/foo/bar/baz", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Equal(t, 404, recorder.Code)

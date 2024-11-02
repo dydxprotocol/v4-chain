@@ -18,12 +18,12 @@ import (
 )
 
 func init() {
-	// SetAddressPrefixes() explicitly in order to set the `dydx` address prefixes.
+	// SetAddressPrefixes() explicitly in order to set the `klyra` address prefixes.
 	config.SetAddressPrefixes()
 }
 
 var (
-	// Module account permissions. Contains all module accounts on dYdX chain.
+	// Module account permissions. Contains all module accounts on klyra chain.
 	maccPerms = map[string][]string{
 		// -------- Native SDK module accounts --------
 		authtypes.FeeCollectorName:     nil,
@@ -33,7 +33,7 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner}, // Note: TDaiPoolAccount is another name for ibctransfertypes.ModuleName
 		icatypes.ModuleName:            nil,
-		// -------- dYdX custom module accounts --------
+		// -------- klyra custom module accounts --------
 		// subaccounts module account holds tokens for all subaccounts.
 		satypes.ModuleName: nil,
 		// insurance fund account manages insurance fund for liquidations.

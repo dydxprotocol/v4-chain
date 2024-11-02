@@ -1,8 +1,8 @@
 # Indexer Websocket Documentation
 
-dYdX offers a WebSocket API for streaming v4 updates.
+Klyra offers a WebSocket API for streaming v4 updates.
 
-You can connect to the v4 Testnet's webSockets at: `wss://indexer.v4testnet.dydx.exchange/v4/ws`
+You can connect to the v4 Testnet's webSockets at: `wss://indexer.v4testnet.klyra.exchange/v4/ws`
 
 ## Overall
 
@@ -38,7 +38,7 @@ Use a command-line websocket client such as [interactive-websocket-cli](https:/
 Example (with `interactive-websocket-cli`)
 
 ```tsx
-wscli connect wss://indexer.v4testnet.dydx.exchange/v4/ws
+wscli connect wss://indexer.v4testnet.klyra.exchange/v4/ws
 <output from ws-cli>
 <type 's' to send> { "type": "subscribe", "channel": "v4_trades", "id": "BTC-USD" }
 ```
@@ -66,10 +66,10 @@ Returns everything from the `/v4/addresses/:address/subaccountNumber/:subaccount
   "connection_id": "c5a28fa5-c257-4fb5-b68e-fe084c2768e5",
   "message_id": 1,
   "channel": "v4_subaccounts",
-  "id": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4/0",
+  "id": "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57/0",
   "contents": {
     "subaccount": {
-      "address": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
+      "address": "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57",
       "subaccountNumber": 0,
       "equity": "100000000000.000000",
       "freeCollateral": "100000000000.000000",
@@ -311,7 +311,7 @@ export enum TransferType {
   "type": "channel_data",
   "connection_id": "a00edbe8-095a-4da1-8a9d-ff1f91467258",
   "message_id": 4,
-  "id": "dydx1zsw8fczav25uvc8rg3zcv6zy9j7yhnktpq374m/0",
+  "id": "klyra1zsw8fczav25uvc8rg3zcv6zy9j7yhnkt73y3as/0",
   "channel": "v4_subaccounts",
   "version": "2.1.0",
   "contents": {

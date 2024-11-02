@@ -6,7 +6,7 @@ import {
   FillTable,
   FillFromDatabase,
   perpetualMarketRefresher,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { RequestMethod, TradeResponseObject } from '../../../../src/types';
 import request from 'supertest';
 import { createMakerTakerOrderAndFill, sendRequest } from '../../../helpers/helpers';

@@ -1,7 +1,7 @@
 import {
   redis as client,
 } from '../helpers/utils';
-import { SubaccountTable } from '@dydxprotocol-indexer/postgres';
+import { SubaccountTable } from '@klyraprotocol-indexer/postgres';
 import { getOrderIdsForSubaccount } from '../../src/caches/subaccount-order-ids-cache';
 import { placeOrder } from '../../src/caches/place-order';
 import {

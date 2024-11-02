@@ -1,7 +1,7 @@
 import {
   IndexerAssetPosition,
   IndexerPerpetualPosition,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexerr/v4-protos';
 
 import {
   bytesToBigInt,

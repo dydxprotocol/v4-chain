@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_get_weighted_average(first_price numeric, first_weight numeric, second_price numeric, second_weight numeric) RETURNS numeric AS $$
+CREATE OR REPLACE FUNCTION klyra_get_weighted_average(first_price numeric, first_weight numeric, second_price numeric, second_weight numeric) RETURNS numeric AS $$
 /**
   Returns the weighted average between two prices.
 
@@ -14,7 +14,7 @@ CREATE OR REPLACE FUNCTION dydx_get_weighted_average(first_price numeric, first_
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
 BEGIN
-    RETURN dydx_trim_scale((coalesce(first_price, 0::numeric) * first_weight +
+    RETURN klyra_trim_scale((coalesce(first_price, 0::numeric) * first_weight +
                             coalesce(second_price, 0::numeric) * second_weight)::numeric(256, 20)
                                / (first_weight + second_weight)::numeric(256, 20));
 END;

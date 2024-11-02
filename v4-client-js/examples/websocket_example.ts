@@ -1,6 +1,6 @@
 import { Network } from '../src/clients/constants';
 import { CandlesResolution, IncomingMessageTypes, SocketClient } from '../src/clients/socket-client';
-import { DYDX_TEST_ADDRESS } from './constants';
+import { KLYRA_TEST_ADDRESS } from './constants';
 
 function test(): void {
   const mySocket = new SocketClient(
@@ -22,7 +22,7 @@ function test(): void {
             mySocket.subscribeToOrderbook('ETH-USD');
             mySocket.subscribeToTrades('ETH-USD');
             mySocket.subscribeToCandles('ETH-USD', CandlesResolution.FIFTEEN_MINUTES);
-            mySocket.subscribeToSubaccount(DYDX_TEST_ADDRESS, 0);
+            mySocket.subscribeToSubaccount(KLYRA_TEST_ADDRESS, 0);
           }
           console.log(data);
         } catch (e) {

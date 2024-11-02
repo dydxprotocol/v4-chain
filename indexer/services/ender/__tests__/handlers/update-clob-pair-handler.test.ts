@@ -6,7 +6,7 @@ import {
   perpetualMarketRefresher,
   protocolTranslations,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import {
   defaultHeight,
@@ -20,15 +20,15 @@ import {
   IndexerTendermintEvent,
   Timestamp,
   UpdateClobPairEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import { UpdateClobPairHandler } from '../../src/handlers/update-clob-pair-handler';
-import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage, producer } from '@klyraprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
@@ -64,7 +64,7 @@ describe('update-clob-pair-handler', () => {
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
+        KlyraIndexerSubtypes.UPDATE_CLOB_PAIR,
         UpdateClobPairEventV1.encode(defaultUpdateClobPairEvent).finish(),
         transactionIndex,
         eventIndex,
@@ -136,7 +136,7 @@ function createKafkaMessageFromUpdateClobPairEvent({
   const events: IndexerTendermintEvent[] = [];
   events.push(
     createIndexerTendermintEvent(
-      DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
+      KlyraIndexerSubtypes.UPDATE_CLOB_PAIR,
       UpdateClobPairEventV1.encode(updatePerpetualEvent).finish(),
       transactionIndex,
       0,

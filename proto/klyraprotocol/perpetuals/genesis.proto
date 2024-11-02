@@ -1,0 +1,15 @@
+syntax = "proto3";
+package klyraprotocol.perpetuals;
+
+import "gogoproto/gogo.proto";
+import "klyraprotocol/perpetuals/perpetual.proto";
+import "klyraprotocol/perpetuals/params.proto";
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types";
+
+// GenesisState defines the perpetuals module's genesis state.
+message GenesisState {
+  repeated Perpetual perpetuals = 1 [ (gogoproto.nullable) = false ];
+  repeated LiquidityTier liquidity_tiers = 2 [ (gogoproto.nullable) = false ];
+  Params params = 3 [ (gogoproto.nullable) = false ];
+}

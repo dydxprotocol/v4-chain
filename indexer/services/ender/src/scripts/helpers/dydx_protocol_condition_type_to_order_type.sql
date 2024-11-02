@@ -1,6 +1,6 @@
-CREATE OR REPLACE FUNCTION dydx_protocol_condition_type_to_order_type(condition_type jsonb) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION klyra_protocol_condition_type_to_order_type(condition_type jsonb) RETURNS text AS $$
 /**
-  Converts the 'ConditionType' enum from the IndexerOrder protobuf (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/protocol/v1/clob.proto#L130)
+  Converts the 'ConditionType' enum from the IndexerOrder protobuf
   to the 'OrderType' enum in postgres.
 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)

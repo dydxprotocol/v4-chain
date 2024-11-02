@@ -5,7 +5,7 @@ import {
   TransferCreateObject,
   TransferTable,
   TransferType,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { ParentSubaccountTransferResponseObject, RequestMethod, TransferResponseObject } from '../../../../src/types';
 import request from 'supertest';
 import { sendRequest } from '../../../helpers/helpers';
@@ -15,7 +15,7 @@ import {
   defaultTendermintEventId4,
   defaultWalletAddress,
   isolatedSubaccountId,
-} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+} from '@klyraprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('transfers-controller#V4', () => {
   beforeAll(async () => {

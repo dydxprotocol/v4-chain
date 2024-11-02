@@ -119,28 +119,28 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
 
 		// clob
-		"/dydxprotocol.clob.MsgBatchCancel",
-		"/dydxprotocol.clob.MsgBatchCancelResponse",
-		"/dydxprotocol.clob.MsgCancelOrder",
-		"/dydxprotocol.clob.MsgCancelOrderResponse",
-		"/dydxprotocol.clob.MsgPlaceOrder",
-		"/dydxprotocol.clob.MsgPlaceOrderResponse",
+		"/klyraprotocol.clob.MsgBatchCancel",
+		"/klyraprotocol.clob.MsgBatchCancelResponse",
+		"/klyraprotocol.clob.MsgCancelOrder",
+		"/klyraprotocol.clob.MsgCancelOrderResponse",
+		"/klyraprotocol.clob.MsgPlaceOrder",
+		"/klyraprotocol.clob.MsgPlaceOrderResponse",
 
 		// perpetuals
 
 		// prices
 
 		// sending
-		"/dydxprotocol.sending.MsgCreateTransfer",
-		"/dydxprotocol.sending.MsgCreateTransferResponse",
-		"/dydxprotocol.sending.MsgDepositToSubaccount",
-		"/dydxprotocol.sending.MsgDepositToSubaccountResponse",
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccount",
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse",
+		"/klyraprotocol.sending.MsgCreateTransfer",
+		"/klyraprotocol.sending.MsgCreateTransferResponse",
+		"/klyraprotocol.sending.MsgDepositToSubaccount",
+		"/klyraprotocol.sending.MsgDepositToSubaccountResponse",
+		"/klyraprotocol.sending.MsgWithdrawFromSubaccount",
+		"/klyraprotocol.sending.MsgWithdrawFromSubaccountResponse",
 
 		// subaccounts
-		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccount",
-		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccountResponse",
+		"/klyraprotocol.subaccounts.MsgClaimYieldForSubaccount",
+		"/klyraprotocol.subaccounts.MsgClaimYieldForSubaccountResponse",
 
 		// ibc application module: ICA
 		"/ibc.applications.interchain_accounts.v1.InterchainAccount",

@@ -1,13 +1,13 @@
-CREATE OR REPLACE FUNCTION dydx_stateful_order_handler(
+CREATE OR REPLACE FUNCTION klyra_stateful_order_handler(
     block_height int, block_time timestamp, event_data jsonb) RETURNS jsonb AS $$
 /**
   Parameters:
     - block_height: the height of the block being processing.
     - block_time: the time of the block being processed.
-    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
+    - event_data: The 'data' field of the IndexerTendermintEvent
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
   Returns: JSON object containing fields:
-    - order: The upserted order in order-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/order-model.ts).
+    - order: The upserted order in order-model format.
 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
@@ -30,26 +30,26 @@ BEGIN
         order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order');
         clob_pair_id = (order_->'orderId'->'clobPairId')::bigint;
 
-        perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
+        perpetual_market_record = klyra_get_perpetual_market_for_clob_pair(clob_pair_id);
 
         /**
           Calculate sizes, prices, and fill amounts.
 
           TODO(IND-238): Extract out calculation of quantums and subticks to their own SQL functions.
         */
-        order_record."id" = dydx_uuid_from_order_id(order_->'orderId');
-        order_record."subaccountId" = dydx_uuid_from_subaccount_id(order_->'orderId'->'subaccountId');
+        order_record."id" = klyra_uuid_from_order_id(order_->'orderId');
+        order_record."subaccountId" = klyra_uuid_from_subaccount_id(order_->'orderId'->'subaccountId');
         order_record."clientId" = jsonb_extract_path_text(order_, 'orderId', 'clientId')::bigint;
         order_record."clobPairId" = clob_pair_id;
-        order_record."side" = dydx_from_protocol_order_side(order_->'side');
-        order_record."size" = dydx_trim_scale(dydx_from_jsonlib_long(order_->'quantums') *
+        order_record."side" = klyra_from_protocol_order_side(order_->'side');
+        order_record."size" = klyra_trim_scale(klyra_from_jsonlib_long(order_->'quantums') *
                                               power(10, perpetual_market_record."atomicResolution")::numeric);
         order_record."totalFilled" = 0;
-        order_record."price" = dydx_trim_scale(dydx_from_jsonlib_long(order_->'subticks') *
+        order_record."price" = klyra_trim_scale(klyra_from_jsonlib_long(order_->'subticks') *
                                                power(10, perpetual_market_record."quantumConversionExponent" +
                                                          QUOTE_CURRENCY_ATOMIC_RESOLUTION -
                                                          perpetual_market_record."atomicResolution")::numeric);
-        order_record."timeInForce" = dydx_from_protocol_time_in_force(order_->'timeInForce');
+        order_record."timeInForce" = klyra_from_protocol_time_in_force(order_->'timeInForce');
         order_record."reduceOnly" = (order_->>'reduceOnly')::boolean;
         order_record."orderFlags" = (order_->'orderId'->'orderFlags')::bigint;
         order_record."goodTilBlockTime" = to_timestamp((order_->'goodTilBlockTime')::double precision);
@@ -63,9 +63,9 @@ BEGIN
 
         CASE
             WHEN event_data->'conditionalOrderPlacement' IS NOT NULL THEN
-                order_record."type" = dydx_protocol_condition_type_to_order_type(order_->'conditionType');
+                order_record."type" = klyra_protocol_condition_type_to_order_type(order_->'conditionType');
                 order_record."status" = 'UNTRIGGERED';
-                order_record."triggerPrice" = dydx_trim_scale(dydx_from_jsonlib_long(order_->'conditionalOrderTriggerSubticks') *
+                order_record."triggerPrice" = klyra_trim_scale(klyra_from_jsonlib_long(order_->'conditionalOrderTriggerSubticks') *
                                                               power(10, perpetual_market_record."quantumConversionExponent" +
                                                                         QUOTE_CURRENCY_ATOMIC_RESOLUTION -
                                                                         perpetual_market_record."atomicResolution")::numeric);
@@ -101,9 +101,9 @@ BEGIN
 
         RETURN jsonb_build_object(
                 'order',
-                dydx_to_jsonb(order_record),
+                klyra_to_jsonb(order_record),
                 'perpetual_market',
-                dydx_to_jsonb(perpetual_market_record)
+                klyra_to_jsonb(perpetual_market_record)
             );
     ELSIF event_data->'conditionalOrderTriggered' IS NOT NULL OR event_data->'orderRemoval' IS NOT NULL THEN
         CASE
@@ -116,15 +116,15 @@ BEGIN
         END CASE;
 
         clob_pair_id = (order_id->'clobPairId')::bigint;
-        perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
+        perpetual_market_record = klyra_get_perpetual_market_for_clob_pair(clob_pair_id);
 
-        subaccount_id = dydx_uuid_from_subaccount_id(order_id->'subaccountId');
+        subaccount_id = klyra_uuid_from_subaccount_id(order_id->'subaccountId');
         SELECT * INTO subaccount_record FROM subaccounts WHERE "id" = subaccount_id;
         IF NOT FOUND THEN
             RAISE EXCEPTION 'Subaccount for order not found: %', order_;
         END IF;
 
-        order_record."id" = dydx_uuid_from_order_id(order_id);
+        order_record."id" = klyra_uuid_from_order_id(order_id);
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
         UPDATE orders
@@ -136,16 +136,16 @@ BEGIN
         RETURNING * INTO order_record;
 
         IF NOT FOUND THEN
-            RAISE EXCEPTION 'Unable to update order status with orderId: %', dydx_uuid_from_order_id(order_id);
+            RAISE EXCEPTION 'Unable to update order status with orderId: %', klyra_uuid_from_order_id(order_id);
         END IF;
 
         RETURN jsonb_build_object(
                 'order',
-                dydx_to_jsonb(order_record),
+                klyra_to_jsonb(order_record),
                 'perpetual_market',
-                dydx_to_jsonb(perpetual_market_record),
+                klyra_to_jsonb(perpetual_market_record),
                 'subaccount',
-                dydx_to_jsonb(subaccount_record)
+                klyra_to_jsonb(subaccount_record)
             );
     ELSE
         RAISE EXCEPTION 'Unkonwn sub-event type %', event_data;

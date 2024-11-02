@@ -455,7 +455,7 @@ replace (
 )
 
 replace (
-	// Use dYdX fork of Cosmos SDK/store
+	// Use klyra fork of Cosmos SDK/store
 	cosmossdk.io/store => github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240227194839-f4e166bc1057
 	// Copy over the same replace functions for Cosmos SDK.
 	// https://github.com/dydxprotocol/cosmos-sdk/blob/fbb26831d28f66e86bfc31283b4be9290929a4a5/go.mod#L171

@@ -23,7 +23,7 @@ func main() {
 
 	// Get flags.
 	var bech32Address string
-	flag.StringVar(&bech32Address, "address", "dydx1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5kmz6xt", "bech32 address")
+	flag.StringVar(&bech32Address, "address", "klyra1qypqxpq9qcrsszg2pvxq6rs0zqg3yyc5f2h4wq", "bech32 address")
 	flag.Parse()
 
 	// Print the flags used for the user

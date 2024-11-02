@@ -1,6 +1,6 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
-import { DeleveragingEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+import { logger, ParseMessageError } from '@klyraprotocol-indexer/base';
+import { DeleveragingEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@klyraprotocol-indexer/v4-protos';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import { DeleveragingValidator } from '../../src/validators/deleveraging-validator';
 import {
   defaultDeleveragingEvent, defaultHeight, defaultTime, defaultTxHash,
@@ -84,7 +84,7 @@ function createBlock(
   deleveragingEvent: DeleveragingEventV1,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
-    DydxIndexerSubtypes.DELEVERAGING,
+    KlyraIndexerSubtypes.DELEVERAGING,
     DeleveragingEventV1.encode(deleveragingEvent).finish(),
     0,
     0,

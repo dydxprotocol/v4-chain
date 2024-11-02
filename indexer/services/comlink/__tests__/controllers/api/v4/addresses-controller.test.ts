@@ -9,12 +9,12 @@ import {
   FundingIndexUpdatesTable,
   BlockTable,
   liquidityTierRefresher,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { RequestMethod } from '../../../../src/types';
 import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
-import { stats } from '@dydxprotocol-indexer/base';
-import { defaultAddress } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import { stats } from '@klyraprotocol-indexer/base';
+import { defaultAddress } from '@klyraprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('addresses-controller#V4', () => {
   const latestHeight: string = '3';

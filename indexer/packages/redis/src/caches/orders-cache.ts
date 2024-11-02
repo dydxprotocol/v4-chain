@@ -1,8 +1,8 @@
-import { OrderTable } from '@dydxprotocol-indexer/postgres';
+import { OrderTable } from '@klyraprotocol-indexer/postgres';
 import {
   IndexerOrderId,
   RedisOrder,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import { RedisClient } from 'redis';
 
 import { getAsync } from '../helpers/redis';

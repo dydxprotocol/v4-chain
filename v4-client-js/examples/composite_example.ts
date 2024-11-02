@@ -6,7 +6,7 @@ import {
 import LocalWallet from '../src/clients/modules/local-wallet';
 import { SubaccountInfo } from '../src/clients/subaccount';
 import { randomInt } from '../src/lib/utils';
-import { DYDX_TEST_MNEMONIC, MAX_CLIENT_ID } from './constants';
+import { KLYRA_TEST_MNEMONIC, MAX_CLIENT_ID } from './constants';
 import ordersParams from './human_readable_orders.json';
 
 async function sleep(ms: number): Promise<void> {
@@ -14,7 +14,7 @@ async function sleep(ms: number): Promise<void> {
 }
 
 async function test(): Promise<void> {
-  const wallet = await LocalWallet.fromMnemonic(DYDX_TEST_MNEMONIC, BECH32_PREFIX);
+  const wallet = await LocalWallet.fromMnemonic(KLYRA_TEST_MNEMONIC, BECH32_PREFIX);
   console.log(wallet);
   const network = Network.testnet();
   const client = await CompositeClient.connect(network);

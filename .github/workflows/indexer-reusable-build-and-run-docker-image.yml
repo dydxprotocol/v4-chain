@@ -18,8 +18,8 @@ jobs:
       postgres:
         image: postgres:12-alpine
         env:
-          POSTGRES_PASSWORD: dydxserver123
-          POSTGRES_USER: dydx_test
+          POSTGRES_PASSWORD: klyraserver123
+          POSTGRES_USER: klyra_test
         ports:
           - 5432:5432
       redis:

@@ -60,7 +60,7 @@ func runTestCase(t *testing.T, tc TestCase) {
 	// Create Test Transaction.
 	priv1, _, _ := testdata.KeyTestPubAddr()
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-	tx, err := txtest.CreateTestTx(privs, accNums, accSeqs, "dydx", tc.msgs)
+	tx, err := txtest.CreateTestTx(privs, accNums, accSeqs, "klyra", tc.msgs)
 	require.NoError(t, err)
 
 	// Call Antehandler.

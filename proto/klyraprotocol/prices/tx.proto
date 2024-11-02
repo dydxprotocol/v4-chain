@@ -1,0 +1,51 @@
+
+syntax = "proto3";
+package klyraprotocol.prices;
+
+import "klyraprotocol/prices/market_param.proto";
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+  // CreateOracleMarket creates a new oracle market.
+  rpc CreateOracleMarket(MsgCreateOracleMarket)
+      returns (MsgCreateOracleMarketResponse);
+  // UpdateMarketParams allows governance to update the parameters of an
+  // oracle market.
+  rpc UpdateMarketParam(MsgUpdateMarketParam)
+      returns (MsgUpdateMarketParamResponse);
+}
+
+// MsgCreateOracleMarket is a message used by x/gov for creating a new oracle
+// market.
+message MsgCreateOracleMarket {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // The address that controls the module.
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // `params` defines parameters for the new oracle market.
+  MarketParam params = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgCreateOracleMarketResponse defines the CreateOracleMarket response type.
+message MsgCreateOracleMarketResponse {}
+
+// MsgUpdateMarketParam is a message used by x/gov for updating the parameters
+// of an oracle market.
+message MsgUpdateMarketParam {
+  // Authority is the address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The market param to update. Each field must be set.
+  MarketParam market_param = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateMarketParamResponse defines the UpdateMarketParam response type.
+message MsgUpdateMarketParamResponse {}

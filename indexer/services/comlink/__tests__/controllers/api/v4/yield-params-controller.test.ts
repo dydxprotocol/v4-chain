@@ -3,7 +3,7 @@ import {
   testConstants,
   testMocks,
   YieldParamsTable,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { RequestMethod, YieldParamsResponseObject } from '../../../../src/types';
 import request from 'supertest';
 import { sendRequest } from '../../../helpers/helpers';

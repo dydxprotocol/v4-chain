@@ -1,12 +1,12 @@
 /* eslint-disable max-len */
-import { logger, stats, STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
+import { logger, stats, STATS_NO_SAMPLING } from '@klyraprotocol-indexer/base';
 import {
   storeHelpers,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import _ from 'lodash';
 import * as pg from 'pg';
 import { DatabaseError } from 'pg';
@@ -33,30 +33,30 @@ import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTra
 import { KafkaPublisher } from './kafka-publisher';
 import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
 import {
-  DydxIndexerSubtypes, EventMessage, EventProtoWithTypeAndVersion, GroupedEvents,
+  KlyraIndexerSubtypes, EventMessage, EventProtoWithTypeAndVersion, GroupedEvents,
 } from './types';
 
 const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.ORDER_FILL.toString(), 1)]: OrderFillValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.SUBACCOUNT_UPDATE.toString(), 1)]: SubaccountUpdateValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.TRANSFER.toString(), 1)]: TransferValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.MARKET.toString(), 1)]: MarketValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.STATEFUL_ORDER.toString(), 1)]: StatefulOrderValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.ASSET.toString(), 1)]: AssetValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.PERPETUAL_MARKET.toString(), 1)]: PerpetualMarketValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.PERPETUAL_MARKET.toString(), 2)]: PerpetualMarketValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.LIQUIDITY_TIER.toString(), 1)]: LiquidityTierValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_PERPETUAL.toString(), 1)]: UpdatePerpetualValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString(), 1)]: UpdateClobPairValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.DELEVERAGING.toString(), 1)]: DeleveragingValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.LIQUIDITY_TIER.toString(), 2)]: LiquidityTierValidatorV2,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.YIELD_PARAMS.toString(), 1)]: YieldParamsValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.ORDER_FILL.toString(), 1)]: OrderFillValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.SUBACCOUNT_UPDATE.toString(), 1)]: SubaccountUpdateValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.TRANSFER.toString(), 1)]: TransferValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.MARKET.toString(), 1)]: MarketValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.STATEFUL_ORDER.toString(), 1)]: StatefulOrderValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.ASSET.toString(), 1)]: AssetValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.PERPETUAL_MARKET.toString(), 1)]: PerpetualMarketValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.PERPETUAL_MARKET.toString(), 2)]: PerpetualMarketValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.LIQUIDITY_TIER.toString(), 1)]: LiquidityTierValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.UPDATE_PERPETUAL.toString(), 1)]: UpdatePerpetualValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.UPDATE_CLOB_PAIR.toString(), 1)]: UpdateClobPairValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.DELEVERAGING.toString(), 1)]: DeleveragingValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.LIQUIDITY_TIER.toString(), 2)]: LiquidityTierValidatorV2,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.YIELD_PARAMS.toString(), 1)]: YieldParamsValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.FUNDING.toString(), 1)]: FundingValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.STATEFUL_ORDER.toString(), 1)]: StatefulOrderValidator,
-  [serializeSubtypeAndVersion(DydxIndexerSubtypes.OPEN_INTEREST_UPDATE.toString(), 1)]: OpenInterestUpdateValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.FUNDING.toString(), 1)]: FundingValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.STATEFUL_ORDER.toString(), 1)]: StatefulOrderValidator,
+  [serializeSubtypeAndVersion(KlyraIndexerSubtypes.OPEN_INTEREST_UPDATE.toString(), 1)]: OpenInterestUpdateValidator,
 };
 
 function serializeSubtypeAndVersion(
@@ -217,7 +217,7 @@ export class BlockProcessor {
     );
 
     _.map(handlers, (handler: Handler<EventMessage>) => {
-      if (SYNCHRONOUS_SUBTYPES.includes(eventProto.type as DydxIndexerSubtypes)) {
+      if (SYNCHRONOUS_SUBTYPES.includes(eventProto.type as KlyraIndexerSubtypes)) {
         this.syncHandlers.addHandler(eventProto.type, handler);
       } else {
         this.batchedHandlers.addHandler(handler);
@@ -246,11 +246,11 @@ export class BlockProcessor {
     let resultRow: pg.QueryResultRow;
     try {
       const result: pg.QueryResult = await storeHelpers.rawQuery(
-        'SELECT dydx_block_processor(?) AS result;',
+        'SELECT klyra_block_processor(?) AS result;',
         {
           txId: this.txId,
           bindings: [JSON.stringify(this.sqlBlock)],
-          sqlOptions: { name: 'dydx_block_processor' },
+          sqlOptions: { name: 'klyra_block_processor' },
         },
       ).catch((error: DatabaseError) => {
         logger.crit({

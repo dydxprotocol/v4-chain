@@ -1,5 +1,5 @@
 import { Method } from '@cosmjs/tendermint-rpc';
-import { Order_ConditionType, Order_Side, Order_TimeInForce } from '@dydxprotocol/v4-proto/src/codegen/dydxprotocol/clob/order';
+import { Order_ConditionType, Order_Side, Order_TimeInForce } from '@klyraprotocol/v4-proto/src/codegen/klyraprotocol/clob/order';
 import BigNumber from 'bignumber.js';
 import Long from 'long';
 

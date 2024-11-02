@@ -1,10 +1,10 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { logger, ParseMessageError } from '@klyraprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   TransferEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+} from '@klyraprotocol-indexer/v4-protos';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import { TransferValidator } from '../../src/validators/transfer-validator';
 import {
   defaultHeight,
@@ -111,7 +111,7 @@ function createBlock(
   transferEvent: TransferEventV1,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
-    DydxIndexerSubtypes.TRANSFER,
+    KlyraIndexerSubtypes.TRANSFER,
     TransferEventV1.encode(transferEvent).finish(),
     0,
     0,

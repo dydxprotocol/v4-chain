@@ -1,7 +1,7 @@
 import { deleteAllAsync, ttl } from '../../src/helpers/redis';
 import { redis as client } from '../helpers/utils';
 import { orderId } from './constants';
-import { OrderTable } from '@dydxprotocol-indexer/postgres';
+import { OrderTable } from '@klyraprotocol-indexer/postgres';
 import {
   STATE_FILLED_QUANTUMS_TTL_SECONDS,
   getCacheKey,

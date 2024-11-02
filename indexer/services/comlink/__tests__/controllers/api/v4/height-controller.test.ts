@@ -5,8 +5,8 @@ import {
   BlockTable,
   dbHelpers,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
-import { stats } from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/postgres';
+import { stats } from '@klyraprotocol-indexer/base';
 
 describe('height-controller#V4', () => {
   beforeAll(async () => {

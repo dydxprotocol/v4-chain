@@ -6,24 +6,24 @@ set -eo pipefail
 
 source "./genesis.sh"
 
-CHAIN_ID="localdydxprotocol"
+CHAIN_ID="localklyraprotocol"
 
 # Define mnemonics for all validators.
 MNEMONICS=(
 	# alice
-	# Consensus Address: dydxvalcons1zf9csp5ygq95cqyxh48w3qkuckmpealrw2ug4d
+	# Consensus Address: klyravalcons1zf9csp5ygq95cqyxh48w3qkuckmpealrhxq0ye
 	"merge panther lobster crazy road hollow amused security before critic about cliff exhibit cause coyote talent happy where lion river tobacco option coconut small"
 
 	# bob
-	# Consensus Address: dydxvalcons1s7wykslt83kayxuaktep9fw8qxe5n73ucftkh4
+	# Consensus Address: klyravalcons1s7wykslt83kayxuaktep9fw8qxe5n73up9h3xp
 	"color habit donor nurse dinosaur stable wonder process post perfect raven gold census inside worth inquiry mammal panic olive toss shadow strong name drum"
 
 	# carl
-	# Consensus Address: dydxvalcons1vy0nrh7l4rtezrsakaadz4mngwlpdmhy64h0ls
+	# Consensus Address: klyravalcons1vy0nrh7l4rtezrsakaadz4mngwlpdmhyretgwy
 	"school artefact ghost shop exchange slender letter debris dose window alarm hurt whale tiger find found island what engine ketchup globe obtain glory manage"
 
 	# dave
-	# Consensus Address: dydxvalcons1stjspktkshgcsv8sneqk2vs2ws0nw2wr272vtt
+	# Consensus Address: klyravalcons1stjspktkshgcsv8sneqk2vs2ws0nw2wrnjkt6l
 	"switch boring kiss cash lizard coconut romance hurry sniff bus accident zone chest height merit elevator furnace eagle fetch quit toward steak mystery nest"
 )
 
@@ -43,7 +43,7 @@ NODE_KEYS=(
 )
 
 # Define monikers for each validator. These are made up strings and can be anything.
-# This also controls in which directory the validator's home will be located. i.e. `/dydxprotocol/chain/.alice`
+# This also controls in which directory the validator's home will be located. i.e. `/klyraprotocol/chain/.alice`
 MONIKERS=(
 	"alice"
 	"bob"
@@ -53,14 +53,14 @@ MONIKERS=(
 
 # Define all test accounts for the chain.
 TEST_ACCOUNTS=(
-	"dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4" # alice
-	"dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs" # bob
-	"dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70" # carl
-	"dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn" # dave
+	"klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57" # alice
+	"klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym" # bob
+	"klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky" # carl
+	"klyra1wau5mja7j7zdavtfq9lu7ejef05hm6ffxz2hcc" # dave
 )
 
 FAUCET_ACCOUNTS=(
-	"dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m" # main faucet
+	"klyra1nzuttarf5k2j0nug5yzhr6p74t9avehn6x2c0s" # main faucet
 )
 
 # Define dependencies for this script.
@@ -81,12 +81,12 @@ create_validators() {
 		VAL_CONFIG_DIR="$VAL_HOME_DIR/config"
 
 		# Initialize the chain and validator files.
-		dydxprotocold init "${MONIKERS[$i]}" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+		klyraprotocold init "${MONIKERS[$i]}" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
 		# Overwrite the randomly generated `priv_validator_key.json` with a key generated deterministically from the mnemonic.
-		dydxprotocold tendermint gen-priv-key --home "$VAL_HOME_DIR" --mnemonic "${MNEMONICS[$i]}"
+		klyraprotocold tendermint gen-priv-key --home "$VAL_HOME_DIR" --mnemonic "${MNEMONICS[$i]}"
 
-		# Note: `dydxprotocold init` non-deterministically creates `node_id.json` for each validator.
+		# Note: `klyraprotocold init` non-deterministically creates `node_id.json` for each validator.
 		# This is inconvenient for persistent peering during testing in Terraform configuration as the `node_id`
 		# would change with every build of this container.
 		#
@@ -96,23 +96,23 @@ create_validators() {
 
 		edit_config "$VAL_CONFIG_DIR"
 
-		# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
-		# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
+		# Using "*" as a subscript results in a single arg: "klyra1... klyra1... klyra1..."
+		# Using "@" as a subscript results in separate args: "klyra1..." "klyra1..." "klyra1..."
 		# Note: `edit_genesis` must be called before `add-genesis-account` or `update_genesis_use_test_exchange`.
 		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}" "" "" "" ""
 		# Configure the genesis file to only use the test exchange to compute daemon prices.
 		update_genesis_use_test_exchange "$VAL_CONFIG_DIR"
 
-		echo "${MNEMONICS[$i]}" | dydxprotocold keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$VAL_HOME_DIR"
+		echo "${MNEMONICS[$i]}" | klyraprotocold keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$VAL_HOME_DIR"
 
 		for acct in "${TEST_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 100000000000000000$TDAI_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
+			klyraprotocold add-genesis-account "$acct" 100000000000000000$TDAI_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 		for acct in "${FAUCET_ACCOUNTS[@]}"; do
-			dydxprotocold add-genesis-account "$acct" 900000000000000000$TDAI_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
+			klyraprotocold add-genesis-account "$acct" 900000000000000000$TDAI_DENOM,$TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE$NATIVE_TOKEN --home "$VAL_HOME_DIR"
 		done
 
-		dydxprotocold gentx "${MONIKERS[$i]}" $TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT$NATIVE_TOKEN --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+		klyraprotocold gentx "${MONIKERS[$i]}" $TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT$NATIVE_TOKEN --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
 		# Copy the gentx to a shared directory.
 		cp -a "$VAL_CONFIG_DIR/gentx/." /tmp/gentx
@@ -127,7 +127,7 @@ create_validators() {
 	cp -r /tmp/gentx "$FIRST_VAL_CONFIG_DIR"
 
 	# Build the final genesis.json file that all validators and the full-nodes will use.
-	dydxprotocold collect-gentxs --home "$FIRST_VAL_HOME_DIR"
+	klyraprotocold collect-gentxs --home "$FIRST_VAL_HOME_DIR"
 
 	# Copy this genesis file to each of the other validators
 	for i in "${!MONIKERS[@]}"; do
@@ -146,10 +146,10 @@ create_validators() {
 setup_cosmovisor() {
 	for i in "${!MONIKERS[@]}"; do
 		VAL_HOME_DIR="$HOME/chain/.${MONIKERS[$i]}"
-		export DAEMON_NAME=dydxprotocold
+		export DAEMON_NAME=klyraprotocold
 		export DAEMON_HOME="$HOME/chain/.${MONIKERS[$i]}"
 
-		cosmovisor init /bin/dydxprotocold
+		cosmovisor init /bin/klyraprotocold
 	done
 }
 
@@ -168,7 +168,7 @@ copy_preupgrade_binary_arch() {
 			exit 1
 			;;
 	esac
-	cp /bin/dydxprotocold_preupgrade_${file_arch} /bin/dydxprotocold_preupgrade
+	cp /bin/klyraprotocold_preupgrade_${file_arch} /bin/klyraprotocold_preupgrade
 }
 
 # TODO(DEC-1894): remove this function once we migrate off of persistent peers.

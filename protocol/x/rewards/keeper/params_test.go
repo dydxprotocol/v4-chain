@@ -22,7 +22,7 @@ func TestSetParams_Success(t *testing.T) {
 	k := tApp.App.RewardsKeeper
 
 	params := types.Params{
-		TreasuryAccount: "dydx12345",
+		TreasuryAccount: "klyra12345",
 		Denom:           "newdenom",
 	}
 	require.NoError(t, params.Validate())

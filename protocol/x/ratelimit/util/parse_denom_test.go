@@ -13,11 +13,11 @@ import (
 )
 
 func TestParseDenomFromRecvPacket(t *testing.T) {
-	nobleChannelOnDydx := "channel-0"
+	nobleChannelOnKlyra := "channel-0"
 	nobleChannelOnOsmo := "channel-200"
-	osmoChannelOnDydx := "channel-5"
-	dydxChannelOnNoble := "channel-100"
-	dydxChannelOnOsmo := "channel-101"
+	osmoChannelOnKlyra := "channel-5"
+	klyraChannelOnNoble := "channel-100"
+	klyraChannelOnOsmo := "channel-101"
 	originalSDaiDenom := types.SDaiDenom
 
 	testCases := []struct {
@@ -28,43 +28,43 @@ func TestParseDenomFromRecvPacket(t *testing.T) {
 		expectedDenom      string
 	}{
 		// Sink asset one hop away:
-		//   sDAI sent from Noble to dYdX
+		//   sDAI sent from Noble to klyra
 		//   -> tack on prefix (transfer/channel-0/gsdai) and hash
 		{
 			name:               "sink_one_hop",
 			packetDenomTrace:   types.SDaiDenom,
-			sourceChannel:      dydxChannelOnNoble,
-			destinationChannel: nobleChannelOnDydx,
+			sourceChannel:      klyraChannelOnNoble,
+			destinationChannel: nobleChannelOnKlyra,
 			expectedDenom: hashDenomTrace(fmt.Sprintf(
 				"%s/%s/%s",
 				transferPort,
-				nobleChannelOnDydx,
+				nobleChannelOnKlyra,
 				types.SDaiDenom,
 			)),
 		},
 		// Native source assets
-		//    lib.DefaultBaseDenom sent from dYdX to Noble and then back to dYdX (transfer/channel-0/adv4tnt)
+		//    lib.DefaultBaseDenom sent from klyra to Noble and then back to klyra (transfer/channel-0/adv4tnt)
 		//    -> remove prefix and leave as is (adv4tnt)
 		{
 			name:               lib.DefaultBaseDenom,
-			packetDenomTrace:   fmt.Sprintf("%s/%s/%s", transferPort, dydxChannelOnNoble, lib.DefaultBaseDenom),
-			sourceChannel:      dydxChannelOnNoble,
-			destinationChannel: nobleChannelOnDydx,
+			packetDenomTrace:   fmt.Sprintf("%s/%s/%s", transferPort, klyraChannelOnNoble, lib.DefaultBaseDenom),
+			sourceChannel:      klyraChannelOnNoble,
+			destinationChannel: nobleChannelOnKlyra,
 			expectedDenom:      lib.DefaultBaseDenom,
 		},
 		// Sink asset two hops away:
-		//   gsdai sent from Noble to Osmosis to dYdX (transfer/channel-200/gsdai)
+		//   gsdai sent from Noble to Osmosis to klyra (transfer/channel-200/gsdai)
 		//   -> tack on prefix (transfer/channel-0/transfer/channel-200/gsdai) and hash
 		{
 			name:               "sink_two_hops",
 			packetDenomTrace:   fmt.Sprintf("%s/%s/%s", transferPort, nobleChannelOnOsmo, originalSDaiDenom),
-			sourceChannel:      dydxChannelOnOsmo,
-			destinationChannel: osmoChannelOnDydx,
+			sourceChannel:      klyraChannelOnOsmo,
+			destinationChannel: osmoChannelOnKlyra,
 			expectedDenom: hashDenomTrace(
 				fmt.Sprintf(
 					"%s/%s/%s/%s/%s",
 					transferPort,
-					osmoChannelOnDydx,
+					osmoChannelOnKlyra,
 					transferPort,
 					nobleChannelOnOsmo,
 					originalSDaiDenom,
@@ -105,7 +105,7 @@ func TestParseDenomFromSendPacket(t *testing.T) {
 		},
 		// Non-native assets are hashed
 		{
-			name:             "gsDAI on dYdX",
+			name:             "gsDAI on klyra",
 			packetDenomTrace: "transfer/channel-0/gsdai",
 			expectedDenom:    types.SDaiDenom,
 		},

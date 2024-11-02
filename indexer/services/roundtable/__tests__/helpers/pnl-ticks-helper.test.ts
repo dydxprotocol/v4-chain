@@ -17,7 +17,7 @@ import {
   Transaction,
   TransferTable,
   PositionSide,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   calculateEquity,
   calculateTotalPnl,
@@ -31,13 +31,13 @@ import {
 import { defaultPnlTickForSubaccounts, defaultZeroPerpYieldIndex } from '../../src/helpers/constants';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
-import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@dydxprotocol-indexer/redis';
+import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@klyraprotocol-indexer/redis';
 import { redisClient } from '../../src/helpers/redis';
 import { ZERO } from '../../src/lib/constants';
 import { SubaccountTDaiTransferMap } from '../../src/helpers/types';
 import config from '../../src/config';
 import _ from 'lodash';
-import { ONE_HOUR_IN_MILLISECONDS } from '@dydxprotocol-indexer/base';
+import { ONE_HOUR_IN_MILLISECONDS } from '@klyraprotocol-indexer/base';
 
 describe('pnl-ticks-helper', () => {
   const positions: PerpetualPositionFromDatabase[] = [

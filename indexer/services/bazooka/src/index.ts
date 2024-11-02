@@ -1,7 +1,7 @@
-import { delay, logger, startBugsnag } from '@dydxprotocol-indexer/base';
-import { admin, KafkaTopics, producer } from '@dydxprotocol-indexer/kafka';
-import { dbHelpers } from '@dydxprotocol-indexer/postgres';
-import { redis } from '@dydxprotocol-indexer/redis';
+import { delay, logger, startBugsnag } from '@klyraprotocol-indexer/base';
+import { admin, KafkaTopics, producer } from '@klyraprotocol-indexer/kafka';
+import { dbHelpers } from '@klyraprotocol-indexer/postgres';
+import { redis } from '@klyraprotocol-indexer/redis';
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { ITopicConfig, ITopicMetadata } from 'kafkajs';
 import _ from 'lodash';

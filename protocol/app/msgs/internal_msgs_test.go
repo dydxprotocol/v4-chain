@@ -64,70 +64,70 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse",
 
 		// blocktime
-		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams",
-		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse",
+		"/klyraprotocol.blocktime.MsgUpdateDowntimeParams",
+		"/klyraprotocol.blocktime.MsgUpdateDowntimeParamsResponse",
 
 		// clob
-		"/dydxprotocol.clob.MsgCreateClobPair",
-		"/dydxprotocol.clob.MsgCreateClobPairResponse",
-		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration",
-		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse",
-		"/dydxprotocol.clob.MsgUpdateClobPair",
-		"/dydxprotocol.clob.MsgUpdateClobPairResponse",
-		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration",
-		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse",
-		"/dydxprotocol.clob.MsgUpdateLiquidationsConfig",
-		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse",
+		"/klyraprotocol.clob.MsgCreateClobPair",
+		"/klyraprotocol.clob.MsgCreateClobPairResponse",
+		"/klyraprotocol.clob.MsgUpdateBlockRateLimitConfiguration",
+		"/klyraprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse",
+		"/klyraprotocol.clob.MsgUpdateClobPair",
+		"/klyraprotocol.clob.MsgUpdateClobPairResponse",
+		"/klyraprotocol.clob.MsgUpdateEquityTierLimitConfiguration",
+		"/klyraprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse",
+		"/klyraprotocol.clob.MsgUpdateLiquidationsConfig",
+		"/klyraprotocol.clob.MsgUpdateLiquidationsConfigResponse",
 
 		// delaymsg
-		"/dydxprotocol.delaymsg.MsgDelayMessage",
-		"/dydxprotocol.delaymsg.MsgDelayMessageResponse",
+		"/klyraprotocol.delaymsg.MsgDelayMessage",
+		"/klyraprotocol.delaymsg.MsgDelayMessageResponse",
 
 		// feetiers
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
+		"/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+		"/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
 
 		// govplus
-		"/dydxprotocol.govplus.MsgSlashValidator",
-		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
+		"/klyraprotocol.govplus.MsgSlashValidator",
+		"/klyraprotocol.govplus.MsgSlashValidatorResponse",
 
 		// perpeutals
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTier",
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse",
-		"/dydxprotocol.perpetuals.MsgUpdateParams",
-		"/dydxprotocol.perpetuals.MsgUpdateParamsResponse",
-		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams",
-		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse",
+		"/klyraprotocol.perpetuals.MsgCreatePerpetual",
+		"/klyraprotocol.perpetuals.MsgCreatePerpetualResponse",
+		"/klyraprotocol.perpetuals.MsgSetLiquidityTier",
+		"/klyraprotocol.perpetuals.MsgSetLiquidityTierResponse",
+		"/klyraprotocol.perpetuals.MsgUpdateParams",
+		"/klyraprotocol.perpetuals.MsgUpdateParamsResponse",
+		"/klyraprotocol.perpetuals.MsgUpdatePerpetualParams",
+		"/klyraprotocol.perpetuals.MsgUpdatePerpetualParamsResponse",
 
 		// prices
-		"/dydxprotocol.prices.MsgCreateOracleMarket",
-		"/dydxprotocol.prices.MsgCreateOracleMarketResponse",
-		"/dydxprotocol.prices.MsgUpdateMarketParam",
-		"/dydxprotocol.prices.MsgUpdateMarketParamResponse",
+		"/klyraprotocol.prices.MsgCreateOracleMarket",
+		"/klyraprotocol.prices.MsgCreateOracleMarketResponse",
+		"/klyraprotocol.prices.MsgUpdateMarketParam",
+		"/klyraprotocol.prices.MsgUpdateMarketParamResponse",
 
 		// ratelimit
-		"/dydxprotocol.ratelimit.MsgSetLimitParams",
-		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse",
+		"/klyraprotocol.ratelimit.MsgSetLimitParams",
+		"/klyraprotocol.ratelimit.MsgSetLimitParamsResponse",
 
 		// rewards
-		"/dydxprotocol.rewards.MsgUpdateParams",
-		"/dydxprotocol.rewards.MsgUpdateParamsResponse",
+		"/klyraprotocol.rewards.MsgUpdateParams",
+		"/klyraprotocol.rewards.MsgUpdateParamsResponse",
 
 		// sending
-		"/dydxprotocol.sending.MsgSendFromModuleToAccount",
-		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse",
+		"/klyraprotocol.sending.MsgSendFromModuleToAccount",
+		"/klyraprotocol.sending.MsgSendFromModuleToAccountResponse",
 
 		// stats
-		"/dydxprotocol.stats.MsgUpdateParams",
-		"/dydxprotocol.stats.MsgUpdateParamsResponse",
+		"/klyraprotocol.stats.MsgUpdateParams",
+		"/klyraprotocol.stats.MsgUpdateParamsResponse",
 
 		// vest
-		"/dydxprotocol.vest.MsgDeleteVestEntry",
-		"/dydxprotocol.vest.MsgDeleteVestEntryResponse",
-		"/dydxprotocol.vest.MsgSetVestEntry",
-		"/dydxprotocol.vest.MsgSetVestEntryResponse",
+		"/klyraprotocol.vest.MsgDeleteVestEntry",
+		"/klyraprotocol.vest.MsgDeleteVestEntryResponse",
+		"/klyraprotocol.vest.MsgSetVestEntry",
+		"/klyraprotocol.vest.MsgSetVestEntryResponse",
 
 		// ibc
 		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe",

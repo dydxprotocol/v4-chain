@@ -2,7 +2,7 @@ import { Network } from '../../../src/clients/constants';
 import LocalWallet from '../../../src/clients/modules/local-wallet';
 import { SubaccountInfo } from '../../../src/clients/subaccount';
 import { ValidatorClient } from '../../../src/clients/validator-client';
-import { DYDX_TEST_MNEMONIC } from '../../../examples/constants';
+import { KLYRA_TEST_MNEMONIC } from '../../../examples/constants';
 import Long from 'long';
 import { BECH32_PREFIX } from '../../../src';
 
@@ -17,7 +17,7 @@ describe('Validator Client', () => {
 
   describe('Transfers', () => {
     beforeEach(async () => {
-      wallet = await LocalWallet.fromMnemonic(DYDX_TEST_MNEMONIC, BECH32_PREFIX);
+      wallet = await LocalWallet.fromMnemonic(KLYRA_TEST_MNEMONIC, BECH32_PREFIX);
       subaccount = new SubaccountInfo(wallet, 0);
       client = await ValidatorClient.connect(Network.testnet().validatorConfig);
       await sleep(5000);  // wait for withdraw to complete

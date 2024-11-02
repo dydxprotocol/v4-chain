@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_protocol_market_type_to_perpetual_market_type(marketType jsonb)
+CREATE OR REPLACE FUNCTION klyra_protocol_market_type_to_perpetual_market_type(marketType jsonb)
     RETURNS text AS $$
 
 BEGIN

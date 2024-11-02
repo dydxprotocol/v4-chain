@@ -1,16 +1,7 @@
-<p align="center"><img src="https://dydx.exchange/icon.svg?" width="256" /></p>
+<h1 align="center">Klyra Chain Protocol</h1>
 
-<h1 align="center">dYdX Chain Protocol</h1>
+Sovereign Blockchain built using Cosmos SDK & CometBFT for Klyra Protocol.
 
-<div align="center">
-  <a href="https://github.com/dydxprotocol/v4-chain/actions/workflows/protocol-test.yml?query=branch%3Amain" style="text-decoration:none;">
-    <img src="https://github.com/dydxprotocol/v4-chain/actions/workflows/protocol-test.yml/badge.svg?branch=main" />
-  </a>
-</div>
-
-Sovereign Blockchain built using Cosmos SDK & CometBFT for dYdX Chain.
-
-TODO(CORE-512): add info/resources around dYdX Chain. [Doc](https://www.notion.so/dydx/V4-36a9f30eee1d478cb88e0c50860fdbee)
 
 ## Get started
 
@@ -25,19 +16,19 @@ TODO(CORE-512): add info/resources around dYdX Chain. [Doc](https://www.notion.s
 * `make test` runs unit tests.
 * `make lint` lints source code (`make lint-fix` to also fix).
 * `make build` builds source.
-* `make mock-gen` generates mocks for files listed in [mocks/Makefile](https://github.com/dydxprotocol/v4/tree/main/mocks/Makefile). More info about mocking [here](https://github.com/dydxprotocol/v4/tree/main/mocks/README.md).
+* `make mock-gen` generates mocks for files listed in [mocks/Makefile](https://github.com/StreamFinance-Protocol/v4/tree/main/mocks/Makefile). More info about mocking [here](https://github.com/StreamFinance-Protocol/v4/tree/main/mocks/README.md).
 
 
 ### Running the chain locally
 
 Requirements: Ensure you are running docker-compose version `1.30.x` or newer, and Docker engine version `20.10.x` or newer.
 
-You can quickly test your changes to dYdX Chain with just a few commands:
+You can quickly test your changes to Klyra Chain with just a few commands:
 
-1. Make any change to the dYdX Chain code that you want to test
+1. Make any change to the Klyra Chain code that you want to test
 
 2. Once ready to test, run `make localnet-start` (or `make localnet-startd` to run the network headlessly)
-    - This first compiles all your changes to docker image called `dydxprotocol-base` (~90 seconds)
+    - This first compiles all your changes to docker image called `klyraprotocol-base` (~90 seconds)
     - You will then be running a local network with your changes!
     - Note, these commands will **reset the chain** to genesis
 
@@ -67,7 +58,7 @@ We use [`yamllint`](https://github.com/adrienverge/yamllint) for linting YAML fi
 - [Running `yamllint`](https://yamllint.readthedocs.io/en/latest/quickstart.html#running-yamllint).
 - [Configuring `yamllint`](https://yamllint.readthedocs.io/en/latest/configuration.html).
 
-We currently lint the following YAML files in the [`Lint` CI job](https://github.com/dydxprotocol/v4/blob/c5ec83f074b4ff997d71a6f5dc486579ea112600/.github/workflows/lint.yml):
+We currently lint the following YAML files in the [`Lint` CI job](https://github.com/StreamFinance-Protocol/v4/blob/c5ec83f074b4ff997d71a6f5dc486579ea112600/.github/workflows/lint.yml):
 - `.golangci.yml`.
 - `.github/workflows/*.yml`.
   - Note this includes all files that end in the `yml` file extension in the `.github/workflows` directory.
@@ -75,7 +66,7 @@ We currently lint the following YAML files in the [`Lint` CI job](https://github
 
 #### Protos
 
-Protos can be found in `../proto/` [here](https://github.com/dydxprotocol/v4-chain/tree/main/proto).
+Protos can be found in `../proto/` [here](https://github.com/StreamFinance-Protocol/stream-chain/tree/main/proto).
 
 #### Genesis
 
@@ -103,19 +94,19 @@ Another module that can be modified similarly is the subaccounts. We can add ano
 ## Debugging Tips
 
 ### Setting up keychain
-To run the below commands, you'll want to import the private keys of the test accounts specified in [testnet-local/local.sh](https://github.com/dydxprotocol/v4/blob/main/testing/testnet-local/local.sh). Run the following commands and input the corresponding 12-word string from `MNEMONICS`. The resulting address should match those in `TEST_ACCOUNTS`.
+To run the below commands, you'll want to import the private keys of the test accounts specified in [testnet-local/local.sh](https://github.com/StreamFinance-Protocol/v4/blob/main/testing/testnet-local/local.sh). Run the following commands and input the corresponding 12-word string from `MNEMONICS`. The resulting address should match those in `TEST_ACCOUNTS`.
 
 ```sh
-./build/dydxprotocold keys add alice --recover
+./build/klyraprotocold keys add alice --recover
 
-./build/dydxprotocold keys add bob --recover
+./build/klyraprotocold keys add bob --recover
 ```
 
 ### Send a test transaction locally
 It's occasionally helpful to send a transaction to the local chain to observe Cosmos behavior through the API such as events. Until `clob` `v0.1` is complete, you can use the default Cosmos `bank` module to transfer assets between two accounts defined at genesis in the `genesis.sh` file.
 
 ```sh
-./build/dydxprotocold tx bank send dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4 dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs 100usdc
+./build/klyraprotocold tx bank send klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57 klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym 100usdc
 ```
 
 ### Placing a test order locally
@@ -123,14 +114,14 @@ It's occasionally helpful to send a transaction to the local chain to observe Co
 It's occasionally helpful to send a transaction to the local chain to test order placement and matching. Run the following two commands in succession in order to match an order between two accounts.
 
 ```sh
-./build/dydxprotocold tx clob place-order dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4 0 0 0 1 10 10000 20 --from alice --chain-id localdydxprotocol
-./build/dydxprotocold tx clob place-order dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs 0 0 0 2 10 10000 20 --from bob --chain-id localdydxprotocol
+./build/klyraprotocold tx clob place-order klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57 0 0 0 1 10 10000 20 --from alice --chain-id localklyraprotocol
+./build/klyraprotocold tx clob place-order klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym 0 0 0 2 10 10000 20 --from bob --chain-id localklyraprotocol
 ```
 
 Run the following command to cancel an order.
 
 ```sh
-./build/dydxprotocold tx clob cancel-order dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4 10 0 20 --from alice
+./build/klyraprotocold tx clob cancel-order klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57 10 0 20 --from alice
 ```
 
 ### Querying the chain locally
@@ -138,13 +129,13 @@ Run the following command to cancel an order.
 While running the development server via `make localnet-start`, you can make queries locally using the Tendermint API. All endpoints listed [here](https://docs.tendermint.com/v0.37/rpc/#/Info/block) are supported. For example to get the block at height 2: `curl -X GET "localhost:26657/block?height=2"`.
 
 ### Updating local flags
-When debugging or inspecting behavior of the chain locally, you may wish modify the flags passed to `dydxprotocold`. You can achieve this by modifying your `docker-compose.yml` file locally in the `entrypoint` section to change these passed in flags.
+When debugging or inspecting behavior of the chain locally, you may wish modify the flags passed to `klyraprotocold`. You can achieve this by modifying your `docker-compose.yml` file locally in the `entrypoint` section to change these passed in flags.
 
 ### Enabled more verbose logging locally
 Refer to the section above and change the `log_level` to `trace`. Note that `trace` can be pretty noisy as it logs every block proposal, message, and committed block to stdout.
 
 ### Debugging behavior in Cosmos SDK
-It's occasionally useful to be able to output logs or modify behavior in `cosmos-sdk` itself. To do this, check out [cosmos-sdk](https://github.com/cosmos/cosmos-sdk) locally at the branch which represents the version specified in the [`go.mod` file](https://github.com/dydxprotocol/v4/blob/main/go.mod) in this repository.
+It's occasionally useful to be able to output logs or modify behavior in `cosmos-sdk` itself. To do this, check out [cosmos-sdk](https://github.com/cosmos/cosmos-sdk) locally at the branch which represents the version specified in the [`go.mod` file](https://github.com/StreamFinance-Protocol/v4/blob/main/go.mod) in this repository.
 
 ```sh
 git clone git@github.com:cosmos/cosmos-sdk.git
@@ -180,11 +171,11 @@ dasel put string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' '60
 
 ## CometBFT fork
 
-Our current implementation contains a light fork of CometBFT. The fork can be found [here](https://github.com/dydxprotocol/cometbft). Instructions to update the fork are included there.
+Our current implementation contains a light fork of CometBFT. The fork can be found [here](https://github.com/StreamFinance-Protocol/cometbft). Instructions to update the fork are included there.
 
 ## CosmosSDK fork
 
-Our current implementation contains a light fork of CosmosSDK. The fork can be found [here](https://github.com/dydxprotocol/cosmos-sdk). Instructions to update the fork are included there.
+Our current implementation contains a light fork of CosmosSDK. The fork can be found [here](https://github.com/StreamFinance-Protocol/cosmos-sdk). Instructions to update the fork are included there.
 
 ## Daemons
 

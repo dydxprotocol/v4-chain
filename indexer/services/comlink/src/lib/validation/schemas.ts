@@ -2,7 +2,7 @@ import {
   perpetualMarketRefresher,
   MAX_PARENT_SUBACCOUNTS,
   CHILD_SUBACCOUNT_MULTIPLIER,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';

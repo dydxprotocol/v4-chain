@@ -1,5 +1,5 @@
 {
-  "app_name": "dydxprotocold",
+  "app_name": "klyraprotocold",
   "app_state": {
     "assets": {
       "assets": [
@@ -31,7 +31,7 @@
     "bank": {
       "balances": [
         {
-          "address": "dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp",
+          "address": "klyra1ltyc6y4skclzafvpznpt2qjwmfwgsndp29jvn2",
           "coins": [
             {
               "amount": "200000000000000000000000000",
@@ -507,8 +507,8 @@
           "block_height": 6912000,
           "id": 0,
           "msg": {
-            "@type": "/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
-            "authority": "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+            "@type": "/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+            "authority": "klyra1mkkvp26dngu6n8rmalaxyp3gwkjuzztqtnn4rg",
             "params": {
               "tiers": [
                 {
@@ -1842,7 +1842,7 @@
     }
   },
   "app_version": "",
-  "chain_id": "dydx-sample-1",
+  "chain_id": "klyra-sample-1",
   "consensus": {
     "params": {
       "abci": {

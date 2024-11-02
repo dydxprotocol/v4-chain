@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_create_tendermint_event(
+CREATE OR REPLACE FUNCTION klyra_create_tendermint_event(
     event jsonb, block_height int
 ) RETURNS jsonb AS $$
 /**
@@ -14,8 +14,8 @@ DECLARE
     event_id bytea;
     inserted_event jsonb;
 BEGIN
-    transaction_idx := dydx_tendermint_event_to_transaction_index(event);
-    event_id := dydx_event_id_from_parts(CAST(block_height AS int), transaction_idx, CAST(event->>'eventIndex' AS int));
+    transaction_idx := klyra_tendermint_event_to_transaction_index(event);
+    event_id := klyra_event_id_from_parts(CAST(block_height AS int), transaction_idx, CAST(event->>'eventIndex' AS int));
 
     INSERT INTO tendermint_events ("id", "blockHeight", "transactionIndex", "eventIndex")
     VALUES (event_id, block_height, transaction_idx, (event->'eventIndex')::int)

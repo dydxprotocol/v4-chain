@@ -1,11 +1,11 @@
-import { logger } from '@dydxprotocol-indexer/base';
-import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import { logger } from '@klyraprotocol-indexer/base';
+import { perpetualMarketRefresher } from '@klyraprotocol-indexer/postgres';
 import {
   FundingEventV1,
   FundingEventV1_Type,
   IndexerTendermintEvent,
   FundingUpdateV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 
 import { FundingHandler } from '../handlers/funding-handler';
 import { Handler } from '../handlers/handler';

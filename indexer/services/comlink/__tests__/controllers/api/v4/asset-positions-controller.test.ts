@@ -7,7 +7,7 @@ import {
   PositionSide,
   testConstants,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { AssetPositionResponseObject, RequestMethod } from '../../../../src/types';
 import request from 'supertest';
 import { sendRequest } from '../../../helpers/helpers';

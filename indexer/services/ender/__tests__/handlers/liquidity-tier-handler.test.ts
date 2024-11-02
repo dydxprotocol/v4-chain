@@ -4,7 +4,7 @@ import {
   LiquidityTierUpsertEventV1,
   LiquidityTierUpsertEventV2,
   Timestamp,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   BlockTable,
   dbHelpers,
@@ -21,11 +21,11 @@ import {
   MarketTable,
   protocolTranslations,
   QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
-import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage, producer } from '@klyraprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
@@ -41,7 +41,7 @@ import {
   defaultLiquidityTierUpsertEventV1,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
-import { defaultLiquidityTier } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import { defaultLiquidityTier } from '@klyraprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import _ from 'lodash';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
@@ -83,7 +83,7 @@ describe('liquidityTierHandler', () => {
         const eventIndex: number = 0;
 
         const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-          DydxIndexerSubtypes.LIQUIDITY_TIER,
+          KlyraIndexerSubtypes.LIQUIDITY_TIER,
           LiquidityTierUpsertEventV1.encode(defaultLiquidityTierUpsertEventV1).finish(),
           transactionIndex,
           eventIndex,
@@ -188,7 +188,7 @@ describe('liquidityTierHandler', () => {
         const eventIndex: number = 0;
 
         const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-          DydxIndexerSubtypes.LIQUIDITY_TIER,
+          KlyraIndexerSubtypes.LIQUIDITY_TIER,
           LiquidityTierUpsertEventV2.encode(defaultLiquidityTierUpsertEventV2).finish(),
           transactionIndex,
           eventIndex,
@@ -324,7 +324,7 @@ function createKafkaMessageFromLiquidityTiersEvent({
   const events: IndexerTendermintEvent[] = [];
   events.push(
     createIndexerTendermintEvent(
-      DydxIndexerSubtypes.LIQUIDITY_TIER,
+      KlyraIndexerSubtypes.LIQUIDITY_TIER,
       liquidityTierEvent,
       transactionIndex,
       0,

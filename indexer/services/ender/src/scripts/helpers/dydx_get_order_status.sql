@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_get_order_status(total_filled numeric, size numeric, order_canceled_status text, order_flags bigint, time_in_force text)
+CREATE OR REPLACE FUNCTION klyra_get_order_status(total_filled numeric, size numeric, order_canceled_status text, order_flags bigint, time_in_force text)
 RETURNS text AS $$
 /**
   Computes the order status given a set of order parameters.

@@ -1,13 +1,13 @@
-import { generateSubaccountMessageContents } from '@dydxprotocol-indexer/kafka';
+import { generateSubaccountMessageContents } from '@klyraprotocol-indexer/kafka';
 import {
   OrderFromDatabase, OrderModel,
   OrderTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   SubaccountMessageContents,
-} from '@dydxprotocol-indexer/postgres';
-import { convertToRedisOrder } from '@dydxprotocol-indexer/redis';
-import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
+} from '@klyraprotocol-indexer/postgres';
+import { convertToRedisOrder } from '@klyraprotocol-indexer/redis';
+import { getOrderIdHash } from '@klyraprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
   IndexerSubaccountId,
@@ -16,7 +16,7 @@ import {
   RedisOrder,
   StatefulOrderEventV1,
   SubaccountId,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
 import config from '../../config';

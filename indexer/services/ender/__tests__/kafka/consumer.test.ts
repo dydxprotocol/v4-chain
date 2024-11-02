@@ -6,7 +6,7 @@ import {
   stopConsumer,
   TO_ENDER_TOPIC,
   createKafkaMessage,
-} from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 
 // Skipping because timeout could cause tests to be flaky

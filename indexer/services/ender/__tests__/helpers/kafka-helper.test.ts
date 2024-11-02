@@ -20,8 +20,8 @@ import {
   UpdatedPerpetualPositionSubaccountKafkaObject,
   TransferType,
   SubaccountTable,
-} from '@dydxprotocol-indexer/postgres';
-import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/postgres';
+import { IndexerSubaccountId } from '@klyraprotocol-indexer/v4-protos';
 import { DateTime } from 'luxon';
 import {
   addPositionsToContents,
@@ -31,7 +31,7 @@ import {
   generateTransferContents,
   getPnl,
 } from '../../src/helpers/kafka-helper';
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@klyraprotocol-indexer/base';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { defaultPreviousHeight, defaultWalletAddress, defaultZeroPerpYieldIndex } from './constants';
 

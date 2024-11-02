@@ -1,7 +1,7 @@
 {
-  "name": "@dydxprotocol/v4-client-js",
+  "name": "@klyraprotocol/v4-client-js",
   "version": "1.0.12",
-  "description": "General client library for the new dYdX system (v4 decentralized)",
+  "description": "General client library for the new Klyra system (v4 decentralized)",
   "main": "build/src/index.js",
   "scripts": {
     "build": "rm -rf build/ && npm run compile",
@@ -23,7 +23,7 @@
     "type": "git",
     "url": "git+https://github.com/dydxprotocol/v4-clients.git"
   },
-  "author": "dYdX Trading Inc.",
+  "author": "Klyra Trading Inc.",
   "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/dydxprotocol/v4-clients/issues"
@@ -38,7 +38,7 @@
     "@cosmjs/stargate": "^0.32.1",
     "@cosmjs/tendermint-rpc": "^0.32.1",
     "@cosmjs/utils": "^0.32.1",
-    "@dydxprotocol/v4-proto": "file:../v4-proto-js",
+    "@klyraprotocol/v4-proto": "file:../v4-proto-js",
     "@osmonauts/lcd": "^0.6.0",
     "@scure/bip32": "^1.1.5",
     "@scure/bip39": "^1.1.1",

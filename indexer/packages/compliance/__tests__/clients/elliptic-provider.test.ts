@@ -5,11 +5,11 @@ import {
   HOLISTIC,
 } from '../../src/clients/elliptic-provider';
 import { ComplianceClientError } from '../../src/lib/error';
-import { TooManyRequestsError } from '@dydxprotocol-indexer/base';
+import { TooManyRequestsError } from '@klyraprotocol-indexer/base';
 import config from '../../src/config';
 import { ComplianceClientResponse } from 'packages/compliance/src';
 
-const defaultAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
+const defaultAddress: string = 'klyra1f9k5qldwmqrnwy8hcgp4fw6heuvszt35xeeywp';
 
 jest.mock('axios');
 describe('elliptic-provider', () => {

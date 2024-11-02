@@ -5,14 +5,14 @@ import {
   parseNumber,
   parseSchema,
   parseString,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 import {
   complianceConfigSchema,
-} from '@dydxprotocol-indexer/compliance';
-import { kafkaConfigSchema } from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/compliance';
+import { kafkaConfigSchema } from '@klyraprotocol-indexer/kafka';
 import {
   postgresConfigSchema,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 
 export const configSchema = {
   ...baseConfigSchema,

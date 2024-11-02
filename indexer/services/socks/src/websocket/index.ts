@@ -1,6 +1,6 @@
 import {
   stats, logger, safeJsonStringify, InfoObject,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 

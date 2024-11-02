@@ -1,4 +1,4 @@
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
 import {
   IndexerTendermintEvent,
   IndexerOrder,
@@ -10,7 +10,7 @@ import {
   StatefulOrderEventV1_ConditionalOrderTriggeredV1,
   StatefulOrderEventV1_LongTermOrderPlacementV1,
   IndexerOrder_ConditionType,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import Long from 'long';
 
 import { Handler, HandlerInitializer } from '../handlers/handler';

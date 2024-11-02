@@ -21,7 +21,7 @@ import (
 	cmtlog "github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/dydxprotocold/cmd"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/klyraprotocold/cmd"
 	sdaitypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/sdaioracle"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	tmcfg "github.com/cometbft/cometbft/config"
@@ -66,7 +66,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// localdydxprotocol Alice config/priv_validator_key.json.
+// localklyraprotocol Alice config/priv_validator_key.json.
 const alicePrivValidatorKeyJson = `{
   "address": "124B880684400B4C0086BD4EE882DCC5B61CF7E3",
   "pub_key": {
@@ -80,7 +80,7 @@ const alicePrivValidatorKeyJson = `{
 }
 `
 
-// localdydxprotocol Alice config/node_key.json.
+// localklyraprotocol Alice config/node_key.json.
 const aliceNodeKeyJson = `{
   "priv_key": {
     "type": "tendermint/PrivKeyEd25519",
@@ -154,7 +154,7 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 	}
 	db := dbm.NewMemDB()
 	sdaitypes.SDAIEventFetcher = &sdaitypes.MockEventFetcher{}
-	dydxApp := app.New(
+	klyraApp := app.New(
 		logger,
 		db,
 		nil,
@@ -162,7 +162,7 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 		appOptions,
 		baseAppOptions...,
 	)
-	return dydxApp
+	return klyraApp
 }
 
 // DefaultGenesis returns a genesis doc using configuration from the local net with a genesis time
@@ -760,7 +760,7 @@ func (tApp *TestApp) AdvanceToBlock(
 				validators,
 				tApp.App.LastBlockHeight(),
 				0,
-				"localdydxprotocol",
+				"localklyraprotocol",
 			)
 
 			prepareRequest := abcitypes.RequestPrepareProposal{
@@ -1146,8 +1146,8 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 	defer tApp.mtx.RUnlock()
 	tApp.panicIfChainIsHalted()
 	res, err := tApp.App.CheckTx(&req)
-	// Note that the dYdX fork of CometBFT explicitly excludes place and cancel order messages. See
-	// https://github.com/dydxprotocol/cometbft/blob/5e6c4b6/mempool/clist_mempool.go#L441
+	// Note that the klyra fork of CometBFT explicitly excludes place and cancel order messages. See
+	// https://github.com/StreamFinance-Protocol/cometbft/blob/5e6c4b6/mempool/clist_mempool.go#L441
 	if err == nil && res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, newTestingLogger()) {
 		// We want to ensure that we hold the lock only for updating passingCheckTxs so that App.CheckTx can execute
 		// concurrently.
@@ -1215,7 +1215,7 @@ func (tApp *TestApp) PrepareProposal() (*abcitypes.ResponsePrepareProposal, erro
 			validators,
 			tApp.App.LastBlockHeight()-1, // we are preparing proposal in the context of the previous block
 			0,
-			"localdydxprotocol",
+			"localklyraprotocol",
 		),
 	})
 }
@@ -1298,7 +1298,7 @@ func launchValidatorInDir(
 
 	appCaptor := make(chan *app.App, 1)
 	// Set up the root command using https://github.com/StreamFinance-Protocol/stream-chain/blob/
-	// 1fa21ed5d848ed7cc6a98053838cadb68422079f/protocol/cmd/dydxprotocold/main.go#L12 as a basis.
+	// 1fa21ed5d848ed7cc6a98053838cadb68422079f/protocol/cmd/klyraprotocold/main.go#L12 as a basis.
 	option := cmd.GetOptionWithCustomStartCmd()
 	rootCmd := cmd.NewRootCmdWithInterceptors(
 		option,
@@ -1315,7 +1315,7 @@ func launchValidatorInDir(
 			}
 		},
 		// Override the addresses to use domain sockets to avoid port conflicts.
-		func(s string, appConfig *cmd.DydxAppConfig) (string, *cmd.DydxAppConfig) {
+		func(s string, appConfig *cmd.KlyraAppConfig) (string, *cmd.KlyraAppConfig) {
 			// Note that the domain sockets need to typically be ~100 bytes or fewer otherwise they will fail to be
 			// created. The actual limit is OS specific.
 			apiSocketPath := filepath.Join(validatorHomeDir, "api_socket")

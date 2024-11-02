@@ -1,4 +1,4 @@
-import { IndexerTendermintEvent, TransferEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerTendermintEvent, TransferEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
 import { Handler } from '../handlers/handler';
 import { TransferHandler } from '../handlers/transfer-handler';

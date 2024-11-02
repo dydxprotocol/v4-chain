@@ -1,6 +1,6 @@
-import { OrderTable } from '@dydxprotocol-indexer/postgres';
-import { ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
-import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
+import { OrderTable } from '@klyraprotocol-indexer/postgres';
+import { ORDER_FLAG_SHORT_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
+import { RedisOrder } from '@klyraprotocol-indexer/v4-protos';
 import { Callback, RedisClient } from 'redis';
 
 import { PlaceOrderResult } from '../types';

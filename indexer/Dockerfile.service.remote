@@ -1,14 +1,14 @@
 # Dockerfile to containerize services for a cloud provider
-FROM dydxprotocol/indexer-node:16-alpine
+FROM klyraprotocol/indexer-node:16-alpine
 ENV NODE_ENV=development
 ARG service
 
 RUN apk add --no-cache bash jq aws-cli
-RUN adduser -S dydx
-RUN mkdir -p /home/dydx/app
-RUN chown dydx -R /home/dydx/app
+RUN adduser -S klyra
+RUN mkdir -p /home/klyra/app
+RUN chown klyra -R /home/klyra/app
 
-WORKDIR /home/dydx/app
+WORKDIR /home/klyra/app
 
 # Copy pnpm lock and workspace and package.json from base directory
 COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
@@ -37,15 +37,15 @@ COPY ./services/${service}/build ./services/${service}/build
 COPY ./services/${service}/.env* ./services/${service}/
 
 # Copy container start script
-COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
+COPY ./scripts/container-run.sh /home/klyra/app/services/$service/scripts/
 
-RUN chown dydx -R /home/dydx/app
+RUN chown klyra -R /home/klyra/app
 
 # Install npm modules using pnpm
 RUN pnpm i --loglevel warn --production --frozen-lockfile
 
-USER dydx
+USER klyra
 
-WORKDIR /home/dydx/app/services/$service
+WORKDIR /home/klyra/app/services/$service
 
 CMD ["sh", "-c", "bash ./scripts/container-run.sh"]

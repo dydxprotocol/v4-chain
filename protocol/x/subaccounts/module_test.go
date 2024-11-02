@@ -163,21 +163,21 @@ func TestAppModuleBasic_RegisterGRPCGatewayRoutes(t *testing.T) {
 
 	// Expect SubaccountAll route registered
 	recorder := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/dydxprotocol/subaccounts/subaccount", nil)
+	req, err := http.NewRequest("GET", "/klyraprotocol/subaccounts/subaccount", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
 
 	// Expect Subaccount route registered
 	recorder = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/dydxprotocol/subaccounts/subaccount/foo/127", nil)
+	req, err = http.NewRequest("GET", "/klyraprotocol/subaccounts/subaccount/foo/127", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
 
 	// Expect unexpected route not registered
 	recorder = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/dydxprotocol/subaccounts/foo/bar/baz", nil)
+	req, err = http.NewRequest("GET", "/klyraprotocol/subaccounts/foo/bar/baz", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Equal(t, 404, recorder.Code)

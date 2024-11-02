@@ -2,7 +2,7 @@ import {
   stats,
   logger,
   NodeEnv,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 
 import config from '../config';
 import * as AssetTable from '../stores/asset-table';

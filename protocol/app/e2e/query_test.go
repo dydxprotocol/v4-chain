@@ -82,7 +82,7 @@ func TestParallelQuery(t *testing.T) {
 			resp, err := tApp.App.Query(
 				context.Background(),
 				&abcitypes.RequestQuery{
-					Path: "/dydxprotocol.blocktime.Query/PreviousBlockInfo",
+					Path: "/klyraprotocol.blocktime.Query/PreviousBlockInfo",
 					Data: blockTimeRequestBytes,
 				},
 			)

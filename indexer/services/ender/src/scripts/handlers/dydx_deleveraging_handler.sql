@@ -1,22 +1,22 @@
-CREATE OR REPLACE FUNCTION dydx_deleveraging_handler(
+CREATE OR REPLACE FUNCTION klyra_deleveraging_handler(
     block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
     transaction_hash text) RETURNS jsonb AS $$
 /**
   Parameters:
     - block_height: the height of the block being processing.
     - block_time: the time of the block being processed.
-    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
+    - event_data: The 'data' field of the IndexerTendermintEvent 
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
     - event_index: The 'event_index' of the IndexerTendermintEvent.
     - transaction_index: The transaction_index of the IndexerTendermintEvent after the conversion that takes into
-        account the block_event (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/services/ender/src/lib/helper.ts#L41)
+        account the block_event
     - transaction_hash: The transaction hash corresponding to this event from the IndexerTendermintBlock 'tx_hashes'.
   Returns: JSON object containing fields:
-    - liquidated_fill: The created liquidated fill in fill-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/fill-model.ts).
-    - offsetting_fill: The created offsetting fill in fill-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/fill-model.ts).
-    - perpetual_market: The perpetual market for the deleveraging in perpetual-market-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-market-model.ts).
-    - liquidated_perpetual_position: The updated liquidated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
-    - offsetting_perpetual_position: The updated offsetting perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
+    - liquidated_fill: The created liquidated fill in fill-model format 
+    - offsetting_fill: The created offsetting fill in fill-model format 
+    - perpetual_market: The perpetual market for the deleveraging in perpetual-market-model format 
+    - liquidated_perpetual_position: The updated liquidated perpetual position in perpetual-position-model format
+    - offsetting_perpetual_position: The updated offsetting perpetual position in perpetual-position-model format 
 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
@@ -54,25 +54,25 @@ BEGIN
 
       TODO(IND-238): Extract out calculation of quantums and subticks to their own SQL functions.
     */
-    size = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'fillAmount') *
+    size = klyra_trim_scale(klyra_from_jsonlib_long(event_data->'fillAmount') *
                                  power(10, perpetual_market_record."atomicResolution")::numeric);
-    quote_amount = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'totalQuoteQuantums') *
+    quote_amount = klyra_trim_scale(klyra_from_jsonlib_long(event_data->'totalQuoteQuantums') *
                                   power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric);
-    price = dydx_trim_scale(quote_amount / size);
+    price = klyra_trim_scale(quote_amount / size);
 
-    liquidated_subaccount_uuid = dydx_uuid_from_subaccount_id(event_data->'liquidated');
-    offsetting_subaccount_uuid = dydx_uuid_from_subaccount_id(event_data->'offsetting');
+    liquidated_subaccount_uuid = klyra_uuid_from_subaccount_id(event_data->'liquidated');
+    offsetting_subaccount_uuid = klyra_uuid_from_subaccount_id(event_data->'offsetting');
     offsetting_side = CASE WHEN (event_data->'isBuy')::bool THEN 'BUY' ELSE 'SELL' END;
     liquidated_side = CASE WHEN offsetting_side = 'BUY' THEN 'SELL' ELSE 'BUY' END;
     clob_pair_id = perpetual_market_record."clobPairId";
 
     /* Insert the associated fill records for this deleveraging event. */
-    event_id = dydx_event_id_from_parts(
+    event_id = klyra_event_id_from_parts(
         block_height, transaction_index, event_index);
     INSERT INTO fills
         ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "size", "price", "quoteAmount",
          "eventId", "transactionHash", "createdAt", "createdAtHeight", "fee")
-    VALUES (dydx_uuid_from_fill_event_parts(event_id, 'TAKER'),
+    VALUES (klyra_uuid_from_fill_event_parts(event_id, 'TAKER'),
             liquidated_subaccount_uuid,
             liquidated_side,
             'TAKER',
@@ -91,7 +91,7 @@ BEGIN
     INSERT INTO fills
         ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "size", "price", "quoteAmount",
          "eventId", "transactionHash", "createdAt", "createdAtHeight", "fee")
-    VALUES (dydx_uuid_from_fill_event_parts(event_id, 'MAKER'),
+    VALUES (klyra_uuid_from_fill_event_parts(event_id, 'MAKER'),
                         offsetting_subaccount_uuid,
                         offsetting_side,
                         'MAKER',
@@ -108,13 +108,13 @@ BEGIN
     RETURNING * INTO offsetting_fill_record;
 
     /* Upsert the perpetual_position records for this deleveraging event. */
-    liquidated_perpetual_position_record = dydx_update_perpetual_position_aggregate_fields(
+    liquidated_perpetual_position_record = klyra_update_perpetual_position_aggregate_fields(
         liquidated_subaccount_uuid,
         perpetual_id,
         liquidated_side,
         size,
         price);
-    offsetting_perpetual_position_record = dydx_update_perpetual_position_aggregate_fields(
+    offsetting_perpetual_position_record = klyra_update_perpetual_position_aggregate_fields(
         offsetting_subaccount_uuid,
         perpetual_id,
         offsetting_side,
@@ -124,15 +124,15 @@ BEGIN
 
     RETURN jsonb_build_object(
             'liquidated_fill',
-            dydx_to_jsonb(liquidated_fill_record),
+            klyra_to_jsonb(liquidated_fill_record),
             'offsetting_fill',
-            dydx_to_jsonb(offsetting_fill_record),
+            klyra_to_jsonb(offsetting_fill_record),
             'perpetual_market',
-            dydx_to_jsonb(perpetual_market_record),
+            klyra_to_jsonb(perpetual_market_record),
             'liquidated_perpetual_position',
-            dydx_to_jsonb(liquidated_perpetual_position_record),
+            klyra_to_jsonb(liquidated_perpetual_position_record),
             'offsetting_perpetual_position',
-            dydx_to_jsonb(offsetting_perpetual_position_record)
+            klyra_to_jsonb(offsetting_perpetual_position_record)
         );
 END;
 $$ LANGUAGE plpgsql;

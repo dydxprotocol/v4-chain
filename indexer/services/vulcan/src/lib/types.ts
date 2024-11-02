@@ -3,7 +3,6 @@ export enum OrderbookSide {
   ASKS = 'asks',
 }
 
-// Sourced from https://github.com/dydxprotocol/v4/blob/main/indexer/msgsender/msgsender.go#L7.
-export enum DydxRecordHeaderKeys {
+export enum KlyraRecordHeaderKeys {
   TRANSACTION_HASH_KEY = 'TransactionHash',
 }

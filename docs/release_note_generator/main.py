@@ -10,9 +10,9 @@ import os
 import requests
 
 GITHUB_TOKEN_ENV_VAR = "GITHUB_TOKEN"
-COMMITS_ENDPOINT = "https://api.github.com/repos/dydxprotocol/v4-chain/commits"
-GET_COMMIT_ENDPOINT = "https://api.github.com/repos/dydxprotocol/v4-chain/commits/%s"
-LIST_COMMIT_PULLS_ENDPOINT = "https://api.github.com/repos/dydxprotocol/v4-chain/commits/%s/pulls"
+COMMITS_ENDPOINT = "https://api.github.com/repos/StreamFinance-Protocol/stream-chain/commits"
+GET_COMMIT_ENDPOINT = "https://api.github.com/repos/StreamFinance-Protocol/stream-chain/commits/%s"
+LIST_COMMIT_PULLS_ENDPOINT = "https://api.github.com/repos/StreamFinance-Protocol/stream-chain/commits/%s/pulls"
 
 
 def get_commit(session, commit_sha):

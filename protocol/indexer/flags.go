@@ -30,7 +30,7 @@ const (
 // AddIndexerFlagsToCmd adds the required flags to instantiate a connection to Kafka during App
 // initialization to a command. These flags should be applied to the `start` command of the
 // V4 Cosmos application.
-// E.g. `dydxprotocold start --indexer-kafka-conn-str kafka:9092
+// E.g. `klyraprotocold start --indexer-kafka-conn-str kafka:9092
 func AddIndexerFlagsToCmd(cmd *cobra.Command) {
 	cmd.
 		Flags().

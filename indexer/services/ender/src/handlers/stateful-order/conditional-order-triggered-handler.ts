@@ -4,15 +4,15 @@ import {
   PerpetualMarketFromDatabase,
   orderTranslations,
   SubaccountFromDatabase, OrderModel, PerpetualMarketModel,
-} from '@dydxprotocol-indexer/postgres';
-import SubaccountModel from '@dydxprotocol-indexer/postgres/build/src/models/subaccount-model';
-import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
+} from '@klyraprotocol-indexer/postgres';
+import SubaccountModel from '@klyraprotocol-indexer/postgres/build/src/models/subaccount-model';
+import { getOrderIdHash } from '@klyraprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
   OffChainUpdateV1,
   OrderPlaceV1_OrderPlacementStatus,
   StatefulOrderEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';

@@ -1,5 +1,5 @@
-import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
-import { PerpetualMarketCreateEventV1, IndexerTendermintEvent, PerpetualMarketCreateEventV2 } from '@dydxprotocol-indexer/v4-protos';
+import { perpetualMarketRefresher } from '@klyraprotocol-indexer/postgres';
+import { PerpetualMarketCreateEventV1, IndexerTendermintEvent, PerpetualMarketCreateEventV2 } from '@klyraprotocol-indexer/v4-protos';
 import Long from 'long';
 
 import { Handler } from '../handlers/handler';

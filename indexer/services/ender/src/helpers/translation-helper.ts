@@ -1,4 +1,4 @@
-import { SubaccountUpdateEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import { SubaccountUpdateEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
 import { ZERO_ASSET_YIELD_INDEX } from '../constants';
 import { OrderFillWithLiquidity, SubaccountUpdate } from '../lib/translated-types';

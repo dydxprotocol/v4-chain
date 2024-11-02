@@ -6,7 +6,7 @@ import {
   parseInteger,
   parseString,
   parseSchema,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 
 export const redisConfigSchema = {
   // Required environment variables.

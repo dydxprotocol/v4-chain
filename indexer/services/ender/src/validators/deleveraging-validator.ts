@@ -1,4 +1,4 @@
-import { IndexerTendermintEvent, DeleveragingEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerTendermintEvent, DeleveragingEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
 import { Handler } from '../handlers/handler';
 import { DeleveragingHandler } from '../handlers/order-fills/deleveraging-handler';

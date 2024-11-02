@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	invalidInnerMsgErr_Dydx = fmt.Errorf("Invalid nested msg for MsgExec: dydx msg type")
+	invalidInnerMsgErr_Klyra = fmt.Errorf("Invalid nested msg for MsgExec: klyra msg type")
 )
 
 func TestIsNestedMsg_Empty(t *testing.T) {
@@ -61,36 +61,36 @@ func TestIsNestedMsg_Valid(t *testing.T) {
 	}
 }
 
-func TestIsDydxMsg_Invalid(t *testing.T) {
-	allDydxMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
+func TestIsKlyraMsg_Invalid(t *testing.T) {
+	allKlyraMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
 		appmsgs.AppInjectedMsgSamples,
-		appmsgs.NormalMsgsDydxCustom,
-		appmsgs.InternalMsgSamplesDydxCustom,
+		appmsgs.NormalMsgsKlyraCustom,
+		appmsgs.InternalMsgSamplesKlyraCustom,
 	)
-	allMsgsMinusDydx := lib.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
-	for key := range allDydxMsgs {
-		delete(allMsgsMinusDydx, key)
+	allMsgsMinusKlyra := lib.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
+	for key := range allKlyraMsgs {
+		delete(allMsgsMinusKlyra, key)
 	}
-	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allMsgsMinusDydx)
+	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allMsgsMinusKlyra)
 
 	for _, sampleMsg := range allNonNilSampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
-			require.False(t, ante.IsDydxMsg(sampleMsg.Msg))
+			require.False(t, ante.IsKlyraMsg(sampleMsg.Msg))
 		})
 	}
 }
 
-func TestIsDydxMsg_Valid(t *testing.T) {
-	allDydxMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
+func TestIsKlyraMsg_Valid(t *testing.T) {
+	allKlyraMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
 		appmsgs.AppInjectedMsgSamples,
-		appmsgs.NormalMsgsDydxCustom,
-		appmsgs.InternalMsgSamplesDydxCustom,
+		appmsgs.NormalMsgsKlyraCustom,
+		appmsgs.InternalMsgSamplesKlyraCustom,
 	)
-	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allDydxMsgs)
+	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allKlyraMsgs)
 
 	for _, sampleMsg := range allNonNilSampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
-			require.True(t, ante.IsDydxMsg(sampleMsg.Msg))
+			require.True(t, ante.IsKlyraMsg(sampleMsg.Msg))
 		})
 	}
 }
@@ -105,9 +105,9 @@ func TestValidateNestedMsg(t *testing.T) {
 			expectedErr: fmt.Errorf("not a nested msg"),
 		},
 
-		"Invalid MsgExec: dydx custom msg": {
-			msg:         &testmsgs.MsgExecWithDydxMessage,
-			expectedErr: invalidInnerMsgErr_Dydx,
+		"Invalid MsgExec: klyra custom msg": {
+			msg:         &testmsgs.MsgExecWithKlyraMessage,
+			expectedErr: invalidInnerMsgErr_Klyra,
 		},
 	}
 

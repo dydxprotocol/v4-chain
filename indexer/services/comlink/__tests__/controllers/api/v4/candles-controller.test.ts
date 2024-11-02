@@ -1,6 +1,6 @@
 import {
   CandleResolution, CandleTable, dbHelpers, perpetualMarketRefresher, testConstants, testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import _ from 'lodash';
 import request from 'supertest';
 

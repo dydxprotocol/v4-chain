@@ -87,7 +87,7 @@ func CreateBankGenesisState(
 	bankGenState := banktypes.GenesisState{
 		Balances: []banktypes.Balance{
 			{
-				Address: "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
+				Address: "klyra1v88c3xv9xyv3eetdx0tvcmq7ung3dywptd5ps3",
 				Coins: []sdk.Coin{
 					sdk.NewInt64Coin(
 						"utdai",
@@ -96,7 +96,7 @@ func CreateBankGenesisState(
 				},
 			},
 			{
-				Address: "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0",
+				Address: "klyra1r3fsd6humm0ghyq0te5jf8eumklmclyaw0hs3y",
 				Coins: []sdk.Coin{
 					{
 						Denom:  "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8",

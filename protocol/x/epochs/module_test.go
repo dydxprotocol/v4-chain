@@ -3,12 +3,13 @@ package epochs_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
@@ -150,21 +151,21 @@ func TestAppModuleBasic_RegisterGRPCGatewayRoutes(t *testing.T) {
 
 	// Expect list all epoch info route registered
 	recorder := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/dydxprotocol/v4/epochs/epoch_info", nil)
+	req, err := http.NewRequest("GET", "/klyraprotocol/v4/epochs/epoch_info", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
 
 	// Expect epoch route registered
 	recorder = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/dydxprotocol/v4/epochs/epoch_info/deewhydeeex", nil)
+	req, err = http.NewRequest("GET", "/klyraprotocol/v4/epochs/epoch_info/deewhydeeex", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
 
 	// Expect unexpected route not registered
 	recorder = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/dydxprotocol/v4/epochs/invalid/path", nil)
+	req, err = http.NewRequest("GET", "/klyraprotocol/v4/epochs/invalid/path", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Equal(t, 404, recorder.Code)

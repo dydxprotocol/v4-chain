@@ -3,15 +3,15 @@ import {
   stats,
   STATS_FUNCTION_NAME,
   wrapBackgroundTask,
-} from '@dydxprotocol-indexer/base';
-import { synchronizeWrapBackgroundTask } from '@dydxprotocol-indexer/dev';
+} from '@klyraprotocol-indexer/base';
+import { synchronizeWrapBackgroundTask } from '@klyraprotocol-indexer/dev';
 import {
   createKafkaMessage,
   ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
   producer,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
   getTriggerPrice,
-} from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/kafka';
 import {
   APIOrderStatus,
   APIOrderStatusEnum,
@@ -28,8 +28,8 @@ import {
   testConstants,
   testMocks,
   TimeInForce,
-} from '@dydxprotocol-indexer/postgres';
-import * as redisPackage from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/postgres';
+import * as redisPackage from '@klyraprotocol-indexer/redis';
 import {
   OpenOrdersCache,
   PriceLevel,
@@ -43,7 +43,7 @@ import {
   updateOrder,
   StatefulOrderUpdatesCache,
   CanceledOrderStatus,
-} from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/redis';
 import {
   OffChainUpdateV1,
   IndexerOrder,
@@ -53,7 +53,7 @@ import {
   SubaccountId,
   SubaccountMessage,
   OrderUpdateV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
@@ -61,12 +61,12 @@ import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { OrderbookSide } from '../../src/lib/types';
-import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@klyraprotocol-indexer/v4-proto-parser';
 import config from '../../src/config';
 import { defaultKafkaHeaders } from '../helpers/constants';
 
-jest.mock('@dydxprotocol-indexer/base', () => ({
-  ...jest.requireActual('@dydxprotocol-indexer/base'),
+jest.mock('@klyraprotocol-indexer/base', () => ({
+  ...jest.requireActual('@klyraprotocol-indexer/base'),
   wrapBackgroundTask: jest.fn(),
 }));
 

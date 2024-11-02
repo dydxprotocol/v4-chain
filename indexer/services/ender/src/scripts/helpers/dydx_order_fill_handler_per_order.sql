@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_order_fill_handler_per_order(
+CREATE OR REPLACE FUNCTION klyra_order_fill_handler_per_order(
     field text, block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
     transaction_hash text, fill_liquidity text, fill_type text, tdai_asset_id text, order_canceled_status text) RETURNS jsonb AS $$
 /**
@@ -6,21 +6,21 @@ CREATE OR REPLACE FUNCTION dydx_order_fill_handler_per_order(
     - field: the field storing the order to process.
     - block_height: the height of the block being processing.
     - block_time: the time of the block being processed.
-    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
+    - event_data: The 'data' field of the IndexerTendermintEvent
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
     - event_index: The 'event_index' of the IndexerTendermintEvent.
     - transaction_index: The transaction_index of the IndexerTendermintEvent after the conversion that takes into
-        account the block_event (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/services/ender/src/lib/helper.ts#L41)
+        account the block_event
     - transaction_hash: The transaction hash corresponding to this event from the IndexerTendermintBlock 'tx_hashes'.
     - fill_liquidity: The liquidity for the fill record.
     - fill_type: The type for the fill record.
     - tdai_asset_id: The TDAI asset id.
     - order_canceled_status: Status of order cancelation
   Returns: JSON object containing fields:
-    - order: The updated order in order-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/order-model.ts).
-    - fill: The updated fill in fill-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/fill-model.ts).
-    - perpetual_market: The perpetual market for the order in perpetual-market-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-market-model.ts).
-    - perpetual_position: The updated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
+    - order: The updated order in order-model format
+    - fill: The updated fill in fill-model format
+    - perpetual_market: The perpetual market for the order in perpetual-market-model format.
+    - perpetual_position: The updated perpetual position in perpetual-position-model format.
 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
@@ -51,7 +51,7 @@ BEGIN
     order_ = event_data->field;
     maker_order = event_data->'makerOrder';
     clob_pair_id = jsonb_extract_path(order_, 'orderId', 'clobPairId')::bigint;
-    perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
+    perpetual_market_record = klyra_get_perpetual_market_for_clob_pair(clob_pair_id);
 
     BEGIN
         SELECT * INTO STRICT asset_record FROM assets WHERE "id" = tdai_asset_id;
@@ -65,26 +65,26 @@ BEGIN
 
       TODO(IND-238): Extract out calculation of quantums and subticks to their own SQL functions.
     */
-    order_size = dydx_trim_scale(dydx_from_jsonlib_long(order_->'quantums') *
+    order_size = klyra_trim_scale(klyra_from_jsonlib_long(order_->'quantums') *
                                  power(10, perpetual_market_record."atomicResolution")::numeric);
-    order_price = dydx_trim_scale(dydx_from_jsonlib_long(order_->'subticks') *
+    order_price = klyra_trim_scale(klyra_from_jsonlib_long(order_->'subticks') *
                                   power(10, perpetual_market_record."quantumConversionExponent" +
                                                      asset_record."atomicResolution" -
                                                      perpetual_market_record."atomicResolution")::numeric);
-    fill_amount = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'fillAmount') *
+    fill_amount = klyra_trim_scale(klyra_from_jsonlib_long(event_data->'fillAmount') *
                                   power(10, perpetual_market_record."atomicResolution")::numeric);
-    maker_price = dydx_trim_scale(dydx_from_jsonlib_long(maker_order->'subticks') *
+    maker_price = klyra_trim_scale(klyra_from_jsonlib_long(maker_order->'subticks') *
                                   power(10, perpetual_market_record."quantumConversionExponent" +
                                                      asset_record."atomicResolution" -
                                                      perpetual_market_record."atomicResolution")::numeric);
-    total_filled = dydx_trim_scale(dydx_get_total_filled(fill_liquidity, event_data) *
+    total_filled = klyra_trim_scale(klyra_get_total_filled(fill_liquidity, event_data) *
                                    power(10, perpetual_market_record."atomicResolution")::numeric);
-    fee = dydx_trim_scale(dydx_get_fee(fill_liquidity, event_data) *
+    fee = klyra_trim_scale(klyra_get_fee(fill_liquidity, event_data) *
                           power(10, asset_record."atomicResolution")::numeric);
 
-    order_uuid = dydx_uuid_from_order_id(order_->'orderId');
-    subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));
-    order_side = dydx_from_protocol_order_side(order_->'side');
+    order_uuid = klyra_uuid_from_order_id(order_->'orderId');
+    subaccount_uuid = klyra_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));
+    order_side = klyra_from_protocol_order_side(order_->'side');
     order_client_metadata = (order_->'clientMetadata')::bigint;
     router_fee_ppm = (order_->'routerFeePpm')::bigint;
     router_fee_subaccount_owner = (order_->'routerFeeSubaccountOwner')::text;
@@ -95,7 +95,7 @@ BEGIN
     order_record."side" = order_side;
     order_record."size" = order_size;
     order_record."price" = order_price;
-    order_record."timeInForce" = dydx_from_protocol_time_in_force(order_->'timeInForce');
+    order_record."timeInForce" = klyra_from_protocol_time_in_force(order_->'timeInForce');
     order_record."reduceOnly" = (order_->>'reduceOnly')::boolean;
     order_record."orderFlags" = jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint;
     order_record."goodTilBlock" = (order_->'goodTilBlock')::bigint;
@@ -109,7 +109,7 @@ BEGIN
 
     IF FOUND THEN
         order_record."totalFilled" = total_filled;
-        order_record."status" = dydx_get_order_status(total_filled, order_record.size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
+        order_record."status" = klyra_get_order_status(total_filled, order_record.size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
 
         UPDATE orders
         SET
@@ -139,7 +139,7 @@ BEGIN
         order_record."type" = 'LIMIT'; /* TODO: Add additional order types once we support */
 
         order_record."totalFilled" = fill_amount;
-        order_record."status" = dydx_get_order_status(fill_amount, order_size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
+        order_record."status" = klyra_get_order_status(fill_amount, order_size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
         order_record."createdAtHeight" = block_height;
         INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
@@ -149,12 +149,12 @@ BEGIN
     END IF;
 
     /* Insert the associated fill record for this order_fill event. */
-    event_id = dydx_event_id_from_parts(
+    event_id = klyra_event_id_from_parts(
         block_height, transaction_index, event_index);
     INSERT INTO fills
         ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
          "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee")
-    VALUES (dydx_uuid_from_fill_event_parts(event_id, fill_liquidity),
+    VALUES (klyra_uuid_from_fill_event_parts(event_id, fill_liquidity),
             subaccount_uuid,
             order_side,
             fill_liquidity,
@@ -163,7 +163,7 @@ BEGIN
             order_uuid,
             fill_amount,
             maker_price,
-            dydx_trim_scale(fill_amount * maker_price),
+            klyra_trim_scale(fill_amount * maker_price),
             event_id,
             transaction_hash,
             block_time,
@@ -173,7 +173,7 @@ BEGIN
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */
-    perpetual_position_record = dydx_update_perpetual_position_aggregate_fields(
+    perpetual_position_record = klyra_update_perpetual_position_aggregate_fields(
             subaccount_uuid,
             perpetual_market_record."id",
             order_side,
@@ -182,13 +182,13 @@ BEGIN
 
     RETURN jsonb_build_object(
             'order',
-            dydx_to_jsonb(order_record),
+            klyra_to_jsonb(order_record),
             'fill',
-            dydx_to_jsonb(fill_record),
+            klyra_to_jsonb(fill_record),
             'perpetual_market',
-            dydx_to_jsonb(perpetual_market_record),
+            klyra_to_jsonb(perpetual_market_record),
             'perpetual_position',
-            dydx_to_jsonb(perpetual_position_record)
+            klyra_to_jsonb(perpetual_position_record)
         );
 END;
 $$ LANGUAGE plpgsql;

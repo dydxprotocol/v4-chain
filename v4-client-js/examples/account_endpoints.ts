@@ -4,11 +4,11 @@
 
 import { Network } from '../src/clients/constants';
 import { IndexerClient } from '../src/clients/indexer-client';
-import { DYDX_TEST_ADDRESS } from './constants';
+import { KLYRA_TEST_ADDRESS } from './constants';
 
 async function test(): Promise<void> {
   const client = new IndexerClient(Network.testnet().indexerConfig);
-  const address = DYDX_TEST_ADDRESS;
+  const address = KLYRA_TEST_ADDRESS;
 
   // Get subaccounts
   try {

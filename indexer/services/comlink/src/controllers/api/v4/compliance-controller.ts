@@ -1,6 +1,6 @@
-import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
-import { ComplianceClientResponse, INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
-import { ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
+import { logger, stats, TooManyRequestsError } from '@klyraprotocol-indexer/base';
+import { ComplianceClientResponse, INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@klyraprotocol-indexer/compliance';
+import { ComplianceDataFromDatabase, ComplianceTable } from '@klyraprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import { DateTime } from 'luxon';

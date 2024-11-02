@@ -1,6 +1,6 @@
 import {
   logger,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 import {
   Consumer, ConsumerRunConfig, EachBatchPayload, KafkaMessage,
 } from 'kafkajs';

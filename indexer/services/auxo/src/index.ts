@@ -24,7 +24,7 @@ import {
   LastUpdateStatus,
   UpdateFunctionCodeCommand,
 } from '@aws-sdk/client-lambda';
-import { logger, startBugsnag } from '@dydxprotocol-indexer/base';
+import { logger, startBugsnag } from '@klyraprotocol-indexer/base';
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import _ from 'lodash';
 

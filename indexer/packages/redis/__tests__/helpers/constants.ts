@@ -1,7 +1,7 @@
 import {
   OrderTable, protocolTranslations, SubaccountTable, testConstants,
-} from '@dydxprotocol-indexer/postgres';
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+} from '@klyraprotocol-indexer/postgres';
+import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
   IndexerOrderId,
@@ -17,7 +17,7 @@ import {
   IndexerSubaccountId,
   IndexerOrder_ConditionType,
   OrderRemovalReason,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import Long from 'long';
 
 export type OffChainUpdateOrderPlaceUpdateMessage = {
@@ -79,7 +79,7 @@ export const defaultOrder: IndexerOrder = {
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
   routerFeePpm: 0,
-  routerFeeSubaccountOwner: 'dydx1xxxxxx',
+  routerFeeSubaccountOwner: 'klyra1xxxxxx',
   routerFeeSubaccountNumber: 0,
 };
 export const defaultOrderGoodTilBlockTime: IndexerOrder = {
@@ -195,7 +195,7 @@ export const isolatedMarketOrder: IndexerOrder = {
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
   routerFeePpm: 0,
-  routerFeeSubaccountOwner: 'dydx1xxxxxx',
+  routerFeeSubaccountOwner: 'klyra1xxxxxx',
   routerFeeSubaccountNumber: 0,
 };
 

@@ -8,5 +8,5 @@ const (
 	// StoreKey defines the primary module store key
 	// This is not govplus because then StoreKey gov (from x/gov) would be a prefix of it,
 	// and that is not allowed.
-	StoreKey = "dydxgovplus"
+	StoreKey = "klyragovplus"
 )

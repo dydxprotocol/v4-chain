@@ -1,0 +1,13 @@
+syntax = "proto3";
+package klyraprotocol.feetiers;
+
+import "gogoproto/gogo.proto";
+import "klyraprotocol/feetiers/params.proto";
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types";
+
+// GenesisState defines the feetiers module's genesis state.
+message GenesisState {
+  // The parameters for perpetual fees.
+  PerpetualFeeParams params = 1 [ (gogoproto.nullable) = false ];
+}

@@ -20,8 +20,8 @@ func init() {
 	_ = testTxBuilder.SetMsgs(MsgCancelUpgrade)
 	MsgCancelUpgradeTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
 
-	_ = testTxBuilder.SetMsgs(&MsgExecWithDydxMessage)
-	MsgExecWithDydxMessageTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
+	_ = testTxBuilder.SetMsgs(&MsgExecWithKlyraMessage)
+	MsgExecWithKlyraMessageTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
 }
 
 var (
@@ -41,9 +41,9 @@ var (
 	}
 	MsgCancelUpgradeTxBytes []byte
 
-	MsgExecWithDydxMessage = authz.NewMsgExec(
+	MsgExecWithKlyraMessage = authz.NewMsgExec(
 		constants.AliceAccAddress,
 		[]sdk.Msg{&sending.MsgCreateTransfer{}},
 	)
-	MsgExecWithDydxMessageTxBytes []byte
+	MsgExecWithKlyraMessageTxBytes []byte
 )

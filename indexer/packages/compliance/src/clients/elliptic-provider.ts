@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-import { TooManyRequestsError, logger, stats } from '@dydxprotocol-indexer/base';
+import { TooManyRequestsError, logger, stats } from '@klyraprotocol-indexer/base';
 import axios, { AxiosResponse } from 'axios';
 import _ from 'lodash';
 

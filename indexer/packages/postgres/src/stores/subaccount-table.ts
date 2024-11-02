@@ -1,4 +1,4 @@
-import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerSubaccountId } from '@klyraprotocol-indexer/v4-protos';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
 import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';

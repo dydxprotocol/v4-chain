@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	AccountAddressPrefix = "dydx"
+	AccountAddressPrefix = "klyra"
 	// Bech32MainPrefix defines the Bech32 prefix for an account's address
 	Bech32MainPrefix = AccountAddressPrefix
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
@@ -32,7 +32,7 @@ func SetupConfig() {
 
 func init() {
 	// This package does not contain the `app/config` package in its import chain, and therefore needs to call
-	// SetAddressPrefixes() explicitly in order to set the `dydx` address prefixes.
+	// SetAddressPrefixes() explicitly in order to set the `klyra` address prefixes.
 	SetAddressPrefixes()
 }
 

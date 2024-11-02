@@ -25,7 +25,7 @@ import {
 //   Order_ConditionType,
 //   Order_Side,
 //   Order_TimeInForce,
-// } from '../../../../../indexer/packages/v4-protos/src/codegen/dydxprotocol/clob/order';
+// } from '../../../../../indexer/packages/v4-protos/src/codegen/klyraprotocol/clob/order';
 
 protobuf.util.Long = Long;
 protobuf.configure();
@@ -92,7 +92,7 @@ export class Composer {
       order,
     };
     return {
-      typeUrl: "/dydxprotocol.clob.MsgPlaceOrder",
+      typeUrl: "/klyraprotocol.clob.MsgPlaceOrder",
       value: msg,
     };
   }
@@ -131,7 +131,7 @@ export class Composer {
     };
 
     return {
-      typeUrl: "/dydxprotocol.clob.MsgCancelOrder",
+      typeUrl: "/klyraprotocol.clob.MsgCancelOrder",
       value: msg,
     };
   }
@@ -165,7 +165,7 @@ export class Composer {
     };
 
     return {
-      typeUrl: "/dydxprotocol.sending.MsgCreateTransfer",
+      typeUrl: "/klyraprotocol.sending.MsgCreateTransfer",
       value: msg,
     };
   }
@@ -189,7 +189,7 @@ export class Composer {
     };
 
     return {
-      typeUrl: "/dydxprotocol.sending.MsgDepositToSubaccount",
+      typeUrl: "/klyraprotocol.sending.MsgDepositToSubaccount",
       value: msg,
     };
   }
@@ -214,7 +214,7 @@ export class Composer {
     };
 
     return {
-      typeUrl: "/dydxprotocol.sending.MsgWithdrawFromSubaccount",
+      typeUrl: "/klyraprotocol.sending.MsgWithdrawFromSubaccount",
       value: msg,
     };
   }

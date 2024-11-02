@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import { IHeaders, Producer, RecordMetadata } from 'kafkajs';
 import _ from 'lodash';
 

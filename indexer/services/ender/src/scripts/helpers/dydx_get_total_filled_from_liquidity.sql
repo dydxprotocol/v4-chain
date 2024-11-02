@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_get_total_filled(fill_liquidity text, event_data jsonb) RETURNS numeric AS $$
+CREATE OR REPLACE FUNCTION klyra_get_total_filled(fill_liquidity text, event_data jsonb) RETURNS numeric AS $$
 /**
   Returns the order total filled amount given the liquidity side.
 
@@ -6,9 +6,9 @@ CREATE OR REPLACE FUNCTION dydx_get_total_filled(fill_liquidity text, event_data
 */
 BEGIN
     IF fill_liquidity = 'TAKER' THEN
-        RETURN dydx_from_jsonlib_long(event_data->'totalFilledTaker');
+        RETURN klyra_from_jsonlib_long(event_data->'totalFilledTaker');
     ELSE
-        RETURN dydx_from_jsonlib_long(event_data->'totalFilledMaker');
+        RETURN klyra_from_jsonlib_long(event_data->'totalFilledMaker');
     END IF;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;

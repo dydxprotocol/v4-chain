@@ -401,7 +401,6 @@ func TestPlaceShortTermOrder(t *testing.T) {
 		// `bigFillQuoteQuantums` for the order when performing collateralization checks during `PlaceOrder`.
 		// This meant that previous buy orders in the match queue could only ever increase collateralization
 		// of the subaccount.
-		// Context: https://dydx-team.slack.com/archives/C03SLFHC3L7/p1668105457456389
 		`Regression: New order should be undercollateralized when adding to the orderbook when previous fills make it
 			undercollateralized`: {
 			perpetuals: []perptypes.Perpetual{

@@ -1,6 +1,6 @@
 import { ValidatorClient } from '../../../src/clients/validator-client';
 import { Network } from '../../../src/clients/constants';
-import { DYDX_TEST_ADDRESS } from './constants';
+import { KLYRA_TEST_ADDRESS } from './constants';
 
 describe('Validator Client', () => {
   let client: ValidatorClient;
@@ -10,12 +10,12 @@ describe('Validator Client', () => {
     });
 
     it('Account', async () => {
-      const account = await client.get.getAccount(DYDX_TEST_ADDRESS);
-      expect(account.address).toBe(DYDX_TEST_ADDRESS);
+      const account = await client.get.getAccount(KLYRA_TEST_ADDRESS);
+      expect(account.address).toBe(KLYRA_TEST_ADDRESS);
     });
 
     it('Balance', async () => {
-      const balances = await client.get.getAccountBalances(DYDX_TEST_ADDRESS);
+      const balances = await client.get.getAccountBalances(KLYRA_TEST_ADDRESS);
       expect(balances).not.toBeUndefined();
     });
 
@@ -25,7 +25,7 @@ describe('Validator Client', () => {
     });
 
     it('Subaccount', async () => {
-      const subaccount = await client.get.getSubaccount(DYDX_TEST_ADDRESS, 0);
+      const subaccount = await client.get.getSubaccount(KLYRA_TEST_ADDRESS, 0);
       expect(subaccount.subaccount).not.toBeUndefined();
     });
 

@@ -1,6 +1,6 @@
 import {
   KafkaTopics, producer, ProducerMessage, TRADES_WEBSOCKET_MESSAGE_VERSION,
-} from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/kafka';
 import {
   FillFromDatabase,
   FillTable,
@@ -16,8 +16,8 @@ import {
   TradeMessageContents,
   TradeType,
   TransferFromDatabase,
-} from '@dydxprotocol-indexer/postgres';
-import { IndexerSubaccountId, SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/postgres';
+import { IndexerSubaccountId, SubaccountMessage, TradeMessage } from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import { AnnotatedSubaccountMessage, ConsolidatedKafkaEvent, SingleTradeMessage } from '../../src/lib/types';

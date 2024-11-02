@@ -1,5 +1,5 @@
 import { SyncHandlers } from '../../src/lib/sync-handlers';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import { KafkaPublisher } from '../../src/lib/kafka-publisher';
 import * as pg from 'pg';
 import { mock, MockProxy } from 'jest-mock-extended';
@@ -17,10 +17,10 @@ describe('syncHandler', () => {
       const syncHandlers: SyncHandlers = new SyncHandlers();
 
       // handlers are processed in the order in which they are received.
-      syncHandlers.addHandler(DydxIndexerSubtypes.MARKET, firstHandler);
-      syncHandlers.addHandler(DydxIndexerSubtypes.ASSET, secondHandler);
+      syncHandlers.addHandler(KlyraIndexerSubtypes.MARKET, firstHandler);
+      syncHandlers.addHandler(KlyraIndexerSubtypes.ASSET, secondHandler);
       // should be ignored, because transfers are not handled by syncHandlers
-      syncHandlers.addHandler(DydxIndexerSubtypes.TRANSFER, handlerNotInvoked);
+      syncHandlers.addHandler(KlyraIndexerSubtypes.TRANSFER, handlerNotInvoked);
 
       const resultRow: pg.QueryResultRow = [
         'forFirstHandler',

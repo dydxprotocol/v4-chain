@@ -8,10 +8,10 @@ import { handleValidationErrors } from '../../src/request-helpers/error-handler'
 import { checkSchema } from 'express-validator';
 import {
   ComplianceTable, dbHelpers, testConstants, testMocks,
-} from '@dydxprotocol-indexer/postgres';
-import { blockedComplianceData, nonBlockedComplianceData } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+} from '@klyraprotocol-indexer/postgres';
+import { blockedComplianceData, nonBlockedComplianceData } from '@klyraprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import request from 'supertest';
-import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
+import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@klyraprotocol-indexer/compliance';
 
 // Create a router to test the middleware with
 const router: express.Router = express.Router();

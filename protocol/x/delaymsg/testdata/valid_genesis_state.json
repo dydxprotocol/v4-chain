@@ -3,8 +3,8 @@
       {
         "id": 1,
         "msg": {
-          "@type": "/dydxprotocol.perpetuals.MsgUpdateParams",
-          "authority": "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+          "@type": "/klyraprotocol.perpetuals.MsgUpdateParams",
+          "authority": "klyra1mkkvp26dngu6n8rmalaxyp3gwkjuzztqtnn4rg",
           "params": {
             "funding_rate_clamp_factor_ppm": 6000000,
             "premium_vote_clamp_factor_ppm": 60000000,

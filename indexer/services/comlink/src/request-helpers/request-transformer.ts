@@ -26,9 +26,9 @@ import {
   TransferType,
   parentSubaccountHelpers,
   YieldParamsFromDatabase,
-} from '@dydxprotocol-indexer/postgres';
-import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
-import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/postgres';
+import { OrderbookLevels, PriceLevel } from '@klyraprotocol-indexer/redis';
+import { RedisOrder } from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 

@@ -1,10 +1,10 @@
-CREATE OR REPLACE FUNCTION dydx_liquidity_tier_handler(event_data jsonb) RETURNS jsonb AS $$
+CREATE OR REPLACE FUNCTION klyra_liquidity_tier_handler(event_data jsonb) RETURNS jsonb AS $$
 /**
   Parameters:
-    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
+    - event_data: The 'data' field of the IndexerTendermintEvent
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
   Returns: JSON object containing fields:
-    - liquidy_tier: The upserted liquidity tier in liquidity-tiers-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/liquidity-tiers-model.ts).
+    - liquidy_tier: The upserted liquidity tier in liquidity-tiers-model format.
 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
@@ -20,13 +20,13 @@ BEGIN
     IF event_data->'openInterestLowerCap' IS NULL THEN
         liquidity_tier_record."openInterestLowerCap" = NULL;
     ELSE
-        liquidity_tier_record."openInterestLowerCap" = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'openInterestLowerCap') *
+        liquidity_tier_record."openInterestLowerCap" = klyra_trim_scale(klyra_from_jsonlib_long(event_data->'openInterestLowerCap') *
                                   power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric);
     END IF;
     IF event_data->'openInterestUpperCap' IS NULL THEN
         liquidity_tier_record."openInterestUpperCap" = NULL;
     ELSE
-        liquidity_tier_record."openInterestUpperCap" = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'openInterestUpperCap') *
+        liquidity_tier_record."openInterestUpperCap" = klyra_trim_scale(klyra_from_jsonlib_long(event_data->'openInterestUpperCap') *
                                   power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric);
     END IF;
 
@@ -44,7 +44,7 @@ BEGIN
 
     RETURN jsonb_build_object(
         'liquidity_tier',
-        dydx_to_jsonb(liquidity_tier_record)
+        klyra_to_jsonb(liquidity_tier_record)
     );
 END;
 $$ LANGUAGE plpgsql;

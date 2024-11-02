@@ -12,17 +12,17 @@ var (
 	// These messages are reserved for proposing validator's use only.
 	AppInjectedMsgSamples = map[string]sdk.Msg{
 		// clob
-		"/dydxprotocol.clob.MsgProposedOperations": &clobtypes.MsgProposedOperations{
+		"/klyraprotocol.clob.MsgProposedOperations": &clobtypes.MsgProposedOperations{
 			OperationsQueue: make([]clobtypes.OperationRaw, 0),
 		},
-		"/dydxprotocol.clob.MsgProposedOperationsResponse": nil,
+		"/klyraprotocol.clob.MsgProposedOperationsResponse": nil,
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotes": &perptypes.MsgAddPremiumVotes{
+		"/klyraprotocol.perpetuals.MsgAddPremiumVotes": &perptypes.MsgAddPremiumVotes{
 			Votes: []perptypes.FundingPremium{
 				{PerpetualId: 0, PremiumPpm: 1_000},
 			},
 		},
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse": nil,
+		"/klyraprotocol.perpetuals.MsgAddPremiumVotesResponse": nil,
 	}
 )

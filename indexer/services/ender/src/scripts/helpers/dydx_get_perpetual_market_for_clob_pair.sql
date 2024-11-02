@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_get_perpetual_market_for_clob_pair(
+CREATE OR REPLACE FUNCTION klyra_get_perpetual_market_for_clob_pair(
     clob_pair_id bigint
 ) RETURNS perpetual_markets AS $$
 /**

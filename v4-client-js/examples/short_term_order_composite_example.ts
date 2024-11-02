@@ -1,4 +1,4 @@
-import { Order_TimeInForce } from '@dydxprotocol/v4-proto/src/codegen/dydxprotocol/clob/order';
+import { Order_TimeInForce } from '@klyraprotocol/v4-proto/src/codegen/klyraprotocol/clob/order';
 
 import { BECH32_PREFIX } from '../src';
 import { CompositeClient } from '../src/clients/composite-client';
@@ -8,7 +8,7 @@ import {
 import LocalWallet from '../src/clients/modules/local-wallet';
 import { SubaccountInfo } from '../src/clients/subaccount';
 import { randomInt } from '../src/lib/utils';
-import { DYDX_TEST_MNEMONIC } from './constants';
+import { KLYRA_TEST_MNEMONIC } from './constants';
 import ordersParams from './human_readable_short_term_orders.json';
 
 async function sleep(ms: number): Promise<void> {
@@ -16,7 +16,7 @@ async function sleep(ms: number): Promise<void> {
 }
 
 async function test(): Promise<void> {
-  const wallet = await LocalWallet.fromMnemonic(DYDX_TEST_MNEMONIC, BECH32_PREFIX);
+  const wallet = await LocalWallet.fromMnemonic(KLYRA_TEST_MNEMONIC, BECH32_PREFIX);
   console.log(wallet);
   const network = Network.testnet();
   const client = await CompositeClient.connect(network);

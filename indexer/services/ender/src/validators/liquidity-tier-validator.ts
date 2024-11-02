@@ -1,5 +1,5 @@
-import { logger } from '@dydxprotocol-indexer/base';
-import { IndexerTendermintEvent, LiquidityTierUpsertEventV1, LiquidityTierUpsertEventV2 } from '@dydxprotocol-indexer/v4-protos';
+import { logger } from '@klyraprotocol-indexer/base';
+import { IndexerTendermintEvent, LiquidityTierUpsertEventV1, LiquidityTierUpsertEventV2 } from '@klyraprotocol-indexer/v4-protos';
 
 import { Handler } from '../handlers/handler';
 import { LiquidityTierHandler, LiquidityTierHandlerV2 } from '../handlers/liquidity-tier-handler';

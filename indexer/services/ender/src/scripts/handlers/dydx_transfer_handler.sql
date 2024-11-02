@@ -1,19 +1,19 @@
-CREATE OR REPLACE FUNCTION dydx_transfer_handler(
+CREATE OR REPLACE FUNCTION klyra_transfer_handler(
     block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
     transaction_hash text) RETURNS jsonb AS $$
 /**
   Parameters:
     - block_height: the height of the block being processing.
     - block_time: the time of the block being processed.
-    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
+    - event_data: The 'data' field of the IndexerTendermintEvent
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
     - event_index: The 'event_index' of the IndexerTendermintEvent.
     - transaction_index: The transaction_index of the IndexerTendermintEvent after the conversion that takes into
-        account the block_event (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/services/ender/src/lib/helper.ts#L41)
+        account the block_event
     - transaction_hash: The transaction hash corresponding to this event from the IndexerTendermintBlock 'tx_hashes'.
   Returns: JSON object containing fields:
-    - asset: The existing asset in asset-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/asset-model.ts).
-    - transfer: The new transfer in transfer-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/transfer-model.ts).
+    - asset: The existing asset in asset-model format.
+    - transfer: The new transfer in transfer-model format.
 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
@@ -31,7 +31,7 @@ BEGIN
     END IF;
 
     IF event_data->'recipient'->'subaccountId' IS NOT NULL THEN
-        transfer_record."recipientSubaccountId" = dydx_uuid_from_subaccount_id(event_data->'recipient'->'subaccountId');
+        transfer_record."recipientSubaccountId" = klyra_uuid_from_subaccount_id(event_data->'recipient'->'subaccountId');
 
         SELECT COUNT(*) INTO subaccount_count FROM subaccounts WHERE "id" = transfer_record."recipientSubaccountId";
         IF subaccount_count > 1 THEN
@@ -56,7 +56,7 @@ BEGIN
     END IF;
 
     IF event_data->'sender'->'subaccountId' IS NOT NULL THEN
-        transfer_record."senderSubaccountId" = dydx_uuid_from_subaccount_id(event_data->'sender'->'subaccountId');
+        transfer_record."senderSubaccountId" = klyra_uuid_from_subaccount_id(event_data->'sender'->'subaccountId');
     END IF;
 
     IF event_data->'recipient'->'address' IS NOT NULL THEN
@@ -68,12 +68,12 @@ BEGIN
     END IF;
 
     transfer_record."assetId" = event_data->>'assetId';
-    transfer_record."size" = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'amount') * power(10, asset_record."atomicResolution")::numeric);
-    transfer_record."eventId" = dydx_event_id_from_parts(block_height, transaction_index, event_index);
+    transfer_record."size" = klyra_trim_scale(klyra_from_jsonlib_long(event_data->'amount') * power(10, asset_record."atomicResolution")::numeric);
+    transfer_record."eventId" = klyra_event_id_from_parts(block_height, transaction_index, event_index);
     transfer_record."transactionHash" = transaction_hash;
     transfer_record."createdAt" = block_time;
     transfer_record."createdAtHeight" = block_height;
-    transfer_record."id" = dydx_uuid_from_transfer_parts(
+    transfer_record."id" = klyra_uuid_from_transfer_parts(
         transfer_record."eventId",
         transfer_record."assetId",
         transfer_record."senderSubaccountId",
@@ -90,9 +90,9 @@ BEGIN
 
     RETURN jsonb_build_object(
         'asset',
-        dydx_to_jsonb(asset_record),
+        klyra_to_jsonb(asset_record),
         'transfer',
-        dydx_to_jsonb(transfer_record)
+        klyra_to_jsonb(transfer_record)
     );
 END;
 $$ LANGUAGE plpgsql;

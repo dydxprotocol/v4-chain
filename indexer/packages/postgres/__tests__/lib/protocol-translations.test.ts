@@ -1,12 +1,12 @@
 import Big from 'big.js';
-import { bigIntToBytes, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { bigIntToBytes, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
   IndexerOrder_ConditionType,
   IndexerOrder_Side,
   IndexerOrder_TimeInForce,
   IndexerOrderId,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   funding8HourValuePpmTo1HourRate,
   fundingIndexToHumanFixedString,
@@ -65,7 +65,7 @@ describe('protocolTranslations', () => {
     conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
     conditionalOrderTriggerSubticks: Long.fromValue(0, true),
     routerFeePpm: 0,
-    routerFeeSubaccountOwner: 'dydx1xxxxxx',
+    routerFeeSubaccountOwner: 'klyra1xxxxxx',
     routerFeeSubaccountNumber: 0,
   };
   const goodTilBlockTimeOrder: IndexerOrder = {

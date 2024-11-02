@@ -46,7 +46,7 @@ func makeEncodingConfig() EncodingConfig {
 func initEncodingConfig() EncodingConfig {
 	encConfig := makeEncodingConfig()
 
-	// This is currently required in order to support various CLI commands such as the `dydxprotocold status` command.
+	// This is currently required in order to support various CLI commands such as the `klyraprotocold status` command.
 	std.RegisterLegacyAminoCodec(encConfig.Amino)
 	std.RegisterInterfaces(encConfig.InterfaceRegistry)
 

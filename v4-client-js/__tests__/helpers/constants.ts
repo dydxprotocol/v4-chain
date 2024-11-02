@@ -12,9 +12,9 @@ import {
   Order_TimeInForce,
 } from '../../src/types';
 
-export const TEST_ADDRESS: string = 'dydx1vl9h9nkmau4e9v7tm30wekespu3d2qhd9404wa';
-export const TEST_RECIPIENT_ADDRESS: string = 'dydx1slanxj8x9ntk9knwa6cvfv2tzlsq5gk3dshml0';
-export const TEST_CHAIN_ID: string = 'dydxprotocol';
+export const TEST_ADDRESS: string = 'klyra1vl9h9nkmau4e9v7tm30wekespu3d2qhd6y66xk';
+export const TEST_RECIPIENT_ADDRESS: string = 'klyra1slanxj8x9ntk9knwa6cvfv2tzlsq5gk3jpz5hy';
+export const TEST_CHAIN_ID: string = 'klyraprotocol';
 export const TEST_HOST: string = 'http://localhost:26657';
 
 export const defaultTransactionOptions: TransactionOptions = {
@@ -52,7 +52,7 @@ export const defaultTransfer: Transfer = {
     number: 0,
   },
   recipient: {
-    owner: 'dydx14063jves4u9zhm7eja5ltf3t8zspxd92qnk23t',
+    owner: 'klyra14063jves4u9zhm7eja5ltf3t8zspxd92lzr9eq',
     number: 0,
   },
   assetId: 0,

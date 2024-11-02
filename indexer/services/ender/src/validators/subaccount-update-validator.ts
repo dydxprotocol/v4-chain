@@ -1,4 +1,4 @@
-import { IndexerTendermintEvent, SubaccountUpdateEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerTendermintEvent, SubaccountUpdateEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
 import { Handler } from '../handlers/handler';
 import { SubaccountUpdateHandler } from '../handlers/subaccount-update-handler';

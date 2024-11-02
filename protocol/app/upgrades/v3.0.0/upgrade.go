@@ -29,7 +29,7 @@ var (
 		sdk.MsgTypeURL(&banktypes.MsgSend{}),
 	}
 	// List of module accounts to check in state.
-	// These include all dYdX custom module accounts.
+	// These include all klyra custom module accounts.
 	ModuleAccsToInitialize = []string{
 		satypes.ModuleName,
 		perpetualsmoduletypes.InsuranceFundName,
@@ -89,7 +89,7 @@ func InitializeModuleAccs(ctx sdk.Context, ak authkeeper.AccountKeeper) {
 
 		// Account has not been initialized at all. Initialize it as module.
 		// Implementation taken from
-		// https://github.com/dydxprotocol/cosmos-sdk/blob/bdf96fdd/x/auth/keeper/keeper.go#L213
+		// https://github.com/StreamFinance-Protocol/cosmos-sdk/blob/bdf96fdd/x/auth/keeper/keeper.go#L213
 		newModuleAccount := authtypes.NewEmptyModuleAccount(modAccName, perms...)
 		maccI := (ak.NewAccount(ctx, newModuleAccount)).(sdk.ModuleAccountI) // this set the account number
 		ak.SetModuleAccount(ctx, maccI)

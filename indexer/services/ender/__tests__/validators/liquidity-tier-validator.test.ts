@@ -1,12 +1,12 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { logger, ParseMessageError } from '@klyraprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   LiquidityTierUpsertEventV1,
   LiquidityTierUpsertEventV2,
-} from '@dydxprotocol-indexer/v4-protos';
-import { dbHelpers, testMocks } from '@dydxprotocol-indexer/postgres';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+} from '@klyraprotocol-indexer/v4-protos';
+import { dbHelpers, testMocks } from '@klyraprotocol-indexer/postgres';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import {
   defaultHeight, defaultLiquidityTierUpsertEventV2, defaultTime, defaultTxHash,
 } from '../helpers/constants';
@@ -97,7 +97,7 @@ function createBlock(
   liquidityTierEvent: LiquidityTierUpsertEventV2,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
-    DydxIndexerSubtypes.LIQUIDITY_TIER,
+    KlyraIndexerSubtypes.LIQUIDITY_TIER,
     LiquidityTierUpsertEventV1.encode(liquidityTierEvent).finish(),
     0,
     0,

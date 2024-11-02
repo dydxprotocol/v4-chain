@@ -19,7 +19,7 @@
     "dotenv-flow": "^3.2.0"
   },
   "devDependencies": {
-    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/dev": "workspace:^0.0.1",
     "@types/jest": "^28.1.4",
     "@types/node": "^18.0.3",
     "jest": "^28.1.2",

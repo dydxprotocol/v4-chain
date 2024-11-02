@@ -7,7 +7,7 @@ import {
   liquidityTierRefresher,
   perpetualMarketRefresher,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import {
   defaultHeight,
@@ -21,13 +21,13 @@ import {
   IndexerTendermintEvent,
   Timestamp,
   UpdateYieldParamsEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
 } from '../helpers/indexer-proto-helpers';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
-import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
+import { createKafkaMessage } from '@klyraprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
@@ -64,7 +64,7 @@ describe('yield-params-handler', () => {
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.YIELD_PARAMS,
+        KlyraIndexerSubtypes.YIELD_PARAMS,
         UpdateYieldParamsEventV1.encode(defaultUpdateYieldParamsEvent1).finish(),
         transactionIndex,
         eventIndex,
@@ -130,7 +130,7 @@ function createKafkaMessageFromYieldParamsEvent({
   const events: IndexerTendermintEvent[] = [];
   events.push(
     createIndexerTendermintEvent(
-      DydxIndexerSubtypes.YIELD_PARAMS,
+      KlyraIndexerSubtypes.YIELD_PARAMS,
       UpdateYieldParamsEventV1.encode(yieldParamsEvent).finish(),
       transactionIndex,
       0,

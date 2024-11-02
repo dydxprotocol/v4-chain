@@ -1,7 +1,7 @@
 import {
   stats,
   NodeEnv,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 import _ from 'lodash';
 
 import config from '../config';

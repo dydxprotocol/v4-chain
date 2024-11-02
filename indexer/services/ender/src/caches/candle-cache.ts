@@ -1,4 +1,4 @@
-import { NodeEnv } from '@dydxprotocol-indexer/base';
+import { NodeEnv } from '@klyraprotocol-indexer/base';
 import {
   CandleFromDatabase,
   CandleResolution,
@@ -7,7 +7,7 @@ import {
   PerpetualMarketColumns,
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import _ from 'lodash';
 
 let candlesMap: CandlesMap = {};

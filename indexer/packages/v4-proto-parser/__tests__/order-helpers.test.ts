@@ -1,14 +1,12 @@
-import { IndexerOrderId } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerOrderId } from '@klyraprotocol-indexer/v4-protos';
 import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '../src/order-helpers';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '../src';
 
 describe('getOrderIdHash', () => {
-  // Test cases match test cases in V4
-  // https://github.com/dydxprotocol/v4/blob/311411a3ce92230d4866a7c4abb1422fbc4ef3b9/indexer/off_chain_updates/off_chain_updates_test.go#L278-L299
   it('hashes an order id correctly', () => {
     const orderId: IndexerOrderId = {
       subaccountId: {
-        owner: 'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4',
+        owner: 'klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57',
         number: 0,
       },
       clientId: 0,

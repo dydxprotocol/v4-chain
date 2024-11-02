@@ -1,19 +1,19 @@
-CREATE OR REPLACE FUNCTION dydx_subaccount_update_handler(
+CREATE OR REPLACE FUNCTION klyra_subaccount_update_handler(
     block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int)
     RETURNS jsonb AS $$
 /**
   Parameters:
     - block_height: the height of the block being processing.
     - block_time: the time of the block being processed.
-    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
+    - event_data: The 'data' field of the IndexerTendermintEvent
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
     - event_index: The 'event_index' of the IndexerTendermintEvent.
     - transaction_index: The transaction_index of the IndexerTendermintEvent after the conversion that takes into
-        account the block_event (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/services/ender/src/lib/helper.ts#L41)
+        account the block_event
   Returns: JSON object containing fields:
-    - subaccount: The upserted subaccount in subaccount-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/subaccount-model.ts).
-    - perpetual_positions: A JSON array of upserted perpetual positions in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
-    - asset_positions: A JSON array of upserted asset positions in asset-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/asset-position-model.ts).
+    - subaccount: The upserted subaccount in subaccount-model format
+    - perpetual_positions: A JSON array of upserted perpetual positions in perpetual-position-model format.
+    - asset_positions: A JSON array of upserted asset positions in asset-position-model format.
 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
@@ -26,12 +26,12 @@ DECLARE
     asset_position_update jsonb;
     asset_position_record_updates jsonb[];
 BEGIN
-    event_id = dydx_event_id_from_parts(
+    event_id = klyra_event_id_from_parts(
             block_height, transaction_index, event_index);
     perpetual_position_record_updates = array[]::jsonb[];
     asset_position_record_updates = array[]::jsonb[];
 
-    subaccount_record."id" = dydx_uuid_from_subaccount_id(event_data->'subaccountId');
+    subaccount_record."id" = klyra_uuid_from_subaccount_id(event_data->'subaccountId');
     subaccount_record."address" = jsonb_extract_path_text(event_data, 'subaccountId', 'owner');
     subaccount_record."subaccountNumber" = jsonb_extract_path(event_data, 'subaccountId', 'number')::int;
     subaccount_record."updatedAtHeight" = block_height;
@@ -66,11 +66,11 @@ BEGIN
                                                       AND "perpetualId" = perpetual_id
                                                       AND "status" = 'OPEN';
             perpetual_position_found = FOUND;
-            _size = dydx_trim_scale(dydx_from_serializable_int(perpetual_position_update->'quantums') *
+            _size = klyra_trim_scale(klyra_from_serializable_int(perpetual_position_update->'quantums') *
                    power(10, perpetual_market."atomicResolution")::numeric);
             side = CASE WHEN _size > 0 THEN 'LONG' ELSE 'SHORT' END;
             existing_funding = CASE WHEN perpetual_position_found THEN perpetual_position_record."settledFunding" ELSE 0 END;
-            settled_funding = dydx_trim_scale(-dydx_from_serializable_int(perpetual_position_update->'fundingPayment')
+            settled_funding = klyra_trim_scale(-klyra_from_serializable_int(perpetual_position_update->'fundingPayment')
                                                   * power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric + existing_funding);
             new_settled_funding = CASE WHEN (perpetual_position_found AND perpetual_position_record.side != side AND _size != 0)
                                         THEN 0
@@ -93,7 +93,7 @@ BEGIN
                                           WHERE "id" = perpetual_position_record."id"
                                           RETURNING * INTO perpetual_position_record;
                 perpetual_position_record_updates = array_append(
-                    perpetual_position_record_updates, dydx_to_jsonb(perpetual_position_record));
+                    perpetual_position_record_updates, klyra_to_jsonb(perpetual_position_record));
             ELSEIF perpetual_position_found AND perpetual_position_record.side = side THEN
                 max_size = CASE
                     WHEN perpetual_position_record."maxSize" IS NOT NULL
@@ -108,7 +108,7 @@ BEGIN
                                                "perpYieldIndex" = perp_yield_index
                                             WHERE "id" = perpetual_position_record."id" RETURNING * INTO perpetual_position_record;
                 perpetual_position_record_updates = array_append(
-                    perpetual_position_record_updates, dydx_to_jsonb(perpetual_position_record));
+                    perpetual_position_record_updates, klyra_to_jsonb(perpetual_position_record));
             END IF;
 
             -- Insert a new perpetual record if necessary.
@@ -116,7 +116,7 @@ BEGIN
                    OR (perpetual_position_found AND perpetual_position_record.side != side AND _size != 0) THEN
                 -- Since no perpetual position was found or we closed an existing perpetual position because it changed
                 -- sides we must create a new perpetual position.
-                perpetual_position_record."id" = dydx_uuid_from_perpetual_position_parts(subaccount_record.id, event_id);
+                perpetual_position_record."id" = klyra_uuid_from_perpetual_position_parts(subaccount_record.id, event_id);
                 perpetual_position_record."subaccountId" = subaccount_record.id;
                 perpetual_position_record."perpetualId" = perpetual_id;
                 perpetual_position_record."side" = side;
@@ -138,7 +138,7 @@ BEGIN
                 perpetual_position_record."perpYieldIndex" = perp_yield_index;
                 INSERT INTO perpetual_positions VALUES (perpetual_position_record.*);
                 perpetual_position_record_updates = array_append(
-                    perpetual_position_record_updates, dydx_to_jsonb(perpetual_position_record));
+                    perpetual_position_record_updates, klyra_to_jsonb(perpetual_position_record));
             END IF;
         END;
     END LOOP;
@@ -157,9 +157,9 @@ BEGIN
                 RAISE EXCEPTION 'Unable to find asset with id %', asset_id;
             END IF;
 
-            size = dydx_trim_scale(dydx_from_serializable_int(asset_position_update->'quantums') *
+            size = klyra_trim_scale(klyra_from_serializable_int(asset_position_update->'quantums') *
                    power(10, asset_record."atomicResolution")::numeric);
-            asset_position_record.id = dydx_uuid_from_asset_position_parts(subaccount_record.id, asset_id);
+            asset_position_record.id = klyra_uuid_from_asset_position_parts(subaccount_record.id, asset_id);
             asset_position_record."subaccountId" = subaccount_record."id";
             asset_position_record."assetId" = asset_id;
             asset_position_record."size" = abs(size);
@@ -170,12 +170,12 @@ BEGIN
                                             SET size = asset_position_record.size,
                                                 "isLong" = asset_position_record."isLong";
             asset_position_record_updates = array_append(
-                asset_position_record_updates, dydx_to_jsonb(asset_position_record));
+                asset_position_record_updates, klyra_to_jsonb(asset_position_record));
         END;
     END LOOP;
 
     RETURN jsonb_build_object(
-        'subaccount', dydx_to_jsonb(subaccount_record),
+        'subaccount', klyra_to_jsonb(subaccount_record),
         'perpetual_positions', to_jsonb(perpetual_position_record_updates),
         'asset_positions', to_jsonb(asset_position_record_updates)
         );

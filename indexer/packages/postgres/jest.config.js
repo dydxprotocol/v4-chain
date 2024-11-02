@@ -1,5 +1,5 @@
 // Use the base configuration as-is.
-const baseConfig = require('./node_modules/@dydxprotocol-indexer/dev/jest.config');
+const baseConfig = require('./node_modules/@klyraprotocol-indexer/dev/jest.config');
 
 module.exports = {
   ...baseConfig,

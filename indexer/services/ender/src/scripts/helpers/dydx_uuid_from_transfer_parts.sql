@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_uuid_from_transfer_parts(event_id bytea, asset_id text, sender_subaccount_id uuid, recipient_subaccount_id uuid, sender_wallet_address text, recipient_wallet_address text) RETURNS uuid AS $$
+CREATE OR REPLACE FUNCTION klyra_uuid_from_transfer_parts(event_id bytea, asset_id text, sender_subaccount_id uuid, recipient_subaccount_id uuid, sender_wallet_address text, recipient_wallet_address text) RETURNS uuid AS $$
 /**
   Returns a UUID using the parts of a transfer.
 
@@ -31,6 +31,6 @@ BEGIN
     ELSE
         recipient_wallet_address_or_undefined = recipient_wallet_address;
     END IF;
-    return dydx_uuid(concat(sender_subaccount_id_or_undefined, '-', recipient_subaccount_id_or_undefined, '-', sender_wallet_address_or_undefined, '-', recipient_wallet_address_or_undefined, '-', encode(event_id, 'hex'), '-', asset_id));
+    return klyra_uuid(concat(sender_subaccount_id_or_undefined, '-', recipient_subaccount_id_or_undefined, '-', sender_wallet_address_or_undefined, '-', recipient_wallet_address_or_undefined, '-', encode(event_id, 'hex'), '-', asset_id));
 END;
 $$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;

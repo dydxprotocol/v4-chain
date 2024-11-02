@@ -9,7 +9,7 @@ import {
   protocolTranslations,
   OrderType,
   APIOrderStatusEnum,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { RequestMethod } from '../../../../src/types';
 import request from 'supertest';
 import { getQueryString, sendRequest } from '../../../helpers/helpers';
@@ -17,7 +17,7 @@ import {
   placeOrder,
   redis,
   redisTestConstants,
-} from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/redis';
 import { redisClient } from '../../../../src/helpers/redis/redis-controller';
 import {
   postgresAndRedisOrderToResponseObject,
@@ -29,10 +29,10 @@ import {
   IndexerOrderId,
   IndexerOrder_Side,
   RedisOrder,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   ORDER_FLAG_CONDITIONAL,
-} from '@dydxprotocol-indexer/v4-proto-parser';
+} from '@klyraprotocol-indexer/v4-proto-parser';
 
 describe('orders-controller#V4', () => {
   beforeAll(async () => {

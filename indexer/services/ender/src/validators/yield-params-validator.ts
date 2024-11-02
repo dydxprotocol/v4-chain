@@ -1,7 +1,7 @@
 import {
   IndexerTendermintEvent,
   UpdateYieldParamsEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 
 import { Handler } from '../handlers/handler';
 import { YieldParamsHandler } from '../handlers/yield-params-handler';

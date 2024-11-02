@@ -27,14 +27,14 @@ TODO: Include a brief summary of the proposal and link to relevant governance fo
 ### TODO: update above fields as needed                                ###
 ########################################################################## 
 
-GOV_MODULE_ADDRESS="dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky" # Governance module account
+GOV_MODULE_ADDRESS="klyra10d07y265gmmuvt4z0w9aw880jnsr700jv2gw70" # Governance module account
 COMMUNITY_TREASURY_MODULE_NAME = "community_treasury"
 OUTPUT_FILE="proposal_community_treasury_sending.json"
 DEPOSIT = "{}{}".format(str(decimal.Decimal(10000)*TOKEN_MULTIPLE), NATIVE_TOKEN_DENOM)
 
 def get_single_send_message(recipient_address, token_amount):
     return {
-        "@type": "/dydxprotocol.sending.MsgSendFromModuleToAccount",
+        "@type": "/klyraprotocol.sending.MsgSendFromModuleToAccount",
         "authority": GOV_MODULE_ADDRESS,
         "sender_module_name": COMMUNITY_TREASURY_MODULE_NAME,
         "recipient": recipient_address,

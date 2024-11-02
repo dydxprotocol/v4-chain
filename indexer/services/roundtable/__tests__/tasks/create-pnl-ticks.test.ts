@@ -9,14 +9,14 @@ import {
   testMocks,
   TransferTable,
   FundingIndexUpdatesTable,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 
 import createPnlTicksTask from '../../src/tasks/create-pnl-ticks';
-import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@dydxprotocol-indexer/redis';
+import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@klyraprotocol-indexer/redis';
 import { DateTime } from 'luxon';
 import config from '../../src/config';
 import { redisClient } from '../../src/helpers/redis';
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 
 describe('create-pnl-ticks', () => {
 

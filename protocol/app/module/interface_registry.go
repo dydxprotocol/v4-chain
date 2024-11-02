@@ -77,25 +77,25 @@ func NewInterfaceRegistry(addrPrefix string, valAddrPrefix string) (types.Interf
 			// https://github.com/cosmos/cosmos-sdk/issues/18722 is fixed, replace this with the cosmos.msg.v1.signing
 			// annotation on the protos.
 			CustomGetSigners: map[protoreflect.FullName]signing.GetSignersFunc{
-				"dydxprotocol.clob.MsgBatchCancel": getLegacyMsgSignerFn(
+				"klyraprotocol.clob.MsgBatchCancel": getLegacyMsgSignerFn(
 					[]string{"subaccount_id", "owner"},
 				),
-				"dydxprotocol.clob.MsgCancelOrder": getLegacyMsgSignerFn(
+				"klyraprotocol.clob.MsgCancelOrder": getLegacyMsgSignerFn(
 					[]string{"order_id", "subaccount_id", "owner"},
 				),
-				"dydxprotocol.clob.MsgPlaceOrder": getLegacyMsgSignerFn(
+				"klyraprotocol.clob.MsgPlaceOrder": getLegacyMsgSignerFn(
 					[]string{"order", "order_id", "subaccount_id", "owner"},
 				),
-				"dydxprotocol.sending.MsgCreateTransfer": getLegacyMsgSignerFn(
+				"klyraprotocol.sending.MsgCreateTransfer": getLegacyMsgSignerFn(
 					[]string{"transfer", "sender", "owner"},
 				),
-				"dydxprotocol.sending.MsgWithdrawFromSubaccount": getLegacyMsgSignerFn(
+				"klyraprotocol.sending.MsgWithdrawFromSubaccount": getLegacyMsgSignerFn(
 					[]string{"sender", "owner"},
 				),
 
 				// App injected messages have no signers.
-				"dydxprotocol.clob.MsgProposedOperations":    noSigners,
-				"dydxprotocol.perpetuals.MsgAddPremiumVotes": noSigners,
+				"klyraprotocol.clob.MsgProposedOperations":    noSigners,
+				"klyraprotocol.perpetuals.MsgAddPremiumVotes": noSigners,
 			},
 		},
 	})

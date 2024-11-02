@@ -1,7 +1,7 @@
 import { StdFee } from '@cosmjs/stargate';
 
 // Bech32 Prefix
-export const BECH32_PREFIX = 'dydx';
+export const BECH32_PREFIX = 'klyra';
 export const NOBLE_BECH32_PREFIX = 'noble';
 
 // Broadcast Defaults

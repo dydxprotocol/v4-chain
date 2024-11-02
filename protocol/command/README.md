@@ -1,10 +1,10 @@
 # Command directory
 
-This directory houses custom [cobra](https://github.com/spf13/cobra) commands which can be added as subcommands to the root `dydxprotocold` command defined in `cmd/dydxprotocold/main.go`.
+This directory houses custom [cobra](https://github.com/spf13/cobra) commands which can be added as subcommands to the root `klyraprotocold` command defined in `cmd/klyraprotocold/main.go`.
 
 Conventionally, each package in this directory should define a public `Command()` method which returns a `*cobra.Command`.
 
-These commands can be added as a subcommand to the `dydxprotocold` root command defined in `main.go` in the following way:
+These commands can be added as a subcommand to the `klyraprotocold` root command defined in `main.go` in the following way:
 
 ```go
 rootCmd, _ := NewRootCmd(...)
@@ -12,9 +12,9 @@ rootCmd, _ := NewRootCmd(...)
 rootCmd.AddCommand(mycommandpkg.Command())
 ```
 
-The above will surface your command as `dydxprotocold mycommand`.
+The above will surface your command as `klyraprotocold mycommand`.
 
-If instead you wish to define your command as the subcommand of a subcommand (i.e. You wish define something like `dydxprotocold tendermint mycommmand`), you can first search for the subcommand (i.e. `tendermint`) and subsequently add your command to it like so:
+If instead you wish to define your command as the subcommand of a subcommand (i.e. You wish define something like `klyraprotocold tendermint mycommmand`), you can first search for the subcommand (i.e. `tendermint`) and subsequently add your command to it like so:
 
 ```go
 // Fetch Tendermint subcommand.

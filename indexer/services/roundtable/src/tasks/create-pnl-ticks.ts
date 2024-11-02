@@ -1,12 +1,12 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@klyraprotocol-indexer/base';
 import {
   BlockFromDatabase,
   BlockTable,
   PnlTicksCreateObject,
   PnlTicksTable,
   Transaction,
-} from '@dydxprotocol-indexer/postgres';
-import { LatestAccountPnlTicksCache } from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/postgres';
+import { LatestAccountPnlTicksCache } from '@klyraprotocol-indexer/redis';
 import _ from 'lodash';
 
 import config from '../config';

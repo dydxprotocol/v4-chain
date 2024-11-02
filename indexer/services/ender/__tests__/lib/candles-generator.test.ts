@@ -1,5 +1,5 @@
-import { stats } from '@dydxprotocol-indexer/base';
-import { CANDLES_WEBSOCKET_MESSAGE_VERSION } from '@dydxprotocol-indexer/kafka';
+import { stats } from '@klyraprotocol-indexer/base';
+import { CANDLES_WEBSOCKET_MESSAGE_VERSION } from '@klyraprotocol-indexer/kafka';
 import {
   CandlesMap, CandlesResolutionMap,
   CandleColumns,
@@ -18,8 +18,8 @@ import {
   testMocks,
   Transaction,
   helpers,
-} from '@dydxprotocol-indexer/postgres';
-import { CandleMessage, CandleMessage_Resolution } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/postgres';
+import { CandleMessage, CandleMessage_Resolution } from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import {

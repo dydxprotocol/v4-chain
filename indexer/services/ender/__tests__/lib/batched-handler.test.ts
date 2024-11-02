@@ -1,7 +1,7 @@
-import { IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerTendermintBlock, IndexerTendermintEvent } from '@klyraprotocol-indexer/v4-protos';
 import { Handler } from '../../src/handlers/handler';
 import { BatchedHandlers } from '../../src/lib/batched-handlers';
-import { ConsolidatedKafkaEvent, DydxIndexerSubtypes, EventMessage } from '../../src/lib/types';
+import { ConsolidatedKafkaEvent, KlyraIndexerSubtypes, EventMessage } from '../../src/lib/types';
 import {
   defaultHeight,
   defaultTime,
@@ -40,7 +40,7 @@ function generateFakeHandler(parallelizationIds: string[]): FakeHandler {
   const defaultEventIndex: number = 0;
   const fakeTxId: number = 0;
   const defaultEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-    DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+    KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
     Uint8Array.from([]),
     defaultTransactionIndex,
     defaultEventIndex,

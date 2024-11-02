@@ -1,6 +1,6 @@
 {
-  "@type": "/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
-  "authority": "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+  "@type": "/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+  "authority": "klyra1mkkvp26dngu6n8rmalaxyp3gwkjuzztqtnn4rg",
   "params": {
     "tiers": [
       {

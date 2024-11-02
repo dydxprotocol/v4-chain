@@ -8,7 +8,7 @@ import {
   AssetCreateEventV1,
   SubaccountUpdateEventV1,
   MarketEventV1, IndexerOrder_ConditionType,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   BUFFER_ENCODING_UTF_8,
   CLOB_STATUS_TO_MARKET_STATUS,
@@ -33,7 +33,7 @@ import {
   TransferTable,
   BlockTable,
   TendermintEventFromDatabase,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 import Long from 'long';
@@ -42,9 +42,9 @@ import {
   indexerTendermintEventToTransactionIndex,
   perpetualPositionAndOrderSideMatching,
 } from '../../src/lib/helper';
-import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
+import { bigIntToBytes } from '@klyraprotocol-indexer/v4-proto-parser';
 import { createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import { defaultAssetCreateEvent, defaultMarketCreate } from '../helpers/constants';
 
 describe('SQL Function Tests', () => {
@@ -96,25 +96,25 @@ describe('SQL Function Tests', () => {
 
   const events: IndexerTendermintEvent[] = [
     createIndexerTendermintEvent(
-      DydxIndexerSubtypes.FUNDING,
+      KlyraIndexerSubtypes.FUNDING,
       defaultMarketEventBinary,
       -1,
       eventIndex0,
     ),
     createIndexerTendermintEvent(
-      DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+      KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
       defaultSubaccountUpdateEventBinary,
       transactionIndex0,
       eventIndex0,
     ),
     createIndexerTendermintEvent(
-      DydxIndexerSubtypes.ASSET,
+      KlyraIndexerSubtypes.ASSET,
       defaultAssetEventBinary,
       transactionIndex0,
       eventIndex1,
     ),
     createIndexerTendermintEvent(
-      DydxIndexerSubtypes.MARKET,
+      KlyraIndexerSubtypes.MARKET,
       defaultMarketEventBinary,
       transactionIndex1,
       eventIndex0,
@@ -125,8 +125,8 @@ describe('SQL Function Tests', () => {
     [0, 0, 0],
     [1, 2, 3],
     [9, 8, 7],
-  ])('dydx_event_id_from_parts (%d, %d, %d)', async (blockHeight: number, transactionIndex: number, eventIndex: number) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_event_id_from_parts(${blockHeight}, ${transactionIndex}, ${eventIndex}) AS result;`);
+  ])('klyra_event_id_from_parts (%d, %d, %d)', async (blockHeight: number, transactionIndex: number, eventIndex: number) => {
+    const result = await getSingleRawQueryResultRow(`SELECT klyra_event_id_from_parts(${blockHeight}, ${transactionIndex}, ${eventIndex}) AS result;`);
     expect(result).toEqual(TendermintEventTable.createEventId(
       `${blockHeight}`,
       transactionIndex,
@@ -138,16 +138,16 @@ describe('SQL Function Tests', () => {
     Long.fromNumber(1_000_000_000, true),
     Long.fromNumber(1_000_000_000, false),
     Long.fromNumber(-1_000_000_000, false),
-  ])('dydx_from_jsonlib_long (%s)', async (value: Long) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_trim_scale(dydx_from_jsonlib_long('${JSON.stringify(value)}')) AS result`);
+  ])('klyra_from_jsonlib_long (%s)', async (value: Long) => {
+    const result = await getSingleRawQueryResultRow(`SELECT klyra_trim_scale(klyra_from_jsonlib_long('${JSON.stringify(value)}')) AS result`);
     expect(result).toEqual(value.toString());
   });
 
   it.each([
     ['SIDE_BUY', IndexerOrder_Side.SIDE_BUY],
     ['SIDE_SELL', IndexerOrder_Side.SIDE_SELL],
-  ])('dydx_from_protocol_order_side(%s)', async (_name: string, value: IndexerOrder_Side) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_from_protocol_order_side('${value}') AS result`);
+  ])('klyra_from_protocol_order_side(%s)', async (_name: string, value: IndexerOrder_Side) => {
+    const result = await getSingleRawQueryResultRow(`SELECT klyra_from_protocol_order_side('${value}') AS result`);
     expect(result).toEqual(protocolTranslations.protocolOrderSideToOrderSide(value));
   });
 
@@ -157,8 +157,8 @@ describe('SQL Function Tests', () => {
     ['TIME_IN_FORCE_POST_ONLY', IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY],
     ['TIME_IN_FORCE_FILL_OR_KILL', IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL],
     ['UNRECOGNIZED', IndexerOrder_TimeInForce.UNRECOGNIZED],
-  ])('dydx_from_protocol_time_in_force (%s)', async (_name: string, value: IndexerOrder_TimeInForce) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_from_protocol_time_in_force('${value}') AS result`);
+  ])('klyra_from_protocol_time_in_force (%s)', async (_name: string, value: IndexerOrder_TimeInForce) => {
+    const result = await getSingleRawQueryResultRow(`SELECT klyra_from_protocol_time_in_force('${value}') AS result`);
     expect(result).toEqual(protocolTranslations.protocolOrderTIFToTIF(value));
   });
 
@@ -167,17 +167,17 @@ describe('SQL Function Tests', () => {
     ['LIMIT', IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
     ['TAKE_PROFIT', IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT],
     ['STOP_LIMIT', IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS],
-  ])('dydx_protocol_condition_type_to_order_type (%s)', async (_name: string, value: IndexerOrder_ConditionType) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_protocol_condition_type_to_order_type('${value}') AS result`);
+  ])('klyra_protocol_condition_type_to_order_type (%s)', async (_name: string, value: IndexerOrder_ConditionType) => {
+    const result = await getSingleRawQueryResultRow(`SELECT klyra_protocol_condition_type_to_order_type('${value}') AS result`);
     expect(result).toEqual(protocolTranslations.protocolConditionTypeToOrderType(value));
   });
 
   it.each([
     '0', '1', '-1', '10000000000000000000000000000', '-20000000000000000000000000000',
-  ])('dydx_from_serializable_int (%s)', async (value: string) => {
+  ])('klyra_from_serializable_int (%s)', async (value: string) => {
     const byteArray = bigIntToBytes(BigInt(value));
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_trim_scale(dydx_from_serializable_int('${JSON.stringify(byteArray)}')) AS result`);
+      `SELECT klyra_trim_scale(klyra_from_serializable_int('${JSON.stringify(byteArray)}')) AS result`);
     expect(result).toEqual(value);
   });
 
@@ -186,8 +186,8 @@ describe('SQL Function Tests', () => {
     ['same amount of rounded decimal places (big.js DP = 20)', 1, 2, 3, 4],
     ['first price is null', null, 1, 10, 2],
     ['second price is null', 3, 1, null, 2],
-  ])('dydx_get_weighted_average (%s)', async (_name: string, firstPrice: number | null, firstWeight: number, secondPrice: number | null, secondWeight: number) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_get_weighted_average(${JSON.stringify(firstPrice)}, ${firstWeight}, ${JSON.stringify(secondPrice)}, ${secondWeight}) AS result`);
+  ])('klyra_get_weighted_average (%s)', async (_name: string, firstPrice: number | null, firstWeight: number, secondPrice: number | null, secondWeight: number) => {
+    const result = await getSingleRawQueryResultRow(`SELECT klyra_get_weighted_average(${JSON.stringify(firstPrice)}, ${firstWeight}, ${JSON.stringify(secondPrice)}, ${secondWeight}) AS result`);
     expect(result).toEqual(getWeightedAverage(firstPrice ? `${firstPrice}` : '0', `${firstWeight}`, secondPrice ? `${secondPrice}` : '0', `${secondWeight}`));
   });
 
@@ -196,8 +196,8 @@ describe('SQL Function Tests', () => {
     [PositionSide.LONG, OrderSide.SELL],
     [PositionSide.SHORT, OrderSide.BUY],
     [PositionSide.SHORT, OrderSide.SELL],
-  ])('dydx_perpetual_position_and_order_side_matching (%s, %s)', async (perpSide: PositionSide, orderSide: OrderSide) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_perpetual_position_and_order_side_matching('${perpSide}', '${orderSide}') AS result;`);
+  ])('klyra_perpetual_position_and_order_side_matching (%s, %s)', async (perpSide: PositionSide, orderSide: OrderSide) => {
+    const result = await getSingleRawQueryResultRow(`SELECT klyra_perpetual_position_and_order_side_matching('${perpSide}', '${orderSide}') AS result;`);
     expect(result).toEqual(perpetualPositionAndOrderSideMatching(perpSide, orderSide));
   });
 
@@ -209,16 +209,16 @@ describe('SQL Function Tests', () => {
     ['-10', '-10'],
     ['1.23456789012345678901234567890', '1.2345678901234567890123456789'],
     ['-1.2300', '-1.23'],
-  ])('dydx_trim_scale (%s)', async (value: string, expected) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_trim_scale('${value}') AS result;`);
+  ])('klyra_trim_scale (%s)', async (value: string, expected) => {
+    const result = await getSingleRawQueryResultRow(`SELECT klyra_trim_scale('${value}') AS result;`);
     expect(result).toEqual(expected);
   });
 
   it.each([
     'foo',
     'bar',
-  ])('dydx_uuid (%s)', async (value: string) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_uuid('${value}') AS result`);
+  ])('klyra_uuid (%s)', async (value: string) => {
+    const result = await getSingleRawQueryResultRow(`SELECT klyra_uuid('${value}') AS result`);
     expect(result).toEqual(uuid.getUuid(Buffer.from(value, BUFFER_ENCODING_UTF_8)));
   });
 
@@ -237,30 +237,30 @@ describe('SQL Function Tests', () => {
       },
       '1',
     ],
-  ])('dydx_uuid_from_asset_position_parts (%s)', async (subaccountId: IndexerSubaccountId, assetId: string) => {
+  ])('klyra_uuid_from_asset_position_parts (%s)', async (subaccountId: IndexerSubaccountId, assetId: string) => {
     const subaccountUuid = SubaccountTable.subaccountIdToUuid(subaccountId);
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_uuid_from_asset_position_parts('${subaccountUuid}', '${assetId}') AS result`);
+      `SELECT klyra_uuid_from_asset_position_parts('${subaccountUuid}', '${assetId}') AS result`);
     expect(result).toEqual(AssetPositionTable.uuid(subaccountUuid, assetId));
   });
 
   it.each([
     [Liquidity.TAKER, 1, 2, 3],
     [Liquidity.MAKER, 4, 5, 6],
-  ])('dydx_uuid_from_fill_event_parts (%s)', async (liquidity: Liquidity, blockHeight: number, transactionIndex: number, eventIndex: number) => {
+  ])('klyra_uuid_from_fill_event_parts (%s)', async (liquidity: Liquidity, blockHeight: number, transactionIndex: number, eventIndex: number) => {
     const eventId = TendermintEventTable.createEventId(`${blockHeight}`, transactionIndex, eventIndex);
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_uuid_from_fill_event_parts('\\x${eventId.toString('hex')}'::bytea, '${liquidity}') AS result`);
+      `SELECT klyra_uuid_from_fill_event_parts('\\x${eventId.toString('hex')}'::bytea, '${liquidity}') AS result`);
     expect(result).toEqual(FillTable.uuid(eventId, liquidity));
   });
 
   it.each([
     [1, 2, 3, 4],
     [5, 6, 7, 8],
-  ])('dydx_uuid_from_funding_index_update_parts (%s, %s, %s, %s)', async (blockHeight: number, transactionIndex: number, eventIndex: number, perpetualId: number) => {
+  ])('klyra_uuid_from_funding_index_update_parts (%s, %s, %s, %s)', async (blockHeight: number, transactionIndex: number, eventIndex: number, perpetualId: number) => {
     const eventId = TendermintEventTable.createEventId(`${blockHeight}`, transactionIndex, eventIndex);
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_uuid_from_funding_index_update_parts('${blockHeight}', '\\x${eventId.toString('hex')}'::bytea, '${perpetualId}') AS result`);
+      `SELECT klyra_uuid_from_funding_index_update_parts('${blockHeight}', '\\x${eventId.toString('hex')}'::bytea, '${perpetualId}') AS result`);
     expect(result).toEqual(FundingIndexUpdatesTable.uuid(`${blockHeight}`, eventId, `${perpetualId}`));
   });
 
@@ -274,11 +274,11 @@ describe('SQL Function Tests', () => {
       orderFlags: 4,
       clobPairId: 5,
     },
-  ])('dydx_uuid_from_order_id and parts (%s)', async (orderId: IndexerOrderId) => {
-    let result = await getSingleRawQueryResultRow(`SELECT dydx_uuid_from_order_id('${JSON.stringify(orderId)}') AS result`);
+  ])('klyra_uuid_from_order_id and parts (%s)', async (orderId: IndexerOrderId) => {
+    let result = await getSingleRawQueryResultRow(`SELECT klyra_uuid_from_order_id('${JSON.stringify(orderId)}') AS result`);
     expect(result).toEqual(OrderTable.orderIdToUuid(orderId));
 
-    result = await getSingleRawQueryResultRow(`SELECT dydx_uuid_from_order_id_parts('${SubaccountTable.subaccountIdToUuid(orderId.subaccountId!)}', '${orderId.clientId}', '${orderId.clobPairId}', '${orderId.orderFlags}') AS result`);
+    result = await getSingleRawQueryResultRow(`SELECT klyra_uuid_from_order_id_parts('${SubaccountTable.subaccountIdToUuid(orderId.subaccountId!)}', '${orderId.clientId}', '${orderId.clobPairId}', '${orderId.orderFlags}') AS result`);
     expect(result).toEqual(OrderTable.orderIdToUuid(orderId));
   });
 
@@ -301,11 +301,11 @@ describe('SQL Function Tests', () => {
       5,
       6,
     ],
-  ])('dydx_uuid_from_perpetual_position_parts (%s, %s, %s, %s)', async (subaccountId: IndexerSubaccountId, blockHeight: number, transactionIndex: number, eventIndex: number) => {
+  ])('klyra_uuid_from_perpetual_position_parts (%s, %s, %s, %s)', async (subaccountId: IndexerSubaccountId, blockHeight: number, transactionIndex: number, eventIndex: number) => {
     const subaccountUuid = SubaccountTable.subaccountIdToUuid(subaccountId);
     const eventId = TendermintEventTable.createEventId(`${blockHeight}`, transactionIndex, eventIndex);
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_uuid_from_perpetual_position_parts('${subaccountUuid}', '\\x${eventId.toString('hex')}'::bytea) AS result`);
+      `SELECT klyra_uuid_from_perpetual_position_parts('${subaccountUuid}', '\\x${eventId.toString('hex')}'::bytea) AS result`);
     expect(result).toEqual(PerpetualPositionTable.uuid(subaccountUuid, eventId));
   });
 
@@ -314,11 +314,11 @@ describe('SQL Function Tests', () => {
       owner: testConstants.defaultSubaccount.address,
       number: testConstants.defaultSubaccount.subaccountNumber,
     },
-  ])('dydx_uuid_from_subaccount_id and parts (%s)', async (subaccountId: IndexerSubaccountId) => {
-    let result = await getSingleRawQueryResultRow(`SELECT dydx_uuid_from_subaccount_id('${JSON.stringify(subaccountId)}') AS result`);
+  ])('klyra_uuid_from_subaccount_id and parts (%s)', async (subaccountId: IndexerSubaccountId) => {
+    let result = await getSingleRawQueryResultRow(`SELECT klyra_uuid_from_subaccount_id('${JSON.stringify(subaccountId)}') AS result`);
     expect(result).toEqual(SubaccountTable.subaccountIdToUuid(subaccountId));
 
-    result = await getSingleRawQueryResultRow(`SELECT dydx_uuid_from_subaccount_id_parts('${subaccountId.owner}', '${subaccountId.number}') AS result`);
+    result = await getSingleRawQueryResultRow(`SELECT klyra_uuid_from_subaccount_id_parts('${subaccountId.owner}', '${subaccountId.number}') AS result`);
     expect(result).toEqual(SubaccountTable.subaccountIdToUuid(subaccountId));
   });
 
@@ -359,7 +359,7 @@ describe('SQL Function Tests', () => {
       'senderWallet',
       'recipientWallet',
     ],
-  ])('dydx_uuid_from_transfer_parts (%s, %s, %s, %s)', async (
+  ])('klyra_uuid_from_transfer_parts (%s, %s, %s, %s)', async (
     senderSubaccountId: IndexerSubaccountId | undefined,
     recipientSubaccountId: IndexerSubaccountId | undefined,
     senderWalletAddress: string | undefined,
@@ -371,7 +371,7 @@ describe('SQL Function Tests', () => {
     const recipientSubaccountUuid: string | undefined = recipientSubaccountId
       ? SubaccountTable.subaccountIdToUuid(recipientSubaccountId) : undefined;
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_uuid_from_transfer_parts('\\x${eventId.toString('hex')}'::bytea, '${assetId}', ${senderSubaccountUuid ? `'${senderSubaccountUuid}'` : 'NULL'}, ${recipientSubaccountUuid ? `'${recipientSubaccountUuid}'` : 'NULL'}, ${senderWalletAddress ? `'${senderWalletAddress}'` : 'NULL'}, ${recipientWalletAddress ? `'${recipientWalletAddress}'` : 'NULL'}) AS result`);
+      `SELECT klyra_uuid_from_transfer_parts('\\x${eventId.toString('hex')}'::bytea, '${assetId}', ${senderSubaccountUuid ? `'${senderSubaccountUuid}'` : 'NULL'}, ${recipientSubaccountUuid ? `'${recipientSubaccountUuid}'` : 'NULL'}, ${senderWalletAddress ? `'${senderWalletAddress}'` : 'NULL'}, ${recipientWalletAddress ? `'${recipientWalletAddress}'` : 'NULL'}) AS result`);
     expect(result).toEqual(TransferTable.uuid(
       eventId,
       assetId,
@@ -403,12 +403,12 @@ describe('SQL Function Tests', () => {
       event: {},
       expectedError: 'Either transactionIndex or blockEvent must be defined in IndexerTendermintEvent',
     },
-  ])('dydx_tendermint_event_to_transaction_index should return the expected result', async (
+  ])('klyra_tendermint_event_to_transaction_index should return the expected result', async (
     { event, expectedResult, expectedError },
   ) => {
     try {
       const result = await getSingleRawQueryResultRow(
-        `SELECT dydx_tendermint_event_to_transaction_index('${JSON.stringify(event)}') AS result`);
+        `SELECT klyra_tendermint_event_to_transaction_index('${JSON.stringify(event)}') AS result`);
       if (expectedError) {
         throw new Error('Expected an error but got a result.');
       }
@@ -426,9 +426,9 @@ describe('SQL Function Tests', () => {
       '123456',
       123,
     ],
-  ])('dydx_uuid_from_transaction_parts (%s, %s)', async (blockHeight: string, transactionIndex: number) => {
+  ])('klyra_uuid_from_transaction_parts (%s, %s)', async (blockHeight: string, transactionIndex: number) => {
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_uuid_from_transaction_parts('${blockHeight}', '${transactionIndex}') AS result`);
+      `SELECT klyra_uuid_from_transaction_parts('${blockHeight}', '${transactionIndex}') AS result`);
     expect(result).toEqual(
       TransactionTable.uuid(blockHeight, transactionIndex),
     );
@@ -439,28 +439,28 @@ describe('SQL Function Tests', () => {
       123,
       '123456',
     ],
-  ])('dydx_uuid_from_oracle_price_parts (%s, %s)', async (marketId: number, blockHeight: string) => {
+  ])('klyra_uuid_from_oracle_price_parts (%s, %s)', async (marketId: number, blockHeight: string) => {
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_uuid_from_oracle_price_parts('${marketId}', '${blockHeight}') AS result`);
+      `SELECT klyra_uuid_from_oracle_price_parts('${marketId}', '${blockHeight}') AS result`);
     expect(result).toEqual(
       OraclePriceTable.uuid(marketId, blockHeight),
     );
   });
 
-  it('dydx_clob_pair_status_to_market_status should convert all statuses', async () => {
+  it('klyra_clob_pair_status_to_market_status should convert all statuses', async () => {
     for (const [key, value] of Object.entries(CLOB_STATUS_TO_MARKET_STATUS)) {
       const result = await getSingleRawQueryResultRow(
-        `SELECT dydx_clob_pair_status_to_market_status('${key}') AS result`);
+        `SELECT klyra_clob_pair_status_to_market_status('${key}') AS result`);
       expect(result).toEqual(value);
     }
   });
 
-  it('dydx_create_transaction.sql should insert a transaction and return correct jsonb', async () => {
+  it('klyra_create_transaction.sql should insert a transaction and return correct jsonb', async () => {
     const transactionHash: string = 'txnhash';
     const blockHeight: string = '1';
     const transactionIndex: number = 123;
 
-    const returnedJsonb = await getSingleRawQueryResultRow(`SELECT dydx_create_transaction('${transactionHash}', '${blockHeight}', ${transactionIndex}) AS result`);
+    const returnedJsonb = await getSingleRawQueryResultRow(`SELECT klyra_create_transaction('${transactionHash}', '${blockHeight}', ${transactionIndex}) AS result`);
 
     const transactions: TransactionFromDatabase[] = await TransactionTable.findAll(
       {},
@@ -482,20 +482,20 @@ describe('SQL Function Tests', () => {
     }));
   });
 
-  it('dydx_create_tendermint_event.sql should insert a tendermint event and return correct jsonb', async () => {
+  it('klyra_create_tendermint_event.sql should insert a tendermint event and return correct jsonb', async () => {
     await BlockTable.create(testConstants.defaultBlock);
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
 
     const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-      DydxIndexerSubtypes.ASSET,
+      KlyraIndexerSubtypes.ASSET,
       AssetCreateEventV1.encode(defaultAssetCreateEvent).finish(),
       transactionIndex,
       eventIndex,
     );
 
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_create_tendermint_event('${JSON.stringify(indexerTendermintEvent)}', '${testConstants.defaultBlock.blockHeight}') AS result`,
+      `SELECT klyra_create_tendermint_event('${JSON.stringify(indexerTendermintEvent)}', '${testConstants.defaultBlock.blockHeight}') AS result`,
     );
     const tendermintEvents: TendermintEventFromDatabase[] = await TendermintEventTable.findAll(
       {},
@@ -522,12 +522,12 @@ describe('SQL Function Tests', () => {
     }));
   });
 
-  it('dydx_create_initial_rows_for_tendermint_block.sql should insert the initial rows correctly', async () => {
+  it('klyra_create_initial_rows_for_tendermint_block.sql should insert the initial rows correctly', async () => {
     const blockHeight = '1';
     const txHashes = [defaultTxHash, defaultTxHash2];
     const dateTimeIso = '2020-01-01T00:00:00.000Z';
     await getSingleRawQueryResultRow(
-      `SELECT dydx_create_initial_rows_for_tendermint_block(${blockHeight}, '${dateTimeIso}', '${JSON.stringify(txHashes)}', '${JSON.stringify(events)}')`,
+      `SELECT klyra_create_initial_rows_for_tendermint_block(${blockHeight}, '${dateTimeIso}', '${JSON.stringify(txHashes)}', '${JSON.stringify(events)}')`,
     );
     // Validate blocks table
     const blocks = await BlockTable.findAll({}, [], { readReplica: true });

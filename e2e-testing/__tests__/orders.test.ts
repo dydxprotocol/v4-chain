@@ -8,12 +8,12 @@ import {
   SocketClient,
   SubaccountInfo,
   ValidatorClient,
-} from "@dydxprotocol/v4-client-js/src";
+} from "@klyraprotocol/v4-client-js/src";
 import {
-  DYDX_LOCAL_ADDRESS,
-  DYDX_LOCAL_ADDRESS_2,
-  DYDX_LOCAL_MNEMONIC,
-  DYDX_LOCAL_MNEMONIC_2,
+  KLYRA_LOCAL_ADDRESS,
+  KLYRA_LOCAL_ADDRESS_2,
+  KLYRA_LOCAL_MNEMONIC,
+  KLYRA_LOCAL_MNEMONIC_2,
   orderDetails,
   PERPETUAL_PAIR_BTC_USD,
 } from "./helpers/constants";
@@ -32,7 +32,7 @@ import {
   OrderSide,
   OrderTable,
   SubaccountTable,
-} from "@dydxprotocol-indexer/postgres";
+} from "@klyraprotocol-indexer/postgres";
 
 async function placeOrder(mnemonic: string, order: IPlaceOrder): Promise<void> {
   const wallet = await LocalWallet.fromMnemonic(mnemonic, BECH32_PREFIX);
@@ -78,8 +78,8 @@ describe("orders", () => {
 
     await utils.sleep(10000); // wait 10s for orders to be placed & matched
     const [wallet, wallet2] = await Promise.all([
-      LocalWallet.fromMnemonic(DYDX_LOCAL_MNEMONIC, BECH32_PREFIX),
-      LocalWallet.fromMnemonic(DYDX_LOCAL_MNEMONIC_2, BECH32_PREFIX),
+      LocalWallet.fromMnemonic(KLYRA_LOCAL_MNEMONIC, BECH32_PREFIX),
+      LocalWallet.fromMnemonic(KLYRA_LOCAL_MNEMONIC_2, BECH32_PREFIX),
     ]);
 
     const subaccountId = SubaccountTable.uuid(wallet.address!, 0);
@@ -155,7 +155,7 @@ describe("orders", () => {
     // Check API /v4/orders endpoint
     const [ordersResponse, ordersResponse2] = await Promise.all([
       indexerClient.account.getSubaccountOrders(
-        DYDX_LOCAL_ADDRESS,
+        KLYRA_LOCAL_ADDRESS,
         0,
         undefined,
         undefined,
@@ -168,7 +168,7 @@ describe("orders", () => {
         true
       ),
       indexerClient.account.getSubaccountOrders(
-        DYDX_LOCAL_ADDRESS_2,
+        KLYRA_LOCAL_ADDRESS_2,
         0,
         undefined,
         undefined,
@@ -183,7 +183,7 @@ describe("orders", () => {
     ]);
     expect(ordersResponse[0]).toEqual(
       expect.objectContaining({
-        subaccountId: SubaccountTable.uuid(DYDX_LOCAL_ADDRESS, 0),
+        subaccountId: SubaccountTable.uuid(KLYRA_LOCAL_ADDRESS, 0),
         clobPairId: "0",
         side: "BUY",
         size: "0.001",
@@ -199,7 +199,7 @@ describe("orders", () => {
     );
     expect(ordersResponse2[0]).toEqual(
       expect.objectContaining({
-        subaccountId: SubaccountTable.uuid(DYDX_LOCAL_ADDRESS_2, 0),
+        subaccountId: SubaccountTable.uuid(KLYRA_LOCAL_ADDRESS_2, 0),
         clobPairId: "0",
         side: "SELL",
         size: "0.0005",
@@ -218,11 +218,11 @@ describe("orders", () => {
     // Check API /v4/perpetualPositions endpoint
     const [response, response2] = await Promise.all([
       indexerClient.account.getSubaccountPerpetualPositions(
-        DYDX_LOCAL_ADDRESS,
+        KLYRA_LOCAL_ADDRESS,
         0
       ),
       indexerClient.account.getSubaccountPerpetualPositions(
-        DYDX_LOCAL_ADDRESS_2,
+        KLYRA_LOCAL_ADDRESS_2,
         0
       ),
     ]);
@@ -287,13 +287,13 @@ describe("orders", () => {
 
   function validateOrders(data: any, socketClient: SocketClient): void {
     if (data.type === "connected") {
-      socketClient.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
+      socketClient.subscribeToSubaccount(KLYRA_LOCAL_ADDRESS, 0);
     } else if (data.type === "subscribed") {
       expect(data.channel).toEqual("v4_subaccounts");
-      expect(data.id).toEqual(`${DYDX_LOCAL_ADDRESS}/0`);
+      expect(data.id).toEqual(`${KLYRA_LOCAL_ADDRESS}/0`);
       expect(data.contents.subaccount).toEqual(
         expect.objectContaining({
-          address: DYDX_LOCAL_ADDRESS,
+          address: KLYRA_LOCAL_ADDRESS,
           subaccountNumber: 0,
         })
       );
@@ -303,7 +303,7 @@ describe("orders", () => {
     ) {
       expect(data.contents.perpetualPositions[0]).toEqual(
         expect.objectContaining({
-          address: DYDX_LOCAL_ADDRESS,
+          address: KLYRA_LOCAL_ADDRESS,
           subaccountNumber: 0,
           market: "BTC-USD",
           side: "LONG",
@@ -323,7 +323,7 @@ describe("orders", () => {
           liquidity: "MAKER",
           clobPairId: "0",
           quoteAmount: "25",
-          subaccountId: SubaccountTable.uuid(DYDX_LOCAL_ADDRESS, 0),
+          subaccountId: SubaccountTable.uuid(KLYRA_LOCAL_ADDRESS, 0),
           clientMetadata: "0",
           ticker: "BTC-USD",
         })

@@ -1,7 +1,7 @@
-CREATE OR REPLACE FUNCTION dydx_open_interest_update_handler(event_data jsonb) RETURNS jsonb AS $$
+CREATE OR REPLACE FUNCTION klyra_open_interest_update_handler(event_data jsonb) RETURNS jsonb AS $$
 /**
   Parameters:
-    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
+    - event_data: The 'data' field of the IndexerTendermintEvent
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
   Returns: JSON object containing fields:
     - open_interest_update: The updated perpetual market open interest
@@ -14,16 +14,16 @@ DECLARE
 BEGIN
     FOR open_interest_update IN SELECT * FROM jsonb_array_elements(event_data->'openInterestUpdates') LOOP
       perpetual_market_record."id" = (open_interest_update->'perpetualId')::bigint;
-      perpetual_market_record."openInterest" = dydx_from_serializable_int(open_interest_update->'openInterest');
+      perpetual_market_record."openInterest" = klyra_from_serializable_int(open_interest_update->'openInterest');
 
           UPDATE perpetual_markets
           SET
-              "baseOpenInterest" = dydx_trim_scale(perpetual_market_record."openInterest"::numeric * power(10, "atomicResolution")::numeric)
+              "baseOpenInterest" = klyra_trim_scale(perpetual_market_record."openInterest"::numeric * power(10, "atomicResolution")::numeric)
           WHERE
               "id" = perpetual_market_record."id"
           RETURNING * INTO perpetual_market_record;
 
-      updates_array = array_append(updates_array, dydx_to_jsonb(perpetual_market_record));
+      updates_array = array_append(updates_array, klyra_to_jsonb(perpetual_market_record));
     END LOOP;
 
     RETURN jsonb_build_object(

@@ -1,21 +1,21 @@
 import {
   logger,
   stats,
-} from '@dydxprotocol-indexer/base';
-import { KafkaTopics, ProducerMessage, producer } from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/base';
+import { KafkaTopics, ProducerMessage, producer } from '@klyraprotocol-indexer/kafka';
 import {
   dbHelpers,
   perpetualMarketRefresher,
   testMocks,
   BlockTable,
   OrderTable,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   IndexerOrder,
   IndexerOrderId,
   IndexerOrder_TimeInForce,
   RedisOrder,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   placeOrder,
   redis,
@@ -24,7 +24,7 @@ import {
   OrdersDataCache,
   OrderData,
   OrderExpiryCache,
-} from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/redis';
 import { ProducerRecord } from 'kafkajs';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -33,7 +33,7 @@ import config from '../../src/config';
 import { redisClient } from '../../src/helpers/redis';
 import { getExpiredOffChainUpdateMessage } from '../../src/helpers/websocket';
 import removeExpiredOrdersTask from '../../src/tasks/remove-expired-orders';
-import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash } from '@klyraprotocol-indexer/v4-proto-parser';
 
 describe('remove-expired-orders', () => {
   let producerSendMock: jest.SpyInstance;

@@ -42,7 +42,7 @@ cd services/$service
 pnpm build
 cd -
 
-AWS_PROFILE=dydx-v4-$env aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $account.dkr.ecr.ap-northeast-1.amazonaws.com
+AWS_PROFILE=klyra-v4-$env aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $account.dkr.ecr.ap-northeast-1.amazonaws.com
 
 DOCKER_BUILDKIT=1 docker build \
             --platform linux/amd64 \
@@ -53,4 +53,4 @@ DOCKER_BUILDKIT=1 docker build \
 
 docker push $account.dkr.ecr.ap-northeast-1.amazonaws.com/$env-indexer-$service:$tag
 
-AWS_PROFILE=dydx-v4-$env orb deploy $service $tag
+AWS_PROFILE=klyra-v4-$env orb deploy $service $tag

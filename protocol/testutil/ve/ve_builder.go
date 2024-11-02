@@ -42,7 +42,7 @@ func NewDefaultSignedVeInfo(
 		SDaiConversionRate: sdaiConversionRate,
 		Height:             3,
 		Round:              0,
-		ChainId:            "localdydxprotocol",
+		ChainId:            "localklyraprotocol",
 	}
 }
 
@@ -325,7 +325,7 @@ func GetInjectedExtendedCommitInfoForTestApp(
 			SDaiConversionRate: sdaiConversionRate,
 			Height:             height,
 			Round:              0,
-			ChainId:            "localdydxprotocol",
+			ChainId:            "localklyraprotocol",
 		})
 	}
 

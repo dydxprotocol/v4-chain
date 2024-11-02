@@ -249,7 +249,7 @@ describe('Compliance data store', () => {
     const updatedTime2: string = DateTime.fromISO(
       nonBlockedComplianceData.updatedAt!,
     ).plus(20).toUTC().toISO();
-    const otherAddress: string = 'dydx1scu097p2sstqzupe6t687kpc2w4sv665fedctf';
+    const otherAddress: string = 'klyra1scu097p2sstqzupe6t687kpc2w4sv665kgchrz';
 
     await ComplianceDataTable.bulkUpsert(
       [

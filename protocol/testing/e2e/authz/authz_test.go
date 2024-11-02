@@ -211,7 +211,7 @@ func TestAuthz(t *testing.T) {
 			expectedMsgExecCheckTxSuccess: false,
 			expectedMsgExecCheckTxCode:    sdkerrors.ErrInvalidRequest.ABCICode(),
 		},
-		"Fail (dydx custom): Bob wraps dydx messages": {
+		"Fail (klyra custom): Bob wraps klyra messages": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_100_000USD,
 				constants.Bob_Num0_100_000USD,

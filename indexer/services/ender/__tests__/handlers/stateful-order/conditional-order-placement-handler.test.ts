@@ -11,17 +11,17 @@ import {
   testConstants,
   testMocks,
   TimeInForce,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   IndexerOrder,
   StatefulOrderEventV1,
   IndexerOrder_ConditionType,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../../src/lib/types';
 import {
   defaultDateTime,
   defaultHeight,
@@ -39,9 +39,9 @@ import {
 } from '../../helpers/indexer-proto-helpers';
 import { getPrice, getSize, getTriggerPrice } from '../../../src/lib/helper';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
-import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_CONDITIONAL } from '@klyraprotocol-indexer/v4-proto-parser';
 import Long from 'long';
-import { producer } from '@dydxprotocol-indexer/kafka';
+import { producer } from '@klyraprotocol-indexer/kafka';
 import { ConditionalOrderPlacementHandler } from '../../../src/handlers/stateful-order/conditional-order-placement-handler';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
@@ -94,7 +94,7 @@ describe('conditionalOrderPlacementHandler', () => {
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.STATEFUL_ORDER,
+        KlyraIndexerSubtypes.STATEFUL_ORDER,
         StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
         transactionIndex,
         eventIndex,
@@ -155,7 +155,7 @@ describe('conditionalOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       routerFeePpm: '0',
-      routerFeeSubaccountOwner: 'dydx1xxxxxx',
+      routerFeeSubaccountOwner: 'klyra1xxxxxx',
       routerFeeSubaccountNumber: '0',
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
       updatedAt: defaultDateTime.toISO(),
@@ -221,7 +221,7 @@ describe('conditionalOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       routerFeePpm: '0',
-      routerFeeSubaccountOwner: 'dydx1xxxxxx',
+      routerFeeSubaccountOwner: 'klyra1xxxxxx',
       routerFeeSubaccountNumber: '0',
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
       updatedAt: defaultDateTime.toISO(),

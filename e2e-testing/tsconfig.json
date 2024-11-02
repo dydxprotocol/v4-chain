@@ -20,7 +20,7 @@
     "strict": true,
     "useUnknownInCatchVariables": false,
     "paths": {
-      "@dydxprotocol-indexer/example-package": ["packages/example-package/src"],
+      "@klyraprotocol-indexer/example-package": ["packages/example-package/src"],
     },
     "baseUrl": ".",
     "outDir": "build",

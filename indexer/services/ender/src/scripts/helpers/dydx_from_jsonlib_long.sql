@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_from_jsonlib_long(long_value jsonb) RETURNS numeric AS $$
+CREATE OR REPLACE FUNCTION klyra_from_jsonlib_long(long_value jsonb) RETURNS numeric AS $$
 /**
   Converts JSON objects of the form (https://www.npmjs.com/package/long):
     {

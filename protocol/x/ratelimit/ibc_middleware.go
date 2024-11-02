@@ -119,7 +119,7 @@ func (im IBCMiddleware) OnChanCloseConfirm(
 
 // OnRecvPacket implements the IBCMiddleware interface
 // Called on the receiver chain when a relayer pick up the `SendPacket` event from sender chain and relayer
-// to the receiver chain. On dYdX chain, this signals an inbound IBC transfer.
+// to the receiver chain. On klyra chain, this signals an inbound IBC transfer.
 // Does the following:
 // - Call `IncrementCapacitiesForDenom` to update `capacity` for the token received.
 // - Invoke `OnRecvPacket` callback on IBC transfer module.

@@ -1,4 +1,4 @@
-import { IndexerOrderId, RedisOrder } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerOrderId, RedisOrder } from '@klyraprotocol-indexer/v4-protos';
 import { Callback, RedisClient } from 'redis';
 
 import { InvalidTotalFilledQuantumsError } from '../errors';

@@ -40,8 +40,8 @@ import (
 
 var (
 	globalStartTime              = time.Date(2020, 1, 2, 0, 0, 0, 0, time.UTC)
-	chainIDPrefix                = "localdydxprotocol"
-	sDaiPoolAccountAddressString = "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0"
+	chainIDPrefix                = "localklyraprotocol"
+	sDaiPoolAccountAddressString = "klyra1r3fsd6humm0ghyq0te5jf8eumklmclyaw0hs3y"
 	exampleAckError              = errors.New("ABCI code: 1: error handling packet: see events for details")
 	sequenceNumberOne            = uint64(1)
 )
@@ -144,11 +144,11 @@ func setupChainForIBC(
 
 	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cmttypes.GenesisDoc) {
 		// for IBC testing, disable vote extensions
-		if chainID == "localdydxprotocol-1" {
+		if chainID == "localklyraprotocol-1" {
 			genesis = testapp.NoVeGenesisIBCTest1()
-		} else if chainID == "localdydxprotocol-2" {
+		} else if chainID == "localklyraprotocol-2" {
 			genesis = testapp.NoVeGenesisIBCTest2()
-		} else if chainID == "localdydxprotocol-3" {
+		} else if chainID == "localklyraprotocol-3" {
 			genesis = testapp.NoVeGenesisIBCTest3()
 		} else {
 			genesis = testapp.NoVeGenesis()

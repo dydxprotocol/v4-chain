@@ -3,7 +3,7 @@ import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   Timestamp,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   AssetColumns,
   AssetFromDatabase,
@@ -15,11 +15,11 @@ import {
   BlockTable,
   TendermintEventTable,
   assetRefresher,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
-import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage } from '@klyraprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
@@ -71,7 +71,7 @@ describe('assetHandler', () => {
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.ASSET,
+        KlyraIndexerSubtypes.ASSET,
         AssetCreateEventV1.encode(defaultAssetCreateEvent).finish(),
         transactionIndex,
         eventIndex,
@@ -168,7 +168,7 @@ function createKafkaMessageFromAssetEvent({
   if (assetEvent !== undefined) {
     events.push(
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.ASSET,
+        KlyraIndexerSubtypes.ASSET,
         AssetCreateEventV1.encode(assetEvent).finish(),
         transactionIndex,
         eventIndex,

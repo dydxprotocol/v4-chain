@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@klyraprotocol-indexer/base';
 import {
   IsoString,
   FillTable,
@@ -6,7 +6,7 @@ import {
   Liquidity,
   QueryableField,
   perpetualMarketRefresher,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import express from 'express';
 import {
   checkSchema,

@@ -4,11 +4,11 @@
 
 import { FaucetApiHost } from '../src/clients/constants';
 import { FaucetClient } from '../src/clients/faucet-client';
-import { DYDX_TEST_ADDRESS } from './constants';
+import { KLYRA_TEST_ADDRESS } from './constants';
 
 async function test(): Promise<void> {
   const client = new FaucetClient(FaucetApiHost.TESTNET);
-  const address = DYDX_TEST_ADDRESS;
+  const address = KLYRA_TEST_ADDRESS;
 
   // Use faucet to fill subaccount
   const faucetResponse = await client?.fill(address, 0, 2000);

@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_update_perpetual_position_aggregate_fields(
+CREATE OR REPLACE FUNCTION klyra_update_perpetual_position_aggregate_fields(
     subaccount_uuid uuid,
     perpetual_id bigint,
     side text,
@@ -41,16 +41,16 @@ BEGIN
     exit_price = perpetual_position_record."exitPrice";
 
     -- Update the perpetual position record based on the side
-    IF dydx_perpetual_position_and_order_side_matching(perpetual_position_record."side", side) THEN
-        sum_open := dydx_trim_scale(perpetual_position_record."sumOpen" + size);
-        entry_price := dydx_get_weighted_average(
+    IF klyra_perpetual_position_and_order_side_matching(perpetual_position_record."side", side) THEN
+        sum_open := klyra_trim_scale(perpetual_position_record."sumOpen" + size);
+        entry_price := klyra_get_weighted_average(
             perpetual_position_record."entryPrice", perpetual_position_record."sumOpen", price, size
         );
         perpetual_position_record."sumOpen" = sum_open;
         perpetual_position_record."entryPrice" = entry_price;
     ELSE
-        sum_close := dydx_trim_scale(perpetual_position_record."sumClose" + size);
-        exit_price := dydx_get_weighted_average(
+        sum_close := klyra_trim_scale(perpetual_position_record."sumClose" + size);
+        exit_price := klyra_get_weighted_average(
             perpetual_position_record."exitPrice", perpetual_position_record."sumClose", price, size
         );
         perpetual_position_record."sumClose" = sum_close;

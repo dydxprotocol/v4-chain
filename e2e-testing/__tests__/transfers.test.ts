@@ -8,17 +8,17 @@ import {
   SocketClient,
   SubaccountInfo,
   ValidatorClient,
-} from "@dydxprotocol/v4-client-js/src";
+} from "@klyraprotocol/v4-client-js/src";
 import {
   Ordering,
   SubaccountTable,
   TransferColumns,
   TransferFromDatabase,
   TransferTable,
-} from "@dydxprotocol-indexer/postgres";
+} from "@klyraprotocol-indexer/postgres";
 import * as utils from "./helpers/utils";
 import Big from "big.js";
-import { DYDX_LOCAL_ADDRESS, DYDX_LOCAL_MNEMONIC } from "./helpers/constants";
+import { KLYRA_LOCAL_ADDRESS, KLYRA_LOCAL_MNEMONIC } from "./helpers/constants";
 import { connectAndValidateSocketClient } from "./helpers/utils";
 import { config } from "yargs";
 
@@ -26,7 +26,7 @@ describe("transfers", () => {
   it("test deposit", async () => {
     connectAndValidateSocketClient(validateTransfers);
     const wallet = await LocalWallet.fromMnemonic(
-      DYDX_LOCAL_MNEMONIC,
+      KLYRA_LOCAL_MNEMONIC,
       BECH32_PREFIX
     );
 
@@ -45,7 +45,7 @@ describe("transfers", () => {
     // Check TDAI asset position before
     let assetPosResp: any =
       await indexerClient.account.getSubaccountAssetPositions(
-        DYDX_LOCAL_ADDRESS,
+        KLYRA_LOCAL_ADDRESS,
         0
       );
     expect(assetPosResp).not.toBeNull();
@@ -89,7 +89,7 @@ describe("transfers", () => {
 
     // Check API /v4/transfers endpoint
     const response = await indexerClient.account.getSubaccountTransfers(
-      DYDX_LOCAL_ADDRESS,
+      KLYRA_LOCAL_ADDRESS,
       0
     );
     expect(response).not.toBeNull();
@@ -113,7 +113,7 @@ describe("transfers", () => {
 
     // Check API /v4/assetPositions endpoint
     assetPosResp = await indexerClient.account.getSubaccountAssetPositions(
-      DYDX_LOCAL_ADDRESS,
+      KLYRA_LOCAL_ADDRESS,
       0
     );
     expect(assetPosResp).not.toBeNull();
@@ -126,13 +126,13 @@ describe("transfers", () => {
 
   function validateTransfers(data: any, socketClient: SocketClient): void {
     if (data.type === "connected") {
-      socketClient.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
+      socketClient.subscribeToSubaccount(KLYRA_LOCAL_ADDRESS, 0);
     } else if (data.type === "subscribed") {
       expect(data.channel).toEqual("v4_subaccounts");
-      expect(data.id).toEqual(`${DYDX_LOCAL_ADDRESS}/0`);
+      expect(data.id).toEqual(`${KLYRA_LOCAL_ADDRESS}/0`);
       expect(data.contents.subaccount).toEqual(
         expect.objectContaining({
-          address: DYDX_LOCAL_ADDRESS,
+          address: KLYRA_LOCAL_ADDRESS,
           subaccountNumber: 0,
         })
       );
@@ -140,10 +140,10 @@ describe("transfers", () => {
       expect(data.contents.transfers).toEqual(
         expect.objectContaining({
           sender: {
-            address: DYDX_LOCAL_ADDRESS,
+            address: KLYRA_LOCAL_ADDRESS,
           },
           recipient: {
-            address: DYDX_LOCAL_ADDRESS,
+            address: KLYRA_LOCAL_ADDRESS,
             subaccountNumber: 0,
           },
           size: "10",

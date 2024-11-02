@@ -1,17 +1,17 @@
 import {
   logger,
   stats,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 import {
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
   QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   OpenOrdersCache,
   OrderbookLevels,
   OrderbookLevelsCache,
-} from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/redis';
 import Big from 'big.js';
 
 import config from '../config';

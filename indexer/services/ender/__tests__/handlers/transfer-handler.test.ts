@@ -1,13 +1,13 @@
 import {
   logger,
   ParseMessageError,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   Timestamp,
   TransferEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   AssetTable,
   AssetFromDatabase,
@@ -23,11 +23,11 @@ import {
   protocolTranslations,
   SubaccountMessageContents,
   assetRefresher,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
-import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage, producer } from '@klyraprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent, expectSubaccountKafkaMessage,
@@ -106,7 +106,7 @@ describe('transferHandler', () => {
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.TRANSFER,
+        KlyraIndexerSubtypes.TRANSFER,
         TransferEventV1.encode(defaultTransferEvent).finish(),
         transactionIndex,
         eventIndex,
@@ -322,7 +322,7 @@ describe('transferHandler', () => {
     await expectNoExistingTransfers([defaultRecipientSubaccountId]);
 
     await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new Error('SELECT dydx_block_processor($1) AS result; - Unable to find subaccount with database id (database id differs from subaccount id found in protocol): 5b047d98-6751-5669-82cf-993a72f5763b'),
+      new Error('SELECT klyra_block_processor($1) AS result; - Unable to find subaccount with database id (database id differs from subaccount id found in protocol): 5b047d98-6751-5669-82cf-993a72f5763b'),
     );
   });
 
@@ -401,7 +401,7 @@ describe('transferHandler', () => {
     await expectNoExistingTransfers([defaultRecipientSubaccountId, defaultSenderSubaccountId]);
 
     await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new Error('SELECT dydx_block_processor($1) AS result; - Unable to find subaccount with database id (database id differs from subaccount id found in protocol): 5b047d98-6751-5669-82cf-993a72f5763b'),
+      new Error('SELECT klyra_block_processor($1) AS result; - Unable to find subaccount with database id (database id differs from subaccount id found in protocol): 5b047d98-6751-5669-82cf-993a72f5763b'),
     );
   });
 });
@@ -424,7 +424,7 @@ function createKafkaMessageFromTransferEvent({
   if (transferEvent !== undefined) {
     events.push(
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.TRANSFER,
+        KlyraIndexerSubtypes.TRANSFER,
         TransferEventV1.encode(transferEvent).finish(),
         transactionIndex,
         eventIndex,

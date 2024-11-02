@@ -1,4 +1,4 @@
-import { AssetCreateEventV1, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
+import { AssetCreateEventV1, IndexerTendermintEvent } from '@klyraprotocol-indexer/v4-protos';
 
 import { AssetCreationHandler } from '../handlers/asset-handler';
 import { Handler } from '../handlers/handler';

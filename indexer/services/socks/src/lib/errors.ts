@@ -1,4 +1,4 @@
-import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
+import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@klyraprotocol-indexer/compliance';
 
 export class InvalidForwardMessageError extends Error {
   constructor(message: string) {

@@ -1,4 +1,4 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@klyraprotocol-indexer/base';
 import {
   AssetPositionTable,
   FundingIndexMap,
@@ -16,8 +16,8 @@ import {
   SubaccountTable,
   SubaccountToPerpetualPositionsMap,
   TransferTable,
-} from '@dydxprotocol-indexer/postgres';
-import { LatestAccountPnlTicksCache, PnlTickForSubaccounts } from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/postgres';
+import { LatestAccountPnlTicksCache, PnlTickForSubaccounts } from '@klyraprotocol-indexer/redis';
 import Big from 'big.js';
 import _ from 'lodash';
 import { DateTime } from 'luxon';

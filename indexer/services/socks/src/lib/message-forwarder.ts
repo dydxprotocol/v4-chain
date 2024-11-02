@@ -3,8 +3,8 @@ import {
   logger,
   InfoObject,
   STATS_NO_SAMPLING,
-} from '@dydxprotocol-indexer/base';
-import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/base';
+import { updateOnMessageFunction } from '@klyraprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
 

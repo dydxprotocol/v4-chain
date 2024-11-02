@@ -1,4 +1,4 @@
-import { IndexerTendermintEvent, MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerTendermintEvent, MarketEventV1 } from '@klyraprotocol-indexer/v4-protos';
 import Long from 'long';
 
 import { Handler, HandlerInitializer } from '../handlers/handler';

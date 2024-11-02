@@ -15,35 +15,35 @@ import {
   withdrawToIBC,
   wrappedError,
 } from '../src/clients/native';
-import { DYDX_TEST_ADDRESS, DYDX_TEST_MNEMONIC } from './constants';
+import { KLYRA_TEST_ADDRESS, KLYRA_TEST_MNEMONIC } from './constants';
 
 async function test(): Promise<void> {
   try {
     const paramsInJson = `{
       "endpointUrls":[
-        "https://dydx-testnet.nodefleet.org",
-        "https://test-dydx.kingnodes.com",
-        "https://dydx-rpc.liquify.com/api=8878132/dydx"
+        "https://klyra-testnet.nodefleet.org",
+        "https://test-klyra.kingnodes.com",
+        "https://klyra-rpc.liquify.com/api=8878132/klyra"
       ],
-      "chainId":"dydx-testnet-4"
+      "chainId":"klyra-testnet-4"
     }`;
     const result = await getOptimalNode(paramsInJson);
     console.log(result);
 
-    const wallet = await connectWallet(DYDX_TEST_MNEMONIC);
+    const wallet = await connectWallet(KLYRA_TEST_MNEMONIC);
     console.log(wallet);
 
-    const address = await connect(Network.testnet(), DYDX_TEST_MNEMONIC);
+    const address = await connect(Network.testnet(), KLYRA_TEST_MNEMONIC);
     console.log(address);
 
-    const payload = `{ "address": "${DYDX_TEST_ADDRESS}" }`;
+    const payload = `{ "address": "${KLYRA_TEST_ADDRESS}" }`;
     const userStats = await getUserStats(payload);
     console.log(userStats);
 
     const sendTokenPayload = {
       subaccountNumber: 0,
-      amount: '10',   // Dydx Token
-      recipient: 'dydx15ndn9c895f8ntck25qughtuck9spv2d9svw5qx',
+      amount: '10',   // Klyra Token
+      recipient: 'klyra15ndn9c895f8ntck25qughtuck9spv2d90ammgd',
     };
     const fees = await simulateTransferNativeToken(JSON.stringify(sendTokenPayload));
     console.log(fees);
@@ -96,7 +96,7 @@ async function test(): Promise<void> {
               "denom": "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8",
               "amount": "10000000000000000000"
           },
-          "sender": "dydx16zfx8g4jg9vels3rsvcym490tkn5la304c57e9",
+          "sender": "klyra16zfx8g4jg9vels3rsvcym490tkn5la302fp33w",
           "receiver": "noble16zfx8g4jg9vels3rsvcym490tkn5la305z0jpu",
           "timeoutTimestamp": {
               "low": -1208865792,

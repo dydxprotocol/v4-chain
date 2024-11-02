@@ -1,6 +1,6 @@
 {
     "genesis_time": "2024-01-04T00:00:00Z",
-    "chain_id": "localdydxprotocol",
+    "chain_id": "localklyraprotocol",
     "initial_height": "1",
     "consensus_params": {
       "block": {
@@ -48,35 +48,35 @@
         "accounts": [
           {
             "@type": "/cosmos.auth.v1beta1.BaseAccount",
-            "address": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
+            "address": "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57",
             "pub_key": null,
             "account_number": "0",
             "sequence": "0"
           },
           {
             "@type": "/cosmos.auth.v1beta1.BaseAccount",
-            "address": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
+            "address": "klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym",
             "pub_key": null,
             "account_number": "1",
             "sequence": "0"
           },
           {
             "@type": "/cosmos.auth.v1beta1.BaseAccount",
-            "address": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
+            "address": "klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky",
             "pub_key": null,
             "account_number": "2",
             "sequence": "0"
           },
           {
             "@type": "/cosmos.auth.v1beta1.BaseAccount",
-            "address": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn",
+            "address": "klyra1wau5mja7j7zdavtfq9lu7ejef05hm6ffxz2hcc",
             "pub_key": null,
             "account_number": "3",
             "sequence": "0"
           },
           {
             "@type": "/cosmos.auth.v1beta1.BaseAccount",
-            "address": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m",
+            "address": "klyra1nzuttarf5k2j0nug5yzhr6p74t9avehn6x2c0s",
             "pub_key": null,
             "account_number": "4",
             "sequence": "0"
@@ -90,7 +90,7 @@
         },
         "balances": [
           {
-            "address": "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+            "address": "klyra1zlefkpe3g0vvm9a4h0jf9000lmqutlh9dl8uc8",
             "coins": [
               {
                 "denom": "adv4tnt",
@@ -99,7 +99,7 @@
             ]
           },
           {
-            "address": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
+            "address": "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57",
             "coins": [
               {
                 "denom": "adv4tnt",
@@ -112,7 +112,7 @@
             ]
           },
           {
-            "address": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
+            "address": "klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky",
             "coins": [
               {
                 "denom": "adv4tnt",
@@ -125,7 +125,7 @@
             ]
           },
           {
-            "address": "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
+            "address": "klyra1v88c3xv9xyv3eetdx0tvcmq7ung3dywptd5ps3",
             "coins": [
               {
                 "denom": "utdai",
@@ -134,7 +134,7 @@
             ]
           },
           {
-            "address": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn",
+            "address": "klyra1wau5mja7j7zdavtfq9lu7ejef05hm6ffxz2hcc",
             "coins": [
               {
                 "denom": "adv4tnt",
@@ -147,7 +147,7 @@
             ]
           },
           {
-            "address": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
+            "address": "klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym",
             "coins": [
               {
                 "denom": "adv4tnt",
@@ -160,7 +160,7 @@
             ]
           },
           {
-            "address": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m",
+            "address": "klyra1nzuttarf5k2j0nug5yzhr6p74t9avehn6x2c0s",
             "coins": [
               {
                 "denom": "adv4tnt",
@@ -173,7 +173,7 @@
             ]
           },
           {
-            "address": "dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp",
+            "address": "klyra1ltyc6y4skclzafvpznpt2qjwmfwgsndp29jvn2",
             "coins": [
               {
                 "denom": "adv4tnt",
@@ -182,7 +182,7 @@
             ]
           },
           {
-            "address": "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0",
+            "address": "klyra1r3fsd6humm0ghyq0te5jf8eumklmclyaw0hs3y",
             "coins": [
               {
                 "denom": "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8",
@@ -209,7 +209,7 @@
             ],
             "base": "adv4tnt",
             "display": "dv4tnt",
-            "name": "dYdX V4 Testnet Token",
+            "name": "klyra V4 Testnet Token",
             "symbol": "dv4tnt",
             "uri": "",
             "uri_hash": ""
@@ -673,8 +673,8 @@
             "block_height": 378000,
             "id": 0,
             "msg": {
-              "@type": "/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
-              "authority": "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+              "@type": "/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+              "authority": "klyra1mkkvp26dngu6n8rmalaxyp3gwkjuzztqtnn4rg",
               "params": {
                 "tiers": [
                   {
@@ -892,8 +892,8 @@
                     "max_change_rate": "0.010000000000000000"
                   },
                   "min_self_delegation": "1",
-                  "delegator_address": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
-                  "validator_address": "dydxvaloper199tqg4wdlnu4qjlxchpd7seg454937hjxg9yhy",
+                  "delegator_address": "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57",
+                  "validator_address": "klyravaloper199tqg4wdlnu4qjlxchpd7seg454937hjlyerxs",
                   "pubkey": {
                     "@type": "/cosmos.crypto.ed25519.PubKey",
                     "key": "YiARx8259Z+fGFUxQLrz/5FU2RYRT6f5yzvt7D7CrQM="
@@ -954,8 +954,8 @@
                     "max_change_rate": "0.010000000000000000"
                   },
                   "min_self_delegation": "1",
-                  "delegator_address": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
-                  "validator_address": "dydxvaloper1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9tjdp47",
+                  "delegator_address": "klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky",
+                  "validator_address": "klyravaloper1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9j73xy2",
                   "pubkey": {
                     "@type": "/cosmos.crypto.ed25519.PubKey",
                     "key": "ytLfs1W6E2I41iteKC/YwjyZ/51+CAYCHYxmRHiBeY4="
@@ -1016,8 +1016,8 @@
                     "max_change_rate": "0.010000000000000000"
                   },
                   "min_self_delegation": "1",
-                  "delegator_address": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn",
-                  "validator_address": "dydxvaloper1wau5mja7j7zdavtfq9lu7ejef05hm6ffudfwmz",
+                  "delegator_address": "klyra1wau5mja7j7zdavtfq9lu7ejef05hm6ffxz2hcc",
+                  "validator_address": "klyravaloper1wau5mja7j7zdavtfq9lu7ejef05hm6ff9p4f2k",
                   "pubkey": {
                     "@type": "/cosmos.crypto.ed25519.PubKey",
                     "key": "yG29kRfZ/hgAE1I7uWjbKQJJL4/gX/05XBnfB+m196A="
@@ -1078,8 +1078,8 @@
                     "max_change_rate": "0.010000000000000000"
                   },
                   "min_self_delegation": "1",
-                  "delegator_address": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
-                  "validator_address": "dydxvaloper10fx7sy6ywd5senxae9dwytf8jxek3t2ga89u8p",
+                  "delegator_address": "klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym",
+                  "validator_address": "klyravaloper10fx7sy6ywd5senxae9dwytf8jxek3t2gytemk4",
                   "pubkey": {
                     "@type": "/cosmos.crypto.ed25519.PubKey",
                     "key": "+P8YiogqqQY+iD96yEa9OJx6EgieU95u9eR3pzxfDp0="
@@ -2171,7 +2171,7 @@
             ],
             "id": {
               "number": 0,
-              "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"
+              "owner": "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57"
             },
             "margin_enabled": true,
             "asset_yield_index": "0/1"
@@ -2186,7 +2186,7 @@
             ],
             "id": {
               "number": 0,
-              "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs"
+              "owner": "klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym"
             },
             "margin_enabled": true,
             "asset_yield_index": "0/1"
@@ -2201,7 +2201,7 @@
             ],
             "id": {
               "number": 0,
-              "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs"
+              "owner": "klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym"
             },
             "margin_enabled": true,
             "asset_yield_index": "0/1"
@@ -2216,7 +2216,7 @@
             ],
             "id": {
               "number": 0,
-              "owner": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70"
+              "owner": "klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky"
             },
             "margin_enabled": true,
             "asset_yield_index": "0/1"
@@ -2231,7 +2231,7 @@
             ],
             "id": {
               "number": 0,
-              "owner": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn"
+              "owner": "klyra1wau5mja7j7zdavtfq9lu7ejef05hm6ffxz2hcc"
             },
             "margin_enabled": true,
             "asset_yield_index": "0/1"
@@ -2246,7 +2246,7 @@
             ],
             "id": {
               "number": 0,
-              "owner": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70"
+              "owner": "klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky"
             },
             "margin_enabled": true,
             "asset_yield_index": "0/1"
@@ -2261,7 +2261,7 @@
             ],
             "id": {
               "number": 0,
-              "owner": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn"
+              "owner": "klyra1wau5mja7j7zdavtfq9lu7ejef05hm6ffxz2hcc"
             },
             "margin_enabled": true,
             "asset_yield_index": "0/1"
@@ -2276,7 +2276,7 @@
             ],
             "id": {
               "number": 0,
-              "owner": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m"
+              "owner": "klyra1nzuttarf5k2j0nug5yzhr6p74t9avehn6x2c0s"
             },
             "margin_enabled": true,
             "asset_yield_index": "0/1"

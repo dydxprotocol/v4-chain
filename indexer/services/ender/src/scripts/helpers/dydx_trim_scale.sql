@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_trim_scale(value numeric) RETURNS numeric AS $$
+CREATE OR REPLACE FUNCTION klyra_trim_scale(value numeric) RETURNS numeric AS $$
 /**
   Returns a numeric with the zeros after the decimal point removed. Note that this function should be replaced by
   trim_scale which has become available with Postgres 13 (https://www.postgresql.org/docs/current/functions-math.html).

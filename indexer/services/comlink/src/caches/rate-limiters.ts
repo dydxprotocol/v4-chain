@@ -1,4 +1,4 @@
-import { redis as redisLib } from '@dydxprotocol-indexer/redis';
+import { redis as redisLib } from '@klyraprotocol-indexer/redis';
 import { RateLimiterRedis } from 'rate-limiter-flexible';
 import { RedisClient } from 'redis';
 

@@ -13,7 +13,7 @@ import {
   SubaccountMessageContents,
   SubaccountTable,
   UpdatedPerpetualPositionSubaccountKafkaObject,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import _ from 'lodash';
 import * as pg from 'pg';
 

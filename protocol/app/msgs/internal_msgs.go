@@ -40,7 +40,7 @@ var (
 	// InternalMsgSamplesAll are msgs that are used only used internally.
 	InternalMsgSamplesGovAuth = lib.MergeAllMapsMustHaveDistinctKeys(
 		InternalMsgSamplesDefault,
-		InternalMsgSamplesDydxCustom,
+		InternalMsgSamplesKlyraCustom,
 	)
 
 	// CosmosSDK default modules
@@ -102,71 +102,71 @@ var (
 	}
 
 	// Custom modules
-	InternalMsgSamplesDydxCustom = map[string]sdk.Msg{
+	InternalMsgSamplesKlyraCustom = map[string]sdk.Msg{
 		// blocktime
-		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         &blocktime.MsgUpdateDowntimeParams{},
-		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": nil,
+		"/klyraprotocol.blocktime.MsgUpdateDowntimeParams":         &blocktime.MsgUpdateDowntimeParams{},
+		"/klyraprotocol.blocktime.MsgUpdateDowntimeParamsResponse": nil,
 
 		// clob
-		"/dydxprotocol.clob.MsgCreateClobPair":                             &clob.MsgCreateClobPair{},
-		"/dydxprotocol.clob.MsgCreateClobPairResponse":                     nil,
-		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration":          &clob.MsgUpdateBlockRateLimitConfiguration{},
-		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse":  nil,
-		"/dydxprotocol.clob.MsgUpdateClobPair":                             &clob.MsgUpdateClobPair{},
-		"/dydxprotocol.clob.MsgUpdateClobPairResponse":                     nil,
-		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration":         &clob.MsgUpdateEquityTierLimitConfiguration{},
-		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": nil,
-		"/dydxprotocol.clob.MsgUpdateLiquidationsConfig":                   &clob.MsgUpdateLiquidationsConfig{},
-		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse":           nil,
+		"/klyraprotocol.clob.MsgCreateClobPair":                             &clob.MsgCreateClobPair{},
+		"/klyraprotocol.clob.MsgCreateClobPairResponse":                     nil,
+		"/klyraprotocol.clob.MsgUpdateBlockRateLimitConfiguration":          &clob.MsgUpdateBlockRateLimitConfiguration{},
+		"/klyraprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse":  nil,
+		"/klyraprotocol.clob.MsgUpdateClobPair":                             &clob.MsgUpdateClobPair{},
+		"/klyraprotocol.clob.MsgUpdateClobPairResponse":                     nil,
+		"/klyraprotocol.clob.MsgUpdateEquityTierLimitConfiguration":         &clob.MsgUpdateEquityTierLimitConfiguration{},
+		"/klyraprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse": nil,
+		"/klyraprotocol.clob.MsgUpdateLiquidationsConfig":                   &clob.MsgUpdateLiquidationsConfig{},
+		"/klyraprotocol.clob.MsgUpdateLiquidationsConfigResponse":           nil,
 
 		// delaymsg
-		"/dydxprotocol.delaymsg.MsgDelayMessage":         &delaymsg.MsgDelayMessage{},
-		"/dydxprotocol.delaymsg.MsgDelayMessageResponse": nil,
+		"/klyraprotocol.delaymsg.MsgDelayMessage":         &delaymsg.MsgDelayMessage{},
+		"/klyraprotocol.delaymsg.MsgDelayMessageResponse": nil,
 
 		// feetiers
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         &feetiers.MsgUpdatePerpetualFeeParams{},
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": nil,
+		"/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParams":         &feetiers.MsgUpdatePerpetualFeeParams{},
+		"/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": nil,
 
 		// govplus
-		"/dydxprotocol.govplus.MsgSlashValidator":         &govplus.MsgSlashValidator{},
-		"/dydxprotocol.govplus.MsgSlashValidatorResponse": nil,
+		"/klyraprotocol.govplus.MsgSlashValidator":         &govplus.MsgSlashValidator{},
+		"/klyraprotocol.govplus.MsgSlashValidatorResponse": nil,
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual":               &perpetuals.MsgCreatePerpetual{},
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":       nil,
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTier":              &perpetuals.MsgSetLiquidityTier{},
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse":      nil,
-		"/dydxprotocol.perpetuals.MsgUpdateParams":                  &perpetuals.MsgUpdateParams{},
-		"/dydxprotocol.perpetuals.MsgUpdateParamsResponse":          nil,
-		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams":         &perpetuals.MsgUpdatePerpetualParams{},
-		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse": nil,
+		"/klyraprotocol.perpetuals.MsgCreatePerpetual":               &perpetuals.MsgCreatePerpetual{},
+		"/klyraprotocol.perpetuals.MsgCreatePerpetualResponse":       nil,
+		"/klyraprotocol.perpetuals.MsgSetLiquidityTier":              &perpetuals.MsgSetLiquidityTier{},
+		"/klyraprotocol.perpetuals.MsgSetLiquidityTierResponse":      nil,
+		"/klyraprotocol.perpetuals.MsgUpdateParams":                  &perpetuals.MsgUpdateParams{},
+		"/klyraprotocol.perpetuals.MsgUpdateParamsResponse":          nil,
+		"/klyraprotocol.perpetuals.MsgUpdatePerpetualParams":         &perpetuals.MsgUpdatePerpetualParams{},
+		"/klyraprotocol.perpetuals.MsgUpdatePerpetualParamsResponse": nil,
 
 		// prices
-		"/dydxprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},
-		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": nil,
-		"/dydxprotocol.prices.MsgUpdateMarketParam":          &prices.MsgUpdateMarketParam{},
-		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  nil,
+		"/klyraprotocol.prices.MsgCreateOracleMarket":         &prices.MsgCreateOracleMarket{},
+		"/klyraprotocol.prices.MsgCreateOracleMarketResponse": nil,
+		"/klyraprotocol.prices.MsgUpdateMarketParam":          &prices.MsgUpdateMarketParam{},
+		"/klyraprotocol.prices.MsgUpdateMarketParamResponse":  nil,
 
 		// ratelimit
-		"/dydxprotocol.ratelimit.MsgSetLimitParams":         &ratelimit.MsgSetLimitParams{},
-		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": nil,
+		"/klyraprotocol.ratelimit.MsgSetLimitParams":         &ratelimit.MsgSetLimitParams{},
+		"/klyraprotocol.ratelimit.MsgSetLimitParamsResponse": nil,
 
 		// rewards
-		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},
-		"/dydxprotocol.rewards.MsgUpdateParamsResponse": nil,
+		"/klyraprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},
+		"/klyraprotocol.rewards.MsgUpdateParamsResponse": nil,
 
 		// sending
-		"/dydxprotocol.sending.MsgSendFromModuleToAccount":         &sending.MsgSendFromModuleToAccount{},
-		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse": nil,
+		"/klyraprotocol.sending.MsgSendFromModuleToAccount":         &sending.MsgSendFromModuleToAccount{},
+		"/klyraprotocol.sending.MsgSendFromModuleToAccountResponse": nil,
 
 		// stats
-		"/dydxprotocol.stats.MsgUpdateParams":         &stats.MsgUpdateParams{},
-		"/dydxprotocol.stats.MsgUpdateParamsResponse": nil,
+		"/klyraprotocol.stats.MsgUpdateParams":         &stats.MsgUpdateParams{},
+		"/klyraprotocol.stats.MsgUpdateParamsResponse": nil,
 
 		// vest
-		"/dydxprotocol.vest.MsgSetVestEntry":            &vest.MsgSetVestEntry{},
-		"/dydxprotocol.vest.MsgSetVestEntryResponse":    nil,
-		"/dydxprotocol.vest.MsgDeleteVestEntry":         &vest.MsgDeleteVestEntry{},
-		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": nil,
+		"/klyraprotocol.vest.MsgSetVestEntry":            &vest.MsgSetVestEntry{},
+		"/klyraprotocol.vest.MsgSetVestEntryResponse":    nil,
+		"/klyraprotocol.vest.MsgDeleteVestEntry":         &vest.MsgDeleteVestEntry{},
+		"/klyraprotocol.vest.MsgDeleteVestEntryResponse": nil,
 	}
 )

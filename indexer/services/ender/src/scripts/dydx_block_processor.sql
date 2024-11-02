@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_block_processor(block jsonb) RETURNS jsonb AS $$
+CREATE OR REPLACE FUNCTION klyra_block_processor(block jsonb) RETURNS jsonb AS $$
 /**
   Processes an entire block by creating the initial tendermint rows for the block and then processes each event
   individually through their respective handlers.
@@ -20,15 +20,15 @@ DECLARE
 BEGIN
     SET LOCAL client_min_messages TO NOTICE;
     
-    PERFORM dydx_create_initial_rows_for_tendermint_block(block_height, block_time, block->'txHashes', block->'events');
+    PERFORM klyra_create_initial_rows_for_tendermint_block(block_height, block_time, block->'txHashes', block->'events');
 
     /** In genesis, handle ordered events first, then unordered events. In other blocks, handle unordered events first, then ordered events. */
     IF NOT block_height = 0 THEN
-        rval = dydx_block_processor_unordered_handlers(block);
-        rval_to_merge = dydx_block_processor_ordered_handlers(block);
+        rval = klyra_block_processor_unordered_handlers(block);
+        rval_to_merge = klyra_block_processor_ordered_handlers(block);
     ELSE
-        rval = dydx_block_processor_ordered_handlers(block);
-        rval_to_merge = dydx_block_processor_unordered_handlers(block);
+        rval = klyra_block_processor_ordered_handlers(block);
+        rval_to_merge = klyra_block_processor_unordered_handlers(block);
     END IF;
 
     /**
