@@ -59,7 +59,7 @@ func TestCmdModuleNameToAddress(t *testing.T) {
 		"subaccounts":       "klyra1v88c3xv9xyv3eetdx0tvcmq7ung3dywptd5ps3",
 		"subaccounts:37":    "klyra16lwrx54mh9aru9ulzpknd429wldkhdwefx2lxz",
 		"insurance_fund":    "klyra1c7ptc87hkd54e3r7zjy92q29xkq7t79w9y9stt",
-		"insurance_fund:37": "klyra10mlrxmaquwjwsj59ywp8xttc8rfxn9jfvzswtn",
+		"insurance_fund:37": "klyra10mlrxmaquwjwsj59ywp8xttc8rfxn9jfnn9prc",
 	}
 	for moduleName, expectedAddress := range expectedModuleNameAddress {
 		t.Run(

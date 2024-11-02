@@ -1148,7 +1148,9 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 	res, err := tApp.App.CheckTx(&req)
 	// Note that the klyra fork of CometBFT explicitly excludes place and cancel order messages. See
 	// https://github.com/StreamFinance-Protocol/cometbft/blob/5e6c4b6/mempool/clist_mempool.go#L441
+	fmt.Println("IN CHECKTX")
 	if err == nil && res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, newTestingLogger()) {
+		fmt.Println("NOT A IsShortTermClobOrderTransaction")
 		// We want to ensure that we hold the lock only for updating passingCheckTxs so that App.CheckTx can execute
 		// concurrently.
 		tApp.passingCheckTxsMtx.Lock()
@@ -1393,12 +1395,14 @@ func MustMakeCheckTxsWithClobMsg[T clobtypes.MsgPlaceOrder | clobtypes.MsgCancel
 	app *app.App,
 	messages ...T,
 ) []abcitypes.RequestCheckTx {
+	fmt.Println("IN MustMakeCheckTxsWithClobMsg")
 	sdkMessages := make([]sdk.Msg, len(messages))
 	var signerAddress string
 	for i, msg := range messages {
 		var m sdk.Msg
 		switch v := any(msg).(type) {
 		case clobtypes.MsgPlaceOrder:
+			fmt.Println("MsgPlaceOrder")
 			signerAddress = v.Order.OrderId.SubaccountId.Owner
 			m = &v
 		case clobtypes.MsgCancelOrder:

@@ -560,7 +560,7 @@ const GenesisState = `{
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57",
+                "delegator_address": "",
                 "validator_address": "klyravaloper199tqg4wdlnu4qjlxchpd7seg454937hjlyerxs",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
@@ -572,7 +572,7 @@ const GenesisState = `{
                 }
               }
             ],
-            "memo": "17e5e45691f0d01449c84fd4ae87279578cdd7ec@172.17.0.3:26656",
+            "memo": "17e5e45691f0d01449c84fd4ae87279578cdd7ec@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -601,7 +601,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "KqBNRNfXrxYaU2585ycZI2BOvJrUrvZWVugMr9d09gxcDSPGqdjleJWFFwO+Hbhj58uZ4wNOplv9e0SxPwZ0KQ=="
+            "JN/tUFfCojdsq4EzxkKMGI/c6WAki8Q6cw/vSUFq984DgjW9PEb6NwlY3V0XAQmANdony/I8/B9vdbROx/IfQg=="
           ]
         },
         {
@@ -622,7 +622,7 @@ const GenesisState = `{
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky",
+                "delegator_address": "",
                 "validator_address": "klyravaloper1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9j73xy2",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
@@ -634,7 +634,7 @@ const GenesisState = `{
                 }
               }
             ],
-            "memo": "47539956aaa8e624e0f1d926040e54908ad0eb44@172.17.0.3:26656",
+            "memo": "47539956aaa8e624e0f1d926040e54908ad0eb44@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -663,7 +663,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "QcK0WTKaXjsPPsALhn7jLJ/hhmhww+1ucTy4VZE9cJlivPcurFr1k4kfP1/M0ppqEWa9mksjIeVQhOHXTOBG/Q=="
+            "5RfvtVwy9HChbwsJGVvyPq86BcbG+tuJJ1jD8n5RWRZMkf09U/8xrdZs1KcS1jH6OKCEi4WOfk+Mf4k3tGSuWw=="
           ]
         },
         {
@@ -684,7 +684,7 @@ const GenesisState = `{
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "klyra1wau5mja7j7zdavtfq9lu7ejef05hm6ffxz2hcc",
+                "delegator_address": "",
                 "validator_address": "klyravaloper1wau5mja7j7zdavtfq9lu7ejef05hm6ff9p4f2k",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
@@ -696,7 +696,7 @@ const GenesisState = `{
                 }
               }
             ],
-            "memo": "5882428984d83b03d0c907c1f0af343534987052@172.17.0.3:26656",
+            "memo": "5882428984d83b03d0c907c1f0af343534987052@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -725,7 +725,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "jpCPNmoS5CHqbDXwFX5FYO7J5g7kSi5ZkxVkXEkgajJOZgu9nVTXavPFZ2t5w+UDzgWbtDxLJ1GqdM+kNFIWaA=="
+            "8j4IUAwuah6VpU1Z9tnFYNwJ4KJWG4YS2Y7Hz8A71StT3O5sG3LkM+SPX6O1/Ip4uAXd1PA4osfxoW3GZT36AA=="
           ]
         },
         {
@@ -746,7 +746,7 @@ const GenesisState = `{
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym",
+                "delegator_address": "",
                 "validator_address": "klyravaloper10fx7sy6ywd5senxae9dwytf8jxek3t2gytemk4",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
@@ -758,7 +758,7 @@ const GenesisState = `{
                 }
               }
             ],
-            "memo": "b69182310be02559483e42c77b7b104352713166@172.17.0.3:26656",
+            "memo": "b69182310be02559483e42c77b7b104352713166@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -787,7 +787,7 @@ const GenesisState = `{
             "tip": null
           },
           "signatures": [
-            "SAhIiKZUWVy8tI0uDanDo9IP2ZCh2ZltV2yY2Y6umqgax34GxbU1BbrAxXxPrrhEa+IFqXJEWpocVsGo++gjuQ=="
+            "c5RQVna5Yz4hw8wE5BFw98bLdrZpIi5UAFYMLQfqo39qVELq00bFMm4Qj9oOf8zEggT3ddezS6d/OTtaNO38iw=="
           ]
         }
       ]

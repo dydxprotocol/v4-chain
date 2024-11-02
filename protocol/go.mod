@@ -439,10 +439,10 @@ replace (
 	// should use v0.11.0. The Cosmos build fails with types/context.go:65:29: undefined: comet.BlockInfo otherwise.
 	cosmossdk.io/core => cosmossdk.io/core v0.11.0
 	// Use Stream fork of CometBFT
-	github.com/cometbft/cometbft => github.com/StreamFinance-Protocol/cometbft v0.0.0-20241001122724-c1b88a873143
+	github.com/cometbft/cometbft => github.com/StreamFinance-Protocol/cometbft v0.0.0-20241102223103-20006fcd0f40
 
 	// Use Stream fork of Cosmos SDK
-	github.com/cosmos/cosmos-sdk => github.com/StreamFinance-Protocol/cosmos-sdk v0.50.6-0.20241001125801-96327035f414
+	github.com/cosmos/cosmos-sdk => github.com/StreamFinance-Protocol/cosmos-sdk v0.50.6-0.20241102223212-fb963a4c098b
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4
 
 	// Use Stream fork of IBC-go

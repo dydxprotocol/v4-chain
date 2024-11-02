@@ -63,6 +63,18 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse",
 
+		// ibc
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe",
+		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafeResponse",
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams",
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse",
+		"/ibc.applications.transfer.v1.MsgUpdateParams",
+		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse",
+		"/ibc.core.client.v1.MsgUpdateParams",
+		"/ibc.core.client.v1.MsgUpdateParamsResponse",
+		"/ibc.core.connection.v1.MsgUpdateParams",
+		"/ibc.core.connection.v1.MsgUpdateParamsResponse",
+
 		// blocktime
 		"/klyraprotocol.blocktime.MsgUpdateDowntimeParams",
 		"/klyraprotocol.blocktime.MsgUpdateDowntimeParamsResponse",
@@ -128,18 +140,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/klyraprotocol.vest.MsgDeleteVestEntryResponse",
 		"/klyraprotocol.vest.MsgSetVestEntry",
 		"/klyraprotocol.vest.MsgSetVestEntryResponse",
-
-		// ibc
-		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe",
-		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafeResponse",
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams",
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse",
-		"/ibc.applications.transfer.v1.MsgUpdateParams",
-		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse",
-		"/ibc.core.client.v1.MsgUpdateParams",
-		"/ibc.core.client.v1.MsgUpdateParamsResponse",
-		"/ibc.core.connection.v1.MsgUpdateParams",
-		"/ibc.core.connection.v1.MsgUpdateParamsResponse",
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.InternalMsgSamplesGovAuth))

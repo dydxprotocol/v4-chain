@@ -6,7 +6,7 @@ import (
 )
 
 func TestAddressConversion(t *testing.T) {
-	newAddr, err := ConvertAddressPrefix("klyravaloper10fx7sy6ywd5senxae9dwytf8jxek3t2gytemk4", "klyravalcons")
+	newAddr, err := ConvertAddressPrefix("dydx1x2hd82qerp7lc0kf5cs3yekftupkrl620te6u2", "klyra")
 	if err != nil {
 		t.Fatal(err)
 	}
