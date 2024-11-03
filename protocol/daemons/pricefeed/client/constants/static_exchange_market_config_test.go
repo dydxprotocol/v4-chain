@@ -156,7 +156,7 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 			id:                             exchange_config.MARKET_USDT_USD,
 			expectedExchangeConfigJsonFile: "usdt_exchange_config.json",
 		},
-		"Dydx exchange config": {
+		"DYDX exchange config": {
 			id:                             exchange_config.MARKET_DYDX_USD,
 			expectedExchangeConfigJsonFile: "dydx_exchange_config.json",
 		},

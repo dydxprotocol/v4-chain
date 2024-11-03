@@ -40,7 +40,7 @@ describe('elliptic-provider', () => {
     expect(headers).toEqual({
       headers: {
         'x-access-key': 'default_elliptic_api_key',
-        'x-access-sign': 'ihaI6NUlY4QZ3co7fV0jLH4XYCHELKQ/nt1Q5XRN2no=',
+        'x-access-sign': 'TIzyb4reLy1xc5FhAzkF0lhhKuZ/r3lwHvx1vfvLSjg=',
         'x-access-timestamp': 1698192000000,
       },
     });

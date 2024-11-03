@@ -530,7 +530,7 @@ describe('Fill store', () => {
           lastFillSize: '10',
           side: 'BUY',
           size: '3',
-          subaccountId: 'df91255d-5e17-5e2e-824a-87ddf3c5214a',
+          subaccountId: 'ba6e7671-a1fd-514f-adb1-cdf5c12553fc',
         },
         {
           createdAtHeight: '4',
@@ -543,7 +543,7 @@ describe('Fill store', () => {
           lastFillSize: '3',
           side: 'SELL',
           size: '4',
-          subaccountId: 'df91255d-5e17-5e2e-824a-87ddf3c5214a',
+          subaccountId: 'ba6e7671-a1fd-514f-adb1-cdf5c12553fc',
         },
         {
           createdAtHeight: '5',
@@ -556,7 +556,7 @@ describe('Fill store', () => {
           lastFillSize: '4',
           side: 'SELL',
           size: '5',
-          subaccountId: 'df91255d-5e17-5e2e-824a-87ddf3c5214a',
+          subaccountId: 'ba6e7671-a1fd-514f-adb1-cdf5c12553fc',
         },
         ]),
       );

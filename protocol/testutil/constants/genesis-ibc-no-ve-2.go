@@ -601,7 +601,7 @@ const GenesisStateNoVeIBC2 = `{
             "tip": null
           },
           "signatures": [
-            "mLElmOb5nJy+CmzZBhUi8EcAlUlreAqZ+imkMjeH0pV6RMiyvGy2O5cEK/AYxfKHHoy8U+CfF0AybciN6nHzOA=="
+            "Bn4Pz1Pf26uuzZfhKgrVDRl/Cw/AEOHrdHUrybvA9elJ0+c+C3iUbOu2/KKZ5PbZP3QEd/IXbKMUEWzwQycB9w=="
           ]
         },
         {
@@ -663,7 +663,7 @@ const GenesisStateNoVeIBC2 = `{
             "tip": null
           },
           "signatures": [
-            "DxN7x283YR9cc/HNennhSqDGfYHRNsoBR/YW3aQuFPpnKcd8KQJuSU547YPEyB9pZ8Vm2dUF5ive3vVZtDu9Qg=="
+            "3cm3LXMrVXSynmOBt4T8AWnF/R/JE5NjzERctRSIZNR2wHCDjR6CLYP8oQDD/Nryx2kl+AgbSO8OrhyhfEiqRQ=="
           ]
         },
         {
@@ -725,7 +725,7 @@ const GenesisStateNoVeIBC2 = `{
             "tip": null
           },
           "signatures": [
-            "0L1Prg0wmy1trwRVu0ZT14XjF4RlTsFLuhOlgQvVt1worPQlJ1pqilvqa1dHpy7jdc7BdQltmLu8ARE+3aDrbg=="
+            "n6Vmps85G4EQe8JvUgWhbz4w8HFmUKUVJizxmkmaktIzCIOE4NiTnfJa7I2Id2RZokiVxYbZOzFf9bU5tdxS4w=="
           ]
         },
         {
@@ -787,7 +787,7 @@ const GenesisStateNoVeIBC2 = `{
             "tip": null
           },
           "signatures": [
-            "K7ThtFhz1VhvbTkqBpEPlW4na2hwRMF5kSBq4ptYXxFQwRNC1I0ptR85hLIELddcamTSPQUhjgs6fScB30P1rw=="
+            "Rky1UMX7J2FANjZhU7qdqRM98+Rsz5Jm5z4wVg3mjtU+4rLp7gKljc7H2IT5QK1oxFUddWWij5l5dmf/A0Yz7g=="
           ]
         }
       ]

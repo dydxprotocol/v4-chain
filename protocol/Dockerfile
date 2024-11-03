@@ -52,7 +52,7 @@ FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST}
 
 RUN apk add --no-cache bash
 
-COPY --from=builder /klyraprotocol/build/klyra /bin/klyra
+COPY --from=builder /klyraprotocol/build/klyraprotocold /bin/klyraprotocold
 
 ENV HOME /klyraprotocol
 WORKDIR $HOME
@@ -66,4 +66,4 @@ EXPOSE 1317
 # grpc
 EXPOSE 9090
 
-ENTRYPOINT ["klyra"]
+ENTRYPOINT ["klyraprotocold"]

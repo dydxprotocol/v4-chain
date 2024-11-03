@@ -1,5 +1,5 @@
 # Dockerfile to containerize postgres package locally
-FROM klyraprotocol/indexer-node:16-alpine
+FROM dydxprotocol/indexer-node:16-alpine
 ENV NODE_ENV=development
 RUN adduser -S klyra
 RUN mkdir -p /home/klyra/app

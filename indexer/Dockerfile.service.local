@@ -1,5 +1,5 @@
 # Dockerfile to containerize services locally
-FROM klyraprotocol/indexer-node:16-alpine
+FROM dydxprotocol/indexer-node:16-alpine
 ENV NODE_ENV=development
 ARG service
 
@@ -31,10 +31,20 @@ COPY ./packages/v4-protos/build ./packages/v4-protos/build/
 COPY ./packages/v4-proto-parser/build ./packages/v4-proto-parser/build/
 COPY ./packages/compliance/build ./packages/compliance/build/
 
+# Add debug logging before copying service files
+RUN echo "Service name: ${service}"
+RUN echo "Checking source directory structure:"
+RUN ls -la ./services/${service}/build/src/scripts/handlers || echo "Source handlers directory not found"
+
+
 # Copy package.json, build files, and environment files from service being run
 COPY ./services/${service}/package.json ./services/${service}/
 COPY ./services/${service}/build ./services/${service}/build
 COPY ./services/${service}/.env* ./services/${service}/
+
+# Add debug logging after copying
+RUN echo "Checking destination directory structure:"
+RUN ls -la /home/klyra/app/services/${service}/build/src/scripts/handlers || echo "Destination handlers directory not found"
 
 # Copy container start script
 COPY ./scripts/container-run.sh /home/klyra/app/services/$service/scripts/
