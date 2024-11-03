@@ -39,7 +39,6 @@ import {
 import { IHeaders } from 'kafkajs';
 import Long from 'long';
 
-
 export enum KlyraIndexerSubtypes {
   ORDER_FILL = 'order_fill',
   SUBACCOUNT_UPDATE = 'subaccount_update',

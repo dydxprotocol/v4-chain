@@ -77,7 +77,7 @@ describe('Transfer store', () => {
       expect.arrayContaining([
         expect.objectContaining(defaultTransfer),
         expect.objectContaining(transfer2),
-      ])
+      ]),
     );
   });
 
@@ -102,7 +102,7 @@ describe('Transfer store', () => {
           ...defaultTransfer,
           eventId: defaultTendermintEventId2,
         }),
-      ])
+      ]),
     );
   });
 
@@ -133,7 +133,7 @@ describe('Transfer store', () => {
       expect.arrayContaining([
         expect.objectContaining(defaultTransfer),
         expect.objectContaining(transfer2),
-      ])
+      ]),
     );
   });
 
