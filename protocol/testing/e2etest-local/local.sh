@@ -6,7 +6,7 @@ set -eo pipefail
 
 source "./genesis.sh"
 
-CHAIN_ID="localklyraprotocol-3"
+CHAIN_ID="localklyraprotocol"
 
 # Define mnemonics for all validators.
 MNEMONICS=(

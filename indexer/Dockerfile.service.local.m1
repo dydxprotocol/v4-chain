@@ -4,9 +4,10 @@ ENV NODE_ENV=development
 ARG service
 
 RUN apk add --no-cache bash jq aws-cli
-RUN adduser -S klyra
+RUN addgroup -S klyra && \
+    adduser -S klyra -G klyra
 RUN mkdir -p /home/klyra/app
-RUN chown klyra -R /home/klyra/app
+RUN chown klyra:klyra -R /home/klyra/app
 
 WORKDIR /home/klyra/app
 
