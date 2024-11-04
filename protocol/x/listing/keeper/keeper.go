@@ -13,14 +13,15 @@ import (
 
 type (
 	Keeper struct {
-		cdc              codec.BinaryCodec
-		storeKey         storetypes.StoreKey
-		authorities      map[string]struct{}
-		PricesKeeper     types.PricesKeeper
-		ClobKeeper       types.ClobKeeper
-		MarketMapKeeper  types.MarketMapKeeper
-		PerpetualsKeeper types.PerpetualsKeeper
-		VaultKeeper      types.VaultKeeper
+		cdc               codec.BinaryCodec
+		storeKey          storetypes.StoreKey
+		authorities       map[string]struct{}
+		PricesKeeper      types.PricesKeeper
+		ClobKeeper        types.ClobKeeper
+		MarketMapKeeper   types.MarketMapKeeper
+		PerpetualsKeeper  types.PerpetualsKeeper
+		SubaccountsKeeper types.SubaccountsKeeper
+		VaultKeeper       types.VaultKeeper
 	}
 )
 
@@ -32,17 +33,19 @@ func NewKeeper(
 	clobKeeper types.ClobKeeper,
 	marketMapKeeper types.MarketMapKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
+	subaccountsKeeper types.SubaccountsKeeper,
 	vaultKeeper types.VaultKeeper,
 ) *Keeper {
 	return &Keeper{
-		cdc:              cdc,
-		storeKey:         storeKey,
-		authorities:      lib.UniqueSliceToSet(authorities),
-		PricesKeeper:     pricesKeeper,
-		ClobKeeper:       clobKeeper,
-		MarketMapKeeper:  marketMapKeeper,
-		PerpetualsKeeper: perpetualsKeeper,
-		VaultKeeper:      vaultKeeper,
+		cdc:               cdc,
+		storeKey:          storeKey,
+		authorities:       lib.UniqueSliceToSet(authorities),
+		PricesKeeper:      pricesKeeper,
+		ClobKeeper:        clobKeeper,
+		MarketMapKeeper:   marketMapKeeper,
+		PerpetualsKeeper:  perpetualsKeeper,
+		SubaccountsKeeper: subaccountsKeeper,
+		VaultKeeper:       vaultKeeper,
 	}
 }
 

@@ -97,8 +97,8 @@ type VaultKeeper interface {
 }
 
 type SubaccountsKeeper interface {
-	GetInsuranceFundBalance(
+	TransferIsolatedInsuranceFundToCross(
 		ctx sdk.Context,
 		perpetualId uint32,
-	) *big.Int
+	) error
 }

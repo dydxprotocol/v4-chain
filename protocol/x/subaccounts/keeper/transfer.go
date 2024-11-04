@@ -545,7 +545,7 @@ func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int)
 // TransferInsuranceFundsForIsolatedPerpetual transfers funds from an isolated perpetual
 // insurance fund to the cross-perpetual insurance fund.
 // Note: This uses the `x/bank` keeper and modifies `x/bank` state.
-func (k Keeper) TransferInsuranceFundsForIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) error {
+func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualId uint32) error {
 	isolatedInsuranceFundBalance := k.GetInsuranceFundBalance(ctx, perpetualId)
 
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(

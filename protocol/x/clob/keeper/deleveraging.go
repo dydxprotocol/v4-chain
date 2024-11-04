@@ -241,7 +241,7 @@ func (k Keeper) IsValidInsuranceFundDelta(ctx sdk.Context, insuranceFundDelta *b
 
 	// The insurance fund delta is valid if the insurance fund balance is non-negative after adding
 	// the delta.
-	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx, perpetualId)
+	currentInsuranceFundBalance := k.subaccountsKeeper.GetInsuranceFundBalance(ctx, perpetualId)
 	return new(big.Int).Add(currentInsuranceFundBalance, insuranceFundDelta).Sign() >= 0
 }
 
