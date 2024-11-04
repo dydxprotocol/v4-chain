@@ -1168,8 +1168,9 @@
     "securitySchemes": {}
   },
   "info": {
-    "title": "Indexer API",
-    "version": "v1.0.0"
+    "title": "Klyra Indexer API",
+    "version": "v1.0.0",
+    "description": "Scroll down for code samples, example requests and responses.\nBase URLs:\n* For **Testnet**, use <a href=\"https://klyra-testnet.imperator.co/v4\">https://klyra-testnet.imperator.co/v4</a>\nNote: Messages on Indexer WebSocket feeds are typically more recent than data fetched via Indexer's REST API, because the latter is backed by read replicas of the databases that feed the former. Ordinarily this difference is minimal (less than a second), but it might become prolonged under load."
   },
   "openapi": "3.0.0",
   "paths": {
@@ -2492,7 +2493,7 @@
   "servers": [
     {
       "url": "https://klyra-testnet.imperator.co/v4",
-      "description": "Public Testnet"
+      "description": "Testnet"
     }
   ]
 }

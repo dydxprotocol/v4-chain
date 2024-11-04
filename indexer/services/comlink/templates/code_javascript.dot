@@ -1,0 +1,14 @@
+const headers = {
+  'Accept':'application/json'
+};
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/{{=data.url.split("/v4/")[1]}}`,
+{
+  method: 'GET',
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
