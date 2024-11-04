@@ -118,10 +118,6 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		perpetual Perpetual,
 	) error
-	UpgradeIsolatedPerpetualToCross(
-		ctx sdk.Context,
-		id uint32,
-	) error
 }
 
 // OpenInterestDelta represents a (perpId, openInterestDelta) tuple.

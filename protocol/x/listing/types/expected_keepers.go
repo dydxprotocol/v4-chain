@@ -65,6 +65,11 @@ type PerpetualsKeeper interface {
 	) (perpetualtypes.Perpetual, error)
 	AcquireNextPerpetualID(ctx sdk.Context) uint32
 	GetAllPerpetuals(ctx sdk.Context) (list []perpetualtypes.Perpetual)
+	SetPerpetualMarketType(
+		ctx sdk.Context,
+		id uint32,
+		marketType perpetualtypes.PerpetualMarketType,
+	) (perpetualtypes.Perpetual, error)
 }
 
 type VaultKeeper interface {

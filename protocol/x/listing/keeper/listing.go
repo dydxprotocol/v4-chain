@@ -152,6 +152,32 @@ func (k Keeper) CreatePerpetual(
 	return perpetual.GetId(), nil
 }
 
+func (k Keeper) UpgradeIsolatedPerpetualToCross(
+	ctx sdk.Context,
+	id uint32,
+) error {
+	err := k.clobKeeper.TransferIsolatedInsuranceFundToCross(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	_, err = k.PerpetualsKeeper.SetPerpetualMarketType(
+		ctx,
+		id,
+		perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+	)
+	if err != nil {
+		return err
+	}
+
+	// TODO Move collateral pool for perpetual to subaccounts module
+	// See transferCollateralForIsolatedPerpetual()?
+
+	// TODO Propagate changes to indexer
+
+	return nil
+}
+
 // Function to set listing vault deposit params in module store
 func (k Keeper) SetListingVaultDepositParams(
 	ctx sdk.Context,

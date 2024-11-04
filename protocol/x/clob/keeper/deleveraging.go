@@ -130,28 +130,6 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	return quantumsDeleveraged, err
 }
 
-// GetInsuranceFundBalance returns the current balance of the specific insurance fund based on the
-// perpetual (in quote quantums).
-// This calls the Bank Keeper’s GetBalance() function for the Module Address of the insurance fund.
-func (k Keeper) GetInsuranceFundBalance(ctx sdk.Context, perpetualId uint32) (balance *big.Int) {
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
-	if !exists {
-		panic("GetInsuranceFundBalance: Usdc asset not found in state")
-	}
-	insuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
-	if err != nil {
-		return nil
-	}
-	insuranceFundBalance := k.bankKeeper.GetBalance(
-		ctx,
-		insuranceFundAddr,
-		usdcAsset.Denom,
-	)
-
-	// Return as big.Int.
-	return insuranceFundBalance.Amount.BigInt()
-}
-
 func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
 	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
 	if !exists {
@@ -165,34 +143,6 @@ func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int)
 
 	// Return as big.Int.
 	return insuranceFundBalance.Amount.BigInt()
-}
-
-// TODO This probably shouldn't live in deleveraging.go
-func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualId uint32) error {
-	isolatedInsuranceFundBalance := k.GetInsuranceFundBalance(ctx, perpetualId)
-
-	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
-		ctx,
-		assettypes.AssetUsdc.Id,
-		new(big.Int).Abs(isolatedInsuranceFundBalance),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	isolatedInsuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
-	if err != nil {
-		return nil
-	}
-
-	crossInsuranceFundAddr := perptypes.InsuranceFundModuleAddress
-
-	return k.bankKeeper.SendCoins(
-		ctx,
-		isolatedInsuranceFundAddr,
-		crossInsuranceFundAddr,
-		[]sdk.Coin{coinToTransfer},
-	)
 }
 
 // CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
@@ -307,7 +257,7 @@ func (k Keeper) IsValidInsuranceFundDelta(ctx sdk.Context, insuranceFundDelta *b
 
 	// The insurance fund delta is valid if the insurance fund balance is non-negative after adding
 	// the delta.
-	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx, perpetualId)
+	currentInsuranceFundBalance := k.subaccountsKeeper.GetInsuranceFundBalance(ctx, perpetualId)
 	return new(big.Int).Add(currentInsuranceFundBalance, insuranceFundDelta).Sign() >= 0
 }
 

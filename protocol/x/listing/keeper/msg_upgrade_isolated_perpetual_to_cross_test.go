@@ -1,9 +1,9 @@
-package types_test
+package keeper_test
 
 import (
 	"testing"
 
-	types "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	types "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	"github.com/stretchr/testify/require"
 )
 

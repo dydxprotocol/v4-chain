@@ -251,32 +251,6 @@ func (k Keeper) GetAllPerpetuals(ctx sdk.Context) (list []types.Perpetual) {
 	return list
 }
 
-func (k Keeper) UpgradeIsolatedPerpetualToCross(
-	ctx sdk.Context,
-	id uint32,
-) error {
-	err := k.clobKeeper.TransferIsolatedInsuranceFundToCross(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	_, err = k.SetPerpetualMarketType(
-		ctx,
-		id,
-		types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
-	)
-	if err != nil {
-		return err
-	}
-
-	// TODO Move collateral pool for perpetual to subaccounts module
-	// See transferCollateralForIsolatedPerpetual()?
-
-	// TODO Propagate changes to indexer
-
-	return nil
-}
-
 // processStoredPremiums combines all stored premiums into a single premium value
 // for each `MarketPremiums` in the premium storage.
 // Returns a mapping from perpetual Id to summarized premium value.
