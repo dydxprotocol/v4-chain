@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  typescript: 4.7.4
+
 importers:
 
   .:
@@ -91,7 +94,7 @@ importers:
         specifier: ^4.18.1
         version: 4.21.1
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   packages/compliance:
@@ -117,9 +120,9 @@ importers:
         version: 28.1.8
       jest:
         specifier: ^28.1.2
-        version: 28.1.3(@types/node@20.17.6)
+        version: 28.1.3(@types/node@18.19.64)(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4))
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   packages/dev:
@@ -166,9 +169,9 @@ importers:
         version: 4.6.2(eslint@8.57.1)
       jest:
         specifier: ^28.1.2
-        version: 28.1.3(@types/node@18.19.64)
+        version: 28.1.3(@types/node@18.19.64)(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4))
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   packages/example-package:
@@ -181,7 +184,7 @@ importers:
         specifier: workspace:^0.0.1
         version: link:../dev
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   packages/kafka:
@@ -225,9 +228,9 @@ importers:
         version: 8.3.4
       jest:
         specifier: ^28.1.2
-        version: 28.1.3(@types/node@18.19.64)
+        version: 28.1.3(@types/node@18.19.64)(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4))
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   packages/postgres:
@@ -306,7 +309,7 @@ importers:
         specifier: ^28.1.2
         version: 28.1.3(@types/node@18.19.64)(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4))
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   packages/redis:
@@ -371,9 +374,9 @@ importers:
         version: 2.8.27
       jest:
         specifier: ^28.1.2
-        version: 28.1.3(@types/node@18.19.64)
+        version: 28.1.3(@types/node@18.19.64)(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4))
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   packages/v4-proto-parser:
@@ -402,9 +405,9 @@ importers:
         version: 18.19.64
       jest:
         specifier: ^28.1.2
-        version: 28.1.3(@types/node@18.19.64)
+        version: 28.1.3(@types/node@18.19.64)(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4))
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   packages/v4-protos:
@@ -456,7 +459,7 @@ importers:
         specifier: ^18.19.39
         version: 18.19.64
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   services/auxo:
@@ -517,7 +520,7 @@ importers:
         specifier: ^4.0.0
         version: 4.2.0
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   services/bazooka:
@@ -590,7 +593,7 @@ importers:
         specifier: ^4.0.0
         version: 4.2.0
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   services/comlink:
@@ -738,7 +741,7 @@ importers:
         specifier: ^4.0.0
         version: 4.2.0
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   services/ender:
@@ -820,7 +823,7 @@ importers:
         specifier: ^4.0.0
         version: 4.2.0
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   services/example-service:
@@ -848,7 +851,7 @@ importers:
         specifier: ^4.0.0
         version: 4.2.0
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   services/roundtable:
@@ -936,7 +939,7 @@ importers:
         specifier: ^4.0.0
         version: 4.2.0
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   services/scripts:
@@ -1103,7 +1106,7 @@ importers:
         specifier: ^4.0.0
         version: 4.2.0
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
   services/vulcan:
@@ -1176,7 +1179,7 @@ importers:
         specifier: ^4.0.0
         version: 4.2.0
       typescript:
-        specifier: ^4.7.4
+        specifier: 4.7.4
         version: 4.7.4
 
 packages:
@@ -4998,7 +5001,7 @@ packages:
     resolution: {integrity: sha512-7lsKdLFcW9B9l5NzZ66S/yTQ9k8rFtnwYdCNuRU/81fqDWicNDVhitTSPnrGmNeNm0xyw0JHexEOShrIKRCIRQ==}
     peerDependencies:
       jest: ^24.0.0 || ^25.0.0 || ^26.0.0 || ^27.0.0 || ^28.0.0 || ^29.0.0
-      typescript: ^3.0.0 || ^4.0.0 || ^5.0.0
+      typescript: 4.7.4
 
   jest-mock@28.1.3:
     resolution: {integrity: sha512-o3J2jr6dMMWYVH4Lh/NKmDXdosrsJgi4AviS8oXLujcjpCMBb1FMsblDnOXKZKfSiHLxYub1eS0IHuRXsio9eA==}
@@ -6647,7 +6650,7 @@ packages:
   ts-essentials@10.0.3:
     resolution: {integrity: sha512-/FrVAZ76JLTWxJOERk04fm8hYENDo0PWSP3YLQKxevLwWtxemGcl5JJEzN4iqfDlRve0ckyfFaOBu4xbNH/wZw==}
     peerDependencies:
-      typescript: '>=4.5.0'
+      typescript: 4.7.4
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -6659,7 +6662,7 @@ packages:
       '@swc/core': '>=1.2.50'
       '@swc/wasm': '>=1.2.50'
       '@types/node': '*'
-      typescript: '>=2.7'
+      typescript: 4.7.4
     peerDependenciesMeta:
       '@swc/core':
         optional: true
@@ -6688,7 +6691,7 @@ packages:
     resolution: {integrity: sha512-mHKK3iUXL+3UF6xL5k0PEhKRUBKPBCv/+RkEOpjRWxxx27KKRBmmA60A9pgOUvMi8GKhRMPEmjBRPzs2W7O1OA==}
     engines: {node: '>= 6'}
     peerDependencies:
-      typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
+      typescript: 4.7.4
 
   tunnel-agent@0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
@@ -6741,11 +6744,6 @@ packages:
 
   typescript@4.7.4:
     resolution: {integrity: sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==}
-    engines: {node: '>=4.2.0'}
-    hasBin: true
-
-  typescript@4.9.5:
-    resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
     engines: {node: '>=4.2.0'}
     hasBin: true
 
@@ -9424,41 +9422,6 @@ snapshots:
       jest-util: 28.1.3
       slash: 3.0.0
 
-  '@jest/core@28.1.3':
-    dependencies:
-      '@jest/console': 28.1.3
-      '@jest/reporters': 28.1.3
-      '@jest/test-result': 28.1.3
-      '@jest/transform': 28.1.3
-      '@jest/types': 28.1.3
-      '@types/node': 18.19.64
-      ansi-escapes: 4.3.2
-      chalk: 4.1.2
-      ci-info: 3.9.0
-      exit: 0.1.2
-      graceful-fs: 4.2.11
-      jest-changed-files: 28.1.3
-      jest-config: 28.1.3(@types/node@18.19.64)
-      jest-haste-map: 28.1.3
-      jest-message-util: 28.1.3
-      jest-regex-util: 28.0.2
-      jest-resolve: 28.1.3
-      jest-resolve-dependencies: 28.1.3
-      jest-runner: 28.1.3
-      jest-runtime: 28.1.3
-      jest-snapshot: 28.1.3
-      jest-util: 28.1.3
-      jest-validate: 28.1.3
-      jest-watcher: 28.1.3
-      micromatch: 4.0.8
-      pretty-format: 28.1.3
-      rimraf: 3.0.2
-      slash: 3.0.0
-      strip-ansi: 6.0.1
-    transitivePeerDependencies:
-      - supports-color
-      - ts-node
-
   '@jest/core@28.1.3(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4))':
     dependencies:
       '@jest/console': 28.1.3
@@ -10192,7 +10155,7 @@ snapshots:
       handlebars: 4.7.8
       merge: 2.1.1
       minimatch: 5.1.6
-      typescript: 4.9.5
+      typescript: 4.7.4
       validator: 13.12.0
       yamljs: 0.3.0
       yargs: 17.7.2
@@ -12963,25 +12926,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  jest-cli@28.1.3(@types/node@18.19.64):
-    dependencies:
-      '@jest/core': 28.1.3
-      '@jest/test-result': 28.1.3
-      '@jest/types': 28.1.3
-      chalk: 4.1.2
-      exit: 0.1.2
-      graceful-fs: 4.2.11
-      import-local: 3.2.0
-      jest-config: 28.1.3(@types/node@18.19.64)
-      jest-util: 28.1.3
-      jest-validate: 28.1.3
-      prompts: 2.4.2
-      yargs: 17.7.2
-    transitivePeerDependencies:
-      - '@types/node'
-      - supports-color
-      - ts-node
-
   jest-cli@28.1.3(@types/node@18.19.64)(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4)):
     dependencies:
       '@jest/core': 28.1.3(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4))
@@ -13000,54 +12944,6 @@ snapshots:
       - '@types/node'
       - supports-color
       - ts-node
-
-  jest-cli@28.1.3(@types/node@20.17.6):
-    dependencies:
-      '@jest/core': 28.1.3
-      '@jest/test-result': 28.1.3
-      '@jest/types': 28.1.3
-      chalk: 4.1.2
-      exit: 0.1.2
-      graceful-fs: 4.2.11
-      import-local: 3.2.0
-      jest-config: 28.1.3(@types/node@20.17.6)
-      jest-util: 28.1.3
-      jest-validate: 28.1.3
-      prompts: 2.4.2
-      yargs: 17.7.2
-    transitivePeerDependencies:
-      - '@types/node'
-      - supports-color
-      - ts-node
-
-  jest-config@28.1.3(@types/node@18.19.64):
-    dependencies:
-      '@babel/core': 7.26.0
-      '@jest/test-sequencer': 28.1.3
-      '@jest/types': 28.1.3
-      babel-jest: 28.1.3(@babel/core@7.26.0)
-      chalk: 4.1.2
-      ci-info: 3.9.0
-      deepmerge: 4.3.1
-      glob: 7.2.3
-      graceful-fs: 4.2.11
-      jest-circus: 28.1.3
-      jest-environment-node: 28.1.3
-      jest-get-type: 28.0.2
-      jest-regex-util: 28.0.2
-      jest-resolve: 28.1.3
-      jest-runner: 28.1.3
-      jest-util: 28.1.3
-      jest-validate: 28.1.3
-      micromatch: 4.0.8
-      parse-json: 5.2.0
-      pretty-format: 28.1.3
-      slash: 3.0.0
-      strip-json-comments: 3.1.1
-    optionalDependencies:
-      '@types/node': 18.19.64
-    transitivePeerDependencies:
-      - supports-color
 
   jest-config@28.1.3(@types/node@18.19.64)(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4)):
     dependencies:
@@ -13076,35 +12972,6 @@ snapshots:
     optionalDependencies:
       '@types/node': 18.19.64
       ts-node: 10.9.2(@types/node@18.19.64)(typescript@4.7.4)
-    transitivePeerDependencies:
-      - supports-color
-
-  jest-config@28.1.3(@types/node@20.17.6):
-    dependencies:
-      '@babel/core': 7.26.0
-      '@jest/test-sequencer': 28.1.3
-      '@jest/types': 28.1.3
-      babel-jest: 28.1.3(@babel/core@7.26.0)
-      chalk: 4.1.2
-      ci-info: 3.9.0
-      deepmerge: 4.3.1
-      glob: 7.2.3
-      graceful-fs: 4.2.11
-      jest-circus: 28.1.3
-      jest-environment-node: 28.1.3
-      jest-get-type: 28.0.2
-      jest-regex-util: 28.0.2
-      jest-resolve: 28.1.3
-      jest-runner: 28.1.3
-      jest-util: 28.1.3
-      jest-validate: 28.1.3
-      micromatch: 4.0.8
-      parse-json: 5.2.0
-      pretty-format: 28.1.3
-      slash: 3.0.0
-      strip-json-comments: 3.1.1
-    optionalDependencies:
-      '@types/node': 20.17.6
     transitivePeerDependencies:
       - supports-color
 
@@ -13371,34 +13238,12 @@ snapshots:
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
-  jest@28.1.3(@types/node@18.19.64):
-    dependencies:
-      '@jest/core': 28.1.3
-      '@jest/types': 28.1.3
-      import-local: 3.2.0
-      jest-cli: 28.1.3(@types/node@18.19.64)
-    transitivePeerDependencies:
-      - '@types/node'
-      - supports-color
-      - ts-node
-
   jest@28.1.3(@types/node@18.19.64)(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4)):
     dependencies:
       '@jest/core': 28.1.3(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4))
       '@jest/types': 28.1.3
       import-local: 3.2.0
       jest-cli: 28.1.3(@types/node@18.19.64)(ts-node@10.9.2(@types/node@18.19.64)(typescript@4.7.4))
-    transitivePeerDependencies:
-      - '@types/node'
-      - supports-color
-      - ts-node
-
-  jest@28.1.3(@types/node@20.17.6):
-    dependencies:
-      '@jest/core': 28.1.3
-      '@jest/types': 28.1.3
-      import-local: 3.2.0
-      jest-cli: 28.1.3(@types/node@20.17.6)
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
@@ -15167,8 +15012,6 @@ snapshots:
       typed-array-byte-offset: 1.0.2
 
   typescript@4.7.4: {}
-
-  typescript@4.9.5: {}
 
   uc.micro@1.0.6: {}
 
