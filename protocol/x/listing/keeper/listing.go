@@ -154,16 +154,16 @@ func (k Keeper) CreatePerpetual(
 
 func (k Keeper) UpgradeIsolatedPerpetualToCross(
 	ctx sdk.Context,
-	id uint32,
+	perpetualId uint32,
 ) error {
-	err := k.clobKeeper.TransferIsolatedInsuranceFundToCross(ctx, id)
+	err := k.SubaccountsKeeper.TransferIsolatedInsuranceFundToCross(ctx, perpetualId)
 	if err != nil {
 		return err
 	}
 
 	_, err = k.PerpetualsKeeper.SetPerpetualMarketType(
 		ctx,
-		id,
+		perpetualId,
 		perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 	)
 	if err != nil {

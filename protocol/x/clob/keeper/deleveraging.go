@@ -18,7 +18,6 @@ import (
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
-	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -128,21 +127,6 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	)
 
 	return quantumsDeleveraged, err
-}
-
-func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
-	if !exists {
-		panic("GetCrossInsuranceFundBalance: Usdc asset not found in state")
-	}
-	insuranceFundBalance := k.bankKeeper.GetBalance(
-		ctx,
-		perptypes.InsuranceFundModuleAddress,
-		usdcAsset.Denom,
-	)
-
-	// Return as big.Int.
-	return insuranceFundBalance.Amount.BigInt()
 }
 
 // CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
@@ -257,7 +241,7 @@ func (k Keeper) IsValidInsuranceFundDelta(ctx sdk.Context, insuranceFundDelta *b
 
 	// The insurance fund delta is valid if the insurance fund balance is non-negative after adding
 	// the delta.
-	currentInsuranceFundBalance := k.subaccountsKeeper.GetInsuranceFundBalance(ctx, perpetualId)
+	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx, perpetualId)
 	return new(big.Int).Add(currentInsuranceFundBalance, insuranceFundDelta).Sign() >= 0
 }
 

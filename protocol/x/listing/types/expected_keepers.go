@@ -95,3 +95,10 @@ type VaultKeeper interface {
 		status vaulttypes.VaultStatus,
 	) error
 }
+
+type SubaccountsKeeper interface {
+	GetInsuranceFundBalance(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) *big.Int
+}

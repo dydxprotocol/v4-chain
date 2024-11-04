@@ -77,6 +77,17 @@ type SubaccountsKeeper interface {
 		amount *big.Int,
 		perpetualId uint32,
 	) error
+	GetInsuranceFundBalance(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (
+		balance *big.Int,
+	)
+	GetCrossInsuranceFundBalance(
+		ctx sdk.Context,
+	) (
+		balance *big.Int,
+	)
 	GetCollateralPoolFromPerpetualId(
 		ctx sdk.Context,
 		perpetualId uint32,
@@ -87,10 +98,6 @@ type SubaccountsKeeper interface {
 		revSharesForFill revsharetypes.RevSharesForFill,
 		fillForProcess FillForProcess,
 	) error
-	GetInsuranceFundBalance(
-		ctx sdk.Context,
-		perpetualId uint32,
-	) *big.Int
 }
 
 type AssetsKeeper interface {

@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"sync/atomic"
 
 	"github.com/dydxprotocol/v4-chain/protocol/finalizeblock"
@@ -160,6 +161,10 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 
 func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingManager {
 	return k.streamingManager
+}
+
+func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) *big.Int {
+	return k.subaccountsKeeper.GetCrossInsuranceFundBalance(ctx)
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
