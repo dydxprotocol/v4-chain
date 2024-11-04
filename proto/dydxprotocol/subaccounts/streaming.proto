@@ -21,6 +21,9 @@ message StreamSubaccountUpdate {
   // `updated_asset_positions` fields will contain the full state of the
   // subaccount.
   bool snapshot = 4;
+
+  // The equity of the subaccount in quote quantums.
+  int64 equity = 5;
 }
 
 // SubaccountPerpetualPosition provides information on a subaccount's updated
@@ -28,8 +31,12 @@ message StreamSubaccountUpdate {
 message SubaccountPerpetualPosition {
   // The `Id` of the `Perpetual`.
   uint32 perpetual_id = 1;
+
   // The size of the position in base quantums. Negative means short.
   int64 quantums = 2;
+
+  // The size of the position in quote quantums.
+  int64 notional = 3;
 }
 
 // SubaccountAssetPosition provides information on a subaccount's updated asset
