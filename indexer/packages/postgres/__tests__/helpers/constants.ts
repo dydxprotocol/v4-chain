@@ -136,7 +136,7 @@ export const defaultAsset: AssetCreateObject = {
 };
 export const defaultAsset2: AssetCreateObject = {
   id: '1',
-  symbol: 'DYDX',
+  symbol: 'ETH',
   atomicResolution: 0,
   hasMarket: true,
   marketId: 1,

@@ -169,7 +169,7 @@ describe('PerpetualMarket store', () => {
   it('Successfully updates a perpetual market by market id', async () => {
     const market: MarketCreateObject = {
       id: 5,
-      pair: 'DYDX-USD',
+      pair: 'ETH-USD',
       exponent: -5,
       minPriceChangePpm: 50,
     };

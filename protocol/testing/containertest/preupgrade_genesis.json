@@ -1917,14 +1917,6 @@
             "pair": "USDT-USD"
           },
           {
-            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"DYDXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"DYDXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"DYDX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"DYDX-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"DYDX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"DYDX-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
-            "exponent": -9,
-            "id": 1000001,
-            "min_exchanges": 3,
-            "min_price_change_ppm": 2500,
-            "pair": "DYDX-USD"
-          },
-          {
             "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"TestVolatileExchange\",\"ticker\":\"TEST-USD\"}]}",
             "exponent": -5,
             "id": 33,
@@ -2103,11 +2095,6 @@
             "exponent": -9,
             "id": 1000000,
             "price": 1000000000
-          },
-          {
-            "exponent": -9,
-            "id": 1000001,
-            "price": 2050000000
           },
           {
             "exponent": -5,

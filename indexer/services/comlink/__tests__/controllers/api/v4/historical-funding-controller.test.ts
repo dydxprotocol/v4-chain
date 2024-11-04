@@ -118,7 +118,7 @@ describe('historical-funding-controller#V4', () => {
   });
 
   it('Returns 400 with unknown ticker', async () => {
-    const unknownTicker = 'DYDX-USD';
+    const unknownTicker = 'ETH-USD';
     const response: request.Response = await sendRequest({
       type: RequestMethod.GET,
       path: `/v4/historicalFunding/${unknownTicker}`,
