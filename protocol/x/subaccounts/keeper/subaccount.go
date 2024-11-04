@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	perplib "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/lib"
 	"math/big"
 	"math/rand"
 	"time"
@@ -137,7 +138,7 @@ func (k Keeper) GetStreamSubaccountUpdate(
 	ctx sdk.Context,
 	id types.SubaccountId,
 	snapshot bool,
-) (val types.StreamSubaccountUpdate) {
+) (val types.StreamSubaccountUpdate, err error) {
 	subaccount := k.GetSubaccount(ctx, id)
 	assetPositions := make([]*types.SubaccountAssetPosition, len(subaccount.AssetPositions))
 	for i, ap := range subaccount.AssetPositions {
@@ -146,12 +147,29 @@ func (k Keeper) GetStreamSubaccountUpdate(
 			Quantums: ap.Quantums.BigInt().Uint64(),
 		}
 	}
+
 	perpetualPositions := make([]*types.SubaccountPerpetualPosition, len(subaccount.PerpetualPositions))
 	for i, pp := range subaccount.PerpetualPositions {
+		perp, price, err := k.perpetualsKeeper.GetPerpetualAndMarketPrice(ctx, pp.PerpetualId)
+		if err != nil {
+			return types.StreamSubaccountUpdate{}, err
+		}
+
+		notional := perplib.GetNetNotionalInQuoteQuantums(perp, price, pp.Quantums.BigInt())
+
 		perpetualPositions[i] = &types.SubaccountPerpetualPosition{
 			PerpetualId: pp.PerpetualId,
 			Quantums:    pp.Quantums.BigInt().Int64(),
+			Notional:    notional.Int64(),
 		}
+	}
+
+	risk, err := k.GetNetCollateralAndMarginRequirements(
+		ctx,
+		types.Update{SubaccountId: id},
+	)
+	if err != nil {
+		return types.StreamSubaccountUpdate{}, err
 	}
 
 	return types.StreamSubaccountUpdate{
@@ -159,7 +177,8 @@ func (k Keeper) GetStreamSubaccountUpdate(
 		UpdatedAssetPositions:     assetPositions,
 		UpdatedPerpetualPositions: perpetualPositions,
 		Snapshot:                  snapshot,
-	}
+		Equity:                    risk.NC.Int64(),
+	}, nil
 }
 
 // GetAllSubaccount returns all subaccount.

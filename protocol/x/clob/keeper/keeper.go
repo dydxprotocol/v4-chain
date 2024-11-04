@@ -316,11 +316,17 @@ func (k Keeper) GetSubaccountSnapshotsForInitStreams(
 
 	return k.GetFullNodeStreamingManager().GetSubaccountSnapshotsForInitStreams(
 		func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate {
-			subaccountUpdate := k.subaccountsKeeper.GetStreamSubaccountUpdate(
+			subaccountUpdate, err := k.subaccountsKeeper.GetStreamSubaccountUpdate(
 				ctx,
 				subaccountId,
 				true,
 			)
+
+			// TODO: Best way to handle this error?
+			if err != nil {
+				panic(err)
+			}
+
 			return &subaccountUpdate
 		},
 	)
