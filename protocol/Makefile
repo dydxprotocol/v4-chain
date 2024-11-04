@@ -1,7 +1,6 @@
 export VERSION := $(shell echo $(shell git describe --tags --always --match "protocol/v*") | sed 's/^protocol\/v//')
 BUILDDIR ?= $(CURDIR)/build
 DOCKER := $(shell which docker)
-HTTPS_GIT := https://github.com/dydxprotocol/v4.git
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 PROJECT_NAME := $(shell git remote get-url origin | xargs basename -s .git)
 CGO_ENABLED=1

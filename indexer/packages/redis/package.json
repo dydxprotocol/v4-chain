@@ -25,14 +25,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dydxprotocol/indexer.git"
+    "url": "git+https://github.com/StreamFinance-Protocol/stream-chain.git"
   },
   "author": "",
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/dydxprotocol/indexer/issues"
+    "url": "https://github.com/StreamFinance-Protocol/stream-chain/issues"
   },
-  "homepage": "https://github.com/dydxprotocol/indexer#readme",
+  "homepage": "https://github.com/StreamFinance-Protocol/stream-chain#readme",
   "dependencies": {
     "@klyraprotocol-indexer/base": "workspace:^0.0.1",
     "@klyraprotocol-indexer/postgres": "workspace:^0.0.1",

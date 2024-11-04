@@ -54,10 +54,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dydxprotocol/indexer.git"
+    "url": "git+https://github.com/StreamFinance-Protocol/stream-chain.git"
   },
   "bugs": {
-    "url": "https://github.com/dydxprotocol/indexer/issues"
+    "url": "https://github.com/StreamFinance-Protocol/stream-chain/issues"
   },
-  "homepage": "https://github.com/dydxprotocol/indexer#readme"
+  "homepage": "https://github.com/StreamFinance-Protocol/stream-chain#readme"
 }

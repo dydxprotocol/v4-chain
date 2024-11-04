@@ -32,7 +32,7 @@
   },
   "keywords": [],
   "bugs": {
-    "url": "https://github.com/dydxprotocol/v4-chain/issues"
+    "url": "https://github.com/StreamFinance-Protocol/stream-chain/issues"
   },
   "devDependencies": {
     "@cosmjs/stargate": "^0.32.1",

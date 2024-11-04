@@ -59,10 +59,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dydxprotocol/v4-chain.git"
+    "url": "git+https://github.com/StreamFinance-Protocol/stream-chain.git"
   },
   "bugs": {
-    "url": "https://github.com/dydxprotocol/v4-chain/issues"
+    "url": "https://github.com/StreamFinance-Protocol/stream-chain/issues"
   },
-  "homepage": "https://github.com/dydxprotocol/v4-chain#readme"
+  "homepage": "https://github.com/StreamFinance-Protocol/stream-chain#readme"
 }
