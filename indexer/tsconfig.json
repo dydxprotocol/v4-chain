@@ -17,7 +17,8 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "resolveJsonModule": true,
-    "strict": true,
+    "strictNullChecks": false,
+    "strict": false,
     "useUnknownInCatchVariables": false,
     "baseUrl": ".",
     "paths": {

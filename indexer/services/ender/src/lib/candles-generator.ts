@@ -224,7 +224,7 @@ export class CandlesGenerator {
     if (existingCandle === undefined) {
       // - Candle doesn't exist & there is no block update - do nothing
       if (blockCandleUpdate === undefined) {
-        return;
+        return undefined;
       }
       // - Candle doesn't exist & there is a block update - create candle
       return this.createCandleInPostgres(
@@ -259,7 +259,7 @@ export class CandlesGenerator {
     }
     if (blockCandleUpdate === undefined) {
       // - Candle exists & sameStartTime & no block update - do nothing
-      return;
+      return undefined;
     }
     // - Candle exists & sameStartTime & block update - update candle
     return this.updateCandleInPostgres(
