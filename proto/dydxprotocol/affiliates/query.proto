@@ -4,21 +4,34 @@ package dydxprotocol.affiliates;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "dydxprotocol/affiliates/affiliates.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types";
 
 // Query defines the gRPC querier service.
 service Query {
   // Query AffiliateInfo returns the affiliate info for a given address.
-  rpc AffiliateInfo(AffiliateInfoRequest) returns (AffiliateInfoResponse);
+  rpc AffiliateInfo(AffiliateInfoRequest) returns (AffiliateInfoResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/affiliates/affiliate_info/{address}";
+  };
   // Query ReferredBy returns the affiliate that referred a given address.
-  rpc ReferredBy(ReferredByRequest) returns (ReferredByResponse);
+  rpc ReferredBy(ReferredByRequest) returns (ReferredByResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/affiliates/referred_by/{address}";
+  };
   // Query AllAffiliateTiers returns all affiliate tiers.
   rpc AllAffiliateTiers(AllAffiliateTiersRequest)
-      returns (AllAffiliateTiersResponse);
+      returns (AllAffiliateTiersResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/affiliates/all_affiliate_tiers";
+  };
   // Query AffiliateWhitelist returns the affiliate whitelist.
   rpc AffiliateWhitelist(AffiliateWhitelistRequest)
-      returns (AffiliateWhitelistResponse);
+      returns (AffiliateWhitelistResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/affiliates/affiliate_whitelist";
+  };
 }
 
 // AffiliateInfoRequest is the request type for the Query/AffiliateInfo RPC
