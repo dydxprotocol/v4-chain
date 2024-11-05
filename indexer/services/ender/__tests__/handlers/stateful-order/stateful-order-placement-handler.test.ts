@@ -182,7 +182,7 @@ describe('statefulOrderPlacementHandler', () => {
       routerFeeSubaccountOwner: 'klyra1xxxxxx',
       routerFeeSubaccountNumber: '0',
       triggerPrice: null,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: defaultHeight.toString(),
     });
 
@@ -241,7 +241,7 @@ describe('statefulOrderPlacementHandler', () => {
       routerFeePpm: '0',
       routerFeeSubaccountOwner: 'klyra1xxxxxx',
       routerFeeSubaccountNumber: '0',
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: '0',
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
@@ -272,7 +272,7 @@ describe('statefulOrderPlacementHandler', () => {
       routerFeeSubaccountOwner: 'klyra1xxxxxx',
       routerFeeSubaccountNumber: '0',
       triggerPrice: null,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: defaultHeight.toString(),
     });
     // TODO[IND-20]: Add tests for vulcan messages

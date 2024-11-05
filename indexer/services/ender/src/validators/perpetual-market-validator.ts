@@ -2,9 +2,9 @@ import { perpetualMarketRefresher } from '@klyraprotocol-indexer/postgres';
 import { PerpetualMarketCreateEventV1, IndexerTendermintEvent, PerpetualMarketCreateEventV2 } from '@klyraprotocol-indexer/v4-protos';
 import Long from 'long';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { PerpetualMarketCreationHandler } from '../handlers/perpetual-market-handler';
-import { Validator } from './validator';
 
 export class PerpetualMarketValidator extends Validator<
   PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2

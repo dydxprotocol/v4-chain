@@ -136,7 +136,7 @@ describe('Fill store', () => {
 
     const fills: FillFromDatabase[] = await FillTable.findAll(
       {
-        createdBeforeOrAt: createdDateTime.plus({ seconds: deltaSeconds }).toISO(),
+        createdBeforeOrAt: createdDateTime.plus({ seconds: deltaSeconds }).toISO() ?? '',
       },
       [],
       { readReplica: true },
@@ -179,7 +179,7 @@ describe('Fill store', () => {
 
     const fills: FillFromDatabase[] = await FillTable.findAll(
       {
-        createdOnOrAfter: createdDateTime.minus({ seconds: deltaSeconds }).toISO(),
+        createdOnOrAfter: createdDateTime.minus({ seconds: deltaSeconds }).toISO() ?? '',
       },
       [],
       { readReplica: true },

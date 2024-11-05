@@ -1,10 +1,10 @@
 import { IndexerTendermintEvent, SubaccountUpdateEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { SubaccountUpdateHandler } from '../handlers/subaccount-update-handler';
 import { subaccountUpdateEventV1ToSubaccountUpdate } from '../helpers/translation-helper';
 import { SubaccountUpdate } from '../lib/translated-types';
-import { Validator } from './validator';
 
 export class SubaccountUpdateValidator extends Validator<SubaccountUpdateEventV1> {
   public validate(): void {

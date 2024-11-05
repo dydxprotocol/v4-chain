@@ -6,8 +6,8 @@ import {
 import { AssetCreateEventV1 } from '@klyraprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
-import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
+import { ConsolidatedKafkaEvent } from '../lib/types';
 
 export class AssetCreationHandler extends Handler<AssetCreateEventV1> {
   eventType: string = 'AssetCreateEvent';

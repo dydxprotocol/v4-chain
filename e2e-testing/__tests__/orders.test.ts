@@ -33,6 +33,7 @@ import {
   OrderTable,
   SubaccountTable,
 } from "@klyraprotocol-indexer/postgres";
+import { AnyMxRecord } from "dns";
 
 async function placeOrder(mnemonic: string, order: IPlaceOrder): Promise<void> {
   const wallet = await LocalWallet.fromMnemonic(mnemonic, BECH32_PREFIX);
@@ -69,12 +70,12 @@ describe("orders", () => {
       await placeOrder(order.mnemonic, modifiedOrder);
     }
 
-    const candleStart: string = helpers
+    const candleStart: string | null = helpers
       .calculateNormalizedCandleStartTime(
-        DateTime.utc(),
+        DateTime.utc() as any,
         CandleResolution.ONE_MINUTE
       )
-      .toISO();
+      .toISO() ?? '';
 
     await utils.sleep(10000); // wait 10s for orders to be placed & matched
     const [wallet, wallet2] = await Promise.all([

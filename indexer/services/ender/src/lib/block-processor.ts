@@ -12,6 +12,13 @@ import * as pg from 'pg';
 import { DatabaseError } from 'pg';
 
 import config from '../config';
+import { BatchedHandlers } from './batched-handlers';
+import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
+import { KafkaPublisher } from './kafka-publisher';
+import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
+import {
+  KlyraIndexerSubtypes, EventMessage, EventProtoWithTypeAndVersion, GroupedEvents,
+} from './types';
 import { Handler } from '../handlers/handler';
 import { AssetValidator } from '../validators/asset-validator';
 import { DeleveragingValidator } from '../validators/deleveraging-validator';
@@ -28,13 +35,6 @@ import { UpdateClobPairValidator } from '../validators/update-clob-pair-validato
 import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
 import { YieldParamsValidator } from '../validators/yield-params-validator';
-import { BatchedHandlers } from './batched-handlers';
-import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
-import { KafkaPublisher } from './kafka-publisher';
-import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
-import {
-  KlyraIndexerSubtypes, EventMessage, EventProtoWithTypeAndVersion, GroupedEvents,
-} from './types';
 
 const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
   [serializeSubtypeAndVersion(KlyraIndexerSubtypes.ORDER_FILL.toString(), 1)]: OrderFillValidator,

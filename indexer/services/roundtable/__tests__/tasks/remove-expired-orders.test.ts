@@ -130,7 +130,7 @@ describe('remove-expired-orders', () => {
   beforeEach(async () => {
     await testMocks.seedData();
     await Promise.all([
-      BlockTable.create({ blockHeight: '30', time: DateTime.utc(2022, 6, 1).toISO() }),
+      BlockTable.create({ blockHeight: '30', time: DateTime.utc(2022, 6, 1).toISO() ?? '' }),
       perpetualMarketRefresher.updatePerpetualMarkets(),
       placeOrder({ redisOrder: REDISORDER_CLIENT1_GTB8, client: redisClient }),
       placeOrder({ redisOrder: REDISORDER_CLIENT2_GTB9, client: redisClient }),
@@ -182,7 +182,7 @@ describe('remove-expired-orders', () => {
       ORDERID_CLIENT3,
       ORDERID_CLIENT4,
     ];
-    await BlockTable.create({ blockHeight: '31', time: DateTime.utc(2022, 6, 2).toISO() });
+    await BlockTable.create({ blockHeight: '31', time: DateTime.utc(2022, 6, 2).toISO() ?? '' });
 
     await removeExpiredOrdersTask();
 

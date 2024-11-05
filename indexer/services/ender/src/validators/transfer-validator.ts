@@ -1,8 +1,8 @@
 import { IndexerTendermintEvent, TransferEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { TransferHandler } from '../handlers/transfer-handler';
-import { Validator } from './validator';
 
 export class TransferValidator extends Validator<TransferEventV1> {
   public validate(): void {

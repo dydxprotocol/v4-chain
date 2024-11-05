@@ -69,7 +69,7 @@ describe('candles-controller#V4', () => {
         _.times(config.API_LIMIT_V4 + 1, async (count: number) => {
           return CandleTable.create({
             ...testConstants.defaultCandle,
-            startedAt: testConstants.createdDateTime.minus({ minutes: count }).toISO(),
+            startedAt: testConstants.createdDateTime.minus({ minutes: count }).toISO() ?? '',
             resolution: CandleResolution.ONE_DAY,
           });
         }),

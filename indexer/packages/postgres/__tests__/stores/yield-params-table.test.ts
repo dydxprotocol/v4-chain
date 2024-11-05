@@ -355,7 +355,7 @@ describe('Yield params store', () => {
       defaultYieldParams2.createdAt,
     )
       .plus({ days: 1 })
-      .toISO();
+      .toISO() ?? '';
 
     const yieldParams: YieldParamsFromDatabase[] = await YieldParamsTable.findAll(
       { createdAt: latestCreatedAtPlusOne },
@@ -421,7 +421,7 @@ describe('Yield params store', () => {
       defaultYieldParams1.createdAt,
     )
       .minus({ days: 1 })
-      .toISO();
+      .toISO() ?? '';
 
     const yieldParams: YieldParamsFromDatabase[] = await YieldParamsTable.findAll(
       { createdBeforeOrAt: latestCreatedAtMinusOne },
@@ -443,7 +443,7 @@ describe('Yield params store', () => {
       defaultYieldParams1.createdAt,
     )
       .minus({ days: 1 })
-      .toISO();
+      .toISO() ?? '';
 
     const yieldParams: YieldParamsFromDatabase[] = await YieldParamsTable.findAll(
       { createdAfter: latestCreatedAtMinusOne },

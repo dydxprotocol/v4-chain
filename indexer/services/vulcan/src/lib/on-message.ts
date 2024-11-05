@@ -10,10 +10,10 @@ import { IHeaders, KafkaMessage } from 'kafkajs';
 import { Handler } from 'src/handlers/handler';
 
 import config from '../config';
+import { KlyraRecordHeaderKeys } from './types';
 import { OrderPlaceHandler } from '../handlers/order-place-handler';
 import { OrderRemoveHandler } from '../handlers/order-remove-handler';
 import { OrderUpdateHandler } from '../handlers/order-update-handler';
-import { KlyraRecordHeaderKeys } from './types';
 
 export type HandlerInitializer = new (
   txHash?: string

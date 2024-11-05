@@ -65,7 +65,7 @@ export const defaultZeroPerpYieldIndex: string = '0/1';
 export const defaultSubaccount: SubaccountCreateObject = {
   address: defaultAddress,
   subaccountNumber: 0,
-  updatedAt: createdDateTime.toISO(),
+  updatedAt: createdDateTime.toISO() ?? '' ?? '',
   updatedAtHeight: createdHeight,
   assetYieldIndex: zeroAssetYieldIndex,
 };
@@ -73,7 +73,7 @@ export const defaultSubaccount: SubaccountCreateObject = {
 export const defaultSubaccount2: SubaccountCreateObject = {
   address: defaultAddress,
   subaccountNumber: 1,
-  updatedAt: createdDateTime.toISO(),
+  updatedAt: createdDateTime.toISO() ?? '',
   updatedAtHeight: createdHeight,
   assetYieldIndex: zeroAssetYieldIndex,
 };
@@ -81,7 +81,7 @@ export const defaultSubaccount2: SubaccountCreateObject = {
 export const defaultSubaccount3: SubaccountCreateObject = {
   address: defaultAddress,
   subaccountNumber: 2,
-  updatedAt: createdDateTime.toISO(),
+  updatedAt: createdDateTime.toISO() ?? '',
   updatedAtHeight: createdHeight,
   assetYieldIndex: zeroAssetYieldIndex,
 };
@@ -104,7 +104,7 @@ export const defaultSubaccountId3: string = SubaccountTable.uuid(
 export const isolatedSubaccount: SubaccountCreateObject = {
   address: defaultAddress,
   subaccountNumber: 128,
-  updatedAt: createdDateTime.toISO(),
+  updatedAt: createdDateTime.toISO() ?? '',
   updatedAtHeight: createdHeight,
   assetYieldIndex: zeroAssetYieldIndex,
 };
@@ -112,7 +112,7 @@ export const isolatedSubaccount: SubaccountCreateObject = {
 export const isolatedSubaccount2: SubaccountCreateObject = {
   address: defaultAddress,
   subaccountNumber: 256,
-  updatedAt: createdDateTime.toISO(),
+  updatedAt: createdDateTime.toISO() ?? '',
   updatedAtHeight: createdHeight,
   assetYieldIndex: zeroAssetYieldIndex,
 };
@@ -391,11 +391,11 @@ export const isolatedMarketOrderId: string = OrderTable.uuid(
 
 export const defaultBlock: BlockCreateObject = {
   blockHeight: '1',
-  time: DateTime.utc(2022, 6, 1).toISO(),
+  time: DateTime.utc(2022, 6, 1).toISO() ?? '',
 };
 export const defaultBlock2: BlockCreateObject = {
   blockHeight: '2',
-  time: DateTime.utc(2022, 6, 2).toISO(),
+  time: DateTime.utc(2022, 6, 2).toISO() ?? '',
 };
 
 // ============== TendermintEvents ==============
@@ -465,7 +465,7 @@ export const defaultPerpetualPosition: PerpetualPositionCreateObject = {
   entryPrice: '20000',
   sumOpen: '10',
   sumClose: '0',
-  createdAt: createdDateTime.toISO(),
+  createdAt: createdDateTime.toISO() ?? '',
   createdAtHeight: createdHeight,
   openEventId: defaultTendermintEventId,
   lastEventId: defaultTendermintEventId2,
@@ -488,7 +488,7 @@ export const isolatedPerpetualPosition: PerpetualPositionCreateObject = {
   entryPrice: '20000',
   sumOpen: '10',
   sumClose: '0',
-  createdAt: createdDateTime.toISO(),
+  createdAt: createdDateTime.toISO() ?? '',
   createdAtHeight: createdHeight,
   openEventId: defaultTendermintEventId,
   lastEventId: defaultTendermintEventId2,
@@ -515,7 +515,7 @@ export const defaultFill: FillCreateObject = {
   quoteAmount: '200000',
   eventId: defaultTendermintEventId,
   transactionHash: '', // TODO: Add a real transaction Hash
-  createdAt: createdDateTime.toISO(),
+  createdAt: createdDateTime.toISO() ?? '',
   createdAtHeight: createdHeight,
   clientMetadata: '0',
   fee: '1.1',
@@ -533,7 +533,7 @@ export const isolatedMarketFill: FillCreateObject = {
   quoteAmount: '200000',
   eventId: defaultTendermintEventId2,
   transactionHash: '', // TODO: Add a real transaction Hash
-  createdAt: createdDateTime.toISO(),
+  createdAt: createdDateTime.toISO() ?? '',
   createdAtHeight: createdHeight,
   clientMetadata: '0',
   fee: '1.1',
@@ -551,7 +551,7 @@ export const isolatedMarketFill2: FillCreateObject = {
   quoteAmount: '200000',
   eventId: defaultTendermintEventId3,
   transactionHash: '', // TODO: Add a real transaction Hash
-  createdAt: createdDateTime.toISO(),
+  createdAt: createdDateTime.toISO() ?? '',
   createdAtHeight: createdHeight,
   clientMetadata: '0',
   fee: '1.1',
@@ -566,7 +566,7 @@ export const defaultTransfer: TransferCreateObject = {
   size: '10',
   eventId: defaultTendermintEventId,
   transactionHash: '', // TODO: Add a real transaction Hash
-  createdAt: createdDateTime.toISO(),
+  createdAt: createdDateTime.toISO() ?? '',
   createdAtHeight: createdHeight,
 };
 
@@ -597,7 +597,7 @@ export const defaultWithdrawal: TransferCreateObject = {
   size: '10',
   eventId: defaultTendermintEventId,
   transactionHash: '', // TODO: Add a real transaction Hash
-  createdAt: createdDateTime.toISO(),
+  createdAt: createdDateTime.toISO() ?? '',
   createdAtHeight: createdHeight,
 };
 
@@ -617,7 +617,7 @@ export const defaultDeposit: TransferCreateObject = {
   size: '10',
   eventId: defaultTendermintEventId,
   transactionHash: '', // TODO: Add a real transaction Hash
-  createdAt: createdDateTime.toISO(),
+  createdAt: createdDateTime.toISO() ?? '',
   createdAtHeight: createdHeight,
 };
 
@@ -701,7 +701,7 @@ export const defaultOraclePrice: OraclePriceCreateObject = {
   marketId: defaultMarket.id,
   spotPrice: '10000',
   pnlPrice: '10000',
-  effectiveAt: createdDateTime.toISO(),
+  effectiveAt: createdDateTime.toISO() ?? '',
   effectiveAtHeight: createdHeight,
 };
 
@@ -714,7 +714,7 @@ export const defaultOraclePrice2: OraclePriceCreateObject = {
   marketId: defaultMarket2.id,
   spotPrice: '500',
   pnlPrice: '500',
-  effectiveAt: createdDateTime.toISO(),
+  effectiveAt: createdDateTime.toISO() ?? '',
   effectiveAtHeight: createdHeight,
 };
 
@@ -726,7 +726,7 @@ export const defaultOraclePriceId2: string = OraclePriceTable.uuid(
 // ============== Candle ==============
 
 export const defaultCandle: CandleCreateObject = {
-  startedAt: createdDateTime.toISO(),
+  startedAt: createdDateTime.toISO() ?? '',
   ticker: defaultPerpetualMarket.ticker,
   resolution: CandleResolution.ONE_MINUTE,
   low: '10000',
@@ -752,7 +752,7 @@ export const defaultPnlTick: PnlTicksCreateObject = {
   equity: '100000',
   totalPnl: '10000',
   netTransfers: '1000',
-  createdAt: createdDateTime.toISO(),
+  createdAt: createdDateTime.toISO() ?? '',
   blockHeight: createdHeight,
   blockTime: defaultBlock2.time,
 };
@@ -765,7 +765,7 @@ export const defaultFundingIndexUpdate: FundingIndexUpdatesCreateObject = {
   rate: '0.0004',
   oraclePrice: '10000',
   fundingIndex: '10050',
-  effectiveAt: createdDateTime.toISO(),
+  effectiveAt: createdDateTime.toISO() ?? '',
   effectiveAtHeight: createdHeight,
 };
 
@@ -781,7 +781,7 @@ export const isolatedMarketFundingIndexUpdate: FundingIndexUpdatesCreateObject =
   rate: '0.0004',
   oraclePrice: '10000',
   fundingIndex: '10200',
-  effectiveAt: createdDateTime.toISO(),
+  effectiveAt: createdDateTime.toISO() ?? '',
   effectiveAtHeight: createdHeight,
 };
 
@@ -799,7 +799,7 @@ export const blockedComplianceData: ComplianceDataCreateObject = {
   chain: klyraChain,
   blocked: true,
   riskScore: '100.00',
-  updatedAt: createdDateTime.toISO(),
+  updatedAt: createdDateTime.toISO() ?? '',
 };
 
 export const nonBlockedComplianceData: ComplianceDataCreateObject = {
@@ -808,7 +808,7 @@ export const nonBlockedComplianceData: ComplianceDataCreateObject = {
   chain: klyraChain,
   blocked: false,
   riskScore: '10.00',
-  updatedAt: createdDateTime.plus(1).toISO(),
+  updatedAt: createdDateTime.plus(1).toISO() ?? '',
 };
 
 // ========= Yield Params ==========
@@ -817,12 +817,12 @@ export const defaultYieldParams1: YieldParamsCreateObject = {
   sDAIPrice: '10000000',
   assetYieldIndex: zeroAssetYieldIndex,
   createdAtHeight: createdHeight,
-  createdAt: createdDateTime.toISO(),
+  createdAt: createdDateTime.toISO() ?? '',
 };
 
 export const defaultYieldParams2: YieldParamsCreateObject = {
   sDAIPrice: '11000000',
   assetYieldIndex: oneAssetYieldIndex,
   createdAtHeight: createdHeightPlusOne,
-  createdAt: createdDateTime.plus(1).toISO(),
+  createdAt: createdDateTime.plus(1).toISO() ?? '',
 };

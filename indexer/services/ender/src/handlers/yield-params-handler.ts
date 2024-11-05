@@ -1,8 +1,8 @@
 import { UpdateYieldParamsEventV1 } from '@klyraprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
-import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
+import { ConsolidatedKafkaEvent } from '../lib/types';
 
 export class YieldParamsHandler extends Handler<UpdateYieldParamsEventV1> {
   eventType: string = 'UpdateYieldParamsEvent';

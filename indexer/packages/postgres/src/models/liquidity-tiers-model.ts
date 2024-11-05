@@ -1,6 +1,6 @@
+import BaseModel from './base-model';
 import { IntegerPattern, NumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
-import BaseModel from './base-model';
 
 export default class LiquidityTiersModel extends BaseModel {
   static get tableName() {

@@ -13,13 +13,13 @@ import {
 } from '@klyraprotocol-indexer/v4-protos';
 import Long from 'long';
 
+import { validateOrderAndReturnErrorMessage, validateOrderIdAndReturnErrorMessage } from './helpers';
+import { Validator } from './validator';
 import { Handler, HandlerInitializer } from '../handlers/handler';
 import { ConditionalOrderPlacementHandler } from '../handlers/stateful-order/conditional-order-placement-handler';
 import { ConditionalOrderTriggeredHandler } from '../handlers/stateful-order/conditional-order-triggered-handler';
 import { StatefulOrderPlacementHandler } from '../handlers/stateful-order/stateful-order-placement-handler';
 import { StatefulOrderRemovalHandler } from '../handlers/stateful-order/stateful-order-removal-handler';
-import { validateOrderAndReturnErrorMessage, validateOrderIdAndReturnErrorMessage } from './helpers';
-import { Validator } from './validator';
 
 export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
   public validate(): void {

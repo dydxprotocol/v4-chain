@@ -40,7 +40,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId2,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO() ?? '',
         createdAtHeight: testConstants.createdHeight,
       };
       await Promise.all([
@@ -298,7 +298,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId2,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO() ?? '',
         createdAtHeight: testConstants.createdHeight,
       };
       await Promise.all([
@@ -418,7 +418,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId2,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO() ?? '',
         createdAtHeight: testConstants.createdHeight,
       };
       const transfer3: TransferCreateObject = {
@@ -428,7 +428,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId3,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO() ?? '',
         createdAtHeight: testConstants.createdHeight,
       };
       await Promise.all([
@@ -480,7 +480,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId2,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO() ?? '',
         createdAtHeight: testConstants.createdHeight,
       };
       const transferToNonParent: TransferCreateObject = {
@@ -490,7 +490,7 @@ describe('transfers-controller#V4', () => {
         size: '5',
         eventId: testConstants.defaultTendermintEventId3,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO() ?? '',
         createdAtHeight: testConstants.createdHeight,
       };
       const depositToChildSA: TransferCreateObject = {
@@ -500,7 +500,7 @@ describe('transfers-controller#V4', () => {
         size: '10',
         eventId: defaultTendermintEventId4,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: createdDateTime.toISO(),
+        createdAt: createdDateTime.toISO() ?? '',
         createdAtHeight: createdHeight,
       };
       const withdrawFromChildSA: TransferCreateObject = {
@@ -510,7 +510,7 @@ describe('transfers-controller#V4', () => {
         size: '10',
         eventId: defaultTendermintEventId4,
         transactionHash: '', // TODO: Add a real transaction Hash
-        createdAt: createdDateTime.toISO(),
+        createdAt: createdDateTime.toISO() ?? '',
         createdAtHeight: createdHeight,
       };
       await Promise.all([

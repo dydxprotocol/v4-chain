@@ -304,7 +304,7 @@ describe('update-compliance-data', () => {
       address: testConstants.blockedAddress,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO() ?? '',
       assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
@@ -365,7 +365,7 @@ describe('update-compliance-data', () => {
       address: testConstants.blockedAddress,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO() ?? '',
       assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
@@ -375,7 +375,7 @@ describe('update-compliance-data', () => {
       address: addressWithComplianceError,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO() ?? '',
       assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
@@ -454,7 +454,7 @@ describe('update-compliance-data', () => {
       address: testConstants.blockedAddress,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO() ?? '',
       assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
@@ -531,7 +531,7 @@ async function setupComplianceData(
 ): Promise<void> {
   const oldUpdatedAt: string = DateTime.utc().minus(
     { seconds: deltaSeconds },
-  ).toUTC().toISO();
+  ).toUTC().toISO() ?? '';
   await ComplianceTable.create({
     ...complianceCreate,
     updatedAt: oldUpdatedAt,
@@ -560,7 +560,7 @@ async function setupSubaccounts(
 ): Promise<void> {
   const newUpdatedAt: string = DateTime.utc().minus({
     seconds: deltaSeconds,
-  }).toUTC().toISO();
+  }).toUTC().toISO() ?? '';
   await Promise.all(subaccountIds.map(
     (subaccountId: string) => {
       return SubaccountTable.update({

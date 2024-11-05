@@ -6,9 +6,9 @@ import {
 import { UpdatePerpetualEventV1 } from '@klyraprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
+import { Handler } from './handler';
 import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
-import { Handler } from './handler';
 
 export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
   eventType: string = 'UpdatePerpetualEventV1';

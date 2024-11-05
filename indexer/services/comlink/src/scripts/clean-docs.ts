@@ -1,5 +1,5 @@
-
 import { readFileSync, writeFileSync } from 'fs';
+
 const filePath = './public/api-documentation.md';
 const data = readFileSync(filePath, 'utf8');
 // Define the custom intro we want
@@ -11,5 +11,5 @@ Note: Messages on Indexer WebSocket feeds are typically more recent than data fe
 // Find the start of the content (after the intro sections)
 const contentStart = data.indexOf('# Authentication');
 // Combine our custom intro with the existing content
-const cleanedContent = customIntro + '\n\n' + data.slice(contentStart);
+const cleanedContent = `${customIntro}\n\n${data.slice(contentStart)}`;
 writeFileSync(filePath, cleanedContent);

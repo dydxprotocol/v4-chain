@@ -7,10 +7,10 @@ import {
   FundingUpdateV1,
 } from '@klyraprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { FundingHandler } from '../handlers/funding-handler';
 import { Handler } from '../handlers/handler';
 import { FundingEventMessage } from '../lib/types';
-import { Validator } from './validator';
 
 export class FundingValidator extends Validator<FundingEventV1> {
   public validate(): void {

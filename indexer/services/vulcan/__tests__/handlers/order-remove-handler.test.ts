@@ -1604,7 +1604,7 @@ describe('OrderRemoveHandler', () => {
 
       await Promise.all([
         // testConstants.defaultOrder has a goodTilBlock of 1150
-        BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() }),
+        BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() ?? '' }),
         placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
         OrderbookLevelsCache.updatePriceLevel({
           ticker: removedRedisOrder.ticker,
@@ -1733,7 +1733,7 @@ describe('OrderRemoveHandler', () => {
 
       await Promise.all([
         // testConstants.defaultOrder has a goodTilBlock of 1150
-        BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() }),
+        BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() ?? '' }),
         placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
         OrderbookLevelsCache.updatePriceLevel({
           ticker: removedRedisOrder.ticker,
@@ -1878,7 +1878,7 @@ describe('OrderRemoveHandler', () => {
 
         await Promise.all([
           // testConstants.defaultOrder has a goodTilBlock of 1150
-          BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() }),
+          BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() ?? '' }),
           placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
           OrderbookLevelsCache.updatePriceLevel({
             ticker: removedRedisOrder.ticker,
@@ -1954,7 +1954,7 @@ describe('OrderRemoveHandler', () => {
 
       await Promise.all([
         // testConstants.defaultOrder has a goodTilBlock of 1150
-        BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() }),
+        BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() ?? '' }),
         placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
         OrderbookLevelsCache.updatePriceLevel({
           ticker: removedRedisOrder.ticker,

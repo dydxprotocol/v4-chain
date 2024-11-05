@@ -75,11 +75,11 @@ describe('candleHelper', () => {
   const startedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
     testConstants.createdDateTime,
     CandleResolution.ONE_MINUTE,
-  ).toISO();
+  ).toISO() ?? '';
   const previousStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
     testConstants.createdDateTime.minus({ minutes: 1 }),
     CandleResolution.ONE_MINUTE,
-  ).toISO();
+  ).toISO() ?? '';
   const lowPrice: string = '7500';
   const openPrice: string = '7000';
   const closePrice: string = '8000';
@@ -115,7 +115,7 @@ describe('candleHelper', () => {
         const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
-        ).toISO();
+        ).toISO() ?? '';
 
         return {
           ...defaultCandle,
@@ -155,7 +155,7 @@ describe('candleHelper', () => {
         const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
-        ).toISO();
+        ).toISO() ?? '';
 
         return {
           ...defaultCandle,
@@ -185,7 +185,7 @@ describe('candleHelper', () => {
         const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
-        ).toISO();
+        ).toISO() ?? '';
 
         return CandleTable.create({
           startedAt: currentStartedAt,
@@ -219,7 +219,7 @@ describe('candleHelper', () => {
         const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
-        ).toISO();
+        ).toISO() ?? '';
 
         return {
           id: CandleTable.uuid(currentStartedAt, defaultCandle.ticker, resolution),

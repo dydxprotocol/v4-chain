@@ -10,6 +10,8 @@ import {
 } from '@klyraprotocol-indexer/v4-protos';
 import _ from 'lodash';
 
+import { validateOrderAndReturnErrorMessage } from './helpers';
+import { Validator } from './validator';
 import { Handler, HandlerInitializer } from '../handlers/handler';
 import { LiquidationHandler } from '../handlers/order-fills/liquidation-handler';
 import { OrderHandler } from '../handlers/order-fills/order-handler';
@@ -17,8 +19,6 @@ import { redisClient } from '../helpers/redis/redis-controller';
 import { orderFillEventV1ToOrderFill } from '../helpers/translation-helper';
 import { OrderFillWithLiquidity } from '../lib/translated-types';
 import { OrderFillEventWithLiquidity } from '../lib/types';
-import { validateOrderAndReturnErrorMessage } from './helpers';
-import { Validator } from './validator';
 
 export class OrderFillValidator extends Validator<OrderFillEventV1> {
   public validate(): void {

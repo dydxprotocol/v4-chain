@@ -161,7 +161,7 @@ describe('Compliance data store', () => {
 
     const updatedTime: string = DateTime.fromISO(
       nonBlockedComplianceData.updatedAt!,
-    ).plus(10).toUTC().toISO();
+    ).plus(10).toUTC().toISO() ?? '';
 
     await ComplianceDataTable.update({
       address: nonBlockedComplianceData.address,
@@ -209,7 +209,7 @@ describe('Compliance data store', () => {
 
     const updatedTime: string = DateTime.fromISO(
       nonBlockedComplianceData.updatedAt!,
-    ).plus(10).toUTC().toISO();
+    ).plus(10).toUTC().toISO() ?? '';
 
     await ComplianceDataTable.upsert({
       address: nonBlockedComplianceData.address,
@@ -245,10 +245,10 @@ describe('Compliance data store', () => {
 
     const updatedTime1: string = DateTime.fromISO(
       nonBlockedComplianceData.updatedAt!,
-    ).plus(10).toUTC().toISO();
+    ).plus(10).toUTC().toISO() ?? '';
     const updatedTime2: string = DateTime.fromISO(
       nonBlockedComplianceData.updatedAt!,
-    ).plus(20).toUTC().toISO();
+    ).plus(20).toUTC().toISO() ?? '';
     const otherAddress: string = 'klyra1scu097p2sstqzupe6t687kpc2w4sv665kgchrz';
 
     await ComplianceDataTable.bulkUpsert(

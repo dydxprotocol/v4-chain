@@ -1,8 +1,8 @@
 import { IndexerTendermintEvent, OpenInterestUpdateEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { OpenInterestUpdateHandler } from '../handlers/open-interest-update-handler';
-import { Validator } from './validator';
 
 export class OpenInterestUpdateValidator extends Validator<OpenInterestUpdateEventV1> {
   public validate(): void {

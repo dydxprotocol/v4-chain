@@ -184,7 +184,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -221,7 +221,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -272,7 +272,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -331,7 +331,7 @@ describe('on-message', () => {
       expectTendermintEvent(defaultHeight.toString(), 0, eventIndex),
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex + 1),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     const newPerpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
@@ -388,7 +388,7 @@ describe('on-message', () => {
     await onMessage(kafkaMessage);
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -468,7 +468,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
@@ -508,7 +508,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -544,7 +544,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -593,7 +593,7 @@ describe('on-message', () => {
     await onMessage(kafkaMessage);
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -653,7 +653,7 @@ describe('on-message', () => {
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTendermintEvent(defaultHeight.toString(), blockTransactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
   });
 
@@ -702,7 +702,7 @@ describe('on-message', () => {
       expectTendermintEvent(defaultHeight.toString(), transactionIndex0, eventIndex1),
       expectTendermintEvent(defaultHeight.toString(), transactionIndex1, eventIndex0),
       expectTransactionWithHash([defaultTxHash, defaultTxHash2]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -749,7 +749,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(producerSendMock).toHaveBeenCalledTimes(3);
@@ -803,7 +803,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     // No messages should have been sent.

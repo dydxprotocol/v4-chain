@@ -20,6 +20,7 @@ import {
 import Long from 'long';
 import * as pg from 'pg';
 
+import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
@@ -31,7 +32,6 @@ import {
   ConsolidatedKafkaEvent,
   OrderFillEventWithLiquidation,
 } from '../../lib/types';
-import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
 export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'LiquidationEvent';

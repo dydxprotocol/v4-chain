@@ -1,9 +1,9 @@
 import { perpetualMarketRefresher } from '@klyraprotocol-indexer/postgres';
 import { IndexerTendermintEvent, UpdateClobPairEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { UpdateClobPairHandler } from '../handlers/update-clob-pair-handler';
-import { Validator } from './validator';
 
 export class UpdateClobPairValidator extends Validator<UpdateClobPairEventV1> {
   public validate(): void {

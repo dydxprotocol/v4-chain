@@ -158,7 +158,7 @@ describe('conditionalOrderPlacementHandler', () => {
       routerFeeSubaccountOwner: 'klyra1xxxxxx',
       routerFeeSubaccountNumber: '0',
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: defaultHeight.toString(),
     });
     expectOrderSubaccountKafkaMessage(
@@ -193,7 +193,7 @@ describe('conditionalOrderPlacementHandler', () => {
       createdAtHeight: '1',
       clientMetadata: '0',
       routerFeePpm: '0',
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: defaultHeight.toString(),
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
@@ -224,7 +224,7 @@ describe('conditionalOrderPlacementHandler', () => {
       routerFeeSubaccountOwner: 'klyra1xxxxxx',
       routerFeeSubaccountNumber: '0',
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: defaultHeight.toString(),
     });
     expectOrderSubaccountKafkaMessage(

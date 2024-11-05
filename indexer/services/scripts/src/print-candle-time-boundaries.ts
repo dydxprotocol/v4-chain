@@ -22,7 +22,7 @@ function getNormalizedBoundaries(time: string, resolutions: CandleResolution[]):
     const startTime = calculateNormalizedCandleStartTime(date, resolution);
     const endTime = startTime.plus({ seconds: NUM_SECONDS_IN_CANDLE_RESOLUTIONS[resolution] });
     // eslint-disable-next-line no-console
-    console.log(`Resolution: ${resolution}, Start Time: ${startTime.toISO()}, End Time: ${endTime.toISO()}`);
+    console.log(`Resolution: ${resolution}, Start Time: ${startTime.toISO() ?? ''}, End Time: ${endTime.toISO() ?? ''}`);
   });
 }
 

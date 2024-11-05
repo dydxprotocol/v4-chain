@@ -41,6 +41,7 @@ import {
 import Long from 'long';
 import { DateTime } from 'luxon';
 
+import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS, ZERO_ASSET_YIELD_INDEX } from '../../src/constants';
 import { SubaccountUpdate } from '../../src/lib/translated-types';
 import {
@@ -50,7 +51,6 @@ import {
   OrderFillEventWithOrder,
   SingleTradeMessage,
 } from '../../src/lib/types';
-import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 
 export const defaultZeroPerpYieldIndex: string = '0/1';
 export const onePerpYieldIndex: string = '1/1';

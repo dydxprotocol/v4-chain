@@ -1,12 +1,12 @@
 import { IndexerTendermintEvent, MarketEventV1 } from '@klyraprotocol-indexer/v4-protos';
 import Long from 'long';
 
+import { Validator } from './validator';
 import { Handler, HandlerInitializer } from '../handlers/handler';
 import { MarketCreateHandler } from '../handlers/markets/market-create-handler';
 import { MarketModifyHandler } from '../handlers/markets/market-modify-handler';
 import { MarketPriceUpdateHandler } from '../handlers/markets/market-price-update-handler';
 import { MarketCreateEventMessage, MarketModifyEventMessage, MarketPriceUpdateEventMessage } from '../lib/types';
-import { Validator } from './validator';
 
 export class MarketValidator extends Validator<MarketEventV1> {
   public validate(): void {

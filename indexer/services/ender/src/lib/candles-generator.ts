@@ -236,7 +236,7 @@ export class CandlesGenerator {
       );
     }
 
-    const sameStartTime: boolean = existingCandle.startedAt === currentStartTime.toISO();
+    const sameStartTime: boolean = existingCandle.startedAt === currentStartTime.toISO() ?? '';
     if (!sameStartTime) {
       // - Candle exists & !sameStartTime & there is a block update - create candle
       if (blockCandleUpdate !== undefined) {
@@ -346,7 +346,7 @@ export class CandlesGenerator {
     openInterestMap: OpenInterestMap,
   ): Promise<CandleFromDatabase> {
     const candle: CandleCreateObject = {
-      startedAt: startedAt.toISO(),
+      startedAt: startedAt.toISO() ?? '',
       ticker,
       resolution,
       low: blockCandleUpdate.low,
@@ -375,7 +375,7 @@ export class CandlesGenerator {
     existingCandle: CandleFromDatabase,
   ): Promise<CandleFromDatabase> {
     const candle: CandleCreateObject = {
-      startedAt: startedAt.toISO(),
+      startedAt: startedAt.toISO() ?? '',
       ticker,
       resolution,
       low: existingCandle.close,

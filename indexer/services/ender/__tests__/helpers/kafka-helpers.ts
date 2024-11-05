@@ -8,9 +8,9 @@ import {
 } from '@klyraprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 
-import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import { defaultHeight, defaultTime, defaultTxHash } from './constants';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from './indexer-proto-helpers';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 
 export function createKafkaMessageFromMarketEvent({
   marketEvents,

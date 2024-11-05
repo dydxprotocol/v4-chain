@@ -10,10 +10,10 @@ import {
 import { OffChainUpdateV1 } from '@klyraprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 
+import { defaultKafkaHeaders } from './constants';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
 import { KlyraRecordHeaderKeys } from '../../src/lib/types';
-import { defaultKafkaHeaders } from './constants';
 
 export async function handleInitialOrderPlace(
   orderPlace: redisTestConstants.OffChainUpdateOrderPlaceUpdateMessage,

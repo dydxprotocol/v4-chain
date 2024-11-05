@@ -86,7 +86,7 @@ describe('perpetual-positions-controller#V4', () => {
         // unrealizedPnl = size * (index price - entry price)
         // unrealizedPnl = 10 * (15_000 - 20_000)
         unrealizedPnl: getFixedRepresentation('-50000'),
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO() ?? '',
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
         perpYieldIndex: testConstants.defaultPerpetualPosition.perpYieldIndex!,
@@ -138,7 +138,7 @@ describe('perpetual-positions-controller#V4', () => {
         // unrealizedPnl = size * (index price - entry price)
         // unrealizedPnl = -10 * (15_000 - 20_000)
         unrealizedPnl: getFixedRepresentation('50000'),
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO() ?? '',
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
         perpYieldIndex: testConstants.defaultPerpetualPosition.perpYieldIndex!,
@@ -188,7 +188,7 @@ describe('perpetual-positions-controller#V4', () => {
         // unrealizedPnl = size * (index price - entry price)
         // unrealizedPnl = 10 * (15_000 - 20_000)
         unrealizedPnl: getFixedRepresentation('-50000'),
-        createdAt: testConstants.createdDateTime.toISO(),
+        createdAt: testConstants.createdDateTime.toISO() ?? '',
         closedAt: null,
         createdAtHeight: testConstants.createdHeight,
         perpYieldIndex: testConstants.defaultPerpetualPosition.perpYieldIndex!,

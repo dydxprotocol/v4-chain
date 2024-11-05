@@ -175,7 +175,7 @@ describe('sparklines-controller#V4', () => {
             ...testConstants.defaultCandle,
             resolution,
             close,
-            startedAt: DateTime.fromISO(testConstants.defaultCandle.startedAt).minus(i).toISO(),
+            startedAt: DateTime.fromISO(testConstants.defaultCandle.startedAt).minus(i).toISO() ?? '',
           });
         }),
       );
@@ -210,7 +210,7 @@ describe('sparklines-controller#V4', () => {
               startedAt: DateTime
                 .fromISO(testConstants.defaultCandle.startedAt)
                 .minus({ hour: i })
-                .toISO(),
+                .toISO() ?? '',
               ticker: testConstants.defaultPerpetualMarket.ticker,
               resolution,
               close: firstClosing,
@@ -228,7 +228,7 @@ describe('sparklines-controller#V4', () => {
               startedAt: DateTime
                 .fromISO(testConstants.defaultCandle.startedAt)
                 .minus({ hour: i })
-                .toISO(),
+                .toISO() ?? '',
               ticker: testConstants.defaultPerpetualMarket2.ticker,
               resolution,
               close: secondClosing,

@@ -91,7 +91,7 @@ describe('Subaccount store', () => {
       SubaccountTable.create({
         ...defaultSubaccount,
         address: 'fake_address',
-        updatedAt: DateTime.fromISO(defaultSubaccount.updatedAt).plus(1).toISO(),
+        updatedAt: DateTime.fromISO(defaultSubaccount.updatedAt).plus(1).toISO() ?? '',
       }),
     ]);
 
@@ -113,7 +113,7 @@ describe('Subaccount store', () => {
       SubaccountTable.create({
         ...defaultSubaccount,
         address: 'fake_address',
-        updatedAt: DateTime.fromISO(defaultSubaccount.updatedAt).minus(10).toISO(),
+        updatedAt: DateTime.fromISO(defaultSubaccount.updatedAt).minus(10).toISO() ?? '',
       }),
     ]);
 
@@ -144,7 +144,7 @@ describe('Subaccount store', () => {
     const defaultSubaccount3: SubaccountCreateObject = {
       address: defaultAddress,
       subaccountNumber: 3,
-      updatedAt: createdDateTime.toISO(),
+      updatedAt: createdDateTime.toISO() ?? '',
       updatedAtHeight: createdHeight,
       assetYieldIndex: zeroAssetYieldIndex,
     };
@@ -171,7 +171,7 @@ describe('Subaccount store', () => {
     const defaultSubaccount3: SubaccountCreateObject = {
       address: defaultAddress,
       subaccountNumber: 3,
-      updatedAt: createdDateTime.toISO(),
+      updatedAt: createdDateTime.toISO() ?? '',
       updatedAtHeight: createdHeight,
       assetYieldIndex: zeroAssetYieldIndex,
     };
@@ -197,7 +197,7 @@ describe('Subaccount store', () => {
     const defaultSubaccount3: SubaccountCreateObject = {
       address: defaultAddress,
       subaccountNumber: 3,
-      updatedAt: createdDateTime.toISO(),
+      updatedAt: createdDateTime.toISO() ?? '',
       updatedAtHeight: createdHeight,
       assetYieldIndex: zeroAssetYieldIndex,
     };

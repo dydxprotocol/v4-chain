@@ -94,7 +94,7 @@ describe('marketCreateHandler', () => {
       marketId: 100,
       marketCreate: {
         base: {
-          pair: 'ETH-USD',
+          pair: 'KLYRA-USD',
           minPriceChangePpm: 500,
         },
         exponent: -5,

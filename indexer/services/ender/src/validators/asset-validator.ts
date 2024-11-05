@@ -1,8 +1,8 @@
 import { AssetCreateEventV1, IndexerTendermintEvent } from '@klyraprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { AssetCreationHandler } from '../handlers/asset-handler';
 import { Handler } from '../handlers/handler';
-import { Validator } from './validator';
 
 export class AssetValidator extends Validator<AssetCreateEventV1> {
   public validate(): void {}

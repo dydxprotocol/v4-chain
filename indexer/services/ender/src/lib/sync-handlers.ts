@@ -3,9 +3,9 @@ import _ from 'lodash';
 import * as pg from 'pg';
 
 import config from '../config';
-import { Handler } from '../handlers/handler';
 import { KafkaPublisher } from './kafka-publisher';
 import { ConsolidatedKafkaEvent, KlyraIndexerSubtypes, EventMessage } from './types';
+import { Handler } from '../handlers/handler';
 
 // type alias for an array of handlers.
 type HandlerBatch = Handler<EventMessage>[];

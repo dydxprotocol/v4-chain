@@ -1,8 +1,8 @@
 import { IndexerTendermintEvent, DeleveragingEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { DeleveragingHandler } from '../handlers/order-fills/deleveraging-handler';
-import { Validator } from './validator';
 
 export class DeleveragingValidator extends Validator<DeleveragingEventV1> {
   public validate(): void {

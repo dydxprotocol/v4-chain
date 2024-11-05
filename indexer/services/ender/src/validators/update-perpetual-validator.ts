@@ -1,9 +1,9 @@
 import { perpetualMarketRefresher } from '@klyraprotocol-indexer/postgres';
 import { IndexerTendermintEvent, UpdatePerpetualEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { UpdatePerpetualHandler } from '../handlers/update-perpetual-handler';
-import { Validator } from './validator';
 
 export class UpdatePerpetualValidator extends Validator<UpdatePerpetualEventV1> {
   public validate(): void {

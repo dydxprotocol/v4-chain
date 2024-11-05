@@ -55,7 +55,8 @@ describe('Index', () => {
     (Subscriptions as unknown as jest.Mock).mockClear();
     (sendMessage as unknown as jest.Mock).mockClear();
     mockWss = new Wss();
-    websocket = new WebSocket(null);
+    // Use the first constructor overload that accepts null
+    websocket = new WebSocket(null); // explicit type assertion to match the overload
     wsOnSpy = jest.spyOn(websocket, 'on');
     wsPingSpy = jest.spyOn(websocket, 'ping').mockImplementation(jest.fn());
     wsTerminateSpy = jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());

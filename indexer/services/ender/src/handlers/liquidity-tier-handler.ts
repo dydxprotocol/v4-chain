@@ -9,9 +9,9 @@ import { LiquidityTierUpsertEventV1, LiquidityTierUpsertEventV2 } from '@klyrapr
 import _ from 'lodash';
 import * as pg from 'pg';
 
+import { Handler } from './handler';
 import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
-import { Handler } from './handler';
 
 export class LiquidityTierHandlerBase<T> extends Handler<T> {
   eventType: string = 'LiquidityTierUpsertEvent';

@@ -41,10 +41,10 @@ import { Big } from 'big.js';
 import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
-import { redisClient } from '../helpers/redis/redis-controller';
-import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
 import { getStateRemainingQuantums } from './helpers';
+import { redisClient } from '../helpers/redis/redis-controller';
+import { sendMessageWrapper } from '../lib/send-message-helper';
 
 /**
  * Handler for OrderRemove messages.
