@@ -1,4 +1,4 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { logger, ParseMessageError } from '@klyraprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
@@ -6,8 +6,8 @@ import {
   StatefulOrderEventV1,
   OrderRemovalReason,
   IndexerOrder_ConditionType,
-} from '@dydxprotocol-indexer/v4-protos';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+} from '@klyraprotocol-indexer/v4-protos';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import { StatefulOrderValidator } from '../../src/validators/stateful-order-validator';
 import {
   defaultConditionalOrderPlacementEvent,
@@ -23,7 +23,7 @@ import {
 } from '../helpers/constants';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
 import Long from 'long';
 
 describe('stateful-order-validator', () => {
@@ -364,7 +364,7 @@ function createBlock(
   statefulOrderEvent: StatefulOrderEventV1,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
-    DydxIndexerSubtypes.STATEFUL_ORDER,
+    KlyraIndexerSubtypes.STATEFUL_ORDER,
     StatefulOrderEventV1.encode(statefulOrderEvent).finish(),
     0,
     0,

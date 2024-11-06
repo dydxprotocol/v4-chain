@@ -1,0 +1,163 @@
+syntax = "proto3";
+package klyraprotocol.clob;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "klyraprotocol/clob/block_rate_limit_config.proto";
+import "klyraprotocol/clob/clob_pair.proto";
+import "klyraprotocol/clob/equity_tier_limit_config.proto";
+import "klyraprotocol/clob/liquidations_config.proto";
+import "klyraprotocol/clob/mev.proto";
+import "klyraprotocol/indexer/off_chain_updates/off_chain_updates.proto";
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Queries a ClobPair by id.
+  rpc ClobPair(QueryGetClobPairRequest) returns (QueryClobPairResponse) {
+    option (google.api.http).get = "/klyraprotocol/clob/clob_pair/{id}";
+  }
+
+  // Queries a list of ClobPair items.
+  rpc ClobPairAll(QueryAllClobPairRequest) returns (QueryClobPairAllResponse) {
+    option (google.api.http).get = "/klyraprotocol/clob/clob_pair";
+  }
+
+  // Runs the MEV node <> node calculation with the provided parameters.
+  rpc MevNodeToNodeCalculation(MevNodeToNodeCalculationRequest)
+      returns (MevNodeToNodeCalculationResponse) {
+    option (google.api.http) = {
+      post : "/klyraprotocol/clob/mev_node_to_node_calculation"
+      body : "*"
+    };
+  }
+
+  // Queries EquityTierLimitConfiguration.
+  rpc EquityTierLimitConfiguration(QueryEquityTierLimitConfigurationRequest)
+      returns (QueryEquityTierLimitConfigurationResponse) {
+    option (google.api.http).get = "/klyraprotocol/clob/equity_tier";
+  }
+
+  // Queries BlockRateLimitConfiguration.
+  rpc BlockRateLimitConfiguration(QueryBlockRateLimitConfigurationRequest)
+      returns (QueryBlockRateLimitConfigurationResponse) {
+    option (google.api.http).get = "/klyraprotocol/clob/block_rate";
+  }
+
+  // Queries LiquidationsConfiguration.
+  rpc LiquidationsConfiguration(QueryLiquidationsConfigurationRequest)
+      returns (QueryLiquidationsConfigurationResponse) {
+    option (google.api.http).get = "/klyraprotocol/clob/liquidations_config";
+  }
+
+  // GRPC Streams
+
+  // Streams orderbook updates.
+  rpc StreamOrderbookUpdates(StreamOrderbookUpdatesRequest)
+      returns (stream StreamOrderbookUpdatesResponse);
+}
+
+// QueryGetClobPairRequest is request type for the ClobPair method.
+message QueryGetClobPairRequest { uint32 id = 1; }
+
+// QueryClobPairResponse is response type for the ClobPair method.
+message QueryClobPairResponse {
+  ClobPair clob_pair = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryAllClobPairRequest is request type for the ClobPairAll method.
+message QueryAllClobPairRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryClobPairAllResponse is response type for the ClobPairAll method.
+message QueryClobPairAllResponse {
+  repeated ClobPair clob_pair = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// MevNodeToNodeCalculationRequest is a request message used to run the
+// MEV node <> node calculation.
+message MevNodeToNodeCalculationRequest {
+  // Represents the matches on the "block proposer". Note that this field
+  // does not need to be the actual block proposer's matches for a block, since
+  // the MEV calculation logic is run with this nodes matches as the "block
+  // proposer" matches.
+  klyraprotocol.clob.ValidatorMevMatches block_proposer_matches = 1;
+  // Represents the matches and mid-prices on the validator.
+  klyraprotocol.clob.MevNodeToNodeMetrics validator_mev_metrics = 2;
+}
+
+// MevNodeToNodeCalculationResponse is a response message that contains the
+// MEV node <> node calculation result.
+message MevNodeToNodeCalculationResponse {
+  // MevAndVolumePerClob contains information about the MEV and volume per CLOB.
+  message MevAndVolumePerClob {
+    uint32 clob_pair_id = 1;
+    float mev = 2;
+    uint64 volume = 3;
+  }
+  repeated MevAndVolumePerClob results = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryEquityTierLimitConfigurationRequest is a request message for
+// EquityTierLimitConfiguration.
+message QueryEquityTierLimitConfigurationRequest {}
+
+// QueryEquityTierLimitConfigurationResponse is a response message that contains
+// the EquityTierLimitConfiguration.
+message QueryEquityTierLimitConfigurationResponse {
+  EquityTierLimitConfiguration equity_tier_limit_config = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// QueryBlockRateLimitConfigurationRequest is a request message for
+// BlockRateLimitConfiguration.
+message QueryBlockRateLimitConfigurationRequest {}
+
+// QueryBlockRateLimitConfigurationResponse is a response message that contains
+// the BlockRateLimitConfiguration.
+message QueryBlockRateLimitConfigurationResponse {
+  BlockRateLimitConfiguration block_rate_limit_config = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// QueryLiquidationsConfigurationRequest is a request message for
+// LiquidationsConfiguration.
+message QueryLiquidationsConfigurationRequest {}
+
+// QueryLiquidationsConfigurationResponse is a response message that contains
+// the LiquidationsConfiguration.
+message QueryLiquidationsConfigurationResponse {
+  LiquidationsConfig liquidations_config = 1 [ (gogoproto.nullable) = false ];
+}
+
+// StreamOrderbookUpdatesRequest is a request message for the
+// StreamOrderbookUpdates method.
+message StreamOrderbookUpdatesRequest {
+  // Clob pair ids to stream orderbook updates for.
+  repeated uint32 clob_pair_id = 1;
+}
+
+// StreamOrderbookUpdatesResponse is a response message for the
+// StreamOrderbookUpdates method.
+message StreamOrderbookUpdatesResponse {
+  // Orderbook updates for the clob pair.
+  repeated klyraprotocol.indexer.off_chain_updates.OffChainUpdateV1 updates = 1
+      [ (gogoproto.nullable) = false ];
+
+  // Snapshot indicates if the response is from a snapshot of the orderbook.
+  // This is true for the initial response and false for all subsequent updates.
+  // Note that if the snapshot is true, then all previous entries should be
+  // discarded and the orderbook should be resynced.
+  bool snapshot = 2;
+
+  // ---Additional fields used to debug issues---
+  // Block height of the updates.
+  uint32 block_height = 3;
+
+  // Exec mode of the updates.
+  uint32 exec_mode = 4;
+}

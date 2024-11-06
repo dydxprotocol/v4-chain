@@ -4,13 +4,13 @@ import {
   SubaccountMessageContents,
   TransferFromDatabase,
   TransferModel,
-} from '@dydxprotocol-indexer/postgres';
-import { TransferEventV1 } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/postgres';
+import { TransferEventV1 } from '@klyraprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
+import { Handler } from './handler';
 import { generateTransferContents } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
-import { Handler } from './handler';
 
 export class TransferHandler extends Handler<TransferEventV1> {
   eventType: string = 'TransferEvent';

@@ -1,6 +1,6 @@
 import {
   logger,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 import Athena from 'aws-sdk/clients/athena';
 import RDS from 'aws-sdk/clients/rds';
 import S3 from 'aws-sdk/clients/s3';
@@ -254,7 +254,7 @@ export async function checkIfExportJobToS3IsOngoing(
     rdsExportIdentifier,
   });
 
-  // check if status was unexpected/invalid for dYdX
+  // check if status was unexpected/invalid for Klyra
   if (
     awsResponse.ExportTasks !== undefined &&
       awsResponse.ExportTasks.length > 0 &&

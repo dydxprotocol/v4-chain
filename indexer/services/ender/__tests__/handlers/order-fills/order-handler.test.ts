@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import {
   IndexerOrder,
   IndexerOrder_Side,
@@ -12,8 +12,8 @@ import {
   OffChainUpdateV1,
   OrderRemovalReason,
   OrderRemoveV1_OrderRemovalStatus,
-} from '@dydxprotocol-indexer/v4-protos';
-import { redis, CanceledOrdersCache } from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/v4-protos';
+import { redis, CanceledOrdersCache } from '@klyraprotocol-indexer/redis';
 import {
   assetRefresher,
   CandleFromDatabase,
@@ -38,7 +38,7 @@ import {
   testConstants,
   testMocks,
   TimeInForce,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { DateTime } from 'luxon';
 import {
@@ -47,7 +47,7 @@ import {
   STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
   SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
 } from '../../../src/constants';
-import { producer } from '@dydxprotocol-indexer/kafka';
+import { producer } from '@klyraprotocol-indexer/kafka';
 import { onMessage } from '../../../src/lib/on-message';
 import {
   createIndexerTendermintBlock,
@@ -63,7 +63,7 @@ import {
 } from '../../helpers/indexer-proto-helpers';
 import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
-import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
   defaultOrder,
@@ -72,7 +72,7 @@ import {
   defaultTakerOrder,
   defaultZeroPerpYieldIndex,
 } from '../../helpers/constants';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../../src/lib/types';
 import { OrderHandler } from '../../../src/handlers/order-fills/order-handler';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
 import Long from 'long';
@@ -141,7 +141,7 @@ describe('OrderHandler', () => {
     maxSize: '25',
     sumOpen: '10',
     entryPrice: '15000',
-    createdAt: DateTime.utc().toISO(),
+    createdAt: DateTime.utc().toISO() ?? '',
     createdAtHeight: '10',
     openEventId: testConstants.defaultTendermintEventId4,
     lastEventId: testConstants.defaultTendermintEventId4,
@@ -171,7 +171,7 @@ describe('OrderHandler', () => {
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.ORDER_FILL,
+        KlyraIndexerSubtypes.ORDER_FILL,
         OrderFillEventV1.encode(defaultOrderEvent).finish(),
         transactionIndex,
         eventIndex,
@@ -327,7 +327,7 @@ describe('OrderHandler', () => {
         routerFeePpm: '0',
         routerFeeSubaccountOwner: '""',
         routerFeeSubaccountNumber: '0',
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO() ?? '',
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -350,7 +350,7 @@ describe('OrderHandler', () => {
         routerFeePpm: '0',
         routerFeeSubaccountOwner: '""',
         routerFeeSubaccountNumber: '0',
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO() ?? '',
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -369,7 +369,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO() ?? '',
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: makerOrderProto.orderId!.clobPairId.toString(),
@@ -387,7 +387,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO() ?? '',
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: defaultClobPairId,
@@ -560,7 +560,7 @@ describe('OrderHandler', () => {
           orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
           clientMetadata: '0',
           routerFeePpm: '0',
-          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAt: DateTime.fromMillis(0).toISO() ?? '',
           updatedAtHeight: '0',
         }),
         // taker order
@@ -581,7 +581,7 @@ describe('OrderHandler', () => {
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
           routerFeePpm: '0',
-          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAt: DateTime.fromMillis(0).toISO() ?? '',
           updatedAtHeight: '0',
         }),
       ]);
@@ -679,7 +679,7 @@ describe('OrderHandler', () => {
         routerFeePpm: '0',
         routerFeeSubaccountOwner: '""',
         routerFeeSubaccountNumber: '0',
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO() ?? '',
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -702,7 +702,7 @@ describe('OrderHandler', () => {
         routerFeePpm: '0',
         routerFeeSubaccountOwner: '""',
         routerFeeSubaccountNumber: '0',
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO() ?? '',
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -722,7 +722,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO() ?? '',
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: defaultClobPairId,
@@ -740,7 +740,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO() ?? '',
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: defaultClobPairId,
@@ -860,7 +860,7 @@ describe('OrderHandler', () => {
           orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
           clientMetadata: '0',
           routerFeePpm: '0',
-          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAt: DateTime.fromMillis(0).toISO() ?? '',
           updatedAtHeight: '0',
         }),
         // taker order
@@ -881,9 +881,9 @@ describe('OrderHandler', () => {
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
           routerFeePpm: '0',
-          routerFeeSubaccountOwner: 'dydx1xxxx',
+          routerFeeSubaccountOwner: 'klyra1xxxx',
           routerFeeSubaccountNumber: '0',
-          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAt: DateTime.fromMillis(0).toISO() ?? '',
           updatedAtHeight: '0',
         }),
       ]);
@@ -979,7 +979,7 @@ describe('OrderHandler', () => {
         routerFeePpm: '0',
         routerFeeSubaccountOwner: '""',
         routerFeeSubaccountNumber: '0',
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO() ?? '',
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -1002,7 +1002,7 @@ describe('OrderHandler', () => {
         routerFeePpm: '0',
         routerFeeSubaccountOwner: '""',
         routerFeeSubaccountNumber: '0',
-        updatedAt: defaultDateTime.toISO(),
+        updatedAt: defaultDateTime.toISO() ?? '',
         updatedAtHeight: defaultHeight.toString(),
       });
 
@@ -1022,7 +1022,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO() ?? '',
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: defaultClobPairId,
@@ -1040,7 +1040,7 @@ describe('OrderHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO() ?? '',
         createdAtHeight: defaultHeight,
         type: FillType.LIMIT,
         clobPairId: defaultClobPairId,
@@ -1210,7 +1210,7 @@ describe('OrderHandler', () => {
       routerFeePpm: '0',
       routerFeeSubaccountOwner: '""',
       routerFeeSubaccountNumber: '0',
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: defaultHeight.toString(),
     });
 
@@ -1234,7 +1234,7 @@ describe('OrderHandler', () => {
       routerFeePpm: '0',
       routerFeeSubaccountOwner: '""',
       routerFeeSubaccountNumber: '0',
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: defaultHeight.toString(),
     });
 
@@ -1255,7 +1255,7 @@ describe('OrderHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO() ?? '',
       createdAtHeight: defaultHeight,
       type: FillType.LIMIT,
       clobPairId: defaultClobPairId,
@@ -1273,7 +1273,7 @@ describe('OrderHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO() ?? '',
       createdAtHeight: defaultHeight,
       type: FillType.LIMIT,
       clobPairId: defaultClobPairId,
@@ -1426,7 +1426,7 @@ describe('OrderHandler', () => {
       routerFeePpm: '0',
       routerFeeSubaccountOwner: '""',
       routerFeeSubaccountNumber: '0',
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: defaultHeight.toString(),
     });
 
@@ -1449,7 +1449,7 @@ describe('OrderHandler', () => {
       routerFeePpm: '0',
       routerFeeSubaccountOwner: '""',
       routerFeeSubaccountNumber: '0',
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: defaultHeight.toString(),
     });
 
@@ -1469,7 +1469,7 @@ describe('OrderHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO() ?? '',
       createdAtHeight: defaultHeight,
       type: FillType.LIMIT,
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
@@ -1487,7 +1487,7 @@ describe('OrderHandler', () => {
       quoteAmount,
       eventId,
       transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO() ?? '',
       createdAtHeight: defaultHeight,
       type: FillType.LIMIT,
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,

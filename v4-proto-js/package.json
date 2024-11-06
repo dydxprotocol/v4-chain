@@ -1,9 +1,9 @@
 {
-  "name": "@dydxprotocol/v4-proto",
+  "name": "@klyraprotocol/v4-proto",
   "version": "0.0.0",
   "access": "public",
-  "description": "Protos for dYdX v4 protocol",
-  "author": "dYdX Trading Inc.",
+  "description": "Protos for Klyra v4 protocol",
+  "author": "Klyra Trading Inc.",
   "homepage": "https://github.com/dydxprotocol/v4-chain",
   "license": "AGPL-3.0",
   "main": "main/index.js",
@@ -32,7 +32,7 @@
   },
   "keywords": [],
   "bugs": {
-    "url": "https://github.com/dydxprotocol/v4-chain/issues"
+    "url": "https://github.com/StreamFinance-Protocol/stream-chain/issues"
   },
   "devDependencies": {
     "@cosmjs/stargate": "^0.32.1",

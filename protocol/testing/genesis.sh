@@ -11,9 +11,9 @@ EIGHTEEN_ZEROS="$NINE_ZEROS$NINE_ZEROS"
 
 # Address of the `subaccounts` module account.
 # Obtained from `authtypes.NewModuleAddress(subaccounttypes.ModuleName)`.
-SUBACCOUNTS_MODACC_ADDR="dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6"
-REWARDS_VESTER_ACCOUNT_ADDR="dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp"
-SDAIPOOL_ACCOUNT_ADDR="dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0"
+SUBACCOUNTS_MODACC_ADDR="klyra1v88c3xv9xyv3eetdx0tvcmq7ung3dywptd5ps3"
+REWARDS_VESTER_ACCOUNT_ADDR="klyra1ltyc6y4skclzafvpznpt2qjwmfwgsndp29jvn2"
+SDAIPOOL_ACCOUNT_ADDR="klyra1r3fsd6humm0ghyq0te5jf8eumklmclyaw0hs3y"
 
 TDAI_DENOM="utdai"
 REWARD_TOKEN="adv4tnt"
@@ -23,7 +23,7 @@ DEFAULT_SDAIPOOL_BALANCE=2600000000000000000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
 NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
-COIN_NAME="dYdX V4 Testnet Token"
+COIN_NAME="klyra V4 Testnet Token"
 # Each testnet validator has 1 million whole coins of native token.
 TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE=1000000$EIGHTEEN_ZEROS # 1e24 or 1 million native tokens.
 # Each testnet validator self-delegates 500k whole coins of native token.
@@ -1086,22 +1086,6 @@ function edit_genesis() {
 	# USDT Exchange Config
 	usdt_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/usdt_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[33].exchange_config_json' -v "$usdt_exchange_config_json"
-
-	# Market: DYDX-USD
-	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
-	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].pair' -v 'DYDX-USD'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].id' -v '1000001'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_exchanges' -v '3'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_price_change_ppm' -v '2500'  # 0.25%
-	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].id' -v '1000001'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].spot_price' -v '2050000000'          # $2.05 = 1 DYDX.
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].pnl_price' -v '2050000000'          # $2.05 = 1 DYDX.
-	# DYDX Exchange Config
-	dydx_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/dydx_exchange_config.json" | jq -c '.')
-	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$dydx_exchange_config_json"
 
 	total_accounts_quote_balance=0
 	acct_idx=0

@@ -8,7 +8,7 @@ import {
   parseSchema,
   NodeEnv,
   parseBoolean,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 
 export const kafkaConfigSchema = {
   // Required to set groupId and clientId for kafka.

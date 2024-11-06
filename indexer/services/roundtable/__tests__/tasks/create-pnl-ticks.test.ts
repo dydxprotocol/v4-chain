@@ -9,29 +9,29 @@ import {
   testMocks,
   TransferTable,
   FundingIndexUpdatesTable,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 
 import createPnlTicksTask from '../../src/tasks/create-pnl-ticks';
-import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@dydxprotocol-indexer/redis';
+import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@klyraprotocol-indexer/redis';
 import { DateTime } from 'luxon';
 import config from '../../src/config';
 import { redisClient } from '../../src/helpers/redis';
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 
 describe('create-pnl-ticks', () => {
 
   const pnlTickForSubaccounts: PnlTickForSubaccounts = {
     [testConstants.defaultSubaccountId]: {
       ...testConstants.defaultPnlTick,
-      createdAt: DateTime.utc(2022, 6, 1, 0, 0, 0).toISO(),
-      blockTime: DateTime.utc(2022, 6, 1, 0, 0, 0).toISO(),
+      createdAt: DateTime.utc(2022, 6, 1, 0, 0, 0).toISO() ?? '',
+      blockTime: DateTime.utc(2022, 6, 1, 0, 0, 0).toISO() ?? '',
     },
   };
   const existingPnlTicksNeedsUpdate: PnlTickForSubaccounts = {
     [testConstants.defaultSubaccountId]: {
       ...testConstants.defaultPnlTick,
-      createdAt: DateTime.utc(2022, 5, 31, 23, 59, 0).toISO(),
-      blockTime: DateTime.utc(2022, 5, 31, 23, 59, 0).toISO(),
+      createdAt: DateTime.utc(2022, 5, 31, 23, 59, 0).toISO() ?? '',
+      blockTime: DateTime.utc(2022, 5, 31, 23, 59, 0).toISO() ?? '',
     },
   };
   const dateTime: DateTime = DateTime.utc(2022, 6, 1, 0, 30, 0);
@@ -108,8 +108,8 @@ describe('create-pnl-ticks', () => {
     expect(pnlTicks).toEqual(
       expect.arrayContaining([
         {
-          id: PnlTicksTable.uuid(testConstants.defaultSubaccountId2, dateTime.toISO()),
-          createdAt: dateTime.toISO(),
+          id: PnlTicksTable.uuid(testConstants.defaultSubaccountId2, dateTime.toISO() ?? ''),
+          createdAt: dateTime.toISO() ?? '',
           blockHeight: '5',
           blockTime: testConstants.defaultBlock.time,
           equity: '0.000000',
@@ -118,8 +118,8 @@ describe('create-pnl-ticks', () => {
           totalPnl: '-20.500000',
         },
         {
-          id: PnlTicksTable.uuid(testConstants.defaultSubaccountId, dateTime.toISO()),
-          createdAt: dateTime.toISO(),
+          id: PnlTicksTable.uuid(testConstants.defaultSubaccountId, dateTime.toISO() ?? ''),
+          createdAt: dateTime.toISO() ?? '',
           blockHeight: '5',
           blockTime: testConstants.defaultBlock.time,
           equity: '0.000000',
@@ -153,8 +153,8 @@ describe('create-pnl-ticks', () => {
     expect(pnlTicks).toEqual(
       expect.arrayContaining([
         {
-          id: PnlTicksTable.uuid(testConstants.defaultSubaccountId2, dateTime.toISO()),
-          createdAt: dateTime.toISO(),
+          id: PnlTicksTable.uuid(testConstants.defaultSubaccountId2, dateTime.toISO() ?? ''),
+          createdAt: dateTime.toISO() ?? '',
           blockHeight: '5',
           blockTime: testConstants.defaultBlock.time,
           equity: '0.000000',
@@ -163,8 +163,8 @@ describe('create-pnl-ticks', () => {
           totalPnl: '-20.500000',
         },
         {
-          id: PnlTicksTable.uuid(testConstants.defaultSubaccountId, dateTime.toISO()),
-          createdAt: dateTime.toISO(),
+          id: PnlTicksTable.uuid(testConstants.defaultSubaccountId, dateTime.toISO() ?? ''),
+          createdAt: dateTime.toISO() ?? '',
           blockHeight: '5',
           blockTime: testConstants.defaultBlock.time,
           equity: '105000.000000',
@@ -205,8 +205,8 @@ describe('create-pnl-ticks', () => {
       expect(pnlTicks).toEqual(
         expect.arrayContaining([
           {
-            id: PnlTicksTable.uuid(testConstants.defaultSubaccountId2, dateTime.toISO()),
-            createdAt: dateTime.toISO(),
+            id: PnlTicksTable.uuid(testConstants.defaultSubaccountId2, dateTime.toISO() ?? ''),
+            createdAt: dateTime.toISO() ?? '',
             blockHeight: '5',
             blockTime: testConstants.defaultBlock.time,
             equity: '0.000000',
@@ -215,8 +215,8 @@ describe('create-pnl-ticks', () => {
             totalPnl: '-20.500000',
           },
           {
-            id: PnlTicksTable.uuid(testConstants.defaultSubaccountId, dateTime.toISO()),
-            createdAt: dateTime.toISO(),
+            id: PnlTicksTable.uuid(testConstants.defaultSubaccountId, dateTime.toISO() ?? ''),
+            createdAt: dateTime.toISO() ?? '',
             blockHeight: '5',
             blockTime: testConstants.defaultBlock.time,
             equity: '105000.000000',
@@ -257,8 +257,8 @@ describe('create-pnl-ticks', () => {
       expect(pnlTicks).toEqual(
         expect.arrayContaining([
           {
-            id: PnlTicksTable.uuid(testConstants.defaultSubaccountId2, dateTime.toISO()),
-            createdAt: dateTime.toISO(),
+            id: PnlTicksTable.uuid(testConstants.defaultSubaccountId2, dateTime.toISO() ?? ''),
+            createdAt: dateTime.toISO() ?? '',
             blockHeight: '5',
             blockTime: testConstants.defaultBlock.time,
             equity: '0.000000',

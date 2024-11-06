@@ -1,6 +1,6 @@
 import {
   KafkaTopics, producer, ProducerMessage, TRADES_WEBSOCKET_MESSAGE_VERSION,
-} from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/kafka';
 import {
   FillFromDatabase,
   FillTable,
@@ -16,8 +16,8 @@ import {
   TradeMessageContents,
   TradeType,
   TransferFromDatabase,
-} from '@dydxprotocol-indexer/postgres';
-import { IndexerSubaccountId, SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/postgres';
+import { IndexerSubaccountId, SubaccountMessage, TradeMessage } from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import { AnnotatedSubaccountMessage, ConsolidatedKafkaEvent, SingleTradeMessage } from '../../src/lib/types';
@@ -250,7 +250,7 @@ describe('kafka-publisher', () => {
       quoteAmount: '200000',
       eventId: testConstants.defaultTendermintEventId,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: testConstants.createdDateTime.toISO(),
+      createdAt: testConstants.createdDateTime.toISO() ?? '',
       createdAtHeight: testConstants.createdHeight,
       clientMetadata: '0',
       fee: '1.1',
@@ -275,7 +275,7 @@ describe('kafka-publisher', () => {
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
       transactionHash: 'hash',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO() ?? '',
       createdAtHeight: '1',
     };
     it('successfully aggregates all fill events per order id and sorts messages', async () => {

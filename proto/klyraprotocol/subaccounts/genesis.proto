@@ -1,0 +1,12 @@
+syntax = "proto3";
+package klyraprotocol.subaccounts;
+
+import "gogoproto/gogo.proto";
+import "klyraprotocol/subaccounts/subaccount.proto";
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types";
+
+// GenesisState defines the subaccounts module's genesis state.
+message GenesisState {
+  repeated Subaccount subaccounts = 1 [ (gogoproto.nullable) = false ];
+}

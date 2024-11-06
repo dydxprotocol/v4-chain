@@ -1,4 +1,4 @@
-import { OrderUpdateV1 } from '@dydxprotocol-indexer/v4-protos';
+import { OrderUpdateV1 } from '@klyraprotocol-indexer/v4-protos';
 import _ from 'lodash';
 import { Callback, RedisClient } from 'redis';
 

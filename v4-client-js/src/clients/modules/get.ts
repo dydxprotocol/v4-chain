@@ -28,7 +28,7 @@ import { TendermintClient } from "./tendermintClient";
 
 // Required for encoding and decoding queries that are of type Long.
 // Must be done once but since the individal modules should be usable without
-// dYdXClient - must be set in each module that encounters encoding/decoding Longs.
+// KlyraClient - must be set in each module that encounters encoding/decoding Longs.
 // Reference: https://github.com/protobufjs/protobuf.js/issues/921
 protobuf.util.Long = Long;
 protobuf.configure();
@@ -75,7 +75,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.feetiers.Query/PerpetualFeeParams",
+      "/klyraprotocol.feetiers.Query/PerpetualFeeParams",
       requestData
     );
     return FeeTierModule.QueryPerpetualFeeParamsResponse.decode(data);
@@ -94,7 +94,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.feetiers.Query/UserFeeTier",
+      "/klyraprotocol.feetiers.Query/UserFeeTier",
       requestData
     );
     return FeeTierModule.QueryUserFeeTierResponse.decode(data);
@@ -113,7 +113,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.stats.Query/UserStats",
+      "/klyraprotocol.stats.Query/UserStats",
       requestData
     );
     return StatsModule.QueryUserStatsResponse.decode(data).stats;
@@ -171,7 +171,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.subaccounts.Query/SubaccountAll",
+      "/klyraprotocol.subaccounts.Query/SubaccountAll",
       requestData
     );
     return SubaccountsModule.QuerySubaccountAllResponse.decode(data);
@@ -194,7 +194,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.subaccounts.Query/Subaccount",
+      "/klyraprotocol.subaccounts.Query/Subaccount",
       requestData
     );
     return SubaccountsModule.QuerySubaccountResponse.decode(data);
@@ -213,7 +213,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.clob.Query/ClobPairAll",
+      "/klyraprotocol.clob.Query/ClobPairAll",
       requestData
     );
     return ClobModule.QueryClobPairAllResponse.decode(data);
@@ -230,7 +230,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.clob.Query/ClobPair",
+      "/klyraprotocol.clob.Query/ClobPair",
       requestData
     );
     return ClobModule.QueryClobPairResponse.decode(data);
@@ -249,7 +249,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.prices.Query/AllMarketPrices",
+      "/klyraprotocol.prices.Query/AllMarketPrices",
       requestData
     );
     return PricesModule.QueryAllMarketPricesResponse.decode(data);
@@ -268,7 +268,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.prices.Query/MarketPrice",
+      "/klyraprotocol.prices.Query/MarketPrice",
       requestData
     );
     return PricesModule.QueryMarketPriceResponse.decode(data);
@@ -287,7 +287,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.perpetuals.Query/AllPerpetuals",
+      "/klyraprotocol.perpetuals.Query/AllPerpetuals",
       requestData
     );
     return PerpetualsModule.QueryAllPerpetualsResponse.decode(data);
@@ -308,7 +308,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.perpetuals.Query/Perpetual",
+      "/klyraprotocol.perpetuals.Query/Perpetual",
       requestData
     );
     return PerpetualsModule.QueryPerpetualResponse.decode(data);
@@ -351,7 +351,7 @@ export class Get {
     );
 
     const data: Uint8Array = await this.sendQuery(
-      "/dydxprotocol.clob.Query/EquityTierLimitConfiguration",
+      "/klyraprotocol.clob.Query/EquityTierLimitConfiguration",
       requestData
     );
     return ClobModule.QueryEquityTierLimitConfigurationResponse.decode(data);

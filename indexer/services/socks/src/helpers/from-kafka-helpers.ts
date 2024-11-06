@@ -1,11 +1,11 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import {
   perpetualMarketRefresher,
   PROTO_TO_CANDLE_RESOLUTION,
   parentSubaccountHelpers,
   SubaccountMessageContents,
-} from '@dydxprotocol-indexer/postgres';
-import { getParentSubaccountNum } from '@dydxprotocol-indexer/postgres/build/src/lib/parent-subaccount-helpers';
+} from '@klyraprotocol-indexer/postgres';
+import { getParentSubaccountNum } from '@klyraprotocol-indexer/postgres/build/src/lib/parent-subaccount-helpers';
 import {
   CandleMessage,
   CandleMessage_Resolution,
@@ -13,7 +13,7 @@ import {
   OrderbookMessage,
   TradeMessage,
   SubaccountMessage,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 
 import { TOPIC_TO_CHANNEL, V4_MARKETS_ID } from '../lib/constants';

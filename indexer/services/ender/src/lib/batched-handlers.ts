@@ -1,11 +1,11 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@klyraprotocol-indexer/base';
 import _ from 'lodash';
 import * as pg from 'pg';
 
 import config from '../config';
-import { Handler } from '../handlers/handler';
 import { KafkaPublisher } from './kafka-publisher';
 import { ConsolidatedKafkaEvent, EventMessage } from './types';
+import { Handler } from '../handlers/handler';
 
 // type alias for an array of handlers, handlers in a `HandlerBatch` can be processed in parallel.
 type HandlerBatch = Handler<EventMessage>[];

@@ -1,7 +1,7 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import {
   consumer, producer, TO_ENDER_TOPIC, updateOnMessageFunction,
-} from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 
 import { onMessage } from '../../lib/on-message';

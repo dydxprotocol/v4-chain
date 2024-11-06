@@ -31,7 +31,7 @@ func TestAllLiquidityTiers(
 	abciResponse, err := tApp.App.Query(
 		context.Background(),
 		&abci.RequestQuery{
-			Path: "/dydxprotocol.perpetuals.Query/AllLiquidityTiers",
+			Path: "/klyraprotocol.perpetuals.Query/AllLiquidityTiers",
 			Data: tApp.App.AppCodec().MustMarshal(&request),
 		})
 	require.NoError(t, err)

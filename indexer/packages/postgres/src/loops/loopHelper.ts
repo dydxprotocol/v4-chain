@@ -1,4 +1,4 @@
-import { delay, logger } from '@dydxprotocol-indexer/base';
+import { delay, logger } from '@klyraprotocol-indexer/base';
 
 export async function startUpdateLoop(
   updateFunction: () => Promise<void>,

@@ -214,7 +214,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 	appOptions := defaultAppOptionsForSimulation()
 
-	dydxApp := NewSimApp(
+	klyraApp := NewSimApp(
 		b,
 		func() *app.App {
 			return app.New(
@@ -226,30 +226,30 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 				interBlockCacheOpt(),
 			)
 		})
-	dydxApp.WithRandomlyGeneratedOperationsSimulationManager()
+	klyraApp.WithRandomlyGeneratedOperationsSimulationManager()
 
 	// Note: While our app does not use the `vesting` module, the `auth` module still attempts to create
 	// vesting accounts during simulation here:
-	// https://github.com/dydxprotocol/cosmos-sdk/blob/dydx-fork-v0.47.0-rc2/x/auth/simulation/genesis.go#L26
+	// https://github.com/StreamFinance-Protocol/cosmos-sdk/blob/klyra-fork-v0.47.0-rc2/x/auth/simulation/genesis.go#L26
 	// For this reason, we need to register the `vesting` module interfaces so that the Genesis state of `auth` can be
 	// marshaled properly.
-	vestingtypes.RegisterInterfaces(dydxApp.InterfaceRegistry())
+	vestingtypes.RegisterInterfaces(klyraApp.InterfaceRegistry())
 
 	// Run randomized simulations
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
-		dydxApp.GetBaseApp(),
-		AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
+		klyraApp.GetBaseApp(),
+		AppStateFn(klyraApp.AppCodec(), klyraApp.SimulationManager()),
 		simtypes.RandomAccounts,
-		simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
+		simtestutil.SimulationOperations(klyraApp, klyraApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
-		dydxApp.AppCodec(),
+		klyraApp.AppCodec(),
 	)
 
 	// export state and simParams before the simulation error is checked
-	if err = simtestutil.CheckExportSimulation(dydxApp, config, simParams); err != nil {
+	if err = simtestutil.CheckExportSimulation(klyraApp, config, simParams); err != nil {
 		b.Fatal(err)
 	}
 
@@ -286,7 +286,7 @@ func TestFullAppSimulation(t *testing.T) {
 
 	appOptions := defaultAppOptionsForSimulation()
 
-	dydxApp := NewSimApp(
+	klyraApp := NewSimApp(
 		t,
 		func() *app.App {
 			return app.New(
@@ -297,27 +297,27 @@ func TestFullAppSimulation(t *testing.T) {
 				appOptions,
 			)
 		})
-	dydxApp.WithRandomlyGeneratedOperationsSimulationManager()
-	require.Equal(t, "dydxprotocol", dydxApp.Name())
+	klyraApp.WithRandomlyGeneratedOperationsSimulationManager()
+	require.Equal(t, "klyraprotocol", klyraApp.Name())
 
 	// Note: While our app does not use the `vesting` module, the `auth` module still attempts to create
 	// vesting accounts during simulation here:
-	// https://github.com/dydxprotocol/cosmos-sdk/blob/dydx-fork-v0.47.0-rc2/x/auth/simulation/genesis.go#L26
+	// https://github.com/StreamFinance-Protocol/cosmos-sdk/blob/klyra-fork-v0.47.0-rc2/x/auth/simulation/genesis.go#L26
 	// For this reason, we need to register the `vesting` module interfaces so that the Genesis state of `auth` can be
 	// marshaled properly.
-	vestingtypes.RegisterInterfaces(dydxApp.InterfaceRegistry())
+	vestingtypes.RegisterInterfaces(klyraApp.InterfaceRegistry())
 
 	// run randomized simulation
 	_, _, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
-		dydxApp.GetBaseApp(),
-		AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
+		klyraApp.GetBaseApp(),
+		AppStateFn(klyraApp.AppCodec(), klyraApp.SimulationManager()),
 		simtypes.RandomAccounts,
-		simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
+		simtestutil.SimulationOperations(klyraApp, klyraApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
 		config,
-		dydxApp.AppCodec(),
+		klyraApp.AppCodec(),
 	)
 	require.NoError(t, simErr)
 
@@ -358,7 +358,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-			dydxApp := NewSimApp(
+			klyraApp := NewSimApp(
 				t,
 				func() *app.App {
 					return app.New(
@@ -370,7 +370,7 @@ func TestAppStateDeterminism(t *testing.T) {
 						interBlockCacheOpt(),
 					)
 				})
-			dydxApp.WithRandomlyGeneratedOperationsSimulationManager()
+			klyraApp.WithRandomlyGeneratedOperationsSimulationManager()
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
@@ -379,21 +379,21 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			// Note: While our app does not use the `vesting` module, the `auth` module still attempts to create
 			// vesting accounts during simulation here:
-			// https://github.com/dydxprotocol/cosmos-sdk/blob/dydx-fork-v0.47.0-rc2/x/auth/simulation/genesis.go#L26
+			// https://github.com/StreamFinance-Protocol/cosmos-sdk/blob/klyra-fork-v0.47.0-rc2/x/auth/simulation/genesis.go#L26
 			// For this reason, we need to register the `vesting` module interfaces so that the Genesis state of `auth` can be
 			// marshaled properly.
-			vestingtypes.RegisterInterfaces(dydxApp.InterfaceRegistry())
+			vestingtypes.RegisterInterfaces(klyraApp.InterfaceRegistry())
 
 			_, _, err := simulation.SimulateFromSeed(
 				t,
 				os.Stdout,
-				dydxApp.GetBaseApp(),
-				AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
+				klyraApp.GetBaseApp(),
+				AppStateFn(klyraApp.AppCodec(), klyraApp.SimulationManager()),
 				simtypes.RandomAccounts,
-				simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
+				simtestutil.SimulationOperations(klyraApp, klyraApp.AppCodec(), config),
 				app.ModuleAccountAddrs(),
 				config,
-				dydxApp.AppCodec(),
+				klyraApp.AppCodec(),
 			)
 			require.NoError(t, err)
 
@@ -401,7 +401,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				simtestutil.PrintStats(db)
 			}
 
-			appHash := dydxApp.LastCommitID().Hash
+			appHash := klyraApp.LastCommitID().Hash
 			appHashList[j] = appHash
 
 			if j != 0 {
@@ -561,7 +561,7 @@ func AppStateRandomizedFn(
 		func(r *rand.Rand) {
 			// Since the stake token denom has 18 decimals, the initial stake balance needs to be at least
 			// 1e18 to be considered valid. However, in the current implementation of auth simulation logic
-			// (https://github.com/dydxprotocol/cosmos-sdk/blob/93454d9f/x/auth/simulation/genesis.go#L38),
+			// (https://github.com/StreamFinance-Protocol/cosmos-sdk/blob/93454d9f/x/auth/simulation/genesis.go#L38),
 			// `initialStake` is casted to an `int64` value (max_int64 ~= 9.22e18).
 			// As such today the only valid range of values for `initialStake` is [1e18, max_int64]. Note
 			// this only represents 1~9 full coins.

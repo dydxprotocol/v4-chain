@@ -1,8 +1,8 @@
 import { readFileSync } from 'fs';
 import path from 'path';
 
-import { logger } from '@dydxprotocol-indexer/base';
-import { dbHelpers, storeHelpers } from '@dydxprotocol-indexer/postgres';
+import { logger } from '@klyraprotocol-indexer/base';
+import { dbHelpers, storeHelpers } from '@klyraprotocol-indexer/postgres';
 
 export type PostgresFunction = {
   // The name of the script
@@ -27,24 +27,24 @@ function newScript(name: string, scriptPath: string): PostgresFunction {
 }
 
 const HANDLER_SCRIPTS: string[] = [
-  'dydx_asset_create_handler.sql',
-  'dydx_block_processor_ordered_handlers.sql',
-  'dydx_block_processor_unordered_handlers.sql',
-  'dydx_deleveraging_handler.sql',
-  'dydx_funding_handler.sql',
-  'dydx_liquidity_tier_handler.sql',
-  'dydx_market_create_handler.sql',
-  'dydx_market_modify_handler.sql',
-  'dydx_market_price_update_handler.sql',
-  'dydx_open_interest_update_handler.sql',
-  'dydx_perpetual_market_v1_handler.sql',
-  'dydx_perpetual_market_v2_handler.sql',
-  'dydx_stateful_order_handler.sql',
-  'dydx_subaccount_update_handler.sql',
-  'dydx_transfer_handler.sql',
-  'dydx_update_clob_pair_handler.sql',
-  'dydx_update_perpetual_handler.sql',
-  'dydx_yield_params_handler.sql',
+  'klyra_asset_create_handler.sql',
+  'klyra_block_processor_ordered_handlers.sql',
+  'klyra_block_processor_unordered_handlers.sql',
+  'klyra_deleveraging_handler.sql',
+  'klyra_funding_handler.sql',
+  'klyra_liquidity_tier_handler.sql',
+  'klyra_market_create_handler.sql',
+  'klyra_market_modify_handler.sql',
+  'klyra_market_price_update_handler.sql',
+  'klyra_open_interest_update_handler.sql',
+  'klyra_perpetual_market_v1_handler.sql',
+  'klyra_perpetual_market_v2_handler.sql',
+  'klyra_stateful_order_handler.sql',
+  'klyra_subaccount_update_handler.sql',
+  'klyra_transfer_handler.sql',
+  'klyra_update_clob_pair_handler.sql',
+  'klyra_update_perpetual_handler.sql',
+  'klyra_yield_params_handler.sql',
 ];
 
 const DB_SETUP_SCRIPTS: string[] = [
@@ -53,45 +53,45 @@ const DB_SETUP_SCRIPTS: string[] = [
 ];
 
 const HELPER_SCRIPTS: string[] = [
-  'dydx_clob_pair_status_to_market_status.sql',
-  'dydx_create_initial_rows_for_tendermint_block.sql',
-  'dydx_create_tendermint_event.sql',
-  'dydx_create_transaction.sql',
-  'dydx_event_id_from_parts.sql',
-  'dydx_from_jsonlib_long.sql',
-  'dydx_from_protocol_order_side.sql',
-  'dydx_from_protocol_time_in_force.sql',
-  'dydx_from_serializable_int.sql',
-  'dydx_get_fee_from_liquidity.sql',
-  'dydx_get_order_status.sql',
-  'dydx_get_perpetual_market_for_clob_pair.sql',
-  'dydx_get_total_filled_from_liquidity.sql',
-  'dydx_get_weighted_average.sql',
-  'dydx_liquidation_fill_handler_per_order.sql',
-  'dydx_order_fill_handler_per_order.sql',
-  'dydx_perpetual_position_and_order_side_matching.sql',
-  'dydx_protocol_condition_type_to_order_type.sql',
-  'dydx_tendermint_event_to_transaction_index.sql',
-  'dydx_trim_scale.sql',
-  'dydx_update_perpetual_position_aggregate_fields.sql',
-  'dydx_uuid.sql',
-  'dydx_uuid_from_asset_position_parts.sql',
-  'dydx_uuid_from_fill_event_parts.sql',
-  'dydx_uuid_from_funding_index_update_parts.sql',
-  'dydx_uuid_from_oracle_price_parts.sql',
-  'dydx_uuid_from_order_id.sql',
-  'dydx_uuid_from_order_id_parts.sql',
-  'dydx_uuid_from_perpetual_position_parts.sql',
-  'dydx_uuid_from_subaccount_id.sql',
-  'dydx_uuid_from_subaccount_id_parts.sql',
-  'dydx_uuid_from_transaction_parts.sql',
-  'dydx_uuid_from_transfer_parts.sql',
-  'dydx_uuid_from_yield_params_parts.sql',
-  'dydx_protocol_market_type_to_perpetual_market_type.sql',
+  'klyra_clob_pair_status_to_market_status.sql',
+  'klyra_create_initial_rows_for_tendermint_block.sql',
+  'klyra_create_tendermint_event.sql',
+  'klyra_create_transaction.sql',
+  'klyra_event_id_from_parts.sql',
+  'klyra_from_jsonlib_long.sql',
+  'klyra_from_protocol_order_side.sql',
+  'klyra_from_protocol_time_in_force.sql',
+  'klyra_from_serializable_int.sql',
+  'klyra_get_fee_from_liquidity.sql',
+  'klyra_get_order_status.sql',
+  'klyra_get_perpetual_market_for_clob_pair.sql',
+  'klyra_get_total_filled_from_liquidity.sql',
+  'klyra_get_weighted_average.sql',
+  'klyra_liquidation_fill_handler_per_order.sql',
+  'klyra_order_fill_handler_per_order.sql',
+  'klyra_perpetual_position_and_order_side_matching.sql',
+  'klyra_protocol_condition_type_to_order_type.sql',
+  'klyra_tendermint_event_to_transaction_index.sql',
+  'klyra_trim_scale.sql',
+  'klyra_update_perpetual_position_aggregate_fields.sql',
+  'klyra_uuid.sql',
+  'klyra_uuid_from_asset_position_parts.sql',
+  'klyra_uuid_from_fill_event_parts.sql',
+  'klyra_uuid_from_funding_index_update_parts.sql',
+  'klyra_uuid_from_oracle_price_parts.sql',
+  'klyra_uuid_from_order_id.sql',
+  'klyra_uuid_from_order_id_parts.sql',
+  'klyra_uuid_from_perpetual_position_parts.sql',
+  'klyra_uuid_from_subaccount_id.sql',
+  'klyra_uuid_from_subaccount_id_parts.sql',
+  'klyra_uuid_from_transaction_parts.sql',
+  'klyra_uuid_from_transfer_parts.sql',
+  'klyra_uuid_from_yield_params_parts.sql',
+  'klyra_protocol_market_type_to_perpetual_market_type.sql',
 ];
 
 const MAIN_SCRIPTS: string[] = [
-  'dydx_block_processor.sql',
+  'klyra_block_processor.sql',
 ];
 
 const SCRIPTS: string[] = [

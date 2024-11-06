@@ -1,13 +1,13 @@
 import { Network } from '../../../src/clients/constants';
 import { IndexerClient } from '../../../src/clients/indexer-client';
-import { DYDX_TEST_ADDRESS } from './constants';
+import { KLYRA_TEST_ADDRESS } from './constants';
 
 describe('IndexerClient', () => {
   const client = new IndexerClient(Network.testnet().indexerConfig);
 
   describe('Private Endpoints', () => {
     it('Subaccounts', async () => {
-      const response = await client.account.getSubaccounts(DYDX_TEST_ADDRESS);
+      const response = await client.account.getSubaccounts(KLYRA_TEST_ADDRESS);
       const subaccounts = response.subaccounts;
       expect(subaccounts.size).not.toBeNull();
       const subaccount0 = subaccounts[0];
@@ -16,7 +16,7 @@ describe('IndexerClient', () => {
     });
 
     it('Subaccount 0', async () => {
-      const response = await client.account.getSubaccount(DYDX_TEST_ADDRESS, 0);
+      const response = await client.account.getSubaccount(KLYRA_TEST_ADDRESS, 0);
       const subaccount = response.subaccount;
       expect(subaccount).not.toBeNull();
       const subaccountNumber = subaccount.subaccountNumber;
@@ -24,7 +24,7 @@ describe('IndexerClient', () => {
     });
 
     it('Asset Positions', async () => {
-      const response = await client.account.getSubaccountAssetPositions(DYDX_TEST_ADDRESS, 0);
+      const response = await client.account.getSubaccountAssetPositions(KLYRA_TEST_ADDRESS, 0);
       expect(response).not.toBeNull();
       const positions = response.positions;
       expect(positions).not.toBeNull();
@@ -35,7 +35,7 @@ describe('IndexerClient', () => {
     });
 
     it('Perpetual Positions', async () => {
-      const response = await client.account.getSubaccountPerpetualPositions(DYDX_TEST_ADDRESS, 0);
+      const response = await client.account.getSubaccountPerpetualPositions(KLYRA_TEST_ADDRESS, 0);
       expect(response).not.toBeNull();
       const positions = response.positions;
       expect(positions).not.toBeNull();
@@ -46,7 +46,7 @@ describe('IndexerClient', () => {
     });
 
     it('Transfers', async () => {
-      const response = await client.account.getSubaccountTransfers(DYDX_TEST_ADDRESS, 0);
+      const response = await client.account.getSubaccountTransfers(KLYRA_TEST_ADDRESS, 0);
       expect(response).not.toBeNull();
       const transfers = response.transfers;
       expect(transfers).not.toBeNull();
@@ -57,7 +57,7 @@ describe('IndexerClient', () => {
     });
 
     it('Orders', async () => {
-      const response = await client.account.getSubaccountOrders(DYDX_TEST_ADDRESS, 0);
+      const response = await client.account.getSubaccountOrders(KLYRA_TEST_ADDRESS, 0);
       expect(response).not.toBeNull();
       const orders = response;
       expect(orders).not.toBeNull();
@@ -68,7 +68,7 @@ describe('IndexerClient', () => {
     });
 
     it('Fills', async () => {
-      const response = await client.account.getSubaccountFills(DYDX_TEST_ADDRESS, 0);
+      const response = await client.account.getSubaccountFills(KLYRA_TEST_ADDRESS, 0);
       expect(response).not.toBeNull();
       const fills = response.fills;
       expect(fills).not.toBeNull();
@@ -79,7 +79,7 @@ describe('IndexerClient', () => {
     });
 
     it('Historical PNL', async () => {
-      const response = await client.account.getSubaccountHistoricalPNLs(DYDX_TEST_ADDRESS, 0);
+      const response = await client.account.getSubaccountHistoricalPNLs(KLYRA_TEST_ADDRESS, 0);
       expect(response).not.toBeNull();
       const historicalPnl = response.historicalPnl;
       expect(historicalPnl).not.toBeNull();

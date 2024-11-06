@@ -1,5 +1,5 @@
 import config from '../../src/config';
-import { asMock } from '@dydxprotocol-indexer/dev';
+import { asMock } from '@klyraprotocol-indexer/dev';
 import {
   checkIfExportJobToS3IsOngoing,
   checkIfS3ObjectExists,

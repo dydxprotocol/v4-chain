@@ -14,18 +14,18 @@ import (
 
 func newHandlerOptions() app.HandlerOptions {
 	encodingConfig := app.GetEncodingConfig()
-	dydxApp := testApp.DefaultTestApp(nil)
+	klyraApp := testApp.DefaultTestApp(nil)
 	return app.HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{
-			AccountKeeper:   dydxApp.AccountKeeper,
-			BankKeeper:      dydxApp.BankKeeper,
+			AccountKeeper:   klyraApp.AccountKeeper,
+			BankKeeper:      klyraApp.BankKeeper,
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
-			FeegrantKeeper:  dydxApp.FeeGrantKeeper,
+			FeegrantKeeper:  klyraApp.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-		ClobKeeper:   dydxApp.ClobKeeper,
+		ClobKeeper:   klyraApp.ClobKeeper,
 		Codec:        encodingConfig.Codec,
-		AuthStoreKey: dydxApp.CommitMultiStore().(*rootmulti.Store).StoreKeysByName()[authtypes.StoreKey],
+		AuthStoreKey: klyraApp.CommitMultiStore().(*rootmulti.Store).StoreKeysByName()[authtypes.StoreKey],
 	}
 }
 

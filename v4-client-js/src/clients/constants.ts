@@ -1,4 +1,4 @@
-import { PageRequest } from '@dydxprotocol/v4-proto/src/codegen/cosmos/base/query/v1beta1/pagination';
+import { PageRequest } from '@klyraprotocol/v4-proto/src/codegen/cosmos/base/query/v1beta1/pagination';
 import Long from 'long';
 
 import { BroadcastOptions, DenomConfig } from './types';
@@ -6,30 +6,30 @@ import { BroadcastOptions, DenomConfig } from './types';
 export * from '../lib/constants';
 
 // Chain ID
-export const DEV_CHAIN_ID = 'dydxprotocol-testnet';
-export const STAGING_CHAIN_ID = 'dydxprotocol-testnet';
-export const TESTNET_CHAIN_ID = 'dydx-testnet-4';
-export const LOCAL_CHAIN_ID = 'localdydxprotocol';
+export const DEV_CHAIN_ID = 'klyraprotocol-testnet';
+export const STAGING_CHAIN_ID = 'klyraprotocol-testnet';
+export const TESTNET_CHAIN_ID = 'klyra-testnet-4';
+export const LOCAL_CHAIN_ID = 'localklyraprotocol';
 
 // ------------ API URLs ------------
 export enum IndexerApiHost {
-  TESTNET = 'https://dydx-testnet.imperator.co',
+  TESTNET = 'https://klyra-testnet.imperator.co',
   LOCAL = 'http://localhost:3002'
   // TODO: Add MAINNET
 }
 
 export enum IndexerWSHost {
-  TESTNET = 'wss://dydx-testnet.imperator.co/v4/ws',
+  TESTNET = 'wss://klyra-testnet.imperator.co/v4/ws',
   // TODO: Add MAINNET
   LOCAL = 'ws://localhost:3003'
 }
 
 export enum FaucetApiHost {
-  TESTNET = 'https://faucet.v4testnet.dydx.exchange',
+  TESTNET = 'https://faucet.v4testnet.klyra.exchange',
 }
 
 export enum ValidatorApiHost {
-  TESTNET = 'https://test-dydx.kingnodes.com',
+  TESTNET = 'https://test-klyra.kingnodes.com',
   // TODO: Add MAINNET
   LOCAL = 'http://localhost:26657'
 }
@@ -37,11 +37,11 @@ export enum ValidatorApiHost {
 // ------------ Network IDs ------------
 
 export enum NetworkId {
-  TESTNET = 'dydx-testnet-4',
+  TESTNET = 'klyra-testnet-4',
   // TODO: Add MAINNET
 }
 export const NETWORK_ID_MAINNET: string | null = null;
-export const NETWORK_ID_TESTNET: string = 'dydxprotocol-testnet';
+export const NETWORK_ID_TESTNET: string = 'klyraprotocol-testnet';
 
 // ------------ Market Statistic Day Types ------------
 export enum MarketStatisticDay {

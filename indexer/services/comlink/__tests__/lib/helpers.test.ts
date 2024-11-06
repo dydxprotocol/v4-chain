@@ -28,7 +28,7 @@ import {
   LiquidityTiersFromDatabase,
   LiquidityTiersTable,
   liquidityTierRefresher,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   adjustTDAIAssetPosition,
   calculateEquityAndFreeCollateral,
@@ -52,7 +52,7 @@ import {
   defaultTendermintEventId,
   defaultTendermintEventId2,
   defaultTendermintEventId3,
-} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+} from '@klyraprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import { AssetPositionsMap, PerpetualPositionWithFunding } from '../../src/types';
 import { ZERO, ZERO_TDAI_POSITION } from '../../src/lib/constants';
 

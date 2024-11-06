@@ -1,13 +1,13 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { logger, ParseMessageError } from '@klyraprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   UpdateYieldParamsEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   dbHelpers, testMocks, perpetualMarketRefresher,
-} from '@dydxprotocol-indexer/postgres';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+} from '@klyraprotocol-indexer/postgres';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import {
   defaultHeight,
   defaultTime,
@@ -120,7 +120,7 @@ function createBlock(
   updateYieldParamsEvent: UpdateYieldParamsEventV1,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
-    DydxIndexerSubtypes.YIELD_PARAMS,
+    KlyraIndexerSubtypes.YIELD_PARAMS,
     UpdateYieldParamsEventV1.encode(updateYieldParamsEvent).finish(),
     0,
     0,

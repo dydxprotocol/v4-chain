@@ -3,7 +3,7 @@ import {
   IndexerTendermintEvent,
   SubaccountUpdateEventV1,
   Timestamp,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   AssetColumns,
   AssetFromDatabase,
@@ -31,16 +31,16 @@ import {
   testConstants,
   testMocks,
   UpdatedPerpetualPositionSubaccountKafkaObject,
-} from '@dydxprotocol-indexer/postgres';
-import { bigIntToBytes, bytesToBase64 } from '@dydxprotocol-indexer/v4-proto-parser';
+} from '@klyraprotocol-indexer/postgres';
+import { bigIntToBytes, bytesToBase64 } from '@klyraprotocol-indexer/v4-proto-parser';
 import { KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../src/constants';
-import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage, producer } from '@klyraprotocol-indexer/kafka';
 import { addPositionsToContents, annotateWithPnl, convertPerpetualPosition } from '../../src/helpers/kafka-helper';
 import { onMessage } from '../../src/lib/on-message';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
@@ -91,7 +91,7 @@ describe('subaccountUpdateHandler', () => {
     status: PerpetualPositionStatus.OPEN,
     size: '10',
     maxSize: '25',
-    createdAt: DateTime.utc().toISO(),
+    createdAt: DateTime.utc().toISO() ?? '',
     createdAtHeight: '1',
     openEventId: testConstants.defaultTendermintEventId,
     lastEventId: testConstants.defaultTendermintEventId,
@@ -116,7 +116,7 @@ describe('subaccountUpdateHandler', () => {
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         SubaccountUpdateEventV1.encode(defaultEmptySubaccountUpdateEvent).finish(),
         transactionIndex,
         eventIndex,
@@ -243,7 +243,7 @@ describe('subaccountUpdateHandler', () => {
       status: PerpetualPositionStatus.OPEN,
       size,
       maxSize: size,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO() ?? '',
       createdAtHeight: defaultHeight.toString(),
       openEventId: tendermintEventId,
       lastEventId: tendermintEventId,
@@ -857,7 +857,7 @@ describe('subaccountUpdateHandler', () => {
       status: PerpetualPositionStatus.OPEN,
       size: perpetualSize,
       maxSize: perpetualSize,
-      createdAt: defaultDateTime.toISO(),
+      createdAt: defaultDateTime.toISO() ?? '',
       createdAtHeight: defaultHeight.toString(),
       openEventId: tendermintEventId,
       lastEventId: tendermintEventId,
@@ -911,7 +911,7 @@ function createKafkaMessageFromSubaccountUpdateEvent({
   if (subaccountUpdateEvent !== undefined) {
     events.push(
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         SubaccountUpdateEventV1.encode(subaccountUpdateEvent).finish(),
         transactionIndex,
         eventIndex,

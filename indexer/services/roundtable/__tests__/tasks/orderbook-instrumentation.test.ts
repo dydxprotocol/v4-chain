@@ -1,16 +1,16 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@klyraprotocol-indexer/base';
 import {
   dbHelpers,
   OrderSide,
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   OpenOrdersCache,
   OrderbookLevelsCache,
   redis,
-} from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/redis';
 import
 orderbookInstrumentationTask,
 { priceToSubticks }

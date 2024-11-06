@@ -5,7 +5,7 @@ import {
   liquidityTierRefresher,
   perpetualMarketRefresher,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import {
   defaultHeight,
@@ -19,15 +19,15 @@ import {
   IndexerTendermintEvent,
   Timestamp,
   UpdatePerpetualEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import { UpdatePerpetualHandler } from '../../src/handlers/update-perpetual-handler';
-import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage, producer } from '@klyraprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
@@ -63,7 +63,7 @@ describe('update-perpetual-handler', () => {
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.UPDATE_PERPETUAL,
+        KlyraIndexerSubtypes.UPDATE_PERPETUAL,
         UpdatePerpetualEventV1.encode(defaultUpdatePerpetualEvent).finish(),
         transactionIndex,
         eventIndex,
@@ -171,7 +171,7 @@ function createKafkaMessageFromUpdatePerpetualEvent({
   const events: IndexerTendermintEvent[] = [];
   events.push(
     createIndexerTendermintEvent(
-      DydxIndexerSubtypes.UPDATE_PERPETUAL,
+      KlyraIndexerSubtypes.UPDATE_PERPETUAL,
       UpdatePerpetualEventV1.encode(updatePerpetualEvent).finish(),
       transactionIndex,
       0,

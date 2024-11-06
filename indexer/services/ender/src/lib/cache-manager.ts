@@ -3,7 +3,7 @@ import {
   Transaction,
   assetRefresher,
   perpetualMarketRefresher,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 
 export async function refreshDataCaches(): Promise<void> {
   const txId: number = await Transaction.start();

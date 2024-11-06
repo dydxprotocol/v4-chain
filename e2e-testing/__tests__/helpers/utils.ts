@@ -2,7 +2,7 @@ import {
   IPlaceOrder,
   Network,
   SocketClient,
-} from "@dydxprotocol/v4-client-js/src";
+} from "@klyraprotocol/v4-client-js/src";
 import { exec } from "child_process";
 import Long from "long";
 

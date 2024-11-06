@@ -1,10 +1,10 @@
 {
-  "name": "@dydxprotocol-indexer/base",
+  "name": "@klyraprotocol-indexer/base",
   "version": "0.0.1",
   "description": "",
   "main": "build/index.js",
   "devDependencies": {
-    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/dev": "workspace:^0.0.1",
     "@types/big.js": "^6.1.5",
     "@types/express": "^4.17.13",
     "@types/lodash": "^4.14.182",
@@ -22,14 +22,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dydxprotocol/indexer.git"
+    "url": "git+https://github.com/StreamFinance-Protocol/stream-chain.git"
   },
   "author": "",
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/dydxprotocol/indexer/issues"
+    "url": "https://github.com/StreamFinance-Protocol/stream-chain/issues"
   },
-  "homepage": "https://github.com/dydxprotocol/indexer#readme",
+  "homepage": "https://github.com/StreamFinance-Protocol/stream-chain#readme",
   "dependencies": {
     "axios": "^1.2.1",
     "big.js": "^6.2.1",

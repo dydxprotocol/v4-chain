@@ -31,7 +31,7 @@ jobs:
 
       - name: Deploy to dev environment using Orb lambda
         id: dev-deploy
-        uses: dydxprotocol/invoke-aws-lambda@master
+        uses: klyraprotocol/invoke-aws-lambda@master
         with:
           HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
           MAX_RETRIES: 3
@@ -74,7 +74,7 @@ jobs:
 
       - name: Deploy to dev2 environment using Orb lambda
         id: dev2-deploy
-        uses: dydxprotocol/invoke-aws-lambda@master
+        uses: klyraprotocol/invoke-aws-lambda@master
         with:
           HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
           MAX_RETRIES: 3
@@ -117,7 +117,7 @@ jobs:
 
       - name: Deploy to dev3 environment using Orb lambda
         id: dev3-deploy
-        uses: dydxprotocol/invoke-aws-lambda@master
+        uses: klyraprotocol/invoke-aws-lambda@master
         with:
           HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
           MAX_RETRIES: 3
@@ -160,7 +160,7 @@ jobs:
 
       - name: Deploy to dev4 environment using Orb lambda
         id: dev4-deploy
-        uses: dydxprotocol/invoke-aws-lambda@master
+        uses: klyraprotocol/invoke-aws-lambda@master
         with:
           HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
           MAX_RETRIES: 3
@@ -203,7 +203,7 @@ jobs:
 
       - name: Deploy to dev5 environment using Orb lambda
         id: dev5-deploy
-        uses: dydxprotocol/invoke-aws-lambda@master
+        uses: klyraprotocol/invoke-aws-lambda@master
         with:
           HTTP_TIMEOUT: 600000  # Ten minutes in milliseconds
           MAX_RETRIES: 3

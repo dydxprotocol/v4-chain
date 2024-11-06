@@ -8,7 +8,7 @@ test -z "$(npm info $NAME@$VERSION)"
 if [ $? -eq 0 ]; then
 	set -e
 
-	git config --global user.email "ci@dydx.exchange"
+	git config --global user.email "ci@klyra.exchange"
 	git config --global user.name "github_actions"
 
 	# Get version and tag

@@ -13,11 +13,11 @@ import {
   IndexerOrder_ConditionType,
   IndexerOrder_Side,
   IndexerOrder_TimeInForce,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   ORDER_FLAG_CONDITIONAL,
   ORDER_FLAG_LONG_TERM,
-} from '@dydxprotocol-indexer/v4-proto-parser';
+} from '@klyraprotocol-indexer/v4-proto-parser';
 import Long from 'long';
 import { convertToIndexerOrder } from '../../src/lib/order-translations';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
@@ -62,7 +62,7 @@ describe('orderTranslations', () => {
         conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
         conditionalOrderTriggerSubticks: Long.fromValue(0, true),
         routerFeePpm: 0,
-        routerFeeSubaccountOwner: 'dydx1xxxxxx',
+        routerFeeSubaccountOwner: 'klyra1xxxxxx',
         routerFeeSubaccountNumber: 0,
       };
       const indexerOrder: IndexerOrder = await convertToIndexerOrder(
@@ -100,7 +100,7 @@ describe('orderTranslations', () => {
       // 19_000 * 1e-10 / 1e-6 / 1e-8 = 190_000_000
       conditionalOrderTriggerSubticks: Long.fromValue(190_000_000, true),
       routerFeePpm: 0,
-      routerFeeSubaccountOwner: 'dydx1xxxxxx',
+      routerFeeSubaccountOwner: 'klyra1xxxxxx',
       routerFeeSubaccountNumber: 0,
     };
     const indexerOrder: IndexerOrder = await convertToIndexerOrder(

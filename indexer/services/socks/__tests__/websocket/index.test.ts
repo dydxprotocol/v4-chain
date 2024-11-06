@@ -15,14 +15,14 @@ import {
 import { InvalidMessageHandler } from '../../src/lib/invalid-message';
 import { PingHandler } from '../../src/lib/ping';
 import config from '../../src/config';
-import { isRestrictedCountryHeaders, COUNTRY_HEADER_KEY } from '@dydxprotocol-indexer/compliance';
+import { isRestrictedCountryHeaders, COUNTRY_HEADER_KEY } from '@klyraprotocol-indexer/compliance';
 
 jest.mock('uuid');
 jest.mock('../../src/helpers/wss');
 jest.mock('../../src/lib/subscription');
 jest.mock('../../src/lib/invalid-message');
 jest.mock('../../src/lib/ping');
-jest.mock('@dydxprotocol-indexer/compliance');
+jest.mock('@klyraprotocol-indexer/compliance');
 
 describe('Index', () => {
   let index: Index;
@@ -55,7 +55,8 @@ describe('Index', () => {
     (Subscriptions as unknown as jest.Mock).mockClear();
     (sendMessage as unknown as jest.Mock).mockClear();
     mockWss = new Wss();
-    websocket = new WebSocket(null);
+    // Use the first constructor overload that accepts null
+    websocket = new WebSocket(null); // explicit type assertion to match the overload
     wsOnSpy = jest.spyOn(websocket, 'on');
     wsPingSpy = jest.spyOn(websocket, 'ping').mockImplementation(jest.fn());
     wsTerminateSpy = jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());

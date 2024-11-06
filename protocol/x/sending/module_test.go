@@ -124,7 +124,7 @@ func TestAppModuleBasic_RegisterGRPCGatewayRoutes(t *testing.T) {
 
 	// Sending currently does not have any routes registered, so expect no routes.
 	recorder := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/dydxprotocol/sending/", nil)
+	req, err := http.NewRequest("GET", "/klyraprotocol/sending/", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Equal(t, 404, recorder.Code)

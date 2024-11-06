@@ -11,7 +11,7 @@ import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';
 import { defaultOrder, defaultOrderGoodTilBlockTime, defaultOrderId } from '../helpers/constants';
 import { CheckViolationError } from 'objection';
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
 import Transaction from '../../src/helpers/transaction';
 
 describe('Order store', () => {

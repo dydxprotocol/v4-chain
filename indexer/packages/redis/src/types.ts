@@ -1,5 +1,5 @@
-import { PnlTicksCreateObject } from '@dydxprotocol-indexer/postgres';
-import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
+import { PnlTicksCreateObject } from '@klyraprotocol-indexer/postgres';
+import { RedisOrder } from '@klyraprotocol-indexer/v4-protos';
 
 // Type for the result of an order being placed
 export interface PlaceOrderResult {

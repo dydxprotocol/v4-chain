@@ -8,9 +8,9 @@ async function testNodes(): Promise<void> {
   try {
     const optimizer = new NetworkOptimizer();
     const endpoints = [
-      'https://validator.v4testnet1.dydx.exchange',
-      'https://dydx-testnet.nodefleet.org',
-      'https://dydx-testnet-archive.allthatnode.com:26657/XZvMM41hESf8PJrEQiTzbCOMVyFca79R',
+      'https://validator.v4testnet1.klyra.exchange',
+      'https://klyra-testnet.nodefleet.org',
+      'https://klyra-testnet-archive.allthatnode.com:26657/XZvMM41hESf8PJrEQiTzbCOMVyFca79R',
     ];
     const optimal = await optimizer.findOptimalNode(endpoints, TESTNET_CHAIN_ID);
     console.log(optimal);
@@ -22,9 +22,9 @@ async function testNodes(): Promise<void> {
   try {
     const optimizer = new NetworkOptimizer();
     const endpoints = [
-      'https://validator.v4testnet1.dydx.exchange',
-      'https://dydx-testnet.nodefleet.org',
-      'https://dydx-testnet-archive.allthatnode.com:26657/XZvMM41hESf8PJrEQiTzbCOMVyFca79R',
+      'https://validator.v4testnet1.klyra.exchange',
+      'https://klyra-testnet.nodefleet.org',
+      'https://klyra-testnet-archive.allthatnode.com:26657/XZvMM41hESf8PJrEQiTzbCOMVyFca79R',
       'https://example.com',
     ];
     const optimal = await optimizer.findOptimalNode(endpoints, TESTNET_CHAIN_ID);
@@ -53,7 +53,7 @@ async function testIndexers(): Promise<void> {
   try {
     const optimizer = new NetworkOptimizer();
     const endpoints = [
-      'https://indexer.v4testnet2.dydx.exchange',
+      'https://indexer.v4testnet2.klyra.exchange',
     ];
     const optimal = await optimizer.findOptimalIndexer(endpoints);
     console.log(optimal);

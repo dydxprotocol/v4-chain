@@ -1,12 +1,12 @@
 import {
   logger,
   stats,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 import {
   StatefulOrderUpdateInfo,
   StatefulOrderUpdatesCache,
-} from '@dydxprotocol-indexer/redis';
-import { OrderUpdateV1 } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/redis';
+import { OrderUpdateV1 } from '@klyraprotocol-indexer/v4-protos';
 
 import config from '../config';
 import { redisClient } from '../helpers/redis';

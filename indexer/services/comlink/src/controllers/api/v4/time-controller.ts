@@ -18,7 +18,7 @@ class TimeController extends Controller {
     const time: DateTime = DateTime.utc();
 
     return {
-      iso: time.toISO(),
+      iso: time.toISO() ?? '',
       epoch: time.toSeconds(),
     };
   }

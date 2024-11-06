@@ -1,4 +1,4 @@
-import { Order_Side } from '@dydxprotocol/v4-proto/src/codegen/dydxprotocol/clob/order';
+import { Order_Side } from '@klyraprotocol/v4-proto/src/codegen/klyraprotocol/clob/order';
 
 import { Network } from '../../../src/clients/constants';
 import LocalWallet from '../../../src/clients/modules/local-wallet';
@@ -6,7 +6,7 @@ import { SubaccountInfo } from '../../../src/clients/subaccount';
 import { IPlaceOrder } from '../../../src/clients/types';
 import { ValidatorClient } from '../../../src/clients/validator-client';
 import { randomInt } from '../../../src/lib/utils';
-import { DYDX_TEST_MNEMONIC, defaultOrder } from '../../../examples/constants';
+import { KLYRA_TEST_MNEMONIC, defaultOrder } from '../../../examples/constants';
 import { BECH32_PREFIX } from '../../../src';
 
 function dummyOrder(height: number): IPlaceOrder {
@@ -29,7 +29,7 @@ describe('Validator Client', () => {
 
   describe('Post', () => {
     beforeEach(async () => {
-      wallet = await LocalWallet.fromMnemonic(DYDX_TEST_MNEMONIC, BECH32_PREFIX);
+      wallet = await LocalWallet.fromMnemonic(KLYRA_TEST_MNEMONIC, BECH32_PREFIX);
       client = await ValidatorClient.connect(Network.testnet().validatorConfig);
     });
 

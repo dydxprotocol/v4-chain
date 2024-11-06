@@ -1,12 +1,12 @@
-import { logger, runFuncWithTimingStat, stats } from '@dydxprotocol-indexer/base';
-import { createSubaccountWebsocketMessage, KafkaTopics } from '@dydxprotocol-indexer/kafka';
+import { logger, runFuncWithTimingStat, stats } from '@klyraprotocol-indexer/base';
+import { createSubaccountWebsocketMessage, KafkaTopics } from '@klyraprotocol-indexer/kafka';
 import {
   OrderFromDatabase,
   OrderTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   protocolTranslations,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   CanceledOrdersCache,
   OpenOrdersCache,
@@ -15,14 +15,14 @@ import {
   placeOrder,
   StatefulOrderUpdatesCache,
   convertToRedisOrder,
-} from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/redis';
 import {
   getOrderIdHash,
   isLongTermOrder,
   isStatefulOrder,
   ORDER_FLAG_SHORT_TERM,
   requiresImmediateExecution,
-} from '@dydxprotocol-indexer/v4-proto-parser';
+} from '@klyraprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
   IndexerOrder,
@@ -30,14 +30,14 @@ import {
   OrderPlaceV1_OrderPlacementStatus,
   OrderUpdateV1,
   RedisOrder,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
+import { Handler } from './handler';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
-import { Handler } from './handler';
 
 /**
  * Handler for OrderPlace messages.

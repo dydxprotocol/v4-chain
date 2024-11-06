@@ -1,7 +1,7 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import {
   consumer, producer, KafkaTopics, updateOnMessageFunction, updateOnBatchFunction,
-} from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 
 import config from '../../config';

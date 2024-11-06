@@ -3,21 +3,21 @@ set -eo pipefail
 
 # This script creates the pregenesis file for a production network.
 #
-# The script must be run from the root of the `v4-chain` repo.
+# The script must be run from the root of the `klyra chain` repo.
 #
 # example usage:
 # $ make build
-# $ ./scripts/genesis/prod_pregenesis.sh ./build/dydxprotocold
+# $ ./scripts/genesis/prod_pregenesis.sh ./build/klyraprotocold
 
 # Check for missing required arguments
 if [ -z "$1" ]; then
-  echo "Error: Missing required argument DYDX_BINARY."
-  echo "Usage: $0 <DYDX_BINARY> [-s|--SEED_FAUCET_TDAI]"
+  echo "Error: Missing required argument KLYRA_BINARY."
+  echo "Usage: $0 <KLYRA_BINARY> [-s|--SEED_FAUCET_TDAI]"
   exit 
 fi
 
 # Capture the required argument
-DYDX_BINARY="$1"
+KLYRA_BINARY="$1"
 
 source "./testing/genesis.sh"
 
@@ -26,7 +26,7 @@ TMP_EXCHANGE_CONFIG_JSON_DIR="/tmp/prod-exchange_config"
 
 # TODO(GENESIS): Update below values before running this script. Sample values are shown.
 ################## Start of required values to be updated ##################
-CHAIN_ID="dydx-sample-1"
+CHAIN_ID="klyra-sample-1"
 # Base denomination of the native token. Usually comes with a prefix "u-", "a-" to indicate unit.
 NATIVE_TOKEN="asample"
 # Denomination of the native token in whole coins.
@@ -131,10 +131,10 @@ function overwrite_genesis_production() {
 }
 
 create_pregenesis_file() {
-	VAL_HOME_DIR="$TMP_CHAIN_DIR/.dydxprotocol"
+	VAL_HOME_DIR="$TMP_CHAIN_DIR/.klyraprotocol"
 	VAL_CONFIG_DIR="$VAL_HOME_DIR/config"
 	# This initializes the $VAL_HOME_DIR folder.
-	$DYDX_BINARY init "test-moniker" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
+	$KLYRA_BINARY init "test-moniker" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
 	# Create temporary directory for exchange config jsons.
 	echo "Copying exchange config jsons to $TMP_EXCHANGE_CONFIG_JSON_DIR"

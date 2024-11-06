@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import Knex from 'knex';
 import _ from 'lodash';
 import { QueryBuilder } from 'objection';

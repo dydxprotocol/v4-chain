@@ -22,7 +22,7 @@ export default class UtilityClient extends RestClient {
 
   /**
    * @description Screen an address to see if it is restricted
-   * @param {string} address evm or dydx address
+   * @param {string} address evm or klyra address
    * @returns {ComplianceResponse} whether the specified address is restricted
    */
   async screen(address: string): Promise<ComplianceResponse> {

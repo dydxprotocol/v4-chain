@@ -14,8 +14,8 @@ require('dotenv-flow').config({
       'node',
     ],
     moduleNameMapper: {
-      '@dydxprotocol/v4-client-js': '<rootDir>/../v4-client-js/build/v4-client-js/src',
-      '@dydxprotocol/v4-proto/(.*)': '<rootDir>/../v4-client-js/build/v4-proto-js/$1'
+      '@klyraprotocol/v4-client-js': '<rootDir>/../v4-client-js/build/v4-client-js/src',
+      '@klyraprotocol/v4-proto/(.*)': '<rootDir>/../v4-client-js/build/v4-proto-js/$1'
     },
     moduleDirectories: [
       'node_modules',

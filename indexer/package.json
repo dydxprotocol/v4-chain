@@ -25,5 +25,10 @@
     "@types/pg": "^8.11.6",
     "@types/redis": "2.8.27",
     "@types/uuid": "^8.3.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "typescript": "4.7.4"
+    }
   }
 }

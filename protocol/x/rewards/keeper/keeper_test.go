@@ -19,9 +19,9 @@ import (
 )
 
 const (
-	TestAddress1         = "dydx16h7p7f4dysrgtzptxx2gtpt5d8t834g9dj830z"
-	TestAddress2         = "dydx168pjt8rkru35239fsqvz7rzgeclakp49zx3aum"
-	TestAddress3         = "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70"
+	TestAddress1         = "klyra16h7p7f4dysrgtzptxx2gtpt5d8t834g9jrj78f"
+	TestAddress2         = "klyra168pjt8rkru35239fsqvz7rzgeclakp49ahyj5s"
+	TestAddress3         = "klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky"
 	TestRewardTokenDenom = "test-denom"
 )
 

@@ -6,7 +6,7 @@ import {
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   testConstants,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 import request from 'supertest';
@@ -15,7 +15,7 @@ import { SPARKLINE_TIME_PERIOD_TO_LIMIT_MAP, SPARKLINE_TIME_PERIOD_TO_RESOLUTION
 import { RequestMethod, SparklineTimePeriod } from '../../../../src/types';
 import { sendRequest } from '../../../helpers/helpers';
 import Big from 'big.js';
-import * as SubaccountTable from '@dydxprotocol-indexer/postgres/build/src/stores/subaccount-table';
+import * as SubaccountTable from '@klyraprotocol-indexer/postgres/build/src/stores/subaccount-table';
 import {
   defaultLiquidityTier,
   defaultLiquidityTier2,
@@ -27,10 +27,10 @@ import {
   defaultPerpetualMarket3,
   defaultSubaccount,
   defaultSubaccount2,
-} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
-import * as MarketTable from '@dydxprotocol-indexer/postgres/build/src/stores/market-table';
-import * as LiquidityTiersTable from '@dydxprotocol-indexer/postgres/build/src/stores/liquidity-tiers-table';
-import * as PerpetualMarketTable from '@dydxprotocol-indexer/postgres/build/src/stores/perpetual-market-table';
+} from '@klyraprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import * as MarketTable from '@klyraprotocol-indexer/postgres/build/src/stores/market-table';
+import * as LiquidityTiersTable from '@klyraprotocol-indexer/postgres/build/src/stores/liquidity-tiers-table';
+import * as PerpetualMarketTable from '@klyraprotocol-indexer/postgres/build/src/stores/perpetual-market-table';
 
 // helper function to seed data
 async function seedData() {
@@ -175,7 +175,7 @@ describe('sparklines-controller#V4', () => {
             ...testConstants.defaultCandle,
             resolution,
             close,
-            startedAt: DateTime.fromISO(testConstants.defaultCandle.startedAt).minus(i).toISO(),
+            startedAt: DateTime.fromISO(testConstants.defaultCandle.startedAt).minus(i).toISO() ?? '',
           });
         }),
       );
@@ -210,7 +210,7 @@ describe('sparklines-controller#V4', () => {
               startedAt: DateTime
                 .fromISO(testConstants.defaultCandle.startedAt)
                 .minus({ hour: i })
-                .toISO(),
+                .toISO() ?? '',
               ticker: testConstants.defaultPerpetualMarket.ticker,
               resolution,
               close: firstClosing,
@@ -228,7 +228,7 @@ describe('sparklines-controller#V4', () => {
               startedAt: DateTime
                 .fromISO(testConstants.defaultCandle.startedAt)
                 .minus({ hour: i })
-                .toISO(),
+                .toISO() ?? '',
               ticker: testConstants.defaultPerpetualMarket2.ticker,
               resolution,
               close: secondClosing,

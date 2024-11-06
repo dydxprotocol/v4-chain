@@ -1,5 +1,5 @@
-import { stats } from '@dydxprotocol-indexer/base';
-import { CANDLES_WEBSOCKET_MESSAGE_VERSION, KafkaTopics } from '@dydxprotocol-indexer/kafka';
+import { stats } from '@klyraprotocol-indexer/base';
+import { CANDLES_WEBSOCKET_MESSAGE_VERSION, KafkaTopics } from '@klyraprotocol-indexer/kafka';
 import {
   CANDLE_RESOLUTION_TO_PROTO,
   CandleColumns,
@@ -19,8 +19,8 @@ import {
   TradeContent,
   TradeMessageContents,
   helpers,
-} from '@dydxprotocol-indexer/postgres';
-import { CandleMessage } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/postgres';
+import { CandleMessage } from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -224,7 +224,7 @@ export class CandlesGenerator {
     if (existingCandle === undefined) {
       // - Candle doesn't exist & there is no block update - do nothing
       if (blockCandleUpdate === undefined) {
-        return;
+        return undefined;
       }
       // - Candle doesn't exist & there is a block update - create candle
       return this.createCandleInPostgres(
@@ -236,7 +236,7 @@ export class CandlesGenerator {
       );
     }
 
-    const sameStartTime: boolean = existingCandle.startedAt === currentStartTime.toISO();
+    const sameStartTime: boolean = existingCandle.startedAt === currentStartTime.toISO() ?? '';
     if (!sameStartTime) {
       // - Candle exists & !sameStartTime & there is a block update - create candle
       if (blockCandleUpdate !== undefined) {
@@ -259,7 +259,7 @@ export class CandlesGenerator {
     }
     if (blockCandleUpdate === undefined) {
       // - Candle exists & sameStartTime & no block update - do nothing
-      return;
+      return undefined;
     }
     // - Candle exists & sameStartTime & block update - update candle
     return this.updateCandleInPostgres(
@@ -346,7 +346,7 @@ export class CandlesGenerator {
     openInterestMap: OpenInterestMap,
   ): Promise<CandleFromDatabase> {
     const candle: CandleCreateObject = {
-      startedAt: startedAt.toISO(),
+      startedAt: startedAt.toISO() ?? '',
       ticker,
       resolution,
       low: blockCandleUpdate.low,
@@ -375,7 +375,7 @@ export class CandlesGenerator {
     existingCandle: CandleFromDatabase,
   ): Promise<CandleFromDatabase> {
     const candle: CandleCreateObject = {
-      startedAt: startedAt.toISO(),
+      startedAt: startedAt.toISO() ?? '',
       ticker,
       resolution,
       low: existingCandle.close,

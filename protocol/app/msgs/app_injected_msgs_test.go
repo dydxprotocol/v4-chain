@@ -20,12 +20,12 @@ import (
 func TestAppInjectedMsgSamples_Key(t *testing.T) {
 	expectedMsgs := []string{
 		// clob
-		"/dydxprotocol.clob.MsgProposedOperations",
-		"/dydxprotocol.clob.MsgProposedOperationsResponse",
+		"/klyraprotocol.clob.MsgProposedOperations",
+		"/klyraprotocol.clob.MsgProposedOperationsResponse",
 
 		// perpetuals
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotes",
-		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse",
+		"/klyraprotocol.perpetuals.MsgAddPremiumVotes",
+		"/klyraprotocol.perpetuals.MsgAddPremiumVotesResponse",
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.AppInjectedMsgSamples))

@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import { RetryStrategyOptions } from 'redis';
 
 import config from '../src/config';

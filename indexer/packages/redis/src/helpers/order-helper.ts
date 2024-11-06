@@ -1,5 +1,5 @@
-import { OrderTable, PerpetualMarketFromDatabase, protocolTranslations } from '@dydxprotocol-indexer/postgres';
-import { IndexerOrder, RedisOrder, RedisOrder_TickerType } from '@dydxprotocol-indexer/v4-protos';
+import { OrderTable, PerpetualMarketFromDatabase, protocolTranslations } from '@klyraprotocol-indexer/postgres';
+import { IndexerOrder, RedisOrder, RedisOrder_TickerType } from '@klyraprotocol-indexer/v4-protos';
 
 /**
  * Creates a `RedisOrder` given an `Order` and the corresponding `PerpetualMarket` for the `Order`.

@@ -1,0 +1,95 @@
+syntax = "proto3";
+package klyraprotocol.ratelimit;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "klyraprotocol/ratelimit/limit_params.proto";
+import "klyraprotocol/ratelimit/capacity.proto";
+import "klyraprotocol/ratelimit/pending_send_packet.proto";
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // List all limit params.
+  rpc ListLimitParams(ListLimitParamsRequest)
+      returns (ListLimitParamsResponse) {
+    option (google.api.http).get =
+        "/klyraprotocol/v4/ratelimit/list_limit_params";
+  }
+
+  // Query capacity by denom.
+  rpc CapacityByDenom(QueryCapacityByDenomRequest)
+      returns (QueryCapacityByDenomResponse) {
+    option (google.api.http).get =
+        "/klyraprotocol/v4/ratelimit/capacity_by_denom";
+  }
+  // Get all pending send packets
+  rpc AllPendingSendPackets(QueryAllPendingSendPacketsRequest)
+      returns (QueryAllPendingSendPacketsResponse) {
+    option (google.api.http).get =
+        "/klyraprotocol/v4/ratelimit/get_all_pending_send_packet";
+  }
+
+  // Get the price of sDAI.
+  rpc GetSDAIPriceQuery(GetSDAIPriceQueryRequest)
+      returns (GetSDAIPriceQueryResponse) {
+    option (google.api.http).get = "/klyraprotocol/v4/ratelimit/get_sdai_price";
+  }
+
+  // Get the price of sDAI.
+  rpc GetAssetYieldIndexQuery(GetAssetYieldIndexQueryRequest)
+      returns (GetAssetYieldIndexQueryResponse) {
+    option (google.api.http).get =
+        "/klyraprotocol/v4/ratelimit/get_asset_yield_index";
+  }
+}
+
+// ListLimitParamsRequest is a request type of the ListLimitParams RPC method.
+message ListLimitParamsRequest {}
+
+// ListLimitParamsResponse is a response type of the ListLimitParams RPC method.
+message ListLimitParamsResponse {
+  repeated LimitParams limit_params_list = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryCapacityByDenomRequest is a request type for the CapacityByDenom RPC
+// method.
+message QueryCapacityByDenomRequest { string denom = 1; }
+
+// QueryCapacityByDenomResponse is a response type of the CapacityByDenom RPC
+// method.
+message QueryCapacityByDenomResponse {
+  repeated LimiterCapacity limiter_capacity_list = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// QueryAllPendingSendPacketsRequest is a request type for the
+// AllPendingSendPackets RPC
+message QueryAllPendingSendPacketsRequest {}
+
+// QueryAllPendingSendPacketsResponse is a response type of the
+// AllPendingSendPackets RPC
+message QueryAllPendingSendPacketsResponse {
+  repeated PendingSendPacket pending_send_packets = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// GetSDAIPriceRequest is a request type for the GetSDAIPrice RPC method.
+message GetSDAIPriceQueryRequest {}
+
+// GetSDAIPriceResponse is a response type for the GetSDAIPrice RPC method.
+message GetSDAIPriceQueryResponse {
+  string price = 1; // Assuming price is returned as a string
+}
+
+// GetAssetYieldIndexRequest is a request type for the GetAssetYieldIndex RPC
+// method.
+message GetAssetYieldIndexQueryRequest {}
+
+// GetSDAIPriceQueryResponse is a response type for the GetAssetYieldIndex RPC
+// method.
+message GetAssetYieldIndexQueryResponse {
+  string asset_yield_index =
+      1; // Handled as a string, should be converted to big.Rat.
+}

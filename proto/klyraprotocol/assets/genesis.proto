@@ -1,0 +1,12 @@
+syntax = "proto3";
+package klyraprotocol.assets;
+
+import "gogoproto/gogo.proto";
+import "klyraprotocol/assets/asset.proto";
+
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types";
+
+// GenesisState defines the assets module's genesis state.
+message GenesisState {
+  repeated Asset assets = 1 [ (gogoproto.nullable) = false ];
+}

@@ -7,26 +7,26 @@ import { NobleClient } from '../src/clients/noble-client';
 import { ValidatorClient } from '../src/clients/validator-client';
 import { BECH32_PREFIX, NOBLE_BECH32_PREFIX } from '../src/lib/constants';
 import { sleep } from '../src/lib/utils';
-import { DYDX_TEST_MNEMONIC } from './constants';
+import { KLYRA_TEST_MNEMONIC } from './constants';
 
 async function test(): Promise<void> {
-  const dydxClient = await ValidatorClient.connect(
+  const klyraClient = await ValidatorClient.connect(
     Network.testnet().validatorConfig,
   );
 
-  const dydxWallet = await LocalWallet.fromMnemonic(
-    DYDX_TEST_MNEMONIC,
+  const klyraWallet = await LocalWallet.fromMnemonic(
+    KLYRA_TEST_MNEMONIC,
     BECH32_PREFIX,
   );
   const nobleWallet = await LocalWallet.fromMnemonic(
-    DYDX_TEST_MNEMONIC,
+    KLYRA_TEST_MNEMONIC,
     NOBLE_BECH32_PREFIX,
   );
 
   const client = new NobleClient('https://rpc.testnet.noble.strange.love');
   await client.connect(nobleWallet);
 
-  if (nobleWallet.address === undefined || dydxWallet.address === undefined) {
+  if (nobleWallet.address === undefined || klyraWallet.address === undefined) {
     throw new Error('Wallet not found');
   }
 
@@ -42,7 +42,7 @@ async function test(): Promise<void> {
           'ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8',
         amount: '1000000000000000000',
       },
-      sender: dydxWallet.address,
+      sender: klyraWallet.address,
       receiver: nobleWallet.address,
       timeoutTimestamp: Long.fromNumber(
         Math.floor(Date.now() / 1000) * 1e9 + 10 * 60 * 1e9,
@@ -54,8 +54,8 @@ async function test(): Promise<void> {
   const encodeObjects: Promise<EncodeObject[]> = new Promise((resolve) => resolve(msgs),
   );
 
-  await dydxClient.post.send(
-    dydxWallet,
+  await klyraClient.post.send(
+    klyraWallet,
     () => {
       return encodeObjects;
     },
@@ -83,7 +83,7 @@ async function test(): Promise<void> {
           amount: coins[0].amount,
         },
         sender: nobleWallet.address,
-        receiver: dydxWallet.address,
+        receiver: klyraWallet.address,
         timeoutTimestamp: Long.fromNumber(
           Math.floor(Date.now() / 1000) * 1e9 + 10 * 60 * 1e9,
         ),

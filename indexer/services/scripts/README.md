@@ -29,8 +29,8 @@ In order to properly run all scripts, add these lines to your `~/.bashrc`:
 
 ```
 export DB_PORT=5432
-export DB_NAME=dydx
-export DB_USERNAME=dydx
+export DB_NAME=klyra
+export DB_USERNAME=klyra
 export DB_HOSTNAME=staging-indexer-apne1-db.cv0zh5lkgpcw.ap-northeast-1.rds.amazonaws.com
 export DB_READONLY_HOSTNAME=staging-indexer-apne1-db-read-replica.cv0zh5lkgpcw.ap-northeast-1.rds.amazonaws.com
 export DB_PASSWORD=<insert DB password from ~/.pgpass here>

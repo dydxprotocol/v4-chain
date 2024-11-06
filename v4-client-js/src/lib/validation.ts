@@ -151,6 +151,6 @@ function verifyIsBech32(address: string): Error | undefined {
 }
 
 export function isValidAddress(address: string): boolean {
-  // An address is valid if it starts with `dydx1` and is Bech32 format.
-  return address.startsWith('dydx1') && (verifyIsBech32(address) === undefined);
+  // An address is valid if it starts with `klyra1` and is Bech32 format.
+  return address.startsWith('klyra1') && (verifyIsBech32(address) === undefined);
 }

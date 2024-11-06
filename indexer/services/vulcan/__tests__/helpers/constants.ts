@@ -3,7 +3,7 @@ import {
   SECONDS_IN_MILLIS,
   Timestamp,
   protoTimestampToDate,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import { IHeaders } from 'kafkajs';
 import Long from 'long';
 import { DateTime } from 'luxon';

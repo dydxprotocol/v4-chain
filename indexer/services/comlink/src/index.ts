@@ -2,8 +2,8 @@ import {
   logger,
   wrapBackgroundTask,
   startBugsnag,
-} from '@dydxprotocol-indexer/base';
-import { perpetualMarketRefresher, liquidityTierRefresher } from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/base';
+import { perpetualMarketRefresher, liquidityTierRefresher } from '@klyraprotocol-indexer/postgres';
 
 import config from './config';
 import IndexV4 from './controllers/api/index-v4';

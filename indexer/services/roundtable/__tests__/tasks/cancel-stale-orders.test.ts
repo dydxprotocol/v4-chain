@@ -1,9 +1,9 @@
 import {
   BlockTable, OrderFromDatabase, OrderTable, OrderStatus, dbHelpers, testConstants, testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import cancelStaleOrdersTask from '../../src/tasks/cancel-stale-orders';
-import { defaultOrderGoodTilBlockTime } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
-import { stats } from '@dydxprotocol-indexer/base';
+import { defaultOrderGoodTilBlockTime } from '@klyraprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import { stats } from '@klyraprotocol-indexer/base';
 import _ from 'lodash';
 import config from '../../src/config';
 

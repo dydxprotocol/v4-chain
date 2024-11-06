@@ -1,8 +1,9 @@
 package constants
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed"
@@ -154,10 +155,6 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 		"USDT exchange config": {
 			id:                             exchange_config.MARKET_USDT_USD,
 			expectedExchangeConfigJsonFile: "usdt_exchange_config.json",
-		},
-		"DYDX exchange config": {
-			id:                             exchange_config.MARKET_DYDX_USD,
-			expectedExchangeConfigJsonFile: "dydx_exchange_config.json",
 		},
 	}
 	for name, tc := range tests {

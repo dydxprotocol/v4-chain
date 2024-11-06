@@ -1,6 +1,6 @@
 import { Network } from "../src/clients/constants";
 import { ValidatorClient } from "../src/clients/validator-client";
-import { DYDX_TEST_ADDRESS } from "./constants";
+import { KLYRA_TEST_ADDRESS } from "./constants";
 
 async function test(): Promise<void> {
   const client = await ValidatorClient.connect(
@@ -8,7 +8,7 @@ async function test(): Promise<void> {
   );
 
   try {
-    const account = await client.get.getAccount(DYDX_TEST_ADDRESS);
+    const account = await client.get.getAccount(KLYRA_TEST_ADDRESS);
     console.log("Account");
     console.log(JSON.stringify(account));
   } catch (error) {
@@ -16,7 +16,7 @@ async function test(): Promise<void> {
   }
 
   try {
-    const coins = await client.get.getAccountBalances(DYDX_TEST_ADDRESS);
+    const coins = await client.get.getAccountBalances(KLYRA_TEST_ADDRESS);
     console.log("Balances");
     console.log(JSON.stringify(coins));
   } catch (error) {
@@ -32,7 +32,7 @@ async function test(): Promise<void> {
   }
 
   try {
-    const subaccount = await client.get.getSubaccount(DYDX_TEST_ADDRESS, 0);
+    const subaccount = await client.get.getSubaccount(KLYRA_TEST_ADDRESS, 0);
     console.log("Subaccount 0");
     console.log(JSON.stringify(subaccount));
   } catch (error) {
@@ -40,7 +40,7 @@ async function test(): Promise<void> {
   }
 
   try {
-    const subaccount = await client.get.getSubaccount(DYDX_TEST_ADDRESS, 1);
+    const subaccount = await client.get.getSubaccount(KLYRA_TEST_ADDRESS, 1);
     console.log("Subaccount 1");
     console.log(JSON.stringify(subaccount));
   } catch (error) {
@@ -72,7 +72,7 @@ async function test(): Promise<void> {
   }
 
   try {
-    const userfeeTier = await client.get.getUserFeeTier(DYDX_TEST_ADDRESS);
+    const userfeeTier = await client.get.getUserFeeTier(KLYRA_TEST_ADDRESS);
     console.log("User Fee Tiers");
     console.log(JSON.stringify(userfeeTier));
   } catch (error) {
@@ -80,7 +80,7 @@ async function test(): Promise<void> {
   }
 
   try {
-    const userStats = await client.get.getUserStats(DYDX_TEST_ADDRESS);
+    const userStats = await client.get.getUserStats(KLYRA_TEST_ADDRESS);
     console.log("User Fee Tiers");
     console.log(JSON.stringify(userStats));
   } catch (error) {
@@ -98,7 +98,7 @@ async function test(): Promise<void> {
 
   try {
     const delegations = await client.get.getDelegatorDelegations(
-      DYDX_TEST_ADDRESS
+      KLYRA_TEST_ADDRESS
     );
     console.log("Delegations");
     console.log(JSON.stringify(delegations));
@@ -108,7 +108,7 @@ async function test(): Promise<void> {
 
   try {
     const unbondingDelegations =
-      await client.get.getDelegatorUnbondingDelegations(DYDX_TEST_ADDRESS);
+      await client.get.getDelegatorUnbondingDelegations(KLYRA_TEST_ADDRESS);
     console.log("Unbonding Delegationss");
     console.log(JSON.stringify(unbondingDelegations));
   } catch (error) {

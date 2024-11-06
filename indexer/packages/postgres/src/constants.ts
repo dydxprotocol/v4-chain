@@ -1,4 +1,4 @@
-import { CandleMessage_Resolution, ClobPairStatus } from '@dydxprotocol-indexer/v4-protos';
+import { CandleMessage_Resolution, ClobPairStatus } from '@klyraprotocol-indexer/v4-protos';
 
 import config from './config';
 import AssetModel from './models/asset-model';
@@ -24,7 +24,6 @@ import {
 
 export const BUFFER_ENCODING_UTF_8: BufferEncoding = 'utf-8';
 
-// Sourced from protocol https://github.com/dydxprotocol/v4/blob/main/lib/constants.go#L6
 export const QUOTE_CURRENCY_ATOMIC_RESOLUTION: number = -6;
 
 export const TDAI_SYMBOL: string = 'TDAI';

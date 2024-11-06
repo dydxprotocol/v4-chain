@@ -2,8 +2,8 @@ import {
   AxiosSafeServerError,
   logger,
   stats,
-} from '@dydxprotocol-indexer/base';
-import { isRestrictedCountry } from '@dydxprotocol-indexer/compliance';
+} from '@klyraprotocol-indexer/base';
+import { isRestrictedCountry } from '@klyraprotocol-indexer/compliance';
 import {
   APIOrderStatus,
   BestEffortOpenedStatus,
@@ -12,7 +12,7 @@ import {
   MAX_PARENT_SUBACCOUNTS,
   OrderStatus,
   perpetualMarketRefresher,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
 import config from '../config';

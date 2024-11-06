@@ -356,7 +356,7 @@ func New(
 	logger.Info("Starting app")
 	assertAppPreconditions()
 
-	// dYdX specific command-line flags.
+	// klyra specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
 	logger.Info("Parsed App flags", "Flags", appFlags)
 	// Panic if this is not a full node and gRPC is disabled.
@@ -718,7 +718,7 @@ func New(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	/****  dYdX specific modules/setup ****/
+	/****  klyra specific modules/setup ****/
 	app.GrpcStreamingManager = getGrpcStreamingManagerFromOptions(appFlags, logger)
 
 	timeProvider := &timelib.TimeProviderImpl{}
@@ -1440,7 +1440,7 @@ func New(
 
 	// Currently the only case that exists where the app is _not_ started with loadLatest=true is when state is
 	// loaded and then immediately exported to a file. In those cases, `LoadHeight` within `app.go` is called instead.
-	// This behavior can be invoked via running `dydxprotocold export`, which exports the chain state to a JSON file.
+	// This behavior can be invoked via running `klyraprotocold export`, which exports the chain state to a JSON file.
 	// In the export case, the memclob does not need to be hydrated, as it is never used.
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {

@@ -1,11 +1,11 @@
 # Dockerfile to containerize postgres package locally
 FROM dydxprotocol/indexer-node:16-alpine
 ENV NODE_ENV=development
-RUN adduser -S dydx
-RUN mkdir -p /home/dydx/app
-RUN chown dydx -R /home/dydx/app
+RUN adduser -S klyra
+RUN mkdir -p /home/klyra/app
+RUN chown klyra -R /home/klyra/app
 
-WORKDIR /home/dydx/app
+WORKDIR /home/klyra/app
 
 # Copy pnpm lock and workspace and package.json from base directory
 COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
@@ -31,9 +31,9 @@ COPY ./packages/postgres/knexfile.js ./packages/postgres
 # Copy .env files
 COPY ./packages/postgres/.env* ./packages/postgres/
 
-RUN chown dydx -R /home/dydx/app
+RUN chown klyra -R /home/klyra/app
 
-USER dydx
+USER klyra
 
 # Install npm modules using pnpm
 
@@ -41,6 +41,6 @@ USER dydx
 RUN pnpm i --loglevel warn --frozen-lockfile
 
 
-WORKDIR /home/dydx/app/packages/postgres
+WORKDIR /home/klyra/app/packages/postgres
 
 CMD ["sh", "-c", "pnpm run migrate"]

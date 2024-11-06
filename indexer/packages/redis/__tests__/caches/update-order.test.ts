@@ -15,7 +15,7 @@ import {
   getOrderData,
 } from './helpers';
 import { updateOrder } from '../../src/caches/update-order';
-import { ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_SHORT_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
 import { getOrderExpiry } from '../../src/caches/helpers';
 
 describe('updateOrder', () => {

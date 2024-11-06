@@ -1,4 +1,4 @@
-import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
 import {
   IndexerTendermintEvent,
   IndexerOrder,
@@ -10,16 +10,16 @@ import {
   StatefulOrderEventV1_ConditionalOrderTriggeredV1,
   StatefulOrderEventV1_LongTermOrderPlacementV1,
   IndexerOrder_ConditionType,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import Long from 'long';
 
+import { validateOrderAndReturnErrorMessage, validateOrderIdAndReturnErrorMessage } from './helpers';
+import { Validator } from './validator';
 import { Handler, HandlerInitializer } from '../handlers/handler';
 import { ConditionalOrderPlacementHandler } from '../handlers/stateful-order/conditional-order-placement-handler';
 import { ConditionalOrderTriggeredHandler } from '../handlers/stateful-order/conditional-order-triggered-handler';
 import { StatefulOrderPlacementHandler } from '../handlers/stateful-order/stateful-order-placement-handler';
 import { StatefulOrderRemovalHandler } from '../handlers/stateful-order/stateful-order-removal-handler';
-import { validateOrderAndReturnErrorMessage, validateOrderIdAndReturnErrorMessage } from './helpers';
-import { Validator } from './validator';
 
 export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
   public validate(): void {

@@ -52,7 +52,7 @@ describe('Oracle price store', () => {
       marketId: defaultMarket.id,
       spotPrice: '10000.05',
       pnlPrice: '10000.05',
-      effectiveAt: createdDateTime.toISO(),
+      effectiveAt: createdDateTime.toISO() ?? '',
       effectiveAtHeight: updatedHeight,
     };
     await Promise.all([

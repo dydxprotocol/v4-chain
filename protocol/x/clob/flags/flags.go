@@ -52,7 +52,7 @@ var DefaultMevTelemetryHosts = []string{}
 
 // AddFlagsToCmd adds flags to app initialization.
 // These flags should be applied to the `start` command of the V4 Cosmos application.
-// E.g. `dydxprotocold start --non-validating-full-node true`.
+// E.g. `klyraprotocold start --non-validating-full-node true`.
 func AddClobFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Uint32(
 		MaxLiquidationAttemptsPerBlock,

@@ -6,7 +6,7 @@ import {
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
   TRADES_WEBSOCKET_MESSAGE_VERSION,
   KafkaTopics,
-} from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/kafka';
 import {
   FillFromDatabase,
   FillTable,
@@ -31,8 +31,8 @@ import {
   IsoString,
   fillTypeToTradeType,
   OrderSubaccountMessageContents,
-} from '@dydxprotocol-indexer/postgres';
-import { getOrderIdHash, ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
+} from '@klyraprotocol-indexer/postgres';
+import { getOrderIdHash, ORDER_FLAG_CONDITIONAL } from '@klyraprotocol-indexer/v4-proto-parser';
 import {
   LiquidationOrderV1,
   MarketMessage,
@@ -53,10 +53,10 @@ import {
   PerpetualMarketCreateEventV2,
   DeleveragingEventV1,
   protoTimestampToDate,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   PerpetualMarketType,
-} from '@dydxprotocol-indexer/v4-protos/build/codegen/dydxprotocol/indexer/protocol/v1/perpetual';
+} from '@klyraprotocol-indexer/v4-protos/build/codegen/klyraprotocol/indexer/protocol/v1/perpetual';
 import { IHeaders, Message, ProducerRecord } from 'kafkajs';
 import _ from 'lodash';
 import Long from 'long';
@@ -67,7 +67,7 @@ import {
   generatePerpetualMarketMessage,
   generatePerpetualPositionsContents,
 } from '../../src/helpers/kafka-helper';
-import { DydxIndexerSubtypes, VulcanMessage } from '../../src/lib/types';
+import { KlyraIndexerSubtypes, VulcanMessage } from '../../src/lib/types';
 
 // TX Hash is SHA256, so is of length 64 hexadecimal without the '0x'.
 // This can be generated from 32 characters, because each character generates two
@@ -473,7 +473,7 @@ export function createKafkaMessageFromOrderFillEvent({
 }) {
   const events: IndexerTendermintEvent[] = [
     createIndexerTendermintEvent(
-      DydxIndexerSubtypes.ORDER_FILL,
+      KlyraIndexerSubtypes.ORDER_FILL,
       Uint8Array.from(OrderFillEventV1.encode(orderFillEvent).finish()),
       transactionIndex,
       eventIndex,
@@ -508,7 +508,7 @@ export function createKafkaMessageFromDeleveragingEvent({
 }) {
   const events: IndexerTendermintEvent[] = [
     createIndexerTendermintEvent(
-      DydxIndexerSubtypes.DELEVERAGING,
+      KlyraIndexerSubtypes.DELEVERAGING,
       Uint8Array.from(DeleveragingEventV1.encode(deleveragingEvent).finish()),
       transactionIndex,
       eventIndex,

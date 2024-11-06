@@ -27,10 +27,10 @@ var (
 	CarlPrivateKeyEddsa  = loadPrivKeyFromBase64("E079rll4qMCWBRrHUw3IkGQBZCQQ921HaQl8m0HloSvK0t+zVboTYjjWK14oL9jCPJn/nX4IBgIdjGZEeIF5jg==")
 	DavePrivateKeyEddsa  = loadPrivKeyFromBase64("FaPbbz/gB/Id6GKYv9M/rwsUziScfbUiIObEWLeCpYrIbb2RF9n+GAATUju5aNspAkkvj+Bf/TlcGd8H6bX3oA==")
 
-	AliceConsAddressEddsa, _ = sdk.ConsAddressFromBech32("dydxvalcons1zf9csp5ygq95cqyxh48w3qkuckmpealrw2ug4d")
-	BobConsAddressEddsa, _   = sdk.ConsAddressFromBech32("dydxvalcons1s7wykslt83kayxuaktep9fw8qxe5n73ucftkh4")
-	CarlConsAddressEddsa, _  = sdk.ConsAddressFromBech32("dydxvalcons1vy0nrh7l4rtezrsakaadz4mngwlpdmhy64h0ls")
-	DaveConsAddressEddsa, _  = sdk.ConsAddressFromBech32("dydxvalcons1stjspktkshgcsv8sneqk2vs2ws0nw2wr272vtt")
+	AliceConsAddressEddsa, _ = sdk.ConsAddressFromBech32("klyravalcons1zf9csp5ygq95cqyxh48w3qkuckmpealrhxq0ye")
+	BobConsAddressEddsa, _   = sdk.ConsAddressFromBech32("klyravalcons1s7wykslt83kayxuaktep9fw8qxe5n73up9h3xp")
+	CarlConsAddressEddsa, _  = sdk.ConsAddressFromBech32("klyravalcons1vy0nrh7l4rtezrsakaadz4mngwlpdmhyretgwy")
+	DaveConsAddressEddsa, _  = sdk.ConsAddressFromBech32("klyravalcons1stjspktkshgcsv8sneqk2vs2ws0nw2wrnjkt6l")
 
 	AlicePubKey = AlicePrivateKey.PubKey()
 	BobPubKey   = BobPrivateKey.PubKey()

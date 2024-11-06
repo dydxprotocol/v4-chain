@@ -14,7 +14,7 @@
     "lint:fix": "eslint --ext .ts,.js . --fix",
     "test": "NODE_ENV=test jest --runInBand --forceExit",
     "swagger": "ts-node -r dotenv-flow/config src/scripts/generate-swagger.ts",
-    "gen-markdown": "widdershins public/swagger.json -o public/api-documentation.md --omitHeader --language_tabs 'python:Python' 'javascript:Javascript'"
+    "gen-markdown": "widdershins public/swagger.json -o public/api-documentation.md --omitHeader --user_templates ./templates && ts-node src/scripts/clean-docs.ts"
   },
   "author": "",
   "license": "AGPL-3.0",
@@ -23,12 +23,12 @@
     "@bugsnag/js": "^7.18.0",
     "@bugsnag/node": "^7.18.0",
     "@bugsnag/plugin-express": "^7.18.0",
-    "@dydxprotocol-indexer/base": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/compliance": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/redis": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/base": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/compliance": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/postgres": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/redis": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/v4-protos": "workspace:^0.0.1",
     "@tsoa/runtime": "^5.0.0",
     "big.js": "^6.2.1",
     "body-parser": "^1.20.0",
@@ -50,7 +50,7 @@
     "tsoa": "^5.1.1"
   },
   "devDependencies": {
-    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/dev": "workspace:^0.0.1",
     "@types/big.js": "^6.1.5",
     "@types/body-parser": "^1.19.2",
     "@types/cors": "^2.8.12",
@@ -72,10 +72,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dydxprotocol/indexer.git"
+    "url": "git+https://github.com/StreamFinance-Protocol/stream-chain.git"
   },
   "bugs": {
-    "url": "https://github.com/dydxprotocol/indexer/issues"
+    "url": "https://github.com/StreamFinance-Protocol/stream-chain/issues"
   },
-  "homepage": "https://github.com/dydxprotocol/indexer#readme"
+  "homepage": "https://github.com/StreamFinance-Protocol/stream-chain#readme"
 }

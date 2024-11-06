@@ -1,5 +1,5 @@
-import { PerpetualMarketFromDatabase } from '@dydxprotocol-indexer/postgres';
-import { PerpetualMarketCreateEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import { PerpetualMarketFromDatabase } from '@klyraprotocol-indexer/postgres';
+import { PerpetualMarketCreateEventV1 } from '@klyraprotocol-indexer/v4-protos';
 
 export function expectPerpetualMarketMatchesEvent(
   perpetual: PerpetualMarketCreateEventV1,

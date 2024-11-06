@@ -432,7 +432,7 @@ func (s *PreBlockTestSuite) getVoteExtension(
 			SDaiConversionRate: sdaiConversionRate,
 			Height:             3,
 			Round:              0,
-			ChainId:            "localdydxprotocol",
+			ChainId:            "localklyraprotocol",
 		},
 	)
 	s.Require().NoError(err)

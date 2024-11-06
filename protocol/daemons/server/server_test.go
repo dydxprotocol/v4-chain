@@ -201,13 +201,13 @@ func TestStart_RegistersAllServices(t *testing.T) {
 
 	// Verify that RegisterService was called for each daemon
 	mockGrpcServer.AssertCalled(t, "RegisterService", mock.MatchedBy(func(sd *golanggrpc.ServiceDesc) bool {
-		return sd.ServiceName == "dydxprotocol.daemons.pricefeed.PriceFeedService"
+		return sd.ServiceName == "klyraprotocol.daemons.pricefeed.PriceFeedService"
 	}), mock.Anything)
 	mockGrpcServer.AssertCalled(t, "RegisterService", mock.MatchedBy(func(sd *golanggrpc.ServiceDesc) bool {
-		return sd.ServiceName == "dydxprotocol.daemons.deleveraging.DeleveragingService"
+		return sd.ServiceName == "klyraprotocol.daemons.deleveraging.DeleveragingService"
 	}), mock.Anything)
 	mockGrpcServer.AssertCalled(t, "RegisterService", mock.MatchedBy(func(sd *golanggrpc.ServiceDesc) bool {
-		return sd.ServiceName == "dydxprotocol.daemons.sdaioracle.SDAIService"
+		return sd.ServiceName == "klyraprotocol.daemons.sdaioracle.SDAIService"
 	}), mock.Anything)
 
 	verifyGrpcServerMocks(

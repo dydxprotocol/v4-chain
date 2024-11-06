@@ -6,7 +6,7 @@ import {
   parseSchema,
   baseConfigSchema,
   parseNumber,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 
 export const configSchema = {
   ...baseConfigSchema,

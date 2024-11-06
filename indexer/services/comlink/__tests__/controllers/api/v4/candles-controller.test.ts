@@ -1,6 +1,6 @@
 import {
   CandleResolution, CandleTable, dbHelpers, perpetualMarketRefresher, testConstants, testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import _ from 'lodash';
 import request from 'supertest';
 
@@ -69,7 +69,7 @@ describe('candles-controller#V4', () => {
         _.times(config.API_LIMIT_V4 + 1, async (count: number) => {
           return CandleTable.create({
             ...testConstants.defaultCandle,
-            startedAt: testConstants.createdDateTime.minus({ minutes: count }).toISO(),
+            startedAt: testConstants.createdDateTime.minus({ minutes: count }).toISO() ?? '',
             resolution: CandleResolution.ONE_DAY,
           });
         }),

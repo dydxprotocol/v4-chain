@@ -2,7 +2,7 @@ package util
 
 // This file includes utility methods used by the IBC middleware for parsing IBC denoms.
 // Re-uses Stride x/ratelimit implementation: https://github.com/Stride-Labs/stride/tree/4913e1dd1a/x/ratelimit
-// See v4-chain/protocol/x/ratelimit/LICENSE and v4-chain/protocol/x/ratelimit/README.md for licensing information.
+// See stream-chain/protocol/x/ratelimit/LICENSE and stream-chain/protocol/x/ratelimit/README.md for licensing information.
 import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
@@ -37,24 +37,24 @@ func ParseDenomFromSendPacket(packet ibctransfertypes.FungibleTokenPacketData) (
 // The denom that the rate limiter will use for a RECEIVE packet depends on whether it was a `source` or `sink`,
 // explained here: https://github.com/cosmos/ibc-go/blob/04531d83bf/modules/apps/transfer/keeper/relay.go#L23-L54
 //
-//	If the chain is acting as a SINK: Add on the dYdX Chain port and channel and hash it
-//	  Ex1: uusdc sent from Noble to dYdX
+//	If the chain is acting as a SINK: Add on the klyra Chain port and channel and hash it
+//	  Ex1: uusdc sent from Noble to klyra
 //	       Packet Denom:   uusdc
 //	        -> Add Prefix: transfer/channel-0/uusdc
 //	        -> Hash:       ibc/...
 //
-//	  Ex2: ujuno sent from Osmosis to dYdX Chain
+//	  Ex2: ujuno sent from Osmosis to klyra Chain
 //	       PacketDenom:    transfer/channel-Y/ujuno  (channel-Y is the Juno <> Osmosis channel)
 //	        -> Add Prefix: transfer/channel-X/transfer/channel-Y/ujuno
 //	        -> Hash:       ibc/...
 //
 //	If the chain is acting as a SOURCE: First, remove the prefix. Then if there is still a denom trace, hash it
-//	  Ex1: adv4tnt sent back to dYdX chain from Osmosis
+//	  Ex1: adv4tnt sent back to klyra chain from Osmosis
 //	       Packet Denom:      transfer/channel-X/adv4tnt
 //	        -> Remove Prefix: adv4tnt
 //	        -> Leave as is:   adv4tnt
 //
-//	  Ex2: juno was sent to dYdX Chain, then to Osmosis, then back to dYdX Chain
+//	  Ex2: juno was sent to klyra Chain, then to Osmosis, then back to klyra Chain
 //	       Packet Denom:      transfer/channel-X/transfer/channel-Z/ujuno
 //	        -> Remove Prefix: transfer/channel-Z/ujuno
 //	        -> Hash:          ibc/...

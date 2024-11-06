@@ -1,4 +1,4 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@klyraprotocol-indexer/base';
 import RDS from 'aws-sdk/clients/rds';
 import { DateTime } from 'luxon';
 

@@ -27,10 +27,10 @@ func TestNewTransferEvent_Success(t *testing.T) {
 		amount,
 	)
 	indexerSenderSubaccountId := v1.SubaccountIdToIndexerSubaccountId(senderSubaccountId)
-	indexerRecipientSubaccountId := v1.SubaccountIdToIndexerSubaccountId(recipientSubaccountId)
+	indexerecipientSubaccountId := v1.SubaccountIdToIndexerSubaccountId(recipientSubaccountId)
 	expectedTransferEventProto := &events.TransferEventV1{
 		SenderSubaccountId:    &indexerSenderSubaccountId,
-		RecipientSubaccountId: &indexerRecipientSubaccountId,
+		RecipientSubaccountId: &indexerecipientSubaccountId,
 		Sender: &events.SourceOfFunds{
 			Source: &events.SourceOfFunds_SubaccountId{
 				SubaccountId: &indexerSenderSubaccountId,
@@ -38,7 +38,7 @@ func TestNewTransferEvent_Success(t *testing.T) {
 		},
 		Recipient: &events.SourceOfFunds{
 			Source: &events.SourceOfFunds_SubaccountId{
-				SubaccountId: &indexerRecipientSubaccountId,
+				SubaccountId: &indexerecipientSubaccountId,
 			},
 		},
 		AssetId: assetId,
@@ -54,7 +54,7 @@ func TestNewDepositEvent_Success(t *testing.T) {
 		assetId,
 		amount,
 	)
-	indexerRecipientSubaccountId := v1.SubaccountIdToIndexerSubaccountId(recipientSubaccountId)
+	indexerecipientSubaccountId := v1.SubaccountIdToIndexerSubaccountId(recipientSubaccountId)
 	expectedDepositEventProto := &events.TransferEventV1{
 		Sender: &events.SourceOfFunds{
 			Source: &events.SourceOfFunds_Address{
@@ -63,7 +63,7 @@ func TestNewDepositEvent_Success(t *testing.T) {
 		},
 		Recipient: &events.SourceOfFunds{
 			Source: &events.SourceOfFunds_SubaccountId{
-				SubaccountId: &indexerRecipientSubaccountId,
+				SubaccountId: &indexerecipientSubaccountId,
 			},
 		},
 		AssetId: assetId,

@@ -1,4 +1,4 @@
-import { logger, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
+import { logger, wrapBackgroundTask } from '@klyraprotocol-indexer/base';
 import {
   updateOnMessageFunction,
   consumer,
@@ -6,8 +6,8 @@ import {
   startConsumer,
   stopConsumer,
   TO_ENDER_TOPIC,
-} from '@dydxprotocol-indexer/kafka';
-import { IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/kafka';
+import { IndexerTendermintBlock, IndexerTendermintEvent } from '@klyraprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
 import yargs from 'yargs';

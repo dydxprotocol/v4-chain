@@ -3,27 +3,27 @@ import {
   Order_Side,
   Order_TimeInForce,
   OrderFlags,
-} from "@dydxprotocol/v4-client-js/src";
+} from "@klyraprotocol/v4-client-js/src";
 import Long from "long";
 
 import { OrderDetails } from "./types";
 
-export const DYDX_LOCAL_ADDRESS = "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4";
-export const DYDX_LOCAL_MNEMONIC =
+export const KLYRA_LOCAL_ADDRESS = "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57";
+export const KLYRA_LOCAL_MNEMONIC =
   "merge panther lobster crazy road hollow amused security before critic about cliff exhibit cause coyote talent happy where lion river tobacco option coconut small";
-export const DYDX_LOCAL_ADDRESS_2 =
-  "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs";
-export const DYDX_LOCAL_MNEMONIC_2 =
+export const KLYRA_LOCAL_ADDRESS_2 =
+  "klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym";
+export const KLYRA_LOCAL_MNEMONIC_2 =
   "color habit donor nurse dinosaur stable wonder process post perfect raven gold census inside worth inquiry mammal panic olive toss shadow strong name drum";
 
 export const MNEMONIC_TO_ADDRESS: Record<string, string> = {
-  [DYDX_LOCAL_MNEMONIC]: DYDX_LOCAL_ADDRESS,
-  [DYDX_LOCAL_MNEMONIC_2]: DYDX_LOCAL_ADDRESS_2,
+  [KLYRA_LOCAL_MNEMONIC]: KLYRA_LOCAL_ADDRESS,
+  [KLYRA_LOCAL_MNEMONIC_2]: KLYRA_LOCAL_ADDRESS_2,
 };
 
 export const ADDRESS_TO_MNEMONIC: Record<string, string> = {
-  [DYDX_LOCAL_ADDRESS]: DYDX_LOCAL_MNEMONIC,
-  [DYDX_LOCAL_ADDRESS_2]: DYDX_LOCAL_MNEMONIC_2,
+  [KLYRA_LOCAL_ADDRESS]: KLYRA_LOCAL_MNEMONIC,
+  [KLYRA_LOCAL_ADDRESS_2]: KLYRA_LOCAL_MNEMONIC_2,
 };
 
 export const PERPETUAL_PAIR_BTC_USD: number = 0;
@@ -44,7 +44,7 @@ export const defaultOrder: IPlaceOrder = {
 
 export const orderDetails: OrderDetails[] = [
   {
-    mnemonic: DYDX_LOCAL_MNEMONIC,
+    mnemonic: KLYRA_LOCAL_MNEMONIC,
     timeInForce: 0,
     orderFlags: 64,
     side: 1,
@@ -53,7 +53,7 @@ export const orderDetails: OrderDetails[] = [
     subticks: 5000000000,
   },
   {
-    mnemonic: DYDX_LOCAL_MNEMONIC_2,
+    mnemonic: KLYRA_LOCAL_MNEMONIC_2,
     timeInForce: 0,
     orderFlags: 64,
     side: 2,

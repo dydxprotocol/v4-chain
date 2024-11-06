@@ -12,8 +12,8 @@ test-sim-nondeterminism:
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
-	@echo "By default, ${HOME}/.dydxprotocol/config/genesis.json will be used."
-	@go test -mod=readonly -tags '$(build_tags)' $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.dydxprotocol/config/genesis.json \
+	@echo "By default, ${HOME}/.klyraprotocol/config/genesis.json will be used."
+	@go test -mod=readonly -tags '$(build_tags)' $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.klyraprotocol/config/genesis.json \
 		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
 
 # TODO(STAB-27): runsim doesn't support adding build tags necessary when running the simulation. Add support to
@@ -29,8 +29,8 @@ test-sim-after-import: runsim
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
-	@echo "By default, ${HOME}/.dydxprotocol/config/genesis.json will be used."
-	@$(BINDIR)/runsim -Genesis=${HOME}/.dydxprotocol/config/genesis.json -SimAppPkg=$(SIMAPP) -ExitOnFail 400 5 'TestFullAppSimulation -tags $(build_tags)'
+	@echo "By default, ${HOME}/.klyraprotocol/config/genesis.json will be used."
+	@$(BINDIR)/runsim -Genesis=${HOME}/.klyraprotocol/config/genesis.json -SimAppPkg=$(SIMAPP) -ExitOnFail 400 5 'TestFullAppSimulation -tags $(build_tags)'
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation. This may take awhile!"

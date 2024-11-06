@@ -7,7 +7,7 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
 
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/dydxprotocold/cmd"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/klyraprotocold/cmd"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	comethttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -117,7 +117,7 @@ func (n *Node) getContextForBroadcastTx(signer string) (*client.Context, *pflag.
 	if err := flags.Set("from", signer); err != nil {
 		return nil, nil, err
 	}
-	if err := flags.Set("chain-id", "localdydxprotocol"); err != nil {
+	if err := flags.Set("chain-id", "localklyraprotocol"); err != nil {
 		return nil, nil, err
 	}
 
@@ -126,7 +126,7 @@ func (n *Node) getContextForBroadcastTx(signer string) (*client.Context, *pflag.
 		return nil, nil, err
 	}
 
-	// NB: In `cmd/dydxprotocol/root.go` this step is done before ReadFromClientConfig, but here we choose to
+	// NB: In `cmd/klyraprotocol/root.go` this step is done before ReadFromClientConfig, but here we choose to
 	// do it second because ReadPersistentCommandFlags sets the node address we configured in flags.
 	// If we were to do it in reverse, ReadFromClientConfig would overwrite the node address.
 	initClientCtx, err = client.ReadPersistentCommandFlags(initClientCtx, flags)

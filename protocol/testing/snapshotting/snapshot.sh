@@ -27,13 +27,13 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
 fi
 
 
-CHAIN_ID="dydxprotocol-testnet"
+CHAIN_ID="klyraprotocol-testnet"
 # local path to temporary snapshots. snapshots are deleted after uploading to S3.
-SNAP_PATH="/dydxprotocol/chain/local_node/snapshots/dydxprotocol/"
+SNAP_PATH="/klyraprotocol/chain/local_node/snapshots/klyraprotocol/"
 # logfile containing snapshot timestamps
-LOG_PATH="/dydxprotocol/chain/local_node/snapshots/dydxprotocol/dydxprotocol_log.txt"
+LOG_PATH="/klyraprotocol/chain/local_node/snapshots/klyraprotocol/klyraprotocol_log.txt"
 # data directory to snapshot. this contains the blockchain state.
-DATA_PATH="/dydxprotocol/chain/local_node/data/"
+DATA_PATH="/klyraprotocol/chain/local_node/data/"
 RPC_ADDRESS="http://127.0.0.1:26657"
 
 while [ $# -gt 0 ]; do
@@ -64,10 +64,10 @@ install_prerequisites() {
 
 setup_cosmovisor() {
     VAL_HOME_DIR="$HOME/chain/local_node"
-    export DAEMON_NAME=dydxprotocold
+    export DAEMON_NAME=klyraprotocold
     export DAEMON_HOME="$HOME/chain/local_node"
 
-    cosmovisor init /bin/dydxprotocold
+    cosmovisor init /bin/klyraprotocold
 }
 
 install_prerequisites
@@ -84,24 +84,24 @@ log_this() {
 mkdir -p $SNAP_PATH
 touch $LOG_PATH
 sleep 10
-dydxprotocold init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
-curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /dydxprotocol/chain/local_node/config/genesis.json
+klyraprotocold init --chain-id=${CHAIN_ID} --home /klyraprotocol/chain/local_node local_node
+curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /klyraprotocol/chain/local_node/config/genesis.json
 
 # Prune snapshots to prevent them from getting too big. We make 3 changes:
 # Prune all app state except last 2 blocks
-sed -i 's/pruning = "default"/pruning = "everything"/' /dydxprotocol/chain/local_node/config/app.toml
+sed -i 's/pruning = "default"/pruning = "everything"/' /klyraprotocol/chain/local_node/config/app.toml
 # Tendermint pruning is decided by picking the most restrictive of multiple factors.
 # Make the custom config setting as permissive as possible.
-sed -i 's/min-retain-blocks = 0/min-retain-blocks = 2/' /dydxprotocol/chain/local_node/config/app.toml
+sed -i 's/min-retain-blocks = 0/min-retain-blocks = 2/' /klyraprotocol/chain/local_node/config/app.toml
 # Do not index tx_index.db
-sed -i 's/indexer = "kv"/indexer = "null"/' /dydxprotocol/chain/local_node/config/config.toml
+sed -i 's/indexer = "kv"/indexer = "null"/' /klyraprotocol/chain/local_node/config/config.toml
 
 setup_cosmovisor
 
 # TODO: add metrics around snapshot upload latency/frequency/success rate
 while true; do
   # p2p.seeds taken from --p2p.persistent_peers flag of full node
-  cosmovisor run start --log_level info --home /dydxprotocol/chain/local_node --p2p.seeds "${p2p_seeds}" \
+  cosmovisor run start --log_level info --home /klyraprotocol/chain/local_node --p2p.seeds "${p2p_seeds}" \
     --non-validating-full-node=true &
 
   sleep ${upload_period}

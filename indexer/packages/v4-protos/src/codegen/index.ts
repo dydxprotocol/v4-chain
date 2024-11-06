@@ -7,6 +7,6 @@
 export * from "./amino/bundle";
 export * from "./cosmos_proto/bundle";
 export * from "./cosmos/bundle";
-export * from "./dydxprotocol/bundle";
 export * from "./gogoproto/bundle";
 export * from "./google/bundle";
+export * from "./klyraprotocol/bundle";

@@ -21,7 +21,7 @@
     "useUnknownInCatchVariables": false,
     "baseUrl": ".",
     "paths": {
-      "@dydxprotocol-indexer/example-package": ["packages/example-package/src"],
+      "@klyraprotocol-indexer/example-package": ["packages/example-package/src"],
     },
   },
   "exclude": [

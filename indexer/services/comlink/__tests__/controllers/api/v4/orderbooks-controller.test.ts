@@ -4,11 +4,11 @@ import {
   OrderSide,
   testMocks,
   perpetualMarketRefresher,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { RequestMethod } from '../../../../src/types';
 import request from 'supertest';
 import { sendRequest } from '../../../helpers/helpers';
-import { OrderbookLevelsCache, redis } from '@dydxprotocol-indexer/redis';
+import { OrderbookLevelsCache, redis } from '@klyraprotocol-indexer/redis';
 import { redisClient } from '../../../../src/helpers/redis/redis-controller';
 
 describe('orderbooks-controller#V4', () => {

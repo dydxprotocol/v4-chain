@@ -1,4 +1,4 @@
-const baseConfig = require('./node_modules/@dydxprotocol-indexer/dev/.eslintrc');
+const baseConfig = require('./node_modules/@klyraprotocol-indexer/dev/.eslintrc');
 
 module.exports = {
   ...baseConfig,

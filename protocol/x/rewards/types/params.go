@@ -9,7 +9,7 @@ import (
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
 	return Params{
-		// Corresponds to module account address: dydx16wrau2x4tsg033xfrrdpae6kxfn9kyuerr5jjp
+		// Corresponds to module account address: klyra16wrau2x4tsg033xfrrdpae6kxfn9kyueujpa62
 		TreasuryAccount:  TreasuryAccountName,
 		Denom:            lib.DefaultBaseDenom,
 		DenomExponent:    lib.BaseDenomExponent,

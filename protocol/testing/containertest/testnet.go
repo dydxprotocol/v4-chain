@@ -127,15 +127,15 @@ func (t *Testnet) initialize() (err error) {
 func (t *Testnet) initializeNode(moniker string) (*Node, error) {
 	var entrypointCommand string
 	if t.isPreupgradeGenesis {
-		entrypointCommand = "/dydxprotocol/preupgrade_entrypoint.sh"
+		entrypointCommand = "/klyraprotocol/preupgrade_entrypoint.sh"
 	} else {
-		entrypointCommand = "dydxprotocold"
+		entrypointCommand = "klyraprotocold"
 	}
 
 	resource, err := t.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("testnet-local-%s", moniker),
-			Repository: "dydxprotocol-container-test",
+			Repository: "klyraprotocol-container-test",
 			Tag:        "",
 			NetworkID:  t.network.Network.ID,
 			ExposedPorts: []string{
@@ -145,13 +145,13 @@ func (t *Testnet) initializeNode(moniker string) (*Node, error) {
 				entrypointCommand,
 				"start",
 				"--home",
-				fmt.Sprintf("/dydxprotocol/chain/.%s", moniker),
+				fmt.Sprintf("/klyraprotocol/chain/.%s", moniker),
 				"--p2p.persistent_peers",
 				persistentPeers,
 			},
 			Env: []string{
-				"DAEMON_NAME=dydxprotocold",
-				fmt.Sprintf("DAEMON_HOME=/dydxprotocol/chain/.%s", moniker),
+				"DAEMON_NAME=klyraprotocold",
+				fmt.Sprintf("DAEMON_HOME=/klyraprotocol/chain/.%s", moniker),
 				fmt.Sprintf("UPGRADE_TO_VERSION=%s", UpgradeToVersion),
 			},
 			ExtraHosts: []string{

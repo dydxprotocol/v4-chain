@@ -27,9 +27,9 @@ describe('Onboarding', () => {
       const { mnemonic, privateKey } = exportMnemonicAndPrivateKey(ENTROPY_FROM_SIGNATURE_RESULT);
 
       const wallet: OfflineSigner = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic!, {
-        prefix: 'dydx',
+        prefix: 'klyra',
       });
-      const pkWallet = await DirectSecp256k1Wallet.fromKey(privateKey!, 'dydx');
+      const pkWallet = await DirectSecp256k1Wallet.fromKey(privateKey!, 'klyra');
       const mnemonicAddress = (await wallet.getAccounts())[0].address;
       const pkAddress = (await pkWallet.getAccounts())[0].address;
       expect(mnemonicAddress).toEqual(pkAddress);

@@ -55,7 +55,7 @@ export class Post {
   public readonly denoms: DenomConfig;
 
   public readonly defaultGasPrice: GasPrice;
-  public readonly defaultDydxGasPrice: GasPrice;
+  public readonly defaultKlyraGasPrice: GasPrice;
 
   private accountNumberCache: Map<string, Account> = new Map();
 
@@ -72,7 +72,7 @@ export class Post {
           : denoms.TDAI_DENOM
       }`
     );
-    this.defaultDydxGasPrice = GasPrice.fromString(
+    this.defaultKlyraGasPrice = GasPrice.fromString(
       `25000000000${
         denoms.CHAINTOKEN_GAS_DENOM !== undefined
           ? denoms.CHAINTOKEN_GAS_DENOM
@@ -185,7 +185,7 @@ export class Post {
   private defaultBroadcastMode(msgs: EncodeObject[]): BroadcastMode {
     if (
       msgs.length === 1 &&
-      msgs[0].typeUrl === "/dydxprotocol.clob.MsgPlaceOrder"
+      msgs[0].typeUrl === "/klyraprotocol.clob.MsgPlaceOrder"
     ) {
       const msg = msgs[0].value as MsgPlaceOrder;
       const orderFlags = msg.order?.orderId?.orderFlags;
@@ -603,7 +603,7 @@ export class Post {
       () => msgs,
       zeroFee,
       coinDenom === this.denoms.CHAINTOKEN_DENOM
-        ? this.defaultDydxGasPrice
+        ? this.defaultKlyraGasPrice
         : this.defaultGasPrice,
       undefined,
       broadcastMode

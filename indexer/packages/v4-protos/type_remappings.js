@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const directory = path.join(__dirname, 'src/codegen/dydxprotocol/ve');
+const directory = path.join(__dirname, 'src/codegen/klyraprotocol/ve');
 
 function replaceBytes(filePath) {
   let data = fs.readFileSync(filePath, 'utf8');

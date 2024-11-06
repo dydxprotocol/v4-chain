@@ -1,4 +1,4 @@
-import { KafkaTopics, producer } from '@dydxprotocol-indexer/kafka';
+import { KafkaTopics, producer } from '@klyraprotocol-indexer/kafka';
 import {
   dbHelpers,
   OrderFromDatabase,
@@ -10,16 +10,16 @@ import {
   SubaccountTable,
   testConstants,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 
-import { getOrderIdHash, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash, ORDER_FLAG_LONG_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
 import { sendStatefulOrderMessages } from '../src/vulcan-helpers';
 import {
   IndexerOrder,
   IndexerOrderId,
   OffChainUpdateV1,
   OrderPlaceV1_OrderPlacementStatus,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import Long from 'long';
 
 describe('vulcan-helpers', () => {

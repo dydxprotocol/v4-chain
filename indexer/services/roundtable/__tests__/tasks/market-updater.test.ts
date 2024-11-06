@@ -16,21 +16,21 @@ import {
   LiquidityTiersTable,
   LiquidityTiersMap,
   LiquidityTiersColumns,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import _ from 'lodash';
 
 import { getUpdatedMarkets } from '../../src/helpers/websocket';
 import marketUpdaterTask, { getPriceChange } from '../../src/tasks/market-updater';
 import { expectMarketWebsocketMessage } from '../helpers/websocket-helpers';
-import { producer } from '@dydxprotocol-indexer/kafka';
-import { wrapBackgroundTask } from '@dydxprotocol-indexer/base';
+import { producer } from '@klyraprotocol-indexer/kafka';
+import { wrapBackgroundTask } from '@klyraprotocol-indexer/base';
 
-import { synchronizeWrapBackgroundTask } from '@dydxprotocol-indexer/dev';
-import { NextFundingCache, redis } from '@dydxprotocol-indexer/redis';
+import { synchronizeWrapBackgroundTask } from '@klyraprotocol-indexer/dev';
+import { NextFundingCache, redis } from '@klyraprotocol-indexer/redis';
 import { redisClient } from '../../src/helpers/redis';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
-import * as SubaccountTable from '@dydxprotocol-indexer/postgres/build/src/stores/subaccount-table';
+import * as SubaccountTable from '@klyraprotocol-indexer/postgres/build/src/stores/subaccount-table';
 import {
   defaultAsset,
   defaultAsset2,
@@ -51,13 +51,13 @@ import {
   defaultTendermintEvent2,
   defaultTendermintEvent3,
   defaultTendermintEvent4,
-} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
-import * as MarketTable from '@dydxprotocol-indexer/postgres/build/src/stores/market-table';
-import * as TendermintEventTable from '@dydxprotocol-indexer/postgres/build/src/stores/tendermint-event-table';
-import * as AssetTable from '@dydxprotocol-indexer/postgres/build/src/stores/asset-table';
+} from '@klyraprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import * as MarketTable from '@klyraprotocol-indexer/postgres/build/src/stores/market-table';
+import * as TendermintEventTable from '@klyraprotocol-indexer/postgres/build/src/stores/tendermint-event-table';
+import * as AssetTable from '@klyraprotocol-indexer/postgres/build/src/stores/asset-table';
 
-jest.mock('@dydxprotocol-indexer/base', () => ({
-  ...jest.requireActual('@dydxprotocol-indexer/base'),
+jest.mock('@klyraprotocol-indexer/base', () => ({
+  ...jest.requireActual('@klyraprotocol-indexer/base'),
   wrapBackgroundTask: jest.fn(),
 }));
 
@@ -233,9 +233,9 @@ describe('market-updater', () => {
     const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send');
     synchronizeWrapBackgroundTask(wrapBackgroundTask);
 
-    const now: string = DateTime.local().toISO();
-    const lessThan24HAgo: string = DateTime.local().minus({ hour: 23 }).toISO();
-    const moreThan24HAgo: string = DateTime.local().minus({ hour: 24, minute: 5 }).toISO();
+    const now: string = DateTime.local().toISO() ?? '';
+    const lessThan24HAgo: string = DateTime.local().minus({ hour: 23 }).toISO() ?? '';
+    const moreThan24HAgo: string = DateTime.local().minus({ hour: 24, minute: 5 }).toISO() ?? '';
 
     const blockHeights = ['3', '4', '6', '7'];
 

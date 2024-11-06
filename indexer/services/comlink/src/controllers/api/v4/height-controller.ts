@@ -1,5 +1,5 @@
-import { stats } from '@dydxprotocol-indexer/base';
-import { BlockTable, BlockFromDatabase } from '@dydxprotocol-indexer/postgres';
+import { stats } from '@klyraprotocol-indexer/base';
+import { BlockTable, BlockFromDatabase } from '@klyraprotocol-indexer/postgres';
 import express from 'express';
 import { Controller, Get, Route } from 'tsoa';
 

@@ -2,7 +2,7 @@ import {
   IndexerOrder,
   IndexerOrderId,
   RedisOrder,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 
 import { InvalidRedisOrderError } from '../errors';
 

@@ -1,5 +1,5 @@
-import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
-import { IndexerOrder_Side, RedisOrder } from '@dydxprotocol-indexer/v4-protos';
+import { StateFilledQuantumsCache } from '@klyraprotocol-indexer/redis';
+import { IndexerOrder_Side, RedisOrder } from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 
 import { redisClient } from '../helpers/redis/redis-controller';

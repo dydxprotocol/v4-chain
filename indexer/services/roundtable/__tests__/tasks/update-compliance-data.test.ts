@@ -10,13 +10,13 @@ import {
   ComplianceDataColumns,
   Ordering,
   ComplianceDataCreateObject,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import updateComplianceDataTask from '../../src/tasks/update-compliance-data';
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@klyraprotocol-indexer/base';
 import _ from 'lodash';
 import config from '../../src/config';
 import { ClientAndProvider } from '../../src/helpers/compliance-clients';
-import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
+import { ComplianceClientResponse } from '@klyraprotocol-indexer/compliance';
 import { DateTime } from 'luxon';
 
 interface ComplianceClientResponseWithNull extends Omit<ComplianceClientResponse, 'riskScore'> {
@@ -304,7 +304,7 @@ describe('update-compliance-data', () => {
       address: testConstants.blockedAddress,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO() ?? '',
       assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
@@ -365,17 +365,17 @@ describe('update-compliance-data', () => {
       address: testConstants.blockedAddress,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO() ?? '',
       assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
-    const addressWithComplianceError: string = 'dydx1gem4xs643fjhaqvphrvv0adpg4435j7xx9pp4z';
+    const addressWithComplianceError: string = 'klyra1gem4xs643fjhaqvphrvv0adpg4435j7xe55waf';
     // Create a new active subaccount that will return an error when queried
     await SubaccountTable.create({
       address: addressWithComplianceError,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO() ?? '',
       assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
@@ -454,7 +454,7 @@ describe('update-compliance-data', () => {
       address: testConstants.blockedAddress,
       subaccountNumber: 0,
       updatedAtHeight: '1',
-      updatedAt: DateTime.utc().toISO(),
+      updatedAt: DateTime.utc().toISO() ?? '',
       assetYieldIndex: testConstants.defaultSubaccount.assetYieldIndex,
     });
 
@@ -531,7 +531,7 @@ async function setupComplianceData(
 ): Promise<void> {
   const oldUpdatedAt: string = DateTime.utc().minus(
     { seconds: deltaSeconds },
-  ).toUTC().toISO();
+  ).toUTC().toISO() ?? '';
   await ComplianceTable.create({
     ...complianceCreate,
     updatedAt: oldUpdatedAt,
@@ -560,7 +560,7 @@ async function setupSubaccounts(
 ): Promise<void> {
   const newUpdatedAt: string = DateTime.utc().minus({
     seconds: deltaSeconds,
-  }).toUTC().toISO();
+  }).toUTC().toISO() ?? '';
   await Promise.all(subaccountIds.map(
     (subaccountId: string) => {
       return SubaccountTable.update({

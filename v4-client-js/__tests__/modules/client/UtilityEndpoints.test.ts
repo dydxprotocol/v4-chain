@@ -1,6 +1,6 @@
 import { IndexerClient } from '../../../src';
 import { Network } from '../../../src/clients/constants';
-import { DYDX_TEST_ADDRESS } from './constants';
+import { KLYRA_TEST_ADDRESS } from './constants';
 
 describe('IndexerClient', () => {
   const client = new IndexerClient(Network.testnet().indexerConfig);
@@ -21,7 +21,7 @@ describe('IndexerClient', () => {
     });
 
     it('Screen Address', async () => {
-      const response = await client.utility.screen(DYDX_TEST_ADDRESS);
+      const response = await client.utility.screen(KLYRA_TEST_ADDRESS);
       const { restricted } = response ?? {};
       expect(restricted).toBeDefined();
     });

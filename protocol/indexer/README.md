@@ -1,7 +1,7 @@
 # Overview
 
 This directory contains structs and functions for sending data from the V4 application to the
-[Indexer](https://github.com/dydxprotocol/indexer).
+[Indexer](https://github.com/StreamFinance-Protocol/indexer).
 
 The base package contains definitions of Indexer specific command-line flags which are added to the
 `start` command of the V4 application.

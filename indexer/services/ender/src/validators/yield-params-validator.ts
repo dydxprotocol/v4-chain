@@ -1,11 +1,11 @@
 import {
   IndexerTendermintEvent,
   UpdateYieldParamsEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 
+import { Validator } from './validator';
 import { Handler } from '../handlers/handler';
 import { YieldParamsHandler } from '../handlers/yield-params-handler';
-import { Validator } from './validator';
 
 export class YieldParamsValidator extends Validator<UpdateYieldParamsEventV1> {
   public validate(): void {

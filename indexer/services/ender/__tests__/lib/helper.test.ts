@@ -1,5 +1,5 @@
-import { IndexerTendermintEvent, IndexerTendermintEvent_BlockEvent } from '@dydxprotocol-indexer/v4-protos';
-import { ParseMessageError } from '@dydxprotocol-indexer/base';
+import { IndexerTendermintEvent, IndexerTendermintEvent_BlockEvent } from '@klyraprotocol-indexer/v4-protos';
+import { ParseMessageError } from '@klyraprotocol-indexer/base';
 import { indexerTendermintEventToTransactionIndex } from '../../src/lib/helper';
 
 describe('helper', () => {

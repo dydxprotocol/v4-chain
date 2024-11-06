@@ -208,11 +208,11 @@ describe('Validations', () => {
       {
         ...defaultTransfer,
         recipient: {
-          owner: 'dydx14063jves4u9zhm7eja5ltf3t8zspxd92qnk23',
+          owner: 'klyra14063jves4u9zhm7eja5ltf3t8zspxd92lzr9eq',
           number: 0,
         },
       },
-      new UserError('Error: Invalid checksum for dydx14063jves4u9zhm7eja5ltf3t8zspxd92qnk23'),
+      new UserError('Error: Invalid checksum for klyra14063jves4u9zhm7eja5ltf3t8zspxd92lzr9eq'),
     ],
     [
       'invalid recipientAddress',
@@ -233,10 +233,10 @@ describe('Validations', () => {
     });
 
   it.each([
-    ['valid', 'dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2', true],
-    ['invalid: does not start with dydx1', 'dydx27xpfvakm2amg962yls6f84z3kell8c5leqdyt2', false],
-    ['invalid: too short', 'dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt', false],
-    ['invalid: too long', 'dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2s', false],
+    ['valid', 'klyra17xpfvakm2amg962yls6f84z3kell8c5lx3ctrp', true],
+    ['invalid: does not start with klyra1', 'klyra7xpfvakm2amg962yls6f84z3kell8c5lx3ctrp', false],
+    ['invalid: too short', 'klyra17xpfvakm2amg962yls6f84z3kell8c5lx3ctr', false],
+    ['invalid: too long', 'klyra17xpfvakm2amg962yls6f84z3kell8c5lx3ctrp2', false],
   ])('Validate address: %s', (_name: string, address: string, expectedResult: boolean) => {
     const validationResult: boolean = isValidAddress(address);
     expect(validationResult).toEqual(expectedResult);

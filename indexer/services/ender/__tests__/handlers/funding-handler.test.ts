@@ -1,11 +1,11 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@klyraprotocol-indexer/base';
 import {
   FundingEventV1,
   FundingEventV1_Type,
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   Timestamp,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   assetRefresher,
   dbHelpers,
@@ -19,8 +19,8 @@ import {
   TendermintEventTable,
   testConstants,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
-import { DydxIndexerSubtypes, FundingEventMessage } from '../../src/lib/types';
+} from '@klyraprotocol-indexer/postgres';
+import { KlyraIndexerSubtypes, FundingEventMessage } from '../../src/lib/types';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { FundingHandler } from '../../src/handlers/funding-handler';
 import {
@@ -34,13 +34,13 @@ import {
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { indexerTendermintEventToTransactionIndex } from '../../src/lib/helper';
 import { KafkaMessage } from 'kafkajs';
-import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage } from '@klyraprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
 import { expectNextFundingRate } from '../helpers/redis-helpers';
-import { redis } from '@dydxprotocol-indexer/redis';
+import { redis } from '@klyraprotocol-indexer/redis';
 import Big from 'big.js';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
-import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
+import { bigIntToBytes } from '@klyraprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('fundingHandler', () => {
@@ -80,7 +80,7 @@ describe('fundingHandler', () => {
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.FUNDING,
+        KlyraIndexerSubtypes.FUNDING,
         FundingEventV1.encode(defaultFundingUpdateSampleEvent).finish(),
         transactionIndex,
         eventIndex,
@@ -368,7 +368,7 @@ function createKafkaMessageFromFundingEvents({
   for (const fundingEvent of fundingEvents) {
     events.push(
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.FUNDING,
+        KlyraIndexerSubtypes.FUNDING,
         FundingEventV1.encode(fundingEvent).finish(),
         transactionIndex,
         eventIndex,

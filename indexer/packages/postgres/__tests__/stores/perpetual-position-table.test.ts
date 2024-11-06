@@ -71,7 +71,7 @@ describe('PerpetualPosition store', () => {
       status: PerpetualPositionStatus.OPEN,
       size: '10',
       maxSize: '25',
-      createdAt: createdDateTime.toISO(),
+      createdAt: createdDateTime.toISO() ?? '',
       createdAtHeight: createdHeight,
       openEventId: defaultTendermintEventId,
       lastEventId: defaultTendermintEventId2,
@@ -181,7 +181,7 @@ describe('PerpetualPosition store', () => {
     const perpetualPositions: PerpetualPositionFromDatabase[] = await
     PerpetualPositionTable.findAll(
       {
-        createdBeforeOrAt: createdDateTime.plus({ seconds: deltaSeconds }).toISO(),
+        createdBeforeOrAt: createdDateTime.plus({ seconds: deltaSeconds }).toISO() ?? '',
       },
       [],
       { readReplica: true },

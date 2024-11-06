@@ -24,7 +24,7 @@ import (
 
 var (
 	// NormalMsgs are messages that can be submitted by external users.
-	NormalMsgs = lib.MergeAllMapsMustHaveDistinctKeys(NormalMsgsDefault, NormalMsgsDydxCustom)
+	NormalMsgs = lib.MergeAllMapsMustHaveDistinctKeys(NormalMsgsDefault, NormalMsgsKlyraCustom)
 
 	// Default modules
 	NormalMsgsDefault = map[string]sdk.Msg{
@@ -232,29 +232,29 @@ var (
 	}
 
 	// Custom modules
-	NormalMsgsDydxCustom = map[string]sdk.Msg{
+	NormalMsgsKlyraCustom = map[string]sdk.Msg{
 		// clob
-		"/dydxprotocol.clob.MsgBatchCancel":         &clob.MsgBatchCancel{},
-		"/dydxprotocol.clob.MsgBatchCancelResponse": nil,
-		"/dydxprotocol.clob.MsgCancelOrder":         &clob.MsgCancelOrder{},
-		"/dydxprotocol.clob.MsgCancelOrderResponse": nil,
-		"/dydxprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
-		"/dydxprotocol.clob.MsgPlaceOrderResponse":  nil,
+		"/klyraprotocol.clob.MsgBatchCancel":         &clob.MsgBatchCancel{},
+		"/klyraprotocol.clob.MsgBatchCancelResponse": nil,
+		"/klyraprotocol.clob.MsgCancelOrder":         &clob.MsgCancelOrder{},
+		"/klyraprotocol.clob.MsgCancelOrderResponse": nil,
+		"/klyraprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
+		"/klyraprotocol.clob.MsgPlaceOrderResponse":  nil,
 
 		// perpetuals
 
 		// prices
 
 		// sending
-		"/dydxprotocol.sending.MsgCreateTransfer":                 &sending.MsgCreateTransfer{},
-		"/dydxprotocol.sending.MsgCreateTransferResponse":         nil,
-		"/dydxprotocol.sending.MsgDepositToSubaccount":            &sending.MsgDepositToSubaccount{},
-		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":    nil,
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":         &sending.MsgWithdrawFromSubaccount{},
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
+		"/klyraprotocol.sending.MsgCreateTransfer":                 &sending.MsgCreateTransfer{},
+		"/klyraprotocol.sending.MsgCreateTransferResponse":         nil,
+		"/klyraprotocol.sending.MsgDepositToSubaccount":            &sending.MsgDepositToSubaccount{},
+		"/klyraprotocol.sending.MsgDepositToSubaccountResponse":    nil,
+		"/klyraprotocol.sending.MsgWithdrawFromSubaccount":         &sending.MsgWithdrawFromSubaccount{},
+		"/klyraprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 
 		// subaccounts
-		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccount":         &subaccounts.MsgClaimYieldForSubaccount{},
-		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccountResponse": nil,
+		"/klyraprotocol.subaccounts.MsgClaimYieldForSubaccount":         &subaccounts.MsgClaimYieldForSubaccount{},
+		"/klyraprotocol.subaccounts.MsgClaimYieldForSubaccountResponse": nil,
 	}
 )

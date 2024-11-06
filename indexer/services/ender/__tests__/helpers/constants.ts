@@ -1,11 +1,11 @@
-import { SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION } from '@dydxprotocol-indexer/kafka';
-import { testConstants, TradeContent, TradeType } from '@dydxprotocol-indexer/postgres';
+import { SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION } from '@klyraprotocol-indexer/kafka';
+import { testConstants, TradeContent, TradeType } from '@klyraprotocol-indexer/postgres';
 import {
   bigIntToBytes,
   ORDER_FLAG_CONDITIONAL,
   ORDER_FLAG_LONG_TERM,
   ORDER_FLAG_SHORT_TERM,
-} from '@dydxprotocol-indexer/v4-proto-parser';
+} from '@klyraprotocol-indexer/v4-proto-parser';
 import {
   AssetCreateEventV1,
   ClobPairStatus,
@@ -37,10 +37,11 @@ import {
   UpdateClobPairEventV1,
   UpdatePerpetualEventV1,
   UpdateYieldParamsEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
 
+import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS, ZERO_ASSET_YIELD_INDEX } from '../../src/constants';
 import { SubaccountUpdate } from '../../src/lib/translated-types';
 import {
@@ -50,7 +51,6 @@ import {
   OrderFillEventWithOrder,
   SingleTradeMessage,
 } from '../../src/lib/types';
-import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 
 export const defaultZeroPerpYieldIndex: string = '0/1';
 export const onePerpYieldIndex: string = '1/1';
@@ -264,7 +264,7 @@ export const defaultMakerOrder: IndexerOrder = {
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
   routerFeePpm: 0,
-  routerFeeSubaccountOwner: 'dydx1xxxxxx',
+  routerFeeSubaccountOwner: 'klyra1xxxxxx',
   routerFeeSubaccountNumber: 0,
 };
 export const defaultTakerOrder: IndexerOrder = {
@@ -279,7 +279,7 @@ export const defaultTakerOrder: IndexerOrder = {
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
   routerFeePpm: 0,
-  routerFeeSubaccountOwner: 'dydx1xxxxxx',
+  routerFeeSubaccountOwner: 'klyra1xxxxxx',
   routerFeeSubaccountNumber: 0,
 };
 export const defaultLiquidationOrder: LiquidationOrderV1 = {

@@ -111,7 +111,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 
 // AddDaemonFlagsToCmd adds the required flags to instantiate a server and client for
 // price updates. These flags should be applied to the `start` command V4 Cosmos application.
-// E.g. `dydxprotocold start --price-daemon-enabled=true --unix-socket-address $(unix_socket_address)`
+// E.g. `klyraprotocold start --price-daemon-enabled=true --unix-socket-address $(unix_socket_address)`
 func AddDaemonFlagsToCmd(
 	cmd *cobra.Command,
 ) {

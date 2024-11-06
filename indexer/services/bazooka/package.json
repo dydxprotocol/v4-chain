@@ -16,12 +16,12 @@
   "author": "",
   "license": "AGPL-3.0",
   "dependencies": {
-    "@dydxprotocol-indexer/base": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/kafka": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/redis": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
-    "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/base": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/kafka": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/postgres": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/redis": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/v4-protos": "workspace:^0.0.1",
     "dotenv-flow": "^3.2.0",
     "kafkajs": "^2.2.4",
     "lodash": "^4.17.21",
@@ -30,7 +30,7 @@
     "big.js": "^6.0.2"
   },
   "devDependencies": {
-    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@klyraprotocol-indexer/dev": "workspace:^0.0.1",
     "@types/aws-lambda": "^8.10.108",
     "@types/jest": "^28.1.4",
     "@types/lodash": "^4.14.182",
@@ -44,10 +44,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dydxprotocol/indexer.git"
+    "url": "git+https://github.com/StreamFinance-Protocol/stream-chain.git"
   },
   "bugs": {
-    "url": "https://github.com/dydxprotocol/indexer/issues"
+    "url": "https://github.com/StreamFinance-Protocol/stream-chain/issues"
   },
-  "homepage": "https://github.com/dydxprotocol/indexer#readme"
+  "homepage": "https://github.com/StreamFinance-Protocol/stream-chain#readme"
 }

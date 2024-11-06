@@ -24,10 +24,10 @@ if [[ -z "${DAEMON_HOME}" ]]; then
     exit 1
 fi
 
-rm "$DAEMON_HOME/cosmovisor/genesis/bin/dydxprotocold"
-ln -s /bin/dydxprotocold_preupgrade "$DAEMON_HOME/cosmovisor/genesis/bin/dydxprotocold"
+rm "$DAEMON_HOME/cosmovisor/genesis/bin/klyraprotocold"
+ln -s /bin/klyraprotocold_preupgrade "$DAEMON_HOME/cosmovisor/genesis/bin/klyraprotocold"
 mkdir -p "$DAEMON_HOME/cosmovisor/upgrades/$UPGRADE_TO_VERSION/bin/"
-ln -s /bin/dydxprotocold "$DAEMON_HOME/cosmovisor/upgrades/$UPGRADE_TO_VERSION/bin/dydxprotocold"
+ln -s /bin/klyraprotocold "$DAEMON_HOME/cosmovisor/upgrades/$UPGRADE_TO_VERSION/bin/klyraprotocold"
 
 rm "$DAEMON_HOME/config/genesis.json"
 cp "$HOME/preupgrade_genesis.json" "$DAEMON_HOME/config/genesis.json"

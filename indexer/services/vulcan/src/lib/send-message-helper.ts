@@ -1,7 +1,7 @@
 import {
   logger, stats, STATS_NO_SAMPLING, wrapBackgroundTask,
-} from '@dydxprotocol-indexer/base';
-import { producer } from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/base';
+import { producer } from '@klyraprotocol-indexer/kafka';
 import { Message } from 'kafkajs';
 
 import config from '../config';

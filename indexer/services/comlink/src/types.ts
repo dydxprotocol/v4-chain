@@ -20,8 +20,8 @@ import {
   SubaccountFromDatabase,
   TradeType,
   TransferType,
-} from '@dydxprotocol-indexer/postgres';
-import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/postgres';
+import { RedisOrder } from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import express from 'express';
 

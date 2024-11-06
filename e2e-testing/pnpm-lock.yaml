@@ -1,13 +1,13 @@
 lockfileVersion: 5.3
 
 specifiers:
-  '@dydxprotocol-indexer/base': file:../indexer/packages/base
-  '@dydxprotocol-indexer/dev': file:../indexer/packages/dev
-  '@dydxprotocol-indexer/kafka': file:../indexer/packages/kafka
-  '@dydxprotocol-indexer/postgres': file:../indexer/packages/postgres
-  '@dydxprotocol-indexer/v4-proto-parser': file:../indexer/packages/v4-proto-parser
-  '@dydxprotocol-indexer/v4-protos': file:../indexer/packages/v4-protos
-  '@dydxprotocol/v4-client-js': file:../v4-client-js
+  '@klyraprotocol-indexer/base': file:../indexer/packages/base
+  '@klyraprotocol-indexer/dev': file:../indexer/packages/dev
+  '@klyraprotocol-indexer/kafka': file:../indexer/packages/kafka
+  '@klyraprotocol-indexer/postgres': file:../indexer/packages/postgres
+  '@klyraprotocol-indexer/v4-proto-parser': file:../indexer/packages/v4-proto-parser
+  '@klyraprotocol-indexer/v4-protos': file:../indexer/packages/v4-protos
+  '@klyraprotocol/v4-client-js': file:../v4-client-js
   '@types/big.js': ^6.1.5
   '@types/jest': ^28.1.4
   '@types/long': 4.0.2
@@ -37,12 +37,12 @@ specifiers:
   yargs: ^13.3.0
 
 dependencies:
-  '@dydxprotocol-indexer/base': link:../indexer/packages/base
-  '@dydxprotocol-indexer/kafka': link:../indexer/packages/kafka
-  '@dydxprotocol-indexer/postgres': link:../indexer/packages/postgres
-  '@dydxprotocol-indexer/v4-proto-parser': link:../indexer/packages/v4-proto-parser
-  '@dydxprotocol-indexer/v4-protos': link:../indexer/packages/v4-protos
-  '@dydxprotocol/v4-client-js': link:../v4-client-js
+  '@klyraprotocol-indexer/base': link:../indexer/packages/base
+  '@klyraprotocol-indexer/kafka': link:../indexer/packages/kafka
+  '@klyraprotocol-indexer/postgres': link:../indexer/packages/postgres
+  '@klyraprotocol-indexer/v4-proto-parser': link:../indexer/packages/v4-proto-parser
+  '@klyraprotocol-indexer/v4-protos': link:../indexer/packages/v4-protos
+  '@klyraprotocol/v4-client-js': link:../v4-client-js
   big.js: 6.2.2
   dotenv-flow: 3.3.0
   kafkajs: 2.2.4
@@ -52,7 +52,7 @@ dependencies:
   yargs: 13.3.2
 
 devDependencies:
-  '@dydxprotocol-indexer/dev': link:../indexer/packages/dev
+  '@klyraprotocol-indexer/dev': link:../indexer/packages/dev
   '@types/big.js': 6.2.2
   '@types/jest': 28.1.8
   '@types/long': 4.0.2

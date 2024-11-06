@@ -1,10 +1,10 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { logger, ParseMessageError } from '@klyraprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   MarketEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+} from '@klyraprotocol-indexer/v4-protos';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import { MarketValidator } from '../../src/validators/market-validator';
 import {
   defaultHeight,
@@ -172,7 +172,7 @@ function createBlock(
   marketEvent: MarketEventV1,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
-    DydxIndexerSubtypes.MARKET,
+    KlyraIndexerSubtypes.MARKET,
     MarketEventV1.encode(marketEvent).finish(),
     0,
     0,

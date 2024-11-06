@@ -11,7 +11,7 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-const DYDX_MSG_PREFIX = "/" + constants.AppName
+const KLYRA_MSG_PREFIX = "/" + constants.AppName
 
 // IsNestedMsg returns true if the given msg is a nested msg.
 func IsNestedMsg(msg sdk.Msg) bool {
@@ -27,9 +27,9 @@ func IsNestedMsg(msg sdk.Msg) bool {
 	return false
 }
 
-// IsDydxMsg returns true if the given msg is a dYdX custom msg.
-func IsDydxMsg(msg sdk.Msg) bool {
-	return strings.HasPrefix(sdk.MsgTypeURL(msg), DYDX_MSG_PREFIX)
+// IsKlyraMsg returns true if the given msg is a klyra custom msg.
+func IsKlyraMsg(msg sdk.Msg) bool {
+	return strings.HasPrefix(sdk.MsgTypeURL(msg), KLYRA_MSG_PREFIX)
 }
 
 // ValidateNestedMsg returns err if the given msg is an invalid nested msg.
@@ -70,15 +70,15 @@ func validateInnerMsg(msg sdk.Msg) error {
 			return fmt.Errorf("Invalid nested msg: double-nested msg type")
 		}
 
-		// 4. Reject nested dydxprotocol messages in `MsgExec`.
+		// 4. Reject nested klyraprotocol messages in `MsgExec`.
 		if _, ok := msg.(*authz.MsgExec); ok {
 			metrics.IncrCountMetricWithLabels(
 				metrics.Ante,
 				metrics.MsgExec,
 				metrics.GetLabelForStringValue(metrics.InnerMsg, sdk.MsgTypeURL(inner)),
 			)
-			if IsDydxMsg(inner) {
-				return fmt.Errorf("Invalid nested msg for MsgExec: dydx msg type")
+			if IsKlyraMsg(inner) {
+				return fmt.Errorf("Invalid nested msg for MsgExec: klyra msg type")
 			}
 		}
 

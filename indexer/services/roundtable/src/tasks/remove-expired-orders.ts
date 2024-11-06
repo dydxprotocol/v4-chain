@@ -1,17 +1,17 @@
 import {
   logger,
   stats,
-} from '@dydxprotocol-indexer/base';
-import { BatchKafkaProducer, KafkaTopics, producer } from '@dydxprotocol-indexer/kafka';
-import { BlockTable, BlockFromDatabase } from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/base';
+import { BatchKafkaProducer, KafkaTopics, producer } from '@klyraprotocol-indexer/kafka';
+import { BlockTable, BlockFromDatabase } from '@klyraprotocol-indexer/postgres';
 import {
   OrderData,
   OrderExpiryCache,
   OrdersCache,
   OrdersDataCache,
-} from '@dydxprotocol-indexer/redis';
-import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
-import { IndexerOrder, RedisOrder } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/redis';
+import { getOrderIdHash } from '@klyraprotocol-indexer/v4-proto-parser';
+import { IndexerOrder, RedisOrder } from '@klyraprotocol-indexer/v4-protos';
 import _ from 'lodash';
 
 import config from '../config';

@@ -14,10 +14,10 @@ func NewTransferEvent(
 	amount satypes.BaseQuantums,
 ) *TransferEventV1 {
 	indexerSenderSubaccountId := v1.SubaccountIdToIndexerSubaccountId(senderSubaccountId)
-	indexerRecipientSubaccountId := v1.SubaccountIdToIndexerSubaccountId(recipientSubaccountId)
+	indexerecipientSubaccountId := v1.SubaccountIdToIndexerSubaccountId(recipientSubaccountId)
 	return &TransferEventV1{
 		SenderSubaccountId:    &indexerSenderSubaccountId,
-		RecipientSubaccountId: &indexerRecipientSubaccountId,
+		RecipientSubaccountId: &indexerecipientSubaccountId,
 		Sender: &SourceOfFunds{
 			Source: &SourceOfFunds_SubaccountId{
 				SubaccountId: &indexerSenderSubaccountId,
@@ -25,7 +25,7 @@ func NewTransferEvent(
 		},
 		Recipient: &SourceOfFunds{
 			Source: &SourceOfFunds_SubaccountId{
-				SubaccountId: &indexerRecipientSubaccountId,
+				SubaccountId: &indexerecipientSubaccountId,
 			},
 		},
 		AssetId: assetId,
@@ -41,7 +41,7 @@ func NewDepositEvent(
 	assetId uint32,
 	amount satypes.BaseQuantums,
 ) *TransferEventV1 {
-	indexerRecipientSubaccountId := v1.SubaccountIdToIndexerSubaccountId(recipientSubaccountId)
+	indexerecipientSubaccountId := v1.SubaccountIdToIndexerSubaccountId(recipientSubaccountId)
 	return &TransferEventV1{
 		AssetId: assetId,
 		Amount:  amount.ToUint64(),
@@ -52,7 +52,7 @@ func NewDepositEvent(
 		},
 		Recipient: &SourceOfFunds{
 			Source: &SourceOfFunds_SubaccountId{
-				SubaccountId: &indexerRecipientSubaccountId,
+				SubaccountId: &indexerecipientSubaccountId,
 			},
 		},
 	}

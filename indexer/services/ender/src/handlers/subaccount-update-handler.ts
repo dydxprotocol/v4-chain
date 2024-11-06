@@ -13,15 +13,15 @@ import {
   SubaccountMessageContents,
   SubaccountTable,
   UpdatedPerpetualPositionSubaccountKafkaObject,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import _ from 'lodash';
 import * as pg from 'pg';
 
 import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../constants';
+import { Handler } from './handler';
 import { addPositionsToContents, annotateWithPnl } from '../helpers/kafka-helper';
 import { SubaccountUpdate } from '../lib/translated-types';
 import { ConsolidatedKafkaEvent } from '../lib/types';
-import { Handler } from './handler';
 
 export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
   eventType: string = 'SubaccountUpdateEvent';

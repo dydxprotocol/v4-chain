@@ -6,7 +6,7 @@ import {
   perpetualMarketRefresher,
   testConstants,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
@@ -14,10 +14,10 @@ import {
   OrderRemovalReason,
   OrderRemoveV1_OrderRemovalStatus,
   StatefulOrderEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../../src/lib/types';
 import {
   defaultDateTime,
   defaultHeight,
@@ -35,7 +35,7 @@ import {
 } from '../../helpers/indexer-proto-helpers';
 import { StatefulOrderRemovalHandler } from '../../../src/handlers/stateful-order/stateful-order-removal-handler';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
-import { producer } from '@dydxprotocol-indexer/kafka';
+import { producer } from '@klyraprotocol-indexer/kafka';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('statefulOrderRemovalHandler', () => {
@@ -77,7 +77,7 @@ describe('statefulOrderRemovalHandler', () => {
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.STATEFUL_ORDER,
+        KlyraIndexerSubtypes.STATEFUL_ORDER,
         StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
         transactionIndex,
         eventIndex,
@@ -125,7 +125,7 @@ describe('statefulOrderRemovalHandler', () => {
     expect(order).toBeDefined();
     expect(order).toEqual(expect.objectContaining({
       status: OrderStatus.CANCELED,
-      updatedAt: defaultDateTime.toISO(),
+      updatedAt: defaultDateTime.toISO() ?? '',
       updatedAtHeight: defaultHeight.toString(),
     }));
 

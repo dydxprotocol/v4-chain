@@ -28,11 +28,11 @@ services:
     ports:
       - 5435:5432
     environment:
-      POSTGRES_PASSWORD: dydxserver123
-      POSTGRES_USER: dydx_dev
-      DATADOG_POSTGRES_PASSWORD: dydxserver123
+      POSTGRES_PASSWORD: klyraserver123
+      POSTGRES_USER: klyra_dev
+      DATADOG_POSTGRES_PASSWORD: klyraserver123
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U dydx_dev" ]
+      test: [ "CMD-SHELL", "pg_isready -U klyra_dev" ]
       interval: 5s
       timeout: 20s
       retries: 10
@@ -40,8 +40,8 @@ services:
     image: redis:5.0.6-alpine
     ports:
       - 6382:6379
-  dydxprotocold0:
-    image: local:e2etest-dydxprotocol
+  klyraprotocold0:
+    image: local:e2etest-klyraprotocol
     entrypoint:
       - cosmovisor
       - run
@@ -51,15 +51,15 @@ services:
       # Change to `debug` for more verbose log-level.
       - info 
       - --home
-      - /dydxprotocol/chain/.alice
+      - /klyraprotocol/chain/.alice
       - --p2p.persistent_peers 
-      - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+      - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@klyraprotocold0:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@klyraprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@klyraprotocold3:26656"
       - --sDAI-daemon-mock-no-yield
       - "true"
     environment:
-      - DAEMON_HOME=/dydxprotocol/chain/.alice
+      - DAEMON_HOME=/klyraprotocol/chain/.alice
     volumes:
-      - ../protocol/localnet/dydxprotocol0:/dydxprotocol/chain/.alice/data
+      - ../protocol/localnet/klyraprotocol0:/klyraprotocol/chain/.alice/data
     ports:
       - "26657:26657"
       - "9090:9090"
@@ -67,8 +67,8 @@ services:
 
   # This is the Indexer connected node.
   # TODO: remove stake and make this a full node.
-  dydxprotocold1:
-    image: local:e2etest-dydxprotocol
+  klyraprotocold1:
+    image: local:e2etest-klyraprotocol
     entrypoint:
        - cosmovisor
        - run
@@ -76,26 +76,26 @@ services:
        - --log_level
        - error
        - --home
-       - /dydxprotocol/chain/.bob
+       - /klyraprotocol/chain/.bob
        - --p2p.persistent_peers 
-       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,b69182310be02559483e42c77b7b104352713166@dydxprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@klyraprotocold0:26656,b69182310be02559483e42c77b7b104352713166@klyraprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@klyraprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@klyraprotocold3:26656"
        - --non-validating-full-node=true
        - --indexer-kafka-conn-str
        - "kafka:9092"
        - --sDAI-daemon-mock-no-yield
        - "true"
     environment:
-      - DAEMON_HOME=/dydxprotocol/chain/.bob
+      - DAEMON_HOME=/klyraprotocol/chain/.bob
     volumes:
-      - ../protocol/localnet/dydxprotocol1:/dydxprotocol/chain/.bob/data
+      - ../protocol/localnet/klyraprotocol1:/klyraprotocol/chain/.bob/data
     ports:
       - "26658:26657"
     depends_on:
       kafka:
         condition: service_healthy
 
-  dydxprotocold2:
-    image: local:e2etest-dydxprotocol
+  klyraprotocold2:
+    image: local:e2etest-klyraprotocol
     entrypoint:
        - cosmovisor
        - run
@@ -103,18 +103,18 @@ services:
        - --log_level
        - error
        - --home
-       - /dydxprotocol/chain/.carl
+       - /klyraprotocol/chain/.carl
        - --p2p.persistent_peers
-       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@klyraprotocold0:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@klyraprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@klyraprotocold3:26656"
        - --sDAI-daemon-mock-no-yield
        - "true"
     environment:
-      - DAEMON_HOME=/dydxprotocol/chain/.carl
+      - DAEMON_HOME=/klyraprotocol/chain/.carl
     volumes:
-      - ../protocol/localnet/dydxprotocol2:/dydxprotocol/chain/.carl/data
+      - ../protocol/localnet/klyraprotocol2:/klyraprotocol/chain/.carl/data
 
-  dydxprotocold3:
-    image: local:e2etest-dydxprotocol
+  klyraprotocold3:
+    image: local:e2etest-klyraprotocol
     entrypoint:
        - cosmovisor
        - run
@@ -122,15 +122,15 @@ services:
        - --log_level
        - error
        - --home
-       - /dydxprotocol/chain/.dave
+       - /klyraprotocol/chain/.dave
        - --p2p.persistent_peers 
-       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@klyraprotocold0:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@klyraprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@klyraprotocold3:26656"
        - --sDAI-daemon-mock-no-yield
        - "true"
     environment:
-      - DAEMON_HOME=/dydxprotocol/chain/.dave
+      - DAEMON_HOME=/klyraprotocol/chain/.dave
     volumes:
-      - ../protocol/localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
+      - ../protocol/localnet/klyraprotocol3:/klyraprotocol/chain/.dave/data
   postgres-package:
     build:
       context: ../indexer

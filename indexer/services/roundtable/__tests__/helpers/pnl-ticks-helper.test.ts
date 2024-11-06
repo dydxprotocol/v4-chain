@@ -17,7 +17,7 @@ import {
   Transaction,
   TransferTable,
   PositionSide,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   calculateEquity,
   calculateTotalPnl,
@@ -31,13 +31,13 @@ import {
 import { defaultPnlTickForSubaccounts, defaultZeroPerpYieldIndex } from '../../src/helpers/constants';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
-import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@dydxprotocol-indexer/redis';
+import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@klyraprotocol-indexer/redis';
 import { redisClient } from '../../src/helpers/redis';
 import { ZERO } from '../../src/lib/constants';
 import { SubaccountTDaiTransferMap } from '../../src/helpers/types';
 import config from '../../src/config';
 import _ from 'lodash';
-import { ONE_HOUR_IN_MILLISECONDS } from '@dydxprotocol-indexer/base';
+import { ONE_HOUR_IN_MILLISECONDS } from '@klyraprotocol-indexer/base';
 
 describe('pnl-ticks-helper', () => {
   const positions: PerpetualPositionFromDatabase[] = [
@@ -390,7 +390,7 @@ describe('pnl-ticks-helper', () => {
     const tdaiPosition: Big = new Big('100');
     const tdaiNetTransfersSinceLastPnlTick: Big = new Big('-5.5');
     const latestBlockHeight: string = '5';
-    const latestBlockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO();
+    const latestBlockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO() ?? '';
     const pnlTick: PnlTicksCreateObject = getNewPnlTick(
       testConstants.defaultSubaccountId,
       subaccountAssetNetTransferMap,
@@ -410,7 +410,7 @@ describe('pnl-ticks-helper', () => {
       equity: '190600.000000',
       totalPnl: '190620.500000',
       netTransfers: '-5.500000',
-      createdAt: dateTime.toISO(),
+      createdAt: dateTime.toISO() ?? '',
       blockHeight: latestBlockHeight,
       blockTime: latestBlockTime,
     });
@@ -421,7 +421,7 @@ describe('pnl-ticks-helper', () => {
     const ticksForSubaccounts: PnlTickForSubaccounts = {
       [testConstants.defaultSubaccountId]: {
         ...testConstants.defaultPnlTick,
-        createdAt: DateTime.utc(2022, 6, 2).toISO(),
+        createdAt: DateTime.utc(2022, 6, 2).toISO() ?? '',
       },
     };
     await LatestAccountPnlTicksCache.set(
@@ -429,7 +429,7 @@ describe('pnl-ticks-helper', () => {
       redisClient,
     );
     const blockHeight: string = '5';
-    const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO();
+    const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO() ?? '';
     await BlockTable.create({
       blockHeight,
       time: blockTime,
@@ -444,7 +444,7 @@ describe('pnl-ticks-helper', () => {
     expect(newTicksToCreate).toEqual(
       expect.arrayContaining([
         {
-          createdAt: dateTime.toISO(),
+          createdAt: dateTime.toISO() ?? '',
           blockHeight,
           blockTime,
           equity: '0.000000',
@@ -461,7 +461,7 @@ describe('pnl-ticks-helper', () => {
     await TransferTable.create(testConstants.defaultTransfer);
     const txId: number = await Transaction.start();
     const blockHeight: string = '5';
-    const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO();
+    const blockTime: IsoString = DateTime.utc(2022, 6, 2, 0, 30).toISO() ?? '';
     const newTicksToCreate: PnlTicksCreateObject[] = await
     getPnlTicksCreateObjects(blockHeight, blockTime, txId);
     await Transaction.rollback(txId);
@@ -469,7 +469,7 @@ describe('pnl-ticks-helper', () => {
     expect(newTicksToCreate).toEqual(
       expect.arrayContaining([
         {
-          createdAt: dateTime.toISO(),
+          createdAt: dateTime.toISO() ?? '',
           blockHeight,
           blockTime,
           equity: '0.000000',
@@ -478,7 +478,7 @@ describe('pnl-ticks-helper', () => {
           totalPnl: '-10.000000',
         },
         {
-          createdAt: dateTime.toISO(),
+          createdAt: dateTime.toISO() ?? '',
           blockHeight,
           blockTime,
           equity: '0.000000',

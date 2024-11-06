@@ -7,7 +7,7 @@ import {
   OrderFromDatabase,
   perpetualMarketRefresher,
   FillFromDatabase,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { FillResponseObject, MarketType, RequestMethod } from '../../../../src/types';
 import request from 'supertest';
 import {

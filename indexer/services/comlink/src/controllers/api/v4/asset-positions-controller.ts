@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@klyraprotocol-indexer/base';
 import {
   AssetColumns,
   AssetFromDatabase,
@@ -14,7 +14,7 @@ import {
   QueryableField,
   SubaccountFromDatabase,
   SubaccountTable,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
 import { matchedData } from 'express-validator';

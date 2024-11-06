@@ -1,12 +1,12 @@
 import { BECH32_PREFIX } from '../src';
 import LocalWallet from '../src/clients/modules/local-wallet';
-import { DYDX_TEST_ADDRESS, DYDX_TEST_MNEMONIC } from './constants';
+import { KLYRA_TEST_ADDRESS, KLYRA_TEST_MNEMONIC } from './constants';
 
 async function test(): Promise<void> {
-  const wallet = await LocalWallet.fromMnemonic(DYDX_TEST_MNEMONIC, BECH32_PREFIX);
+  const wallet = await LocalWallet.fromMnemonic(KLYRA_TEST_MNEMONIC, BECH32_PREFIX);
   console.log(wallet);
   const address = wallet.address;
-  const addressOk = (address === DYDX_TEST_ADDRESS);
+  const addressOk = (address === KLYRA_TEST_ADDRESS);
   console.log(addressOk);
   console.log(address);
 }

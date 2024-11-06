@@ -2,7 +2,7 @@ package util
 
 // This file includes IBC utility methods used by the IBC middleware.
 // Re-uses/adapts Stride x/ratelimit implementation: https://github.com/Stride-Labs/stride/tree/4913e1dd1a/x/ratelimit
-// See v4-chain/protocol/x/ratelimit/LICENSE and v4-chain/protocol/x/ratelimit/README.md for licensing information.
+// See stream-chain/protocol/x/ratelimit/LICENSE and stream-chain/protocol/x/ratelimit/README.md for licensing information.
 
 import (
 	"encoding/json"

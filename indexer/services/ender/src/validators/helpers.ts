@@ -2,7 +2,7 @@ import {
   IndexerOrder,
   IndexerOrderId,
   IndexerOrder_Side,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 
 export function validateOrderIdAndReturnErrorMessage(orderId: IndexerOrderId): string | undefined {
   if (orderId.subaccountId === undefined) {

@@ -1,8 +1,8 @@
 import {
   ComplianceClient,
   getComplianceClient,
-} from '@dydxprotocol-indexer/compliance';
-import { ComplianceProvider } from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/compliance';
+import { ComplianceProvider } from '@klyraprotocol-indexer/postgres';
 
 export interface ClientAndProvider {
   client: ComplianceClient;

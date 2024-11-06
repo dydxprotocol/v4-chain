@@ -4,7 +4,7 @@ import {
   InfoObject,
   logger,
   stats,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 import bluebird from 'bluebird';
 import _ from 'lodash';
 import redis, {

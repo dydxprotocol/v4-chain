@@ -118,30 +118,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal",
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal",
 
-		// clob
-		"/dydxprotocol.clob.MsgBatchCancel",
-		"/dydxprotocol.clob.MsgBatchCancelResponse",
-		"/dydxprotocol.clob.MsgCancelOrder",
-		"/dydxprotocol.clob.MsgCancelOrderResponse",
-		"/dydxprotocol.clob.MsgPlaceOrder",
-		"/dydxprotocol.clob.MsgPlaceOrderResponse",
-
-		// perpetuals
-
-		// prices
-
-		// sending
-		"/dydxprotocol.sending.MsgCreateTransfer",
-		"/dydxprotocol.sending.MsgCreateTransferResponse",
-		"/dydxprotocol.sending.MsgDepositToSubaccount",
-		"/dydxprotocol.sending.MsgDepositToSubaccountResponse",
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccount",
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse",
-
-		// subaccounts
-		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccount",
-		"/dydxprotocol.subaccounts.MsgClaimYieldForSubaccountResponse",
-
 		// ibc application module: ICA
 		"/ibc.applications.interchain_accounts.v1.InterchainAccount",
 
@@ -234,6 +210,30 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.lightclients.tendermint.v1.ConsensusState",
 		"/ibc.lightclients.tendermint.v1.Header",
 		"/ibc.lightclients.tendermint.v1.Misbehaviour",
+
+		// clob
+		"/klyraprotocol.clob.MsgBatchCancel",
+		"/klyraprotocol.clob.MsgBatchCancelResponse",
+		"/klyraprotocol.clob.MsgCancelOrder",
+		"/klyraprotocol.clob.MsgCancelOrderResponse",
+		"/klyraprotocol.clob.MsgPlaceOrder",
+		"/klyraprotocol.clob.MsgPlaceOrderResponse",
+
+		// perpetuals
+
+		// prices
+
+		// sending
+		"/klyraprotocol.sending.MsgCreateTransfer",
+		"/klyraprotocol.sending.MsgCreateTransferResponse",
+		"/klyraprotocol.sending.MsgDepositToSubaccount",
+		"/klyraprotocol.sending.MsgDepositToSubaccountResponse",
+		"/klyraprotocol.sending.MsgWithdrawFromSubaccount",
+		"/klyraprotocol.sending.MsgWithdrawFromSubaccountResponse",
+
+		// subaccounts
+		"/klyraprotocol.subaccounts.MsgClaimYieldForSubaccount",
+		"/klyraprotocol.subaccounts.MsgClaimYieldForSubaccountResponse",
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.NormalMsgs))

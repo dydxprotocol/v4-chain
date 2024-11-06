@@ -1,4 +1,4 @@
-import { IndexerOrderId } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerOrderId } from '@klyraprotocol-indexer/v4-protos';
 import { getOrderData, getOrderDataCacheKey } from '../../src/caches/orders-data-cache';
 import { deleteAllAsync, setAsync } from '../../src/helpers/redis';
 import { OrderData } from '../../src/types';

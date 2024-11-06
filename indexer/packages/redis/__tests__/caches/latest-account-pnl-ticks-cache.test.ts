@@ -3,7 +3,7 @@ import { deleteAllAsync } from '../../src/helpers/redis';
 import { redis as client } from '../helpers/utils';
 import { subaccountUuid } from './constants';
 import { PnlTickForSubaccounts } from '../../src';
-import { testConstants } from '@dydxprotocol-indexer/postgres';
+import { testConstants } from '@klyraprotocol-indexer/postgres';
 
 describe('latestAccountPnlTicksCache', () => {
   beforeEach(async () => {

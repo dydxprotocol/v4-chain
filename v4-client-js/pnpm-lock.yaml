@@ -10,7 +10,7 @@ specifiers:
   '@cosmjs/tendermint-rpc': ^0.32.1
   '@cosmjs/utils': ^0.32.1
   '@dydxprotocol/node-service-base-dev': ^0.2.6
-  '@dydxprotocol/v4-proto': file:../v4-proto-js
+  '@klyraprotocol/v4-proto': file:../v4-proto-js
   '@osmonauts/lcd': ^0.6.0
   '@osmonauts/telescope': 0.80.0
   '@protobufs/cosmos': ^0.0.11
@@ -63,7 +63,7 @@ dependencies:
   '@cosmjs/stargate': 0.32.4
   '@cosmjs/tendermint-rpc': 0.32.4
   '@cosmjs/utils': 0.32.4
-  '@dydxprotocol/v4-proto': link:../v4-proto-js
+  '@klyraprotocol/v4-proto': link:../v4-proto-js
   '@osmonauts/lcd': 0.6.0
   '@scure/bip32': 1.5.0
   '@scure/bip39': 1.4.0

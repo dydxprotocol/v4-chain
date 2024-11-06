@@ -1,5 +1,5 @@
 {
-  "app_name": "dydxprotocold",
+  "app_name": "klyraprotocold",
   "app_state": {
     "assets": {
       "assets": [
@@ -31,7 +31,7 @@
     "bank": {
       "balances": [
         {
-          "address": "dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp",
+          "address": "klyra1ltyc6y4skclzafvpznpt2qjwmfwgsndp29jvn2",
           "coins": [
             {
               "amount": "200000000000000000000000000",
@@ -507,8 +507,8 @@
           "block_height": 6912000,
           "id": 0,
           "msg": {
-            "@type": "/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
-            "authority": "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+            "@type": "/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+            "authority": "klyra1mkkvp26dngu6n8rmalaxyp3gwkjuzztqtnn4rg",
             "params": {
               "tiers": [
                 {
@@ -1524,14 +1524,6 @@
           "min_exchanges": 3,
           "min_price_change_ppm": 1000,
           "pair": "USDT-USD"
-        },
-        {
-          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"DYDXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"DYDXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"DYDX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"DYDX-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"DYDX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"DYDX-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
-          "exponent": -9,
-          "id": 1000001,
-          "min_exchanges": 3,
-          "min_price_change_ppm": 2500,
-          "pair": "DYDX-USD"
         }
       ],
       "market_prices": [
@@ -1738,12 +1730,6 @@
           "id": 1000000,
           "spot_price": 1000000000,
           "pnl_price": 1000000000
-        },
-        {
-          "exponent": -9,
-          "id": 1000001,
-          "spot_price": 2050000000,
-          "pnl_price": 2050000000
         }
       ]
     },
@@ -1842,7 +1828,7 @@
     }
   },
   "app_version": "",
-  "chain_id": "dydx-sample-1",
+  "chain_id": "klyra-sample-1",
   "consensus": {
     "params": {
       "abci": {

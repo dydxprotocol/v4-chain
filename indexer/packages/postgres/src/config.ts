@@ -8,7 +8,7 @@ import {
   parseString,
   parseSchema,
   baseConfigSchema,
-} from '@dydxprotocol-indexer/base';
+} from '@klyraprotocol-indexer/base';
 
 export const configSecrets: (keyof typeof postgresConfigSchema)[] = [
   'DB_PASSWORD',
@@ -25,9 +25,9 @@ export const postgresConfigSchema = {
   IS_USING_DB_READONLY: parseBoolean({ default: true }),
 
   DB_PORT: parseInteger({ default: 5435 }),
-  DB_NAME: parseString({ default: 'dydx_dev' }),
-  DB_USERNAME: parseString({ default: 'dydx_dev' }),
-  DB_PASSWORD: parseString({ default: 'dydxserver123' }),
+  DB_NAME: parseString({ default: 'klyra_dev' }),
+  DB_USERNAME: parseString({ default: 'klyra_dev' }),
+  DB_PASSWORD: parseString({ default: 'klyraserver123' }),
   PG_POOL_MIN: parseInteger({ default: 1 }),
   PG_POOL_MAX: parseInteger({ default: 2 }),
   PG_ACQUIRE_CONNECTION_TIMEOUT_MS: parseInteger({ default: 10_000 }),

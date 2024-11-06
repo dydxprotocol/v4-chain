@@ -4,13 +4,13 @@ For development and testing purposes, it's useful to be able to deploy the chain
 
 Overall, the steps involve:
 1. Define validator node keys
-2. Build the app binary (i.e. `dydxprotocold`)
+2. Build the app binary (i.e. `klyraprotocold`)
 3. Set up configuration files (i.e. `genesis.json`, `app.toml`, `app.toml`, and etc.)
 4. Setup the app data and configs (i.e. moving data and configs files into correct directory)
 
 Currently, step 1 is a manual process and steps 2, 3 and 4 are automated within the scripts (`local.sh`, `dev.sh`, and `staging.sh`).
 
-TODO(CORE-512): add info/resources around cloud setup. [Doc](https://www.notion.so/dydx/Cloud-Setup-ccc68e7b6a4b4e83a8d0c35029a9997f)
+TODO(CORE-512): add info/resources around cloud setup. [Doc](https://www.notion.so/klyra/Cloud-Setup-ccc68e7b6a4b4e83a8d0c35029a9997f)
 
 # [Manual] Add new validator node keys to `dev.sh` or `staging.sh`
 
@@ -28,10 +28,10 @@ It's necessary to specify the `--home` flag as this is how the container knows w
 
 ```sh
 # dev
-docker build . --progress=plain --no-cache -f ./testing/testnet-dev/Dockerfile -t testnet && docker run testnet start --home /dydxprotocol/chain/.alice
+docker build . --progress=plain --no-cache -f ./testing/testnet-dev/Dockerfile -t testnet && docker run testnet start --home /klyraprotocol/chain/.alice
 
 # staging
-docker build . --progress=plain --no-cache -f ./testing/testnet-staging/Dockerfile -t testnet && docker run testnet start --home /dydxprotocol/chain/.alice
+docker build . --progress=plain --no-cache -f ./testing/testnet-staging/Dockerfile -t testnet && docker run testnet start --home /klyraprotocol/chain/.alice
 ```
 
 # Building and Pushing the Docker container image to ECR
@@ -42,7 +42,7 @@ Run the `./build-push-ecr.sh` script in this directory from this repository's ro
 
 Ensure that your `AWS_PROFILE` is correct for the environment you want to deploy to (this can be found in ~/.aws/credentials), and can be selected using the `AWS_PROFILE` env var.
 
-example: `AWS_PROFILE=dydx-v4 ./scripts/build-push-ecr.sh staging`
+example: `AWS_PROFILE=klyra-v4 ./scripts/build-push-ecr.sh staging`
 
 # Opening a shell on Docker container images
 
@@ -54,8 +54,8 @@ $ docker run -it --entrypoint /bin/sh <image id>
 
 # Running a full-node
 
-If you wish to run as a full-node instead of a validator, specify the `--home` flag as ` /dydxprotocol/chain/.full-node`.
+If you wish to run as a full-node instead of a validator, specify the `--home` flag as ` /klyraprotocol/chain/.full-node`.
 
 ```sh
-$ docker build . --progress=plain --no-cache -f ./testing/testnet-dev/Dockerfile -t testnet && docker run testnet start --home /dydxprotocol/chain/.full-node
+$ docker build . --progress=plain --no-cache -f ./testing/testnet-dev/Dockerfile -t testnet && docker run testnet start --home /klyraprotocol/chain/.full-node
 ```

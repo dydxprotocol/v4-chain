@@ -20,7 +20,7 @@ import {
   testMocks,
   TransactionFromDatabase,
   TransactionTable,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   FundingEventV1,
   IndexerTendermintBlock,
@@ -32,17 +32,17 @@ import {
   Timestamp,
   TransferEventV1,
   UpdateYieldParamsEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { onMessage } from '../../src/lib/on-message';
 import { KafkaMessage } from 'kafkajs';
 import {
   createKafkaMessage, KafkaTopics, producer,
-} from '@dydxprotocol-indexer/kafka';
+} from '@klyraprotocol-indexer/kafka';
 import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS } from '../../src/constants';
-import { ConsolidatedKafkaEvent, DydxIndexerSubtypes } from '../../src/lib/types';
+import { ConsolidatedKafkaEvent, KlyraIndexerSubtypes } from '../../src/lib/types';
 import config from '../../src/config';
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@klyraprotocol-indexer/base';
 import {
   defaultFundingUpdateSampleEvent,
   defaultHeight,
@@ -165,7 +165,7 @@ describe('on-message', () => {
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
@@ -184,7 +184,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -200,7 +200,7 @@ describe('on-message', () => {
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
@@ -221,7 +221,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -246,13 +246,13 @@ describe('on-message', () => {
     // event before a transfer event.
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.TRANSFER,
+        KlyraIndexerSubtypes.TRANSFER,
         defaultTransferEventBinary,
         transactionIndex,
         eventIndex1,
@@ -272,7 +272,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -304,13 +304,13 @@ describe('on-message', () => {
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.PERPETUAL_MARKET,
+        KlyraIndexerSubtypes.PERPETUAL_MARKET,
         defaultPerpetualMarketEventBinary,
         0,
         eventIndex,
       ),
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.FUNDING,
+        KlyraIndexerSubtypes.FUNDING,
         defaultFundingEventBinary,
         transactionIndex,
         eventIndex + 1,
@@ -331,7 +331,7 @@ describe('on-message', () => {
       expectTendermintEvent(defaultHeight.toString(), 0, eventIndex),
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex + 1),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     const newPerpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
@@ -369,7 +369,7 @@ describe('on-message', () => {
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.FUNDING,
+        KlyraIndexerSubtypes.FUNDING,
         defaultFundingEventBinary,
         transactionIndex,
         eventIndex,
@@ -388,7 +388,7 @@ describe('on-message', () => {
     await onMessage(kafkaMessage);
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -405,7 +405,7 @@ describe('on-message', () => {
     // unparsable transfer event
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.TRANSFER,
+        KlyraIndexerSubtypes.TRANSFER,
         errorSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
@@ -436,13 +436,13 @@ describe('on-message', () => {
     const eventIndex2: number = 2;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.TRANSFER,
+        KlyraIndexerSubtypes.TRANSFER,
         defaultTransferEventBinary,
         transactionIndex,
         eventIndex1,
@@ -468,7 +468,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
@@ -488,7 +488,7 @@ describe('on-message', () => {
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.MARKET,
+        KlyraIndexerSubtypes.MARKET,
         defaultMarketEventBinary,
         transactionIndex,
         eventIndex,
@@ -508,7 +508,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -524,7 +524,7 @@ describe('on-message', () => {
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.YIELD_PARAMS,
+        KlyraIndexerSubtypes.YIELD_PARAMS,
         defaultUpdateYieldParamsEventBinary,
         transactionIndex,
         eventIndex,
@@ -544,7 +544,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -574,7 +574,7 @@ describe('on-message', () => {
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.FUNDING,
+        KlyraIndexerSubtypes.FUNDING,
         defaultFundingEventBinary,
         transactionIndex,
         eventIndex,
@@ -593,7 +593,7 @@ describe('on-message', () => {
     await onMessage(kafkaMessage);
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -625,14 +625,14 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       // MARKET is a transaction event.
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.MARKET,
+        KlyraIndexerSubtypes.MARKET,
         defaultMarketEventBinary,
         transactionIndex,
         eventIndex,
       ),
       // FUNDING is a block event.
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.FUNDING,
+        KlyraIndexerSubtypes.FUNDING,
         defaultFundingEventBinary,
         blockTransactionIndex,
         eventIndex,
@@ -653,7 +653,7 @@ describe('on-message', () => {
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTendermintEvent(defaultHeight.toString(), blockTransactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
   });
 
@@ -665,19 +665,19 @@ describe('on-message', () => {
 
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex0,
         eventIndex0,
       ),
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex0,
         eventIndex1,
       ),
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex1,
         eventIndex0,
@@ -702,7 +702,7 @@ describe('on-message', () => {
       expectTendermintEvent(defaultHeight.toString(), transactionIndex0, eventIndex1),
       expectTendermintEvent(defaultHeight.toString(), transactionIndex1, eventIndex0),
       expectTransactionWithHash([defaultTxHash, defaultTxHash2]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -722,13 +722,13 @@ describe('on-message', () => {
     const eventIndex1: number = 1;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
       ),
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.TRANSFER,
+        KlyraIndexerSubtypes.TRANSFER,
         defaultTransferEventBinary,
         transactionIndex,
         eventIndex1,
@@ -749,7 +749,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     expect(producerSendMock).toHaveBeenCalledTimes(3);
@@ -768,7 +768,7 @@ describe('on-message', () => {
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
@@ -803,7 +803,7 @@ describe('on-message', () => {
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
       expectTransactionWithHash([defaultTxHash]),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO() ?? ''),
     ]);
 
     // No messages should have been sent.
@@ -819,7 +819,7 @@ describe('on-message', () => {
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,
@@ -851,7 +851,7 @@ describe('on-message', () => {
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         defaultSubaccountUpdateEventBinary,
         transactionIndex,
         eventIndex,

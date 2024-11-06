@@ -20,8 +20,8 @@ import {
   UpdatedPerpetualPositionSubaccountKafkaObject,
   TransferType,
   SubaccountTable,
-} from '@dydxprotocol-indexer/postgres';
-import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/postgres';
+import { IndexerSubaccountId } from '@klyraprotocol-indexer/v4-protos';
 import { DateTime } from 'luxon';
 import {
   addPositionsToContents,
@@ -31,7 +31,7 @@ import {
   generateTransferContents,
   getPnl,
 } from '../../src/helpers/kafka-helper';
-import { stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@klyraprotocol-indexer/base';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { defaultPreviousHeight, defaultWalletAddress, defaultZeroPerpYieldIndex } from './constants';
 
@@ -48,7 +48,7 @@ describe('kafka-helper', () => {
       entryPrice: '20000',
       sumOpen: '10',
       sumClose: '0',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO() ?? '',
       createdAtHeight: '1',
       openEventId: testConstants.defaultTendermintEventId,
       lastEventId: testConstants.defaultTendermintEventId,
@@ -306,7 +306,7 @@ describe('kafka-helper', () => {
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
       transactionHash: 'hash',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO() ?? '',
       createdAtHeight: '1',
     };
 
@@ -321,7 +321,7 @@ describe('kafka-helper', () => {
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
       transactionHash: 'hash',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO() ?? '',
       createdAtHeight: '1',
     };
 
@@ -333,7 +333,7 @@ describe('kafka-helper', () => {
       size: '10',
       eventId: testConstants.defaultTendermintEventId,
       transactionHash: 'hash',
-      createdAt: DateTime.utc().toISO(),
+      createdAt: DateTime.utc().toISO() ?? '',
       createdAtHeight: '1',
     };
 
@@ -451,7 +451,7 @@ describe('kafka-helper', () => {
       marketId: 0,
       spotPrice: '500000.00',
       pnlPrice: '500000.00',
-      effectiveAt: DateTime.utc().toISO(),
+      effectiveAt: DateTime.utc().toISO() ?? '',
       effectiveAtHeight: height,
     };
 
@@ -491,7 +491,7 @@ describe('kafka-helper', () => {
       entryPrice: '0',
       sumOpen: '0',
       sumClose: '0',
-      id: '65c77c62-043b-5dd0-9ba9-0f9cc130eca8',
+      id: '563588bd-c743-57a4-bfdd-d1ffc90a71d6',
       closedAt: null,
       closedAtHeight: null,
       closeEventId: null,
@@ -578,7 +578,7 @@ describe('kafka-helper', () => {
         exitPrice: null,
         sumOpen: '10',
         sumClose: '0',
-        id: '65c77c62-043b-5dd0-9ba9-0f9cc130eca8',
+        id: '563588bd-c743-57a4-bfdd-d1ffc90a71d6',
         closedAt: null,
         closedAtHeight: null,
         closeEventId: null,

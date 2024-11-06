@@ -63,72 +63,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse",
 
-		// blocktime
-		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams",
-		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse",
-
-		// clob
-		"/dydxprotocol.clob.MsgCreateClobPair",
-		"/dydxprotocol.clob.MsgCreateClobPairResponse",
-		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration",
-		"/dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse",
-		"/dydxprotocol.clob.MsgUpdateClobPair",
-		"/dydxprotocol.clob.MsgUpdateClobPairResponse",
-		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration",
-		"/dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse",
-		"/dydxprotocol.clob.MsgUpdateLiquidationsConfig",
-		"/dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse",
-
-		// delaymsg
-		"/dydxprotocol.delaymsg.MsgDelayMessage",
-		"/dydxprotocol.delaymsg.MsgDelayMessageResponse",
-
-		// feetiers
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
-		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
-
-		// govplus
-		"/dydxprotocol.govplus.MsgSlashValidator",
-		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
-
-		// perpeutals
-		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
-		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTier",
-		"/dydxprotocol.perpetuals.MsgSetLiquidityTierResponse",
-		"/dydxprotocol.perpetuals.MsgUpdateParams",
-		"/dydxprotocol.perpetuals.MsgUpdateParamsResponse",
-		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParams",
-		"/dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse",
-
-		// prices
-		"/dydxprotocol.prices.MsgCreateOracleMarket",
-		"/dydxprotocol.prices.MsgCreateOracleMarketResponse",
-		"/dydxprotocol.prices.MsgUpdateMarketParam",
-		"/dydxprotocol.prices.MsgUpdateMarketParamResponse",
-
-		// ratelimit
-		"/dydxprotocol.ratelimit.MsgSetLimitParams",
-		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse",
-
-		// rewards
-		"/dydxprotocol.rewards.MsgUpdateParams",
-		"/dydxprotocol.rewards.MsgUpdateParamsResponse",
-
-		// sending
-		"/dydxprotocol.sending.MsgSendFromModuleToAccount",
-		"/dydxprotocol.sending.MsgSendFromModuleToAccountResponse",
-
-		// stats
-		"/dydxprotocol.stats.MsgUpdateParams",
-		"/dydxprotocol.stats.MsgUpdateParamsResponse",
-
-		// vest
-		"/dydxprotocol.vest.MsgDeleteVestEntry",
-		"/dydxprotocol.vest.MsgDeleteVestEntryResponse",
-		"/dydxprotocol.vest.MsgSetVestEntry",
-		"/dydxprotocol.vest.MsgSetVestEntryResponse",
-
 		// ibc
 		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafe",
 		"/ibc.applications.interchain_accounts.host.v1.MsgModuleQuerySafeResponse",
@@ -140,6 +74,72 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/ibc.core.client.v1.MsgUpdateParamsResponse",
 		"/ibc.core.connection.v1.MsgUpdateParams",
 		"/ibc.core.connection.v1.MsgUpdateParamsResponse",
+
+		// blocktime
+		"/klyraprotocol.blocktime.MsgUpdateDowntimeParams",
+		"/klyraprotocol.blocktime.MsgUpdateDowntimeParamsResponse",
+
+		// clob
+		"/klyraprotocol.clob.MsgCreateClobPair",
+		"/klyraprotocol.clob.MsgCreateClobPairResponse",
+		"/klyraprotocol.clob.MsgUpdateBlockRateLimitConfiguration",
+		"/klyraprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse",
+		"/klyraprotocol.clob.MsgUpdateClobPair",
+		"/klyraprotocol.clob.MsgUpdateClobPairResponse",
+		"/klyraprotocol.clob.MsgUpdateEquityTierLimitConfiguration",
+		"/klyraprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse",
+		"/klyraprotocol.clob.MsgUpdateLiquidationsConfig",
+		"/klyraprotocol.clob.MsgUpdateLiquidationsConfigResponse",
+
+		// delaymsg
+		"/klyraprotocol.delaymsg.MsgDelayMessage",
+		"/klyraprotocol.delaymsg.MsgDelayMessageResponse",
+
+		// feetiers
+		"/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+		"/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
+
+		// govplus
+		"/klyraprotocol.govplus.MsgSlashValidator",
+		"/klyraprotocol.govplus.MsgSlashValidatorResponse",
+
+		// perpeutals
+		"/klyraprotocol.perpetuals.MsgCreatePerpetual",
+		"/klyraprotocol.perpetuals.MsgCreatePerpetualResponse",
+		"/klyraprotocol.perpetuals.MsgSetLiquidityTier",
+		"/klyraprotocol.perpetuals.MsgSetLiquidityTierResponse",
+		"/klyraprotocol.perpetuals.MsgUpdateParams",
+		"/klyraprotocol.perpetuals.MsgUpdateParamsResponse",
+		"/klyraprotocol.perpetuals.MsgUpdatePerpetualParams",
+		"/klyraprotocol.perpetuals.MsgUpdatePerpetualParamsResponse",
+
+		// prices
+		"/klyraprotocol.prices.MsgCreateOracleMarket",
+		"/klyraprotocol.prices.MsgCreateOracleMarketResponse",
+		"/klyraprotocol.prices.MsgUpdateMarketParam",
+		"/klyraprotocol.prices.MsgUpdateMarketParamResponse",
+
+		// ratelimit
+		"/klyraprotocol.ratelimit.MsgSetLimitParams",
+		"/klyraprotocol.ratelimit.MsgSetLimitParamsResponse",
+
+		// rewards
+		"/klyraprotocol.rewards.MsgUpdateParams",
+		"/klyraprotocol.rewards.MsgUpdateParamsResponse",
+
+		// sending
+		"/klyraprotocol.sending.MsgSendFromModuleToAccount",
+		"/klyraprotocol.sending.MsgSendFromModuleToAccountResponse",
+
+		// stats
+		"/klyraprotocol.stats.MsgUpdateParams",
+		"/klyraprotocol.stats.MsgUpdateParamsResponse",
+
+		// vest
+		"/klyraprotocol.vest.MsgDeleteVestEntry",
+		"/klyraprotocol.vest.MsgDeleteVestEntryResponse",
+		"/klyraprotocol.vest.MsgSetVestEntry",
+		"/klyraprotocol.vest.MsgSetVestEntryResponse",
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.InternalMsgSamplesGovAuth))

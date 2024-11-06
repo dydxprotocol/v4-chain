@@ -1,4 +1,4 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@klyraprotocol-indexer/base';
 import {
   FundingIndexUpdatesTable,
   PerpetualMarketFromDatabase,
@@ -7,22 +7,22 @@ import {
   PerpetualMarketModel,
   FundingIndexUpdatesFromDatabase,
   FundingIndexUpdatesModel,
-} from '@dydxprotocol-indexer/postgres';
-import { NextFundingCache } from '@dydxprotocol-indexer/redis';
-import { bytesToBigInt } from '@dydxprotocol-indexer/v4-proto-parser';
+} from '@klyraprotocol-indexer/postgres';
+import { NextFundingCache } from '@klyraprotocol-indexer/redis';
+import { bytesToBigInt } from '@klyraprotocol-indexer/v4-proto-parser';
 import {
   FundingEventV1_Type,
   FundingUpdateV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import * as pg from 'pg';
 
 import config from '../config';
+import { Handler } from './handler';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
 import { ConsolidatedKafkaEvent, FundingEventMessage } from '../lib/types';
-import { Handler } from './handler';
 
 export class FundingHandler extends Handler<FundingEventMessage> {
   eventType: string = 'FundingEvent';

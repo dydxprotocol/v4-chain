@@ -2,17 +2,17 @@ import {
   logger,
   stats,
   wrapBackgroundTask,
-} from '@dydxprotocol-indexer/base';
-import { redis } from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/base';
+import { redis } from '@klyraprotocol-indexer/redis';
 import { v4 as uuidv4 } from 'uuid';
 
 import config from '../config';
+import { generateRandomStartDelayMs } from './helpers';
+import { redisClient } from './redis';
 import {
   REDIS_VALUE,
   STATS_NO_SAMPLING,
 } from '../lib/constants';
-import { generateRandomStartDelayMs } from './helpers';
-import { redisClient } from './redis';
 
 let numRunningTasks = 0;
 

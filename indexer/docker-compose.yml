@@ -22,9 +22,9 @@ services:
     ports:
       - 5436:5432
     environment:
-      POSTGRES_PASSWORD: dydxserver123
-      POSTGRES_USER: dydx_test
-      DATADOG_POSTGRES_PASSWORD: dydxserver123
+      POSTGRES_PASSWORD: klyraserver123
+      POSTGRES_USER: klyra_test
+      DATADOG_POSTGRES_PASSWORD: klyraserver123
   postgres:
     build:
       context: .
@@ -32,9 +32,9 @@ services:
     ports:
       - 5435:5432
     environment:
-      POSTGRES_PASSWORD: dydxserver123
-      POSTGRES_USER: dydx_dev
-      DATADOG_POSTGRES_PASSWORD: dydxserver123
+      POSTGRES_PASSWORD: klyraserver123
+      POSTGRES_USER: klyra_dev
+      DATADOG_POSTGRES_PASSWORD: klyraserver123
   redis:
     image: redis:5.0.6-alpine
     ports:

@@ -1,13 +1,13 @@
 package constants
 
 // This is a copy of the localnet genesis.json. This can be retrieved from the localnet docker container path:
-// /dydxprotocol/chain/.alice/config/genesis.json. This genesis has Vote Extension disabled until a very high height.
+// /klyraprotocol/chain/.alice/config/genesis.json. This genesis has Vote Extension disabled until a very high height.
 // Disable linter for exchange config.
 //
 //nolint:all
 const GenesisStateNoVe = `{
   "genesis_time": "2023-07-10T19:23:15.891430637Z",
-  "chain_id": "localdydxprotocol",
+  "chain_id": "localklyraprotocol",
   "initial_height": "1",
   "consensus_params": {
     "block": {
@@ -58,35 +58,35 @@ const GenesisStateNoVe = `{
       "accounts": [
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
+          "address": "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
+          "address": "klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym",
           "pub_key": null,
           "account_number": "1",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
+          "address": "klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky",
           "pub_key": null,
           "account_number": "2",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn",
+          "address": "klyra1wau5mja7j7zdavtfq9lu7ejef05hm6ffxz2hcc",
           "pub_key": null,
           "account_number": "3",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m",
+          "address": "klyra1nzuttarf5k2j0nug5yzhr6p74t9avehn6x2c0s",
           "pub_key": null,
           "account_number": "4",
           "sequence": "0"
@@ -100,7 +100,7 @@ const GenesisStateNoVe = `{
       },
       "balances": [
         {
-          "address": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
+          "address": "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57",
           "coins": [
             {
               "denom": "adv4tnt",
@@ -113,7 +113,7 @@ const GenesisStateNoVe = `{
           ]
         },
         {
-          "address": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
+          "address": "klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky",
           "coins": [
             {
               "denom": "adv4tnt",
@@ -126,7 +126,7 @@ const GenesisStateNoVe = `{
           ]
         },
         {
-          "address": "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
+          "address": "klyra1v88c3xv9xyv3eetdx0tvcmq7ung3dywptd5ps3",
           "coins": [
             {
               "denom": "utdai",
@@ -135,7 +135,7 @@ const GenesisStateNoVe = `{
           ]
         },
         {
-          "address": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn",
+          "address": "klyra1wau5mja7j7zdavtfq9lu7ejef05hm6ffxz2hcc",
           "coins": [
             {
               "denom": "adv4tnt",
@@ -148,7 +148,7 @@ const GenesisStateNoVe = `{
           ]
         },
         {
-          "address": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
+          "address": "klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym",
           "coins": [
             {
               "denom": "adv4tnt",
@@ -161,7 +161,7 @@ const GenesisStateNoVe = `{
           ]
         },
         {
-          "address": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m",
+          "address": "klyra1nzuttarf5k2j0nug5yzhr6p74t9avehn6x2c0s",
           "coins": [
             {
               "denom": "adv4tnt",
@@ -174,7 +174,7 @@ const GenesisStateNoVe = `{
           ]
         },
         {
-          "address": "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+          "address": "klyra1zlefkpe3g0vvm9a4h0jf9000lmqutlh9dl8uc8",
           "coins": [
             {
               "denom": "adv4tnt",
@@ -183,7 +183,7 @@ const GenesisStateNoVe = `{
           ]
         },
         {
-          "address": "dydx1r3fsd6humm0ghyq0te5jf8eumklmclya37zle0",
+          "address": "klyra1r3fsd6humm0ghyq0te5jf8eumklmclyaw0hs3y",
           "coins": [
             {
               "denom": "ibc/DEEFE2DEFDC8EA8879923C4CCA42BB888C3CD03FF7ECFEFB1C2FEC27A732ACC8",
@@ -325,8 +325,8 @@ const GenesisStateNoVe = `{
         {
           "id": 0,
           "msg": {
-            "@type": "/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
-            "authority": "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+            "@type": "/klyraprotocol.feetiers.MsgUpdatePerpetualFeeParams",
+            "authority": "klyra1mkkvp26dngu6n8rmalaxyp3gwkjuzztqtnn4rg",
             "params": {
               "tiers": [
                 {
@@ -560,8 +560,8 @@ const GenesisStateNoVe = `{
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
-                "validator_address": "dydxvaloper199tqg4wdlnu4qjlxchpd7seg454937hjxg9yhy",
+                "delegator_address": "",
+                "validator_address": "klyravaloper199tqg4wdlnu4qjlxchpd7seg454937hjlyerxs",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
                   "key": "YiARx8259Z+fGFUxQLrz/5FU2RYRT6f5yzvt7D7CrQM="
@@ -572,7 +572,7 @@ const GenesisStateNoVe = `{
                 }
               }
             ],
-            "memo": "17e5e45691f0d01449c84fd4ae87279578cdd7ec@172.17.0.3:26656",
+            "memo": "17e5e45691f0d01449c84fd4ae87279578cdd7ec@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -601,7 +601,7 @@ const GenesisStateNoVe = `{
             "tip": null
           },
           "signatures": [
-            "KqBNRNfXrxYaU2585ycZI2BOvJrUrvZWVugMr9d09gxcDSPGqdjleJWFFwO+Hbhj58uZ4wNOplv9e0SxPwZ0KQ=="
+            "JN/tUFfCojdsq4EzxkKMGI/c6WAki8Q6cw/vSUFq984DgjW9PEb6NwlY3V0XAQmANdony/I8/B9vdbROx/IfQg=="
           ]
         },
         {
@@ -622,8 +622,8 @@ const GenesisStateNoVe = `{
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
-                "validator_address": "dydxvaloper1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9tjdp47",
+                "delegator_address": "",
+                "validator_address": "klyravaloper1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9j73xy2",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
                   "key": "ytLfs1W6E2I41iteKC/YwjyZ/51+CAYCHYxmRHiBeY4="
@@ -634,7 +634,7 @@ const GenesisStateNoVe = `{
                 }
               }
             ],
-            "memo": "47539956aaa8e624e0f1d926040e54908ad0eb44@172.17.0.3:26656",
+            "memo": "47539956aaa8e624e0f1d926040e54908ad0eb44@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -663,7 +663,7 @@ const GenesisStateNoVe = `{
             "tip": null
           },
           "signatures": [
-            "QcK0WTKaXjsPPsALhn7jLJ/hhmhww+1ucTy4VZE9cJlivPcurFr1k4kfP1/M0ppqEWa9mksjIeVQhOHXTOBG/Q=="
+            "5RfvtVwy9HChbwsJGVvyPq86BcbG+tuJJ1jD8n5RWRZMkf09U/8xrdZs1KcS1jH6OKCEi4WOfk+Mf4k3tGSuWw=="
           ]
         },
         {
@@ -684,8 +684,8 @@ const GenesisStateNoVe = `{
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn",
-                "validator_address": "dydxvaloper1wau5mja7j7zdavtfq9lu7ejef05hm6ffudfwmz",
+                "delegator_address": "",
+                "validator_address": "klyravaloper1wau5mja7j7zdavtfq9lu7ejef05hm6ff9p4f2k",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
                   "key": "yG29kRfZ/hgAE1I7uWjbKQJJL4/gX/05XBnfB+m196A="
@@ -696,7 +696,7 @@ const GenesisStateNoVe = `{
                 }
               }
             ],
-            "memo": "5882428984d83b03d0c907c1f0af343534987052@172.17.0.3:26656",
+            "memo": "5882428984d83b03d0c907c1f0af343534987052@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -725,7 +725,7 @@ const GenesisStateNoVe = `{
             "tip": null
           },
           "signatures": [
-            "jpCPNmoS5CHqbDXwFX5FYO7J5g7kSi5ZkxVkXEkgajJOZgu9nVTXavPFZ2t5w+UDzgWbtDxLJ1GqdM+kNFIWaA=="
+            "8j4IUAwuah6VpU1Z9tnFYNwJ4KJWG4YS2Y7Hz8A71StT3O5sG3LkM+SPX6O1/Ip4uAXd1PA4osfxoW3GZT36AA=="
           ]
         },
         {
@@ -746,8 +746,8 @@ const GenesisStateNoVe = `{
                   "max_change_rate": "0.010000000000000000"
                 },
                 "min_self_delegation": "1",
-                "delegator_address": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
-                "validator_address": "dydxvaloper10fx7sy6ywd5senxae9dwytf8jxek3t2ga89u8p",
+                "delegator_address": "",
+                "validator_address": "klyravaloper10fx7sy6ywd5senxae9dwytf8jxek3t2gytemk4",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
                   "key": "+P8YiogqqQY+iD96yEa9OJx6EgieU95u9eR3pzxfDp0="
@@ -758,7 +758,7 @@ const GenesisStateNoVe = `{
                 }
               }
             ],
-            "memo": "b69182310be02559483e42c77b7b104352713166@172.17.0.3:26656",
+            "memo": "b69182310be02559483e42c77b7b104352713166@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -787,7 +787,7 @@ const GenesisStateNoVe = `{
             "tip": null
           },
           "signatures": [
-            "SAhIiKZUWVy8tI0uDanDo9IP2ZCh2ZltV2yY2Y6umqgax34GxbU1BbrAxXxPrrhEa+IFqXJEWpocVsGo++gjuQ=="
+            "c5RQVna5Yz4hw8wE5BFw98bLdrZpIi5UAFYMLQfqo39qVELq00bFMm4Qj9oOf8zEggT3ddezS6d/OTtaNO38iw=="
           ]
         }
       ]
@@ -1448,7 +1448,7 @@ const GenesisStateNoVe = `{
           ],
           "id": {
             "number": 0,
-            "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"
+            "owner": "klyra199tqg4wdlnu4qjlxchpd7seg454937hju8xa57"
           },
           "margin_enabled": true,
           "asset_yield_index": "1/1"
@@ -1463,7 +1463,7 @@ const GenesisStateNoVe = `{
           ],
           "id": {
             "number": 0,
-            "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs"
+            "owner": "klyra10fx7sy6ywd5senxae9dwytf8jxek3t2g8gx9ym"
           },
           "margin_enabled": true,
           "asset_yield_index": "1/1"
@@ -1478,7 +1478,7 @@ const GenesisStateNoVe = `{
           ],
           "id": {
             "number": 0,
-            "owner": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70"
+            "owner": "klyra1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw93awcky"
           },
           "margin_enabled": true,
           "asset_yield_index": "1/1"
@@ -1493,7 +1493,7 @@ const GenesisStateNoVe = `{
           ],
           "id": {
             "number": 0,
-            "owner": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn"
+            "owner": "klyra1wau5mja7j7zdavtfq9lu7ejef05hm6ffxz2hcc"
           },
           "margin_enabled": true,
           "asset_yield_index": "1/1"
@@ -1508,7 +1508,7 @@ const GenesisStateNoVe = `{
           ],
           "id": {
             "number": 0,
-            "owner": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m"
+            "owner": "klyra1nzuttarf5k2j0nug5yzhr6p74t9avehn6x2c0s"
           },
           "margin_enabled": true,
           "asset_yield_index": "1/1"

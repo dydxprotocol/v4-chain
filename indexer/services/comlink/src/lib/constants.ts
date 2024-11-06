@@ -1,6 +1,6 @@
 import {
   CandleResolution, PositionSide, TDAI_ASSET_ID, TDAI_SYMBOL,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import Big from 'big.js';
 
 import { AssetPositionResponseObject, SparklineTimePeriod } from '../types';

@@ -1,11 +1,8 @@
-
-# Indexer API v1.0.0
-
-> Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
-
+# Klyra Indexer API v1.0.0
+> Scroll down for code samples, example requests and responses.
 Base URLs:
-
-* <a href="https://dydx-testnet.imperator.co/v4">https://dydx-testnet.imperator.co/v4</a>
+* For **Testnet**, use <a href="https://klyra-testnet.imperator.co/v4">https://klyra-testnet.imperator.co/v4</a>
+Note: Messages on Indexer WebSocket feeds are typically more recent than data fetched via Indexer's REST API, because the latter is backed by read replicas of the databases that feed the former. Ordinarily this difference is minimal (less than a second), but it might become prolonged under load.
 
 # Authentication
 
@@ -17,28 +14,28 @@ Base URLs:
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/addresses/{address} \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/addresses/{address}', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/addresses/{address} HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/addresses/{address}`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -46,6 +43,104 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/addresses/{address}',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/addresses/{address}', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/addresses/{address}', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/addresses/{address}");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/addresses/{address}", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -66,7 +161,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
   "subaccounts": [
     {
       "address": "string",
-      "subaccountNumber": 0,
+      "subaccountNumber": 0.1,
       "equity": "string",
       "freeCollateral": "string",
       "openPerpetualPositions": {
@@ -113,14 +208,14 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0
+          "subaccountNumber": 0.1
         },
         "property2": {
           "symbol": "string",
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0
+          "subaccountNumber": 0.1
         }
       },
       "marginEnabled": true,
@@ -146,28 +241,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber} \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber} HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber}',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/addresses/{address}/subaccountNumber/{subaccountNumber}`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -175,6 +270,104 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber}',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber}', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber}");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/addresses/{address}/subaccountNumber/{subaccountNumber}", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -194,7 +387,7 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
 ```json
 {
   "address": "string",
-  "subaccountNumber": 0,
+  "subaccountNumber": 0.1,
   "equity": "string",
   "freeCollateral": "string",
   "openPerpetualPositions": {
@@ -241,14 +434,14 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0.1
     },
     "property2": {
       "symbol": "string",
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0.1
     }
   },
   "marginEnabled": true,
@@ -272,28 +465,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber} \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber} HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -301,6 +494,104 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -320,13 +611,13 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
 ```json
 {
   "address": "string",
-  "parentSubaccountNumber": 0,
+  "parentSubaccountNumber": 0.1,
   "equity": "string",
   "freeCollateral": "string",
   "childSubaccounts": [
     {
       "address": "string",
-      "subaccountNumber": 0,
+      "subaccountNumber": 0.1,
       "equity": "string",
       "freeCollateral": "string",
       "openPerpetualPositions": {
@@ -373,14 +664,14 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0
+          "subaccountNumber": 0.1
         },
         "property2": {
           "symbol": "string",
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0
+          "subaccountNumber": 0.1
         }
       },
       "marginEnabled": true,
@@ -406,30 +697,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/assetPositions?address=string&subaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/assetPositions', params={
-  'address': 'string',  'subaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/assetPositions?address=string&subaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/assetPositions?address=string&subaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/assetPositions`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -437,6 +726,106 @@ fetch('https://dydx-testnet.imperator.co/v4/assetPositions?address=string&subacc
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/assetPositions',
+  params: {
+  'address' => 'string',
+'subaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/assetPositions', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/assetPositions', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/assetPositions?address=string&subaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/assetPositions", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -461,7 +850,7 @@ fetch('https://dydx-testnet.imperator.co/v4/assetPositions?address=string&subacc
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0.1
     }
   ]
 }
@@ -483,30 +872,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber', params={
-  'address': 'string',  'parentSubaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/assetPositions/parentSubaccountNumber`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -514,6 +901,106 @@ fetch('https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumbe
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber',
+  params: {
+  'address' => 'string',
+'parentSubaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/assetPositions/parentSubaccountNumber', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -538,7 +1025,7 @@ fetch('https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumbe
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0.1
     }
   ]
 }
@@ -560,30 +1047,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}', params={
-  'resolution': '1MIN'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/candles/perpetualMarkets/{ticker}`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -591,6 +1076,105 @@ fetch('https://dydx-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}?re
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}',
+  params: {
+  'resolution' => '[CandleResolution](#schemacandleresolution)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/candles/perpetualMarkets/{ticker}', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -635,7 +1219,7 @@ fetch('https://dydx-testnet.imperator.co/v4/candles/perpetualMarkets/{ticker}?re
       "close": "string",
       "baseTokenVolume": "string",
       "usdVolume": "string",
-      "trades": 0,
+      "trades": 0.1,
       "startingOpenInterest": "string",
       "id": "string"
     }
@@ -659,30 +1243,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/screen?address=string \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/screen', params={
-  'address': 'string'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/screen?address=string HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/screen?address=string',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/screen`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -690,6 +1272,105 @@ fetch('https://dydx-testnet.imperator.co/v4/screen?address=string',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/screen',
+  params: {
+  'address' => 'string'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/screen', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/screen', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/screen?address=string");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/screen", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -728,30 +1409,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/fills?address=string&subaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/fills', params={
-  'address': 'string',  'subaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/fills?address=string&subaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/fills?address=string&subaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/fills`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -759,6 +1438,106 @@ fetch('https://dydx-testnet.imperator.co/v4/fills?address=string&subaccountNumbe
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/fills',
+  params: {
+  'address' => 'string',
+'subaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/fills', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/fills', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/fills?address=string&subaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/fills", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -804,7 +1583,7 @@ fetch('https://dydx-testnet.imperator.co/v4/fills?address=string&subaccountNumbe
       "createdAtHeight": "string",
       "orderId": "string",
       "clientMetadata": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0.1
     }
   ]
 }
@@ -826,30 +1605,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/fills/parentSubaccount?address=string&parentSubaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/fills/parentSubaccount', params={
-  'address': 'string',  'parentSubaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/fills/parentSubaccount?address=string&parentSubaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/fills/parentSubaccount?address=string&parentSubaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/fills/parentSubaccount`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -857,6 +1634,106 @@ fetch('https://dydx-testnet.imperator.co/v4/fills/parentSubaccount?address=strin
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/fills/parentSubaccount',
+  params: {
+  'address' => 'string',
+'parentSubaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/fills/parentSubaccount', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/fills/parentSubaccount', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/fills/parentSubaccount?address=string&parentSubaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/fills/parentSubaccount", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -902,7 +1779,7 @@ fetch('https://dydx-testnet.imperator.co/v4/fills/parentSubaccount?address=strin
       "createdAtHeight": "string",
       "orderId": "string",
       "clientMetadata": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0.1
     }
   ]
 }
@@ -924,28 +1801,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/height \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/height', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/height HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/height',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/height`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -953,6 +1830,104 @@ fetch('https://dydx-testnet.imperator.co/v4/height',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/height',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/height', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/height', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/height");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/height", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -985,28 +1960,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/historicalFunding/{ticker} \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/historicalFunding/{ticker}', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/historicalFunding/{ticker} HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/historicalFunding/{ticker}',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/historicalFunding/{ticker}`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -1014,6 +1989,104 @@ fetch('https://dydx-testnet.imperator.co/v4/historicalFunding/{ticker}',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/historicalFunding/{ticker}',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/historicalFunding/{ticker}', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/historicalFunding/{ticker}', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/historicalFunding/{ticker}");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/historicalFunding/{ticker}", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -1062,30 +2135,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/historical-pnl?address=string&subaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/historical-pnl', params={
-  'address': 'string',  'subaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/historical-pnl?address=string&subaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/historical-pnl?address=string&subaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/historical-pnl`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -1093,6 +2164,106 @@ fetch('https://dydx-testnet.imperator.co/v4/historical-pnl?address=string&subacc
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/historical-pnl',
+  params: {
+  'address' => 'string',
+'subaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/historical-pnl', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/historical-pnl', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/historical-pnl?address=string&subaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/historical-pnl", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -1147,30 +2318,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/historical-pnl/parentSubaccount?address=string&parentSubaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount', params={
-  'address': 'string',  'parentSubaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/historical-pnl/parentSubaccount?address=string&parentSubaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount?address=string&parentSubaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/historical-pnl/parentSubaccount`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -1178,6 +2347,106 @@ fetch('https://dydx-testnet.imperator.co/v4/historical-pnl/parentSubaccount?addr
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/historical-pnl/parentSubaccount',
+  params: {
+  'address' => 'string',
+'parentSubaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/historical-pnl/parentSubaccount', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/historical-pnl/parentSubaccount', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/historical-pnl/parentSubaccount?address=string&parentSubaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/historical-pnl/parentSubaccount", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -1232,28 +2501,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker} \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker} HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/orderbooks/perpetualMarket/{ticker}`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -1261,6 +2530,104 @@ fetch('https://dydx-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}'
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/orderbooks/perpetualMarket/{ticker}', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/orderbooks/perpetualMarket/{ticker}", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -1309,30 +2676,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/orders?address=string&subaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/orders', params={
-  'address': 'string',  'subaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/orders?address=string&subaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/orders?address=string&subaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/orders`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -1340,6 +2705,106 @@ fetch('https://dydx-testnet.imperator.co/v4/orders?address=string&subaccountNumb
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/orders',
+  params: {
+  'address' => 'string',
+'subaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/orders', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/orders', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/orders?address=string&subaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/orders", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -1409,7 +2874,7 @@ fetch('https://dydx-testnet.imperator.co/v4/orders?address=string&subaccountNumb
     "ticker": "string",
     "updatedAt": "string",
     "updatedAtHeight": "string",
-    "subaccountNumber": 0
+    "subaccountNumber": 0.1
   }
 ]
 ```
@@ -1507,30 +2972,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/orders/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNumber', params={
-  'address': 'string',  'parentSubaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/orders/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/orders/parentSubaccountNumber`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -1538,6 +3001,106 @@ fetch('https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNumber?addres
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/orders/parentSubaccountNumber',
+  params: {
+  'address' => 'string',
+'parentSubaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/orders/parentSubaccountNumber', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/orders/parentSubaccountNumber', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/orders/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/orders/parentSubaccountNumber", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -1607,7 +3170,7 @@ fetch('https://dydx-testnet.imperator.co/v4/orders/parentSubaccountNumber?addres
     "ticker": "string",
     "updatedAt": "string",
     "updatedAtHeight": "string",
-    "subaccountNumber": 0
+    "subaccountNumber": 0.1
   }
 ]
 ```
@@ -1705,28 +3268,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/orders/{orderId} \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/orders/{orderId}', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/orders/{orderId} HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/orders/{orderId}',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/orders/{orderId}`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -1734,6 +3297,104 @@ fetch('https://dydx-testnet.imperator.co/v4/orders/{orderId}',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/orders/{orderId}',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/orders/{orderId}', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/orders/{orderId}', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/orders/{orderId}");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/orders/{orderId}", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -1776,7 +3437,7 @@ fetch('https://dydx-testnet.imperator.co/v4/orders/{orderId}',
   "ticker": "string",
   "updatedAt": "string",
   "updatedAtHeight": "string",
-  "subaccountNumber": 0
+  "subaccountNumber": 0.1
 }
 ```
 
@@ -1796,28 +3457,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/perpetualMarkets \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/perpetualMarkets', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/perpetualMarkets HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/perpetualMarkets`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -1825,6 +3486,104 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/perpetualMarkets',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/perpetualMarkets', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/perpetualMarkets', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/perpetualMarkets");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/perpetualMarkets", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -1852,19 +3611,19 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
-      "trades24H": 0,
+      "trades24H": 0.1,
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
-      "atomicResolution": 0,
-      "dangerIndexPpm": 0,
+      "atomicResolution": 0.1,
+      "dangerIndexPpm": 0.1,
       "isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock": "string",
-      "quantumConversionExponent": 0,
+      "quantumConversionExponent": 0.1,
       "tickSize": "string",
       "stepSize": "string",
-      "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
+      "stepBaseQuantums": 0.1,
+      "subticksPerTick": 0.1,
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
@@ -1879,19 +3638,19 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
-      "trades24H": 0,
+      "trades24H": 0.1,
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
-      "atomicResolution": 0,
-      "dangerIndexPpm": 0,
+      "atomicResolution": 0.1,
+      "dangerIndexPpm": 0.1,
       "isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock": "string",
-      "quantumConversionExponent": 0,
+      "quantumConversionExponent": 0.1,
       "tickSize": "string",
       "stepSize": "string",
-      "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
+      "stepBaseQuantums": 0.1,
+      "subticksPerTick": 0.1,
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
@@ -1918,30 +3677,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/perpetualPositions?address=string&subaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/perpetualPositions', params={
-  'address': 'string',  'subaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/perpetualPositions?address=string&subaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/perpetualPositions?address=string&subaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/perpetualPositions`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -1949,6 +3706,106 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualPositions?address=string&su
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/perpetualPositions',
+  params: {
+  'address' => 'string',
+'subaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/perpetualPositions', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/perpetualPositions', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/perpetualPositions?address=string&subaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/perpetualPositions", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -2018,30 +3875,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/sparklines?timePeriod=ONE_DAY \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/sparklines', params={
-  'timePeriod': 'ONE_DAY'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/sparklines?timePeriod=ONE_DAY HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/sparklines?timePeriod=ONE_DAY',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/sparklines`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -2049,6 +3904,105 @@ fetch('https://dydx-testnet.imperator.co/v4/sparklines?timePeriod=ONE_DAY',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/sparklines',
+  params: {
+  'timePeriod' => '[SparklineTimePeriod](#schemasparklinetimeperiod)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/sparklines', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/sparklines', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/sparklines?timePeriod=ONE_DAY");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/sparklines", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -2098,28 +4052,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/time \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/time', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/time HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/time',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/time`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -2127,6 +4081,104 @@ fetch('https://dydx-testnet.imperator.co/v4/time',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/time',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/time', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/time', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/time");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/time", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -2139,7 +4191,7 @@ fetch('https://dydx-testnet.imperator.co/v4/time',
 ```json
 {
   "iso": "string",
-  "epoch": 0
+  "epoch": 0.1
 }
 ```
 
@@ -2159,28 +4211,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/trades/perpetualMarket/{ticker} \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/trades/perpetualMarket/{ticker} HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/trades/perpetualMarket/{ticker}`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -2188,6 +4240,104 @@ fetch('https://dydx-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/trades/perpetualMarket/{ticker}', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -2238,30 +4388,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/transfers?address=string&subaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/transfers', params={
-  'address': 'string',  'subaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/transfers?address=string&subaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/transfers`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -2269,6 +4417,106 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountN
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/transfers',
+  params: {
+  'address' => 'string',
+'subaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/transfers', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/transfers', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/transfers?address=string&subaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/transfers", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -2294,11 +4542,11 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountN
     {
       "id": "string",
       "sender": {
-        "subaccountNumber": 0,
+        "subaccountNumber": 0.1,
         "address": "string"
       },
       "recipient": {
-        "subaccountNumber": 0,
+        "subaccountNumber": 0.1,
         "address": "string"
       },
       "size": "string",
@@ -2328,30 +4576,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/transfers/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1 \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber', params={
-  'address': 'string',  'parentSubaccountNumber': '0'
-}, headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/transfers/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1 HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/transfers/parentSubaccountNumber`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -2359,6 +4605,106 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber?add
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/transfers/parentSubaccountNumber',
+  params: {
+  'address' => 'string',
+'parentSubaccountNumber' => 'number(double)'
+}, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/transfers/parentSubaccountNumber', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/transfers/parentSubaccountNumber', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/transfers/parentSubaccountNumber?address=string&parentSubaccountNumber=0.1");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/transfers/parentSubaccountNumber", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -2384,11 +4730,11 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber?add
     {
       "id": "string",
       "sender": {
-        "subaccountNumber": 0,
+        "subaccountNumber": 0.1,
         "address": "string"
       },
       "recipient": {
-        "subaccountNumber": 0,
+        "subaccountNumber": 0.1,
         "address": "string"
       },
       "size": "string",
@@ -2418,28 +4764,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/yieldParams \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/yieldParams', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/yieldParams HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/yieldParams',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/yieldParams`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -2447,6 +4793,104 @@ fetch('https://dydx-testnet.imperator.co/v4/yieldParams',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/yieldParams',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/yieldParams', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/yieldParams', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/yieldParams");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/yieldParams", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -2492,28 +4936,28 @@ This operation does not require authentication
 
 > Code samples
 
-```python
-import requests
-headers = {
-  'Accept': 'application/json'
-}
+```shell
+# You can also use wget
+curl -X GET https://klyra-testnet.imperator.co/v4/yieldParams/latestYieldParams \
+  -H 'Accept: application/json'
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/yieldParams/latestYieldParams', headers = headers)
+```
 
-print(r.json())
+```http
+GET https://klyra-testnet.imperator.co/v4/yieldParams/latestYieldParams HTTP/1.1
+Host: klyra-testnet.imperator.co
+Accept: application/json
 
 ```
 
 ```javascript
-
 const headers = {
   'Accept':'application/json'
 };
-
-fetch('https://dydx-testnet.imperator.co/v4/yieldParams/latestYieldParams',
+const baseURL = 'https://klyra-testnet.imperator.co/v4';
+fetch(`${baseURL}/yieldParams/latestYieldParams`,
 {
   method: 'GET',
-
   headers: headers
 })
 .then(function(res) {
@@ -2521,6 +4965,104 @@ fetch('https://dydx-testnet.imperator.co/v4/yieldParams/latestYieldParams',
 }).then(function(body) {
     console.log(body);
 });
+```
+
+```ruby
+require 'rest-client'
+require 'json'
+
+headers = {
+  'Accept' => 'application/json'
+}
+
+result = RestClient.get 'https://klyra-testnet.imperator.co/v4/yieldParams/latestYieldParams',
+  params: {
+  }, headers: headers
+
+p JSON.parse(result)
+
+```
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+baseURL = 'https://klyra-testnet.imperator.co/v4'
+r = requests.get(f'{baseURL}/yieldParams/latestYieldParams', headers = headers)
+print(r.json())
+```
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+$headers = array(
+    'Accept' => 'application/json',
+);
+
+$client = new \GuzzleHttp\Client();
+
+// Define array of request body.
+$request_body = array();
+
+try {
+    $response = $client->request('GET','https://klyra-testnet.imperator.co/v4/yieldParams/latestYieldParams', array(
+        'headers' => $headers,
+        'json' => $request_body,
+       )
+    );
+    print_r($response->getBody()->getContents());
+ }
+ catch (\GuzzleHttp\Exception\BadResponseException $e) {
+    // handle exception or api errors.
+    print_r($e->getMessage());
+ }
+
+ // ...
+
+```
+
+```java
+URL obj = new URL("https://klyra-testnet.imperator.co/v4/yieldParams/latestYieldParams");
+HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+con.setRequestMethod("GET");
+int responseCode = con.getResponseCode();
+BufferedReader in = new BufferedReader(
+    new InputStreamReader(con.getInputStream()));
+String inputLine;
+StringBuffer response = new StringBuffer();
+while ((inputLine = in.readLine()) != null) {
+    response.append(inputLine);
+}
+in.close();
+System.out.println(response.toString());
+
+```
+
+```go
+package main
+
+import (
+       "bytes"
+       "net/http"
+)
+
+func main() {
+
+    headers := map[string][]string{
+        "Accept": []string{"application/json"},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest("GET", "https://klyra-testnet.imperator.co/v4/yieldParams/latestYieldParams", data)
+    req.Header = headers
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
 
 ```
 
@@ -2743,7 +5285,7 @@ This operation does not require authentication
   "side": "LONG",
   "size": "string",
   "assetId": "string",
-  "subaccountNumber": 0
+  "subaccountNumber": 0.1
 }
 
 ```
@@ -2772,14 +5314,14 @@ This operation does not require authentication
     "side": "LONG",
     "size": "string",
     "assetId": "string",
-    "subaccountNumber": 0
+    "subaccountNumber": 0.1
   },
   "property2": {
     "symbol": "string",
     "side": "LONG",
     "size": "string",
     "assetId": "string",
-    "subaccountNumber": 0
+    "subaccountNumber": 0.1
   }
 }
 
@@ -2801,7 +5343,7 @@ This operation does not require authentication
 ```json
 {
   "address": "string",
-  "subaccountNumber": 0,
+  "subaccountNumber": 0.1,
   "equity": "string",
   "freeCollateral": "string",
   "openPerpetualPositions": {
@@ -2848,14 +5390,14 @@ This operation does not require authentication
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0.1
     },
     "property2": {
       "symbol": "string",
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0.1
     }
   },
   "marginEnabled": true,
@@ -2889,7 +5431,7 @@ This operation does not require authentication
   "subaccounts": [
     {
       "address": "string",
-      "subaccountNumber": 0,
+      "subaccountNumber": 0.1,
       "equity": "string",
       "freeCollateral": "string",
       "openPerpetualPositions": {
@@ -2936,14 +5478,14 @@ This operation does not require authentication
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0
+          "subaccountNumber": 0.1
         },
         "property2": {
           "symbol": "string",
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0
+          "subaccountNumber": 0.1
         }
       },
       "marginEnabled": true,
@@ -2970,13 +5512,13 @@ This operation does not require authentication
 ```json
 {
   "address": "string",
-  "parentSubaccountNumber": 0,
+  "parentSubaccountNumber": 0.1,
   "equity": "string",
   "freeCollateral": "string",
   "childSubaccounts": [
     {
       "address": "string",
-      "subaccountNumber": 0,
+      "subaccountNumber": 0.1,
       "equity": "string",
       "freeCollateral": "string",
       "openPerpetualPositions": {
@@ -3023,14 +5565,14 @@ This operation does not require authentication
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0
+          "subaccountNumber": 0.1
         },
         "property2": {
           "symbol": "string",
           "side": "LONG",
           "size": "string",
           "assetId": "string",
-          "subaccountNumber": 0
+          "subaccountNumber": 0.1
         }
       },
       "marginEnabled": true,
@@ -3066,7 +5608,7 @@ This operation does not require authentication
       "side": "LONG",
       "size": "string",
       "assetId": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0.1
     }
   ]
 }
@@ -3127,7 +5669,7 @@ This operation does not require authentication
   "close": "string",
   "baseTokenVolume": "string",
   "usdVolume": "string",
-  "trades": 0,
+  "trades": 0.1,
   "startingOpenInterest": "string",
   "id": "string"
 }
@@ -3171,7 +5713,7 @@ This operation does not require authentication
       "close": "string",
       "baseTokenVolume": "string",
       "usdVolume": "string",
-      "trades": 0,
+      "trades": 0.1,
       "startingOpenInterest": "string",
       "id": "string"
     }
@@ -3333,7 +5875,7 @@ This operation does not require authentication
   "createdAtHeight": "string",
   "orderId": "string",
   "clientMetadata": "string",
-  "subaccountNumber": 0
+  "subaccountNumber": 0.1
 }
 
 ```
@@ -3381,7 +5923,7 @@ This operation does not require authentication
       "createdAtHeight": "string",
       "orderId": "string",
       "clientMetadata": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0.1
     }
   ]
 }
@@ -3762,7 +6304,7 @@ or
   "ticker": "string",
   "updatedAt": "string",
   "updatedAtHeight": "string",
-  "subaccountNumber": 0
+  "subaccountNumber": 0.1
 }
 
 ```
@@ -3868,19 +6410,19 @@ or
   "pnlPrice": "string",
   "priceChange24H": "string",
   "volume24H": "string",
-  "trades24H": 0,
+  "trades24H": 0.1,
   "nextFundingRate": "string",
   "initialMarginFraction": "string",
   "maintenanceMarginFraction": "string",
   "openInterest": "string",
-  "atomicResolution": 0,
-  "dangerIndexPpm": 0,
+  "atomicResolution": 0.1,
+  "dangerIndexPpm": 0.1,
   "isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock": "string",
-  "quantumConversionExponent": 0,
+  "quantumConversionExponent": 0.1,
   "tickSize": "string",
   "stepSize": "string",
-  "stepBaseQuantums": 0,
-  "subticksPerTick": 0,
+  "stepBaseQuantums": 0.1,
+  "subticksPerTick": 0.1,
   "marketType": "CROSS",
   "openInterestLowerCap": "string",
   "openInterestUpperCap": "string",
@@ -3938,19 +6480,19 @@ or
       "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
-      "trades24H": 0,
+      "trades24H": 0.1,
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
-      "atomicResolution": 0,
-      "dangerIndexPpm": 0,
+      "atomicResolution": 0.1,
+      "dangerIndexPpm": 0.1,
       "isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock": "string",
-      "quantumConversionExponent": 0,
+      "quantumConversionExponent": 0.1,
       "tickSize": "string",
       "stepSize": "string",
-      "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
+      "stepBaseQuantums": 0.1,
+      "subticksPerTick": 0.1,
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
@@ -3965,19 +6507,19 @@ or
       "pnlPrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
-      "trades24H": 0,
+      "trades24H": 0.1,
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "openInterest": "string",
-      "atomicResolution": 0,
-      "dangerIndexPpm": 0,
+      "atomicResolution": 0.1,
+      "dangerIndexPpm": 0.1,
       "isolatedMarketMaxCumulativeInsuranceFundDeltaPerBlock": "string",
-      "quantumConversionExponent": 0,
+      "quantumConversionExponent": 0.1,
       "tickSize": "string",
       "stepSize": "string",
-      "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
+      "stepBaseQuantums": 0.1,
+      "subticksPerTick": 0.1,
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
@@ -4095,7 +6637,7 @@ or
 ```json
 {
   "iso": "string",
-  "epoch": 0
+  "epoch": 0.1
 }
 
 ```
@@ -4233,11 +6775,11 @@ or
 {
   "id": "string",
   "sender": {
-    "subaccountNumber": 0,
+    "subaccountNumber": 0.1,
     "address": "string"
   },
   "recipient": {
-    "subaccountNumber": 0,
+    "subaccountNumber": 0.1,
     "address": "string"
   },
   "size": "string",
@@ -4281,11 +6823,11 @@ or
     {
       "id": "string",
       "sender": {
-        "subaccountNumber": 0,
+        "subaccountNumber": 0.1,
         "address": "string"
       },
       "recipient": {
-        "subaccountNumber": 0,
+        "subaccountNumber": 0.1,
         "address": "string"
       },
       "size": "string",
@@ -4319,11 +6861,11 @@ or
     {
       "id": "string",
       "sender": {
-        "subaccountNumber": 0,
+        "subaccountNumber": 0.1,
         "address": "string"
       },
       "recipient": {
-        "subaccountNumber": 0,
+        "subaccountNumber": 0.1,
         "address": "string"
       },
       "size": "string",

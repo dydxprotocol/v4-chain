@@ -1,19 +1,19 @@
-import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
-import { OrderSide } from '@dydxprotocol-indexer/postgres';
+import { createKafkaMessage } from '@klyraprotocol-indexer/kafka';
+import { OrderSide } from '@klyraprotocol-indexer/postgres';
 import {
   OpenOrdersCache,
   redisTestConstants,
   OrderbookLevelsCache,
   CanceledOrdersCache,
   CanceledOrderStatus,
-} from '@dydxprotocol-indexer/redis';
-import { OffChainUpdateV1 } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/redis';
+import { OffChainUpdateV1 } from '@klyraprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 
+import { defaultKafkaHeaders } from './constants';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
-import { DydxRecordHeaderKeys } from '../../src/lib/types';
-import { defaultKafkaHeaders } from './constants';
+import { KlyraRecordHeaderKeys } from '../../src/lib/types';
 
 export async function handleInitialOrderPlace(
   orderPlace: redisTestConstants.OffChainUpdateOrderPlaceUpdateMessage,
@@ -82,7 +82,7 @@ export function setTransactionHash(
     messageWithTxhash.headers = {};
   }
 
-  messageWithTxhash.headers![DydxRecordHeaderKeys.TRANSACTION_HASH_KEY] = txHash;
+  messageWithTxhash.headers![KlyraRecordHeaderKeys.TRANSACTION_HASH_KEY] = txHash;
   return messageWithTxhash;
 }
 

@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import {
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
@@ -6,13 +6,13 @@ import {
   MarketMessageContents,
   TradingMarketMessageContents,
   TradingPerpetualMarketMessage,
-} from '@dydxprotocol-indexer/postgres';
-import { OpenInterestUpdateEventV1 } from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/postgres';
+import { OpenInterestUpdateEventV1 } from '@klyraprotocol-indexer/v4-protos';
 import _ from 'lodash';
 import * as pg from 'pg';
 
-import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
+import { ConsolidatedKafkaEvent } from '../lib/types';
 
 export class OpenInterestUpdateHandler extends Handler<OpenInterestUpdateEventV1> {
   eventType: string = 'OpenInterestUpdate';

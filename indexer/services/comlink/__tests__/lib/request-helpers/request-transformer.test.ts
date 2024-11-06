@@ -16,15 +16,15 @@ import {
   helpers,
   YieldParamsFromDatabase,
   YieldParamsTable,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   OrderbookLevels,
   redisTestConstants,
-} from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/redis';
 import {
   IndexerOrder_TimeInForce,
   RedisOrder,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import {
   OrderbookLevelsToResponseObject,
@@ -411,7 +411,7 @@ describe('request-transformer', () => {
           subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
           routerFeePpm: '0',
           routerFeeSubaccountNumber: '0',
-          routerFeeSubaccountOwner: 'dydx1xxxxxx',
+          routerFeeSubaccountOwner: 'klyra1xxxxxx',
         });
       },
     );

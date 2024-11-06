@@ -1,5 +1,5 @@
 # Title for the gitleaks configuration file.
-title = "dYdX Chain Gitleaks Settings"
+title = "Klyra Chain Gitleaks Settings"
 
 [extend]
 # useDefault will extend the base configuration with the default gitleaks config:
@@ -16,5 +16,5 @@ regexTarget = "line"
 regexes = [
   '''googleapis''',
   '''cosmos1''',
-  '''dydx1''',
+  '''klyra1''',
 ]

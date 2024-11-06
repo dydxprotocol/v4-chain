@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import express from 'express';
 import _ from 'lodash';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';

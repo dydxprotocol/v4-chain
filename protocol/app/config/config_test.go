@@ -1,10 +1,11 @@
 package config_test
 
 import (
+	"testing"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestSetupConfig_SealsConfig(t *testing.T) {
@@ -23,12 +24,12 @@ func TestSetupConfig_SealsConfig(t *testing.T) {
 func TestSetAddressPrefixes(t *testing.T) {
 	sdkConfig := sdk.GetConfig()
 
-	require.Equal(t, "dydx", sdkConfig.GetBech32AccountAddrPrefix())
-	require.Equal(t, "dydxpub", sdkConfig.GetBech32AccountPubPrefix())
+	require.Equal(t, "klyra", sdkConfig.GetBech32AccountAddrPrefix())
+	require.Equal(t, "klyrapub", sdkConfig.GetBech32AccountPubPrefix())
 
-	require.Equal(t, "dydxvaloper", sdkConfig.GetBech32ValidatorAddrPrefix())
-	require.Equal(t, "dydxvaloperpub", sdkConfig.GetBech32ValidatorPubPrefix())
+	require.Equal(t, "klyravaloper", sdkConfig.GetBech32ValidatorAddrPrefix())
+	require.Equal(t, "klyravaloperpub", sdkConfig.GetBech32ValidatorPubPrefix())
 
-	require.Equal(t, "dydxvalcons", sdkConfig.GetBech32ConsensusAddrPrefix())
-	require.Equal(t, "dydxvalconspub", sdkConfig.GetBech32ConsensusPubPrefix())
+	require.Equal(t, "klyravalcons", sdkConfig.GetBech32ConsensusAddrPrefix())
+	require.Equal(t, "klyravalconspub", sdkConfig.GetBech32ConsensusPubPrefix())
 }

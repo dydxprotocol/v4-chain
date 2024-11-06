@@ -1,14 +1,14 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { logger, ParseMessageError } from '@klyraprotocol-indexer/base';
 import {
   PerpetualMarketCreateEventV1,
   PerpetualMarketCreateEventV2,
   IndexerTendermintBlock,
   IndexerTendermintEvent,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   dbHelpers, testMocks, perpetualMarketRefresher,
-} from '@dydxprotocol-indexer/postgres';
-import { DydxIndexerSubtypes } from '../../src/lib/types';
+} from '@klyraprotocol-indexer/postgres';
+import { KlyraIndexerSubtypes } from '../../src/lib/types';
 import {
   defaultPerpetualMarketCreateEventV1,
   defaultPerpetualMarketCreateEventV2,
@@ -121,7 +121,7 @@ function createBlock(
   perpetualMarketEventDataBytes: Uint8Array,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
-    DydxIndexerSubtypes.PERPETUAL_MARKET,
+    KlyraIndexerSubtypes.PERPETUAL_MARKET,
     perpetualMarketEventDataBytes,
     0,
     0,

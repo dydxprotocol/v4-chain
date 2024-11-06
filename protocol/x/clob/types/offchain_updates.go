@@ -8,7 +8,7 @@ import (
 type OffchainUpdateMessageType int
 
 // Enum used to track the types of messages, should correspond to the types of messages defined in
-// https://github.com/dydxprotocol/v4-proto/blob/main/dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto
+// https://github.com/StreamFinance-Protocol/v4-proto/blob/main/klyraprotocol/indexer/off_chain_updates/off_chain_updates.proto
 const (
 	PlaceMessageType OffchainUpdateMessageType = iota
 	RemoveMessageType

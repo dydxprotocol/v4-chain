@@ -57,7 +57,7 @@ export default class OraclePriceModel extends Model {
 
   /**
    * A mapping from column name to JSON conversion expected.
-   * See getSqlConversionForDydxModelTypes for valid conversions.
+   * See getSqlConversionForKlyraModelTypes for valid conversions.
    *
    * TODO(IND-239): Ensure that jsonSchema() / sqlToJsonConversions() / model fields match.
    */

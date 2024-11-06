@@ -1,7 +1,7 @@
 import {
   CountryHeaders,
   isRestrictedCountryHeaders,
-} from '@dydxprotocol-indexer/compliance';
+} from '@klyraprotocol-indexer/compliance';
 
 import { IncomingMessage } from '../types';
 

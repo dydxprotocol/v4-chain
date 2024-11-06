@@ -60,7 +60,7 @@ describe('Transfer store', () => {
       size: '5',
       eventId: defaultTendermintEventId2,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: createdDateTime.toISO(),
+      createdAt: createdDateTime.toISO() ?? '',
       createdAtHeight: createdHeight,
     };
     await Promise.all([
@@ -73,8 +73,12 @@ describe('Transfer store', () => {
     });
 
     expect(transfers.length).toEqual(2);
-    expect(transfers[0]).toEqual(expect.objectContaining(defaultTransfer));
-    expect(transfers[1]).toEqual(expect.objectContaining(transfer2));
+    expect(transfers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(defaultTransfer),
+        expect.objectContaining(transfer2),
+      ]),
+    );
   });
 
   it('Successfully finds all Transfers', async () => {
@@ -91,11 +95,15 @@ describe('Transfer store', () => {
     });
 
     expect(transfers.length).toEqual(2);
-    expect(transfers[0]).toEqual(expect.objectContaining(defaultTransfer));
-    expect(transfers[1]).toEqual(expect.objectContaining({
-      ...defaultTransfer,
-      eventId: defaultTendermintEventId2,
-    }));
+    expect(transfers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(defaultTransfer),
+        expect.objectContaining({
+          ...defaultTransfer,
+          eventId: defaultTendermintEventId2,
+        }),
+      ]),
+    );
   });
 
   it('Successfully finds all transfers to and from subaccount', async () => {
@@ -106,7 +114,7 @@ describe('Transfer store', () => {
       size: '5',
       eventId: defaultTendermintEventId2,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: createdDateTime.toISO(),
+      createdAt: createdDateTime.toISO() ?? '',
       createdAtHeight: createdHeight,
     };
     await Promise.all([
@@ -121,8 +129,12 @@ describe('Transfer store', () => {
       });
 
     expect(transfers.length).toEqual(2);
-    expect(transfers[0]).toEqual(expect.objectContaining(defaultTransfer));
-    expect(transfers[1]).toEqual(expect.objectContaining(transfer2));
+    expect(transfers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(defaultTransfer),
+        expect.objectContaining(transfer2),
+      ]),
+    );
   });
 
   it('Successfully finds all transfers to and from subaccount w/ event id', async () => {
@@ -133,7 +145,7 @@ describe('Transfer store', () => {
       size: '5',
       eventId: defaultTendermintEventId2,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: createdDateTime.toISO(),
+      createdAt: createdDateTime.toISO() ?? '',
       createdAtHeight: createdHeight,
     };
     await Promise.all([
@@ -284,7 +296,7 @@ describe('Transfer store', () => {
       size: '10',
       eventId: defaultTendermintEventId,
       transactionHash: '', // TODO: Add a real transaction Hash
-      createdAt: createdDateTime.toISO(),
+      createdAt: createdDateTime.toISO() ?? '',
       createdAtHeight: createdHeight,
     };
     await expect(TransferTable.create(invalidTfer)).rejects.toBeInstanceOf(CheckViolationError);

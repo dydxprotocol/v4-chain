@@ -1,10 +1,10 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { logger, ParseMessageError } from '@klyraprotocol-indexer/base';
 import {
   OrderSide,
   PerpetualMarketFromDatabase,
   PositionSide,
   protocolTranslations,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   IndexerTendermintEvent,
   IndexerTendermintEvent_BlockEvent,
@@ -26,14 +26,14 @@ import {
   OpenInterestUpdateEventV1,
   DeleveragingEventV1,
   UpdateYieldParamsEventV1,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 
 import {
   AnnotatedSubaccountMessage,
-  DydxIndexerSubtypes,
+  KlyraIndexerSubtypes,
   EventProtoWithTypeAndVersion,
 } from './types';
 
@@ -89,73 +89,73 @@ export function indexerTendermintEventToEventProtoWithType(
   // set the default version to 1
   const version: number = event.version === 0 ? 1 : event.version;
   switch (event.subtype) {
-    case (DydxIndexerSubtypes.ORDER_FILL.toString()): {
+    case (KlyraIndexerSubtypes.ORDER_FILL.toString()): {
       return {
-        type: DydxIndexerSubtypes.ORDER_FILL,
+        type: KlyraIndexerSubtypes.ORDER_FILL,
         eventProto: OrderFillEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.SUBACCOUNT_UPDATE.toString()): {
+    case (KlyraIndexerSubtypes.SUBACCOUNT_UPDATE.toString()): {
       return {
-        type: DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
+        type: KlyraIndexerSubtypes.SUBACCOUNT_UPDATE,
         eventProto: SubaccountUpdateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.TRANSFER.toString()): {
+    case (KlyraIndexerSubtypes.TRANSFER.toString()): {
       return {
-        type: DydxIndexerSubtypes.TRANSFER,
+        type: KlyraIndexerSubtypes.TRANSFER,
         eventProto: TransferEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.MARKET.toString()): {
+    case (KlyraIndexerSubtypes.MARKET.toString()): {
       return {
-        type: DydxIndexerSubtypes.MARKET,
+        type: KlyraIndexerSubtypes.MARKET,
         eventProto: MarketEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.STATEFUL_ORDER.toString()): {
+    case (KlyraIndexerSubtypes.STATEFUL_ORDER.toString()): {
       return {
-        type: DydxIndexerSubtypes.STATEFUL_ORDER,
+        type: KlyraIndexerSubtypes.STATEFUL_ORDER,
         eventProto: StatefulOrderEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.FUNDING.toString()): {
+    case (KlyraIndexerSubtypes.FUNDING.toString()): {
       return {
-        type: DydxIndexerSubtypes.FUNDING,
+        type: KlyraIndexerSubtypes.FUNDING,
         eventProto: FundingEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.ASSET.toString()): {
+    case (KlyraIndexerSubtypes.ASSET.toString()): {
       return {
-        type: DydxIndexerSubtypes.ASSET,
+        type: KlyraIndexerSubtypes.ASSET,
         eventProto: AssetCreateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.PERPETUAL_MARKET.toString()): {
+    case (KlyraIndexerSubtypes.PERPETUAL_MARKET.toString()): {
       if (version === 1) {
         return {
-          type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+          type: KlyraIndexerSubtypes.PERPETUAL_MARKET,
           eventProto: PerpetualMarketCreateEventV1.decode(eventDataBinary),
           indexerTendermintEvent: event,
           version,
@@ -163,7 +163,7 @@ export function indexerTendermintEventToEventProtoWithType(
         };
       } else if (version === 2) {
         return {
-          type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+          type: KlyraIndexerSubtypes.PERPETUAL_MARKET,
           eventProto: PerpetualMarketCreateEventV2.decode(eventDataBinary),
           indexerTendermintEvent: event,
           version,
@@ -178,10 +178,10 @@ export function indexerTendermintEventToEventProtoWithType(
         return undefined;
       }
     }
-    case (DydxIndexerSubtypes.LIQUIDITY_TIER.toString()): {
+    case (KlyraIndexerSubtypes.LIQUIDITY_TIER.toString()): {
       if (version === 1) {
         return {
-          type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+          type: KlyraIndexerSubtypes.LIQUIDITY_TIER,
           eventProto: LiquidityTierUpsertEventV1.decode(eventDataBinary),
           indexerTendermintEvent: event,
           version,
@@ -189,52 +189,52 @@ export function indexerTendermintEventToEventProtoWithType(
         };
       }
       return {
-        type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+        type: KlyraIndexerSubtypes.LIQUIDITY_TIER,
         eventProto: LiquidityTierUpsertEventV2.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()): {
+    case (KlyraIndexerSubtypes.UPDATE_PERPETUAL.toString()): {
       return {
-        type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+        type: KlyraIndexerSubtypes.UPDATE_PERPETUAL,
         eventProto: UpdatePerpetualEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString()): {
+    case (KlyraIndexerSubtypes.UPDATE_CLOB_PAIR.toString()): {
       return {
-        type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
+        type: KlyraIndexerSubtypes.UPDATE_CLOB_PAIR,
         eventProto: UpdateClobPairEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.DELEVERAGING.toString()): {
+    case (KlyraIndexerSubtypes.DELEVERAGING.toString()): {
       return {
-        type: DydxIndexerSubtypes.DELEVERAGING,
+        type: KlyraIndexerSubtypes.DELEVERAGING,
         eventProto: DeleveragingEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.OPEN_INTEREST_UPDATE.toString()): {
+    case (KlyraIndexerSubtypes.OPEN_INTEREST_UPDATE.toString()): {
       return {
-        type: DydxIndexerSubtypes.OPEN_INTEREST_UPDATE,
+        type: KlyraIndexerSubtypes.OPEN_INTEREST_UPDATE,
         eventProto: OpenInterestUpdateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
       };
     }
-    case (DydxIndexerSubtypes.YIELD_PARAMS.toString()): {
+    case (KlyraIndexerSubtypes.YIELD_PARAMS.toString()): {
       return {
-        type: DydxIndexerSubtypes.YIELD_PARAMS,
+        type: KlyraIndexerSubtypes.YIELD_PARAMS,
         eventProto: UpdateYieldParamsEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,

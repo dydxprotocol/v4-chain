@@ -1,5 +1,5 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
-import { redis } from '@dydxprotocol-indexer/redis';
+import { logger, stats } from '@klyraprotocol-indexer/base';
+import { redis } from '@klyraprotocol-indexer/redis';
 import {
   assetRefresher,
   dbHelpers,
@@ -18,7 +18,7 @@ import {
   TendermintEventTable,
   testConstants,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import { defaultDeleveragingEvent, defaultPreviousHeight, defaultZeroPerpYieldIndex } from '../../helpers/constants';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
@@ -30,7 +30,7 @@ import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   Timestamp,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
@@ -39,7 +39,7 @@ import {
   expectFillInDatabase,
   expectFillSubaccountKafkaMessageFromLiquidationEvent, expectPerpetualPosition,
 } from '../../helpers/indexer-proto-helpers';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
+import { KlyraIndexerSubtypes } from '../../../src/lib/types';
 import {
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
@@ -51,8 +51,8 @@ import Long from 'long';
 import { DeleveragingHandler } from '../../../src/handlers/order-fills/deleveraging-handler';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
-import { producer } from '@dydxprotocol-indexer/kafka';
-import { createdDateTime, createdHeight } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import { producer } from '@klyraprotocol-indexer/kafka';
+import { createdDateTime, createdHeight } from '@klyraprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
 
@@ -60,7 +60,7 @@ describe('DeleveragingHandler', () => {
   const offsettingSubaccount: SubaccountCreateObject = {
     address: defaultDeleveragingEvent.offsetting!.owner,
     subaccountNumber: defaultDeleveragingEvent.offsetting!.number,
-    updatedAt: createdDateTime.toISO(),
+    updatedAt: createdDateTime.toISO() ?? '',
     updatedAtHeight: createdHeight,
     assetYieldIndex: ZERO_ASSET_YIELD_INDEX,
   };
@@ -68,7 +68,7 @@ describe('DeleveragingHandler', () => {
   const deleveragedSubaccount: SubaccountCreateObject = {
     address: defaultDeleveragingEvent.liquidated!.owner,
     subaccountNumber: defaultDeleveragingEvent.liquidated!.number,
-    updatedAt: createdDateTime.toISO(),
+    updatedAt: createdDateTime.toISO() ?? '',
     updatedAtHeight: createdHeight,
     assetYieldIndex: ZERO_ASSET_YIELD_INDEX,
   };
@@ -119,7 +119,7 @@ describe('DeleveragingHandler', () => {
     maxSize: '25',
     sumOpen: '10',
     entryPrice: '15000',
-    createdAt: DateTime.utc().toISO(),
+    createdAt: DateTime.utc().toISO() ?? '',
     createdAtHeight: '1',
     openEventId: testConstants.defaultTendermintEventId,
     lastEventId: testConstants.defaultTendermintEventId,
@@ -136,7 +136,7 @@ describe('DeleveragingHandler', () => {
     const deleveragedSubaccountId: IndexerSubaccountId = defaultDeleveragingEvent.liquidated!;
 
     const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-      DydxIndexerSubtypes.DELEVERAGING,
+      KlyraIndexerSubtypes.DELEVERAGING,
       DeleveragingEventV1.encode(defaultDeleveragingEvent).finish(),
       transactionIndex,
       eventIndex,
@@ -251,7 +251,7 @@ describe('DeleveragingHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO() ?? '',
         createdAtHeight: defaultHeight,
         type: FillType.OFFSETTING,
         clobPairId: perpetualMarket!.clobPairId,
@@ -270,7 +270,7 @@ describe('DeleveragingHandler', () => {
         quoteAmount,
         eventId,
         transactionHash: defaultTxHash,
-        createdAt: defaultDateTime.toISO(),
+        createdAt: defaultDateTime.toISO() ?? '',
         createdAtHeight: defaultHeight,
         type: FillType.DELEVERAGED,
         clobPairId: perpetualMarket!.clobPairId,

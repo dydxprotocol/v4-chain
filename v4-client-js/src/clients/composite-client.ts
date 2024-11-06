@@ -3,7 +3,7 @@ import {
   Account, GasPrice, IndexedTx, StdFee,
 } from '@cosmjs/stargate';
 import { BroadcastTxAsyncResponse, BroadcastTxSyncResponse } from '@cosmjs/tendermint-rpc/build/tendermint37';
-import { Order_ConditionType, Order_TimeInForce } from '@dydxprotocol/v4-proto/src/codegen/dydxprotocol/clob/order';
+import { Order_ConditionType, Order_TimeInForce } from '@klyraprotocol/v4-proto/src/codegen/klyraprotocol/clob/order';
 import { parseUnits } from 'ethers';
 import Long from 'long';
 import protobuf from 'protobufjs';

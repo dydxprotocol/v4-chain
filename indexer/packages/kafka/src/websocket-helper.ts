@@ -10,14 +10,14 @@ import {
   SubaccountMessageContents,
   SubaccountTable,
   TimeInForce,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   IndexerOrder,
   IndexerOrder_ConditionType,
   OrderPlaceV1_OrderPlacementStatus,
   RedisOrder,
   SubaccountMessage,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 
 import { SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION } from './constants';
 

@@ -2,7 +2,7 @@ import { deleteAllAsync, setAsync } from '../../src/helpers/redis';
 import {
   IndexerOrder,
   RedisOrder,
-} from '@dydxprotocol-indexer/v4-protos';
+} from '@klyraprotocol-indexer/v4-protos';
 import {
   redis as client,
 } from '../helpers/utils';
@@ -14,7 +14,7 @@ import {
   order, orderGoodTilBlockTIme, redisOrder, redisOrderGoodTilBlockTime, secondRedisOrder,
 } from './constants';
 import { expectNewOrder, expectOrderCache, expectOrderExpiry } from './helpers';
-import { ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_SHORT_TERM } from '@klyraprotocol-indexer/v4-proto-parser';
 import { getOrderExpiry } from '../../src/caches/helpers';
 import Long from 'long';
 

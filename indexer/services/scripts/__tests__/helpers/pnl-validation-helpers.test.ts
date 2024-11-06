@@ -9,7 +9,7 @@ import {
   OrderTable,
   testConstants,
   testMocks,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import {
   getPnl,
   getRealizedFunding,

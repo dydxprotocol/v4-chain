@@ -1,4 +1,4 @@
-import { CandleResolution, NUM_SECONDS_IN_CANDLE_RESOLUTIONS } from '@dydxprotocol-indexer/postgres';
+import { CandleResolution, NUM_SECONDS_IN_CANDLE_RESOLUTIONS } from '@klyraprotocol-indexer/postgres';
 import { DateTime } from 'luxon';
 import yargs from 'yargs';
 
@@ -22,7 +22,7 @@ function getNormalizedBoundaries(time: string, resolutions: CandleResolution[]):
     const startTime = calculateNormalizedCandleStartTime(date, resolution);
     const endTime = startTime.plus({ seconds: NUM_SECONDS_IN_CANDLE_RESOLUTIONS[resolution] });
     // eslint-disable-next-line no-console
-    console.log(`Resolution: ${resolution}, Start Time: ${startTime.toISO()}, End Time: ${endTime.toISO()}`);
+    console.log(`Resolution: ${resolution}, Start Time: ${startTime.toISO() ?? ''}, End Time: ${endTime.toISO() ?? ''}`);
   });
 }
 

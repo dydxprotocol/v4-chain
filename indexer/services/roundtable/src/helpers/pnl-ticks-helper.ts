@@ -1,4 +1,4 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@klyraprotocol-indexer/base';
 import {
   AssetPositionTable,
   FundingIndexMap,
@@ -16,16 +16,16 @@ import {
   SubaccountTable,
   SubaccountToPerpetualPositionsMap,
   TransferTable,
-} from '@dydxprotocol-indexer/postgres';
-import { LatestAccountPnlTicksCache, PnlTickForSubaccounts } from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/postgres';
+import { LatestAccountPnlTicksCache, PnlTickForSubaccounts } from '@klyraprotocol-indexer/redis';
 import Big from 'big.js';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 
 import config from '../config';
-import { TDAI_ASSET_ID, ZERO } from '../lib/constants';
 import { redisClient } from './redis';
 import { SubaccountTDaiTransferMap } from './types';
+import { TDAI_ASSET_ID, ZERO } from '../lib/constants';
 
 /**
  * Normalizes a time to the nearest PNL_TICK_UPDATE_INTERVAL_MS.
@@ -319,7 +319,7 @@ export function getNewPnlTick(
     totalPnl: totalPnl.toFixed(6),
     netTransfers: tdaiNetTransfersSinceLastPnlTick.toFixed(6),
     subaccountId,
-    createdAt: pnlTicksToBeCreatedAt.toISO(),
+    createdAt: pnlTicksToBeCreatedAt.toISO() ?? '',
     equity: currentEquity.toFixed(6),
     blockHeight: latestBlockHeight,
     blockTime: latestBlockTime,

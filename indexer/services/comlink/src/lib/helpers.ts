@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger } from '@klyraprotocol-indexer/base';
 import {
   AssetPositionFromDatabase,
   BlockFromDatabase,
@@ -22,7 +22,7 @@ import {
   TendermintEventFromDatabase,
   TendermintEventTable,
   TDAI_SYMBOL,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
 import _ from 'lodash';

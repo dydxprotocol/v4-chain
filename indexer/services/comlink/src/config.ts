@@ -4,12 +4,12 @@ import {
   parseInteger,
   parseSchema,
   parseString,
-} from '@dydxprotocol-indexer/base';
-import { complianceConfigSchema } from '@dydxprotocol-indexer/compliance';
+} from '@klyraprotocol-indexer/base';
+import { complianceConfigSchema } from '@klyraprotocol-indexer/compliance';
 import {
   postgresConfigSchema,
-} from '@dydxprotocol-indexer/postgres';
-import { redisConfigSchema } from '@dydxprotocol-indexer/redis';
+} from '@klyraprotocol-indexer/postgres';
+import { redisConfigSchema } from '@klyraprotocol-indexer/redis';
 
 export const configSchema = {
   ...baseConfigSchema,
@@ -17,7 +17,7 @@ export const configSchema = {
   ...redisConfigSchema,
   ...complianceConfigSchema,
 
-  CHAIN_ID: parseString({ default: 'dydxprotocol' }),
+  CHAIN_ID: parseString({ default: 'klyraprotocol' }),
   API_LIMIT_V4: parseInteger({
     default: 100,
   }),

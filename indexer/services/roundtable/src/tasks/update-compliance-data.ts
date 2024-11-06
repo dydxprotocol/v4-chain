@@ -2,8 +2,8 @@ import {
   delay,
   logger,
   stats,
-} from '@dydxprotocol-indexer/base';
-import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
+} from '@klyraprotocol-indexer/base';
+import { ComplianceClientResponse } from '@klyraprotocol-indexer/compliance';
 import {
   ComplianceDataColumns,
   ComplianceDataCreateObject,
@@ -13,7 +13,7 @@ import {
   SubaccountColumns,
   SubaccountFromDatabase,
   SubaccountTable,
-} from '@dydxprotocol-indexer/postgres';
+} from '@klyraprotocol-indexer/postgres';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 
@@ -44,13 +44,13 @@ export default async function runTask(
   let remainingQueries: number = config.MAX_COMPLIANCE_DATA_QUERY_PER_LOOP;
   const activeAddressThreshold: IsoString = startTime.minus(
     { seconds: config.ACTIVE_ADDRESS_THRESHOLD_SECONDS },
-  ).toISO();
+  ).toISO() ?? '';
   const ageThreshold: IsoString = startTime.minus(
     { seconds: config.MAX_COMPLIANCE_DATA_AGE_SECONDS },
-  ).toISO();
+  ).toISO() ?? '';
   const activeAgeThreshold: IsoString = startTime.minus(
     { seconds: config.MAX_ACTIVE_COMPLIANCE_DATA_AGE_SECONDS },
-  ).toISO();
+  ).toISO() ?? '';
   let addressesToQuery: string[] = [];
 
   try {
@@ -171,7 +171,7 @@ export default async function runTask(
       addressesToQuery,
       complianceProvider,
     );
-    const calculatedAt: string = DateTime.utc().toISO();
+    const calculatedAt: string = DateTime.utc().toISO() ?? '';
     const complianceCreateObjects: ComplianceDataCreateObject[] = complianceResponses.map(
       (complianceResponse: ComplianceClientResponse): ComplianceDataCreateObject => {
         return {
