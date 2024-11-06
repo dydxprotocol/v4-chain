@@ -1,10 +1,10 @@
 {
-  "name": "@klyraprotocol/v4-proto",
-  "version": "0.0.0",
+  "name": "@klyra/proto",
+  "version": "0.0.1",
   "access": "public",
-  "description": "Protos for Klyra v4 protocol",
+  "description": "Protos for Klyra",
   "author": "Klyra Trading Inc.",
-  "homepage": "https://github.com/dydxprotocol/v4-chain",
+  "homepage": "https://github.com/StreamFinance-Protocol/stream-chain",
   "license": "AGPL-3.0",
   "main": "main/index.js",
   "module": "module/index.js",
@@ -28,7 +28,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dydxprotocol/v4-chain"
+    "url": "https://github.com/StreamFinance-Protocol/stream-chain"
   },
   "keywords": [],
   "bugs": {
