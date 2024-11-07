@@ -250,11 +250,6 @@ func (_m *SubaccountsKeeper) LegacyGetNegativeTncSubaccountSeenAtBlock(ctx types
 	return r0, r1
 }
 
-// SendFinalizedSubaccountUpdates provides a mock function with given fields: ctx, subaccountUpdates
-func (_m *SubaccountsKeeper) SendFinalizedSubaccountUpdates(ctx types.Context, subaccountUpdates []subaccountstypes.StreamSubaccountUpdate) {
-	_m.Called(ctx, subaccountUpdates)
-}
-
 // SetNegativeTncSubaccountSeenAtBlock provides a mock function with given fields: ctx, perpetualId, blockHeight
 func (_m *SubaccountsKeeper) SetNegativeTncSubaccountSeenAtBlock(ctx types.Context, perpetualId uint32, blockHeight uint32) error {
 	ret := _m.Called(ctx, perpetualId, blockHeight)
