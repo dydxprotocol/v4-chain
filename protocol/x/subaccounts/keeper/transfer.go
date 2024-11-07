@@ -542,7 +542,7 @@ func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int)
 	return insuranceFundBalance.Amount.BigInt()
 }
 
-// TransferInsuranceFundsForIsolatedPerpetual transfers funds from an isolated perpetual
+// TransferIsolatedInsuranceFundToCross transfers funds from an isolated perpetual's
 // insurance fund to the cross-perpetual insurance fund.
 // Note: This uses the `x/bank` keeper and modifies `x/bank` state.
 func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualId uint32) error {
@@ -551,7 +551,7 @@ func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualI
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assettypes.AssetUsdc.Id,
-		new(big.Int).Abs(isolatedInsuranceFundBalance),
+		isolatedInsuranceFundBalance,
 	)
 	if err != nil {
 		panic(err)
@@ -569,5 +569,32 @@ func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualI
 		isolatedInsuranceFundAddr,
 		crossInsuranceFundAddr,
 		[]sdk.Coin{coinToTransfer},
+	)
+}
+
+func (k Keeper) TransferIsolatedCollateralToCross(ctx sdk.Context, perpetualId uint32) error {
+	isolatedCollateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	crossCollateralPoolAddr := types.ModuleAddress
+
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		panic("TransferIsolatedCollateralToCross: Usdc asset not found in state")
+	}
+
+	isolatedCollateralPoolBalance := k.bankKeeper.GetBalance(
+		ctx,
+		isolatedCollateralPoolAddr,
+		usdcAsset.Denom,
+	)
+
+	return k.bankKeeper.SendCoins(
+		ctx,
+		isolatedCollateralPoolAddr,
+		crossCollateralPoolAddr,
+		[]sdk.Coin{isolatedCollateralPoolBalance},
 	)
 }

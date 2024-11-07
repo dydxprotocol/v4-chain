@@ -101,4 +101,8 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 	) error
+	TransferIsolatedCollateralToCross(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) error
 }

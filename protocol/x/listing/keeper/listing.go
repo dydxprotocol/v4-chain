@@ -161,6 +161,12 @@ func (k Keeper) UpgradeIsolatedPerpetualToCross(
 		return err
 	}
 
+	// TODO Move collateral pool for perpetual to subaccounts module
+	err = k.SubaccountsKeeper.TransferIsolatedCollateralToCross(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
 	_, err = k.PerpetualsKeeper.SetPerpetualMarketType(
 		ctx,
 		perpetualId,
@@ -170,10 +176,11 @@ func (k Keeper) UpgradeIsolatedPerpetualToCross(
 		return err
 	}
 
-	// TODO Move collateral pool for perpetual to subaccounts module
-	// See transferCollateralForIsolatedPerpetual()?
-
 	// TODO Propagate changes to indexer
+	// See perpetual.go, modifyperpetual
+	// Put the proto code for the new message in events.proto
+	// And requires changes to indexer to process the new event - write typescript handler in indexer/services/ender/src/handlers
+	// And also some SQL handlers in scripts/handlers
 
 	return nil
 }
