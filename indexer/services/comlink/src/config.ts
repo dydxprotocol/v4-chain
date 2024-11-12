@@ -64,6 +64,7 @@ export const configSchema = {
   VAULT_PNL_HISTORY_HOURS: parseInteger({ default: 72 }),
   VAULT_LATEST_PNL_TICK_WINDOW_HOURS: parseInteger({ default: 1 }),
   VAULT_FETCH_FUNDING_INDEX_BLOCK_WINDOWS: parseInteger({ default: 250_000 }),
+  VAULT_SUBACCOUNT_ID_CHUNK_SIZE: parseInteger({ default: 30 }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////

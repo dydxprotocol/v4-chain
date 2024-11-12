@@ -341,6 +341,7 @@ async function getVaultSubaccountPnlTicks(
     resolution,
     windowSeconds,
     vaultSubaccountIds,
+    config.VAULT_SUBACCOUNT_ID_CHUNK_SIZE,
   );
 
   return pnlTicks;
@@ -542,6 +543,7 @@ export async function getLatestPnlTick(
     PnlTickInterval.hour,
     config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS * 60 * 60,
     vaultSubaccountIds,
+    config.VAULT_SUBACCOUNT_ID_CHUNK_SIZE,
   );
   // Aggregate and get pnl tick closest to the hour
   const aggregatedTicks: PnlTicksFromDatabase[] = aggregateVaultPnlTicks(

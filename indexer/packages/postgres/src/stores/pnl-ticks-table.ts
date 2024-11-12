@@ -465,43 +465,49 @@ export async function getPnlTicksAtIntervals(
   interval: PnlTickInterval,
   timeWindowSeconds: number,
   subaccountIds: string[],
+  chunkSize: number,
 ): Promise <PnlTicksFromDatabase[]> {
-  const result: {
-    rows: PnlTicksFromDatabase[],
-  } = await knexReadReplica.getConnection().raw(
-    `
-    SELECT
-      "id",
-      "subaccountId",
-      "equity",
-      "totalPnl",
-      "netTransfers",
-      "createdAt",
-      "blockHeight",
-      "blockTime"
-    FROM (
-      SELECT
-        pnl_ticks.*,
-        ROW_NUMBER() OVER (
-          PARTITION BY
-            "subaccountId", 
-            DATE_TRUNC(
-              '${interval}',
-              "blockTime"
-            ) ORDER BY "blockTime"
-        ) AS r
-      FROM pnl_ticks
-      WHERE
-        "subaccountId" IN (${subaccountIds.map((id: string) => { return `'${id}'`; }).join(',')}) AND
-        "blockTime" > NOW() - INTERVAL '${timeWindowSeconds} second'
-    ) AS pnl_intervals
-    WHERE
-      r = 1
-    ORDER BY "subaccountId";
-    `,
-  ) as unknown as {
-    rows: PnlTicksFromDatabase[],
-  };
-
-  return result.rows;
+  const subaccountIdsChunks: string[][] = _.chunk(subaccountIds, chunkSize);
+  const results: PnlTicksFromDatabase[][] = await Promise.all(subaccountIdsChunks.map(
+    async (subaccountIdsChunk: string[]) => {
+      const result: {
+        rows: PnlTicksFromDatabase[],
+      } = await knexReadReplica.getConnection().raw(
+        `
+        SELECT
+          "id",
+          "subaccountId",
+          "equity",
+          "totalPnl",
+          "netTransfers",
+          "createdAt",
+          "blockHeight",
+          "blockTime"
+        FROM (
+          SELECT
+            pnl_ticks.*,
+            ROW_NUMBER() OVER (
+              PARTITION BY
+                "subaccountId", 
+                DATE_TRUNC(
+                  '${interval}',
+                  "blockTime"
+                ) ORDER BY "blockTime"
+            ) AS r
+          FROM pnl_ticks
+          WHERE
+            "subaccountId" IN (${subaccountIdsChunk.map((id: string) => { return `'${id}'`; }).join(',')}) AND
+            "blockTime" > NOW() - INTERVAL '${timeWindowSeconds} second'
+        ) AS pnl_intervals
+        WHERE
+          r = 1
+        ORDER BY "subaccountId";
+        `,
+      ) as unknown as {
+        rows: PnlTicksFromDatabase[],
+      };
+      return result.rows;
+    }
+  ));
+  return _(results).flatten().sortBy('subaccountId').value();
 }

@@ -43,6 +43,7 @@ describe('vault-controller#V4', () => {
   const mainVaultEquity: number = 10000;
   const vaultPnlHistoryHoursPrev: number = config.VAULT_PNL_HISTORY_HOURS;
   const vaultPnlLastPnlWindowPrev: number = config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS;
+  const vaultSubaccountIdChunkPrev: number = config.VAULT_SUBACCOUNT_ID_CHUNK_SIZE;
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -58,6 +59,8 @@ describe('vault-controller#V4', () => {
       config.VAULT_PNL_HISTORY_HOURS = 168;
       // Use last 48 hours to get latest pnl tick for tests.
       config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS = 48;
+      // Fetch vault PnL one at a time for tests to test chunking.
+      config.VAULT_SUBACCOUNT_ID_CHUNK_SIZE = 1;
       await testMocks.seedData();
       await perpetualMarketRefresher.updatePerpetualMarkets();
       await liquidityTierRefresher.updateLiquidityTiers();
