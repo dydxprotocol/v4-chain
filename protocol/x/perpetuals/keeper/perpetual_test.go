@@ -323,8 +323,13 @@ func TestSetPerpetualMarketType(t *testing.T) {
 		errorExpected bool
 		expectedError error
 	}{
-		"success": {
+		"success - set unspecified to cross": {
 			currType:      types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED,
+			newType:       types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			errorExpected: false,
+		},
+		"success - set isolated to cross": {
+			currType:      types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 			newType:       types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			errorExpected: false,
 		},
@@ -340,16 +345,16 @@ func TestSetPerpetualMarketType(t *testing.T) {
 				),
 			),
 		},
-		"failure - market type already set": {
-			currType:      types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
-			newType:       types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		"failure - market type already set to cross": {
+			currType:      types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			newType:       types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 			errorExpected: true,
 			expectedError: errorsmod.Wrap(
 				types.ErrInvalidMarketType,
 				fmt.Sprintf(
-					"perpetual %d already has market type %v",
+					"perpetual %d already has market type %v and cannot be changed",
 					0,
-					types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
+					types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 				),
 			),
 		},

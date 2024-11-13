@@ -1242,6 +1242,7 @@ func New(
 		app.ClobKeeper,
 		&app.MarketMapKeeper,
 		app.PerpetualsKeeper,
+		app.SubaccountsKeeper,
 		app.VaultKeeper,
 	)
 	listingModule := listingmodule.NewAppModule(
