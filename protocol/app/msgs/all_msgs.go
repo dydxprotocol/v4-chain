@@ -234,7 +234,7 @@ var (
 		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse":   {},
 		"/dydxprotocol.listing.MsgSetListingVaultDepositParams":         {},
 		"/dydxprotocol.listing.MsgSetListingVaultDepositParamsResponse": {},
-		// TODO TODO TODO
+		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCross":      {},
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
