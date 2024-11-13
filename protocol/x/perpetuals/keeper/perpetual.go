@@ -200,7 +200,8 @@ func (k Keeper) SetPerpetualMarketType(
 	if perpetual.Params.MarketType == types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS {
 		return types.Perpetual{}, errorsmod.Wrap(
 			types.ErrInvalidMarketType,
-			fmt.Sprintf("perpetual %d already has market type %v and cannot be changed", perpetualId, types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS),
+			fmt.Sprintf("perpetual %d already has market type %v and cannot be changed",
+				perpetualId, types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS),
 		)
 	}
 
