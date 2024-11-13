@@ -482,7 +482,8 @@ type MsgClient interface {
 	CreateMarketPermissionless(ctx context.Context, in *MsgCreateMarketPermissionless, opts ...grpc.CallOption) (*MsgCreateMarketPermissionlessResponse, error)
 	// SetListingVaultDepositParams sets PML megavault deposit params
 	SetListingVaultDepositParams(ctx context.Context, in *MsgSetListingVaultDepositParams, opts ...grpc.CallOption) (*MsgSetListingVaultDepositParamsResponse, error)
-	// UpgradeIsolatedPerpetualToCross upgrades a perpetual from isolated to cross margin
+	// UpgradeIsolatedPerpetualToCross upgrades a perpetual from isolated to cross
+	// margin
 	UpgradeIsolatedPerpetualToCross(ctx context.Context, in *MsgUpgradeIsolatedPerpetualToCross, opts ...grpc.CallOption) (*MsgUpgradeIsolatedPerpetualToCrossResponse, error)
 }
 
@@ -538,7 +539,8 @@ type MsgServer interface {
 	CreateMarketPermissionless(context.Context, *MsgCreateMarketPermissionless) (*MsgCreateMarketPermissionlessResponse, error)
 	// SetListingVaultDepositParams sets PML megavault deposit params
 	SetListingVaultDepositParams(context.Context, *MsgSetListingVaultDepositParams) (*MsgSetListingVaultDepositParamsResponse, error)
-	// UpgradeIsolatedPerpetualToCross upgrades a perpetual from isolated to cross margin
+	// UpgradeIsolatedPerpetualToCross upgrades a perpetual from isolated to cross
+	// margin
 	UpgradeIsolatedPerpetualToCross(context.Context, *MsgUpgradeIsolatedPerpetualToCross) (*MsgUpgradeIsolatedPerpetualToCrossResponse, error)
 }
 
