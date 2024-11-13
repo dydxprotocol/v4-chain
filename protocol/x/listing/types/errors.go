@@ -39,4 +39,10 @@ var (
 		6,
 		"invalid market map ticker metadata",
 	)
+
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		7,
+		"Authority is invalid",
+	)
 )
