@@ -43,6 +43,7 @@ describe('vault-controller#V4', () => {
   const mainVaultEquity: number = 10000;
   const vaultPnlHistoryHoursPrev: number = config.VAULT_PNL_HISTORY_HOURS;
   const vaultPnlLastPnlWindowPrev: number = config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS;
+  const vaultPnlStartDatePrev: string = config.VAULT_PNL_START_DATE;
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -58,6 +59,8 @@ describe('vault-controller#V4', () => {
       config.VAULT_PNL_HISTORY_HOURS = 168;
       // Use last 48 hours to get latest pnl tick for tests.
       config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS = 48;
+      // Use a time before all pnl ticks as the pnl start date.
+      config.VAULT_PNL_START_DATE = '2020-01-01T00:00:00Z';
       await testMocks.seedData();
       await perpetualMarketRefresher.updatePerpetualMarkets();
       await liquidityTierRefresher.updateLiquidityTiers();
@@ -126,6 +129,7 @@ describe('vault-controller#V4', () => {
       await dbHelpers.clearData();
       config.VAULT_PNL_HISTORY_HOURS = vaultPnlHistoryHoursPrev;
       config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS = vaultPnlLastPnlWindowPrev;
+      config.VAULT_PNL_START_DATE = vaultPnlStartDatePrev;
     });
 
     it('Get /megavault/historicalPnl with no vault subaccounts', async () => {
@@ -138,21 +142,32 @@ describe('vault-controller#V4', () => {
     });
 
     it.each([
-      ['no resolution', '', [1, 2], 4],
-      ['daily resolution', '?resolution=day', [1, 2], 4],
-      ['hourly resolution', '?resolution=hour', [1, 2, 3, 4], 4],
+      ['no resolution', '', [1, 2], 4, undefined],
+      ['daily resolution', '?resolution=day', [1, 2], 4, undefined],
+      ['hourly resolution', '?resolution=hour', [1, 2, 3, 4], 4, undefined],
+      ['start date adjust PnL', '?resolution=hour', [1, 2, 3, 4], 4, twoDaysAgo.toISO()],
     ])('Get /megavault/historicalPnl with single vault subaccount (%s)', async (
       _name: string,
       queryParam: string,
       expectedTicksIndex: number[],
       finalTickIndex: number,
+      startDate: string | undefined,
     ) => {
+      if (startDate !== undefined) {
+        config.VAULT_PNL_START_DATE = startDate;
+      }
       await VaultTable.create({
         ...testConstants.defaultVault,
         address: testConstants.defaultSubaccount.address,
         clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
       });
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
+      // Adjust PnL by total pnl of start date
+      if (startDate !== undefined) {
+        for (const createdPnlTick of createdPnlTicks) {
+          createdPnlTick.totalPnl = Big(createdPnlTick.totalPnl).sub('10000').toFixed();
+        }
+      }
       const finalTick: PnlTicksFromDatabase = {
         ...createdPnlTicks[finalTickIndex],
         equity: Big(vault1Equity).toFixed(),
