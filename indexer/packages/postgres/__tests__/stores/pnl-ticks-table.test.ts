@@ -460,22 +460,19 @@ describe('PnlTicks store', () => {
       interval,
       7 * 24 * 60 * 60, // 1 week
       [defaultSubaccountId, defaultSubaccountIdWithAlternateAddress],
+      DateTime.fromISO(createdTicks[0].blockTime).plus({ seconds: 1 }),
     );
     // See setup function for created ticks.
     // Should exclude tick that is within the same hour except the first.
     const expectedHourlyTicks: PnlTicksFromDatabase[] = [
-      createdTicks[8],
       createdTicks[7],
       createdTicks[5],
-      createdTicks[3],
       createdTicks[2],
       createdTicks[0],
     ];
     // Should exclude ticks that is within the same day except for the first.
     const expectedDailyTicks: PnlTicksFromDatabase[] = [
-      createdTicks[8],
       createdTicks[7],
-      createdTicks[3],
       createdTicks[2],
     ];
 
@@ -484,6 +481,33 @@ describe('PnlTicks store', () => {
     } else if (interval === PnlTickInterval.hour) {
       expect(pnlTicks).toEqual(expectedHourlyTicks);
     }
+  });
+
+  it('Gets latest pnl ticks for subaccounts before or at given date', async () => {
+    const createdTicks: PnlTicksFromDatabase[] = await setupIntervalPnlTicks();
+    const latestTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getLatestPnlTick(
+      [defaultSubaccountId, defaultSubaccountIdWithAlternateAddress],
+      DateTime.fromISO(createdTicks[8].blockTime).plus({ seconds: 1 }),
+    );
+    expect(latestTicks).toEqual([createdTicks[8], createdTicks[3]]);
+  });
+
+  it('Gets empty pnl ticks for subaccounts before or at date earlier than all pnl data', async () => {
+    const createdTicks: PnlTicksFromDatabase[] = await setupIntervalPnlTicks();
+    const latestTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getLatestPnlTick(
+      [defaultSubaccountId, defaultSubaccountIdWithAlternateAddress],
+      DateTime.fromISO(createdTicks[0].blockTime).minus({ years: 1 }),
+    );
+    expect(latestTicks).toEqual([]);
+  });
+
+  it('Gets empty pnl ticks for subaccounts before or at date if no subaccounts given', async () => {
+    const createdTicks: PnlTicksFromDatabase[] = await setupIntervalPnlTicks();
+    const latestTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getLatestPnlTick(
+      [],
+      DateTime.fromISO(createdTicks[0].blockTime).plus({ years: 1 }),
+    );
+    expect(latestTicks).toEqual([]);
   });
 
 });

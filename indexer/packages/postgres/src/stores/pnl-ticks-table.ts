@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { DateTime } from 'luxon';
 import { QueryBuilder } from 'objection';
 
 import {
@@ -465,7 +466,11 @@ export async function getPnlTicksAtIntervals(
   interval: PnlTickInterval,
   timeWindowSeconds: number,
   subaccountIds: string[],
+  earliestDate: DateTime,
 ): Promise <PnlTicksFromDatabase[]> {
+  if (subaccountIds.length === 0) {
+    return [];
+  }
   const result: {
     rows: PnlTicksFromDatabase[],
   } = await knexReadReplica.getConnection().raw(
@@ -493,11 +498,49 @@ export async function getPnlTicksAtIntervals(
       FROM pnl_ticks
       WHERE
         "subaccountId" IN (${subaccountIds.map((id: string) => { return `'${id}'`; }).join(',')}) AND
+        "blockTime" >= '${earliestDate.toUTC().toISO()}'::timestamp AND
         "blockTime" > NOW() - INTERVAL '${timeWindowSeconds} second'
     ) AS pnl_intervals
     WHERE
       r = 1
     ORDER BY "subaccountId";
+    `,
+  ) as unknown as {
+    rows: PnlTicksFromDatabase[],
+  };
+
+  return result.rows;
+}
+
+export async function getLatestPnlTick(
+  subaccountIds: string[],
+  beforeOrAt: DateTime,
+): Promise <PnlTicksFromDatabase[]> {
+  if (subaccountIds.length === 0) {
+    return [];
+  }
+  const result: {
+    rows: PnlTicksFromDatabase[],
+  } = await knexReadReplica.getConnection().raw(
+    `
+    SELECT
+      DISTINCT ON ("subaccountId")
+      "id",
+      "subaccountId",
+      "equity",
+      "totalPnl",
+      "netTransfers",
+      "createdAt",
+      "blockHeight",
+      "blockTime"
+    FROM
+      pnl_ticks
+    WHERE
+      "subaccountId" in (${subaccountIds.map((id: string) => { return `'${id}'`; }).join(',')}) AND
+      "blockTime" <= '${beforeOrAt.toUTC().toISO()}'::timestamp
+    ORDER BY
+      "subaccountId",
+      "blockTime" DESC
     `,
   ) as unknown as {
     rows: PnlTicksFromDatabase[],
