@@ -62,8 +62,10 @@ export const configSchema = {
   // Vaults config
   VAULT_PNL_HISTORY_DAYS: parseInteger({ default: 90 }),
   VAULT_PNL_HISTORY_HOURS: parseInteger({ default: 72 }),
+  VAULT_PNL_START_DATE: parseString({ default: '2024-01-01T00:00:00Z' }),
   VAULT_LATEST_PNL_TICK_WINDOW_HOURS: parseInteger({ default: 1 }),
   VAULT_FETCH_FUNDING_INDEX_BLOCK_WINDOWS: parseInteger({ default: 250_000 }),
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
