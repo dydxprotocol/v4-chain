@@ -3,6 +3,7 @@ import {
   SubaccountUsernamesTable,
   SubaccountsWithoutUsernamesResult,
 } from '@dydxprotocol-indexer/postgres';
+import _ from 'lodash';
 
 import config from '../config';
 import { generateUsernameForSubaccount } from '../helpers/usernames-helper';
@@ -13,6 +14,7 @@ export default async function runTask(): Promise<void> {
   SubaccountUsernamesTable.getSubaccountZerosWithoutUsernames(
     config.SUBACCOUNT_USERNAME_BATCH_SIZE,
   );
+  let successCount: number = 0;
   for (const subaccount of subaccountZerosWithoutUsername) {
     for (let i = 0; i < config.ATTEMPT_PER_SUBACCOUNT; i++) {
       const username: string = generateUsernameForSubaccount(
@@ -30,6 +32,7 @@ export default async function runTask(): Promise<void> {
           subaccountId: subaccount.subaccountId,
         });
         // If success, break from loop and move to next subaccount.
+        successCount += 1;
         break;
       } catch (e) {
         // There are roughly ~225 million possible usernames
@@ -58,4 +61,16 @@ export default async function runTask(): Promise<void> {
       }
     }
   }
+  const subaccountAddresses = _.map(
+    subaccountZerosWithoutUsername,
+    (subaccount) => subaccount.address,
+  );
+
+  logger.info({
+    at: 'subaccount-username-generator#runTask',
+    message: 'Generated usernames',
+    batchSize: subaccountZerosWithoutUsername.length,
+    successCount,
+    addressSample: subaccountAddresses.slice(0, 10),
+  });
 }
