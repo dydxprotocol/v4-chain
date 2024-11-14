@@ -1,13 +1,18 @@
-import { randomInt } from 'crypto';
+import seedrandom from 'seedrandom';
 
 import config from '../config';
 import adjectives from './adjectives.json';
 import nouns from './nouns.json';
 
-export function generateUsername(): string {
-  const randomAdjective: string = adjectives[randomInt(0, adjectives.length)];
-  const randomNoun: string = nouns[randomInt(0, nouns.length)];
-  const randomNumber: string = randomInt(0, 1000).toString().padStart(
+export function generateUsernameForSubaccount(
+  subaccountId: string,
+  subaccountNum: number,
+  nounce: number = 0, // incremented in case of collision
+): string {
+  const rng = seedrandom(`${subaccountId}/${subaccountNum}/${nounce}`);
+  const randomAdjective: string = adjectives[Math.floor(rng() * adjectives.length)];
+  const randomNoun: string = nouns[Math.floor(rng() * nouns.length)];
+  const randomNumber: string = Math.floor(rng() * 1000).toString().padStart(
     config.SUBACCOUNT_USERNAME_NUM_RANDOM_DIGITS, '0');
 
   const capitalizedAdjective: string = randomAdjective.charAt(

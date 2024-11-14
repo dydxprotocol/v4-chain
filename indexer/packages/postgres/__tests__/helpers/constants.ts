@@ -71,6 +71,7 @@ export const invalidTicker: string = 'INVALID-INVALID';
 export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
 export const defaultAddress2: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc575lnf';
+export const defaultAddress3: string = 'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4';
 export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
 // Vault address for vault id 0 was generated using
 // script protocol/scripts/vault/get_vault.go
@@ -96,6 +97,20 @@ export const defaultSubaccount2: SubaccountCreateObject = {
 export const defaultSubaccount3: SubaccountCreateObject = {
   address: defaultAddress,
   subaccountNumber: 2,
+  updatedAt: createdDateTime.toISO(),
+  updatedAtHeight: createdHeight,
+};
+
+export const defaultSubaccount2Num0: SubaccountCreateObject = {
+  address: defaultAddress2,
+  subaccountNumber: 0,
+  updatedAt: createdDateTime.toISO(),
+  updatedAtHeight: createdHeight,
+};
+
+export const defaultSubaccount3Num0: SubaccountCreateObject = {
+  address: defaultAddress3,
+  subaccountNumber: 0,
   updatedAt: createdDateTime.toISO(),
   updatedAtHeight: createdHeight,
 };
