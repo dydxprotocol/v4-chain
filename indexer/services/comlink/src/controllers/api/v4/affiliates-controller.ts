@@ -32,6 +32,7 @@ import {
   AffiliateTotalVolumeResponse,
   AffiliateTotalVolumeRequest,
 } from '../../../types';
+import { log } from 'console';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'affiliates-controller';
@@ -68,6 +69,12 @@ class AffiliatesController extends Controller {
     if (subaccountZeroRows.length === 0) {
       // error logging will be performed by handleInternalServerError
       throw new UnexpectedServerError(`Subaccount 0 not found for address ${address}`);
+    } else if (subaccountZeroRows.length > 1) {
+      logger.error({
+        at: 'affiliates-controller#snapshot',
+        message: `More than 1 username exist for address: ${address}`,
+        subaccountZeroRows,
+      });
     }
     const subaccountId = subaccountZeroRows[0].id;
 
