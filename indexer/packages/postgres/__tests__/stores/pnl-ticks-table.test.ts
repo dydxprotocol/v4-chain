@@ -460,7 +460,7 @@ describe('PnlTicks store', () => {
       interval,
       7 * 24 * 60 * 60, // 1 week
       [defaultSubaccountId, defaultSubaccountIdWithAlternateAddress],
-      DateTime.fromISO(createdTicks[0].blockTime).plus({ seconds: 1 }),
+      DateTime.fromISO(createdTicks[8].blockTime).plus({ seconds: 1 }),
     );
     // See setup function for created ticks.
     // Should exclude tick that is within the same hour except the first.
