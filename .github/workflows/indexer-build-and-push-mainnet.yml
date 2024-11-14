@@ -16,3 +16,33 @@ jobs:
     with:
       ENVIRONMENT: mainnet
     secrets: inherit
+
+
+SELECT
+"id",
+"subaccountId",
+"equity",
+"totalPnl",
+"netTransfers",
+"createdAt",
+"blockHeight",
+"blockTime"
+FROM (
+SELECT
+pnl_ticks.*,
+ROW_NUMBER() OVER (
+PARTITION BY
+"subaccountId",
+DATE_TRUNC(
+'day',
+"blockTime"
+) ORDER BY "blockTime"
+) AS r
+FROM pnl_ticks
+WHERE
+"subaccountId" IN ('1ca6ddbf-9fae-539e-a0fa-9f02dafdf3c6','f883d837-cca9-57e6-b7f8-97d77ceebaa3','08bb4b5a-d950-5475-99c2-be70d7d2b421','19682472-ec1e-5c2c-95e7-402da7059e45','1c18bfd8-078e-5a80-90f6-84e31ddaf381','29ba0452-cd5e-5da8-8aa4-fb6fc0d06df6','5f823324-ce6e-542c-92ff-013e1cc68d35','ce4d6949-5d9e-5fc3-a302-f59f6524a3cb','c97c5aa9-ac7e-5472-9f06-804e4f65e280','142296e4-792b-5e91-9d71-43d728006b33') AND
+"blockTime" > NOW() - INTERVAL '2592000 second'
+) AS pnl_intervals
+WHERE
+r = 1
+ORDER BY "subaccountId";
