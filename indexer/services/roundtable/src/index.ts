@@ -202,6 +202,7 @@ async function start(): Promise<void> {
       subaccountUsernameGeneratorTask,
       'subaccount_username_generator',
       config.LOOPS_INTERVAL_MS_SUBACCOUNT_USERNAME_GENERATOR,
+      config.SUBACCOUNT_USERNAME_GENERATOR_LOCK_MULTIPLIER,
     );
   }
 
