@@ -32,7 +32,6 @@ import {
   AffiliateTotalVolumeResponse,
   AffiliateTotalVolumeRequest,
 } from '../../../types';
-import { log } from 'console';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'affiliates-controller';
