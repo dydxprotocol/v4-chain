@@ -36,7 +36,7 @@ export default async function runTask(): Promise<void> {
         break;
       } catch (e) {
         // There are roughly ~225 million possible usernames
-        // so the chance of a collision is very lo
+        // so the chance of collision is very low.
         if (e instanceof Error && e.name === 'UniqueViolationError') {
           stats.increment(
             `${config.SERVICE_NAME}.subaccount-username-generator.collision`, 1);

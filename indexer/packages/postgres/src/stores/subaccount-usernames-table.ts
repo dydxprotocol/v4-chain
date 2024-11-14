@@ -108,6 +108,7 @@ export async function getSubaccountZerosWithoutUsernames(
     AND id NOT IN (
       SELECT "subaccountId" FROM subaccount_usernames
     )
+    ORDER BY address
     LIMIT ?
   `;
 

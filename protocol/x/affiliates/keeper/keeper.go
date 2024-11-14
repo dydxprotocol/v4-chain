@@ -312,9 +312,6 @@ func (k Keeper) SetAffiliateWhitelist(ctx sdk.Context, whitelist types.Affiliate
 		}
 		// Check for duplicate addresses.
 		for _, address := range tier.Addresses {
-			if _, err := sdk.AccAddressFromBech32(address); err != nil {
-				return errorsmod.Wrapf(types.ErrInvalidAddress, "address %s", address)
-			}
 			if addressSet[address] {
 				return errorsmod.Wrapf(types.ErrDuplicateAffiliateAddressForWhitelist,
 					"address %s is duplicated in affiliate whitelist", address)
