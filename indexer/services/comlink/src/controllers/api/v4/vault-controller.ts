@@ -351,7 +351,7 @@ async function getVaultSubaccountPnlTicks(
     ),
     PnlTicksTable.getLatestPnlTick(
       vaultSubaccountIds,
-      getVautlPnlStartDate(),
+      getVautlPnlStartDate().plus({ minutes: 10 }),
     ),
   ])
 
@@ -565,7 +565,7 @@ export async function getLatestPnlTick(
     ),
     PnlTicksTable.getLatestPnlTick(
       vaultSubaccountIds,
-      getVautlPnlStartDate(),
+      getVautlPnlStartDate().plus({ minutes: 10 }),
     )
   ]);
   const adjustedPnlTicks: PnlTicksFromDatabase[] = adjustVaultPnlTicks(

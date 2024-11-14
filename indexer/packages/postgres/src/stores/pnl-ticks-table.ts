@@ -498,7 +498,7 @@ export async function getPnlTicksAtIntervals(
       FROM pnl_ticks
       WHERE
         "subaccountId" IN (${subaccountIds.map((id: string) => { return `'${id}'`; }).join(',')}) AND
-        "blockTime" >= '${earliestDate.toISO()}'::timestamp AND
+        "blockTime" >= '${earliestDate.toUTC().toISO()}'::timestamp AND
         "blockTime" > NOW() - INTERVAL '${timeWindowSeconds} second'
     ) AS pnl_intervals
     WHERE
