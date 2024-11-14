@@ -101,7 +101,7 @@ class VaultController extends Controller {
       BlockFromDatabase,
       string,
       PnlTicksFromDatabase | undefined,
-      DateTime | undefined
+      DateTime | undefined,
     ] = await Promise.all([
       getVaultSubaccountPnlTicks(vaultSubaccountIdsWithMainSubaccount, getResolution(resolution)),
       getVaultPositions(vaultSubaccounts),
@@ -114,7 +114,6 @@ class VaultController extends Controller {
       `${config.SERVICE_NAME}.${controllerName}.fetch_ticks_positions_equity.timing`,
       Date.now() - startTicksPositions,
     );
-
     // aggregate pnlTicks for all vault subaccounts grouped by blockHeight
     const aggregatedPnlTicks: PnlTicksFromDatabase[] = aggregateVaultPnlTicks(
       vaultPnlTicks,
@@ -337,13 +336,28 @@ async function getVaultSubaccountPnlTicks(
     windowSeconds = config.VAULT_PNL_HISTORY_HOURS * 60 * 60; // hours to seconds
   }
 
-  const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getPnlTicksAtIntervals(
-    resolution,
-    windowSeconds,
-    vaultSubaccountIds,
-  );
+  const [
+    pnlTicks,
+    adjustByPnlTicks,
+  ] : [
+    PnlTicksFromDatabase[],
+    PnlTicksFromDatabase[],
+  ] = await Promise.all([
+    PnlTicksTable.getPnlTicksAtIntervals(
+      resolution,
+      windowSeconds,
+      vaultSubaccountIds,
+      getVautlPnlStartDate(),
+    ),
+    PnlTicksTable.getLatestPnlTick(
+      vaultSubaccountIds,
+      // Add a buffer of 10 minutes to get the first PnL tick for PnL data as PnL ticks aren't
+      // created exactly on the hour.
+      getVautlPnlStartDate().plus({ minutes: 10 }),
+    ),
+  ]);
 
-  return pnlTicks;
+  return adjustVaultPnlTicks(pnlTicks, adjustByPnlTicks);
 }
 
 async function getVaultPositions(
@@ -538,14 +552,33 @@ export async function getLatestPnlTick(
   vaultSubaccountIds: string[],
   vaults: VaultFromDatabase[],
 ): Promise<PnlTicksFromDatabase | undefined> {
-  const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getPnlTicksAtIntervals(
-    PnlTickInterval.hour,
-    config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS * 60 * 60,
-    vaultSubaccountIds,
+  const [
+    pnlTicks,
+    adjustByPnlTicks,
+  ] : [
+    PnlTicksFromDatabase[],
+    PnlTicksFromDatabase[],
+  ] = await Promise.all([
+    PnlTicksTable.getPnlTicksAtIntervals(
+      PnlTickInterval.hour,
+      config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS * 60 * 60,
+      vaultSubaccountIds,
+      getVautlPnlStartDate(),
+    ),
+    PnlTicksTable.getLatestPnlTick(
+      vaultSubaccountIds,
+      // Add a buffer of 10 minutes to get the first PnL tick for PnL data as PnL ticks aren't
+      // created exactly on the hour.
+      getVautlPnlStartDate().plus({ minutes: 10 }),
+    ),
+  ]);
+  const adjustedPnlTicks: PnlTicksFromDatabase[] = adjustVaultPnlTicks(
+    pnlTicks,
+    adjustByPnlTicks,
   );
   // Aggregate and get pnl tick closest to the hour
   const aggregatedTicks: PnlTicksFromDatabase[] = aggregateVaultPnlTicks(
-    pnlTicks,
+    adjustedPnlTicks,
     vaults,
   );
   const filteredTicks: PnlTicksFromDatabase[] = filterOutIntervalTicks(
@@ -708,6 +741,29 @@ function aggregateVaultPnlTicks(
   }).map((aggregatedPnlTick: AggregatedPnlTick) => { return aggregatedPnlTick.pnlTick; });
 }
 
+function adjustVaultPnlTicks(
+  pnlTicks: PnlTicksFromDatabase[],
+  pnlTicksToAdjustBy: PnlTicksFromDatabase[],
+): PnlTicksFromDatabase[] {
+  const subaccountToPnlTick: {[subaccountId: string]: PnlTicksFromDatabase} = {};
+  for (const pnlTickToAdjustBy of pnlTicksToAdjustBy) {
+    subaccountToPnlTick[pnlTickToAdjustBy.subaccountId] = pnlTickToAdjustBy;
+  }
+
+  return pnlTicks.map((pnlTick: PnlTicksFromDatabase): PnlTicksFromDatabase => {
+    const adjustByPnlTick: PnlTicksFromDatabase | undefined = subaccountToPnlTick[
+      pnlTick.subaccountId
+    ];
+    if (adjustByPnlTick === undefined) {
+      return pnlTick;
+    }
+    return {
+      ...pnlTick,
+      totalPnl: Big(pnlTick.totalPnl).sub(Big(adjustByPnlTick.totalPnl)).toFixed(),
+    };
+  });
+}
+
 async function getVaultMapping(): Promise<VaultMapping> {
   const vaults: VaultFromDatabase[] = await VaultTable.findAll(
     {},
@@ -738,6 +794,11 @@ async function getVaultMapping(): Promise<VaultMapping> {
     validVaultMapping[subaccountId] = vaultMapping[subaccountId];
   }
   return validVaultMapping;
+}
+
+function getVautlPnlStartDate(): DateTime {
+  const startDate: DateTime = DateTime.fromISO(config.VAULT_PNL_START_DATE).toUTC();
+  return startDate;
 }
 
 export default router;
