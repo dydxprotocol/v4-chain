@@ -43,7 +43,7 @@ class AffiliatesController extends Controller {
   async getMetadata(
     @Query() address: string,
   ): Promise<AffiliateMetadataResponse> {
-    const [walletRow, referredUserRows, subaccountRows] = await Promise.all([
+    const [walletRow, referredUserRows, subaccountZeroRows] = await Promise.all([
       WalletTable.findById(address),
       AffiliateReferredUsersTable.findByAffiliateAddress(address),
       SubaccountTable.findAll(
@@ -65,11 +65,11 @@ class AffiliatesController extends Controller {
     const isAffiliate = referredUserRows !== undefined ? referredUserRows.length > 0 : false;
 
     // No need to check subaccountRows.length > 1 as subaccountNumber is unique for an address
-    if (subaccountRows.length === 0) {
+    if (subaccountZeroRows.length === 0) {
       // error logging will be performed by handleInternalServerError
       throw new UnexpectedServerError(`Subaccount 0 not found for address ${address}`);
     }
-    const subaccountId = subaccountRows[0].id;
+    const subaccountId = subaccountZeroRows[0].id;
 
     // Get subaccount0 username, which is the referral code
     const usernameRows = await SubaccountUsernamesTable.findAll(

@@ -152,6 +152,7 @@ export const configSchema = {
   DELETE_ZERO_PRICE_LEVELS_LOCK_MULTIPLIER: parseInteger({ default: 1 }),
   UNCROSS_ORDERBOOK_LOCK_MULTIPLIER: parseInteger({ default: 1 }),
   PNL_TICK_UPDATE_LOCK_MULTIPLIER: parseInteger({ default: 20 }),
+  SUBACCOUNT_USERNAME_GENERATOR_LOCK_MULTIPLIER: parseInteger({ default: 5 }),
 
   // Maximum number of running tasks - set this equal to PG_POOL_MIN in .env, default is 2
   MAX_CONCURRENT_RUNNING_TASKS: parseInteger({ default: 2 }),
@@ -211,7 +212,9 @@ export const configSchema = {
 
   // Subaccount username generator
   SUBACCOUNT_USERNAME_NUM_RANDOM_DIGITS: parseInteger({ default: 3 }),
-  SUBACCOUNT_USERNAME_MAX_LENGTH: parseInteger({ default: 13 }),
+  SUBACCOUNT_USERNAME_BATCH_SIZE: parseInteger({ default: 1000 }),
+  // number of attempts to generate username for a subaccount
+  ATTEMPT_PER_SUBACCOUNT: parseInteger({ default: 3 }),
 };
 
 export default parseSchema(configSchema);

@@ -97,20 +97,23 @@ export async function findByUsername(
   return (await baseQuery).find((subaccountUsername) => subaccountUsername.username === username);
 }
 
-export async function getSubaccountsWithoutUsernames(
+export async function getSubaccountZerosWithoutUsernames(
+  limit: number,
   options: Options = DEFAULT_POSTGRES_OPTIONS):
   Promise<SubaccountsWithoutUsernamesResult[]> {
   const queryString: string = `
-    SELECT id as "subaccountId"
+    SELECT id as "subaccountId", address
     FROM subaccounts
     WHERE subaccounts."subaccountNumber" = 0
-    EXCEPT
-    SELECT "subaccountId" FROM subaccount_usernames;
+    AND id NOT IN (
+      SELECT "subaccountId" FROM subaccount_usernames
+    )
+    LIMIT ?
   `;
 
   const result: {
     rows: SubaccountsWithoutUsernamesResult[],
-  } = await rawQuery(queryString, options);
+  } = await rawQuery(queryString, { ...options, bindings: [limit] });
 
   return result.rows;
 }
