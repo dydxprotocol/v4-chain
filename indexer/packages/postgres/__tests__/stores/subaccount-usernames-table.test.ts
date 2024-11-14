@@ -6,17 +6,17 @@ import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import {
   defaultSubaccountUsername,
   defaultSubaccountUsername2,
-  defaultSubaccountWithAlternateAddress,
   defaultWallet,
   defaultWallet2,
   duplicatedSubaccountUsername,
   subaccountUsernameWithAlternativeAddress,
 } from '../helpers/constants';
-import { seedData } from '../helpers/mock-generators';
+import { seedData, seedAdditionalSubaccounts } from '../helpers/mock-generators';
 
 describe('SubaccountUsernames store', () => {
   beforeEach(async () => {
     await seedData();
+    await seedAdditionalSubaccounts();
   });
 
   beforeAll(async () => {
@@ -82,18 +82,17 @@ describe('SubaccountUsernames store', () => {
     const subaccountLength = subaccounts.length;
     await SubaccountUsernamesTable.create(defaultSubaccountUsername);
     const subaccountIds: SubaccountsWithoutUsernamesResult[] = await
-    SubaccountUsernamesTable.getSubaccountsWithoutUsernames();
+    SubaccountUsernamesTable.getSubaccountZerosWithoutUsernames(1000);
     expect(subaccountIds.length).toEqual(subaccountLength - 1);
   });
 
   it('Get username using address', async () => {
     await Promise.all([
-      // Add two usernames for defaultWallet
+      // Add username for defaultWallet
       SubaccountUsernamesTable.create(defaultSubaccountUsername),
       SubaccountUsernamesTable.create(defaultSubaccountUsername2),
       // Add one username for alternativeWallet
       WalletTable.create(defaultWallet2),
-      SubaccountsTable.create(defaultSubaccountWithAlternateAddress),
       SubaccountUsernamesTable.create(subaccountUsernameWithAlternativeAddress),
     ]);
 

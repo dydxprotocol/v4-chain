@@ -12,4 +12,5 @@ export enum SubaccountUsernamesColumns {
 
 export interface SubaccountsWithoutUsernamesResult {
   subaccountId: string,
+  address: string,
 }

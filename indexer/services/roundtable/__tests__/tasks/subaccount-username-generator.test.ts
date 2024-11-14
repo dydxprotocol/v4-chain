@@ -18,6 +18,7 @@ describe('subaccount-username-generator', () => {
 
   beforeEach(async () => {
     await testMocks.seedData();
+    await testMocks.seedAdditionalSubaccounts();
   });
 
   afterAll(async () => {
