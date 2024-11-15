@@ -5,6 +5,7 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	listingtypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -25,7 +26,9 @@ func IsUnsupportedMsg(msg sdk.Msg) bool {
 		// nolint:staticcheck
 		*vaulttypes.MsgSetVaultQuotingParams,
 		// nolint:staticcheck
-		*vaulttypes.MsgUpdateParams:
+		*vaulttypes.MsgUpdateParams,
+		// WIP
+		*listingtypes.MsgUpgradeIsolatedPerpetualToCross:
 		return true
 	}
 	return false

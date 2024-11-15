@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
+	listingtypes "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 
 	"github.com/stretchr/testify/require"
@@ -76,7 +77,8 @@ func TestIsDydxMsg_Invalid(t *testing.T) {
 			// nolint:staticcheck
 			"/dydxprotocol.vault.MsgSetVaultQuotingParams": &vaulttypes.MsgSetVaultQuotingParams{},
 			// nolint:staticcheck
-			"/dydxprotocol.vault.MsgUpdateParams": &vaulttypes.MsgUpdateParams{},
+			"/dydxprotocol.vault.MsgUpdateParams":                      &vaulttypes.MsgUpdateParams{},
+			"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCross": &listingtypes.MsgUpgradeIsolatedPerpetualToCross{},
 		},
 	)
 	allMsgsMinusDydx := lib.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
