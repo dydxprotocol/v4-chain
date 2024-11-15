@@ -20,7 +20,7 @@ export default async function runTask(): Promise<void> {
   for (const subaccount of subaccountZerosWithoutUsername) {
     for (let i = 0; i < config.ATTEMPT_PER_SUBACCOUNT; i++) {
       const username: string = generateUsernameForSubaccount(
-        subaccount.subaccountId,
+        subaccount.address,
         // Always use subaccountNum 0 for generation. Effectively we are
         // generating one username per address. The fact that we are storing
         // in the `subaccount_usernames` table is a tech debt.
