@@ -19,10 +19,6 @@ func TestUnsupportedMsgSamples_Key(t *testing.T) {
 		"/dydxprotocol.vault.MsgSetVaultQuotingParams",
 		"/dydxprotocol.vault.MsgUpdateParams",
 
-		// WIP
-		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCross",
-		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCrossResponse",
-
 		// ICA Controller messages
 		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccount",
 		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccountResponse",

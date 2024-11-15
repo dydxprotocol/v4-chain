@@ -116,6 +116,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.listing.MsgSetListingVaultDepositParamsResponse",
 		"/dydxprotocol.listing.MsgSetMarketsHardCap",
 		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse",
+		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCross",
+		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCrossResponse",
 
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
