@@ -32,7 +32,8 @@ var (
 		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse": nil,
 
 		// WIP
-		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCross":         &listingtypes.MsgUpgradeIsolatedPerpetualToCross{},
+		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCross": &listingtypes.
+			MsgUpgradeIsolatedPerpetualToCross{},
 		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCrossResponse": nil,
 
 		// vault
