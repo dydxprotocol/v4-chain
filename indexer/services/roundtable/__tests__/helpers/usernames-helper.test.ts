@@ -16,14 +16,14 @@ describe('usernames-helper', () => {
     ];
 
     const expectedUsernames = [
-      'CushyHand599',
-      'AmpleCube324',
-      'AwareFood215',
-      'LoudLand654',
-      'MossyStraw800',
-      'BoldGap392',
-      'ZoomEra454',
-      'WiryFern332',
+      'CushyHandVE6',
+      'AmpleCubeLKI',
+      'AwareFoodHGP',
+      'LoudLandXWV',
+      'MossyStraw2JJ',
+      'BoldGapOGY',
+      'ZoomEraQE0',
+      'WiryFernLEC',
     ];
 
     for (let i = 0; i < addresses.length; i++) {
