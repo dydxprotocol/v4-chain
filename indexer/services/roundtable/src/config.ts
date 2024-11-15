@@ -211,8 +211,8 @@ export const configSchema = {
   STALE_ORDERBOOK_LEVEL_THRESHOLD_SECONDS: parseInteger({ default: 10 }),
 
   // Subaccount username generator
-  SUBACCOUNT_USERNAME_NUM_RANDOM_DIGITS: parseInteger({ default: 3 }),
-  SUBACCOUNT_USERNAME_BATCH_SIZE: parseInteger({ default: 1000 }),
+  SUBACCOUNT_USERNAME_SUFFIX_RANDOM_DIGITS: parseInteger({ default: 3 }),
+  SUBACCOUNT_USERNAME_BATCH_SIZE: parseInteger({ default: 2000 }),
   // number of attempts to generate username for a subaccount
   ATTEMPT_PER_SUBACCOUNT: parseInteger({ default: 3 }),
 };

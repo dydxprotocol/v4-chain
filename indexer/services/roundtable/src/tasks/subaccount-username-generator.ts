@@ -9,6 +9,8 @@ import config from '../config';
 import { generateUsernameForSubaccount } from '../helpers/usernames-helper';
 
 export default async function runTask(): Promise<void> {
+  const start: number = Date.now();
+
   const subaccountZerosWithoutUsername:
   SubaccountsWithoutUsernamesResult[] = await
   SubaccountUsernamesTable.getSubaccountZerosWithoutUsernames(
@@ -66,11 +68,19 @@ export default async function runTask(): Promise<void> {
     (subaccount) => subaccount.address,
   );
 
+  const duration = Date.now() - start;
+
   logger.info({
     at: 'subaccount-username-generator#runTask',
     message: 'Generated usernames',
     batchSize: subaccountZerosWithoutUsername.length,
     successCount,
     addressSample: subaccountAddresses.slice(0, 10),
+    duration,
   });
+
+  stats.timing(
+    `${config.SERVICE_NAME}.subaccount_username_generator`,
+    duration,
+  );
 }
