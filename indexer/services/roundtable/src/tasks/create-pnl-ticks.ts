@@ -54,7 +54,15 @@ export default async function runTask(): Promise<void> {
   // Start a transaction to ensure different table reads are consistent. Use a repeatable read
   // to ensure all reads within the transaction are consistent.
   const txId: number = await Transaction.start();
-  await Transaction.setIsolationLevel(txId, IsolationLevel.REPEATABLE_READ);
+  try {
+    await Transaction.setIsolationLevel(txId, IsolationLevel.REPEATABLE_READ);
+  } catch (error) {
+    logger.error({
+      at: 'create-pnl-ticks#runTask#setTransactionIsolation',
+      message: 'Failed to set transaction isolation level',
+      error,
+    });
+  }
   let newTicksToCreate: PnlTicksCreateObject[] = [];
   try {
     await perpetualMarketRefresher.updatePerpetualMarkets();
