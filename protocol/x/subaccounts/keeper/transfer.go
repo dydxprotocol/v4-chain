@@ -509,7 +509,17 @@ func (k Keeper) TransferFundsFromSubaccountToSubaccount(
 // insurance fund to the cross-perpetual insurance fund.
 // Note: This uses the `x/bank` keeper and modifies `x/bank` state.
 func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualId uint32) error {
+	// Validate perpetual exists
+	if _, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId); err != nil {
+		return err
+	}
+
 	isolatedInsuranceFundBalance := k.GetInsuranceFundBalance(ctx, perpetualId)
+
+	// Skip if balance is zero
+	if isolatedInsuranceFundBalance.Sign() == 0 {
+		return nil
+	}
 
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
@@ -517,12 +527,13 @@ func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualI
 		isolatedInsuranceFundBalance,
 	)
 	if err != nil {
+		// Panic if USDC does not exist.
 		panic(err)
 	}
 
 	isolatedInsuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	crossInsuranceFundAddr := perptypes.InsuranceFundModuleAddress
@@ -535,7 +546,16 @@ func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualI
 	)
 }
 
+// TransferIsolatedCollateralToCross transfers the collateral balance from an isolated perpetual's
+// collateral pool to the cross-margin collateral pool. This is used during the upgrade process
+// from isolated perpetuals to cross-margin.
+// Note: This uses the `x/bank` keeper and modifies `x/bank` state.
 func (k Keeper) TransferIsolatedCollateralToCross(ctx sdk.Context, perpetualId uint32) error {
+	// Validate perpetual exists
+	if _, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId); err != nil {
+		return err
+	}
+
 	isolatedCollateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, perpetualId)
 	if err != nil {
 		return err
@@ -553,6 +573,11 @@ func (k Keeper) TransferIsolatedCollateralToCross(ctx sdk.Context, perpetualId u
 		isolatedCollateralPoolAddr,
 		usdcAsset.Denom,
 	)
+
+	// Skip if balance is zero
+	if isolatedCollateralPoolBalance.IsZero() {
+		return nil
+	}
 
 	return k.bankKeeper.SendCoins(
 		ctx,

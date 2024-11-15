@@ -228,13 +228,14 @@ var (
 		"/dydxprotocol.govplus.MsgSlashValidatorResponse": {},
 
 		// listing
-		"/dydxprotocol.listing.MsgSetMarketsHardCap":                    {},
-		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse":            {},
-		"/dydxprotocol.listing.MsgCreateMarketPermissionless":           {},
-		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse":   {},
-		"/dydxprotocol.listing.MsgSetListingVaultDepositParams":         {},
-		"/dydxprotocol.listing.MsgSetListingVaultDepositParamsResponse": {},
-		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCross":      {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCap":                       {},
+		"/dydxprotocol.listing.MsgSetMarketsHardCapResponse":               {},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionless":              {},
+		"/dydxprotocol.listing.MsgCreateMarketPermissionlessResponse":      {},
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParams":            {},
+		"/dydxprotocol.listing.MsgSetListingVaultDepositParamsResponse":    {},
+		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCross":         {},
+		"/dydxprotocol.listing.MsgUpgradeIsolatedPerpetualToCrossResponse": {},
 
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},

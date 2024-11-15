@@ -21,5 +21,8 @@ func (msg *MsgUpgradeIsolatedPerpetualToCross) ValidateBasic() error {
 			),
 		)
 	}
+	if msg.PerpetualId == 0 {
+		return ErrInvalidPerpetualId
+	}
 	return nil
 }

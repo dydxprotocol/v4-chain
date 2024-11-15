@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"math/big"
 
@@ -156,7 +157,16 @@ func (k Keeper) UpgradeIsolatedPerpetualToCross(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) error {
-	err := k.SubaccountsKeeper.TransferIsolatedInsuranceFundToCross(ctx, perpetualId)
+	// Validate perpetual exists and is in isolated mode
+	perpetual, err := k.PerpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+	if perpetual.Params.GetMarketType() != perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+		return fmt.Errorf("perpetual %d is not an isolated perpetual and cannot be upgraded to cross", perpetualId)
+	}
+
+	err = k.SubaccountsKeeper.TransferIsolatedInsuranceFundToCross(ctx, perpetualId)
 	if err != nil {
 		return err
 	}
