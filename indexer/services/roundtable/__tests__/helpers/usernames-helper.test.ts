@@ -13,6 +13,10 @@ describe('usernames-helper', () => {
       'dydx1df84hz7y0dd3mrqcv3vrhw9wdttelul8edqmvp',
       'dydx16h7p7f4dysrgtzptxx2gtpt5d8t834g9dj830z',
       'dydx15u9tppy5e2pdndvlrvafxqhuurj9mnpdstzj6z',
+      'dydx1q54yvrslnu0xp4drpde6f4e0k2ap9efss5hpsd',
+      'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4',
+      'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf',
+      'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc575lnf',
     ];
 
     const expectedUsernames = [
@@ -24,6 +28,10 @@ describe('usernames-helper', () => {
       'BoldGapOGY',
       'ZoomEraQE0',
       'WiryFernLEC',
+      'RudeFuel59E',
+      'MacroMealFK5',
+      'HappySnapWTT',
+      'BumpyEdgeH5Y',
     ];
 
     for (let i = 0; i < addresses.length; i++) {
