@@ -10,15 +10,20 @@ import config from '../config';
 import { generateUsernameForSubaccount } from '../helpers/usernames-helper';
 
 export default async function runTask(): Promise<void> {
-  const start: number = Date.now();
+  const taskStart: number = Date.now();
 
   const subaccountZerosWithoutUsername:
   SubaccountsWithoutUsernamesResult[] = await
   SubaccountUsernamesTable.getSubaccountZerosWithoutUsernames(
     config.SUBACCOUNT_USERNAME_BATCH_SIZE,
   );
+  stats.timing(
+    `${config.SERVICE_NAME}.get_subaccount_zeros_without_usernames.timing`,
+    Date.now() - taskStart,
+  );
 
   const txId: number = await Transaction.start();
+  const txnStart: number = Date.now();
   try {
     let successCount: number = 0;
     for (const subaccount of subaccountZerosWithoutUsername) {
@@ -73,19 +78,18 @@ export default async function runTask(): Promise<void> {
       subaccountZerosWithoutUsername,
       (subaccount) => subaccount.address,
     );
-    const duration = Date.now() - start;
+    stats.timing(
+      `${config.SERVICE_NAME}.subaccount_username_generator.txn.timing`,
+      Date.now() - txnStart,
+    );
     logger.info({
       at: 'subaccount-username-generator#runTask',
       message: 'Generated usernames',
       batchSize: subaccountZerosWithoutUsername.length,
       successCount,
       addressSample: subaccountAddresses.slice(0, 10),
-      duration,
+      duration: Date.now() - taskStart,
     });
-    stats.timing(
-      `${config.SERVICE_NAME}.subaccount_username_generator`,
-      duration,
-    );
   } catch (error) {
     await Transaction.rollback(txId);
     logger.error({
@@ -94,4 +98,9 @@ export default async function runTask(): Promise<void> {
       error,
     });
   }
+
+  stats.timing(
+    `${config.SERVICE_NAME}.subaccount_username_generator.total.timing`,
+    Date.now() - taskStart,
+  );
 }
