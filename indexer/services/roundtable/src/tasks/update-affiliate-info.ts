@@ -18,6 +18,7 @@ const defaultLastUpdateTime: string = '2024-09-16T00:00:00Z';
  * Update the affiliate info for all affiliate addresses.
  */
 export default async function runTask(): Promise<void> {
+  const taskStart: number = Date.now();
   // Wrap getting cache, updating info, and setting cache in one transaction so that persistent
   // cache and affilitate info table are in sync.
   const txId: number = await Transaction.start();
@@ -55,6 +56,7 @@ export default async function runTask(): Promise<void> {
       at: 'update-affiliate-info#runTask',
       message: `Updating affiliate info from ${windowStartTime.toISO()} to ${windowEndTime.toISO()}`,
     });
+    const updateAffiliateInfoStartTime: number = Date.now();
     await AffiliateInfoTable.updateInfo(windowStartTime.toISO(), windowEndTime.toISO(), txId);
     await PersistentCacheTable.upsert({
       key: PersistentCacheKeys.AFFILIATE_INFO_UPDATE_TIME,
@@ -62,6 +64,10 @@ export default async function runTask(): Promise<void> {
     }, { txId });
 
     await Transaction.commit(txId);
+    stats.timing(
+      `${config.SERVICE_NAME}.update-affiliate-info.update-txn.timing`,
+      Date.now() - updateAffiliateInfoStartTime,
+    );
   } catch (error) {
     await Transaction.rollback(txId);
     logger.error({
@@ -70,4 +76,6 @@ export default async function runTask(): Promise<void> {
       error,
     });
   }
+
+  stats.timing(`${config.SERVICE_NAME}.update-affiliate-info.total.timing`, Date.now() - taskStart);
 }
