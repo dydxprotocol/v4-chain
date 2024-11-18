@@ -42,7 +42,6 @@ export default async function runTask(): Promise<void> {
             username,
             subaccountId: subaccount.subaccountId,
           }, { txId });
-          // NEXT: use TxnID.
           // If success, break from loop and move to next subaccount.
           successCount += 1;
           break;
@@ -93,7 +92,7 @@ export default async function runTask(): Promise<void> {
   } catch (error) {
     await Transaction.rollback(txId);
     logger.error({
-      at: 'update-wallet-total-volume#runTask',
+      at: 'subaccount-username-generator#runTask',
       message: 'Error when updating totalVolume in wallets table',
       error,
     });
