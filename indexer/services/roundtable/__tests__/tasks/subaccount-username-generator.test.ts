@@ -49,8 +49,8 @@ describe('subaccount-username-generator', () => {
       {}, [], {});
 
     const expectedUsernames = [
-      'GreenSnowWTT', // dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc575lnf
-      'BubblyEarH5Y', // dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf
+      'BubblyEarH5Y', // dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc575lnf
+      'GreenSnowWTT', // dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf
       'LunarMatFK5', // dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4
     ];
     expect(subaccountsWithUsernamesAfter.length).toEqual(subaccountsLength);
