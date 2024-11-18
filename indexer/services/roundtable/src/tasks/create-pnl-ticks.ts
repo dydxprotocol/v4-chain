@@ -2,6 +2,7 @@ import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   BlockFromDatabase,
   BlockTable,
+  IsolationLevel,
   PnlTicksCreateObject,
   PnlTicksTable,
   Transaction,
@@ -50,8 +51,10 @@ export default async function runTask(): Promise<void> {
     return;
   }
 
-  // Start a transaction to ensure different table reads are consistent.
+  // Start a transaction to ensure different table reads are consistent. Use a repeatable read
+  // to ensure all reads within the transaction are consistent.
   const txId: number = await Transaction.start();
+  await Transaction.setIsolationLevel(txId, IsolationLevel.REPEATABLE_READ);
   let newTicksToCreate: PnlTicksCreateObject[] = [];
   try {
     await perpetualMarketRefresher.updatePerpetualMarkets();
