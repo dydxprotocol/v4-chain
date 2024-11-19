@@ -31,14 +31,14 @@ func TestMsgUpgradeIsolatedPerpetualToCross_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: "Authority is invalid",
 		},
-		"Failure: Invaid authority": {
+		"Failure: Invalid authority": {
 			msg: types.MsgUpgradeIsolatedPerpetualToCross{
 				Authority:   "invalid",
 				PerpetualId: 1,
 			},
 			expectedErr: "Authority is invalid",
 		},
-		"Failure: Invaid perpetual ID": {
+		"Failure: Invalid perpetual ID": {
 			msg: types.MsgUpgradeIsolatedPerpetualToCross{
 				Authority:   validAuthority,
 				PerpetualId: 0,
