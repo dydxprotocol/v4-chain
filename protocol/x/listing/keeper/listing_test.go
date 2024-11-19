@@ -6,12 +6,14 @@ import (
 	"testing"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	bank_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
@@ -62,7 +64,7 @@ func TestCreateMarket(t *testing.T) {
 		t.Run(
 			name, func(t *testing.T) {
 				mockIndexerEventManager := &mocks.IndexerEventManager{}
-				ctx, keeper, _, _, pricesKeeper, _, _, marketMapKeeper := keepertest.ListingKeepers(
+				ctx, keeper, _, _, pricesKeeper, _, _, marketMapKeeper, _, _, _ := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,
@@ -131,7 +133,7 @@ func TestCreatePerpetual(t *testing.T) {
 		t.Run(
 			name, func(t *testing.T) {
 				mockIndexerEventManager := &mocks.IndexerEventManager{}
-				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, _, marketMapKeeper := keepertest.ListingKeepers(
+				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, _, marketMapKeeper, _, _, _ := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,
@@ -217,7 +219,7 @@ func TestCreateClobPair(t *testing.T) {
 		t.Run(
 			name, func(t *testing.T) {
 				mockIndexerEventManager := &mocks.IndexerEventManager{}
-				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, clobKeeper, marketMapKeeper := keepertest.ListingKeepers(
+				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, clobKeeper, marketMapKeeper, _, _, _ := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,
@@ -417,6 +419,162 @@ func TestDepositToMegavaultforPML(t *testing.T) {
 					)
 					require.True(t, exists)
 					require.Equal(t, vaulttypes.VaultStatus_VAULT_STATUS_QUOTING, vaultParams.Status)
+				}
+			},
+		)
+	}
+}
+
+func TestUpgradeIsolatedPerpetualToCross(t *testing.T) {
+	tests := map[string]struct {
+		perpetualId                   uint32
+		isolatedInsuranceFundBalance  *big.Int
+		isolatedCollateralPoolBalance *big.Int
+		crossInsuranceFundBalance     *big.Int
+		crossCollateralPoolBalance    *big.Int
+
+		expectedErr string
+	}{
+		"success": {
+			perpetualId:                   3, // isolated
+			isolatedInsuranceFundBalance:  big.NewInt(1),
+			isolatedCollateralPoolBalance: big.NewInt(1),
+			crossInsuranceFundBalance:     big.NewInt(1),
+			crossCollateralPoolBalance:    big.NewInt(1),
+			expectedErr:                   "",
+		},
+		"success - empty isolated insurance fund": {
+			perpetualId:                   3, // isolated
+			isolatedInsuranceFundBalance:  big.NewInt(0),
+			isolatedCollateralPoolBalance: big.NewInt(1),
+			crossInsuranceFundBalance:     big.NewInt(1),
+			crossCollateralPoolBalance:    big.NewInt(1),
+			expectedErr:                   "",
+		},
+		"success - empty isolated collateral fund": {
+			perpetualId:                   3, // isolated
+			isolatedInsuranceFundBalance:  big.NewInt(1),
+			isolatedCollateralPoolBalance: big.NewInt(0),
+			crossInsuranceFundBalance:     big.NewInt(1),
+			crossCollateralPoolBalance:    big.NewInt(1),
+			expectedErr:                   "",
+		},
+		"success - empty isolated insurance fund + empty isolated collateral fund": {
+			perpetualId:                   3, // isolated
+			isolatedInsuranceFundBalance:  big.NewInt(0),
+			isolatedCollateralPoolBalance: big.NewInt(0),
+			crossInsuranceFundBalance:     big.NewInt(1),
+			crossCollateralPoolBalance:    big.NewInt(1),
+			expectedErr:                   "",
+		},
+		"failure - perpetual already has cross market type": {
+			perpetualId:                   1, // cross
+			isolatedInsuranceFundBalance:  big.NewInt(1),
+			isolatedCollateralPoolBalance: big.NewInt(1),
+			crossInsuranceFundBalance:     big.NewInt(1),
+			crossCollateralPoolBalance:    big.NewInt(1),
+			expectedErr:                   "perpetual 1 is not an isolated perpetual and cannot be upgraded to cross",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(
+			name, func(t *testing.T) {
+				mockIndexerEventManager := &mocks.IndexerEventManager{}
+
+				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, bankKeeper, subaccountsKeeper := keepertest.ListingKeepers(
+					t,
+					&mocks.BankKeeper{},
+					mockIndexerEventManager,
+				)
+
+				// Create the default markets.
+				keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+
+				// Create liquidity tiers.
+				keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+
+				// Create USDC asset.
+				err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
+				require.NoError(t, err)
+
+				// Create test perpetuals.
+				keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+
+				// Get addresses for isolated/cross insurance funds and collateral pools.
+				isolatedInsuranceFundAddr, err := perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, tc.perpetualId)
+				require.NoError(t, err)
+
+				isolatedCollateralPoolAddr, err := subaccountsKeeper.GetCollateralPoolFromPerpetualId(ctx, tc.perpetualId)
+				require.NoError(t, err)
+
+				crossInsuranceFundAddr := perpetualtypes.InsuranceFundModuleAddress
+
+				crossCollateralPoolAddr := satypes.ModuleAddress
+
+				// Fund the isolated insurance account, cross insurance account,
+				// isolated collateral pool, and cross collateral pool.
+				fundingData := [][]interface{}{
+					{isolatedInsuranceFundAddr, tc.isolatedInsuranceFundBalance},
+					{crossInsuranceFundAddr, tc.crossInsuranceFundBalance},
+					{isolatedCollateralPoolAddr, tc.isolatedCollateralPoolBalance},
+					{crossCollateralPoolAddr, tc.crossCollateralPoolBalance},
+				}
+
+				for _, data := range fundingData {
+					addr := data[0].(sdk.AccAddress)
+					amount := data[1].(*big.Int)
+
+					if amount.Cmp(big.NewInt(0)) != 0 {
+						err = bank_testutil.FundAccount(
+							ctx,
+							addr,
+							sdk.Coins{
+								sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(amount)),
+							},
+							*bankKeeper,
+						)
+						require.NoError(t, err)
+					}
+				}
+
+				// Upgrade perpetual from isolated to cross.
+				err = keeper.UpgradeIsolatedPerpetualToCross(ctx, tc.perpetualId)
+				if tc.expectedErr != "" {
+					require.ErrorContains(t, err, tc.expectedErr)
+					return
+				}
+				require.NoError(t, err)
+
+				// Check perpetual market type has been upgraded to cross.
+				perpetual, err := perpetualsKeeper.GetPerpetual(ctx, tc.perpetualId)
+				require.NoError(t, err)
+				require.Equal(
+					t,
+					perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+					perpetual.Params.MarketType,
+				)
+
+				// Check expected balance for isolated/cross insurance funds and collateral pools.
+				expectedBalances := [][]interface{}{
+					{isolatedInsuranceFundAddr, big.NewInt(0)},
+					{crossInsuranceFundAddr, big.NewInt(0).Add(tc.isolatedInsuranceFundBalance, tc.crossInsuranceFundBalance)},
+					{isolatedCollateralPoolAddr, big.NewInt(0)},
+					{crossCollateralPoolAddr, big.NewInt(0).Add(tc.isolatedCollateralPoolBalance, tc.crossCollateralPoolBalance)},
+				}
+
+				for _, data := range expectedBalances {
+					addr := data[0].(sdk.AccAddress)
+					amount := data[1].(*big.Int)
+
+					require.Equal(
+						t,
+						sdk.NewCoin(
+							asstypes.AssetUsdc.Denom,
+							sdkmath.NewIntFromBigInt(amount),
+						),
+						bankKeeper.GetBalance(ctx, addr, asstypes.AssetUsdc.Denom),
+					)
 				}
 			},
 		)
