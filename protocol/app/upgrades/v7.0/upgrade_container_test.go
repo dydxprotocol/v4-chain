@@ -1,6 +1,6 @@
 //go:build all || container_test
 
-package v_7_0_test
+package v_7_0_3_test
 
 import (
 	"math/big"
@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	v_7_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v7.0"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -38,7 +37,7 @@ func TestStateUpgrade(t *testing.T) {
 	preUpgradeSetups(node, t)
 	preUpgradeChecks(node, t)
 
-	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_7_0.UpgradeName)
+	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_7_0_3.UpgradeName)
 	require.NoError(t, err)
 
 	postUpgradeChecks(node, t)
@@ -51,18 +50,12 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 }
 
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
-	// Check that vault quoting params are successfully migrated to vault params.
-	postUpgradeVaultParamsCheck(node, t)
-	// Check that vault shares are successfully migrated to megavault shares.
-	postUpgradeMegavaultSharesCheck(node, t)
-	// Check that megavault module account is successfully initialized.
-	postUpgradeMegavaultModuleAccCheck(node, t)
-
-	// Check that the affiliates module has been initialized with the default tiers.
-	postUpgradeAffiliatesModuleTiersCheck(node, t)
 
 	// Check that the listing module state has been initialized with the hard cap and default deposit params.
-	postUpgradeListingModuleStateCheck(node, t)
+	postUpgradeMarketIdsCheck(node, t)
+}
+
+func postUpgradeMarketIdsCheck(node *containertest.Node, t *testing.T) {
 }
 
 func postUpgradeVaultParamsCheck(node *containertest.Node, t *testing.T) {

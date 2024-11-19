@@ -118,6 +118,7 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		perpetual Perpetual,
 	) error
+	SetNextPerpetualID(ctx sdk.Context, nextID uint32)
 }
 
 // OpenInterestDelta represents a (perpId, openInterestDelta) tuple.

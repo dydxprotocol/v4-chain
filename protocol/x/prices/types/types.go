@@ -57,4 +57,6 @@ type PricesKeeper interface {
 	GetCurrencyPairFromID(ctx context.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool)
 	GetIDForCurrencyPair(ctx context.Context, cp slinkytypes.CurrencyPair) (uint64, bool)
 	GetPriceForCurrencyPair(ctx context.Context, cp slinkytypes.CurrencyPair) (oracletypes.QuotePrice, error)
+
+	SetNextMarketID(ctx sdk.Context, nextID uint32)
 }

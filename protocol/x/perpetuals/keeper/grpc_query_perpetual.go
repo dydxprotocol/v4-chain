@@ -71,3 +71,17 @@ func (k Keeper) Perpetual(c context.Context, req *types.QueryPerpetualRequest) (
 
 	return &types.QueryPerpetualResponse{Perpetual: val}, nil
 }
+
+func (k Keeper) NextPerpetualId(
+	c context.Context,
+	req *types.QueryNextPerpetualIdRequest,
+) (
+	*types.QueryNextPerpetualIdResponse,
+	error,
+) {
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+
+	return &types.QueryNextPerpetualIdResponse{
+		NextPerpetualId: k.GetNextPerpetualID(ctx),
+	}, nil
+}

@@ -121,3 +121,14 @@ func (k Keeper) MarketParam(
 
 	return &types.QueryMarketParamResponse{MarketParam: val}, nil
 }
+
+func (k Keeper) NextMarketId(
+	c context.Context,
+	req *types.QueryNextMarketIdRequest,
+) (
+	*types.QueryNextMarketIdResponse,
+	error,
+) {
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+	return &types.QueryNextMarketIdResponse{NextMarketId: k.GetNextMarketID(ctx)}, nil
+}
