@@ -219,7 +219,8 @@ func TestCreateClobPair(t *testing.T) {
 		t.Run(
 			name, func(t *testing.T) {
 				mockIndexerEventManager := &mocks.IndexerEventManager{}
-				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, clobKeeper, marketMapKeeper, _, _, _ := keepertest.ListingKeepers(
+				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, clobKeeper, marketMapKeeper,
+					_, _, _ := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,
@@ -482,7 +483,8 @@ func TestUpgradeIsolatedPerpetualToCross(t *testing.T) {
 			name, func(t *testing.T) {
 				mockIndexerEventManager := &mocks.IndexerEventManager{}
 
-				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, bankKeeper, subaccountsKeeper := keepertest.ListingKeepers(
+				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper,
+					bankKeeper, subaccountsKeeper := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,

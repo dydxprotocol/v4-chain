@@ -186,7 +186,8 @@ func ListingKeepers(
 		},
 	)
 
-	return ctx, keeper, storeKey, mockTimeProvider, pricesKeeper, perpetualsKeeper, clobKeeper, marketMapKeeper, assetsKeeper, bankKeeper_out, subaccountsKeeper
+	return ctx, keeper, storeKey, mockTimeProvider, pricesKeeper, perpetualsKeeper,
+		clobKeeper, marketMapKeeper, assetsKeeper, bankKeeper_out, subaccountsKeeper
 }
 
 func createListingKeeper(
