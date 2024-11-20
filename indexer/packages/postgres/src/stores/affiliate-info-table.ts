@@ -16,6 +16,7 @@ import {
   AffiliateInfoFromDatabase,
   AffiliateInfoQueryConfig,
   Liquidity,
+  FillType,
 } from '../types';
 
 export async function findAll(
@@ -156,7 +157,8 @@ filtered_fills AS (
       fills."affiliateRevShare",
       fills."createdAtHeight",
       fills."price",
-      fills."size"
+      fills."size",
+      fills."type"
   FROM 
       fills
   WHERE 
@@ -174,6 +176,7 @@ affiliate_fills AS (
       filtered_fills."affiliateRevShare",
       filtered_fills."price",
       filtered_fills."size",
+      filtered_fills."type",
       affiliate_referred_subaccounts."affiliateAddress",
       affiliate_referred_subaccounts."referredAtBlock"
   FROM 
@@ -193,7 +196,7 @@ affiliate_stats AS (
       SUM(affiliate_fills."fee") AS "totalReferredFees",
       SUM(affiliate_fills."affiliateRevShare") AS "affiliateEarnings",
       SUM(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.MAKER}' AND affiliate_fills."fee" > 0 THEN affiliate_fills."fee" ELSE 0 END) AS "totalReferredMakerFees",
-      SUM(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.TAKER}' THEN affiliate_fills."fee" ELSE 0 END) AS "totalReferredTakerFees",
+      SUM(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.TAKER}' AND affiliate_fills."type" = '${FillType.LIMIT}' THEN affiliate_fills."fee" ELSE 0 END) AS "totalReferredTakerFees",
       SUM(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.MAKER}' AND affiliate_fills."fee" < 0 THEN affiliate_fills."fee" ELSE 0 END) AS "totalReferredMakerRebates",
       COUNT(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.MAKER}' THEN 1 END) AS "referredMakerTrades",
       COUNT(CASE WHEN affiliate_fills."liquidity" = '${Liquidity.TAKER}' THEN 1 END) AS "referredTakerTrades",
@@ -301,8 +304,9 @@ export async function paginatedFindWithAddressFilter(
   }
 
   // Sorting by affiliate earnings or default sorting by address
-  if (sortByAffiliateEarning) {
-    baseQuery = baseQuery.orderBy(AffiliateInfoColumns.affiliateEarnings, Ordering.DESC);
+  if (sortByAffiliateEarning || offset !== 0) {
+    baseQuery = baseQuery.orderBy(AffiliateInfoColumns.affiliateEarnings, Ordering.DESC)
+      .orderBy(AffiliateInfoColumns.address, Ordering.ASC);
   }
 
   // Apply pagination using offset and limit

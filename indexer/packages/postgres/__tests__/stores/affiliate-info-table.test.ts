@@ -1,5 +1,5 @@
 import {
-  AffiliateInfoFromDatabase, Liquidity,
+  AffiliateInfoFromDatabase, Liquidity, FillType,
 } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import {
@@ -138,15 +138,15 @@ describe('Affiliate info store', () => {
       );
       const expectedAffiliateInfo1: AffiliateInfoFromDatabase = {
         address: defaultWallet2.address,
-        affiliateEarnings: '1000',
-        referredMakerTrades: 2,
-        referredTakerTrades: 0,
-        totalReferredMakerFees: '2000',
+        affiliateEarnings: '1005',
+        referredMakerTrades: 3,
+        referredTakerTrades: 1,
+        totalReferredMakerFees: '2100',
         totalReferredTakerFees: '0',
         totalReferredMakerRebates: '0',
         totalReferredUsers: 1,
         firstReferralBlockHeight: '1',
-        referredTotalVolume: '2',
+        referredTotalVolume: '4',
       };
       expect(updatedInfo1).toEqual(expectedAffiliateInfo1);
 
@@ -161,15 +161,15 @@ describe('Affiliate info store', () => {
       );
       const expectedAffiliateInfo2: AffiliateInfoFromDatabase = {
         address: defaultWallet2.address,
-        affiliateEarnings: '2000',
-        referredMakerTrades: 3,
-        referredTakerTrades: 1,
-        totalReferredMakerFees: '2000',
+        affiliateEarnings: '2005',
+        referredMakerTrades: 4,
+        referredTakerTrades: 2,
+        totalReferredMakerFees: '2100',
         totalReferredTakerFees: '1000',
         totalReferredMakerRebates: '-1000',
         totalReferredUsers: 1,
         firstReferralBlockHeight: '1',
-        referredTotalVolume: '4',
+        referredTotalVolume: '6',
       };
       expect(updatedInfo2).toEqual(expectedAffiliateInfo2);
 
@@ -188,15 +188,15 @@ describe('Affiliate info store', () => {
       );
       const expectedAffiliateInfo3: AffiliateInfoFromDatabase = {
         address: defaultWallet2.address,
-        affiliateEarnings: '2000',
-        referredMakerTrades: 3,
-        referredTakerTrades: 1,
-        totalReferredMakerFees: '2000',
+        affiliateEarnings: '2005',
+        referredMakerTrades: 4,
+        referredTakerTrades: 2,
+        totalReferredMakerFees: '2100',
         totalReferredTakerFees: '1000',
         totalReferredMakerRebates: '-1000',
         totalReferredUsers: 2,
         firstReferralBlockHeight: '1',
-        referredTotalVolume: '4',
+        referredTotalVolume: '6',
       };
       expect(updatedInfo3).toEqual(expectedAffiliateInfo3);
     });
@@ -303,7 +303,7 @@ describe('Affiliate info store', () => {
       }));
     });
 
-    it('Successfully uses offset and limit', async () => {
+    it('Successfully uses offset (default to sorted) and limit', async () => {
       const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable
         .paginatedFindWithAddressFilter(
           [],
@@ -315,13 +315,15 @@ describe('Affiliate info store', () => {
       expect(infos!.length).toEqual(2);
       expect(infos![0]).toEqual(expect.objectContaining({
         ...defaultAffiliateInfo,
-        address: 'address_5',
-        affiliateEarnings: '5',
+        address: 'address_4',
+        // affiliateEarnings in DB: 9, 8, 7, 6, 5, 4, ...
+        // so we get 4 with offset = 5.
+        affiliateEarnings: '4',
       }));
       expect(infos![1]).toEqual(expect.objectContaining({
         ...defaultAffiliateInfo,
-        address: 'address_6',
-        affiliateEarnings: '6',
+        address: 'address_3',
+        affiliateEarnings: '3',
       }));
     });
 
@@ -358,6 +360,34 @@ describe('Affiliate info store', () => {
       expect(infos).toBeDefined();
       expect(infos!.length).toEqual(0);
     });
+
+    it('Successfully use sorted - equal earnings between affiliates', async () => {
+      await AffiliateInfoTable.create({
+        ...defaultAffiliateInfo,
+        address: 'address_10',
+        affiliateEarnings: '9', // same as address_9
+      });
+      const infos: AffiliateInfoFromDatabase[] = await AffiliateInfoTable
+        .paginatedFindWithAddressFilter(
+          [],
+          0,
+          100,
+          true,
+        );
+      expect(infos).toBeDefined();
+      expect(infos!.length).toEqual(11);
+      expect(infos![0]).toEqual(expect.objectContaining({
+        ...defaultAffiliateInfo,
+        address: 'address_10', // '10' < '9' in lexicographical order
+        affiliateEarnings: '9',
+      }));
+      expect(infos![1]).toEqual(expect.objectContaining({
+        ...defaultAffiliateInfo,
+        address: 'address_9',
+        affiliateEarnings: '9',
+      }));
+    });
+
   });
 });
 
@@ -420,6 +450,30 @@ async function populateFillsAndReferrals(): Promise<DateTime> {
       size: '1',
       fee: '1000',
       affiliateRevShare: '500',
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.TAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      eventId: defaultTendermintEventId4,
+      price: '1',
+      size: '1',
+      fee: '1000',
+      affiliateRevShare: '0',
+      type: FillType.LIQUIDATED,
+    }),
+    FillTable.create({
+      ...defaultFill,
+      liquidity: Liquidity.MAKER,
+      subaccountId: defaultOrder.subaccountId,
+      createdAt: referenceDt.minus({ minutes: 2 }).toISO(),
+      eventId: defaultTendermintEventId,
+      price: '1',
+      size: '1',
+      fee: '100',
+      affiliateRevShare: '5',
+      type: FillType.LIQUIDATION,
     }),
   ]);
 
