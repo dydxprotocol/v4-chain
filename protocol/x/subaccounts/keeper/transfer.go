@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -521,14 +522,18 @@ func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualI
 		return nil
 	}
 
+	_, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		return fmt.Errorf("USDC asset not found in state")
+	}
+
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assettypes.AssetUsdc.Id,
 		isolatedInsuranceFundBalance,
 	)
 	if err != nil {
-		// Panic if USDC does not exist.
-		panic(err)
+		return err
 	}
 
 	isolatedInsuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
