@@ -60,6 +60,7 @@ export const configSchema = {
   LOOPS_ENABLED_UPDATE_WALLET_TOTAL_VOLUME: parseBoolean({ default: true }),
   LOOPS_ENABLED_UPDATE_AFFILIATE_INFO: parseBoolean({ default: true }),
   LOOPS_ENABLED_DELETE_OLD_FIREBASE_NOTIFICATION_TOKENS: parseBoolean({ default: true }),
+  LOOPS_ENABLED_CACHE_ORDERBOOK_MID_PRICES: parseBoolean({ default: true }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
