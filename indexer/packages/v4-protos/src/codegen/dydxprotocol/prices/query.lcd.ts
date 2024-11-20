@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryMarketPriceRequest, QueryMarketPriceResponseSDKType, QueryAllMarketPricesRequest, QueryAllMarketPricesResponseSDKType, QueryMarketParamRequest, QueryMarketParamResponseSDKType, QueryAllMarketParamsRequest, QueryAllMarketParamsResponseSDKType } from "./query";
+import { QueryMarketPriceRequest, QueryMarketPriceResponseSDKType, QueryAllMarketPricesRequest, QueryAllMarketPricesResponseSDKType, QueryMarketParamRequest, QueryMarketParamResponseSDKType, QueryAllMarketParamsRequest, QueryAllMarketParamsResponseSDKType, QueryNextMarketIdRequest, QueryNextMarketIdResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -14,6 +14,7 @@ export class LCDQueryClient {
     this.allMarketPrices = this.allMarketPrices.bind(this);
     this.marketParam = this.marketParam.bind(this);
     this.allMarketParams = this.allMarketParams.bind(this);
+    this.nextMarketId = this.nextMarketId.bind(this);
   }
   /* Queries a MarketPrice by id. */
 
@@ -62,6 +63,13 @@ export class LCDQueryClient {
 
     const endpoint = `dydxprotocol/prices/params/market`;
     return await this.req.get<QueryAllMarketParamsResponseSDKType>(endpoint, options);
+  }
+  /* Queries the next market id. */
+
+
+  async nextMarketId(_params: QueryNextMarketIdRequest = {}): Promise<QueryNextMarketIdResponseSDKType> {
+    const endpoint = `dydxprotocol/prices/next_market_id`;
+    return await this.req.get<QueryNextMarketIdResponseSDKType>(endpoint);
   }
 
 }

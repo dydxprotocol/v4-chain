@@ -151,6 +151,24 @@ export interface QueryAllMarketParamsResponseSDKType {
   market_params: MarketParamSDKType[];
   pagination?: PageResponseSDKType;
 }
+/** QueryNextMarketIdRequest is request type for the Query/Params `NextMarketId` */
+
+export interface QueryNextMarketIdRequest {}
+/** QueryNextMarketIdRequest is request type for the Query/Params `NextMarketId` */
+
+export interface QueryNextMarketIdRequestSDKType {}
+/** QueryNextMarketIdResponse is response type for the Query/Params `NextMarketId` */
+
+export interface QueryNextMarketIdResponse {
+  /** QueryNextMarketIdResponse is response type for the Query/Params `NextMarketId` */
+  nextMarketId: number;
+}
+/** QueryNextMarketIdResponse is response type for the Query/Params `NextMarketId` */
+
+export interface QueryNextMarketIdResponseSDKType {
+  /** QueryNextMarketIdResponse is response type for the Query/Params `NextMarketId` */
+  next_market_id: number;
+}
 
 function createBaseQueryMarketPriceRequest(): QueryMarketPriceRequest {
   return {
@@ -527,6 +545,85 @@ export const QueryAllMarketParamsResponse = {
     const message = createBaseQueryAllMarketParamsResponse();
     message.marketParams = object.marketParams?.map(e => MarketParam.fromPartial(e)) || [];
     message.pagination = object.pagination !== undefined && object.pagination !== null ? PageResponse.fromPartial(object.pagination) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryNextMarketIdRequest(): QueryNextMarketIdRequest {
+  return {};
+}
+
+export const QueryNextMarketIdRequest = {
+  encode(_: QueryNextMarketIdRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryNextMarketIdRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryNextMarketIdRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryNextMarketIdRequest>): QueryNextMarketIdRequest {
+    const message = createBaseQueryNextMarketIdRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryNextMarketIdResponse(): QueryNextMarketIdResponse {
+  return {
+    nextMarketId: 0
+  };
+}
+
+export const QueryNextMarketIdResponse = {
+  encode(message: QueryNextMarketIdResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.nextMarketId !== 0) {
+      writer.uint32(8).uint32(message.nextMarketId);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryNextMarketIdResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryNextMarketIdResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.nextMarketId = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryNextMarketIdResponse>): QueryNextMarketIdResponse {
+    const message = createBaseQueryNextMarketIdResponse();
+    message.nextMarketId = object.nextMarketId ?? 0;
     return message;
   }
 

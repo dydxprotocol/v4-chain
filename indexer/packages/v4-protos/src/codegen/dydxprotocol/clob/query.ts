@@ -245,6 +245,24 @@ export interface QueryLiquidationsConfigurationResponse {
 export interface QueryLiquidationsConfigurationResponseSDKType {
   liquidations_config?: LiquidationsConfigSDKType;
 }
+/** QueryNextClobPairIdRequest is a request message for the next clob pair id */
+
+export interface QueryNextClobPairIdRequest {}
+/** QueryNextClobPairIdRequest is a request message for the next clob pair id */
+
+export interface QueryNextClobPairIdRequestSDKType {}
+/** QueryNextClobPairIdResponse is a response message for the next clob pair id */
+
+export interface QueryNextClobPairIdResponse {
+  /** QueryNextClobPairIdResponse is a response message for the next clob pair id */
+  nextClobPairId: number;
+}
+/** QueryNextClobPairIdResponse is a response message for the next clob pair id */
+
+export interface QueryNextClobPairIdResponseSDKType {
+  /** QueryNextClobPairIdResponse is a response message for the next clob pair id */
+  next_clob_pair_id: number;
+}
 /**
  * StreamOrderbookUpdatesRequest is a request message for the
  * StreamOrderbookUpdates method.
@@ -1183,6 +1201,85 @@ export const QueryLiquidationsConfigurationResponse = {
   fromPartial(object: DeepPartial<QueryLiquidationsConfigurationResponse>): QueryLiquidationsConfigurationResponse {
     const message = createBaseQueryLiquidationsConfigurationResponse();
     message.liquidationsConfig = object.liquidationsConfig !== undefined && object.liquidationsConfig !== null ? LiquidationsConfig.fromPartial(object.liquidationsConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryNextClobPairIdRequest(): QueryNextClobPairIdRequest {
+  return {};
+}
+
+export const QueryNextClobPairIdRequest = {
+  encode(_: QueryNextClobPairIdRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryNextClobPairIdRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryNextClobPairIdRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryNextClobPairIdRequest>): QueryNextClobPairIdRequest {
+    const message = createBaseQueryNextClobPairIdRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryNextClobPairIdResponse(): QueryNextClobPairIdResponse {
+  return {
+    nextClobPairId: 0
+  };
+}
+
+export const QueryNextClobPairIdResponse = {
+  encode(message: QueryNextClobPairIdResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.nextClobPairId !== 0) {
+      writer.uint32(8).uint32(message.nextClobPairId);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryNextClobPairIdResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryNextClobPairIdResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.nextClobPairId = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryNextClobPairIdResponse>): QueryNextClobPairIdResponse {
+    const message = createBaseQueryNextClobPairIdResponse();
+    message.nextClobPairId = object.nextClobPairId ?? 0;
     return message;
   }
 
