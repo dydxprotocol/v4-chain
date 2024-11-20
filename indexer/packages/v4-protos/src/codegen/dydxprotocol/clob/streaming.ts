@@ -1,5 +1,6 @@
 import { StreamOrderbookFill, StreamOrderbookFillSDKType, StreamOrderbookUpdate, StreamOrderbookUpdateSDKType } from "./query";
 import { StreamSubaccountUpdate, StreamSubaccountUpdateSDKType } from "../subaccounts/streaming";
+import { StreamPriceUpdate, StreamPriceUpdateSDKType } from "../prices/streaming";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** StagedFinalizeBlockEvent is an event staged during `FinalizeBlock`. */
@@ -8,6 +9,7 @@ export interface StagedFinalizeBlockEvent {
   orderFill?: StreamOrderbookFill;
   subaccountUpdate?: StreamSubaccountUpdate;
   orderbookUpdate?: StreamOrderbookUpdate;
+  priceUpdate?: StreamPriceUpdate;
 }
 /** StagedFinalizeBlockEvent is an event staged during `FinalizeBlock`. */
 
@@ -15,13 +17,15 @@ export interface StagedFinalizeBlockEventSDKType {
   order_fill?: StreamOrderbookFillSDKType;
   subaccount_update?: StreamSubaccountUpdateSDKType;
   orderbook_update?: StreamOrderbookUpdateSDKType;
+  price_update?: StreamPriceUpdateSDKType;
 }
 
 function createBaseStagedFinalizeBlockEvent(): StagedFinalizeBlockEvent {
   return {
     orderFill: undefined,
     subaccountUpdate: undefined,
-    orderbookUpdate: undefined
+    orderbookUpdate: undefined,
+    priceUpdate: undefined
   };
 }
 
@@ -37,6 +41,10 @@ export const StagedFinalizeBlockEvent = {
 
     if (message.orderbookUpdate !== undefined) {
       StreamOrderbookUpdate.encode(message.orderbookUpdate, writer.uint32(26).fork()).ldelim();
+    }
+
+    if (message.priceUpdate !== undefined) {
+      StreamPriceUpdate.encode(message.priceUpdate, writer.uint32(34).fork()).ldelim();
     }
 
     return writer;
@@ -63,6 +71,10 @@ export const StagedFinalizeBlockEvent = {
           message.orderbookUpdate = StreamOrderbookUpdate.decode(reader, reader.uint32());
           break;
 
+        case 4:
+          message.priceUpdate = StreamPriceUpdate.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -77,6 +89,7 @@ export const StagedFinalizeBlockEvent = {
     message.orderFill = object.orderFill !== undefined && object.orderFill !== null ? StreamOrderbookFill.fromPartial(object.orderFill) : undefined;
     message.subaccountUpdate = object.subaccountUpdate !== undefined && object.subaccountUpdate !== null ? StreamSubaccountUpdate.fromPartial(object.subaccountUpdate) : undefined;
     message.orderbookUpdate = object.orderbookUpdate !== undefined && object.orderbookUpdate !== null ? StreamOrderbookUpdate.fromPartial(object.orderbookUpdate) : undefined;
+    message.priceUpdate = object.priceUpdate !== undefined && object.priceUpdate !== null ? StreamPriceUpdate.fromPartial(object.priceUpdate) : undefined;
     return message;
   }
 
