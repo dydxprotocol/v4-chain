@@ -4,7 +4,7 @@ go 1.22.2
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/math v1.3.0
+	cosmossdk.io/math v1.4.0
 	github.com/Shopify/sarama v1.37.2
 	github.com/cometbft/cometbft v0.38.12
 	github.com/cometbft/cometbft-db v0.12.0 // indirect
