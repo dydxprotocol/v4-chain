@@ -8,12 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	bank_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
 	listingkeeper "github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
 	types "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -22,33 +20,10 @@ import (
 )
 
 var (
-	// validAuthority is a valid bech32 address.
 	validAuthority = lib.GovModuleAddress.String()
 )
 
 func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
-	tests := map[string]struct {
-		msg         *types.MsgUpgradeIsolatedPerpetualToCross
-		expectedErr string
-	}{}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).Build()
-			ctx := tApp.InitChain()
-			k := tApp.App.ListingKeeper
-			ms := keeper.NewMsgServerImpl(k)
-			_, err := ms.UpgradeIsolatedPerpetualToCross(ctx, tc.msg)
-			if tc.expectedErr == "" {
-				require.NoError(t, err)
-			} else {
-				require.ErrorContains(t, err, tc.expectedErr)
-			}
-		})
-	}
-}
-
-func TestUpgradeIsolatedPerpetualToCross(t *testing.T) {
 	tests := map[string]struct {
 		msg                           *types.MsgUpgradeIsolatedPerpetualToCross
 		isolatedInsuranceFundBalance  *big.Int
@@ -169,7 +144,8 @@ func TestUpgradeIsolatedPerpetualToCross(t *testing.T) {
 				// Create test perpetuals.
 				keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
 
-				var isolatedInsuranceFundAddr, crossInsuranceFundAddr, isolatedCollateralPoolAddr, crossCollateralPoolAddr sdk.AccAddress
+				var isolatedInsuranceFundAddr, crossInsuranceFundAddr, isolatedCollateralPoolAddr,
+					crossCollateralPoolAddr sdk.AccAddress
 				if tc.isolatedInsuranceFundBalance != nil {
 					// Get addresses for isolated/cross insurance funds and collateral pools.
 					isolatedInsuranceFundAddr, err = perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, tc.msg.PerpetualId)
