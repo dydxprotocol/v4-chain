@@ -12,13 +12,15 @@ import {
   defaultPreviousHeight,
   defaultTime,
   defaultTxHash,
-  defaultUpdatePerpetualEvent,
+  defaultUpdatePerpetualEventV1,
+  defaultUpdatePerpetualEventV2,
 } from '../helpers/constants';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   Timestamp,
   UpdatePerpetualEventV1,
+  UpdatePerpetualEventV2,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   createIndexerTendermintBlock,
@@ -57,14 +59,35 @@ describe('update-perpetual-handler', () => {
     jest.resetAllMocks();
   });
 
-  describe('getParallelizationIds', () => {
+  describe.each([
+    [
+      'UpdatePerpetualEventV1',
+      1,
+      UpdatePerpetualEventV1.encode(defaultUpdatePerpetualEventV1).finish(),
+      expectPerpetualMarketV1,
+      defaultUpdatePerpetualEventV1,
+    ],
+    [
+      'PerpetualMarketCreateEventV2',
+      2,
+      UpdatePerpetualEventV2.encode(defaultUpdatePerpetualEventV2).finish(),
+      expectPerpetualMarketV2,
+      defaultUpdatePerpetualEventV2,
+    ],
+  ])('%s', (
+    _name: string,
+    version: number,
+    updatePerpetualEventBytes: Uint8Array,
+    expectPerpetualMarket: Function,
+    event: UpdatePerpetualEventV1 | UpdatePerpetualEventV2,
+  ) => {
     it('returns the correct parallelization ids', () => {
       const transactionIndex: number = 0;
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.UPDATE_PERPETUAL,
-        UpdatePerpetualEventV1.encode(defaultUpdatePerpetualEvent).finish(),
+        updatePerpetualEventBytes,
         transactionIndex,
         eventIndex,
       );
@@ -80,7 +103,7 @@ describe('update-perpetual-handler', () => {
         0,
         indexerTendermintEvent,
         0,
-        defaultUpdatePerpetualEvent,
+        event,
       );
 
       expect(handler.getParallelizationIds()).toEqual([]);
@@ -100,9 +123,9 @@ describe('update-perpetual-handler', () => {
     await onMessage(kafkaMessage);
 
     const perpetualMarket:
-    PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
-      defaultUpdatePerpetualEvent.id.toString(),
-    );
+      PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
+        defaultUpdatePerpetualEvent.id.toString(),
+      );
     expect(perpetualMarket).toEqual(expect.objectContaining({
       id: defaultUpdatePerpetualEvent.id.toString(),
       ticker: defaultUpdatePerpetualEvent.ticker,
