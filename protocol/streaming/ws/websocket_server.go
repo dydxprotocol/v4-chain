@@ -16,6 +16,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const (
+	CLOB_PAIR_IDS_QUERY_PARAM = "clobPairIds"
+	MARKET_IDS_QUERY_PARAM    = "marketIds"
+)
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -61,7 +66,7 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	conn.SetReadLimit(10 * 1024 * 1024)
 
 	// Parse clobPairIds from query parameters
-	clobPairIds, err := parseClobPairIds(r)
+	clobPairIds, err := parseUint32(r, CLOB_PAIR_IDS_QUERY_PARAM)
 	if err != nil {
 		ws.logger.Error(
 			"Error parsing clobPairIds",
@@ -70,6 +75,18 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	// Parse marketIds from query parameters
+	marketIds, err := parseUint32(r, MARKET_IDS_QUERY_PARAM)
+	if err != nil {
+		ws.logger.Error(
+			"Error parsing marketIds",
+			"err", err,
+		)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	// Parse subaccountIds from query parameters
 	subaccountIds, err := parseSubaccountIds(r)
 	if err != nil {
@@ -93,6 +110,7 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	err = ws.streamingManager.Subscribe(
 		clobPairIds,
 		subaccountIds,
+		marketIds,
 		websocketMessageSender,
 	)
 	if err != nil {
@@ -136,26 +154,26 @@ func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
 	return subaccountIds, nil
 }
 
-// parseClobPairIds is a helper function to parse the clobPairIds from the query parameters.
-func parseClobPairIds(r *http.Request) ([]uint32, error) {
-	clobPairIdsParam := r.URL.Query().Get("clobPairIds")
-	if clobPairIdsParam == "" {
+// parseUint32 is a helper function to parse the uint32 from the query parameters.
+func parseUint32(r *http.Request, queryParam string) ([]uint32, error) {
+	param := r.URL.Query().Get(queryParam)
+	if param == "" {
 		return []uint32{}, nil
 	}
-	idStrs := strings.Split(clobPairIdsParam, ",")
-	clobPairIds := make([]uint32, 0)
+	idStrs := strings.Split(param, ",")
+	ids := make([]uint32, 0)
 	for _, idStr := range idStrs {
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
-			return nil, fmt.Errorf("invalid clobPairId: %s", idStr)
+			return nil, fmt.Errorf("invalid %s: %s", queryParam, idStr)
 		}
 		if id < 0 || id > math.MaxInt32 {
-			return nil, fmt.Errorf("invalid clob pair id: %s", idStr)
+			return nil, fmt.Errorf("invalid %s: %s", queryParam, idStr)
 		}
-		clobPairIds = append(clobPairIds, uint32(id))
+		ids = append(ids, uint32(id))
 	}
 
-	return clobPairIds, nil
+	return ids, nil
 }
 
 // Start the websocket server in a separate goroutine.

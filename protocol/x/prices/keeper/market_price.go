@@ -193,3 +193,26 @@ func (k Keeper) GetMarketIdToValidIndexPrice(
 	}
 	return ret
 }
+
+// GetStreamPriceUpdate returns a stream price update from its id.
+func (k Keeper) GetStreamPriceUpdate(
+	ctx sdk.Context,
+	id uint32,
+	snapshot bool,
+) (
+	val types.StreamPriceUpdate,
+) {
+	price, err := k.GetMarketPrice(ctx, id)
+	if err != nil {
+		k.Logger(ctx).Error(
+			"failed to get market price for streaming",
+			"market id", id,
+			"error", err,
+		)
+	}
+	return types.StreamPriceUpdate{
+		MarketId: id,
+		Price:    price,
+		Snapshot: snapshot,
+	}
+}

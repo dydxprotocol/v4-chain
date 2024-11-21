@@ -11,6 +11,7 @@ func (k Keeper) StreamOrderbookUpdates(
 	err := k.GetFullNodeStreamingManager().Subscribe(
 		req.GetClobPairId(),
 		req.GetSubaccountIds(),
+		req.GetMarketIds(),
 		stream,
 	)
 	if err != nil {
