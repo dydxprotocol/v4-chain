@@ -310,8 +310,12 @@ func (k Keeper) SetAffiliateWhitelist(ctx sdk.Context, whitelist types.Affiliate
 				"taker fee share ppm %d is greater than the cap %d",
 				tier.TakerFeeSharePpm, types.AffiliatesRevSharePpmCap)
 		}
-		// Check for duplicate addresses.
 		for _, address := range tier.Addresses {
+			// Check for invalid addresses.
+			if _, err := sdk.AccAddressFromBech32(address); err != nil {
+				return errorsmod.Wrapf(types.ErrInvalidAddress, "address to whitelist: %s", address)
+			}
+			// Check for duplicate addresses.
 			if addressSet[address] {
 				return errorsmod.Wrapf(types.ErrDuplicateAffiliateAddressForWhitelist,
 					"address %s is duplicated in affiliate whitelist", address)
