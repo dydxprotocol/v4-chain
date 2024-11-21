@@ -80,109 +80,110 @@ import * as _83 from "./prices/genesis";
 import * as _84 from "./prices/market_param";
 import * as _85 from "./prices/market_price";
 import * as _86 from "./prices/query";
-import * as _87 from "./prices/tx";
-import * as _88 from "./ratelimit/capacity";
-import * as _89 from "./ratelimit/genesis";
-import * as _90 from "./ratelimit/limit_params";
-import * as _91 from "./ratelimit/pending_send_packet";
-import * as _92 from "./ratelimit/query";
-import * as _93 from "./ratelimit/tx";
-import * as _94 from "./revshare/genesis";
-import * as _95 from "./revshare/params";
-import * as _96 from "./revshare/query";
-import * as _97 from "./revshare/revshare";
-import * as _98 from "./revshare/tx";
-import * as _99 from "./rewards/genesis";
-import * as _100 from "./rewards/params";
-import * as _101 from "./rewards/query";
-import * as _102 from "./rewards/reward_share";
-import * as _103 from "./rewards/tx";
-import * as _104 from "./sending/genesis";
-import * as _105 from "./sending/query";
-import * as _106 from "./sending/transfer";
-import * as _107 from "./sending/tx";
-import * as _108 from "./stats/genesis";
-import * as _109 from "./stats/params";
-import * as _110 from "./stats/query";
-import * as _111 from "./stats/stats";
-import * as _112 from "./stats/tx";
-import * as _113 from "./subaccounts/asset_position";
-import * as _114 from "./subaccounts/genesis";
-import * as _115 from "./subaccounts/perpetual_position";
-import * as _116 from "./subaccounts/query";
-import * as _117 from "./subaccounts/streaming";
-import * as _118 from "./subaccounts/subaccount";
-import * as _119 from "./vault/genesis";
-import * as _120 from "./vault/params";
-import * as _121 from "./vault/query";
-import * as _122 from "./vault/share";
-import * as _123 from "./vault/tx";
-import * as _124 from "./vault/vault";
-import * as _125 from "./vest/genesis";
-import * as _126 from "./vest/query";
-import * as _127 from "./vest/tx";
-import * as _128 from "./vest/vest_entry";
-import * as _136 from "./accountplus/query.lcd";
-import * as _137 from "./affiliates/query.lcd";
-import * as _138 from "./assets/query.lcd";
-import * as _139 from "./blocktime/query.lcd";
-import * as _140 from "./bridge/query.lcd";
-import * as _141 from "./clob/query.lcd";
-import * as _142 from "./delaymsg/query.lcd";
-import * as _143 from "./epochs/query.lcd";
-import * as _144 from "./feetiers/query.lcd";
-import * as _145 from "./listing/query.lcd";
-import * as _146 from "./perpetuals/query.lcd";
-import * as _147 from "./prices/query.lcd";
-import * as _148 from "./ratelimit/query.lcd";
-import * as _149 from "./revshare/query.lcd";
-import * as _150 from "./rewards/query.lcd";
-import * as _151 from "./stats/query.lcd";
-import * as _152 from "./subaccounts/query.lcd";
-import * as _153 from "./vault/query.lcd";
-import * as _154 from "./vest/query.lcd";
-import * as _155 from "./accountplus/query.rpc.Query";
-import * as _156 from "./affiliates/query.rpc.Query";
-import * as _157 from "./assets/query.rpc.Query";
-import * as _158 from "./blocktime/query.rpc.Query";
-import * as _159 from "./bridge/query.rpc.Query";
-import * as _160 from "./clob/query.rpc.Query";
-import * as _161 from "./delaymsg/query.rpc.Query";
-import * as _162 from "./epochs/query.rpc.Query";
-import * as _163 from "./feetiers/query.rpc.Query";
-import * as _164 from "./govplus/query.rpc.Query";
-import * as _165 from "./listing/query.rpc.Query";
-import * as _166 from "./perpetuals/query.rpc.Query";
-import * as _167 from "./prices/query.rpc.Query";
-import * as _168 from "./ratelimit/query.rpc.Query";
-import * as _169 from "./revshare/query.rpc.Query";
-import * as _170 from "./rewards/query.rpc.Query";
-import * as _171 from "./sending/query.rpc.Query";
-import * as _172 from "./stats/query.rpc.Query";
-import * as _173 from "./subaccounts/query.rpc.Query";
-import * as _174 from "./vault/query.rpc.Query";
-import * as _175 from "./vest/query.rpc.Query";
-import * as _176 from "./accountplus/tx.rpc.msg";
-import * as _177 from "./affiliates/tx.rpc.msg";
-import * as _178 from "./blocktime/tx.rpc.msg";
-import * as _179 from "./bridge/tx.rpc.msg";
-import * as _180 from "./clob/tx.rpc.msg";
-import * as _181 from "./delaymsg/tx.rpc.msg";
-import * as _182 from "./feetiers/tx.rpc.msg";
-import * as _183 from "./govplus/tx.rpc.msg";
-import * as _184 from "./listing/tx.rpc.msg";
-import * as _185 from "./perpetuals/tx.rpc.msg";
-import * as _186 from "./prices/tx.rpc.msg";
-import * as _187 from "./ratelimit/tx.rpc.msg";
-import * as _188 from "./revshare/tx.rpc.msg";
-import * as _189 from "./rewards/tx.rpc.msg";
-import * as _190 from "./sending/tx.rpc.msg";
-import * as _191 from "./stats/tx.rpc.msg";
-import * as _192 from "./vault/tx.rpc.msg";
-import * as _193 from "./vest/tx.rpc.msg";
-import * as _194 from "./lcd";
-import * as _195 from "./rpc.query";
-import * as _196 from "./rpc.tx";
+import * as _87 from "./prices/streaming";
+import * as _88 from "./prices/tx";
+import * as _89 from "./ratelimit/capacity";
+import * as _90 from "./ratelimit/genesis";
+import * as _91 from "./ratelimit/limit_params";
+import * as _92 from "./ratelimit/pending_send_packet";
+import * as _93 from "./ratelimit/query";
+import * as _94 from "./ratelimit/tx";
+import * as _95 from "./revshare/genesis";
+import * as _96 from "./revshare/params";
+import * as _97 from "./revshare/query";
+import * as _98 from "./revshare/revshare";
+import * as _99 from "./revshare/tx";
+import * as _100 from "./rewards/genesis";
+import * as _101 from "./rewards/params";
+import * as _102 from "./rewards/query";
+import * as _103 from "./rewards/reward_share";
+import * as _104 from "./rewards/tx";
+import * as _105 from "./sending/genesis";
+import * as _106 from "./sending/query";
+import * as _107 from "./sending/transfer";
+import * as _108 from "./sending/tx";
+import * as _109 from "./stats/genesis";
+import * as _110 from "./stats/params";
+import * as _111 from "./stats/query";
+import * as _112 from "./stats/stats";
+import * as _113 from "./stats/tx";
+import * as _114 from "./subaccounts/asset_position";
+import * as _115 from "./subaccounts/genesis";
+import * as _116 from "./subaccounts/perpetual_position";
+import * as _117 from "./subaccounts/query";
+import * as _118 from "./subaccounts/streaming";
+import * as _119 from "./subaccounts/subaccount";
+import * as _120 from "./vault/genesis";
+import * as _121 from "./vault/params";
+import * as _122 from "./vault/query";
+import * as _123 from "./vault/share";
+import * as _124 from "./vault/tx";
+import * as _125 from "./vault/vault";
+import * as _126 from "./vest/genesis";
+import * as _127 from "./vest/query";
+import * as _128 from "./vest/tx";
+import * as _129 from "./vest/vest_entry";
+import * as _137 from "./accountplus/query.lcd";
+import * as _138 from "./affiliates/query.lcd";
+import * as _139 from "./assets/query.lcd";
+import * as _140 from "./blocktime/query.lcd";
+import * as _141 from "./bridge/query.lcd";
+import * as _142 from "./clob/query.lcd";
+import * as _143 from "./delaymsg/query.lcd";
+import * as _144 from "./epochs/query.lcd";
+import * as _145 from "./feetiers/query.lcd";
+import * as _146 from "./listing/query.lcd";
+import * as _147 from "./perpetuals/query.lcd";
+import * as _148 from "./prices/query.lcd";
+import * as _149 from "./ratelimit/query.lcd";
+import * as _150 from "./revshare/query.lcd";
+import * as _151 from "./rewards/query.lcd";
+import * as _152 from "./stats/query.lcd";
+import * as _153 from "./subaccounts/query.lcd";
+import * as _154 from "./vault/query.lcd";
+import * as _155 from "./vest/query.lcd";
+import * as _156 from "./accountplus/query.rpc.Query";
+import * as _157 from "./affiliates/query.rpc.Query";
+import * as _158 from "./assets/query.rpc.Query";
+import * as _159 from "./blocktime/query.rpc.Query";
+import * as _160 from "./bridge/query.rpc.Query";
+import * as _161 from "./clob/query.rpc.Query";
+import * as _162 from "./delaymsg/query.rpc.Query";
+import * as _163 from "./epochs/query.rpc.Query";
+import * as _164 from "./feetiers/query.rpc.Query";
+import * as _165 from "./govplus/query.rpc.Query";
+import * as _166 from "./listing/query.rpc.Query";
+import * as _167 from "./perpetuals/query.rpc.Query";
+import * as _168 from "./prices/query.rpc.Query";
+import * as _169 from "./ratelimit/query.rpc.Query";
+import * as _170 from "./revshare/query.rpc.Query";
+import * as _171 from "./rewards/query.rpc.Query";
+import * as _172 from "./sending/query.rpc.Query";
+import * as _173 from "./stats/query.rpc.Query";
+import * as _174 from "./subaccounts/query.rpc.Query";
+import * as _175 from "./vault/query.rpc.Query";
+import * as _176 from "./vest/query.rpc.Query";
+import * as _177 from "./accountplus/tx.rpc.msg";
+import * as _178 from "./affiliates/tx.rpc.msg";
+import * as _179 from "./blocktime/tx.rpc.msg";
+import * as _180 from "./bridge/tx.rpc.msg";
+import * as _181 from "./clob/tx.rpc.msg";
+import * as _182 from "./delaymsg/tx.rpc.msg";
+import * as _183 from "./feetiers/tx.rpc.msg";
+import * as _184 from "./govplus/tx.rpc.msg";
+import * as _185 from "./listing/tx.rpc.msg";
+import * as _186 from "./perpetuals/tx.rpc.msg";
+import * as _187 from "./prices/tx.rpc.msg";
+import * as _188 from "./ratelimit/tx.rpc.msg";
+import * as _189 from "./revshare/tx.rpc.msg";
+import * as _190 from "./rewards/tx.rpc.msg";
+import * as _191 from "./sending/tx.rpc.msg";
+import * as _192 from "./stats/tx.rpc.msg";
+import * as _193 from "./vault/tx.rpc.msg";
+import * as _194 from "./vest/tx.rpc.msg";
+import * as _195 from "./lcd";
+import * as _196 from "./rpc.query";
+import * as _197 from "./rpc.tx";
 export namespace dydxprotocol {
   export const accountplus = { ..._5,
     ..._6,
@@ -190,33 +191,33 @@ export namespace dydxprotocol {
     ..._8,
     ..._9,
     ..._10,
-    ..._136,
-    ..._155,
-    ..._176
+    ..._137,
+    ..._156,
+    ..._177
   };
   export const affiliates = { ..._11,
     ..._12,
     ..._13,
     ..._14,
-    ..._137,
-    ..._156,
-    ..._177
+    ..._138,
+    ..._157,
+    ..._178
   };
   export const assets = { ..._15,
     ..._16,
     ..._17,
     ..._18,
-    ..._138,
-    ..._157
+    ..._139,
+    ..._158
   };
   export const blocktime = { ..._19,
     ..._20,
     ..._21,
     ..._22,
     ..._23,
-    ..._139,
-    ..._158,
-    ..._178
+    ..._140,
+    ..._159,
+    ..._179
   };
   export const bridge = { ..._24,
     ..._25,
@@ -224,9 +225,9 @@ export namespace dydxprotocol {
     ..._27,
     ..._28,
     ..._29,
-    ..._140,
-    ..._159,
-    ..._179
+    ..._141,
+    ..._160,
+    ..._180
   };
   export const clob = { ..._30,
     ..._31,
@@ -244,9 +245,9 @@ export namespace dydxprotocol {
     ..._43,
     ..._44,
     ..._45,
-    ..._141,
-    ..._160,
-    ..._180
+    ..._142,
+    ..._161,
+    ..._181
   };
   export namespace daemons {
     export const bridge = { ..._46
@@ -261,29 +262,29 @@ export namespace dydxprotocol {
     ..._51,
     ..._52,
     ..._53,
-    ..._142,
-    ..._161,
-    ..._181
+    ..._143,
+    ..._162,
+    ..._182
   };
   export const epochs = { ..._54,
     ..._55,
     ..._56,
-    ..._143,
-    ..._162
+    ..._144,
+    ..._163
   };
   export const feetiers = { ..._57,
     ..._58,
     ..._59,
     ..._60,
-    ..._144,
-    ..._163,
-    ..._182
+    ..._145,
+    ..._164,
+    ..._183
   };
   export const govplus = { ..._61,
     ..._62,
     ..._63,
-    ..._164,
-    ..._183
+    ..._165,
+    ..._184
   };
   export namespace indexer {
     export const events = { ..._64
@@ -310,101 +311,102 @@ export namespace dydxprotocol {
     ..._75,
     ..._76,
     ..._77,
-    ..._145,
-    ..._165,
-    ..._184
+    ..._146,
+    ..._166,
+    ..._185
   };
   export const perpetuals = { ..._78,
     ..._79,
     ..._80,
     ..._81,
     ..._82,
-    ..._146,
-    ..._166,
-    ..._185
+    ..._147,
+    ..._167,
+    ..._186
   };
   export const prices = { ..._83,
     ..._84,
     ..._85,
     ..._86,
     ..._87,
-    ..._147,
-    ..._167,
-    ..._186
-  };
-  export const ratelimit = { ..._88,
-    ..._89,
-    ..._90,
-    ..._91,
-    ..._92,
-    ..._93,
+    ..._88,
     ..._148,
     ..._168,
     ..._187
   };
-  export const revshare = { ..._94,
-    ..._95,
-    ..._96,
-    ..._97,
-    ..._98,
+  export const ratelimit = { ..._89,
+    ..._90,
+    ..._91,
+    ..._92,
+    ..._93,
+    ..._94,
     ..._149,
     ..._169,
     ..._188
   };
-  export const rewards = { ..._99,
-    ..._100,
-    ..._101,
-    ..._102,
-    ..._103,
+  export const revshare = { ..._95,
+    ..._96,
+    ..._97,
+    ..._98,
+    ..._99,
     ..._150,
     ..._170,
     ..._189
   };
-  export const sending = { ..._104,
-    ..._105,
-    ..._106,
-    ..._107,
+  export const rewards = { ..._100,
+    ..._101,
+    ..._102,
+    ..._103,
+    ..._104,
+    ..._151,
     ..._171,
     ..._190
   };
-  export const stats = { ..._108,
-    ..._109,
-    ..._110,
-    ..._111,
-    ..._112,
-    ..._151,
+  export const sending = { ..._105,
+    ..._106,
+    ..._107,
+    ..._108,
     ..._172,
     ..._191
   };
-  export const subaccounts = { ..._113,
-    ..._114,
+  export const stats = { ..._109,
+    ..._110,
+    ..._111,
+    ..._112,
+    ..._113,
+    ..._152,
+    ..._173,
+    ..._192
+  };
+  export const subaccounts = { ..._114,
     ..._115,
     ..._116,
     ..._117,
     ..._118,
-    ..._152,
-    ..._173
+    ..._119,
+    ..._153,
+    ..._174
   };
-  export const vault = { ..._119,
-    ..._120,
+  export const vault = { ..._120,
     ..._121,
     ..._122,
     ..._123,
     ..._124,
-    ..._153,
-    ..._174,
-    ..._192
-  };
-  export const vest = { ..._125,
-    ..._126,
-    ..._127,
-    ..._128,
+    ..._125,
     ..._154,
     ..._175,
     ..._193
   };
-  export const ClientFactory = { ..._194,
-    ..._195,
-    ..._196
+  export const vest = { ..._126,
+    ..._127,
+    ..._128,
+    ..._129,
+    ..._155,
+    ..._176,
+    ..._194
+  };
+  export const ClientFactory = { ..._195,
+    ..._196,
+    ..._197
   };
 }
