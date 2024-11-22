@@ -62,23 +62,17 @@ describe('update-perpetual-handler', () => {
   describe.each([
     [
       'UpdatePerpetualEventV1',
-      1,
       UpdatePerpetualEventV1.encode(defaultUpdatePerpetualEventV1).finish(),
-      expectPerpetualMarketV1,
       defaultUpdatePerpetualEventV1,
     ],
     [
       'PerpetualMarketCreateEventV2',
-      2,
       UpdatePerpetualEventV2.encode(defaultUpdatePerpetualEventV2).finish(),
-      expectPerpetualMarketV2,
       defaultUpdatePerpetualEventV2,
     ],
   ])('%s', (
     _name: string,
-    version: number,
     updatePerpetualEventBytes: Uint8Array,
-    expectPerpetualMarket: Function,
     event: UpdatePerpetualEventV1 | UpdatePerpetualEventV2,
   ) => {
     it('returns the correct parallelization ids', () => {
@@ -108,35 +102,36 @@ describe('update-perpetual-handler', () => {
 
       expect(handler.getParallelizationIds()).toEqual([]);
     });
-  });
 
-  it('updates an existing perpetual market', async () => {
-    const transactionIndex: number = 0;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdatePerpetualEvent({
-      updatePerpetualEvent: defaultUpdatePerpetualEvent,
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
+    it('updates an existing perpetual market', async () => {
+      const transactionIndex: number = 0;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdatePerpetualEvent({
+        updatePerpetualEvent: event,
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
+      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+      await onMessage(kafkaMessage);
+
+      const perpetualMarket:
+        PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
+          event.id.toString(),
+        );
+      // TODO new fields
+      expect(perpetualMarket).toEqual(expect.objectContaining({
+        id: event.id.toString(),
+        ticker: event.ticker,
+        marketId: event.marketId,
+        atomicResolution: event.atomicResolution,
+        liquidityTierId: event.liquidityTier,
+      }));
+      expect(perpetualMarket).toEqual(
+        perpetualMarketRefresher.getPerpetualMarketFromId(
+          event.id.toString()));
+      expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
     });
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-    await onMessage(kafkaMessage);
-
-    const perpetualMarket:
-      PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
-        defaultUpdatePerpetualEvent.id.toString(),
-      );
-    expect(perpetualMarket).toEqual(expect.objectContaining({
-      id: defaultUpdatePerpetualEvent.id.toString(),
-      ticker: defaultUpdatePerpetualEvent.ticker,
-      marketId: defaultUpdatePerpetualEvent.marketId,
-      atomicResolution: defaultUpdatePerpetualEvent.atomicResolution,
-      liquidityTierId: defaultUpdatePerpetualEvent.liquidityTier,
-    }));
-    expect(perpetualMarket).toEqual(
-      perpetualMarketRefresher.getPerpetualMarketFromId(
-        defaultUpdatePerpetualEvent.id.toString()));
-    expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
   });
 });
 
