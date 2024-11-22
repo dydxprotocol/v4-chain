@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"cosmossdk.io/log"
@@ -52,6 +53,8 @@ type FullNodeStreamingManagerImpl struct {
 	clobPairIdToSubscriptionIdMapping map[uint32][]uint32
 	// map from subaccount id to subscription ids.
 	subaccountIdToSubscriptionIdMapping map[satypes.SubaccountId][]uint32
+	// map from market id to subscription ids.
+	marketIdToSubscriptionIdMapping map[uint32][]uint32
 
 	maxUpdatesInCache          uint32
 	maxSubscriptionChannelSize uint32
@@ -78,6 +81,9 @@ type OrderbookSubscription struct {
 
 	// Subaccount ids to subscribe to.
 	subaccountIds []satypes.SubaccountId
+
+	// market ids to subscribe to.
+	marketIds []uint32
 
 	// Stream
 	messageSender types.OutgoingMessageSender
@@ -114,6 +120,7 @@ func NewFullNodeStreamingManager(
 		streamUpdateSubscriptionCache:       make([][]uint32, 0),
 		clobPairIdToSubscriptionIdMapping:   make(map[uint32][]uint32),
 		subaccountIdToSubscriptionIdMapping: make(map[satypes.SubaccountId][]uint32),
+		marketIdToSubscriptionIdMapping:     make(map[uint32][]uint32),
 
 		maxUpdatesInCache:          maxUpdatesInCache,
 		maxSubscriptionChannelSize: maxSubscriptionChannelSize,
@@ -184,6 +191,7 @@ func (sm *FullNodeStreamingManagerImpl) getNextAvailableSubscriptionId() uint32 
 func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	clobPairIds []uint32,
 	subaccountIds []*satypes.SubaccountId,
+	marketIds []uint32,
 	messageSender types.OutgoingMessageSender,
 ) (
 	err error,
@@ -206,6 +214,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		initialized:    &atomic.Bool{}, // False by default.
 		clobPairIds:    clobPairIds,
 		subaccountIds:  sIds,
+		marketIds:      marketIds,
 		messageSender:  messageSender,
 		updatesChannel: make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
 	}
@@ -228,6 +237,17 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		}
 		sm.subaccountIdToSubscriptionIdMapping[subaccountId] = append(
 			sm.subaccountIdToSubscriptionIdMapping[subaccountId],
+			subscription.subscriptionId,
+		)
+	}
+	for _, marketId := range marketIds {
+		// if subaccountId exists in the map, append the subscription id to the slice
+		// otherwise, create a new slice with the subscription id
+		if _, ok := sm.marketIdToSubscriptionIdMapping[marketId]; !ok {
+			sm.marketIdToSubscriptionIdMapping[marketId] = []uint32{}
+		}
+		sm.marketIdToSubscriptionIdMapping[marketId] = append(
+			sm.marketIdToSubscriptionIdMapping[marketId],
 			subscription.subscriptionId,
 		)
 	}
@@ -325,6 +345,21 @@ func (sm *FullNodeStreamingManagerImpl) removeSubscription(
 		}
 	}
 
+	// Iterate over the marketIdToSubscriptionIdMapping to remove the subscriptionIdToRemove
+	for marketId, subscriptionIds := range sm.marketIdToSubscriptionIdMapping {
+		for i, id := range subscriptionIds {
+			if id == subscriptionIdToRemove {
+				// Remove the subscription ID from the slice
+				sm.marketIdToSubscriptionIdMapping[marketId] = append(subscriptionIds[:i], subscriptionIds[i+1:]...)
+				break
+			}
+		}
+		// If the list is empty after removal, delete the key from the map
+		if len(sm.marketIdToSubscriptionIdMapping[marketId]) == 0 {
+			delete(sm.marketIdToSubscriptionIdMapping, marketId)
+		}
+	}
+
 	sm.logger.Info(
 		fmt.Sprintf("Removed streaming subscription id %+v", subscriptionIdToRemove),
 	)
@@ -364,6 +399,24 @@ func toSubaccountStreamUpdates(
 		streamUpdates = append(streamUpdates, clobtypes.StreamUpdate{
 			UpdateMessage: &clobtypes.StreamUpdate_SubaccountUpdate{
 				SubaccountUpdate: saUpdate,
+			},
+			BlockHeight: blockHeight,
+			ExecMode:    uint32(execMode),
+		})
+	}
+	return streamUpdates
+}
+
+func toPriceStreamUpdates(
+	priceUpdates []*pricestypes.StreamPriceUpdate,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) []clobtypes.StreamUpdate {
+	streamUpdates := make([]clobtypes.StreamUpdate, 0)
+	for _, update := range priceUpdates {
+		streamUpdates = append(streamUpdates, clobtypes.StreamUpdate{
+			UpdateMessage: &clobtypes.StreamUpdate_PriceUpdate{
+				PriceUpdate: update,
 			},
 			BlockHeight: blockHeight,
 			ExecMode:    uint32(execMode),
@@ -466,6 +519,7 @@ func (sm *FullNodeStreamingManagerImpl) GetStagedFinalizeBlockEvents(
 func (sm *FullNodeStreamingManagerImpl) SendCombinedSnapshot(
 	offchainUpdates *clobtypes.OffchainUpdates,
 	saUpdates []*satypes.StreamSubaccountUpdate,
+	priceUpdates []*pricestypes.StreamPriceUpdate,
 	subscriptionId uint32,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
@@ -479,6 +533,7 @@ func (sm *FullNodeStreamingManagerImpl) SendCombinedSnapshot(
 	var streamUpdates []clobtypes.StreamUpdate
 	streamUpdates = append(streamUpdates, toOrderbookStreamUpdate(offchainUpdates, blockHeight, execMode)...)
 	streamUpdates = append(streamUpdates, toSubaccountStreamUpdates(saUpdates, blockHeight, execMode)...)
+	streamUpdates = append(streamUpdates, toPriceStreamUpdates(priceUpdates, blockHeight, execMode)...)
 	sm.sendStreamUpdates(subscriptionId, streamUpdates)
 }
 
@@ -863,6 +918,30 @@ func (sm *FullNodeStreamingManagerImpl) GetSubaccountSnapshotsForInitStreams(
 	return ret
 }
 
+func (sm *FullNodeStreamingManagerImpl) GetPriceSnapshotsForInitStreams(
+	getPriceSnapshot func(marketId uint32) *pricestypes.StreamPriceUpdate,
+) map[uint32]*pricestypes.StreamPriceUpdate {
+	sm.Lock()
+	defer sm.Unlock()
+
+	ret := make(map[uint32]*pricestypes.StreamPriceUpdate)
+	for _, subscription := range sm.orderbookSubscriptions {
+		// If the subscription has been initialized, no need to grab the price snapshot.
+		if alreadyInitialized := subscription.initialized.Load(); alreadyInitialized {
+			continue
+		}
+
+		for _, marketId := range subscription.marketIds {
+			if _, exists := ret[marketId]; exists {
+				continue
+			}
+
+			ret[marketId] = getPriceSnapshot(marketId)
+		}
+	}
+	return ret
+}
+
 // cacheStreamUpdatesByClobPairWithLock adds stream updates to cache,
 // and store corresponding clob pair Ids.
 // This method requires the lock and assumes that the lock has already been
@@ -1003,6 +1082,7 @@ func (sm *FullNodeStreamingManagerImpl) getStagedEventsFromFinalizeBlock(
 func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
 	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
+	pricesSnapshots map[uint32]*pricestypes.StreamPriceUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
@@ -1038,7 +1118,28 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 				}
 			}
 
-			sm.SendCombinedSnapshot(allUpdates, saUpdates, subscriptionId, blockHeight, execMode)
+			priceUpdates := []*pricestypes.StreamPriceUpdate{}
+			for _, marketId := range subscription.marketIds {
+				if priceUpdate, ok := pricesSnapshots[marketId]; ok {
+					priceUpdates = append(priceUpdates, priceUpdate)
+				} else {
+					sm.logger.Error(
+						fmt.Sprintf(
+							"Price update not found for market id %v. This should not happen.",
+							marketId,
+						),
+					)
+				}
+			}
+
+			sm.SendCombinedSnapshot(
+				allUpdates,
+				saUpdates,
+				priceUpdates,
+				subscriptionId,
+				blockHeight,
+				execMode,
+			)
 
 			if sm.snapshotBlockInterval != 0 {
 				subscription.nextSnapshotBlock = blockHeight + sm.snapshotBlockInterval

@@ -23,6 +23,7 @@ import (
 	flags "github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 type (
@@ -331,6 +332,25 @@ func (k Keeper) GetSubaccountSnapshotsForInitStreams(
 	)
 }
 
+func (k Keeper) GetPriceSnapshotsForInitStreams(
+	ctx sdk.Context,
+) (
+	priceSnapshots map[uint32]*pricestypes.StreamPriceUpdate,
+) {
+	lib.AssertCheckTxMode(ctx)
+
+	return k.GetFullNodeStreamingManager().GetPriceSnapshotsForInitStreams(
+		func(marketId uint32) *pricestypes.StreamPriceUpdate {
+			update := k.pricesKeeper.GetStreamPriceUpdate(
+				ctx,
+				marketId,
+				true,
+			)
+			return &update
+		},
+	)
+}
+
 // InitializeNewStreams initializes new streams for all uninitialized clob pairs
 // by sending the corresponding orderbook snapshots.
 func (k Keeper) InitializeNewStreams(
@@ -338,6 +358,8 @@ func (k Keeper) InitializeNewStreams(
 	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
 ) {
 	streamingManager := k.GetFullNodeStreamingManager()
+
+	priceSnapshots := k.GetPriceSnapshotsForInitStreams(ctx)
 
 	streamingManager.InitializeNewStreams(
 		func(clobPairId types.ClobPairId) *types.OffchainUpdates {
@@ -347,6 +369,7 @@ func (k Keeper) InitializeNewStreams(
 			)
 		},
 		subaccountSnapshots,
+		priceSnapshots,
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)

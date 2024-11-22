@@ -152,6 +152,7 @@ type PerpetualsKeeper interface {
 
 type PricesKeeper interface {
 	GetMarketParam(ctx sdk.Context, id uint32) (param pricestypes.MarketParam, exists bool)
+	GetStreamPriceUpdate(ctx sdk.Context, id uint32, snapshot bool) (val pricestypes.StreamPriceUpdate)
 }
 
 type StatsKeeper interface {

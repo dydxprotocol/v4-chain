@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -22,6 +23,7 @@ func (sm *NoopGrpcStreamingManager) Enabled() bool {
 func (sm *NoopGrpcStreamingManager) Subscribe(
 	_ []uint32,
 	_ []*satypes.SubaccountId,
+	_ []uint32,
 	_ types.OutgoingMessageSender,
 ) (
 	err error,
@@ -58,9 +60,16 @@ func (sm *NoopGrpcStreamingManager) GetSubaccountSnapshotsForInitStreams(
 	return nil
 }
 
+func (sm *NoopGrpcStreamingManager) GetPriceSnapshotsForInitStreams(
+	_ func(_ uint32) *pricestypes.StreamPriceUpdate,
+) map[uint32]*pricestypes.StreamPriceUpdate {
+	return nil
+}
+
 func (sm *NoopGrpcStreamingManager) InitializeNewStreams(
 	getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
 	subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
+	priceSnapshots map[uint32]*pricestypes.StreamPriceUpdate,
 	blockHeight uint32,
 	execMode sdk.ExecMode,
 ) {
