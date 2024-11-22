@@ -16,7 +16,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
 	listingkeeper "github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
 	types "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -127,13 +126,10 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(
 			name, func(t *testing.T) {
-				mockIndexerEventManager := &mocks.IndexerEventManager{}
-
 				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper,
 					bankKeeper, subaccountsKeeper := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
-					mockIndexerEventManager,
 				)
 
 				// Create the default markets.
@@ -189,17 +185,6 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 					}
 				}
 
-				perpetual, err := perpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualId)
-				require.NoError(t, err)
-				expectedIndexerEvent := &indexerevents.UpdatePerpetualEventV2{
-					Id:               perpetual.Params.Id,
-					Ticker:           perpetual.Params.Ticker,
-					MarketId:         perpetual.Params.MarketId,
-					AtomicResolution: perpetual.Params.AtomicResolution,
-					LiquidityTier:    perpetual.Params.LiquidityTier,
-					MarketType:       v1.ConvertToPerpetualMarketType(perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS),
-				}
-
 				// Upgrade perpetual from isolated to cross.
 				ms := listingkeeper.NewMsgServerImpl(*keeper)
 				_, err = ms.UpgradeIsolatedPerpetualToCross(ctx, tc.msg)
@@ -210,7 +195,7 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 				require.NoError(t, err)
 
 				// Check perpetual market type has been upgraded to cross.
-				perpetual, err = perpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualId)
+				perpetual, err := perpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualId)
 				require.NoError(t, err)
 				require.Equal(
 					t,
@@ -240,6 +225,16 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 				}
 
 				// Verify that expected indexer event was emitted.
+				perpetual, err = perpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualId)
+				require.NoError(t, err)
+				expectedIndexerEvent := &indexerevents.UpdatePerpetualEventV2{
+					Id:               perpetual.Params.Id,
+					Ticker:           perpetual.Params.Ticker,
+					MarketId:         perpetual.Params.MarketId,
+					AtomicResolution: perpetual.Params.AtomicResolution,
+					LiquidityTier:    perpetual.Params.LiquidityTier,
+					MarketType:       v1.ConvertToPerpetualMarketType(perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS),
+				}
 				emittedIndexerEvents := getUpdatePerpetualEventsFromIndexerBlock(ctx, keeper)
 				require.Equal(t, emittedIndexerEvents, []*indexerevents.UpdatePerpetualEventV2{expectedIndexerEvent})
 			},
@@ -250,7 +245,7 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 // getUpdatePerpetualEventsFromIndexerBlock returns all UpdatePerpetual events from the indexer block.
 func getUpdatePerpetualEventsFromIndexerBlock(
 	ctx sdk.Context,
-	listingKeeper *keeper.Keeper,
+	listingKeeper *listingkeeper.Keeper,
 ) []*indexerevents.UpdatePerpetualEventV2 {
 	block := listingKeeper.GetIndexerEventManager().ProduceBlock(ctx)
 	var updatePerpetualEvents []*indexerevents.UpdatePerpetualEventV2
