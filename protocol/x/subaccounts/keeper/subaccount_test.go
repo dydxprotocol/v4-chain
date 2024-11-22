@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"math"
 	"math/big"
 	"strconv"
@@ -6127,6 +6128,132 @@ func TestGetAllRelevantPerpetuals_Deterministic(t *testing.T) {
 						"Gas usage when out of gas is not deterministic",
 					)
 				}
+			}
+		})
+	}
+}
+
+func TestGetInsuranceFundBalance(t *testing.T) {
+	tests := map[string]struct {
+		// Setup
+		assets               []asstypes.Asset
+		insuranceFundBalance *big.Int
+		perpetualId          uint32
+		perpetual            *perptypes.Perpetual
+
+		// Expectations.
+		expectedInsuranceFundBalance *big.Int
+		expectedError                error
+	}{
+		"can get zero balance": {
+			assets: []asstypes.Asset{
+				*constants.Usdc,
+			},
+			perpetualId:                  0,
+			insuranceFundBalance:         new(big.Int),
+			expectedInsuranceFundBalance: big.NewInt(0),
+		},
+		"can get positive balance": {
+			assets: []asstypes.Asset{
+				*constants.Usdc,
+			},
+			perpetualId:                  0,
+			insuranceFundBalance:         big.NewInt(100),
+			expectedInsuranceFundBalance: big.NewInt(100),
+		},
+		"can get greater than MaxUint64 balance": {
+			assets: []asstypes.Asset{
+				*constants.Usdc,
+			},
+			perpetualId: 0,
+			insuranceFundBalance: new(big.Int).Add(
+				new(big.Int).SetUint64(math.MaxUint64),
+				new(big.Int).SetUint64(math.MaxUint64),
+			),
+			expectedInsuranceFundBalance: new(big.Int).Add(
+				new(big.Int).SetUint64(math.MaxUint64),
+				new(big.Int).SetUint64(math.MaxUint64),
+			),
+		},
+		"can get zero balance - isolated market": {
+			assets: []asstypes.Asset{
+				*constants.Usdc,
+			},
+			perpetualId:                  3, // Isolated market.
+			insuranceFundBalance:         new(big.Int),
+			expectedInsuranceFundBalance: big.NewInt(0),
+		},
+		"can get positive balance - isolated market": {
+			assets: []asstypes.Asset{
+				*constants.Usdc,
+			},
+			perpetualId:                  3, // Isolated market.
+			insuranceFundBalance:         big.NewInt(100),
+			expectedInsuranceFundBalance: big.NewInt(100),
+		},
+		"panics when asset not found in state": {
+			assets:        []asstypes.Asset{},
+			perpetualId:   0,
+			expectedError: errors.New("GetInsuranceFundBalance: Usdc asset not found in state"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup keeper state.
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, bankKeeper, assetsKeeper, _, _, _, _ :=
+				keepertest.SubaccountsKeepers(t, true)
+
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+
+			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+
+			for _, a := range tc.assets {
+				_, err := assetsKeeper.CreateAsset(
+					ctx,
+					a.Id,
+					a.Symbol,
+					a.Denom,
+					a.DenomExponent,
+					a.HasMarket,
+					a.MarketId,
+					a.AtomicResolution,
+				)
+				require.NoError(t, err)
+			}
+
+			insuranceFundAddr, err := perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, tc.perpetualId)
+			require.NoError(t, err)
+			if tc.insuranceFundBalance != nil && tc.insuranceFundBalance.Cmp(big.NewInt(0)) != 0 {
+				err := bank_testutil.FundAccount(
+					ctx,
+					insuranceFundAddr,
+					sdk.Coins{
+						sdk.NewCoin(asstypes.AssetUsdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
+					},
+					*bankKeeper,
+				)
+				require.NoError(t, err)
+			}
+
+			if tc.expectedError != nil {
+				require.PanicsWithValue(
+					t,
+					tc.expectedError.Error(),
+					func() {
+						keeper.GetInsuranceFundBalance(ctx, tc.perpetualId)
+					},
+				)
+			} else {
+				require.Equal(
+					t,
+					tc.expectedInsuranceFundBalance,
+					keeper.GetInsuranceFundBalance(ctx, tc.perpetualId),
+				)
 			}
 		})
 	}

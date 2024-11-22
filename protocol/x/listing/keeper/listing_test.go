@@ -62,7 +62,7 @@ func TestCreateMarket(t *testing.T) {
 		t.Run(
 			name, func(t *testing.T) {
 				mockIndexerEventManager := &mocks.IndexerEventManager{}
-				ctx, keeper, _, _, pricesKeeper, _, _, marketMapKeeper := keepertest.ListingKeepers(
+				ctx, keeper, _, _, pricesKeeper, _, _, marketMapKeeper, _, _, _ := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,
@@ -131,7 +131,7 @@ func TestCreatePerpetual(t *testing.T) {
 		t.Run(
 			name, func(t *testing.T) {
 				mockIndexerEventManager := &mocks.IndexerEventManager{}
-				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, _, marketMapKeeper := keepertest.ListingKeepers(
+				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, _, marketMapKeeper, _, _, _ := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,
@@ -217,7 +217,8 @@ func TestCreateClobPair(t *testing.T) {
 		t.Run(
 			name, func(t *testing.T) {
 				mockIndexerEventManager := &mocks.IndexerEventManager{}
-				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, clobKeeper, marketMapKeeper := keepertest.ListingKeepers(
+				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, clobKeeper, marketMapKeeper,
+					_, _, _ := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
 					mockIndexerEventManager,

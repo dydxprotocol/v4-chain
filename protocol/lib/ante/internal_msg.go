@@ -103,6 +103,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		// listing
 		*listing.MsgSetMarketsHardCap,
 		*listing.MsgSetListingVaultDepositParams,
+		*listing.MsgUpgradeIsolatedPerpetualToCross,
 
 		// perpetuals
 		*perpetuals.MsgCreatePerpetual,

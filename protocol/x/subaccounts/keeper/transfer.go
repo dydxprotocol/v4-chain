@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -11,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -501,5 +503,91 @@ func (k Keeper) TransferFundsFromSubaccountToSubaccount(
 		ctx,
 		updates,
 		types.Transfer,
+	)
+}
+
+// TransferIsolatedInsuranceFundToCross transfers funds from an isolated perpetual's
+// insurance fund to the cross-perpetual insurance fund.
+// Note: This uses the `x/bank` keeper and modifies `x/bank` state.
+func (k Keeper) TransferIsolatedInsuranceFundToCross(ctx sdk.Context, perpetualId uint32) error {
+	// Validate perpetual exists
+	if _, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId); err != nil {
+		return err
+	}
+
+	isolatedInsuranceFundBalance := k.GetInsuranceFundBalance(ctx, perpetualId)
+
+	// Skip if balance is zero
+	if isolatedInsuranceFundBalance.Sign() == 0 {
+		return nil
+	}
+
+	_, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		return fmt.Errorf("USDC asset not found in state")
+	}
+
+	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
+		ctx,
+		assettypes.AssetUsdc.Id,
+		isolatedInsuranceFundBalance,
+	)
+	if err != nil {
+		return err
+	}
+
+	isolatedInsuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	crossInsuranceFundAddr := perptypes.InsuranceFundModuleAddress
+
+	return k.bankKeeper.SendCoins(
+		ctx,
+		isolatedInsuranceFundAddr,
+		crossInsuranceFundAddr,
+		[]sdk.Coin{coinToTransfer},
+	)
+}
+
+// TransferIsolatedCollateralToCross transfers the collateral balance from an isolated perpetual's
+// collateral pool to the cross-margin collateral pool. This is used during the upgrade process
+// from isolated perpetuals to cross-margin.
+// Note: This uses the `x/bank` keeper and modifies `x/bank` state.
+func (k Keeper) TransferIsolatedCollateralToCross(ctx sdk.Context, perpetualId uint32) error {
+	// Validate perpetual exists
+	if _, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId); err != nil {
+		return err
+	}
+
+	isolatedCollateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	crossCollateralPoolAddr := types.ModuleAddress
+
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		panic("TransferIsolatedCollateralToCross: Usdc asset not found in state")
+	}
+
+	isolatedCollateralPoolBalance := k.bankKeeper.GetBalance(
+		ctx,
+		isolatedCollateralPoolAddr,
+		usdcAsset.Denom,
+	)
+
+	// Skip if balance is zero
+	if isolatedCollateralPoolBalance.IsZero() {
+		return nil
+	}
+
+	return k.bankKeeper.SendCoins(
+		ctx,
+		isolatedCollateralPoolAddr,
+		crossCollateralPoolAddr,
+		[]sdk.Coin{isolatedCollateralPoolBalance},
 	)
 }
