@@ -6,6 +6,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
@@ -21,7 +22,6 @@ import (
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 )
 
 var (
