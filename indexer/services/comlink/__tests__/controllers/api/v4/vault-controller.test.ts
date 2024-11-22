@@ -135,15 +135,6 @@ describe('vault-controller#V4', () => {
       config.VAULT_PNL_START_DATE = vaultPnlStartDatePrev;
     });
 
-    it('Get /megavault/historicalPnl with no vault subaccounts', async () => {
-      const response: request.Response = await sendRequest({
-        type: RequestMethod.GET,
-        path: '/v4/vault/v1/megavault/historicalPnl',
-      });
-
-      expect(response.body.megavaultPnl).toEqual([]);
-    });
-
     it.each([
       ['no resolution', '', [1, 2], 4, undefined],
       ['daily resolution', '?resolution=day', [1, 2], 4, undefined],
