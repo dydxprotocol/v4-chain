@@ -234,7 +234,7 @@ export type FundingEventMessage = {
 
 export type SumFields = PerpetualPositionColumns.sumOpen | PerpetualPositionColumns.sumClose;
 export type PriceFields = PerpetualPositionColumns.entryPrice |
-  PerpetualPositionColumns.exitPrice;
+PerpetualPositionColumns.exitPrice;
 
 export type OrderFillEventWithLiquidity = {
   event: OrderFillEventV1,

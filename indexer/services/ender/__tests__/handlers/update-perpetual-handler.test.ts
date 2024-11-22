@@ -116,9 +116,9 @@ describe('update-perpetual-handler', () => {
       await onMessage(kafkaMessage);
 
       const perpetualMarket:
-        PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
-          event.id.toString(),
-        );
+      PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
+        event.id.toString(),
+      );
       // TODO new fields
       expect(perpetualMarket).toEqual(expect.objectContaining({
         id: event.id.toString(),

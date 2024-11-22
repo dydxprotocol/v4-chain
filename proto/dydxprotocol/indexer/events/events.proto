@@ -487,7 +487,7 @@ message UpdateClobPairEventV1 {
 // UpdatePerpetualEventV1 message contains all the information about an update
 // to a perpetual on the dYdX chain.
 // Deprecated. See UpdatePerpetualEventV2 for the most up to date message
-// for the event to update a perpetual. 
+// for the event to update a perpetual.
 message UpdatePerpetualEventV1 {
   option deprecated = true;
   // Unique Perpetual id.

@@ -407,7 +407,7 @@ export const defaultTradeMessage: SingleTradeMessage = contentToSingleTradeMessa
   testConstants.defaultPerpetualMarket.clobPairId,
 );
 export const defaultTradeKafkaEvent:
-  ConsolidatedKafkaEvent = createConsolidatedKafkaEventFromTrade(defaultTradeMessage);
+ConsolidatedKafkaEvent = createConsolidatedKafkaEventFromTrade(defaultTradeMessage);
 
 export const defaultStatefulOrderPlacementEvent: StatefulOrderEventV1 = {
   orderPlace: {

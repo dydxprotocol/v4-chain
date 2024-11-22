@@ -147,10 +147,10 @@ export class BlockProcessor {
       const event: IndexerTendermintEvent = this.block.events[i];
       const transactionIndex: number = indexerTendermintEventToTransactionIndex(event);
       const eventProtoWithType:
-        EventProtoWithTypeAndVersion | undefined = indexerTendermintEventToEventProtoWithType(
-          i,
-          event,
-        );
+      EventProtoWithTypeAndVersion | undefined = indexerTendermintEventToEventProtoWithType(
+        i,
+        event,
+      );
       if (eventProtoWithType === undefined) {
         continue;
       }
@@ -193,12 +193,12 @@ export class BlockProcessor {
     validatorMap: Record<string, ValidatorInitializer>,
   ): void {
     const Initializer:
-      ValidatorInitializer | undefined = validatorMap[
+    ValidatorInitializer | undefined = validatorMap[
       serializeSubtypeAndVersion(
         eventProto.type,
         eventProto.version,
       )
-      ];
+    ];
 
     if (Initializer === undefined) {
       const message: string = `cannot process subtype ${eventProto.type} and version ${eventProto.version}`;
