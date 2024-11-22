@@ -60,6 +60,7 @@ export const configSchema = {
   LOOPS_ENABLED_UPDATE_WALLET_TOTAL_VOLUME: parseBoolean({ default: true }),
   LOOPS_ENABLED_UPDATE_AFFILIATE_INFO: parseBoolean({ default: true }),
   LOOPS_ENABLED_DELETE_OLD_FIREBASE_NOTIFICATION_TOKENS: parseBoolean({ default: true }),
+  LOOPS_ENABLED_REFRESH_VAULT_PNL: parseBoolean({ default: true }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -140,6 +141,9 @@ export const configSchema = {
   LOOPS_INTERVAL_MS_CACHE_ORDERBOOK_MID_PRICES: parseInteger({
     default: ONE_SECOND_IN_MILLISECONDS,
   }),
+  LOOPS_INTERVAL_MS_REFRESH_VAULT_PNL: parseInteger({
+    default: 5 * ONE_MINUTE_IN_MILLISECONDS,
+  }),
 
   // Start delay
   START_DELAY_ENABLED: parseBoolean({ default: true }),
@@ -215,6 +219,9 @@ export const configSchema = {
   SUBACCOUNT_USERNAME_BATCH_SIZE: parseInteger({ default: 2000 }),
   // number of attempts to generate username for a subaccount
   ATTEMPT_PER_SUBACCOUNT: parseInteger({ default: 3 }),
+
+  // Refresh vault pnl view
+  TIME_WINDOW_FOR_REFRESH_MS: parseInteger({ default: 15 * ONE_MINUTE_IN_MILLISECONDS }),
 };
 
 export default parseSchema(configSchema);
