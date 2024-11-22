@@ -1249,7 +1249,11 @@ export interface UpdateClobPairEventV1SDKType {
 /**
  * UpdatePerpetualEventV1 message contains all the information about an update
  * to a perpetual on the dYdX chain.
+ * Deprecated. See UpdatePerpetualEventV2 for the most up to date message
+ * for the event to update a perpetual.
  */
+
+/** @deprecated */
 
 export interface UpdatePerpetualEventV1 {
   /**
@@ -1288,7 +1292,11 @@ export interface UpdatePerpetualEventV1 {
 /**
  * UpdatePerpetualEventV1 message contains all the information about an update
  * to a perpetual on the dYdX chain.
+ * Deprecated. See UpdatePerpetualEventV2 for the most up to date message
+ * for the event to update a perpetual.
  */
+
+/** @deprecated */
 
 export interface UpdatePerpetualEventV1SDKType {
   /**
@@ -1323,6 +1331,90 @@ export interface UpdatePerpetualEventV1SDKType {
    */
 
   liquidity_tier: number;
+}
+/**
+ * UpdatePerpetualEventV2 message contains all the information about an update
+ * to a perpetual on the dYdX chain.
+ */
+
+export interface UpdatePerpetualEventV2 {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  marketId: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomicResolution: number;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidityTier: number;
+  /** Market type of the perpetual. */
+
+  marketType: PerpetualMarketType;
+}
+/**
+ * UpdatePerpetualEventV2 message contains all the information about an update
+ * to a perpetual on the dYdX chain.
+ */
+
+export interface UpdatePerpetualEventV2SDKType {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  market_id: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomic_resolution: number;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidity_tier: number;
+  /** Market type of the perpetual. */
+
+  market_type: PerpetualMarketTypeSDKType;
 }
 /**
  * TradingRewardsEventV1 is communicates all trading rewards for all accounts
@@ -3480,6 +3572,101 @@ export const UpdatePerpetualEventV1 = {
     message.marketId = object.marketId ?? 0;
     message.atomicResolution = object.atomicResolution ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseUpdatePerpetualEventV2(): UpdatePerpetualEventV2 {
+  return {
+    id: 0,
+    ticker: "",
+    marketId: 0,
+    atomicResolution: 0,
+    liquidityTier: 0,
+    marketType: 0
+  };
+}
+
+export const UpdatePerpetualEventV2 = {
+  encode(message: UpdatePerpetualEventV2, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    if (message.ticker !== "") {
+      writer.uint32(18).string(message.ticker);
+    }
+
+    if (message.marketId !== 0) {
+      writer.uint32(24).uint32(message.marketId);
+    }
+
+    if (message.atomicResolution !== 0) {
+      writer.uint32(32).sint32(message.atomicResolution);
+    }
+
+    if (message.liquidityTier !== 0) {
+      writer.uint32(40).uint32(message.liquidityTier);
+    }
+
+    if (message.marketType !== 0) {
+      writer.uint32(48).int32(message.marketType);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdatePerpetualEventV2 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdatePerpetualEventV2();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.ticker = reader.string();
+          break;
+
+        case 3:
+          message.marketId = reader.uint32();
+          break;
+
+        case 4:
+          message.atomicResolution = reader.sint32();
+          break;
+
+        case 5:
+          message.liquidityTier = reader.uint32();
+          break;
+
+        case 6:
+          message.marketType = (reader.int32() as any);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<UpdatePerpetualEventV2>): UpdatePerpetualEventV2 {
+    const message = createBaseUpdatePerpetualEventV2();
+    message.id = object.id ?? 0;
+    message.ticker = object.ticker ?? "";
+    message.marketId = object.marketId ?? 0;
+    message.atomicResolution = object.atomicResolution ?? 0;
+    message.liquidityTier = object.liquidityTier ?? 0;
+    message.marketType = object.marketType ?? 0;
     return message;
   }
 

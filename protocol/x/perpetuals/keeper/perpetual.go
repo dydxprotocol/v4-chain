@@ -166,12 +166,13 @@ func (k Keeper) ModifyPerpetual(
 		indexerevents.SubtypeUpdatePerpetual,
 		indexerevents.UpdatePerpetualEventVersion,
 		indexer_manager.GetBytes(
-			indexerevents.NewUpdatePerpetualEventV1(
+			indexerevents.NewUpdatePerpetualEvent(
 				perpetual.Params.Id,
 				perpetual.Params.Ticker,
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.LiquidityTier,
+				perpetual.Params.MarketType,
 			),
 		),
 	)
