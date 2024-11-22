@@ -44,7 +44,8 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_trading_rewards_handler.sql',
   'dydx_transfer_handler.sql',
   'dydx_update_clob_pair_handler.sql',
-  'dydx_update_perpetual_handler.sql',
+  'dydx_update_perpetual_v1_handler.sql',
+  'dydx_update_perpetual_v2_handler.sql',
   'dydx_vault_upsert_handler.sql',
 ];
 

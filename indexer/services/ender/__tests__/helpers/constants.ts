@@ -35,6 +35,7 @@ import {
   TransferEventV1,
   UpdateClobPairEventV1,
   UpdatePerpetualEventV1,
+  UpdatePerpetualEventV2,
   OpenInterestUpdateEventV1,
   OpenInterestUpdate,
 } from '@dydxprotocol-indexer/v4-protos';
@@ -191,12 +192,21 @@ export const defaultOpenInterestUpdateEvent: OpenInterestUpdateEventV1 = {
   openInterestUpdates: [defaultOpenInterestUpdate1, defaultOpenInterestUpdate2],
 };
 
-export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
+export const defaultUpdatePerpetualEventV1: UpdatePerpetualEventV1 = {
   id: 0,
   ticker: 'BTC-USD2',
   marketId: 1,
   atomicResolution: -8,
   liquidityTier: 1,
+};
+
+export const defaultUpdatePerpetualEventV2: UpdatePerpetualEventV2 = {
+  id: 0,
+  ticker: 'BTC-USD2',
+  marketId: 1,
+  atomicResolution: -8,
+  liquidityTier: 1,
+  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS,
 };
 
 export const defaultUpdateClobPairEvent: UpdateClobPairEventV1 = {
@@ -397,7 +407,7 @@ export const defaultTradeMessage: SingleTradeMessage = contentToSingleTradeMessa
   testConstants.defaultPerpetualMarket.clobPairId,
 );
 export const defaultTradeKafkaEvent:
-ConsolidatedKafkaEvent = createConsolidatedKafkaEventFromTrade(defaultTradeMessage);
+  ConsolidatedKafkaEvent = createConsolidatedKafkaEventFromTrade(defaultTradeMessage);
 
 export const defaultStatefulOrderPlacementEvent: StatefulOrderEventV1 = {
   orderPlace: {

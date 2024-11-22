@@ -51,6 +51,7 @@ const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorIn
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.PERPETUAL_MARKET.toString(), 2)]: PerpetualMarketValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.LIQUIDITY_TIER.toString(), 1)]: LiquidityTierValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_PERPETUAL.toString(), 1)]: UpdatePerpetualValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_PERPETUAL.toString(), 2)]: UpdatePerpetualValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString(), 1)]: UpdateClobPairValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.DELEVERAGING.toString(), 1)]: DeleveragingValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.LIQUIDITY_TIER.toString(), 2)]: LiquidityTierValidatorV2,
@@ -146,10 +147,10 @@ export class BlockProcessor {
       const event: IndexerTendermintEvent = this.block.events[i];
       const transactionIndex: number = indexerTendermintEventToTransactionIndex(event);
       const eventProtoWithType:
-      EventProtoWithTypeAndVersion | undefined = indexerTendermintEventToEventProtoWithType(
-        i,
-        event,
-      );
+        EventProtoWithTypeAndVersion | undefined = indexerTendermintEventToEventProtoWithType(
+          i,
+          event,
+        );
       if (eventProtoWithType === undefined) {
         continue;
       }
@@ -192,12 +193,12 @@ export class BlockProcessor {
     validatorMap: Record<string, ValidatorInitializer>,
   ): void {
     const Initializer:
-    ValidatorInitializer | undefined = validatorMap[
+      ValidatorInitializer | undefined = validatorMap[
       serializeSubtypeAndVersion(
         eventProto.type,
         eventProto.version,
       )
-    ];
+      ];
 
     if (Initializer === undefined) {
       const message: string = `cannot process subtype ${eventProto.type} and version ${eventProto.version}`;

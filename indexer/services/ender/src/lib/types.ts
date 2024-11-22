@@ -31,6 +31,7 @@ import {
   LiquidityTierUpsertEventV1,
   LiquidityTierUpsertEventV2,
   UpdatePerpetualEventV1,
+  UpdatePerpetualEventV2,
   UpdateClobPairEventV1,
   DeleveragingEventV1,
   TradingRewardsEventV1,
@@ -146,6 +147,12 @@ export type EventProtoWithTypeAndVersion = {
   version: number,
   blockEventIndex: number,
 } | {
+  type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+  eventProto: UpdatePerpetualEventV2,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+} | {
   type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
   eventProto: UpdateClobPairEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
@@ -227,7 +234,7 @@ export type FundingEventMessage = {
 
 export type SumFields = PerpetualPositionColumns.sumOpen | PerpetualPositionColumns.sumClose;
 export type PriceFields = PerpetualPositionColumns.entryPrice |
-PerpetualPositionColumns.exitPrice;
+  PerpetualPositionColumns.exitPrice;
 
 export type OrderFillEventWithLiquidity = {
   event: OrderFillEventV1,
