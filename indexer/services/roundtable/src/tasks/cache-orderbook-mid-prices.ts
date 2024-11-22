@@ -16,13 +16,22 @@ import { redisClient } from '../helpers/redis';
  */
 export default async function runTask(): Promise<void> {
   try {
-    const perpetualMarkets = Object.values(perpetualMarketRefresher.getPerpetualMarketsMap());
-    const marketTickers = perpetualMarkets.map(
+    let perpetualMarkets = Object.values(perpetualMarketRefresher.getPerpetualMarketsMap());
+    let marketTickers = perpetualMarkets.map(
       (market: PerpetualMarketFromDatabase) => market.ticker,
     );
 
+    // If no markets found, try updating the perpetual markets cache and fetch again
     if (marketTickers.length === 0) {
-      throw new Error('perpetualMarketRefresher is empty');
+      await perpetualMarketRefresher.updatePerpetualMarkets();
+      perpetualMarkets = Object.values(perpetualMarketRefresher.getPerpetualMarketsMap());
+      marketTickers = perpetualMarkets.map(
+        (market: PerpetualMarketFromDatabase) => market.ticker,
+      );
+
+      if (marketTickers.length === 0) {
+        throw new Error('perpetualMarketRefresher is empty');
+      }
     }
 
     logger.info({
