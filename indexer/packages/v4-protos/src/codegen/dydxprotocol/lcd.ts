@@ -12,6 +12,9 @@ export const createLCDClient = async ({
       accountplus: new (await import("./accountplus/query.lcd")).LCDQueryClient({
         requestClient
       }),
+      affiliates: new (await import("./affiliates/query.lcd")).LCDQueryClient({
+        requestClient
+      }),
       assets: new (await import("./assets/query.lcd")).LCDQueryClient({
         requestClient
       }),
