@@ -106,7 +106,7 @@ describe('update-perpetual-handler', () => {
     it('updates an existing perpetual market', async () => {
       const transactionIndex: number = 0;
       const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdatePerpetualEvent({
-        updatePerpetualEventBytes: updatePerpetualEventBytes,
+        updatePerpetualEventBytes,
         transactionIndex,
         height: defaultHeight,
         time: defaultTime,
@@ -116,9 +116,9 @@ describe('update-perpetual-handler', () => {
       await onMessage(kafkaMessage);
 
       const perpetualMarket:
-        PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
-          event.id.toString(),
-        );
+      PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
+        event.id.toString(),
+      );
 
       expect(perpetualMarket).toEqual(expect.objectContaining({
         id: event.id.toString(),
@@ -127,7 +127,7 @@ describe('update-perpetual-handler', () => {
         atomicResolution: event.atomicResolution,
         liquidityTierId: event.liquidityTier,
         // Add V2-specific field expectations when testing V2 events
-        ...("marketType" in event && {
+        ...('marketType' in event && {
           marketType: event.marketType,
         }),
       }));
