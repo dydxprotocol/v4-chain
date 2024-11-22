@@ -537,7 +537,8 @@ export async function getLatestPnlTick(
       pnl_ticks
     WHERE
       "subaccountId" in (${subaccountIds.map((id: string) => { return `'${id}'`; }).join(',')}) AND
-      "blockTime" <= '${beforeOrAt.toUTC().toISO()}'::timestamp
+      "blockTime" <= '${beforeOrAt.toUTC().toISO()}'::timestamp AND
+      "blockTime" >= '${beforeOrAt.toUTC().minus({ day: 1}).toISO()}'::timestamp
     ORDER BY
       "subaccountId",
       "blockTime" DESC
