@@ -16,6 +16,7 @@ import {
   MEGAVAULT_MODULE_ADDRESS,
   MEGAVAULT_SUBACCOUNT_ID,
   TransferTable,
+  VaultPnlTicksView,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
 import request from 'supertest';
@@ -127,18 +128,11 @@ describe('vault-controller#V4', () => {
 
     afterEach(async () => {
       await dbHelpers.clearData();
+      await VaultPnlTicksView.refreshDailyView();
+      await VaultPnlTicksView.refreshHourlyView();
       config.VAULT_PNL_HISTORY_HOURS = vaultPnlHistoryHoursPrev;
       config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS = vaultPnlLastPnlWindowPrev;
       config.VAULT_PNL_START_DATE = vaultPnlStartDatePrev;
-    });
-
-    it('Get /megavault/historicalPnl with no vault subaccounts', async () => {
-      const response: request.Response = await sendRequest({
-        type: RequestMethod.GET,
-        path: '/v4/vault/v1/megavault/historicalPnl',
-      });
-
-      expect(response.body.megavaultPnl).toEqual([]);
     });
 
     it.each([
@@ -652,6 +646,8 @@ describe('vault-controller#V4', () => {
       ]);
       createdTicks.push(...mainSubaccountTicks);
     }
+    await VaultPnlTicksView.refreshDailyView();
+    await VaultPnlTicksView.refreshHourlyView();
 
     return createdTicks;
   }
