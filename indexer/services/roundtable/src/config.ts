@@ -221,7 +221,7 @@ export const configSchema = {
   ATTEMPT_PER_SUBACCOUNT: parseInteger({ default: 3 }),
 
   // Refresh vault pnl view
-  TIME_WINDOW_FOR_REFRESH_MS: parseInteger({ default: 15 * ONE_MINUTE_IN_MILLISECONDS }),
+  TIME_WINDOW_FOR_REFRESH_VAULT_PNL_MS: parseInteger({ default: 15 * ONE_MINUTE_IN_MILLISECONDS }),
 };
 
 export default parseSchema(configSchema);

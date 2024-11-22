@@ -1,31 +1,30 @@
-import _ from 'lodash';
 import { DateTime } from 'luxon';
 
 import { knexReadReplica } from '../helpers/knex';
+import { rawQuery } from '../helpers/stores-helpers';
 import {
   PnlTickInterval,
   PnlTicksFromDatabase,
 } from '../types';
-import { rawQuery } from '../helpers/stores-helpers';
 
 const VAULT_HOURLY_PNL_VIEW: string = 'vaults_hourly_pnl';
 const VAULT_DAILY_PNL_VIEW: string = 'vaults_daily_pnl';
 
 export async function refreshHourlyView(): Promise<void> {
-  return await rawQuery(
+  await rawQuery(
     `REFRESH MATERIALIZED VIEW CONCURRENTLY ${VAULT_HOURLY_PNL_VIEW}`,
     {
       readReplica: false,
-    }
+    },
   );
 }
 
 export async function refreshDailyView(): Promise<void> {
-  return await rawQuery(
+  await rawQuery(
     `REFRESH MATERIALIZED VIEW CONCURRENTLY ${VAULT_DAILY_PNL_VIEW}`,
     {
       readReplica: false,
-    }
+    },
   );
 }
 
@@ -35,7 +34,7 @@ export async function getVaultsPnl(
   earliestDate: DateTime,
 ): Promise<PnlTicksFromDatabase[]> {
   let viewName: string = VAULT_DAILY_PNL_VIEW;
-  if (interval == PnlTickInterval.hour) {
+  if (interval === PnlTickInterval.hour) {
     viewName = VAULT_HOURLY_PNL_VIEW;
   }
   const result: {

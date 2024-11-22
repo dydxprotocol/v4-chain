@@ -1,7 +1,7 @@
 import config from '../../src/config';
 import refreshVaulPnlTask from '../../src/tasks/refresh-vault-pnl';
 import { Settings, DateTime } from 'luxon';
-import { 
+import {
   BlockTable,
   PnlTickInterval,
   PnlTicksFromDatabase,
@@ -46,62 +46,62 @@ describe('refresh-vault-pnl', () => {
     Settings.now = () => new Date().valueOf();
   });
 
-  it('refreshes hourly view if within time window of an hour', async() => {
+  it('refreshes hourly view if within time window of an hour', async () => {
     Settings.now = () => currentTime.startOf('hour').plus(
-      { milliseconds: config.TIME_WINDOW_FOR_REFRESH_MS - 1},
-    ).valueOf()
+      { milliseconds: config.TIME_WINDOW_FOR_REFRESH_VAULT_PNL_MS - 1 },
+    ).valueOf();
     const pnlTick: PnlTicksFromDatabase = await setupPnlTick();
     await refreshVaulPnlTask();
 
     const pnlTicks: PnlTicksFromDatabase[] = await VaultPnlTicksView.getVaultsPnl(
       PnlTickInterval.hour,
       86400,
-      currentTime.minus({ day: 1}),
+      currentTime.minus({ day: 1 }),
     );
     expect(pnlTicks).toEqual([pnlTick]);
   });
 
-  it('refreshes daily view if within time window of a day', async() => {
+  it('refreshes daily view if within time window of a day', async () => {
     Settings.now = () => currentTime.startOf('day').plus(
-      { milliseconds: config.TIME_WINDOW_FOR_REFRESH_MS - 1 },
-    ).valueOf()
+      { milliseconds: config.TIME_WINDOW_FOR_REFRESH_VAULT_PNL_MS - 1 },
+    ).valueOf();
     const pnlTick: PnlTicksFromDatabase = await setupPnlTick();
     await refreshVaulPnlTask();
 
     const pnlTicks: PnlTicksFromDatabase[] = await VaultPnlTicksView.getVaultsPnl(
       PnlTickInterval.day,
       608400,
-      currentTime.minus({ day: 7}),
+      currentTime.minus({ day: 7 }),
     );
     expect(pnlTicks).toEqual([pnlTick]);
   });
 
-  it('does not refresh hourly view if outside of time window of an hour', async() => {
+  it('does not refresh hourly view if outside of time window of an hour', async () => {
     Settings.now = () => currentTime.startOf('hour').plus(
-      { milliseconds: config.TIME_WINDOW_FOR_REFRESH_MS + 1},
-    ).valueOf()
+      { milliseconds: config.TIME_WINDOW_FOR_REFRESH_VAULT_PNL_MS + 1 },
+    ).valueOf();
     await setupPnlTick();
     await refreshVaulPnlTask();
 
     const pnlTicks: PnlTicksFromDatabase[] = await VaultPnlTicksView.getVaultsPnl(
       PnlTickInterval.hour,
       86400,
-      currentTime.minus({ day: 1}),
+      currentTime.minus({ day: 1 }),
     );
     expect(pnlTicks).toEqual([]);
   });
 
-  it('does not refresh hourly view if outside time window of a day', async() => {
+  it('does not refresh daily view if outside time window of a day', async () => {
     Settings.now = () => currentTime.startOf('day').plus(
-      { milliseconds: config.TIME_WINDOW_FOR_REFRESH_MS + 1},
-    ).valueOf()
+      { milliseconds: config.TIME_WINDOW_FOR_REFRESH_VAULT_PNL_MS + 1 },
+    ).valueOf();
     await setupPnlTick();
     await refreshVaulPnlTask();
 
     const pnlTicks: PnlTicksFromDatabase[] = await VaultPnlTicksView.getVaultsPnl(
       PnlTickInterval.day,
       608400,
-      currentTime.minus({ day: 7}),
+      currentTime.minus({ day: 7 }),
     );
     expect(pnlTicks).toEqual([]);
   });
@@ -128,4 +128,3 @@ describe('refresh-vault-pnl', () => {
     return createdTick;
   }
 });
-

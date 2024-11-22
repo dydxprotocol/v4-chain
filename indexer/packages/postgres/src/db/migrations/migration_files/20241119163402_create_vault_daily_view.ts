@@ -1,4 +1,4 @@
-import * as Knex from "knex";
+import * as Knex from 'knex';
 
 const RAW_VAULTS_PNL_DAILY_QUERY: string = `
 CREATE MATERIALIZED VIEW IF NOT EXISTS vaults_daily_pnl AS WITH vault_subaccounts AS
@@ -35,13 +35,13 @@ FROM     (
                   AND      "blockTime" >= NOW() - interval '7776000 second' ) AS pnl_intervals
 WHERE    r = 1
 ORDER BY "subaccountId";
-`
+`;
 
 export async function up(knex: Knex): Promise<void> {
   await knex.raw(RAW_VAULTS_PNL_DAILY_QUERY);
-  await knex.raw(`CREATE UNIQUE INDEX ON vaults_daily_pnl (id);`)
+  await knex.raw('CREATE UNIQUE INDEX ON vaults_daily_pnl (id);');
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.raw('DROP MATERIALIZED VIEW IF EXISTS vaults_daily_pnl;')
+  await knex.raw('DROP MATERIALIZED VIEW IF EXISTS vaults_daily_pnl;');
 }
