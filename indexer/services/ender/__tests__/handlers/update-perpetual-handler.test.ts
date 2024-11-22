@@ -66,7 +66,7 @@ describe('update-perpetual-handler', () => {
       defaultUpdatePerpetualEventV1,
     ],
     [
-      'PerpetualMarketCreateEventV2',
+      'UpdatePerpetualEventV2',
       UpdatePerpetualEventV2.encode(defaultUpdatePerpetualEventV2).finish(),
       defaultUpdatePerpetualEventV2,
     ],
@@ -106,7 +106,7 @@ describe('update-perpetual-handler', () => {
     it('updates an existing perpetual market', async () => {
       const transactionIndex: number = 0;
       const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdatePerpetualEvent({
-        updatePerpetualEvent: event,
+        updatePerpetualEventBytes: updatePerpetualEventBytes,
         transactionIndex,
         height: defaultHeight,
         time: defaultTime,
@@ -116,16 +116,20 @@ describe('update-perpetual-handler', () => {
       await onMessage(kafkaMessage);
 
       const perpetualMarket:
-      PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
-        event.id.toString(),
-      );
-      // TODO new fields
+        PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
+          event.id.toString(),
+        );
+
       expect(perpetualMarket).toEqual(expect.objectContaining({
         id: event.id.toString(),
         ticker: event.ticker,
         marketId: event.marketId,
         atomicResolution: event.atomicResolution,
         liquidityTierId: event.liquidityTier,
+        // Add V2-specific field expectations when testing V2 events
+        ...("marketType" in event && {
+          marketType: event.marketType,
+        }),
       }));
       expect(perpetualMarket).toEqual(
         perpetualMarketRefresher.getPerpetualMarketFromId(
@@ -136,13 +140,13 @@ describe('update-perpetual-handler', () => {
 });
 
 function createKafkaMessageFromUpdatePerpetualEvent({
-  updatePerpetualEvent,
+  updatePerpetualEventBytes,
   transactionIndex,
   height,
   time,
   txHash,
 }: {
-  updatePerpetualEvent: UpdatePerpetualEventV1,
+  updatePerpetualEventBytes: Uint8Array,
   transactionIndex: number,
   height: number,
   time: Timestamp,
@@ -152,7 +156,7 @@ function createKafkaMessageFromUpdatePerpetualEvent({
   events.push(
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.UPDATE_PERPETUAL,
-      UpdatePerpetualEventV1.encode(updatePerpetualEvent).finish(),
+      updatePerpetualEventBytes,
       transactionIndex,
       0,
     ),
