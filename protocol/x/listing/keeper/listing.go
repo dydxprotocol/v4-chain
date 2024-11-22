@@ -187,6 +187,12 @@ func (k Keeper) UpgradeIsolatedPerpetualToCross(
 		return err
 	}
 
+	// Fetch updated perpetual data after the upgrade
+	perpetual, err = k.PerpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
 	// Emit indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
