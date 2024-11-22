@@ -6,17 +6,22 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	bank_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
 	listingkeeper "github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
 	types "github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -166,7 +171,6 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 						{isolatedCollateralPoolAddr, tc.isolatedCollateralPoolBalance},
 						{crossCollateralPoolAddr, tc.crossCollateralPoolBalance},
 					}
-
 					for _, data := range fundingData {
 						addr := data[0].(sdk.AccAddress)
 						amount := data[1].(*big.Int)
@@ -185,6 +189,17 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 					}
 				}
 
+				perpetual, err := perpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualId)
+				require.NoError(t, err)
+				expectedIndexerEvent := &indexerevents.UpdatePerpetualEventV2{
+					Id:               perpetual.Params.Id,
+					Ticker:           perpetual.Params.Ticker,
+					MarketId:         perpetual.Params.MarketId,
+					AtomicResolution: perpetual.Params.AtomicResolution,
+					LiquidityTier:    perpetual.Params.LiquidityTier,
+					MarketType:       v1.ConvertToPerpetualMarketType(perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS),
+				}
+
 				// Upgrade perpetual from isolated to cross.
 				ms := listingkeeper.NewMsgServerImpl(*keeper)
 				_, err = ms.UpgradeIsolatedPerpetualToCross(ctx, tc.msg)
@@ -195,7 +210,7 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 				require.NoError(t, err)
 
 				// Check perpetual market type has been upgraded to cross.
-				perpetual, err := perpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualId)
+				perpetual, err = perpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualId)
 				require.NoError(t, err)
 				require.Equal(
 					t,
@@ -210,7 +225,6 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 					{isolatedCollateralPoolAddr, big.NewInt(0)},
 					{crossCollateralPoolAddr, big.NewInt(0).Add(tc.isolatedCollateralPoolBalance, tc.crossCollateralPoolBalance)},
 				}
-
 				for _, data := range expectedBalances {
 					addr := data[0].(sdk.AccAddress)
 					amount := data[1].(*big.Int)
@@ -224,7 +238,34 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 						bankKeeper.GetBalance(ctx, addr, asstypes.AssetUsdc.Denom),
 					)
 				}
+
+				// Verify that expected indexer event was emitted.
+				emittedIndexerEvents := getUpdatePerpetualEventsFromIndexerBlock(ctx, keeper)
+				require.Equal(t, emittedIndexerEvents, []*indexerevents.UpdatePerpetualEventV2{expectedIndexerEvent})
 			},
 		)
 	}
+}
+
+// getUpdatePerpetualEventsFromIndexerBlock returns all UpdatePerpetual events from the indexer block.
+func getUpdatePerpetualEventsFromIndexerBlock(
+	ctx sdk.Context,
+	listingKeeper *keeper.Keeper,
+) []*indexerevents.UpdatePerpetualEventV2 {
+	block := listingKeeper.GetIndexerEventManager().ProduceBlock(ctx)
+	var updatePerpetualEvents []*indexerevents.UpdatePerpetualEventV2
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeUpdatePerpetual {
+			continue
+		}
+		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
+			var updatePerpetualEvent indexerevents.UpdatePerpetualEventV2
+			err := proto.Unmarshal(event.DataBytes, &updatePerpetualEvent)
+			if err != nil {
+				panic(err)
+			}
+			updatePerpetualEvents = append(updatePerpetualEvents, &updatePerpetualEvent)
+		}
+	}
+	return updatePerpetualEvents
 }
