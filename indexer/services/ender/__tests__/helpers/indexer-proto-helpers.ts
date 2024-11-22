@@ -596,7 +596,7 @@ export async function expectNoOrdersExistForSubaccountClobPairId({
   clobPairId: string,
 }): Promise<void> {
   const ordersFromDatabase: OrderFromDatabase[] = await
-    OrderTable.findBySubaccountIdAndClobPair(subaccountId, clobPairId);
+  OrderTable.findBySubaccountIdAndClobPair(subaccountId, clobPairId);
   expect(ordersFromDatabase).toHaveLength(0);
 }
 
@@ -637,7 +637,7 @@ export async function expectOrderInDatabase({
 }): Promise<void> {
   const orderId: string = OrderTable.uuid(subaccountId, clientId, clobPairId, orderFlags);
   const orderFromDatabase: OrderFromDatabase | undefined = await
-    OrderTable.findById(orderId);
+  OrderTable.findById(orderId);
 
   expect(orderFromDatabase).not.toEqual(undefined);
   expect(orderFromDatabase).toEqual(expect.objectContaining({
@@ -675,12 +675,12 @@ export async function expectFillSubaccountKafkaMessageFromLiquidationEvent(
     fill,
     position,
   ]: [
-      FillFromDatabase | undefined,
-      PerpetualPositionFromDatabase | undefined,
-    ] = await Promise.all([
-      FillTable.findById(fillId),
-      PerpetualPositionTable.findById(positionId),
-    ]);
+    FillFromDatabase | undefined,
+    PerpetualPositionFromDatabase | undefined,
+  ] = await Promise.all([
+    FillTable.findById(fillId),
+    PerpetualPositionTable.findById(positionId),
+  ]);
   expect(fill).toBeDefined();
   expect(position).toBeDefined();
 
@@ -790,14 +790,14 @@ export async function expectOrderFillAndPositionSubaccountKafkaMessageFromIds(
     fill,
     position,
   ]: [
-      OrderFromDatabase | undefined,
-      FillFromDatabase | undefined,
-      PerpetualPositionFromDatabase | undefined,
-    ] = await Promise.all([
-      OrderTable.findById(orderId),
-      FillTable.findById(fillId),
-      PerpetualPositionTable.findById(positionId),
-    ]);
+    OrderFromDatabase | undefined,
+    FillFromDatabase | undefined,
+    PerpetualPositionFromDatabase | undefined,
+  ] = await Promise.all([
+    OrderTable.findById(orderId),
+    FillTable.findById(fillId),
+    PerpetualPositionTable.findById(positionId),
+  ]);
 
   const perpetualMarket: PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable
     .findById(
@@ -896,9 +896,9 @@ export async function expectPerpetualPosition(
   },
 ) {
   const perpetualPosition:
-    PerpetualPositionFromDatabase | undefined = await PerpetualPositionTable.findById(
-      perpetualPositionId,
-    );
+  PerpetualPositionFromDatabase | undefined = await PerpetualPositionTable.findById(
+    perpetualPositionId,
+  );
 
   expect(perpetualPosition).toBeDefined();
 
