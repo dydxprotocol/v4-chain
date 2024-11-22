@@ -25,6 +25,7 @@ import {
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
+  eventPerpetualMarketTypeToIndexerPerpetualMarketType,
   expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
@@ -116,9 +117,9 @@ describe('update-perpetual-handler', () => {
       await onMessage(kafkaMessage);
 
       const perpetualMarket:
-      PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
-        event.id.toString(),
-      );
+        PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
+          event.id.toString(),
+        );
 
       expect(perpetualMarket).toEqual(expect.objectContaining({
         id: event.id.toString(),
@@ -128,7 +129,7 @@ describe('update-perpetual-handler', () => {
         liquidityTierId: event.liquidityTier,
         // Add V2-specific field expectations when testing V2 events
         ...('marketType' in event && {
-          marketType: event.marketType,
+          marketType: eventPerpetualMarketTypeToIndexerPerpetualMarketType(event.marketType),
         }),
       }));
       expect(perpetualMarket).toEqual(
