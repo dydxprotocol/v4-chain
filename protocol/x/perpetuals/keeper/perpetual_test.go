@@ -17,6 +17,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
@@ -66,8 +67,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 			MarketId:         marketId,
 			AtomicResolution: item.Params.AtomicResolution,
 			LiquidityTier:    liquidityTier,
-			// TODO
-			MarketType: item.Params.MarketType,
+			MarketType:       v1.ConvertToPerpetualMarketType(item.Params.MarketType),
 		}
 
 		// Verify updatedp perpetual in store.
