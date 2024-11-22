@@ -82,7 +82,7 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 			crossCollateralPoolBalance:    big.NewInt(1),
 			expectedErr:                   "",
 		},
-		"Failure: Empty authority": {
+		"Failure - empty authority": {
 			msg: &types.MsgUpgradeIsolatedPerpetualToCross{
 				Authority:   "",
 				PerpetualId: 3, // isolated
@@ -93,7 +93,7 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 			crossCollateralPoolBalance:    big.NewInt(1),
 			expectedErr:                   "invalid authority",
 		},
-		"Failure: Invalid authority": {
+		"Failure - invalid authority": {
 			msg: &types.MsgUpgradeIsolatedPerpetualToCross{
 				Authority:   "invalid",
 				PerpetualId: 3, // isolated
@@ -104,7 +104,7 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 			crossCollateralPoolBalance:    big.NewInt(1),
 			expectedErr:                   "invalid authority",
 		},
-		"Failure: Invalid perpetual ID": {
+		"Failure - invalid perpetual ID": {
 			msg: &types.MsgUpgradeIsolatedPerpetualToCross{
 				Authority:   validAuthority,
 				PerpetualId: 99999999, // invalid
