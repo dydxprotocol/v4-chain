@@ -1,6 +1,7 @@
 package events
 
 import (
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
@@ -20,6 +21,6 @@ func NewUpdatePerpetualEvent(
 		MarketId:         marketId,
 		AtomicResolution: atomicResolution,
 		LiquidityTier:    liquidityTier,
-		MarketType:       marketType,
+		MarketType:       v1.ConvertToPerpetualMarketType(marketType),
 	}
 }
