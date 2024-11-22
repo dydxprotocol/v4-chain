@@ -24,7 +24,7 @@ BEGIN
         "ticker" = perpetual_market_record."ticker",
         "marketId" = perpetual_market_record."marketId",
         "atomicResolution" = perpetual_market_record."atomicResolution",
-        "liquidityTierId" = perpetual_market_record."liquidityTierId"
+        "liquidityTierId" = perpetual_market_record."liquidityTierId",
         "marketType" = perpetual_market_record."marketType"
     WHERE "id" = perpetual_market_id
     RETURNING * INTO perpetual_market_record;
