@@ -29,6 +29,7 @@ import {
   TransferTable,
   TransferColumns,
   Ordering,
+  VaultPnlTicksView,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import bounds from 'binary-searching';
@@ -343,10 +344,9 @@ async function getVaultSubaccountPnlTicks(
     PnlTicksFromDatabase[],
     PnlTicksFromDatabase[],
   ] = await Promise.all([
-    PnlTicksTable.getPnlTicksAtIntervals(
+    VaultPnlTicksView.getVaultsPnl(
       resolution,
       windowSeconds,
-      vaultSubaccountIds,
       getVautlPnlStartDate(),
     ),
     PnlTicksTable.getLatestPnlTick(
@@ -559,10 +559,9 @@ export async function getLatestPnlTick(
     PnlTicksFromDatabase[],
     PnlTicksFromDatabase[],
   ] = await Promise.all([
-    PnlTicksTable.getPnlTicksAtIntervals(
+    VaultPnlTicksView.getVaultsPnl(
       PnlTickInterval.hour,
       config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS * 60 * 60,
-      vaultSubaccountIds,
       getVautlPnlStartDate(),
     ),
     PnlTicksTable.getLatestPnlTick(
