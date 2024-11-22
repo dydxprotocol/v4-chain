@@ -174,6 +174,7 @@ func ListingKeepers(
 				stateStore,
 				db,
 				cdc,
+				indexerEventManager,
 				pricesKeeper,
 				perpetualsKeeper,
 				clobKeeper,
@@ -194,6 +195,7 @@ func createListingKeeper(
 	stateStore storetypes.CommitMultiStore,
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
+	indexerEventManager indexer_manager.IndexerEventManager,
 	pricesKeeper *priceskeeper.Keeper,
 	perpetualsKeeper *perpetualskeeper.Keeper,
 	clobKeeper *clobkeeper.Keeper,
@@ -215,6 +217,7 @@ func createListingKeeper(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		indexerEventManager,
 		pricesKeeper,
 		clobKeeper,
 		marketMapKeeper,

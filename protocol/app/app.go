@@ -1238,6 +1238,7 @@ func New(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		app.IndexerEventManager,
 		app.PricesKeeper,
 		app.ClobKeeper,
 		&app.MarketMapKeeper,
