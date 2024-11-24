@@ -1308,6 +1308,8 @@ func launchValidatorInDir(
 		"--oracle.enabled=false",
 		"--oracle.metrics_enabled=false",
 		"--log_level=error",
+		// TODO(CT-1329): Currently, the TestApp framework does not work well with OE,
+		// since the non-deterministic test app instances does not handle go routines.
 		"--optimistic-execution-enabled=false",
 	})
 
