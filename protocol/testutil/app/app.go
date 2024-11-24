@@ -1308,6 +1308,7 @@ func launchValidatorInDir(
 		"--oracle.enabled=false",
 		"--oracle.metrics_enabled=false",
 		"--log_level=error",
+		"--optimistic-execution-enabled=false",
 	})
 
 	ctx := svrcmd.CreateExecuteContext(parentCtx)
