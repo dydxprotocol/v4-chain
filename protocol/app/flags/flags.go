@@ -80,7 +80,7 @@ const (
 
 	DefaultVEOracleEnabled = true
 
-	DefaultOptimisticExecutionEnabled       = false
+	DefaultOptimisticExecutionEnabled       = true
 	DefaultOptimisticExecutionTestAbortRate = 0
 )
 
