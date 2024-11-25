@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"math/big"
 
@@ -150,6 +151,43 @@ func (k Keeper) CreatePerpetual(
 	}
 
 	return perpetual.GetId(), nil
+}
+
+func (k Keeper) UpgradeIsolatedPerpetualToCross(
+	ctx sdk.Context,
+	perpetualId uint32,
+) error {
+	// Validate perpetual exists and is in isolated mode
+	perpetual, err := k.PerpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+	if perpetual.Params.GetMarketType() != perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+		return fmt.Errorf("perpetual %d is not an isolated perpetual and cannot be upgraded to cross", perpetualId)
+	}
+
+	err = k.SubaccountsKeeper.TransferIsolatedInsuranceFundToCross(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	err = k.SubaccountsKeeper.TransferIsolatedCollateralToCross(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	_, err = k.PerpetualsKeeper.SetPerpetualMarketType(
+		ctx,
+		perpetualId,
+		perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+	)
+	if err != nil {
+		return err
+	}
+
+	// TODO Propagate changes to indexer
+
+	return nil
 }
 
 // Function to set listing vault deposit params in module store

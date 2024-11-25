@@ -14,6 +14,7 @@ import "dydxprotocol/clob/mev.proto";
 import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
 import "dydxprotocol/subaccounts/streaming.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
+import "dydxprotocol/prices/streaming.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
@@ -182,6 +183,9 @@ message StreamOrderbookUpdatesRequest {
 
   // Subaccount ids to stream subaccount updates for.
   repeated dydxprotocol.subaccounts.SubaccountId subaccount_ids = 2;
+
+  // Market ids for price updates.
+  repeated uint32 market_ids = 3;
 }
 
 // StreamOrderbookUpdatesResponse is a response message for the
@@ -207,6 +211,7 @@ message StreamUpdate {
     StreamOrderbookFill order_fill = 4;
     StreamTakerOrder taker_order = 5;
     dydxprotocol.subaccounts.StreamSubaccountUpdate subaccount_update = 6;
+    dydxprotocol.prices.StreamPriceUpdate price_update = 7;
   }
 }
 

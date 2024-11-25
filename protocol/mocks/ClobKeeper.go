@@ -332,26 +332,6 @@ func (_m *ClobKeeper) GetIndexerEventManager() indexer_manager.IndexerEventManag
 	return r0
 }
 
-// GetInsuranceFundBalance provides a mock function with given fields: ctx, perpetualId
-func (_m *ClobKeeper) GetInsuranceFundBalance(ctx types.Context, perpetualId uint32) *big.Int {
-	ret := _m.Called(ctx, perpetualId)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetInsuranceFundBalance")
-	}
-
-	var r0 *big.Int
-	if rf, ok := ret.Get(0).(func(types.Context, uint32) *big.Int); ok {
-		r0 = rf(ctx, perpetualId)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
-		}
-	}
-
-	return r0
-}
-
 // GetLiquidationInsuranceFundDelta provides a mock function with given fields: ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks
 func (_m *ClobKeeper) GetLiquidationInsuranceFundDelta(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, isBuy bool, fillAmount uint64, subticks clobtypes.Subticks) (*big.Int, error) {
 	ret := _m.Called(ctx, subaccountId, perpetualId, isBuy, fillAmount, subticks)

@@ -64,7 +64,16 @@ type PerpetualsKeeper interface {
 		marketType perpetualtypes.PerpetualMarketType,
 	) (perpetualtypes.Perpetual, error)
 	AcquireNextPerpetualID(ctx sdk.Context) uint32
+	GetPerpetual(
+		ctx sdk.Context,
+		id uint32,
+	) (val perpetualtypes.Perpetual, err error)
 	GetAllPerpetuals(ctx sdk.Context) (list []perpetualtypes.Perpetual)
+	SetPerpetualMarketType(
+		ctx sdk.Context,
+		id uint32,
+		marketType perpetualtypes.PerpetualMarketType,
+	) (perpetualtypes.Perpetual, error)
 }
 
 type VaultKeeper interface {
@@ -88,5 +97,16 @@ type VaultKeeper interface {
 		ctx sdk.Context,
 		vaultId vaulttypes.VaultId,
 		status vaulttypes.VaultStatus,
+	) error
+}
+
+type SubaccountsKeeper interface {
+	TransferIsolatedInsuranceFundToCross(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) error
+	TransferIsolatedCollateralToCross(
+		ctx sdk.Context,
+		perpetualId uint32,
 	) error
 }

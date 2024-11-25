@@ -2,6 +2,7 @@ syntax = "proto3";
 package dydxprotocol.clob;
 
 import "dydxprotocol/subaccounts/streaming.proto";
+import "dydxprotocol/prices/streaming.proto";
 import "dydxprotocol/clob/query.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
@@ -13,5 +14,6 @@ message StagedFinalizeBlockEvent {
     StreamOrderbookFill order_fill = 1;
     dydxprotocol.subaccounts.StreamSubaccountUpdate subaccount_update = 2;
     StreamOrderbookUpdate orderbook_update = 3;
+    dydxprotocol.prices.StreamPriceUpdate price_update = 4;
   }
 }

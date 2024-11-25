@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -27,6 +28,13 @@ type AssetsKeeper interface {
 		convertedQuantums *big.Int,
 		coin sdk.Coin,
 		err error,
+	)
+	GetAsset(
+		ctx sdk.Context,
+		id uint32,
+	) (
+		val assettypes.Asset,
+		exists bool,
 	)
 }
 
@@ -91,6 +99,7 @@ type BankKeeper interface {
 	) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
 type BlocktimeKeeper interface {

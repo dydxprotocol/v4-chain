@@ -8,6 +8,7 @@ import (
 	"time"
 
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -824,4 +825,41 @@ func (k Keeper) GetAllRelevantPerpetuals(
 
 func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingManager {
 	return k.streamingManager
+}
+
+// GetInsuranceFundBalance returns the current balance of the specific insurance fund based on the
+// perpetual (in quote quantums).
+// This calls the Bank Keeper’s GetBalance() function for the Module Address of the insurance fund.
+func (k Keeper) GetInsuranceFundBalance(ctx sdk.Context, perpetualId uint32) (balance *big.Int) {
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		panic("GetInsuranceFundBalance: Usdc asset not found in state")
+	}
+	insuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
+	if err != nil {
+		return nil
+	}
+	insuranceFundBalance := k.bankKeeper.GetBalance(
+		ctx,
+		insuranceFundAddr,
+		usdcAsset.Denom,
+	)
+
+	// Return as big.Int.
+	return insuranceFundBalance.Amount.BigInt()
+}
+
+func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		panic("GetCrossInsuranceFundBalance: Usdc asset not found in state")
+	}
+	insuranceFundBalance := k.bankKeeper.GetBalance(
+		ctx,
+		perptypes.InsuranceFundModuleAddress,
+		usdcAsset.Denom,
+	)
+
+	// Return as big.Int.
+	return insuranceFundBalance.Amount.BigInt()
 }

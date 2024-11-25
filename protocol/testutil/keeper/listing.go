@@ -11,9 +11,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	perpetualskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	subaccountskeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	marketmapkeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
@@ -37,6 +39,9 @@ func ListingKeepers(
 	perpetualsKeeper *perpetualskeeper.Keeper,
 	clobKeeper *clobkeeper.Keeper,
 	marketMapKeeper *marketmapkeeper.Keeper,
+	assetsKeeper *assetskeeper.Keeper,
+	bankKeeper_out *bankkeeper.BaseKeeper,
+	subaccountsKeeper *subaccountskeeper.Keeper,
 ) {
 	ctx = initKeepers(
 		t, func(
@@ -63,13 +68,13 @@ func ListingKeepers(
 				db,
 				cdc,
 			)
-			bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountsKeeper)
+			bankKeeper_out, _ = createBankKeeper(stateStore, db, cdc, accountsKeeper)
 			stakingKeeper, _ := createStakingKeeper(
 				stateStore,
 				db,
 				cdc,
 				accountsKeeper,
-				bankKeeper,
+				bankKeeper_out,
 			)
 			statsKeeper, _ := createStatsKeeper(
 				stateStore,
@@ -113,7 +118,7 @@ func ListingKeepers(
 				epochsKeeper,
 				transientStoreKey,
 			)
-			assetsKeeper, _ := createAssetsKeeper(
+			assetsKeeper, _ = createAssetsKeeper(
 				stateStore,
 				db,
 				cdc,
@@ -126,19 +131,19 @@ func ListingKeepers(
 			rewardsKeeper, _ := createRewardsKeeper(
 				stateStore,
 				assetsKeeper,
-				bankKeeper,
+				bankKeeper_out,
 				feeTiersKeeper,
 				pricesKeeper,
 				indexerEventManager,
 				db,
 				cdc,
 			)
-			subaccountsKeeper, _ := createSubaccountsKeeper(
+			subaccountsKeeper, _ = createSubaccountsKeeper(
 				stateStore,
 				db,
 				cdc,
 				assetsKeeper,
-				bankKeeper,
+				bankKeeper_out,
 				perpetualsKeeper,
 				blockTimeKeeper,
 				transientStoreKey,
@@ -151,7 +156,7 @@ func ListingKeepers(
 				memClob,
 				assetsKeeper,
 				blockTimeKeeper,
-				bankKeeper,
+				bankKeeper_out,
 				feeTiersKeeper,
 				perpetualsKeeper,
 				pricesKeeper,
@@ -173,6 +178,7 @@ func ListingKeepers(
 				perpetualsKeeper,
 				clobKeeper,
 				marketMapKeeper,
+				subaccountsKeeper,
 				vaultKeeper,
 			)
 
@@ -180,7 +186,8 @@ func ListingKeepers(
 		},
 	)
 
-	return ctx, keeper, storeKey, mockTimeProvider, pricesKeeper, perpetualsKeeper, clobKeeper, marketMapKeeper
+	return ctx, keeper, storeKey, mockTimeProvider, pricesKeeper, perpetualsKeeper,
+		clobKeeper, marketMapKeeper, assetsKeeper, bankKeeper_out, subaccountsKeeper
 }
 
 func createListingKeeper(
@@ -191,6 +198,7 @@ func createListingKeeper(
 	perpetualsKeeper *perpetualskeeper.Keeper,
 	clobKeeper *clobkeeper.Keeper,
 	marketMapKeeper *marketmapkeeper.Keeper,
+	subaccountsKeeper *subaccountskeeper.Keeper,
 	vaultkeeper *vaultkeeper.Keeper,
 ) (
 	*keeper.Keeper,
@@ -211,6 +219,7 @@ func createListingKeeper(
 		clobKeeper,
 		marketMapKeeper,
 		perpetualsKeeper,
+		subaccountsKeeper,
 		vaultkeeper,
 	)
 

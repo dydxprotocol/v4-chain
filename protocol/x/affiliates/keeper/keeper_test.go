@@ -484,6 +484,36 @@ func TestSetAffiliateWhitelist(t *testing.T) {
 			},
 			expectedError: types.ErrRevShareSafetyViolation,
 		},
+		{
+			name: "Invalid bech32 address present",
+			whitelist: types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses: []string{
+							constants.AliceAccAddress.String(),
+							"dydxinvalidaddress",
+						},
+						TakerFeeSharePpm: 500_000, // 50%
+					},
+				},
+			},
+			expectedError: types.ErrInvalidAddress,
+		},
+		{
+			name: "Validator operator address not accepted",
+			whitelist: types.AffiliateWhitelist{
+				Tiers: []types.AffiliateWhitelist_Tier{
+					{
+						Addresses: []string{
+							constants.AliceAccAddress.String(),
+							"dydxvaloper1et2kxktzr6tav65uhrxsyr8gx82xvan6gl78xd",
+						},
+						TakerFeeSharePpm: 500_000, // 50%
+					},
+				},
+			},
+			expectedError: types.ErrInvalidAddress,
+		},
 	}
 
 	for _, tc := range testCases {

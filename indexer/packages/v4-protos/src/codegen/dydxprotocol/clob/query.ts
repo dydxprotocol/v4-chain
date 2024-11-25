@@ -7,6 +7,7 @@ import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } fro
 import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
 import { LiquidationsConfig, LiquidationsConfigSDKType } from "./liquidations_config";
 import { StreamSubaccountUpdate, StreamSubaccountUpdateSDKType } from "../subaccounts/streaming";
+import { StreamPriceUpdate, StreamPriceUpdateSDKType } from "../prices/streaming";
 import { OffChainUpdateV1, OffChainUpdateV1SDKType } from "../indexer/off_chain_updates/off_chain_updates";
 import { ClobMatch, ClobMatchSDKType } from "./matches";
 import * as _m0 from "protobufjs/minimal";
@@ -274,6 +275,9 @@ export interface StreamOrderbookUpdatesRequest {
   /** Subaccount ids to stream subaccount updates for. */
 
   subaccountIds: SubaccountId[];
+  /** Market ids for price updates. */
+
+  marketIds: number[];
 }
 /**
  * StreamOrderbookUpdatesRequest is a request message for the
@@ -286,6 +290,9 @@ export interface StreamOrderbookUpdatesRequestSDKType {
   /** Subaccount ids to stream subaccount updates for. */
 
   subaccount_ids: SubaccountIdSDKType[];
+  /** Market ids for price updates. */
+
+  market_ids: number[];
 }
 /**
  * StreamOrderbookUpdatesResponse is a response message for the
@@ -320,6 +327,7 @@ export interface StreamUpdate {
   orderFill?: StreamOrderbookFill;
   takerOrder?: StreamTakerOrder;
   subaccountUpdate?: StreamSubaccountUpdate;
+  priceUpdate?: StreamPriceUpdate;
 }
 /**
  * StreamUpdate is an update that will be pushed through the
@@ -336,6 +344,7 @@ export interface StreamUpdateSDKType {
   order_fill?: StreamOrderbookFillSDKType;
   taker_order?: StreamTakerOrderSDKType;
   subaccount_update?: StreamSubaccountUpdateSDKType;
+  price_update?: StreamPriceUpdateSDKType;
 }
 /**
  * StreamOrderbookUpdate provides information on an orderbook update. Used in
@@ -1288,7 +1297,8 @@ export const QueryNextClobPairIdResponse = {
 function createBaseStreamOrderbookUpdatesRequest(): StreamOrderbookUpdatesRequest {
   return {
     clobPairId: [],
-    subaccountIds: []
+    subaccountIds: [],
+    marketIds: []
   };
 }
 
@@ -1306,6 +1316,13 @@ export const StreamOrderbookUpdatesRequest = {
       SubaccountId.encode(v!, writer.uint32(18).fork()).ldelim();
     }
 
+    writer.uint32(26).fork();
+
+    for (const v of message.marketIds) {
+      writer.uint32(v);
+    }
+
+    writer.ldelim();
     return writer;
   },
 
@@ -1335,6 +1352,19 @@ export const StreamOrderbookUpdatesRequest = {
           message.subaccountIds.push(SubaccountId.decode(reader, reader.uint32()));
           break;
 
+        case 3:
+          if ((tag & 7) === 2) {
+            const end2 = reader.uint32() + reader.pos;
+
+            while (reader.pos < end2) {
+              message.marketIds.push(reader.uint32());
+            }
+          } else {
+            message.marketIds.push(reader.uint32());
+          }
+
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1348,6 +1378,7 @@ export const StreamOrderbookUpdatesRequest = {
     const message = createBaseStreamOrderbookUpdatesRequest();
     message.clobPairId = object.clobPairId?.map(e => e) || [];
     message.subaccountIds = object.subaccountIds?.map(e => SubaccountId.fromPartial(e)) || [];
+    message.marketIds = object.marketIds?.map(e => e) || [];
     return message;
   }
 
@@ -1405,7 +1436,8 @@ function createBaseStreamUpdate(): StreamUpdate {
     orderbookUpdate: undefined,
     orderFill: undefined,
     takerOrder: undefined,
-    subaccountUpdate: undefined
+    subaccountUpdate: undefined,
+    priceUpdate: undefined
   };
 }
 
@@ -1433,6 +1465,10 @@ export const StreamUpdate = {
 
     if (message.subaccountUpdate !== undefined) {
       StreamSubaccountUpdate.encode(message.subaccountUpdate, writer.uint32(50).fork()).ldelim();
+    }
+
+    if (message.priceUpdate !== undefined) {
+      StreamPriceUpdate.encode(message.priceUpdate, writer.uint32(58).fork()).ldelim();
     }
 
     return writer;
@@ -1471,6 +1507,10 @@ export const StreamUpdate = {
           message.subaccountUpdate = StreamSubaccountUpdate.decode(reader, reader.uint32());
           break;
 
+        case 7:
+          message.priceUpdate = StreamPriceUpdate.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1488,6 +1528,7 @@ export const StreamUpdate = {
     message.orderFill = object.orderFill !== undefined && object.orderFill !== null ? StreamOrderbookFill.fromPartial(object.orderFill) : undefined;
     message.takerOrder = object.takerOrder !== undefined && object.takerOrder !== null ? StreamTakerOrder.fromPartial(object.takerOrder) : undefined;
     message.subaccountUpdate = object.subaccountUpdate !== undefined && object.subaccountUpdate !== null ? StreamSubaccountUpdate.fromPartial(object.subaccountUpdate) : undefined;
+    message.priceUpdate = object.priceUpdate !== undefined && object.priceUpdate !== null ? StreamPriceUpdate.fromPartial(object.priceUpdate) : undefined;
     return message;
   }
 

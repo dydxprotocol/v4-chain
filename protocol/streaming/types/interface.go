@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -14,6 +15,7 @@ type FullNodeStreamingManager interface {
 	Subscribe(
 		clobPairIds []uint32,
 		subaccountIds []*satypes.SubaccountId,
+		marketIds []uint32,
 		srv OutgoingMessageSender,
 	) (
 		err error,
@@ -23,12 +25,16 @@ type FullNodeStreamingManager interface {
 	InitializeNewStreams(
 		getOrderbookSnapshot func(clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates,
 		subaccountSnapshots map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate,
+		priceSnapshots map[uint32]*pricestypes.StreamPriceUpdate,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
 	GetSubaccountSnapshotsForInitStreams(
 		getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
 	) map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate
+	GetPriceSnapshotsForInitStreams(
+		getPriceSnapshot func(marketId uint32) *pricestypes.StreamPriceUpdate,
+	) map[uint32]*pricestypes.StreamPriceUpdate
 	SendOrderbookUpdates(
 		offchainUpdates *clobtypes.OffchainUpdates,
 		ctx sdk.Context,

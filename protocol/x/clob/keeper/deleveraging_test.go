@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
-	"math"
 	"math/big"
 	"testing"
 	"time"
@@ -19,7 +17,6 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -29,133 +26,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
-
-func TestGetInsuranceFundBalance(t *testing.T) {
-	tests := map[string]struct {
-		// Setup
-		assets               []assettypes.Asset
-		insuranceFundBalance *big.Int
-		perpetualId          uint32
-		perpetual            *perptypes.Perpetual
-
-		// Expectations.
-		expectedInsuranceFundBalance *big.Int
-		expectedError                error
-	}{
-		"can get zero balance": {
-			assets: []assettypes.Asset{
-				*constants.Usdc,
-			},
-			perpetualId:                  0,
-			insuranceFundBalance:         new(big.Int),
-			expectedInsuranceFundBalance: big.NewInt(0),
-		},
-		"can get positive balance": {
-			assets: []assettypes.Asset{
-				*constants.Usdc,
-			},
-			perpetualId:                  0,
-			insuranceFundBalance:         big.NewInt(100),
-			expectedInsuranceFundBalance: big.NewInt(100),
-		},
-		"can get greater than MaxUint64 balance": {
-			assets: []assettypes.Asset{
-				*constants.Usdc,
-			},
-			perpetualId: 0,
-			insuranceFundBalance: new(big.Int).Add(
-				new(big.Int).SetUint64(math.MaxUint64),
-				new(big.Int).SetUint64(math.MaxUint64),
-			),
-			expectedInsuranceFundBalance: new(big.Int).Add(
-				new(big.Int).SetUint64(math.MaxUint64),
-				new(big.Int).SetUint64(math.MaxUint64),
-			),
-		},
-		"can get zero balance - isolated market": {
-			assets: []assettypes.Asset{
-				*constants.Usdc,
-			},
-			perpetualId:                  3, // Isolated market.
-			insuranceFundBalance:         new(big.Int),
-			expectedInsuranceFundBalance: big.NewInt(0),
-		},
-		"can get positive balance - isolated market": {
-			assets: []assettypes.Asset{
-				*constants.Usdc,
-			},
-			perpetualId:                  3, // Isolated market.
-			insuranceFundBalance:         big.NewInt(100),
-			expectedInsuranceFundBalance: big.NewInt(100),
-		},
-		"panics when asset not found in state": {
-			assets:        []assettypes.Asset{},
-			perpetualId:   0,
-			expectedError: errors.New("GetInsuranceFundBalance: Usdc asset not found in state"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			// Setup keeper state.
-			memClob := memclob.NewMemClobPriceTimePriority(false)
-			bankMock := &mocks.BankKeeper{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
-
-			ctx := ks.Ctx.WithIsCheckTx(true)
-			// Create the default markets.
-			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
-
-			// Create liquidity tiers.
-			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
-
-			keepertest.CreateTestPerpetuals(t, ctx, ks.PerpetualsKeeper)
-
-			for _, a := range tc.assets {
-				_, err := ks.AssetsKeeper.CreateAsset(
-					ks.Ctx,
-					a.Id,
-					a.Symbol,
-					a.Denom,
-					a.DenomExponent,
-					a.HasMarket,
-					a.MarketId,
-					a.AtomicResolution,
-				)
-				require.NoError(t, err)
-			}
-
-			insuranceFundAddr, err := ks.PerpetualsKeeper.GetInsuranceFundModuleAddress(ks.Ctx, tc.perpetualId)
-			require.NoError(t, err)
-			if tc.insuranceFundBalance != nil {
-				bankMock.On(
-					"GetBalance",
-					mock.Anything,
-					insuranceFundAddr,
-					constants.Usdc.Denom,
-				).Return(
-					sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
-				)
-			}
-
-			if tc.expectedError != nil {
-				require.PanicsWithValue(
-					t,
-					tc.expectedError.Error(),
-					func() {
-						ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx, tc.perpetualId)
-					},
-				)
-			} else {
-				require.Equal(
-					t,
-					tc.expectedInsuranceFundBalance,
-					ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx, tc.perpetualId),
-				)
-			}
-		})
-	}
-}
 
 func TestIsValidInsuranceFundDelta(t *testing.T) {
 	tests := map[string]struct {

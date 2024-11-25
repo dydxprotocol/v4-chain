@@ -100,6 +100,40 @@ export interface MsgSetListingVaultDepositParamsResponse {}
  */
 
 export interface MsgSetListingVaultDepositParamsResponseSDKType {}
+/**
+ * MsgUpgradeIsolatedPerpetualToCross is used to upgrade a market from
+ * isolated margin to cross margin.
+ */
+
+export interface MsgUpgradeIsolatedPerpetualToCross {
+  authority: string;
+  /** ID of the perpetual to be upgraded to CROSS */
+
+  perpetualId: number;
+}
+/**
+ * MsgUpgradeIsolatedPerpetualToCross is used to upgrade a market from
+ * isolated margin to cross margin.
+ */
+
+export interface MsgUpgradeIsolatedPerpetualToCrossSDKType {
+  authority: string;
+  /** ID of the perpetual to be upgraded to CROSS */
+
+  perpetual_id: number;
+}
+/**
+ * MsgUpgradeIsolatedPerpetualToCrossResponse defines the
+ * UpgradeIsolatedPerpetualToCross response type.
+ */
+
+export interface MsgUpgradeIsolatedPerpetualToCrossResponse {}
+/**
+ * MsgUpgradeIsolatedPerpetualToCrossResponse defines the
+ * UpgradeIsolatedPerpetualToCross response type.
+ */
+
+export interface MsgUpgradeIsolatedPerpetualToCrossResponseSDKType {}
 
 function createBaseMsgSetMarketsHardCap(): MsgSetMarketsHardCap {
   return {
@@ -363,6 +397,95 @@ export const MsgSetListingVaultDepositParamsResponse = {
 
   fromPartial(_: DeepPartial<MsgSetListingVaultDepositParamsResponse>): MsgSetListingVaultDepositParamsResponse {
     const message = createBaseMsgSetListingVaultDepositParamsResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgUpgradeIsolatedPerpetualToCross(): MsgUpgradeIsolatedPerpetualToCross {
+  return {
+    authority: "",
+    perpetualId: 0
+  };
+}
+
+export const MsgUpgradeIsolatedPerpetualToCross = {
+  encode(message: MsgUpgradeIsolatedPerpetualToCross, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.perpetualId !== 0) {
+      writer.uint32(16).uint32(message.perpetualId);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpgradeIsolatedPerpetualToCross {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpgradeIsolatedPerpetualToCross();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.perpetualId = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgUpgradeIsolatedPerpetualToCross>): MsgUpgradeIsolatedPerpetualToCross {
+    const message = createBaseMsgUpgradeIsolatedPerpetualToCross();
+    message.authority = object.authority ?? "";
+    message.perpetualId = object.perpetualId ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseMsgUpgradeIsolatedPerpetualToCrossResponse(): MsgUpgradeIsolatedPerpetualToCrossResponse {
+  return {};
+}
+
+export const MsgUpgradeIsolatedPerpetualToCrossResponse = {
+  encode(_: MsgUpgradeIsolatedPerpetualToCrossResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgUpgradeIsolatedPerpetualToCrossResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgUpgradeIsolatedPerpetualToCrossResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgUpgradeIsolatedPerpetualToCrossResponse>): MsgUpgradeIsolatedPerpetualToCrossResponse {
+    const message = createBaseMsgUpgradeIsolatedPerpetualToCrossResponse();
     return message;
   }
 
