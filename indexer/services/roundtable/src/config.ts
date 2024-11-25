@@ -140,7 +140,7 @@ export const configSchema = {
     default: 30 * ONE_DAY_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_CACHE_ORDERBOOK_MID_PRICES: parseInteger({
-    default: ONE_SECOND_IN_MILLISECONDS * 5,
+    default: TEN_SECONDS_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_REFRESH_VAULT_PNL: parseInteger({
     default: 5 * ONE_MINUTE_IN_MILLISECONDS,
