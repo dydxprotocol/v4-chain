@@ -142,7 +142,7 @@ func (k Keeper) CreatePerpetual(
 		ticker,
 		marketId,
 		atomicResolution,
-		types.Default8hrFundingPpm,
+		types.DefaultFundingPpm,
 		types.LiquidityTier_Isolated,
 		perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 	)
