@@ -1010,6 +1010,7 @@ func New(
 		},
 		app.RevShareKeeper,
 		&app.MarketMapKeeper,
+		app.FullNodeStreamingManager,
 	)
 	pricesModule := pricesmodule.NewAppModule(
 		appCodec,

@@ -197,7 +197,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	err error,
 ) {
 	// Perform some basic validation on the request.
-	if len(clobPairIds) == 0 && len(subaccountIds) == 0 {
+	if len(clobPairIds) == 0 && len(subaccountIds) == 0 && len(marketIds) == 0 {
 		return types.ErrInvalidStreamingRequest
 	}
 
@@ -493,6 +493,33 @@ func (sm *FullNodeStreamingManagerImpl) SendSubaccountUpdate(
 	)
 }
 
+// SendPriceUpdates sends price updates to the subscribers.
+func (sm *FullNodeStreamingManagerImpl) SendPriceUpdate(
+	ctx sdk.Context,
+	priceUpdate pricestypes.StreamPriceUpdate,
+) {
+	if !lib.IsDeliverTxMode(ctx) {
+		// If not `DeliverTx`, return since there is no optimistic price updates.
+		return
+	}
+
+	metrics.IncrCounter(
+		metrics.GrpcSendSubaccountUpdateCount,
+		1,
+	)
+
+	// If `DeliverTx`, updates should be staged to be streamed after consensus finalizes on a block.
+	stagedEvent := clobtypes.StagedFinalizeBlockEvent{
+		Event: &clobtypes.StagedFinalizeBlockEvent_PriceUpdate{
+			PriceUpdate: &priceUpdate,
+		},
+	}
+	sm.finalizeBlockStager.StageFinalizeBlockEvent(
+		ctx,
+		&stagedEvent,
+	)
+}
+
 // Retrieve all events staged during `FinalizeBlock`.
 func (sm *FullNodeStreamingManagerImpl) GetStagedFinalizeBlockEvents(
 	ctx sdk.Context,
@@ -542,6 +569,14 @@ func (sm *FullNodeStreamingManagerImpl) TracksSubaccountId(subaccountId satypes.
 	sm.Lock()
 	defer sm.Unlock()
 	_, exists := sm.subaccountIdToSubscriptionIdMapping[subaccountId]
+	return exists
+}
+
+// TracksMarketId checks if a market id is being tracked by the streaming manager.
+func (sm *FullNodeStreamingManagerImpl) TracksMarketId(marketId uint32) bool {
+	sm.Lock()
+	defer sm.Unlock()
+	_, exists := sm.marketIdToSubscriptionIdMapping[marketId]
 	return exists
 }
 
@@ -773,6 +808,31 @@ func getStreamUpdatesForSubaccountUpdates(
 	return streamUpdates, subaccountIds
 }
 
+func getStreamUpdatesForPriceUpdates(
+	priceUpdates []pricestypes.StreamPriceUpdate,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) (
+	streamUpdates []clobtypes.StreamUpdate,
+	marketIds []uint32,
+) {
+	// Group subaccount updates by subaccount id.
+	streamUpdates = make([]clobtypes.StreamUpdate, 0)
+	marketIds = make([]uint32, 0)
+	for _, priceUpdate := range priceUpdates {
+		streamUpdate := clobtypes.StreamUpdate{
+			UpdateMessage: &clobtypes.StreamUpdate_PriceUpdate{
+				PriceUpdate: &priceUpdate,
+			},
+			BlockHeight: blockHeight,
+			ExecMode:    uint32(execMode),
+		}
+		streamUpdates = append(streamUpdates, streamUpdate)
+		marketIds = append(marketIds, priceUpdate.MarketId)
+	}
+	return streamUpdates, marketIds
+}
+
 // AddOrderUpdatesToCache adds a series of updates to the full node streaming cache.
 // Clob pair ids are the clob pair id each update is relevant to.
 func (sm *FullNodeStreamingManagerImpl) AddOrderUpdatesToCache(
@@ -976,6 +1036,23 @@ func (sm *FullNodeStreamingManagerImpl) cacheStreamUpdatesBySubaccountWithLock(
 	}
 }
 
+// cacheStreamUpdatesByMarketIdWithLock adds stream updates to cache,
+// and store corresponding market ids.
+// This method requires the lock and assumes that the lock has already been
+// acquired by the caller.
+func (sm *FullNodeStreamingManagerImpl) cacheStreamUpdatesByMarketIdWithLock(
+	streamUpdates []clobtypes.StreamUpdate,
+	marketIds []uint32,
+) {
+	sm.streamUpdateCache = append(sm.streamUpdateCache, streamUpdates...)
+	for _, marketId := range marketIds {
+		sm.streamUpdateSubscriptionCache = append(
+			sm.streamUpdateSubscriptionCache,
+			sm.marketIdToSubscriptionIdMapping[marketId],
+		)
+	}
+}
+
 // Grpc Streaming logic after consensus agrees on a block.
 // - Stream all events staged during `FinalizeBlock`.
 // - Stream orderbook updates to sync fills in local ops queue.
@@ -989,7 +1066,8 @@ func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
 
 	finalizedFills,
 		finalizedSubaccountUpdates,
-		finalizedOrderbookUpdates := sm.getStagedEventsFromFinalizeBlock(ctx)
+		finalizedOrderbookUpdates,
+		finalizedPriceUpdates := sm.getStagedEventsFromFinalizeBlock(ctx)
 
 	sm.Lock()
 	defer sm.Unlock()
@@ -1032,6 +1110,14 @@ func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
 	)
 	sm.cacheStreamUpdatesBySubaccountWithLock(subaccountStreamUpdates, subaccountIds)
 
+	// Finally, cache updates for finalized subaccount updates
+	priceStreamUpdates, marketIds := getStreamUpdatesForPriceUpdates(
+		finalizedPriceUpdates,
+		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+	)
+	sm.cacheStreamUpdatesByMarketIdWithLock(priceStreamUpdates, marketIds)
+
 	// Emit all stream updates in a single batch.
 	// Note we still have the lock, which is released right before function returns.
 	sm.FlushStreamUpdatesWithLock()
@@ -1045,6 +1131,7 @@ func (sm *FullNodeStreamingManagerImpl) getStagedEventsFromFinalizeBlock(
 	finalizedFills []clobtypes.StreamOrderbookFill,
 	finalizedSubaccountUpdates []satypes.StreamSubaccountUpdate,
 	finalizedOrderbookUpdates []clobtypes.StreamOrderbookUpdate,
+	finalizedPriceUpdates []pricestypes.StreamPriceUpdate,
 ) {
 	// Get onchain stream events stored in transient store.
 	stagedEvents := sm.GetStagedFinalizeBlockEvents(ctx)
@@ -1062,6 +1149,8 @@ func (sm *FullNodeStreamingManagerImpl) getStagedEventsFromFinalizeBlock(
 			finalizedSubaccountUpdates = append(finalizedSubaccountUpdates, *event.SubaccountUpdate)
 		case *clobtypes.StagedFinalizeBlockEvent_OrderbookUpdate:
 			finalizedOrderbookUpdates = append(finalizedOrderbookUpdates, *event.OrderbookUpdate)
+		case *clobtypes.StagedFinalizeBlockEvent_PriceUpdate:
+			finalizedPriceUpdates = append(finalizedPriceUpdates, *event.PriceUpdate)
 		default:
 			panic(fmt.Sprintf("Unhandled staged event type: %v\n", stagedEvent.Event))
 		}
@@ -1076,7 +1165,7 @@ func (sm *FullNodeStreamingManagerImpl) getStagedEventsFromFinalizeBlock(
 		float32(len(finalizedFills)),
 	)
 
-	return finalizedFills, finalizedSubaccountUpdates, finalizedOrderbookUpdates
+	return finalizedFills, finalizedSubaccountUpdates, finalizedOrderbookUpdates, finalizedPriceUpdates
 }
 
 func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(

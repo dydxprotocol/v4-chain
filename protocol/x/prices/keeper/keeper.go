@@ -11,6 +11,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -24,6 +25,8 @@ type (
 		authorities         map[string]struct{}
 		RevShareKeeper      types.RevShareKeeper
 		MarketMapKeeper     types.MarketMapKeeper
+
+		streamingManager streamingtypes.FullNodeStreamingManager
 	}
 )
 
@@ -38,6 +41,7 @@ func NewKeeper(
 	authorities []string,
 	revShareKeeper types.RevShareKeeper,
 	marketMapKeeper types.MarketMapKeeper,
+	streamingManager streamingtypes.FullNodeStreamingManager,
 ) *Keeper {
 	return &Keeper{
 		cdc:                 cdc,
@@ -48,6 +52,7 @@ func NewKeeper(
 		authorities:         lib.UniqueSliceToSet(authorities),
 		RevShareKeeper:      revShareKeeper,
 		MarketMapKeeper:     marketMapKeeper,
+		streamingManager:    streamingManager,
 	}
 }
 
@@ -65,4 +70,8 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) HasAuthority(authority string) bool {
 	_, ok := k.authorities[authority]
 	return ok
+}
+
+func (k Keeper) GetFullNodeStreamingManager() streamingtypes.FullNodeStreamingManager {
+	return k.streamingManager
 }
