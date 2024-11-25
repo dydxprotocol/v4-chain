@@ -32,10 +32,10 @@ export async function fetchAndCacheOrderbookMidPrices(
   tickers: string[],
 ): Promise<void> {
   // Fetch midPrices and filter out undefined values
-  const cacheKeyPricePairs = await Promise.all(
+  const cacheKeyPricePairs: ({ cacheKey: string, midPrice: string } | null)[] = await Promise.all(
     tickers.map(async (ticker) => {
-      const cacheKey = getOrderbookMidPriceCacheKey(ticker);
-      const midPrice = await getOrderBookMidPrice(ticker, client);
+      const cacheKey: string = getOrderbookMidPriceCacheKey(ticker);
+      const midPrice: string | undefined = await getOrderBookMidPrice(ticker, client);
       if (midPrice !== undefined) {
         return { cacheKey, midPrice };
       }
@@ -44,7 +44,7 @@ export async function fetchAndCacheOrderbookMidPrices(
   );
 
   // Filter out null values
-  const validPairs = cacheKeyPricePairs.filter(
+  const validPairs: { cacheKey: string, midPrice: string }[] = cacheKeyPricePairs.filter(
     (pair): pair is { cacheKey: string, midPrice: string } => pair !== null,
   );
   if (validPairs.length === 0) {
@@ -52,10 +52,10 @@ export async function fetchAndCacheOrderbookMidPrices(
     return;
   }
 
-  const nowSeconds = Math.floor(Date.now() / 1000); // Current time in seconds
+  const nowSeconds: number = Math.floor(Date.now() / 1000); // Current time in seconds
   // Extract cache keys and prices
-  const priceValues = validPairs.map((pair) => pair.midPrice);
-  const priceCacheKeys = validPairs.map((pair) => {
+  const priceValues: string[] = validPairs.map((pair) => pair.midPrice);
+  const priceCacheKeys: string[] = validPairs.map((pair) => {
 
     logger.info({
       at: 'orderbook-mid-prices-cache#fetchAndCacheOrderbookMidPrices',
@@ -123,9 +123,9 @@ export async function getMedianPrices(
   evalAsync = evalAsync.bind(client);
 
   // Map tickers to cache keys
-  const marketCacheKeys = tickers.map(getOrderbookMidPriceCacheKey);
+  const marketCacheKeys: string[] = tickers.map(getOrderbookMidPriceCacheKey);
   // Fetch the prices arrays from Redis (without scores)
-  const pricesArrays = await evalAsync(marketCacheKeys);
+  const pricesArrays: string[][] = await evalAsync(marketCacheKeys);
 
   const result: { [ticker: string]: string | undefined } = {};
   tickers.forEach((ticker, index) => {
@@ -138,13 +138,13 @@ export async function getMedianPrices(
     }
 
     // Convert the prices to Big.js objects for precision
-    const bigPrices = prices.map((price) => Big(price));
+    const bigPrices: Big[] = prices.map((price) => Big(price));
 
     // Sort the prices in ascending order
     bigPrices.sort((a, b) => a.cmp(b));
 
     // Calculate the median
-    const mid = Math.floor(bigPrices.length / 2);
+    const mid: number = Math.floor(bigPrices.length / 2);
     if (bigPrices.length % 2 === 1) {
       // Odd number of prices: the middle one is the median
       result[ticker] = bigPrices[mid].toFixed();

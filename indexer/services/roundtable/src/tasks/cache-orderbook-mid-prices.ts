@@ -16,8 +16,10 @@ import { redisClient } from '../helpers/redis';
  */
 export default async function runTask(): Promise<void> {
   try {
-    let perpetualMarkets = Object.values(perpetualMarketRefresher.getPerpetualMarketsMap());
-    let marketTickers = perpetualMarkets.map(
+    let perpetualMarkets: PerpetualMarketFromDatabase[] = Object.values(
+      perpetualMarketRefresher.getPerpetualMarketsMap(),
+    );
+    let marketTickers: string[] = perpetualMarkets.map(
       (market: PerpetualMarketFromDatabase) => market.ticker,
     );
 
@@ -43,7 +45,7 @@ export default async function runTask(): Promise<void> {
   } catch (error) {
     logger.error({
       at: 'cache-orderbook-mid-prices#runTask',
-      message: error.message,
+      message: (error as Error).message,
       error,
     });
   }

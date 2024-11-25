@@ -104,7 +104,10 @@ describe('orderbook-mid-prices-cache', () => {
   describe('getMedianPrice', () => {
 
     it('returns null when no prices are set', async () => {
-      const result = await getMedianPrices(client, [defaultTicker]);
+      const result: {[ticker: string]: string | undefined} = await getMedianPrices(
+        client,
+        [defaultTicker],
+      );
       expect(result).toEqual({ 'BTC-USD': undefined });
     });
 
@@ -113,7 +116,10 @@ describe('orderbook-mid-prices-cache', () => {
       setPrice(defaultTicker, '50000');
       setPrice(defaultTicker, '49000');
 
-      const result = await getMedianPrices(client, [defaultTicker]);
+      const result: {[ticker: string]: string | undefined} = await getMedianPrices(
+        client,
+        [defaultTicker],
+      );
       expect(result).toEqual({ 'BTC-USD': '50000' });
     });
 
@@ -123,14 +129,17 @@ describe('orderbook-mid-prices-cache', () => {
       setPrice(defaultTicker, '49000');
       setPrice(defaultTicker, '52000');
 
-      const result = await getMedianPrices(client, [defaultTicker]);
+      const result: {[ticker: string]: string | undefined} = await getMedianPrices(
+        client,
+        [defaultTicker],
+      );
       expect(result).toEqual({ 'BTC-USD': '50500' });
     });
 
     it('returns the correct median price after 30 seconds', async () => {
       jest.useFakeTimers();
       // Mock the getOrderBookMidPrice function for the ticker
-      const mockPrices = ['50000', '51000', '49000', '48000', '52000', '53000'];
+      const mockPrices: string[] = ['50000', '51000', '49000', '48000', '52000', '53000'];
 
       (OrderbookLevelsCache.getOrderBookMidPrice as jest.Mock)
         .mockResolvedValueOnce(mockPrices[0])
@@ -160,7 +169,10 @@ describe('orderbook-mid-prices-cache', () => {
       expect(OrderbookLevelsCache.getOrderBookMidPrice).toHaveBeenCalledTimes(6);
 
       // Check the median price
-      const result = await getMedianPrices(client, [defaultTicker]);
+      const result:{[ticker: string]: string | undefined} = await getMedianPrices(
+        client,
+        [defaultTicker],
+      );
       // Median of last 4 prices, as first two should have expired after moving clock forward
       expect(result).toEqual({ 'BTC-USD': '50500' });
 
@@ -171,7 +183,10 @@ describe('orderbook-mid-prices-cache', () => {
       setPrice(defaultTicker, '0.00000000002345');
       setPrice(defaultTicker, '0.00000000002346');
 
-      const midPrice1 = await getMedianPrices(client, [defaultTicker]);
+      const midPrice1: { [ticker: string]: string | undefined } = await getMedianPrices(
+        client,
+        [defaultTicker],
+      );
       expect(midPrice1).toEqual({ 'BTC-USD': '0.000000000023455' });
     });
 
@@ -182,7 +197,10 @@ describe('orderbook-mid-prices-cache', () => {
       setPrice(defaultTicker, '0.00000000004');
       setPrice(defaultTicker, '0.00000000005');
 
-      const midPrice1 = await getMedianPrices(client, [defaultTicker]);
+      const midPrice1: { [ticker: string]: string | undefined } = await getMedianPrices(
+        client,
+        [defaultTicker],
+      );
       expect(midPrice1).toEqual({ 'BTC-USD': '0.00000000003' });
 
       await deleteAllAsync(client);
@@ -191,7 +209,10 @@ describe('orderbook-mid-prices-cache', () => {
       setPrice(defaultTicker, '0.00000847006');
       setPrice(defaultTicker, '0.00000847008');
 
-      const midPrice2 = await getMedianPrices(client, [defaultTicker]);
+      const midPrice2: { [ticker: string]: string | undefined } = await getMedianPrices(
+        client,
+        [defaultTicker],
+      );
       expect(midPrice2).toEqual({ 'BTC-USD': '0.00000847007' });
     });
   });
@@ -221,7 +242,10 @@ describe('orderbook-mid-prices-cache', () => {
       setPrice(solUsdTicker, '102');
       setPrice(solUsdTicker, '98');
 
-      const result = await getMedianPrices(client, [btcUsdTicker, ethUsdTicker, solUsdTicker]);
+      const result: { [ticker: string]: string | undefined } = await getMedianPrices(
+        client,
+        [btcUsdTicker, ethUsdTicker, solUsdTicker],
+      );
       expect(result).toEqual({
         'BTC-USD': '50000',
         'ETH-USD': '3000',
@@ -242,7 +266,10 @@ describe('orderbook-mid-prices-cache', () => {
       setPrice(ethUsdTicker, '2900');
       setPrice(ethUsdTicker, '3200');
 
-      const result = await getMedianPrices(client, [btcUsdTicker, ethUsdTicker]);
+      const result: { [ticker: string]: string | undefined } = await getMedianPrices(
+        client,
+        [btcUsdTicker, ethUsdTicker],
+      );
       expect(result).toEqual({
         'BTC-USD': '50500',
         'ETH-USD': '3050',
@@ -263,7 +290,10 @@ describe('orderbook-mid-prices-cache', () => {
 
       // Set no prices for SOL-USD
 
-      const result = await getMedianPrices(client, [btcUsdTicker, ethUsdTicker, solUsdTicker]);
+      const result: { [ticker: string]: string | undefined } = await getMedianPrices(
+        client,
+        [btcUsdTicker, ethUsdTicker, solUsdTicker],
+      );
       expect(result).toEqual({
         'BTC-USD': '50000',
         'ETH-USD': '3050',
@@ -287,7 +317,10 @@ describe('orderbook-mid-prices-cache', () => {
       setPrice(solUsdTicker, '0.00000125');
       setPrice(solUsdTicker, '0.00000126');
 
-      const result = await getMedianPrices(client, [btcUsdTicker, ethUsdTicker, solUsdTicker]);
+      const result: { [ticker: string]: string | undefined } = await getMedianPrices(
+        client,
+        [btcUsdTicker, ethUsdTicker, solUsdTicker],
+      );
       expect(result).toEqual({
         'BTC-USD': '50000.123455',
         'ETH-USD': '3000.6',

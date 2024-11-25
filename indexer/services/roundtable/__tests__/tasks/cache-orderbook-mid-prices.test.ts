@@ -36,15 +36,15 @@ describe('cache-orderbook-mid-prices', () => {
   });
 
   it('caches mid prices for all markets', async () => {
-    const market1 = await PerpetualMarketTable
+    const market1: PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable
       .findByMarketId(
         testConstants.defaultMarket.id,
       );
-    const market2 = await PerpetualMarketTable
+    const market2: PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable
       .findByMarketId(
         testConstants.defaultMarket2.id,
       );
-    const market3 = await PerpetualMarketTable
+    const market3: PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable
       .findByMarketId(
         testConstants.defaultMarket3.id,
       );
@@ -60,7 +60,8 @@ describe('cache-orderbook-mid-prices', () => {
     await runTask();
     expect(OrderbookLevelsCache.getOrderBookMidPrice).toHaveBeenCalledTimes(5);
 
-    const prices = await OrderbookMidPricesCache.getMedianPrices(
+    const prices: {[ticker: string]: string | undefined} = await
+    OrderbookMidPricesCache.getMedianPrices(
       redisClient,
       [market1.ticker, market2.ticker, market3.ticker],
     );
