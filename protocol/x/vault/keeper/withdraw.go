@@ -290,7 +290,7 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 
 		_, perpetual, marketParam, marketPrice, err := k.GetVaultClobPerpAndMarket(ctx, *vaultId)
 		if err != nil {
-			if simulate {
+			if !simulate {
 				log.DebugLog(
 					ctx,
 					"Megavault withdrawal: failed to get perpetual and market. Skipping this vault",
@@ -299,20 +299,12 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 					"Error",
 					err,
 				)
-			} else {
-				log.ErrorLogWithError(
-					ctx,
-					"Megavault withdrawal: error when getting perpetual and market. Skipping this vault",
-					err,
-					"Vault ID",
-					vaultId,
-				)
 			}
 			continue
 		}
 		leverage, equity, err := k.GetVaultLeverageAndEquity(ctx, *vaultId, &perpetual, &marketPrice)
 		if err != nil {
-			if simulate {
+			if !simulate {
 				log.DebugLog(
 					ctx,
 					"Megavault withdrawal: failed to get vault leverage and equity. Skipping this vault",
@@ -320,14 +312,6 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 					vaultId,
 					"Error",
 					err,
-				)
-			} else {
-				log.ErrorLogWithError(
-					ctx,
-					"Megavault withdrawal: error when getting vault leverage and equity. Skipping this vault",
-					err,
-					"Vault ID",
-					vaultId,
 				)
 			}
 			continue
@@ -343,7 +327,7 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 			&marketParam,
 		)
 		if err != nil {
-			if simulate {
+			if !simulate {
 				log.DebugLog(
 					ctx,
 					"Megavault withdrawal: failed to get vault withdrawal slippage. Skipping this vault",
@@ -351,14 +335,6 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 					vaultId,
 					"Error",
 					err,
-				)
-			} else {
-				log.ErrorLogWithError(
-					ctx,
-					"Megavault withdrawal: error when getting vault withdrawal slippage. Skipping this vault",
-					err,
-					"Vault ID",
-					vaultId,
 				)
 			}
 			continue
@@ -371,17 +347,8 @@ func (k Keeper) RedeemFromMainAndSubVaults(
 		quantumsToTransfer := new(big.Int).Quo(redeemedFromSubVault.Num(), redeemedFromSubVault.Denom())
 
 		if quantumsToTransfer.Sign() <= 0 || !quantumsToTransfer.IsUint64() {
-			if simulate {
+			if !simulate {
 				log.DebugLog(
-					ctx,
-					"Megavault withdrawal: quantums to transfer is invalid. Skipping this vault",
-					"Vault ID",
-					vaultId,
-					"Quantums",
-					quantumsToTransfer,
-				)
-			} else {
-				log.ErrorLog(
 					ctx,
 					"Megavault withdrawal: quantums to transfer is invalid. Skipping this vault",
 					"Vault ID",
