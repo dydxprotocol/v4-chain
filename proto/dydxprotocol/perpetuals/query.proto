@@ -46,7 +46,8 @@ service Query {
   }
 
   // Queries the next perpetual id.
-  rpc NextPerpetualId(QueryNextPerpetualIdRequest) returns (QueryNextPerpetualIdResponse) {
+  rpc NextPerpetualId(QueryNextPerpetualIdRequest)
+      returns (QueryNextPerpetualIdResponse) {
     option (google.api.http).get = "/dydxprotocol/perpetuals/next_perpetual_id";
   }
 }

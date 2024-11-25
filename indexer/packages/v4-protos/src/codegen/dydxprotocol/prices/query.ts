@@ -157,16 +157,28 @@ export interface QueryNextMarketIdRequest {}
 /** QueryNextMarketIdRequest is request type for the Query/Params `NextMarketId` */
 
 export interface QueryNextMarketIdRequestSDKType {}
-/** QueryNextMarketIdResponse is response type for the Query/Params `NextMarketId` */
+/**
+ * QueryNextMarketIdResponse is response type for the Query/Params
+ * `NextMarketId`
+ */
 
 export interface QueryNextMarketIdResponse {
-  /** QueryNextMarketIdResponse is response type for the Query/Params `NextMarketId` */
+  /**
+   * QueryNextMarketIdResponse is response type for the Query/Params
+   * `NextMarketId`
+   */
   nextMarketId: number;
 }
-/** QueryNextMarketIdResponse is response type for the Query/Params `NextMarketId` */
+/**
+ * QueryNextMarketIdResponse is response type for the Query/Params
+ * `NextMarketId`
+ */
 
 export interface QueryNextMarketIdResponseSDKType {
-  /** QueryNextMarketIdResponse is response type for the Query/Params `NextMarketId` */
+  /**
+   * QueryNextMarketIdResponse is response type for the Query/Params
+   * `NextMarketId`
+   */
   next_market_id: number;
 }
 

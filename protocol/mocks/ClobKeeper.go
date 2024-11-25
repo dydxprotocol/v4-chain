@@ -1134,6 +1134,11 @@ func (_m *ClobKeeper) SetLongTermOrderPlacement(ctx types.Context, order clobtyp
 	_m.Called(ctx, order, blockHeight)
 }
 
+// SetNextClobPairID provides a mock function with given fields: ctx, nextID
+func (_m *ClobKeeper) SetNextClobPairID(ctx types.Context, nextID uint32) {
+	_m.Called(ctx, nextID)
+}
+
 // UnsafeMigrateOrderExpirationState provides a mock function with given fields: ctx
 func (_m *ClobKeeper) UnsafeMigrateOrderExpirationState(ctx types.Context) {
 	_m.Called(ctx)

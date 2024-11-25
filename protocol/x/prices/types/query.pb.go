@@ -451,7 +451,8 @@ func (m *QueryNextMarketIdRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryNextMarketIdRequest proto.InternalMessageInfo
 
-// QueryNextMarketIdResponse is response type for the Query/Params `NextMarketId`
+// QueryNextMarketIdResponse is response type for the Query/Params
+// `NextMarketId`
 type QueryNextMarketIdResponse struct {
 	NextMarketId uint32 `protobuf:"varint,1,opt,name=next_market_id,json=nextMarketId,proto3" json:"next_market_id,omitempty"`
 }

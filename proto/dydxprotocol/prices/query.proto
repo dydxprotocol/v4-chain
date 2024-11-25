@@ -34,7 +34,8 @@ service Query {
   }
 
   // Queries the next market id.
-  rpc NextMarketId(QueryNextMarketIdRequest) returns (QueryNextMarketIdResponse) {
+  rpc NextMarketId(QueryNextMarketIdRequest)
+      returns (QueryNextMarketIdResponse) {
     option (google.api.http).get = "/dydxprotocol/prices/next_market_id";
   }
 }
@@ -88,5 +89,6 @@ message QueryAllMarketParamsResponse {
 // QueryNextMarketIdRequest is request type for the Query/Params `NextMarketId`
 message QueryNextMarketIdRequest {}
 
-// QueryNextMarketIdResponse is response type for the Query/Params `NextMarketId`
+// QueryNextMarketIdResponse is response type for the Query/Params
+// `NextMarketId`
 message QueryNextMarketIdResponse { uint32 next_market_id = 1; }

@@ -696,6 +696,117 @@ func (_m *QueryClient) MevNodeToNodeCalculation(ctx context.Context, in *clobtyp
 	return r0, r1
 }
 
+// NextClobPairId provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) NextClobPairId(ctx context.Context, in *clobtypes.QueryNextClobPairIdRequest, opts ...grpc.CallOption) (*clobtypes.QueryNextClobPairIdResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for NextClobPairId")
+	}
+
+	var r0 *clobtypes.QueryNextClobPairIdResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryNextClobPairIdRequest, ...grpc.CallOption) (*clobtypes.QueryNextClobPairIdResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryNextClobPairIdRequest, ...grpc.CallOption) *clobtypes.QueryNextClobPairIdResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*clobtypes.QueryNextClobPairIdResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.QueryNextClobPairIdRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// NextMarketId provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) NextMarketId(ctx context.Context, in *pricestypes.QueryNextMarketIdRequest, opts ...grpc.CallOption) (*pricestypes.QueryNextMarketIdResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for NextMarketId")
+	}
+
+	var r0 *pricestypes.QueryNextMarketIdResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *pricestypes.QueryNextMarketIdRequest, ...grpc.CallOption) (*pricestypes.QueryNextMarketIdResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *pricestypes.QueryNextMarketIdRequest, ...grpc.CallOption) *pricestypes.QueryNextMarketIdResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*pricestypes.QueryNextMarketIdResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *pricestypes.QueryNextMarketIdRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// NextPerpetualId provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) NextPerpetualId(ctx context.Context, in *perpetualstypes.QueryNextPerpetualIdRequest, opts ...grpc.CallOption) (*perpetualstypes.QueryNextPerpetualIdResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for NextPerpetualId")
+	}
+
+	var r0 *perpetualstypes.QueryNextPerpetualIdResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *perpetualstypes.QueryNextPerpetualIdRequest, ...grpc.CallOption) (*perpetualstypes.QueryNextPerpetualIdResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *perpetualstypes.QueryNextPerpetualIdRequest, ...grpc.CallOption) *perpetualstypes.QueryNextPerpetualIdResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*perpetualstypes.QueryNextPerpetualIdResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *perpetualstypes.QueryNextPerpetualIdRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Params provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) Params(ctx context.Context, in *perpetualstypes.QueryParamsRequest, opts ...grpc.CallOption) (*perpetualstypes.QueryParamsResponse, error) {
 	_va := make([]interface{}, len(opts))

@@ -418,6 +418,11 @@ func (_m *PricesKeeper) PerformStatefulPriceUpdateValidation(ctx types.Context, 
 	return r0
 }
 
+// SetNextMarketID provides a mock function with given fields: ctx, nextID
+func (_m *PricesKeeper) SetNextMarketID(ctx types.Context, nextID uint32) {
+	_m.Called(ctx, nextID)
+}
+
 // UpdateMarketPrices provides a mock function with given fields: ctx, updates
 func (_m *PricesKeeper) UpdateMarketPrices(ctx types.Context, updates []*pricestypes.MsgUpdateMarketPrices_MarketPrice) error {
 	ret := _m.Called(ctx, updates)
