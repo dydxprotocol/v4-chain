@@ -163,6 +163,9 @@ class VaultController extends Controller {
     ]);
 
     const groupedVaultPnlTicks: VaultHistoricalPnl[] = _(vaultPnlTicks)
+      .filter((pnlTickFromDatabase: PnlTicksFromDatabase): boolean => {
+        return vaultSubaccounts[pnlTickFromDatabase.subaccountId] !== undefined;
+      }) 
       .groupBy('subaccountId')
       .mapValues((pnlTicks: PnlTicksFromDatabase[], subaccountId: string): VaultHistoricalPnl => {
         const market: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
