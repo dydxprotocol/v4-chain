@@ -1,7 +1,9 @@
-package v_8_0
+package v_8_0_test
 
 import (
 	"testing"
+
+	v_8_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.0"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,7 +56,7 @@ func (s *UpgradeTestSuite) TestUpgrade_MigrateAccountplusAccountState() {
 	}
 
 	// Migrate
-	migrateAccountplusAccountState(ctx, s.tApp.App.AccountPlusKeeper)
+	v_8_0.MigrateAccountplusAccountState(ctx, s.tApp.App.AccountPlusKeeper)
 
 	// Verify that unprefixed keys are deleted and prefixed keys exist
 	for _, addr := range addresses {

@@ -19,7 +19,7 @@ import (
 )
 
 // Migrate accountplus AccountState in kvstore from non-prefixed keys to prefixed keys
-func migrateAccountplusAccountState(ctx sdk.Context, k accountpluskeeper.Keeper) {
+func MigrateAccountplusAccountState(ctx sdk.Context, k accountpluskeeper.Keeper) {
 	ctx.Logger().Info("Migrating accountplus module AccountState in kvstore from non-prefixed keys to prefixed keys")
 
 	store := ctx.KVStore(k.GetStoreKey())

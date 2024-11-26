@@ -3,9 +3,10 @@ package v_8_0_test
 import (
 	"testing"
 
+	v_8_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.0"
+
 	"github.com/cosmos/gogoproto/proto"
 
-	v_8_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.0"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
