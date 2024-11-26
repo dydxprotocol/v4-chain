@@ -21,7 +21,7 @@ import {
 import { RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
 import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
-import { DateTime } from 'luxon';
+import { DateTime, Settings } from 'luxon';
 import Big from 'big.js';
 import config from '../../../../src/config';
 
@@ -124,6 +124,7 @@ describe('vault-controller#V4', () => {
           effectiveAtHeight: twoDayBlockHeight,
         }),
       ]);
+      Settings.now = () => latestTime.valueOf();
     });
 
     afterEach(async () => {
@@ -133,6 +134,7 @@ describe('vault-controller#V4', () => {
       config.VAULT_PNL_HISTORY_HOURS = vaultPnlHistoryHoursPrev;
       config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS = vaultPnlLastPnlWindowPrev;
       config.VAULT_PNL_START_DATE = vaultPnlStartDatePrev;
+      Settings.now = () => new Date().valueOf();
     });
 
     it.each([

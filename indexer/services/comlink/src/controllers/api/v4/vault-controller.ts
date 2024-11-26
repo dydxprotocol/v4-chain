@@ -571,7 +571,7 @@ export async function getLatestPnlTicks(
   ] = await Promise.all([
     PnlTicksTable.getLatestPnlTick(
       vaultSubaccountIds,
-      DateTime.utc(),
+      DateTime.now().toUTC(),
     ),
     PnlTicksTable.getLatestPnlTick(
       vaultSubaccountIds,
