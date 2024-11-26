@@ -298,13 +298,14 @@ describe('vault-controller#V4', () => {
     });
 
     it.each([
-      ['no resolution', '', [1, 2]],
-      ['daily resolution', '?resolution=day', [1, 2]],
-      ['hourly resolution', '?resolution=hour', [1, 2, 3, 4]],
+      ['no resolution', '', [1, 2], 4],
+      ['daily resolution', '?resolution=day', [1, 2], 4],
+      ['hourly resolution', '?resolution=hour', [1, 2, 3, 4], 4],
     ])('Get /vaults/historicalPnl with single vault subaccount (%s)', async (
       _name: string,
       queryParam: string,
       expectedTicksIndex: number[],
+      currentTickIndex: number,
     ) => {
       await VaultTable.create({
         ...testConstants.defaultVault,
@@ -313,7 +314,7 @@ describe('vault-controller#V4', () => {
       });
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
       const finalTick: PnlTicksFromDatabase = {
-        ...createdPnlTicks[expectedTicksIndex[expectedTicksIndex.length - 1]],
+        ...createdPnlTicks[currentTickIndex],
         equity: Big(vault1Equity).toFixed(),
         blockHeight: latestBlockHeight,
         blockTime: latestTime.toISO(),
@@ -338,14 +339,16 @@ describe('vault-controller#V4', () => {
     });
 
     it.each([
-      ['no resolution', '', [1, 2], [6, 7]],
-      ['daily resolution', '?resolution=day', [1, 2], [6, 7]],
-      ['hourly resolution', '?resolution=hour', [1, 2, 3, 4], [6, 7, 8, 9]],
+      ['no resolution', '', [1, 2], [6, 7], 4, 9],
+      ['daily resolution', '?resolution=day', [1, 2], [6, 7], 4, 9],
+      ['hourly resolution', '?resolution=hour', [1, 2, 3, 4], [6, 7, 8, 9], 4, 9],
     ])('Get /vaults/historicalPnl with 2 vault subaccounts (%s)', async (
       _name: string,
       queryParam: string,
       expectedTicksIndex1: number[],
       expectedTicksIndex2: number[],
+      curerntTickIndex1: number,
+      currentTickIndex2: number,
     ) => {
       await Promise.all([
         VaultTable.create({
@@ -361,14 +364,14 @@ describe('vault-controller#V4', () => {
       ]);
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
       const finalTick1: PnlTicksFromDatabase = {
-        ...createdPnlTicks[expectedTicksIndex1[expectedTicksIndex1.length - 1]],
+        ...createdPnlTicks[curerntTickIndex1],
         equity: Big(vault1Equity).toFixed(),
         blockHeight: latestBlockHeight,
         blockTime: latestTime.toISO(),
         createdAt: latestTime.toISO(),
       };
       const finalTick2: PnlTicksFromDatabase = {
-        ...createdPnlTicks[expectedTicksIndex2[expectedTicksIndex2.length - 1]],
+        ...createdPnlTicks[currentTickIndex2],
         equity: Big(vault2Equity).toFixed(),
         blockHeight: latestBlockHeight,
         blockTime: latestTime.toISO(),

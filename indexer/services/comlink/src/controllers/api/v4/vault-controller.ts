@@ -35,7 +35,7 @@ import Big from 'big.js';
 import bounds from 'binary-searching';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
-import _ from 'lodash';
+import _, { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   Controller, Get, Query, Route,
@@ -152,15 +152,22 @@ class VaultController extends Controller {
       vaultPnlTicks,
       vaultPositions,
       latestBlock,
+      latestTicks,
     ] : [
       PnlTicksFromDatabase[],
       Map<string, VaultPosition>,
       BlockFromDatabase,
+      PnlTicksFromDatabase[],
     ] = await Promise.all([
       getVaultSubaccountPnlTicks(_.keys(vaultSubaccounts), getResolution(resolution)),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
+      getLatestPnlTicks(_.keys(vaultSubaccounts)),
     ]);
+    const latestTicksBySubaccountId: Dictionary<PnlTicksFromDatabase> = _.keyBy(
+      latestTicks,
+      'subaccountId',
+    );
 
     const groupedVaultPnlTicks: VaultHistoricalPnl[] = _(vaultPnlTicks)
       .filter((pnlTickFromDatabsae: PnlTicksFromDatabase): boolean => {
@@ -185,6 +192,7 @@ class VaultController extends Controller {
           currentEquity,
           pnlTicks,
           latestBlock,
+          latestTicksBySubaccountId[subaccountId],
         );
 
         return {
@@ -549,6 +557,34 @@ function getPnlTicksWithCurrentTick(
     createdAt: latestBlock.time,
   };
   return pnlTicks.concat([currentTick]);
+}
+
+export async function getLatestPnlTicks(
+  vaultSubaccountIds: string[],
+): Promise<PnlTicksFromDatabase[]> {
+  const [
+    latestPnlTicks,
+    adjustByPnlTicks,
+  ] : [
+    PnlTicksFromDatabase[],
+    PnlTicksFromDatabase[],
+  ] = await Promise.all([
+    PnlTicksTable.getLatestPnlTick(
+      vaultSubaccountIds,
+      DateTime.utc(),
+    ),
+    PnlTicksTable.getLatestPnlTick(
+      vaultSubaccountIds,
+      // Add a buffer of 10 minutes to get the first PnL tick for PnL data as PnL ticks aren't
+      // created exactly on the hour.
+      getVautlPnlStartDate().plus({ minutes: 10 }),
+    ),
+  ]);
+  const adjustedPnlTicks: PnlTicksFromDatabase[] = adjustVaultPnlTicks(
+    latestPnlTicks,
+    adjustByPnlTicks,
+  );
+  return adjustedPnlTicks;
 }
 
 export async function getLatestPnlTick(
