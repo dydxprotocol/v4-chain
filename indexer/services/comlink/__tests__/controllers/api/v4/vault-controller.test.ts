@@ -347,7 +347,7 @@ describe('vault-controller#V4', () => {
       queryParam: string,
       expectedTicksIndex1: number[],
       expectedTicksIndex2: number[],
-      curerntTickIndex1: number,
+      currentTickIndex1: number,
       currentTickIndex2: number,
     ) => {
       await Promise.all([
@@ -364,7 +364,7 @@ describe('vault-controller#V4', () => {
       ]);
       const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
       const finalTick1: PnlTicksFromDatabase = {
-        ...createdPnlTicks[curerntTickIndex1],
+        ...createdPnlTicks[currentTickIndex1],
         equity: Big(vault1Equity).toFixed(),
         blockHeight: latestBlockHeight,
         blockTime: latestTime.toISO(),

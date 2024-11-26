@@ -358,13 +358,13 @@ async function getVaultSubaccountPnlTicks(
     VaultPnlTicksView.getVaultsPnl(
       resolution,
       windowSeconds,
-      getVautlPnlStartDate(),
+      getVaultPnlStartDate(),
     ),
     PnlTicksTable.getLatestPnlTick(
       vaultSubaccountIds,
       // Add a buffer of 10 minutes to get the first PnL tick for PnL data as PnL ticks aren't
       // created exactly on the hour.
-      getVautlPnlStartDate().plus({ minutes: 10 }),
+      getVaultPnlStartDate().plus({ minutes: 10 }),
     ),
   ]);
 
@@ -577,7 +577,7 @@ export async function getLatestPnlTicks(
       vaultSubaccountIds,
       // Add a buffer of 10 minutes to get the first PnL tick for PnL data as PnL ticks aren't
       // created exactly on the hour.
-      getVautlPnlStartDate().plus({ minutes: 10 }),
+      getVaultPnlStartDate().plus({ minutes: 10 }),
     ),
   ]);
   const adjustedPnlTicks: PnlTicksFromDatabase[] = adjustVaultPnlTicks(
@@ -601,13 +601,13 @@ export async function getLatestPnlTick(
     VaultPnlTicksView.getVaultsPnl(
       PnlTickInterval.hour,
       config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS * 60 * 60,
-      getVautlPnlStartDate(),
+      getVaultPnlStartDate(),
     ),
     PnlTicksTable.getLatestPnlTick(
       vaultSubaccountIds,
       // Add a buffer of 10 minutes to get the first PnL tick for PnL data as PnL ticks aren't
       // created exactly on the hour.
-      getVautlPnlStartDate().plus({ minutes: 10 }),
+      getVaultPnlStartDate().plus({ minutes: 10 }),
     ),
   ]);
   const adjustedPnlTicks: PnlTicksFromDatabase[] = adjustVaultPnlTicks(
@@ -834,7 +834,7 @@ async function getVaultMapping(): Promise<VaultMapping> {
   return validVaultMapping;
 }
 
-function getVautlPnlStartDate(): DateTime {
+function getVaultPnlStartDate(): DateTime {
   const startDate: DateTime = DateTime.fromISO(config.VAULT_PNL_START_DATE).toUTC();
   return startDate;
 }
