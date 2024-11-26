@@ -3,13 +3,15 @@ import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   UpdatePerpetualEventV1,
+  UpdatePerpetualEventV2,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   dbHelpers, testMocks, perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
-  defaultUpdatePerpetualEvent,
+  defaultUpdatePerpetualEventV1,
+  defaultUpdatePerpetualEventV2,
   defaultHeight,
   defaultTime,
   defaultTxHash,
@@ -42,11 +44,26 @@ describe('update-perpetual-validator', () => {
     await dbHelpers.teardown();
   });
 
-  describe('validate', () => {
+  describe.each([
+    [
+      'UpdatePerpetualEventV1',
+      UpdatePerpetualEventV1.encode(defaultUpdatePerpetualEventV1).finish(),
+      defaultUpdatePerpetualEventV1,
+    ],
+    [
+      'PerpetualMarketCreateEventV2',
+      UpdatePerpetualEventV2.encode(defaultUpdatePerpetualEventV2).finish(),
+      defaultUpdatePerpetualEventV2,
+    ],
+  ])('%s', (
+    _name: string,
+    updatePerpetualEventBytes: Uint8Array,
+    event: UpdatePerpetualEventV1 | UpdatePerpetualEventV2,
+  ) => {
     it('does not throw error on valid perpetual market create event', () => {
       const validator: UpdatePerpetualValidator = new UpdatePerpetualValidator(
-        defaultUpdatePerpetualEvent,
-        createBlock(defaultUpdatePerpetualEvent),
+        event,
+        createBlock(updatePerpetualEventBytes),
         0,
       );
 
@@ -57,10 +74,10 @@ describe('update-perpetual-validator', () => {
     it('throws error if id does not correspond to an existing perpetual market', () => {
       const validator: UpdatePerpetualValidator = new UpdatePerpetualValidator(
         {
-          ...defaultUpdatePerpetualEvent,
+          ...event,
           id: 20,
         },
-        createBlock(defaultUpdatePerpetualEvent),
+        createBlock(updatePerpetualEventBytes),
         0,
       );
 
@@ -72,11 +89,11 @@ describe('update-perpetual-validator', () => {
 });
 
 function createBlock(
-  updatePerpetualEvent: UpdatePerpetualEventV1,
+  updatePerpetualEventBytes: Uint8Array,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.UPDATE_PERPETUAL,
-    UpdatePerpetualEventV1.encode(updatePerpetualEvent).finish(),
+    updatePerpetualEventBytes,
     0,
     0,
   );

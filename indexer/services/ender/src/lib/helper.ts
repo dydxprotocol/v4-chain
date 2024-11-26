@@ -21,6 +21,7 @@ import {
   LiquidityTierUpsertEventV1,
   LiquidityTierUpsertEventV2,
   UpdatePerpetualEventV1,
+  UpdatePerpetualEventV2,
   UpdateClobPairEventV1,
   SubaccountMessage,
   DeleveragingEventV1,
@@ -198,13 +199,30 @@ export function indexerTendermintEventToEventProtoWithType(
       };
     }
     case (DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()): {
-      return {
-        type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
-        eventProto: UpdatePerpetualEventV1.decode(eventDataBinary),
-        indexerTendermintEvent: event,
-        version,
-        blockEventIndex,
-      };
+      if (version === 1) {
+        return {
+          type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+          eventProto: UpdatePerpetualEventV1.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
+      } else if (version === 2) {
+        return {
+          type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+          eventProto: UpdatePerpetualEventV2.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
+      } else {
+        const message: string = `Invalid version for update perpetual event: ${version}`;
+        logger.error({
+          at: 'helpers#indexerTendermintEventToEventWithType',
+          message,
+        });
+        return undefined;
+      }
     }
     case (DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString()): {
       return {

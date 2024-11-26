@@ -6,12 +6,14 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -185,7 +187,28 @@ func (k Keeper) UpgradeIsolatedPerpetualToCross(
 		return err
 	}
 
-	// TODO Propagate changes to indexer
+	// Fetch updated perpetual data after the upgrade
+	perpetual, err = k.PerpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	// Emit indexer event.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpdatePerpetual,
+		indexerevents.UpdatePerpetualEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewUpdatePerpetualEvent(
+				perpetual.Params.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				perpetual.Params.AtomicResolution,
+				perpetual.Params.LiquidityTier,
+				perpetual.Params.MarketType,
+			),
+		),
+	)
 
 	return nil
 }

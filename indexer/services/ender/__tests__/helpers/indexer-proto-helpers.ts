@@ -971,7 +971,7 @@ export function expectPerpetualMarketV2(
   }));
 }
 
-function eventPerpetualMarketTypeToIndexerPerpetualMarketType(
+export function eventPerpetualMarketTypeToIndexerPerpetualMarketType(
   perpetualMarketType: PerpetualMarketType,
 ): string {
   switch (perpetualMarketType) {

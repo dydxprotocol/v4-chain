@@ -17,8 +17,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
-	"github.com/stretchr/testify/mock"
-
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
@@ -61,11 +59,9 @@ func TestCreateMarket(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(
 			name, func(t *testing.T) {
-				mockIndexerEventManager := &mocks.IndexerEventManager{}
 				ctx, keeper, _, _, pricesKeeper, _, _, marketMapKeeper, _, _, _ := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
-					mockIndexerEventManager,
 				)
 
 				keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
@@ -130,11 +126,9 @@ func TestCreatePerpetual(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(
 			name, func(t *testing.T) {
-				mockIndexerEventManager := &mocks.IndexerEventManager{}
 				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, _, marketMapKeeper, _, _, _ := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
-					mockIndexerEventManager,
 				)
 				keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, perpetualsKeeper, pricesKeeper, 10)
 
@@ -216,20 +210,11 @@ func TestCreateClobPair(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(
 			name, func(t *testing.T) {
-				mockIndexerEventManager := &mocks.IndexerEventManager{}
 				ctx, keeper, _, _, pricesKeeper, perpetualsKeeper, clobKeeper, marketMapKeeper,
 					_, _, _ := keepertest.ListingKeepers(
 					t,
 					&mocks.BankKeeper{},
-					mockIndexerEventManager,
 				)
-				mockIndexerEventManager.On(
-					"AddTxnEvent",
-					mock.Anything,
-					mock.Anything,
-					mock.Anything,
-					mock.Anything,
-				).Return()
 				keepertest.CreateLiquidityTiersAndNPerpetuals(t, ctx, perpetualsKeeper, pricesKeeper, 10)
 
 				// Set deliverTx mode

@@ -62,7 +62,14 @@ BEGIN
             WHEN '"liquidity_tier"'::jsonb THEN
                 rval[i] = dydx_liquidity_tier_handler(event_data);
             WHEN '"update_perpetual"'::jsonb THEN
-                rval[i] = dydx_update_perpetual_handler(event_data);
+                CASE (event_->'version')::int
+                    WHEN 1 THEN
+                        rval[i] = dydx_update_perpetual_v1_handler(event_data);
+                    WHEN 2 THEN
+                        rval[i] = dydx_update_perpetual_v2_handler(event_data);
+                    ELSE
+                        NULL;
+                END CASE;
             WHEN '"update_clob_pair"'::jsonb THEN
                 rval[i] = dydx_update_clob_pair_handler(event_data);
             WHEN '"funding_values"'::jsonb THEN

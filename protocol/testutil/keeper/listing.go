@@ -29,7 +29,6 @@ import (
 func ListingKeepers(
 	t testing.TB,
 	bankKeeper bankkeeper.Keeper,
-	indexerEventManager indexer_manager.IndexerEventManager,
 ) (
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
@@ -127,6 +126,10 @@ func ListingKeepers(
 				true,
 			)
 
+			mockMsgSender := &mocks.IndexerMessageSender{}
+			mockMsgSender.On("Enabled").Return(true)
+			mockIndexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, transientStoreKey, true)
+
 			blockTimeKeeper, _ := createBlockTimeKeeper(stateStore, db, cdc)
 			rewardsKeeper, _ := createRewardsKeeper(
 				stateStore,
@@ -134,7 +137,7 @@ func ListingKeepers(
 				bankKeeper_out,
 				feeTiersKeeper,
 				pricesKeeper,
-				indexerEventManager,
+				mockIndexerEventManager,
 				db,
 				cdc,
 			)
@@ -166,7 +169,7 @@ func ListingKeepers(
 				subaccountsKeeper,
 				revShareKeeper,
 				accountPlusKeeper,
-				indexerEventManager,
+				mockIndexerEventManager,
 				transientStoreKey,
 			)
 			// Create the listing keeper
@@ -174,6 +177,7 @@ func ListingKeepers(
 				stateStore,
 				db,
 				cdc,
+				mockIndexerEventManager,
 				pricesKeeper,
 				perpetualsKeeper,
 				clobKeeper,
@@ -194,6 +198,7 @@ func createListingKeeper(
 	stateStore storetypes.CommitMultiStore,
 	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
+	indexerEventManager indexer_manager.IndexerEventManager,
 	pricesKeeper *priceskeeper.Keeper,
 	perpetualsKeeper *perpetualskeeper.Keeper,
 	clobKeeper *clobkeeper.Keeper,
@@ -215,6 +220,7 @@ func createListingKeeper(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		indexerEventManager,
 		pricesKeeper,
 		clobKeeper,
 		marketMapKeeper,
