@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	v_7_1 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v7.1"
+	v_8_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.0"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -28,7 +28,7 @@ func TestStateUpgrade(t *testing.T) {
 	preUpgradeSetups(node, t)
 	preUpgradeChecks(node, t)
 
-	err = containertest.UpgradeTestnet(nodeAddress, t, node, UpgradeName)
+	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_8_0.UpgradeName)
 	require.NoError(t, err)
 
 	postUpgradeChecks(node, t)
