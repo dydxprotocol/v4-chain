@@ -3031,7 +3031,7 @@
         {
           "params": {
             "atomic_resolution": -10,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 0,
             "liquidity_tier": 0,
             "market_id": 0,
@@ -3042,7 +3042,7 @@
         {
           "params": {
             "atomic_resolution": -9,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 1,
             "liquidity_tier": 0,
             "market_id": 1,
@@ -3053,7 +3053,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 2,
             "liquidity_tier": 1,
             "market_id": 2,
@@ -3064,7 +3064,7 @@
         {
           "params": {
             "atomic_resolution": -5,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 3,
             "liquidity_tier": 1,
             "market_id": 3,
@@ -3075,7 +3075,7 @@
         {
           "params": {
             "atomic_resolution": -5,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 4,
             "liquidity_tier": 1,
             "market_id": 4,
@@ -3086,7 +3086,7 @@
         {
           "params": {
             "atomic_resolution": -7,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 5,
             "liquidity_tier": 1,
             "market_id": 5,
@@ -3097,7 +3097,7 @@
         {
           "params": {
             "atomic_resolution": -5,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 6,
             "liquidity_tier": 1,
             "market_id": 6,
@@ -3108,7 +3108,7 @@
         {
           "params": {
             "atomic_resolution": -7,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 7,
             "liquidity_tier": 1,
             "market_id": 7,
@@ -3119,7 +3119,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 8,
             "liquidity_tier": 1,
             "market_id": 8,
@@ -3130,7 +3130,7 @@
         {
           "params": {
             "atomic_resolution": -7,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 9,
             "liquidity_tier": 1,
             "market_id": 9,
@@ -3141,7 +3141,7 @@
         {
           "params": {
             "atomic_resolution": -4,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 10,
             "liquidity_tier": 1,
             "market_id": 10,
@@ -3152,7 +3152,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 11,
             "liquidity_tier": 1,
             "market_id": 11,
@@ -3163,7 +3163,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 12,
             "liquidity_tier": 1,
             "market_id": 12,
@@ -3174,7 +3174,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 13,
             "liquidity_tier": 1,
             "market_id": 13,
@@ -3185,7 +3185,7 @@
         {
           "params": {
             "atomic_resolution": -8,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 14,
             "liquidity_tier": 1,
             "market_id": 14,
@@ -3196,7 +3196,7 @@
         {
           "params": {
             "atomic_resolution": -4,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 15,
             "liquidity_tier": 1,
             "market_id": 15,
@@ -3207,7 +3207,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 16,
             "liquidity_tier": 1,
             "market_id": 16,
@@ -3218,7 +3218,7 @@
         {
           "params": {
             "atomic_resolution": -9,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 17,
             "liquidity_tier": 2,
             "market_id": 17,
@@ -3229,7 +3229,7 @@
         {
           "params": {
             "atomic_resolution": -5,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 18,
             "liquidity_tier": 1,
             "market_id": 18,
@@ -3240,7 +3240,7 @@
         {
           "params": {
             "atomic_resolution": -7,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 19,
             "liquidity_tier": 1,
             "market_id": 19,
@@ -3251,7 +3251,7 @@
         {
           "params": {
             "atomic_resolution": -7,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 20,
             "liquidity_tier": 2,
             "market_id": 20,
@@ -3262,7 +3262,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 21,
             "liquidity_tier": 1,
             "market_id": 21,
@@ -3273,7 +3273,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 22,
             "liquidity_tier": 2,
             "market_id": 22,
@@ -3284,7 +3284,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 23,
             "liquidity_tier": 1,
             "market_id": 23,
@@ -3295,7 +3295,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 24,
             "liquidity_tier": 1,
             "market_id": 24,
@@ -3306,7 +3306,7 @@
         {
           "params": {
             "atomic_resolution": -5,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 25,
             "liquidity_tier": 2,
             "market_id": 25,
@@ -3317,7 +3317,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 26,
             "liquidity_tier": 2,
             "market_id": 26,
@@ -3328,7 +3328,7 @@
         {
           "params": {
             "atomic_resolution": -6,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 27,
             "liquidity_tier": 1,
             "market_id": 27,
@@ -3339,7 +3339,7 @@
         {
           "params": {
             "atomic_resolution": 1,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 28,
             "liquidity_tier": 1,
             "market_id": 28,
@@ -3350,7 +3350,7 @@
         {
           "params": {
             "atomic_resolution": -5,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 29,
             "liquidity_tier": 2,
             "market_id": 29,
@@ -3361,7 +3361,7 @@
         {
           "params": {
             "atomic_resolution": 0,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 30,
             "liquidity_tier": 1,
             "market_id": 30,
@@ -3372,7 +3372,7 @@
         {
           "params": {
             "atomic_resolution": -5,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 31,
             "liquidity_tier": 1,
             "market_id": 31,
@@ -3383,7 +3383,7 @@
         {
           "params": {
             "atomic_resolution": -5,
-            "default_funding_ppm": 0,
+            "default_funding_ppm": 100,
             "id": 32,
             "liquidity_tier": 1,
             "market_id": 32,
@@ -3916,7 +3916,7 @@
       ]
     }
   },
-  "app_version": "5.2.1-172-g351fcccd",
+  "app_version": "7.0.0-dev0-129-g2b9a6b6dd",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
