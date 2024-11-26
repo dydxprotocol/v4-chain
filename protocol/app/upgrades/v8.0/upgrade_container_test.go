@@ -59,7 +59,7 @@ func postUpgradeMarketIdsCheck(node *containertest.Node, t *testing.T) {
 	nextMarketIdResp := pricetypes.QueryNextMarketIdResponse{}
 	err = proto.UnmarshalText(resp.String(), &nextMarketIdResp)
 	require.NoError(t, err)
-	require.Equal(t, uint32(v_7_1.ID_NUM), nextMarketIdResp.NextMarketId)
+	require.Equal(t, uint32(v_8_0.ID_NUM), nextMarketIdResp.NextMarketId)
 
 	// query the next perpetual id
 	resp, err = containertest.Query(
@@ -74,7 +74,7 @@ func postUpgradeMarketIdsCheck(node *containertest.Node, t *testing.T) {
 	nextPerpIdResp := perptypes.QueryNextPerpetualIdResponse{}
 	err = proto.UnmarshalText(resp.String(), &nextPerpIdResp)
 	require.NoError(t, err)
-	require.Equal(t, uint32(v_7_1.ID_NUM), nextPerpIdResp.NextPerpetualId)
+	require.Equal(t, uint32(v_8_0.ID_NUM), nextPerpIdResp.NextPerpetualId)
 
 	// query the next clob pair id
 	resp, err = containertest.Query(
@@ -89,5 +89,5 @@ func postUpgradeMarketIdsCheck(node *containertest.Node, t *testing.T) {
 	nextClobPairIdResp := clobtypes.QueryNextClobPairIdResponse{}
 	err = proto.UnmarshalText(resp.String(), &nextClobPairIdResp)
 	require.NoError(t, err)
-	require.Equal(t, uint32(v_7_1.ID_NUM), nextClobPairIdResp.NextClobPairId)
+	require.Equal(t, uint32(v_8_0.ID_NUM), nextClobPairIdResp.NextClobPairId)
 }
