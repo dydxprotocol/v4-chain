@@ -2,10 +2,11 @@ package types_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const (
@@ -35,7 +36,7 @@ func TestMutableExchangeMarketConfig_Copy(t *testing.T) {
 		},
 	}
 	mmecCopy := mutableMarketExchangeConfig.Copy()
-	require.NotSame(t, mutableMarketExchangeConfig, mmecCopy)
+	require.NotSame(t, &mutableMarketExchangeConfig, &mmecCopy)
 	require.True(t, mutableMarketExchangeConfig.Equal(mmecCopy))
 }
 

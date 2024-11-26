@@ -2,10 +2,11 @@ package types_test
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestCopy(t *testing.T) {
@@ -18,7 +19,7 @@ func TestCopy(t *testing.T) {
 
 	mmcCopy := mmc.Copy()
 
-	require.NotSame(t, mmc, mmcCopy)
+	require.NotSame(t, &mmc, &mmcCopy)
 	require.Equal(t, mmc, mmcCopy)
 }
 

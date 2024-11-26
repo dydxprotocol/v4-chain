@@ -2,8 +2,9 @@ package price_fetcher
 
 import (
 	"errors"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"testing"
+
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	"cosmossdk.io/math"
 	pricefeed_cosntants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
@@ -210,7 +211,7 @@ func TestGetTaskLoopDefinition_SingleMarketExchange(t *testing.T) {
 	taskLoopDefinition := pf.getTaskLoopDefinition()
 
 	// Expect that the definition uses a copy of the mutableExchangeConfig for synchronization purposes.
-	require.NotSame(t, pf.mutableState.mutableExchangeConfig, taskLoopDefinition.mutableExchangeConfig)
+	require.NotSame(t, &pf.mutableState.mutableExchangeConfig, &taskLoopDefinition.mutableExchangeConfig)
 	require.Equal(t, expectedExchangeConfig, taskLoopDefinition.mutableExchangeConfig)
 	require.Equal(t, expectedMarketExponents, taskLoopDefinition.marketExponents)
 	require.Equal(t, []types.MarketId{constants.MarketId7, constants.MarketId8}, taskLoopDefinition.marketIds)
@@ -220,7 +221,7 @@ func TestGetTaskLoopDefinition_SingleMarketExchange(t *testing.T) {
 
 	// Sanity checks:
 
-	require.NotSame(t, pf.mutableState.mutableExchangeConfig, taskLoopDefinition.mutableExchangeConfig)
+	require.NotSame(t, &pf.mutableState.mutableExchangeConfig, &taskLoopDefinition.mutableExchangeConfig)
 	require.Equal(t, expectedExchangeConfig, taskLoopDefinition.mutableExchangeConfig)
 	require.Equal(t, expectedMarketExponents, taskLoopDefinition.marketExponents)
 
@@ -248,7 +249,7 @@ func TestGetTaskLoopDefinition_MultiMarketExchange(t *testing.T) {
 	expectedExchangeConfig := &constants.Exchange1_3Markets_MutableExchangeMarketConfig
 
 	// Expect that the definition uses a copy of the mutableExchangeConfig for synchronization purposes.
-	require.NotSame(t, expectedExchangeConfig, taskLoopDefinition.mutableExchangeConfig)
+	require.NotSame(t, &expectedExchangeConfig, &taskLoopDefinition.mutableExchangeConfig)
 	require.Equal(t, expectedExchangeConfig, taskLoopDefinition.mutableExchangeConfig)
 	require.Equal(t, expectedExponents, taskLoopDefinition.marketExponents)
 	require.Equal(t, expectedMarkets, taskLoopDefinition.marketIds)

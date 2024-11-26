@@ -89,7 +89,7 @@ func TestGetMutableExchangeConfig(t *testing.T) {
 
 	mutableExchangeConfig := pf.mutableState.GetMutableExchangeConfig()
 
-	require.NotSame(t, mutableExchangeConfig, pf.mutableState.mutableExchangeConfig)
+	require.NotSame(t, &mutableExchangeConfig, &pf.mutableState.mutableExchangeConfig)
 	require.Equal(t, pf.mutableState.mutableExchangeConfig, mutableExchangeConfig)
 }
 
@@ -110,8 +110,8 @@ func TestGetTaskLoopDefinition(t *testing.T) {
 	taskLoopDefinition := pf.getTaskLoopDefinition()
 
 	// The taskLoopDefinition should use copies of shared state
-	require.NotSame(t, pf.mutableState.mutableExchangeConfig, taskLoopDefinition.mutableExchangeConfig)
-	require.NotSame(t, pf.mutableState.marketExponents, taskLoopDefinition.marketExponents)
+	require.NotSame(t, &pf.mutableState.mutableExchangeConfig, &taskLoopDefinition.mutableExchangeConfig)
+	require.NotSame(t, &pf.mutableState.marketExponents, &taskLoopDefinition.marketExponents)
 
 	require.Equal(t, pf.mutableState.mutableExchangeConfig, taskLoopDefinition.mutableExchangeConfig)
 	require.Equal(t, pf.mutableState.marketExponents, taskLoopDefinition.marketExponents)
