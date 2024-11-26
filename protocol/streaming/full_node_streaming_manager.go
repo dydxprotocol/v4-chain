@@ -504,7 +504,7 @@ func (sm *FullNodeStreamingManagerImpl) SendPriceUpdate(
 	}
 
 	metrics.IncrCounter(
-		metrics.GrpcSendSubaccountUpdateCount,
+		metrics.GrpcSendPriceUpdateCount,
 		1,
 	)
 
@@ -1044,6 +1044,10 @@ func (sm *FullNodeStreamingManagerImpl) cacheStreamUpdatesByMarketIdWithLock(
 	streamUpdates []clobtypes.StreamUpdate,
 	marketIds []uint32,
 ) {
+	if len(streamUpdates) != len(marketIds) {
+		sm.logger.Error("Mismatch between stream updates and market IDs lengths")
+		return
+	}
 	sm.streamUpdateCache = append(sm.streamUpdateCache, streamUpdates...)
 	for _, marketId := range marketIds {
 		sm.streamUpdateSubscriptionCache = append(
