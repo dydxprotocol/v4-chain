@@ -1,9 +1,11 @@
+import { logger } from '@dydxprotocol-indexer/base';
 import Big from 'big.js';
 import { Callback, RedisClient } from 'redis';
 
+import { getOrderBookMidPrice } from './orderbook-levels-cache';
 import {
-  addMarketPriceScript,
-  getMarketMedianScript,
+  addOrderbookMidPricesScript,
+  getOrderbookMidPricesScript,
 } from './scripts';
 
 // Cache of orderbook prices for each clob pair
@@ -20,73 +22,89 @@ function getOrderbookMidPriceCacheKey(ticker: string): string {
 }
 
 /**
- * Adds a price to the market prices cache for a given ticker.
- * Uses a Lua script to add the price with a timestamp to a sorted set in Redis.
+ * Fetches and caches mid prices for multiple tickers.
  * @param client The Redis client
- * @param ticker The ticker symbol
- * @param price The price to be added
- * @returns A promise that resolves when the operation is complete
+ * @param tickers An array of ticker symbols
+ * @returns A promise that resolves when all prices are fetched and cached
  */
-export async function setPrice(
+export async function fetchAndCacheOrderbookMidPrices(
   client: RedisClient,
-  ticker: string,
-  price: string,
+  tickers: string[],
 ): Promise<void> {
-  // Number of keys for the lua script.
-  const numKeys: number = 1;
-
-  let evalAsync: (
-    marketCacheKey: string,
-  ) => Promise<void> = (marketCacheKey) => {
-
-    return new Promise<void>((resolve, reject) => {
-      const callback: Callback<void> = (
-        err: Error | null,
-      ) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve();
-      };
-
-      const nowSeconds = Math.floor(Date.now() / 1000); // Current time in seconds
-      client.evalsha(
-        addMarketPriceScript.hash,
-        numKeys,
-        marketCacheKey,
-        price,
-        nowSeconds,
-        callback,
-      );
-
-    });
-  };
-  evalAsync = evalAsync.bind(client);
-
-  return evalAsync(
-    getOrderbookMidPriceCacheKey(ticker),
+  // Fetch midPrices and filter out undefined values
+  const cacheKeyPricePairs: ({ cacheKey: string, midPrice: string } | null)[] = await Promise.all(
+    tickers.map(async (ticker) => {
+      const cacheKey: string = getOrderbookMidPriceCacheKey(ticker);
+      const midPrice: string | undefined = await getOrderBookMidPrice(ticker, client);
+      if (midPrice !== undefined) {
+        return { cacheKey, midPrice };
+      }
+      return null;
+    }),
   );
+
+  // Filter out null values
+  const validPairs: { cacheKey: string, midPrice: string }[] = cacheKeyPricePairs.filter(
+    (pair): pair is { cacheKey: string, midPrice: string } => pair !== null,
+  );
+  if (validPairs.length === 0) {
+    // No valid midPrices to cache
+    return;
+  }
+
+  const nowSeconds: number = Math.floor(Date.now() / 1000); // Current time in seconds
+  // Extract cache keys and prices
+  const priceValues: string[] = validPairs.map((pair) => pair.midPrice);
+  const priceCacheKeys: string[] = validPairs.map((pair) => {
+
+    logger.info({
+      at: 'orderbook-mid-prices-cache#fetchAndCacheOrderbookMidPrices',
+      message: 'Caching orderbook mid price',
+      cacheKey: pair.cacheKey,
+      midPrice: pair.midPrice,
+    });
+    return pair.cacheKey;
+  });
+
+  return new Promise<void>((resolve, reject) => {
+    client.evalsha(
+      addOrderbookMidPricesScript.hash,
+      priceCacheKeys.length,
+      ...priceCacheKeys,
+      ...priceValues,
+      nowSeconds,
+      (err: Error | null) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
 }
 
 /**
- * Retrieves the median price for a given ticker from the cache.
- * Uses a Lua script to fetch either the middle element (for odd number of prices)
- * or the two middle elements (for even number of prices) from a sorted set in Redis.
- * If two middle elements are returned, their average is calculated in JavaScript.
+ * Retrieves the median prices for a given array of tickers from the cache.
  * @param client The Redis client
- * @param ticker The ticker symbol
- * @returns A promise that resolves with the median price as a string, or null if not found
+ * @param tickers Array of ticker symbols
+ * @returns A promise that resolves with an object mapping tickers
+ *  to their median prices (as strings) or undefined if not found
  */
-export async function getMedianPrice(client: RedisClient, ticker: string): Promise<string | null> {
+export async function getMedianPrices(
+  client: RedisClient,
+  tickers: string[],
+): Promise<{ [ticker: string]: string | undefined }> {
+
   let evalAsync: (
-    marketCacheKey: string,
-  ) => Promise<string[]> = (
-    marketCacheKey,
+    marketCacheKeys: string[],
+  ) => Promise<string[][]> = (
+    marketCacheKeys,
   ) => {
     return new Promise((resolve, reject) => {
-      const callback: Callback<string[]> = (
+      const callback: Callback<string[][]> = (
         err: Error | null,
-        results: string[],
+        results: string[][],
       ) => {
         if (err) {
           return reject(err);
@@ -95,33 +113,46 @@ export async function getMedianPrice(client: RedisClient, ticker: string): Promi
       };
 
       client.evalsha(
-        getMarketMedianScript.hash,
-        1,
-        marketCacheKey,
+        getOrderbookMidPricesScript.hash,  // The Lua script to get cached prices
+        marketCacheKeys.length,
+        ...marketCacheKeys,
         callback,
       );
     });
   };
   evalAsync = evalAsync.bind(client);
 
-  const prices = await evalAsync(
-    getOrderbookMidPriceCacheKey(ticker),
-  );
+  // Map tickers to cache keys
+  const marketCacheKeys: string[] = tickers.map(getOrderbookMidPriceCacheKey);
+  // Fetch the prices arrays from Redis (without scores)
+  const pricesArrays: string[][] = await evalAsync(marketCacheKeys);
 
-  if (!prices || prices.length === 0) {
-    return null;
-  }
+  const result: { [ticker: string]: string | undefined } = {};
+  tickers.forEach((ticker, index) => {
+    const prices = pricesArrays[index];
 
-  if (prices.length === 1) {
-    return Big(prices[0]).toFixed();
-  }
+    // Check if there are any prices
+    if (!prices || prices.length === 0) {
+      result[ticker] = undefined;
+      return;
+    }
 
-  if (prices.length === 2) {
-    const [price1, price2] = prices.map((price) => {
-      return Big(price);
-    });
-    return price1.plus(price2).div(2).toFixed();
-  }
+    // Convert the prices to Big.js objects for precision
+    const bigPrices: Big[] = prices.map((price) => Big(price));
 
-  return null;
+    // Sort the prices in ascending order
+    bigPrices.sort((a, b) => a.cmp(b));
+
+    // Calculate the median
+    const mid: number = Math.floor(bigPrices.length / 2);
+    if (bigPrices.length % 2 === 1) {
+      // Odd number of prices: the middle one is the median
+      result[ticker] = bigPrices[mid].toFixed();
+    } else {
+      // Even number of prices: average the two middle ones
+      result[ticker] = bigPrices[mid - 1].plus(bigPrices[mid]).div(2).toFixed();
+    }
+  });
+
+  return result;
 }
