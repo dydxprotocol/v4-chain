@@ -19,7 +19,7 @@ func TestCopy(t *testing.T) {
 
 	mmcCopy := mmc.Copy()
 
-	require.NotSame(t, &mmc, &mmcCopy)
+	require.NotSame(t, mmc, mmcCopy)
 	require.Equal(t, mmc, mmcCopy)
 }
 

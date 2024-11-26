@@ -36,7 +36,7 @@ func TestMutableExchangeMarketConfig_Copy(t *testing.T) {
 		},
 	}
 	mmecCopy := mutableMarketExchangeConfig.Copy()
-	require.NotSame(t, &mutableMarketExchangeConfig, &mmecCopy)
+	require.NotSame(t, mutableMarketExchangeConfig, mmecCopy)
 	require.True(t, mutableMarketExchangeConfig.Equal(mmecCopy))
 }
 
