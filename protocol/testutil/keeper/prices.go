@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -124,6 +125,7 @@ func createPricesKeeper(
 		},
 		revShareKeeper,
 		marketMapKeeper,
+		streaming.NewNoopGrpcStreamingManager(),
 	)
 
 	return k, storeKey, indexPriceCache, mockTimeProvider

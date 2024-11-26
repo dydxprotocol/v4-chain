@@ -52,10 +52,15 @@ type FullNodeStreamingManager interface {
 		ctx sdk.Context,
 		subaccountUpdate satypes.StreamSubaccountUpdate,
 	)
+	SendPriceUpdate(
+		ctx sdk.Context,
+		priceUpdate pricestypes.StreamPriceUpdate,
+	)
 	GetStagedFinalizeBlockEvents(
 		ctx sdk.Context,
 	) []clobtypes.StagedFinalizeBlockEvent
 	TracksSubaccountId(id satypes.SubaccountId) bool
+	TracksMarketId(marketId uint32) bool
 	StreamBatchUpdatesAfterFinalizeBlock(
 		ctx sdk.Context,
 		orderBookUpdatesToSyncLocalOpsQueue *clobtypes.OffchainUpdates,

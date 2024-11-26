@@ -96,6 +96,20 @@ func (k Keeper) UpdateMarketPrices(
 				pricefeedmetrics.GetLabelForMarketId(marketPrice.Id),
 			},
 		)
+
+		// If GRPC streaming is on, emit a price update to stream.
+		if k.GetFullNodeStreamingManager().Enabled() {
+			if k.GetFullNodeStreamingManager().TracksMarketId(marketPrice.Id) {
+				k.GetFullNodeStreamingManager().SendPriceUpdate(
+					ctx,
+					types.StreamPriceUpdate{
+						MarketId: marketPrice.Id,
+						Price:    marketPrice,
+						Snapshot: false,
+					},
+				)
+			}
+		}
 	}
 
 	// Generate indexer events.

@@ -54,6 +54,10 @@ func (sm *NoopGrpcStreamingManager) TracksSubaccountId(id satypes.SubaccountId) 
 	return false
 }
 
+func (sm *NoopGrpcStreamingManager) TracksMarketId(id uint32) bool {
+	return false
+}
+
 func (sm *NoopGrpcStreamingManager) GetSubaccountSnapshotsForInitStreams(
 	getSubaccountSnapshot func(subaccountId satypes.SubaccountId) *satypes.StreamSubaccountUpdate,
 ) map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate {
@@ -87,6 +91,12 @@ func (sm *NoopGrpcStreamingManager) GetStagedFinalizeBlockEvents(
 func (sm *NoopGrpcStreamingManager) SendSubaccountUpdate(
 	ctx sdk.Context,
 	subaccountUpdate satypes.StreamSubaccountUpdate,
+) {
+}
+
+func (sm *NoopGrpcStreamingManager) SendPriceUpdate(
+	ctx sdk.Context,
+	priceUpdate pricestypes.StreamPriceUpdate,
 ) {
 }
 
