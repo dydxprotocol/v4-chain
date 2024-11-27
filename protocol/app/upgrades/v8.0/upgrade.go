@@ -69,7 +69,7 @@ func MigrateAccountplusAccountState(ctx sdk.Context, k accountpluskeeper.Keeper)
 }
 
 const (
-	ID_NUM = 200
+	ID_NUM = 300
 )
 
 // Set market, perpetual, and clob ids to a set number
