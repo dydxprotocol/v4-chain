@@ -879,6 +879,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 	localOperations []types.InternalOperation,
 	shortTermOrderTxBytes map[types.OrderHash][]byte,
 	existingOffchainUpdates *types.OffchainUpdates,
+	onlyPlacePostOnly bool,
 ) *types.OffchainUpdates {
 	lib.AssertCheckTxMode(ctx)
 
@@ -922,6 +923,11 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 		// Replay all short-term and stateful order placements.
 		case *types.InternalOperation_ShortTermOrderPlacement:
 			order := operation.GetShortTermOrderPlacement().Order
+
+			// Skip the order if it is a post-only order and we are only replaying post-only orders.
+			if onlyPlacePostOnly && !order.IsPostOnlyOrder() {
+				continue
+			}
 
 			// Set underlying tx bytes so OperationsToPropose may access it and
 			// store the tx bytes on OperationHashToTxBytes data structure

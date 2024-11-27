@@ -180,6 +180,11 @@ func (o *Order) IsConditionalOrder() bool {
 	return o.OrderId.IsConditionalOrder()
 }
 
+// IsPostOnlyOrder returns whether this order is a post only order.
+func (o *Order) IsPostOnlyOrder() bool {
+	return o.GetTimeInForce() == Order_TIME_IN_FORCE_POST_ONLY
+}
+
 // CanTrigger returns if a condition order is eligible to be triggered based on a given
 // subticks value. Function will panic if order is not a conditional order.
 func (o *Order) CanTrigger(subticks Subticks) bool {

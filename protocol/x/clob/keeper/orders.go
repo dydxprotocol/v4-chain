@@ -496,6 +496,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 	ctx sdk.Context,
 	placedStatefulOrderIds []types.OrderId,
 	existingOffchainUpdates *types.OffchainUpdates,
+	onlyPlacePostOnly bool,
 ) (
 	offchainUpdates *types.OffchainUpdates,
 ) {
@@ -521,6 +522,12 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 		}
 
 		order := orderPlacement.GetOrder()
+
+		// Prioritize placing post-only orders if the flag is set.
+		if onlyPlacePostOnly && !order.IsPostOnlyOrder() {
+			continue
+		}
+
 		// Validate and place order.
 		_, orderStatus, placeOrderOffchainUpdates, err := k.AddPreexistingStatefulOrder(
 			ctx,
@@ -579,6 +586,7 @@ func (k Keeper) PlaceConditionalOrdersTriggeredInLastBlock(
 	ctx sdk.Context,
 	conditionalOrderIdsTriggeredInLastBlock []types.OrderId,
 	existingOffchainUpdates *types.OffchainUpdates,
+	onlyPlacePostOnly bool,
 ) (
 	offchainUpdates *types.OffchainUpdates,
 ) {
@@ -608,7 +616,12 @@ func (k Keeper) PlaceConditionalOrdersTriggeredInLastBlock(
 		}
 	}
 
-	return k.PlaceStatefulOrdersFromLastBlock(ctx, conditionalOrderIdsTriggeredInLastBlock, existingOffchainUpdates)
+	return k.PlaceStatefulOrdersFromLastBlock(
+		ctx,
+		conditionalOrderIdsTriggeredInLastBlock,
+		existingOffchainUpdates,
+		onlyPlacePostOnly,
+	)
 }
 
 // PerformOrderCancellationStatefulValidation performs stateful validation on an order cancellation.
