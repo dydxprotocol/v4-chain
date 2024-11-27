@@ -1019,6 +1019,11 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
+			// Skip the order if it is a post-only order and we are only replaying post-only orders.
+			if onlyPlacePostOnly && !statefulOrderPlacement.Order.IsPostOnlyOrder() {
+				continue
+			}
+
 			// TODO(DEC-998): Research whether it's fine for two post-only orders to be matched. Currently they are dropped.
 			_, orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.AddPreexistingStatefulOrder(
 				ctx,
@@ -1069,6 +1074,11 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 
 			// if not in state anymore, this means it was removed in the previous block. No-op.
 			if !found {
+				continue
+			}
+
+			// Skip the order if it is a post-only order and we are only replaying post-only orders.
+			if onlyPlacePostOnly && !statefulOrderPlacement.Order.IsPostOnlyOrder() {
 				continue
 			}
 
