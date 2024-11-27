@@ -1869,7 +1869,7 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				constants.Order_Dave_Num1_Id0_Clob0_Sell1BTC_Price49997_GTB10,
 				constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50003_GTB10,
 				// Place the conditional order.
-				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10,
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10_PO,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO,
 			},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{

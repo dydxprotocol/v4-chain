@@ -43,7 +43,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				constants.Bob_Num0_10_000USD,
 			},
 			orders: []clobtypes.Order{
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_PO,
 				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO_SL_15,
 			},
 
@@ -629,7 +629,7 @@ func TestOrderRemoval(t *testing.T) {
 				constants.Alice_Num0_10_000USD,
 				constants.Bob_Num0_10_000USD,
 			},
-			firstOrder:  constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+			firstOrder:  constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_PO,
 			secondOrder: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO,
 
 			expectedFirstOrderRemoved:  false,
