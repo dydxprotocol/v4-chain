@@ -485,10 +485,16 @@ describe('candleHelper', () => {
     const usdVolume: string = Big(existingPrice).times(baseTokenVolume).toString();
     const orderbookMidPriceClose = '7500';
     const orderbookMidPriceOpen = '8000';
+    // Set candle start time to be far in the past to ensure all candles are new
+    const startTime: IsoString = helpers.calculateNormalizedCandleStartTime(
+      testConstants.createdDateTime.minus({ minutes: 100 }),
+      CandleResolution.ONE_MINUTE,
+    ).toISO();
+
     await Promise.all(
       _.map(Object.values(CandleResolution), (resolution: CandleResolution) => {
         return CandleTable.create({
-          startedAt: previousStartedAt,
+          startedAt: startTime,
           ticker: testConstants.defaultPerpetualMarket.ticker,
           resolution,
           low: existingPrice,
@@ -508,7 +514,7 @@ describe('candleHelper', () => {
 
     setCachePrice('BTC-USD', '10005');
     await OrderbookMidPriceMemoryCache.updateOrderbookMidPrices();
-
+    // Add two trades for BTC-USD market
     const publisher: KafkaPublisher = new KafkaPublisher();
     publisher.addEvents([
       defaultTradeKafkaEvent,
@@ -516,32 +522,31 @@ describe('candleHelper', () => {
     ]);
 
     // Create new candles, with trades
-    await runUpdateCandles(publisher).then(async () => {
+    await runUpdateCandles(publisher);
 
-      // Verify previous candles have orderbookMidPriceClose updated
-      const previousExpectedCandles: CandleFromDatabase[] = _.map(
-        Object.values(CandleResolution),
-        (resolution: CandleResolution) => {
-          return {
-            id: CandleTable.uuid(previousStartedAt, defaultCandle.ticker, resolution),
-            startedAt: previousStartedAt,
-            ticker: defaultCandle.ticker,
-            resolution,
-            low: existingPrice,
-            high: existingPrice,
-            open: existingPrice,
-            close: existingPrice,
-            baseTokenVolume,
-            usdVolume,
-            trades: existingTrades,
-            startingOpenInterest,
-            orderbookMidPriceClose: '10005',
-            orderbookMidPriceOpen,
-          };
-        },
-      );
-      await verifyCandlesInPostgres(previousExpectedCandles);
-    });
+    // Verify previous candles have orderbookMidPriceClose updated
+    const previousExpectedCandles: CandleFromDatabase[] = _.map(
+      Object.values(CandleResolution),
+      (resolution: CandleResolution) => {
+        return {
+          id: CandleTable.uuid(startTime, defaultCandle.ticker, resolution),
+          startedAt: startTime,
+          ticker: defaultCandle.ticker,
+          resolution,
+          low: existingPrice,
+          high: existingPrice,
+          open: existingPrice,
+          close: existingPrice,
+          baseTokenVolume,
+          usdVolume,
+          trades: existingTrades,
+          startingOpenInterest,
+          orderbookMidPriceClose: '10005',
+          orderbookMidPriceOpen,
+        };
+      },
+    );
+    await verifyCandlesInPostgres(previousExpectedCandles);
 
     // Verify new candles were created
     const expectedCandles: CandleFromDatabase[] = _.map(
@@ -583,11 +588,16 @@ describe('candleHelper', () => {
     const usdVolume: string = Big(existingPrice).times(baseTokenVolume).toString();
     const orderbookMidPriceClose = '7500';
     const orderbookMidPriceOpen = '8000';
+    // Set candle start time to be far in the past to ensure all candles are new
+    const startTime: IsoString = helpers.calculateNormalizedCandleStartTime(
+      testConstants.createdDateTime.minus({ minutes: 100 }),
+      CandleResolution.ONE_MINUTE,
+    ).toISO();
 
     await Promise.all(
       _.map(Object.values(CandleResolution), (resolution: CandleResolution) => {
         return CandleTable.create({
-          startedAt: previousStartedAt,
+          startedAt: startTime,
           ticker: testConstants.defaultPerpetualMarket.ticker,
           resolution,
           low: existingPrice,
@@ -619,8 +629,8 @@ describe('candleHelper', () => {
       Object.values(CandleResolution),
       (resolution: CandleResolution) => {
         return {
-          id: CandleTable.uuid(previousStartedAt, defaultCandle.ticker, resolution),
-          startedAt: previousStartedAt,
+          id: CandleTable.uuid(startTime, defaultCandle.ticker, resolution),
+          startedAt: startTime,
           ticker: defaultCandle.ticker,
           resolution,
           low: existingPrice,
