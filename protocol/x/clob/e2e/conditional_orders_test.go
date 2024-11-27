@@ -705,7 +705,7 @@ func TestConditionalOrder(t *testing.T) {
 				constants.Dave_Num0_500000USD,
 			},
 			orders: []clobtypes.Order{
-				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10,
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10_PO,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO,
 			},
 			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
