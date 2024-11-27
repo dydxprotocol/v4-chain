@@ -218,7 +218,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[0].params.id' -v '0'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[0].params.market_id' -v '0'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[0].params.atomic_resolution' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[0].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[0].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[0].params.liquidity_tier' -v '0'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[0].params.market_type' -v '1'
 
@@ -228,7 +228,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[1].params.id' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[1].params.market_id' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[1].params.atomic_resolution' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[1].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[1].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[1].params.liquidity_tier' -v '0'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[1].params.market_type' -v '1'
 
@@ -238,7 +238,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[2].params.id' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[2].params.market_id' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[2].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[2].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[2].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[2].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[2].params.market_type' -v '1'
 
@@ -248,7 +248,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.id' -v '3'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.market_id' -v '3'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.atomic_resolution' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[3].params.market_type' -v '1'
 
@@ -258,7 +258,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[4].params.id' -v '4'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[4].params.market_id' -v '4'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[4].params.atomic_resolution' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[4].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[4].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[4].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[4].params.market_type' -v '1'
 
@@ -268,7 +268,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[5].params.id' -v '5'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[5].params.market_id' -v '5'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[5].params.atomic_resolution' -v '-7'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[5].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[5].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[5].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[5].params.market_type' -v '1'
 
@@ -278,7 +278,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[6].params.id' -v '6'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[6].params.market_id' -v '6'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[6].params.atomic_resolution' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[6].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[6].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[6].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[6].params.market_type' -v '1'
 
@@ -288,7 +288,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[7].params.id' -v '7'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[7].params.market_id' -v '7'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[7].params.atomic_resolution' -v '-7'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[7].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[7].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[7].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[7].params.market_type' -v '1'
 
@@ -298,7 +298,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[8].params.id' -v '8'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[8].params.market_id' -v '8'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[8].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[8].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[8].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[8].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[8].params.market_type' -v '1'
 
@@ -308,7 +308,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[9].params.id' -v '9'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[9].params.market_id' -v '9'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[9].params.atomic_resolution' -v '-7'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[9].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[9].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[9].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[9].params.market_type' -v '1'
 
@@ -318,7 +318,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[10].params.id' -v '10'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[10].params.market_id' -v '10'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[10].params.atomic_resolution' -v '-4'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[10].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[10].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[10].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[10].params.market_type' -v '1'
 
@@ -328,7 +328,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[11].params.id' -v '11'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[11].params.market_id' -v '11'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[11].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[11].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[11].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[11].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[11].params.market_type' -v '1'
 
@@ -338,7 +338,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[12].params.id' -v '12'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[12].params.market_id' -v '12'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[12].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[12].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[12].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[12].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[12].params.market_type' -v '1'
 
@@ -348,7 +348,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[13].params.id' -v '13'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[13].params.market_id' -v '13'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[13].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[13].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[13].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[13].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[13].params.market_type' -v '1'
 
@@ -358,7 +358,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[14].params.id' -v '14'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[14].params.market_id' -v '14'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[14].params.atomic_resolution' -v '-8'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[14].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[14].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[14].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[14].params.market_type' -v '1'
 
@@ -368,7 +368,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[15].params.id' -v '15'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[15].params.market_id' -v '15'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[15].params.atomic_resolution' -v '-4'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[15].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[15].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[15].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[15].params.market_type' -v '1'
 
@@ -378,7 +378,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[16].params.id' -v '16'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[16].params.market_id' -v '16'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[16].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[16].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[16].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[16].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[16].params.market_type' -v '1'
 
@@ -388,7 +388,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[17].params.id' -v '17'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[17].params.market_id' -v '17'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[17].params.atomic_resolution' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[17].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[17].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[17].params.liquidity_tier' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[17].params.market_type' -v '1'
 
@@ -398,7 +398,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[18].params.id' -v '18'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[18].params.market_id' -v '18'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[18].params.atomic_resolution' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[18].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[18].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[18].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[18].params.market_type' -v '1'
 
@@ -408,7 +408,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[19].params.id' -v '19'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[19].params.market_id' -v '19'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[19].params.atomic_resolution' -v '-7'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[19].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[19].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[19].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[19].params.market_type' -v '1'
 
@@ -418,7 +418,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[20].params.id' -v '20'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[20].params.market_id' -v '20'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[20].params.atomic_resolution' -v '-7'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[20].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[20].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[20].params.liquidity_tier' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[20].params.market_type' -v '1'
 
@@ -428,7 +428,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[21].params.id' -v '21'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[21].params.market_id' -v '21'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[21].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[21].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[21].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[21].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[21].params.market_type' -v '1'
 
@@ -438,7 +438,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[22].params.id' -v '22'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[22].params.market_id' -v '22'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[22].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[22].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[22].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[22].params.liquidity_tier' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[22].params.market_type' -v '1'
 
@@ -448,7 +448,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[23].params.id' -v '23'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[23].params.market_id' -v '23'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[23].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[23].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[23].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[23].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[23].params.market_type' -v '1'
 
@@ -458,7 +458,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[24].params.id' -v '24'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[24].params.market_id' -v '24'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[24].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[24].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[24].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[24].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[24].params.market_type' -v '1'
 
@@ -468,7 +468,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[25].params.id' -v '25'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[25].params.market_id' -v '25'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[25].params.atomic_resolution' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[25].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[25].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[25].params.liquidity_tier' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[25].params.market_type' -v '1'
 
@@ -478,7 +478,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[26].params.id' -v '26'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[26].params.market_id' -v '26'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[26].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[26].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[26].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[26].params.liquidity_tier' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[26].params.market_type' -v '1'
 
@@ -488,7 +488,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[27].params.id' -v '27'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[27].params.market_id' -v '27'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[27].params.atomic_resolution' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[27].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[27].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[27].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[27].params.market_type' -v '1'
 
@@ -498,7 +498,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[28].params.id' -v '28'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[28].params.market_id' -v '28'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[28].params.atomic_resolution' -v '1'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[28].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[28].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[28].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[28].params.market_type' -v '1'
 
@@ -508,7 +508,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[29].params.id' -v '29'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[29].params.market_id' -v '29'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[29].params.atomic_resolution' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[29].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[29].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[29].params.liquidity_tier' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[29].params.market_type' -v '1'
 
@@ -518,7 +518,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[30].params.id' -v '30'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[30].params.market_id' -v '30'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[30].params.atomic_resolution' -v '0'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[30].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[30].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[30].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[30].params.market_type' -v '1'
 
@@ -528,7 +528,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[31].params.id' -v '31'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[31].params.market_id' -v '31'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[31].params.atomic_resolution' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[31].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[31].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[31].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[31].params.market_type' -v '1'
 
@@ -538,7 +538,7 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.id' -v '32'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.market_id' -v '32'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.atomic_resolution' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.market_type' -v '1'
 
@@ -2270,7 +2270,7 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.id' -v "${NUM_PERPETUALS}"
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.market_id' -v "${TEST_USD_MARKET_ID}"
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.atomic_resolution' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.default_funding_ppm' -v '100'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.liquidity_tier' -v "${NUM_LIQUIDITY_TIERS}"
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.last().params.market_type' -v '1'
 

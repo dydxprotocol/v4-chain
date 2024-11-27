@@ -2,8 +2,9 @@ package price_fetcher
 
 import (
 	"errors"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"testing"
+
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	"cosmossdk.io/math"
 	pricefeed_cosntants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"

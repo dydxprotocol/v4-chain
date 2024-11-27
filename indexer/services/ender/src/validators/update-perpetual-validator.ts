@@ -1,11 +1,13 @@
 import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
-import { IndexerTendermintEvent, UpdatePerpetualEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerTendermintEvent, UpdatePerpetualEventV1, UpdatePerpetualEventV2 } from '@dydxprotocol-indexer/v4-protos';
 
 import { Handler } from '../handlers/handler';
 import { UpdatePerpetualHandler } from '../handlers/update-perpetual-handler';
 import { Validator } from './validator';
 
-export class UpdatePerpetualValidator extends Validator<UpdatePerpetualEventV1> {
+export class UpdatePerpetualValidator extends Validator<
+  UpdatePerpetualEventV1 | UpdatePerpetualEventV2
+> {
   public validate(): void {
     if (perpetualMarketRefresher.getPerpetualMarketFromId(this.event.id.toString()) === undefined) {
       return this.logAndThrowParseMessageError(

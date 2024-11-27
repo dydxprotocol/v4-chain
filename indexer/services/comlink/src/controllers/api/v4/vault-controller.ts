@@ -35,7 +35,7 @@ import Big from 'big.js';
 import bounds from 'binary-searching';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
-import _ from 'lodash';
+import _, { Dictionary } from 'lodash';
 import { DateTime } from 'luxon';
 import {
   Controller, Get, Query, Route,
@@ -152,17 +152,27 @@ class VaultController extends Controller {
       vaultPnlTicks,
       vaultPositions,
       latestBlock,
+      latestTicks,
     ] : [
       PnlTicksFromDatabase[],
       Map<string, VaultPosition>,
       BlockFromDatabase,
+      PnlTicksFromDatabase[],
     ] = await Promise.all([
       getVaultSubaccountPnlTicks(_.keys(vaultSubaccounts), getResolution(resolution)),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
+      getLatestPnlTicks(_.keys(vaultSubaccounts)),
     ]);
+    const latestTicksBySubaccountId: Dictionary<PnlTicksFromDatabase> = _.keyBy(
+      latestTicks,
+      'subaccountId',
+    );
 
     const groupedVaultPnlTicks: VaultHistoricalPnl[] = _(vaultPnlTicks)
+      .filter((pnlTickFromDatabsae: PnlTicksFromDatabase): boolean => {
+        return vaultSubaccounts[pnlTickFromDatabsae.subaccountId] !== undefined;
+      })
       .groupBy('subaccountId')
       .mapValues((pnlTicks: PnlTicksFromDatabase[], subaccountId: string): VaultHistoricalPnl => {
         const market: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
@@ -182,6 +192,7 @@ class VaultController extends Controller {
           currentEquity,
           pnlTicks,
           latestBlock,
+          latestTicksBySubaccountId[subaccountId],
         );
 
         return {
@@ -347,13 +358,13 @@ async function getVaultSubaccountPnlTicks(
     VaultPnlTicksView.getVaultsPnl(
       resolution,
       windowSeconds,
-      getVautlPnlStartDate(),
+      getVaultPnlStartDate(),
     ),
     PnlTicksTable.getLatestPnlTick(
       vaultSubaccountIds,
       // Add a buffer of 10 minutes to get the first PnL tick for PnL data as PnL ticks aren't
       // created exactly on the hour.
-      getVautlPnlStartDate().plus({ minutes: 10 }),
+      getVaultPnlStartDate().plus({ minutes: 10 }),
     ),
   ]);
 
@@ -548,6 +559,34 @@ function getPnlTicksWithCurrentTick(
   return pnlTicks.concat([currentTick]);
 }
 
+export async function getLatestPnlTicks(
+  vaultSubaccountIds: string[],
+): Promise<PnlTicksFromDatabase[]> {
+  const [
+    latestPnlTicks,
+    adjustByPnlTicks,
+  ] : [
+    PnlTicksFromDatabase[],
+    PnlTicksFromDatabase[],
+  ] = await Promise.all([
+    PnlTicksTable.getLatestPnlTick(
+      vaultSubaccountIds,
+      DateTime.now().toUTC(),
+    ),
+    PnlTicksTable.getLatestPnlTick(
+      vaultSubaccountIds,
+      // Add a buffer of 10 minutes to get the first PnL tick for PnL data as PnL ticks aren't
+      // created exactly on the hour.
+      getVaultPnlStartDate().plus({ minutes: 10 }),
+    ),
+  ]);
+  const adjustedPnlTicks: PnlTicksFromDatabase[] = adjustVaultPnlTicks(
+    latestPnlTicks,
+    adjustByPnlTicks,
+  );
+  return adjustedPnlTicks;
+}
+
 export async function getLatestPnlTick(
   vaultSubaccountIds: string[],
   vaults: VaultFromDatabase[],
@@ -562,13 +601,13 @@ export async function getLatestPnlTick(
     VaultPnlTicksView.getVaultsPnl(
       PnlTickInterval.hour,
       config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS * 60 * 60,
-      getVautlPnlStartDate(),
+      getVaultPnlStartDate(),
     ),
     PnlTicksTable.getLatestPnlTick(
       vaultSubaccountIds,
       // Add a buffer of 10 minutes to get the first PnL tick for PnL data as PnL ticks aren't
       // created exactly on the hour.
-      getVautlPnlStartDate().plus({ minutes: 10 }),
+      getVaultPnlStartDate().plus({ minutes: 10 }),
     ),
   ]);
   const adjustedPnlTicks: PnlTicksFromDatabase[] = adjustVaultPnlTicks(
@@ -795,7 +834,7 @@ async function getVaultMapping(): Promise<VaultMapping> {
   return validVaultMapping;
 }
 
-function getVautlPnlStartDate(): DateTime {
+function getVaultPnlStartDate(): DateTime {
   const startDate: DateTime = DateTime.fromISO(config.VAULT_PNL_START_DATE).toUTC();
   return startDate;
 }

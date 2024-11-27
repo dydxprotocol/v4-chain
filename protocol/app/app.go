@@ -1010,6 +1010,7 @@ func New(
 		},
 		app.RevShareKeeper,
 		&app.MarketMapKeeper,
+		app.FullNodeStreamingManager,
 	)
 	pricesModule := pricesmodule.NewAppModule(
 		appCodec,
@@ -1238,6 +1239,7 @@ func New(
 		[]string{
 			lib.GovModuleAddress.String(),
 		},
+		app.IndexerEventManager,
 		app.PricesKeeper,
 		app.ClobKeeper,
 		&app.MarketMapKeeper,

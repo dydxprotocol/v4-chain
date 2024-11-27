@@ -31,6 +31,7 @@ import {
   LiquidityTierUpsertEventV1,
   LiquidityTierUpsertEventV2,
   UpdatePerpetualEventV1,
+  UpdatePerpetualEventV2,
   UpdateClobPairEventV1,
   DeleveragingEventV1,
   TradingRewardsEventV1,
@@ -142,6 +143,12 @@ export type EventProtoWithTypeAndVersion = {
 } | {
   type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
   eventProto: UpdatePerpetualEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+} | {
+  type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+  eventProto: UpdatePerpetualEventV2,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,

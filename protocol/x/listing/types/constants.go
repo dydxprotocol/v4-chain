@@ -3,7 +3,7 @@ package types
 const (
 	MinPriceChangePpm_LongTail uint32 = 800
 
-	DefaultFundingPpm = 0
+	DefaultFundingPpm = 100 // 1bps per 8 hour or 0.125bps per hour
 
 	LiquidityTier_Isolated uint32 = 4
 

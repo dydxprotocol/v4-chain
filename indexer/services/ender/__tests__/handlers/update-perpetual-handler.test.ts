@@ -12,17 +12,20 @@ import {
   defaultPreviousHeight,
   defaultTime,
   defaultTxHash,
-  defaultUpdatePerpetualEvent,
+  defaultUpdatePerpetualEventV1,
+  defaultUpdatePerpetualEventV2,
 } from '../helpers/constants';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   Timestamp,
   UpdatePerpetualEventV1,
+  UpdatePerpetualEventV2,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
+  eventPerpetualMarketTypeToIndexerPerpetualMarketType,
   expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
@@ -57,14 +60,29 @@ describe('update-perpetual-handler', () => {
     jest.resetAllMocks();
   });
 
-  describe('getParallelizationIds', () => {
+  describe.each([
+    [
+      'UpdatePerpetualEventV1',
+      UpdatePerpetualEventV1.encode(defaultUpdatePerpetualEventV1).finish(),
+      defaultUpdatePerpetualEventV1,
+    ],
+    [
+      'UpdatePerpetualEventV2',
+      UpdatePerpetualEventV2.encode(defaultUpdatePerpetualEventV2).finish(),
+      defaultUpdatePerpetualEventV2,
+    ],
+  ])('%s', (
+    _name: string,
+    updatePerpetualEventBytes: Uint8Array,
+    event: UpdatePerpetualEventV1 | UpdatePerpetualEventV2,
+  ) => {
     it('returns the correct parallelization ids', () => {
       const transactionIndex: number = 0;
       const eventIndex: number = 0;
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.UPDATE_PERPETUAL,
-        UpdatePerpetualEventV1.encode(defaultUpdatePerpetualEvent).finish(),
+        updatePerpetualEventBytes,
         transactionIndex,
         eventIndex,
       );
@@ -80,51 +98,56 @@ describe('update-perpetual-handler', () => {
         0,
         indexerTendermintEvent,
         0,
-        defaultUpdatePerpetualEvent,
+        event,
       );
 
       expect(handler.getParallelizationIds()).toEqual([]);
     });
-  });
 
-  it('updates an existing perpetual market', async () => {
-    const transactionIndex: number = 0;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdatePerpetualEvent({
-      updatePerpetualEvent: defaultUpdatePerpetualEvent,
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
+    it('updates an existing perpetual market', async () => {
+      const transactionIndex: number = 0;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdatePerpetualEvent({
+        updatePerpetualEventBytes,
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
+      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+      await onMessage(kafkaMessage);
+
+      const perpetualMarket:
+      PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
+        event.id.toString(),
+      );
+
+      expect(perpetualMarket).toEqual(expect.objectContaining({
+        id: event.id.toString(),
+        ticker: event.ticker,
+        marketId: event.marketId,
+        atomicResolution: event.atomicResolution,
+        liquidityTierId: event.liquidityTier,
+        // Add V2-specific field expectations when testing V2 events
+        ...('marketType' in event && {
+          marketType: eventPerpetualMarketTypeToIndexerPerpetualMarketType(event.marketType),
+        }),
+      }));
+      expect(perpetualMarket).toEqual(
+        perpetualMarketRefresher.getPerpetualMarketFromId(
+          event.id.toString()));
+      expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
     });
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-    await onMessage(kafkaMessage);
-
-    const perpetualMarket:
-    PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
-      defaultUpdatePerpetualEvent.id.toString(),
-    );
-    expect(perpetualMarket).toEqual(expect.objectContaining({
-      id: defaultUpdatePerpetualEvent.id.toString(),
-      ticker: defaultUpdatePerpetualEvent.ticker,
-      marketId: defaultUpdatePerpetualEvent.marketId,
-      atomicResolution: defaultUpdatePerpetualEvent.atomicResolution,
-      liquidityTierId: defaultUpdatePerpetualEvent.liquidityTier,
-    }));
-    expect(perpetualMarket).toEqual(
-      perpetualMarketRefresher.getPerpetualMarketFromId(
-        defaultUpdatePerpetualEvent.id.toString()));
-    expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
   });
 });
 
 function createKafkaMessageFromUpdatePerpetualEvent({
-  updatePerpetualEvent,
+  updatePerpetualEventBytes,
   transactionIndex,
   height,
   time,
   txHash,
 }: {
-  updatePerpetualEvent: UpdatePerpetualEventV1,
+  updatePerpetualEventBytes: Uint8Array,
   transactionIndex: number,
   height: number,
   time: Timestamp,
@@ -134,7 +157,7 @@ function createKafkaMessageFromUpdatePerpetualEvent({
   events.push(
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.UPDATE_PERPETUAL,
-      UpdatePerpetualEventV1.encode(updatePerpetualEvent).finish(),
+      updatePerpetualEventBytes,
       transactionIndex,
       0,
     ),

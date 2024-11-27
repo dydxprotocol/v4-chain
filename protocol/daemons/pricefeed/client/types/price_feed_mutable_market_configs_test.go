@@ -155,7 +155,7 @@ func TestGetMarketConfigCopies(t *testing.T) {
 				require.Error(t, err, tc.ExpectedError.Error())
 			} else {
 				// Validate that this method returns a copy and not the original.
-				require.NotSame(t, tc.Expected, actual)
+				require.NotSame(t, &tc.Expected, &actual)
 				require.Equal(t, tc.Expected, actual)
 				require.NoError(t, err)
 			}

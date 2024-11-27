@@ -4,7 +4,7 @@ import {
   perpetualMarketRefresher,
   PerpetualMarketModel,
 } from '@dydxprotocol-indexer/postgres';
-import { UpdatePerpetualEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import { UpdatePerpetualEventV1, UpdatePerpetualEventV2 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
 import config from '../config';
@@ -12,8 +12,9 @@ import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
 
-export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
-  eventType: string = 'UpdatePerpetualEventV1';
+export class UpdatePerpetualHandler extends Handler<
+  UpdatePerpetualEventV1 | UpdatePerpetualEventV2> {
+  eventType: string = 'UpdatePerpetualEvent';
 
   public getParallelizationIds(): string[] {
     return [];

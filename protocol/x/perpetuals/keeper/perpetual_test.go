@@ -17,6 +17,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
@@ -41,7 +42,7 @@ func TestModifyPerpetual_Success(t *testing.T) {
 	// Create liquidity tiers and perpetuals,
 	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
 	numMarkets := keepertest.GetNumMarkets(t, pc.Ctx, pc.PricesKeeper)
-	expectedIndexerEvents := make([]*indexerevents.UpdatePerpetualEventV1, len(perps))
+	expectedIndexerEvents := make([]*indexerevents.UpdatePerpetualEventV2, len(perps))
 	for i, item := range perps {
 		// Modify each field arbitrarily and
 		// verify the fields were modified in state.
@@ -60,12 +61,13 @@ func TestModifyPerpetual_Success(t *testing.T) {
 		require.NoError(t, err)
 
 		// Record the indexer event expected to emit from above `ModifyPerpetual`.
-		expectedIndexerEvents[i] = &indexerevents.UpdatePerpetualEventV1{
+		expectedIndexerEvents[i] = &indexerevents.UpdatePerpetualEventV2{
 			Id:               item.Params.Id,
 			Ticker:           ticker,
 			MarketId:         marketId,
 			AtomicResolution: item.Params.AtomicResolution,
 			LiquidityTier:    liquidityTier,
+			MarketType:       v1.ConvertToPerpetualMarketType(item.Params.MarketType),
 		}
 
 		// Verify updatedp perpetual in store.
@@ -112,15 +114,15 @@ func TestModifyPerpetual_Success(t *testing.T) {
 func getUpdatePerpetualEventsFromIndexerBlock(
 	ctx sdk.Context,
 	perpetualsKeeper *keeper.Keeper,
-) []*indexerevents.UpdatePerpetualEventV1 {
+) []*indexerevents.UpdatePerpetualEventV2 {
 	block := perpetualsKeeper.GetIndexerEventManager().ProduceBlock(ctx)
-	var updatePerpetualEvents []*indexerevents.UpdatePerpetualEventV1
+	var updatePerpetualEvents []*indexerevents.UpdatePerpetualEventV2
 	for _, event := range block.Events {
 		if event.Subtype != indexerevents.SubtypeUpdatePerpetual {
 			continue
 		}
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
-			var updatePerpetualEvent indexerevents.UpdatePerpetualEventV1
+			var updatePerpetualEvent indexerevents.UpdatePerpetualEventV2
 			err := proto.Unmarshal(event.DataBytes, &updatePerpetualEvent)
 			if err != nil {
 				panic(err)
