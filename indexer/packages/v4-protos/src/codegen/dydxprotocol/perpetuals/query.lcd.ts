@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryPerpetualRequest, QueryPerpetualResponseSDKType, QueryAllPerpetualsRequest, QueryAllPerpetualsResponseSDKType, QueryAllLiquidityTiersRequest, QueryAllLiquidityTiersResponseSDKType, QueryPremiumVotesRequest, QueryPremiumVotesResponseSDKType, QueryPremiumSamplesRequest, QueryPremiumSamplesResponseSDKType, QueryParamsRequest, QueryParamsResponseSDKType } from "./query";
+import { QueryPerpetualRequest, QueryPerpetualResponseSDKType, QueryAllPerpetualsRequest, QueryAllPerpetualsResponseSDKType, QueryAllLiquidityTiersRequest, QueryAllLiquidityTiersResponseSDKType, QueryPremiumVotesRequest, QueryPremiumVotesResponseSDKType, QueryPremiumSamplesRequest, QueryPremiumSamplesResponseSDKType, QueryParamsRequest, QueryParamsResponseSDKType, QueryNextPerpetualIdRequest, QueryNextPerpetualIdResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -16,6 +16,7 @@ export class LCDQueryClient {
     this.premiumVotes = this.premiumVotes.bind(this);
     this.premiumSamples = this.premiumSamples.bind(this);
     this.params = this.params.bind(this);
+    this.nextPerpetualId = this.nextPerpetualId.bind(this);
   }
   /* Queries a Perpetual by id. */
 
@@ -78,6 +79,13 @@ export class LCDQueryClient {
   async params(_params: QueryParamsRequest = {}): Promise<QueryParamsResponseSDKType> {
     const endpoint = `dydxprotocol/perpetuals/params`;
     return await this.req.get<QueryParamsResponseSDKType>(endpoint);
+  }
+  /* Queries the next perpetual id. */
+
+
+  async nextPerpetualId(_params: QueryNextPerpetualIdRequest = {}): Promise<QueryNextPerpetualIdResponseSDKType> {
+    const endpoint = `dydxprotocol/perpetuals/next_perpetual_id`;
+    return await this.req.get<QueryNextPerpetualIdResponseSDKType>(endpoint);
   }
 
 }

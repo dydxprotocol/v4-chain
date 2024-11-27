@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryMarketPriceRequest, QueryMarketPriceResponse, QueryAllMarketPricesRequest, QueryAllMarketPricesResponse, QueryMarketParamRequest, QueryMarketParamResponse, QueryAllMarketParamsRequest, QueryAllMarketParamsResponse } from "./query";
+import { QueryMarketPriceRequest, QueryMarketPriceResponse, QueryAllMarketPricesRequest, QueryAllMarketPricesResponse, QueryMarketParamRequest, QueryMarketParamResponse, QueryAllMarketParamsRequest, QueryAllMarketParamsResponse, QueryNextMarketIdRequest, QueryNextMarketIdResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -16,6 +16,9 @@ export interface Query {
   /** Queries a list of MarketParam items. */
 
   allMarketParams(request?: QueryAllMarketParamsRequest): Promise<QueryAllMarketParamsResponse>;
+  /** Queries the next market id. */
+
+  nextMarketId(request?: QueryNextMarketIdRequest): Promise<QueryNextMarketIdResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -26,6 +29,7 @@ export class QueryClientImpl implements Query {
     this.allMarketPrices = this.allMarketPrices.bind(this);
     this.marketParam = this.marketParam.bind(this);
     this.allMarketParams = this.allMarketParams.bind(this);
+    this.nextMarketId = this.nextMarketId.bind(this);
   }
 
   marketPrice(request: QueryMarketPriceRequest): Promise<QueryMarketPriceResponse> {
@@ -56,6 +60,12 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryAllMarketParamsResponse.decode(new _m0.Reader(data)));
   }
 
+  nextMarketId(request: QueryNextMarketIdRequest = {}): Promise<QueryNextMarketIdResponse> {
+    const data = QueryNextMarketIdRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.prices.Query", "NextMarketId", data);
+    return promise.then(data => QueryNextMarketIdResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -75,6 +85,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     allMarketParams(request?: QueryAllMarketParamsRequest): Promise<QueryAllMarketParamsResponse> {
       return queryService.allMarketParams(request);
+    },
+
+    nextMarketId(request?: QueryNextMarketIdRequest): Promise<QueryNextMarketIdResponse> {
+      return queryService.nextMarketId(request);
     }
 
   };

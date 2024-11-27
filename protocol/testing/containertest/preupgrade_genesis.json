@@ -1,11 +1,57 @@
 {
-  "app_name": "dydxprotocold",
-  "app_version": "6.0.0-dev999",
   "genesis_time": "2023-01-01T00:00:00Z",
   "chain_id": "localdydxprotocol",
-  "initial_height": 1,
-  "app_hash": null,
+  "initial_height": "1",
+  "consensus_params": {
+    "block": {
+      "max_bytes": "4194304",
+      "max_gas": "-1"
+    },
+    "evidence": {
+      "max_age_num_blocks": "100000",
+      "max_age_duration": "172800000000000",
+      "max_bytes": "1048576"
+    },
+    "validator": {
+      "pub_key_types": [
+        "ed25519"
+      ]
+    },
+    "version": {
+      "app": "0"
+    },
+    "abci": {
+      "vote_extensions_enable_height": "1"
+    }
+  },
+  "app_hash": "",
   "app_state": {
+    "affiliates": {
+      "affiliate_tiers": {
+        "tiers": [
+          {
+            "req_referred_volume_quote_quantums": "0",
+            "req_staked_whole_coins": 0,
+            "taker_fee_share_ppm": 50000
+          },
+          {
+            "req_referred_volume_quote_quantums": "1000000000000",
+            "req_staked_whole_coins": 200,
+            "taker_fee_share_ppm": 100000
+          },
+          {
+            "req_referred_volume_quote_quantums": "5000000000000",
+            "req_staked_whole_coins": 1000,
+            "taker_fee_share_ppm": 125000
+          },
+          {
+            "req_referred_volume_quote_quantums": "25000000000000",
+            "req_staked_whole_coins": 5000,
+            "taker_fee_share_ppm": 150000
+          }
+        ]
+      }
+    },
     "assets": {
       "assets": [
         {
@@ -775,7 +821,12 @@
       "validator_slash_events": []
     },
     "dydxaccountplus": {
-      "accounts": []
+      "accounts": [],
+      "params": {
+        "is_smart_account_active": false
+      },
+      "next_authenticator_id": "0",
+      "authenticator_data": []
     },
     "epochs": {
       "epoch_info_list": [
@@ -1159,8 +1210,8 @@
             "amount": "10000000"
           }
         ],
-        "max_deposit_period": "300s",
-        "voting_period": "300s",
+        "max_deposit_period": "120s",
+        "voting_period": "120s",
         "quorum": "0.334000000000000000",
         "threshold": "0.500000000000000000",
         "veto_threshold": "0.334000000000000000",
@@ -1246,7 +1297,12 @@
       }
     },
     "listing": {
-      "hard_cap_for_markets": 0
+      "hard_cap_for_markets": 500,
+      "listing_vault_deposit_params": {
+        "new_vault_deposit_amount": "10000000000",
+        "main_vault_deposit_amount": "0",
+        "num_blocks_to_lock_shares": 2592000
+      }
     },
     "marketmap": {
       "market_map": {
@@ -1426,21 +1482,20 @@
               }
             ]
           },
-          "POL/USD": {
+          "MATIC/USD": {
             "ticker": {
               "currency_pair": {
-                "Base": "POL",
+                "Base": "MATIC",
                 "Quote": "USD"
               },
-              "decimals": "10",
-              "min_provider_count": "3",
-              "enabled": true,
-              "metadata_JSON": ""
+              "decimals": 10,
+              "min_provider_count": 3,
+              "enabled": true
             },
             "provider_configs": [
               {
                 "name": "binance_ws",
-                "off_chain_ticker": "POLUSDT",
+                "off_chain_ticker": "MATICUSDT",
                 "normalize_by_pair": {
                   "Base": "USDT",
                   "Quote": "USD"
@@ -1448,7 +1503,7 @@
               },
               {
                 "name": "bybit_ws",
-                "off_chain_ticker": "POLUSDT",
+                "off_chain_ticker": "MATICUSDT",
                 "normalize_by_pair": {
                   "Base": "USDT",
                   "Quote": "USD"
@@ -1456,15 +1511,39 @@
               },
               {
                 "name": "coinbase_ws",
-                "off_chain_ticker": "POL-USD"
+                "off_chain_ticker": "MATIC-USD"
               },
               {
-                "name": "crypto_dot_com_ws",
-                "off_chain_ticker": "POL_USD"
+                "name": "gate_ws",
+                "off_chain_ticker": "MATIC_USDT",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                }
+              },
+              {
+                "name": "huobi_ws",
+                "off_chain_ticker": "maticusdt",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                }
+              },
+              {
+                "name": "kraken_api",
+                "off_chain_ticker": "MATICUSD"
+              },
+              {
+                "name": "kucoin_ws",
+                "off_chain_ticker": "MATIC-USDT",
+                "normalize_by_pair": {
+                  "Base": "USDT",
+                  "Quote": "USD"
+                }
               },
               {
                 "name": "okx_ws",
-                "off_chain_ticker": "POL-USDT",
+                "off_chain_ticker": "MATIC-USDT",
                 "normalize_by_pair": {
                   "Base": "USDT",
                   "Quote": "USD"
@@ -3345,7 +3424,7 @@
         },
         {
           "params": {
-            "ticker": "POL-USD",
+            "ticker": "MATIC-USD",
             "id": 3,
             "market_id": 3,
             "atomic_resolution": -5,
@@ -3680,7 +3759,7 @@
             "market_id": 33,
             "atomic_resolution": -10,
             "default_funding_ppm": 0,
-            "liquidity_tier": 4,
+            "liquidity_tier": 7,
             "market_type": 1
           }
         }
@@ -3691,17 +3770,15 @@
           "name": "Large-Cap",
           "initial_margin_ppm": 50000,
           "maintenance_fraction_ppm": 600000,
-          "base_position_notional": 1000000000000,
           "impact_notional": 10000000000,
           "open_interest_lower_cap": 0,
           "open_interest_upper_cap": 0
         },
         {
           "id": 1,
-          "name": "Mid-Cap",
+          "name": "Small-Cap",
           "initial_margin_ppm": 100000,
           "maintenance_fraction_ppm": 500000,
-          "base_position_notional": 250000000000,
           "impact_notional": 5000000000,
           "open_interest_lower_cap": 20000000000000,
           "open_interest_upper_cap": 50000000000000
@@ -3711,7 +3788,6 @@
           "name": "Long-Tail",
           "initial_margin_ppm": 200000,
           "maintenance_fraction_ppm": 500000,
-          "base_position_notional": 100000000000,
           "impact_notional": 2500000000,
           "open_interest_lower_cap": 5000000000000,
           "open_interest_upper_cap": 10000000000000
@@ -3721,25 +3797,49 @@
           "name": "Safety",
           "initial_margin_ppm": 1000000,
           "maintenance_fraction_ppm": 200000,
-          "base_position_notional": 1000000000,
           "impact_notional": 2500000000,
           "open_interest_lower_cap": 2000000000000,
           "open_interest_upper_cap": 5000000000000
         },
         {
           "id": 4,
-          "name": "test-usd-100x-liq-tier-linear",
-          "initial_margin_ppm": 10007,
-          "maintenance_fraction_ppm": 500009,
-          "base_position_notional": 1000000000039,
-          "impact_notional": 50000000000
+          "name": "Isolated",
+          "initial_margin_ppm": 50000,
+          "maintenance_fraction_ppm": 600000,
+          "impact_notional": 2500000000,
+          "open_interest_lower_cap": 500000000000,
+          "open_interest_upper_cap": 1000000000000
         },
         {
           "id": 5,
+          "name": "Mid-Cap",
+          "initial_margin_ppm": 50000,
+          "maintenance_fraction_ppm": 600000,
+          "impact_notional": 5000000000,
+          "open_interest_lower_cap": 40000000000000,
+          "open_interest_upper_cap": 100000000000000
+        },
+        {
+          "id": 6,
+          "name": "FX",
+          "initial_margin_ppm": 10000,
+          "maintenance_fraction_ppm": 500000,
+          "impact_notional": 2500000000,
+          "open_interest_lower_cap": 500000000000,
+          "open_interest_upper_cap": 1000000000000
+        },
+        {
+          "id": 7,
+          "name": "test-usd-100x-liq-tier-linear",
+          "initial_margin_ppm": 10007,
+          "maintenance_fraction_ppm": 500009,
+          "impact_notional": 50000000000
+        },
+        {
+          "id": 8,
           "name": "test-usd-100x-liq-tier-nonlinear",
           "initial_margin_ppm": 10007,
           "maintenance_fraction_ppm": 500009,
-          "base_position_notional": 100000007,
           "impact_notional": 50000000000
         }
       ],
@@ -3776,12 +3876,12 @@
           "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"LINKUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"LINKUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LINK-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LINKUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LINK-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LINK-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
         },
         {
-          "pair": "POL-USD",
+          "pair": "MATIC-USD",
           "id": 3,
           "exponent": -10,
           "min_exchanges": 3,
           "min_price_change_ppm": 2500,
-          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Bybit\",\"ticker\":\"POLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"POL-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"POL_USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"POL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"MATICUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"MATICUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MATIC-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"MATIC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"maticusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"MATICUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MATIC-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MATIC-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}"
         },
         {
           "pair": "CRV-USD",
@@ -4331,21 +4431,7 @@
           "asset_positions": [
             {
               "asset_id": 0,
-              "quantums": "2000000000",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "id": {
-            "owner": "dydx190te44zcctdgk0qmqtenve2m00g3r2dn7ntd72",
-            "number": 0
-          },
-          "margin_enabled": true,
-          "asset_positions": [
-            {
-              "asset_id": 0,
-              "quantums": "3000000000",
+              "quantums": "1000000000",
               "index": 0
             }
           ]
@@ -4363,31 +4449,25 @@
     },
     "upgrade": {},
     "vault": {
+      "total_shares": {
+        "num_shares": "2000000000"
+      },
+      "owner_shares": [
+        {
+          "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
+          "shares": {
+            "num_shares": "2000000000"
+          }
+        }
+      ],
       "vaults": [
         {
           "vault_id": {
             "type": "VAULT_TYPE_CLOB",
             "number": 0
           },
-          "total_shares": {
-            "num_shares": "1000000000"
-          },
-          "owner_shares": [
-            {
-              "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
-              "shares": {
-                "num_shares": "1000000000"
-              }
-            }
-          ],
-          "quoting_params": {
-            "layers": 3,
-            "spread_min_ppm": 1500,
-            "spread_buffer_ppm": 500,
-            "skew_factor_ppm": 1000000,
-            "order_size_pct_ppm": 50000,
-            "order_expiration_seconds": 30,
-            "activation_threshold_quote_quantums": "500000000"
+          "vault_params": {
+            "status": "VAULT_STATUS_QUOTING"
           }
         },
         {
@@ -4395,52 +4475,9 @@
             "type": "VAULT_TYPE_CLOB",
             "number": 1
           },
-          "total_shares": {
-            "num_shares": "3000000000"
-          },
-          "owner_shares": [
-            {
-              "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
-              "shares": {
-                "num_shares": "1000000000"
-              }
-            },
-            {
-              "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
-              "shares": {
-                "num_shares": "1000000000"
-              }
-            },
-            {
-              "owner": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
-              "shares": {
-                "num_shares": "1000000000"
-              }
-            }
-          ]
-        },
-        {
-          "vault_id": {
-            "type": "VAULT_TYPE_CLOB",
-            "number": 2
-          },
-          "total_shares": {
-            "num_shares": "556677"
-          },
-          "owner_shares": [
-            {
-              "owner": "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
-              "shares": {
-                "num_shares": "123456"
-              }
-            },
-            {
-              "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
-              "shares": {
-                "num_shares": "433221"
-              }
-            }
-          ]
+          "vault_params": {
+            "status": "VAULT_STATUS_QUOTING"
+          }
         }
       ],
       "default_quoting_params": {
@@ -4451,6 +4488,10 @@
         "order_size_pct_ppm": 100000,
         "order_expiration_seconds": 60,
         "activation_threshold_quote_quantums": "1000000000"
+      },
+      "all_owner_share_unlocks": [],
+      "operator_params": {
+        "operator": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
       }
     },
     "vest": {
@@ -4470,30 +4511,6 @@
           "end_time": "2025-01-01T00:00:00Z"
         }
       ]
-    }
-  },
-  "consensus": {
-    "params": {
-      "block": {
-        "max_bytes": "4194304",
-        "max_gas": "-1"
-      },
-      "evidence": {
-        "max_age_num_blocks": "100000",
-        "max_age_duration": "172800000000000",
-        "max_bytes": "1048576"
-      },
-      "validator": {
-        "pub_key_types": [
-          "ed25519"
-        ]
-      },
-      "version": {
-        "app": "0"
-      },
-      "abci": {
-        "vote_extensions_enable_height": "1"
-      }
     }
   }
 }

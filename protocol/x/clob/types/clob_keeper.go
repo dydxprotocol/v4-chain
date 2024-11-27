@@ -152,4 +152,5 @@ type ClobKeeper interface {
 	ResetAllDeliveredOrderIds(ctx sdk.Context)
 	// Migrate order expiration state (for upgrading to 5.2 only)
 	UnsafeMigrateOrderExpirationState(ctx sdk.Context)
+	SetNextClobPairID(ctx sdk.Context, nextID uint32)
 }

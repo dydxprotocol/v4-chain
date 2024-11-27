@@ -58,3 +58,14 @@ func (k Keeper) ClobPair(c context.Context, req *types.QueryGetClobPairRequest) 
 
 	return &types.QueryClobPairResponse{ClobPair: val}, nil
 }
+
+func (k Keeper) NextClobPairId(
+	c context.Context,
+	request *types.QueryNextClobPairIdRequest,
+) (*types.QueryNextClobPairIdResponse, error) {
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+	nextId := k.GetNextClobPairID(ctx)
+	return &types.QueryNextClobPairIdResponse{
+		NextClobPairId: nextId,
+	}, nil
+}

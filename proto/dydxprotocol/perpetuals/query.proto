@@ -44,6 +44,12 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/dydxprotocol/perpetuals/params";
   }
+
+  // Queries the next perpetual id.
+  rpc NextPerpetualId(QueryNextPerpetualIdRequest)
+      returns (QueryNextPerpetualIdResponse) {
+    option (google.api.http).get = "/dydxprotocol/perpetuals/next_perpetual_id";
+  }
 }
 
 // Queries a Perpetual by id.
@@ -103,5 +109,11 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
+
+// QueryNextPerpetualIdRequest is the request type for the NextPerpetualId RPC
+message QueryNextPerpetualIdRequest {}
+
+// QueryNextPerpetualIdResponse is the response type for the NextPerpetualId RPC
+message QueryNextPerpetualIdResponse { uint32 next_perpetual_id = 1; }
 
 // this line is used by starport scaffolding # 3

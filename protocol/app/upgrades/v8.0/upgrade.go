@@ -2,7 +2,15 @@ package v_8_0
 
 import (
 	"bytes"
+	"context"
 	"fmt"
+
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +19,7 @@ import (
 )
 
 // Migrate accountplus AccountState in kvstore from non-prefixed keys to prefixed keys
-func migrateAccountplusAccountState(ctx sdk.Context, k accountpluskeeper.Keeper) {
+func MigrateAccountplusAccountState(ctx sdk.Context, k accountpluskeeper.Keeper) {
 	ctx.Logger().Info("Migrating accountplus module AccountState in kvstore from non-prefixed keys to prefixed keys")
 
 	store := ctx.KVStore(k.GetStoreKey())
@@ -60,4 +68,40 @@ func migrateAccountplusAccountState(ctx sdk.Context, k accountpluskeeper.Keeper)
 	ctx.Logger().Info("Successfully migrated accountplus AccountState keys")
 }
 
-// TODO: Scaffolding for upgrade: https://linear.app/dydx/issue/OTE-886/v8-upgrade-handler-scaffold
+const (
+	ID_NUM = 300
+)
+
+// Set market, perpetual, and clob ids to a set number
+// This is done so that the ids are consistent for convenience
+func setMarketListingBaseIds(
+	ctx sdk.Context,
+	pricesKeeper pricestypes.PricesKeeper,
+	perpetualsKeeper perptypes.PerpetualsKeeper,
+	clobKeeper clobtypes.ClobKeeper,
+) {
+	// Set all ids to a set number
+	pricesKeeper.SetNextMarketID(ctx, ID_NUM)
+
+	perpetualsKeeper.SetNextPerpetualID(ctx, ID_NUM)
+
+	clobKeeper.SetNextClobPairID(ctx, ID_NUM)
+}
+
+func CreateUpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	pricesKeeper pricestypes.PricesKeeper,
+	perpetualsKeeper perptypes.PerpetualsKeeper,
+	clobKeeper clobtypes.ClobKeeper,
+) upgradetypes.UpgradeHandler {
+	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
+		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
+
+		// Set market, perpetual, and clob ids to a set number
+		setMarketListingBaseIds(sdkCtx, pricesKeeper, perpetualsKeeper, clobKeeper)
+
+		return mm.RunMigrations(ctx, configurator, vm)
+	}
+}

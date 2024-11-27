@@ -61,6 +61,12 @@ service Query {
   rpc StatefulOrder(QueryStatefulOrderRequest)
       returns (QueryStatefulOrderResponse) {}
 
+  // Queries the next clob pair id.
+  rpc NextClobPairId(QueryNextClobPairIdRequest)
+      returns (QueryNextClobPairIdResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/next_clob_pair_id";
+  }
+
   // GRPC Streams
 
   // Streams orderbook updates. Updates contain orderbook data
@@ -162,6 +168,12 @@ message QueryLiquidationsConfigurationRequest {}
 message QueryLiquidationsConfigurationResponse {
   LiquidationsConfig liquidations_config = 1 [ (gogoproto.nullable) = false ];
 }
+
+// QueryNextClobPairIdRequest is a request message for the next clob pair id
+message QueryNextClobPairIdRequest {}
+
+// QueryNextClobPairIdResponse is a response message for the next clob pair id
+message QueryNextClobPairIdResponse { uint32 next_clob_pair_id = 1; }
 
 // StreamOrderbookUpdatesRequest is a request message for the
 // StreamOrderbookUpdates method.

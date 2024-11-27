@@ -141,6 +141,24 @@ export interface QueryParamsResponse {
 export interface QueryParamsResponseSDKType {
   params?: ParamsSDKType;
 }
+/** QueryNextPerpetualIdRequest is the request type for the NextPerpetualId RPC */
+
+export interface QueryNextPerpetualIdRequest {}
+/** QueryNextPerpetualIdRequest is the request type for the NextPerpetualId RPC */
+
+export interface QueryNextPerpetualIdRequestSDKType {}
+/** QueryNextPerpetualIdResponse is the response type for the NextPerpetualId RPC */
+
+export interface QueryNextPerpetualIdResponse {
+  /** QueryNextPerpetualIdResponse is the response type for the NextPerpetualId RPC */
+  nextPerpetualId: number;
+}
+/** QueryNextPerpetualIdResponse is the response type for the NextPerpetualId RPC */
+
+export interface QueryNextPerpetualIdResponseSDKType {
+  /** QueryNextPerpetualIdResponse is the response type for the NextPerpetualId RPC */
+  next_perpetual_id: number;
+}
 
 function createBaseQueryPerpetualRequest(): QueryPerpetualRequest {
   return {
@@ -664,6 +682,85 @@ export const QueryParamsResponse = {
   fromPartial(object: DeepPartial<QueryParamsResponse>): QueryParamsResponse {
     const message = createBaseQueryParamsResponse();
     message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryNextPerpetualIdRequest(): QueryNextPerpetualIdRequest {
+  return {};
+}
+
+export const QueryNextPerpetualIdRequest = {
+  encode(_: QueryNextPerpetualIdRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryNextPerpetualIdRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryNextPerpetualIdRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryNextPerpetualIdRequest>): QueryNextPerpetualIdRequest {
+    const message = createBaseQueryNextPerpetualIdRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryNextPerpetualIdResponse(): QueryNextPerpetualIdResponse {
+  return {
+    nextPerpetualId: 0
+  };
+}
+
+export const QueryNextPerpetualIdResponse = {
+  encode(message: QueryNextPerpetualIdResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.nextPerpetualId !== 0) {
+      writer.uint32(8).uint32(message.nextPerpetualId);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryNextPerpetualIdResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryNextPerpetualIdResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.nextPerpetualId = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryNextPerpetualIdResponse>): QueryNextPerpetualIdResponse {
+    const message = createBaseQueryNextPerpetualIdResponse();
+    message.nextPerpetualId = object.nextPerpetualId ?? 0;
     return message;
   }
 
