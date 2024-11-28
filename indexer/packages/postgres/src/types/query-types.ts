@@ -341,6 +341,10 @@ export interface AffiliateInfoQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string,
 }
 
+export interface AffiliatePerRefereeStatsQueryConfig extends QueryConfig {
+  [QueryableField.AFFILIATE_ADDRESS]?: string,
+}
+
 export interface FirebaseNotificationTokenQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string,
   [QueryableField.TOKEN]?: string,

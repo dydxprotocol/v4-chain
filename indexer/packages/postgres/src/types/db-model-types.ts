@@ -283,6 +283,20 @@ export interface PersistentCacheFromDatabase {
   value: string,
 }
 
+export interface AffiliatePerRefereeStatsFromDatabase {
+  affiliateAddress: string,
+  refereeAddress: string,
+  affiliateEarnings: string,
+  referredMakerTrades: number,
+  referredTakerTrades: number,
+  referredTotalVolume: string,
+  firstReferralBlockHeight: number,
+  totalReferredTakerFees: string,
+  totalReferredMakerFees: string,
+  totalReferredMakerRebates: string,
+  totalReferredLiquidationfees: string,
+}
+
 export interface AffiliateInfoFromDatabase {
   address: string,
   affiliateEarnings: string,
