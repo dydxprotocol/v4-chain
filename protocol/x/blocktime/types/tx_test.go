@@ -54,3 +54,50 @@ func TestMsgUpdateDowntimeParams_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgUpdateSynchronyParams_ValidateBasic(t *testing.T) {
+	tests := map[string]struct {
+		msg         types.MsgUpdateSynchronyParams
+		expectedErr error
+	}{
+		"Success - empty params": {
+			msg: types.MsgUpdateSynchronyParams{
+				Authority: validAuthority,
+				Params:    types.SynchronyParams{},
+			},
+		},
+		"Success": {
+			msg: types.MsgUpdateSynchronyParams{
+				Authority: validAuthority,
+				Params: types.SynchronyParams{
+					NextBlockDelay: 300 * time.Millisecond,
+				},
+			},
+		},
+		"Failure: Invalid authority": {
+			msg: types.MsgUpdateSynchronyParams{
+				Authority: "", // invalid
+			},
+			expectedErr: types.ErrInvalidAuthority,
+		},
+		"Failure: Invalid params": {
+			msg: types.MsgUpdateSynchronyParams{
+				Authority: validAuthority,
+				Params: types.SynchronyParams{
+					NextBlockDelay: -1 * time.Second,
+				},
+			},
+			expectedErr: types.ErrNegativeNextBlockDelay,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, tc.expectedErr)
+			}
+		})
+	}
+}

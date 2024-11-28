@@ -19,4 +19,7 @@ const (
 
 	// PreviousBlockInfoKey defines the key for PreviousBlockInfo
 	PreviousBlockInfoKey = "PreviousBlockInfo"
+
+	// SynchronyParamsKey defines the key for the SynchronyParams
+	SynchronyParamsKey = "SP:"
 )
