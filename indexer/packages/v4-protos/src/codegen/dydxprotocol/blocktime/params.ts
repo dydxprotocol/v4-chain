@@ -24,8 +24,10 @@ export interface DowntimeParamsSDKType {
 export interface SynchronyParams {
   /**
    * next_block_delay replaces the locally configured timeout_commit in
-   * CometBFT. It determines the amount of time the CometBFT waits after the If
-   * the application sends next_block_delay = 0 to the consensus engine, the
+   * CometBFT. It determines the amount of time the CometBFT waits after the
+   * `CommitTime` (subjective time when +2/3 precommits were received), before
+   * moving to next height.
+   * If the application sends next_block_delay = 0 to the consensus engine, the
    * latter defaults back to using timeout_commit.
    */
   nextBlockDelay?: Duration;
@@ -35,8 +37,10 @@ export interface SynchronyParams {
 export interface SynchronyParamsSDKType {
   /**
    * next_block_delay replaces the locally configured timeout_commit in
-   * CometBFT. It determines the amount of time the CometBFT waits after the If
-   * the application sends next_block_delay = 0 to the consensus engine, the
+   * CometBFT. It determines the amount of time the CometBFT waits after the
+   * `CommitTime` (subjective time when +2/3 precommits were received), before
+   * moving to next height.
+   * If the application sends next_block_delay = 0 to the consensus engine, the
    * latter defaults back to using timeout_commit.
    */
   next_block_delay?: DurationSDKType;
