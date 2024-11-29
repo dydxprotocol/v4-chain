@@ -742,7 +742,7 @@ func New(
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
-	// Wrap the x/ratelimit middlware over the IBC Transfer module
+	// Wrap the x/ratelimit middleware over the IBC Transfer module
 	var transferStack ibcporttypes.IBCModule = transferIBCModule
 	transferStack = ratelimitmodule.NewIBCMiddleware(app.RatelimitKeeper, transferStack)
 
