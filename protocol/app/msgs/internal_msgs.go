@@ -118,8 +118,10 @@ var (
 		"/dydxprotocol.accountplus.MsgSetActiveStateResponse": nil,
 
 		// blocktime
-		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         &blocktime.MsgUpdateDowntimeParams{},
-		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": nil,
+		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":          &blocktime.MsgUpdateDowntimeParams{},
+		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse":  nil,
+		"/dydxprotocol.blocktime.MsgUpdateSynchronyParams":         &blocktime.MsgUpdateSynchronyParams{},
+		"/dydxprotocol.blocktime.MsgUpdateSynchronyParamsResponse": nil,
 
 		// bridge
 		"/dydxprotocol.bridge.MsgCompleteBridge":              &bridge.MsgCompleteBridge{},

@@ -41,3 +41,21 @@ func (k msgServer) UpdateDowntimeParams(
 
 	return &types.MsgUpdateDowntimeParamsResponse{}, nil
 }
+
+func (k msgServer) UpdateSynchronyParams(
+	goCtx context.Context,
+	msg *types.MsgUpdateSynchronyParams,
+) (*types.MsgUpdateSynchronyParamsResponse, error) {
+	if !k.HasAuthority(msg.Authority) {
+		return nil, errorsmod.Wrapf(
+			govtypes.ErrInvalidSigner,
+			"invalid authority %s",
+			msg.Authority,
+		)
+	}
+
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+	k.SetSynchronyParams(ctx, msg.Params)
+
+	return &types.MsgUpdateSynchronyParamsResponse{}, nil
+}

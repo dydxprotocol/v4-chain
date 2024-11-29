@@ -20,4 +20,9 @@ var (
 		402,
 		"Authority is invalid",
 	)
+	ErrNegativeNextBlockDelay = errorsmod.Register(
+		ModuleName,
+		403,
+		"next_block_delay must be non-negative",
+	)
 )

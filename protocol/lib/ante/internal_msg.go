@@ -77,7 +77,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// blocktime
 		*blocktime.MsgUpdateDowntimeParams,
-
+		*blocktime.MsgUpdateSynchronyParams,
 		// bridge
 		*bridge.MsgCompleteBridge,
 		*bridge.MsgUpdateEventParams,

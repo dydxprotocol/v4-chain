@@ -1571,6 +1571,8 @@ func New(
 	app.SetPrepareProposal(prepareProposalHandler)
 	app.SetProcessProposal(processProposalHandler)
 
+	app.SetBlockDelayGetter(app.BlockTimeKeeper.GetBlockDelay)
+
 	// Note that panics from out of gas errors won't get logged, since the `OutOfGasMiddleware` is added in front of this,
 	// so error will get handled by that middleware and subsequent middlewares won't get executed.
 	// Also note that `AddRunTxRecoveryHandler` adds the handler in reverse order, meaning that handlers that appear

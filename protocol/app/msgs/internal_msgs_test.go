@@ -76,6 +76,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams",
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse",
+		"/dydxprotocol.blocktime.MsgUpdateSynchronyParams",
+		"/dydxprotocol.blocktime.MsgUpdateSynchronyParamsResponse",
 
 		// bridge
 		"/dydxprotocol.bridge.MsgCompleteBridge",

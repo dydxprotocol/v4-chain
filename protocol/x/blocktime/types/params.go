@@ -1,5 +1,7 @@
 package types
 
+import time "time"
+
 func (m *DowntimeParams) Validate() error {
 	if m.Durations != nil {
 		for i := 0; i < len(m.Durations); i++ {
@@ -15,4 +17,19 @@ func (m *DowntimeParams) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (s SynchronyParams) Validate() error {
+	if s.NextBlockDelay < 0 {
+		return ErrNegativeNextBlockDelay
+	}
+	return nil
+}
+
+func DefaultSynchronyParams() SynchronyParams {
+	return SynchronyParams{
+		// CometBFT defaults back to `timeout_commit` if application sends over
+		// `NextBlockDelay` of 0.
+		NextBlockDelay: 0 * time.Second,
+	}
 }

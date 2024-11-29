@@ -180,8 +180,10 @@ var (
 		"/dydxprotocol.accountplus.TxExtension":                    {},
 
 		// blocktime
-		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         {},
-		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},
+		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":          {},
+		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse":  {},
+		"/dydxprotocol.blocktime.MsgUpdateSynchronyParams":         {},
+		"/dydxprotocol.blocktime.MsgUpdateSynchronyParamsResponse": {},
 
 		// bridge
 		"/dydxprotocol.bridge.MsgAcknowledgeBridges":          {},
