@@ -578,9 +578,9 @@ func (_m *MemClob) RemoveOrderIfFilled(ctx types.Context, orderId clobtypes.Orde
 	_m.Called(ctx, orderId)
 }
 
-// ReplayOperations provides a mock function with given fields: ctx, localOperations, shortTermOrderTxBytes, existingOffchainUpdates, onlyPlacePostOnly
-func (_m *MemClob) ReplayOperations(ctx types.Context, localOperations []clobtypes.InternalOperation, shortTermOrderTxBytes map[clobtypes.OrderHash][]byte, existingOffchainUpdates *clobtypes.OffchainUpdates, onlyPlacePostOnly bool) *clobtypes.OffchainUpdates {
-	ret := _m.Called(ctx, localOperations, shortTermOrderTxBytes, existingOffchainUpdates, onlyPlacePostOnly)
+// ReplayOperations provides a mock function with given fields: ctx, localOperations, shortTermOrderTxBytes, existingOffchainUpdates, postOnlyFilter
+func (_m *MemClob) ReplayOperations(ctx types.Context, localOperations []clobtypes.InternalOperation, shortTermOrderTxBytes map[clobtypes.OrderHash][]byte, existingOffchainUpdates *clobtypes.OffchainUpdates, postOnlyFilter bool) *clobtypes.OffchainUpdates {
+	ret := _m.Called(ctx, localOperations, shortTermOrderTxBytes, existingOffchainUpdates, postOnlyFilter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ReplayOperations")
@@ -588,7 +588,7 @@ func (_m *MemClob) ReplayOperations(ctx types.Context, localOperations []clobtyp
 
 	var r0 *clobtypes.OffchainUpdates
 	if rf, ok := ret.Get(0).(func(types.Context, []clobtypes.InternalOperation, map[clobtypes.OrderHash][]byte, *clobtypes.OffchainUpdates, bool) *clobtypes.OffchainUpdates); ok {
-		r0 = rf(ctx, localOperations, shortTermOrderTxBytes, existingOffchainUpdates, onlyPlacePostOnly)
+		r0 = rf(ctx, localOperations, shortTermOrderTxBytes, existingOffchainUpdates, postOnlyFilter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*clobtypes.OffchainUpdates)

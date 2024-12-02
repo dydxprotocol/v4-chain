@@ -110,7 +110,7 @@ type MemClob interface {
 		localOperations []InternalOperation,
 		shortTermOrderTxBytes map[OrderHash][]byte,
 		existingOffchainUpdates *OffchainUpdates,
-		onlyPlacePostOnly bool,
+		postOnlyFilter bool,
 	) (offchainUpdates *OffchainUpdates)
 	SetMemclobGauges(
 		ctx sdk.Context,

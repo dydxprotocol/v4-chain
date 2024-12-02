@@ -2250,13 +2250,13 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 
 func TestPlaceStatefulOrdersFromLastBlock_PostOnly(t *testing.T) {
 	tests := map[string]struct {
-		orders            []types.Order
-		onlyPlacePostOnly bool
+		orders         []types.Order
+		postOnlyFilter bool
 
 		expectedOrderPlacementCalls []types.Order
 	}{
-		"places PO stateful orders from last block when onlyPlacePostOnly = true": {
-			onlyPlacePostOnly: true,
+		"places PO stateful orders from last block when postOnlyFilter = true": {
+			postOnlyFilter: true,
 			orders: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_PO,
 			},
@@ -2264,22 +2264,22 @@ func TestPlaceStatefulOrdersFromLastBlock_PostOnly(t *testing.T) {
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_PO,
 			},
 		},
-		"does not places non-PO stateful orders when onlyPlacePostOnly = true": {
-			onlyPlacePostOnly: true,
+		"does not places non-PO stateful orders when postOnlyFilter = true": {
+			postOnlyFilter: true,
 			orders: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 			},
 			expectedOrderPlacementCalls: []types.Order{},
 		},
-		"does not places PO stateful orders from last block, when onlyPlacePostOnly = false": {
-			onlyPlacePostOnly: false,
+		"does not places PO stateful orders from last block, when postOnlyFilter = false": {
+			postOnlyFilter: false,
 			orders: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_PO,
 			},
 			expectedOrderPlacementCalls: []types.Order{},
 		},
-		"places non-PO stateful orders from last block when onlyPlacePostOnly = false": {
-			onlyPlacePostOnly: false,
+		"places non-PO stateful orders from last block when postOnlyFilter = false": {
+			postOnlyFilter: false,
 			orders: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 			},
@@ -2350,7 +2350,7 @@ func TestPlaceStatefulOrdersFromLastBlock_PostOnly(t *testing.T) {
 			for _, order := range tc.orders {
 				orderIds = append(orderIds, order.OrderId)
 			}
-			ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, orderIds, offchainUpdates, tc.onlyPlacePostOnly)
+			ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, orderIds, offchainUpdates, tc.postOnlyFilter)
 
 			// PlaceStatefulOrdersFromLastBlock utilizes the memclob's PlaceOrder flow, but we
 			// do not want to emit PlaceMessages in offchain events for stateful orders. This assertion
