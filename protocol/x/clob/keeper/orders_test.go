@@ -2218,7 +2218,139 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			for _, order := range tc.orders {
 				orderIds = append(orderIds, order.OrderId)
 			}
-			ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, orderIds, offchainUpdates)
+			ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, orderIds, offchainUpdates, true)
+			ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, orderIds, offchainUpdates, false)
+
+			// PlaceStatefulOrdersFromLastBlock utilizes the memclob's PlaceOrder flow, but we
+			// do not want to emit PlaceMessages in offchain events for stateful orders. This assertion
+			// verifies that we call `ClearPlaceMessages()` on the offchain updates before returning.
+			require.Equal(t, 0, memclobtest.MessageCountOfType(offchainUpdates, types.PlaceMessageType))
+
+			// Verify that all removed orders have an associated off-chain update.
+			orderMap := make(map[types.OrderId]bool)
+			for _, order := range tc.orders {
+				orderMap[order.OrderId] = true
+			}
+
+			removedOrders := lib.FilterSlice(tc.expectedOrderPlacementCalls, func(order types.Order) bool {
+				return !orderMap[order.OrderId]
+			})
+
+			for _, order := range removedOrders {
+				require.True(
+					t,
+					memclobtest.HasMessage(offchainUpdates, order.OrderId, types.RemoveMessageType),
+				)
+			}
+
+			memClob.AssertExpectations(t)
+		})
+	}
+}
+
+func TestPlaceStatefulOrdersFromLastBlock_PostOnly(t *testing.T) {
+	tests := map[string]struct {
+		orders         []types.Order
+		postOnlyFilter bool
+
+		expectedOrderPlacementCalls []types.Order
+	}{
+		"places PO stateful orders from last block when postOnlyFilter = true": {
+			postOnlyFilter: true,
+			orders: []types.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_PO,
+			},
+			expectedOrderPlacementCalls: []types.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_PO,
+			},
+		},
+		"does not places non-PO stateful orders when postOnlyFilter = true": {
+			postOnlyFilter: true,
+			orders: []types.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+			},
+			expectedOrderPlacementCalls: []types.Order{},
+		},
+		"does not places PO stateful orders from last block, when postOnlyFilter = false": {
+			postOnlyFilter: false,
+			orders: []types.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_PO,
+			},
+			expectedOrderPlacementCalls: []types.Order{},
+		},
+		"places non-PO stateful orders from last block when postOnlyFilter = false": {
+			postOnlyFilter: false,
+			orders: []types.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+			},
+			expectedOrderPlacementCalls: []types.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup state.
+			memClob := &mocks.MemClob{}
+
+			memClob.On("SetClobKeeper", mock.Anything).Return()
+
+			ks := keepertest.NewClobKeepersTestContext(
+				t,
+				memClob,
+				&mocks.BankKeeper{},
+				indexer_manager.NewIndexerEventManagerNoop(),
+			)
+
+			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
+			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+			ctx := ks.Ctx.WithBlockHeight(int64(100)).WithBlockTime(time.Unix(5, 0))
+			ctx = ctx.WithIsCheckTx(true)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Height:    100,
+				Timestamp: time.Unix(int64(2), 0),
+			})
+
+			// Create CLOB pair.
+			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
+			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+				ctx,
+				constants.ClobPair_Btc.Id,
+				clobtest.MustPerpetualId(constants.ClobPair_Btc),
+				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
+				constants.ClobPair_Btc.QuantumConversionExponent,
+				constants.ClobPair_Btc.SubticksPerTick,
+				constants.ClobPair_Btc.Status,
+			)
+			require.NoError(t, err)
+
+			// Create each stateful order placement in state
+			for i, order := range tc.orders {
+				require.True(t, order.IsStatefulOrder())
+
+				ks.ClobKeeper.SetLongTermOrderPlacement(ctx.WithIsCheckTx(false), order, uint32(i))
+			}
+
+			// Assert expected order placement memclob calls.
+			for _, order := range tc.expectedOrderPlacementCalls {
+				memClob.On("PlaceOrder", mock.Anything, order).Return(
+					satypes.BaseQuantums(0),
+					types.Success,
+					constants.TestOffchainUpdates,
+					nil,
+				).Once()
+			}
+
+			// Run the test and verify expectations.
+			offchainUpdates := types.NewOffchainUpdates()
+			orderIds := make([]types.OrderId, 0)
+			for _, order := range tc.orders {
+				orderIds = append(orderIds, order.OrderId)
+			}
+			ks.ClobKeeper.PlaceStatefulOrdersFromLastBlock(ctx, orderIds, offchainUpdates, tc.postOnlyFilter)
 
 			// PlaceStatefulOrdersFromLastBlock utilizes the memclob's PlaceOrder flow, but we
 			// do not want to emit PlaceMessages in offchain events for stateful orders. This assertion
@@ -2376,13 +2508,15 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 					t,
 					tc.expectedPanic,
 					func() {
-						ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds, offchainUpdates)
+						ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds, offchainUpdates, true)
+						ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds, offchainUpdates, false)
 					},
 				)
 				return
 			}
 
-			ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds, offchainUpdates)
+			ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds, offchainUpdates, true)
+			ks.ClobKeeper.PlaceConditionalOrdersTriggeredInLastBlock(ctx, orderIds, offchainUpdates, false)
 
 			// PlaceStatefulOrdersFromLastBlock utilizes the memclob's PlaceOrder flow, but we
 			// do not want to emit PlaceMessages in offchain events for stateful orders. This assertion

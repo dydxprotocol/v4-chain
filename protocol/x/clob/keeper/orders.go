@@ -487,6 +487,9 @@ func (k Keeper) AddPreexistingStatefulOrder(
 // PlaceStatefulOrdersFromLastBlock validates and places stateful orders from the last block onto the memclob.
 // Note that stateful orders could fail to be placed due to various reasons such as collateralization
 // check failures, self-trade errors, etc. In these cases the `checkState` will not be written to.
+// Note that this function also takes in a postOnlyFilter variable and only places post-only orders if
+// postOnlyFilter is true and non-post-only orders if postOnlyFilter is false.
+//
 // This function is used in:
 // 1. `PrepareCheckState` to place newly placed long term orders from the last
 // block from ProcessProposerMatchesEvents.PlacedStatefulOrderIds. This is step 3 in PrepareCheckState.
@@ -496,6 +499,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 	ctx sdk.Context,
 	placedStatefulOrderIds []types.OrderId,
 	existingOffchainUpdates *types.OffchainUpdates,
+	postOnlyFilter bool,
 ) (
 	offchainUpdates *types.OffchainUpdates,
 ) {
@@ -521,6 +525,12 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 		}
 
 		order := orderPlacement.GetOrder()
+
+		// Skip post-only orders if postOnlyFilter is false or non-post-only orders if postOnlyFilter is true.
+		if postOnlyFilter != order.IsPostOnlyOrder() {
+			continue
+		}
+
 		// Validate and place order.
 		_, orderStatus, placeOrderOffchainUpdates, err := k.AddPreexistingStatefulOrder(
 			ctx,
@@ -575,10 +585,14 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 // PlaceConditionalOrdersTriggeredInLastBlock takes in a list of conditional order ids that were triggered
 // in the last block, verifies they are conditional orders, verifies they are in triggered state, and places
 // the orders on the memclob.
+//
+// Note that this function also takes in a postOnlyFilter variable and only places post-only orders if
+// postOnlyFilter is true and non-post-only orders if postOnlyFilter is false.
 func (k Keeper) PlaceConditionalOrdersTriggeredInLastBlock(
 	ctx sdk.Context,
 	conditionalOrderIdsTriggeredInLastBlock []types.OrderId,
 	existingOffchainUpdates *types.OffchainUpdates,
+	postOnlyFilter bool,
 ) (
 	offchainUpdates *types.OffchainUpdates,
 ) {
@@ -608,7 +622,12 @@ func (k Keeper) PlaceConditionalOrdersTriggeredInLastBlock(
 		}
 	}
 
-	return k.PlaceStatefulOrdersFromLastBlock(ctx, conditionalOrderIdsTriggeredInLastBlock, existingOffchainUpdates)
+	return k.PlaceStatefulOrdersFromLastBlock(
+		ctx,
+		conditionalOrderIdsTriggeredInLastBlock,
+		existingOffchainUpdates,
+		postOnlyFilter,
+	)
 }
 
 // PerformOrderCancellationStatefulValidation performs stateful validation on an order cancellation.

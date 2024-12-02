@@ -874,11 +874,15 @@ func (m *MemClobPriceTimePriority) matchOrder(
 // - Pre-existing stateful orders.
 // - Stateful cancelations.
 // Note that match operations are no-op.
+//
+// Note that this function also takes in a postOnlyFilter variable and only places post-only orders if
+// postOnlyFilter is true and non-post-only orders if postOnlyFilter is false.
 func (m *MemClobPriceTimePriority) ReplayOperations(
 	ctx sdk.Context,
 	localOperations []types.InternalOperation,
 	shortTermOrderTxBytes map[types.OrderHash][]byte,
 	existingOffchainUpdates *types.OffchainUpdates,
+	postOnlyFilter bool,
 ) *types.OffchainUpdates {
 	lib.AssertCheckTxMode(ctx)
 
@@ -922,6 +926,11 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 		// Replay all short-term and stateful order placements.
 		case *types.InternalOperation_ShortTermOrderPlacement:
 			order := operation.GetShortTermOrderPlacement().Order
+
+			// Skip post-only orders if postOnlyFilter is false or non-post-only orders if postOnlyFilter is true.
+			if postOnlyFilter != order.IsPostOnlyOrder() {
+				continue
+			}
 
 			// Set underlying tx bytes so OperationsToPropose may access it and
 			// store the tx bytes on OperationHashToTxBytes data structure
@@ -1013,6 +1022,11 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
+			// Skip post-only orders if postOnlyFilter is false or non-post-only orders if postOnlyFilter is true.
+			if postOnlyFilter != statefulOrderPlacement.Order.IsPostOnlyOrder() {
+				continue
+			}
+
 			// TODO(DEC-998): Research whether it's fine for two post-only orders to be matched. Currently they are dropped.
 			_, orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.AddPreexistingStatefulOrder(
 				ctx,
@@ -1063,6 +1077,11 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 
 			// if not in state anymore, this means it was removed in the previous block. No-op.
 			if !found {
+				continue
+			}
+
+			// Skip post-only orders if postOnlyFilter is false or non-post-only orders if postOnlyFilter is true.
+			if postOnlyFilter != statefulOrderPlacement.Order.IsPostOnlyOrder() {
 				continue
 			}
 

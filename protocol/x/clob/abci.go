@@ -185,15 +185,42 @@ func PrepareCheckState(
 		offchainUpdates,
 	)
 
-	// 3. Place all stateful order placements included in the last block on the memclob.
-	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
-	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.
-	startPlaceLongTermOrders := time.Now()
+	// 3. Go through the orders two times and only place the post only orders during the first pass.
 	longTermOrderIds := keeper.GetDeliveredLongTermOrderIds(ctx)
 	offchainUpdates = keeper.PlaceStatefulOrdersFromLastBlock(
 		ctx,
 		longTermOrderIds,
 		offchainUpdates,
+		true, // post only
+	)
+
+	offchainUpdates = keeper.PlaceConditionalOrdersTriggeredInLastBlock(
+		ctx,
+		processProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock,
+		offchainUpdates,
+		true, // post only
+	)
+
+	replayUpdates := keeper.MemClob.ReplayOperations(
+		ctx,
+		localValidatorOperationsQueue,
+		shortTermOrderTxBytes,
+		offchainUpdates,
+		true, // post only
+	)
+	if replayUpdates != nil {
+		offchainUpdates = replayUpdates
+	}
+
+	// 4. Place all stateful order placements included in the last block on the memclob.
+	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
+	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.
+	startPlaceLongTermOrders := time.Now()
+	offchainUpdates = keeper.PlaceStatefulOrdersFromLastBlock(
+		ctx,
+		longTermOrderIds,
+		offchainUpdates,
+		false, // post only
 	)
 	telemetry.MeasureSince(
 		startPlaceLongTermOrders,
@@ -208,27 +235,27 @@ func PrepareCheckState(
 		metrics.Count,
 	)
 
-	// 4. Place all conditional orders triggered in EndBlocker of last block on the memclob.
+	// 5. Place all conditional orders triggered in EndBlocker of last block on the memclob.
 	offchainUpdates = keeper.PlaceConditionalOrdersTriggeredInLastBlock(
 		ctx,
 		processProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock,
 		offchainUpdates,
+		false, // post only
 	)
 
-	// 5. Replay the local validator’s operations onto the book.
-	replayUpdates := keeper.MemClob.ReplayOperations(
+	// 6. Replay the local validator’s operations onto the book.
+	replayUpdates = keeper.MemClob.ReplayOperations(
 		ctx,
 		localValidatorOperationsQueue,
 		shortTermOrderTxBytes,
 		offchainUpdates,
+		false, // post only
 	)
-
-	// TODO(CLOB-275): Do not gracefully handle panics in `PrepareCheckState`.
 	if replayUpdates != nil {
 		offchainUpdates = replayUpdates
 	}
 
-	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
+	// 7. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
 	liquidatableSubaccountIds := keeper.DaemonLiquidationInfo.GetLiquidatableSubaccountIds()
 	subaccountsToDeleverage, err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, liquidatableSubaccountIds)
 	if err != nil {
@@ -241,14 +268,14 @@ func PrepareCheckState(
 		keeper.GetSubaccountsWithPositionsInFinalSettlementMarkets(ctx)...,
 	)
 
-	// 7. Deleverage subaccounts.
+	// 8. Deleverage subaccounts.
 	// TODO(CLOB-1052) - decouple steps 6 and 7 by using DaemonLiquidationInfo.NegativeTncSubaccounts
 	// as the input for this function.
 	if err := keeper.DeleverageSubaccounts(ctx, subaccountsToDeleverage); err != nil {
 		panic(err)
 	}
 
-	// 8. Gate withdrawals by inserting a zero-fill deleveraging operation into the operations queue if any
+	// 9. Gate withdrawals by inserting a zero-fill deleveraging operation into the operations queue if any
 	// of the negative TNC subaccounts still have negative TNC after liquidations and deleveraging steps.
 	negativeTncSubaccountIds := keeper.DaemonLiquidationInfo.GetNegativeTncSubaccountIds()
 	if err := keeper.GateWithdrawalsIfNegativeTncSubaccountSeen(ctx, negativeTncSubaccountIds); err != nil {

@@ -1308,6 +1308,19 @@ var (
 	}
 
 	// Long-Term post-only orders.
+	LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5_PO = clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     5,
+		Subticks:     10,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
+		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+	}
 	LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO = clobtypes.Order{
 		OrderId: clobtypes.OrderId{
 			SubaccountId: Alice_Num0,
@@ -1356,6 +1369,19 @@ var (
 		},
 		Side:         clobtypes.Order_SIDE_BUY,
 		Quantums:     100_000_000,
+		Subticks:     50_000_000_000,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+	}
+	LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10_PO = clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: Dave_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		Side:         clobtypes.Order_SIDE_SELL,
+		Quantums:     25_000_000,
 		Subticks:     50_000_000_000,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
 		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
