@@ -523,8 +523,8 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 
 		order := orderPlacement.GetOrder()
 
-		// Prioritize placing post-only orders if the flag is set.
-		if onlyPlacePostOnly && !order.IsPostOnlyOrder() {
+		// Skip the order if it is a post-only order and we are only placing post-only orders.
+		if onlyPlacePostOnly != order.IsPostOnlyOrder() {
 			continue
 		}
 

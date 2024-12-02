@@ -925,7 +925,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			order := operation.GetShortTermOrderPlacement().Order
 
 			// Skip the order if it is a post-only order and we are only replaying post-only orders.
-			if onlyPlacePostOnly && !order.IsPostOnlyOrder() {
+			if onlyPlacePostOnly != order.IsPostOnlyOrder() {
 				continue
 			}
 
@@ -1020,7 +1020,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			}
 
 			// Skip the order if it is a post-only order and we are only replaying post-only orders.
-			if onlyPlacePostOnly && !statefulOrderPlacement.Order.IsPostOnlyOrder() {
+			if onlyPlacePostOnly != statefulOrderPlacement.Order.IsPostOnlyOrder() {
 				continue
 			}
 
@@ -1078,7 +1078,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			}
 
 			// Skip the order if it is a post-only order and we are only replaying post-only orders.
-			if onlyPlacePostOnly && !statefulOrderPlacement.Order.IsPostOnlyOrder() {
+			if onlyPlacePostOnly != statefulOrderPlacement.Order.IsPostOnlyOrder() {
 				continue
 			}
 
