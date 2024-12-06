@@ -94,10 +94,13 @@ func CreateUpgradeHandler(
 	pricesKeeper pricestypes.PricesKeeper,
 	perpetualsKeeper perptypes.PerpetualsKeeper,
 	clobKeeper clobtypes.ClobKeeper,
+	accountplusKeeper accountpluskeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
+
+		MigrateAccountplusAccountState(sdkCtx, accountplusKeeper)
 
 		// Set market, perpetual, and clob ids to a set number
 		setMarketListingBaseIds(sdkCtx, pricesKeeper, perpetualsKeeper, clobKeeper)
