@@ -20,10 +20,9 @@ import request from 'supertest';
 import { getQueryString, sendRequest } from '../../../helpers/helpers';
 import {
   createdDateTime, createdHeight,
-  defaultAsset,
+  defaultAsset, defaultSubaccount2Num0,
   defaultTendermintEventId4,
-  defaultWalletAddress,
-  isolatedSubaccountId,
+  defaultWalletAddress, isolatedSubaccountId,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import Big from 'big.js';
 
@@ -461,10 +460,14 @@ describe('transfers-controller#V4', () => {
       };
       await WalletTable.create(defaultWallet);
       await Promise.all([
+        SubaccountTable.create(defaultSubaccount2Num0),
+      ]);
+      await Promise.all([
         TransferTable.create(testConstants.defaultTransfer),
         TransferTable.create(transfer2),
         TransferTable.create(testConstants.defaultWithdrawal),
         TransferTable.create(testConstants.defaultDeposit),
+        TransferTable.create(testConstants.defaultTransferWithAlternateAddress),
       ]);
 
       const response: request.Response = await sendRequest({
@@ -550,6 +553,24 @@ describe('transfers-controller#V4', () => {
         transactionHash: testConstants.defaultWithdrawal.transactionHash,
       };
 
+      const expectedTransferWithAlternateAddressResponse: ParentSubaccountTransferResponseObject = {
+        id: testConstants.defaultTransferWithAlternateAddressId,
+        sender: {
+          address: testConstants.defaultAddress2,
+          parentSubaccountNumber: testConstants.defaultSubaccount2Num0.subaccountNumber,
+        },
+        recipient: {
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+        },
+        size: testConstants.defaultTransferWithAlternateAddress.size,
+        createdAt: testConstants.defaultTransferWithAlternateAddress.createdAt,
+        createdAtHeight: testConstants.defaultTransferWithAlternateAddress.createdAtHeight,
+        symbol: testConstants.defaultAsset.symbol,
+        type: TransferType.TRANSFER_IN,
+        transactionHash: testConstants.defaultTransferWithAlternateAddress.transactionHash,
+      };
+
       expect(response.body.transfers).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -563,6 +584,9 @@ describe('transfers-controller#V4', () => {
           }),
           expect.objectContaining({
             ...expectedDepositResponse,
+          }),
+          expect.objectContaining({
+            ...expectedTransferWithAlternateAddressResponse,
           }),
         ]),
       );

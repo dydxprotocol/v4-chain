@@ -218,6 +218,7 @@ class TransfersController extends Controller {
           transfer,
           idToAsset,
           idToSubaccount,
+          address,
           parentSubaccountNumber);
       });
 
@@ -225,7 +226,8 @@ class TransfersController extends Controller {
     const transfersFiltered:
     ParentSubaccountTransferResponseObject[] = transfersWithParentSubaccount.filter(
       (transfer) => {
-        return transfer.sender.parentSubaccountNumber !== transfer.recipient.parentSubaccountNumber;
+        return transfer.sender.address !== transfer.recipient.address ||
+            transfer.sender.parentSubaccountNumber !== transfer.recipient.parentSubaccountNumber;
       });
 
     return {
