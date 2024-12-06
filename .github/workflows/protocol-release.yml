@@ -120,9 +120,6 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
           twine upload -r pypi dist/*
-        with:
-          ENVIRONMENT: release
-        secrets: inherit
 
   v4-proto-js-release:
     runs-on: ubuntu-latest
