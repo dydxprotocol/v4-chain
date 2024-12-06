@@ -751,6 +751,29 @@ func TestAggregateAffiliateReferredVolumeForFills(t *testing.T) {
 				})
 			},
 		},
+		{
+			name:           "2 referrals, takers not referred, maker referred",
+			referrals:      2,
+			expectedVolume: big.NewInt(300_000_000_000),
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper, statsKeeper *statskeeper.Keeper) {
+				err := k.RegisterAffiliate(ctx, maker, affiliate)
+				require.NoError(t, err)
+				statsKeeper.SetBlockStats(ctx, &statstypes.BlockStats{
+					Fills: []*statstypes.BlockStats_Fill{
+						{
+							Taker:    referee1,
+							Maker:    maker,
+							Notional: 100_000_000_000,
+						},
+						{
+							Taker:    referee2,
+							Maker:    maker,
+							Notional: 200_000_000_000,
+						},
+					},
+				})
+			},
+		},
 	}
 
 	for _, tc := range testCases {
