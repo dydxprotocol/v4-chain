@@ -243,6 +243,7 @@ export function transferToParentSubaccountResponseObject(
   transfer: TransferFromDatabase,
   assetMap: AssetById,
   subaccountMap: SubaccountById,
+  address: string,
   parentSubaccountNumber: number,
 ): ParentSubaccountTransferResponseObject {
 
@@ -251,6 +252,9 @@ export function transferToParentSubaccountResponseObject(
     : parentSubaccountHelpers.getParentSubaccountNum(
       subaccountMap[transfer.senderSubaccountId!].subaccountNumber,
     );
+  const senderAddress = transfer.senderWalletAddress
+    ? transfer.senderWalletAddress
+    : subaccountMap[transfer.senderSubaccountId!].address;
 
   const recipientParentSubaccountNum = transfer.recipientWalletAddress
     ? undefined
@@ -260,13 +264,13 @@ export function transferToParentSubaccountResponseObject(
 
   // Determine transfer type based on parent subaccount number.
   let transferType: TransferType = TransferType.TRANSFER_IN;
-  if (senderParentSubaccountNum === parentSubaccountNumber) {
+  if (senderAddress === address && senderParentSubaccountNum === parentSubaccountNumber) {
     if (transfer.recipientSubaccountId) {
       transferType = TransferType.TRANSFER_OUT;
     } else {
       transferType = TransferType.WITHDRAWAL;
     }
-  } else if (recipientParentSubaccountNum === parentSubaccountNumber) {
+  } else { // if (recipientParentSubaccountNum === parentSubaccountNumber) {
     if (transfer.senderSubaccountId) {
       transferType = TransferType.TRANSFER_IN;
     } else {
