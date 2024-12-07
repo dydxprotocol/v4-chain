@@ -645,6 +645,12 @@ export const defaultTransfer3: TransferCreateObject = {
   assetId: defaultAsset2.id,
 };
 
+export const defaultTransferWithAlternateAddress: TransferCreateObject = {
+  ...defaultTransfer,
+  senderSubaccountId: defaultSubaccountIdWithAlternateAddress,
+  recipientSubaccountId: defaultSubaccountId,
+};
+
 export const defaultTransferId: string = TransferTable.uuid(
   defaultTransfer.eventId,
   defaultTransfer.assetId,
@@ -652,6 +658,15 @@ export const defaultTransferId: string = TransferTable.uuid(
   defaultTransfer.recipientSubaccountId,
   defaultTransfer.senderWalletAddress,
   defaultTransfer.recipientWalletAddress,
+);
+
+export const defaultTransferWithAlternateAddressId: string = TransferTable.uuid(
+  defaultTransferWithAlternateAddress.eventId,
+  defaultTransferWithAlternateAddress.assetId,
+  defaultTransferWithAlternateAddress.senderSubaccountId,
+  defaultTransferWithAlternateAddress.recipientSubaccountId,
+  defaultTransferWithAlternateAddress.senderWalletAddress,
+  defaultTransferWithAlternateAddress.recipientWalletAddress,
 );
 
 export const defaultWithdrawal: TransferCreateObject = {
