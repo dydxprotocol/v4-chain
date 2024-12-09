@@ -71,7 +71,9 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	clobPairIds, err := parseUint32(r, CLOB_PAIR_IDS_QUERY_PARAM)
 	if err != nil {
 		ws.logger.Error("Error parsing clobPairIds", "err", err)
-		sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error())
+		if err := sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error()); err != nil {
+			ws.logger.Error("Error sending close message", "err", err)
+		}
 		return
 	}
 
@@ -79,7 +81,9 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	marketIds, err := parseUint32(r, MARKET_IDS_QUERY_PARAM)
 	if err != nil {
 		ws.logger.Error("Error parsing marketIds", "err", err)
-		sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error())
+		if err := sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error()); err != nil {
+			ws.logger.Error("Error sending close message", "err", err)
+		}
 		return
 	}
 
@@ -87,7 +91,9 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	subaccountIds, err := parseSubaccountIds(r)
 	if err != nil {
 		ws.logger.Error("Error parsing subaccountIds", "err", err)
-		sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error())
+		if err := sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error()); err != nil {
+			ws.logger.Error("Error sending close message", "err", err)
+		}
 		return
 	}
 
@@ -111,7 +117,9 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 			"Ending handler for websocket connection",
 			"err", err,
 		)
-		sendCloseWithReason(conn, websocket.CloseInternalServerErr, err.Error())
+		if err := sendCloseWithReason(conn, websocket.CloseInternalServerErr, err.Error()); err != nil {
+			ws.logger.Error("Error sending close message", "err", err)
+		}
 		return
 	}
 }
@@ -119,7 +127,9 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 func sendCloseWithReason(conn *websocket.Conn, closeCode int, reason string) error {
 	closeMessage := websocket.FormatCloseMessage(closeCode, reason)
 	// Set a write deadline to avoid blocking indefinitely
-	conn.SetWriteDeadline(time.Now().Add(CLOSE_DEADLINE))
+	if err := conn.SetWriteDeadline(time.Now().Add(CLOSE_DEADLINE)); err != nil {
+		return err
+	}
 	return conn.WriteControl(
 		websocket.CloseMessage,
 		closeMessage,
