@@ -18,15 +18,16 @@ let currentBlockHeight: string = INITIAL_BLOCK_HEIGHT;
 
 export async function refreshBlockCache(txId?: number): Promise<void> {
   try {
+    const startTime: number = Date.now();
     const block: BlockFromDatabase = await BlockTable.getLatest({ txId });
     currentBlockHeight = block.blockHeight;
+    stats.timing(`${config.SERVICE_NAME}.refresh_block_cache`, Date.now() - startTime);
   } catch (error) { // Unable to find latest block
     logger.info({
       at: 'block-cache#refreshBlockCache',
       message: 'Unable to refresh block cache most likely due to unable to find latest block',
       error,
     });
-
   }
 }
 
@@ -107,8 +108,16 @@ function isNextBlock(blockHeight: string): boolean {
  * All caches must be initialized in a Transaction to ensure consistency
  */
 export async function initializeAllCaches(): Promise<void> {
+  logger.info({
+    at: 'block-cache#initializeAllCaches',
+    message: 'Initializing all caches',
+  })
   const txId: number = await Transaction.start();
   await Transaction.setIsolationLevel(txId, IsolationLevel.READ_COMMITTED);
+  logger.info({
+    at: 'block-cache#initializeAllCaches',
+    message: 'Set transaction isolation level to READ_COMMITTED',
+  })
 
   await Promise.all([
     refreshBlockCache(txId),
@@ -120,6 +129,10 @@ export async function initializeAllCaches(): Promise<void> {
   ]);
 
   await Transaction.rollback(txId);
+  logger.info({
+    at: 'block-cache#initializeAllCaches',
+    message: 'Done initializing all caches',
+  })
 }
 
 export function resetBlockCache(): void {
