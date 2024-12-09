@@ -82,7 +82,7 @@ export function handleControllerError(
   );
 }
 
-function handleInternalServerError(
+export function handleInternalServerError(
   at: string,
   message: string,
   error: Error,
