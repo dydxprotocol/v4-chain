@@ -136,7 +136,7 @@ describe('orderbook-mid-prices-cache', () => {
       expect(result).toEqual({ 'BTC-USD': '50500' });
     });
 
-    it('returns the correct median price after 30 seconds', async () => {
+    it('returns the correct median price after 60 seconds', async () => {
       jest.useFakeTimers();
       // Mock the getOrderBookMidPrice function for the ticker
       const mockPrices: string[] = ['50000', '51000', '49000', '48000', '52000', '53000'];
@@ -154,7 +154,7 @@ describe('orderbook-mid-prices-cache', () => {
       expect(OrderbookLevelsCache.getOrderBookMidPrice).toHaveBeenCalledTimes(2);
 
       // Advance time and fetch more prices
-      jest.advanceTimersByTime(31000); // Advance time by 31 seconds
+      jest.advanceTimersByTime(61000); // Advance time by 61 seconds
       await fetchAndCacheOrderbookMidPrices(
         client,
         [defaultTicker, defaultTicker, defaultTicker, defaultTicker],
