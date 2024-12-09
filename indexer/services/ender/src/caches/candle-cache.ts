@@ -1,4 +1,4 @@
-import { NodeEnv } from '@dydxprotocol-indexer/base';
+import { NodeEnv, logger, stats } from '@dydxprotocol-indexer/base';
 import {
   CandleFromDatabase,
   CandleResolution,
@@ -10,22 +10,40 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
 
+import config from '../config';
+
 let candlesMap: CandlesMap = {};
 
 export async function startCandleCache(txId?: number): Promise<void> {
+  const startTime: number = Date.now();
+  logger.info({
+    at: 'candle-cache#startCandleCache',
+    message: 'Starting candle cache',
+  });
+
   const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
     {}, [], { txId },
   );
+  logger.info({
+    at: 'candle-cache#startCandleCache',
+    message: 'Found all perpetual markets',
+  });
+
   const tickers: string[] = _.map(
     perpetualMarkets,
     PerpetualMarketColumns.ticker,
   );
-
   candlesMap = await CandleTable.findCandlesMap(
     tickers,
     Object.values(CandleResolution),
     { txId },
   );
+  logger.info({
+    at: 'candle-cache#startCandleCache',
+    message: 'Found candles map',
+  });
+
+  stats.timing(`${config.SERVICE_NAME}.start_candle_cache`, Date.now() - startTime);
 }
 
 export function getCandle(
