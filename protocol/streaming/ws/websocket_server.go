@@ -19,6 +19,8 @@ import (
 const (
 	CLOB_PAIR_IDS_QUERY_PARAM = "clobPairIds"
 	MARKET_IDS_QUERY_PARAM    = "marketIds"
+
+	CLOSE_DEADLINE = 5 * time.Second
 )
 
 var upgrader = websocket.Upgrader{
@@ -68,33 +70,30 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	// Parse clobPairIds from query parameters
 	clobPairIds, err := parseUint32(r, CLOB_PAIR_IDS_QUERY_PARAM)
 	if err != nil {
-		ws.logger.Error(
-			"Error parsing clobPairIds",
-			"err", err,
-		)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ws.logger.Error("Error parsing clobPairIds", "err", err)
+		if err := sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error()); err != nil {
+			ws.logger.Error("Error sending close message", "err", err)
+		}
 		return
 	}
 
 	// Parse marketIds from query parameters
 	marketIds, err := parseUint32(r, MARKET_IDS_QUERY_PARAM)
 	if err != nil {
-		ws.logger.Error(
-			"Error parsing marketIds",
-			"err", err,
-		)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ws.logger.Error("Error parsing marketIds", "err", err)
+		if err := sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error()); err != nil {
+			ws.logger.Error("Error sending close message", "err", err)
+		}
 		return
 	}
 
 	// Parse subaccountIds from query parameters
 	subaccountIds, err := parseSubaccountIds(r)
 	if err != nil {
-		ws.logger.Error(
-			"Error parsing subaccountIds",
-			"err", err,
-		)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ws.logger.Error("Error parsing subaccountIds", "err", err)
+		if err := sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error()); err != nil {
+			ws.logger.Error("Error sending close message", "err", err)
+		}
 		return
 	}
 
@@ -118,8 +117,24 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 			"Ending handler for websocket connection",
 			"err", err,
 		)
+		if err := sendCloseWithReason(conn, websocket.CloseInternalServerErr, err.Error()); err != nil {
+			ws.logger.Error("Error sending close message", "err", err)
+		}
 		return
 	}
+}
+
+func sendCloseWithReason(conn *websocket.Conn, closeCode int, reason string) error {
+	closeMessage := websocket.FormatCloseMessage(closeCode, reason)
+	// Set a write deadline to avoid blocking indefinitely
+	if err := conn.SetWriteDeadline(time.Now().Add(CLOSE_DEADLINE)); err != nil {
+		return err
+	}
+	return conn.WriteControl(
+		websocket.CloseMessage,
+		closeMessage,
+		time.Now().Add(CLOSE_DEADLINE),
+	)
 }
 
 // parseSubaccountIds is a helper function to parse the subaccountIds from the query parameters.
