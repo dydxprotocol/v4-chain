@@ -37,6 +37,9 @@ import * as athenaTradingRewardAggregations from '../lib/athena-ddl-tables/tradi
 import * as athenaTradingRewards from '../lib/athena-ddl-tables/trading_rewards';
 import * as athenaTransfers from '../lib/athena-ddl-tables/transfers';
 import * as athenaWallets from '../lib/athena-ddl-tables/wallets';
+import * as athenaAffiliateInfo from '../lib/athena-ddl-tables/affiliate_info';
+import * as athenaAffiliateReferredUsers from '../lib/athena-ddl-tables/affiliate_referred_users';
+import * as athenaVaults from '../lib/athena-ddl-tables/vaults';
 
 export const tablesToAddToAthena: { [table: string]: AthenaTableDDLQueries } = {
   asset_positions: athenaAssetPositions,
@@ -58,6 +61,9 @@ export const tablesToAddToAthena: { [table: string]: AthenaTableDDLQueries } = {
   transfers: athenaTransfers,
   liquidity_tiers: athenaLiquidityTiers,
   wallets: athenaWallets,
+  affiliate_info: athenaAffiliateInfo,
+  affiliate_referred_users: athenaAffiliateReferredUsers,
+  vaults: athenaVaults,
 };
 
 const statStart: string = `${config.SERVICE_NAME}.update_research_environment`;
