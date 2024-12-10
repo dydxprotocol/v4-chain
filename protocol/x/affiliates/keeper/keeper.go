@@ -61,6 +61,12 @@ func (k Keeper) RegisterAffiliate(
 	referee string,
 	affiliateAddr string,
 ) error {
+	if referee == affiliateAddr {
+		return errorsmod.Wrapf(
+			types.ErrSelfReferral, "referee: %s, affiliate: %s",
+			referee, affiliateAddr,
+		)
+	}
 	if _, err := sdk.AccAddressFromBech32(referee); err != nil {
 		return errorsmod.Wrapf(types.ErrInvalidAddress, "referee: %s", referee)
 	}
