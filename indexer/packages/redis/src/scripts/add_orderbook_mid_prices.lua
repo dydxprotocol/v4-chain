@@ -7,8 +7,8 @@ local numArgs = #ARGV
 -- Get the timestamp from the last argument
 local timestamp = tonumber(ARGV[numArgs])
 
--- Time window (30 seconds)
-local thirtySeconds = 30
+-- Time window (60 seconds)
+local sixtySeconds = 60
 
 -- Validate the timestamp
 if not timestamp then
@@ -16,7 +16,7 @@ if not timestamp then
 end
 
 -- Calculate the cutoff time for removing old prices
-local cutoffTime = timestamp - thirtySeconds
+local cutoffTime = timestamp - sixtySeconds
 
 -- Iterate through each key (market) and corresponding price
 for i = 1, numKeys do
@@ -31,7 +31,7 @@ for i = 1, numKeys do
   -- Add the price to the sorted set with the current timestamp as the score
   redis.call("ZADD", priceCacheKey, timestamp, price)
 
-  -- Remove entries older than the cutoff time (older than 30 seconds)
+  -- Remove entries older than the cutoff time (older than 60 seconds)
   redis.call("ZREMRANGEBYSCORE", priceCacheKey, "-inf", cutoffTime)
 end
 
