@@ -18,7 +18,7 @@ const RAW_TABLE_COLUMNS: string = `
   \`totalReferredMakerRebates\` string
 `;
 const TABLE_COLUMNS: string = `
-  "id",
+  "address",
   ${castToDouble('affiliateEarnings')},
   "referredMakerTrades",
   "referredTakerTrades",
