@@ -88,6 +88,15 @@ func TestRegisterAffiliate_GetReferredBy(t *testing.T) {
 				// No setup needed for this test case
 			},
 		},
+		{
+			name:        "Self referral",
+			referee:     constants.AliceAccAddress.String(),
+			affiliate:   constants.AliceAccAddress.String(),
+			expectError: types.ErrSelfReferral,
+			setup: func(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+				// No setup needed for this test case
+			},
+		},
 	}
 
 	for _, tc := range tests {
