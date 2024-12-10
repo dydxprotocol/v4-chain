@@ -10,12 +10,12 @@ const RAW_TABLE_COLUMNS: string = `
   \`affiliateEarnings\` string,
   \`referredMakerTrades\` int,
   \`referredTakerTrades\` int,
-  \'totalReferredUsers\' int,
-  \'firstReferralBlockHeight\' bigint,
-  \'referredTotalVolume\' string,
-  \'totalReferredTakerFees\' string,
-  \'totalReferredMakerFees\' string,
-  \'totalReferredMakerRebates\' string
+  \`totalReferredUsers\` int,
+  \`firstReferralBlockHeight\` bigint,
+  \`referredTotalVolume\` string,
+  \`totalReferredTakerFees\` string,
+  \`totalReferredMakerFees\` string,
+  \`totalReferredMakerRebates\` string
 `;
 const TABLE_COLUMNS: string = `
   "id",

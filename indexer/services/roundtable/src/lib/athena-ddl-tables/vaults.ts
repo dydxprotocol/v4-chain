@@ -9,8 +9,8 @@ const RAW_TABLE_COLUMNS: string = `
   \`address\` string,
   \`clobPairId\` bigint,
   \`status\` string,
-  \'createdAt\' string,
-  \'updatedAt\' string
+  \`createdAt\` string,
+  \`updatedAt\` string
 `;
 const TABLE_COLUMNS: string = `
   "address",
