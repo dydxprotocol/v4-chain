@@ -27,7 +27,6 @@ const TABLE_COLUMNS: string = `
   ${castToDouble('referredTotalVolume')},
   ${castToDouble('totalReferredTakerFees')},
   ${castToDouble('totalReferredMakerFees')},
-  ${castToDouble('totalReferredMakerFees')},
   ${castToDouble('totalReferredMakerRebates')}
 `;
 
