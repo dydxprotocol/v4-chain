@@ -72,8 +72,8 @@ const (
 
 	DefaultGrpcStreamingEnabled              = false
 	DefaultGrpcStreamingFlushIntervalMs      = 50
-	DefaultGrpcStreamingMaxBatchSize         = 10000
-	DefaultGrpcStreamingMaxChannelBufferSize = 10000
+	DefaultGrpcStreamingMaxBatchSize         = 100_000
+	DefaultGrpcStreamingMaxChannelBufferSize = 100_000
 	DefaultWebsocketStreamingEnabled         = false
 	DefaultWebsocketStreamingPort            = 9092
 	DefaultFullNodeStreamingSnapshotInterval = 0
