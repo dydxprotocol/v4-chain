@@ -270,7 +270,7 @@ export function transferToParentSubaccountResponseObject(
     } else {
       transferType = TransferType.WITHDRAWAL;
     }
-  } else { // if (recipientParentSubaccountNum === parentSubaccountNumber) {
+  } else {
     if (transfer.senderSubaccountId) {
       transferType = TransferType.TRANSFER_IN;
     } else {
