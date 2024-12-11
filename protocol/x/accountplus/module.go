@@ -15,6 +15,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 )
@@ -71,15 +72,13 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 // GetTxCmd returns the root Tx command for the module. The subcommands of this root command are used by end-users
 // to generate new transactions containing messages defined in the module
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	// accountplus is currently purely for storage and does not support user-submitted transactions
-	return nil
+	return cli.GetTxCmd()
 }
 
 // GetQueryCmd returns the root query command for the module. The subcommands of this root command are used by
 // end-users to generate new queries to the subset of the state defined by the module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	// accountplus is currently purely for storage and does not support queries
-	return nil
+	return cli.GetQueryCmd()
 }
 
 // DefaultGenesis returns a default GenesisState for the module, marshalled to json.RawMessage. The default
