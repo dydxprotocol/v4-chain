@@ -667,7 +667,7 @@
       "authenticator_data": [],
       "next_authenticator_id": "0",
       "params": {
-        "is_smart_account_active": false
+        "is_smart_account_active": true
       }
     },
     "epochs": {

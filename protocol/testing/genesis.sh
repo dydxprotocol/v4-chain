@@ -84,7 +84,6 @@ function edit_genesis() {
 	# Consensus params
 	dasel put -t string -f "$GENESIS" '.consensus.params.block.max_bytes' -v '4194304'
 	dasel put -t string -f "$GENESIS" '.consensus.params.block.max_gas' -v '-1'
-	dasel put -t string -f "$GENESIS" '.consensus.params.abci.vote_extensions_enable_height' -v '1'
 
 	# Update crisis module.
 	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.denom' -v "$NATIVE_TOKEN"
@@ -2152,6 +2151,9 @@ function edit_genesis() {
 		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_params.status" -v 'VAULT_STATUS_QUOTING'
 		vault_idx=$(($vault_idx + 1))
 	done
+
+	# Update accountplus module.
+	dasel put -t bool -f "$GENESIS" '.app_state.dydxaccountplus.params.is_smart_account_active' -v 'true'
 }
 
 function add_subaccount() {
