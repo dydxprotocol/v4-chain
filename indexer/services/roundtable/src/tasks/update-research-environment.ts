@@ -18,6 +18,8 @@ import {
   startAthenaQuery,
 } from '../helpers/aws';
 import { AthenaTableDDLQueries } from '../helpers/types';
+import * as athenaAffiliateInfo from '../lib/athena-ddl-tables/affiliate_info';
+import * as athenaAffiliateReferredUsers from '../lib/athena-ddl-tables/affiliate_referred_users';
 import * as athenaAssetPositions from '../lib/athena-ddl-tables/asset_positions';
 import * as athenaAssets from '../lib/athena-ddl-tables/assets';
 import * as athenaBlocks from '../lib/athena-ddl-tables/blocks';
@@ -36,6 +38,7 @@ import * as athenaTendermintEvents from '../lib/athena-ddl-tables/tendermint_eve
 import * as athenaTradingRewardAggregations from '../lib/athena-ddl-tables/trading_reward_aggregations';
 import * as athenaTradingRewards from '../lib/athena-ddl-tables/trading_rewards';
 import * as athenaTransfers from '../lib/athena-ddl-tables/transfers';
+import * as athenaVaults from '../lib/athena-ddl-tables/vaults';
 import * as athenaWallets from '../lib/athena-ddl-tables/wallets';
 
 export const tablesToAddToAthena: { [table: string]: AthenaTableDDLQueries } = {
@@ -58,6 +61,9 @@ export const tablesToAddToAthena: { [table: string]: AthenaTableDDLQueries } = {
   transfers: athenaTransfers,
   liquidity_tiers: athenaLiquidityTiers,
   wallets: athenaWallets,
+  affiliate_info: athenaAffiliateInfo,
+  affiliate_referred_users: athenaAffiliateReferredUsers,
+  vaults: athenaVaults,
 };
 
 const statStart: string = `${config.SERVICE_NAME}.update_research_environment`;
