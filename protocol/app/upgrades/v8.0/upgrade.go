@@ -102,6 +102,8 @@ func CreateUpgradeHandler(
 
 		MigrateAccountplusAccountState(sdkCtx, accountplusKeeper)
 
+		accountplusKeeper.SetActiveState(sdkCtx, true)
+
 		// Set market, perpetual, and clob ids to a set number
 		setMarketListingBaseIds(sdkCtx, pricesKeeper, perpetualsKeeper, clobKeeper)
 
