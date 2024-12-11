@@ -27,7 +27,7 @@ func GetTxCmd() *cobra.Command {
 
 func CmdAddAuthenticator() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-authenticator account authenticator_type data",
+		Use:   "add-authenticator [account] [authenticator_type] [data]",
 		Short: "Registers an authenticator",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
