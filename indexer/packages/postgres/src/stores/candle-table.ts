@@ -1,7 +1,7 @@
-import _ from 'lodash';
 import { PartialModelObject, QueryBuilder } from 'objection';
 
 import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
+import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
@@ -174,36 +174,66 @@ export async function findLatest(
 
 export async function findCandlesMap(
   tickers: string[],
-  resolutions: CandleResolution[],
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<CandlesMap> {
+  if (tickers.length === 0) {
+    return {};
+  }
+
   const candlesMap: CandlesMap = {};
+  for (const ticker of tickers) {
+    candlesMap[ticker] = {};
+  }
 
-  await Promise.all(
-    _.map(
-      tickers,
-      async (ticker: string) => {
-        candlesMap[ticker] = {};
-        const findLatestCandles: Promise<CandleFromDatabase | undefined>[] = resolutions.map(
-          (resolution: CandleResolution) => findLatest(
-            ticker,
-            resolution,
-            options,
-          ),
-        );
-
-        // Map each resolution to its respective candle
-        const allLatestCandles: (CandleFromDatabase | undefined)[] = await Promise.all(
-          findLatestCandles,
-        );
-        _.forEach(allLatestCandles, (candle: CandleFromDatabase | undefined) => {
-          if (candle !== undefined) {
-            candlesMap[ticker][candle.resolution] = candle;
-          }
-        });
-      },
-    ),
-  );
+  const minuteCandlesResult: {
+    rows: CandleFromDatabase[],
+  } = await knexReadReplica.getConnection().raw(
+    `
+    SELECT DISTINCT ON (
+      ticker,
+      resolution
+    ) candles.* FROM 
+      candles
+    WHERE
+      "ticker" IN (${tickers.map((ticker) => { return `'${ticker}'`; }).join(',')}) AND
+      "startedAt" > NOW() - INTERVAL '3 hours' AND
+      resolution IN ('1MIN', '5MINS', '15MINS', '30MINS', '1HOUR')
+    ORDER BY
+      ticker,
+      resolution,
+      "startedAt" DESC;
+    `,
+  ) as unknown as {
+    rows: CandleFromDatabase[],
+  };
+  const hourDayCandlesResult: {
+    rows: CandleFromDatabase[],
+  } = await knexReadReplica.getConnection().raw(
+    `
+    SELECT DISTINCT ON (
+      ticker,
+      resolution
+    ) candles.* FROM 
+      candles
+    WHERE
+      "ticker" IN (${tickers.map((ticker) => { return `'${ticker}'`; }).join(',')}) AND
+      "startedAt" > NOW() - INTERVAL '2 days' AND
+      resolution IN ('4HOURS', '1DAY')
+    ORDER BY
+      ticker,
+      resolution,
+      "startedAt" DESC;
+    `,
+  ) as unknown as {
+    rows: CandleFromDatabase[],
+  };
+  const latestCandles: CandleFromDatabase[] = minuteCandlesResult.rows
+    .concat(hourDayCandlesResult.rows);
+  for (const candle of latestCandles) {
+    if (candlesMap[candle.ticker] === undefined) {
+      candlesMap[candle.ticker] = {};
+    }
+    candlesMap[candle.ticker][candle.resolution] = candle;
+  }
 
   return candlesMap;
 }
