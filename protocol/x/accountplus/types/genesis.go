@@ -2,7 +2,11 @@ package types
 
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {
-	return &GenesisState{}
+	return &GenesisState{
+		Params: Params{
+			IsSmartAccountActive: true,
+		},
+	}
 }
 
 // Validate performs basic genesis state validation returning an error upon any

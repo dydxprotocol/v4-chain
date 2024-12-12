@@ -445,7 +445,7 @@ const GenesisState = `{
     "dydxaccountplus": {
       "accounts": [],
       "params": {
-        "is_smart_account_active": false
+        "is_smart_account_active": true
       },
       "next_authenticator_id": "0",
       "authenticator_data": []

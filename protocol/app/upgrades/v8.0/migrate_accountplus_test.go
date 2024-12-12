@@ -3,6 +3,7 @@ package v_8_0_test
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/types"
 	v_8_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.0"
 
 	"cosmossdk.io/store/prefix"
@@ -24,7 +25,16 @@ func TestMigrateAccountplusAccountState(t *testing.T) {
 }
 
 func (s *UpgradeTestSuite) SetupTest() {
-	s.tApp = testapp.NewTestAppBuilder(s.T()).Build()
+	s.tApp = testapp.NewTestAppBuilder(s.T()).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *accountplustypes.GenesisState) {
+				genesisState.Params.IsSmartAccountActive = false
+			},
+		)
+		return genesis
+	}).Build()
 	s.Ctx = s.tApp.InitChain()
 }
 
