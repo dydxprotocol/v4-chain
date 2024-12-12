@@ -2152,6 +2152,9 @@ function edit_genesis() {
 		dasel put -t string -f "$GENESIS" ".app_state.vault.vaults.[${vault_idx}].vault_params.status" -v 'VAULT_STATUS_QUOTING'
 		vault_idx=$(($vault_idx + 1))
 	done
+
+	# Update accountplus module.
+	dasel put -t bool -f "$GENESIS" '.app_state.dydxaccountplus.params.is_smart_account_active' -v 'true'
 }
 
 function add_subaccount() {
