@@ -19,18 +19,12 @@ func DefaultGenesis() *GenesisState {
 func (gs GenesisState) Validate() error {
 	// Check for duplicated id in clobPair
 	clobPairIdMap := make(map[uint32]struct{})
-	expectedId := uint32(0)
 
 	for _, clobPair := range gs.ClobPairs {
 		if _, ok := clobPairIdMap[clobPair.Id]; ok {
 			return fmt.Errorf("duplicated id for clobPair")
 		}
 		clobPairIdMap[clobPair.Id] = struct{}{}
-
-		if clobPair.Id != expectedId {
-			return fmt.Errorf("found gap in clobPair id")
-		}
-		expectedId = expectedId + 1
 	}
 
 	if err := gs.BlockRateLimitConfig.Validate(); err != nil {
