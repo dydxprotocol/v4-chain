@@ -3952,9 +3952,9 @@
           "price": 4973000000
         },
         {
-          "exponent": -10,
+          "exponent": -12,
           "id": 301,
-          "price": 657992192
+          "price": 8695478191
         }
       ]
     },
@@ -4090,7 +4090,7 @@
       ]
     }
   },
-  "app_version": "7.0.0-dev0-148-g7da33a6b8",
+  "app_version": "7.0.0-dev0-149-g12cfb908b",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
