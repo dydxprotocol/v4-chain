@@ -58,7 +58,7 @@ func TestUserFeeTier(t *testing.T) {
 	}{
 		"Success": {
 			req: &types.QueryUserFeeTierRequest{
-				User: "alice",
+				User: "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4",
 			},
 			res: &types.QueryUserFeeTierResponse{
 				Index: 0,
@@ -77,6 +77,13 @@ func TestUserFeeTier(t *testing.T) {
 			req: nil,
 			res: nil,
 			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+		"Malformed address": {
+			req: &types.QueryUserFeeTierRequest{
+				User: "alice",
+			},
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "user address is valid bech32 address"),
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
