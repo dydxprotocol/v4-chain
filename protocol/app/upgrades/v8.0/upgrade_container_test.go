@@ -11,6 +11,7 @@ import (
 
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
+	aptypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
@@ -45,7 +46,25 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	// Check that the listing module state has been initialized with the hard cap and default deposit params.
+	postUpgradeSmartAccountActiveCheck(node, t)
 	postUpgradeMarketIdsCheck(node, t)
+}
+
+func postUpgradeSmartAccountActiveCheck(node *containertest.Node, t *testing.T) {
+	// query the smart account active
+	resp, err := containertest.Query(
+		node,
+		aptypes.NewQueryClient,
+		aptypes.QueryClient.Params,
+		&aptypes.QueryParamsRequest{},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	queryResponse := aptypes.QueryParamsResponse{}
+	err = proto.UnmarshalText(resp.String(), &queryResponse)
+	require.NoError(t, err)
+	require.Equal(t, true, queryResponse.Params.IsSmartAccountActive)
 }
 
 func postUpgradeMarketIdsCheck(node *containertest.Node, t *testing.T) {
