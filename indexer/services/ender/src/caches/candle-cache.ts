@@ -23,8 +23,6 @@ export async function startCandleCache(txId?: number): Promise<void> {
 
   candlesMap = await CandleTable.findCandlesMap(
     tickers,
-    Object.values(CandleResolution),
-    { txId },
   );
 }
 
