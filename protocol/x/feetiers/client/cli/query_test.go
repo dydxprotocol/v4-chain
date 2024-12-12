@@ -56,7 +56,7 @@ func TestQueryPerpetualFeeParams(t *testing.T) {
 func TestQueryUserFeeTier(t *testing.T) {
 	net, ctx := setupNetwork(t)
 
-	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryUserFeeTier(), []string{"alice"})
+	out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryUserFeeTier(), []string{"dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"})
 
 	require.NoError(t, err)
 	var resp types.QueryUserFeeTierResponse
