@@ -46,7 +46,7 @@ func (k Keeper) UserFeeTier(
 	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	if _, err := sdk.AccAddressFromBech32(req.User); err != nil {
-		return nil, status.Error(codes.InvalidArgument, "user address is valid bech32 address")
+		return nil, status.Error(codes.InvalidArgument, "invalid bech32 address")
 	}
 	index, tier := k.getUserFeeTier(ctx, req.User)
 	return &types.QueryUserFeeTierResponse{

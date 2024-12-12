@@ -83,7 +83,7 @@ func TestUserFeeTier(t *testing.T) {
 				User: "alice",
 			},
 			res: nil,
-			err: status.Error(codes.InvalidArgument, "user address is valid bech32 address"),
+			err: status.Error(codes.InvalidArgument, "invalid bech32 address"),
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
