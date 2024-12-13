@@ -3850,6 +3850,7 @@
           "pair": "DYDX-USD"
         },
         {
+          "exchange_config_json": "{\"placeholder\":\"placeholder\"}",
           "exponent": -9,
           "id": 300,
           "min_exchanges": 1,
@@ -3857,6 +3858,7 @@
           "pair": "EIGEN-USD"
         },
         {
+          "exchange_config_json": "{\"placeholder\":\"placeholder\"}",
           "exponent": -12,
           "id": 301,
           "min_exchanges": 1,
@@ -4180,7 +4182,7 @@
       ]
     }
   },
-  "app_version": "7.0.0-dev0-149-g12cfb908b",
+  "app_version": "7.0.5-4-g462dbfcc7",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
