@@ -47,9 +47,13 @@ import {
   PerpetualPositionWithFunding,
   Risk,
   SubaccountResponseObject,
+  VaultMapping,
 } from '../types';
 import { ZERO, ZERO_USDC_POSITION } from './constants';
 import { InvalidParamError, NotFoundError } from './errors';
+import { VaultFromDatabase } from '@dydxprotocol-indexer/postgres';
+import { VaultTable } from '@dydxprotocol-indexer/postgres';
+import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 
 /* ------- GENERIC HELPERS ------- */
 
@@ -719,4 +723,43 @@ export function aggregateHourlyPnlTicks(
       numTicks: (hourlySubaccountIds.get(hour) as Set<string>).size,
     };
   });
+}
+
+/* ------- VAULT HELPERS ------- */
+
+export async function getVaultMapping(): Promise<VaultMapping> {
+  const vaults: VaultFromDatabase[] = await VaultTable.findAll(
+    {},
+    [],
+    {},
+  );
+  const vaultMapping: VaultMapping = _.zipObject(
+    vaults.map((vault: VaultFromDatabase): string => {
+      return SubaccountTable.uuid(vault.address, 0);
+    }),
+    vaults,
+  );
+  const validVaultMapping: VaultMapping = {};
+  for (const subaccountId of _.keys(vaultMapping)) {
+    const perpetual: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+      .getPerpetualMarketFromClobPairId(
+        vaultMapping[subaccountId].clobPairId,
+      );
+    if (perpetual === undefined) {
+      logger.warning({
+        at: 'VaultController#getVaultPositions',
+        message: `Vault clob pair id ${vaultMapping[subaccountId]} does not correspond to a ` +
+          'perpetual market.',
+        subaccountId,
+      });
+      continue;
+    }
+    validVaultMapping[subaccountId] = vaultMapping[subaccountId];
+  }
+  return validVaultMapping;
+}
+
+export function getVaultPnlStartDate(): DateTime {
+  const startDate: DateTime = DateTime.fromISO(config.VAULT_PNL_START_DATE).toUTC();
+  return startDate;
 }
