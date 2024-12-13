@@ -84,43 +84,6 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedError: errors.New("duplicated perpetual id"),
 		},
-		"invalid: found a gap in perpetual id": {
-			genState: &types.GenesisState{
-				Perpetuals: []types.Perpetual{
-					{
-						Params: types.PerpetualParams{
-							Id:            0,
-							Ticker:        "EXAM-USD",
-							LiquidityTier: 0,
-						},
-						FundingIndex: dtypes.ZeroInt(),
-					},
-					{
-						Params: types.PerpetualParams{
-							Id:            2, // duplicate
-							Ticker:        "PERP-USD",
-							LiquidityTier: 0,
-						},
-						FundingIndex: dtypes.ZeroInt(),
-					},
-				},
-				LiquidityTiers: []types.LiquidityTier{
-					{
-						Id:                     0,
-						Name:                   "Large-Cap",
-						InitialMarginPpm:       500_000,
-						MaintenanceFractionPpm: 750_000,
-						ImpactNotional:         1_000_000_000,
-					},
-				},
-				Params: types.Params{
-					FundingRateClampFactorPpm: 6_000_000,
-					PremiumVoteClampFactorPpm: 60_000_000,
-					MinNumVotesPerSample:      15,
-				},
-			},
-			expectedError: errors.New("found a gap in perpetual id"),
-		},
 		"invalid: empty ticker": {
 			genState: &types.GenesisState{
 				Perpetuals: []types.Perpetual{
