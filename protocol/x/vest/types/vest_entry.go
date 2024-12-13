@@ -15,7 +15,7 @@ func (entry VestEntry) Validate() error {
 	}
 
 	if err := sdk.ValidateDenom(entry.Denom); err != nil {
-		return errorsmod.Wrapf(ErrInvalidDenom, err.Error())
+		return errorsmod.Wrap(ErrInvalidDenom, err.Error())
 	}
 
 	if !entry.StartTime.Before(entry.EndTime) {
@@ -27,7 +27,7 @@ func (entry VestEntry) Validate() error {
 	}
 
 	if entry.EndTime.Location().String() != "UTC" {
-		return errorsmod.Wrapf(ErrInvalidTimeZone, "start_time must be in UTC")
+		return errorsmod.Wrapf(ErrInvalidTimeZone, "end_time must be in UTC")
 	}
 	return nil
 }

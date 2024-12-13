@@ -201,7 +201,7 @@ func (k Keeper) ValidateMsg(msg sdk.Msg, signers [][]byte) error {
 	handler := k.router.Handler(msg)
 	// If the message type is not routable, return an error.
 	if handler == nil {
-		return errorsmod.Wrapf(
+		return errorsmod.Wrap(
 			types.ErrMsgIsUnroutable,
 			sdk.MsgTypeURL(msg),
 		)

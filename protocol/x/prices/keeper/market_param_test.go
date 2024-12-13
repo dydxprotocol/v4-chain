@@ -239,7 +239,7 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 			minExchanges:       uint32(1),
 			minPriceChangePpm:  uint32(50),
 			exchangeConfigJson: validExchangeConfigJson,
-			expectedErr: errorsmod.Wrapf(
+			expectedErr: errorsmod.Wrap(
 				types.ErrTickerNotFoundInMarketMap,
 				invalidUpdateCurrencyPair.String(),
 			).Error(),
