@@ -4180,11 +4180,7 @@
       ]
     }
   },
-<<<<<<< HEAD
-  "app_version": "5.2.1-172-g351fcccd",
-=======
   "app_version": "7.0.0-dev0-149-g12cfb908b",
->>>>>>> 7117942b (chore: Add EIGEN,BOME as isolatd market in default test genesis (#2651))
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
