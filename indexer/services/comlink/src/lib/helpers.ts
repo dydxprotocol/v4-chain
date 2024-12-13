@@ -24,6 +24,7 @@ import {
   AssetFromDatabase,
   AssetColumns,
   MarketColumns,
+  VaultFromDatabase, VaultTable, perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -51,9 +52,6 @@ import {
 } from '../types';
 import { ZERO, ZERO_USDC_POSITION } from './constants';
 import { InvalidParamError, NotFoundError } from './errors';
-import { VaultFromDatabase } from '@dydxprotocol-indexer/postgres';
-import { VaultTable } from '@dydxprotocol-indexer/postgres';
-import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 
 /* ------- GENERIC HELPERS ------- */
 

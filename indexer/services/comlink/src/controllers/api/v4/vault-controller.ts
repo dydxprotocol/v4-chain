@@ -1,7 +1,6 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   PnlTicksFromDatabase,
-  PnlTicksTable,
   perpetualMarketRefresher,
   PerpetualMarketFromDatabase,
   USDC_ASSET_ID,
@@ -41,6 +40,7 @@ import {
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
+import { getVaultStartPnl } from '../../../caches/vault-start-pnl';
 import config from '../../../config';
 import {
   aggregateHourlyPnlTicks,
@@ -65,7 +65,6 @@ import {
   VaultsHistoricalPnlRequest,
   AggregatedPnlTick,
 } from '../../../types';
-import { getVaultStartPnl } from '../../../caches/vault-start-pnl';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'vault-controller';
@@ -547,13 +546,8 @@ function getPnlTicksWithCurrentTick(
   return pnlTicks.concat([currentTick]);
 }
 
-export async function getLatestPnlTicks(
-  vaultSubaccountIds: string[],
-): Promise<PnlTicksFromDatabase[]> {
-  const latestPnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getLatestPnlTick(
-    vaultSubaccountIds,
-    DateTime.now().toUTC(),
-  );
+export async function getLatestPnlTicks(): Promise<PnlTicksFromDatabase[]> {
+  const latestPnlTicks: PnlTicksFromDatabase[] = await VaultPnlTicksView.getLatestVaultPnl();
   const adjustedPnlTicks: PnlTicksFromDatabase[] = adjustVaultPnlTicks(
     latestPnlTicks,
     getVaultStartPnl(),

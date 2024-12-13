@@ -1,11 +1,12 @@
+import { NodeEnv } from '@dydxprotocol-indexer/base';
 import {
   PnlTicksFromDatabase,
   PnlTicksTable,
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
+
 import { getVaultMapping, getVaultPnlStartDate } from '../lib/helpers';
 import { VaultMapping } from '../types';
-import { NodeEnv } from '@dydxprotocol-indexer/base';
 
 let vaultStartPnl: PnlTicksFromDatabase[] = [];
 

@@ -24,7 +24,7 @@ import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
 import { DateTime, Settings } from 'luxon';
 import Big from 'big.js';
 import config from '../../../../src/config';
-import { clearVaultStartPnl, startVaultStartPnlCache } from '../../../../src/caches/vault-start-pnl'
+import { clearVaultStartPnl, startVaultStartPnlCache } from '../../../../src/caches/vault-start-pnl';
 
 describe('vault-controller#V4', () => {
   const latestBlockHeight: string = '25';
