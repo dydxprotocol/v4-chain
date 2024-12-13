@@ -9,6 +9,7 @@ import config from './config';
 import IndexV4 from './controllers/api/index-v4';
 import { connect as connectToRedis } from './helpers/redis/redis-controller';
 import Server from './request-helpers/server';
+import { startVaultStartPnlCache } from './caches/vault-start-pnl';
 
 process.on('SIGTERM', () => {
   logger.info({
@@ -42,6 +43,8 @@ async function start() {
   ]);
   wrapBackgroundTask(perpetualMarketRefresher.start(), true, 'startUpdatePerpetualMarkets');
   wrapBackgroundTask(liquidityTierRefresher.start(), true, 'startUpdateLiquidityTiers');
+  // Initialize cache for vault start PnL
+  await startVaultStartPnlCache();
 
   await connectToRedis();
   logger.info({
