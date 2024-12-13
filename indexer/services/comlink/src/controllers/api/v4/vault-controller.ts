@@ -550,10 +550,7 @@ function getPnlTicksWithCurrentTick(
 export async function getLatestPnlTicks(
   vaultSubaccountIds: string[],
 ): Promise<PnlTicksFromDatabase[]> {
-  const latestPnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.getLatestPnlTick(
-    vaultSubaccountIds,
-    DateTime.now().toUTC(),
-  );
+  const latestPnlTicks: PnlTicksFromDatabase[] = await VaultPnlTicksView.getLatestVaultPnl();
   const adjustedPnlTicks: PnlTicksFromDatabase[] = adjustVaultPnlTicks(
     latestPnlTicks,
     getVaultStartPnl(),
