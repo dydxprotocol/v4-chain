@@ -6,7 +6,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
-	marketmapkeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -228,7 +228,7 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 			minExchanges:       uint32(1),
 			minPriceChangePpm:  uint32(50),
 			exchangeConfigJson: validExchangeConfigJson,
-			expectedErr: errorsmod.Wrap(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrMarketParamPairAlreadyExists,
 				"1-1",
 			).Error(),
@@ -239,7 +239,7 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 			minExchanges:       uint32(1),
 			minPriceChangePpm:  uint32(50),
 			exchangeConfigJson: validExchangeConfigJson,
-			expectedErr: errorsmod.Wrap(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrTickerNotFoundInMarketMap,
 				invalidUpdateCurrencyPair.String(),
 			).Error(),

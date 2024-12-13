@@ -86,7 +86,7 @@ func (rpd ReplayProtectionDecorator) AnteHandle(
 						1,
 						[]gometrics.Label{metrics.GetLabelForIntValue(metrics.ExecMode, int(ctx.ExecMode()))},
 					)
-					return ctx, errorsmod.Wrap(sdkerrors.ErrWrongSequence, err.Error())
+					return ctx, errorsmod.Wrapf(sdkerrors.ErrWrongSequence, err.Error())
 				}
 				telemetry.IncrCounterWithLabels(
 					[]string{metrics.TimestampNonce, metrics.Valid, metrics.Count},

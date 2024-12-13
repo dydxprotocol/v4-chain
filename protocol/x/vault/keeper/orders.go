@@ -45,7 +45,7 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 			vaultParams.QuotingParams = &defaultQuotingParams
 		}
 		vault := k.subaccountsKeeper.GetSubaccount(ctx, *vaultId.ToSubaccountId())
-		if len(vault.PerpetualPositions) == 0 {
+		if vault.PerpetualPositions == nil || len(vault.PerpetualPositions) == 0 {
 			if vault.GetUsdcPosition().Cmp(vaultParams.QuotingParams.ActivationThresholdQuoteQuantums.BigInt()) == -1 {
 				continue
 			}

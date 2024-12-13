@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"context"
 	"fmt"
 	"math"
 	"math/big"
@@ -18,7 +17,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/skip-mev/connect/v2/x/marketmap/types/tickermetadata"
+	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
 )
 
 // Function to set hard cap on listed markets in module store
@@ -41,12 +40,10 @@ func (k Keeper) GetMarketsHardCap(ctx sdk.Context) (hardCap uint32) {
 // Function to wrap the creation of a new market
 // Note: This will only list long-tail/isolated markets
 func (k Keeper) CreateMarket(
-	ctx context.Context,
+	ctx sdk.Context,
 	ticker string,
 ) (marketId uint32, err error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	marketId = k.PricesKeeper.AcquireNextMarketID(sdkCtx)
+	marketId = k.PricesKeeper.AcquireNextMarketID(ctx)
 
 	// Get market details from marketmap
 	// TODO: change to use util from marketmap when available
@@ -54,14 +51,14 @@ func (k Keeper) CreateMarket(
 	if err != nil {
 		return 0, err
 	}
-	marketMapDetails, err := k.MarketMapKeeper.GetMarket(sdkCtx, marketMapPair.String())
+	marketMapDetails, err := k.MarketMapKeeper.GetMarket(ctx, marketMapPair.String())
 	if err != nil {
 		return 0, types.ErrMarketNotFound
 	}
 
 	// Create a new market
 	market, err := k.PricesKeeper.CreateMarket(
-		sdkCtx,
+		ctx,
 		pricestypes.MarketParam{
 			Id:                marketId,
 			Pair:              ticker,

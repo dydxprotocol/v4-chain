@@ -752,7 +752,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	// negative TNC subaccount was seen.
 	if len(matchDeleveraging.GetFills()) == 0 {
 		if !shouldDeleverageAtBankruptcyPrice {
-			return errorsmod.Wrap(
+			return errorsmod.Wrapf(
 				types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
 				fmt.Sprintf(
 					"PersistMatchDeleveragingToState: zero-fill deleveraging operation included for subaccount %+v"+

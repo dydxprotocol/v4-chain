@@ -2,7 +2,6 @@ package price_function
 
 import (
 	"fmt"
-
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 )
 
@@ -36,6 +35,6 @@ func (e *ExchangeErrorImpl) GetExchangeId() types.ExchangeId {
 func NewExchangeError(exchangeId types.ExchangeId, msg string) ExchangeError {
 	return &ExchangeErrorImpl{
 		exchangeId: exchangeId,
-		err:        fmt.Errorf("%s", msg),
+		err:        fmt.Errorf(msg),
 	}
 }

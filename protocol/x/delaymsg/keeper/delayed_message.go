@@ -188,7 +188,7 @@ func validateSigners(signers [][]byte) error {
 		)
 	}
 	if !bytes.Equal(signers[0], types.ModuleAddress) {
-		return errorsmod.Wrap(
+		return errorsmod.Wrapf(
 			types.ErrInvalidSigner,
 			"message signer must be delaymsg module address",
 		)
@@ -201,7 +201,7 @@ func (k Keeper) ValidateMsg(msg sdk.Msg, signers [][]byte) error {
 	handler := k.router.Handler(msg)
 	// If the message type is not routable, return an error.
 	if handler == nil {
-		return errorsmod.Wrap(
+		return errorsmod.Wrapf(
 			types.ErrMsgIsUnroutable,
 			sdk.MsgTypeURL(msg),
 		)

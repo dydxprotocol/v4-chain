@@ -1,15 +1,14 @@
 package keeper
 
 import (
-	"context"
 	"fmt"
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	slinkytypes "github.com/skip-mev/connect/v2/pkg/types"
-	oracletypes "github.com/skip-mev/connect/v2/x/oracle/types"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
+	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -28,28 +27,24 @@ func (k Keeper) getCurrencyPairIDStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.CurrencyPairIDPrefix))
 }
 
-func (k Keeper) GetCurrencyPairFromID(ctx context.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	mp, found := k.GetMarketParam(sdkCtx, uint32(id))
+func (k Keeper) GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool) {
+	mp, found := k.GetMarketParam(ctx, uint32(id))
 	if !found {
 		return cp, false
 	}
 
 	cp, err := slinky.MarketPairToCurrencyPair(mp.Pair)
 	if err != nil {
-		k.Logger(sdkCtx).Error("CurrencyPairFromString", "error", err)
+		k.Logger(ctx).Error("CurrencyPairFromString", "error", err)
 		return cp, false
 	}
 
 	return cp, true
 }
 
-func (k Keeper) GetIDForCurrencyPair(ctx context.Context, cp slinkytypes.CurrencyPair) (uint64, bool) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
+func (k Keeper) GetIDForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (uint64, bool) {
 	// Try to get corresponding market ID of the currency pair from the store
-	marketId, found := k.GetCurrencyPairIDFromStore(sdkCtx, cp)
+	marketId, found := k.GetCurrencyPairIDFromStore(ctx, cp)
 	if found {
 		return uint64(marketId), true
 	}
@@ -84,15 +79,12 @@ func (k Keeper) RemoveCurrencyPairFromStore(ctx sdk.Context, cp slinkytypes.Curr
 	currencyPairIDStore.Delete([]byte(currencyPairString))
 }
 
-func (k Keeper) GetPriceForCurrencyPair(ctx context.Context, cp slinkytypes.CurrencyPair) (oracletypes.QuotePrice,
-	error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
+func (k Keeper) GetPriceForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (oracletypes.QuotePrice, error) {
 	id, found := k.GetIDForCurrencyPair(ctx, cp)
 	if !found {
 		return oracletypes.QuotePrice{}, fmt.Errorf("currency pair %s not found", cp.String())
 	}
-	mp, err := k.GetMarketPrice(sdkCtx, uint32(id))
+	mp, err := k.GetMarketPrice(ctx, uint32(id))
 	if err != nil {
 		return oracletypes.QuotePrice{}, fmt.Errorf("currency pair %s not found", cp.String())
 	}
@@ -101,10 +93,8 @@ func (k Keeper) GetPriceForCurrencyPair(ctx context.Context, cp slinkytypes.Curr
 	}, nil
 }
 
-func (k Keeper) GetNumCurrencyPairs(ctx context.Context) (uint64, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	marketPriceStore := k.getMarketPriceStore(sdkCtx)
+func (k Keeper) GetNumCurrencyPairs(ctx sdk.Context) (uint64, error) {
+	marketPriceStore := k.getMarketPriceStore(ctx)
 
 	var numMarketPrices uint64
 
@@ -121,12 +111,12 @@ func (k Keeper) GetNumCurrencyPairs(ctx context.Context) (uint64, error) {
 }
 
 // GetNumRemovedCurrencyPairs is currently a no-op since we don't support removing Markets right now.
-func (k Keeper) GetNumRemovedCurrencyPairs(_ context.Context) (uint64, error) {
+func (k Keeper) GetNumRemovedCurrencyPairs(_ sdk.Context) (uint64, error) {
 	return 0, nil
 }
 
 // GetAllCurrencyPairs is not used with the DefaultCurrencyPair strategy.
-// See https://github.com/skip-mev/connect/v2/blob/main/abci/strategies/currencypair/default.go
-func (k Keeper) GetAllCurrencyPairs(_ context.Context) []slinkytypes.CurrencyPair {
+// See https://github.com/skip-mev/slinky/blob/main/abci/strategies/currencypair/default.go
+func (k Keeper) GetAllCurrencyPairs(ctx sdk.Context) []slinkytypes.CurrencyPair {
 	return nil
 }

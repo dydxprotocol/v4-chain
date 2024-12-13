@@ -22,7 +22,7 @@ var (
 	invalidInnerMsgErr_AppInjected = fmt.Errorf("Invalid nested msg: app-injected msg type")
 	invalidInnerMsgErr_Nested      = fmt.Errorf("Invalid nested msg: double-nested msg type")
 	invalidInnerMsgErr_Dydx        = fmt.Errorf("Invalid nested msg for MsgExec: dydx msg type")
-	invalidInnerMsgErr_Connect     = fmt.Errorf("Invalid nested msg for MsgExec: Connect msg type")
+	invalidInnerMsgErr_Slinky      = fmt.Errorf("Invalid nested msg for MsgExec: Slinky msg type")
 )
 
 func TestIsNestedMsg_Empty(t *testing.T) {
@@ -107,32 +107,32 @@ func TestIsDydxMsg_Valid(t *testing.T) {
 	}
 }
 
-func TestIsConnectMsg_Invalid(t *testing.T) {
-	allConnectMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
-		appmsgs.NormalMsgsConnect,
+func TestIsSlinkyMsg_Invalid(t *testing.T) {
+	allSlinkyMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
+		appmsgs.NormalMsgsSlinky,
 	)
-	allMsgsMinusConnect := lib.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
-	for key := range allConnectMsgs {
-		delete(allMsgsMinusConnect, key)
+	allMsgsMinusSlinky := lib.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
+	for key := range allSlinkyMsgs {
+		delete(allMsgsMinusSlinky, key)
 	}
-	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allMsgsMinusConnect)
+	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allMsgsMinusSlinky)
 
 	for _, sampleMsg := range allNonNilSampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
-			require.False(t, ante.IsConnectMsg(sampleMsg.Msg))
+			require.False(t, ante.IsSlinkyMsg(sampleMsg.Msg))
 		})
 	}
 }
 
-func TestIsConnectMsg_Valid(t *testing.T) {
-	allConnectMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
-		appmsgs.NormalMsgsConnect,
+func TestIsSlinkyMsg_Valid(t *testing.T) {
+	allSlinkyMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
+		appmsgs.NormalMsgsSlinky,
 	)
-	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allConnectMsgs)
+	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allSlinkyMsgs)
 
 	for _, sampleMsg := range allNonNilSampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {
-			require.True(t, ante.IsConnectMsg(sampleMsg.Msg))
+			require.True(t, ante.IsSlinkyMsg(sampleMsg.Msg))
 		})
 	}
 }
@@ -174,9 +174,9 @@ func TestValidateNestedMsg(t *testing.T) {
 			msg:         &testmsgs.MsgExecWithDydxMessage,
 			expectedErr: invalidInnerMsgErr_Dydx,
 		},
-		"Invalid MsgExec: Connect custom msg": {
-			msg:         &testmsgs.MsgExecWithConnectMessage,
-			expectedErr: invalidInnerMsgErr_Connect,
+		"Invalid MsgExec: Slinky custom msg": {
+			msg:         &testmsgs.MsgExecWithSlinkyMessage,
+			expectedErr: invalidInnerMsgErr_Slinky,
 		},
 		"Valid: empty inner msg": {
 			msg:         testmsgs.MsgSubmitProposalWithEmptyInner,
