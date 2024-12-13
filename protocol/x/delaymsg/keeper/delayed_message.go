@@ -188,7 +188,7 @@ func validateSigners(signers [][]byte) error {
 		)
 	}
 	if !bytes.Equal(signers[0], types.ModuleAddress) {
-		return errorsmod.Wrapf(
+		return errorsmod.Wrap(
 			types.ErrInvalidSigner,
 			"message signer must be delaymsg module address",
 		)

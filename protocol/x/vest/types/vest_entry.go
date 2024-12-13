@@ -7,11 +7,11 @@ import (
 
 func (entry VestEntry) Validate() error {
 	if entry.VesterAccount == "" {
-		return errorsmod.Wrapf(ErrInvalidVesterAccount, "vester account cannot be empty")
+		return errorsmod.Wrap(ErrInvalidVesterAccount, "vester account cannot be empty")
 	}
 
 	if entry.TreasuryAccount == "" {
-		return errorsmod.Wrapf(ErrInvalidTreasuryAccount, "treasury account cannot be empty")
+		return errorsmod.Wrap(ErrInvalidTreasuryAccount, "treasury account cannot be empty")
 	}
 
 	if err := sdk.ValidateDenom(entry.Denom); err != nil {
@@ -23,11 +23,11 @@ func (entry VestEntry) Validate() error {
 	}
 
 	if entry.StartTime.Location().String() != "UTC" {
-		return errorsmod.Wrapf(ErrInvalidTimeZone, "start_time must be in UTC")
+		return errorsmod.Wrap(ErrInvalidTimeZone, "start_time must be in UTC")
 	}
 
 	if entry.EndTime.Location().String() != "UTC" {
-		return errorsmod.Wrapf(ErrInvalidTimeZone, "end_time must be in UTC")
+		return errorsmod.Wrap(ErrInvalidTimeZone, "end_time must be in UTC")
 	}
 	return nil
 }
