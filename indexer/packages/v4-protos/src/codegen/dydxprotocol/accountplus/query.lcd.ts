@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryParamsRequest, QueryParamsResponseSDKType, GetAuthenticatorRequest, GetAuthenticatorResponseSDKType, GetAuthenticatorsRequest, GetAuthenticatorsResponseSDKType } from "./query";
+import { QueryParamsRequest, QueryParamsResponseSDKType, GetAuthenticatorRequest, GetAuthenticatorResponseSDKType, GetAuthenticatorsRequest, GetAuthenticatorsResponseSDKType, AccountStateRequest, AccountStateResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -12,6 +12,7 @@ export class LCDQueryClient {
     this.params = this.params.bind(this);
     this.getAuthenticator = this.getAuthenticator.bind(this);
     this.getAuthenticators = this.getAuthenticators.bind(this);
+    this.accountState = this.accountState.bind(this);
   }
   /* Parameters queries the parameters of the module. */
 
@@ -33,6 +34,13 @@ export class LCDQueryClient {
   async getAuthenticators(params: GetAuthenticatorsRequest): Promise<GetAuthenticatorsResponseSDKType> {
     const endpoint = `dydxprotocol/accountplus/authenticators/${params.account}`;
     return await this.req.get<GetAuthenticatorsResponseSDKType>(endpoint);
+  }
+  /* Queries for an account state (timestamp nonce). */
+
+
+  async accountState(params: AccountStateRequest): Promise<AccountStateResponseSDKType> {
+    const endpoint = `dydxprotocol/accountplus/account_state/${params.address}`;
+    return await this.req.get<AccountStateResponseSDKType>(endpoint);
   }
 
 }
