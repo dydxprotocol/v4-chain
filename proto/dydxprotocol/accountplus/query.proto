@@ -3,6 +3,7 @@ package dydxprotocol.accountplus;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "dydxprotocol/accountplus/accountplus.proto";
 import "dydxprotocol/accountplus/models.proto";
 import "dydxprotocol/accountplus/params.proto";
 
@@ -28,7 +29,20 @@ service Query {
     option (google.api.http).get =
         "/dydxprotocol/accountplus/authenticators/{account}";
   }
+
+  // Queries for an account state (timestamp nonce).
+  rpc AccountState(AccountStateRequest) returns (AccountStateResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/accountplus/account_state/{address}";
+  }
 }
+
+// AccountStateRequest is request type for the Query/AccountState RPC method.
+message AccountStateRequest { string address = 1; }
+
+// AccountStateResponse is response type for the Query/GetAccountState RPC
+// method.
+message AccountStateResponse { AccountState account_state = 1; }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
