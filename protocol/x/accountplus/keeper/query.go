@@ -67,3 +67,26 @@ func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*t
 
 	return &types.QueryParamsResponse{Params: k.GetParams(ctx)}, nil
 }
+
+// AccountState returns the x/accountplus account state for an address
+func (k Keeper) AccountState(
+	ctx context.Context,
+	request *types.AccountStateRequest,
+) (*types.AccountStateResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := sdk.AccAddressFromBech32(request.Address)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "not valid bech32 address")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// GetAccountState returns `empty, false` AccountState if the account does not exist.
+	accountState, _ := k.GetAccountState(sdkCtx, addr)
+
+	return &types.AccountStateResponse{
+		AccountState: &accountState,
+	}, nil
+}

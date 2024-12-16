@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryParamsRequest, QueryParamsResponse, GetAuthenticatorRequest, GetAuthenticatorResponse, GetAuthenticatorsRequest, GetAuthenticatorsResponse } from "./query";
+import { QueryParamsRequest, QueryParamsResponse, GetAuthenticatorRequest, GetAuthenticatorResponse, GetAuthenticatorsRequest, GetAuthenticatorsResponse, AccountStateRequest, AccountStateResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -13,6 +13,9 @@ export interface Query {
   /** Queries all authenticators for a given account. */
 
   getAuthenticators(request: GetAuthenticatorsRequest): Promise<GetAuthenticatorsResponse>;
+  /** Queries for an account state (timestamp nonce). */
+
+  accountState(request: AccountStateRequest): Promise<AccountStateResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -22,6 +25,7 @@ export class QueryClientImpl implements Query {
     this.params = this.params.bind(this);
     this.getAuthenticator = this.getAuthenticator.bind(this);
     this.getAuthenticators = this.getAuthenticators.bind(this);
+    this.accountState = this.accountState.bind(this);
   }
 
   params(request: QueryParamsRequest = {}): Promise<QueryParamsResponse> {
@@ -42,6 +46,12 @@ export class QueryClientImpl implements Query {
     return promise.then(data => GetAuthenticatorsResponse.decode(new _m0.Reader(data)));
   }
 
+  accountState(request: AccountStateRequest): Promise<AccountStateResponse> {
+    const data = AccountStateRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.accountplus.Query", "AccountState", data);
+    return promise.then(data => AccountStateResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -57,6 +67,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     getAuthenticators(request: GetAuthenticatorsRequest): Promise<GetAuthenticatorsResponse> {
       return queryService.getAuthenticators(request);
+    },
+
+    accountState(request: AccountStateRequest): Promise<AccountStateResponse> {
+      return queryService.accountState(request);
     }
 
   };
