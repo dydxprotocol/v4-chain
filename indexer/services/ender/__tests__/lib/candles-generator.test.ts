@@ -498,7 +498,7 @@ describe('candleHelper', () => {
     await Promise.all(
       _.map(Object.values(CandleResolution), (resolution: CandleResolution) => {
         return CandleTable.create({
-          startedAt: previousStartedAt,
+          startedAt: startTime,
           ticker: testConstants.defaultPerpetualMarket.ticker,
           resolution,
           low: existingPrice,
