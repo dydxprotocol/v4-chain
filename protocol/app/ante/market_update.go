@@ -1,15 +1,14 @@
 package ante
 
 import (
-	"context"
 	"errors"
 	"fmt"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	slinkytypes "github.com/skip-mev/connect/v2/pkg/types"
-	mmtypes "github.com/skip-mev/connect/v2/x/marketmap/types"
+	mmtypes "github.com/skip-mev/slinky/x/marketmap/types"
 
 	slinkylibs "github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -20,7 +19,7 @@ var ErrRestrictedMarketUpdates = errors.New("cannot call MsgUpdateMarkets or Msg
 	"on a restricted market")
 
 type MarketMapKeeper interface {
-	GetAllMarkets(ctx context.Context) (map[string]mmtypes.Market, error)
+	GetAllMarkets(ctx sdk.Context) (map[string]mmtypes.Market, error)
 }
 
 var (

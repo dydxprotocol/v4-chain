@@ -7,8 +7,8 @@ import (
 	"cosmossdk.io/log"
 	"github.com/hashicorp/go-version"
 
-	oracleclient "github.com/skip-mev/connect/v2/service/clients/oracle"
-	"github.com/skip-mev/connect/v2/service/servers/oracle/types"
+	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
+	"github.com/skip-mev/slinky/service/servers/oracle/types"
 )
 
 // SidecarVersionChecker is a lightweight process run in a goroutine by the slinky client.

@@ -12,7 +12,7 @@ import (
 )
 
 const DYDX_MSG_PREFIX = "/" + constants.AppName
-const CONNECT_MSG_PREFIX = "/connect"
+const SLINKY_MSG_PREFIX = "/slinky"
 
 // IsNestedMsg returns true if the given msg is a nested msg.
 func IsNestedMsg(msg sdk.Msg) bool {
@@ -33,9 +33,9 @@ func IsDydxMsg(msg sdk.Msg) bool {
 	return strings.HasPrefix(sdk.MsgTypeURL(msg), DYDX_MSG_PREFIX)
 }
 
-// IsConnectMsg returns true if the given msg is a Connect custom msg.
-func IsConnectMsg(msg sdk.Msg) bool {
-	return strings.HasPrefix(sdk.MsgTypeURL(msg), CONNECT_MSG_PREFIX)
+// IsSlinkyMsg returns true if the given msg is a Slinky custom msg.
+func IsSlinkyMsg(msg sdk.Msg) bool {
+	return strings.HasPrefix(sdk.MsgTypeURL(msg), SLINKY_MSG_PREFIX)
 }
 
 // ValidateNestedMsg returns err if the given msg is an invalid nested msg.
@@ -86,8 +86,8 @@ func validateInnerMsg(msg sdk.Msg) error {
 			if IsDydxMsg(inner) {
 				return fmt.Errorf("Invalid nested msg for MsgExec: dydx msg type")
 			}
-			if IsConnectMsg(inner) {
-				return fmt.Errorf("Invalid nested msg for MsgExec: Connect msg type")
+			if IsSlinkyMsg(inner) {
+				return fmt.Errorf("Invalid nested msg for MsgExec: Slinky msg type")
 			}
 		}
 
