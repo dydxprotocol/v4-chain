@@ -190,6 +190,14 @@ func TestReferredBy(t *testing.T) {
 			expected:    nil,
 			expectError: nil,
 		},
+		"Invalid bech32 address": {
+			req: &types.ReferredByRequest{
+				Address: "Foo",
+			},
+			setup:       func(ctx sdk.Context, k keeper.Keeper) {},
+			expected:    nil,
+			expectError: types.ErrInvalidAddress,
+		},
 	}
 
 	for name, tc := range testCases {
