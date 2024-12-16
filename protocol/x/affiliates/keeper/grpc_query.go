@@ -59,6 +59,13 @@ func (k Keeper) ReferredBy(ctx context.Context,
 	req *types.ReferredByRequest) (*types.ReferredByResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	// Check req.Address is a valid bech32 address
+	_, err := sdk.AccAddressFromBech32(req.GetAddress())
+	if err != nil {
+		return nil, errorsmod.Wrapf(types.ErrInvalidAddress, "address: %s, error: %s",
+			req.GetAddress(), err.Error())
+	}
+
 	affiliateAddr, exists := k.GetReferredBy(sdkCtx, req.GetAddress())
 	if !exists {
 		return &types.ReferredByResponse{}, nil
