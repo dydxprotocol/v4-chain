@@ -489,15 +489,12 @@ describe('candleHelper', () => {
     const usdVolume: string = Big(existingPrice).times(baseTokenVolume).toString();
     const orderbookMidPriceClose = '7500';
     const orderbookMidPriceOpen = '8000';
-<<<<<<< HEAD
-=======
     // Set candle start time to be far in the past to ensure all candles are new
     const startTime: IsoString = helpers.calculateNormalizedCandleStartTime(
       testConstants.createdDateTime.minus({ minutes: 100 }),
       CandleResolution.ONE_MINUTE,
     ).toUTC().toISO();
 
->>>>>>> 196dc84f (Improve query to find candles map. (#2650))
     await Promise.all(
       _.map(Object.values(CandleResolution), (resolution: CandleResolution) => {
         return CandleTable.create({
