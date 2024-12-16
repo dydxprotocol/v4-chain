@@ -27,7 +27,7 @@ func (entry VestEntry) Validate() error {
 	}
 
 	if entry.EndTime.Location().String() != "UTC" {
-		return errorsmod.Wrap(ErrInvalidTimeZone, "start_time must be in UTC")
+		return errorsmod.Wrap(ErrInvalidTimeZone, "end_time must be in UTC")
 	}
 	return nil
 }

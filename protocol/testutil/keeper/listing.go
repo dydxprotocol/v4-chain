@@ -17,7 +17,7 @@ import (
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	subaccountskeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
-	marketmapkeeper "github.com/skip-mev/connect/v2/x/marketmap/keeper"
+	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 
 	"testing"

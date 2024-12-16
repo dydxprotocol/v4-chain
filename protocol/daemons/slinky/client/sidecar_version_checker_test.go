@@ -10,7 +10,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/slinky/client"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/skip-mev/connect/v2/service/servers/oracle/types"
+	"github.com/skip-mev/slinky/service/servers/oracle/types"
 )
 
 func TestSidecarVersionChecker(t *testing.T) {
