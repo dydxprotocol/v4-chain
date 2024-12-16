@@ -3,38 +3,38 @@ import { Params, ParamsSDKType } from "./params";
 import { AccountAuthenticator, AccountAuthenticatorSDKType } from "./models";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
-/** AccountStateResponse is request type for the Query/AccountState RPC method. */
+/** AccountStateRequest is request type for the Query/AccountState RPC method. */
 
 export interface AccountStateRequest {
-  /** AccountStateResponse is request type for the Query/AccountState RPC method. */
+  /** AccountStateRequest is request type for the Query/AccountState RPC method. */
   address: string;
 }
-/** AccountStateResponse is request type for the Query/AccountState RPC method. */
+/** AccountStateRequest is request type for the Query/AccountState RPC method. */
 
 export interface AccountStateRequestSDKType {
-  /** AccountStateResponse is request type for the Query/AccountState RPC method. */
+  /** AccountStateRequest is request type for the Query/AccountState RPC method. */
   address: string;
 }
 /**
- * GetAccountStateResponse is response type for the Query/GetAccountState RPC
+ * AccountStateResponse is response type for the Query/GetAccountState RPC
  * method.
  */
 
 export interface AccountStateResponse {
   /**
-   * GetAccountStateResponse is response type for the Query/GetAccountState RPC
+   * AccountStateResponse is response type for the Query/GetAccountState RPC
    * method.
    */
   accountState?: AccountState;
 }
 /**
- * GetAccountStateResponse is response type for the Query/GetAccountState RPC
+ * AccountStateResponse is response type for the Query/GetAccountState RPC
  * method.
  */
 
 export interface AccountStateResponseSDKType {
   /**
-   * GetAccountStateResponse is response type for the Query/GetAccountState RPC
+   * AccountStateResponse is response type for the Query/GetAccountState RPC
    * method.
    */
   account_state?: AccountStateSDKType;

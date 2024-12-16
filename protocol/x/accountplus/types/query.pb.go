@@ -29,7 +29,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// AccountStateResponse is request type for the Query/AccountState RPC method.
+// AccountStateRequest is request type for the Query/AccountState RPC method.
 type AccountStateRequest struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
@@ -74,7 +74,8 @@ func (m *AccountStateRequest) GetAddress() string {
 	return ""
 }
 
-// GetAccountStateResponse is response type for the Query/GetAccountState RPC method.
+// AccountStateResponse is response type for the Query/GetAccountState RPC
+// method.
 type AccountStateResponse struct {
 	AccountState *AccountState `protobuf:"bytes,1,opt,name=account_state,json=accountState,proto3" json:"account_state,omitempty"`
 }

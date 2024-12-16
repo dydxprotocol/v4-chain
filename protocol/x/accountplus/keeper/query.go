@@ -68,7 +68,7 @@ func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*t
 	return &types.QueryParamsResponse{Params: k.GetParams(ctx)}, nil
 }
 
-// GetAccountState returns the x/accountplus account state for an address
+// AccountState returns the x/accountplus account state for an address
 func (k Keeper) AccountState(
 	ctx context.Context,
 	request *types.AccountStateRequest,

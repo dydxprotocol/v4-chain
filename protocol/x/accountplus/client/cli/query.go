@@ -119,7 +119,7 @@ func CmdQueryGetAllAuthenticators() *cobra.Command {
 func CmdQueryAccountState() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "account-state [address]",
-		Short: "Geta account state for an address",
+		Short: "Get account state for an address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

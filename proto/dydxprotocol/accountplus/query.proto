@@ -37,10 +37,10 @@ service Query {
   }
 }
 
-// AccountStateResponse is request type for the Query/AccountState RPC method.
+// AccountStateRequest is request type for the Query/AccountState RPC method.
 message AccountStateRequest { string address = 1; }
 
-// GetAccountStateResponse is response type for the Query/GetAccountState RPC
+// AccountStateResponse is response type for the Query/GetAccountState RPC
 // method.
 message AccountStateResponse { AccountState account_state = 1; }
 
