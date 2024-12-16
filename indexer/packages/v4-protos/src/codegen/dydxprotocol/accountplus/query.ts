@@ -1,7 +1,44 @@
+import { AccountState, AccountStateSDKType } from "./accountplus";
 import { Params, ParamsSDKType } from "./params";
 import { AccountAuthenticator, AccountAuthenticatorSDKType } from "./models";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
+/** AccountStateResponse is request type for the Query/AccountState RPC method. */
+
+export interface AccountStateRequest {
+  /** AccountStateResponse is request type for the Query/AccountState RPC method. */
+  address: string;
+}
+/** AccountStateResponse is request type for the Query/AccountState RPC method. */
+
+export interface AccountStateRequestSDKType {
+  /** AccountStateResponse is request type for the Query/AccountState RPC method. */
+  address: string;
+}
+/**
+ * GetAccountStateResponse is response type for the Query/GetAccountState RPC
+ * method.
+ */
+
+export interface AccountStateResponse {
+  /**
+   * GetAccountStateResponse is response type for the Query/GetAccountState RPC
+   * method.
+   */
+  accountState?: AccountState;
+}
+/**
+ * GetAccountStateResponse is response type for the Query/GetAccountState RPC
+ * method.
+ */
+
+export interface AccountStateResponseSDKType {
+  /**
+   * GetAccountStateResponse is response type for the Query/GetAccountState RPC
+   * method.
+   */
+  account_state?: AccountStateSDKType;
+}
 /** QueryParamsRequest is request type for the Query/Params RPC method. */
 
 export interface QueryParamsRequest {}
@@ -64,6 +101,96 @@ export interface GetAuthenticatorResponse {
 export interface GetAuthenticatorResponseSDKType {
   account_authenticator?: AccountAuthenticatorSDKType;
 }
+
+function createBaseAccountStateRequest(): AccountStateRequest {
+  return {
+    address: ""
+  };
+}
+
+export const AccountStateRequest = {
+  encode(message: AccountStateRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.address !== "") {
+      writer.uint32(10).string(message.address);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AccountStateRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAccountStateRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.address = reader.string();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AccountStateRequest>): AccountStateRequest {
+    const message = createBaseAccountStateRequest();
+    message.address = object.address ?? "";
+    return message;
+  }
+
+};
+
+function createBaseAccountStateResponse(): AccountStateResponse {
+  return {
+    accountState: undefined
+  };
+}
+
+export const AccountStateResponse = {
+  encode(message: AccountStateResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.accountState !== undefined) {
+      AccountState.encode(message.accountState, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AccountStateResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAccountStateResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.accountState = AccountState.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AccountStateResponse>): AccountStateResponse {
+    const message = createBaseAccountStateResponse();
+    message.accountState = object.accountState !== undefined && object.accountState !== null ? AccountState.fromPartial(object.accountState) : undefined;
+    return message;
+  }
+
+};
 
 function createBaseQueryParamsRequest(): QueryParamsRequest {
   return {};
