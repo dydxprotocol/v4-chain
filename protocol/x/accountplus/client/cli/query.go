@@ -27,6 +27,7 @@ func GetQueryCmd() *cobra.Command {
 		CmdQueryParam(),
 		CmdQueryGetAuthenticator(),
 		CmdQueryGetAllAuthenticators(),
+		CmdQueryAccountState(),
 	)
 	return cmd
 }
