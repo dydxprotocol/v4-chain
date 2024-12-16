@@ -15,7 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/marketmap"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	marketmaptypes "github.com/skip-mev/connect/v2/x/marketmap/types"
+	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 )
 
 // genNumMarkets returns randomized num markets.

@@ -68,7 +68,7 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vesttypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-	marketmapmoduletypes "github.com/skip-mev/connect/v2/x/marketmap/types"
+	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
