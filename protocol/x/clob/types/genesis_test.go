@@ -101,19 +101,6 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedError: errors.New("duplicated id for clobPair"),
 		},
-		"gap in clobPair": {
-			genState: &types.GenesisState{
-				ClobPairs: []types.ClobPair{
-					{
-						Id: uint32(0),
-					},
-					{
-						Id: uint32(2),
-					},
-				},
-			},
-			expectedError: errors.New("found gap in clobPair id"),
-		},
 		"spread to maintenance margin ratio of 0 is invalid": {
 			genState: &types.GenesisState{
 				LiquidationsConfig: types.LiquidationsConfig{

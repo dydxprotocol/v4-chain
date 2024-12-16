@@ -542,6 +542,26 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.liquidity_tier' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[32].params.market_type' -v '1'
 
+	# Perpetual (Isolated): EIGEN-USD
+	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.perpetuals.[]' -v "{}"
+	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].params.ticker' -v 'EIGEN-USD'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].params.id' -v '300'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].params.market_id' -v '300'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].params.atomic_resolution' -v '-6'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].params.liquidity_tier' -v '4'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[33].params.market_type' -v '2' # Isolated
+
+	# Perpetual (Isolated): BOME-USD
+	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.perpetuals.[]' -v "{}"
+	dasel put -t string -f "$GENESIS" '.app_state.perpetuals.perpetuals.[34].params.ticker' -v 'BOME-USD'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[34].params.id' -v '301'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[34].params.market_id' -v '301'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[34].params.atomic_resolution' -v '-3'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[34].params.default_funding_ppm' -v '0'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[34].params.liquidity_tier' -v '4'
+	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.perpetuals.[34].params.market_type' -v '2' # Isolated
+
 	# Update MarketMap module.
 	dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map' -v "{}"
 	dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets' -v "{}"
@@ -1254,7 +1274,43 @@ function edit_genesis() {
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.provider_configs.[]' -v '{"name": "kucoin_ws", "off_chain_ticker": "BTC-USDT", "normalize_by_pair": {"Base": "BTC", "Quote": "USD"}, "invert": true}'
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.USDT/USD.provider_configs.[]' -v '{"name": "okx_ws", "off_chain_ticker": "USDC-USDT", "invert": true}'
 
+    # Marketmap: EIGEN-USD
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD' -v "{}"
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.ticker' -v "{}" 
 
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.ticker.currency_pair' -v "{}"
+    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.ticker.currency_pair.Base' -v 'EIGEN'
+    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.ticker.currency_pair.Quote' -v 'USD'
+
+    dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.ticker.decimals' -v '9'
+    dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.ticker.min_provider_count' -v '1'
+    dasel put -t bool -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.ticker.enabled' -v 'true'
+    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.ticker.metadata_JSON' -v '{"reference_price":3648941500,"liquidity":3099304,"aggregate_ids":[{"venue":"coinmarketcap","ID":"30494"}]}'
+
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.provider_configs.[]' -v '{"name": "okx_ws", "off_chain_ticker": "EIGEN-USDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}, "invert": false}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.provider_configs.[]' -v '{"name": "bybit_ws", "off_chain_ticker": "EIGENUSDT", "normalize_by_pair": {"Base": "USDT", "Quote": "USD"}, "invert": false}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.provider_configs.[]' -v '{"name": "crypto_dot_com_ws", "off_chain_ticker": "EIGEN_USD"}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.provider_configs.[]' -v '{"name": "coinbase_ws", "off_chain_ticker": "EIGEN-USD"}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.EIGEN/USD.provider_configs.[]' -v '{"name": "kraken_api", "off_chain_ticker": "EIGENUSD"}'
+
+	# Marketmap: BOME-USD
+	dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD' -v "{}"
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.ticker' -v "{}" 
+
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.ticker.currency_pair' -v "{}"
+    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.ticker.currency_pair.Base' -v 'BOME'
+    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.ticker.currency_pair.Quote' -v 'USD'
+
+    dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.ticker.decimals' -v '12'
+    dasel put -t int -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.ticker.min_provider_count' -v '1'
+    dasel put -t bool -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.ticker.enabled' -v 'true'
+    dasel put -t string -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.ticker.metadata_JSON' -v '{"reference_price":6051284618,"liquidity":748591,"aggregate_ids":[{"venue":"coinmarketcap","ID":"29870"}]}'
+
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.provider_configs.[]' -v '{"name":"kucoin_ws","off_chain_ticker":"BOME-USDT","normalize_by_pair":{"Base":"USDT","Quote":"USD"},"invert":false,"metadata_JSON":""}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.provider_configs.[]' -v '{"name":"huobi_ws","off_chain_ticker":"bomeusdt","normalize_by_pair":{"Base":"USDT","Quote":"USD"},"invert":false,"metadata_JSON":""}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.provider_configs.[]' -v '{"name":"bybit_ws","off_chain_ticker":"BOMEUSDT","normalize_by_pair":{"Base":"USDT","Quote":"USD"},"invert":false,"metadata_JSON":""}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.provider_configs.[]' -v '{"name":"raydium_api","off_chain_ticker":"BOME,RAYDIUM,UKHH6C7MMYIWCF1B9PNWE25TSPKDDT3H5PQZGZ74J82/SOL,RAYDIUM,SO11111111111111111111111111111111111111112","normalize_by_pair":{"Base":"SOL","Quote":"USD"},"invert":false,"metadata_JSON":"{\"base_token_vault\":{\"token_vault_address\":\"FBba2XsQVhkoQDMfbNLVmo7dsvssdT39BMzVc2eFfE21\",\"token_decimals\":6},\"quote_token_vault\":{\"token_vault_address\":\"GuXKCb9ibwSeRSdSYqaCL3dcxBZ7jJcj6Y7rDwzmUBu9\",\"token_decimals\":9},\"amm_info_address\":\"DSUvc5qf5LJHHV5e2tD184ixotSnCnwj7i4jJa4Xsrmt\",\"open_orders_address\":\"38p42yoKFWgxw2LCbB96wAKa2LwAxiBArY3fc3eA9yWv\"}"}'
+    dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.BOME/USD.provider_configs.[]' -v '{"name":"okx_ws","off_chain_ticker":"BOME-USDT","normalize_by_pair":{"Base":"USDT","Quote":"USD"},"invert":false,"metadata_JSON":""}'
     # Marketmap: DYDX-USD
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DYDX/USD' -v "{}"
     dasel put -t json -f "$GENESIS" '.app_state.marketmap.market_map.markets.DYDX/USD.ticker' -v "{}" 
@@ -1802,6 +1858,32 @@ function edit_genesis() {
 	dydx_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/dydx_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$dydx_exchange_config_json"
 
+	# Market: EIGEN-USD
+	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[35].pair' -v 'EIGEN-USD'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[35].id' -v '300'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[35].exponent' -v '-9'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[35].min_price_change_ppm' -v '800'  # 0.080%
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[35].min_exchanges' -v '1'
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[35].exchange_config_json' -v '{"placeholder":"placeholder"}'
+	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[35].id' -v '300'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[35].exponent' -v '-9'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[35].price' -v '4973000000'          # $4.973
+
+	# Market: BOME-USD
+	dasel put -t json -f "$GENESIS" '.app_state.prices.market_params.[]' -v "{}"
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[36].pair' -v 'BOME-USD'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[36].id' -v '301'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[36].exponent' -v '-12'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[36].min_price_change_ppm' -v '800'  # 0.080%
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[36].min_exchanges' -v '1'
+	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[36].exchange_config_json' -v '{"placeholder":"placeholder"}'
+	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[36].id' -v '301'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[36].exponent' -v '-12'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[36].price' -v '8695478191'          # $0.008695
+
 	# Initialize bridge module account balance as total native token supply.
 	bridge_module_account_balance=$TOTAL_NATIVE_TOKEN_SUPPLY
 	total_accounts_quote_balance=0
@@ -2167,6 +2249,24 @@ function edit_genesis() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].step_base_quantums' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].subticks_per_tick' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[32].quantum_conversion_exponent' -v '-9'
+
+	# Clob: EIGEN-USD
+	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].id' -v '300'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[33].status' -v "$INITIAL_CLOB_PAIR_STATUS"
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].perpetual_clob_metadata.perpetual_id' -v '300'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].step_base_quantums' -v '1000000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].subticks_per_tick' -v '1000000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[33].quantum_conversion_exponent' -v '-9'
+
+	# Clob: BOME-USD
+	dasel put -t json -f "$GENESIS" '.app_state.clob.clob_pairs.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[34].id' -v '301'
+	dasel put -t string -f "$GENESIS" '.app_state.clob.clob_pairs.[34].status' -v "$INITIAL_CLOB_PAIR_STATUS"
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[34].perpetual_clob_metadata.perpetual_id' -v '301'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[34].step_base_quantums' -v '1000000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[34].subticks_per_tick' -v '1000000'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.[34].quantum_conversion_exponent' -v '-9'
 
 	# Liquidations
 	dasel put -t int -f "$GENESIS" '.app_state.clob.liquidations_config.max_liquidation_fee_ppm' -v '15000'  # 1.5%

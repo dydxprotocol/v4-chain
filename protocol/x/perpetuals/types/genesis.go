@@ -45,21 +45,14 @@ func (gs GenesisState) Validate() error {
 
 	// Validate perpetuals
 	// 1. keys are unique
-	// 2. IDs are sequential
-	// 3. `Ticker` is non-empty
+	// 2. `Ticker` is non-empty
 	perpKeyMap := make(map[uint32]struct{})
-	expectedPerpId := uint32(0)
 
 	for _, perp := range gs.Perpetuals {
 		if _, exists := perpKeyMap[perp.Params.Id]; exists {
 			return fmt.Errorf("duplicated perpetual id")
 		}
 		perpKeyMap[perp.Params.Id] = struct{}{}
-
-		if perp.Params.Id != expectedPerpId {
-			return fmt.Errorf("found a gap in perpetual id")
-		}
-		expectedPerpId = expectedPerpId + 1
 
 		if len(perp.Params.Ticker) == 0 {
 			return ErrTickerEmptyString
