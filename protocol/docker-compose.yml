@@ -115,16 +115,19 @@ services:
       - DAEMON_HOME=/dydxprotocol/chain/.dave
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
-  connect0:
-    image: ghcr.io/skip-mev/connect-sidecar:v2.1.0
+  slinky0:
+    image: ghcr.io/skip-mev/slinky-sidecar:v1.0.13
     entrypoint: >
-      sh -c "connect --marketmap-provider dydx_migration_api --oracle-config /etc/connect/oracle.json --log-std-out-level error"
+      sh -c "slinky --marketmap-provider dydx_migration_api --oracle-config /etc/slinky/oracle.json --log-std-out-level error"
     environment:
-      - CONNECT_CONFIG_PROVIDERS_RAYDIUM_API_API_ENDPOINTS_0_URL=${RAYDIUM_URL}
-      - CONNECT_CONFIG_PROVIDERS_UNISWAPV3_API-BASE_API_ENDPOINTS_0_URL=${UNISWAPV3_BASE_URL}
-      - CONNECT_CONFIG_PROVIDERS_UNISWAPV3_API-ETHEREUM_API_ENDPOINTS_0_URL=${UNISWAPV3_ETHEREUM_URL}
+      - SLINKY_CONFIG_PROVIDERS_RAYDIUM_API_API_ENDPOINTS_0_URL=${RAYDIUM_URL}
+      - SLINKY_CONFIG_PROVIDERS_UNISWAPV3_API-BASE_API_ENDPOINTS_0_URL=${UNISWAPV3_BASE_URL}
+      - SLINKY_CONFIG_PROVIDERS_UNISWAPV3_API-ETHEREUM_API_ENDPOINTS_0_URL=${UNISWAPV3_ETHEREUM_URL}
+      - SLINKY_CONFIG_PROVIDERS_RAYDIUM_API_API_INTERVAL=${PROVIDER_NODE_QUERY_INTERVAL}
+      - SLINKY_CONFIG_PROVIDERS_UNISWAPV3_API-BASE_API_INTERVAL=${PROVIDER_NODE_QUERY_INTERVAL}
+      - SLINKY_CONFIG_PROVIDERS_UNISWAPV3_API-ETHEREUM_API_INTERVAL=${PROVIDER_NODE_QUERY_INTERVAL}
     volumes:
-      - ./contrib/connect:/etc/connect
+      - ./contrib/slinky:/etc/slinky
     ports:
       - "8080:8080"
       - "8002:8002" # metrics
