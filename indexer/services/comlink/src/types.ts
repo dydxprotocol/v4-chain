@@ -24,6 +24,7 @@ import {
   TradeType,
   TradingRewardAggregationPeriod,
   TransferType,
+  VaultFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -690,6 +691,10 @@ export interface MegavaultHistoricalPnlRequest {
 }
 
 export interface VaultsHistoricalPnlRequest extends MegavaultHistoricalPnlRequest {}
+
+export interface VaultMapping {
+  [subaccountId: string]: VaultFromDatabase,
+}
 
 /* ------- Affiliates Types ------- */
 export interface AffiliateMetadataRequest{
