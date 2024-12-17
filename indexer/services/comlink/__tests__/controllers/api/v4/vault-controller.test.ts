@@ -24,6 +24,7 @@ import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
 import { DateTime, Settings } from 'luxon';
 import Big from 'big.js';
 import config from '../../../../src/config';
+import { clearVaultStartPnl, startVaultStartPnlCache } from '../../../../src/caches/vault-start-pnl';
 
 describe('vault-controller#V4', () => {
   const latestBlockHeight: string = '25';
@@ -131,6 +132,7 @@ describe('vault-controller#V4', () => {
       await dbHelpers.clearData();
       await VaultPnlTicksView.refreshDailyView();
       await VaultPnlTicksView.refreshHourlyView();
+      clearVaultStartPnl();
       config.VAULT_PNL_HISTORY_HOURS = vaultPnlHistoryHoursPrev;
       config.VAULT_LATEST_PNL_TICK_WINDOW_HOURS = vaultPnlLastPnlWindowPrev;
       config.VAULT_PNL_START_DATE = vaultPnlStartDatePrev;
@@ -653,6 +655,7 @@ describe('vault-controller#V4', () => {
     }
     await VaultPnlTicksView.refreshDailyView();
     await VaultPnlTicksView.refreshHourlyView();
+    await startVaultStartPnlCache();
 
     return createdTicks;
   }

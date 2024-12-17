@@ -62,3 +62,27 @@ export async function getVaultsPnl(
 
   return result.rows;
 }
+
+export async function getLatestVaultPnl(): Promise<PnlTicksFromDatabase[]> {
+  const result: {
+    rows: PnlTicksFromDatabase[],
+  } = await knexReadReplica.getConnection().raw(
+    `
+    SELECT DISTINCT ON ("subaccountId")
+      "id",
+      "subaccountId",
+      "equity",
+      "totalPnl",
+      "netTransfers",
+      "createdAt",
+      "blockHeight",
+      "blockTime"
+    FROM ${VAULT_HOURLY_PNL_VIEW}
+    ORDER BY "subaccountId", "blockTime" DESC;
+    `,
+  ) as unknown as {
+    rows: PnlTicksFromDatabase[],
+  };
+
+  return result.rows;
+}
