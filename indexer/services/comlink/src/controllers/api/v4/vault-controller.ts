@@ -109,7 +109,7 @@ class VaultController extends Controller {
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
       getMainSubaccountEquity(),
-      getLatestPnlTick(vaultSubaccountIdsWithMainSubaccount, _.values(vaultSubaccounts)),
+      getLatestPnlTick(_.values(vaultSubaccounts)),
       getFirstMainVaultTransferDateTime(),
     ]);
     stats.timing(
@@ -163,7 +163,7 @@ class VaultController extends Controller {
       getVaultSubaccountPnlTicks(_.keys(vaultSubaccounts), getResolution(resolution)),
       getVaultPositions(vaultSubaccounts),
       BlockTable.getLatest(),
-      getLatestPnlTicks(_.keys(vaultSubaccounts)),
+      getLatestPnlTicks(),
     ]);
     const latestTicksBySubaccountId: Dictionary<PnlTicksFromDatabase> = _.keyBy(
       latestTicks,
@@ -556,7 +556,6 @@ export async function getLatestPnlTicks(): Promise<PnlTicksFromDatabase[]> {
 }
 
 export async function getLatestPnlTick(
-  vaultSubaccountIds: string[],
   vaults: VaultFromDatabase[],
 ): Promise<PnlTicksFromDatabase | undefined> {
   const pnlTicks: PnlTicksFromDatabase[] = await VaultPnlTicksView.getVaultsPnl(
