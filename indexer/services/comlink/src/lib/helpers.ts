@@ -745,7 +745,7 @@ export async function getVaultMapping(): Promise<VaultMapping> {
       );
     if (perpetual === undefined) {
       logger.warning({
-        at: 'VaultController#getVaultPositions',
+        at: 'get-vault-mapping',
         message: `Vault clob pair id ${vaultMapping[subaccountId]} does not correspond to a ` +
           'perpetual market.',
         subaccountId,
