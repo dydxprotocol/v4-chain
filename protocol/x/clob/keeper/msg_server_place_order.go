@@ -128,7 +128,9 @@ func (k Keeper) HandleMsgPlaceOrder(
 			ctx,
 			order.OrderId,
 		)
-	} else {
+		// Don't need to emit stateful order placement events for internal
+		// orders like Vault orders.
+	} else if !isInternalOrder {
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
