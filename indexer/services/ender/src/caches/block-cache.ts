@@ -107,6 +107,7 @@ function isNextBlock(blockHeight: string): boolean {
  * All caches must be initialized in a Transaction to ensure consistency
  */
 export async function initializeAllCaches(): Promise<void> {
+  const start: number = Date.now();
   const txId: number = await Transaction.start();
   await Transaction.setIsolationLevel(txId, IsolationLevel.READ_COMMITTED);
 
@@ -120,6 +121,10 @@ export async function initializeAllCaches(): Promise<void> {
   ]);
 
   await Transaction.rollback(txId);
+  stats.timing(
+    `${config.SERVICE_NAME}.initialize_caches`,
+    Date.now() - start,
+  );
 }
 
 export function resetBlockCache(): void {
