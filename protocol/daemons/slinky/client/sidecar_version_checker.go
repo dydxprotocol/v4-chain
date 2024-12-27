@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"cosmossdk.io/log"
 	"github.com/hashicorp/go-version"
@@ -50,7 +51,13 @@ func (s *SidecarVersionCheckerImpl) CheckSidecarVersion(ctx context.Context) err
 	if err != nil {
 		return err
 	}
-	current, err := version.NewVersion(slinkyResponse.Version)
+
+	versionStr := slinkyResponse.Version
+	if idx := strings.LastIndex(versionStr, "/"); idx != -1 {
+		versionStr = versionStr[idx+1:]
+	}
+
+	current, err := version.NewVersion(versionStr)
 	if err != nil {
 		return fmt.Errorf("failed to parse current version: %w", err)
 	}
