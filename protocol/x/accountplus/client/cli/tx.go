@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -35,10 +36,14 @@ func CmdAddAuthenticator() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			config, err := base64.StdEncoding.DecodeString(args[2])
+			if err != nil {
+				return err
+			}
 			msg := types.MsgAddAuthenticator{
 				Sender:            args[0],
 				AuthenticatorType: args[1],
-				Data:              []byte(args[2]),
+				Data:              config,
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},

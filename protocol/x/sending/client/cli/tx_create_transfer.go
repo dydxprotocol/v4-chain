@@ -6,6 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	customflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	aptypes "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/types"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -65,11 +68,30 @@ func CmdCreateTransfer() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			authenticatorIds, err := customflags.GetPermisionedKeyAuthenticatorsForExtOptions(cmd)
+			if err == nil && len(authenticatorIds) > 0 {
+				value, err := codectypes.NewAnyWithValue(
+					&aptypes.TxExtension{
+						SelectedAuthenticators: authenticatorIds,
+					},
+				)
+				if err != nil {
+					return err
+				}
+				txf = txf.WithNonCriticalExtensionOptions(value)
+			}
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	customflags.AddTxPermissionedKeyFlagsToCmd(cmd)
 
 	return cmd
 }
