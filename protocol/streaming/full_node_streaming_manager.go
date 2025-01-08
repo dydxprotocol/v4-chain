@@ -2,6 +2,7 @@ package streaming
 
 import (
 	"fmt"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -94,6 +95,9 @@ type OrderbookSubscription struct {
 	// If interval snapshots are turned on, the next block height at which
 	// a snapshot should be sent out.
 	nextSnapshotBlock uint32
+
+	// Filter orders for subaccountIds
+	filterOrders bool
 }
 
 func (sub *OrderbookSubscription) IsInitialized() bool {
@@ -187,11 +191,79 @@ func (sm *FullNodeStreamingManagerImpl) getNextAvailableSubscriptionId() uint32 
 	return id
 }
 
+// TODO best practice for ensuring all cases are handled
+// default error? default panic?
+func GetOffChannelUpdateV1SubaccountId(update ocutypes.OffChainUpdateV1) uint32 {
+	var orderSubaccountIdNumber uint32
+	switch ocu1 := update.UpdateMessage.(type) {
+	case *ocutypes.OffChainUpdateV1_OrderPlace:
+		orderSubaccountIdNumber = ocu1.OrderPlace.Order.OrderId.SubaccountId.Number
+	case *ocutypes.OffChainUpdateV1_OrderRemove:
+		orderSubaccountIdNumber = ocu1.OrderRemove.RemovedOrderId.SubaccountId.Number
+	case *ocutypes.OffChainUpdateV1_OrderUpdate:
+		orderSubaccountIdNumber = ocu1.OrderUpdate.OrderId.SubaccountId.Number
+	case *ocutypes.OffChainUpdateV1_OrderReplace:
+		orderSubaccountIdNumber = ocu1.OrderReplace.Order.OrderId.SubaccountId.Number
+
+	}
+	return orderSubaccountIdNumber
+}
+
+// Filter StreamUpdates for subaccountIdNumbers
+// If a StreamUpdate_OrderUpdate contains no updates for subscribed subaccounts, drop message
+// If a StreamUpdate_OrderUpdate contains updates for subscribed subaccounts, construct a new
+// StreamUpdate_OrderUpdate with updates only for subscribed subaccounts
+func (sub *OrderbookSubscription) FilterSubaccountStreamUpdates(output chan []clobtypes.StreamUpdate) {
+	subaccountIdNumbers := make([]uint32, len(sub.subaccountIds))
+	for i, subaccountId := range sub.subaccountIds {
+		subaccountIdNumbers[i] = subaccountId.Number
+	}
+
+	// If reflection becomes too expensive, split updatesChannel by message type
+	for updates := range sub.updatesChannel {
+		filteredUpdates := []clobtypes.StreamUpdate{}
+		for _, update := range updates {
+			switch updateMessage := update.UpdateMessage.(type) {
+			case *clobtypes.StreamUpdate_OrderbookUpdate:
+				orderBookUpdates := []ocutypes.OffChainUpdateV1{}
+				for _, orderBookUpdate := range updateMessage.OrderbookUpdate.Updates {
+					orderBookUpdateSubaccountIdNumber := GetOffChannelUpdateV1SubaccountId(orderBookUpdate)
+					if slices.Contains(subaccountIdNumbers, orderBookUpdateSubaccountIdNumber) {
+						orderBookUpdates = append(orderBookUpdates, orderBookUpdate)
+					}
+				}
+				// Drop the StreamUpdate_OrderbookUpdate if all updates inside were dropped
+				if len(orderBookUpdates) > 0 {
+					if len(orderBookUpdates) < len(updateMessage.OrderbookUpdate.Updates) {
+						update = clobtypes.StreamUpdate{
+							BlockHeight: update.BlockHeight,
+							ExecMode:    update.ExecMode,
+							UpdateMessage: &clobtypes.StreamUpdate_OrderbookUpdate{
+								OrderbookUpdate: &clobtypes.StreamOrderbookUpdate{
+									Snapshot: updateMessage.OrderbookUpdate.Snapshot,
+									Updates:  orderBookUpdates,
+								},
+							},
+						}
+					}
+					filteredUpdates = append(filteredUpdates, update)
+				}
+			default:
+				filteredUpdates = append(filteredUpdates, update)
+			}
+		}
+		if len(filteredUpdates) > 0 {
+			output <- filteredUpdates
+		}
+	}
+}
+
 // Subscribe subscribes to the orderbook updates stream.
 func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	clobPairIds []uint32,
 	subaccountIds []*satypes.SubaccountId,
 	marketIds []uint32,
+	filterOrders bool,
 	messageSender types.OutgoingMessageSender,
 ) (
 	err error,
@@ -265,9 +337,22 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	sm.EmitMetrics()
 	sm.Unlock()
 
+	// If filterOrders, listen to filtered channel and start filter goroutine
+	// Error if fitlerOrders but no subaccounts are subscribed
+	filteredUpdateChannel := subscription.updatesChannel
+	if subscription.filterOrders {
+		if len(subaccountIds) == 0 {
+			// TODO panic?
+			// log error
+		}
+		filteredUpdateChannel = make(chan []clobtypes.StreamUpdate)
+		defer close(filteredUpdateChannel)
+		go subscription.FilterSubaccountStreamUpdates(filteredUpdateChannel)
+	}
+
 	// Use current goroutine to consistently poll subscription channel for updates
 	// to send through stream.
-	for updates := range subscription.updatesChannel {
+	for updates := range filteredUpdateChannel {
 		metrics.IncrCounterWithLabels(
 			metrics.GrpcSendResponseToSubscriberCount,
 			1,
@@ -1080,12 +1165,12 @@ func (sm *FullNodeStreamingManagerImpl) StreamBatchUpdatesAfterFinalizeBlock(
 	sm.FlushStreamUpdatesWithLock()
 
 	// Cache updates to sync local ops queue
-	sycnLocalUpdates, syncLocalClobPairIds := getStreamUpdatesFromOffchainUpdates(
+	syncLocalUpdates, syncLocalClobPairIds := getStreamUpdatesFromOffchainUpdates(
 		streaming_util.GetOffchainUpdatesV1(orderBookUpdatesToSyncLocalOpsQueue),
 		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		ctx.ExecMode(),
 	)
-	sm.cacheStreamUpdatesByClobPairWithLock(sycnLocalUpdates, syncLocalClobPairIds)
+	sm.cacheStreamUpdatesByClobPairWithLock(syncLocalUpdates, syncLocalClobPairIds)
 
 	// Cache updates for finalized fills.
 	fillStreamUpdates, fillClobPairIds := sm.getStreamUpdatesForOrderbookFills(

@@ -186,6 +186,9 @@ message StreamOrderbookUpdatesRequest {
 
   // Market ids for price updates.
   repeated uint32 market_ids = 3;
+
+  // Filter order updates in addition to position updates
+  bool filter_orders = 4;
 }
 
 // StreamOrderbookUpdatesResponse is a response message for the
