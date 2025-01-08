@@ -244,6 +244,8 @@ describe('Subscriptions', () => {
           message: expect.stringContaining(
             `Internal error, could not fetch data for subscription: ${Channel.V4_ACCOUNTS}`,
           ),
+          channel: Channel.V4_ACCOUNTS,
+          id: mockSubaccountId,
         }));
       expect(subscriptions.subscriptions[Channel.V4_ACCOUNTS]).toBeUndefined();
       expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
@@ -278,6 +280,8 @@ describe('Subscriptions', () => {
           connection_id: connectionId,
           type: 'error',
           message: expectedError.message,
+          channel: Channel.V4_ACCOUNTS,
+          id: mockSubaccountId,
         }));
       expect(subscriptions.subscriptions[Channel.V4_ACCOUNTS]).toBeUndefined();
       expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
