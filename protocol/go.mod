@@ -472,11 +472,7 @@ replace (
 	// Use dYdX fork of CometBFT
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20241126215519-69cdde955fd0
 	// Use dYdX fork of Cosmos SDK
-<<<<<<< HEAD
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20241127172510-4ee58434cdea
-=======
 	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20250107211707-20a978a867c1
->>>>>>> 2a79ca01 (Patch for ASA-2024-0012 and 0013. (#2666))
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85
 )
 
