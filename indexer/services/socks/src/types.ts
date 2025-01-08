@@ -67,6 +67,8 @@ export interface OutgoingMessage {
 
 export interface ErrorMessage extends OutgoingMessage {
   message: string,
+  channel?: string,
+  id?: string,
 }
 
 export interface SubscribedMessage extends OutgoingMessage {
