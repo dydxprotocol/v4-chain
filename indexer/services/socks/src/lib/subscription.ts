@@ -172,6 +172,8 @@ export class Subscriptions {
           errorMsg,
           connectionId,
           messageId,
+          channel,
+          id,
         ),
       );
 

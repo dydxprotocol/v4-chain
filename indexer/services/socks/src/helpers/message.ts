@@ -13,12 +13,16 @@ export function createErrorMessage(
   message: string,
   connectionId: string,
   messageId: number,
+  channel?: string,
+  id?: string,
 ): ErrorMessage {
   return {
     type: OutgoingMessageType.ERROR,
     message,
     connection_id: connectionId,
     message_id: messageId,
+    channel,
+    id,
   };
 }
 
