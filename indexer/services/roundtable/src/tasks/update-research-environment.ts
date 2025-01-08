@@ -33,6 +33,7 @@ import * as athenaOrders from '../lib/athena-ddl-tables/orders';
 import * as athenaPerpetualMarkets from '../lib/athena-ddl-tables/perpetual_markets';
 import * as athenaPerpetualPositions from '../lib/athena-ddl-tables/perpetual_positions';
 import * as athenaPnlTicks from '../lib/athena-ddl-tables/pnl_ticks';
+import * as athenaSubaccountUsernames from '../lib/athena-ddl-tables/subaccount_usernames';
 import * as athenaSubaccounts from '../lib/athena-ddl-tables/subaccounts';
 import * as athenaTendermintEvents from '../lib/athena-ddl-tables/tendermint_events';
 import * as athenaTradingRewardAggregations from '../lib/athena-ddl-tables/trading_reward_aggregations';
@@ -40,7 +41,6 @@ import * as athenaTradingRewards from '../lib/athena-ddl-tables/trading_rewards'
 import * as athenaTransfers from '../lib/athena-ddl-tables/transfers';
 import * as athenaVaults from '../lib/athena-ddl-tables/vaults';
 import * as athenaWallets from '../lib/athena-ddl-tables/wallets';
-import * as athenaSubaccountUsernames  from '../lib/athena-ddl-tables/subaccount_usernames';
 
 export const tablesToAddToAthena: { [table: string]: AthenaTableDDLQueries } = {
   asset_positions: athenaAssetPositions,
