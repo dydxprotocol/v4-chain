@@ -7,24 +7,20 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
+	"github.com/dydxprotocol/v4-chain/protocol/finalizeblock"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
-	"github.com/dydxprotocol/v4-chain/protocol/streaming/util"
 	streaming_util "github.com/dydxprotocol/v4-chain/protocol/streaming/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-
-	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
-
-	"github.com/dydxprotocol/v4-chain/protocol/finalizeblock"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 var _ types.FullNodeStreamingManager = (*FullNodeStreamingManagerImpl)(nil)
@@ -96,9 +92,41 @@ type OrderbookSubscription struct {
 	// If interval snapshots are turned on, the next block height at which
 	// a snapshot should be sent out.
 	nextSnapshotBlock uint32
+}
 
-	// Filter orders for subaccountIds
-	filterOrders bool
+func NewOrderbookSubscription(
+	subscriptionId uint32,
+	clobPairIds []uint32,
+	subaccountIds []satypes.SubaccountId,
+	marketIds []uint32,
+	messageSender types.OutgoingMessageSender,
+	updatesChannel chan []clobtypes.StreamUpdate,
+) *OrderbookSubscription {
+	return &OrderbookSubscription{
+		subscriptionId: subscriptionId,
+		initialized:    &atomic.Bool{}, // False by default.
+		clobPairIds:    clobPairIds,
+		subaccountIds:  subaccountIds,
+		marketIds:      marketIds,
+		messageSender:  messageSender,
+		updatesChannel: updatesChannel,
+	}
+}
+
+func (sm *FullNodeStreamingManagerImpl) NewOrderbookSubscription(
+	clobPairIds []uint32,
+	subaccountIds []satypes.SubaccountId,
+	marketIds []uint32,
+	messageSender types.OutgoingMessageSender,
+) *OrderbookSubscription {
+	return NewOrderbookSubscription(
+		sm.getNextAvailableSubscriptionId(),
+		clobPairIds,
+		subaccountIds,
+		marketIds,
+		messageSender,
+		make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
+	)
 }
 
 func (sub *OrderbookSubscription) IsInitialized() bool {
@@ -196,7 +224,10 @@ func (sm *FullNodeStreamingManagerImpl) getNextAvailableSubscriptionId() uint32 
 // If a StreamUpdate_OrderUpdate contains no updates for subscribed subaccounts, drop message
 // If a StreamUpdate_OrderUpdate contains updates for subscribed subaccounts, construct a new
 // StreamUpdate_OrderUpdate with updates only for subscribed subaccounts
-func (sub *OrderbookSubscription) FilterSubaccountStreamUpdates(output chan []clobtypes.StreamUpdate, logger log.Logger) {
+func (sub *OrderbookSubscription) FilterSubaccountStreamUpdates(
+	output chan []clobtypes.StreamUpdate,
+	logger log.Logger,
+) {
 	subaccountIdNumbers := make([]uint32, len(sub.subaccountIds))
 	for i, subaccountId := range sub.subaccountIds {
 		subaccountIdNumbers[i] = subaccountId.Number
@@ -210,8 +241,8 @@ func (sub *OrderbookSubscription) FilterSubaccountStreamUpdates(output chan []cl
 			case *clobtypes.StreamUpdate_OrderbookUpdate:
 				orderBookUpdates := []ocutypes.OffChainUpdateV1{}
 				for _, orderBookUpdate := range updateMessage.OrderbookUpdate.Updates {
-					orderBookUpdateSubaccountIdNumber, err := util.GetOffChainUpdateV1SubaccountIdNumber(orderBookUpdate)
-					if err != nil {
+					orderBookUpdateSubaccountIdNumber, err := streaming_util.GetOffChainUpdateV1SubaccountIdNumber(orderBookUpdate)
+					if err == nil {
 						if slices.Contains(subaccountIdNumbers, orderBookUpdateSubaccountIdNumber) {
 							orderBookUpdates = append(orderBookUpdates, orderBookUpdate)
 						}
@@ -266,17 +297,8 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		sIds[i] = *subaccountId
 	}
 
-	subscriptionId := sm.getNextAvailableSubscriptionId()
+	subscription := sm.NewOrderbookSubscription(clobPairIds, sIds, marketIds, messageSender)
 
-	subscription := &OrderbookSubscription{
-		subscriptionId: subscriptionId,
-		initialized:    &atomic.Bool{}, // False by default.
-		clobPairIds:    clobPairIds,
-		subaccountIds:  sIds,
-		marketIds:      marketIds,
-		messageSender:  messageSender,
-		updatesChannel: make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
-	}
 	for _, clobPairId := range clobPairIds {
 		// if clobPairId exists in the map, append the subscription id to the slice
 		// otherwise, create a new slice with the subscription id
@@ -325,16 +347,21 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	sm.Unlock()
 
 	// If filterOrders, listen to filtered channel and start filter goroutine
-	// Error if fitlerOrders but no subaccounts are subscribed
+	// Error if filterOrders but no subaccounts are subscribed
 	filteredUpdateChannel := subscription.updatesChannel
-	if subscription.filterOrders {
+	if filterOrders {
 		if len(subaccountIds) == 0 {
-			// TODO panic?
-			// log error
+			sm.logger.Error(
+				fmt.Sprintf(
+					"filterOrders requires subaccountIds for subscription id: %+v",
+					subscription.subscriptionId,
+				),
+			)
+		} else {
+			filteredUpdateChannel = make(chan []clobtypes.StreamUpdate)
+			defer close(filteredUpdateChannel)
+			go subscription.FilterSubaccountStreamUpdates(filteredUpdateChannel, sm.logger)
 		}
-		filteredUpdateChannel = make(chan []clobtypes.StreamUpdate)
-		defer close(filteredUpdateChannel)
-		go subscription.FilterSubaccountStreamUpdates(filteredUpdateChannel, sm.logger)
 	}
 
 	// Use current goroutine to consistently poll subscription channel for updates
