@@ -21,3 +21,22 @@ func GetOffchainUpdatesV1(offchainUpdates *clobtypes.OffchainUpdates) []ocutypes
 	}
 	return v1updates
 }
+
+// TODO best practice for ensuring all cases are handled
+// default error? default panic?
+func GetOffChainUpdateV1SubaccountIdNumber(update ocutypes.OffChainUpdateV1) (uint32, error) {
+	var orderSubaccountIdNumber uint32
+	switch ocu1 := update.UpdateMessage.(type) {
+	case *ocutypes.OffChainUpdateV1_OrderPlace:
+		orderSubaccountIdNumber = ocu1.OrderPlace.Order.OrderId.SubaccountId.Number
+	case *ocutypes.OffChainUpdateV1_OrderRemove:
+		orderSubaccountIdNumber = ocu1.OrderRemove.RemovedOrderId.SubaccountId.Number
+	case *ocutypes.OffChainUpdateV1_OrderUpdate:
+		orderSubaccountIdNumber = ocu1.OrderUpdate.OrderId.SubaccountId.Number
+	case *ocutypes.OffChainUpdateV1_OrderReplace:
+		orderSubaccountIdNumber = ocu1.OrderReplace.Order.OrderId.SubaccountId.Number
+	default:
+		return 0, fmt.Errorf("UpdateMessage type not in {OrderPlace, OrderRemove, OrderUpdate, OrderReplace}")
+	}
+	return orderSubaccountIdNumber, nil
+}

@@ -18,6 +18,7 @@ import (
 	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/util"
 	streaming_util "github.com/dydxprotocol/v4-chain/protocol/streaming/util"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
@@ -191,29 +192,11 @@ func (sm *FullNodeStreamingManagerImpl) getNextAvailableSubscriptionId() uint32 
 	return id
 }
 
-// TODO best practice for ensuring all cases are handled
-// default error? default panic?
-func GetOffChannelUpdateV1SubaccountId(update ocutypes.OffChainUpdateV1) uint32 {
-	var orderSubaccountIdNumber uint32
-	switch ocu1 := update.UpdateMessage.(type) {
-	case *ocutypes.OffChainUpdateV1_OrderPlace:
-		orderSubaccountIdNumber = ocu1.OrderPlace.Order.OrderId.SubaccountId.Number
-	case *ocutypes.OffChainUpdateV1_OrderRemove:
-		orderSubaccountIdNumber = ocu1.OrderRemove.RemovedOrderId.SubaccountId.Number
-	case *ocutypes.OffChainUpdateV1_OrderUpdate:
-		orderSubaccountIdNumber = ocu1.OrderUpdate.OrderId.SubaccountId.Number
-	case *ocutypes.OffChainUpdateV1_OrderReplace:
-		orderSubaccountIdNumber = ocu1.OrderReplace.Order.OrderId.SubaccountId.Number
-
-	}
-	return orderSubaccountIdNumber
-}
-
 // Filter StreamUpdates for subaccountIdNumbers
 // If a StreamUpdate_OrderUpdate contains no updates for subscribed subaccounts, drop message
 // If a StreamUpdate_OrderUpdate contains updates for subscribed subaccounts, construct a new
 // StreamUpdate_OrderUpdate with updates only for subscribed subaccounts
-func (sub *OrderbookSubscription) FilterSubaccountStreamUpdates(output chan []clobtypes.StreamUpdate) {
+func (sub *OrderbookSubscription) FilterSubaccountStreamUpdates(output chan []clobtypes.StreamUpdate, logger log.Logger) {
 	subaccountIdNumbers := make([]uint32, len(sub.subaccountIds))
 	for i, subaccountId := range sub.subaccountIds {
 		subaccountIdNumbers[i] = subaccountId.Number
@@ -227,9 +210,13 @@ func (sub *OrderbookSubscription) FilterSubaccountStreamUpdates(output chan []cl
 			case *clobtypes.StreamUpdate_OrderbookUpdate:
 				orderBookUpdates := []ocutypes.OffChainUpdateV1{}
 				for _, orderBookUpdate := range updateMessage.OrderbookUpdate.Updates {
-					orderBookUpdateSubaccountIdNumber := GetOffChannelUpdateV1SubaccountId(orderBookUpdate)
-					if slices.Contains(subaccountIdNumbers, orderBookUpdateSubaccountIdNumber) {
-						orderBookUpdates = append(orderBookUpdates, orderBookUpdate)
+					orderBookUpdateSubaccountIdNumber, err := util.GetOffChainUpdateV1SubaccountIdNumber(orderBookUpdate)
+					if err != nil {
+						if slices.Contains(subaccountIdNumbers, orderBookUpdateSubaccountIdNumber) {
+							orderBookUpdates = append(orderBookUpdates, orderBookUpdate)
+						}
+					} else {
+						logger.Error(err.Error())
 					}
 				}
 				// Drop the StreamUpdate_OrderbookUpdate if all updates inside were dropped
@@ -347,7 +334,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		}
 		filteredUpdateChannel = make(chan []clobtypes.StreamUpdate)
 		defer close(filteredUpdateChannel)
-		go subscription.FilterSubaccountStreamUpdates(filteredUpdateChannel)
+		go subscription.FilterSubaccountStreamUpdates(filteredUpdateChannel, sm.logger)
 	}
 
 	// Use current goroutine to consistently poll subscription channel for updates
