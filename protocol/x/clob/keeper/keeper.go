@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 	"sync/atomic"
@@ -54,8 +53,7 @@ type (
 		streamingManager         streamingtypes.FullNodeStreamingManager
 		finalizeBlockEventStager finalizeblock.EventStager[*types.ClobStagedFinalizeBlockEvent]
 
-		initialized         *atomic.Bool
-		memStoreInitialized *atomic.Bool
+		initialized *atomic.Bool
 
 		Flags flags.ClobFlags
 
@@ -124,7 +122,6 @@ func NewKeeper(
 		accountPlusKeeper:       accountPlusKeeper,
 		indexerEventManager:     indexerEventManager,
 		streamingManager:        streamingManager,
-		memStoreInitialized:     &atomic.Bool{}, // False by default.
 		initialized:             &atomic.Bool{}, // False by default.
 		txDecoder:               txDecoder,
 		mevTelemetryConfig: MevTelemetryConfig{
@@ -187,13 +184,15 @@ func (k Keeper) IsInitialized() bool {
 
 // Initialize hydrates the clob keeper with the necessary in memory data structures.
 func (k Keeper) Initialize(ctx sdk.Context) {
+	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
+	k.InitMemStore(ctx)
+
+	// Code below hydrates the in memory data structures and is not rolled back even if
+	// the block execution is discarded by OE. Therefore, they are only called once.
 	alreadyInitialized := k.initialized.Swap(true)
 	if alreadyInitialized {
 		return
 	}
-
-	// Initialize memstore in clobKeeper with order fill amounts and stateful orders.
-	k.InitMemStore(ctx)
 
 	// Branch the context for hydration.
 	// This means that new order matches from hydration will get added to the operations
@@ -254,10 +253,13 @@ func (k Keeper) ProcessStagedFinalizeBlockEvents(ctx sdk.Context) {
 // InitMemStore initializes the memstore of the `clob` keeper.
 // This is called during app initialization in `app.go`, before any ABCI calls are received.
 func (k Keeper) InitMemStore(ctx sdk.Context) {
-	alreadyInitialized := k.memStoreInitialized.Swap(true)
+	alreadyInitialized := k.GetMemstoreInitialized(ctx)
 	if alreadyInitialized {
-		panic(errors.New("Memory store already initialized and is not intended to be invoked more then once."))
+		return
 	}
+
+	// Set memstore initialized flag.
+	k.SetMemstoreInitialized(ctx)
 
 	memStore := ctx.KVStore(k.memKey)
 	memStoreType := memStore.GetStoreType()
@@ -305,6 +307,19 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 			k.GetStatefulOrderCount(ctx, subaccountId)+1,
 		)
 	}
+}
+
+func (k Keeper) GetMemstoreInitialized(ctx sdk.Context) bool {
+	store := ctx.KVStore(k.memKey)
+	return store.Has([]byte(types.KeyMemstoreInitialized))
+}
+
+func (k Keeper) SetMemstoreInitialized(ctx sdk.Context) {
+	store := ctx.KVStore(k.memKey)
+	store.Set(
+		[]byte(types.KeyMemstoreInitialized),
+		[]byte{1},
+	)
 }
 
 // Sets the ante handler after it has been constructed. This breaks a cycle between
