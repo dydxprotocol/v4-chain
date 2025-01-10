@@ -358,7 +358,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 				),
 			)
 		} else {
-			filteredUpdateChannel = make(chan []clobtypes.StreamUpdate)
+			filteredUpdateChannel = make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize)
 			defer close(filteredUpdateChannel)
 			go subscription.FilterSubaccountStreamUpdates(filteredUpdateChannel, sm.logger)
 		}
