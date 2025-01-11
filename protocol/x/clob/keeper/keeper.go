@@ -53,7 +53,7 @@ type (
 		streamingManager         streamingtypes.FullNodeStreamingManager
 		finalizeBlockEventStager finalizeblock.EventStager[*types.ClobStagedFinalizeBlockEvent]
 
-		initialized *atomic.Bool
+		inMemStructuresInitialized *atomic.Bool
 
 		Flags flags.ClobFlags
 
@@ -102,28 +102,28 @@ func NewKeeper(
 	revshareKeeper types.RevShareKeeper,
 ) *Keeper {
 	keeper := &Keeper{
-		cdc:                     cdc,
-		storeKey:                storeKey,
-		memKey:                  memKey,
-		transientStoreKey:       transientStoreKey,
-		authorities:             lib.UniqueSliceToSet(authorities),
-		MemClob:                 memClob,
-		PerpetualIdToClobPairId: make(map[uint32][]types.ClobPairId),
-		subaccountsKeeper:       subaccountsKeeper,
-		assetsKeeper:            assetsKeeper,
-		blockTimeKeeper:         blockTimeKeeper,
-		bankKeeper:              bankKeeper,
-		feeTiersKeeper:          feeTiersKeeper,
-		perpetualsKeeper:        perpetualsKeeper,
-		pricesKeeper:            pricesKeeper,
-		statsKeeper:             statsKeeper,
-		rewardsKeeper:           rewardsKeeper,
-		affiliatesKeeper:        affiliatesKeeper,
-		accountPlusKeeper:       accountPlusKeeper,
-		indexerEventManager:     indexerEventManager,
-		streamingManager:        streamingManager,
-		initialized:             &atomic.Bool{}, // False by default.
-		txDecoder:               txDecoder,
+		cdc:                        cdc,
+		storeKey:                   storeKey,
+		memKey:                     memKey,
+		transientStoreKey:          transientStoreKey,
+		authorities:                lib.UniqueSliceToSet(authorities),
+		MemClob:                    memClob,
+		PerpetualIdToClobPairId:    make(map[uint32][]types.ClobPairId),
+		subaccountsKeeper:          subaccountsKeeper,
+		assetsKeeper:               assetsKeeper,
+		blockTimeKeeper:            blockTimeKeeper,
+		bankKeeper:                 bankKeeper,
+		feeTiersKeeper:             feeTiersKeeper,
+		perpetualsKeeper:           perpetualsKeeper,
+		pricesKeeper:               pricesKeeper,
+		statsKeeper:                statsKeeper,
+		rewardsKeeper:              rewardsKeeper,
+		affiliatesKeeper:           affiliatesKeeper,
+		accountPlusKeeper:          accountPlusKeeper,
+		indexerEventManager:        indexerEventManager,
+		streamingManager:           streamingManager,
+		inMemStructuresInitialized: &atomic.Bool{}, // False by default.
+		txDecoder:                  txDecoder,
 		mevTelemetryConfig: MevTelemetryConfig{
 			Enabled:    clobFlags.MevTelemetryEnabled,
 			Hosts:      clobFlags.MevTelemetryHosts,
@@ -177,9 +177,9 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
 }
 
-// IsInitialized returns whether the clob keeper has been hydrated.
-func (k Keeper) IsInitialized() bool {
-	return k.initialized.Load()
+// IsInMemStructuresInitialized returns whether the clob keeper has been hydrated.
+func (k Keeper) IsInMemStructuresInitialized() bool {
+	return k.inMemStructuresInitialized.Load()
 }
 
 // Initialize hydrates the clob keeper with the necessary in memory data structures.
@@ -189,7 +189,7 @@ func (k Keeper) Initialize(ctx sdk.Context) {
 
 	// Code below hydrates the in memory data structures and is not rolled back even if
 	// the block execution is discarded by OE. Therefore, they are only called once.
-	alreadyInitialized := k.initialized.Swap(true)
+	alreadyInitialized := k.inMemStructuresInitialized.Swap(true)
 	if alreadyInitialized {
 		return
 	}

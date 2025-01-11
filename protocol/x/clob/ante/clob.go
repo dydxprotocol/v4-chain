@@ -65,7 +65,7 @@ func (cd ClobDecorator) AnteHandle(
 	}
 
 	// Disable order placement and cancelation processing if the clob keeper is not initialized.
-	if !cd.clobKeeper.IsInitialized() {
+	if !cd.clobKeeper.IsInMemStructuresInitialized() {
 		return ctx, errorsmod.Wrap(
 			types.ErrClobNotInitialized,
 			"clob keeper is not initialized. Please wait for the next block.",
