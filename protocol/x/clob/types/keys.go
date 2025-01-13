@@ -79,6 +79,9 @@ const (
 
 // Memstore
 const (
+	// KeyMemstoreInitialized is the key to check if the memstore has been initialized.
+	KeyMemstoreInitialized = "MemstoreInit"
+
 	// ProcessProposerMatchesEventsKey is the key to retrieve information about how to update
 	// memclob state based on the latest block.
 	ProcessProposerMatchesEventsKey = "ProposerEvents"
