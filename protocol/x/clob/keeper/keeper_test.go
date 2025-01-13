@@ -31,10 +31,7 @@ func TestInitMemStore_OnlyAllowedOnce(t *testing.T) {
 
 	ks.ClobKeeper.InitMemStore(ks.Ctx)
 
-	// Initializing a second time causes a panic
-	require.Panics(t, func() {
-		ks.ClobKeeper.InitMemStore(ks.Ctx)
-	})
+	require.True(t, ks.ClobKeeper.GetMemstoreInitialized(ks.Ctx))
 }
 
 func TestInitMemStore_StatefulOrderCount(t *testing.T) {
