@@ -1162,8 +1162,7 @@
           "stepBaseQuantums",
           "subticksPerTick",
           "marketType",
-          "baseOpenInterest",
-          "defaultFundingRate1H"
+          "baseOpenInterest"
         ],
         "type": "object",
         "additionalProperties": false

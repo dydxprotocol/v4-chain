@@ -5,7 +5,7 @@ import (
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
-// NewUpdatePerpetualEvent creates a UpdatePerpetualEventV2 representing
+// NewUpdatePerpetualEvent creates a UpdatePerpetualEventV3 representing
 // update of a perpetual.
 func NewUpdatePerpetualEvent(
 	id uint32,

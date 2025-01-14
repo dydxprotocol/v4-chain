@@ -5420,7 +5420,7 @@ or
 |openInterestLowerCap|string|false|none|none|
 |openInterestUpperCap|string|false|none|none|
 |baseOpenInterest|string|true|none|none|
-|defaultFundingRate1H|string|true|none|none|
+|defaultFundingRate1H|string|false|none|none|
 
 ## PerpetualMarketResponse
 
