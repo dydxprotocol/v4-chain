@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryDowntimeParamsRequest, QueryDowntimeParamsResponseSDKType, QueryAllDowntimeInfoRequest, QueryAllDowntimeInfoResponseSDKType } from "./query";
+import { QueryDowntimeParamsRequest, QueryDowntimeParamsResponseSDKType, QueryAllDowntimeInfoRequest, QueryAllDowntimeInfoResponseSDKType, QuerySynchronyParamsRequest, QuerySynchronyParamsResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -11,6 +11,7 @@ export class LCDQueryClient {
     this.req = requestClient;
     this.downtimeParams = this.downtimeParams.bind(this);
     this.allDowntimeInfo = this.allDowntimeInfo.bind(this);
+    this.synchronyParams = this.synchronyParams.bind(this);
   }
   /* Queries the DowntimeParams. */
 
@@ -25,6 +26,13 @@ export class LCDQueryClient {
   async allDowntimeInfo(_params: QueryAllDowntimeInfoRequest = {}): Promise<QueryAllDowntimeInfoResponseSDKType> {
     const endpoint = `dydxprotocol/v4/blocktime/all_downtime_info`;
     return await this.req.get<QueryAllDowntimeInfoResponseSDKType>(endpoint);
+  }
+  /* Queries the SynchronyParams. */
+
+
+  async synchronyParams(_params: QuerySynchronyParamsRequest = {}): Promise<QuerySynchronyParamsResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/blocktime/synchrony_params`;
+    return await this.req.get<QuerySynchronyParamsResponseSDKType>(endpoint);
   }
 
 }
