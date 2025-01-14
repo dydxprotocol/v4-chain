@@ -24,6 +24,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryDowntimeParams())
 	cmd.AddCommand(CmdQueryAllDowntimeInfo())
 	cmd.AddCommand(CmdQueryPreviousBlockInfo())
+	cmd.AddCommand(CmdQuerySynchronyParams())
 
 	return cmd
 }
@@ -84,6 +85,29 @@ func CmdQueryPreviousBlockInfo() *cobra.Command {
 			res, err := queryClient.PreviousBlockInfo(
 				context.Background(),
 				&types.QueryPreviousBlockInfoRequest{},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQuerySynchronyParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "sychrony-params",
+		Short: "get synchrony params",
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.SynchronyParams(
+				context.Background(),
+				&types.QuerySynchronyParamsRequest{},
 			)
 			if err != nil {
 				return err
