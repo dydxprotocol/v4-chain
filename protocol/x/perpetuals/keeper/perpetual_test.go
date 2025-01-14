@@ -62,12 +62,13 @@ func TestModifyPerpetual_Success(t *testing.T) {
 
 		// Record the indexer event expected to emit from above `ModifyPerpetual`.
 		expectedIndexerEvents[i] = &indexerevents.UpdatePerpetualEventV2{
-			Id:               item.Params.Id,
-			Ticker:           ticker,
-			MarketId:         marketId,
-			AtomicResolution: item.Params.AtomicResolution,
-			LiquidityTier:    liquidityTier,
-			MarketType:       v1.ConvertToPerpetualMarketType(item.Params.MarketType),
+			Id:                   item.Params.Id,
+			Ticker:               ticker,
+			MarketId:             marketId,
+			AtomicResolution:     item.Params.AtomicResolution,
+			LiquidityTier:        liquidityTier,
+			MarketType:           v1.ConvertToPerpetualMarketType(item.Params.MarketType),
+			DefaultFunding8HrPpm: defaultFundingPpm,
 		}
 
 		// Verify updatedp perpetual in store.

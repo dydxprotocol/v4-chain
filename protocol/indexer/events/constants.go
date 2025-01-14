@@ -32,9 +32,9 @@ const (
 	FundingValuesEventVersion     uint32 = 1
 	StatefulOrderEventVersion     uint32 = 1
 	AssetEventVersion             uint32 = 1
-	PerpetualMarketEventVersion   uint32 = 2
+	PerpetualMarketEventVersion   uint32 = 3
 	LiquidityTierEventVersion     uint32 = 2
-	UpdatePerpetualEventVersion   uint32 = 2
+	UpdatePerpetualEventVersion   uint32 = 3
 	UpdateClobPairEventVersion    uint32 = 1
 	DeleveragingEventVersion      uint32 = 1
 	TradingRewardVersion          uint32 = 1

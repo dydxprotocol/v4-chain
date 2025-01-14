@@ -4,6 +4,7 @@ import {
   IndexerTendermintEvent,
   UpdatePerpetualEventV1,
   UpdatePerpetualEventV2,
+  UpdatePerpetualEventV3,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   dbHelpers, testMocks, perpetualMarketRefresher,
@@ -12,6 +13,7 @@ import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
   defaultUpdatePerpetualEventV1,
   defaultUpdatePerpetualEventV2,
+  defaultUpdatePerpetualEventV3,
   defaultHeight,
   defaultTime,
   defaultTxHash,
@@ -51,14 +53,19 @@ describe('update-perpetual-validator', () => {
       defaultUpdatePerpetualEventV1,
     ],
     [
-      'PerpetualMarketCreateEventV2',
+      'UpdatePerpetualEventV2',
       UpdatePerpetualEventV2.encode(defaultUpdatePerpetualEventV2).finish(),
+      defaultUpdatePerpetualEventV2,
+    ],
+    [
+      'UpdatePerpetualEventV3',
+      UpdatePerpetualEventV3.encode(defaultUpdatePerpetualEventV3).finish(),
       defaultUpdatePerpetualEventV2,
     ],
   ])('%s', (
     _name: string,
     updatePerpetualEventBytes: Uint8Array,
-    event: UpdatePerpetualEventV1 | UpdatePerpetualEventV2,
+    event: UpdatePerpetualEventV1 | UpdatePerpetualEventV2 | UpdatePerpetualEventV3,
   ) => {
     it('does not throw error on valid perpetual market create event', () => {
       const validator: UpdatePerpetualValidator = new UpdatePerpetualValidator(

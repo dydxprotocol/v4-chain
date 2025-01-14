@@ -17,6 +17,7 @@ func TestNewUpdatePerpetualEvent_Success(t *testing.T) {
 		-8,
 		2,
 		perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		0,
 	)
 	expectedUpdatePerpetualEventProto := &UpdatePerpetualEventV2{
 		Id:               5,

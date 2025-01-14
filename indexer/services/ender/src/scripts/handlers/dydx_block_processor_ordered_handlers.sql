@@ -56,6 +56,8 @@ BEGIN
                         rval[i] = dydx_perpetual_market_v1_handler(event_data);
                     WHEN 2 THEN
                         rval[i] = dydx_perpetual_market_v2_handler(event_data);
+                    WHEN 3 THEN
+                        rval[i] = dydx_perpetual_market_v3_handler(event_data);
                     ELSE
                         NULL;
                 END CASE;
@@ -67,6 +69,8 @@ BEGIN
                         rval[i] = dydx_update_perpetual_v1_handler(event_data);
                     WHEN 2 THEN
                         rval[i] = dydx_update_perpetual_v2_handler(event_data);
+                    WHEN 3 THEN
+                        rval[i] = dydx_update_perpetual_v3_handler(event_data);
                     ELSE
                         NULL;
                 END CASE;

@@ -1250,6 +1250,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
+						constants.BtcUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
 					),
 				),
 			).Once().Return()
@@ -1280,6 +1281,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.ClobPair_Eth.StepBaseQuantums,
 						constants.EthUsd_100PercentMarginRequirement.Params.LiquidityTier,
 						constants.EthUsd_100PercentMarginRequirement.Params.MarketType,
+						constants.EthUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
 					),
 				),
 			).Once().Return()
@@ -2190,6 +2192,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							clobPair.StepBaseQuantums,
 							perpetuals[i].Params.LiquidityTier,
 							perpetuals[i].Params.MarketType,
+							perpetuals[i].Params.DefaultFundingPpm,
 						),
 					),
 				).Once().Return()
@@ -2310,6 +2313,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 				constants.ClobPair_Btc.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DefaultFundingPpm,
 			),
 		),
 	).Once().Return()
@@ -3849,6 +3853,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 						constants.ClobPair_Btc.StepBaseQuantums,
 						tc.perpetuals[0].Params.LiquidityTier,
 						tc.perpetuals[0].Params.MarketType,
+						tc.perpetuals[0].Params.DefaultFundingPpm,
 					),
 				),
 			).Once().Return()
@@ -4597,6 +4602,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 							clobPair.StepBaseQuantums,
 							tc.perpetuals[perpetualId].Params.LiquidityTier,
 							tc.perpetuals[perpetualId].Params.MarketType,
+							tc.perpetuals[perpetualId].Params.DefaultFundingPpm,
 						),
 					),
 				).Once().Return()
@@ -5178,6 +5184,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
+						constants.BtcUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
 					),
 				),
 			).Once().Return()
@@ -5333,6 +5340,7 @@ func TestSortLiquidationOrders(t *testing.T) {
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
 						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
+						constants.BtcUsd_100PercentMarginRequirement.Params.DefaultFundingPpm,
 					),
 				),
 			).Once().Return()

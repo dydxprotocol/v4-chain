@@ -56,6 +56,7 @@ import {
   IndexerOrderId,
   PerpetualMarketCreateEventV1,
   PerpetualMarketCreateEventV2,
+  PerpetualMarketCreateEventV3,
   DeleveragingEventV1,
   protoTimestampToDate,
   PerpetualMarketType,
@@ -968,6 +969,30 @@ export function expectPerpetualMarketV2(
     marketType: eventPerpetualMarketTypeToIndexerPerpetualMarketType(
       perpetual.marketType,
     ),
+  }));
+}
+
+export function expectPerpetualMarketV3(
+  perpetualMarket: PerpetualMarketFromDatabase,
+  perpetual: PerpetualMarketCreateEventV3,
+): void {
+  // TODO(IND-219): Set initialMarginFraction/maintenanceMarginFraction using LiquidityTier
+  expect(perpetualMarket).toEqual(expect.objectContaining({
+    ...HARDCODED_PERPETUAL_MARKET_VALUES,
+    id: perpetual.id.toString(),
+    status: PerpetualMarketStatus.INITIALIZING,
+    clobPairId: perpetual.clobPairId.toString(),
+    ticker: perpetual.ticker,
+    marketId: perpetual.marketId,
+    quantumConversionExponent: perpetual.quantumConversionExponent,
+    atomicResolution: perpetual.atomicResolution,
+    subticksPerTick: perpetual.subticksPerTick,
+    stepBaseQuantums: Number(perpetual.stepBaseQuantums),
+    liquidityTierId: perpetual.liquidityTier,
+    marketType: eventPerpetualMarketTypeToIndexerPerpetualMarketType(
+      perpetual.marketType,
+    ),
+    defaultFundingRate1H: ((perpetual.defaultFunding8hrPpm / 1_000_000) / 8).toString(),
   }));
 }
 

@@ -252,7 +252,8 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it('successfully processes block with market create and its funding events', async () => {
+  // NEXT!! both V2 and V3
+  it('successfully processes block with `PerpetualMarketCreateV2` and its funding events', async () => {
     await Promise.all([
       MarketTable.create(testConstants.defaultMarket),
       MarketTable.create(testConstants.defaultMarket2),

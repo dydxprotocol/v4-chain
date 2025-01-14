@@ -382,6 +382,7 @@ describe('pnl-ticks-helper', () => {
       liquidityTierId: 0,
       marketType: PerpetualMarketType.ISOLATED,
       baseOpenInterest: '100000',
+      defaultFundingRate1H: '0.0001',
     });
     await perpetualMarketRefresher.updatePerpetualMarkets();
     const positions2: PerpetualPositionFromDatabase[] = [

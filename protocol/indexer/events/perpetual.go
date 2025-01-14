@@ -14,13 +14,15 @@ func NewUpdatePerpetualEvent(
 	atomicResolution int32,
 	liquidityTier uint32,
 	marketType perptypes.PerpetualMarketType,
-) *UpdatePerpetualEventV2 {
-	return &UpdatePerpetualEventV2{
-		Id:               id,
-		Ticker:           ticker,
-		MarketId:         marketId,
-		AtomicResolution: atomicResolution,
-		LiquidityTier:    liquidityTier,
-		MarketType:       v1.ConvertToPerpetualMarketType(marketType),
+	defaultFundingPpm int32,
+) *UpdatePerpetualEventV3 {
+	return &UpdatePerpetualEventV3{
+		Id:                   id,
+		Ticker:               ticker,
+		MarketId:             marketId,
+		AtomicResolution:     atomicResolution,
+		LiquidityTier:        liquidityTier,
+		MarketType:           v1.ConvertToPerpetualMarketType(marketType),
+		DefaultFunding8HrPpm: defaultFundingPpm,
 	}
 }
