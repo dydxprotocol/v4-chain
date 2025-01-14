@@ -30,7 +30,8 @@ service Query {
   // Queries the SynchronyParams.
   rpc SynchronyParams(QuerySynchronyParamsRequest)
       returns (QuerySynchronyParamsResponse) {
-    option (google.api.http).get = "/dydxprotocol/v4/blocktime/synchrony_params";
+    option (google.api.http).get =
+        "/dydxprotocol/v4/blocktime/synchrony_params";
   }
 }
 

@@ -1,7 +1,23 @@
-import { DowntimeParams, DowntimeParamsSDKType } from "./params";
+import { SynchronyParams, SynchronyParamsSDKType, DowntimeParams, DowntimeParamsSDKType } from "./params";
 import { BlockInfo, BlockInfoSDKType, AllDowntimeInfo, AllDowntimeInfoSDKType } from "./blocktime";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
+/** QuerySynchronyParamsRequest is a request type for the SynchronyParams */
+
+export interface QuerySynchronyParamsRequest {}
+/** QuerySynchronyParamsRequest is a request type for the SynchronyParams */
+
+export interface QuerySynchronyParamsRequestSDKType {}
+/** QuerySynchronyParamsResponse is a response type for the SynchronyParams */
+
+export interface QuerySynchronyParamsResponse {
+  params?: SynchronyParams;
+}
+/** QuerySynchronyParamsResponse is a response type for the SynchronyParams */
+
+export interface QuerySynchronyParamsResponseSDKType {
+  params?: SynchronyParamsSDKType;
+}
 /**
  * QueryDowntimeParamsRequest is a request type for the DowntimeParams
  * RPC method.
@@ -102,6 +118,85 @@ export interface QueryAllDowntimeInfoResponseSDKType {
    */
   info?: AllDowntimeInfoSDKType;
 }
+
+function createBaseQuerySynchronyParamsRequest(): QuerySynchronyParamsRequest {
+  return {};
+}
+
+export const QuerySynchronyParamsRequest = {
+  encode(_: QuerySynchronyParamsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QuerySynchronyParamsRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQuerySynchronyParamsRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QuerySynchronyParamsRequest>): QuerySynchronyParamsRequest {
+    const message = createBaseQuerySynchronyParamsRequest();
+    return message;
+  }
+
+};
+
+function createBaseQuerySynchronyParamsResponse(): QuerySynchronyParamsResponse {
+  return {
+    params: undefined
+  };
+}
+
+export const QuerySynchronyParamsResponse = {
+  encode(message: QuerySynchronyParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.params !== undefined) {
+      SynchronyParams.encode(message.params, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QuerySynchronyParamsResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQuerySynchronyParamsResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.params = SynchronyParams.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QuerySynchronyParamsResponse>): QuerySynchronyParamsResponse {
+    const message = createBaseQuerySynchronyParamsResponse();
+    message.params = object.params !== undefined && object.params !== null ? SynchronyParams.fromPartial(object.params) : undefined;
+    return message;
+  }
+
+};
 
 function createBaseQueryDowntimeParamsRequest(): QueryDowntimeParamsRequest {
   return {};
