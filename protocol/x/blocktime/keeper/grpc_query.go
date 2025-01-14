@@ -11,6 +11,24 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+func (k Keeper) SynchronyParams(
+	c context.Context,
+	req *types.QuerySynchronyParamsRequest,
+) (
+	*types.QuerySynchronyParamsResponse,
+	error,
+) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
+	params := k.GetSynchronyParams(ctx)
+	return &types.QuerySynchronyParamsResponse{
+		Params: params,
+	}, nil
+}
+
 func (k Keeper) DowntimeParams(
 	c context.Context,
 	req *types.QueryDowntimeParamsRequest,

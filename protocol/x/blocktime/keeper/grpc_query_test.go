@@ -12,6 +12,41 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 )
 
+func TestSynchronyParams(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.BlockTimeKeeper
+
+	for name, tc := range map[string]struct {
+		req *types.QuerySynchronyParamsRequest
+		res *types.QuerySynchronyParamsResponse
+		err error
+	}{
+		"Default": {
+			req: &types.QuerySynchronyParamsRequest{},
+			res: &types.QuerySynchronyParamsResponse{
+				Params: types.DefaultSynchronyParams(),
+			},
+			err: nil,
+		},
+		"Nil": {
+			req: nil,
+			res: nil,
+			err: status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			res, err := k.SynchronyParams(ctx, tc.req)
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.res, res)
+			}
+		})
+	}
+}
+
 func TestDowntimeParams(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
