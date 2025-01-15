@@ -16,6 +16,7 @@ type FullNodeStreamingManager interface {
 		clobPairIds []uint32,
 		subaccountIds []*satypes.SubaccountId,
 		marketIds []uint32,
+		filterOrders bool,
 		srv OutgoingMessageSender,
 	) (
 		err error,
