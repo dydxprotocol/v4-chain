@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_update_perpetual_v2_handler(event_data jsonb) RETURNS jsonb AS $$
+CREATE OR REPLACE FUNCTION dydx_update_perpetual_v3_handler(event_data jsonb) RETURNS jsonb AS $$
 /**
   Parameters:
     - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)

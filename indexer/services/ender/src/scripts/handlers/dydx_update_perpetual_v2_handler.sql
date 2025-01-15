@@ -1,5 +1,6 @@
 CREATE OR REPLACE FUNCTION dydx_update_perpetual_v2_handler(event_data jsonb) RETURNS jsonb AS $$
-/**
+/*
+  Deprecated; use `dydx_update_perpetual_v3_handler` instead.
   Parameters:
     - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
