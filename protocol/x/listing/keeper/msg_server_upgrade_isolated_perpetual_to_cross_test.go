@@ -228,12 +228,14 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 				perpetual, err = perpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualId)
 				require.NoError(t, err)
 				expectedIndexerEvent := &indexerevents.UpdatePerpetualEventV3{
-					Id:                   perpetual.Params.Id,
-					Ticker:               perpetual.Params.Ticker,
-					MarketId:             perpetual.Params.MarketId,
-					AtomicResolution:     perpetual.Params.AtomicResolution,
-					LiquidityTier:        perpetual.Params.LiquidityTier,
-					MarketType:           v1.ConvertToPerpetualMarketType(perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS),
+					Id:               perpetual.Params.Id,
+					Ticker:           perpetual.Params.Ticker,
+					MarketId:         perpetual.Params.MarketId,
+					AtomicResolution: perpetual.Params.AtomicResolution,
+					LiquidityTier:    perpetual.Params.LiquidityTier,
+					MarketType: v1.ConvertToPerpetualMarketType(
+						perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+					),
 					DefaultFunding8HrPpm: perpetual.Params.DefaultFundingPpm,
 				}
 				emittedIndexerEvents := getUpdatePerpetualEventsFromIndexerBlock(ctx, keeper)
