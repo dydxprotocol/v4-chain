@@ -100,7 +100,7 @@ func CmdQueryPreviousBlockInfo() *cobra.Command {
 
 func CmdQuerySynchronyParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sychrony-params",
+		Use:   "synchrony-params",
 		Short: "get synchrony params",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
