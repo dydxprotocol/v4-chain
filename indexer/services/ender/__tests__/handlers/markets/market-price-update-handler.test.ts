@@ -15,6 +15,7 @@ import { DydxIndexerSubtypes, MarketPriceUpdateEventMessage } from '../../../src
 import {
   defaultHeight,
   defaultMarketPriceUpdate,
+  defaultMarketPriceUpdate3,
   defaultPreviousHeight,
   defaultTime,
   defaultTxHash,
@@ -138,6 +139,39 @@ describe('marketPriceUpdateHandler', () => {
 
     expectOraclePriceMatchesEvent(
       defaultMarketPriceUpdate as MarketPriceUpdateEventMessage,
+      oraclePrice,
+      market,
+      defaultHeight,
+    );
+
+    const contents: MarketMessageContents = generateOraclePriceContents(
+      oraclePrice,
+      market.pair,
+    );
+
+    expectMarketKafkaMessage({
+      producerSendMock,
+      contents: JSON.stringify(contents),
+    });
+  });
+
+  it('successfully inserts new oracle price for market with very low exponent', async () => {
+    const transactionIndex: number = 0;
+
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
+      marketEvents: [defaultMarketPriceUpdate3],
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    await onMessage(kafkaMessage);
+
+    const { market, oraclePrice } = await getDbState(defaultMarketPriceUpdate3);
+
+    expectOraclePriceMatchesEvent(
+      defaultMarketPriceUpdate3 as MarketPriceUpdateEventMessage,
       oraclePrice,
       market,
       defaultHeight,

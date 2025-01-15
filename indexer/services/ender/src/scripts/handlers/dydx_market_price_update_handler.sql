@@ -11,6 +11,8 @@ CREATE OR REPLACE FUNCTION dydx_market_price_update_handler(block_height int, bl
 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
+
+
 DECLARE
     market_record_id integer;
     market_record markets%ROWTYPE;
@@ -25,8 +27,8 @@ BEGIN
     END IF;
 
     oracle_price = dydx_trim_scale(
-        dydx_from_jsonlib_long(event_data->'priceUpdate'->'priceWithExponent') *
-        power(10, market_record.exponent::numeric));
+        (dydx_from_jsonlib_long(event_data->'priceUpdate'->'priceWithExponent') *
+        power(10, market_record.exponent::bigint))::numeric);
 
     market_record."oraclePrice" = oracle_price;
 

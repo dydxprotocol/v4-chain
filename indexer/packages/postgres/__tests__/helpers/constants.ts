@@ -746,7 +746,7 @@ export const isolatedMarket: MarketCreateObject = {
 export const isolatedMarket2: MarketCreateObject = {
   id: 4,
   pair: 'ISO2-USD',
-  exponent: -12,
+  exponent: -20,
   minPriceChangePpm: 50,
   oraclePrice: '0.000000085',
 };
