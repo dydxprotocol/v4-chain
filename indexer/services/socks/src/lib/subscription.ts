@@ -217,6 +217,8 @@ export class Subscriptions {
           `Invalid subscribe message: already subscribed (${channel}-${subscriptionId})`,
           connectionId,
           messageId,
+          channel,
+          id,
         ),
       );
       return;
