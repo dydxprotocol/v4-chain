@@ -1,6 +1,5 @@
-CREATE OR REPLACE FUNCTION dydx_update_perpetual_v2_handler(event_data jsonb) RETURNS jsonb AS $$
-/*
-  Deprecated; use `dydx_update_perpetual_v3_handler` instead.
+CREATE OR REPLACE FUNCTION dydx_update_perpetual_v3_handler(event_data jsonb) RETURNS jsonb AS $$
+/**
   Parameters:
     - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
@@ -10,6 +9,8 @@ CREATE OR REPLACE FUNCTION dydx_update_perpetual_v2_handler(event_data jsonb) RE
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
 DECLARE
+    PPM_EXPONENT constant numeric = -6;
+    FUNDING_RATE_FROM_PROTOCOL_IN_HOURS constant numeric = 8;
     perpetual_market_id bigint;
     perpetual_market_record perpetual_markets%ROWTYPE;
 BEGIN
@@ -19,14 +20,18 @@ BEGIN
     perpetual_market_record."atomicResolution" = (event_data->'atomicResolution')::integer;
     perpetual_market_record."liquidityTierId" = (event_data->'liquidityTier')::integer;
     perpetual_market_record."marketType" = dydx_protocol_market_type_to_perpetual_market_type(event_data->'marketType');
-
+    perpetual_market_record."defaultFundingRate1H" = dydx_trim_scale(
+      power(10, PPM_EXPONENT) /
+      FUNDING_RATE_FROM_PROTOCOL_IN_HOURS *
+      (event_data->'defaultFunding8hrPpm')::numeric);
     UPDATE perpetual_markets
     SET
         "ticker" = perpetual_market_record."ticker",
         "marketId" = perpetual_market_record."marketId",
         "atomicResolution" = perpetual_market_record."atomicResolution",
         "liquidityTierId" = perpetual_market_record."liquidityTierId",
-        "marketType" = perpetual_market_record."marketType"
+        "marketType" = perpetual_market_record."marketType",
+        "defaultFundingRate1H" = perpetual_market_record."defaultFundingRate1H"
     WHERE "id" = perpetual_market_id
     RETURNING * INTO perpetual_market_record;
 

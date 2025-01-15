@@ -7,6 +7,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import {
   PerpetualMarketCreateEventV2,
+  PerpetualMarketCreateEventV3,
   StatefulOrderEventV1,
   IndexerTendermintEvent,
   CandleMessage,
@@ -32,6 +33,7 @@ import {
   LiquidityTierUpsertEventV2,
   UpdatePerpetualEventV1,
   UpdatePerpetualEventV2,
+  UpdatePerpetualEventV3,
   UpdateClobPairEventV1,
   DeleveragingEventV1,
   TradingRewardsEventV1,
@@ -129,6 +131,12 @@ export type EventProtoWithTypeAndVersion = {
   version: number,
   blockEventIndex: number,
 } | {
+  type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+  eventProto: PerpetualMarketCreateEventV3,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+} | {
   type: DydxIndexerSubtypes.LIQUIDITY_TIER,
   eventProto: LiquidityTierUpsertEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
@@ -149,6 +157,12 @@ export type EventProtoWithTypeAndVersion = {
 } | {
   type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
   eventProto: UpdatePerpetualEventV2,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+} | {
+  type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+  eventProto: UpdatePerpetualEventV3,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,

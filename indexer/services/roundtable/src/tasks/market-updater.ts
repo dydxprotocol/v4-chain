@@ -70,6 +70,7 @@ export default async function runTask(): Promise<void> {
       // TODO(DEC-1149 Add support for pulling information from candles
       FillTable.get24HourInformation(clobPairIds),
       PerpetualPositionTable.getOpenInterestLong(perpetualMarketIds),
+      // TODO(CT-1340): Need to add default funding rate to this value.
       NextFundingCache.getNextFunding(redisClient, tickers),
     ]);
 

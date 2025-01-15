@@ -22,7 +22,8 @@ const RAW_TABLE_COLUMNS: string = `
   \`stepBaseQuantums\` int,
   \`liquidityTierId\` int,
   \`marketType\` string,
-  \`baseOpenInterest\` string
+  \`baseOpenInterest\` string,
+  \`defaultFundingRate1H\` string
 `;
 const TABLE_COLUMNS: string = `
   "id",
@@ -41,7 +42,8 @@ const TABLE_COLUMNS: string = `
   "stepBaseQuantums",
   "liquidityTierId",
   "marketType",
-  ${castToDouble('baseOpenInterest')}
+  ${castToDouble('baseOpenInterest')},
+  ${castToDouble('defaultFundingRate1H')}
 `;
 
 export function generateRawTable(tablePrefix: string, rdsExportIdentifier: string): string {

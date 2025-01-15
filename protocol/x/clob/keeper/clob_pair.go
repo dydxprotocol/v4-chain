@@ -161,6 +161,7 @@ func (k Keeper) createPerpetualClobPair(
 				clobPair.StepBaseQuantums,
 				perpetual.Params.LiquidityTier,
 				perpetual.Params.MarketType,
+				perpetual.Params.DefaultFundingPpm,
 			),
 		),
 	)

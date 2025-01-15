@@ -14,6 +14,7 @@ import {
   defaultTxHash,
   defaultUpdatePerpetualEventV1,
   defaultUpdatePerpetualEventV2,
+  defaultUpdatePerpetualEventV3,
 } from '../helpers/constants';
 import {
   IndexerTendermintBlock,
@@ -21,6 +22,7 @@ import {
   Timestamp,
   UpdatePerpetualEventV1,
   UpdatePerpetualEventV2,
+  UpdatePerpetualEventV3,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   createIndexerTendermintBlock,
@@ -71,10 +73,16 @@ describe('update-perpetual-handler', () => {
       UpdatePerpetualEventV2.encode(defaultUpdatePerpetualEventV2).finish(),
       defaultUpdatePerpetualEventV2,
     ],
+    [
+      'UpdatePerpetualEventV3',
+      UpdatePerpetualEventV3.encode(defaultUpdatePerpetualEventV3).finish(),
+      defaultUpdatePerpetualEventV3,
+    ],
   ])('%s', (
     _name: string,
     updatePerpetualEventBytes: Uint8Array,
-    event: UpdatePerpetualEventV1 | UpdatePerpetualEventV2,
+    event: UpdatePerpetualEventV1 | UpdatePerpetualEventV2
+    | UpdatePerpetualEventV3,
   ) => {
     it('returns the correct parallelization ids', () => {
       const transactionIndex: number = 0;

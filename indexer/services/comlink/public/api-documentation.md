@@ -2506,7 +2506,8 @@ fetch(`${baseURL}/perpetualMarkets`,
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
-      "baseOpenInterest": "string"
+      "baseOpenInterest": "string",
+      "defaultFundingRate1H": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -2529,7 +2530,8 @@ fetch(`${baseURL}/perpetualMarkets`,
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
-      "baseOpenInterest": "string"
+      "baseOpenInterest": "string",
+      "defaultFundingRate1H": "string"
     }
   }
 }
@@ -5387,7 +5389,8 @@ or
   "marketType": "CROSS",
   "openInterestLowerCap": "string",
   "openInterestUpperCap": "string",
-  "baseOpenInterest": "string"
+  "baseOpenInterest": "string",
+  "defaultFundingRate1H": "string"
 }
 
 ```
@@ -5417,6 +5420,7 @@ or
 |openInterestLowerCap|string|false|none|none|
 |openInterestUpperCap|string|false|none|none|
 |baseOpenInterest|string|true|none|none|
+|defaultFundingRate1H|string|false|none|none|
 
 ## PerpetualMarketResponse
 
@@ -5449,7 +5453,8 @@ or
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
-      "baseOpenInterest": "string"
+      "baseOpenInterest": "string",
+      "defaultFundingRate1H": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -5472,7 +5477,8 @@ or
       "marketType": "CROSS",
       "openInterestLowerCap": "string",
       "openInterestUpperCap": "string",
-      "baseOpenInterest": "string"
+      "baseOpenInterest": "string",
+      "defaultFundingRate1H": "string"
     }
   }
 }

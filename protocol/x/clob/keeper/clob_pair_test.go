@@ -67,6 +67,7 @@ func TestCreatePerpetualClobPairAndMemStructs_MultiplePerpetual(t *testing.T) {
 					clobPair.StepBaseQuantums,
 					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
 					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketType,
+					constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.DefaultFundingPpm,
 				),
 			),
 		).Once().Return()
@@ -190,6 +191,7 @@ func TestCreatePerpetualClobPairAndMemStructs_FailsWithDuplicateClobPairId(t *te
 				clobPair.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DefaultFundingPpm,
 			),
 		),
 	).Once().Return()
@@ -283,6 +285,7 @@ func TestCreatePerpetualClobPairAndMemStructs(t *testing.T) {
 							tc.clobPair.StepBaseQuantums,
 							perpetual.Params.LiquidityTier,
 							perpetual.Params.MarketType,
+							perpetual.Params.DefaultFundingPpm,
 						),
 					),
 				).Return()
@@ -437,6 +440,7 @@ func TestCreateMultipleClobPairs(t *testing.T) {
 								make.clobPair.StepBaseQuantums,
 								perpetual.Params.LiquidityTier,
 								perpetual.Params.MarketType,
+								perpetual.Params.DefaultFundingPpm,
 							),
 						),
 					).Return()
@@ -631,6 +635,7 @@ func TestUpdateClobPair_FinalSettlement(t *testing.T) {
 				clobPair.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DefaultFundingPpm,
 			),
 		),
 	).Once().Return()
@@ -740,6 +745,7 @@ func TestUpdateClobPair(t *testing.T) {
 							clobPair.StepBaseQuantums,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DefaultFundingPpm,
 						),
 					),
 				).Once().Return()
@@ -798,6 +804,7 @@ func TestUpdateClobPair(t *testing.T) {
 							clobPair.StepBaseQuantums,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DefaultFundingPpm,
 						),
 					),
 				).Once().Return()
@@ -836,6 +843,7 @@ func TestUpdateClobPair(t *testing.T) {
 							clobPair.StepBaseQuantums,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+							constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DefaultFundingPpm,
 						),
 					),
 				).Once().Return()

@@ -95,6 +95,7 @@ export interface PerpetualMarketFromDatabase {
   liquidityTierId: number,
   marketType: PerpetualMarketType,
   baseOpenInterest: string,
+  defaultFundingRate1H?: string,
 }
 
 export interface FillFromDatabase {

@@ -51,6 +51,7 @@ const mockMarket: PerpetualMarketFromDatabase = {
   liquidityTierId: 1,
   marketType: PerpetualMarketType.ISOLATED,
   baseOpenInterest: '0',
+  defaultFundingRate1H: '0',
 };
 
 describe('notification functions', () => {

@@ -122,7 +122,7 @@ type PerpetualParams struct {
 	// then a `PerpetualPosition` with `size = 1e8` is equivalent to
 	// a position size of one full coin.
 	AtomicResolution int32 `protobuf:"zigzag32,4,opt,name=atomic_resolution,json=atomicResolution,proto3" json:"atomic_resolution,omitempty"`
-	// The default funding payment if there is no price premium. In
+	// The default (8hr) funding payment if there is no price premium. In
 	// parts-per-million.
 	DefaultFundingPpm int32 `protobuf:"zigzag32,5,opt,name=default_funding_ppm,json=defaultFundingPpm,proto3" json:"default_funding_ppm,omitempty"`
 	// The liquidity_tier that this perpetual is associated with.

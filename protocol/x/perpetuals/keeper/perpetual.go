@@ -173,6 +173,7 @@ func (k Keeper) ModifyPerpetual(
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.LiquidityTier,
 				perpetual.Params.MarketType,
+				perpetual.Params.DefaultFundingPpm,
 			),
 		),
 	)

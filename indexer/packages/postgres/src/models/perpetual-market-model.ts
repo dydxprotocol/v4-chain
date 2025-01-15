@@ -86,6 +86,7 @@ export default class PerpetualMarketModel extends Model {
         liquidityTierId: { type: 'integer' },
         marketType: { type: 'string' },
         baseOpenInterest: { type: 'string', pattern: NumericPattern },
+        defaultFundingRate1H: { type: ['string', 'null'], default: null, pattern: NumericPattern },
       },
     };
   }
@@ -115,6 +116,7 @@ export default class PerpetualMarketModel extends Model {
       liquidityTierId: 'integer',
       marketType: 'string',
       baseOpenInterest: 'string',
+      defaultFundingRate1H: 'string',
     };
   }
 
@@ -151,4 +153,6 @@ export default class PerpetualMarketModel extends Model {
   marketType!: PerpetualMarketType;
 
   baseOpenInterest!: string;
+
+  defaultFundingRate1H?: string;
 }

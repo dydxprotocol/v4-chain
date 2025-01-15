@@ -183,6 +183,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 						clobPair.StepBaseQuantums,
 						perpetual.Params.LiquidityTier,
 						perpetual.Params.MarketType,
+						perpetual.Params.DefaultFundingPpm,
 					),
 				),
 			).Once().Return()
@@ -334,6 +335,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 						clobPair.StepBaseQuantums,
 						perpetual.Params.LiquidityTier,
 						perpetual.Params.MarketType,
+						perpetual.Params.DefaultFundingPpm,
 					),
 				),
 			).Once().Return()

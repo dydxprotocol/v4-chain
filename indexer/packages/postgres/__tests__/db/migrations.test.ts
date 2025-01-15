@@ -10,8 +10,6 @@ import {
 } from '../helpers/constants';
 import { seedData } from '../helpers/mock-generators';
 
-// NOTE: If a model is modified for a migration then these
-// tests must be skipped until the following migration
 describe('Test new migration', () => {
   beforeEach(async () => {
     await migrate();
@@ -25,21 +23,36 @@ describe('Test new migration', () => {
     await teardown();
   });
 
-  it('test adding most recent migration', async () => {
+  it('test UP and DOWN for most recent migration without seed data', async () => {
     // remove latest migration
     await multiDown(1);
 
-    // add data to verify you can roll up and then later roll down
-    await seedData();
-
-    // readd latest migration
+    // re-add latest migration
     await knexPrimary.migrate.latest({ loadExtensions: ['.js'] });
 
     // re-remove latest migration
     await multiDown(1);
   });
 
-  it('test adding most recent migration with rows that fail index that should only be applied going forward', async () => {
+  // NOTE: If a model is modified for a migration then these
+  // tests must be skipped until the following migration
+  it.skip('[Will fail if a model is modified for migration - see README] test adding most recent migration', async () => {
+    // remove latest migration
+    await multiDown(1);
+
+    // add data to verify you can roll up and then later roll down
+    await seedData();
+
+    // re-add latest migration
+    await knexPrimary.migrate.latest({ loadExtensions: ['.js'] });
+
+    // re-remove latest migration
+    await multiDown(1);
+  });
+
+  // NOTE: If a model is modified for a migration then these
+  // tests must be skipped until the following migration
+  it.skip('[Will fail if a model is modified for migration - see README] test adding most recent migration with rows that fail index that should only be applied going forward', async () => {
     // remove latest migration
     await multiDown(1);
 
@@ -47,7 +60,7 @@ describe('Test new migration', () => {
     await seedData();
     await OrderTable.create(defaultOrder);
 
-    // readd latest migration
+    // re-add latest migration
     await knexPrimary.migrate.latest({ loadExtensions: ['.js'] });
 
     // re-remove latest migration
