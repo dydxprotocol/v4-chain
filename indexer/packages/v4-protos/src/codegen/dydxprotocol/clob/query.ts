@@ -278,9 +278,12 @@ export interface StreamOrderbookUpdatesRequest {
   /** Market ids for price updates. */
 
   marketIds: number[];
-  /** Filter order updates in addition to position updates */
+  /**
+   * Filter order updates by subaccount IDs.
+   * If true, the orderbook updates only include orders from provided subaccount IDs.
+   */
 
-  filterOrders: boolean;
+  filterOrdersBySubaccountId: boolean;
 }
 /**
  * StreamOrderbookUpdatesRequest is a request message for the
@@ -296,9 +299,12 @@ export interface StreamOrderbookUpdatesRequestSDKType {
   /** Market ids for price updates. */
 
   market_ids: number[];
-  /** Filter order updates in addition to position updates */
+  /**
+   * Filter order updates by subaccount IDs.
+   * If true, the orderbook updates only include orders from provided subaccount IDs.
+   */
 
-  filter_orders: boolean;
+  filter_orders_by_subaccount_id: boolean;
 }
 /**
  * StreamOrderbookUpdatesResponse is a response message for the
@@ -1305,7 +1311,7 @@ function createBaseStreamOrderbookUpdatesRequest(): StreamOrderbookUpdatesReques
     clobPairId: [],
     subaccountIds: [],
     marketIds: [],
-    filterOrders: false
+    filterOrdersBySubaccountId: false
   };
 }
 
@@ -1331,8 +1337,8 @@ export const StreamOrderbookUpdatesRequest = {
 
     writer.ldelim();
 
-    if (message.filterOrders === true) {
-      writer.uint32(32).bool(message.filterOrders);
+    if (message.filterOrdersBySubaccountId === true) {
+      writer.uint32(32).bool(message.filterOrdersBySubaccountId);
     }
 
     return writer;
@@ -1378,7 +1384,7 @@ export const StreamOrderbookUpdatesRequest = {
           break;
 
         case 4:
-          message.filterOrders = reader.bool();
+          message.filterOrdersBySubaccountId = reader.bool();
           break;
 
         default:
@@ -1395,7 +1401,7 @@ export const StreamOrderbookUpdatesRequest = {
     message.clobPairId = object.clobPairId?.map(e => e) || [];
     message.subaccountIds = object.subaccountIds?.map(e => SubaccountId.fromPartial(e)) || [];
     message.marketIds = object.marketIds?.map(e => e) || [];
-    message.filterOrders = object.filterOrders ?? false;
+    message.filterOrdersBySubaccountId = object.filterOrdersBySubaccountId ?? false;
     return message;
   }
 

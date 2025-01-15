@@ -255,7 +255,7 @@ func NewOrder(id clobtypes.OrderId) *clobtypes.Order {
 }
 
 type TestCase struct {
-	updates         *[]clobtypes.StreamUpdate
+	updates         []clobtypes.StreamUpdate
 	subaccountIds   []uint32
 	filteredUpdates *[]clobtypes.StreamUpdate
 }
@@ -317,137 +317,147 @@ func TestFilterStreamUpdates(t *testing.T) {
 
 	tests := map[string]TestCase{
 		"baseInScope": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate},
 			subaccountIds:   []uint32{orderId.SubaccountId.Number},
 			filteredUpdates: &[]clobtypes.StreamUpdate{baseStreamUpdate},
 		},
 		"baseNotInScope": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate},
 			subaccountIds:   []uint32{0},
 			filteredUpdates: nil,
 		},
 		"otherInScope": {
-			updates:         &[]clobtypes.StreamUpdate{otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{otherStreamUpdate},
 			subaccountIds:   []uint32{otherSubaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{otherStreamUpdate},
 		},
 		"otherNotInScope": {
-			updates:         &[]clobtypes.StreamUpdate{otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{otherStreamUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: nil,
 		},
 		"bothInScope": {
-			updates:         &[]clobtypes.StreamUpdate{bothStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{bothStreamUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber, otherSubaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{bothStreamUpdate},
 		},
 		"bothOtherInScope": {
-			updates:         &[]clobtypes.StreamUpdate{bothStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{bothStreamUpdate},
+			subaccountIds:   []uint32{otherSubaccountIdNumber},
+			filteredUpdates: &[]clobtypes.StreamUpdate{bothStreamUpdate},
+		},
+		"bothSequentiallyOtherInScope": {
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, otherStreamUpdate},
 			subaccountIds:   []uint32{otherSubaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{otherStreamUpdate},
 		},
 		"bothBaseInScope": {
-			updates:         &[]clobtypes.StreamUpdate{bothStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{bothStreamUpdate},
+			subaccountIds:   []uint32{subaccountIdNumber},
+			filteredUpdates: &[]clobtypes.StreamUpdate{bothStreamUpdate},
+		},
+		"bothSequentiallyBaseInScope": {
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, otherStreamUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{baseStreamUpdate},
 		},
 		"bothNoneInScopeWrongId": {
-			updates:         &[]clobtypes.StreamUpdate{bothStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{bothStreamUpdate},
 			subaccountIds:   []uint32{404},
 			filteredUpdates: nil,
 		},
 		"bothNoneInScopeNoId": {
-			updates:         &[]clobtypes.StreamUpdate{bothStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{bothStreamUpdate},
 			subaccountIds:   []uint32{},
 			filteredUpdates: nil,
 		},
 		"noUpdates": {
-			updates:         &[]clobtypes.StreamUpdate{},
+			updates:         []clobtypes.StreamUpdate{},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: nil,
 		},
 		"noUpdatesNoId": {
-			updates:         &[]clobtypes.StreamUpdate{},
+			updates:         []clobtypes.StreamUpdate{},
 			subaccountIds:   []uint32{},
 			filteredUpdates: nil,
 		},
 		"orderBookFillUpdates": {
-			updates:         &[]clobtypes.StreamUpdate{*orderBookFillUpdate},
+			updates:         []clobtypes.StreamUpdate{*orderBookFillUpdate},
 			subaccountIds:   []uint32{},
 			filteredUpdates: &[]clobtypes.StreamUpdate{*orderBookFillUpdate},
 		},
 		"orderBookFillUpdatesDropUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *orderBookFillUpdate, otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *orderBookFillUpdate, otherStreamUpdate},
 			subaccountIds:   []uint32{},
 			filteredUpdates: &[]clobtypes.StreamUpdate{*orderBookFillUpdate},
 		},
 		"orderBookFillUpdatesFilterUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *orderBookFillUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *orderBookFillUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{baseStreamUpdate, *orderBookFillUpdate},
 		},
 		"orderBookFillUpdatesFilterAndDropUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *orderBookFillUpdate, otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *orderBookFillUpdate, otherStreamUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{baseStreamUpdate, *orderBookFillUpdate},
 		},
 		"takerOrderUpdates": {
-			updates:         &[]clobtypes.StreamUpdate{*takerOrderUpdate},
+			updates:         []clobtypes.StreamUpdate{*takerOrderUpdate},
 			subaccountIds:   []uint32{},
 			filteredUpdates: &[]clobtypes.StreamUpdate{*takerOrderUpdate},
 		},
 		"takerOrderUpdatesDropUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate, otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate, otherStreamUpdate},
 			subaccountIds:   []uint32{},
 			filteredUpdates: &[]clobtypes.StreamUpdate{*takerOrderUpdate},
 		},
 		"takerOrderUpdatesFilterUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate},
 		},
 		"takerOrderUpdatesFilterAndDropUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate, otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate, otherStreamUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate},
 		},
 		"subaccountUpdates": {
-			updates:         &[]clobtypes.StreamUpdate{*subaccountUpdate},
+			updates:         []clobtypes.StreamUpdate{*subaccountUpdate},
 			subaccountIds:   []uint32{},
 			filteredUpdates: &[]clobtypes.StreamUpdate{*subaccountUpdate},
 		},
 		"subaccountUpdatesDropUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *subaccountUpdate, otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *subaccountUpdate, otherStreamUpdate},
 			subaccountIds:   []uint32{},
 			filteredUpdates: &[]clobtypes.StreamUpdate{*subaccountUpdate},
 		},
 		"subaccountUpdatesFilterUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *subaccountUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *subaccountUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{baseStreamUpdate, *subaccountUpdate},
 		},
 		"subaccountUpdatesFilterAndDropUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *subaccountUpdate, otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *subaccountUpdate, otherStreamUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{baseStreamUpdate, *subaccountUpdate},
 		},
 		"priceUpdates": {
-			updates:         &[]clobtypes.StreamUpdate{*priceUpdate},
+			updates:         []clobtypes.StreamUpdate{*priceUpdate},
 			subaccountIds:   []uint32{},
 			filteredUpdates: &[]clobtypes.StreamUpdate{*priceUpdate},
 		},
 		"priceUpdatesDropUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *priceUpdate, otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *priceUpdate, otherStreamUpdate},
 			subaccountIds:   []uint32{},
 			filteredUpdates: &[]clobtypes.StreamUpdate{*priceUpdate},
 		},
 		"priceUpdatesFilterUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *priceUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *priceUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{baseStreamUpdate, *priceUpdate},
 		},
 		"priceUpdatesFilterAndDropUpdate": {
-			updates:         &[]clobtypes.StreamUpdate{baseStreamUpdate, *priceUpdate, otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *priceUpdate, otherStreamUpdate},
 			subaccountIds:   []uint32{subaccountIdNumber},
 			filteredUpdates: &[]clobtypes.StreamUpdate{baseStreamUpdate, *priceUpdate},
 		},
@@ -455,23 +465,12 @@ func TestFilterStreamUpdates(t *testing.T) {
 
 	for name, testCase := range tests {
 		t.Run(name, func(t *testing.T) {
-			func() {
-				filteredUpdatesChannel := make(chan []clobtypes.StreamUpdate, maxSubscriptionChannelSize)
-				defer close(filteredUpdatesChannel)
-				updatesChannel := make(chan []clobtypes.StreamUpdate, maxSubscriptionChannelSize)
-				defer close(updatesChannel)
-
-				subscription := NewOrderbookSubscription(testCase.subaccountIds, updatesChannel)
-				go subscription.FilterSubaccountStreamUpdates(filteredUpdatesChannel, logger)
-				updatesChannel <- *testCase.updates
-
-				if testCase.filteredUpdates != nil {
-					require.Equal(t, <-filteredUpdatesChannel, *testCase.filteredUpdates)
-				} else {
-					time.Sleep(noMessagesMaxSleep)
-					require.Equal(t, len(filteredUpdatesChannel), 0)
-				}
-			}()
+			filteredUpdates := streaming.FilterSubaccountStreamUpdates(testCase.updates, testCase.subaccountIds, logger)
+			if testCase.filteredUpdates != nil {
+				require.Equal(t, *filteredUpdates, *testCase.filteredUpdates)
+			} else {
+				require.Nil(t, filteredUpdates)
+			}
 		})
 	}
 }
