@@ -288,9 +288,12 @@ function verifyIsBech32(address: string): Error | undefined {
   return undefined;
 }
 
-export function isValidAddress(address: string): boolean {
+export function isValidDydxAddress(address: string): boolean {
   // An address is valid if it starts with `dydx1` and is Bech32 format.
-  const ret: boolean = address.startsWith('dydx1') && (verifyIsBech32(address) === undefined);
-  console.log('is valid address: ', ret);
-  return ret;
+  return address.startsWith('dydx1') && (verifyIsBech32(address) === undefined);
+}
+
+export function isValidAddress(address: string): boolean {
+  // Address is valid if its under 90 characters and alphanumeric
+  return address.length <= 90 && /^[a-zA-Z0-9]*$/.test(address);
 }

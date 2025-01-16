@@ -406,16 +406,13 @@ describe('addresses-controller#V4', () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/addresses/${invalidAddress}`,
-        expectedStatus: 400,
+        expectedStatus: 404,
       });
 
       expect(response.body).toEqual({
         errors: [
           {
-            msg: 'address must be a valid dydx address',
-            location: 'params',
-            param: 'address',
-            value: 'invalidAddress',
+            msg: 'No subaccounts found for address invalidAddress',
           },
         ],
       });
@@ -736,10 +733,7 @@ describe('addresses-controller#V4', () => {
       expect(response.body).toEqual({
         errors: [
           {
-            msg: 'address must be a valid dydx address',
-            location: 'params',
-            param: 'address',
-            value: 'invalidAddress',
+            msg: 'Address invalidAddress is not a valid dYdX V4 address',
           },
         ],
       });

@@ -23,6 +23,7 @@ import { complianceProvider } from '../../../helpers/compliance/compliance-clien
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { getIpAddr } from '../../../lib/utils';
+import { CheckAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { ComplianceRequest, ComplianceResponse } from '../../../types';
