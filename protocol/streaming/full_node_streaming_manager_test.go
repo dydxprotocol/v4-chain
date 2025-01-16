@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	maxSubscriptionChannelSize = 2 ^ 10
+	maxSubscriptionChannelSize = 1024
 	owner                      = "foo"
 	noMessagesMaxSleep         = 10 * time.Millisecond
 )
@@ -187,7 +187,7 @@ func NewPriceUpdate(
 				MarketId: 1,
 				Price: pricestypes.MarketPrice{
 					Id:       1,
-					Exponent: 1 ^ -6,
+					Exponent: 1_000_000,
 					Price:    1,
 				},
 				Snapshot: true,
@@ -224,12 +224,12 @@ func NewIndexerOrder(id pv1types.IndexerOrderId) pv1types.IndexerOrder {
 	return pv1types.IndexerOrder{
 		OrderId:  id,
 		Side:     pv1types.IndexerOrder_SIDE_BUY,
-		Quantums: uint64(10 ^ 6),
+		Quantums: uint64(1_000_000),
 		Subticks: 1,
 		GoodTilOneof: &pv1types.IndexerOrder_GoodTilBlock{
-			GoodTilBlock: 10 ^ 9,
+			GoodTilBlock: 1_000_000_000,
 		},
-		TimeInForce:                     10 ^ 9,
+		TimeInForce:                     1_000_000_000,
 		ReduceOnly:                      false,
 		ClientMetadata:                  0,
 		ConditionType:                   pv1types.IndexerOrder_CONDITION_TYPE_UNSPECIFIED,
@@ -241,12 +241,12 @@ func NewOrder(id clobtypes.OrderId) *clobtypes.Order {
 	return &clobtypes.Order{
 		OrderId:  id,
 		Side:     clobtypes.Order_SIDE_BUY,
-		Quantums: uint64(10 ^ 6),
+		Quantums: uint64(1_000_000),
 		Subticks: 1,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{
-			GoodTilBlock: 10 ^ 9,
+			GoodTilBlock: 1_000_000_000,
 		},
-		TimeInForce:                     10 ^ 9,
+		TimeInForce:                     1_000_000_000,
 		ReduceOnly:                      false,
 		ClientMetadata:                  0,
 		ConditionType:                   clobtypes.Order_CONDITION_TYPE_UNSPECIFIED,
