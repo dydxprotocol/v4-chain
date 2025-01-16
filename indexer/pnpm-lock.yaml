@@ -470,6 +470,7 @@ importers:
       '@types/response-time': ^2.3.5
       '@types/supertest': ^2.0.12
       '@types/swagger-ui-express': ^4.1.3
+      bech32: 1.1.4
       big.js: ^6.2.1
       binary-searching: ^2.0.5
       body-parser: ^1.20.0
@@ -510,6 +511,7 @@ importers:
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
       '@keplr-wallet/cosmos': 0.12.122
       '@tsoa/runtime': 5.0.0
+      bech32: 1.1.4
       big.js: 6.2.1
       binary-searching: 2.0.5
       body-parser: 1.20.0

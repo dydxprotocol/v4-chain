@@ -1,9 +1,12 @@
+import * as console from 'node:console';
+
 import { isValidLanguageCode } from '@dydxprotocol-indexer/notifications';
 import {
   perpetualMarketRefresher,
   MAX_PARENT_SUBACCOUNTS,
   CHILD_SUBACCOUNT_MULTIPLIER,
 } from '@dydxprotocol-indexer/postgres';
+import { decode } from 'bech32';
 import { body, checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
@@ -12,6 +15,10 @@ export const CheckSubaccountSchema = checkSchema({
   address: {
     in: ['params', 'query'],
     isString: true,
+    custom: {
+      options: isValidAddress,
+    },
+    errorMessage: 'address must be a valid dydx address',
   },
   subaccountNumber: {
     in: ['params', 'query'],
@@ -26,6 +33,10 @@ export const CheckParentSubaccountSchema = checkSchema({
   address: {
     in: ['params', 'query'],
     isString: true,
+    custom: {
+      options: isValidAddress,
+    },
+    errorMessage: 'address must be a valid dydx address',
   },
   parentSubaccountNumber: {
     in: ['params', 'query'],
@@ -40,6 +51,10 @@ export const checkAddressSchemaRecord: Record<string, ParamSchema> = {
   address: {
     in: ['params'],
     isString: true,
+    custom: {
+      options: isValidAddress,
+    },
+    errorMessage: 'address must be a valid dydx address',
   },
 };
 
@@ -262,3 +277,20 @@ export const RegisterTokenValidationSchema = [
       return true;
     }),
 ];
+
+function verifyIsBech32(address: string): Error | undefined {
+  try {
+    decode(address);
+  } catch (error) {
+    return error;
+  }
+
+  return undefined;
+}
+
+export function isValidAddress(address: string): boolean {
+  // An address is valid if it starts with `dydx1` and is Bech32 format.
+  const ret: boolean = address.startsWith('dydx1') && (verifyIsBech32(address) === undefined);
+  console.log('is valid address: ', ret);
+  return ret;
+}
