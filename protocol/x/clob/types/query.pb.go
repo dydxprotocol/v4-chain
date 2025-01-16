@@ -859,7 +859,8 @@ type StreamOrderbookUpdatesRequest struct {
 	// Market ids for price updates.
 	MarketIds []uint32 `protobuf:"varint,3,rep,packed,name=market_ids,json=marketIds,proto3" json:"market_ids,omitempty"`
 	// Filter order updates by subaccount IDs.
-	// If true, the orderbook updates only include orders from provided subaccount IDs.
+	// If true, the orderbook updates only include orders from provided subaccount
+	// IDs.
 	FilterOrdersBySubaccountId bool `protobuf:"varint,4,opt,name=filter_orders_by_subaccount_id,json=filterOrdersBySubaccountId,proto3" json:"filter_orders_by_subaccount_id,omitempty"`
 }
 

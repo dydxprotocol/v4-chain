@@ -280,7 +280,8 @@ export interface StreamOrderbookUpdatesRequest {
   marketIds: number[];
   /**
    * Filter order updates by subaccount IDs.
-   * If true, the orderbook updates only include orders from provided subaccount IDs.
+   * If true, the orderbook updates only include orders from provided subaccount
+   * IDs.
    */
 
   filterOrdersBySubaccountId: boolean;
@@ -301,7 +302,8 @@ export interface StreamOrderbookUpdatesRequestSDKType {
   market_ids: number[];
   /**
    * Filter order updates by subaccount IDs.
-   * If true, the orderbook updates only include orders from provided subaccount IDs.
+   * If true, the orderbook updates only include orders from provided subaccount
+   * IDs.
    */
 
   filter_orders_by_subaccount_id: boolean;
