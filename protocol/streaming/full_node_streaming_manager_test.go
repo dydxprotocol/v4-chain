@@ -187,7 +187,7 @@ func NewPriceUpdate(
 				MarketId: 1,
 				Price: pricestypes.MarketPrice{
 					Id:       1,
-					Exponent: 1_000_000,
+					Exponent: 6,
 					Price:    1,
 				},
 				Snapshot: true,
@@ -465,7 +465,7 @@ func TestFilterStreamUpdates(t *testing.T) {
 
 	for name, testCase := range tests {
 		t.Run(name, func(t *testing.T) {
-			filteredUpdates := streaming.FilterSubaccountStreamUpdates(testCase.updates, testCase.subaccountIds, logger)
+			filteredUpdates := streaming.FilterStreamUpdateBySubaccount(testCase.updates, testCase.subaccountIds, logger)
 			if testCase.filteredUpdates != nil {
 				require.Equal(t, *filteredUpdates, *testCase.filteredUpdates)
 			} else {

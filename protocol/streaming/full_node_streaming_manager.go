@@ -220,7 +220,7 @@ func (sm *FullNodeStreamingManagerImpl) getNextAvailableSubscriptionId() uint32 
 	return id
 }
 
-func doFilterSubaccountStreamUpdate(
+func doFilterStreamUpdateBySubaccount(
 	orderBookUpdate *clobtypes.StreamUpdate_OrderbookUpdate,
 	subaccountIdNumbers []uint32,
 	logger log.Logger,
@@ -242,7 +242,7 @@ func doFilterSubaccountStreamUpdate(
 // If a StreamUpdate_OrderUpdate contains no updates for subscribed subaccounts, drop message
 // If a StreamUpdate_OrderUpdate contains updates for subscribed subaccounts, construct a new
 // StreamUpdate_OrderUpdate with updates only for subscribed subaccounts
-func FilterSubaccountStreamUpdates(
+func FilterStreamUpdateBySubaccount(
 	updates []clobtypes.StreamUpdate,
 	subaccountIdNumbers []uint32,
 	logger log.Logger,
@@ -252,7 +252,7 @@ func FilterSubaccountStreamUpdates(
 	for _, update := range updates {
 		switch updateMessage := update.UpdateMessage.(type) {
 		case *clobtypes.StreamUpdate_OrderbookUpdate:
-			if doFilterSubaccountStreamUpdate(updateMessage, subaccountIdNumbers, logger) {
+			if doFilterStreamUpdateBySubaccount(updateMessage, subaccountIdNumbers, logger) {
 				filteredUpdates = append(filteredUpdates, update)
 			}
 		default:
@@ -262,9 +262,8 @@ func FilterSubaccountStreamUpdates(
 
 	if len(filteredUpdates) > 0 {
 		return &filteredUpdates
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // Subscribe subscribes to the orderbook updates stream.
@@ -347,7 +346,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	// to send through stream.
 	for updates := range subscription.updatesChannel {
 		if filterOrdersBySubAccountId {
-			filteredUpdates := FilterSubaccountStreamUpdates(updates, subaccountIdNumbers, sm.logger)
+			filteredUpdates := FilterStreamUpdateBySubaccount(updates, subaccountIdNumbers, sm.logger)
 			if filteredUpdates != nil {
 				updates = *filteredUpdates
 			}
