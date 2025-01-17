@@ -98,7 +98,7 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse filterOrders from query parameters
-	filterOrders, err := parseFilterOrders(r)
+	filterOrders, err := parseFilterOrdersBySubaccountId(r)
 	if err != nil {
 		ws.logger.Error("Error parsing filterOrders", "err", err)
 		if err := sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error()); err != nil {
@@ -180,17 +180,17 @@ func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
 	return subaccountIds, nil
 }
 
-// parseFilterOrders is a helper function to parse the filterOrders flag from the query parameters.
-func parseFilterOrders(r *http.Request) (bool, error) {
-	filterOrdersParam := r.URL.Query().Get("filterOrders")
-	if filterOrdersParam == "" {
+// parseFilterOrdersBySubaccountId is a helper function to parse the filterOrdersBySubaccountId flag from the query parameters.
+func parseFilterOrdersBySubaccountId(r *http.Request) (bool, error) {
+	token := r.URL.Query().Get("filterOrdersBySubaccountId")
+	if token == "" {
 		return false, nil
 	}
-	filterOrders, err := strconv.ParseBool(filterOrdersParam)
+	value, err := strconv.ParseBool(token)
 	if err != nil {
-		return false, fmt.Errorf("invalid filterOrders: %s", filterOrdersParam)
+		return false, fmt.Errorf("invalid filterOrdersBySubaccountId: %s", token)
 	}
-	return filterOrders, nil
+	return value, nil
 }
 
 // parseUint32 is a helper function to parse the uint32 from the query parameters.
