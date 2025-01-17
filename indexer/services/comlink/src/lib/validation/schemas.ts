@@ -52,7 +52,7 @@ export const checkAddressSchemaRecord: Record<string, ParamSchema> = {
     custom: {
       options: isValidAddress,
     },
-    errorMessage: 'address must be a valid dydx address',
+    errorMessage: 'address must be a valid address',
   },
 };
 
