@@ -433,14 +433,14 @@ describe('transfers-controller#V4', () => {
     it('Get /transfers with non-existent address and subaccount number returns 404', async () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: '/v4/transfers?address=invalid_address&subaccountNumber=100',
+        path: '/v4/transfers?address=invalidaddress&subaccountNumber=100',
         expectedStatus: 404,
       });
 
       expect(response.body).toEqual({
         errors: [
           {
-            msg: 'No subaccount found with address invalid_address and subaccountNumber 100',
+            msg: 'No subaccount found with address invalidaddress and subaccountNumber 100',
           },
         ],
       });
@@ -981,14 +981,14 @@ describe('transfers-controller#V4', () => {
     it('Get /transfers/parentSubaccountNumber with non-existent address and subaccount number returns 404', async () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: '/v4/transfers/parentSubaccountNumber?address=invalid_address&parentSubaccountNumber=100',
+        path: '/v4/transfers/parentSubaccountNumber?address=invalidaddress&parentSubaccountNumber=100',
         expectedStatus: 404,
       });
 
       expect(response.body).toEqual({
         errors: [
           {
-            msg: 'No subaccount found with address invalid_address and parentSubaccountNumber 100',
+            msg: 'No subaccount found with address invalidaddress and parentSubaccountNumber 100',
           },
         ],
       });

@@ -1,5 +1,3 @@
-import * as console from 'node:console';
-
 import { isValidLanguageCode } from '@dydxprotocol-indexer/notifications';
 import {
   perpetualMarketRefresher,
