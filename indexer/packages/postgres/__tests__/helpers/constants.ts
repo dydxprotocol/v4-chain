@@ -78,7 +78,7 @@ export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvt
 export const vaultAddress: string = 'dydx1c0m5x87llaunl5sgv3q5vd7j5uha26d2q2r2q0';
 
 // ============== Subaccounts ==============
-export const defaultWalletAddress: string = 'defaultWalletAddress';
+export const defaultWalletAddress: string = 'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4';
 
 export const defaultSubaccount: SubaccountCreateObject = {
   address: defaultAddress,
