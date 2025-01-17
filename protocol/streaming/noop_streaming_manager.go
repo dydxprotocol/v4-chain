@@ -24,6 +24,7 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 	_ []uint32,
 	_ []*satypes.SubaccountId,
 	_ []uint32,
+	_ bool,
 	_ types.OutgoingMessageSender,
 ) (
 	err error,

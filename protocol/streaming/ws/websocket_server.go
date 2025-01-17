@@ -97,6 +97,16 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Parse filterOrders from query parameters
+	filterOrders, err := parseFilterOrders(r)
+	if err != nil {
+		ws.logger.Error("Error parsing filterOrders", "err", err)
+		if err := sendCloseWithReason(conn, websocket.CloseUnsupportedData, err.Error()); err != nil {
+			ws.logger.Error("Error sending close message", "err", err)
+		}
+		return
+	}
+
 	websocketMessageSender := &WebsocketMessageSender{
 		cdc:  ws.cdc,
 		conn: conn,
@@ -110,6 +120,7 @@ func (ws *WebsocketServer) Handler(w http.ResponseWriter, r *http.Request) {
 		clobPairIds,
 		subaccountIds,
 		marketIds,
+		filterOrders,
 		websocketMessageSender,
 	)
 	if err != nil {
@@ -167,6 +178,19 @@ func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
 	}
 
 	return subaccountIds, nil
+}
+
+// parseFilterOrders is a helper function to parse the filterOrders flag from the query parameters.
+func parseFilterOrders(r *http.Request) (bool, error) {
+	filterOrdersParam := r.URL.Query().Get("filterOrders")
+	if filterOrdersParam == "" {
+		return false, nil
+	}
+	filterOrders, err := strconv.ParseBool(filterOrdersParam)
+	if err != nil {
+		return false, fmt.Errorf("invalid filterOrders: %s", filterOrdersParam)
+	}
+	return filterOrders, nil
 }
 
 // parseUint32 is a helper function to parse the uint32 from the query parameters.
