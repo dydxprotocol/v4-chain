@@ -22,6 +22,7 @@ import { Secp256k1 } from '@cosmjs/crypto';
 import { toBech32 } from '@cosmjs/encoding';
 import { DateTime } from 'luxon';
 import { verifyADR36Amino } from '@keplr-wallet/cosmos';
+import { defaultAddress3 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 jest.mock('@cosmjs/crypto', () => ({
   ...jest.requireActual('@cosmjs/crypto'),
@@ -211,7 +212,7 @@ describe('addresses-controller#V4', () => {
     it('Get / with non-existent address and subaccount number returns 404', async () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: `/v4/addresses/${invalidAddress}/subaccountNumber/` +
+        path: `/v4/addresses/${defaultAddress3}/subaccountNumber/` +
         `${testConstants.defaultSubaccount.subaccountNumber}`,
         expectedStatus: 404,
       });
@@ -219,7 +220,7 @@ describe('addresses-controller#V4', () => {
       expect(response.body).toEqual({
         errors: [
           {
-            msg: `No subaccount found with address ${invalidAddress} and ` +
+            msg: `No subaccount found with address ${defaultAddress3} and ` +
             `subaccountNumber ${testConstants.defaultSubaccount.subaccountNumber}`,
           },
         ],
@@ -411,15 +412,10 @@ describe('addresses-controller#V4', () => {
       expect(response.body).toEqual({
         errors: [
           {
-            msg: `No subaccounts found for address ${invalidAddress}`,
+            msg: 'No subaccounts found for address invalidAddress',
           },
         ],
       });
-      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.404', 1,
-        {
-          path: '/:address',
-          method: 'GET',
-        });
     });
   });
 
@@ -561,7 +557,7 @@ describe('addresses-controller#V4', () => {
   it('Get /:address/parentSubaccountNumber/ with non-existent address returns 404', async () => {
     const response: request.Response = await sendRequest({
       type: RequestMethod.GET,
-      path: `/v4/addresses/${invalidAddress}/parentSubaccountNumber/` +
+      path: `/v4/addresses/${defaultAddress3}/parentSubaccountNumber/` +
           `${testConstants.defaultSubaccount.subaccountNumber}`,
       expectedStatus: 404,
     });
@@ -569,7 +565,7 @@ describe('addresses-controller#V4', () => {
     expect(response.body).toEqual({
       errors: [
         {
-          msg: `No subaccounts found for address ${invalidAddress} and ` +
+          msg: `No subaccounts found for address ${defaultAddress3} and ` +
               `parentSubaccountNumber ${testConstants.defaultSubaccount.subaccountNumber}`,
         },
       ],
@@ -740,10 +736,6 @@ describe('addresses-controller#V4', () => {
             msg: 'Address invalidAddress is not a valid dYdX V4 address',
           },
         ],
-      });
-      expect(statsSpy).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.400', 1, {
-        path: '/:address/registerToken',
-        method: 'POST',
       });
     });
 

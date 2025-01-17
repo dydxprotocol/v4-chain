@@ -246,14 +246,14 @@ describe('pnlTicks-controller#V4', () => {
     it('Get /historical-pnl with non-existent address and subaccount number returns 404', async () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: '/v4/historical-pnl?address=invalid_address&subaccountNumber=100',
+        path: '/v4/historical-pnl?address=invalidaddress&subaccountNumber=100',
         expectedStatus: 404,
       });
 
       expect(response.body).toEqual({
         errors: [
           {
-            msg: 'No subaccount found with address invalid_address and subaccountNumber 100',
+            msg: 'No subaccount found with address invalidaddress and subaccountNumber 100',
           },
         ],
       });

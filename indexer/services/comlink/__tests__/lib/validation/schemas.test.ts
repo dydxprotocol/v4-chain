@@ -17,7 +17,12 @@ describe('schemas', () => {
   const defaultAddress: string = testConstants.defaultSubaccount.address;
   describe('CheckSubaccountSchema', () => {
     it.each([
-      ['missing address', { subaccountNumber: defaultSubaccountNumber }, 'address', 'Invalid value'],
+      [
+        'missingaddress',
+        { subaccountNumber: defaultSubaccountNumber },
+        'address',
+        'address must be a valid dydx address',
+      ],
       [
         'missing subaccountNumber',
         { address: defaultAddress },
