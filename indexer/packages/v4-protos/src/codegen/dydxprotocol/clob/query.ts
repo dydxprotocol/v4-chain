@@ -278,6 +278,13 @@ export interface StreamOrderbookUpdatesRequest {
   /** Market ids for price updates. */
 
   marketIds: number[];
+  /**
+   * Filter order updates by subaccount IDs.
+   * If true, the orderbook updates only include orders from provided subaccount
+   * IDs.
+   */
+
+  filterOrdersBySubaccountId: boolean;
 }
 /**
  * StreamOrderbookUpdatesRequest is a request message for the
@@ -293,6 +300,13 @@ export interface StreamOrderbookUpdatesRequestSDKType {
   /** Market ids for price updates. */
 
   market_ids: number[];
+  /**
+   * Filter order updates by subaccount IDs.
+   * If true, the orderbook updates only include orders from provided subaccount
+   * IDs.
+   */
+
+  filter_orders_by_subaccount_id: boolean;
 }
 /**
  * StreamOrderbookUpdatesResponse is a response message for the
@@ -1298,7 +1312,8 @@ function createBaseStreamOrderbookUpdatesRequest(): StreamOrderbookUpdatesReques
   return {
     clobPairId: [],
     subaccountIds: [],
-    marketIds: []
+    marketIds: [],
+    filterOrdersBySubaccountId: false
   };
 }
 
@@ -1323,6 +1338,11 @@ export const StreamOrderbookUpdatesRequest = {
     }
 
     writer.ldelim();
+
+    if (message.filterOrdersBySubaccountId === true) {
+      writer.uint32(32).bool(message.filterOrdersBySubaccountId);
+    }
+
     return writer;
   },
 
@@ -1365,6 +1385,10 @@ export const StreamOrderbookUpdatesRequest = {
 
           break;
 
+        case 4:
+          message.filterOrdersBySubaccountId = reader.bool();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1379,6 +1403,7 @@ export const StreamOrderbookUpdatesRequest = {
     message.clobPairId = object.clobPairId?.map(e => e) || [];
     message.subaccountIds = object.subaccountIds?.map(e => SubaccountId.fromPartial(e)) || [];
     message.marketIds = object.marketIds?.map(e => e) || [];
+    message.filterOrdersBySubaccountId = object.filterOrdersBySubaccountId ?? false;
     return message;
   }
 
