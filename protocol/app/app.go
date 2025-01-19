@@ -1592,6 +1592,7 @@ func New(
 	// This behavior can be invoked via running `dydxprotocold export`, which exports the chain state to a JSON file.
 	// In the export case, the memclob does not need to be hydrated, as it is never used.
 	if loadLatest {
+		// !!!! App loads the version here.
 		if err := app.LoadLatestVersion(); err != nil {
 			tmos.Exit(err.Error())
 		}

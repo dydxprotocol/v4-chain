@@ -55,7 +55,6 @@ require (
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/burdiyan/kafkautil v0.0.0-20190131162249-eaf83ed22d5b
 	github.com/cosmos/cosmos-db v1.0.2
-	github.com/cosmos/iavl v1.2.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/v8 v8.5.1
 	github.com/cosmos/rosetta v0.50.3
@@ -121,6 +120,7 @@ require (
 	github.com/ashanbrown/makezero v1.1.1 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/aws/aws-sdk-go v1.44.224 // indirect
+	github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
@@ -135,6 +135,7 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/butuzov/ireturn v0.3.0 // indirect
 	github.com/butuzov/mirror v1.2.0 // indirect
+	github.com/bvinc/go-sqlite-lite v0.6.1 // indirect
 	github.com/catenacyber/perfsprint v0.7.1 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.2 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
@@ -158,6 +159,8 @@ require (
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
+	github.com/cosmos/iavl v1.2.0 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-alpha.4 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/interchain-security/v5 v5.2.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
@@ -288,6 +291,7 @@ require (
 	github.com/kisielk/errcheck v1.8.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.5 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/kocubinski/costor-api v1.1.1 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/kulti/thelper v0.6.3 // indirect
@@ -468,12 +472,20 @@ replace (
 	// should use v0.11.0. The Cosmos build fails with types/context.go:65:29: undefined: comet.BlockInfo otherwise.
 	cosmossdk.io/core => cosmossdk.io/core v0.11.0
 	// Use dYdX fork of Cosmos SDK/store
-	cosmossdk.io/store => github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d
+	// This points to `Use go-ethereum secp256k1 directly` commit on dydx-fork-v0.50.5.
+	// cosmossdk.io/store => github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d
+	// !!!!!!
+	cosmossdk.io/store => ../../dydxprotocol/cosmos-sdk/store
 	// Use dYdX fork of CometBFT
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20241126215519-69cdde955fd0
 	// Use dYdX fork of Cosmos SDK
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20250113155252-f00c500eaff3
+	github.com/cosmos/cosmos-sdk => ../../dydxprotocol/cosmos-sdk/
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85
+	// Use dYdX fork of IAVL
+	// This points to `fix: working hash with initial version` commit on roy/v1.x.x-fix.
+	// github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85
+	// !!!!
+	github.com/cosmos/iavl/v2 => ../../cosmos/iavl
 )
 
 replace (

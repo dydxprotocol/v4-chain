@@ -749,6 +749,8 @@ github.com/avast/retry-go v3.0.0+incompatible/go.mod h1:XtSnn+n/sHqQIpZ10K1qAevB
 github.com/aws/aws-sdk-go v1.44.122/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go v1.44.224 h1:09CiaaF35nRmxrzWZ2uRq5v6Ghg/d2RiPjZnSgtt+RQ=
 github.com/aws/aws-sdk-go v1.44.224/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e h1:dSeuFcs4WAJJnswS8vXy7YY1+fdlbVPuEVmDAfqvFOQ=
+github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e/go.mod h1:uh71c5Vc3VNIplXOFXsnDy21T1BepgT32c5X/YPrOyc=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
@@ -788,6 +790,8 @@ github.com/butuzov/ireturn v0.3.0 h1:hTjMqWw3y5JC3kpnC5vXmFJAWI/m31jaCYQqzkS6PL0
 github.com/butuzov/ireturn v0.3.0/go.mod h1:A09nIiwiqzN/IoVo9ogpa0Hzi9fex1kd9PSD6edP5ZA=
 github.com/butuzov/mirror v1.2.0 h1:9YVK1qIjNspaqWutSv8gsge2e/Xpq1eqEkslEUHy5cs=
 github.com/butuzov/mirror v1.2.0/go.mod h1:DqZZDtzm42wIAIyHXeN8W/qb1EPlb9Qn/if9icBOpdQ=
+github.com/bvinc/go-sqlite-lite v0.6.1 h1:JU8Rz5YAOZQiU3WEulKF084wfXpytRiqD2IaW2QjPz4=
+github.com/bvinc/go-sqlite-lite v0.6.1/go.mod h1:2GiE60NUdb0aNhDdY+LXgrqAVDpi2Ijc6dB6ZMp9x6s=
 github.com/bytedance/sonic v1.5.0/go.mod h1:ED5hyg4y6t3/9Ku1R6dU/4KyJ48DZ4jPhfY1O2AihPM=
 github.com/bytedance/sonic v1.9.1/go.mod h1:i736AoUSYt75HyZLoJW9ERYxcy6eaN6h4BZXU064P/U=
 github.com/catenacyber/perfsprint v0.7.1 h1:PGW5G/Kxn+YrN04cRAZKC+ZuvlVwolYMrIyyTJ/rMmc=
@@ -887,6 +891,8 @@ github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ
 github.com/cosmos/gogoproto v1.4.2/go.mod h1:cLxOsn1ljAHSV527CHOtaIP91kK6cCrZETRBrkzItWU=
 github.com/cosmos/gogoproto v1.7.0 h1:79USr0oyXAbxg3rspGh/m4SWNyoz/GLaAh0QlCe2fro=
 github.com/cosmos/gogoproto v1.7.0/go.mod h1:yWChEv5IUEYURQasfyBW5ffkMHR/90hiHgbNgrtp4j0=
+github.com/cosmos/iavl-bench/bench v0.0.4 h1:J6zQPiBqF4CXMM3QBsLqZgQEBGY0taX85vLIZMhmAfQ=
+github.com/cosmos/iavl-bench/bench v0.0.4/go.mod h1:j2rLae77EffacWcp7mmj3Uaa4AOAmZA7ymvhsuBQKKI=
 github.com/cosmos/ibc-go/modules/capability v1.0.1 h1:ibwhrpJ3SftEEZRxCRkH0fQZ9svjthrX2+oXdZvzgGI=
 github.com/cosmos/ibc-go/modules/capability v1.0.1/go.mod h1:rquyOV262nGJplkumH+/LeYs04P3eV8oB7ZM4Ygqk4E=
 github.com/cosmos/ibc-go/v8 v8.0.0 h1:QKipnr/NGwc+9L7NZipURvmSIu+nw9jOIWTJuDBqOhg=
@@ -960,10 +966,6 @@ github.com/dvsekhvalnov/jose2go v1.6.0 h1:Y9gnSnP4qEI0+/uQkHvFXeD2PLPJeXEL+ySMEA
 github.com/dvsekhvalnov/jose2go v1.6.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
 github.com/dydxprotocol/cometbft v0.38.6-0.20241126215519-69cdde955fd0 h1:KBMuBNAE91SVeULnq2XBnmSDGeimI6aM1+YxlLb0yOI=
 github.com/dydxprotocol/cometbft v0.38.6-0.20241126215519-69cdde955fd0/go.mod h1:XSQX1hQbr54qaJb4/5YNNZGXkAQHHa6bi/KMcN1SQ7w=
-github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20250113155252-f00c500eaff3 h1:F9zv2Yvn7wurRAbC1mrZ/c/7GyWp1ux7uLxk3ZPHLH0=
-github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20250113155252-f00c500eaff3/go.mod h1:z/5+LD4MJzLqbe+fBCWI2pZLnQbOlzSM82snAw2zceg=
-github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d h1:HgLu1FD2oDFzlKW6/+SFXlH5Os8cwNTbplQIrQOWx8w=
-github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d/go.mod h1:zMcD3hfNwd0WMTpdRUhS3QxoCoEtBXWeoKsu3iaLBbQ=
 github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85 h1:5B/yGZyTBX/OZASQQMnk6Ms/TZja56MYd8OBaVc0Mho=
 github.com/dydxprotocol/iavl v1.1.1-0.20240509161911-1c8b8e787e85/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
@@ -1452,6 +1454,8 @@ github.com/klauspost/compress v1.17.11 h1:In6xLpyWOi1+C7tXUUWv2ot1QvBjxevKAaI6IX
 github.com/klauspost/compress v1.17.11/go.mod h1:pMDklpSncoRMuLFrf1W9Ss9KT+0rH90U12bZKk7uwG0=
 github.com/klauspost/cpuid/v2 v2.0.9/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=
 github.com/klauspost/cpuid/v2 v2.2.4/go.mod h1:RVVoqg1df56z8g3pUjL/3lE5UfnlrJX8tyFgg4nqhuY=
+github.com/kocubinski/costor-api v1.1.1 h1:sgfJA7T/8IfZ59zxiMrED0xdjerAFuPNBTqyO90GiEE=
+github.com/kocubinski/costor-api v1.1.1/go.mod h1:ESMBMDkKfN+9vvvhhNVdKLhbOmzI3O/i16iXvRM9Tuc=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kr/fs v0.1.0/go.mod h1:FFnZGqtBN9Gxj7eW1uZ42v5BccTP0vu6NEaFoC2HwRg=
 github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515/go.mod h1:+0opPa2QZZtGFBFZlji/RkVcI2GknAs/DXo4wKdlNEc=

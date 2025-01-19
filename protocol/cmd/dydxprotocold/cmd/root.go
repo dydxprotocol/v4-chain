@@ -412,6 +412,7 @@ func newApp(
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(int(cast.ToUint64(appOpts.Get(flagIAVLCacheSize)))),
 		baseapp.SetIAVLDisableFastNode(true),
+		baseapp.SetIAVLV2("i2t"),
 		baseapp.SetChainID(chainID),
 	)
 }

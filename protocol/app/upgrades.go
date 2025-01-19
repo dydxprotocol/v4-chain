@@ -52,6 +52,7 @@ func (app *App) setupUpgradeStoreLoaders() {
 
 	for _, upgrade := range Upgrades {
 		if upgradeInfo.Name == upgrade.UpgradeName {
+			// !!! StoreLoader here
 			app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &upgrade.StoreUpgrades))
 		}
 	}
