@@ -352,6 +352,7 @@ export interface PerpetualMarketResponseObject {
   openInterestLowerCap?: string,
   openInterestUpperCap?: string,
   baseOpenInterest: string,
+  defaultFundingRate1H?: string,
 }
 
 /* ------- ORDERBOOK TYPES ------- */

@@ -18,10 +18,12 @@ import {
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
   PerpetualMarketCreateEventV2,
+  PerpetualMarketCreateEventV3,
   LiquidityTierUpsertEventV1,
   LiquidityTierUpsertEventV2,
   UpdatePerpetualEventV1,
   UpdatePerpetualEventV2,
+  UpdatePerpetualEventV3,
   UpdateClobPairEventV1,
   SubaccountMessage,
   DeleveragingEventV1,
@@ -171,6 +173,14 @@ export function indexerTendermintEventToEventProtoWithType(
           version,
           blockEventIndex,
         };
+      } else if (version === 3) {
+        return {
+          type: DydxIndexerSubtypes.PERPETUAL_MARKET,
+          eventProto: PerpetualMarketCreateEventV3.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
       } else {
         const message: string = `Invalid version for perpetual market event: ${version}`;
         logger.error({
@@ -211,6 +221,14 @@ export function indexerTendermintEventToEventProtoWithType(
         return {
           type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
           eventProto: UpdatePerpetualEventV2.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
+      } else if (version === 3) {
+        return {
+          type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+          eventProto: UpdatePerpetualEventV3.decode(eventDataBinary),
           indexerTendermintEvent: event,
           version,
           blockEventIndex,

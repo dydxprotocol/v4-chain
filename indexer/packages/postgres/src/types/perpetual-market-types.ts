@@ -18,6 +18,7 @@ export interface PerpetualMarketCreateObject {
   liquidityTierId: number,
   marketType: PerpetualMarketType,
   baseOpenInterest: string,
+  defaultFundingRate1H: string,
 }
 
 export interface PerpetualMarketUpdateObject {
@@ -54,6 +55,7 @@ export enum PerpetualMarketColumns {
   subticksPerTick = 'subticksPerTick',
   stepBaseQuantums = 'stepBaseQuantums',
   liquidityTierId = 'liquidityTierId',
+  defaultFundingRate1H = 'defaultFundingRate1H',
 }
 
 export enum PerpetualMarketStatus {

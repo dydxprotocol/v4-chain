@@ -347,6 +347,7 @@ export function generatePerpetualMarketMessage(
         nextFundingRate: perpetualMarket.nextFundingRate,
         openInterest: perpetualMarket.openInterest,
         baseOpenInterest: perpetualMarket.baseOpenInterest,
+        defaultFundingRate1H: perpetualMarket.defaultFundingRate1H,
       };
     })
     .value();

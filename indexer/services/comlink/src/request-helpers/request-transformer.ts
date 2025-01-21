@@ -389,6 +389,7 @@ export function perpetualMarketToResponseObject(
     openInterestLowerCap: liquidityTier.openInterestLowerCap,
     openInterestUpperCap: liquidityTier.openInterestUpperCap,
     baseOpenInterest: perpetualMarket.baseOpenInterest,
+    defaultFundingRate1H: perpetualMarket.defaultFundingRate1H,
   };
 }
 

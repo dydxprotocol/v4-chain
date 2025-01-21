@@ -23,8 +23,9 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		5,
 		0,
 		perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		100,
 	)
-	expectedPerpetualMarketCreateEventProto := &PerpetualMarketCreateEventV2{
+	expectedPerpetualMarketCreateEventProto := &PerpetualMarketCreateEventV3{
 		Id:                        0,
 		ClobPairId:                0,
 		Ticker:                    "BTC",
@@ -36,6 +37,7 @@ func TestNewPerpetualMarketCreateEvent_Success(t *testing.T) {
 		StepBaseQuantums:          5,
 		LiquidityTier:             0,
 		MarketType:                v1types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		DefaultFunding8HrPpm:      100,
 	}
 	require.Equal(t, expectedPerpetualMarketCreateEventProto, perpetualMarketCreateEvent)
 }
