@@ -55,7 +55,7 @@ message PerpetualParams {
   // a position size of one full coin.
   sint32 atomic_resolution = 4;
 
-  // The default funding payment if there is no price premium. In
+  // The default (8hr) funding payment if there is no price premium. In
   // parts-per-million.
   sint32 default_funding_ppm = 5;
 

@@ -285,6 +285,7 @@ export const defaultPerpetualMarket: PerpetualMarketCreateObject = {
   liquidityTierId: 0,
   marketType: PerpetualMarketType.CROSS,
   baseOpenInterest: '100000',
+  defaultFundingRate1H: '0',
 };
 export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   id: '1',
@@ -304,6 +305,7 @@ export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   liquidityTierId: 0,
   marketType: PerpetualMarketType.CROSS,
   baseOpenInterest: '100000',
+  defaultFundingRate1H: '0',
 };
 export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
   id: '2',
@@ -323,6 +325,7 @@ export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
   liquidityTierId: 0,
   marketType: PerpetualMarketType.CROSS,
   baseOpenInterest: '100000',
+  defaultFundingRate1H: '0',
 };
 
 export const isolatedPerpetualMarket: PerpetualMarketCreateObject = {
@@ -343,6 +346,7 @@ export const isolatedPerpetualMarket: PerpetualMarketCreateObject = {
   liquidityTierId: 0,
   marketType: PerpetualMarketType.ISOLATED,
   baseOpenInterest: '100000',
+  defaultFundingRate1H: '0.0001',
 };
 
 export const isolatedPerpetualMarket2: PerpetualMarketCreateObject = {
@@ -363,6 +367,7 @@ export const isolatedPerpetualMarket2: PerpetualMarketCreateObject = {
   liquidityTierId: 0,
   marketType: PerpetualMarketType.ISOLATED,
   baseOpenInterest: '100000',
+  defaultFundingRate1H: '0.0001',
 };
 
 // ============== Orders ==============

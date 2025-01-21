@@ -17,14 +17,16 @@ func TestNewUpdatePerpetualEvent_Success(t *testing.T) {
 		-8,
 		2,
 		perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		100, // defaultFundingPpm
 	)
-	expectedUpdatePerpetualEventProto := &UpdatePerpetualEventV2{
-		Id:               5,
-		Ticker:           "BTC-ETH",
-		MarketId:         5,
-		AtomicResolution: -8,
-		LiquidityTier:    2,
-		MarketType:       v1types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+	expectedUpdatePerpetualEventProto := &UpdatePerpetualEventV3{
+		Id:                   5,
+		Ticker:               "BTC-ETH",
+		MarketId:             5,
+		AtomicResolution:     -8,
+		LiquidityTier:        2,
+		MarketType:           v1types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		DefaultFunding8HrPpm: 100,
 	}
 	require.Equal(t, expectedUpdatePerpetualEventProto, updatePerpetualEvent)
 }

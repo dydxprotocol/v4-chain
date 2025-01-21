@@ -310,6 +310,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				uint64(5),
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.DefaultFundingPpm,
 			),
 		),
 	).Once().Return()
