@@ -60,7 +60,7 @@ describe('update-perpetual-validator', () => {
     [
       'UpdatePerpetualEventV3',
       UpdatePerpetualEventV3.encode(defaultUpdatePerpetualEventV3).finish(),
-      defaultUpdatePerpetualEventV2,
+      defaultUpdatePerpetualEventV3,
     ],
   ])('%s', (
     _name: string,

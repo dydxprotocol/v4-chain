@@ -26,7 +26,8 @@ import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   MarketEventV1,
-  PerpetualMarketCreateEventV1,
+  PerpetualMarketCreateEventV2,
+  PerpetualMarketCreateEventV3,
   SubaccountMessage,
   SubaccountUpdateEventV1,
   Timestamp,
@@ -46,7 +47,8 @@ import {
   defaultFundingUpdateSampleEvent,
   defaultHeight,
   defaultMarketModify,
-  defaultPerpetualMarketCreateEventV1,
+  defaultPerpetualMarketCreateEventV2,
+  defaultPerpetualMarketCreateEventV3,
   defaultPreviousHeight,
   defaultSubaccountMessage,
 } from '../helpers/constants';
@@ -133,9 +135,15 @@ describe('on-message', () => {
     defaultMarketModify,
   ).finish());
 
-  const defaultPerpetualMarketEventBinary: Uint8Array = Uint8Array.from(
-    PerpetualMarketCreateEventV1.encode(
-      defaultPerpetualMarketCreateEventV1,
+  const defaultPerpetualMarketEventV2Binary: Uint8Array = Uint8Array.from(
+    PerpetualMarketCreateEventV2.encode(
+      defaultPerpetualMarketCreateEventV2,
+    ).finish(),
+  );
+
+  const defaultPerpetualMarketEventV3Binary: Uint8Array = Uint8Array.from(
+    PerpetualMarketCreateEventV3.encode(
+      defaultPerpetualMarketCreateEventV3,
     ).finish(),
   );
 
@@ -252,8 +260,22 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  // NEXT!! both V2 and V3
-  it('successfully processes block with `PerpetualMarketCreateV2` and its funding events', async () => {
+  it.each([
+    [
+      'PerpetualMarketCreateV2',
+      defaultPerpetualMarketCreateEventV2,
+      defaultPerpetualMarketEventV2Binary,
+    ],
+    [
+      'PerpetualMarketCreateV3',
+      defaultPerpetualMarketCreateEventV3,
+      defaultPerpetualMarketEventV3Binary,
+    ],
+  ])('successfully processes block with %s and its funding events', async (
+    _name: string,
+    marketCreateEvent: any,
+    marketCreateEventBinary: Uint8Array,
+  ) => {
     await Promise.all([
       MarketTable.create(testConstants.defaultMarket),
       MarketTable.create(testConstants.defaultMarket2),
@@ -275,13 +297,13 @@ describe('on-message', () => {
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.PERPETUAL_MARKET,
-        defaultPerpetualMarketEventBinary,
+        marketCreateEventBinary,
         0,
         eventIndex,
       ),
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.FUNDING,
-        defaultFundingEventBinary,
+        marketCreateEventBinary,
         transactionIndex,
         eventIndex + 1,
       ),
@@ -310,7 +332,7 @@ describe('on-message', () => {
         orderBy: [[PerpetualMarketColumns.id, Ordering.ASC]],
       });
     expect(newPerpetualMarkets.length).toEqual(2);
-    expectPerpetualMarketMatchesEvent(defaultPerpetualMarketCreateEventV1, newPerpetualMarkets[0]);
+    expectPerpetualMarketMatchesEvent(marketCreateEvent, newPerpetualMarkets[0]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(

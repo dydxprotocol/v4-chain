@@ -26,7 +26,6 @@ export class PerpetualMarketCreationHandler extends Handler<
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
-    console.log(resultRow);
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
       resultRow.perpetual_market) as PerpetualMarketFromDatabase;
 
