@@ -38,6 +38,7 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_market_price_update_handler.sql',
   'dydx_perpetual_market_v1_handler.sql',
   'dydx_perpetual_market_v2_handler.sql',
+  'dydx_perpetual_market_v3_handler.sql',
   'dydx_register_affiliate_handler.sql',
   'dydx_stateful_order_handler.sql',
   'dydx_subaccount_update_handler.sql',
@@ -46,6 +47,7 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_update_clob_pair_handler.sql',
   'dydx_update_perpetual_v1_handler.sql',
   'dydx_update_perpetual_v2_handler.sql',
+  'dydx_update_perpetual_v3_handler.sql',
   'dydx_vault_upsert_handler.sql',
 ];
 

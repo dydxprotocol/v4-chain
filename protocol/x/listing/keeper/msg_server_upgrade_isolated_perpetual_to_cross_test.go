@@ -227,16 +227,19 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 				// Verify that expected indexer event was emitted.
 				perpetual, err = perpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualId)
 				require.NoError(t, err)
-				expectedIndexerEvent := &indexerevents.UpdatePerpetualEventV2{
+				expectedIndexerEvent := &indexerevents.UpdatePerpetualEventV3{
 					Id:               perpetual.Params.Id,
 					Ticker:           perpetual.Params.Ticker,
 					MarketId:         perpetual.Params.MarketId,
 					AtomicResolution: perpetual.Params.AtomicResolution,
 					LiquidityTier:    perpetual.Params.LiquidityTier,
-					MarketType:       v1.ConvertToPerpetualMarketType(perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS),
+					MarketType: v1.ConvertToPerpetualMarketType(
+						perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+					),
+					DefaultFunding8HrPpm: perpetual.Params.DefaultFundingPpm,
 				}
 				emittedIndexerEvents := getUpdatePerpetualEventsFromIndexerBlock(ctx, keeper)
-				require.Equal(t, emittedIndexerEvents, []*indexerevents.UpdatePerpetualEventV2{expectedIndexerEvent})
+				require.Equal(t, emittedIndexerEvents, []*indexerevents.UpdatePerpetualEventV3{expectedIndexerEvent})
 			},
 		)
 	}
@@ -246,15 +249,15 @@ func TestMsgUpgradeIsolatedPerpetualToCross(t *testing.T) {
 func getUpdatePerpetualEventsFromIndexerBlock(
 	ctx sdk.Context,
 	listingKeeper *listingkeeper.Keeper,
-) []*indexerevents.UpdatePerpetualEventV2 {
+) []*indexerevents.UpdatePerpetualEventV3 {
 	block := listingKeeper.GetIndexerEventManager().ProduceBlock(ctx)
-	var updatePerpetualEvents []*indexerevents.UpdatePerpetualEventV2
+	var updatePerpetualEvents []*indexerevents.UpdatePerpetualEventV3
 	for _, event := range block.Events {
 		if event.Subtype != indexerevents.SubtypeUpdatePerpetual {
 			continue
 		}
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
-			var updatePerpetualEvent indexerevents.UpdatePerpetualEventV2
+			var updatePerpetualEvent indexerevents.UpdatePerpetualEventV3
 			err := proto.Unmarshal(event.DataBytes, &updatePerpetualEvent)
 			if err != nil {
 				panic(err)

@@ -203,6 +203,7 @@ func (k Keeper) UpgradeIsolatedPerpetualToCross(
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.LiquidityTier,
 				perpetual.Params.MarketType,
+				perpetual.Params.DefaultFundingPpm,
 			),
 		),
 	)

@@ -217,6 +217,7 @@ export interface TradingPerpetualMarketMessage {
   openInterestLowerCap?: string,
   openInterestUpperCap?: string,
   baseOpenInterest?: string,
+  defaultFundingRate1H?: string,
 
   // Fields that are likely to change
   priceChange24H?: string,

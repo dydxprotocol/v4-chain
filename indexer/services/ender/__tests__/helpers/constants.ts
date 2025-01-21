@@ -26,6 +26,7 @@ import {
   OrderRemovalReason,
   PerpetualMarketCreateEventV1,
   PerpetualMarketCreateEventV2,
+  PerpetualMarketCreateEventV3,
   PerpetualMarketType,
   StatefulOrderEventV1,
   SubaccountMessage,
@@ -36,6 +37,7 @@ import {
   UpdateClobPairEventV1,
   UpdatePerpetualEventV1,
   UpdatePerpetualEventV2,
+  UpdatePerpetualEventV3,
   OpenInterestUpdateEventV1,
   OpenInterestUpdate,
 } from '@dydxprotocol-indexer/v4-protos';
@@ -160,6 +162,36 @@ export const defaultPerpetualMarketCreateEventV2: PerpetualMarketCreateEventV2 =
   marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
 };
 
+export const defaultPerpetualMarketCreateEvent3: PerpetualMarketCreateEventV3 = {
+  id: 0,
+  clobPairId: 1,
+  ticker: 'BTC-USD',
+  marketId: 0,
+  status: ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING,
+  quantumConversionExponent: -8,
+  atomicResolution: -10,
+  subticksPerTick: 100,
+  stepBaseQuantums: Long.fromValue(10, true),
+  liquidityTier: 0,
+  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS,
+  defaultFunding8hrPpm: 100,
+};
+
+export const defaultPerpetualMarketCreateEventV3: PerpetualMarketCreateEventV3 = {
+  id: 0,
+  clobPairId: 1,
+  ticker: 'BTC-USD',
+  marketId: 0,
+  status: ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING,
+  quantumConversionExponent: -8,
+  atomicResolution: -10,
+  subticksPerTick: 100,
+  stepBaseQuantums: Long.fromValue(10, true),
+  liquidityTier: 0,
+  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
+  defaultFunding8hrPpm: 100,
+};
+
 export const defaultLiquidityTierUpsertEventV2: LiquidityTierUpsertEventV2 = {
   id: 0,
   name: 'Large-Cap',
@@ -207,6 +239,16 @@ export const defaultUpdatePerpetualEventV2: UpdatePerpetualEventV2 = {
   atomicResolution: -8,
   liquidityTier: 1,
   marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS,
+};
+
+export const defaultUpdatePerpetualEventV3: UpdatePerpetualEventV3 = {
+  id: 0,
+  ticker: 'BTC-USD2',
+  marketId: 1,
+  atomicResolution: -8,
+  liquidityTier: 1,
+  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS,
+  defaultFunding8hrPpm: 100,
 };
 
 export const defaultUpdateClobPairEvent: UpdateClobPairEventV1 = {
