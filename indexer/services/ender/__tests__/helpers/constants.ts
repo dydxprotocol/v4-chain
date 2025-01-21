@@ -148,7 +148,7 @@ export const defaultPerpetualMarketCreateEventV1: PerpetualMarketCreateEventV1 =
   liquidityTier: 0,
 };
 
-export const defaultPerpetualMarketCreateEvent2: PerpetualMarketCreateEventV2 = {
+export const defaultPerpetualMarketCreateEventV2: PerpetualMarketCreateEventV2 = {
   id: 0,
   clobPairId: 1,
   ticker: 'BTC-USD',
@@ -159,7 +159,7 @@ export const defaultPerpetualMarketCreateEvent2: PerpetualMarketCreateEventV2 = 
   subticksPerTick: 100,
   stepBaseQuantums: Long.fromValue(10, true),
   liquidityTier: 0,
-  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS,
+  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
 };
 
 export const defaultPerpetualMarketCreateEvent3: PerpetualMarketCreateEventV3 = {
@@ -175,20 +175,6 @@ export const defaultPerpetualMarketCreateEvent3: PerpetualMarketCreateEventV3 = 
   liquidityTier: 0,
   marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS,
   defaultFunding8hrPpm: 100,
-};
-
-export const defaultPerpetualMarketCreateEventV2: PerpetualMarketCreateEventV2 = {
-  id: 0,
-  clobPairId: 1,
-  ticker: 'BTC-USD',
-  marketId: 0,
-  status: ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING,
-  quantumConversionExponent: -8,
-  atomicResolution: -10,
-  subticksPerTick: 100,
-  stepBaseQuantums: Long.fromValue(10, true),
-  liquidityTier: 0,
-  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED,
 };
 
 export const defaultPerpetualMarketCreateEventV3: PerpetualMarketCreateEventV3 = {
