@@ -104,11 +104,12 @@ func (k Keeper) BatchCancelShortTermOrder(
 
 			if err != nil {
 				failure = append(failure, clientId)
-				log.InfoLog(
+				log.DebugLog(
 					ctx,
 					"Batch Cancel: Failed to cancel a short term order.",
 					log.Error, err,
 				)
+				telemetry.IncrCounter(1, types.ModuleName, metrics.SingleCancelInBatchCancelFailed)
 			} else {
 				success = append(success, clientId)
 			}
