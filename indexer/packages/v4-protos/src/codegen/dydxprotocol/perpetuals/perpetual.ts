@@ -115,7 +115,7 @@ export interface PerpetualParams {
 
   atomicResolution: number;
   /**
-   * The default funding payment if there is no price premium. In
+   * The default (8hr) funding payment if there is no price premium. In
    * parts-per-million.
    */
 
@@ -154,7 +154,7 @@ export interface PerpetualParamsSDKType {
 
   atomic_resolution: number;
   /**
-   * The default funding payment if there is no price premium. In
+   * The default (8hr) funding payment if there is no price premium. In
    * parts-per-million.
    */
 

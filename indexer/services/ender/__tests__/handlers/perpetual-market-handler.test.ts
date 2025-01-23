@@ -1,6 +1,7 @@
 import {
   PerpetualMarketCreateEventV1,
   PerpetualMarketCreateEventV2,
+  PerpetualMarketCreateEventV3,
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   Timestamp,
@@ -29,11 +30,13 @@ import {
   expectPerpetualMarketV1,
   expectPerpetualMarketKafkaMessage,
   expectPerpetualMarketV2,
+  expectPerpetualMarketV3,
 } from '../helpers/indexer-proto-helpers';
 import { PerpetualMarketCreationHandler } from '../../src/handlers/perpetual-market-handler';
 import {
   defaultPerpetualMarketCreateEventV1,
   defaultPerpetualMarketCreateEventV2,
+  defaultPerpetualMarketCreateEventV3,
   defaultHeight,
   defaultPreviousHeight,
   defaultTime,
@@ -89,12 +92,20 @@ describe('perpetualMarketHandler', () => {
       expectPerpetualMarketV2,
       defaultPerpetualMarketCreateEventV2,
     ],
+    [
+      'PerpetualMarketCreateEventV3',
+      3,
+      PerpetualMarketCreateEventV3.encode(defaultPerpetualMarketCreateEventV3).finish(),
+      expectPerpetualMarketV3,
+      defaultPerpetualMarketCreateEventV3,
+    ],
   ])('%s', (
     _name: string,
     version: number,
     perpetualMarketCreateEventBytes: Uint8Array,
     expectPerpetualMarket: Function,
-    event: PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
+    event: PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2
+    | PerpetualMarketCreateEventV3,
   ) => {
     it('returns the correct parallelization ids', () => {
       const transactionIndex: number = 0;

@@ -2,6 +2,7 @@ import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
 import {
   PerpetualMarketCreateEventV1,
   PerpetualMarketCreateEventV2,
+  PerpetualMarketCreateEventV3,
   IndexerTendermintBlock,
   IndexerTendermintEvent,
 } from '@dydxprotocol-indexer/v4-protos';
@@ -12,6 +13,7 @@ import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
   defaultPerpetualMarketCreateEventV1,
   defaultPerpetualMarketCreateEventV2,
+  defaultPerpetualMarketCreateEventV3,
   defaultHeight,
   defaultTime,
   defaultTxHash,
@@ -49,11 +51,18 @@ describe('perpetual-market-validator', () => {
       PerpetualMarketCreateEventV2.encode(defaultPerpetualMarketCreateEventV2).finish(),
       defaultPerpetualMarketCreateEventV2,
     ],
+    [
+      'PerpetualMarketCreateEventV3',
+      3,
+      PerpetualMarketCreateEventV3.encode(defaultPerpetualMarketCreateEventV3).finish(),
+      defaultPerpetualMarketCreateEventV3,
+    ],
   ])('validate %s', (
     _name: string,
     version: number,
     perpetualMarketCreateEventBytes: Uint8Array,
-    event: PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
+    event: PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2
+    | PerpetualMarketCreateEventV3,
   ) => {
     it('does not throw error on valid perpetual market create event', () => {
       const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
@@ -83,7 +92,8 @@ describe('perpetual-market-validator', () => {
         {
           ...event,
           ticker: '',
-        } as PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
+        } as PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2
+        | PerpetualMarketCreateEventV3,
         'PerpetualMarketCreateEvent ticker is not populated',
       ],
       [
@@ -91,7 +101,8 @@ describe('perpetual-market-validator', () => {
         {
           ...event,
           subticksPerTick: 0,
-        } as PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
+        } as PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2
+        | PerpetualMarketCreateEventV3,
         'PerpetualMarketCreateEvent subticksPerTick is not populated',
       ],
       [
@@ -99,12 +110,14 @@ describe('perpetual-market-validator', () => {
         {
           ...event,
           stepBaseQuantums: Long.fromValue(0, true),
-        } as PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
+        } as PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2
+        | PerpetualMarketCreateEventV3,
         'PerpetualMarketCreateEvent stepBaseQuantums is not populated',
       ],
     ])('%s', (
       _description: string,
-      eventToTest: PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2,
+      eventToTest: PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2
+      | PerpetualMarketCreateEventV3,
       expectedMessage: string,
     ) => {
       const validator: PerpetualMarketValidator = new PerpetualMarketValidator(

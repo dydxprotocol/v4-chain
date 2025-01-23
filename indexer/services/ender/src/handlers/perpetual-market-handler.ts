@@ -3,7 +3,10 @@ import {
   PerpetualMarketFromDatabase, PerpetualMarketModel,
   perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
-import { PerpetualMarketCreateEventV1, PerpetualMarketCreateEventV2 } from '@dydxprotocol-indexer/v4-protos';
+import {
+  PerpetualMarketCreateEventV1, PerpetualMarketCreateEventV2,
+  PerpetualMarketCreateEventV3,
+} from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
 import config from '../config';
@@ -13,6 +16,7 @@ import { Handler } from './handler';
 
 export class PerpetualMarketCreationHandler extends Handler<
   PerpetualMarketCreateEventV1 | PerpetualMarketCreateEventV2
+  | PerpetualMarketCreateEventV3
 > {
   eventType: string = 'PerpetualMarketCreateEvent';
 
