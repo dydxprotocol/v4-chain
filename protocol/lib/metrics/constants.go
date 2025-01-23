@@ -95,7 +95,7 @@ const (
 	AddPerpetualFillAmount                                  = "add_perpetual_fill_amount"
 	BaseQuantums                                            = "base_quantums"
 	BatchCancel                                             = "batch_cancel"
-	BatchCancelFailed                                       = "batch_cancel_failed"
+	SingleCancelInBatchCancelFailed                         = "single_cancel_in_batch_cancel_failed"
 	BestAsk                                                 = "best_ask"
 	BestAskClobPair                                         = "best_ask_clob_pair"
 	BestBid                                                 = "best_bid"
