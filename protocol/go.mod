@@ -471,8 +471,9 @@ replace (
 	cosmossdk.io/store => github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d
 	// Use dYdX fork of CometBFT
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20241126215519-69cdde955fd0
-	// Fixes `tx_search` height query issue.
-	// TODO(CT-1343): Remove and fix properly.
+	// Fixes the issue that `tx_search` resolves to a single entry, due to an cometbft-db interface 
+	// change in v0.13.0+.
+	// TODO(CT-1343): Remove and fix properly by backporting upstream fix to cometbft fork.
 	github.com/cometbft/cometbft-db => github.com/cometbft/cometbft-db v0.12.0
 	// Use dYdX fork of Cosmos SDK
 	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20250113155252-f00c500eaff3
