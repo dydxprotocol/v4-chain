@@ -959,7 +959,10 @@ export interface PerpetualMarketCreateEventV1SDKType {
 /**
  * PerpetualMarketCreateEventV2 message contains all the information about a
  * new Perpetual Market on the dYdX chain.
+ * Deprecated. Use PerpetualMarketCreateEventV3 for the most up to date message
  */
+
+/** @deprecated */
 
 export interface PerpetualMarketCreateEventV2 {
   /**
@@ -1032,7 +1035,10 @@ export interface PerpetualMarketCreateEventV2 {
 /**
  * PerpetualMarketCreateEventV2 message contains all the information about a
  * new Perpetual Market on the dYdX chain.
+ * Deprecated. Use PerpetualMarketCreateEventV3 for the most up to date message
  */
+
+/** @deprecated */
 
 export interface PerpetualMarketCreateEventV2SDKType {
   /**
@@ -1101,6 +1107,158 @@ export interface PerpetualMarketCreateEventV2SDKType {
   /** Market type of the perpetual. */
 
   market_type: PerpetualMarketTypeSDKType;
+}
+/**
+ * PerpetualMarketCreateEventV3 message contains all the information about a
+ * new Perpetual Market on the dYdX chain.
+ */
+
+export interface PerpetualMarketCreateEventV3 {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * Unique clob pair Id associated with this perpetual market
+   * Defined in clob.clob_pair
+   */
+
+  clobPairId: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  marketId: number;
+  /** Status of the CLOB */
+
+  status: ClobPairStatus;
+  /**
+   * `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+   * per Subtick.
+   * Defined in clob.clob_pair
+   */
+
+  quantumConversionExponent: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomicResolution: number;
+  /**
+   * Defines the tick size of the orderbook by defining how many subticks
+   * are in one tick. That is, the subticks of any valid order must be a
+   * multiple of this value. Generally this value should start `>= 100`to
+   * allow room for decreasing it.
+   * Defined in clob.clob_pair
+   */
+
+  subticksPerTick: number;
+  /**
+   * Minimum increment in the size of orders on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  stepBaseQuantums: Long;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidityTier: number;
+  /** Market type of the perpetual. */
+
+  marketType: PerpetualMarketType;
+  /** Default 8hr funding rate in parts-per-million. */
+
+  defaultFunding8hrPpm: number;
+}
+/**
+ * PerpetualMarketCreateEventV3 message contains all the information about a
+ * new Perpetual Market on the dYdX chain.
+ */
+
+export interface PerpetualMarketCreateEventV3SDKType {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * Unique clob pair Id associated with this perpetual market
+   * Defined in clob.clob_pair
+   */
+
+  clob_pair_id: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  market_id: number;
+  /** Status of the CLOB */
+
+  status: ClobPairStatusSDKType;
+  /**
+   * `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
+   * per Subtick.
+   * Defined in clob.clob_pair
+   */
+
+  quantum_conversion_exponent: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomic_resolution: number;
+  /**
+   * Defines the tick size of the orderbook by defining how many subticks
+   * are in one tick. That is, the subticks of any valid order must be a
+   * multiple of this value. Generally this value should start `>= 100`to
+   * allow room for decreasing it.
+   * Defined in clob.clob_pair
+   */
+
+  subticks_per_tick: number;
+  /**
+   * Minimum increment in the size of orders on the CLOB, in base quantums.
+   * Defined in clob.clob_pair
+   */
+
+  step_base_quantums: Long;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidity_tier: number;
+  /** Market type of the perpetual. */
+
+  market_type: PerpetualMarketTypeSDKType;
+  /** Default 8hr funding rate in parts-per-million. */
+
+  default_funding8hr_ppm: number;
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
@@ -1335,7 +1493,10 @@ export interface UpdatePerpetualEventV1SDKType {
 /**
  * UpdatePerpetualEventV2 message contains all the information about an update
  * to a perpetual on the dYdX chain.
+ * Deprecated. Use UpdatePerpetualEventV3.
  */
+
+/** @deprecated */
 
 export interface UpdatePerpetualEventV2 {
   /**
@@ -1377,7 +1538,10 @@ export interface UpdatePerpetualEventV2 {
 /**
  * UpdatePerpetualEventV2 message contains all the information about an update
  * to a perpetual on the dYdX chain.
+ * Deprecated. Use UpdatePerpetualEventV3.
  */
+
+/** @deprecated */
 
 export interface UpdatePerpetualEventV2SDKType {
   /**
@@ -1415,6 +1579,96 @@ export interface UpdatePerpetualEventV2SDKType {
   /** Market type of the perpetual. */
 
   market_type: PerpetualMarketTypeSDKType;
+}
+/**
+ * UpdatePerpetualEventV3 message contains all the information about an update
+ * to a perpetual on the dYdX chain.
+ */
+
+export interface UpdatePerpetualEventV3 {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  marketId: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomicResolution: number;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidityTier: number;
+  /** Market type of the perpetual. */
+
+  marketType: PerpetualMarketType;
+  /** Default 8hr funding rate in parts-per-million. */
+
+  defaultFunding8hrPpm: number;
+}
+/**
+ * UpdatePerpetualEventV3 message contains all the information about an update
+ * to a perpetual on the dYdX chain.
+ */
+
+export interface UpdatePerpetualEventV3SDKType {
+  /**
+   * Unique Perpetual id.
+   * Defined in perpetuals.perpetual
+   */
+  id: number;
+  /**
+   * The name of the `Perpetual` (e.g. `BTC-USD`).
+   * Defined in perpetuals.perpetual
+   */
+
+  ticker: string;
+  /**
+   * Unique id of market param associated with this perpetual market.
+   * Defined in perpetuals.perpetual
+   */
+
+  market_id: number;
+  /**
+   * The exponent for converting an atomic amount (`size = 1`)
+   * to a full coin. For example, if `AtomicResolution = -8`
+   * then a `PerpetualPosition` with `size = 1e8` is equivalent to
+   * a position size of one full coin.
+   * Defined in perpetuals.perpetual
+   */
+
+  atomic_resolution: number;
+  /**
+   * The liquidity_tier that this perpetual is associated with.
+   * Defined in perpetuals.perpetual
+   */
+
+  liquidity_tier: number;
+  /** Market type of the perpetual. */
+
+  market_type: PerpetualMarketTypeSDKType;
+  /** Default 8hr funding rate in parts-per-million. */
+
+  default_funding8hr_ppm: number;
 }
 /**
  * TradingRewardsEventV1 is communicates all trading rewards for all accounts
@@ -3322,6 +3576,161 @@ export const PerpetualMarketCreateEventV2 = {
 
 };
 
+function createBasePerpetualMarketCreateEventV3(): PerpetualMarketCreateEventV3 {
+  return {
+    id: 0,
+    clobPairId: 0,
+    ticker: "",
+    marketId: 0,
+    status: 0,
+    quantumConversionExponent: 0,
+    atomicResolution: 0,
+    subticksPerTick: 0,
+    stepBaseQuantums: Long.UZERO,
+    liquidityTier: 0,
+    marketType: 0,
+    defaultFunding8hrPpm: 0
+  };
+}
+
+export const PerpetualMarketCreateEventV3 = {
+  encode(message: PerpetualMarketCreateEventV3, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    if (message.clobPairId !== 0) {
+      writer.uint32(16).uint32(message.clobPairId);
+    }
+
+    if (message.ticker !== "") {
+      writer.uint32(26).string(message.ticker);
+    }
+
+    if (message.marketId !== 0) {
+      writer.uint32(32).uint32(message.marketId);
+    }
+
+    if (message.status !== 0) {
+      writer.uint32(40).int32(message.status);
+    }
+
+    if (message.quantumConversionExponent !== 0) {
+      writer.uint32(48).sint32(message.quantumConversionExponent);
+    }
+
+    if (message.atomicResolution !== 0) {
+      writer.uint32(56).sint32(message.atomicResolution);
+    }
+
+    if (message.subticksPerTick !== 0) {
+      writer.uint32(64).uint32(message.subticksPerTick);
+    }
+
+    if (!message.stepBaseQuantums.isZero()) {
+      writer.uint32(72).uint64(message.stepBaseQuantums);
+    }
+
+    if (message.liquidityTier !== 0) {
+      writer.uint32(80).uint32(message.liquidityTier);
+    }
+
+    if (message.marketType !== 0) {
+      writer.uint32(88).int32(message.marketType);
+    }
+
+    if (message.defaultFunding8hrPpm !== 0) {
+      writer.uint32(96).int32(message.defaultFunding8hrPpm);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): PerpetualMarketCreateEventV3 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePerpetualMarketCreateEventV3();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 3:
+          message.ticker = reader.string();
+          break;
+
+        case 4:
+          message.marketId = reader.uint32();
+          break;
+
+        case 5:
+          message.status = (reader.int32() as any);
+          break;
+
+        case 6:
+          message.quantumConversionExponent = reader.sint32();
+          break;
+
+        case 7:
+          message.atomicResolution = reader.sint32();
+          break;
+
+        case 8:
+          message.subticksPerTick = reader.uint32();
+          break;
+
+        case 9:
+          message.stepBaseQuantums = (reader.uint64() as Long);
+          break;
+
+        case 10:
+          message.liquidityTier = reader.uint32();
+          break;
+
+        case 11:
+          message.marketType = (reader.int32() as any);
+          break;
+
+        case 12:
+          message.defaultFunding8hrPpm = reader.int32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<PerpetualMarketCreateEventV3>): PerpetualMarketCreateEventV3 {
+    const message = createBasePerpetualMarketCreateEventV3();
+    message.id = object.id ?? 0;
+    message.clobPairId = object.clobPairId ?? 0;
+    message.ticker = object.ticker ?? "";
+    message.marketId = object.marketId ?? 0;
+    message.status = object.status ?? 0;
+    message.quantumConversionExponent = object.quantumConversionExponent ?? 0;
+    message.atomicResolution = object.atomicResolution ?? 0;
+    message.subticksPerTick = object.subticksPerTick ?? 0;
+    message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
+    message.liquidityTier = object.liquidityTier ?? 0;
+    message.marketType = object.marketType ?? 0;
+    message.defaultFunding8hrPpm = object.defaultFunding8hrPpm ?? 0;
+    return message;
+  }
+
+};
+
 function createBaseLiquidityTierUpsertEventV1(): LiquidityTierUpsertEventV1 {
   return {
     id: 0,
@@ -3667,6 +4076,111 @@ export const UpdatePerpetualEventV2 = {
     message.atomicResolution = object.atomicResolution ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
     message.marketType = object.marketType ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseUpdatePerpetualEventV3(): UpdatePerpetualEventV3 {
+  return {
+    id: 0,
+    ticker: "",
+    marketId: 0,
+    atomicResolution: 0,
+    liquidityTier: 0,
+    marketType: 0,
+    defaultFunding8hrPpm: 0
+  };
+}
+
+export const UpdatePerpetualEventV3 = {
+  encode(message: UpdatePerpetualEventV3, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint32(message.id);
+    }
+
+    if (message.ticker !== "") {
+      writer.uint32(18).string(message.ticker);
+    }
+
+    if (message.marketId !== 0) {
+      writer.uint32(24).uint32(message.marketId);
+    }
+
+    if (message.atomicResolution !== 0) {
+      writer.uint32(32).sint32(message.atomicResolution);
+    }
+
+    if (message.liquidityTier !== 0) {
+      writer.uint32(40).uint32(message.liquidityTier);
+    }
+
+    if (message.marketType !== 0) {
+      writer.uint32(48).int32(message.marketType);
+    }
+
+    if (message.defaultFunding8hrPpm !== 0) {
+      writer.uint32(56).int32(message.defaultFunding8hrPpm);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): UpdatePerpetualEventV3 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdatePerpetualEventV3();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.id = reader.uint32();
+          break;
+
+        case 2:
+          message.ticker = reader.string();
+          break;
+
+        case 3:
+          message.marketId = reader.uint32();
+          break;
+
+        case 4:
+          message.atomicResolution = reader.sint32();
+          break;
+
+        case 5:
+          message.liquidityTier = reader.uint32();
+          break;
+
+        case 6:
+          message.marketType = (reader.int32() as any);
+          break;
+
+        case 7:
+          message.defaultFunding8hrPpm = reader.int32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<UpdatePerpetualEventV3>): UpdatePerpetualEventV3 {
+    const message = createBaseUpdatePerpetualEventV3();
+    message.id = object.id ?? 0;
+    message.ticker = object.ticker ?? "";
+    message.marketId = object.marketId ?? 0;
+    message.atomicResolution = object.atomicResolution ?? 0;
+    message.liquidityTier = object.liquidityTier ?? 0;
+    message.marketType = object.marketType ?? 0;
+    message.defaultFunding8hrPpm = object.defaultFunding8hrPpm ?? 0;
     return message;
   }
 

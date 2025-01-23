@@ -20,8 +20,9 @@ func NewPerpetualMarketCreateEvent(
 	stepBaseQuantums uint64,
 	liquidityTier uint32,
 	marketType perptypes.PerpetualMarketType,
-) *PerpetualMarketCreateEventV2 {
-	return &PerpetualMarketCreateEventV2{
+	defaultFundingPpm int32,
+) *PerpetualMarketCreateEventV3 {
+	return &PerpetualMarketCreateEventV3{
 		Id:                        id,
 		ClobPairId:                clobPairId,
 		Ticker:                    ticker,
@@ -33,5 +34,6 @@ func NewPerpetualMarketCreateEvent(
 		StepBaseQuantums:          stepBaseQuantums,
 		LiquidityTier:             liquidityTier,
 		MarketType:                v1.ConvertToPerpetualMarketType(marketType),
+		DefaultFunding8HrPpm:      defaultFundingPpm,
 	}
 }
