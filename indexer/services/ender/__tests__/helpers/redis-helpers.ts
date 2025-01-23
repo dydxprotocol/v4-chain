@@ -9,14 +9,15 @@ import Big from 'big.js';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 
 export async function expectNextFundingRate(
+  expectedRate: Big | undefined,
   ticker: string,
-  rate: Big | undefined,
+  defaultFundingRate1H: string = '0',
 ): Promise<void> {
   const rates: { [ticker: string]: Big | undefined } = await NextFundingCache.getNextFunding(
     redisClient,
-    [ticker],
+    [[ticker, defaultFundingRate1H]],
   );
-  expect(rates[ticker]).toEqual(rate);
+  expect(rates[ticker]).toEqual(expectedRate);
 }
 
 export async function expectStateFilledQuantums(
