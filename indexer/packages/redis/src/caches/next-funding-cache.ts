@@ -20,11 +20,12 @@ function getKey(ticker: string): string {
  */
 export async function getNextFunding(
   client: RedisClient,
-  tickers: string[],
+  tickerDefaultFundingRate1HPairs: [string, string][],
 ): Promise<{ [ticker: string]: Big | undefined }> {
   const fundingRates: { [ticker: string]: Big | undefined } = {};
+
   await Promise.all(
-    tickers.map(async (ticker: string) => {
+    tickerDefaultFundingRate1HPairs.map(async ([ticker, defaultFundingRate1H]) => {
       const rates: string[] = await lRangeAsync(
         getKey(ticker),
         client,
@@ -36,7 +37,7 @@ export async function getNextFunding(
           new Big(0),
         );
         const avg: Big = sum.div(rates.length);
-        fundingRates[ticker] = avg;
+        fundingRates[ticker] = avg.plus(new Big(defaultFundingRate1H));
       } else {
         fundingRates[ticker] = undefined;
       }

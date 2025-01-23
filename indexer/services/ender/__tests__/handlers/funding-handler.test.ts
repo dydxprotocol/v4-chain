@@ -12,6 +12,7 @@ import {
   FundingIndexUpdatesColumns,
   FundingIndexUpdatesFromDatabase,
   FundingIndexUpdatesTable,
+  PerpetualMarketTable,
   OraclePriceTable,
   Ordering,
   perpetualMarketRefresher,
@@ -42,6 +43,7 @@ import Big from 'big.js';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import { defaultPerpetualMarket } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('fundingHandler', () => {
   beforeAll(async () => {
@@ -127,10 +129,65 @@ describe('fundingHandler', () => {
     await onMessage(kafkaMessage);
 
     await expectNextFundingRate(
-      'BTC-USD',
       new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
         defaultFundingUpdateSampleEvent.updates[0].fundingValuePpm,
       )),
+      'BTC-USD',
+    );
+  });
+
+  it.each([
+    [
+      'Non-zero sample',
+      'TEST-USD',
+      '0.0001',
+      120,
+      new Big('0.000115'), // 0.000120 / 8 + default 0.0001
+    ],
+    [
+      'Sample is zero',
+      'TEST-USD',
+      '0.0001',
+      0,
+      new Big('0.0001'), // 0 + default 0.0001
+    ],
+  ])('(%s) Non-zero default funding: successfully handle premium sample', async (
+    _name: string,
+    ticker: string,
+    defaultFundingRate1H: string,
+    fundingValuePpm: number,
+    expectedNextFundingRate: Big,
+  ) => {
+    const testPerpetualMarket = await PerpetualMarketTable.create({
+      ...defaultPerpetualMarket,
+      id: '1000', // Different id than `defaultPerpeptualMarket` to avoid conflict
+      ticker,
+      defaultFundingRate1H,
+    });
+
+    const fundingUpdateSampleEvent: FundingEventV1 = {
+      type: FundingEventV1_Type.TYPE_PREMIUM_SAMPLE,
+      updates: [
+        {
+          perpetualId: parseInt(testPerpetualMarket.id, 10),
+          fundingValuePpm,
+          fundingIndex: bigIntToBytes(BigInt(0)),
+        },
+      ],
+    };
+
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
+      fundingEvents: [fundingUpdateSampleEvent],
+      height: defaultHeight,
+      time: defaultTime,
+    });
+
+    await onMessage(kafkaMessage);
+
+    await expectNextFundingRate(
+      expectedNextFundingRate,
+      ticker,
+      defaultFundingRate1H,
     );
   });
 
@@ -160,14 +217,14 @@ describe('fundingHandler', () => {
     await onMessage(kafkaMessage);
 
     await expectNextFundingRate(
-      'BTC-USD',
       new Big('0.000006875'),
+      'BTC-USD',
     );
     await expectNextFundingRate(
-      'ETH-USD',
       new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
         fundingUpdateSampleEvent2.updates[1].fundingValuePpm,
       )),
+      'ETH-USD',
     );
   });
 
@@ -204,10 +261,10 @@ describe('fundingHandler', () => {
       await onMessage(kafkaMessage);
 
       await expectNextFundingRate(
-        'BTC-USD',
         new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
           defaultFundingUpdateSampleEvent.updates[0].fundingValuePpm,
         )),
+        'BTC-USD',
       );
 
       const kafkaMessage2: KafkaMessage = createKafkaMessageFromFundingEvents({
@@ -218,8 +275,8 @@ describe('fundingHandler', () => {
 
       await onMessage(kafkaMessage2);
       await expectNextFundingRate(
-        'BTC-USD',
         undefined,
+        'BTC-USD',
       );
       const fundingIndices: FundingIndexUpdatesFromDatabase[] = await
       FundingIndexUpdatesTable.findAll({}, [], {});
@@ -253,10 +310,10 @@ describe('fundingHandler', () => {
     await onMessage(kafkaMessage);
 
     await expectNextFundingRate(
-      'BTC-USD',
       new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
         defaultFundingUpdateSampleEvent.updates[0].fundingValuePpm,
       )),
+      'BTC-USD',
     );
 
     const kafkaMessage2: KafkaMessage = createKafkaMessageFromFundingEvents({
@@ -267,8 +324,8 @@ describe('fundingHandler', () => {
 
     await onMessage(kafkaMessage2);
     await expectNextFundingRate(
-      'BTC-USD',
       undefined,
+      'BTC-USD',
     );
     const fundingIndices: FundingIndexUpdatesFromDatabase[] = await
     FundingIndexUpdatesTable.findAll({}, [], {});
@@ -310,16 +367,16 @@ describe('fundingHandler', () => {
 
     await Promise.all([
       expectNextFundingRate(
-        'BTC-USD',
         new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
           fundingSampleEvent.updates[0].fundingValuePpm,
         )),
+        'BTC-USD',
       ),
       expectNextFundingRate(
-        'ETH-USD',
         new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
           fundingSampleEvent.updates[1].fundingValuePpm,
         )),
+        'ETH-USD',
       ),
     ]);
 
@@ -347,12 +404,12 @@ describe('fundingHandler', () => {
     await onMessage(kafkaMessage2);
     await Promise.all([
       expectNextFundingRate(
-        'BTC-USD',
         undefined,
+        'BTC-USD',
       ),
       expectNextFundingRate(
-        'ETH-USD',
         undefined,
+        'ETH-USD',
       ),
     ]);
     const fundingIndices: FundingIndexUpdatesFromDatabase[] = await

@@ -144,7 +144,7 @@ describe('market-updater', () => {
     jest.clearAllMocks();
   });
 
-  it('succeeds with no fills, positions or funding rates', async () => {
+  it('succeeds with no fills, positions or funding samples', async () => {
     const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send');
     const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
       {},
@@ -368,12 +368,119 @@ describe('market-updater', () => {
 
     await Promise.all([
       PerpetualMarketTable.update(perpMarketUpdate1),
-      PerpetualMarketTable.update(perpMarketUpdate2),
+      PerpetualMarketTable.update({
+        ...perpMarketUpdate2,
+        // set initial `nextFundingRate` to non-zero
+        // we still don't expect update message if no funding samples.
+        nextFundingRate: '0.000225',
+      }),
       PerpetualMarketTable.update(perpMarketUpdate3),
     ]);
 
     await marketUpdaterTask();
     expect(producerSendSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('(non-zero default funding) no message sent if no update, and no funding samples', async () => {
+    const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send');
+    synchronizeWrapBackgroundTask(wrapBackgroundTask);
+    await OrderTable.create(testConstants.defaultOrder);
+    await Promise.all([
+      FillTable.create(testConstants.defaultFill),
+      PerpetualPositionTable.create(testConstants.defaultPerpetualPosition),
+    ]);
+
+    await Promise.all([
+      PerpetualMarketTable.update({
+        ...perpMarketUpdate1,
+        defaultFundingRate1H: '0.0000125',
+      }),
+      PerpetualMarketTable.update({
+        ...perpMarketUpdate2,
+        defaultFundingRate1H: '0.0000125',
+      }),
+      PerpetualMarketTable.update(perpMarketUpdate3),
+    ]);
+
+    await marketUpdaterTask();
+    expect(producerSendSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('(non-zero default funding) message send with funding sample of 0', async () => {
+    const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send');
+    synchronizeWrapBackgroundTask(wrapBackgroundTask);
+    await OrderTable.create(testConstants.defaultOrder);
+    await Promise.all([
+      FillTable.create(testConstants.defaultFill),
+      PerpetualPositionTable.create(testConstants.defaultPerpetualPosition),
+    ]);
+
+    await Promise.all([
+      NextFundingCache.addFundingSample(
+        testConstants.defaultPerpetualMarket.ticker,
+        new Big(0), // `0` sample for BTC-USD
+        redisClient,
+      ),
+      NextFundingCache.addFundingSample(
+        testConstants.defaultPerpetualMarket2.ticker,
+        new Big(0), // `0` sample for ETH-USD
+        redisClient,
+      ),
+    ]);
+
+    await Promise.all([
+      PerpetualMarketTable.update({
+        ...perpMarketUpdate1,
+        // `nextFundingRate` equal to default funding rate.
+        // With a funding sample of `0` we don't expect a mssage to be sent for BTC-USD
+        nextFundingRate: '0.0000125',
+        defaultFundingRate1H: '0.0000125',
+      }),
+      PerpetualMarketTable.update({
+        ...perpMarketUpdate2,
+        nextFundingRate: '0',
+        // Differ from current `nextFundingRate` of 0.
+        // Expect a message for this.
+        defaultFundingRate1H: '0.0000125',
+      }),
+      PerpetualMarketTable.update(perpMarketUpdate3),
+    ]);
+
+    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
+      {},
+      [],
+    );
+    const perpetualMarketMap: _.Dictionary<PerpetualMarketFromDatabase> = _.keyBy(
+      perpetualMarkets,
+      PerpetualMarketColumns.id,
+    );
+    const liquidityTiers:
+    LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll({}, []);
+
+    const liquidityTiersMap: LiquidityTiersMap = _.keyBy(
+      liquidityTiers,
+      LiquidityTiersColumns.id,
+    );
+
+    await marketUpdaterTask();
+
+    const newPerpetualMarketMap: _.Dictionary<PerpetualMarketFromDatabase> = {};
+    newPerpetualMarketMap[testConstants.defaultPerpetualPosition.perpetualId] = {
+      ...perpetualMarketMap[testConstants.defaultPerpetualPosition.perpetualId],
+    };
+    newPerpetualMarketMap[testConstants.defaultPerpetualMarket2.id] = {
+      ...perpetualMarketMap[testConstants.defaultPerpetualMarket2.id],
+      nextFundingRate: '0.0000125',
+    };
+    newPerpetualMarketMap[testConstants.defaultPerpetualMarket3.id] = {
+      ...perpetualMarketMap[testConstants.defaultPerpetualMarket3.id],
+    };
+
+    const contents: string = JSON.stringify(
+      getUpdatedMarkets(perpetualMarketMap, newPerpetualMarketMap, liquidityTiersMap),
+    );
+    expectMarketWebsocketMessage(producerSendSpy, contents);
+    expect(producerSendSpy).toHaveBeenCalledTimes(1);
   });
 
   it('update sent if position and fills update, but funding was not', async () => {
