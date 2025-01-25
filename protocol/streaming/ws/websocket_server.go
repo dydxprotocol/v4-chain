@@ -180,7 +180,8 @@ func parseSubaccountIds(r *http.Request) ([]*satypes.SubaccountId, error) {
 	return subaccountIds, nil
 }
 
-// parseFilterOrdersBySubaccountId is a helper function to parse the filterOrdersBySubaccountId flag from the query parameters.
+// parseFilterOrdersBySubaccountId is a helper function to parse the filterOrdersBySubaccountId flag
+// from the query parameters.
 func parseFilterOrdersBySubaccountId(r *http.Request) (bool, error) {
 	token := r.URL.Query().Get("filterOrdersBySubaccountId")
 	if token == "" {

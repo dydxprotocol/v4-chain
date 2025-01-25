@@ -11,46 +11,51 @@ import (
 	pv1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	stypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/util"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 func _ToPtr[V any](v V) *V {
 	return &v
 }
 
-func TestGetOffChainUpdateV1SubaccountIdNumber(t *testing.T) {
-	subaccountIdNumber := uint32(1337)
+func TestGetOffChainUpdateV1SubaccountId(t *testing.T) {
+	indexerSubaccountId := pv1types.IndexerSubaccountId{
+		Owner:  "dydx1gm0w9nymewm9z4u7wtyw6auru562xkhtftk80p",
+		Number: uint32(1337),
+	}
+	subaccountId := satypes.SubaccountId{
+		Owner:  "dydx1gm0w9nymewm9z4u7wtyw6auru562xkhtftk80p",
+		Number: uint32(1337),
+	}
 	orderId := pv1types.IndexerOrderId{
-		SubaccountId: pv1types.IndexerSubaccountId{
-			Owner:  "foo",
-			Number: uint32(subaccountIdNumber),
-		},
-		ClientId:   0,
-		OrderFlags: 0,
-		ClobPairId: 0,
+		SubaccountId: indexerSubaccountId,
+		ClientId:     0,
+		OrderFlags:   0,
+		ClobPairId:   0,
 	}
 	order := pv1types.IndexerOrder{
 		OrderId:  orderId,
 		Side:     pv1types.IndexerOrder_SIDE_BUY,
-		Quantums: uint64(10 ^ 6),
+		Quantums: uint64(1_000_000),
 		Subticks: 1,
 		GoodTilOneof: &pv1types.IndexerOrder_GoodTilBlock{
-			GoodTilBlock: 10 ^ 9,
+			GoodTilBlock: 1_000_000_000,
 		},
-		TimeInForce:                     10 ^ 9,
+		TimeInForce:                     1_000_000_000,
 		ReduceOnly:                      false,
 		ClientMetadata:                  0,
 		ConditionType:                   pv1types.IndexerOrder_CONDITION_TYPE_UNSPECIFIED,
 		ConditionalOrderTriggerSubticks: 0,
 	}
 	newOrder := order
-	newOrder.Quantums += 10 ^ 6
+	newOrder.Quantums += 1_000_000
 
 	orderPlaceTime := time.Now()
 	fillQuantums := uint64(1988)
 
 	tests := map[string]struct {
 		update ocutypes.OffChainUpdateV1
-		id     uint32
+		id     satypes.SubaccountId
 		err    error
 	}{
 		"OrderPlace": {
@@ -63,7 +68,7 @@ func TestGetOffChainUpdateV1SubaccountIdNumber(t *testing.T) {
 					},
 				},
 			},
-			id:  subaccountIdNumber,
+			id:  subaccountId,
 			err: nil,
 		},
 		"OrderRemove": {
@@ -77,7 +82,7 @@ func TestGetOffChainUpdateV1SubaccountIdNumber(t *testing.T) {
 					},
 				},
 			},
-			id:  subaccountIdNumber,
+			id:  subaccountId,
 			err: nil,
 		},
 		"OrderUpdate": {
@@ -89,7 +94,7 @@ func TestGetOffChainUpdateV1SubaccountIdNumber(t *testing.T) {
 					},
 				},
 			},
-			id:  subaccountIdNumber,
+			id:  subaccountId,
 			err: nil,
 		},
 		"OrderReplace": {
@@ -103,16 +108,16 @@ func TestGetOffChainUpdateV1SubaccountIdNumber(t *testing.T) {
 					},
 				},
 			},
-			id:  subaccountIdNumber,
+			id:  subaccountId,
 			err: nil,
 		},
 	}
 	for name, testCase := range tests {
 		t.Run(name, func(t *testing.T) {
-			id, err := util.GetOffChainUpdateV1SubaccountIdNumber(testCase.update)
+			id, err := util.GetOffChainUpdateV1SubaccountId(testCase.update)
 			fmt.Println("expected", id)
-			require.Equal(t, err, testCase.err)
-			require.Equal(t, id, testCase.id)
+			require.Equal(t, testCase.err, err)
+			require.Equal(t, testCase.id, *id)
 		})
 	}
 }

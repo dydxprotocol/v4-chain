@@ -222,17 +222,15 @@ func (sm *FullNodeStreamingManagerImpl) getNextAvailableSubscriptionId() uint32 
 
 func doFilterStreamUpdateBySubaccount(
 	orderBookUpdate *clobtypes.StreamUpdate_OrderbookUpdate,
-	subaccountIdNumbers []uint32,
+	subaccountIds []satypes.SubaccountId,
 	logger log.Logger,
 ) bool {
 	for _, orderBookUpdate := range orderBookUpdate.OrderbookUpdate.Updates {
-		orderBookUpdateSubaccountIdNumber, err := streaming_util.GetOffChainUpdateV1SubaccountIdNumber(orderBookUpdate)
-		if err == nil {
-			if slices.Contains(subaccountIdNumbers, orderBookUpdateSubaccountIdNumber) {
-				return true
-			}
-		} else {
+		orderBookUpdateSubaccountId, err := streaming_util.GetOffChainUpdateV1SubaccountId(orderBookUpdate)
+		if err != nil {
 			logger.Error(err.Error())
+		} else if slices.Contains(subaccountIds, *orderBookUpdateSubaccountId) {
+			return true
 		}
 	}
 	return false
@@ -244,18 +242,21 @@ func doFilterStreamUpdateBySubaccount(
 // StreamUpdate_OrderUpdate with updates only for subscribed subaccounts
 func FilterStreamUpdateBySubaccount(
 	updates []clobtypes.StreamUpdate,
-	subaccountIdNumbers []uint32,
+	subaccountIds []satypes.SubaccountId,
 	logger log.Logger,
 ) *[]clobtypes.StreamUpdate {
 	// If reflection becomes too expensive, split updatesChannel by message type
 	filteredUpdates := []clobtypes.StreamUpdate{}
+	var doFilter bool
 	for _, update := range updates {
+		doFilter = true
 		switch updateMessage := update.UpdateMessage.(type) {
 		case *clobtypes.StreamUpdate_OrderbookUpdate:
-			if doFilterStreamUpdateBySubaccount(updateMessage, subaccountIdNumbers, logger) {
-				filteredUpdates = append(filteredUpdates, update)
+			if !updateMessage.OrderbookUpdate.Snapshot && !doFilterStreamUpdateBySubaccount(updateMessage, subaccountIds, logger) {
+				doFilter = false
 			}
-		default:
+		}
+		if doFilter {
 			filteredUpdates = append(filteredUpdates, update)
 		}
 	}
@@ -287,10 +288,8 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 
 	sm.Lock()
 	sIds := make([]satypes.SubaccountId, len(subaccountIds))
-	subaccountIdNumbers := make([]uint32, len(subaccountIds))
 	for i, subaccountId := range subaccountIds {
 		sIds[i] = *subaccountId
-		subaccountIdNumbers[i] = subaccountId.Number
 	}
 
 	subscription := sm.NewOrderbookSubscription(clobPairIds, sIds, marketIds, messageSender)
@@ -331,10 +330,11 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 
 	sm.logger.Info(
 		fmt.Sprintf(
-			"New subscription id %+v for clob pair ids: %+v and subaccount ids: %+v",
+			"New subscription id %+v for clob pair ids: %+v and subaccount ids: %+v. filter orders by subaccount ids: %+v",
 			subscription.subscriptionId,
 			clobPairIds,
 			subaccountIds,
+			filterOrdersBySubAccountId,
 		),
 	)
 	sm.orderbookSubscriptions[subscription.subscriptionId] = subscription
@@ -346,9 +346,11 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	// to send through stream.
 	for updates := range subscription.updatesChannel {
 		if filterOrdersBySubAccountId {
-			filteredUpdates := FilterStreamUpdateBySubaccount(updates, subaccountIdNumbers, sm.logger)
+			filteredUpdates := FilterStreamUpdateBySubaccount(updates, sIds, sm.logger)
 			if filteredUpdates != nil {
 				updates = *filteredUpdates
+			} else {
+				continue
 			}
 		}
 		metrics.IncrCounterWithLabels(
