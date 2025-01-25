@@ -186,6 +186,11 @@ message StreamOrderbookUpdatesRequest {
 
   // Market ids for price updates.
   repeated uint32 market_ids = 3;
+
+  // Filter order updates by subaccount IDs.
+  // If true, the orderbook updates only include orders from provided subaccount
+  // IDs.
+  bool filter_orders_by_subaccount_id = 4;
 }
 
 // StreamOrderbookUpdatesResponse is a response message for the
