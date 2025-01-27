@@ -7,6 +7,13 @@ import (
 
 var (
 	// Subaccounts.
+	Alice_Num0_1USD = satypes.Subaccount{
+		Id: &Alice_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_1,
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{},
+	}
 	Alice_Num0_10_000USD = satypes.Subaccount{
 		Id: &Alice_Num0,
 		AssetPositions: []*satypes.AssetPosition{
