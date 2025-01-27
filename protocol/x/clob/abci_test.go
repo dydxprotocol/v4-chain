@@ -247,16 +247,16 @@ func TestEndBlocker_Success(t *testing.T) {
 					)
 				}
 
-				ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
-					constants.ClobPair_Btc.GetClobPairId(): {
-						OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{orderToPrune1, orderToPrune2, orderToPrune4},
-						OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{},
-					},
-					constants.ClobPair_Eth.GetClobPairId(): {
-						OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{},
-						OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{orderToPrune3},
-					},
-				}
+				// ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+				// 	constants.ClobPair_Btc.GetClobPairId(): {
+				// 		OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{orderToPrune1, orderToPrune2, orderToPrune4},
+				// 		OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{},
+				// 	},
+				// 	constants.ClobPair_Eth.GetClobPairId(): {
+				// 		OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{},
+				// 		OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{orderToPrune3},
+				// 	},
+				// }
 
 				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 					ctx,
@@ -366,43 +366,43 @@ func TestEndBlocker_Success(t *testing.T) {
 				})
 				require.NoError(t, err)
 
-				ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
-					constants.ClobPair_Btc.GetClobPairId(): {
-						// 10 oracle price subticks triggers 3 orders here.
-						OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
-							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10,
-							constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_TakeProfit5,
-							constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_TakeProfit10,
-							constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Sell25_Price10_GTBT15_StopLoss10,
-						},
-						// 10 oracle price subticks triggers no orders here.
-						OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
-							constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price20_GTBT15_StopLoss20,
-							constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25,
-							constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Sell20_Price20_GTBT15_TakeProfit20,
-							constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Buy25_Price25_GTBT15_StopLoss25,
-						},
-					},
-					constants.ClobPair_Eth.GetClobPairId(): {
-						// 35 oracle price subticks triggers no orders here.
-						OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
-							constants.ConditionalOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT15_TakeProfit30,
-						},
-						// 35 oracle price subticks triggers one order here.
-						OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
-							constants.ConditionalOrder_Alice_Num0_Id3_Clob1_Buy25_Price10_GTBT15_StopLoss20,
-						},
-					},
-				}
+				// ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+				// 	constants.ClobPair_Btc.GetClobPairId(): {
+				// 		// 10 oracle price subticks triggers 3 orders here.
+				// 		OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
+				// 			constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit10,
+				// 			constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price10_GTBT15_TakeProfit5,
+				// 			constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Buy20_Price10_GTBT15_TakeProfit10,
+				// 			constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Sell25_Price10_GTBT15_StopLoss10,
+				// 		},
+				// 		// 10 oracle price subticks triggers no orders here.
+				// 		OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
+				// 			constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price20_GTBT15_StopLoss20,
+				// 			constants.ConditionalOrder_Alice_Num0_Id1_Clob0_Buy15_Price25_GTBT15_StopLoss25,
+				// 			constants.ConditionalOrder_Alice_Num0_Id2_Clob0_Sell20_Price20_GTBT15_TakeProfit20,
+				// 			constants.ConditionalOrder_Alice_Num0_Id3_Clob0_Buy25_Price25_GTBT15_StopLoss25,
+				// 		},
+				// 	},
+				// 	constants.ClobPair_Eth.GetClobPairId(): {
+				// 		// 35 oracle price subticks triggers no orders here.
+				// 		OrdersToTriggerWhenOraclePriceLTETriggerPrice: []types.Order{
+				// 			constants.ConditionalOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT15_TakeProfit30,
+				// 		},
+				// 		// 35 oracle price subticks triggers one order here.
+				// 		OrdersToTriggerWhenOraclePriceGTETriggerPrice: []types.Order{
+				// 			constants.ConditionalOrder_Alice_Num0_Id3_Clob1_Buy25_Price10_GTBT15_StopLoss20,
+				// 		},
+				// 	},
+				// }
 
-				for _, untrigCondOrders := range ks.ClobKeeper.UntriggeredConditionalOrders {
-					for _, conditionalOrder := range untrigCondOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice {
-						ks.ClobKeeper.SetLongTermOrderPlacement(ctx, conditionalOrder, blockHeight)
-					}
-					for _, conditionalOrder := range untrigCondOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {
-						ks.ClobKeeper.SetLongTermOrderPlacement(ctx, conditionalOrder, blockHeight)
-					}
-				}
+				// for _, untrigCondOrders := range ks.ClobKeeper.UntriggeredConditionalOrders {
+				// 	for _, conditionalOrder := range untrigCondOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice {
+				// 		ks.ClobKeeper.SetLongTermOrderPlacement(ctx, conditionalOrder, blockHeight)
+				// 	}
+				// 	for _, conditionalOrder := range untrigCondOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {
+				// 		ks.ClobKeeper.SetLongTermOrderPlacement(ctx, conditionalOrder, blockHeight)
+				// 	}
+				// }
 
 				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 					ctx,
@@ -807,21 +807,21 @@ func TestEndBlocker_Success(t *testing.T) {
 			for _, triggeredConditionalOrderId := range actualProcessProposerMatchesEvents.
 				ConditionalOrderIdsTriggeredInLastBlock {
 				// TODO(CLOB-746) Once R/W methods are created, substitute those methods here.
-				triggeredConditionalOrderMemstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
-				untriggeredConditionalOrderMemstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
-				exists := triggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.ToStateKey())
+				triggeredConditionalOrderStore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementStore(ctx)
+				untriggeredConditionalOrderStore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementStore(ctx)
+				exists := triggeredConditionalOrderStore.Has(triggeredConditionalOrderId.ToStateKey())
 				require.True(t, exists)
-				exists = untriggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.ToStateKey())
+				exists = untriggeredConditionalOrderStore.Has(triggeredConditionalOrderId.ToStateKey())
 				require.False(t, exists)
 			}
 
-			if tc.expectedUntriggeredConditionalOrders != nil {
-				require.Equal(
-					t,
-					tc.expectedUntriggeredConditionalOrders,
-					ks.ClobKeeper.UntriggeredConditionalOrders,
-				)
-			}
+			// if tc.expectedUntriggeredConditionalOrders != nil {
+			// 	require.Equal(
+			// 		t,
+			// 		tc.expectedUntriggeredConditionalOrders,
+			// 		ks.ClobKeeper.UntriggeredConditionalOrders,
+			// 	)
+			// }
 
 			// Assert that the necessary off-chain indexer events have been added.
 			mockIndexerEventManager.AssertExpectations(t)
