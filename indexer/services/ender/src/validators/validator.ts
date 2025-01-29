@@ -60,7 +60,7 @@ export abstract class Validator<T extends object> {
   ): Handler<EventMessage>[];
 
   /**
-   * Allows aribtrary logic to exclude events from being processed.
+   * Allows arbitrary logic to exclude events from being processed.
    * Defaults to no events being excluded.
    * @returns
    */
