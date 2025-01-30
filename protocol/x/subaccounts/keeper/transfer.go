@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -194,6 +195,10 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 	collateralPoolAddr, err := k.GetCollateralPoolForSubaccount(ctx, fromSubaccountId)
 	if err != nil {
 		return err
+	}
+
+	if k.bankKeeper.BlockedAddr(toAccount) {
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", toAccount)
 	}
 
 	// Send coins from `fromModule` to the `subaccounts` module account.
