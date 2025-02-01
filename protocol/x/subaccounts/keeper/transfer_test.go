@@ -13,6 +13,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	auth_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/auth"
 	bank_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
@@ -330,9 +331,26 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 		// Transfer details
 		quantums *big.Int
 
+		// Optional. Defaults to an arbitrary test account if nil
+		optionalRecipient sdk.AccAddress
+
 		// Expectations.
 		expectedErr error
 	}{
+		"WithdrawFundsFromSubaccountToAccount: recipient is blocked address": {
+			testTransferFundToAccount:  true,
+			asset:                      *constants.Usdc,
+			accAddressBalance:          big.NewInt(0),
+			subaccountModuleAccBalance: big.NewInt(0),
+			quantums:                   big.NewInt(500),
+			assetPositions:             testutil.CreateUsdcAssetPositions(big.NewInt(500)),
+			perpetualPositions: []*types.PerpetualPosition{
+				&constants.PerpetualPosition_OneBTCLong,
+			},
+			collateralPoolAddr: types.ModuleAddress,
+			optionalRecipient:  authtypes.NewModuleAddress(distrtypes.ModuleName),
+			expectedErr:        sdkerrors.ErrUnauthorized,
+		},
 		"WithdrawFundsFromSubaccountToAccount: subaccount does not have enough balance to transfer": {
 			testTransferFundToAccount:  true,
 			asset:                      *constants.Usdc,
@@ -467,18 +485,21 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
 
 			// Set up test account address.
-			addressStr := sample_testutil.AccAddress()
-			testAccAddress, err := sdk.AccAddressFromBech32(addressStr)
-			require.NoError(t, err)
+			var err error
+			if tc.optionalRecipient == nil {
+				addressStr := sample_testutil.AccAddress()
+				tc.optionalRecipient, err = sdk.AccAddressFromBech32(addressStr)
+				require.NoError(t, err)
+			}
 
-			testAcc := authtypes.NewBaseAccount(testAccAddress, nil, accountKeeper.NextAccountNumber(ctx), 0)
+			testAcc := authtypes.NewBaseAccount(tc.optionalRecipient, nil, accountKeeper.NextAccountNumber(ctx), 0)
 			accountKeeper.SetAccount(ctx, testAcc)
 
 			if tc.accAddressBalance.Sign() > 0 {
 				// Mint asset in the receipt/sender account address for transfer.
 				err := bank_testutil.FundAccount(
 					ctx,
-					testAccAddress,
+					tc.optionalRecipient,
 					sdk.Coins{
 						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
 					},
@@ -530,14 +551,14 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				err = keeper.WithdrawFundsFromSubaccountToAccount(
 					ctx,
 					*subaccount.Id,
-					testAccAddress,
+					tc.optionalRecipient,
 					tc.asset.Id,
 					tc.quantums,
 				)
 			} else {
 				err = keeper.DepositFundsFromAccountToSubaccount(
 					ctx,
-					testAccAddress,
+					tc.optionalRecipient,
 					*subaccount.Id,
 					tc.asset.Id,
 					tc.quantums,
@@ -566,7 +587,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 			// Check the test account balance stays the same.
 			testAccountBalance := bankKeeper.GetBalance(
-				ctx, testAccAddress,
+				ctx, tc.optionalRecipient,
 				tc.asset.Denom,
 			)
 			require.Equal(t,
