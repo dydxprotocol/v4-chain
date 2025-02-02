@@ -406,6 +406,7 @@ func (k Keeper) persistMatchedOrders(
 	success, successPerUpdate, err := k.subaccountsKeeper.UpdateSubaccounts(
 		ctx,
 		updates,
+		// `Match` type is required to update open interest correctly.
 		satypes.Match,
 	)
 	if err != nil {
