@@ -1,4 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
+import { PerpetualMarketFromDatabase, PriceMap } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import { Callback, RedisClient } from 'redis';
 
@@ -19,6 +20,56 @@ export const ORDERBOOK_MID_PRICES_CACHE_KEY_PREFIX: string = 'v4/orderbook_mid_p
  */
 function getOrderbookMidPriceCacheKey(ticker: string): string {
   return `${ORDERBOOK_MID_PRICES_CACHE_KEY_PREFIX}${ticker}`;
+}
+
+export async function cacheOraclePrices(
+  client: RedisClient,
+  markets: PerpetualMarketFromDatabase[],
+  prices: PriceMap,
+): Promise<void> {
+  const cacheKeyPricePairs:
+  ({cacheKey: string, price: string})[] = markets.flatMap((market) => {
+    const cacheKey: string = getOrderbookMidPriceCacheKey(market.ticker);
+    const price = prices[market.marketId];
+
+    return price !== undefined ? { cacheKey, price } : [];
+  });
+
+  // Extract cache keys and prices
+  const { priceCacheKeys, priceValues } = cacheKeyPricePairs.reduce(
+    (acc, pair) => {
+      acc.priceCacheKeys.push(pair.cacheKey);
+      acc.priceValues.push(pair.price);
+      return acc;
+    },
+    { priceCacheKeys: [] as string[], priceValues: [] as string[] },
+  );
+
+  const nowSeconds: number = Math.floor(Date.now() / 1000); // Current time in seconds
+
+  logger.info({
+    at: 'orderbook-mid-prices-cache#cacheOraclePrices',
+    message: 'Caching orderbook mid price',
+    cacheKey: priceCacheKeys[0],
+    midPrice: priceValues[0],
+  });
+
+  return new Promise<void>((resolve, reject) => {
+    client.evalsha(
+      addOrderbookMidPricesScript.hash,
+      priceCacheKeys.length,
+      ...priceCacheKeys,
+      ...priceValues,
+      nowSeconds,
+      (err: Error | null) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
 }
 
 /**
@@ -98,13 +149,13 @@ export async function getMedianPrices(
 
   let evalAsync: (
     marketCacheKeys: string[],
-  ) => Promise<string[][]> = (
+  ) => Promise<string[]> = (
     marketCacheKeys,
   ) => {
     return new Promise((resolve, reject) => {
-      const callback: Callback<string[][]> = (
+      const callback: Callback<string[]> = (
         err: Error | null,
-        results: string[][],
+        results: string[],
       ) => {
         if (err) {
           return reject(err);
@@ -125,33 +176,21 @@ export async function getMedianPrices(
   // Map tickers to cache keys
   const marketCacheKeys: string[] = tickers.map(getOrderbookMidPriceCacheKey);
   // Fetch the prices arrays from Redis (without scores)
-  const pricesArrays: string[][] = await evalAsync(marketCacheKeys);
+  const pricesArray: string[] = await evalAsync(marketCacheKeys);
 
   const result: { [ticker: string]: string | undefined } = {};
   tickers.forEach((ticker, index) => {
-    const prices = pricesArrays[index];
+    const price = pricesArray[index];
 
     // Check if there are any prices
-    if (!prices || prices.length === 0) {
+    if (!price || price.length === 0) {
       result[ticker] = undefined;
       return;
     }
 
     // Convert the prices to Big.js objects for precision
-    const bigPrices: Big[] = prices.map((price) => Big(price));
-
-    // Sort the prices in ascending order
-    bigPrices.sort((a, b) => a.cmp(b));
-
-    // Calculate the median
-    const mid: number = Math.floor(bigPrices.length / 2);
-    if (bigPrices.length % 2 === 1) {
-      // Odd number of prices: the middle one is the median
-      result[ticker] = bigPrices[mid].toFixed();
-    } else {
-      // Even number of prices: average the two middle ones
-      result[ticker] = bigPrices[mid - 1].plus(bigPrices[mid]).div(2).toFixed();
-    }
+    const bigPrice = Big(price);
+    result[ticker] = bigPrice.toFixed();
   });
 
   return result;
