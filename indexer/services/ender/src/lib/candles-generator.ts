@@ -26,7 +26,7 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 
 import { getCandle } from '../caches/candle-cache';
-import { getOrderbookMidPrice } from '../caches/orderbook-mid-price-memory-cache';
+import { getOracleCachePrice } from '../caches/oracle-price-memory-cache';
 import config from '../config';
 import { KafkaPublisher } from './kafka-publisher';
 import { ConsolidatedKafkaEvent, SingleTradeMessage } from './types';
@@ -538,7 +538,7 @@ export function getOrderbookMidPriceMap(): { [ticker: string]: OrderbookMidPrice
 
   const priceMap: { [ticker: string]: OrderbookMidPrice } = {};
   perpetualMarkets.forEach((perpetualMarket: PerpetualMarketFromDatabase) => {
-    priceMap[perpetualMarket.ticker] = getOrderbookMidPrice(perpetualMarket.ticker);
+    priceMap[perpetualMarket.ticker] = getOracleCachePrice(perpetualMarket.ticker);
   });
 
   stats.timing(`${config.SERVICE_NAME}.get_orderbook_mid_price_map.timing`, Date.now() - start);

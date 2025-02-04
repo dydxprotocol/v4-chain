@@ -25,7 +25,6 @@ import _ from 'lodash';
 import {
   clearCandlesMap, getCandlesMap, startCandleCache,
 } from '../../src/caches/candle-cache';
-import * as OrderbookMidPriceMemoryCache from '../../src/caches/orderbook-mid-price-memory-cache';
 import config from '../../src/config';
 import { CandlesGenerator, getOrderbookMidPriceMap } from '../../src/lib/candles-generator';
 import { KafkaPublisher } from '../../src/lib/kafka-publisher';
@@ -36,8 +35,8 @@ import { redisClient } from '../../src/helpers/redis/redis-controller';
 import {
   redis,
 } from '@dydxprotocol-indexer/redis';
-import { ORDERBOOK_MID_PRICES_CACHE_KEY_PREFIX } from '@dydxprotocol-indexer/redis/build/src/caches/orderbook-mid-prices-cache';
 import { DateTime, Settings } from 'luxon';
+import { setOraclePrice } from '../../src/caches/oracle-price-memory-cache';
 
 describe('candleHelper', () => {
   const startedAt: DateTime = helpers.calculateNormalizedCandleStartTime(
@@ -72,8 +71,7 @@ describe('candleHelper', () => {
 
   // Helper function to set a price for a given market ticker
   const setCachePrice = (marketTicker: string, price: string) => {
-    const now = Date.now();
-    redisClient.zadd(`${ORDERBOOK_MID_PRICES_CACHE_KEY_PREFIX}${marketTicker}`, now, price);
+    setOraclePrice(marketTicker, price);
   };
 
   const defaultPrice: string = defaultTradeContent.price;
@@ -126,10 +124,7 @@ describe('candleHelper', () => {
     ]);
 
     const ticker = 'BTC-USD';
-    setCachePrice(ticker, '100000');
-    setCachePrice(ticker, '105000');
     setCachePrice(ticker, '110000');
-    await OrderbookMidPriceMemoryCache.updateOrderbookMidPrices();
 
     await runUpdateCandles(publisher);
 
@@ -147,8 +142,8 @@ describe('candleHelper', () => {
           id: CandleTable.uuid(currentStartedAt, defaultCandle.ticker, resolution),
           startedAt: currentStartedAt,
           resolution,
-          orderbookMidPriceClose: '105000',
-          orderbookMidPriceOpen: '105000',
+          orderbookMidPriceClose: '110000',
+          orderbookMidPriceOpen: '110000',
         };
       },
     );
@@ -170,10 +165,7 @@ describe('candleHelper', () => {
     ]);
 
     const ticker = 'BTC-USD';
-    setCachePrice(ticker, '80000');
-    setCachePrice(ticker, '81000');
     setCachePrice(ticker, '80500');
-    await OrderbookMidPriceMemoryCache.updateOrderbookMidPrices();
 
     // Create Perpetual Position to set open position
     const openInterest: string = '100';
@@ -445,7 +437,6 @@ describe('candleHelper', () => {
     orderbookMidPrice: number,
   ) => {
     setCachePrice('BTC-USD', orderbookMidPrice.toFixed());
-    await OrderbookMidPriceMemoryCache.updateOrderbookMidPrices();
 
     if (initialCandle !== undefined) {
       await CandleTable.create(initialCandle);
@@ -517,7 +508,7 @@ describe('candleHelper', () => {
     await startCandleCache();
 
     setCachePrice('BTC-USD', '10005');
-    await OrderbookMidPriceMemoryCache.updateOrderbookMidPrices();
+
     // Add two trades for BTC-USD market
     const publisher: KafkaPublisher = new KafkaPublisher();
     publisher.addEvents([
@@ -620,7 +611,6 @@ describe('candleHelper', () => {
     await startCandleCache();
 
     setCachePrice('BTC-USD', '10005');
-    await OrderbookMidPriceMemoryCache.updateOrderbookMidPrices();
 
     const publisher: KafkaPublisher = new KafkaPublisher();
     publisher.addEvents([]);
@@ -687,9 +677,8 @@ describe('candleHelper', () => {
     setCachePrice('BTC-USD', '105000');
     setCachePrice('ISO-USD', '115000');
     setCachePrice('ETH-USD', '150000');
-    await OrderbookMidPriceMemoryCache.updateOrderbookMidPrices();
 
-    const map = await getOrderbookMidPriceMap();
+    const map = getOrderbookMidPriceMap();
     expect(map).toEqual({
       'BTC-USD': '105000',
       'ETH-USD': '150000',
