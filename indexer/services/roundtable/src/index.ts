@@ -280,13 +280,6 @@ async function start(): Promise<void> {
       config.LOOPS_INTERVAL_MS_REFRESH_VAULT_PNL,
     );
   }
-  // if (config.LOOPS_ENABLED_CACHE_ORDERBOOK_MID_PRICES) {
-  //   startLoop(
-  //     cacheOrderbookMidPrices,
-  //     'cache-orderbook-mid-prices',
-  //     config.LOOPS_INTERVAL_MS_CACHE_ORDERBOOK_MID_PRICES,
-  //   );
-  // }
 
   logger.info({
     at: 'index',

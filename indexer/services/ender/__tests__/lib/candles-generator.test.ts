@@ -673,7 +673,7 @@ describe('candleHelper', () => {
 
   });
 
-  it('successfully creates an orderbook price map for each market', async () => {
+  it('successfully creates an orderbook price map for each market', () => {
     setCachePrice('BTC-USD', '105000');
     setCachePrice('ISO-USD', '115000');
     setCachePrice('ETH-USD', '150000');
