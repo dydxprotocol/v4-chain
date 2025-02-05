@@ -65,7 +65,9 @@ export async function findAll(
     reduceOnly,
     orderFlags,
     goodTilBlockBeforeOrAt,
+    goodTilBlockAfter,
     goodTilBlockTimeBeforeOrAt,
+    goodTilBlockTimeAfter,
     clientMetadata,
     triggerPrice,
     page,
@@ -166,6 +168,15 @@ export async function findAll(
       goodTilBlockBeforeOrAt,
     );
   }
+  if (goodTilBlockAfter !== undefined) {
+    baseQuery = baseQuery.whereNotNull(
+      OrderColumns.goodTilBlock,
+    ).andWhere(
+      OrderColumns.goodTilBlock,
+      '>',
+      goodTilBlockAfter,
+    );
+  }
 
   // If filtering by `goodTilBlockTime`, filter out all rows with NULL `goodTilBlockTime`
   if (goodTilBlockTimeBeforeOrAt !== undefined) {
@@ -175,6 +186,15 @@ export async function findAll(
       OrderColumns.goodTilBlockTime,
       '<=',
       goodTilBlockTimeBeforeOrAt,
+    );
+  }
+  if (goodTilBlockTimeAfter !== undefined) {
+    baseQuery = baseQuery.whereNotNull(
+      OrderColumns.goodTilBlockTime,
+    ).andWhere(
+      OrderColumns.goodTilBlockTime,
+      '>',
+      goodTilBlockTimeAfter,
     );
   }
 

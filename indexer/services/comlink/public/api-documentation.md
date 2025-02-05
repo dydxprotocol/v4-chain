@@ -2001,7 +2001,9 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
 |type|query|[OrderType](#schemaordertype)|false|none|
 |status|query|array[any]|false|none|
 |goodTilBlockBeforeOrAt|query|number(double)|false|none|
+|goodTilBlockAfter|query|number(double)|false|none|
 |goodTilBlockTimeBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|goodTilBlockTimeAfter|query|[IsoString](#schemaisostring)|false|none|
 |returnLatestOrders|query|boolean|false|none|
 
 #### Enumerated Values
@@ -2195,7 +2197,9 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
 |type|query|[OrderType](#schemaordertype)|false|none|
 |status|query|array[any]|false|none|
 |goodTilBlockBeforeOrAt|query|number(double)|false|none|
+|goodTilBlockAfter|query|number(double)|false|none|
 |goodTilBlockTimeBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|goodTilBlockTimeAfter|query|[IsoString](#schemaisostring)|false|none|
 |returnLatestOrders|query|boolean|false|none|
 
 #### Enumerated Values
