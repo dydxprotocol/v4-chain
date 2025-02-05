@@ -17,7 +17,7 @@ import {
   LiquidityTiersFromDatabase,
   LiquidityTiersTable, LiquidityTiersMap, LiquidityTiersColumns,
 } from '@dydxprotocol-indexer/postgres';
-import { NextFundingCache, OrderbookMidPricesCache } from '@dydxprotocol-indexer/redis';
+import { NextFundingCache } from '@dydxprotocol-indexer/redis';
 import Big from 'big.js';
 import _ from 'lodash';
 
@@ -84,13 +84,6 @@ export default async function runTask(): Promise<void> {
       `${config.SERVICE_NAME}.markets_updater_get_fills_positions_and_markets_timing`,
       Date.now() - start,
     );
-
-    await OrderbookMidPricesCache.cacheOraclePrices(redisClient, perpetualMarkets, latestPrices);
-    const count = perpetualMarkets.length;
-    logger.info({
-      at: 'market_updater#cache_oracle_prices',
-      message: `Caching prices for ${count} markets`,
-    });
 
     const clobPairIdToPerpetualMarketId: _.Dictionary<string> = _.chain(perpetualMarkets)
       .keyBy(PerpetualMarketColumns.clobPairId)

@@ -12,7 +12,6 @@ export * as CanceledOrdersCache from './caches/canceled-orders-cache';
 export * as StatefulOrderUpdatesCache from './caches/stateful-order-updates-cache';
 export * as StateFilledQuantumsCache from './caches/state-filled-quantums-cache';
 export * as LeaderboardPnlProcessedCache from './caches/leaderboard-processed-cache';
-export * as OrderbookMidPricesCache from './caches/orderbook-mid-prices-cache';
 export { placeOrder } from './caches/place-order';
 export { removeOrder } from './caches/remove-order';
 export { updateOrder } from './caches/update-order';
