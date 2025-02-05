@@ -8,6 +8,7 @@ import {
 import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
+import { setOraclePrice } from '../../caches/oracle-price-memory-cache';
 import config from '../../config';
 import { generateOraclePriceContents } from '../../helpers/kafka-helper';
 import {
@@ -35,6 +36,13 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
       resultRow.market) as MarketFromDatabase;
     const oraclePrice: OraclePriceFromDatabase = OraclePriceModel.fromJson(
       resultRow.oracle_price) as OraclePriceFromDatabase;
+
+    setOraclePrice(market.pair, oraclePrice.price);
+
+    logger.info({
+      at: 'MarketPriceUpdateHandler#handle',
+      message: `Setting Oracle Price ${market.pair} - ${oraclePrice.price}`,
+    });
 
     // Handle latency from resultRow
     stats.timing(

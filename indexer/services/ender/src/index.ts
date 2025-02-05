@@ -5,7 +5,6 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 
 import { initializeAllCaches } from './caches/block-cache';
-import * as OrderbookMidPriceMemoryCache from './caches/orderbook-mid-price-memory-cache';
 import config from './config';
 import { connect } from './helpers/kafka/kafka-controller';
 import { createPostgresFunctions } from './helpers/postgres/postgres-functions';
@@ -32,7 +31,6 @@ async function startKafka(): Promise<void> {
   // The two exceptions are the aggregated properties of perpetual_markets and the
   // OrderbookMidPriceMemoryCache
   await initializeAllCaches();
-  wrapBackgroundTask(OrderbookMidPriceMemoryCache.start(), true, 'startUpdateOrderbookMidPrices');
 
   await connect();
   await startConsumer();

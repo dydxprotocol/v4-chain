@@ -32,7 +32,7 @@ export const configSchema = {
   SKIP_STATEFUL_ORDER_UUIDS: parseString({
     default: '',
   }),
-  ORDERBOOK_MID_PRICE_REFRESH_INTERVAL_MS: parseInteger({ default: 10_000 }), // 10 seconds
+  ORDERBOOK_MID_PRICE_REFRESH_INTERVAL_MS: parseInteger({ default: 5_000 }), // 5 seconds
 };
 
 export default parseSchema(configSchema);
