@@ -10,7 +10,6 @@ import {
   connect as connectToRedis,
 } from './helpers/redis';
 import aggregateTradingRewardsTasks from './tasks/aggregate-trading-rewards';
-import cacheOrderbookMidPrices from './tasks/cache-orderbook-mid-prices';
 import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
 import createLeaderboardTask from './tasks/create-leaderboard';
 import createPnlTicksTask from './tasks/create-pnl-ticks';
@@ -279,13 +278,6 @@ async function start(): Promise<void> {
       refreshVaultPnlTask,
       'refresh-vault-pnl',
       config.LOOPS_INTERVAL_MS_REFRESH_VAULT_PNL,
-    );
-  }
-  if (config.LOOPS_ENABLED_CACHE_ORDERBOOK_MID_PRICES) {
-    startLoop(
-      cacheOrderbookMidPrices,
-      'cache-orderbook-mid-prices',
-      config.LOOPS_INTERVAL_MS_CACHE_ORDERBOOK_MID_PRICES,
     );
   }
 
