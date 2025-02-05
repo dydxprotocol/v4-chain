@@ -12,6 +12,7 @@ func (k Keeper) StreamOrderbookUpdates(
 		req.GetClobPairId(),
 		req.GetSubaccountIds(),
 		req.GetMarketIds(),
+		req.GetFilterOrdersBySubaccountId(),
 		stream,
 	)
 	if err != nil {
