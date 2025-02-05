@@ -254,6 +254,28 @@ describe('Order store', () => {
         goodTilBlock: null,
       },
     ],
+    [
+      'goodTilBlockAfter',
+      'goodTilBlock',
+      {
+        goodTilBlockAfter: '1',
+      },
+      {
+        ...defaultOrder,
+        goodTilBlockTime: null,
+      },
+    ],
+    [
+      'goodTilBlockTimeAfter',
+      'goodTilBlockTime',
+      {
+        goodTilBlockTimeAfter: '2022-02-01T00:00:00.000Z',
+      },
+      {
+        ...defaultOrderGoodTilBlockTime,
+        goodTilBlock: null,
+      },
+    ],
   ])(
     'Successfully finds all orders by %s, excludes orders with null %s',
     async (
