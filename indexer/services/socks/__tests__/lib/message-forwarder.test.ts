@@ -174,7 +174,7 @@ describe('message-forwarder', () => {
     childSubaccount2Messages[1],
   ];
 
-  const mockAxiosResponse: Object = { a: 'b' };
+  const mockAxiosResponse: Object = ['a', 'b'];
   const subaccountInitialMessage: Object = {
     ...mockAxiosResponse,
     orders: mockAxiosResponse,
