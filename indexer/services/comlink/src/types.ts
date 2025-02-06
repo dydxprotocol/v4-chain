@@ -529,7 +529,9 @@ export interface ListOrderRequest extends SubaccountRequest, LimitRequest, Ticke
   type?: OrderType,
   status?: OrderStatus[],
   goodTilBlockBeforeOrAt?: number,
+  goodTilBlockAfter?: number,
   goodTilBlockTimeBeforeOrAt?: IsoString,
+  goodTilBlockTimeAfter?: IsoString,
   returnLatestOrders?: boolean,
 }
 
@@ -539,7 +541,9 @@ export interface ParentSubaccountListOrderRequest
   type?: OrderType,
   status?: OrderStatus[],
   goodTilBlockBeforeOrAt?: number,
+  goodTilBlockAfter?: number,
   goodTilBlockTimeBeforeOrAt?: IsoString,
+  goodTilBlockTimeAfter?: IsoString,
   returnLatestOrders?: boolean,
 }
 

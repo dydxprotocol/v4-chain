@@ -409,7 +409,7 @@ describe('orders-controller#V4', () => {
         redisTestConstants.defaultRedisOrder,
       ],
       [
-        'goodTilBlock',
+        'goodTilBlockBeforeOrAt',
         [
           redisTestConstants.defaultRedisOrder,
           redisOrderWithDifferentMarket,
@@ -424,7 +424,7 @@ describe('orders-controller#V4', () => {
         redisTestConstants.defaultRedisOrder,
       ],
       [
-        'goodTilBlock',
+        'goodTilBlockBeforeOrAt with isolated market',
         [
           redisTestConstants.defaultRedisOrder,
           {
@@ -444,7 +444,42 @@ describe('orders-controller#V4', () => {
         redisTestConstants.defaultRedisOrder,
       ],
       [
-        'goodTilBlockTime',
+        'goodTilBlockAfter',
+        [
+          redisTestConstants.defaultRedisOrder,
+          redisOrderWithDifferentMarket,
+          redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        ],
+        {
+          ...defaultQueryParams,
+          goodTilBlockAfter: protocolTranslations.getGoodTilBlock(
+            redisOrderWithDifferentMarket.order!,
+          )! - 1,
+        },
+        redisOrderWithDifferentMarket,
+      ],
+      [
+        'goodTilBlockAfter with isolated market',
+        [
+          redisTestConstants.defaultRedisOrder,
+          {
+            ...redisTestConstants.isolatedMarketRedisOrder,
+            order: {
+              ...redisTestConstants.isolatedMarketOrder,
+              goodTilBlock: 1200,
+            },
+          },
+        ],
+        {
+          ...defaultQueryParams,
+          goodTilBlockAfter: protocolTranslations.getGoodTilBlock(
+            redisTestConstants.defaultRedisOrder.order!,
+          )! - 1,
+        },
+        redisTestConstants.defaultRedisOrder,
+      ],
+      [
+        'goodTilBlockTimeBeforeOrAt',
         [
           redisTestConstants.defaultRedisOrder,
           redisTestConstants.defaultRedisOrderGoodTilBlockTime,
@@ -457,6 +492,19 @@ describe('orders-controller#V4', () => {
           ),
         },
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+      ],
+      [
+        'goodTilBlockTimeAfter',
+        [
+          redisTestConstants.defaultRedisOrder,
+          redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+          newerRedisOrderGoodTilBlockTime,
+        ],
+        {
+          ...defaultQueryParams,
+          goodTilBlockTimeAfter: '2020-09-13T12:26:39.000Z',
+        },
+        newerRedisOrderGoodTilBlockTime,
       ],
     ])('Successfully filters redis order by %s', async (
       _testName: string,
