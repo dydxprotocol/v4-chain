@@ -33,7 +33,6 @@ import {
 import {
   ORDER_FLAG_CONDITIONAL,
 } from '@dydxprotocol-indexer/v4-proto-parser';
-import { DateTime } from 'luxon';
 
 describe('orders-controller#V4', () => {
   beforeAll(async () => {
