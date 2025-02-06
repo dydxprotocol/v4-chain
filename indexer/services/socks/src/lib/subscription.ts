@@ -587,7 +587,7 @@ export class Subscriptions {
         }),
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=BEST_EFFORT_CANCELED&goodTilBlockAfter=${numBlockHeight - 20}`,
+          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=BEST_EFFORT_CANCELED&goodTilBlockAfter=$${Math.max(numBlockHeight - 20, 1)}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,
