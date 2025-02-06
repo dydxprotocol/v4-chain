@@ -503,9 +503,7 @@ describe('orders-controller#V4', () => {
         ],
         {
           ...defaultQueryParams,
-          goodTilBlockTimeAfter: DateTime.fromISO(protocolTranslations.getGoodTilBlockTime(
-            newerRedisOrderGoodTilBlockTime.order!,
-          )!).minus({ second: 1 }).toISO(),
+          goodTilBlockTimeAfter: '2020-09-13T12:26:39.000Z',
         },
         newerRedisOrderGoodTilBlockTime,
       ],
