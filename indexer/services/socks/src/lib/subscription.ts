@@ -545,11 +545,6 @@ export class Subscriptions {
       throw new Error('Invalid undefined id');
     }
 
-    logger.error({
-      at: "getInitialResponseForSubaccountSubscription",
-      message: `Getting initial subaccount data for ${id}`,
-    });
-
     try {
       const {
         address,
@@ -561,12 +556,6 @@ export class Subscriptions {
 
       const blockHeight: string = await blockHeightRefresher.getLatestBlockHeight();
       const numBlockHeight: number = parseInt(blockHeight, 10);
-
-      logger.error({
-        at: "getInitialResponseForSubaccountSubscription",
-        message: `Got initial block height ${numBlockHeight}`,
-        id,
-      });
 
       const [
         subaccountsResponse,
@@ -607,27 +596,11 @@ export class Subscriptions {
         }),
       ]);
 
-      logger.error({
-        at: "getInitialResponseForSubaccountSubscription",
-        message: `Got order responses`,
-        id,
-        subaccountsResponse,
-        ordersResponse,
-        currentBestEffortCanceledOrdersResponse,
-      });
-
       const orders: OrderFromDatabase[] = JSON.parse(ordersResponse);
       const currentBestEffortCanceledOrders: OrderFromDatabase[] = JSON.parse(
         currentBestEffortCanceledOrdersResponse,
       );
       const allOrders: OrderFromDatabase[] = orders.concat(currentBestEffortCanceledOrders);
-
-      logger.error({
-        at: "getInitialResponseForSubaccountScription",
-        message: `Concatenated orders`,
-        allOrders,
-        id,
-      });
 
       return JSON.stringify({
         ...JSON.parse(subaccountsResponse),
@@ -635,11 +608,6 @@ export class Subscriptions {
         blockHeight,
       });
     } catch (error) {
-      logger.error({
-        at: 'getInitialResponseForSubaccountSubscription',
-        message: `Received error when subscribing ${id}`,
-        error,
-      });
       // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however
       // such subaccounts can be subscribed to and events can be sent when the subaccounts are
       // indexed to an existing subscription.
@@ -663,11 +631,6 @@ export class Subscriptions {
       throw new Error('Invalid undefined id');
     }
 
-    logger.error({
-      at: "getInitialResponseForParentSubaccountSubscription",
-      message: `Getting initial parent subaccount data for ${id}`,
-    });
-
     try {
       const {
         address,
@@ -679,12 +642,6 @@ export class Subscriptions {
 
       const blockHeight: string = await blockHeightRefresher.getLatestBlockHeight();
       const numBlockHeight: number = parseInt(blockHeight, 10);
-
-      logger.error({
-        at: "getInitialResponseForParentSubaccountSubscription",
-        message: `Got initial block height ${numBlockHeight}`,
-        id,
-      });
 
       const [
         subaccountsResponse,
@@ -725,27 +682,11 @@ export class Subscriptions {
         }),
       ]);
 
-      logger.error({
-        at: "getInitialResponseForParentSubaccountSubscription",
-        message: `Got order responses`,
-        id,
-        subaccountsResponse,
-        ordersResponse,
-        currentBestEffortCanceledOrdersResponse,
-      });
-
       const orders: OrderFromDatabase[] = JSON.parse(ordersResponse);
       const currentBestEffortCanceledOrders: OrderFromDatabase[] = JSON.parse(
         currentBestEffortCanceledOrdersResponse,
       );
       const allOrders: OrderFromDatabase[] = orders.concat(currentBestEffortCanceledOrders);
-
-      logger.error({
-        at: "getInitialResponseForSubaccountScription",
-        message: `Concatenated orders`,
-        allOrders,
-        id,
-      });
 
       return JSON.stringify({
         ...JSON.parse(subaccountsResponse),
