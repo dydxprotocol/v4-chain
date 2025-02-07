@@ -2752,7 +2752,24 @@
           },
           {
             "in": "query",
+            "name": "goodTilBlockAfter",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
             "name": "goodTilBlockTimeBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "goodTilBlockTimeAfter",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
@@ -2861,7 +2878,24 @@
           },
           {
             "in": "query",
+            "name": "goodTilBlockAfter",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
             "name": "goodTilBlockTimeBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "goodTilBlockTimeAfter",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
