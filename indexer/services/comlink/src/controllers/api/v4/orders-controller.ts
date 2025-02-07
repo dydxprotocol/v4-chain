@@ -492,7 +492,19 @@ router.get(
         options: { gt: 0 },
       },
     },
+    goodTilBlockAfter: {
+      in: 'query',
+      optional: true,
+      isInt: {
+        options: { gt: 0 },
+      },
+    },
     goodTilBlockTimeBeforeOrAt: {
+      in: 'query',
+      optional: true,
+      isISO8601: true,
+    },
+    goodTilBlockTimeAfter: {
       in: 'query',
       optional: true,
       isISO8601: true,
