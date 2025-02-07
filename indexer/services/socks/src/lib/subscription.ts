@@ -545,7 +545,7 @@ export class Subscriptions {
       throw new Error('Invalid undefined id');
     }
 
-    logger.info({
+    logger.error({
       at: "getInitialResponseForSubaccountSubscription",
       message: `Getting initial subaccount data for ${id}`,
     });
@@ -562,7 +562,7 @@ export class Subscriptions {
       const blockHeight: string = await blockHeightRefresher.getLatestBlockHeight();
       const numBlockHeight: number = parseInt(blockHeight, 10);
 
-      logger.info({
+      logger.error({
         at: "getInitialResponseForSubaccountSubscription",
         message: `Got initial block height ${numBlockHeight}`,
         id,
@@ -598,7 +598,7 @@ export class Subscriptions {
         }),
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=BEST_EFFORT_CANCELED&goodTilBlockAfter=$${Math.max(numBlockHeight - 20, 1)}`,
+          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=BEST_EFFORT_CANCELED&goodTilBlockAfter=${Math.max(numBlockHeight - 20, 1)}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           headers: {
             'cf-ipcountry': country,
@@ -607,7 +607,7 @@ export class Subscriptions {
         }),
       ]);
 
-      logger.info({
+      logger.error({
         at: "getInitialResponseForSubaccountSubscription",
         message: `Got order responses`,
         id,
@@ -622,7 +622,7 @@ export class Subscriptions {
       );
       const allOrders: OrderFromDatabase[] = orders.concat(currentBestEffortCanceledOrders);
 
-      logger.info({
+      logger.error({
         at: "getInitialResponseForSubaccountScription",
         message: `Concatenated orders`,
         allOrders,
@@ -663,6 +663,11 @@ export class Subscriptions {
       throw new Error('Invalid undefined id');
     }
 
+    logger.error({
+      at: "getInitialResponseForParentSubaccountSubscription",
+      message: `Getting initial parent subaccount data for ${id}`,
+    });
+
     try {
       const {
         address,
@@ -674,6 +679,12 @@ export class Subscriptions {
 
       const blockHeight: string = await blockHeightRefresher.getLatestBlockHeight();
       const numBlockHeight: number = parseInt(blockHeight, 10);
+
+      logger.error({
+        at: "getInitialResponseForParentSubaccountSubscription",
+        message: `Got initial block height ${numBlockHeight}`,
+        id,
+      });
 
       const [
         subaccountsResponse,
@@ -714,11 +725,27 @@ export class Subscriptions {
         }),
       ]);
 
+      logger.error({
+        at: "getInitialResponseForParentSubaccountSubscription",
+        message: `Got order responses`,
+        id,
+        subaccountsResponse,
+        ordersResponse,
+        currentBestEffortCanceledOrdersResponse,
+      });
+
       const orders: OrderFromDatabase[] = JSON.parse(ordersResponse);
       const currentBestEffortCanceledOrders: OrderFromDatabase[] = JSON.parse(
         currentBestEffortCanceledOrdersResponse,
       );
       const allOrders: OrderFromDatabase[] = orders.concat(currentBestEffortCanceledOrders);
+
+      logger.error({
+        at: "getInitialResponseForSubaccountScription",
+        message: `Concatenated orders`,
+        allOrders,
+        id,
+      });
 
       return JSON.stringify({
         ...JSON.parse(subaccountsResponse),
