@@ -545,6 +545,11 @@ export class Subscriptions {
       throw new Error('Invalid undefined id');
     }
 
+    logger.info({
+      at: "getInitialResponseForSubaccountSubscription",
+      message: `Getting initial subaccount data for ${id}`,
+    });
+
     try {
       const {
         address,
@@ -556,6 +561,12 @@ export class Subscriptions {
 
       const blockHeight: string = await blockHeightRefresher.getLatestBlockHeight();
       const numBlockHeight: number = parseInt(blockHeight, 10);
+
+      logger.info({
+        at: "getInitialResponseForSubaccountSubscription",
+        message: `Got initial block height ${numBlockHeight}`,
+        id,
+      });
 
       const [
         subaccountsResponse,
@@ -596,11 +607,27 @@ export class Subscriptions {
         }),
       ]);
 
+      logger.info({
+        at: "getInitialResponseForSubaccountSubscription",
+        message: `Got order responses`,
+        id,
+        subaccountsResponse,
+        ordersResponse,
+        currentBestEffortCanceledOrdersResponse,
+      });
+
       const orders: OrderFromDatabase[] = JSON.parse(ordersResponse);
       const currentBestEffortCanceledOrders: OrderFromDatabase[] = JSON.parse(
         currentBestEffortCanceledOrdersResponse,
       );
       const allOrders: OrderFromDatabase[] = orders.concat(currentBestEffortCanceledOrders);
+
+      logger.info({
+        at: "getInitialResponseForSubaccountScription",
+        message: `Concatenated orders`,
+        allOrders,
+        id,
+      });
 
       return JSON.stringify({
         ...JSON.parse(subaccountsResponse),
