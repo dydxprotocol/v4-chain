@@ -608,6 +608,12 @@ export class Subscriptions {
         blockHeight,
       });
     } catch (error) {
+      logger.error({
+        at: 'getInitialResponseForSubaccountSubscription',
+        message: 'Error on getting initial response for subaccount subscription',
+        id,
+        error,
+      });
       // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however
       // such subaccounts can be subscribed to and events can be sent when the subaccounts are
       // indexed to an existing subscription.
@@ -694,6 +700,12 @@ export class Subscriptions {
         blockHeight,
       });
     } catch (error) {
+      logger.error({
+        at: 'getInitialResponseForParentSubaccountSubscription',
+        message: 'Error on getting initial response for subaccount subscription',
+        id,
+        error,
+      });
       // The subaccounts API endpoint returns a 404 for subaccounts that are not indexed, however
       // such subaccounts can be subscribed to and events can be sent when the subaccounts are
       // indexed to an existing subscription.
