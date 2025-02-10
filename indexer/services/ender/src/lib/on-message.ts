@@ -105,7 +105,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     try {
       candles = await candlesGenerator.updateCandles();
     } catch (ex) {
-      if (PROCESSED.length === 0 && blockHeight = 36809131) {
+      if (blockHeight === 36809131) {
         logger.info({
           at: 'on-message',
           message: 'Ignoring error with generating candles',
