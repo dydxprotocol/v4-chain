@@ -29,6 +29,7 @@ import {
 import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
+import { isVaultOrder } from '../helpers/orders';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
@@ -109,8 +110,11 @@ export class OrderPlaceHandler extends Handler {
       // isn't updated.
       // For stateful and conditional orders, look the order up in the db for the createdAtHeight
       // and send any cached order updates for the stateful or conditional order
+      // Vault orders are not persisted, so do not execute logic for stateful orders for vault
+      // orders.
       let dbOrder: OrderFromDatabase | undefined;
-      if (isStatefulOrder(redisOrder.order!.orderId!.orderFlags)) {
+      if (isStatefulOrder(redisOrder.order!.orderId!.orderFlags) &&
+        !isVaultOrder(redisOrder.order!.orderId!)) {
         const orderUuid: string = OrderTable.orderIdToUuid(redisOrder.order!.orderId!);
         dbOrder = await OrderTable.findById(orderUuid);
         if (dbOrder === undefined) {

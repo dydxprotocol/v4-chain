@@ -187,5 +187,18 @@ describe('statefulOrderRemovalHandler', () => {
       ...testConstants.defaultOrder,
       clientId: '0',
     }));
+    const expectedOffchainUpdate: OffChainUpdateV1 = {
+      orderRemove: {
+        removedOrderId: defaultOrderId,
+        reason,
+        removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED,
+      },
+    };
+    expectVulcanKafkaMessage({
+      producerSendMock,
+      orderId: defaultOrderId,
+      offchainUpdate: expectedOffchainUpdate,
+      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderRemoval' },
+    });
   });
 });

@@ -57,6 +57,7 @@ export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';
 export * as blockHeightRefresher from './loops/block-height-refresher';
 export * as liquidityTierRefresher from './loops/liquidity-tier-refresher';
+export * as vaultRefresher from './loops/vault-refresher';
 
 export * as uuid from './helpers/uuid';
 export * as protocolTranslations from './lib/protocol-translations';

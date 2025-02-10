@@ -219,7 +219,7 @@ export class BlockProcessor {
     );
     validator.validate();
     this.sqlEventPromises[eventProto.blockEventIndex] = validator.getEventForBlockProcessor();
-    let handlers: Handler<EventMessage>[] = validator.createHandlers(
+    const handlers: Handler<EventMessage>[] = validator.createHandlers(
       eventProto.indexerTendermintEvent,
       this.txId,
       this.messageReceivedTimestamp,
@@ -232,8 +232,6 @@ export class BlockProcessor {
         ...this.block.events[eventProto.blockEventIndex],
         subtype: SKIPPED_EVENT_SUBTYPE,
       };
-      // Set handlers to empty array if event is to be skipped.
-      handlers = [];
       logger.info({
         at: 'onMessage#shouldExcludeEvent',
         message: 'Excluded event from processing',
