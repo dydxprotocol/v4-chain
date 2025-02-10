@@ -33,7 +33,6 @@ import {
   dateToDateTime,
 } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
-import { PROCESSED } from 'src/constants';
 
 /**
  * @function onMessage
