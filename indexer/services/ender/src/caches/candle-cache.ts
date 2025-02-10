@@ -1,5 +1,7 @@
 import { NodeEnv } from '@dydxprotocol-indexer/base';
 import {
+  BlockFromDatabase,
+  BlockTable,
   CandleFromDatabase,
   CandleResolution,
   CandlesMap,
@@ -16,6 +18,9 @@ export async function startCandleCache(txId?: number): Promise<void> {
   const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
     {}, [], { txId },
   );
+  
+  const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
+
   const tickers: string[] = _.map(
     perpetualMarkets,
     PerpetualMarketColumns.ticker,
@@ -23,6 +28,7 @@ export async function startCandleCache(txId?: number): Promise<void> {
 
   candlesMap = await CandleTable.findCandlesMap(
     tickers,
+    latestBlock.time,
   );
 }
 

@@ -20,6 +20,7 @@ import {
   QueryableField,
   QueryConfig,
 } from '../types';
+import { DateTime } from 'luxon';
 
 export function uuid(startedAt: IsoString, ticker: string, resolution: CandleResolution): string {
   // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
@@ -174,10 +175,13 @@ export async function findLatest(
 
 export async function findCandlesMap(
   tickers: string[],
+  timestamp?: string, 
 ): Promise<CandlesMap> {
   if (tickers.length === 0) {
     return {};
   }
+
+  const startTime: string = timestamp !== undefined ? `'${timestamp}'::timestamp` : 'NOW()';
 
   const candlesMap: CandlesMap = {};
   for (const ticker of tickers) {
@@ -195,7 +199,7 @@ export async function findCandlesMap(
       candles
     WHERE
       "ticker" IN (${tickers.map((ticker) => { return `'${ticker}'`; }).join(',')}) AND
-      "startedAt" > NOW() - INTERVAL '3 hours' AND
+      "startedAt" > ${startTime} - INTERVAL '3 hours' AND
       resolution IN ('1MIN', '5MINS', '15MINS', '30MINS', '1HOUR')
     ORDER BY
       ticker,
@@ -216,7 +220,7 @@ export async function findCandlesMap(
       candles
     WHERE
       "ticker" IN (${tickers.map((ticker) => { return `'${ticker}'`; }).join(',')}) AND
-      "startedAt" > NOW() - INTERVAL '2 days' AND
+      "startedAt" > ${startTime} - INTERVAL '2 days' AND
       resolution IN ('4HOURS', '1DAY')
     ORDER BY
       ticker,
