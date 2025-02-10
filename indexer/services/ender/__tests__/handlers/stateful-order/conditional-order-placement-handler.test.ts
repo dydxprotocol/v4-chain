@@ -234,7 +234,7 @@ describe('conditionalOrderPlacementHandler', () => {
   it.each([
     ['transaction event', 0],
     ['block event', -1],
-  ])('successfully skips order (as %s)', async (
+  ])('does not skip order (as %s)', async (
     _name: string,
     transactionIndex: number,
   ) => {
@@ -246,6 +246,6 @@ describe('conditionalOrderPlacementHandler', () => {
 
     await onMessage(kafkaMessage);
     const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
-    expect(order).toBeUndefined();
+    expect(order).toBeDefined();
   });
 });

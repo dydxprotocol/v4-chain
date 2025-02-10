@@ -275,5 +275,17 @@ describe('statefulOrderPlacementHandler', () => {
     await onMessage(kafkaMessage);
     const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
     expect(order).toBeUndefined();
+    const expectedOffchainUpdate: OffChainUpdateV1 = {
+      orderPlace: {
+        order: defaultOrder,
+        placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
+      },
+    };
+    expectVulcanKafkaMessage({
+      producerSendMock,
+      orderId: defaultOrder.orderId!,
+      offchainUpdate: expectedOffchainUpdate,
+      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderPlacement' },
+    });
   });
 });
