@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { CANDLES_WEBSOCKET_MESSAGE_VERSION, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
   CANDLE_RESOLUTION_TO_PROTO,
@@ -387,6 +387,14 @@ export class CandlesGenerator {
       orderbookMidPriceOpen: orderbookMidPrice,
     };
 
+    logger.info({
+      at: 'createCandle',
+      message: `Creating candle for ${ticker} with resolution ${resolution}`,
+      ticker,
+      resolution,
+      startedAt,
+    })
+
     return CandleTable.create(candle, this.writeOptions);
   }
 
@@ -418,6 +426,14 @@ export class CandlesGenerator {
       orderbookMidPriceClose: orderbookMidPrice,
       orderbookMidPriceOpen: orderbookMidPrice,
     };
+
+    logger.info({
+      at: 'createEmptyCandle',
+      message: `Creating empty candle for ${ticker} with resolution ${resolution}`,
+      ticker,
+      resolution,
+      startedAt,
+    })
 
     return CandleTable.create(candle, this.writeOptions);
   }
