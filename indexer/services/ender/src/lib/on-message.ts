@@ -104,15 +104,12 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     try {
       candles = await candlesGenerator.updateCandles();
     } catch (ex) {
-      if (blockHeight === '36809131') {
-        logger.info({
-          at: 'on-message',
-          message: 'Ignoring error with generating candles',
-          blockHeight,
-          ex,
-        });
-      }
-      throw ex;
+      logger.info({
+        at: 'on-message',
+        message: 'Ignoring error with generating candles',
+        blockHeight,
+        ex,
+      });
     }
     await Transaction.commit(txId);
     stats.gauge(`${config.SERVICE_NAME}.processing_block_height`, indexerTendermintBlock.height);
