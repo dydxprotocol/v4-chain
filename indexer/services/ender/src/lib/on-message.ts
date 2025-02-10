@@ -33,6 +33,7 @@ import {
   dateToDateTime,
 } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
+import { PROCESSED } from 'src/constants';
 
 /**
  * @function onMessage
@@ -100,7 +101,20 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
       dateToDateTime(indexerTendermintBlock.time!),
       txId,
     );
-    const candles: CandleFromDatabase[] = await candlesGenerator.updateCandles();
+    let candles: CandleFromDatabase[] = [];
+    try {
+      candles = await candlesGenerator.updateCandles();
+    } catch (ex) {
+      if (PROCESSED.length === 0 && blockHeight = 36809131) {
+        logger.info({
+          at: 'on-message',
+          message: 'Ignoring error with generating candles',
+          blockHeight,
+          ex,
+        });
+      }
+      throw ex;
+    }
     await Transaction.commit(txId);
     stats.gauge(`${config.SERVICE_NAME}.processing_block_height`, indexerTendermintBlock.height);
     // Update caches after transaction is committed

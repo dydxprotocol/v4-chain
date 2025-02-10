@@ -434,7 +434,7 @@ export class CandlesGenerator {
       resolution,
       startedAt,
     })
-
+    
     return CandleTable.create(candle, this.writeOptions);
   }
 
