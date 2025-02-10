@@ -58,7 +58,12 @@ describe('Subscriptions', () => {
   const initialResponseUrlPatterns: Record<Channel, string[] | undefined> = {
     [Channel.V4_ACCOUNTS]: [
       '/v4/addresses/.+/subaccountNumber/.+',
+<<<<<<< HEAD
       '/v4/orders?.+subaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED,BEST_EFFORT_CANCELED',
+=======
+      '/v4/orders?.+subaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
+      '/v4/orders?.+subaccountNumber.+BEST_EFFORT_CANCELED.+goodTilBlockAfter=[0-9]+',
+>>>>>>> a6010055 (Fix bug with socks subaccount subscription with best effort canceled logic. (#2718))
     ],
     [Channel.V4_CANDLES]: ['/v4/candles/perpetualMarkets/.+?resolution=.+'],
     [Channel.V4_MARKETS]: ['/v4/perpetualMarkets'],
@@ -66,7 +71,12 @@ describe('Subscriptions', () => {
     [Channel.V4_TRADES]: ['/v4/trades/perpetualMarket/.+'],
     [Channel.V4_PARENT_ACCOUNTS]: [
       '/v4/addresses/.+/parentSubaccountNumber/.+',
+<<<<<<< HEAD
       '/v4/orders/parentSubaccountNumber?.+parentSubaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED,BEST_EFFORT_CANCELED',
+=======
+      '/v4/orders/parentSubaccountNumber?.+parentSubaccountNumber.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
+      '/v4/orders/parentSubaccountNumber?.+parentSubaccountNumber.+BEST_EFFORT_CANCELED.+goodTilBlockAfter=[0-9]+',
+>>>>>>> a6010055 (Fix bug with socks subaccount subscription with best effort canceled logic. (#2718))
     ],
     [Channel.V4_BLOCK_HEIGHT]: ['v4/height'],
   };
