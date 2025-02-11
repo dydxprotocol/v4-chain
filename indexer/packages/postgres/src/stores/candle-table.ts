@@ -21,7 +21,7 @@ import {
   QueryConfig,
 } from '../types';
 import { DateTime } from 'luxon';
-import { logger } from 'packages/base/build/src';
+import { logger } from '@dydxprotocol-indexer/base';
 
 export function uuid(startedAt: IsoString, ticker: string, resolution: CandleResolution): string {
   // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
