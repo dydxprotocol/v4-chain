@@ -481,6 +481,11 @@ export class CandlesGenerator {
     existingCandle: CandleFromDatabase,
     orderbookMidPrice: OrderbookMidPrice,
   ): Promise<CandleFromDatabase> {
+    logger.info({
+      at: 'updateCandleWithOrderbookMidPriceInPostgres',
+      message: 'Updating existing candle with mid price',
+      existingCandle,
+    });
 
     const candle: CandleUpdateObject = {
       id: existingCandle.id,
