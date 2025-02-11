@@ -21,6 +21,7 @@ import {
   QueryConfig,
 } from '../types';
 import { DateTime } from 'luxon';
+import { logger } from 'packages/base/build/src';
 
 export function uuid(startedAt: IsoString, ticker: string, resolution: CandleResolution): string {
   // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
@@ -129,6 +130,13 @@ export async function update(
     // TODO fix expression typing so we dont have to use any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ).findById(id);
+  if (candle === undefined) {
+    logger.info({
+      at: 'UpdateCandle',
+      message: 'Attempted to update non-existent candle',
+      id,
+    });
+  }
   const updatedCandle = await candle.$query().patch(fields as PartialModelObject<CandleModel>).returning('*');
   // The objection types mistakenly think the query returns an array of candles.
   return updatedCandle as unknown as (CandleFromDatabase | undefined);
