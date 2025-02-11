@@ -100,17 +100,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
       dateToDateTime(indexerTendermintBlock.time!),
       txId,
     );
-    let candles: CandleFromDatabase[] = [];
-    try {
-      candles = await candlesGenerator.updateCandles();
-    } catch (ex) {
-      logger.info({
-        at: 'on-message',
-        message: 'Ignoring error with generating candles',
-        blockHeight,
-        ex,
-      });
-    }
+    const candles: CandleFromDatabase[] = await candlesGenerator.updateCandles();
     await Transaction.commit(txId);
     stats.gauge(`${config.SERVICE_NAME}.processing_block_height`, indexerTendermintBlock.height);
     // Update caches after transaction is committed

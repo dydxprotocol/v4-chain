@@ -387,14 +387,6 @@ export class CandlesGenerator {
       orderbookMidPriceOpen: orderbookMidPrice,
     };
 
-    logger.info({
-      at: 'createCandle',
-      message: `Creating candle for ${ticker} with resolution ${resolution}`,
-      ticker,
-      resolution,
-      startedAt,
-    })
-
     return CandleTable.create(candle, this.writeOptions);
   }
 
@@ -426,14 +418,6 @@ export class CandlesGenerator {
       orderbookMidPriceClose: orderbookMidPrice,
       orderbookMidPriceOpen: orderbookMidPrice,
     };
-
-    logger.info({
-      at: 'createEmptyCandle',
-      message: `Creating empty candle for ${ticker} with resolution ${resolution}`,
-      ticker,
-      resolution,
-      startedAt,
-    })
     
     return CandleTable.create(candle, this.writeOptions);
   }
