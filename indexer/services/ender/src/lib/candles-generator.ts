@@ -429,6 +429,11 @@ export class CandlesGenerator {
     existingCandle: CandleFromDatabase,
     blockCandleUpdate: BlockCandleUpdate,
   ): Promise<CandleFromDatabase> {
+    logger.info({
+      at: 'updateCandleInPostgres',
+      message: 'Updating existing candle',
+      existingCandle,
+    });
     if (existingCandle.trades === 0) {
       // If there are no trades in the existing candle, then we can just replace the candle with the
       // block candle update.
