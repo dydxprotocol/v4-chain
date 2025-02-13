@@ -84,7 +84,9 @@ async function listOrdersCommon(
   type?: OrderType,
   status?: APIOrderStatus[],
   goodTilBlockBeforeOrAt?: number,
+  goodTilBlockAfter?: number,
   goodTilBlockTimeBeforeOrAt?: IsoString,
+  goodTilBlockTimeAfter?: IsoString,
   returnLatestOrders?: boolean,
 ): Promise<OrderResponseObject[]> {
   let clobPairId: string | undefined;
@@ -101,7 +103,9 @@ async function listOrdersCommon(
     side,
     type,
     goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
+    goodTilBlockAfter: goodTilBlockAfter?.toString(),
     goodTilBlockTimeBeforeOrAt,
+    goodTilBlockTimeAfter,
   };
   if (!_.isEmpty(status)) {
     // BEST_EFFORT_OPENED status is not filtered out, because it's a minor optimization,
@@ -124,7 +128,9 @@ async function listOrdersCommon(
       side,
       type,
       goodTilBlockBeforeOrAt,
+      goodTilBlockAfter,
       goodTilBlockTimeBeforeOrAt,
+      goodTilBlockTimeAfter,
     ),
     OrderTable.findAll(
       orderQueryConfig, [], {
@@ -207,7 +213,9 @@ class OrdersController extends Controller {
       @Query() type?: OrderType,
       @Query() status?: APIOrderStatus[],
       @Query() goodTilBlockBeforeOrAt?: number,
+      @Query() goodTilBlockAfter?: number,
       @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
+      @Query() goodTilBlockTimeAfter?: IsoString,
       @Query() returnLatestOrders?: boolean,
   ): Promise<OrderResponseObject[]> {
 
@@ -221,7 +229,9 @@ class OrdersController extends Controller {
       type,
       status,
       goodTilBlockBeforeOrAt,
+      goodTilBlockAfter,
       goodTilBlockTimeBeforeOrAt,
+      goodTilBlockTimeAfter,
       returnLatestOrders,
     );
   }
@@ -236,7 +246,9 @@ class OrdersController extends Controller {
       @Query() type?: OrderType,
       @Query() status?: APIOrderStatus[],
       @Query() goodTilBlockBeforeOrAt?: number,
+      @Query() goodTilBlockAfter?: number,
       @Query() goodTilBlockTimeBeforeOrAt?: IsoString,
+      @Query() goodTilBlockTimeAfter?: IsoString,
       @Query() returnLatestOrders?: boolean,
   ): Promise<OrderResponseObject[]> {
     const childIdtoSubaccountNumber: Record<string, number> = {};
@@ -254,7 +266,9 @@ class OrdersController extends Controller {
       type,
       status,
       goodTilBlockBeforeOrAt,
+      goodTilBlockAfter,
       goodTilBlockTimeBeforeOrAt,
+      goodTilBlockTimeAfter,
       returnLatestOrders,
     );
   }
@@ -351,7 +365,19 @@ router.get(
         options: { gt: 0 },
       },
     },
+    goodTilBlockAfter: {
+      in: 'query',
+      optional: true,
+      isInt: {
+        options: { gt: 0 },
+      },
+    },
     goodTilBlockTimeBeforeOrAt: {
+      in: 'query',
+      optional: true,
+      isISO8601: true,
+    },
+    goodTilBlockTimeAfter: {
       in: 'query',
       optional: true,
       isISO8601: true,
@@ -378,7 +404,9 @@ router.get(
       type,
       status,
       goodTilBlockBeforeOrAt,
+      goodTilBlockAfter,
       goodTilBlockTimeBeforeOrAt,
+      goodTilBlockTimeAfter,
       returnLatestOrders,
     }: ListOrderRequest = matchedData(req) as ListOrderRequest;
 
@@ -396,7 +424,9 @@ router.get(
         type,
         status,
         goodTilBlockBeforeOrAt,
+        goodTilBlockAfter,
         goodTilBlockTimeBeforeOrAt,
+        goodTilBlockTimeAfter,
         returnLatestOrders,
       );
 
@@ -462,7 +492,19 @@ router.get(
         options: { gt: 0 },
       },
     },
+    goodTilBlockAfter: {
+      in: 'query',
+      optional: true,
+      isInt: {
+        options: { gt: 0 },
+      },
+    },
     goodTilBlockTimeBeforeOrAt: {
+      in: 'query',
+      optional: true,
+      isISO8601: true,
+    },
+    goodTilBlockTimeAfter: {
       in: 'query',
       optional: true,
       isISO8601: true,
@@ -489,7 +531,9 @@ router.get(
       type,
       status,
       goodTilBlockBeforeOrAt,
+      goodTilBlockAfter,
       goodTilBlockTimeBeforeOrAt,
+      goodTilBlockTimeAfter,
       returnLatestOrders,
     }: ParentSubaccountListOrderRequest = matchedData(req) as ParentSubaccountListOrderRequest;
 
@@ -507,7 +551,9 @@ router.get(
         type,
         status,
         goodTilBlockBeforeOrAt,
+        goodTilBlockAfter,
         goodTilBlockTimeBeforeOrAt,
+        goodTilBlockTimeAfter,
         returnLatestOrders,
       );
 
@@ -588,7 +634,9 @@ async function getRedisOrderMapForSubaccountIds(
   side?: OrderSide,
   type?: OrderType,
   goodTilBlockBeforeOrAt?: number,
+  goodTilBlockAfter?: number,
   goodTilBlockTimeBeforeOrAt?: IsoString,
+  goodTilBlockTimeAfter?: IsoString,
 ): Promise<RedisOrderMap> {
   if (type !== undefined && type !== OrderType.LIMIT) {
     // TODO(DEC-1458): Add support for advanced Orders
@@ -633,10 +681,13 @@ async function getRedisOrderMapForSubaccountIds(
         if (goodTilBlockBeforeOrAt !== undefined && redisGoodTilBlock > goodTilBlockBeforeOrAt) {
           return false;
         }
+        if (goodTilBlockAfter !== undefined && redisGoodTilBlock <= goodTilBlockAfter) {
+          return false;
+        }
       } else {
-        // If `goodTilBlockBeforeOrAt` is defined as a filter, filter out all orders that don't have
-        // `goodTilBlock` defined
-        if (goodTilBlockBeforeOrAt !== undefined) {
+        // If `goodTilBlockBeforeOrAt` or `goodTilBlockAfter` is defined as a filter, filter out all
+        // orders that don't have `goodTilBlock` defined
+        if (goodTilBlockBeforeOrAt !== undefined || goodTilBlockAfter !== undefined) {
           return false;
         }
       }
@@ -650,10 +701,15 @@ async function getRedisOrderMapForSubaccountIds(
         ) {
           return false;
         }
+        if (goodTilBlockTimeAfter !== undefined &&
+            redisGoodTilBlockTimeDateObj <= DateTime.fromISO(goodTilBlockTimeAfter)
+        ) {
+          return false;
+        }
       } else {
-        if (goodTilBlockTimeBeforeOrAt !== undefined) {
-          // If `goodTilBlockTimeBeforeOrAt` is defined as a filter, filter out all orders that
-          // don't have `goodTilBlockTime` defined
+        if (goodTilBlockTimeBeforeOrAt !== undefined || goodTilBlockTimeAfter !== undefined) {
+          // If `goodTilBlockTimeBeforeOrAt` or `goodTilBlockTimeAfter` is defined as a filter,
+          // filter out all orders that don't have `goodTilBlockTime` defined
           return false;
         }
       }

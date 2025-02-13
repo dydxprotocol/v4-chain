@@ -7,8 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
@@ -25,7 +27,9 @@ func createBankKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
 		accountKeeper,
-		map[string]bool{},
+		map[string]bool{
+			authtypes.NewModuleAddress(distrtypes.ModuleName).String(): true,
+		},
 		lib.GovModuleAddress.String(),
 		log.NewNopLogger(),
 	)
