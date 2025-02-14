@@ -368,8 +368,8 @@ export function getWeightedAverage(
 }
 
 /**
- * Returns true if perpetualPostionSide is LONG and orderSide is BUY or
- * if perpetualPostionSide is SHORT and orderSide is SELL
+ * Returns true if perpetualPositionSide is LONG and orderSide is BUY or
+ * if perpetualPositionSide is SHORT and orderSide is SELL
  * @param perpetualPositionSide
  * @param orderSide
  */
