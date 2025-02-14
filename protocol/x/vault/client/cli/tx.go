@@ -31,6 +31,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdAllocateToVault())
 	cmd.AddCommand(CmdRetrieveFromVault())
 	cmd.AddCommand(CmdWithdrawFromMegavault())
+	cmd.AddCommand(CmdUpdateDefaultQuotingParams())
 
 	return cmd
 }
@@ -283,6 +284,43 @@ func CmdWithdrawFromMegavault() *cobra.Command {
 				},
 				Shares:           types.NumShares{NumShares: dtypes.NewIntFromUint64(shares)},
 				MinQuoteQuantums: dtypes.NewIntFromUint64(minQuoteQuantums),
+			}
+
+			// Broadcast or generate the transaction.
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	// Add the necessary flags.
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdUpdateDefaultQuotingParams() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-default-quoting-params [authority] [quoting_params_json]",
+		Short: "Broadcast message UpdateDefaultQuotingParams",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// Parse quoting params.
+			var quotingParams types.QuotingParams
+			if err := json.Unmarshal([]byte(args[1]), &quotingParams); err != nil {
+				return fmt.Errorf("invalid quoting params JSON: %w", err)
+			}
+			if err := quotingParams.Validate(); err != nil {
+				return err
+			}
+
+			// Create MsgUpdateDefaultQuotingParams.
+			msg := &types.MsgUpdateDefaultQuotingParams{
+				Authority:            args[0],
+				DefaultQuotingParams: quotingParams,
 			}
 
 			// Broadcast or generate the transaction.
