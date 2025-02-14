@@ -9,7 +9,7 @@ CLOB_URL = f"{MAINNET_URL_BASE}/dydxprotocol/clob/clob_pair?pagination.limit=100
 
 DELISTED_CLOB_STATUS = "STATUS_FINAL_SETTLEMENT"
 
-TICKERS_TO_DELIST = ["FOXY-USD", "MAVIA-USD", "VRTX-USD", "SCRT-USD", "PAIN-USD"]
+TICKERS_TO_DELIST = [] # should be in BASE-QUOTE format (ex. PAIN-USD)
 
 def main():
     marketmap_data = requests.get(MARKETMAP_URL).json()
