@@ -13,6 +13,7 @@ import {
   MAX_PARENT_SUBACCOUNTS,
   OrderStatus,
   perpetualMarketRefresher,
+  OrderFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
@@ -37,8 +38,8 @@ const VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE: APIOrderStatus[] = [
   OrderStatus.OPEN,
   OrderStatus.UNTRIGGERED,
   BestEffortOpenedStatus.BEST_EFFORT_OPENED,
-  OrderStatus.BEST_EFFORT_CANCELED,
 ];
+
 const VALID_ORDER_STATUS: string = VALID_ORDER_STATUS_FOR_INITIAL_SUBACCOUNT_RESPONSE.join(',');
 
 export class Subscriptions {
@@ -217,6 +218,8 @@ export class Subscriptions {
           `Invalid subscribe message: already subscribed (${channel}-${subscriptionId})`,
           connectionId,
           messageId,
+          channel,
+          id,
         ),
       );
       return;
@@ -551,10 +554,13 @@ export class Subscriptions {
         subaccountNumber: string,
       } = this.parseSubaccountChannelId(id);
 
+      const blockHeight: string = await blockHeightRefresher.getLatestBlockHeight();
+      const numBlockHeight: number = parseInt(blockHeight, 10);
+
       const [
         subaccountsResponse,
         ordersResponse,
-        blockHeight,
+        currentBestEffortCanceledOrdersResponse,
       ]: [
         string,
         string,
@@ -579,9 +585,6 @@ export class Subscriptions {
           },
           transformResponse: (res) => res,
         }),
-<<<<<<< HEAD
-        blockHeightRefresher.getLatestBlockHeight(),
-=======
         axiosRequest({
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=BEST_EFFORT_CANCELED&goodTilBlockAfter=${Math.max(numBlockHeight - 20, 1)}`,
@@ -591,12 +594,17 @@ export class Subscriptions {
           },
           transformResponse: (res) => res,
         }),
->>>>>>> a6010055 (Fix bug with socks subaccount subscription with best effort canceled logic. (#2718))
       ]);
+
+      const orders: OrderFromDatabase[] = JSON.parse(ordersResponse);
+      const currentBestEffortCanceledOrders: OrderFromDatabase[] = JSON.parse(
+        currentBestEffortCanceledOrdersResponse,
+      );
+      const allOrders: OrderFromDatabase[] = orders.concat(currentBestEffortCanceledOrders);
 
       return JSON.stringify({
         ...JSON.parse(subaccountsResponse),
-        orders: JSON.parse(ordersResponse),
+        orders: allOrders,
         blockHeight,
       });
     } catch (error) {
@@ -638,10 +646,13 @@ export class Subscriptions {
         subaccountNumber: string,
       } = this.parseSubaccountChannelId(id);
 
+      const blockHeight: string = await blockHeightRefresher.getLatestBlockHeight();
+      const numBlockHeight: number = parseInt(blockHeight, 10);
+
       const [
         subaccountsResponse,
         ordersResponse,
-        blockHeight,
+        currentBestEffortCanceledOrdersResponse,
       ]: [
         string,
         string,
@@ -666,12 +677,26 @@ export class Subscriptions {
           },
           transformResponse: (res) => res,
         }),
-        blockHeightRefresher.getLatestBlockHeight(),
+        axiosRequest({
+          method: RequestMethod.GET,
+          url: `${COMLINK_URL}/v4/orders/parentSubaccountNumber?address=${address}&parentSubaccountNumber=${subaccountNumber}&status=BEST_EFFORT_CANCELED&goodTilBlockAfter=${Math.max(numBlockHeight - 20, 1)}`,
+          timeout: config.INITIAL_GET_TIMEOUT_MS,
+          headers: {
+            'cf-ipcountry': country,
+          },
+          transformResponse: (res) => res,
+        }),
       ]);
+
+      const orders: OrderFromDatabase[] = JSON.parse(ordersResponse);
+      const currentBestEffortCanceledOrders: OrderFromDatabase[] = JSON.parse(
+        currentBestEffortCanceledOrdersResponse,
+      );
+      const allOrders: OrderFromDatabase[] = orders.concat(currentBestEffortCanceledOrders);
 
       return JSON.stringify({
         ...JSON.parse(subaccountsResponse),
-        orders: JSON.parse(ordersResponse),
+        orders: allOrders,
         blockHeight,
       });
     } catch (error) {
