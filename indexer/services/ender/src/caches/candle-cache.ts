@@ -1,4 +1,4 @@
-import { NodeEnv } from '@dydxprotocol-indexer/base';
+import { logger, NodeEnv } from '@dydxprotocol-indexer/base';
 import {
   BlockTable,
   CandleFromDatabase,
@@ -15,9 +15,17 @@ import _ from 'lodash';
 let candlesMap: CandlesMap = {};
 
 export async function startCandleCache(txId?: number): Promise<void> {
-  const latestBlockTime: IsoString = await BlockTable.getLatest({ txId })
-    .then((latestBlock) => latestBlock.time)
-    .catch(() => new Date().toISOString());
+  let latestBlockTime: IsoString;
+  try {
+    const latestBlock = await BlockTable.getLatest({ txId });
+    latestBlockTime = latestBlock.time;
+  } catch (error) {
+    logger.error({
+      at: 'ender#startCandleCache',
+      message: 'Cannot fetch latest indexed block and falling back to current timestamp',
+    });
+    latestBlockTime = new Date().toISOString();
+  }
 
   const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
     {}, [], { txId },
