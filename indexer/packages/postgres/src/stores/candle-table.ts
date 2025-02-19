@@ -174,6 +174,7 @@ export async function findLatest(
 
 export async function findCandlesMap(
   tickers: string[],
+  latestBlockTime: IsoString,
 ): Promise<CandlesMap> {
   if (tickers.length === 0) {
     return {};
@@ -195,16 +196,18 @@ export async function findCandlesMap(
       candles
     WHERE
       "ticker" IN (${tickers.map((ticker) => { return `'${ticker}'`; }).join(',')}) AND
-      "startedAt" > NOW() - INTERVAL '3 hours' AND
+      "startedAt" > ?::timestamptz - INTERVAL '3 hours' AND
       resolution IN ('1MIN', '5MINS', '15MINS', '30MINS', '1HOUR')
     ORDER BY
       ticker,
       resolution,
       "startedAt" DESC;
     `,
+    [latestBlockTime],
   ) as unknown as {
     rows: CandleFromDatabase[],
   };
+
   const hourDayCandlesResult: {
     rows: CandleFromDatabase[],
   } = await knexReadReplica.getConnection().raw(
@@ -216,16 +219,18 @@ export async function findCandlesMap(
       candles
     WHERE
       "ticker" IN (${tickers.map((ticker) => { return `'${ticker}'`; }).join(',')}) AND
-      "startedAt" > NOW() - INTERVAL '2 days' AND
+      "startedAt" > ?::timestamptz - INTERVAL '2 days' AND
       resolution IN ('4HOURS', '1DAY')
     ORDER BY
       ticker,
       resolution,
       "startedAt" DESC;
     `,
+    [latestBlockTime],
   ) as unknown as {
     rows: CandleFromDatabase[],
   };
+
   const latestCandles: CandleFromDatabase[] = minuteCandlesResult.rows
     .concat(hourDayCandlesResult.rows);
   for (const candle of latestCandles) {

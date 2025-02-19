@@ -1,9 +1,11 @@
 import { NodeEnv } from '@dydxprotocol-indexer/base';
 import {
+  BlockTable,
   CandleFromDatabase,
   CandleResolution,
   CandlesMap,
   CandleTable,
+  IsoString,
   PerpetualMarketColumns,
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
@@ -13,6 +15,10 @@ import _ from 'lodash';
 let candlesMap: CandlesMap = {};
 
 export async function startCandleCache(txId?: number): Promise<void> {
+  const latestBlockTime: IsoString = await BlockTable.getLatest({ txId })
+    .then((latestBlock) => latestBlock.time)
+    .catch(() => new Date().toISOString());
+
   const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
     {}, [], { txId },
   );
@@ -23,6 +29,7 @@ export async function startCandleCache(txId?: number): Promise<void> {
 
   candlesMap = await CandleTable.findCandlesMap(
     tickers,
+    latestBlockTime,
   );
 }
 
