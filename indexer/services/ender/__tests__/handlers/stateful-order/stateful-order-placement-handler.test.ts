@@ -45,6 +45,7 @@ import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
+import { vaultRefresher } from '@dydxprotocol-indexer/postgres';
 
 describe('statefulOrderPlacementHandler', () => {
   const prevSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
@@ -58,6 +59,7 @@ describe('statefulOrderPlacementHandler', () => {
     await testMocks.seedData();
     updateBlockCache(defaultPreviousHeight);
     await perpetualMarketRefresher.updatePerpetualMarkets();
+    await vaultRefresher.updateVaults();
     producerSendMock = jest.spyOn(producer, 'send');
   });
 
@@ -82,16 +84,39 @@ describe('statefulOrderPlacementHandler', () => {
     goodTilBlock: undefined,
     goodTilBlockTime,
   };
+  const defaultVaultOrder: IndexerOrder = {
+    ...defaultMakerOrder,
+    orderId: {
+      ...defaultMakerOrder.orderId!,
+      subaccountId: {
+        owner: testConstants.defaultVault.address,
+        number: 0,
+      },
+      orderFlags: ORDER_FLAG_LONG_TERM,
+    },
+    goodTilBlock: undefined,
+    goodTilBlockTime,
+  };
   const defaultStatefulOrderLongTermEvent: StatefulOrderEventV1 = {
     longTermOrderPlacement: {
       order: defaultOrder,
     },
+  };
+  const defaultVaultLongTermOrderEvent: StatefulOrderEventV1 = {
+    longTermOrderPlacement: {
+      order: defaultVaultOrder,
+    }
   };
   // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
   const defaultStatefulOrderEvent: StatefulOrderEventV1 = {
     orderPlace: {
       order: defaultOrder,
     },
+  };
+  const defaultVaultStatefulOrderEvent: StatefulOrderEventV1 = {
+    orderPlace: {
+      order: defaultVaultOrder,
+    }
   };
   const orderId: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
   let producerSendMock: jest.SpyInstance;
@@ -284,6 +309,38 @@ describe('statefulOrderPlacementHandler', () => {
     expectVulcanKafkaMessage({
       producerSendMock,
       orderId: defaultOrder.orderId!,
+      offchainUpdate: expectedOffchainUpdate,
+      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderPlacement' },
+    });
+  });
+
+  it.each([
+    ['stateful order placement as txn event', defaultVaultStatefulOrderEvent, 0],
+    ['stateful long term order placement as txn event', defaultVaultLongTermOrderEvent, 0],
+    ['stateful order placement as txn event', defaultVaultStatefulOrderEvent, -1],
+    ['stateful long term order placement as txn event', defaultVaultLongTermOrderEvent, -1],
+  ])('successfully skips vault orders with %s', async (
+    _name: string,
+    statefulOrderEvent: StatefulOrderEventV1,
+    transactionIndex: number,
+  ) => {
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
+      statefulOrderEvent,
+      transactionIndex,
+    );
+
+    await onMessage(kafkaMessage);
+    const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
+    expect(order).toBeUndefined();
+    const expectedOffchainUpdate: OffChainUpdateV1 = {
+      orderPlace: {
+        order: defaultVaultOrder,
+        placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
+      },
+    };
+    expectVulcanKafkaMessage({
+      producerSendMock,
+      orderId: defaultVaultOrder.orderId!,
       offchainUpdate: expectedOffchainUpdate,
       headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderPlacement' },
     });

@@ -1,11 +1,14 @@
 import {
   dbHelpers,
+  OrderCreateObject,
   OrderFromDatabase,
   OrderStatus,
   OrderTable,
   perpetualMarketRefresher,
+  SubaccountTable,
   testConstants,
   testMocks,
+  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
@@ -38,6 +41,7 @@ import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
+import { defaultVault } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('statefulOrderRemovalHandler', () => {
   const prevSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
@@ -51,6 +55,7 @@ describe('statefulOrderRemovalHandler', () => {
     await testMocks.seedData();
     updateBlockCache(defaultPreviousHeight);
     await perpetualMarketRefresher.updatePerpetualMarkets();
+    await vaultRefresher.updateVaults();
     producerSendMock = jest.spyOn(producer, 'send');
   });
 
@@ -72,7 +77,22 @@ describe('statefulOrderRemovalHandler', () => {
       reason,
     },
   };
+  const defaultStatefulVaultOrderEvent: StatefulOrderEventV1 = {
+    orderRemoval: {
+      removedOrderId: {
+        ...defaultOrderId,
+        subaccountId: {
+          owner: defaultVault.address,
+          number: 0,
+        },
+      },
+      reason,
+    },
+  };
   const orderId: string = OrderTable.orderIdToUuid(defaultOrderId);
+  const vaultOrderId: string = OrderTable.orderIdToUuid(
+    defaultStatefulVaultOrderEvent.orderRemoval!.removedOrderId!,
+  );
   let producerSendMock: jest.SpyInstance;
 
   describe('getParallelizationIds', () => {
@@ -197,6 +217,51 @@ describe('statefulOrderRemovalHandler', () => {
     expectVulcanKafkaMessage({
       producerSendMock,
       orderId: defaultOrderId,
+      offchainUpdate: expectedOffchainUpdate,
+      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderRemoval' },
+    });
+  });
+
+  it.each([
+    ['transaction event', 0],
+    ['block event', -1],
+  ])('successfully skips order removal event for vault orders (as %s)', async (
+    _name: string,
+    transactionIndex: number,
+  ) => {
+    const vaultOrderCreateEvent: OrderCreateObject = {
+      ...testConstants.defaultOrder,
+      subaccountId: SubaccountTable.uuid(defaultVault.address, 0),
+      clientId: '0',
+    }
+    await SubaccountTable.create({
+      ...testConstants.defaultSubaccount,
+      address: defaultVault.address,
+      subaccountNumber: 0,
+    });
+    await OrderTable.create(vaultOrderCreateEvent);
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
+      defaultStatefulVaultOrderEvent,
+      transactionIndex,
+    );
+
+    await onMessage(kafkaMessage);
+    const order: OrderFromDatabase | undefined = await OrderTable.findById(vaultOrderId);
+    expect(order).toBeDefined();
+    expect(order).toEqual(expect.objectContaining({
+      ...vaultOrderCreateEvent,
+      clientId: '0',
+    }));
+    const expectedOffchainUpdate: OffChainUpdateV1 = {
+      orderRemove: {
+        removedOrderId: defaultStatefulVaultOrderEvent.orderRemoval!.removedOrderId!,
+        reason,
+        removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED,
+      },
+    };
+    expectVulcanKafkaMessage({
+      producerSendMock,
+      orderId: defaultStatefulVaultOrderEvent.orderRemoval!.removedOrderId!,
       offchainUpdate: expectedOffchainUpdate,
       headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderRemoval' },
     });

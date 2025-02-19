@@ -1,3 +1,4 @@
+import * as VaultTable from '../../src/stores/vault-table';
 import * as AssetTable from '../../src/stores/asset-table';
 import * as BlockTable from '../../src/stores/block-table';
 import * as FirebaseNotificationTokenTable from '../../src/stores/firebase-notification-token-table';
@@ -37,6 +38,7 @@ import {
   isolatedSubaccount2,
   defaultSubaccount2Num0,
   defaultSubaccount3Num0,
+  defaultVault,
 } from './constants';
 
 export async function seedAdditionalSubaccounts() {
@@ -91,5 +93,8 @@ export async function seedData() {
   ]);
   await Promise.all([
     FirebaseNotificationTokenTable.create(defaultFirebaseNotificationToken),
+  ]);
+  await Promise.all([
+    VaultTable.create(defaultVault),
   ]);
 }
