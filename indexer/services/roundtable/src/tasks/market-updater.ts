@@ -46,6 +46,8 @@ export function getPriceChange(
 }
 
 export default async function runTask(): Promise<void> {
+  const start: number = Date.now();
+
   const liquidityTiers:
   LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll({}, []);
   const perpetualMarkets:
@@ -63,7 +65,11 @@ export default async function runTask(): Promise<void> {
   const latestPrices: PriceMap = await OraclePriceTable.getLatestPrices();
   const prices24hAgo: PriceMap = await OraclePriceTable.getPricesFrom24hAgo();
 
-  const start: number = Date.now();
+  stats.timing(
+    `${config.SERVICE_NAME}.market_updater_initial_queries`,
+    Date.now() - start,
+  );
+
   try {
     const [
       perpetualMarketStats,
