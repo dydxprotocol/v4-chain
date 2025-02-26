@@ -56,6 +56,7 @@ BEGIN
             perpetual_position_found boolean;
             existing_funding numeric;
             new_settled_funding numeric;
+            funding_payment_amount numeric;
         BEGIN
             perpetual_id = (perpetual_position_update->'perpetualId')::bigint;
             SELECT * INTO perpetual_market FROM perpetual_markets WHERE id = perpetual_id;
@@ -68,11 +69,33 @@ BEGIN
                    power(10, perpetual_market."atomicResolution")::numeric);
             side = CASE WHEN _size > 0 THEN 'LONG' ELSE 'SHORT' END;
             existing_funding = CASE WHEN perpetual_position_found THEN perpetual_position_record."settledFunding" ELSE 0 END;
-            settled_funding = dydx_trim_scale(-dydx_from_serializable_int(perpetual_position_update->'fundingPayment')
-                                                  * power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric + existing_funding);
+            funding_payment_amount = dydx_from_serializable_int(perpetual_position_update->'fundingPayment')
+                            * power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric;
+            settled_funding = dydx_trim_scale(-funding_payment_amount + existing_funding);
             new_settled_funding = CASE WHEN (perpetual_position_found AND perpetual_position_record.side != side AND _size != 0)
                                         THEN 0
                                         ELSE settled_funding END;
+
+             -- Insert into funding_payments table if payment is nonzero
+             IF funding_payment_amount != 0 THEN
+                 INSERT INTO funding_payments (
+                     address,
+                     clobPairId,
+                     size,
+                     rate,
+                     amount,
+                     isLong,
+                     createdAt
+                 ) VALUES (
+                     subaccount_record."address",
+                     perpetual_id,
+                     abs(_size),
+                     0,  -- TODO: Fix this rate
+                     funding_payment_amount,
+                     CASE WHEN side = 'LONG' THEN TRUE ELSE FALSE END,
+                     block_time
+                 );
+             END IF;
 
             -- Handle updating the existing perpetual record.
             IF perpetual_position_found AND (_size = 0 OR perpetual_position_record.side != side) THEN
