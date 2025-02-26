@@ -21,6 +21,7 @@ export { default as LeaderboardPnlModel } from './models/leaderboard-pnl-model';
 export { default as PersistentCacheModel } from './models/persistent-cache-model';
 export { default as AffiliateReferredUsersModel } from './models/affiliate-referred-users-model';
 export { default as AffiliateInfoModel } from './models/affiliate-info-model';
+export { default as VaultModel } from './models/vault-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';

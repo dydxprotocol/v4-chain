@@ -1,6 +1,7 @@
 import {
   stats,
   NodeEnv,
+  logger,
 } from '@dydxprotocol-indexer/base';
 import _ from 'lodash';
 
@@ -32,6 +33,14 @@ export async function updateVaults(options?: Options): Promise<void> {
   );
   vaultAddresses = new Set(_.map(vaults, 'address'));
   stats.timing(`${config.SERVICE_NAME}.loops.update_vaults`, Date.now() - startTime);
+
+  logger.info(
+    {
+      at: 'vault-refresher#updateVaults',
+      message: 'Updated vaults',
+      numVaults: vaultAddresses.size,
+    },
+  )
 }
 
 export function getVaultAddresses(): Set<string> {
@@ -48,4 +57,17 @@ export function clear(): void {
 
 export function isVault(address: string): boolean {
   return vaultAddresses.has(address);
+}
+
+export function addVault(address: string): void {
+  vaultAddresses.add(address);
+
+  logger.info(
+    {
+      at: 'vault-refresher#addVault',
+      message: 'Added vault',
+      address,
+      numVaults: vaultAddresses.size,
+    },
+  )
 }
