@@ -296,6 +296,13 @@ export class BlockProcessor {
         throw error;
       });
       resultRow = result.rows[0].result;
+      logger.info({
+        at: 'block-processor#processEvents',
+        message: 'got result from dydx_block_processor',
+        rowsLength: result.rows.length,
+        numBlockEvents: this.sqlBlock.events.length,
+        resultRow
+      });
       success = true;
     } finally {
       stats.timing(
