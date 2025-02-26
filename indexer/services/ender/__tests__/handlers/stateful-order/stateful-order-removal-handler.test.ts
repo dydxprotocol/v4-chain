@@ -225,7 +225,7 @@ describe('statefulOrderRemovalHandler', () => {
   it.each([
     ['transaction event', 0],
     ['block event', -1],
-  ])('successfully skips order removal event for vault orders (as %s)', async (
+  ])('successfully skips vault order removals (as %s)', async (
     _name: string,
     transactionIndex: number,
   ) => {

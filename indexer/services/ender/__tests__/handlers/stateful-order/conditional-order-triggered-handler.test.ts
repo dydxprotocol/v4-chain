@@ -171,7 +171,7 @@ describe('conditionalOrderTriggeredHandler', () => {
   it.each([
     ['transaction event', 0],
     ['block event', -1],
-  ])('does not skip order trigger event (as %s)', async (
+  ])('successfully skips order trigger event (as %s)', async (
     _name: string,
     transactionIndex: number,
   ) => {

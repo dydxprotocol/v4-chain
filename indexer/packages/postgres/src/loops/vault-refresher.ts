@@ -1,6 +1,7 @@
 import {
   stats,
   NodeEnv,
+  logger,
 } from '@dydxprotocol-indexer/base';
 import _ from 'lodash';
 
@@ -48,4 +49,8 @@ export function clear(): void {
 
 export function isVault(address: string): boolean {
   return vaultAddresses.has(address);
+}
+
+export function addVault(address: string): void {
+  vaultAddresses.add(address);
 }

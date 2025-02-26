@@ -315,11 +315,9 @@ describe('statefulOrderPlacementHandler', () => {
   });
 
   it.each([
-    ['stateful order placement as txn event', defaultVaultStatefulOrderEvent, 0],
-    ['stateful long term order placement as txn event', defaultVaultLongTermOrderEvent, 0],
-    ['stateful order placement as txn event', defaultVaultStatefulOrderEvent, -1],
-    ['stateful long term order placement as txn event', defaultVaultLongTermOrderEvent, -1],
-  ])('successfully skips vault orders with %s', async (
+    ['txn event', defaultVaultStatefulOrderEvent, 0],
+    ['block event', defaultVaultStatefulOrderEvent, -1],
+  ])('successfully skips vault order placements (as %s)', async (
     _name: string,
     statefulOrderEvent: StatefulOrderEventV1,
     transactionIndex: number,

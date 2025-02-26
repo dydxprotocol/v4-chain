@@ -241,19 +241,17 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
    * Skip order uuids in config env var.
    */
   public shouldExcludeEvent(): boolean {
-    // Do not skip conditional orders.
-    if (this.event.conditionalOrderPlacement !== undefined ||
-      this.event.conditionalOrderTriggered !== undefined) {
+    const orderUUIDsToSkip: string[] = config.SKIP_STATEFUL_ORDER_UUIDS.split(',');
+    if (orderUUIDsToSkip.length === 0) {
       return false;
     }
 
-    const orderUUIDsToSkip: string[] = config.SKIP_STATEFUL_ORDER_UUIDS.split(',');
     const orderUUIDStoSkipSet: Set<string> = new Set(orderUUIDsToSkip);
     if (orderUUIDStoSkipSet.has(this.getOrderUUId())) {
       return true;
     }
 
-    // Skip handling all vault stateful orders
+    // Exclude vault stateful orders.
     const address: string = this.getSubaccountid().owner;
     if (vaultRefresher.isVault(address)) {
       return true;
@@ -264,7 +262,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
 
   /**
    * Gets subaccount id for the event being validated.
-   * Assumes events are valid.
+   * Assumes event is valid.
    */
   private getSubaccountid(): IndexerSubaccountId {
     if (this.event.orderPlace !== undefined) {
