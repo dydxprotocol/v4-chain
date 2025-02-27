@@ -2224,49 +2224,7 @@
           },
           {
             "in": "query",
-            "name": "market",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "marketType",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/MarketType"
-            }
-          },
-          {
-            "in": "query",
             "name": "limit",
-            "required": false,
-            "schema": {
-              "format": "double",
-              "type": "number"
-            }
-          },
-          {
-            "in": "query",
-            "name": "createdBeforeOrAtHeight",
-            "required": false,
-            "schema": {
-              "format": "double",
-              "type": "number"
-            }
-          },
-          {
-            "in": "query",
-            "name": "createdBeforeOrAt",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/IsoString"
-            }
-          },
-          {
-            "in": "query",
-            "name": "page",
             "required": false,
             "schema": {
               "format": "double",

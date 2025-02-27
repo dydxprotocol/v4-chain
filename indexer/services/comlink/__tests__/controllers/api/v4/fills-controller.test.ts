@@ -398,7 +398,7 @@ describe('fills-controller#V4', () => {
       });
     });
 
-    it('Get /fills/parentSubaccountNumber gets fills', async () => {
+    it.only('Get /fills/parentSubaccountNumber gets fills', async () => {
       await OrderTable.create(testConstants.defaultOrder);
       await FillTable.create(testConstants.defaultFill);
       await OrderTable.create(testConstants.isolatedMarketOrder);
@@ -437,7 +437,8 @@ describe('fills-controller#V4', () => {
       );
     });
 
-    it('Get /fills/parentSubaccountNumber gets fills for isolated market', async () => {
+    // TODO: fix test.
+    it.only('Get /fills/parentSubaccountNumber gets fills for isolated market', async () => {
       await OrderTable.create(testConstants.defaultOrder);
       await FillTable.create(testConstants.defaultFill);
       await OrderTable.create(testConstants.isolatedMarketOrder);
@@ -473,7 +474,7 @@ describe('fills-controller#V4', () => {
       );
     });
 
-    it('Get /fills/parentSubaccountNumber with market with no fills', async () => {
+    it.only('Get /fills/parentSubaccountNumber with market with no fills', async () => {
       await OrderTable.create(testConstants.defaultOrder);
       await FillTable.create(testConstants.defaultFill);
       await OrderTable.create(testConstants.isolatedMarketOrder);

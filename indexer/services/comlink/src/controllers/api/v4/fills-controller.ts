@@ -120,27 +120,13 @@ class FillsController extends Controller {
   }
 
   @Get('/parentSubaccount')
+  // TODO add more fields. Note this is only expected to be used for FE
+  // because parentSubaccount -> childSubaccount mapping is only FE logic. 
   async getFillsForParentSubaccount(
     @Query() address: string,
       @Query() parentSubaccountNumber: number,
-      @Query() market?: string,
-      @Query() marketType?: MarketType,
       @Query() limit?: number,
-      @Query() createdBeforeOrAtHeight?: number,
-      @Query() createdBeforeOrAt?: IsoString,
-      @Query() page?: number,
   ): Promise<FillResponse> {
-    // TODO(DEC-656): Change to using a cache of markets in Redis similar to Librarian instead of
-    // querying the DB.
-    let clobPairId: string | undefined;
-    if (isDefined(market) && isDefined(marketType)) {
-      clobPairId = await getClobPairId(market!, marketType!);
-
-      if (clobPairId === undefined) {
-        throw new NotFoundError(`${market} not found in markets of type ${marketType}`);
-      }
-    }
-
     // Get subaccountIds for all child subaccounts of the parent subaccount
     // Create a record of subaccountId to subaccount number
     const childIdtoSubaccountNumber: Record<string, number> = {};
@@ -149,26 +135,14 @@ class FillsController extends Controller {
         childIdtoSubaccountNumber[SubaccountTable.uuid(address, subaccountNum)] = subaccountNum;
       },
     );
-    const subaccountIds: string[] = Object.keys(childIdtoSubaccountNumber);
 
-    const {
-      results: fills,
-      limit: pageSize,
-      offset,
-      total,
-    } = await FillTable.findAll(
-      {
-        subaccountId: subaccountIds,
-        clobPairId,
-        limit,
-        createdBeforeOrAtHeight: createdBeforeOrAtHeight
-          ? createdBeforeOrAtHeight.toString()
-          : undefined,
-        createdBeforeOrAt,
-        page,
-      },
-      [QueryableField.LIMIT],
-      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
+    // NEXT: Use FillTable.getFillsForParentSubaccount here.
+    // Don't change other parts in this function.
+    // Get fills for all child subaccounts using the new optimized query
+    const fills: FillFromDatabase[] = await FillTable.getFillsForParentSubaccount(
+      address,
+      parentSubaccountNumber,
+      limit,
     );
 
     const clobPairIdToPerpetualMarket: Record<
@@ -189,11 +163,84 @@ class FillsController extends Controller {
         return fillToResponseObject(fill, clobPairIdToMarket,
           childIdtoSubaccountNumber[fill.subaccountId]);
       }),
-      pageSize,
-      totalResults: total,
-      offset,
     };
   }
+
+  // @Get('/parentSubaccount')
+  // async getFillsForParentSubaccount(
+  //   @Query() address: string,
+  //     @Query() parentSubaccountNumber: number,
+  //     @Query() market?: string,
+  //     @Query() marketType?: MarketType,
+  //     @Query() limit?: number,
+  //     @Query() createdBeforeOrAtHeight?: number,
+  //     @Query() createdBeforeOrAt?: IsoString,
+  //     @Query() page?: number,
+  // ): Promise<FillResponse> {
+  //   // TODO(DEC-656): Change to using a cache of markets in Redis similar to Librarian instead of
+  //   // querying the DB.
+  //   let clobPairId: string | undefined;
+  //   if (isDefined(market) && isDefined(marketType)) {
+  //     clobPairId = await getClobPairId(market!, marketType!);
+
+  //     if (clobPairId === undefined) {
+  //       throw new NotFoundError(`${market} not found in markets of type ${marketType}`);
+  //     }
+  //   }
+
+  //   // Get subaccountIds for all child subaccounts of the parent subaccount
+  //   // Create a record of subaccountId to subaccount number
+  //   const childIdtoSubaccountNumber: Record<string, number> = {};
+  //   getChildSubaccountNums(parentSubaccountNumber).forEach(
+  //     (subaccountNum: number) => {
+  //       childIdtoSubaccountNumber[SubaccountTable.uuid(address, subaccountNum)] = subaccountNum;
+  //     },
+  //   );
+  //   const subaccountIds: string[] = Object.keys(childIdtoSubaccountNumber);
+
+  //   const {
+  //     results: fills,
+  //     limit: pageSize,
+  //     offset,
+  //     total,
+  //   } = await FillTable.findAll(
+  //     {
+  //       subaccountId: subaccountIds,
+  //       clobPairId,
+  //       limit,
+  //       createdBeforeOrAtHeight: createdBeforeOrAtHeight
+  //         ? createdBeforeOrAtHeight.toString()
+  //         : undefined,
+  //       createdBeforeOrAt,
+  //       page,
+  //     },
+  //     [QueryableField.LIMIT],
+  //     page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
+  //   );
+
+  //   const clobPairIdToPerpetualMarket: Record<
+  //       string,
+  //       PerpetualMarketFromDatabase> = perpetualMarketRefresher.getClobPairIdToPerpetualMarket();
+  //   const clobPairIdToMarket: MarketAndTypeByClobPairId = _.mapValues(
+  //     clobPairIdToPerpetualMarket,
+  //     (perpetualMarket: PerpetualMarketFromDatabase) => {
+  //       return {
+  //         marketType: MarketType.PERPETUAL,
+  //         market: perpetualMarket.ticker,
+  //       };
+  //     },
+  //   );
+
+  //   return {
+  //     fills: fills.map((fill: FillFromDatabase): FillResponseObject => {
+  //       return fillToResponseObject(fill, clobPairIdToMarket,
+  //         childIdtoSubaccountNumber[fill.subaccountId]);
+  //     }),
+  //     pageSize,
+  //     totalResults: total,
+  //     offset,
+  //   };
+  // }
 }
 
 router.get(
@@ -314,12 +361,7 @@ router.get(
     const {
       address,
       parentSubaccountNumber,
-      market,
-      marketType,
       limit,
-      createdBeforeOrAtHeight,
-      createdBeforeOrAt,
-      page,
     }: ParentSubaccountFillRequest = matchedData(req) as ParentSubaccountFillRequest;
 
     // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
@@ -332,12 +374,7 @@ router.get(
       const response: FillResponse = await controller.getFillsForParentSubaccount(
         address,
         parentSubaccountNum,
-        market,
-        marketType,
         limit,
-        createdBeforeOrAtHeight,
-        createdBeforeOrAt,
-        page,
       );
 
       return res.send(response);

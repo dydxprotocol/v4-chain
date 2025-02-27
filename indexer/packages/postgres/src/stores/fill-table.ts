@@ -578,3 +578,46 @@ export async function getFeesPaid(
 
   return Big(result.rows[0].feesPaid);
 }
+
+/**
+ * Returns fills across all subaccounts belonging to a parent subaccount.
+ * A parent subaccount is defined by an address and parent subaccount number,
+ * where child subaccounts have subaccount numbers in increments of 128 from the parent.
+ *
+ * @param address The wallet address
+ * @param parentSubaccountNumber The parent subaccount number
+ * @param limit Maximum number of fills to return
+ * @param options Query options
+ */
+export async function getFillsForParentSubaccount(
+  address: string,
+  parentSubaccountNumber: number,
+  limit: number = 100,
+): Promise<FillFromDatabase[]> {
+  const query = `
+    WITH target_subaccounts AS (
+      SELECT id as "subaccountId"
+      FROM subaccounts 
+      WHERE address = ?
+      AND "subaccountNumber" IN (
+        SELECT generate_series(?, 12800, 128)
+      )
+    )
+    SELECT f.* 
+    FROM target_subaccounts s
+    JOIN LATERAL (
+      SELECT *
+      FROM fills f
+      WHERE f."subaccountId" = s."subaccountId"
+      ORDER BY f."createdAtHeight" DESC
+    ) f ON true
+    ORDER BY f."createdAtHeight" DESC
+    LIMIT ?;
+  `;
+
+  const result = await knexReadReplica
+    .getConnection()
+    .raw(query, [address, parentSubaccountNumber, limit]);
+
+  return result.rows;
+}
