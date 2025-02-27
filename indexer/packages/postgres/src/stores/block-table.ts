@@ -16,10 +16,56 @@ import {
   QueryConfig,
 } from '../types';
 
+/**
+ * Find blocks by their block heights.
+ */
+export async function findByBlockHeights(
+  blockHeights: string[],
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<BlockFromDatabase[]> {
+  const baseQuery: QueryBuilder<BlockModel> = setupBaseQuery<BlockModel>(
+    BlockModel,
+    options,
+  );
+
+  return baseQuery
+    .whereIn(BlockColumns.blockHeight, blockHeights)
+    .orderBy(BlockColumns.blockHeight, Ordering.ASC)
+    .returning('*');
+}
+
+/**
+ * Find blocks created on or after the given timestamp.
+ * Uses the blocks_time_since_feb2025_idx index for efficient querying.
+ */
+export async function findByCreatedOnOrAfter(
+  createdOnOrAfter: string,
+  limit?: number,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<BlockFromDatabase[]> {
+  const baseQuery: QueryBuilder<BlockModel> = setupBaseQuery<BlockModel>(
+    BlockModel,
+    options,
+  );
+
+  let query = baseQuery
+    .where(BlockColumns.time, '>=', createdOnOrAfter)
+    .orderBy(BlockColumns.time, Ordering.ASC);
+
+  if (limit !== undefined) {
+    query = query.limit(limit);
+  }
+
+  return query.returning('*');
+}
+
+// Mark as deprecated to encourage migration to more specific methods
+/**
+ * @deprecated Use findByBlockHeights or findByCreatedOnOrAfter instead
+ */
 export async function findAll(
   {
     blockHeight,
-    createdOnOrAfter,
     limit,
   }: BlockQueryConfig,
   requiredFields: QueryableField[],
@@ -28,7 +74,6 @@ export async function findAll(
   verifyAllRequiredFields(
     {
       blockHeight,
-      createdOnOrAfter,
       limit,
     } as QueryConfig,
     requiredFields,
@@ -41,10 +86,6 @@ export async function findAll(
 
   if (blockHeight !== undefined) {
     baseQuery = baseQuery.whereIn(BlockColumns.blockHeight, blockHeight);
-  }
-
-  if (createdOnOrAfter !== undefined) {
-    baseQuery = baseQuery.where(BlockColumns.time, '>=', createdOnOrAfter);
   }
 
   if (options.orderBy !== undefined) {
