@@ -225,7 +225,7 @@ describe('Oracle price store', () => {
     ]);
 
     const oraclePrices: PriceMap = await OraclePriceTable
-      .findLatestPrices(
+      .findLatestPricesBeforeOrAtHeight(
         updatedHeight,
       );
 
@@ -278,8 +278,7 @@ describe('Oracle price store', () => {
     const blockPromises = blockHeights.map((height) => BlockTable.create({
       ...defaultBlock,
       blockHeight: height,
-    }),
-    );
+    }));
 
     await Promise.all(blockPromises);
     await Promise.all([
@@ -319,12 +318,79 @@ describe('Oracle price store', () => {
     ]);
 
     const oraclePrices: PriceMap = await OraclePriceTable
-      .findLatestPrices(
+      .findLatestPricesBeforeOrAtHeight(
         defaultOraclePrice.effectiveAtHeight,
       );
 
     expect(oraclePrices).toEqual(expect.objectContaining({
       [defaultOraclePrice.marketId]: defaultOraclePrice.price,
     }));
+  });
+
+  it('Successfully finds latest prices by dateTime using LEFT JOIN LATERAL', async () => {
+    const now: string = DateTime.utc().toISO();
+    const yesterday: string = DateTime.utc().minus({ days: 1 }).toISO();
+    const twoDaysAgo: string = DateTime.utc().minus({ days: 2 }).toISO();
+
+    const recentPrice: OraclePriceCreateObject = {
+      ...defaultOraclePrice,
+      price: '10000.05',
+      effectiveAtHeight: '10',
+      effectiveAt: now,
+    };
+
+    const olderPrice: OraclePriceCreateObject = {
+      ...defaultOraclePrice,
+      price: '9500.75',
+      effectiveAtHeight: '9',
+      effectiveAt: yesterday,
+    };
+
+    const oldestPrice: OraclePriceCreateObject = {
+      ...defaultOraclePrice,
+      price: '9000.50',
+      effectiveAtHeight: '8',
+      effectiveAt: twoDaysAgo,
+    };
+
+    const market2Price: OraclePriceCreateObject = {
+      ...defaultOraclePrice2,
+      price: '500.25',
+      effectiveAtHeight: '11',
+      effectiveAt: yesterday,
+    };
+
+    const blockHeights = ['8', '9', '10', '11'];
+    const blockPromises = blockHeights.map((height) => BlockTable.create({
+      ...defaultBlock,
+      blockHeight: height,
+    }));
+
+    await Promise.all(blockPromises);
+
+    await Promise.all([
+      OraclePriceTable.create(recentPrice),
+      OraclePriceTable.create(olderPrice),
+      OraclePriceTable.create(oldestPrice),
+      OraclePriceTable.create(market2Price),
+    ]);
+
+    const yesterdayPrices: PriceMap = await OraclePriceTable.findLatestPricesByDateTime(yesterday);
+    expect(yesterdayPrices).toEqual({
+      [defaultMarket.id]: olderPrice.price,
+      [defaultMarket2.id]: market2Price.price,
+    });
+
+    const twoDaysAgoPrices: PriceMap = await
+    OraclePriceTable.findLatestPricesByDateTime(twoDaysAgo);
+    expect(twoDaysAgoPrices).toEqual({
+      [defaultMarket.id]: oldestPrice.price,
+    });
+
+    const currentPrices: PriceMap = await OraclePriceTable.findLatestPricesByDateTime(now);
+    expect(currentPrices).toEqual({
+      [defaultMarket.id]: recentPrice.price,
+      [defaultMarket2.id]: market2Price.price,
+    });
   });
 });

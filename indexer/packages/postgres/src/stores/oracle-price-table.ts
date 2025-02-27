@@ -178,34 +178,36 @@ function constructPriceMap(oraclePrices: OraclePriceFromDatabase[]): PriceMap {
   }, {});
 }
 
-async function findLatestPricesByDateTime(
+export async function findLatestPricesByDateTime(
   latestDateTimeISO: string,
 ): Promise<PriceMap> {
-  const baseQuery: QueryBuilder<OraclePriceModel> = setupBaseQuery<OraclePriceModel>(
-    OraclePriceModel,
-    { readReplica: true },
-  );
+  // Use raw query with LEFT JOIN LATERAL for better performance.
+  // This query enables Postgres to utilize the index on the effectiveAt column
+  // for individual markets.
+  const query = `
+    SELECT m.id AS "marketId",
+           p."price",
+           p."effectiveAt",
+           p."effectiveAtHeight",
+           p."id"
+    FROM "markets" m
+    LEFT JOIN LATERAL (
+      SELECT "id", "price", "effectiveAt", "effectiveAtHeight"
+      FROM "oracle_prices"
+      WHERE "marketId" = m.id
+      AND "effectiveAt" <= ?
+      ORDER BY "effectiveAt" DESC
+      LIMIT 1
+    ) p ON TRUE
+    WHERE p."price" IS NOT NULL
+  `;
 
-  const innerQuery: QueryBuilder<OraclePriceModel> = setupBaseQuery<OraclePriceModel>(
-    OraclePriceModel,
-    { readReplica: true },
-  );
+  const result = await knexReadReplica.getConnection().raw(
+    query,
+    [latestDateTimeISO],
+  ) as unknown as { rows: OraclePriceFromDatabase[] };
 
-  const subQuery = innerQuery
-    .select('marketId')
-    .max('effectiveAt as maxEffectiveAt')
-    .where('effectiveAt', '<=', latestDateTimeISO)
-    .groupBy('marketId');
-
-  const oraclePrices: OraclePriceFromDatabase[] = await baseQuery
-    .innerJoin(subQuery.as('sub'), function joinConditions() {
-      this
-        .on('oracle_prices.marketId', '=', 'sub.marketId')
-        .andOn('oracle_prices.effectiveAt', '=', 'sub.maxEffectiveAt');
-    })
-    .returning('*');
-
-  return constructPriceMap(oraclePrices);
+  return constructPriceMap(result.rows);
 }
 
 export async function getPricesFrom24hAgo(
@@ -219,7 +221,7 @@ export async function getLatestPrices(): Promise<PriceMap> {
   return findLatestPricesByDateTime(now);
 }
 
-export async function findLatestPrices(
+export async function findLatestPricesBeforeOrAtHeight(
   effectiveBeforeOrAtHeight: string,
   transaction?: Knex.Transaction,
 ): Promise<PriceMap> {
@@ -229,17 +231,19 @@ export async function findLatestPrices(
     WHERE ("marketId", "effectiveAtHeight") IN (
       SELECT "marketId", MAX("effectiveAtHeight")
       FROM "oracle_prices"
-      WHERE "effectiveAtHeight" <= '${effectiveBeforeOrAtHeight}'
+      WHERE "effectiveAtHeight" <= ?
       GROUP BY "marketId");
   `;
   let result: { rows: OraclePriceFromDatabase[] };
   if (transaction === undefined) {
     result = await knexReadReplica.getConnection().raw(
       query,
+      [effectiveBeforeOrAtHeight],
     ) as unknown as { rows: OraclePriceFromDatabase[] };
   } else {
     result = await knexReadReplica.getConnection().raw(
       query,
+      [effectiveBeforeOrAtHeight],
     ).transacting(transaction) as unknown as { rows: OraclePriceFromDatabase[] };
   }
 

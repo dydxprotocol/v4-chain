@@ -164,7 +164,7 @@ export async function getPnlTicksCreateObjects(
       blockHeight,
       txId,
     ),
-    OraclePriceTable.findLatestPrices(blockHeight),
+    OraclePriceTable.findLatestPricesBeforeOrAtHeight(blockHeight),
     FundingIndexUpdatesTable.findFundingIndexMap(blockHeight),
   ]);
   stats.timing(
