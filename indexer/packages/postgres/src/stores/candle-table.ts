@@ -237,3 +237,36 @@ export async function findCandlesMap(
 
   return candlesMap;
 }
+
+/**
+ * Find all candles for a given resolution within a lookback period.
+ * Uses Objection.js query builder for type safety and query construction.
+ * @param resolution - The candle resolution to query for
+ * @param lookbackMs - Number of milliseconds to look back from now
+ * @param options - Query options
+ */
+export async function findByResAndLookbackPeriod(
+  resolution: CandleResolution,
+  lookbackMs: number,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<CandleFromDatabase[]> {
+  const baseQuery: QueryBuilder<CandleModel> = setupBaseQuery<CandleModel>(
+    CandleModel,
+    options,
+  );
+
+  const lookbackTime: IsoString = new Date(Date.now() - lookbackMs).toISOString();
+
+  return baseQuery
+    .where(CandleColumns.resolution, resolution)
+    .where(CandleColumns.startedAt, '>=', lookbackTime)
+    .orderBy(CandleColumns.startedAt, Ordering.DESC)
+    .returning('*');
+}
+
+/* TODO: index
+CREATE INDEX CONCURRENTLY IF NOT EXISTS candles_resolution_started_at_1_4_hour_feb2025_idx
+ON candles (resolution, "startedAt")
+WHERE resolution IN ('1HOUR', '4HOURS')
+  AND "startedAt" > '2025-02-01 00:00:00+00'::timestamp with time zone;
+*/
