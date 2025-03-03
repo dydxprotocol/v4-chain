@@ -1,4 +1,5 @@
 import { Big } from 'big.js';
+import { DateTime } from 'luxon';
 
 import {
   FillColumns,
@@ -35,9 +36,15 @@ import {
   defaultOrder,
   defaultPerpetualMarket,
   defaultSubaccountId2,
+  defaultTendermintEventId,
   defaultTendermintEventId2,
+  defaultTendermintEventId3,
+  defaultTendermintEventId4,
 } from '../helpers/constants';
 import { checkLengthAndContains } from './helpers';
+import * as SubaccountTable from '../../src/stores/subaccount-table';
+
+const defaultDateTime: DateTime = DateTime.fromISO('2025-01-01T00:00:00.000Z');
 
 describe('Fill store', () => {
   beforeEach(async () => {
@@ -616,6 +623,98 @@ describe('Fill store', () => {
       const paidFunding: Big = FillTable.getSettledFunding(orderedFillsWithFundingIndices);
       // 10 * (10100-10050) + 13 * (10150-10100) + 9 * (10200-10150) = 1600
       expect(paidFunding.eq(new Big(1600))).toBe(true);
+    });
+  });
+
+  describe('getFillsForParentSubaccount', () => {
+    it('successfully gets fills for parent and child subaccounts', async () => {
+      // Create fills for parent and child subaccounts
+      const address = 'parent_address';
+      const parentSubaccountNumber = 0;
+      const childSubaccountNumbers = [0, 128, 3840]; // Parent and 3 child subaccounts
+      // Create subaccounts first
+      await Promise.all(childSubaccountNumbers.map((subaccountNum) => SubaccountTable.create({
+        address,
+        subaccountNumber: subaccountNum,
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: '1',
+      })));
+
+      // Add block creation before fills
+      await Promise.all([10, 9, 8].map((height) => BlockTable.create({
+        ...defaultBlock,
+        blockHeight: height.toString(),
+      })));
+
+      const tendermintEventIds = [
+        defaultTendermintEventId,
+        defaultTendermintEventId2,
+        defaultTendermintEventId3,
+      ];
+
+      // Then create fills as before
+      const fillPromises = childSubaccountNumbers.map((subaccountNum, index) => {
+        return FillTable.create({
+          ...defaultFill,
+          subaccountId: SubaccountTable.uuid(address, subaccountNum),
+          createdAtHeight: (10 - index).toString(),
+          eventId: tendermintEventIds[index],
+        });
+      });
+      const createdFills = await Promise.all(fillPromises);
+
+      // Create additional block for the different address fill
+      await BlockTable.create({
+        ...defaultBlock,
+        blockHeight: '11',
+      });
+
+      // Add a fill for a different address that shouldn't be returned
+      await SubaccountTable.create({
+        address,
+        subaccountNumber: 2, // not a child subaccount
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: '1',
+      });
+      await FillTable.create({
+        ...defaultFill,
+        subaccountId: SubaccountTable.uuid(address, 2),
+        createdAtHeight: '11',
+        eventId: defaultTendermintEventId4,
+      });
+
+      // Test with default limit
+      const fills = await FillTable.getFillsForParentSubaccount(
+        address,
+        parentSubaccountNumber,
+      );
+
+      expect(fills.length).toEqual(3);
+      // Verify DESC ordering by createdAtHeight
+      expect(fills.map((f: FillFromDatabase) => f.createdAtHeight)).toEqual(['10', '9', '8']);
+      // Verify returned fills match created fills
+      expect(fills).toEqual(expect.arrayContaining(createdFills));
+
+      // Test with custom limit
+      const limitedFills = await FillTable.getFillsForParentSubaccount(
+        address,
+        parentSubaccountNumber,
+        2,
+      );
+
+      expect(limitedFills.length).toEqual(2);
+      expect(limitedFills.map((f: FillFromDatabase) => f.createdAtHeight)).toEqual(['10', '9']);
+      // Verify limited fills are a subset of created fills
+      expect(createdFills).toEqual(expect.arrayContaining(limitedFills));
+    });
+
+    it('returns empty array when no fills exist', async () => {
+      const fills = await FillTable.getFillsForParentSubaccount(
+        'nonexistent_address',
+        0,
+      );
+
+      expect(fills).toEqual([]);
     });
   });
 });
