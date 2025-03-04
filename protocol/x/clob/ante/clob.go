@@ -179,7 +179,6 @@ func (cd ClobDecorator) AnteHandle(
 		if err != nil {
 			return ctx, err
 		}
-
 	}
 
 	return next(ctx, tx, simulate)
