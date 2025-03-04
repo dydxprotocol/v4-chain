@@ -53,17 +53,6 @@ func (cd ClobDecorator) AnteHandle(
 		return next(ctx, tx, simulate)
 	}
 
-	// Ensure that if this is a clob message then that there is only one.
-	// If it isn't a clob message then pass to the next AnteHandler.
-	//isSingleClobMsgTx, err := IsSingleClobMsgTx(tx)
-	//if err != nil {
-	//	return ctx, err
-	//}
-	//
-	//if !isSingleClobMsgTx {
-	//	return next(ctx, tx, simulate)
-	//}
-
 	// Return an error if there is more than one msg with a short term order in the transaction.
 	// Move on if there are no short term orders in the transaction
 	isShortTermClobMsgTx, err := IsShortTermClobMsgTx(ctx, tx)
@@ -80,11 +69,9 @@ func (cd ClobDecorator) AnteHandle(
 	}
 
 	msgs := tx.GetMsgs()
-	//var msg = msgs[0]
 
 	err = nil
 	for _, msg := range msgs {
-
 		switch msg := msg.(type) {
 		case *types.MsgCancelOrder:
 			if msg.OrderId.IsStatefulOrder() {
