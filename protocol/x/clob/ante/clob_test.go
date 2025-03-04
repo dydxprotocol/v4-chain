@@ -363,24 +363,24 @@ func TestIsShortTermClobTransaction(t *testing.T) {
 			expectedResult: false,
 			expectedErr:    nil,
 		},
-		"Returns false and error for multiple `PlaceOrder` message": {
+		"Returns true and error for multiple `PlaceOrder` message": {
 			msgs:           []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder},
-			expectedResult: false,
+			expectedResult: true,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
-		"Returns false and error for multiple `CancelOrder` messages": {
+		"Returns true and error for multiple `CancelOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_CancelOrder_LongTerm, constants.Msg_CancelOrder},
-			expectedResult: false,
+			expectedResult: true,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
-		"Returns false and error for mix of `PlaceOrder` and `CancelOrder` messages": {
+		"Returns true and error for mix of `PlaceOrder` and `CancelOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_CancelOrder},
-			expectedResult: false,
+			expectedResult: true,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns false and error for mix of `MsgSend` and `PlaceOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_Send, constants.Msg_PlaceOrder},
-			expectedResult: false,
+			expectedResult: true,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns true for a Short-Term `CancelOrder` message": {

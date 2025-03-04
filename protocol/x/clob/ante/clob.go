@@ -64,6 +64,13 @@ func (cd ClobDecorator) AnteHandle(
 	//	return next(ctx, tx, simulate)
 	//}
 
+	// Return an error if there is more than one msg with a short term order in the transaction.
+	// Move on if there are no short term orders in the transaction
+	isShortTermClobMsgTx, err := IsShortTermClobMsgTx(ctx, tx)
+	if isShortTermClobMsgTx && err != nil {
+		return ctx, err
+	}
+
 	// Disable order placement and cancelation processing if the clob keeper is not initialized.
 	if !cd.clobKeeper.IsInMemStructuresInitialized() {
 		return ctx, errorsmod.Wrap(
@@ -75,7 +82,7 @@ func (cd ClobDecorator) AnteHandle(
 	msgs := tx.GetMsgs()
 	//var msg = msgs[0]
 
-	var err error
+	err = nil
 	for _, msg := range msgs {
 
 		switch msg := msg.(type) {
@@ -264,9 +271,9 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 
 	numMsgs := len(msgs)
 	if numMsgs > 1 {
-		return false, errorsmod.Wrap(
+		return true, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
-			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
+			"a transaction containing short term MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
 		)
 	}
 
