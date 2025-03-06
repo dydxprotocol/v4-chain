@@ -540,7 +540,6 @@ export function candleToResponseObject(
 export function candlesToSparklineResponseObject(
   tickers: string[],
   unsortedTickerCandles: CandleFromDatabase[],
-  limit: number,
 ): SparklineResponseObject {
   const response: SparklineResponseObject = _.fromPairs(
     _.map(tickers, (ticker: string) => [ticker, []]),
@@ -548,9 +547,8 @@ export function candlesToSparklineResponseObject(
   return _.reduce(
     unsortedTickerCandles,
     (accumulator: { [ticker: string]: string[] }, candle: CandleFromDatabase) => {
-      if (accumulator[candle.ticker].length < limit) {
-        accumulator[candle.ticker].push(candle[CandleColumns.close]);
-      }
+      accumulator[candle.ticker].push(candle[CandleColumns.close]);
+
       // Do not add to accumulator if accumulator length is already at limit.
       // Since candles are sorted by startedAt in descending order, the first 'limit' candles
       // will be the most recent candles.
