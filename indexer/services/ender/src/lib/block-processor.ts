@@ -125,9 +125,26 @@ export class BlockProcessor {
    * @returns the kafka publisher which contains all the events to be published to the kafka
    */
   public async process(): Promise<KafkaPublisher> {
+    const start: number = Date.now();
     const groupedEvents: GroupedEvents = this.groupEvents();
+    logger.info({
+      at: 'block-processor#process',
+      message: 'after group events',
+      elapsed: Date.now() - start,
+    })
     this.validateAndOrganizeEvents(groupedEvents);
-    return this.processEvents();
+    logger.info({
+      at: 'block-processor#process',
+      message: 'after organize events',
+      elapsed: Date.now() - start,
+    })
+    const a = this.processEvents();
+    logger.info({
+      at: 'block-processor#process',
+      message: 'after process events',
+      elapsed: Date.now() - start,
+    })
+    return a;
   }
 
   /**
@@ -261,6 +278,7 @@ export class BlockProcessor {
   }
 
   private async processEvents(): Promise<KafkaPublisher> {
+    const startmy = Date.now();
     const kafkaPublisher: KafkaPublisher = new KafkaPublisher();
 
     await Promise.all(this.sqlEventPromises).then((values) => {
@@ -275,6 +293,12 @@ export class BlockProcessor {
         };
       }
     });
+
+    logger.info({
+      at: 'block-processor#processEvents',
+      message: 'after promise all',
+      elapsed: Date.now() - startmy,
+    })
 
     const start: number = Date.now();
     let success = false;
@@ -299,49 +323,49 @@ export class BlockProcessor {
       success = true;
 
       // helper logs.
-      logger.info({
-        at: 'block-processor#processEvents',
-        message: 'got result from dydx_block_processor',
-        numBlockEvents: this.block.events.length,
-        numSqlBlockEvents: this.sqlBlock.events.length,
-      });
-      const subtypeLatency: {
-        [subtype: string]: { totalLatency: number; count: number; maxLatency: number; minLatency: number; }
-      } = {};
-      for (let i = 0; i < this.sqlBlock.events.length; i++) {
-        const event = this.sqlBlock.events[i];
-        const latency = resultRow[i].latency;
-        const eventSubtype = event.subtype;
+      // logger.info({
+      //   at: 'block-processor#processEvents',
+      //   message: 'got result from dydx_block_processor',
+      //   numBlockEvents: this.block.events.length,
+      //   numSqlBlockEvents: this.sqlBlock.events.length,
+      // });
+      // const subtypeLatency: {
+      //   [subtype: string]: { totalLatency: number; count: number; maxLatency: number; minLatency: number; }
+      // } = {};
+      // for (let i = 0; i < this.sqlBlock.events.length; i++) {
+      //   const event = this.sqlBlock.events[i];
+      //   const latency = resultRow[i].latency;
+      //   const eventSubtype = event.subtype;
 
-        if (!subtypeLatency[eventSubtype]) {
-          subtypeLatency[eventSubtype] = {
-            totalLatency: latency,
-            count: 1,
-            maxLatency: latency,
-            minLatency: latency,
-          };
-        }
+      //   if (!subtypeLatency[eventSubtype]) {
+      //     subtypeLatency[eventSubtype] = {
+      //       totalLatency: latency,
+      //       count: 1,
+      //       maxLatency: latency,
+      //       minLatency: latency,
+      //     };
+      //   }
 
-        subtypeLatency[eventSubtype].totalLatency += latency;
-        subtypeLatency[eventSubtype].count++;
-        subtypeLatency[eventSubtype].maxLatency = Math.max(subtypeLatency[eventSubtype].maxLatency, latency);
-        subtypeLatency[eventSubtype].minLatency = Math.min(subtypeLatency[eventSubtype].minLatency, latency);
-      }
-      const aggregatedSubtypeLatency = Object.keys(subtypeLatency).map(eventSubtype => {
-        const { totalLatency, count, maxLatency, minLatency } = subtypeLatency[eventSubtype];
-        return {
-          eventSubtype,
-          avgLatency: totalLatency / count,
-          maxLatency,
-          minLatency,
-          count,
-        };
-      });
-      logger.info({
-        at: 'block-processor#processEvents',
-        message: 'latencies by event subtype',
-        aggregatedSubtypeLatency,
-      });
+      //   subtypeLatency[eventSubtype].totalLatency += latency;
+      //   subtypeLatency[eventSubtype].count++;
+      //   subtypeLatency[eventSubtype].maxLatency = Math.max(subtypeLatency[eventSubtype].maxLatency, latency);
+      //   subtypeLatency[eventSubtype].minLatency = Math.min(subtypeLatency[eventSubtype].minLatency, latency);
+      // }
+      // const aggregatedSubtypeLatency = Object.keys(subtypeLatency).map(eventSubtype => {
+      //   const { totalLatency, count, maxLatency, minLatency } = subtypeLatency[eventSubtype];
+      //   return {
+      //     eventSubtype,
+      //     avgLatency: totalLatency / count,
+      //     maxLatency,
+      //     minLatency,
+      //     count,
+      //   };
+      // });
+      // logger.info({
+      //   at: 'block-processor#processEvents',
+      //   message: 'latencies by event subtype',
+      //   aggregatedSubtypeLatency,
+      // });
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.processed_block_sql.timing`,
