@@ -65,6 +65,12 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     return;
   }
 
+  logger.info({
+    at: 'onMessage#timing',
+    message: 'after shouldSkipBlock',
+    elapsed: Date.now() - start,
+  })
+
   stats.timing(
     `${config.SERVICE_NAME}.message_time_in_queue`,
     start - Number(message.timestamp),
@@ -85,6 +91,13 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   let success: boolean = false;
   const txId: number = await Transaction.start();
   await Transaction.setIsolationLevel(txId, IsolationLevel.READ_UNCOMMITTED);
+
+  logger.info({
+    at: 'onMessage#timing',
+    message: 'after tx set isolation level',
+    elapsed: Date.now() - start,
+  })
+
   try {
     validateIndexerTendermintBlock(indexerTendermintBlock);
 
@@ -95,17 +108,38 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     );
     const kafkaPublisher: KafkaPublisher = await blockProcessor.process();
 
+    logger.info({
+      at: 'onMessage#timing',
+      message: 'after blockProcessor.process',
+      elapsed: Date.now() - start,
+    })
+
     const candlesGenerator: CandlesGenerator = new CandlesGenerator(
       kafkaPublisher,
       dateToDateTime(indexerTendermintBlock.time!),
       txId,
     );
     const candles: CandleFromDatabase[] = await candlesGenerator.updateCandles();
+    logger.info({
+      at: 'onMessage#timing',
+      message: 'after updateCandles',
+      elapsed: Date.now() - start,
+    })
     await Transaction.commit(txId);
+    logger.info({
+      at: 'onMessage#timing',
+      message: 'after tx commit',
+      elapsed: Date.now() - start,
+    })
     stats.gauge(`${config.SERVICE_NAME}.processing_block_height`, indexerTendermintBlock.height);
     // Update caches after transaction is committed
     updateBlockCache(blockHeight);
     _.forEach(candles, updateCandleCacheWithCandle);
+    logger.info({
+      at: 'onMessage#timing',
+      message: 'after update each candle',
+      elapsed: Date.now() - start,
+    })
 
     if (config.SEND_WEBSOCKET_MESSAGES) {
       wrapBackgroundTask(
@@ -114,6 +148,11 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
         'kafkaPublisher.publish',
       );
     }
+    logger.info({
+      at: 'onMessage#timing',
+      message: 'after starting kafka publish background',
+      elapsed: Date.now() - start,
+    })
     logger.info({
       at: 'onMessage#onMessage',
       message: 'Successfully processed block',
