@@ -683,10 +683,11 @@ describe('Fill store', () => {
         eventId: defaultTendermintEventId4,
       });
 
-      // Test with default limit
-      const fills = await FillTable.getFillsForParentSubaccount(
+      // Test with high limit
+      const { results: fills } = await FillTable.getFillsForParentSubaccount(
         address,
         parentSubaccountNumber,
+        100,
       );
 
       expect(fills.length).toEqual(3);
@@ -696,7 +697,7 @@ describe('Fill store', () => {
       expect(fills).toEqual(expect.arrayContaining(createdFills));
 
       // Test with custom limit
-      const limitedFills = await FillTable.getFillsForParentSubaccount(
+      const { results: limitedFills } = await FillTable.getFillsForParentSubaccount(
         address,
         parentSubaccountNumber,
         2,
@@ -708,10 +709,97 @@ describe('Fill store', () => {
       expect(createdFills).toEqual(expect.arrayContaining(limitedFills));
     });
 
+    it('successfully paginates fills for parent and child subaccounts', async () => {
+      // Create fills for parent and child subaccounts
+      const address = 'parent_address';
+      const parentSubaccountNumber = 0;
+      const childSubaccountNumbers = [0, 128, 3840]; // Parent and 3 child subaccounts
+      // Create subaccounts first
+      await Promise.all(childSubaccountNumbers.map((subaccountNum) => SubaccountTable.create({
+        address,
+        subaccountNumber: subaccountNum,
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: '1',
+      })));
+
+      // Add block creation before fills
+      await Promise.all([10, 9, 8].map((height) => BlockTable.create({
+        ...defaultBlock,
+        blockHeight: height.toString(),
+      })));
+
+      const tendermintEventIds = [
+        defaultTendermintEventId,
+        defaultTendermintEventId2,
+        defaultTendermintEventId3,
+      ];
+
+      // Then create fills
+      await Promise.all(childSubaccountNumbers.map((subaccountNum, index) => {
+        return FillTable.create({
+          ...defaultFill,
+          subaccountId: SubaccountTable.uuid(address, subaccountNum),
+          createdAtHeight: (10 - index).toString(),
+          eventId: tendermintEventIds[index],
+        });
+      }));
+
+      // Test with pagination
+      const responsePageOne = await FillTable.getFillsForParentSubaccount(
+        address,
+        parentSubaccountNumber,
+        1,
+        1,
+      );
+
+      expect(responsePageOne.results.length).toEqual(1);
+      expect(responsePageOne.results[0].createdAtHeight).toEqual('10');
+      expect(responsePageOne.offset).toEqual(0);
+      expect(responsePageOne.total).toEqual(3);
+
+      const responsePageTwo = await FillTable.getFillsForParentSubaccount(
+        address,
+        parentSubaccountNumber,
+        1,
+        2,
+      );
+
+      expect(responsePageTwo.results.length).toEqual(1);
+      expect(responsePageTwo.results[0].createdAtHeight).toEqual('9');
+      expect(responsePageTwo.offset).toEqual(1);
+      expect(responsePageTwo.total).toEqual(3);
+
+      const responsePageThree = await FillTable.getFillsForParentSubaccount(
+        address,
+        parentSubaccountNumber,
+        1,
+        3,
+      );
+
+      expect(responsePageThree.results.length).toEqual(1);
+      expect(responsePageThree.results[0].createdAtHeight).toEqual('8');
+      expect(responsePageThree.offset).toEqual(2);
+      expect(responsePageThree.total).toEqual(3);
+
+      // Test getting all results in one page
+      const responseAllPages = await FillTable.getFillsForParentSubaccount(
+        address,
+        parentSubaccountNumber,
+        3,
+        1,
+      );
+
+      expect(responseAllPages.results.length).toEqual(3);
+      expect(responseAllPages.results.map((f) => f.createdAtHeight)).toEqual(['10', '9', '8']);
+      expect(responseAllPages.offset).toEqual(0);
+      expect(responseAllPages.total).toEqual(3);
+    });
+
     it('returns empty array when no fills exist', async () => {
-      const fills = await FillTable.getFillsForParentSubaccount(
+      const { results: fills } = await FillTable.getFillsForParentSubaccount(
         'nonexistent_address',
         0,
+        100,
       );
 
       expect(fills).toEqual([]);

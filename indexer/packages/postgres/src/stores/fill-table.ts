@@ -3,7 +3,12 @@ import _ from 'lodash';
 import { DateTime } from 'luxon';
 import { QueryBuilder } from 'objection';
 
-import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
+import {
+  BUFFER_ENCODING_UTF_8,
+  DEFAULT_POSTGRES_OPTIONS,
+  MAX_PARENT_SUBACCOUNTS,
+  CHILD_SUBACCOUNT_MULTIPLIER,
+} from '../constants';
 import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
@@ -31,6 +36,57 @@ import {
 export function uuid(eventId: Buffer, liquidity: Liquidity): string {
   // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
   return getUuid(Buffer.from(`${eventId.toString('hex')}-${liquidity}`, BUFFER_ENCODING_UTF_8));
+}
+
+/**
+ * Handles pagination and limit logic for fill queries
+ * @param baseQuery The base query to apply pagination to
+ * @param limit Maximum number of fills to return
+ * @param page Page number
+ * @returns Promise<PaginationFromDatabase<FillFromDatabase>>
+ */
+async function handleLimitAndPagination(
+  baseQuery: QueryBuilder<FillModel>,
+  limit?: number,
+  page?: number,
+): Promise<PaginationFromDatabase<FillFromDatabase>> {
+  let query = baseQuery;
+
+  /**
+   * If a query is made using a page number, then the limit property is used as 'page limit'
+   */
+  if (page !== undefined && limit !== undefined) {
+    /**
+     * We make sure that the page number is always >= 1
+     */
+    const currentPage: number = Math.max(1, page);
+    const offset: number = (currentPage - 1) * limit;
+
+    /**
+     * Ensure sorting is applied to maintain consistent pagination results.
+     * Also a casting of the ts type is required since the infer of the type
+     * obtained from the count is not performed.
+     */
+    const count: { count?: string } = await query.clone().clearOrder().count({ count: '*' }).first() as unknown as { count?: string };
+
+    query = query.offset(offset).limit(limit);
+
+    return {
+      results: await query.returning('*'),
+      limit,
+      offset,
+      total: parseInt(count.count ?? '0', 10),
+    };
+  }
+
+  // If no pagination, just apply the limit
+  if (limit !== undefined) {
+    query = query.limit(limit);
+  }
+
+  return {
+    results: await query.returning('*'),
+  };
 }
 
 export async function findAll(
@@ -158,41 +214,7 @@ export async function findAll(
     Ordering.DESC,
   );
 
-  if (limit !== undefined && page === undefined) {
-    baseQuery = baseQuery.limit(limit);
-  }
-
-  /**
-   * If a query is made using a page number, then the limit property is used as 'page limit'
-   * TODO: Improve pagination by adding a required eventId for orderBy clause
-   */
-  if (page !== undefined && limit !== undefined) {
-    /**
-     * We make sure that the page number is always >= 1
-     */
-    const currentPage: number = Math.max(1, page);
-    const offset: number = (currentPage - 1) * limit;
-
-    /**
-     * Ensure sorting is applied to maintain consistent pagination results.
-     * Also a casting of the ts type is required since the infer of the type
-     * obtained from the count is not performed.
-     */
-    const count: { count?: string } = await baseQuery.clone().clearOrder().count({ count: '*' }).first() as unknown as { count?: string };
-
-    baseQuery = baseQuery.offset(offset).limit(limit);
-
-    return {
-      results: await baseQuery.returning('*'),
-      limit,
-      offset,
-      total: parseInt(count.count ?? '0', 10),
-    };
-  }
-
-  return {
-    results: await baseQuery.returning('*'),
-  };
+  return handleLimitAndPagination(baseQuery, limit, page);
 }
 
 export async function create(
@@ -587,41 +609,37 @@ export async function getFeesPaid(
  * @param address The wallet address
  * @param parentSubaccountNumber The parent subaccount number
  * @param limit Maximum number of fills to return
- * @param options Query options
+ * @param page Page number
  */
 export async function getFillsForParentSubaccount(
   address: string,
   parentSubaccountNumber: number,
-  limit: number = 200,
-): Promise<FillFromDatabase[]> {
-  const query = `
--- Step 1: Get all child subaccount IDs under the parent subaccount
-WITH target_subaccounts AS (
-  SELECT id as "subaccountId"
-  FROM subaccounts 
-  WHERE address = ?
-  AND "subaccountNumber" IN (
-    SELECT generate_series(?, 12800, 128)
-  )
-)
+  limit: number,
+  page?: number,
+): Promise<PaginationFromDatabase<FillFromDatabase>> {
+  // Create base query to get subaccount IDs
+  const subaccountQuery = knexReadReplica.getConnection()
+    .select('id as subaccountId')
+    .from('subaccounts')
+    .where('address', address)
+    .whereRaw(
+      `"subaccountNumber" IN (
+        SELECT generate_series(
+          ?, 
+          ? + ${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}, 
+          ${MAX_PARENT_SUBACCOUNTS}
+        )
+      )`,
+      [parentSubaccountNumber, parentSubaccountNumber],
+    );
 
--- Step 2: Get all child subaccounts that exist in subaccounts table, 
--- and get all fills for these subaccounts.
-SELECT f.* 
-FROM target_subaccounts s
-JOIN LATERAL (
-  SELECT *
-  FROM fills f
-  WHERE f."subaccountId" = s."subaccountId"
-  ORDER BY f."createdAtHeight" DESC
-) f ON true
-ORDER BY f."createdAtHeight" DESC
-LIMIT ?;
-`;
+  // Create the main query
+  const baseQuery = FillModel.query()
+    .whereIn(
+      'subaccountId',
+      subaccountQuery,
+    )
+    .orderBy(FillColumns.createdAtHeight, Ordering.DESC);
 
-  const result = await knexReadReplica
-    .getConnection()
-    .raw(query, [address, parentSubaccountNumber, limit]);
-
-  return result.rows;
+  return handleLimitAndPagination(baseQuery, limit, page);
 }

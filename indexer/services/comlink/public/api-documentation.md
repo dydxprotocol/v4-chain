@@ -1273,6 +1273,7 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
 |address|query|string|true|none|
 |parentSubaccountNumber|query|number(double)|true|none|
 |limit|query|number(double)|false|none|
+|page|query|number(double)|false|none|
 
 > Example responses
 

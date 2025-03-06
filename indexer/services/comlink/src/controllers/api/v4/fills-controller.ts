@@ -121,11 +121,12 @@ class FillsController extends Controller {
 
   @Get('/parentSubaccount')
   // Note: This is expected to be used for FE only, where `parentSubaccount -> childSubaccount`
-  // mapping is relevant. API traders should use `orders` instead.
+  // mapping is relevant. API traders should use `fills/` instead.
   async getFillsForParentSubaccount(
     @Query() address: string,
       @Query() parentSubaccountNumber: number,
       @Query() limit?: number,
+      @Query() page?: number,
   ): Promise<FillResponse> {
     // Get subaccountIds for all child subaccounts of the parent subaccount
     // Create a record of subaccountId to subaccount number
@@ -136,12 +137,17 @@ class FillsController extends Controller {
       },
     );
 
-    // Don't change other parts in this function.
     // Get fills for all child subaccounts using the new optimized query
-    const fills: FillFromDatabase[] = await FillTable.getFillsForParentSubaccount(
+    const {
+      results: fills,
+      limit: pageSize,
+      offset,
+      total,
+    } = await FillTable.getFillsForParentSubaccount(
       address,
       parentSubaccountNumber,
-      limit,
+      limit || config.API_LIMIT_V4,
+      page,
     );
 
     const clobPairIdToPerpetualMarket: Record<
@@ -162,6 +168,9 @@ class FillsController extends Controller {
         return fillToResponseObject(fill, clobPairIdToMarket,
           childIdtoSubaccountNumber[fill.subaccountId]);
       }),
+      pageSize,
+      totalResults: total,
+      offset,
     };
   }
 }
