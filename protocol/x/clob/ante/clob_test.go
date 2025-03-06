@@ -116,6 +116,36 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 			useWithIsCheckTxContext: true,
 			expectedErr:             nil,
 		},
+		"Successfully places multiple stateful orders within the same transaction": {
+			msgs: []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On(
+					"PlaceStatefulOrder",
+					ctx,
+					constants.Msg_PlaceOrder_LongTerm,
+					false,
+				).Return(
+					nil,
+				)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             nil,
+		},
+		"Successfully places transfer and stateful order within the same transaction": {
+			msgs: []sdk.Msg{constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On(
+					"PlaceStatefulOrder",
+					ctx,
+					constants.Msg_PlaceOrder_LongTerm,
+					false,
+				).Return(
+					nil,
+				)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             nil,
+		},
 		"Successfully places a conditional order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder_Conditional},
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
