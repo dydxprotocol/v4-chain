@@ -116,6 +116,36 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 			useWithIsCheckTxContext: true,
 			expectedErr:             nil,
 		},
+		"Successfully places multiple stateful orders within the same transaction": {
+			msgs: []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On(
+					"PlaceStatefulOrder",
+					ctx,
+					constants.Msg_PlaceOrder_LongTerm,
+					false,
+				).Return(
+					nil,
+				)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             nil,
+		},
+		"Successfully places transfer and stateful order within the same transaction": {
+			msgs: []sdk.Msg{constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On(
+					"PlaceStatefulOrder",
+					ctx,
+					constants.Msg_PlaceOrder_LongTerm,
+					false,
+				).Return(
+					nil,
+				)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             nil,
+		},
 		"Successfully places a conditional order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder_Conditional},
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
@@ -363,24 +393,24 @@ func TestIsShortTermClobTransaction(t *testing.T) {
 			expectedResult: false,
 			expectedErr:    nil,
 		},
-		"Returns false and error for multiple `PlaceOrder` message": {
+		"Returns true and error for multiple `PlaceOrder` message": {
 			msgs:           []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder},
-			expectedResult: false,
+			expectedResult: true,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
-		"Returns false and error for multiple `CancelOrder` messages": {
+		"Returns true and error for multiple `CancelOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_CancelOrder_LongTerm, constants.Msg_CancelOrder},
-			expectedResult: false,
+			expectedResult: true,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
-		"Returns false and error for mix of `PlaceOrder` and `CancelOrder` messages": {
+		"Returns true and error for mix of `PlaceOrder` and `CancelOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_CancelOrder},
-			expectedResult: false,
+			expectedResult: true,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns false and error for mix of `MsgSend` and `PlaceOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_Send, constants.Msg_PlaceOrder},
-			expectedResult: false,
+			expectedResult: true,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns true for a Short-Term `CancelOrder` message": {
