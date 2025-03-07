@@ -1272,19 +1272,8 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
 |---|---|---|---|---|
 |address|query|string|true|none|
 |parentSubaccountNumber|query|number(double)|true|none|
-|market|query|string|false|none|
-|marketType|query|[MarketType](#schemamarkettype)|false|none|
 |limit|query|number(double)|false|none|
-|createdBeforeOrAtHeight|query|number(double)|false|none|
-|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
 |page|query|number(double)|false|none|
-
-#### Enumerated Values
-
-|Parameter|Value|
-|---|---|
-|marketType|PERPETUAL|
-|marketType|SPOT|
 
 > Example responses
 
