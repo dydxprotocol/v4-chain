@@ -69,7 +69,14 @@ export default async function runTask(): Promise<void> {
   // Derive data from perpetual markets
   const perpetualMarketIds: string[] = _.map(perpetualMarkets, PerpetualMarketColumns.id);
   const clobPairIds: string[] = _.map(perpetualMarkets, PerpetualMarketColumns.clobPairId);
-  const tickers: string[] = _.map(perpetualMarkets, PerpetualMarketColumns.ticker);
+  const tickerDefaultFundingRate1HPairs: [string, string][] = _.map(
+    perpetualMarkets,
+    (market) => [
+      market[PerpetualMarketColumns.ticker],
+      // Use 0 as default for null default funding rate
+      market[PerpetualMarketColumns.defaultFundingRate1H] ?? '0',
+    ],
+  );
 
   stats.timing(
     `${config.SERVICE_NAME}.market_updater_initial_queries`,
@@ -89,8 +96,7 @@ export default async function runTask(): Promise<void> {
       // TODO(DEC-1149 Add support for pulling information from candles
       FillTable.get24HourInformation(clobPairIds),
       PerpetualPositionTable.getOpenInterestLong(perpetualMarketIds),
-      // TODO(CT-1340): Need to add default funding rate to this value.
-      NextFundingCache.getNextFunding(redisClient, tickers),
+      NextFundingCache.getNextFunding(redisClient, tickerDefaultFundingRate1HPairs),
     ]);
 
     stats.timing(
