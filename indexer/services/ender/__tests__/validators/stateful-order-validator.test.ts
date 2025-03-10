@@ -25,6 +25,7 @@ import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../h
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
+import { vaultRefresher } from '@dydxprotocol-indexer/postgres';
 
 describe('stateful-order-validator', () => {
   beforeEach(() => {
@@ -356,6 +357,25 @@ describe('stateful-order-validator', () => {
         message,
         { event },
       );
+    });
+  });
+
+  describe('shouldExcludeEvent', () => {
+    it.each([
+      ['order placement', defaultLongTermOrderPlacementEvent],
+      ['order removal', defaultStatefulOrderRemovalEvent],
+    ])('excludes vault %s', (_name: string, event: StatefulOrderEventV1) => {
+      const vaultAddress: string = event.longTermOrderPlacement?.order?.orderId?.subaccountId?.owner ||
+        event.orderRemoval?.removedOrderId?.subaccountId?.owner || '';
+      vaultRefresher.addVault(vaultAddress);
+      
+      const validator: StatefulOrderValidator = new StatefulOrderValidator(
+        event,
+        createBlock(event),
+        0,
+      );
+
+      expect(validator.shouldExcludeEvent()).toBe(true);
     });
   });
 });

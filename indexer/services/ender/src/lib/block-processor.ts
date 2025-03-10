@@ -125,7 +125,6 @@ export class BlockProcessor {
    * @returns the kafka publisher which contains all the events to be published to the kafka
    */
   public async process(): Promise<KafkaPublisher> {
-    const start: number = Date.now();
     const groupedEvents: GroupedEvents = this.groupEvents();
     this.validateAndOrganizeEvents(groupedEvents);
     return this.processEvents();
