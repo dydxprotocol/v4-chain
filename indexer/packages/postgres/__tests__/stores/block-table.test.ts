@@ -6,6 +6,7 @@ import {
   teardown,
 } from '../../src/helpers/db-helpers';
 import { defaultBlock, defaultBlock2 } from '../helpers/constants';
+import { DateTime } from 'luxon';
 
 describe('Block store', () => {
   beforeAll(async () => {
@@ -90,5 +91,46 @@ describe('Block store', () => {
 
   it('Unable to find latest Block', async () => {
     await expect(BlockTable.getLatest()).rejects.toEqual(new Error('Unable to find latest block'));
+  });
+
+  it('Successfully finds first block created on or after timestamp', async () => {
+    await Promise.all([
+      BlockTable.create(defaultBlock),
+      BlockTable.create(defaultBlock2),
+    ]);
+
+    const block: BlockFromDatabase | undefined = await BlockTable.findBlockByCreatedOnOrAfter(
+      DateTime.utc(2025, 3, 5).toISO(),
+    );
+
+    expect(block).toBeDefined();
+    expect(block).toEqual(expect.objectContaining(defaultBlock));
+  });
+
+  it('Successfully finds first block when querying with later timestamp', async () => {
+    await Promise.all([
+      BlockTable.create(defaultBlock),
+      BlockTable.create(defaultBlock2),
+    ]);
+
+    const block: BlockFromDatabase | undefined = await BlockTable.findBlockByCreatedOnOrAfter(
+      DateTime.utc(2025, 3, 6).toISO(),
+    );
+
+    expect(block).toBeDefined();
+    expect(block).toEqual(expect.objectContaining(defaultBlock2));
+  });
+
+  it('Returns undefined when no blocks found after timestamp', async () => {
+    await Promise.all([
+      BlockTable.create(defaultBlock),
+      BlockTable.create(defaultBlock2),
+    ]);
+
+    const block: BlockFromDatabase | undefined = await BlockTable.findBlockByCreatedOnOrAfter(
+      DateTime.utc(2025, 3, 7).toISO(),
+    );
+
+    expect(block).toBeUndefined();
   });
 });
