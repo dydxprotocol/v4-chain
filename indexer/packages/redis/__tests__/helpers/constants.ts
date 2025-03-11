@@ -58,6 +58,15 @@ export const defaultOrderIdConditional: IndexerOrderId = {
   clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
   orderFlags: ORDER_FLAG_CONDITIONAL,
 };
+export const defaultOrderIdVault: IndexerOrderId = {
+  subaccountId: {
+    owner: testConstants.defaultVaultAddress,
+    number: 0,
+  },
+  clientId: 4,
+  clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
+  orderFlags: ORDER_FLAG_LONG_TERM,
+}
 
 export const defaultSubaccountUuid: string = SubaccountTable.uuid(
   defaultSubaccountId.owner,
@@ -99,6 +108,11 @@ export const defaultOrderIoc: IndexerOrder = {
   ...defaultOrder,
   timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
 };
+export const defaultOrderVault: IndexerOrder = {
+  ...defaultOrderGoodTilBlockTime,
+  orderId: defaultOrderIdVault,
+  timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+};
 
 export const defaultOrderUuid: string = OrderTable.orderIdToUuid(defaultOrderId);
 export const defaultOrderUuidGoodTilBlockTime: string = OrderTable.orderIdToUuid(
@@ -106,6 +120,9 @@ export const defaultOrderUuidGoodTilBlockTime: string = OrderTable.orderIdToUuid
 );
 export const defaultOrderUuidConditional: string = OrderTable.orderIdToUuid(
   defaultOrderIdConditional,
+);
+export const defaultOrderUuidVault: string = OrderTable.orderIdToUuid(
+  defaultOrderIdVault,
 );
 
 export const defaultPrice = protocolTranslations.subticksToPrice(
@@ -141,6 +158,11 @@ export const defaultRedisOrderFok: RedisOrder = {
 export const defaultRedisOrderIoc: RedisOrder = {
   ...defaultRedisOrder,
   order: defaultOrderIoc,
+};
+export const defaultRedisOrderVault: RedisOrder = {
+  ...defaultRedisOrderGoodTilBlockTime,
+  id: defaultOrderUuidVault,
+  order: defaultOrderVault,
 };
 
 export const orderPlace: OffChainUpdateOrderPlaceUpdateMessage = {

@@ -20,6 +20,7 @@ import {
   protocolTranslations,
   testConstants,
   testMocks,
+  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   logger,
@@ -63,6 +64,7 @@ describe('OrderUpdateHandler', () => {
       await Promise.all([
         perpetualMarketRefresher.updatePerpetualMarkets(),
         blockHeightRefresher.updateBlockHeight(),
+        vaultRefresher.updateVaults(),
       ]);
       jest.spyOn(stats, 'timing');
       jest.spyOn(stats, 'increment');
@@ -577,6 +579,26 @@ describe('OrderUpdateHandler', () => {
           instance: '',
         },
       );
+    });
+
+    it('does not add order update to stateful order update cache if stateful order not found and is a vault order', async () => {
+      synchronizeWrapBackgroundTask(wrapBackgroundTask);
+      const vaultOrderUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
+        ...redisTestConstants.orderUpdate,
+        orderUpdate: {
+          ...redisTestConstants.orderUpdate.orderUpdate,
+          orderId: redisTestConstants.defaultOrderIdVault,
+        },
+      };
+      await handleOrderUpdate(vaultOrderUpdate);
+
+      const cachedOrderUpdate: OrderUpdateV1 | undefined = await StatefulOrderUpdatesCache
+        .removeStatefulOrderUpdate(
+          redisTestConstants.defaultOrderUuidVault,
+          Date.now(),
+          client,
+        );
+      expect(cachedOrderUpdate).toBeUndefined();
     });
   });
 });
