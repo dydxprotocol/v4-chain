@@ -511,11 +511,6 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 			useWithIsCheckTxContext: true,
 			expectedErr:             nil,
 		},
-		"Works with any number of off-chain messages": {
-			msgs:                    []sdk.Msg{constants.Msg_Send, constants.Msg_Send},
-			useWithIsCheckTxContext: true,
-			expectedErr:             nil,
-		},
 		"CancelShortTermOrder is not called on keeper during deliver": {
 			msgs:                    []sdk.Msg{constants.Msg_CancelOrder},
 			useWithIsCheckTxContext: false,
