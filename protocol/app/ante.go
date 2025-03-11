@@ -191,10 +191,13 @@ func (h *lockingAnteHandler) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate boo
 		log.BlockHeight, ctx.BlockHeight()+1,
 	)
 
-	isClob, err := clobante.IsSingleClobMsgTx(tx)
-	if err != nil {
-		return ctx, err
-	} else if isClob {
+	//isClob, err := clobante.IsSingleClobMsgTx(tx)
+	//if err != nil {
+	//	return ctx, err
+	//} else if isClob {
+	//	return h.clobAnteHandle(ctx, tx, simulate)
+	//}
+	if clobante.HasClobMsg(tx) {
 		return h.clobAnteHandle(ctx, tx, simulate)
 	}
 	if libante.IsSingleAppInjectedMsg(tx.GetMsgs()) {
