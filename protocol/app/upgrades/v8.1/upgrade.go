@@ -4,12 +4,22 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	perpetualskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 )
+
+func checkLiquidityTierExists(
+	ctx sdk.Context,
+	perpetualsKeeper perpetualskeeper.Keeper,
+) {
+	if existingTier, err := perpetualsKeeper.GetLiquidityTier(ctx, NewTierId); err == nil {
+		ctx.Logger().Error("Liquidity tier already exists", "id", NewTierId, "tier", existingTier)
+		panic(fmt.Sprintf("liquidity tier %d already exists", NewTierId))
+	}	
+}
 
 func createNewLiquidityTier(
 	ctx sdk.Context,
@@ -38,6 +48,8 @@ func CreateUpgradeHandler(
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
+
+		checkLiquidityTierExists(sdkCtx, perpetualsKeeper)
 
 		createNewLiquidityTier(sdkCtx, perpetualsKeeper)
 
