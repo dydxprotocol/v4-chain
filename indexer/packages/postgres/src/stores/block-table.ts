@@ -17,24 +17,6 @@ import {
 } from '../types';
 
 /**
- * Find blocks by their block heights.
- */
-export async function findByBlockHeights(
-  blockHeights: string[],
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<BlockFromDatabase[]> {
-  const baseQuery: QueryBuilder<BlockModel> = setupBaseQuery<BlockModel>(
-    BlockModel,
-    options,
-  );
-
-  return baseQuery
-    .whereIn(BlockColumns.blockHeight, blockHeights)
-    .orderBy(BlockColumns.blockHeight, Ordering.ASC)
-    .returning('*');
-}
-
-/**
  * Find the first block created on or after the given timestamp.
  * Uses the blocks_time_since_march2025_idx index for efficient querying.
  */

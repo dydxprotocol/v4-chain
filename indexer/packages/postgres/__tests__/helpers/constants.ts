@@ -459,11 +459,11 @@ export const defaultConditionalOrderId: string = OrderTable.uuid(
 
 export const defaultBlock: BlockCreateObject = {
   blockHeight: '1',
-  time: DateTime.utc(2025, 3, 5).toISO(),
+  time: DateTime.utc(2022, 6, 1).toISO(),
 };
 export const defaultBlock2: BlockCreateObject = {
   blockHeight: '2',
-  time: DateTime.utc(2025, 3, 6).toISO(),
+  time: DateTime.utc(2022, 6, 2).toISO(),
 };
 
 // ============== TendermintEvents ==============
