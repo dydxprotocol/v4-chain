@@ -347,7 +347,6 @@ func IsValidClobMsgTx(tx sdk.Tx) (bool, error) {
 	}
 
 	return true, nil
-
 }
 
 // GetTimeoutHeight returns the timeout height of a transaction. If the transaction does not have
