@@ -43,16 +43,12 @@ type FullNodeStreamingManagerImpl struct {
 	// TODO: Consolidate the streamUpdateCache and streamUpdateSubscriptionCache into a single
 	// struct to avoid the need to maintain two separate slices for the same data.
 
-	// list of stream updates.
-	streamUpdateCache []clobtypes.StreamUpdate
-	// list of subscription ids for each stream update.
-	streamUpdateSubscriptionCache [][]uint32
-	// map from clob pair id to subscription ids.
-	clobPairIdToSubscriptionIdMapping map[uint32][]uint32
-	// map from subaccount id to subscription ids.
+	streamUpdateCache                   []clobtypes.StreamUpdate
+	streamUpdateSubscriptionCache       [][]uint32
+	clobPairIdToSubscriptionIdMapping   map[uint32][]uint32
 	subaccountIdToSubscriptionIdMapping map[satypes.SubaccountId][]uint32
-	// map from market id to subscription ids.
-	marketIdToSubscriptionIdMapping map[uint32][]uint32
+	marketIdToSubscriptionIdMapping     map[uint32][]uint32
+	allClobPairSubscriptionIdMapping    map[uint32]struct{}
 
 	maxUpdatesInCache          uint32
 	maxSubscriptionChannelSize uint32
@@ -71,27 +67,25 @@ type FullNodeStreamingManagerImpl struct {
 type OrderbookSubscription struct {
 	subscriptionId uint32
 
-	// Whether the subscription is initialized with snapshot.
-	initialized *atomic.Bool
+	initializedWithSnapshot *atomic.Bool
+	clobPairIds             []uint32
+	subaccountIds           []satypes.SubaccountId
+	marketIds               []uint32
 
-	// Clob pair ids to subscribe to.
-	clobPairIds []uint32
-
-	// Subaccount ids to subscribe to.
-	subaccountIds []satypes.SubaccountId
-
-	// market ids to subscribe to.
-	marketIds []uint32
-
-	// Stream
-	messageSender types.OutgoingMessageSender
-
-	// Channel to buffer writes before the stream
-	updatesChannel chan []clobtypes.StreamUpdate
+	messageSender        types.OutgoingMessageSender
+	streamUpdatesChannel chan []clobtypes.StreamUpdate
 
 	// If interval snapshots are turned on, the next block height at which
 	// a snapshot should be sent out.
 	nextSnapshotBlock uint32
+}
+
+func (sm *FullNodeStreamingManagerImpl) AllClobPairSubscriptionIds() []uint32 {
+	allClobPairSubscriptionIds := []uint32{}
+	for subscriptionId := range sm.allClobPairSubscriptionIdMapping {
+		allClobPairSubscriptionIds = append(allClobPairSubscriptionIds, subscriptionId)
+	}
+	return allClobPairSubscriptionIds
 }
 
 func (sm *FullNodeStreamingManagerImpl) NewOrderbookSubscription(
@@ -101,18 +95,18 @@ func (sm *FullNodeStreamingManagerImpl) NewOrderbookSubscription(
 	messageSender types.OutgoingMessageSender,
 ) *OrderbookSubscription {
 	return &OrderbookSubscription{
-		subscriptionId: sm.getNextAvailableSubscriptionId(),
-		initialized:    &atomic.Bool{}, // False by default.
-		clobPairIds:    clobPairIds,
-		subaccountIds:  subaccountIds,
-		marketIds:      marketIds,
-		messageSender:  messageSender,
-		updatesChannel: make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
+		subscriptionId:          sm.getNextAvailableSubscriptionId(),
+		initializedWithSnapshot: &atomic.Bool{}, // False by default.
+		clobPairIds:             clobPairIds,
+		subaccountIds:           subaccountIds,
+		marketIds:               marketIds,
+		messageSender:           messageSender,
+		streamUpdatesChannel:    make(chan []clobtypes.StreamUpdate, sm.maxSubscriptionChannelSize),
 	}
 }
 
 func (sub *OrderbookSubscription) IsInitialized() bool {
-	return sub.initialized.Load()
+	return sub.initializedWithSnapshot.Load()
 }
 
 func NewFullNodeStreamingManager(
@@ -136,6 +130,7 @@ func NewFullNodeStreamingManager(
 		clobPairIdToSubscriptionIdMapping:   make(map[uint32][]uint32),
 		subaccountIdToSubscriptionIdMapping: make(map[satypes.SubaccountId][]uint32),
 		marketIdToSubscriptionIdMapping:     make(map[uint32][]uint32),
+		allClobPairSubscriptionIdMapping:    make(map[uint32]struct{}),
 
 		maxUpdatesInCache:          maxUpdatesInCache,
 		maxSubscriptionChannelSize: maxSubscriptionChannelSize,
@@ -186,7 +181,7 @@ func (sm *FullNodeStreamingManagerImpl) EmitMetrics() {
 	for _, subscription := range sm.orderbookSubscriptions {
 		metrics.AddSampleWithLabels(
 			metrics.GrpcSubscriptionChannelLength,
-			float32(len(subscription.updatesChannel)),
+			float32(len(subscription.streamUpdatesChannel)),
 			metrics.GetLabelForIntValue(metrics.SubscriptionId, int(subscription.subscriptionId)),
 		)
 	}
@@ -241,13 +236,14 @@ func FilterStreamUpdateBySubaccount(
 			if !doFilter {
 				continue
 			}
+		case *clobtypes.StreamUpdate_TakerOrder:
+
 		}
 		filteredUpdates = append(filteredUpdates, update)
 	}
 	return filteredUpdates
 }
 
-// Subscribe subscribes to the orderbook updates stream.
 func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	clobPairIds []uint32,
 	subaccountIds []*satypes.SubaccountId,
@@ -263,7 +259,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	}
 	if filterOrdersBySubAccountId && (len(subaccountIds) == 0) {
 		sm.logger.Error("filterOrdersBySubaccountId with no subaccountIds")
-		return types.ErrInvalidStreamingRequest
+		return types.ErrInvalidSubaccountFilteringRequest
 	}
 
 	sm.Lock()
@@ -273,7 +269,9 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 	}
 
 	subscription := sm.NewOrderbookSubscription(clobPairIds, sIds, marketIds, messageSender)
-
+	if len(clobPairIds) == 0 {
+		sm.allClobPairSubscriptionIdMapping[subscription.subscriptionId] = struct{}{}
+	}
 	for _, clobPairId := range clobPairIds {
 		// if clobPairId exists in the map, append the subscription id to the slice
 		// otherwise, create a new slice with the subscription id
@@ -308,11 +306,17 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 		)
 	}
 
+	var clobPairIdString string
+	if _, ok := sm.allClobPairSubscriptionIdMapping[subscription.subscriptionId]; ok {
+		clobPairIdString = "*"
+	} else {
+		clobPairIdString = fmt.Sprintf("%+v", clobPairIds)
+	}
 	sm.logger.Info(
 		fmt.Sprintf(
-			"New subscription id %+v for clob pair ids: %+v and subaccount ids: %+v. filter orders by subaccount ids: %+v",
+			"New subscription id %+v for clob pair ids: %v and subaccount ids: %+v. filter orders by subaccount ids: %+v",
 			subscription.subscriptionId,
-			clobPairIds,
+			clobPairIdString,
 			subaccountIds,
 			filterOrdersBySubAccountId,
 		),
@@ -324,7 +328,7 @@ func (sm *FullNodeStreamingManagerImpl) Subscribe(
 
 	// Use current goroutine to consistently poll subscription channel for updates
 	// to send through stream.
-	for updates := range subscription.updatesChannel {
+	for updates := range subscription.streamUpdatesChannel {
 		if filterOrdersBySubAccountId {
 			updates = FilterStreamUpdateBySubaccount(updates, sIds, sm.logger)
 		}
@@ -374,9 +378,10 @@ func (sm *FullNodeStreamingManagerImpl) removeSubscription(
 	if subscription == nil {
 		return
 	}
-	close(subscription.updatesChannel)
+	close(subscription.streamUpdatesChannel)
 	delete(sm.orderbookSubscriptions, subscriptionIdToRemove)
 	delete(sm.activeSubscriptionIds, subscriptionIdToRemove)
+	delete(sm.allClobPairSubscriptionIdMapping, subscriptionIdToRemove)
 
 	// Iterate over the clobPairIdToSubscriptionIdMapping to remove the subscriptionIdToRemove
 	for pairId, subscriptionIds := range sm.clobPairIdToSubscriptionIdMapping {
@@ -511,7 +516,7 @@ func (sm *FullNodeStreamingManagerImpl) sendStreamUpdates(
 	)
 
 	select {
-	case subscription.updatesChannel <- streamUpdates:
+	case subscription.streamUpdatesChannel <- streamUpdates:
 	default:
 		// Buffer is full. Emit metric and drop subscription.
 		sm.EmitMetrics()
@@ -992,7 +997,7 @@ func (sm *FullNodeStreamingManagerImpl) FlushStreamUpdatesWithLock() {
 				metrics.GetLabelForIntValue(metrics.SubscriptionId, int(id)),
 			)
 			select {
-			case subscription.updatesChannel <- updates:
+			case subscription.streamUpdatesChannel <- updates:
 			default:
 				// Buffer is full. Emit metric and drop subscription.
 				sm.EmitMetrics()
@@ -1026,7 +1031,7 @@ func (sm *FullNodeStreamingManagerImpl) GetSubaccountSnapshotsForInitStreams(
 	ret := make(map[satypes.SubaccountId]*satypes.StreamSubaccountUpdate)
 	for _, subscription := range sm.orderbookSubscriptions {
 		// If the subscription has been initialized, no need to grab the subaccount snapshot.
-		if alreadyInitialized := subscription.initialized.Load(); alreadyInitialized {
+		if alreadyInitialized := subscription.initializedWithSnapshot.Load(); alreadyInitialized {
 			continue
 		}
 
@@ -1050,7 +1055,7 @@ func (sm *FullNodeStreamingManagerImpl) GetPriceSnapshotsForInitStreams(
 	ret := make(map[uint32]*pricestypes.StreamPriceUpdate)
 	for _, subscription := range sm.orderbookSubscriptions {
 		// If the subscription has been initialized, no need to grab the price snapshot.
-		if alreadyInitialized := subscription.initialized.Load(); alreadyInitialized {
+		if alreadyInitialized := subscription.initializedWithSnapshot.Load(); alreadyInitialized {
 			continue
 		}
 
@@ -1074,10 +1079,12 @@ func (sm *FullNodeStreamingManagerImpl) cacheStreamUpdatesByClobPairWithLock(
 	clobPairIds []uint32,
 ) {
 	sm.streamUpdateCache = append(sm.streamUpdateCache, streamUpdates...)
+	allClobPairSubscriptionIds := sm.AllClobPairSubscriptionIds()
 	for _, clobPairId := range clobPairIds {
+		subscriptionIds := append(sm.clobPairIdToSubscriptionIdMapping[clobPairId], allClobPairSubscriptionIds...)
 		sm.streamUpdateSubscriptionCache = append(
 			sm.streamUpdateSubscriptionCache,
-			sm.clobPairIdToSubscriptionIdMapping[clobPairId],
+			subscriptionIds,
 		)
 	}
 }
@@ -1252,7 +1259,7 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 	updatesByClobPairId := make(map[uint32]*clobtypes.OffchainUpdates)
 
 	for subscriptionId, subscription := range sm.orderbookSubscriptions {
-		if alreadyInitialized := subscription.initialized.Swap(true); !alreadyInitialized {
+		if alreadyInitialized := subscription.initializedWithSnapshot.Swap(true); !alreadyInitialized {
 			allUpdates := clobtypes.NewOffchainUpdates()
 			for _, clobPairId := range subscription.clobPairIds {
 				if _, ok := updatesByClobPairId[clobPairId]; !ok {
@@ -1306,7 +1313,7 @@ func (sm *FullNodeStreamingManagerImpl) InitializeNewStreams(
 		// reset the `atomic.Bool` so snapshots are sent for the next block.
 		if sm.snapshotBlockInterval > 0 &&
 			blockHeight+1 == subscription.nextSnapshotBlock {
-			subscription.initialized = &atomic.Bool{} // False by default.
+			subscription.initializedWithSnapshot = &atomic.Bool{} // False by default.
 		}
 	}
 }
