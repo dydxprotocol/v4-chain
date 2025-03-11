@@ -252,6 +252,20 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 			useWithIsCheckTxContext: true,
 			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
+		"Fails if there are multiple transfer messages": {
+			msgs: []sdk.Msg{
+				constants.Msg_Transfer, constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm,
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+		},
+		"Fails if there are non CLOB, non transfer messages": {
+			msgs: []sdk.Msg{
+				constants.Msg_Transfer, constants.Msg_Send,
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+		},
 		// Test for hotfix.
 		"PlaceShortTermOrder is not called on keeper CheckTx if transaction timeout height < goodTilBlock": {
 			msgs:                      []sdk.Msg{constants.Msg_PlaceOrder},
@@ -596,6 +610,20 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 		},
 		"Fails if there are a mix of off-chain and on-chain messages": {
 			msgs:                    []sdk.Msg{constants.Msg_CancelOrder, constants.Msg_Send},
+			useWithIsCheckTxContext: true,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+		},
+		"Fails if there are multiple transfer messages": {
+			msgs: []sdk.Msg{
+				constants.Msg_Transfer, constants.Msg_Transfer, constants.Msg_CancelOrder_LongTerm,
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+		},
+		"Fails if there are non CLOB, non transfer messages": {
+			msgs: []sdk.Msg{
+				constants.Msg_Transfer, constants.Msg_Send,
+			},
 			useWithIsCheckTxContext: true,
 			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
