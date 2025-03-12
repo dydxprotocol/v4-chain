@@ -48,10 +48,25 @@ export function getPriceChange(
 export default async function runTask(): Promise<void> {
   const start: number = Date.now();
 
-  const liquidityTiers:
-  LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll({}, []);
-  const perpetualMarkets:
-  PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll({}, []);
+  // Run all initial database queries in parallel
+  const [
+    liquidityTiers,
+    perpetualMarkets,
+    latestPrices,
+    prices24hAgo,
+  ] : [
+    LiquidityTiersFromDatabase[],
+    PerpetualMarketFromDatabase[],
+    PriceMap,
+    PriceMap,
+  ] = await Promise.all([
+    LiquidityTiersTable.findAll({}, []),
+    PerpetualMarketTable.findAll({}, []),
+    OraclePriceTable.getLatestPrices(),
+    OraclePriceTable.getPricesFrom24hAgo(),
+  ]);
+
+  // Derive data from perpetual markets
   const perpetualMarketIds: string[] = _.map(perpetualMarkets, PerpetualMarketColumns.id);
   const clobPairIds: string[] = _.map(perpetualMarkets, PerpetualMarketColumns.clobPairId);
   const tickerDefaultFundingRate1HPairs: [string, string][] = _.map(
@@ -62,8 +77,6 @@ export default async function runTask(): Promise<void> {
       market[PerpetualMarketColumns.defaultFundingRate1H] ?? '0',
     ],
   );
-  const latestPrices: PriceMap = await OraclePriceTable.getLatestPrices();
-  const prices24hAgo: PriceMap = await OraclePriceTable.getPricesFrom24hAgo();
 
   stats.timing(
     `${config.SERVICE_NAME}.market_updater_initial_queries`,
