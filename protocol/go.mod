@@ -454,11 +454,7 @@ replace (
 	cosmossdk.io/x/evidence => cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/upgrade => cosmossdk.io/x/upgrade v0.1.1
 	github.com/btcsuite/btcd/btcec/v2 => github.com/btcsuite/btcd/btcec/v2 v2.3.2
-<<<<<<< HEAD
-	github.com/cosmos/ibc-go/v8 => github.com/dydxprotocol/ibc-go/v8 v8.0.0-rc.0.0.20250228142559-e238a5667825
-=======
 	github.com/cosmos/ibc-go/v8 => github.com/dydxprotocol/ibc-go/v8 v8.0.0-rc.0.0.20250312180215-8733b3edf43a
->>>>>>> 268a73c2 (bump ibc-go to latest patch on fork (commit 8733b3e) (#2747))
 	github.com/google/pprof => github.com/google/pprof v0.0.0-20230228050547-1710fef4ab10
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.18.0
 	github.com/prometheus/common => github.com/prometheus/common v0.47.0
