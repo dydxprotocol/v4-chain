@@ -293,6 +293,8 @@ func IsValidClobMsgTx(tx sdk.Tx) error {
 
 	var hasShortTermOrder = false
 	var numTransferMsgs = 0
+	// Non CLOB msgs are not allowed in CLOB msg transactions because there is no fee charged
+	// for CLOB transactions
 	var hasNonClobMsg = false
 
 	for _, msg := range msgs {
@@ -322,6 +324,8 @@ func IsValidClobMsgTx(tx sdk.Tx) error {
 		)
 	}
 
+	// We only expect a single transfer msg to be batched with a PlaceOrder msg. This is primarily used
+	// to transfer collateral to an isolated subaccount for an isolated position order
 	if numTransferMsgs > 1 {
 		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
