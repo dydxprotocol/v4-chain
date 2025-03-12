@@ -37,6 +37,7 @@ export interface PerpetualMarketUpdateObject {
   subticksPerTick?: number,
   stepBaseQuantums?: number,
   liquidityTierId?: number,
+  defaultFundingRate1H?: string,
 }
 
 export enum PerpetualMarketColumns {
