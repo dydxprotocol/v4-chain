@@ -481,6 +481,92 @@ func TestIsShortTermClobTransaction(t *testing.T) {
 	}
 }
 
+func TestIsValidClobTransaction(t *testing.T) {
+	tests := map[string]struct {
+		msgs           []sdk.Msg
+		expectedResult bool
+		expectedErr    error
+	}{
+		"Failure on non CLOB msg": {
+			msgs:        []sdk.Msg{constants.Msg_Send},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Failure on mixing long term and short term `PlaceOrder` messages": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Failure on mixing long term and short term `CancelOrder` messages": {
+			msgs:        []sdk.Msg{constants.Msg_CancelOrder_LongTerm, constants.Msg_CancelOrder},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Success on multiple long term `PlaceOrder` messages": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder_LongTerm},
+			expectedErr: nil,
+		},
+		"Success on mix of long term `PlaceOrder` and `CancelOrder` messages": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_CancelOrder_LongTerm},
+			expectedErr: nil,
+		},
+		"Success on mix of long term `PlaceOrder` and `Transfer` messages": {
+			msgs:        []sdk.Msg{constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
+			expectedErr: nil,
+		},
+		"Failure on more than one `Transfer` msg": {
+			msgs:        []sdk.Msg{constants.Msg_Transfer, constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Failure on  mix of non CLOB and `PlaceOrder` messages": {
+			msgs:        []sdk.Msg{constants.Msg_Send, constants.Msg_PlaceOrder},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Success for a Short-Term `CancelOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_CancelOrder},
+			expectedErr: nil,
+		},
+		"Success for a Short-Term `PlaceOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder},
+			expectedErr: nil,
+		},
+		"Success for a Stateful `PlaceOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
+			expectedErr: nil,
+		},
+		"Success for a Stateful `CancelOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
+			expectedErr: nil,
+		},
+		"Success for a Conditional `PlaceOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_Conditional},
+			expectedErr: nil,
+		},
+		"Success for a Conditional `CancelOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_CancelOrder_Conditional},
+			expectedErr: nil,
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(
+			name, func(t *testing.T) {
+				// Initialize some test setup which builds a test transaction from a slice of messages.
+				var reg codectypes.InterfaceRegistry
+				protoCfg := authtx.NewTxConfig(codec.NewProtoCodec(reg), authtx.DefaultSignModes)
+				builder := protoCfg.NewTxBuilder()
+				err := builder.SetMsgs(tc.msgs...)
+				require.NoError(t, err)
+				tx := builder.GetTx()
+
+				// Invoke the function under test.
+				err = ante.IsValidClobMsgTx(tx)
+
+				// Assert the results.
+				require.ErrorIs(t, tc.expectedErr, err)
+			},
+		)
+	}
+}
+
 func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 	tests := map[string]TestCase{
 		"Successfully cancels a short term order using a single message": {

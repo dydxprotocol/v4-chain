@@ -55,7 +55,7 @@ func (cd ClobDecorator) AnteHandle(
 	}
 
 	// Check if the transaction is a valid clob tx
-	if _, err := IsValidClobMsgTx(tx); err != nil {
+	if err := IsValidClobMsgTx(tx); err != nil {
 		return ctx, err
 	}
 
@@ -265,7 +265,7 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 	return true, nil
 }
 
-// hasClobMsg returns `true` if the transaction has a single clob msg
+// HasClobMsg returns `true` if the transaction has at least one clob msg
 func HasClobMsg(tx sdk.Tx) bool {
 	msgs := tx.GetMsgs()
 
@@ -276,77 +276,67 @@ func HasClobMsg(tx sdk.Tx) bool {
 		case *types.MsgPlaceOrder:
 			return true
 		case *types.MsgBatchCancel:
-
 			return true
 		}
 	}
 	return false
 }
 
-// IsValidClobMsgTx returns `true` if the transaction contains a valid set of clob msgs
+// IsValidClobMsgTx checks if the transaction contains a valid set of clob msgs
+// This function assumes that the input tx has at least one clob msg
 // A transaction with a clob msg must adhere to the below conditions
 //   - If the tx contains a short term order msg, the tx can only have one msg
 //   - If the tx contains a stateful order msg, it can only contain other stateful order msgs
 //     or a single transfer msg
-func IsValidClobMsgTx(tx sdk.Tx) (bool, error) {
+func IsValidClobMsgTx(tx sdk.Tx) error {
 	msgs := tx.GetMsgs()
 
 	var hasShortTermOrder = false
 	var numTransferMsgs = 0
-	var hasOtherMsgs = false
+	var hasNonClobMsg = false
 
 	for _, msg := range msgs {
 		switch msg := msg.(type) {
 		case *types.MsgCancelOrder:
-			{
-				if msg.OrderId.IsShortTermOrder() {
-					hasShortTermOrder = true
-				}
-			}
-		case *types.MsgPlaceOrder:
-			{
-				if msg.Order.OrderId.IsShortTermOrder() {
-					hasShortTermOrder = true
-				}
-			}
-		case *types.MsgBatchCancel:
-			{
-				// MsgBatchCancel processes only short term orders for now.
+			if msg.OrderId.IsShortTermOrder() {
 				hasShortTermOrder = true
 			}
+		case *types.MsgPlaceOrder:
+			if msg.Order.OrderId.IsShortTermOrder() {
+				hasShortTermOrder = true
+			}
+		case *types.MsgBatchCancel:
+			// MsgBatchCancel processes only short term orders for now.
+			hasShortTermOrder = true
 		case *sendingtypes.MsgCreateTransfer:
-			{
-				numTransferMsgs += 1
-			}
+			numTransferMsgs += 1
 		default:
-			{
-				hasOtherMsgs = true
-			}
+			hasNonClobMsg = true
 		}
 	}
 
 	if hasShortTermOrder && len(msgs) > 1 {
-		return false, errorsmod.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing short term order may not contain more than one message",
 		)
 	}
 
 	if numTransferMsgs > 1 {
-		return false, errorsmod.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing stateful orders can only be accompanied by 1 transfer msg",
 		)
 	}
 
-	if hasOtherMsgs {
-		return false, errorsmod.Wrap(
+	if hasNonClobMsg {
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing stateful orders cannot be accompanied by non transfer msgs",
 		)
 	}
 
-	return true, nil
+	return nil
 }
 
 // GetTimeoutHeight returns the timeout height of a transaction. If the transaction does not have
