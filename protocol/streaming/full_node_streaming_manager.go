@@ -212,6 +212,17 @@ func doFilterStreamUpdateBySubaccount(
 	return false, nil
 }
 
+func doFilterTakerOrderBySubaccount(
+	takerOrder *clobtypes.StreamUpdate_TakerOrder,
+	subaccountIds []satypes.SubaccountId,
+) bool {
+	order := takerOrder.TakerOrder.GetOrder()
+	if slices.Contains(subaccountIds, order.OrderId.SubaccountId) {
+		return true
+	}
+	return false
+}
+
 // If UpdateMessage is not a StreamUpdate_OrderUpdate, filter it
 // If a StreamUpdate_OrderUpdate contains updates for subscribed subaccounts, filter it
 // If a StreamUpdate_OrderUpdate contains no updates for subscribed subaccounts, drop it
@@ -237,7 +248,9 @@ func FilterStreamUpdateBySubaccount(
 				continue
 			}
 		case *clobtypes.StreamUpdate_TakerOrder:
-
+			if !doFilterTakerOrderBySubaccount(updateMessage, subaccountIds) {
+				continue
+			}
 		}
 		filteredUpdates = append(filteredUpdates, update)
 	}

@@ -288,8 +288,8 @@ func TestFilterStreamUpdates(t *testing.T) {
 	)
 
 	orderBookFillUpdate := NewStreamOrderbookFill(0, 0)
-	clobOrder := NewOrder(NewOrderId("foo", 23))
-	takerOrderUpdate := NewStreamTakerOrder(0, 0, clobOrder, 0, 0)
+	takerOrderUpdate := NewStreamTakerOrder(0, 0, NewOrder(NewOrderId(subaccountId.Owner, subaccountId.Number)), 0, 0)
+	neverInScopeTakerOrderUpdate := NewStreamTakerOrder(0, 0, NewOrder(NewOrderId("foo", 23)), 0, 0)
 	subaccountUpdate := NewSubaccountUpdate(
 		0,
 		0,
@@ -393,15 +393,20 @@ func TestFilterStreamUpdates(t *testing.T) {
 			subaccountIds:   []satypes.SubaccountId{subaccountId},
 			filteredUpdates: []clobtypes.StreamUpdate{baseStreamUpdate, *orderBookFillUpdate},
 		},
-		"takerOrderUpdates": {
-			updates:         []clobtypes.StreamUpdate{*takerOrderUpdate},
+		"takerOrderUpdatesNoIds": {
+			updates:         []clobtypes.StreamUpdate{*neverInScopeTakerOrderUpdate, *takerOrderUpdate},
 			subaccountIds:   []satypes.SubaccountId{},
+			filteredUpdates: []clobtypes.StreamUpdate{},
+		},
+		"takerOrderUpdates": {
+			updates:         []clobtypes.StreamUpdate{*neverInScopeTakerOrderUpdate, *takerOrderUpdate},
+			subaccountIds:   []satypes.SubaccountId{subaccountId},
 			filteredUpdates: []clobtypes.StreamUpdate{*takerOrderUpdate},
 		},
 		"takerOrderUpdatesDropUpdate": {
-			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate, otherStreamUpdate},
+			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *neverInScopeTakerOrderUpdate, otherStreamUpdate},
 			subaccountIds:   []satypes.SubaccountId{},
-			filteredUpdates: []clobtypes.StreamUpdate{*takerOrderUpdate},
+			filteredUpdates: []clobtypes.StreamUpdate{},
 		},
 		"takerOrderUpdatesFilterUpdate": {
 			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate},
@@ -409,7 +414,12 @@ func TestFilterStreamUpdates(t *testing.T) {
 			filteredUpdates: []clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate},
 		},
 		"takerOrderUpdatesFilterAndDropUpdate": {
-			updates:         []clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate, otherStreamUpdate},
+			updates: []clobtypes.StreamUpdate{
+				baseStreamUpdate,
+				*neverInScopeTakerOrderUpdate,
+				otherStreamUpdate,
+				*takerOrderUpdate,
+			},
 			subaccountIds:   []satypes.SubaccountId{subaccountId},
 			filteredUpdates: []clobtypes.StreamUpdate{baseStreamUpdate, *takerOrderUpdate},
 		},
