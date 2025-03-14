@@ -1,11 +1,9 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import {
-  CandleColumns,
   CandleFromDatabase,
   CandleResolution,
   CandleTable,
   DEFAULT_POSTGRES_OPTIONS,
-  Ordering,
   PerpetualMarketColumns,
   perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
@@ -18,7 +16,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { SPARKLINE_TIME_PERIOD_TO_LIMIT_MAP, SPARKLINE_TIME_PERIOD_TO_RESOLUTION_MAP } from '../../../lib/constants';
+import { SPARKLINE_TIME_PERIOD_TO_RESOLUTION_MAP, SPARKLINE_TIME_PERIOD_TO_LOOKBACK_MAP } from '../../../lib/constants';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -34,25 +32,23 @@ class SparklinesController extends Controller {
   async get(
     @Query() timePeriod: SparklineTimePeriod,
   ): Promise<SparklineResponseObject> {
+
     const tickers: string[] = _.map(
       perpetualMarketRefresher.getPerpetualMarketsMap(),
       PerpetualMarketColumns.ticker,
     );
 
     const resolution: CandleResolution = SPARKLINE_TIME_PERIOD_TO_RESOLUTION_MAP[timePeriod];
-    const limit: number = SPARKLINE_TIME_PERIOD_TO_LIMIT_MAP[timePeriod];
+    const lookbackMs: number = SPARKLINE_TIME_PERIOD_TO_LOOKBACK_MAP[timePeriod];
 
-    const ungroupedTickerCandles: CandleFromDatabase[] = await CandleTable.findAll(
-      {
-        ticker: tickers,
-        resolution,
-        limit: limit * tickers.length,
-      },
-      [],
-      { ...DEFAULT_POSTGRES_OPTIONS, orderBy: [[CandleColumns.startedAt, Ordering.DESC]] },
+    const ungroupedTickerCandles
+    : CandleFromDatabase[] = await CandleTable.findByResAndLookbackPeriod(
+      resolution,
+      lookbackMs,
+      DEFAULT_POSTGRES_OPTIONS,
     );
 
-    return candlesToSparklineResponseObject(tickers, ungroupedTickerCandles, limit);
+    return candlesToSparklineResponseObject(tickers, ungroupedTickerCandles);
   }
 }
 

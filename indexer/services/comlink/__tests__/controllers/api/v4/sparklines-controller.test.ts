@@ -10,7 +10,7 @@ import {
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 import request from 'supertest';
-import { SPARKLINE_TIME_PERIOD_TO_LIMIT_MAP, SPARKLINE_TIME_PERIOD_TO_RESOLUTION_MAP } from '../../../../src/lib/constants';
+import { SPARKLINE_TIME_PERIOD_TO_RESOLUTION_MAP } from '../../../../src/lib/constants';
 
 import { RequestMethod, SparklineTimePeriod } from '../../../../src/types';
 import { sendRequest } from '../../../helpers/helpers';
@@ -166,17 +166,23 @@ describe('sparklines-controller#V4', () => {
       const defaultTimePeriod: SparklineTimePeriod = SparklineTimePeriod.ONE_DAY;
       const resolution:
       CandleResolution = SPARKLINE_TIME_PERIOD_TO_RESOLUTION_MAP[defaultTimePeriod];
-      const closePrices: string[] = [];
+      const now = DateTime.now().startOf('hour');  // Round to current hour
+      const allClosePrices: string[] = [];
+
+      // Create 100 hourly candles from oldest to newest, aligned to hour marks
       await Promise.all(
         // eslint-disable-next-line @typescript-eslint/require-await
         _.times(100, async (i: number) => {
           const close = Math.floor(Math.random() * 20000).toString();
-          closePrices.push(close);
+          // Store prices oldest to newest
+          allClosePrices.push(close);
+          // Create candles from 99h ago to now, aligned to hour marks, in chronological order.
+          const startedAt = now.minus({ hours: 99 - i }).toISO();
           return CandleTable.create({
             ...testConstants.defaultCandle,
             resolution,
             close,
-            startedAt: DateTime.fromISO(testConstants.defaultCandle.startedAt).minus(i).toISO(),
+            startedAt,
           });
         }),
       );
@@ -186,26 +192,25 @@ describe('sparklines-controller#V4', () => {
         path: `/v4/sparklines?timePeriod=${defaultTimePeriod}`,
       });
 
-      const limit: number = SPARKLINE_TIME_PERIOD_TO_LIMIT_MAP[defaultTimePeriod];
+      // Should only get back the most recent 24 candles
+      // Reverse since we expect response to be in reverse chronological order.
+      const last24Prices = allClosePrices.slice(-24).reverse();
       expect(response.body).toEqual({
-        [testConstants.defaultPerpetualMarket.ticker]: _.times(
-          limit,
-          (i: number) => closePrices[i],
-        ),
+        [testConstants.defaultPerpetualMarket.ticker]: last24Prices,
         [testConstants.defaultPerpetualMarket2.ticker]: [],
         [testConstants.defaultPerpetualMarket3.ticker]: [],
       });
     });
 
-    it('successfully returns multiple sparklines when one sparkline has less than "limit" candles',
+    it('successfully returns multiple sparklines when one sparkline has less than enough candles',
       async () => {
         const timePeriod: SparklineTimePeriod = SparklineTimePeriod.ONE_DAY;
         const resolution: CandleResolution = SPARKLINE_TIME_PERIOD_TO_RESOLUTION_MAP[timePeriod];
-        const limit: number = SPARKLINE_TIME_PERIOD_TO_LIMIT_MAP[timePeriod];
         const firstClosing: string = Math.floor(Math.random() * 20000).toString();
 
+        const numCandles: number = 24; // enough for ONE_HOUR for a day
         await Promise.all(
-          _.times(limit, (i: number) => {
+          _.times(numCandles, (i: number) => {
             return CandleTable.create({
               ...testConstants.defaultCandle,
               startedAt: DateTime
@@ -221,9 +226,9 @@ describe('sparklines-controller#V4', () => {
 
         const secondClosing: string = Math.floor(Math.random() * 20000).toString();
 
-        const limit2: number = limit - 10;
+        const numCandles2: number = numCandles - 10; // not enough for ONE_HOUR for a day
         await Promise.all(
-          _.times(limit2, (i: number) => {
+          _.times(numCandles2, (i: number) => {
             return CandleTable.create({
               ...testConstants.defaultCandle,
               startedAt: DateTime
@@ -243,8 +248,8 @@ describe('sparklines-controller#V4', () => {
         });
 
         expect(response.body).toEqual({
-          [testConstants.defaultPerpetualMarket.ticker]: _.times(limit, () => firstClosing),
-          [testConstants.defaultPerpetualMarket2.ticker]: _.times(limit2, () => secondClosing),
+          [testConstants.defaultPerpetualMarket.ticker]: _.times(numCandles, () => firstClosing),
+          [testConstants.defaultPerpetualMarket2.ticker]: _.times(numCandles2, () => secondClosing),
           [testConstants.defaultPerpetualMarket3.ticker]: [],
         });
       },
