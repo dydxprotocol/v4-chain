@@ -197,15 +197,19 @@ func (sm *FullNodeStreamingManagerImpl) getNextAvailableSubscriptionId() uint32 
 	return id
 }
 
-func doFilterStreamUpdateBySubaccount(
+func doFilterOrderbookUpdateBySubaccount(
 	orderBookUpdate *clobtypes.StreamUpdate_OrderbookUpdate,
 	subaccountIds []satypes.SubaccountId,
 ) (bool, error) {
+	if orderBookUpdate.OrderbookUpdate.Snapshot {
+		return true, nil
+	}
 	for _, orderBookUpdate := range orderBookUpdate.OrderbookUpdate.Updates {
 		orderBookUpdateSubaccountId, err := streaming_util.GetOffChainUpdateV1SubaccountId(orderBookUpdate)
 		if err != nil {
 			return false, err
-		} else if slices.Contains(subaccountIds, orderBookUpdateSubaccountId) {
+		}
+		if slices.Contains(subaccountIds, orderBookUpdateSubaccountId) {
 			return true, nil
 		}
 	}
@@ -216,11 +220,64 @@ func doFilterTakerOrderBySubaccount(
 	takerOrder *clobtypes.StreamUpdate_TakerOrder,
 	subaccountIds []satypes.SubaccountId,
 ) bool {
-	order := takerOrder.TakerOrder.GetOrder()
-	if slices.Contains(subaccountIds, order.OrderId.SubaccountId) {
-		return true
+	return slices.Contains(subaccountIds, takerOrder.TakerOrder.GetOrder().OrderId.SubaccountId)
+}
+
+func doFilterOrderFillBySubaccount(
+	orderFill *clobtypes.StreamUpdate_OrderFill,
+	subaccountIds []satypes.SubaccountId,
+) bool {
+	switch match := orderFill.OrderFill.GetClobMatch().GetMatch().(type) {
+	case *clobtypes.ClobMatch_MatchOrders:
+		if slices.Contains(subaccountIds, match.MatchOrders.TakerOrderId.SubaccountId) {
+			return true
+		}
+		for _, fill := range match.MatchOrders.Fills {
+			if slices.Contains(subaccountIds, fill.MakerOrderId.SubaccountId) {
+				return true
+			}
+		}
+		return false
+	case *clobtypes.ClobMatch_MatchPerpetualLiquidation:
+		if slices.Contains(subaccountIds, match.MatchPerpetualLiquidation.Liquidated) {
+			return true
+		}
+		for _, fill := range match.MatchPerpetualLiquidation.Fills {
+			if slices.Contains(subaccountIds, fill.MakerOrderId.SubaccountId) {
+				return true
+			}
+		}
+		return false
+	case *clobtypes.ClobMatch_MatchPerpetualDeleveraging:
+		if slices.Contains(subaccountIds, match.MatchPerpetualDeleveraging.Liquidated) {
+			return true
+		}
+		for _, fill := range match.MatchPerpetualDeleveraging.Fills {
+			if slices.Contains(subaccountIds, fill.OffsettingSubaccountId) {
+				return true
+			}
+		}
+		return false
+	case nil:
+		return false
 	}
-	return false
+	return true
+}
+
+func doFilterStreamUpdateBySubaccount(
+	update *clobtypes.StreamUpdate,
+	subaccountIds []satypes.SubaccountId,
+) (bool, error) {
+	// If reflection becomes too expensive, split updatesChannel by message type
+	switch updateMessage := update.UpdateMessage.(type) {
+	case *clobtypes.StreamUpdate_OrderbookUpdate:
+		return doFilterOrderbookUpdateBySubaccount(updateMessage, subaccountIds)
+	case *clobtypes.StreamUpdate_TakerOrder:
+		return doFilterTakerOrderBySubaccount(updateMessage, subaccountIds), nil
+	case *clobtypes.StreamUpdate_OrderFill:
+		return doFilterOrderFillBySubaccount(updateMessage, subaccountIds), nil
+	}
+	return true, nil
 }
 
 // If UpdateMessage is not a StreamUpdate_OrderUpdate, filter it
@@ -232,27 +289,15 @@ func FilterStreamUpdateBySubaccount(
 	subaccountIds []satypes.SubaccountId,
 	logger log.Logger,
 ) []clobtypes.StreamUpdate {
-	// If reflection becomes too expensive, split updatesChannel by message type
 	filteredUpdates := []clobtypes.StreamUpdate{}
 	for _, update := range updates {
-		switch updateMessage := update.UpdateMessage.(type) {
-		case *clobtypes.StreamUpdate_OrderbookUpdate:
-			if updateMessage.OrderbookUpdate.Snapshot {
-				break
-			}
-			doFilter, err := doFilterStreamUpdateBySubaccount(updateMessage, subaccountIds)
-			if err != nil {
-				logger.Error(err.Error())
-			}
-			if !doFilter {
-				continue
-			}
-		case *clobtypes.StreamUpdate_TakerOrder:
-			if !doFilterTakerOrderBySubaccount(updateMessage, subaccountIds) {
-				continue
-			}
+		doFilter, err := doFilterStreamUpdateBySubaccount(&update, subaccountIds)
+		if err != nil {
+			logger.Error(err.Error())
 		}
-		filteredUpdates = append(filteredUpdates, update)
+		if doFilter {
+			filteredUpdates = append(filteredUpdates, update)
+		}
 	}
 	return filteredUpdates
 }
