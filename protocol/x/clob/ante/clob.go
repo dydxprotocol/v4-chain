@@ -55,7 +55,7 @@ func (cd ClobDecorator) AnteHandle(
 	}
 
 	// Check if the transaction is a valid clob tx
-	if err := IsValidClobMsgTx(tx); err != nil {
+	if err := ValidateMsgsInClobTx(tx); err != nil {
 		return ctx, err
 	}
 
@@ -256,7 +256,7 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 
 	numMsgs := len(msgs)
 	if numMsgs > 1 {
-		return true, errorsmod.Wrap(
+		return false, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing short term MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
 		)
@@ -282,20 +282,20 @@ func HasClobMsg(tx sdk.Tx) bool {
 	return false
 }
 
-// IsValidClobMsgTx checks if the transaction contains a valid set of clob msgs
+// ValidateMsgsInClobTx checks if the transaction contains a valid set of clob msgs
 // This function assumes that the input tx has at least one clob msg
 // A transaction with a clob msg must adhere to the below conditions
 //   - If the tx contains a short term order msg, the tx can only have one msg
 //   - If the tx contains a stateful order msg, it can only contain other stateful order msgs
 //     or a single transfer msg
-func IsValidClobMsgTx(tx sdk.Tx) error {
+func ValidateMsgsInClobTx(tx sdk.Tx) error {
 	msgs := tx.GetMsgs()
 
 	var hasShortTermOrder = false
 	var numTransferMsgs = 0
-	// Non CLOB msgs are not allowed in CLOB msg transactions because there is no fee charged
-	// for CLOB transactions
-	var hasNonClobMsg = false
+	// Non CLOB msgs other than a single transfer msg are not allowed in CLOB msg transactions
+	// because there is no gas fee charged for CLOB transactions
+	var hasDisallowedMsg = false
 
 	for _, msg := range msgs {
 		switch msg := msg.(type) {
@@ -313,7 +313,7 @@ func IsValidClobMsgTx(tx sdk.Tx) error {
 		case *sendingtypes.MsgCreateTransfer:
 			numTransferMsgs += 1
 		default:
-			hasNonClobMsg = true
+			hasDisallowedMsg = true
 		}
 	}
 
@@ -333,7 +333,7 @@ func IsValidClobMsgTx(tx sdk.Tx) error {
 		)
 	}
 
-	if hasNonClobMsg {
+	if hasDisallowedMsg {
 		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing stateful orders cannot be accompanied by non transfer msgs",

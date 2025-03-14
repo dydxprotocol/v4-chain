@@ -407,24 +407,24 @@ func TestIsShortTermClobTransaction(t *testing.T) {
 			expectedResult: false,
 			expectedErr:    nil,
 		},
-		"Returns true and error for multiple `PlaceOrder` message": {
+		"Returns false and error for multiple `PlaceOrder` message": {
 			msgs:           []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder},
-			expectedResult: true,
+			expectedResult: false,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
-		"Returns true and error for multiple `CancelOrder` messages": {
+		"Returns false and error for multiple `CancelOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_CancelOrder_LongTerm, constants.Msg_CancelOrder},
-			expectedResult: true,
+			expectedResult: false,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
-		"Returns true and error for mix of `PlaceOrder` and `CancelOrder` messages": {
+		"Returns false and error for mix of `PlaceOrder` and `CancelOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_CancelOrder},
-			expectedResult: true,
+			expectedResult: false,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns false and error for mix of `MsgSend` and `PlaceOrder` messages": {
 			msgs:           []sdk.Msg{constants.Msg_Send, constants.Msg_PlaceOrder},
-			expectedResult: true,
+			expectedResult: false,
 			expectedErr:    sdkerrors.ErrInvalidRequest,
 		},
 		"Returns true for a Short-Term `CancelOrder` message": {
@@ -558,7 +558,7 @@ func TestIsValidClobTransaction(t *testing.T) {
 				tx := builder.GetTx()
 
 				// Invoke the function under test.
-				err = ante.IsValidClobMsgTx(tx)
+				err = ante.ValidateMsgsInClobTx(tx)
 
 				// Assert the results.
 				require.ErrorIs(t, tc.expectedErr, err)
