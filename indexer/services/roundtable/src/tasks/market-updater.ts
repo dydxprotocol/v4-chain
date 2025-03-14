@@ -48,19 +48,6 @@ export function getPriceChange(
 export default async function runTask(): Promise<void> {
   const start: number = Date.now();
 
-  async function measureLatencyAndExecute<T>(
-    name: string,
-    fn: () => Promise<T>,
-  ): Promise<T> {
-    const startTime = Date.now();
-    const result = await fn();
-    stats.timing(
-      `${config.SERVICE_NAME}.market_updater_${name}`,
-      Date.now() - startTime,
-    );
-    return result;
-  }
-
   // Run all initial database queries in parallel
   const [
     liquidityTiers,
@@ -106,9 +93,10 @@ export default async function runTask(): Promise<void> {
       _.Dictionary<MarketOpenInterest>,
       _.Dictionary<Big | undefined>,
     ] = await Promise.all([
-      measureLatencyAndExecute('fills_24h', () => FillTable.get24HourInformation(clobPairIds)),
-      measureLatencyAndExecute('open_interest', () => PerpetualPositionTable.getOpenInterestLong(perpetualMarketIds)),
-      measureLatencyAndExecute('next_funding', () => NextFundingCache.getNextFunding(redisClient, tickerDefaultFundingRate1HPairs)),
+      // TODO(DEC-1149 Add support for pulling information from candles
+      FillTable.get24HourInformation(clobPairIds),
+      PerpetualPositionTable.getOpenInterestLong(perpetualMarketIds),
+      NextFundingCache.getNextFunding(redisClient, tickerDefaultFundingRate1HPairs),
     ]);
 
     stats.timing(
