@@ -9,6 +9,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -53,15 +54,9 @@ func (cd ClobDecorator) AnteHandle(
 		return next(ctx, tx, simulate)
 	}
 
-	// Ensure that if this is a clob message then that there is only one.
-	// If it isn't a clob message then pass to the next AnteHandler.
-	isSingleClobMsgTx, err := IsSingleClobMsgTx(tx)
-	if err != nil {
+	// Check if the transaction is a valid clob tx
+	if err := ValidateMsgsInClobTx(tx); err != nil {
 		return ctx, err
-	}
-
-	if !isSingleClobMsgTx {
-		return next(ctx, tx, simulate)
 	}
 
 	// Disable order placement and cancelation processing if the clob keeper is not initialized.
@@ -73,105 +68,116 @@ func (cd ClobDecorator) AnteHandle(
 	}
 
 	msgs := tx.GetMsgs()
-	var msg = msgs[0]
 
-	switch msg := msg.(type) {
-	case *types.MsgCancelOrder:
-		if msg.OrderId.IsStatefulOrder() {
-			err = cd.clobKeeper.CancelStatefulOrder(ctx, msg)
-		} else {
-			// No need to process short term order cancelations on `ReCheckTx`.
-			if ctx.IsReCheckTx() {
-				return next(ctx, tx, simulate)
+	var err error
+	for _, msg := range msgs {
+		switch msg := msg.(type) {
+		case *types.MsgCancelOrder:
+			if msg.OrderId.IsStatefulOrder() {
+				err = cd.clobKeeper.CancelStatefulOrder(ctx, msg)
+			} else {
+				// No need to process short term order cancelations on `ReCheckTx`.
+				if ctx.IsReCheckTx() {
+					return next(ctx, tx, simulate)
+				}
+
+				// Note that `msg.ValidateBasic` is called before the AnteHandlers.
+				// This guarantees that `MsgCancelOrder` has undergone stateless validation.
+				err = cd.clobKeeper.CancelShortTermOrder(ctx, msg)
 			}
 
-			// Note that `msg.ValidateBasic` is called before the AnteHandlers.
-			// This guarantees that `MsgCancelOrder` has undergone stateless validation.
-			err = cd.clobKeeper.CancelShortTermOrder(ctx, msg)
-		}
-
-		log.DebugLog(ctx, "Received new order cancellation",
-			log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-			log.Error, err,
-		)
-
-	case *types.MsgPlaceOrder:
-		if msg.Order.OrderId.IsStatefulOrder() {
-			err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg, false)
-
-			log.DebugLog(ctx, "Received new stateful order",
+			log.DebugLog(
+				ctx, "Received new order cancellation",
 				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-				log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
 				log.Error, err,
 			)
-		} else {
+
+		case *types.MsgPlaceOrder:
+			if msg.Order.OrderId.IsStatefulOrder() {
+				err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg, false)
+
+				log.DebugLog(
+					ctx, "Received new stateful order",
+					log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+					log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
+					log.Error, err,
+				)
+			} else {
+				// No need to process short term orders on `ReCheckTx`.
+				if ctx.IsReCheckTx() {
+					return next(ctx, tx, simulate)
+				}
+
+				// HOTFIX: Reject any short-term place orders in a transaction with a non-zero timeout height < good til block
+				if timeoutHeight := GetTimeoutHeight(tx); timeoutHeight > 0 &&
+					timeoutHeight < uint64(msg.Order.GetGoodTilBlock()) && ctx.IsCheckTx() {
+					log.InfoLog(
+						ctx,
+						"Rejected short-term place order with non-zero timeout height < goodTilBlock",
+						timeoutHeightLogKey,
+						timeoutHeight,
+					)
+					return ctx, errorsmod.Wrap(
+						sdkerrors.ErrInvalidRequest,
+						"timeout height (if non-zero) may not be less than `goodTilBlock` for a short-term place order",
+					)
+				}
+
+				var orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums
+				var status types.OrderStatus
+				// Note that `msg.ValidateBasic` is called before all AnteHandlers.
+				// This guarantees that `MsgPlaceOrder` has undergone stateless validation.
+				orderSizeOptimisticallyFilledFromMatchingQuantums, status, err = cd.clobKeeper.PlaceShortTermOrder(
+					ctx,
+					msg,
+				)
+
+				log.DebugLog(
+					ctx,
+					"Received new short term order",
+					log.Tx,
+					cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+					log.OrderHash,
+					cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
+					log.OrderStatus,
+					status,
+					log.OrderSizeOptimisticallyFilledFromMatchingQuantums,
+					orderSizeOptimisticallyFilledFromMatchingQuantums,
+					log.Error,
+					err,
+				)
+			}
+		case *types.MsgBatchCancel:
+			// MsgBatchCancel currently only processes short-term cancels right now.
 			// No need to process short term orders on `ReCheckTx`.
 			if ctx.IsReCheckTx() {
 				return next(ctx, tx, simulate)
 			}
 
-			// HOTFIX: Reject any short-term place orders in a transaction with a non-zero timeout height < good til block
-			if timeoutHeight := GetTimeoutHeight(tx); timeoutHeight > 0 &&
-				timeoutHeight < uint64(msg.Order.GetGoodTilBlock()) && ctx.IsCheckTx() {
-				log.InfoLog(
-					ctx,
-					"Rejected short-term place order with non-zero timeout height < goodTilBlock",
-					timeoutHeightLogKey,
-					timeoutHeight,
-				)
-				return ctx, errorsmod.Wrap(
-					sdkerrors.ErrInvalidRequest,
-					"timeout height (if non-zero) may not be less than `goodTilBlock` for a short-term place order",
-				)
-			}
-
-			var orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums
-			var status types.OrderStatus
-			// Note that `msg.ValidateBasic` is called before all AnteHandlers.
-			// This guarantees that `MsgPlaceOrder` has undergone stateless validation.
-			orderSizeOptimisticallyFilledFromMatchingQuantums, status, err = cd.clobKeeper.PlaceShortTermOrder(
+			success, failures, err := cd.clobKeeper.BatchCancelShortTermOrder(
 				ctx,
 				msg,
 			)
+			// If there are no successful cancellations and no validation errors,
+			// return an error indicating no cancels have succeeded.
+			if len(success) == 0 && err == nil {
+				err = errorsmod.Wrapf(
+					types.ErrBatchCancelFailed,
+					"No successful cancellations. Failures: %+v",
+					failures,
+				)
+			}
 
-			log.DebugLog(ctx, "Received new short term order",
+			log.DebugLog(
+				ctx,
+				"Received new batch cancellation",
 				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-				log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
-				log.OrderStatus, status,
-				log.OrderSizeOptimisticallyFilledFromMatchingQuantums, orderSizeOptimisticallyFilledFromMatchingQuantums,
 				log.Error, err,
 			)
 		}
-	case *types.MsgBatchCancel:
-		// MsgBatchCancel currently only processes short-term cancels right now.
-		// No need to process short term orders on `ReCheckTx`.
-		if ctx.IsReCheckTx() {
-			return next(ctx, tx, simulate)
+		if err != nil {
+			return ctx, err
 		}
-
-		success, failures, err := cd.clobKeeper.BatchCancelShortTermOrder(
-			ctx,
-			msg,
-		)
-		// If there are no successful cancellations and no validation errors,
-		// return an error indicating no cancels have succeeded.
-		if len(success) == 0 && err == nil {
-			err = errorsmod.Wrapf(
-				types.ErrBatchCancelFailed,
-				"No successful cancellations. Failures: %+v",
-				failures,
-			)
-		}
-
-		log.DebugLog(
-			ctx,
-			"Received new batch cancellation",
-			log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-			log.Error, err,
-		)
-	}
-	if err != nil {
-		return ctx, err
 	}
 
 	return next(ctx, tx, simulate)
@@ -252,11 +258,89 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 	if numMsgs > 1 {
 		return false, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
-			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
+			"a transaction containing short term MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
 		)
 	}
 
 	return true, nil
+}
+
+// HasClobMsg returns `true` if the transaction has at least one clob msg
+func HasClobMsg(tx sdk.Tx) bool {
+	msgs := tx.GetMsgs()
+
+	for _, msg := range msgs {
+		switch msg.(type) {
+		case *types.MsgCancelOrder:
+			return true
+		case *types.MsgPlaceOrder:
+			return true
+		case *types.MsgBatchCancel:
+			return true
+		}
+	}
+	return false
+}
+
+// ValidateMsgsInClobTx checks if the transaction contains a valid set of clob msgs
+// This function assumes that the input tx has at least one clob msg
+// A transaction with a clob msg must adhere to the below conditions
+//   - If the tx contains a short term order msg, the tx can only have one msg
+//   - If the tx contains a stateful order msg, it can only contain other stateful order msgs
+//     or a single transfer msg
+func ValidateMsgsInClobTx(tx sdk.Tx) error {
+	msgs := tx.GetMsgs()
+
+	var hasShortTermOrder = false
+	var numTransferMsgs = 0
+	// Non CLOB msgs other than a single transfer msg are not allowed in CLOB msg transactions
+	// because there is no gas fee charged for CLOB transactions
+	var hasDisallowedMsg = false
+
+	for _, msg := range msgs {
+		switch msg := msg.(type) {
+		case *types.MsgCancelOrder:
+			if msg.OrderId.IsShortTermOrder() {
+				hasShortTermOrder = true
+			}
+		case *types.MsgPlaceOrder:
+			if msg.Order.OrderId.IsShortTermOrder() {
+				hasShortTermOrder = true
+			}
+		case *types.MsgBatchCancel:
+			// MsgBatchCancel processes only short term orders for now.
+			hasShortTermOrder = true
+		case *sendingtypes.MsgCreateTransfer:
+			numTransferMsgs += 1
+		default:
+			hasDisallowedMsg = true
+		}
+	}
+
+	if hasShortTermOrder && len(msgs) > 1 {
+		return errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"a transaction containing short term order may not contain more than one message",
+		)
+	}
+
+	// We only expect a single transfer msg to be batched with a PlaceOrder msg. This is primarily used
+	// to transfer collateral to an isolated subaccount for an isolated position order
+	if numTransferMsgs > 1 {
+		return errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"a transaction containing stateful orders can only be accompanied by 1 transfer msg",
+		)
+	}
+
+	if hasDisallowedMsg {
+		return errorsmod.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"a transaction containing stateful orders cannot be accompanied by non transfer msgs",
+		)
+	}
+
+	return nil
 }
 
 // GetTimeoutHeight returns the timeout height of a transaction. If the transaction does not have
