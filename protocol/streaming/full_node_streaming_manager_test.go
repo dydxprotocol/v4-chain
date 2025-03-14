@@ -558,3 +558,50 @@ func TestFilterStreamUpdates(t *testing.T) {
 		})
 	}
 }
+
+func TestFilterStreamUpdatesWithDuplicateSubaccountIds(t *testing.T) {
+	logger := NewLogger()
+
+	subaccountId := satypes.SubaccountId{Owner: "me", Number: 1337}
+	orderId := NewIndexerOrderId(subaccountId.Owner, subaccountId.Number)
+	order := NewIndexerOrder(orderId)
+
+	otherSubaccountId := satypes.SubaccountId{Owner: "we", Number: 2600}
+
+	orderPlaceTime := time.Date(2024, 12, 25, 0, 0, 0, 0, time.UTC)
+	openOrder := OpenOrder(&order, &orderPlaceTime)
+	cancelOrder := CancelOrder(&orderId, &orderPlaceTime)
+	replaceOrder := ReplaceOrder(&orderId, &order, &orderPlaceTime)
+	updateOrder := UpdateOrder(&orderId, uint64(1988))
+	streamUpdate := toStreamUpdate(false, openOrder, cancelOrder, replaceOrder, updateOrder)
+	priceUpdate := NewPriceUpdate(0, 0)
+
+	tests := map[string]TestCase{
+		"duplicateSubaccountIdsBase": {
+			updates:       []clobtypes.StreamUpdate{streamUpdate},
+			subaccountIds: []satypes.SubaccountId{subaccountId, subaccountId},
+			filteredUpdates: []clobtypes.StreamUpdate{
+				streamUpdate,
+			},
+		},
+		"duplicateSubaccountIdsOther": {
+			updates:         []clobtypes.StreamUpdate{streamUpdate},
+			subaccountIds:   []satypes.SubaccountId{otherSubaccountId, otherSubaccountId},
+			filteredUpdates: []clobtypes.StreamUpdate{},
+		},
+		"priceUpdateWithDuplicateSubaccountIds": {
+			updates:       []clobtypes.StreamUpdate{*priceUpdate},
+			subaccountIds: []satypes.SubaccountId{subaccountId, subaccountId},
+			filteredUpdates: []clobtypes.StreamUpdate{
+				*priceUpdate,
+			},
+		},
+	}
+
+	for name, testCase := range tests {
+		t.Run(name, func(t *testing.T) {
+			filteredUpdates := streaming.FilterStreamUpdateBySubaccount(testCase.updates, testCase.subaccountIds, logger)
+			require.Equal(t, testCase.filteredUpdates, filteredUpdates)
+		})
+	}
+}
