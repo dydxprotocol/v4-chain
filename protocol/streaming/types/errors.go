@@ -13,4 +13,9 @@ var (
 		2,
 		"Invalid full node streaming request",
 	)
+	ErrInvalidSubaccountFilteringRequest = errorsmod.Register(
+		ModuleName,
+		3,
+		"Invalid subaccount ID filtering request",
+	)
 )
