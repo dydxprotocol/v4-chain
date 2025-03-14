@@ -1,7 +1,6 @@
 import {
   stats,
   NodeEnv,
-  logger,
 } from '@dydxprotocol-indexer/base';
 import _ from 'lodash';
 

@@ -1,5 +1,5 @@
-import { UpsertVaultEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import { vaultRefresher, VaultFromDatabase, VaultModel } from '@dydxprotocol-indexer/postgres';
+import { UpsertVaultEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../lib/types';

@@ -1,7 +1,7 @@
 import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { stopConsumer, startConsumer } from '@dydxprotocol-indexer/kafka';
 import {
-  assetRefresher, perpetualMarketRefresher, liquidityTierRefresher, vaultRefresher
+  assetRefresher, perpetualMarketRefresher, liquidityTierRefresher, vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 
 import { initializeAllCaches } from './caches/block-cache';

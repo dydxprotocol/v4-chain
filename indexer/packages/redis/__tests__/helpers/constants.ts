@@ -66,7 +66,7 @@ export const defaultOrderIdVault: IndexerOrderId = {
   clientId: 4,
   clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
   orderFlags: ORDER_FLAG_LONG_TERM,
-}
+};
 
 export const defaultSubaccountUuid: string = SubaccountTable.uuid(
   defaultSubaccountId.owner,

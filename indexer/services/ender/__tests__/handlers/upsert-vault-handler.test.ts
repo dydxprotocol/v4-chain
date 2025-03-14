@@ -10,6 +10,7 @@ import {
   VaultFromDatabase,
   VaultTable,
   VaultStatus as IndexerVaultStatus,
+  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
@@ -24,7 +25,6 @@ import {
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
-import { vaultRefresher } from '@dydxprotocol-indexer/postgres';
 
 describe('upsertVaultHandler', () => {
   beforeAll(async () => {

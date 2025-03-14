@@ -11,6 +11,7 @@ import {
   testConstants,
   testMocks,
   TimeInForce,
+  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerOrder,
@@ -45,7 +46,6 @@ import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
-import { vaultRefresher } from '@dydxprotocol-indexer/postgres';
 
 describe('statefulOrderPlacementHandler', () => {
   const prevSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
@@ -102,11 +102,6 @@ describe('statefulOrderPlacementHandler', () => {
       order: defaultOrder,
     },
   };
-  const defaultVaultLongTermOrderEvent: StatefulOrderEventV1 = {
-    longTermOrderPlacement: {
-      order: defaultVaultOrder,
-    }
-  };
   // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
   const defaultStatefulOrderEvent: StatefulOrderEventV1 = {
     orderPlace: {
@@ -116,7 +111,7 @@ describe('statefulOrderPlacementHandler', () => {
   const defaultVaultStatefulOrderEvent: StatefulOrderEventV1 = {
     orderPlace: {
       order: defaultVaultOrder,
-    }
+    },
   };
   const orderId: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
   let producerSendMock: jest.SpyInstance;

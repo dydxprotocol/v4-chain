@@ -365,10 +365,11 @@ describe('stateful-order-validator', () => {
       ['order placement', defaultLongTermOrderPlacementEvent],
       ['order removal', defaultStatefulOrderRemovalEvent],
     ])('excludes vault %s', (_name: string, event: StatefulOrderEventV1) => {
+      // eslint-disable-next-line max-len
       const vaultAddress: string = event.longTermOrderPlacement?.order?.orderId?.subaccountId?.owner ||
         event.orderRemoval?.removedOrderId?.subaccountId?.owner || '';
       vaultRefresher.addVault(vaultAddress);
-      
+
       const validator: StatefulOrderValidator = new StatefulOrderValidator(
         event,
         createBlock(event),

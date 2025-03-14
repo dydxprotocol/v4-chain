@@ -233,7 +233,7 @@ describe('statefulOrderRemovalHandler', () => {
       ...testConstants.defaultOrder,
       subaccountId: SubaccountTable.uuid(defaultVault.address, 0),
       clientId: '0',
-    }
+    };
     await SubaccountTable.create({
       ...testConstants.defaultSubaccount,
       address: defaultVault.address,
