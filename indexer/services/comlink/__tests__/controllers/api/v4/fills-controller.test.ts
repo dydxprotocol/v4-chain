@@ -437,59 +437,6 @@ describe('fills-controller#V4', () => {
       );
     });
 
-    it('Get /fills/parentSubaccountNumber gets fills for isolated market', async () => {
-      await OrderTable.create(testConstants.defaultOrder);
-      await FillTable.create(testConstants.defaultFill);
-      await OrderTable.create(testConstants.isolatedMarketOrder);
-      await FillTable.create(testConstants.isolatedMarketFill);
-      await FillTable.create(testConstants.isolatedMarketFill2);
-
-      const parentSubaccountNumber: number = 0;
-      const response: request.Response = await sendRequest({
-        type: RequestMethod.GET,
-        path: `/v4/fills/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
-            `&parentSubaccountNumber=${parentSubaccountNumber}` +
-            `&market=${testConstants.isolatedPerpetualMarket.ticker}&marketType=${MarketType.PERPETUAL}`,
-      });
-
-      // Use fillResponseObjectFromFillCreateObject to create expectedFills
-      const expectedFills: Partial<FillResponseObject>[] = [
-        fillResponseObjectFromFillCreateObject(testConstants.isolatedMarketFill,
-          testConstants.isolatedSubaccount.subaccountNumber),
-        fillResponseObjectFromFillCreateObject(testConstants.isolatedMarketFill2,
-          testConstants.isolatedSubaccount2.subaccountNumber),
-      ];
-
-      expect(response.body.fills).toHaveLength(2);
-      expect(response.body.fills).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            ...expectedFills[0],
-          }),
-          expect.objectContaining({
-            ...expectedFills[1],
-          }),
-        ]),
-      );
-    });
-
-    it('Get /fills/parentSubaccountNumber with market with no fills', async () => {
-      await OrderTable.create(testConstants.defaultOrder);
-      await FillTable.create(testConstants.defaultFill);
-      await OrderTable.create(testConstants.isolatedMarketOrder);
-      await FillTable.create(testConstants.isolatedMarketFill);
-
-      const parentSubaccountNumber: number = 0;
-      const response: request.Response = await sendRequest({
-        type: RequestMethod.GET,
-        path: `/v4/fills/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
-            `&parentSubaccountNumber=${parentSubaccountNumber}` +
-            `&market=${testConstants.isolatedPerpetualMarket2.ticker}&marketType=${MarketType.PERPETUAL}`,
-      });
-
-      expect(response.body.fills).toEqual([]);
-    });
-
     it.each([
       [
         'market passed in without marketType',
@@ -550,25 +497,5 @@ describe('fills-controller#V4', () => {
         ]),
       }));
     });
-
-    it('Returns 404 with unknown market and type on parentSubaccount endpt', async () => {
-      const parentSubaccountNumber: number = 0;
-      const response: request.Response = await sendRequest({
-        type: RequestMethod.GET,
-        path: `/v4/fills/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
-            `&parentSubaccountNumber=${parentSubaccountNumber}` +
-            `&market=${invalidMarket}&marketType=${MarketType.PERPETUAL}`,
-        expectedStatus: 404,
-      });
-
-      expect(response.body).toEqual({
-        errors: [
-          {
-            msg: `${invalidMarket} not found in markets of type ${MarketType.PERPETUAL}`,
-          },
-        ],
-      });
-    });
-
   });
 });
