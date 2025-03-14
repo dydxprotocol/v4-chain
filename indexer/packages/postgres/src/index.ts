@@ -21,6 +21,7 @@ export { default as LeaderboardPnlModel } from './models/leaderboard-pnl-model';
 export { default as PersistentCacheModel } from './models/persistent-cache-model';
 export { default as AffiliateReferredUsersModel } from './models/affiliate-referred-users-model';
 export { default as AffiliateInfoModel } from './models/affiliate-info-model';
+export { default as VaultModel } from './models/vault-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';
@@ -57,6 +58,7 @@ export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';
 export * as blockHeightRefresher from './loops/block-height-refresher';
 export * as liquidityTierRefresher from './loops/liquidity-tier-refresher';
+export * as vaultRefresher from './loops/vault-refresher';
 
 export * as uuid from './helpers/uuid';
 export * as protocolTranslations from './lib/protocol-translations';

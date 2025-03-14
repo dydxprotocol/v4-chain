@@ -29,6 +29,9 @@ export class ConditionalOrderPlacementHandler extends
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+    if (resultRow.order === undefined) {
+      return [];
+    }
     const order: OrderFromDatabase = OrderModel.fromJson(resultRow.order) as OrderFromDatabase;
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
       resultRow.perpetual_market) as PerpetualMarketFromDatabase;

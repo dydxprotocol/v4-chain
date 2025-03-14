@@ -232,8 +232,10 @@ export class BlockProcessor {
         ...this.block.events[eventProto.blockEventIndex],
         subtype: SKIPPED_EVENT_SUBTYPE,
       };
-      // Set handlers to empty array if event is to be skipped.
-      handlers = [];
+      // Set handlers to empty array if a non-stateful-order event is to be skipped.
+      if (eventProto.type !== DydxIndexerSubtypes.STATEFUL_ORDER) {
+        handlers = [];
+      }
       logger.info({
         at: 'onMessage#shouldExcludeEvent',
         message: 'Excluded event from processing',

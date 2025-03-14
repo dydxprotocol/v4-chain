@@ -31,6 +31,7 @@ import {
   testMocks,
   apiTranslations,
   TimeInForce, blockHeightRefresher,
+  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OrderbookLevelsCache,
@@ -90,6 +91,7 @@ describe('OrderRemoveHandler', () => {
     await Promise.all([
       perpetualMarketRefresher.updatePerpetualMarkets(),
       blockHeightRefresher.updateBlockHeight(),
+      vaultRefresher.updateVaults(),
     ]);
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'increment');
@@ -1148,6 +1150,8 @@ describe('OrderRemoveHandler', () => {
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
       const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
+      const statefulOrderCancelSpy = jest.spyOn(orderRemoveHandler as any, 'handleStatefulOrderCancelation');
+      const orderRemovalSpy = jest.spyOn(orderRemoveHandler as any, 'handleOrderRemoval');
       await orderRemoveHandler.handleUpdate(
         offChainUpdate,
         defaultKafkaHeaders,
@@ -1159,6 +1163,27 @@ describe('OrderRemoveHandler', () => {
         message: expect.stringContaining('Could not find order for stateful order cancelation'),
         orderRemove: statefulCancelationOrderRemove,
       }));
+      expect(statefulOrderCancelSpy).toHaveBeenCalled();
+      expect(orderRemovalSpy).not.toHaveBeenCalled();
+    });
+
+    it('calls order removal instead of stateful order cancellation for vault orders', async () => {
+      const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate({
+        ...statefulCancelationOrderRemove,
+        removedOrderId: redisTestConstants.defaultOrderIdVault,
+      });
+
+      synchronizeWrapBackgroundTask(wrapBackgroundTask);
+      const orderRemoveHandler: OrderRemoveHandler = new OrderRemoveHandler();
+      const statefulOrderCancelSpy = jest.spyOn(orderRemoveHandler as any, 'handleStatefulOrderCancelation');
+      const orderRemovalSpy = jest.spyOn(orderRemoveHandler as any, 'handleOrderRemoval');
+      await orderRemoveHandler.handleUpdate(
+        offChainUpdate,
+        defaultKafkaHeaders,
+      );
+
+      expect(statefulOrderCancelSpy).not.toHaveBeenCalled();
+      expect(orderRemovalSpy).toHaveBeenCalled();
     });
 
     it.each([
