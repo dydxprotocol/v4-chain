@@ -140,4 +140,74 @@ describe('CandleTable', () => {
       candlesMap[defaultCandle.ticker][CandleResolution.ONE_DAY],
     ).toEqual(expect.objectContaining(candleDayResOneDayAgo));
   });
+
+  it('Successfully finds candles within lookback period', async () => {
+    const now: DateTime = DateTime.utc();
+    const candle23HoursAgo = {
+      ...defaultCandle,
+      startedAt: now.minus({ hours: 23 }).toISO(),
+    };
+    const candle25HoursAgo = {
+      ...defaultCandle,
+      startedAt: now.minus({ hours: 25 }).toISO(),
+    };
+    const candle6DaysAgo = {
+      ...defaultCandle,
+      startedAt: now.minus({ days: 6 }).toISO(),
+    };
+    const candle8DaysAgo = {
+      ...defaultCandle,
+      startedAt: now.minus({ days: 8 }).toISO(),
+    };
+    const otherTickerCandle23HoursAgo = {
+      ...defaultCandle,
+      ticker: defaultPerpetualMarket2.ticker,
+      startedAt: now.minus({ hours: 23 }).toISO(),
+    };
+    const otherTickerCandle6DaysAgo = {
+      ...defaultCandle,
+      ticker: defaultPerpetualMarket2.ticker,
+      startedAt: now.minus({ days: 6 }).toISO(),
+    };
+
+    await Promise.all([
+      CandleTable.create(candle23HoursAgo),
+      CandleTable.create(candle25HoursAgo),
+      CandleTable.create(candle6DaysAgo),
+      CandleTable.create(candle8DaysAgo),
+      CandleTable.create(otherTickerCandle23HoursAgo),
+      CandleTable.create(otherTickerCandle6DaysAgo),
+    ]);
+
+    // Test ONE_DAY lookback
+    const oneDayCandles = await CandleTable.findByResAndLookbackPeriod(
+      defaultCandle.resolution,
+      24 * 60 * 60 * 1000,
+    );
+
+    expect(oneDayCandles.length).toEqual(2);
+    expect(oneDayCandles).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(candle23HoursAgo),
+        expect.objectContaining(otherTickerCandle23HoursAgo),
+      ]),
+    );
+
+    // Test SEVEN_DAYS lookback
+    const sevenDayCandles = await CandleTable.findByResAndLookbackPeriod(
+      defaultCandle.resolution,
+      7 * 24 * 60 * 60 * 1000,
+    );
+
+    expect(sevenDayCandles.length).toEqual(5);
+    expect(sevenDayCandles).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(candle23HoursAgo),
+        expect.objectContaining(candle25HoursAgo),
+        expect.objectContaining(candle6DaysAgo),
+        expect.objectContaining(otherTickerCandle23HoursAgo),
+        expect.objectContaining(otherTickerCandle6DaysAgo),
+      ]),
+    );
+  });
 });
