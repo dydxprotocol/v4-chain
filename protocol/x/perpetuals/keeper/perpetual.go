@@ -540,12 +540,20 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 			},
 		)
 		if err != nil {
-			return nil, err
+			// Log error and continue to next perpetual.
+			log.ErrorLog(
+				ctx,
+				"sampleAllPerpetuals: failed to get price premium for perpetual",
+				"perpetualId",
+				perp.Params.Id,
+				"error",
+				err,
+			)
+			continue
 		}
 
 		if premiumPpm == 0 {
 			// Do not include zero premiums in message.
-
 			log.DebugLog(
 				ctx,
 				fmt.Sprintf(
