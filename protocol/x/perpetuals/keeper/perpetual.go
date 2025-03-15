@@ -456,6 +456,11 @@ func (k Keeper) GetAddPremiumVotes(
 		)
 	}
 
+	log.InfoLog(
+		ctx,
+		fmt.Sprintf("!!! newPremiumVotes: %v", newPremiumVotes),
+	)
+
 	telemetry.SetGauge(
 		float32(len(newPremiumVotes)),
 		types.ModuleName,
