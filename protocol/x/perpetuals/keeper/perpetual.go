@@ -549,6 +549,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 				"error",
 				err,
 			)
+			continue
 		}
 
 		if premiumPpm == 0 {
