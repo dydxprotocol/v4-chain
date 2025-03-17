@@ -381,12 +381,12 @@ export class AggregateTradingReward {
   }
 
   private async getNextBlock(time: IsoString): Promise<string> {
-    const blocks: BlockFromDatabase[] = await BlockTable.findAll({
-      createdOnOrAfter: time,
-      limit: 1,
-    }, [], { readReplica: true });
+    const block: BlockFromDatabase | undefined = await BlockTable.findBlockByCreatedOnOrAfter(
+      time,
+      { readReplica: true },
+    );
 
-    if (blocks.length === 0) {
+    if (block === undefined) {
       logger.error({
         at: 'aggregate-trading-rewards#getStartedAtHeight',
         message: 'No blocks found after time, this should never happen',
@@ -395,7 +395,7 @@ export class AggregateTradingReward {
       });
       throw new Error(`No blocks found after ${time}`);
     }
-    return blocks[0].blockHeight;
+    return block.blockHeight;
   }
 
   private isEndofPeriod(endTime: DateTime): boolean {
