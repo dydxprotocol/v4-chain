@@ -9,6 +9,7 @@ import (
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
+	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -87,6 +88,21 @@ func TestMsgCreateMarketPermissionless(t *testing.T) {
 										},
 									},
 								}
+							},
+						)
+
+						testapp.UpdateGenesisDocWithAppStateForModule(
+							&genesis,
+							func(genesisState *perpetualstypes.GenesisState) {
+								genesisState.LiquidityTiers = append(genesisState.LiquidityTiers, perpetualstypes.LiquidityTier{
+									Id:                     7,
+									Name:                   "Instant",
+									InitialMarginPpm:       200000,
+									MaintenanceFractionPpm: 500000,
+									ImpactNotional:         1000000000,
+									OpenInterestLowerCap:   500000000000,
+									OpenInterestUpperCap:   1000000000000,
+								})
 							},
 						)
 						return genesis
