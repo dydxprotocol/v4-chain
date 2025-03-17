@@ -5,7 +5,7 @@ const (
 
 	DefaultFundingPpm = 100 // 1bps per 8 hour or 0.125bps per hour
 
-	LiquidityTier_Instant_5x uint32 = 7
+	LiquidityTier_IML_5x uint32 = 7
 
 	DefaultStepBaseQuantums uint64 = 1_000_000
 

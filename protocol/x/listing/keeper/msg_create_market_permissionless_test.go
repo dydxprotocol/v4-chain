@@ -96,7 +96,7 @@ func TestMsgCreateMarketPermissionless(t *testing.T) {
 							func(genesisState *perpetualstypes.GenesisState) {
 								genesisState.LiquidityTiers = append(genesisState.LiquidityTiers, perpetualstypes.LiquidityTier{
 									Id:                     7,
-									Name:                   "Instant",
+									Name:                   "IML 5x",
 									InitialMarginPpm:       200000,
 									MaintenanceFractionPpm: 500000,
 									ImpactNotional:         1000000000,
