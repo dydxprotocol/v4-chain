@@ -107,8 +107,10 @@ class HistoricalPnlController extends Controller {
     @Query() address: string,
       @Query() parentSubaccountNumber: number,
       @Query() limit?: number,
+      // NEXT: remove
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
+      // NEXT: remove this
       @Query() createdOnOrAfterHeight?: number,
       @Query() createdOnOrAfter?: IsoString,
   ): Promise<HistoricalPnlResponse> {
