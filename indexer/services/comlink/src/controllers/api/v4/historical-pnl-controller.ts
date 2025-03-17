@@ -131,25 +131,32 @@ class HistoricalPnlController extends Controller {
         },
         [QueryableField.ID],
       ),
-      PnlTicksTable.findAll(
-        {
-          subaccountId: childSubaccountIds,
-          limit,
-          createdBeforeOrAtBlockHeight: createdBeforeOrAtHeight
-            ? createdBeforeOrAtHeight.toString()
-            : undefined,
-          createdBeforeOrAt,
-          createdOnOrAfterBlockHeight: createdOnOrAfterHeight
-            ? createdOnOrAfterHeight.toString()
-            : undefined,
-          createdOnOrAfter,
-        },
-        [QueryableField.LIMIT],
-        {
-          ...DEFAULT_POSTGRES_OPTIONS,
-          orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
-        },
+      PnlTicksTable.getPnlTicksForParentSubaccount(
+        address,
+        parentSubaccountNumber,
+        limit,
+        createdBeforeOrAt,
+        createdOnOrAfter,
       ),
+      // PnlTicksTable.findAll(
+      //   {
+      //     subaccountId: childSubaccountIds,
+      //     limit,
+      //     createdBeforeOrAtBlockHeight: createdBeforeOrAtHeight
+      //       ? createdBeforeOrAtHeight.toString()
+      //       : undefined,
+      //     createdBeforeOrAt,
+      //     createdOnOrAfterBlockHeight: createdOnOrAfterHeight
+      //       ? createdOnOrAfterHeight.toString()
+      //       : undefined,
+      //     createdOnOrAfter,
+      //   },
+      //   [QueryableField.LIMIT],
+      //   {
+      //     ...DEFAULT_POSTGRES_OPTIONS,
+      //     orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
+      //   },
+      // ),
     ]);
 
     if (subaccounts.length === 0) {
