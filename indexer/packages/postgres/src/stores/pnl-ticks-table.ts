@@ -41,58 +41,6 @@ export function uuid(
 }
 
 /**
- * Handles pagination and limit logic for fill queries
- * @param baseQuery The base query to apply pagination to
- * @param limit Maximum number of fills to return
- * @param page Page number
- * @returns Promise<PaginationFromDatabase<FillFromDatabase>>
- */
-// NEXT: generalize as common utility.
-async function handleLimitAndPagination(
-  baseQuery: QueryBuilder<PnlTicksModel>,
-  limit?: number,
-  page?: number,
-): Promise<PaginationFromDatabase<PnlTicksFromDatabase>> {
-  let query = baseQuery;
-
-  /**
-   * If a query is made using a page number, then the limit property is used as 'page limit'
-   */
-  if (page !== undefined && limit !== undefined) {
-    /**
-     * We make sure that the page number is always >= 1
-     */
-    const currentPage: number = Math.max(1, page);
-    const offset: number = (currentPage - 1) * limit;
-
-    /**
-     * Ensure sorting is applied to maintain consistent pagination results.
-     * Also a casting of the ts type is required since the infer of the type
-     * obtained from the count is not performed.
-     */
-    const count: { count?: string } = await query.clone().clearOrder().count({ count: '*' }).first() as unknown as { count?: string };
-
-    query = query.offset(offset).limit(limit);
-
-    return {
-      results: await query.returning('*'),
-      limit,
-      offset,
-      total: parseInt(count.count ?? '0', 10),
-    };
-  }
-
-  // If no pagination, just apply the limit
-  if (limit !== undefined) {
-    query = query.limit(limit);
-  }
-
-  return {
-    results: await query.returning('*'),
-  };
-}
-
-/**
  * Returns fills across all subaccounts belonging to a parent subaccount.
  * A parent subaccount is defined by an address and parent subaccount number,
  * where child subaccounts have subaccount numbers in increments of 128 from the parent.
@@ -105,10 +53,9 @@ async function handleLimitAndPagination(
 export async function getPnlTicksForParentSubaccount(
   address: string,
   parentSubaccountNumber: number,
-  limit: number,
+  limit?: number,
   createdBeforeOrAt?: string,
   createdOnOrAfter?: string,
-  page?: number,
 ): Promise<PaginationFromDatabase<PnlTicksFromDatabase>> {
   // Create base query to get subaccount IDs
   const subaccountQuery = knexReadReplica.getConnection()
@@ -142,7 +89,14 @@ export async function getPnlTicksForParentSubaccount(
     baseQuery = baseQuery.where(PnlTicksColumns.createdAt, '>=', createdOnOrAfter);
   }
 
-  return handleLimitAndPagination(baseQuery, limit, page);
+  // If no pagination, just apply the limit
+  if (limit !== undefined) {
+    baseQuery = baseQuery.limit(limit);
+  }
+
+  return {
+    results: await baseQuery.returning('*'),
+  };
 }
 
 export async function findAll(
