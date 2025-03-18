@@ -5,6 +5,7 @@ import { Liquidity } from './fill-types';
 import { OrderSide, OrderStatus, OrderType } from './order-types';
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
+import { ParentSubaccount } from './subaccount-types';
 import { TradingRewardAggregationPeriod } from './trading-reward-aggregation-types';
 import { IsoString } from './utility-types';
 
@@ -95,6 +96,7 @@ export enum QueryableField {
   KEY = 'key',
   TOKEN = 'token',
   ADDRESS_IN_WALLETS_TABLE = 'addressInWalletsTable',
+  PARENT_SUBACCOUNT = 'parentSubaccount'
 }
 
 export interface QueryConfig {
@@ -149,6 +151,8 @@ export interface OrderQueryConfig extends QueryConfig {
   [QueryableField.ORDER_FLAGS]?: string,
   [QueryableField.CLIENT_METADATA]?: string,
   [QueryableField.TRIGGER_PRICE]?: string,
+  [QueryableField.ADDRESS]?: string,
+  [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
 }
 
 export interface PerpetualMarketQueryConfig extends QueryConfig {
