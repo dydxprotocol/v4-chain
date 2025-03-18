@@ -162,6 +162,8 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/dydxprotocol.vault.MsgRetrieveFromVaultResponse",
 		"/dydxprotocol.vault.MsgSetVaultParams",
 		"/dydxprotocol.vault.MsgSetVaultParamsResponse",
+		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams",
+		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse",
 		"/dydxprotocol.vault.MsgWithdrawFromMegavault",
 		"/dydxprotocol.vault.MsgWithdrawFromMegavaultResponse",
 
