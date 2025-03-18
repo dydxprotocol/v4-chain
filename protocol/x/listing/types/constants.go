@@ -7,6 +7,8 @@ const (
 
 	LiquidityTier_Isolated uint32 = 4
 
+	LiquidityTier_LongTail uint32 = 2
+
 	DefaultStepBaseQuantums uint64 = 1_000_000
 
 	SubticksPerTick_LongTail uint32 = 1_000_000
