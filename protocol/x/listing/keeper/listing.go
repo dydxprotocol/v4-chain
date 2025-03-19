@@ -147,8 +147,13 @@ func (k Keeper) CreatePerpetual(
 		marketId,
 		atomicResolution,
 		types.DefaultFundingPpm,
+<<<<<<< HEAD
 		types.LiquidityTier_Isolated,
 		marketType,
+=======
+		types.LiquidityTier_IML_5x,
+		perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
+>>>>>>> 705b9a5d ([ENG-29] Use New IML 5X Liquidity Tier for Newly Launched Markets)
 	)
 	if err != nil {
 		return 0, err
