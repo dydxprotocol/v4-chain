@@ -1,4 +1,4 @@
-import { OrderTable } from '@dydxprotocol-indexer/postgres';
+import { OrderTable, vaultRefresher } from '@dydxprotocol-indexer/postgres';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerTendermintEvent,
@@ -11,6 +11,7 @@ import {
   StatefulOrderEventV1_ConditionalOrderTriggeredV1,
   StatefulOrderEventV1_LongTermOrderPlacementV1,
   IndexerOrder_ConditionType,
+  IndexerSubaccountId,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
@@ -250,7 +251,35 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       return true;
     }
 
+    // Exclude vault stateful orders.
+    const address: string = this.getSubaccountid().owner;
+    if (vaultRefresher.isVault(address)) {
+      return true;
+    }
+
     return false;
+  }
+
+  /**
+   * Gets subaccount id for the event being validated.
+   * Assumes event is valid.
+   */
+  private getSubaccountid(): IndexerSubaccountId {
+    if (this.event.orderPlace !== undefined) {
+      return this.event.orderPlace.order!.orderId!.subaccountId!;
+    } else if (this.event.orderRemoval !== undefined) {
+      return this.event.orderRemoval.removedOrderId!.subaccountId!;
+    } else if (this.event.conditionalOrderPlacement !== undefined) {
+      return this.event.conditionalOrderPlacement.order!.orderId!.subaccountId!;
+    } else if (this.event.conditionalOrderTriggered !== undefined) {
+      return this.event.conditionalOrderTriggered.triggeredOrderId!.subaccountId!;
+    } else if (this.event.longTermOrderPlacement !== undefined) {
+      return this.event.longTermOrderPlacement.order!.orderId!.subaccountId!;
+    }
+    return {
+      owner: '',
+      number: 0,
+    };
   }
 
   /**
