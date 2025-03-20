@@ -95,11 +95,17 @@ export enum QueryableField {
   KEY = 'key',
   TOKEN = 'token',
   ADDRESS_IN_WALLETS_TABLE = 'addressInWalletsTable',
+  PARENT_SUBACCOUNT = 'parentSubaccount',
 }
 
 export interface QueryConfig {
   [QueryableField.LIMIT]?: number,
   [QueryableField.PAGE]?: number,
+}
+
+export interface ParentSubaccount {
+  address: string,
+  subaccountNumber: number,
 }
 
 export interface SubaccountQueryConfig extends QueryConfig {
@@ -275,6 +281,7 @@ export interface PnlTicksQueryConfig extends QueryConfig {
   [QueryableField.CREATED_BEFORE_OR_AT_BLOCK_HEIGHT]?: string,
   [QueryableField.CREATED_ON_OR_AFTER]?: string,
   [QueryableField.CREATED_ON_OR_AFTER_BLOCK_HEIGHT]?: string,
+  [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
 }
 
 export interface FundingIndexUpdatesQueryConfig extends QueryConfig {

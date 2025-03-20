@@ -107,10 +107,8 @@ class HistoricalPnlController extends Controller {
     @Query() address: string,
       @Query() parentSubaccountNumber: number,
       @Query() limit?: number,
-      // NEXT: remove
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
-      // NEXT: remove this
       @Query() createdOnOrAfterHeight?: number,
       @Query() createdOnOrAfter?: IsoString,
   ): Promise<HistoricalPnlResponse> {
@@ -131,32 +129,28 @@ class HistoricalPnlController extends Controller {
         },
         [QueryableField.ID],
       ),
-      PnlTicksTable.getPnlTicksForParentSubaccount(
-        address,
-        parentSubaccountNumber,
-        limit,
-        createdBeforeOrAt,
-        createdOnOrAfter,
+      PnlTicksTable.findAll(
+        {
+          parentSubaccount: {
+            address,
+            subaccountNumber: parentSubaccountNumber,
+          },
+          limit,
+          createdBeforeOrAtBlockHeight: createdBeforeOrAtHeight
+            ? createdBeforeOrAtHeight.toString()
+            : undefined,
+          createdBeforeOrAt,
+          createdOnOrAfterBlockHeight: createdOnOrAfterHeight
+            ? createdOnOrAfterHeight.toString()
+            : undefined,
+          createdOnOrAfter,
+        },
+        [QueryableField.LIMIT],
+        {
+          ...DEFAULT_POSTGRES_OPTIONS,
+          orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
+        },
       ),
-      // PnlTicksTable.findAll(
-      //   {
-      //     subaccountId: childSubaccountIds,
-      //     limit,
-      //     createdBeforeOrAtBlockHeight: createdBeforeOrAtHeight
-      //       ? createdBeforeOrAtHeight.toString()
-      //       : undefined,
-      //     createdBeforeOrAt,
-      //     createdOnOrAfterBlockHeight: createdOnOrAfterHeight
-      //       ? createdOnOrAfterHeight.toString()
-      //       : undefined,
-      //     createdOnOrAfter,
-      //   },
-      //   [QueryableField.LIMIT],
-      //   {
-      //     ...DEFAULT_POSTGRES_OPTIONS,
-      //     orderBy: [[QueryableField.BLOCK_HEIGHT, Ordering.DESC]],
-      //   },
-      // ),
     ]);
 
     if (subaccounts.length === 0) {

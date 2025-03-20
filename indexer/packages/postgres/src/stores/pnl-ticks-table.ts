@@ -40,70 +40,12 @@ export function uuid(
   );
 }
 
-/**
- * Returns fills across all subaccounts belonging to a parent subaccount.
- * A parent subaccount is defined by an address and parent subaccount number,
- * where child subaccounts have subaccount numbers in increments of 128 from the parent.
- *
- * @param address The wallet address
- * @param parentSubaccountNumber The parent subaccount number
- * @param limit Maximum number of fills to return
- * @param page Page number
- */
-export async function getPnlTicksForParentSubaccount(
-  address: string,
-  parentSubaccountNumber: number,
-  limit?: number,
-  createdBeforeOrAt?: string,
-  createdOnOrAfter?: string,
-): Promise<PaginationFromDatabase<PnlTicksFromDatabase>> {
-  // Create base query to get subaccount IDs
-  const subaccountQuery = knexReadReplica.getConnection()
-    .select('id as subaccountId')
-    .from('subaccounts')
-    .where('address', address)
-    .whereRaw(
-      `"subaccountNumber" IN (
-        SELECT generate_series(
-          ?, 
-          ? + ${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}, 
-          ${MAX_PARENT_SUBACCOUNTS}
-        )
-      )`,
-      [parentSubaccountNumber, parentSubaccountNumber],
-    );
-
-  // Create the main query
-  let baseQuery = PnlTicksModel.query()
-    .whereIn(
-      'subaccountId',
-      subaccountQuery,
-    )
-    .orderBy(PnlTicksColumns.createdAt, Ordering.DESC);
-
-  if (createdBeforeOrAt !== undefined) {
-    baseQuery = baseQuery.where(PnlTicksColumns.createdAt, '<=', createdBeforeOrAt);
-  }
-
-  if (createdOnOrAfter !== undefined) {
-    baseQuery = baseQuery.where(PnlTicksColumns.createdAt, '>=', createdOnOrAfter);
-  }
-
-  // If no pagination, just apply the limit
-  if (limit !== undefined) {
-    baseQuery = baseQuery.limit(limit);
-  }
-
-  return {
-    results: await baseQuery.returning('*'),
-  };
-}
-
 export async function findAll(
   {
     limit,
     id,
     subaccountId,
+    parentSubaccount,
     createdAt,
     blockHeight,
     blockTime,
@@ -116,11 +58,16 @@ export async function findAll(
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PaginationFromDatabase<PnlTicksFromDatabase>> {
+  if (subaccountId !== undefined && parentSubaccount !== undefined) {
+    throw new Error('Cannot specify both subaccountId and parentSubaccount in pnl ticks query');
+  }
+
   verifyAllRequiredFields(
     {
       limit,
       id,
       subaccountId,
+      parentSubaccount,
       createdAt,
       blockHeight,
       blockTime,
@@ -143,6 +90,26 @@ export async function findAll(
 
   if (subaccountId !== undefined) {
     baseQuery = baseQuery.whereIn(PnlTicksColumns.subaccountId, subaccountId);
+  } else if (parentSubaccount !== undefined) {
+    const subaccountQuery = knexReadReplica.getConnection()
+      .select('id as subaccountId')
+      .from('subaccounts')
+      .where('address', parentSubaccount.address)
+      .whereRaw(
+        `"subaccountNumber" IN (
+          SELECT generate_series(
+            ?, 
+            ? + ${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}, 
+            ${MAX_PARENT_SUBACCOUNTS}
+          )
+        )`,
+        [parentSubaccount.subaccountNumber, parentSubaccount.subaccountNumber],
+      );
+
+    baseQuery = baseQuery.whereIn(
+      PnlTicksColumns.subaccountId,
+      subaccountQuery,
+    );
   }
 
   if (createdAt !== undefined) {
