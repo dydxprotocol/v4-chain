@@ -5,6 +5,7 @@ import { Liquidity } from './fill-types';
 import { OrderSide, OrderStatus, OrderType } from './order-types';
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
+import { ParentSubaccount } from './subaccount-types';
 import { TradingRewardAggregationPeriod } from './trading-reward-aggregation-types';
 import { IsoString } from './utility-types';
 
@@ -95,6 +96,7 @@ export enum QueryableField {
   KEY = 'key',
   TOKEN = 'token',
   ADDRESS_IN_WALLETS_TABLE = 'addressInWalletsTable',
+  PARENT_SUBACCOUNT = 'parentSubaccount',
 }
 
 export interface QueryConfig {
@@ -275,6 +277,7 @@ export interface PnlTicksQueryConfig extends QueryConfig {
   [QueryableField.CREATED_BEFORE_OR_AT_BLOCK_HEIGHT]?: string,
   [QueryableField.CREATED_ON_OR_AFTER]?: string,
   [QueryableField.CREATED_ON_OR_AFTER_BLOCK_HEIGHT]?: string,
+  [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
 }
 
 export interface FundingIndexUpdatesQueryConfig extends QueryConfig {
