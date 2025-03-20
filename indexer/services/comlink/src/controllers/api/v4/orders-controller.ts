@@ -12,6 +12,7 @@ import {
   OrderStatus,
   OrderTable,
   OrderType,
+  ParentSubaccount,
   PaginationFromDatabase,
   perpetualMarketRefresher,
   protocolTranslations,
@@ -78,6 +79,7 @@ const controllerName: string = 'orders-controller';
  */
 async function listOrdersCommon(
   subaccountIdToNumber: Record<string, number>,
+  parentSubaccount?: ParentSubaccount,
   limit?: number,
   ticker?: string,
   side?: OrderSide,
@@ -97,7 +99,6 @@ async function listOrdersCommon(
   const subaccountIds: string[] = Object.keys(subaccountIdToNumber);
 
   const orderQueryConfig: OrderQueryConfig = {
-    subaccountId: subaccountIds,
     limit,
     clobPairId,
     side,
@@ -107,6 +108,12 @@ async function listOrdersCommon(
     goodTilBlockTimeBeforeOrAt,
     goodTilBlockTimeAfter,
   };
+  if (parentSubaccount !== undefined) {
+    orderQueryConfig.parentSubaccount = parentSubaccount;
+  } else {
+    orderQueryConfig.subaccountId = subaccountIds;
+  }
+
   if (!_.isEmpty(status)) {
     // BEST_EFFORT_OPENED status is not filtered out, because it's a minor optimization,
     // is more confusing, and is not going to affect the result of the query.
@@ -223,6 +230,7 @@ class OrdersController extends Controller {
 
     return listOrdersCommon(
       { [subaccountId]: subaccountNumber },
+      undefined, // parentSubaccount
       limit,
       ticker,
       side,
@@ -260,6 +268,10 @@ class OrdersController extends Controller {
 
     return listOrdersCommon(
       childIdtoSubaccountNumber,
+      {
+        address,
+        subaccountNumber: parentSubaccountNumber,
+      }, // parentSubaccount
       limit,
       ticker,
       side,

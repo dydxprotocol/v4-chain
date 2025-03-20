@@ -22,3 +22,8 @@ export enum SubaccountColumns {
   updatedAt = 'updatedAt',
   updatedAtHeight = 'updatedAtHeight',
 }
+
+export interface ParentSubaccount {
+  address: string,
+  subaccountNumber: number,
+}
