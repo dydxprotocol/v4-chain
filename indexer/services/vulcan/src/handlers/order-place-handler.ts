@@ -110,7 +110,7 @@ export class OrderPlaceHandler extends Handler {
       // isn't updated.
       // For stateful and conditional orders, look the order up in the db for the createdAtHeight
       // and send any cached order updates for the stateful or conditional order
-      // Do not execute logic for vault orders as they are not persisted.
+      // No need to send cached order updates for vault orders as they are not cached or persisted.
       let dbOrder: OrderFromDatabase | undefined;
       if (isStatefulOrder(redisOrder.order!.orderId!.orderFlags) &&
         !isVaultOrder(redisOrder.order!.orderId!)) {

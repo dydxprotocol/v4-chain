@@ -9,6 +9,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import { StatefulOrderValidator } from '../../src/validators/stateful-order-validator';
+import config from '../../src/config';
 import {
   defaultConditionalOrderPlacementEvent,
   defaultConditionalOrderTriggeredEvent,
@@ -20,20 +21,41 @@ import {
   defaultStatefulOrderRemovalEvent,
   defaultTime,
   defaultTxHash,
+  defaultVaultOrderPlacementEvent,
+  defaultVaultOrderRemovalEvent,
 } from '../helpers/constants';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
-import { vaultRefresher } from '@dydxprotocol-indexer/postgres';
+import {
+  dbHelpers, OrderTable, testMocks, vaultRefresher,
+} from '@dydxprotocol-indexer/postgres';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('stateful-order-validator', () => {
-  beforeEach(() => {
+  const originalSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
+
+  beforeAll(async () => {
+    await dbHelpers.migrate();
+    await createPostgresFunctions();
+  });
+
+  beforeEach(async () => {
+    await testMocks.seedData();
+    await vaultRefresher.updateVaults();
     jest.spyOn(logger, 'error');
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    config.SKIP_STATEFUL_ORDER_UUIDS = originalSkippedOrderUUIDs;
+    await dbHelpers.clearData();
     jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await dbHelpers.teardown();
+    jest.resetAllMocks();
   });
 
   describe('validate', () => {
@@ -360,15 +382,27 @@ describe('stateful-order-validator', () => {
     });
   });
 
-  describe('shouldExcludeEvent', () => {
+  describe('shouldSkipSql', () => {
+    it.each([
+      ['order placement', defaultStatefulOrderPlacementEvent],
+      ['order removal', defaultStatefulOrderRemovalEvent],
+    ])('does not skip sql for a regular %s', (_name: string, event: StatefulOrderEventV1) => {
+      const validator: StatefulOrderValidator = new StatefulOrderValidator(
+        event,
+        createBlock(event),
+        0,
+      );
+
+      expect(validator.shouldSkipSql()).toBe(false);
+    });
+
     it.each([
       ['order placement', defaultLongTermOrderPlacementEvent],
       ['order removal', defaultStatefulOrderRemovalEvent],
-    ])('excludes vault %s', (_name: string, event: StatefulOrderEventV1) => {
-      // eslint-disable-next-line max-len
-      const vaultAddress: string = event.longTermOrderPlacement?.order?.orderId?.subaccountId?.owner ||
-        event.orderRemoval?.removedOrderId?.subaccountId?.owner || '';
-      vaultRefresher.addVault(vaultAddress);
+    ])('skips sql for an %s configured in env var to be skipped', (_name: string, event: StatefulOrderEventV1) => {
+      const orderId = event.longTermOrderPlacement?.order?.orderId ||
+        event.orderRemoval?.removedOrderId;
+      config.SKIP_STATEFUL_ORDER_UUIDS = OrderTable.orderIdToUuid(orderId!);
 
       const validator: StatefulOrderValidator = new StatefulOrderValidator(
         event,
@@ -376,7 +410,65 @@ describe('stateful-order-validator', () => {
         0,
       );
 
-      expect(validator.shouldExcludeEvent()).toBe(true);
+      expect(validator.shouldSkipSql()).toBe(true);
+    });
+
+    it.each([
+      ['order placement', defaultVaultOrderPlacementEvent],
+      ['order removal', defaultVaultOrderRemovalEvent],
+    ])('skips sql for vault %s', (_name: string, event: StatefulOrderEventV1) => {
+      const validator: StatefulOrderValidator = new StatefulOrderValidator(
+        event,
+        createBlock(event),
+        0,
+      );
+
+      expect(validator.shouldSkipSql()).toBe(true);
+    });
+  });
+
+  describe('shouldSkipHandlers', () => {
+    it.each([
+      ['order placement', defaultLongTermOrderPlacementEvent],
+      ['order removal', defaultStatefulOrderRemovalEvent],
+    ])('does not skip handlers for a regular %s', (_name: string, event: StatefulOrderEventV1) => {
+      const validator: StatefulOrderValidator = new StatefulOrderValidator(
+        event,
+        createBlock(event),
+        0,
+      );
+
+      expect(validator.shouldSkipHandlers()).toBe(false);
+    });
+
+    it.each([
+      ['order placement', defaultLongTermOrderPlacementEvent],
+      ['order removal', defaultStatefulOrderRemovalEvent],
+    ])('skips handlers for an %s configured in env var to be skipped', (_name: string, event: StatefulOrderEventV1) => {
+      const orderId = event.longTermOrderPlacement?.order?.orderId ||
+        event.orderRemoval?.removedOrderId;
+      config.SKIP_STATEFUL_ORDER_UUIDS = OrderTable.orderIdToUuid(orderId!);
+
+      const validator: StatefulOrderValidator = new StatefulOrderValidator(
+        event,
+        createBlock(event),
+        0,
+      );
+
+      expect(validator.shouldSkipHandlers()).toBe(true);
+    });
+
+    it.each([
+      ['order placement', defaultVaultOrderPlacementEvent],
+      ['order removal', defaultVaultOrderRemovalEvent],
+    ])('does not skip handlers for vault %s', (_name: string, event: StatefulOrderEventV1) => {
+      const validator: StatefulOrderValidator = new StatefulOrderValidator(
+        event,
+        createBlock(event),
+        0,
+      );
+
+      expect(validator.shouldSkipHandlers()).toBe(false);
     });
   });
 });
