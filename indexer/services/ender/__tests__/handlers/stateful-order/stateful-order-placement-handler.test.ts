@@ -31,6 +31,8 @@ import {
   defaultPreviousHeight,
   defaultTime,
   defaultTxHash,
+  defaultVaultOrder,
+  defaultVaultOrderPlacementEvent,
 } from '../../helpers/constants';
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
@@ -84,19 +86,6 @@ describe('statefulOrderPlacementHandler', () => {
     goodTilBlock: undefined,
     goodTilBlockTime,
   };
-  const defaultVaultOrder: IndexerOrder = {
-    ...defaultMakerOrder,
-    orderId: {
-      ...defaultMakerOrder.orderId!,
-      subaccountId: {
-        owner: testConstants.defaultVault.address,
-        number: 0,
-      },
-      orderFlags: ORDER_FLAG_LONG_TERM,
-    },
-    goodTilBlock: undefined,
-    goodTilBlockTime,
-  };
   const defaultStatefulOrderLongTermEvent: StatefulOrderEventV1 = {
     longTermOrderPlacement: {
       order: defaultOrder,
@@ -106,11 +95,6 @@ describe('statefulOrderPlacementHandler', () => {
   const defaultStatefulOrderEvent: StatefulOrderEventV1 = {
     orderPlace: {
       order: defaultOrder,
-    },
-  };
-  const defaultVaultStatefulOrderEvent: StatefulOrderEventV1 = {
-    orderPlace: {
-      order: defaultVaultOrder,
     },
   };
   const orderId: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
@@ -295,23 +279,11 @@ describe('statefulOrderPlacementHandler', () => {
     await onMessage(kafkaMessage);
     const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
     expect(order).toBeUndefined();
-    const expectedOffchainUpdate: OffChainUpdateV1 = {
-      orderPlace: {
-        order: defaultOrder,
-        placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
-      },
-    };
-    expectVulcanKafkaMessage({
-      producerSendMock,
-      orderId: defaultOrder.orderId!,
-      offchainUpdate: expectedOffchainUpdate,
-      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderPlacement' },
-    });
   });
 
   it.each([
-    ['txn event', defaultVaultStatefulOrderEvent, 0],
-    ['block event', defaultVaultStatefulOrderEvent, -1],
+    ['txn event', defaultVaultOrderPlacementEvent, 0],
+    ['block event', defaultVaultOrderPlacementEvent, -1],
   ])('successfully skips vault order placements (as %s)', async (
     _name: string,
     statefulOrderEvent: StatefulOrderEventV1,

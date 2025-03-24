@@ -136,7 +136,8 @@ export class OrderRemoveHandler extends Handler {
       });
     }
 
-    // Skip vault orders as they are not persisted.
+    // For vault orders, handle cancellation as non-stateful instead because they
+    // are not persisted.
     if (this.isStatefulOrderCancelation(orderRemove) &&
       !isVaultOrder(orderRemove.removedOrderId!)) {
       await this.handleStatefulOrderCancelation(orderRemove, removeOrderResult, headers);
