@@ -112,6 +112,7 @@ export class OrderPlaceHandler extends Handler {
       // and send any cached order updates for the stateful or conditional order
       // No need to send cached order updates for vault orders as they are not cached or persisted.
       let dbOrder: OrderFromDatabase | undefined;
+      console.log("vulcan is vault", await isVaultOrder(redisOrder.order!.orderId!), redisOrder.order!.orderId!.subaccountId!.owner);
       if (isStatefulOrder(redisOrder.order!.orderId!.orderFlags) &&
         !(await isVaultOrder(redisOrder.order!.orderId!))) {
         const orderUuid: string = OrderTable.orderIdToUuid(redisOrder.order!.orderId!);

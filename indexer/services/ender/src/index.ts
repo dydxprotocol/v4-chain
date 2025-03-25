@@ -31,6 +31,7 @@ async function startKafka(): Promise<void> {
   // writes to the key attributes of perpetual_markets, asset_refresher, and market_refresher
   // The two exceptions are the aggregated properties of perpetual_markets and the
   // OrderbookMidPriceMemoryCache
+  console.log("ender initialize all caches");
   await initializeAllCaches();
   wrapBackgroundTask(OrderbookMidPriceMemoryCache.start(), true, 'startUpdateOrderbookMidPrices');
 

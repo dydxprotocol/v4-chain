@@ -256,6 +256,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
 
     // Exclude vault stateful orders.
     const address: string = this.getSubaccountid().owner;
+    console.log("ender is vault", await isVaultAddress(address));
     if (await isVaultAddress(address)) {
       return true;
     }

@@ -46,6 +46,15 @@ export async function addVaultAddress(
       if (err) {
         return reject(err);
       }
+
+      client.scard(VAULT_ADDRESSES_CACHE_KEY, (err, size) => {
+        if (err) {
+          return reject(err);
+        }
+        console.log(`Vault address cache, size: ${size}, added ${address}`);
+        resolve(result);
+      });
+
       resolve(result);
     });
   });

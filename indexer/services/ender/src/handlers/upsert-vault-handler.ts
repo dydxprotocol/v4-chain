@@ -16,6 +16,7 @@ export class UpsertVaultHandler extends Handler<UpsertVaultEventV1> {
 
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const vault: VaultFromDatabase = VaultModel.fromJson(resultRow.vault) as VaultFromDatabase;
+    console.log('ender upsert vault handler', vault.address);
     await VaultAddressesCache.addVaultAddress(vault.address, redisClient);
 
     return [];
