@@ -131,7 +131,10 @@ class HistoricalPnlController extends Controller {
       ),
       PnlTicksTable.findAll(
         {
-          subaccountId: childSubaccountIds,
+          parentSubaccount: {
+            address,
+            subaccountNumber: parentSubaccountNumber,
+          },
           limit,
           createdBeforeOrAtBlockHeight: createdBeforeOrAtHeight
             ? createdBeforeOrAtHeight.toString()

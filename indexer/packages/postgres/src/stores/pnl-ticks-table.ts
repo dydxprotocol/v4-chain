@@ -4,6 +4,8 @@ import { QueryBuilder } from 'objection';
 
 import {
   BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS, ZERO_TIME_ISO_8601,
+  MAX_PARENT_SUBACCOUNTS,
+  CHILD_SUBACCOUNT_MULTIPLIER,
 } from '../constants';
 import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllInjectableVariables, verifyAllRequiredFields } from '../helpers/stores-helpers';
@@ -43,6 +45,7 @@ export async function findAll(
     limit,
     id,
     subaccountId,
+    parentSubaccount,
     createdAt,
     blockHeight,
     blockTime,
@@ -55,11 +58,16 @@ export async function findAll(
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PaginationFromDatabase<PnlTicksFromDatabase>> {
+  if (subaccountId !== undefined && parentSubaccount !== undefined) {
+    throw new Error('Cannot specify both subaccountId and parentSubaccount in pnl ticks query');
+  }
+
   verifyAllRequiredFields(
     {
       limit,
       id,
       subaccountId,
+      parentSubaccount,
       createdAt,
       blockHeight,
       blockTime,
@@ -82,6 +90,26 @@ export async function findAll(
 
   if (subaccountId !== undefined) {
     baseQuery = baseQuery.whereIn(PnlTicksColumns.subaccountId, subaccountId);
+  } else if (parentSubaccount !== undefined) {
+    const subaccountQuery = knexReadReplica.getConnection()
+      .select('id as subaccountId')
+      .from('subaccounts')
+      .where('address', parentSubaccount.address)
+      .whereRaw(
+        `"subaccountNumber" IN (
+          SELECT generate_series(
+            ?, 
+            ? + ${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}, 
+            ${MAX_PARENT_SUBACCOUNTS}
+          )
+        )`,
+        [parentSubaccount.subaccountNumber, parentSubaccount.subaccountNumber],
+      );
+
+    baseQuery = baseQuery.whereIn(
+      PnlTicksColumns.subaccountId,
+      subaccountQuery,
+    );
   }
 
   if (createdAt !== undefined) {
