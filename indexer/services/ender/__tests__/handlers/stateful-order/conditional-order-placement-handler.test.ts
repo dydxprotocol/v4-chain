@@ -45,6 +45,8 @@ import { producer } from '@dydxprotocol-indexer/kafka';
 import { ConditionalOrderPlacementHandler } from '../../../src/handlers/stateful-order/conditional-order-placement-handler';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
+import { redis } from '@dydxprotocol-indexer/redis';
+import { redisClient } from '../../../src/helpers/redis/redis-controller';
 
 describe('conditionalOrderPlacementHandler', () => {
   const prevSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
@@ -65,6 +67,7 @@ describe('conditionalOrderPlacementHandler', () => {
     config.SKIP_STATEFUL_ORDER_UUIDS = prevSkippedOrderUUIDs;
     await dbHelpers.clearData();
     jest.clearAllMocks();
+    await redis.deleteAllAsync(redisClient);
   });
 
   afterAll(async () => {

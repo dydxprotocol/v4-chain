@@ -20,7 +20,6 @@ import {
   protocolTranslations,
   testConstants,
   testMocks,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   logger,
@@ -64,8 +63,8 @@ describe('OrderUpdateHandler', () => {
       await Promise.all([
         perpetualMarketRefresher.updatePerpetualMarkets(),
         blockHeightRefresher.updateBlockHeight(),
-        vaultRefresher.updateVaults(),
       ]);
+      await redisPackage.VaultAddressesCache.initialize(client);
       jest.spyOn(stats, 'timing');
       jest.spyOn(stats, 'increment');
       jest.spyOn(OrderbookLevelsCache, 'updatePriceLevel');

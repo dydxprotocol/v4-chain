@@ -113,7 +113,7 @@ export class OrderPlaceHandler extends Handler {
       // No need to send cached order updates for vault orders as they are not cached or persisted.
       let dbOrder: OrderFromDatabase | undefined;
       if (isStatefulOrder(redisOrder.order!.orderId!.orderFlags) &&
-        !isVaultOrder(redisOrder.order!.orderId!)) {
+        !(await isVaultOrder(redisOrder.order!.orderId!))) {
         const orderUuid: string = OrderTable.orderIdToUuid(redisOrder.order!.orderId!);
         dbOrder = await OrderTable.findById(orderUuid);
         if (dbOrder === undefined) {

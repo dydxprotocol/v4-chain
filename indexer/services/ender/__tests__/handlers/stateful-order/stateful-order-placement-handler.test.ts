@@ -11,7 +11,6 @@ import {
   testConstants,
   testMocks,
   TimeInForce,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerOrder,
@@ -35,7 +34,7 @@ import {
   defaultVaultOrderPlacementEvent,
 } from '../../helpers/constants';
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
-import { updateBlockCache } from '../../../src/caches/block-cache';
+import { initializeAllCaches, updateBlockCache } from '../../../src/caches/block-cache';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
@@ -48,6 +47,8 @@ import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
+import { redis } from '@dydxprotocol-indexer/redis';
+import { redisClient } from '../../../src/helpers/redis/redis-controller';
 
 describe('statefulOrderPlacementHandler', () => {
   const prevSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
@@ -61,7 +62,7 @@ describe('statefulOrderPlacementHandler', () => {
     await testMocks.seedData();
     updateBlockCache(defaultPreviousHeight);
     await perpetualMarketRefresher.updatePerpetualMarkets();
-    await vaultRefresher.updateVaults();
+    await initializeAllCaches();
     producerSendMock = jest.spyOn(producer, 'send');
   });
 
@@ -69,6 +70,7 @@ describe('statefulOrderPlacementHandler', () => {
     config.SKIP_STATEFUL_ORDER_UUIDS = prevSkippedOrderUUIDs;
     await dbHelpers.clearData();
     jest.clearAllMocks();
+    await redis.deleteAllAsync(redisClient);
   });
 
   afterAll(async () => {

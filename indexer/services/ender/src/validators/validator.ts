@@ -64,7 +64,7 @@ export abstract class Validator<T extends object> {
    * Defaults to no.
    * @returns
    */
-  public shouldSkipSql(): boolean {
+  public async shouldSkipSql(): Promise<boolean> {
     return false;
   }
 
@@ -73,7 +73,7 @@ export abstract class Validator<T extends object> {
    * Defaults to no.
    * @returns
    */
-  public shouldSkipHandlers(): boolean {
+  public async shouldSkipHandlers(): Promise<boolean> {
     return false;
   }
 }

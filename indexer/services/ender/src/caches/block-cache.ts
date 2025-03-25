@@ -6,12 +6,13 @@ import {
   Transaction,
   assetRefresher,
   perpetualMarketRefresher,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 
 import config from '../config';
 import { startCandleCache } from './candle-cache';
+import { VaultAddressesCache } from '@dydxprotocol-indexer/redis';
+import { redisClient } from '../helpers/redis/redis-controller';
 
 const INITIAL_BLOCK_HEIGHT: string = '-1';
 
@@ -119,7 +120,7 @@ export async function initializeAllCaches(): Promise<void> {
     startCandleCache(txId),
     perpetualMarketRefresher.updatePerpetualMarkets({ txId }),
     assetRefresher.updateAssets({ txId }),
-    vaultRefresher.updateVaults({ txId }),
+    VaultAddressesCache.initialize(redisClient, { txId }),
   ]);
 
   await Transaction.rollback(txId);

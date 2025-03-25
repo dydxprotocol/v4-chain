@@ -82,7 +82,7 @@ export class OrderUpdateHandler extends Handler {
     if (updateResult.updated !== true) {
       const orderFlags: number = orderUpdate.orderId!.orderFlags;
       // Skip caching updates for vault orders as they are not persisted.
-      if (isStatefulOrder(orderFlags) && !isVaultOrder(orderUpdate.orderId!)) {
+      if (isStatefulOrder(orderFlags) && !(await isVaultOrder(orderUpdate.orderId!))) {
         // If the order update was for a stateful order, add it to a cache of order updates
         // for stateful orders, so it can be re-sent after `ender` processes the on-chain
         // event for the stateful order placement

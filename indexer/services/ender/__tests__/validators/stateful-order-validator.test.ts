@@ -28,8 +28,11 @@ import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../h
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
-import { dbHelpers, OrderTable, testMocks, vaultRefresher } from '@dydxprotocol-indexer/postgres';
+import { dbHelpers, OrderTable, testMocks } from '@dydxprotocol-indexer/postgres';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import { redis } from '@dydxprotocol-indexer/redis';
+import { redisClient } from '../../src/helpers/redis/redis-controller';
+import { initializeAllCaches } from '../../src/caches/block-cache';
 
 describe('stateful-order-validator', () => {
   const originalSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
@@ -41,7 +44,7 @@ describe('stateful-order-validator', () => {
 
   beforeEach(async () => {
     await testMocks.seedData();
-    await vaultRefresher.updateVaults();
+    await initializeAllCaches();
     jest.spyOn(logger, 'error');
   });
 
@@ -49,6 +52,7 @@ describe('stateful-order-validator', () => {
     config.SKIP_STATEFUL_ORDER_UUIDS = originalSkippedOrderUUIDs;
     await dbHelpers.clearData();
     jest.clearAllMocks();
+    await redis.deleteAllAsync(redisClient);
   });
 
   afterAll(async () => {
@@ -391,7 +395,7 @@ describe('stateful-order-validator', () => {
         0,
       );
 
-      expect(validator.shouldSkipSql()).toBe(false);
+      expect(validator.shouldSkipSql()).resolves.toBe(false);
     });
 
     it.each([
@@ -407,7 +411,7 @@ describe('stateful-order-validator', () => {
         0,
       );
 
-      expect(validator.shouldSkipSql()).toBe(true);
+      expect(validator.shouldSkipSql()).resolves.toBe(true);
     });
 
     it.each([
@@ -420,7 +424,7 @@ describe('stateful-order-validator', () => {
         0,
       );
 
-      expect(validator.shouldSkipSql()).toBe(true);
+      expect(validator.shouldSkipSql()).resolves.toBe(true);
     });
   });
 
@@ -435,7 +439,7 @@ describe('stateful-order-validator', () => {
         0,
       );
 
-      expect(validator.shouldSkipHandlers()).toBe(false);
+      expect(validator.shouldSkipHandlers()).resolves.toBe(false);
     });
 
     it.each([
@@ -451,7 +455,7 @@ describe('stateful-order-validator', () => {
         0,
       );
 
-      expect(validator.shouldSkipHandlers()).toBe(true);
+      expect(validator.shouldSkipHandlers()).resolves.toBe(true);
     });
 
     it.each([
@@ -464,7 +468,7 @@ describe('stateful-order-validator', () => {
         0,
       );
 
-      expect(validator.shouldSkipHandlers()).toBe(false);
+      expect(validator.shouldSkipHandlers()).resolves.toBe(false);
     });
   });
 });

@@ -7,8 +7,8 @@ import {
   perpetualMarketRefresher,
   testConstants,
   testMocks,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
+import { redis } from '@dydxprotocol-indexer/redis';
 import {
   getCurrentBlockHeight,
   initializeAllCaches,
@@ -17,6 +17,8 @@ import {
   shouldSkipBlock,
 } from '../../src/caches/block-cache';
 import { clearCandlesMap, getCandlesMap } from '../../src/caches/candle-cache';
+import { redisClient } from '../../src/helpers/redis/redis-controller';
+import { isVaultAddress } from '../../src/helpers/redis/vault-addresses';
 
 describe('block-cache', () => {
   beforeAll(async () => {
@@ -35,7 +37,7 @@ describe('block-cache', () => {
     clearCandlesMap();
     perpetualMarketRefresher.clear();
     assetRefresher.clear();
-    vaultRefresher.clear();
+    await redis.deleteAllAsync(redisClient);
   });
 
   afterAll(async () => {
@@ -91,7 +93,7 @@ describe('block-cache', () => {
       expect(getCandlesMap()).toEqual({});
       expect(perpetualMarketRefresher.getPerpetualMarketsMap()).toEqual({});
       expect(assetRefresher.getAssetsMap()).toEqual({});
-      expect(vaultRefresher.getVaultAddresses()).toEqual(new Set());
+      expect(isVaultAddress(testConstants.defaultVaultAddress)).resolves.toBe(false);
 
       await initializeAllCaches();
 
@@ -100,7 +102,7 @@ describe('block-cache', () => {
       expect(getCandlesMap()).not.toEqual({});
       expect(perpetualMarketRefresher.getPerpetualMarketsMap()).not.toEqual({});
       expect(assetRefresher.getAssetsMap()).not.toEqual({});
-      expect(vaultRefresher.getVaultAddresses()).not.toEqual({});
+      expect(isVaultAddress(testConstants.defaultVaultAddress)).resolves.toBe(true);
     });
   });
 });

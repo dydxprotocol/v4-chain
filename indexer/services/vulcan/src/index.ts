@@ -2,7 +2,7 @@ import {
   logger, getInstanceId, startBugsnag, setInstanceId, wrapBackgroundTask,
 } from '@dydxprotocol-indexer/base';
 import { stopConsumer, startConsumer } from '@dydxprotocol-indexer/kafka';
-import { blockHeightRefresher, perpetualMarketRefresher, vaultRefresher } from '@dydxprotocol-indexer/postgres';
+import { blockHeightRefresher, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 
 import config from './config';
 import { connect as connectToKafka } from './helpers/kafka/kafka-controller';
@@ -11,6 +11,7 @@ import {
   redisClient,
 } from './helpers/redis/redis-controller';
 import { flushAllQueues } from './lib/send-message-helper';
+import { VaultAddressesCache } from '@dydxprotocol-indexer/redis';
 
 async function startService(): Promise<void> {
   logger.info({
@@ -31,16 +32,6 @@ async function startService(): Promise<void> {
     at: 'index#start',
     message: `Got instance id ${getInstanceId()}.`,
   });
-
-  // Initialize caches.
-  await Promise.all([
-    blockHeightRefresher.updateBlockHeight(),
-    perpetualMarketRefresher.updatePerpetualMarkets(),
-    vaultRefresher.updateVaults(),
-  ]);
-  wrapBackgroundTask(blockHeightRefresher.start(), true, 'startUpdateBlockHeight');
-  wrapBackgroundTask(perpetualMarketRefresher.start(), true, 'startUpdatePerpetualMarkets');
-  wrapBackgroundTask(vaultRefresher.start(), true, 'startUpdateVaults');
 
   logger.info({
     at: 'index#start',
@@ -63,6 +54,15 @@ async function startService(): Promise<void> {
     at: 'index#start',
     message: 'Successfully started',
   });
+
+  // Initialize caches.
+  await Promise.all([
+    blockHeightRefresher.updateBlockHeight(),
+    perpetualMarketRefresher.updatePerpetualMarkets(),
+  ]);
+  await VaultAddressesCache.initialize(redisClient);
+  wrapBackgroundTask(blockHeightRefresher.start(), true, 'startUpdateBlockHeight');
+  wrapBackgroundTask(perpetualMarketRefresher.start(), true, 'startUpdatePerpetualMarkets');
 }
 
 process.on('SIGTERM', async () => {

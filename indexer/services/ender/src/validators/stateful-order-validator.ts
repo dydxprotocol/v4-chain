@@ -1,4 +1,4 @@
-import { OrderTable, vaultRefresher } from '@dydxprotocol-indexer/postgres';
+import { OrderTable } from '@dydxprotocol-indexer/postgres';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerTendermintEvent,
@@ -23,6 +23,7 @@ import { StatefulOrderPlacementHandler } from '../handlers/stateful-order/statef
 import { StatefulOrderRemovalHandler } from '../handlers/stateful-order/stateful-order-removal-handler';
 import { validateOrderAndReturnErrorMessage, validateOrderIdAndReturnErrorMessage } from './helpers';
 import { Validator } from './validator';
+import { isVaultAddress } from '../helpers/redis/vault-addresses';
 
 export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
   public validate(): void {
@@ -242,7 +243,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
    * - order uuids to be skipped in config env var.
    * - vault stateful orders.
    */
-  public shouldSkipSql(): boolean {
+  public async shouldSkipSql(): Promise<boolean> {
     const orderUUIDsToSkip: string[] = config.SKIP_STATEFUL_ORDER_UUIDS.split(',');
     if (orderUUIDsToSkip.length === 0) {
       return false;
@@ -255,7 +256,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
 
     // Exclude vault stateful orders.
     const address: string = this.getSubaccountid().owner;
-    if (vaultRefresher.isVault(address)) {
+    if (await isVaultAddress(address)) {
       return true;
     }
 
@@ -268,7 +269,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
    * Note that handlers are not skipped for vault stateful orders so that kafka events are
    * sent from ender.
    */
-  public shouldSkipHandlers(): boolean {
+  public async shouldSkipHandlers(): Promise<boolean> {
     const orderUUIDsToSkip: string[] = config.SKIP_STATEFUL_ORDER_UUIDS.split(',');
     if (orderUUIDsToSkip.length === 0) {
       return false;

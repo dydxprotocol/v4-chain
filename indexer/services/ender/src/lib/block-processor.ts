@@ -126,7 +126,7 @@ export class BlockProcessor {
    */
   public async process(): Promise<KafkaPublisher> {
     const groupedEvents: GroupedEvents = this.groupEvents();
-    this.validateAndOrganizeEvents(groupedEvents);
+    await this.validateAndOrganizeEvents(groupedEvents);
     return this.processEvents();
   }
 
@@ -173,27 +173,27 @@ export class BlockProcessor {
    * Each event is validated by a validator and also returns a list of handlers that will process
    * the event.
    */
-  private validateAndOrganizeEvents(groupedEvents: GroupedEvents): void {
+  private async validateAndOrganizeEvents(groupedEvents: GroupedEvents): Promise<void> {
     for (const eventsInTransaction of groupedEvents.transactionEvents) {
       for (const eventProtoWithType of eventsInTransaction) {
-        this.validateAndAddHandlerForEvent(
+        await this.validateAndAddHandlerForEvent(
           eventProtoWithType,
           TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING,
         );
       }
     }
     for (const eventProtoWithType of groupedEvents.blockEvents) {
-      this.validateAndAddHandlerForEvent(
+      await this.validateAndAddHandlerForEvent(
         eventProtoWithType,
         BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING,
       );
     }
   }
 
-  private validateAndAddHandlerForEvent(
+  private async validateAndAddHandlerForEvent(
     eventProto: EventProtoWithTypeAndVersion,
     validatorMap: Record<string, ValidatorInitializer>,
-  ): void {
+  ): Promise<void> {
     const Initializer:
     ValidatorInitializer | undefined = validatorMap[
       serializeSubtypeAndVersion(
@@ -221,7 +221,7 @@ export class BlockProcessor {
     this.sqlEventPromises[eventProto.blockEventIndex] = validator.getEventForBlockProcessor();
     let handlers: Handler<EventMessage>[];
 
-    if (validator.shouldSkipSql()) {
+    if (await validator.shouldSkipSql()) {
       // If sql processing should be skipped, set event subtype to `skipped_event`.
       this.block.events[eventProto.blockEventIndex] = {
         ...this.block.events[eventProto.blockEventIndex],
@@ -233,7 +233,7 @@ export class BlockProcessor {
         eventProto,
       });
     }
-    if (validator.shouldSkipHandlers()) {
+    if (await validator.shouldSkipHandlers()) {
       // If handlers should be skipped, set handlers to empty.
       handlers = [];
       logger.info({

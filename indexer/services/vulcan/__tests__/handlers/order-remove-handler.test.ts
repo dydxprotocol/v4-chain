@@ -31,7 +31,6 @@ import {
   testMocks,
   apiTranslations,
   TimeInForce, blockHeightRefresher,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OrderbookLevelsCache,
@@ -45,6 +44,7 @@ import {
   SubaccountOrderIdsCache,
   updateOrder,
   CanceledOrderStatus,
+  VaultAddressesCache,
 } from '@dydxprotocol-indexer/redis';
 import {
   OffChainUpdateV1,
@@ -91,8 +91,8 @@ describe('OrderRemoveHandler', () => {
     await Promise.all([
       perpetualMarketRefresher.updatePerpetualMarkets(),
       blockHeightRefresher.updateBlockHeight(),
-      vaultRefresher.updateVaults(),
     ]);
+    await VaultAddressesCache.initialize(redisClient);
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'increment');
     jest.spyOn(logger, 'info');

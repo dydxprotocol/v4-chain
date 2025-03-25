@@ -10,7 +10,6 @@ import {
   VaultFromDatabase,
   VaultTable,
   VaultStatus as IndexerVaultStatus,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
@@ -25,6 +24,7 @@ import {
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import { isVaultAddress } from '../../src/helpers/redis/vault-addresses';
 
 describe('upsertVaultHandler', () => {
   beforeAll(async () => {
@@ -67,6 +67,9 @@ describe('upsertVaultHandler', () => {
     const binaryBlock: Uint8Array = IndexerTendermintBlock.encode(block).finish();
     const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
 
+    expect(isVaultAddress(testConstants.defaultVaultAddress)).resolves.toBe(false);
+    expect(isVaultAddress(testConstants.defaultAddress)).resolves.toBe(false);
+
     await onMessage(kafkaMessage);
 
     const vaults: VaultFromDatabase[] = await VaultTable.findAll({}, [], {});
@@ -86,9 +89,8 @@ describe('upsertVaultHandler', () => {
       updatedAt: block.time?.toISOString(),
     });
 
-    expect(vaultRefresher.getVaultAddresses().size).toBe(2);
-    expect(vaultRefresher.isVault(testConstants.defaultVaultAddress)).toBe(true);
-    expect(vaultRefresher.isVault(testConstants.defaultAddress)).toBe(true);
+    expect(isVaultAddress(testConstants.defaultVaultAddress)).resolves.toBe(true);
+    expect(isVaultAddress(testConstants.defaultAddress)).resolves.toBe(true);
   });
 
   it('should upsert an existing vault', async () => {
@@ -96,7 +98,7 @@ describe('upsertVaultHandler', () => {
     expect(vaults).toHaveLength(1);
     expect(vaults[0].status).toEqual(IndexerVaultStatus.QUOTING);
     const existingVaultAddr: string = vaults[0].address;
-    expect(vaultRefresher.isVault(existingVaultAddr)).toBe(true);
+    expect(isVaultAddress(existingVaultAddr)).resolves.toBe(true);
 
     const events: UpsertVaultEventV1[] = [
       {
@@ -123,7 +125,7 @@ describe('upsertVaultHandler', () => {
       createdAt: testConstants.defaultVault.createdAt,
       updatedAt: block.time?.toISOString(),
     });
-    expect(vaultRefresher.isVault(existingVaultAddr)).toBe(true);
+    expect(isVaultAddress(existingVaultAddr)).resolves.toBe(true);
   });
 });
 
