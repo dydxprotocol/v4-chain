@@ -255,16 +255,18 @@ var (
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 
 		// vault
-		"/dydxprotocol.vault.MsgAllocateToVault":               &vault.MsgAllocateToVault{},
-		"/dydxprotocol.vault.MsgAllocateToVaultResponse":       nil,
-		"/dydxprotocol.vault.MsgDepositToMegavault":            &vault.MsgDepositToMegavault{},
-		"/dydxprotocol.vault.MsgDepositToMegavaultResponse":    nil,
-		"/dydxprotocol.vault.MsgRetrieveFromVault":             &vault.MsgRetrieveFromVault{},
-		"/dydxprotocol.vault.MsgRetrieveFromVaultResponse":     nil,
-		"/dydxprotocol.vault.MsgSetVaultParams":                &vault.MsgSetVaultParams{},
-		"/dydxprotocol.vault.MsgSetVaultParamsResponse":        nil,
-		"/dydxprotocol.vault.MsgWithdrawFromMegavault":         &vault.MsgWithdrawFromMegavault{},
-		"/dydxprotocol.vault.MsgWithdrawFromMegavaultResponse": nil,
+		"/dydxprotocol.vault.MsgAllocateToVault":                    &vault.MsgAllocateToVault{},
+		"/dydxprotocol.vault.MsgAllocateToVaultResponse":            nil,
+		"/dydxprotocol.vault.MsgDepositToMegavault":                 &vault.MsgDepositToMegavault{},
+		"/dydxprotocol.vault.MsgDepositToMegavaultResponse":         nil,
+		"/dydxprotocol.vault.MsgRetrieveFromVault":                  &vault.MsgRetrieveFromVault{},
+		"/dydxprotocol.vault.MsgRetrieveFromVaultResponse":          nil,
+		"/dydxprotocol.vault.MsgSetVaultParams":                     &vault.MsgSetVaultParams{},
+		"/dydxprotocol.vault.MsgSetVaultParamsResponse":             nil,
+		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParams":         &vault.MsgUpdateDefaultQuotingParams{},
+		"/dydxprotocol.vault.MsgUpdateDefaultQuotingParamsResponse": nil,
+		"/dydxprotocol.vault.MsgWithdrawFromMegavault":              &vault.MsgWithdrawFromMegavault{},
+		"/dydxprotocol.vault.MsgWithdrawFromMegavaultResponse":      nil,
 	}
 
 	NormalMsgsSlinky = map[string]sdk.Msg{
