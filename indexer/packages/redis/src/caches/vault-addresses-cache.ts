@@ -1,6 +1,5 @@
+import { Options, VaultFromDatabase, VaultTable } from '@dydxprotocol-indexer/postgres';
 import { RedisClient } from 'redis';
-
-import { Options, VaultFromDatabase, VaultTable } from "@dydxprotocol-indexer/postgres";
 
 // Cache key for vault addresses.
 export const VAULT_ADDRESSES_CACHE_KEY: string = 'v4/vault_addresses';
@@ -30,7 +29,7 @@ export async function isVaultAddress(
 
 /**
  * Adds an address to vault address cache.
- * 
+ *
  * Ender calls this function when a new vault is created.
  *
  * @param address
@@ -62,7 +61,7 @@ export async function addVaultAddress(
 
 /**
  * Initialize vault addresses cache by adding all vaults in database.
- * 
+ *
  * Ender and Vulcan both call this function upon start-up.
  *
  * @param client
@@ -73,9 +72,9 @@ export async function initialize(
   options?: Options,
 ): Promise<void> {
   const vaults: VaultFromDatabase[] = await VaultTable.findAll(
-      {}, [], options || { readReplica: true },
+    {}, [], options || { readReplica: true },
   );
   await Promise.all(
-      vaults.map(vault => addVaultAddress(vault.address, client))
+    vaults.map((vault) => addVaultAddress(vault.address, client)),
   );
 }

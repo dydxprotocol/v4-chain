@@ -31,11 +31,11 @@ describe('vaultAddressesCache', () => {
     const address2 = testConstants.defaultAddress3;
     expect(await addVaultAddress(address1, client)).toBe(1);
     expect(await addVaultAddress(address2, client)).toBe(1);
-    
+
     expect(await isVaultAddress(address1, client)).toBe(true);
     expect(await isVaultAddress(address2, client)).toBe(true);
   });
-  
+
   it('should return false if the address is not in cache', async () => {
     const exists = await isVaultAddress('0xABC', client);
     expect(exists).toBe(false);

@@ -3,6 +3,7 @@ import {
 } from '@dydxprotocol-indexer/base';
 import { stopConsumer, startConsumer } from '@dydxprotocol-indexer/kafka';
 import { blockHeightRefresher, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
+import { VaultAddressesCache } from '@dydxprotocol-indexer/redis';
 
 import config from './config';
 import { connect as connectToKafka } from './helpers/kafka/kafka-controller';
@@ -11,7 +12,6 @@ import {
   redisClient,
 } from './helpers/redis/redis-controller';
 import { flushAllQueues } from './lib/send-message-helper';
-import { VaultAddressesCache } from '@dydxprotocol-indexer/redis';
 
 async function startService(): Promise<void> {
   logger.info({

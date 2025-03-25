@@ -1,5 +1,6 @@
 import { VaultAddressesCache } from '@dydxprotocol-indexer/redis';
 import { IndexerOrderId } from '@dydxprotocol-indexer/v4-protos';
+
 import { redisClient } from './redis/redis-controller';
 
 /**
