@@ -43,7 +43,7 @@ export interface ProposeParams {
   /**
    * The minimum duration to wait between a finalized bridge and
    * proposing it. This allows other validators to have enough time to
-   * also recognize its occurence. Therefore the bridge daemon should
+   * also recognize its occurrence. Therefore the bridge daemon should
    * pool for new finalized events at least as often as this parameter.
    */
 
@@ -74,7 +74,7 @@ export interface ProposeParamsSDKType {
   /**
    * The minimum duration to wait between a finalized bridge and
    * proposing it. This allows other validators to have enough time to
-   * also recognize its occurence. Therefore the bridge daemon should
+   * also recognize its occurrence. Therefore the bridge daemon should
    * pool for new finalized events at least as often as this parameter.
    */
 

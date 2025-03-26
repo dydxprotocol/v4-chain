@@ -16,7 +16,7 @@ export class BatchedHandlers {
   // An array of `HandlerBatch`s. Handlers in a `HandlerBatch` can be processed in parallel, and
   // `HandlerBatch`s are processed in a sequential order following the order in `batchedHandlers`.
   batchedHandlers: HandlerBatch[];
-  // An array of sets of parallization ids. Each array of ids is the parallelization ids for the
+  // An array of sets of parallelization ids. Each array of ids is the parallelization ids for the
   // corresponding array of handlers in this.batchedHandlers as well as all the parallelization ids
   // of the previous batches. Handlers with overlapping parallelization ids cannot be processed in
   // parallel.

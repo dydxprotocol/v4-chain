@@ -39,7 +39,7 @@ export interface UnconditionalRevShareConfigSDKType {
 /** Describes the config of a recipient */
 
 export interface UnconditionalRevShareConfig_RecipientConfig {
-  /** Address of the recepient. */
+  /** Address of the recipient. */
   address: string;
   /** Percentage of net revenue to share with recipient, in parts-per-million. */
 
@@ -48,7 +48,7 @@ export interface UnconditionalRevShareConfig_RecipientConfig {
 /** Describes the config of a recipient */
 
 export interface UnconditionalRevShareConfig_RecipientConfigSDKType {
-  /** Address of the recepient. */
+  /** Address of the recipient. */
   address: string;
   /** Percentage of net revenue to share with recipient, in parts-per-million. */
 
