@@ -1,10 +1,11 @@
 package price_fetcher
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"golang.org/x/exp/maps"
-	"gopkg.in/typ.v4/lists"
+	"maps"
 	"sync"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"gopkg.in/typ.v4/lists"
 )
 
 // mutableState stores the mutable state of the price fetcher.

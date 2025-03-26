@@ -1,6 +1,8 @@
 package app
 
 import (
+	"maps"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -16,8 +18,6 @@ import (
 	vaultmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
-
-	"golang.org/x/exp/maps"
 )
 
 func init() {
