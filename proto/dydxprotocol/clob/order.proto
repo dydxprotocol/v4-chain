@@ -216,8 +216,8 @@ message Order {
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
 
-      // duration represents the duration in seconds for a TWAP order.
-    uint32 duration = 12;
+  // duration represents the duration in seconds for a TWAP order.
+  uint32 duration = 12;
 }
 
 // TransactionOrdering represents a unique location in the block where a
