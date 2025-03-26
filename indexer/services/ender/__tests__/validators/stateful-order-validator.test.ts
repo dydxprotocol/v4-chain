@@ -28,9 +28,7 @@ import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../h
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
-import {
-  dbHelpers, OrderTable, testMocks, vaultRefresher,
-} from '@dydxprotocol-indexer/postgres';
+import { dbHelpers, OrderTable, testMocks } from '@dydxprotocol-indexer/postgres';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('stateful-order-validator', () => {
@@ -43,7 +41,6 @@ describe('stateful-order-validator', () => {
 
   beforeEach(async () => {
     await testMocks.seedData();
-    await vaultRefresher.updateVaults();
     jest.spyOn(logger, 'error');
   });
 

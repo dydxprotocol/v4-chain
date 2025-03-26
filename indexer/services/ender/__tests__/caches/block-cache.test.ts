@@ -7,7 +7,6 @@ import {
   perpetualMarketRefresher,
   testConstants,
   testMocks,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   getCurrentBlockHeight,
@@ -35,7 +34,6 @@ describe('block-cache', () => {
     clearCandlesMap();
     perpetualMarketRefresher.clear();
     assetRefresher.clear();
-    vaultRefresher.clear();
   });
 
   afterAll(async () => {
@@ -91,7 +89,6 @@ describe('block-cache', () => {
       expect(getCandlesMap()).toEqual({});
       expect(perpetualMarketRefresher.getPerpetualMarketsMap()).toEqual({});
       expect(assetRefresher.getAssetsMap()).toEqual({});
-      expect(vaultRefresher.getVaultAddresses()).toEqual(new Set());
 
       await initializeAllCaches();
 
@@ -100,7 +97,6 @@ describe('block-cache', () => {
       expect(getCandlesMap()).not.toEqual({});
       expect(perpetualMarketRefresher.getPerpetualMarketsMap()).not.toEqual({});
       expect(assetRefresher.getAssetsMap()).not.toEqual({});
-      expect(vaultRefresher.getVaultAddresses()).not.toEqual({});
     });
   });
 });

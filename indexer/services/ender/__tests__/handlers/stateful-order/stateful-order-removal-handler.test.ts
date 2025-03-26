@@ -8,7 +8,6 @@ import {
   SubaccountTable,
   testConstants,
   testMocks,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
@@ -41,7 +40,6 @@ import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
-import { defaultVault } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('statefulOrderRemovalHandler', () => {
   const prevSkippedOrderUUIDs: string = config.SKIP_STATEFUL_ORDER_UUIDS;
@@ -55,7 +53,6 @@ describe('statefulOrderRemovalHandler', () => {
     await testMocks.seedData();
     updateBlockCache(defaultPreviousHeight);
     await perpetualMarketRefresher.updatePerpetualMarkets();
-    await vaultRefresher.updateVaults();
     producerSendMock = jest.spyOn(producer, 'send');
   });
 
@@ -82,7 +79,7 @@ describe('statefulOrderRemovalHandler', () => {
       removedOrderId: {
         ...defaultOrderId,
         subaccountId: {
-          owner: defaultVault.address,
+          owner: testConstants.defaultVaultAddress,
           number: 0,
         },
       },
@@ -218,12 +215,12 @@ describe('statefulOrderRemovalHandler', () => {
   ) => {
     const vaultOrderCreateEvent: OrderCreateObject = {
       ...testConstants.defaultOrder,
-      subaccountId: SubaccountTable.uuid(defaultVault.address, 0),
+      subaccountId: SubaccountTable.uuid(testConstants.defaultVaultAddress, 0),
       clientId: '0',
     };
     await SubaccountTable.create({
       ...testConstants.defaultSubaccount,
-      address: defaultVault.address,
+      address: testConstants.defaultVaultAddress,
       subaccountNumber: 0,
     });
     await OrderTable.create(vaultOrderCreateEvent);

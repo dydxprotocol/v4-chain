@@ -25,7 +25,6 @@ import {
   testConstants,
   testMocks,
   TimeInForce,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import * as redisPackage from '@dydxprotocol-indexer/redis';
 import {
@@ -235,7 +234,6 @@ describe('order-place-handler', () => {
       await Promise.all([
         perpetualMarketRefresher.updatePerpetualMarkets(),
         blockHeightRefresher.updateBlockHeight(),
-        vaultRefresher.updateVaults(),
       ]);
       await Promise.all([
         OrderTable.create(dbDefaultOrder),

@@ -10,7 +10,6 @@ import {
   VaultFromDatabase,
   VaultTable,
   VaultStatus as IndexerVaultStatus,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
@@ -85,10 +84,6 @@ describe('upsertVaultHandler', () => {
       createdAt: block.time?.toISOString(),
       updatedAt: block.time?.toISOString(),
     });
-
-    expect(vaultRefresher.getVaultAddresses().size).toBe(2);
-    expect(vaultRefresher.isVault(testConstants.defaultVaultAddress)).toBe(true);
-    expect(vaultRefresher.isVault(testConstants.defaultAddress)).toBe(true);
   });
 
   it('should upsert an existing vault', async () => {
@@ -96,7 +91,6 @@ describe('upsertVaultHandler', () => {
     expect(vaults).toHaveLength(1);
     expect(vaults[0].status).toEqual(IndexerVaultStatus.QUOTING);
     const existingVaultAddr: string = vaults[0].address;
-    expect(vaultRefresher.isVault(existingVaultAddr)).toBe(true);
 
     const events: UpsertVaultEventV1[] = [
       {
@@ -123,7 +117,6 @@ describe('upsertVaultHandler', () => {
       createdAt: testConstants.defaultVault.createdAt,
       updatedAt: block.time?.toISOString(),
     });
-    expect(vaultRefresher.isVault(existingVaultAddr)).toBe(true);
   });
 });
 

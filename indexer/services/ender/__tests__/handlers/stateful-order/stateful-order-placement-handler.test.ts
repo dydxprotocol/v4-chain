@@ -11,7 +11,6 @@ import {
   testConstants,
   testMocks,
   TimeInForce,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerOrder,
@@ -61,7 +60,6 @@ describe('statefulOrderPlacementHandler', () => {
     await testMocks.seedData();
     updateBlockCache(defaultPreviousHeight);
     await perpetualMarketRefresher.updatePerpetualMarkets();
-    await vaultRefresher.updateVaults();
     producerSendMock = jest.spyOn(producer, 'send');
   });
 

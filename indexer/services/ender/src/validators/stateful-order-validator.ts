@@ -1,4 +1,5 @@
-import { OrderTable, vaultRefresher } from '@dydxprotocol-indexer/postgres';
+import { OrderTable } from '@dydxprotocol-indexer/postgres';
+import { VAULTS_CLOB_0_TO_999 } from '@dydxprotocol-indexer/postgres/build/src/lib/helpers';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerTendermintEvent,
@@ -255,7 +256,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
 
     // Exclude vault stateful orders.
     const address: string = this.getSubaccountid().owner;
-    if (vaultRefresher.isVault(address)) {
+    if (VAULTS_CLOB_0_TO_999.has(address)) {
       return true;
     }
 

@@ -329,7 +329,7 @@ export const defaultVaultOrder: IndexerOrder = {
   orderId: {
     ...defaultMakerOrder.orderId!,
     subaccountId: {
-      owner: testConstants.defaultVault.address,
+      owner: testConstants.defaultVaultAddress,
       number: 0,
     },
     orderFlags: ORDER_FLAG_LONG_TERM,

@@ -1,4 +1,3 @@
-import { vaultRefresher, VaultFromDatabase, VaultModel } from '@dydxprotocol-indexer/postgres';
 import { UpsertVaultEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
@@ -13,10 +12,7 @@ export class UpsertVaultHandler extends Handler<UpsertVaultEventV1> {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
-    const vault: VaultFromDatabase = VaultModel.fromJson(resultRow.vault) as VaultFromDatabase;
-    vaultRefresher.addVault(vault.address);
-
+  public async internalHandle(_: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     return [];
   }
 }

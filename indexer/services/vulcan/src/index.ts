@@ -2,7 +2,7 @@ import {
   logger, getInstanceId, startBugsnag, setInstanceId, wrapBackgroundTask,
 } from '@dydxprotocol-indexer/base';
 import { stopConsumer, startConsumer } from '@dydxprotocol-indexer/kafka';
-import { blockHeightRefresher, perpetualMarketRefresher, vaultRefresher } from '@dydxprotocol-indexer/postgres';
+import { blockHeightRefresher, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 
 import config from './config';
 import { connect as connectToKafka } from './helpers/kafka/kafka-controller';
@@ -36,11 +36,9 @@ async function startService(): Promise<void> {
   await Promise.all([
     blockHeightRefresher.updateBlockHeight(),
     perpetualMarketRefresher.updatePerpetualMarkets(),
-    vaultRefresher.updateVaults(),
   ]);
   wrapBackgroundTask(blockHeightRefresher.start(), true, 'startUpdateBlockHeight');
   wrapBackgroundTask(perpetualMarketRefresher.start(), true, 'startUpdatePerpetualMarkets');
-  wrapBackgroundTask(vaultRefresher.start(), true, 'startUpdateVaults');
 
   logger.info({
     at: 'index#start',

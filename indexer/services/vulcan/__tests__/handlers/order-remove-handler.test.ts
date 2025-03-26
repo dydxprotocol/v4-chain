@@ -31,7 +31,6 @@ import {
   testMocks,
   apiTranslations,
   TimeInForce, blockHeightRefresher,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OrderbookLevelsCache,
@@ -91,7 +90,6 @@ describe('OrderRemoveHandler', () => {
     await Promise.all([
       perpetualMarketRefresher.updatePerpetualMarkets(),
       blockHeightRefresher.updateBlockHeight(),
-      vaultRefresher.updateVaults(),
     ]);
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'increment');

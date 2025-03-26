@@ -58,13 +58,13 @@ export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
 export * as assetRefresher from './loops/asset-refresher';
 export * as blockHeightRefresher from './loops/block-height-refresher';
 export * as liquidityTierRefresher from './loops/liquidity-tier-refresher';
-export * as vaultRefresher from './loops/vault-refresher';
 
 export * as uuid from './helpers/uuid';
 export * as protocolTranslations from './lib/protocol-translations';
 export * as orderTranslations from './lib/order-translations';
 export * as apiTranslations from './lib/api-translations';
 export * as parentSubaccountHelpers from './lib/parent-subaccount-helpers';
+export * as libHelpers from './lib/helpers';
 export * as dbHelpers from './helpers/db-helpers';
 export * as storeHelpers from './helpers/stores-helpers';
 

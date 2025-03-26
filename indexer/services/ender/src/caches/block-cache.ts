@@ -6,7 +6,6 @@ import {
   Transaction,
   assetRefresher,
   perpetualMarketRefresher,
-  vaultRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 
@@ -119,7 +118,6 @@ export async function initializeAllCaches(): Promise<void> {
     startCandleCache(txId),
     perpetualMarketRefresher.updatePerpetualMarkets({ txId }),
     assetRefresher.updateAssets({ txId }),
-    vaultRefresher.updateVaults({ txId }),
   ]);
 
   await Transaction.rollback(txId);
