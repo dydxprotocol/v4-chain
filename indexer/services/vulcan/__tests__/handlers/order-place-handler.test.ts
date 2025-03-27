@@ -1125,7 +1125,7 @@ describe('order-place-handler', () => {
         );
       });
 
-      it('does not look up vault order in db or send cached order update', async () => {
+      it('does not look up vault order in db but sends cached order update', async () => {
         const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
 
         await handleInitialOrderPlace({
@@ -1138,7 +1138,7 @@ describe('order-place-handler', () => {
         });
 
         expect(OrderTable.findById).not.toHaveBeenCalled();
-        expect(StatefulOrderUpdatesCache.removeStatefulOrderUpdate).not.toHaveBeenCalled();
+        expect(StatefulOrderUpdatesCache.removeStatefulOrderUpdate).toHaveBeenCalled();
         expectWebsocketMessagesSent(
           producerSendSpy,
           redisTestConstants.defaultRedisOrderVault,

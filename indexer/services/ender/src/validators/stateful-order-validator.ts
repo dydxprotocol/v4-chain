@@ -240,27 +240,17 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
 
   /**
    * Skip SQL processing for
-   * - order uuids to be skipped in config env var.
    * - vault stateful orders.
+   * - order uuids to be skipped in config env var.
    */
   public shouldSkipSql(): boolean {
-    const orderUUIDsToSkip: string[] = config.SKIP_STATEFUL_ORDER_UUIDS.split(',');
-    if (orderUUIDsToSkip.length === 0) {
-      return false;
-    }
-
-    const orderUUIDStoSkipSet: Set<string> = new Set(orderUUIDsToSkip);
-    if (orderUUIDStoSkipSet.has(this.getOrderUUId())) {
-      return true;
-    }
-
     // Exclude vault stateful orders.
     const address: string = this.getSubaccountid().owner;
     if (VAULTS_CLOB_0_TO_999.has(address)) {
       return true;
     }
 
-    return false;
+    return this.shouldSkipOrderUuid();
   }
 
   /**
@@ -270,6 +260,10 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
    * sent from ender.
    */
   public shouldSkipHandlers(): boolean {
+    return this.shouldSkipOrderUuid();
+  }
+
+  private shouldSkipOrderUuid(): boolean {
     const orderUUIDsToSkip: string[] = config.SKIP_STATEFUL_ORDER_UUIDS.split(',');
     if (orderUUIDsToSkip.length === 0) {
       return false;

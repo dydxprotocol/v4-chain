@@ -136,8 +136,8 @@ export class OrderRemoveHandler extends Handler {
       });
     }
 
-    // For vault orders, handle cancellation as non-stateful instead because they
-    // are not persisted.
+    // Since vault orders are not persisted by ender (to improve processing latency), we
+    // should handle their cancellation as non-stateful.
     if (this.isStatefulOrderCancelation(orderRemove) &&
       !isVaultOrder(orderRemove.removedOrderId!)) {
       await this.handleStatefulOrderCancelation(orderRemove, removeOrderResult, headers);

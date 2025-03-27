@@ -579,7 +579,7 @@ describe('OrderUpdateHandler', () => {
       );
     });
 
-    it('does not add order update to stateful order update cache if stateful order not found and is a vault order', async () => {
+    it('adds order update to stateful order update cache if vault order not found', async () => {
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const vaultOrderUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
         ...redisTestConstants.orderUpdate,
@@ -596,7 +596,7 @@ describe('OrderUpdateHandler', () => {
           Date.now(),
           client,
         );
-      expect(cachedOrderUpdate).toBeUndefined();
+      expect(cachedOrderUpdate).toBeDefined();
     });
   });
 });

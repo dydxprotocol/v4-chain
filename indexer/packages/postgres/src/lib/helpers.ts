@@ -9,6 +9,7 @@ export function blockTimeFromIsoString(isoString: IsoString): number {
   return Math.floor(dateTime.toMillis() / 1000);
 }
 
+// TODO (ENG-65): future-proof pre-generated vault addresses.
 // Set of the addresses of vaults that quote on clob pairs 0 to 999.
 export const VAULTS_CLOB_0_TO_999: Set<string> = new Set(vaultAddresses);
 // Comma-separated list of the addresses of vaults that quote on clob pairs 0 to 999.

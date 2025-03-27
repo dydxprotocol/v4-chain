@@ -110,18 +110,20 @@ export class OrderPlaceHandler extends Handler {
       // isn't updated.
       // For stateful and conditional orders, look the order up in the db for the createdAtHeight
       // and send any cached order updates for the stateful or conditional order
-      // No need to send cached order updates for vault orders as they are not cached or persisted.
       let dbOrder: OrderFromDatabase | undefined;
-      if (isStatefulOrder(redisOrder.order!.orderId!.orderFlags) &&
-        !isVaultOrder(redisOrder.order!.orderId!)) {
+      if (isStatefulOrder(redisOrder.order!.orderId!.orderFlags)) {
         const orderUuid: string = OrderTable.orderIdToUuid(redisOrder.order!.orderId!);
-        dbOrder = await OrderTable.findById(orderUuid);
-        if (dbOrder === undefined) {
-          logger.crit({
-            at: 'OrderPlaceHandler#createSubaccountWebsocketMessage',
-            message: 'Stateful order not found in database',
-          });
-          throw new Error(`Stateful order not found in database: ${orderUuid}`);
+        // Since vault orders are not persisted by ender (to improve processing latency), skip
+        // looking them up in db. However, we should still send corresponding cached order update.
+        if (!isVaultOrder(redisOrder.order!.orderId!)) {
+          dbOrder = await OrderTable.findById(orderUuid);
+          if (dbOrder === undefined) {
+            logger.crit({
+              at: 'OrderPlaceHandler#createSubaccountWebsocketMessage',
+              message: 'Stateful order not found in database',
+            });
+            throw new Error(`Stateful order not found in database: ${orderUuid}`);
+          }
         }
         await this.sendCachedOrderUpdate(orderUuid, headers);
       }
