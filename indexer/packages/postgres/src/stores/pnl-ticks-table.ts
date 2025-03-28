@@ -11,7 +11,7 @@ import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllInjectableVariables, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
-import { getVaultAddresses } from '../lib/helpers';
+import { VAULTS_CLOB_0_TO_999_STR_CONCAT } from '../lib/helpers';
 import PnlTicksModel from '../models/pnl-ticks-model';
 import {
   Options,
@@ -357,8 +357,7 @@ function convertTimespanToSQL(timeSpan: string): string {
 async function getRankedPnlTicksForTimeSpan(
   timeSpan: string,
 ): Promise<LeaderboardPnlCreateObject[]> {
-  const vaultAddresses: string[] = getVaultAddresses();
-  const vaultAddressesString: string = vaultAddresses.map((address) => `'${address}'`).join(',');
+  const vaultAddressesString: string = VAULTS_CLOB_0_TO_999_STR_CONCAT;
   const intervalSqlString: string = convertTimespanToSQL(timeSpan);
   const result: {
     rows: LeaderboardPnlCreateObject[],
@@ -437,8 +436,7 @@ async function getRankedPnlTicksForTimeSpan(
  *    descending order along with associated fields
  */
 async function getAllTimeRankedPnlTicks(): Promise<LeaderboardPnlCreateObject[]> {
-  const vaultAddresses: string[] = getVaultAddresses();
-  const vaultAddressesString: string = vaultAddresses.map((address) => `'${address}'`).join(',');
+  const vaultAddressesString: string = VAULTS_CLOB_0_TO_999_STR_CONCAT;
   const result: {
     rows: LeaderboardPnlCreateObject[],
   } = await knexReadReplica.getConnection().raw(

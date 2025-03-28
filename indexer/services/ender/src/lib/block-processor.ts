@@ -219,26 +219,34 @@ export class BlockProcessor {
     );
     validator.validate();
     this.sqlEventPromises[eventProto.blockEventIndex] = validator.getEventForBlockProcessor();
-    let handlers: Handler<EventMessage>[] = validator.createHandlers(
-      eventProto.indexerTendermintEvent,
-      this.txId,
-      this.messageReceivedTimestamp,
-    );
+    let handlers: Handler<EventMessage>[];
 
-    if (validator.shouldExcludeEvent()) {
-      // If the event should be excluded from being processed, set the subtype to a special value
-      // for skipped events.
+    if (validator.shouldSkipSql()) {
+      // If sql processing should be skipped, set event subtype to `skipped_event`.
       this.block.events[eventProto.blockEventIndex] = {
         ...this.block.events[eventProto.blockEventIndex],
         subtype: SKIPPED_EVENT_SUBTYPE,
       };
-      // Set handlers to empty array if event is to be skipped.
-      handlers = [];
       logger.info({
-        at: 'onMessage#shouldExcludeEvent',
-        message: 'Excluded event from processing',
+        at: 'onMessage#shouldSkipSql',
+        message: 'Excluded event from sql processing',
         eventProto,
       });
+    }
+    if (validator.shouldSkipHandlers()) {
+      // If handlers should be skipped, set handlers to empty.
+      handlers = [];
+      logger.info({
+        at: 'onMessage#shouldSkipHandlers',
+        message: 'Excluded event from handler processing',
+        eventProto,
+      });
+    } else {
+      handlers = validator.createHandlers(
+        eventProto.indexerTendermintEvent,
+        this.txId,
+        this.messageReceivedTimestamp,
+      );
     }
 
     _.map(handlers, (handler: Handler<EventMessage>) => {

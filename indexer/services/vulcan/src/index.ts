@@ -32,7 +32,7 @@ async function startService(): Promise<void> {
     message: `Got instance id ${getInstanceId()}.`,
   });
 
-  // Initialize PerpetualMarkets cache
+  // Initialize caches.
   await Promise.all([
     blockHeightRefresher.updateBlockHeight(),
     perpetualMarketRefresher.updatePerpetualMarkets(),

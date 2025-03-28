@@ -30,6 +30,8 @@ import {
   defaultPreviousHeight,
   defaultTime,
   defaultTxHash,
+  defaultVaultOrder,
+  defaultVaultOrderPlacementEvent,
 } from '../../helpers/constants';
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
@@ -275,5 +277,35 @@ describe('statefulOrderPlacementHandler', () => {
     await onMessage(kafkaMessage);
     const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
     expect(order).toBeUndefined();
+  });
+
+  it.each([
+    ['txn event', defaultVaultOrderPlacementEvent, 0],
+    ['block event', defaultVaultOrderPlacementEvent, -1],
+  ])('successfully skips vault order placements (as %s)', async (
+    _name: string,
+    statefulOrderEvent: StatefulOrderEventV1,
+    transactionIndex: number,
+  ) => {
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
+      statefulOrderEvent,
+      transactionIndex,
+    );
+
+    await onMessage(kafkaMessage);
+    const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
+    expect(order).toBeUndefined();
+    const expectedOffchainUpdate: OffChainUpdateV1 = {
+      orderPlace: {
+        order: defaultVaultOrder,
+        placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
+      },
+    };
+    expectVulcanKafkaMessage({
+      producerSendMock,
+      orderId: defaultVaultOrder.orderId!,
+      offchainUpdate: expectedOffchainUpdate,
+      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderPlacement' },
+    });
   });
 });

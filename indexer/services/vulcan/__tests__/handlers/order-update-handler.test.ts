@@ -578,6 +578,26 @@ describe('OrderUpdateHandler', () => {
         },
       );
     });
+
+    it('adds order update to stateful order update cache if vault order not found', async () => {
+      synchronizeWrapBackgroundTask(wrapBackgroundTask);
+      const vaultOrderUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
+        ...redisTestConstants.orderUpdate,
+        orderUpdate: {
+          ...redisTestConstants.orderUpdate.orderUpdate,
+          orderId: redisTestConstants.defaultOrderIdVault,
+        },
+      };
+      await handleOrderUpdate(vaultOrderUpdate);
+
+      const cachedOrderUpdate: OrderUpdateV1 | undefined = await StatefulOrderUpdatesCache
+        .removeStatefulOrderUpdate(
+          redisTestConstants.defaultOrderUuidVault,
+          Date.now(),
+          client,
+        );
+      expect(cachedOrderUpdate).toBeDefined();
+    });
   });
 });
 

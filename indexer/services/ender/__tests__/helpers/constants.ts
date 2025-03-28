@@ -324,6 +324,20 @@ export const defaultTakerOrder: IndexerOrder = {
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   conditionalOrderTriggerSubticks: Long.fromValue(0, true),
 };
+export const defaultVaultOrder: IndexerOrder = {
+  ...defaultMakerOrder,
+  orderId: {
+    ...defaultMakerOrder.orderId!,
+    subaccountId: {
+      owner: testConstants.defaultVaultAddress,
+      number: 0,
+    },
+    orderFlags: ORDER_FLAG_LONG_TERM,
+  },
+  goodTilBlock: undefined,
+  goodTilBlockTime: 123,
+  timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+};
 export const defaultLiquidationOrder: LiquidationOrderV1 = {
   liquidated: defaultSubaccountId,
   clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
@@ -508,6 +522,17 @@ export const defaultLongTermOrderPlacementEvent: StatefulOrderEventV1 = {
       },
       goodTilBlockTime: 123,
     },
+  },
+};
+export const defaultVaultOrderPlacementEvent: StatefulOrderEventV1 = {
+  orderPlace: {
+    order: defaultVaultOrder,
+  },
+};
+export const defaultVaultOrderRemovalEvent: StatefulOrderEventV1 = {
+  orderRemoval: {
+    removedOrderId: defaultVaultOrder.orderId!,
+    reason: OrderRemovalReason.ORDER_REMOVAL_REASON_EXPIRED,
   },
 };
 

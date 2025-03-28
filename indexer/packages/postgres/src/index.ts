@@ -21,6 +21,7 @@ export { default as LeaderboardPnlModel } from './models/leaderboard-pnl-model';
 export { default as PersistentCacheModel } from './models/persistent-cache-model';
 export { default as AffiliateReferredUsersModel } from './models/affiliate-referred-users-model';
 export { default as AffiliateInfoModel } from './models/affiliate-info-model';
+export { default as VaultModel } from './models/vault-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';
@@ -63,6 +64,7 @@ export * as protocolTranslations from './lib/protocol-translations';
 export * as orderTranslations from './lib/order-translations';
 export * as apiTranslations from './lib/api-translations';
 export * as parentSubaccountHelpers from './lib/parent-subaccount-helpers';
+export * as libHelpers from './lib/helpers';
 export * as dbHelpers from './helpers/db-helpers';
 export * as storeHelpers from './helpers/stores-helpers';
 
