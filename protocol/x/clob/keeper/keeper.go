@@ -301,6 +301,16 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 	statefulOrders := k.GetAllStatefulOrders(ctx)
 	for _, order := range statefulOrders {
 		subaccountId := order.GetSubaccountId()
+		if subaccountId.Owner == "dydx1m93n2784h9cz3rsppn9au97cs6c5p2rkc03fq2" {
+			k.Logger(ctx).Info(
+				"!!!! Debug: initializing stateful order for dydx1m93n2784h9cz3rsppn9au97cs6c5p2rkc03fq2",
+				"subaccount_id",
+				subaccountId,
+				"order",
+				order,
+			)
+		}
+
 		k.SetStatefulOrderCount(
 			ctx,
 			subaccountId,
