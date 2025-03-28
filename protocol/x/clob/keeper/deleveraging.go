@@ -297,7 +297,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	indexOffset := pseudoRand.Intn(numSubaccounts)
 
 	// Iterate at most `MaxDeleveragingSubaccountsToIterate` subaccounts.
-	numSubaccountsToIterate := lib.Min(numSubaccounts, int(k.Flags.MaxDeleveragingSubaccountsToIterate))
+	numSubaccountsToIterate := min(numSubaccounts, int(k.Flags.MaxDeleveragingSubaccountsToIterate))
 
 	for i := 0; i < numSubaccountsToIterate && deltaQuantumsRemaining.Sign() != 0; i++ {
 		index := (i + indexOffset) % numSubaccounts
