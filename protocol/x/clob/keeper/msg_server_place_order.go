@@ -128,6 +128,7 @@ func (k Keeper) HandleMsgPlaceOrder(
 			ctx,
 			order.OrderId,
 		)
+		// TODO: add indexer event here
 	} else {
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,

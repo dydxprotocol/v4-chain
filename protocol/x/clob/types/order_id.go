@@ -10,9 +10,11 @@ import (
 )
 
 const (
-	OrderIdFlags_ShortTerm   = uint32(0)
-	OrderIdFlags_Conditional = uint32(32)
-	OrderIdFlags_LongTerm    = uint32(64)
+	OrderIdFlags_ShortTerm    = uint32(0)
+	OrderIdFlags_Conditional  = uint32(32)
+	OrderIdFlags_LongTerm     = uint32(64)
+	OrderIdFlags_Twap         = uint32(128)
+	OrderIdFlags_TwapSuborder = uint32(256)
 )
 
 // IsShortTermOrder returns true if this order ID is for a short-term order, false if
@@ -29,6 +31,12 @@ func (o *OrderId) IsConditionalOrder() bool {
 	// this is a conditional order.
 	// Note that 32 in decimal == 0x20 in hex == 0b00100000 in binary.
 	return o.OrderFlags == OrderIdFlags_Conditional
+}
+
+// IsTwapOrder returns true if this order ID is for a TWAP order, false if
+// not (which implies the order ID is for a short-term or long-term order).
+func (o *OrderId) IsTwapOrder() bool {
+	return o.OrderFlags == OrderIdFlags_Twap
 }
 
 // IsLongTermOrder returns true if this order ID is for a long-term order, false if

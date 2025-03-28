@@ -65,6 +65,12 @@ const (
 	// information about when it was triggered.
 	TriggeredConditionalOrderKeyPrefix = PlacedStatefulOrderKeyPrefix + "T:"
 
+	// TWAPOrderKeyPrefix is the key to retrieve a TWAP order and information about when it was placed.
+	TWAPOrderKeyPrefix = StatefulOrderKeyPrefix + "TWAP:"
+
+	// TWAPTriggerOrderKeyPrefix is the key to retrieve a TWAP trigger order and information about when suborders will be placed.
+	TWAPTriggerOrderKeyPrefix = PlacedStatefulOrderKeyPrefix + "TWAP:"
+
 	// LongTermOrderPlacementKeyPrefix is the key to retrieve a long term order and information about
 	// when it was placed.
 	LongTermOrderPlacementKeyPrefix = PlacedStatefulOrderKeyPrefix + "L:"

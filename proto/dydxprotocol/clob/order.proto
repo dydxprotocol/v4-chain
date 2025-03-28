@@ -39,6 +39,9 @@ message OrderId {
 
   // ID of the CLOB the order is created for.
   uint32 clob_pair_id = 4;
+
+  // sequence number of the order. Used for matching generated suborders to parent TWAP orders.
+  uint64 sequence_number = 5;
 }
 
 // OrdersFilledDuringLatestBlock represents a list of `OrderIds` that were
@@ -93,6 +96,26 @@ message LongTermOrderPlacement {
   // The block height and transaction index at which the order was placed.
   // Used for ordering by time priority when the chain is restarted.
   TransactionOrdering placement_index = 2 [ (gogoproto.nullable) = false ];
+}
+
+message TWAPOrderPlacement {
+  Order order = 1 [ (gogoproto.nullable) = false ];
+  // The number of legs remaining to be executed.
+  uint32 remaining_legs = 2;
+  // The number of quantums remaining to be executed.
+  uint64 remaining_quantums = 3;
+  // The block height at which the order was placed.
+  uint32 block_height = 4;
+}
+
+// TWAPTriggerPlacement represents the placement of a TWAP suborder in
+// state. It stores the stateful order itself, the `BlockHeight` and
+// `TransactionIndex` at which the order was placed and triggered.
+message TWAPTriggerPlacement {
+  // The generated suborder given a TWAP order.
+  Order order = 1 [ (gogoproto.nullable) = false ];
+  // The block height at which the order was triggered.
+  uint64 trigger_block_height = 2;
 }
 
 // ConditionalOrderPlacement represents the placement of a conditional order in
@@ -215,6 +238,20 @@ message Order {
   // Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
+
+  // twap_config represents the configuration for a TWAP order. This must be present 
+  // for twap orders and will be ignored for all other order types.
+  TWAPOrderConfig twap_config = 12;
+}
+
+message TWAPOrderConfig {
+  // Duration of the TWAP order execution in seconds. Must be between 300 (5 minutes)
+  // and 86400 (24 hours).
+  uint32 duration = 1;
+
+  // Interval in seconds for each suborder to execute. Must be a whole number and 
+  // a factor of the duration.
+  uint32 interval = 2;
 }
 
 // TransactionOrdering represents a unique location in the block where a

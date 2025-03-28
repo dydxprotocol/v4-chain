@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"time"
+	"encoding/binary"
 
 	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -180,6 +181,11 @@ func (o *Order) IsConditionalOrder() bool {
 	return o.OrderId.IsConditionalOrder()
 }
 
+// IsTwapOrder returns whether this order is a TWAP order.
+func (o *Order) IsTwapOrder() bool {
+	return o.OrderId.IsTwapOrder()
+}
+
 // IsPostOnlyOrder returns whether this order is a post only order.
 func (o *Order) IsPostOnlyOrder() bool {
 	return o.GetTimeInForce() == Order_TIME_IN_FORCE_POST_ONLY
@@ -240,4 +246,18 @@ func (o *Order) GetOrderLabels() []gometrics.Label {
 		},
 		o.OrderId.GetOrderIdLabels()...,
 	)
+}
+
+// GetTWAPTriggerKey returns the key for a TWAP trigger order.
+func GetTWAPTriggerKey(triggerTime int64, orderId OrderId) []byte {
+    // 8 bytes for triggerTime + 32 bytes for orderId hash
+    key := make([]byte, 40)
+    
+    // Write trigger time as big-endian uint64
+    binary.BigEndian.PutUint64(key[0:8], uint64(triggerTime))
+    
+    // Write orderId hash
+    copy(key[8:], orderId.ToStateKey())
+    
+    return key
 }

@@ -398,7 +398,11 @@ func (k Keeper) PlaceStatefulOrder(
 	// state.
 	if lib.IsDeliverTxMode(ctx) {
 		// Write the stateful order to state and the memstore.
-		k.SetLongTermOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
+		if order.IsTwapOrder() {
+			k.SetTWAPOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
+		} else {
+			k.SetLongTermOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
+		}
 		k.AddStatefulOrderIdExpiration(
 			ctx,
 			order.MustGetUnixGoodTilBlockTime(),
