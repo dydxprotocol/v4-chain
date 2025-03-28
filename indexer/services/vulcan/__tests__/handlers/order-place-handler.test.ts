@@ -243,6 +243,8 @@ describe('order-place-handler', () => {
       jest.spyOn(stats, 'timing');
       jest.spyOn(OrderbookLevelsCache, 'updatePriceLevel');
       jest.spyOn(CanceledOrdersCache, 'removeOrderFromCaches');
+      jest.spyOn(StatefulOrderUpdatesCache, 'removeStatefulOrderUpdate');
+      jest.spyOn(OrderTable, 'findById');
       jest.spyOn(stats, 'increment');
       jest.spyOn(redisPackage, 'placeOrder');
       jest.spyOn(logger, 'error');
@@ -1070,6 +1072,85 @@ describe('order-place-handler', () => {
         true,
       );
     });
+
+    describe('stateful order update cache', () => {
+      it('looks up stateful order in db and send cached order update', async () => {
+        const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+        const fakeSystemTime = 123456789;
+        jest.setSystemTime(fakeSystemTime);
+        await StatefulOrderUpdatesCache.addStatefulOrderUpdate(
+          redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+          {
+            ...redisTestConstants.orderUpdate.orderUpdate,
+            orderId: redisTestConstants.defaultOrderIdGoodTilBlockTime,
+          },
+          Date.now(),
+          redisClient,
+        );
+
+        await handleInitialOrderPlace({
+          ...redisTestConstants.orderPlace,
+          orderPlace: {
+            order: redisTestConstants.defaultOrderGoodTilBlockTime,
+            placementStatus:
+            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
+          },
+        });
+
+        expect(OrderTable.findById).toHaveBeenCalledWith(
+          redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        );
+        expect(StatefulOrderUpdatesCache.removeStatefulOrderUpdate).toHaveBeenCalledWith(
+          redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+          fakeSystemTime,
+          client,
+        );
+        expectWebsocketMessagesSent(
+          producerSendSpy,
+          redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+          dbOrderGoodTilBlockTime,
+          testConstants.defaultPerpetualMarket,
+          APIOrderStatusEnum.OPEN,
+          true,
+          undefined,
+          {
+            key: getOrderIdHash(redisTestConstants.defaultOrderIdGoodTilBlockTime),
+            offchainUpdate: {
+              orderUpdate: {
+                orderId: redisTestConstants.defaultOrderIdGoodTilBlockTime,
+                totalFilledQuantums: redisTestConstants.orderUpdate.orderUpdate.totalFilledQuantums,
+              },
+            },
+          },
+        );
+      });
+
+      it('does not look up vault order in db but sends cached order update', async () => {
+        const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+
+        await handleInitialOrderPlace({
+          ...redisTestConstants.orderPlace,
+          orderPlace: {
+            order: redisTestConstants.defaultOrderVault,
+            placementStatus:
+            OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
+          },
+        });
+
+        expect(OrderTable.findById).not.toHaveBeenCalled();
+        expect(StatefulOrderUpdatesCache.removeStatefulOrderUpdate).toHaveBeenCalled();
+        expectWebsocketMessagesSent(
+          producerSendSpy,
+          redisTestConstants.defaultRedisOrderVault,
+          undefined,
+          testConstants.defaultPerpetualMarket,
+          APIOrderStatusEnum.OPEN,
+          true,
+          undefined,
+          undefined,
+        );
+      });
+    });
   });
 });
 
@@ -1109,7 +1190,7 @@ function expectStats(orderWasReplaced: boolean = false): void {
 function expectWebsocketMessagesSent(
   producerSendSpy: jest.SpyInstance,
   redisOrder: RedisOrder,
-  dbOrder: OrderFromDatabase,
+  dbOrder: OrderFromDatabase | undefined,
   perpetualMarket: PerpetualMarketFromDatabase,
   placementStatus: APIOrderStatus,
   expectSubaccountMessage: boolean,
@@ -1172,9 +1253,9 @@ function expectWebsocketMessagesSent(
             ?.toString(),
           goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
           ticker: redisOrder.ticker,
-          ...(isStateful && { createdAtHeight: dbOrder.createdAtHeight }),
-          ...(isStateful && { updatedAt: dbOrder.updatedAt }),
-          ...(isStateful && { updatedAtHeight: dbOrder.updatedAtHeight }),
+          ...(isStateful && dbOrder && { createdAtHeight: dbOrder.createdAtHeight }),
+          ...(isStateful && dbOrder && { updatedAt: dbOrder.updatedAt }),
+          ...(isStateful && dbOrder && { updatedAtHeight: dbOrder.updatedAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },

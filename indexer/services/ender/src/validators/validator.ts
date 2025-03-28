@@ -60,11 +60,20 @@ export abstract class Validator<T extends object> {
   ): Handler<EventMessage>[];
 
   /**
-   * Allows aribtrary logic to exclude events from being processed.
-   * Defaults to no events being excluded.
+   * Allows aribtrary logic to skip SQL processing for an event.
+   * Defaults to no.
    * @returns
    */
-  public shouldExcludeEvent(): boolean {
+  public shouldSkipSql(): boolean {
+    return false;
+  }
+
+  /**
+   * Allows arbitrary logic to skip handlers for an event.
+   * Defaults to no.
+   * @returns
+   */
+  public shouldSkipHandlers(): boolean {
     return false;
   }
 }
