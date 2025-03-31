@@ -1199,6 +1199,8 @@ func placeOrderAndVerifyExpectationsOperations(
 		}
 	}
 
+	fmt.Printf("Orderbook snapshot: \n%s", memclob.PrintOrderbookSnapshot(ctx))
+
 	orderbook := memclob.orderbooks[order.GetClobPairId()]
 
 	// Verify the return values are correct.

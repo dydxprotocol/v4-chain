@@ -6,6 +6,8 @@ import (
 	"math"
 	"math/big"
 	"runtime/debug"
+	"sort"
+	"strings"
 	"time"
 
 	cmtlog "github.com/cometbft/cometbft/libs/log"
@@ -1736,8 +1738,8 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 
 		// Pass in empty map to avoid reading `AffiliateWhitelist` from state in every `CheckTx`. This deviates
 		// from `DeliverTx` which accounts for affiliate whitelist correctly. This deviation is ok because rev
-		// shares/fees are distributed to the recipient’s bank balance and not settled at the subaccount level,
-		// and won’t affect the collateralization of future operations in the operations queue.
+		// shares/fees are distributed to the recipient's bank balance and not settled at the subaccount level,
+		// and won't affect the collateralization of future operations in the operations queue.
 		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(
 			ctx, &matchWithOrders, map[string]uint32{})
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
@@ -1882,6 +1884,101 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		matchedMakerOrderIdToOrder,
 		makerOrdersToRemove,
 		takerOrderStatus
+}
+
+// sortSubticks sorts a slice of Subticks in ascending order.
+func sortSubticks(subticks []types.Subticks) {
+	sort.Slice(subticks, func(i, j int) bool {
+		return subticks[i] < subticks[j]
+	})
+}
+
+// sortSubticksDesc sorts a slice of Subticks in descending order.
+func sortSubticksDesc(subticks []types.Subticks) {
+	sort.Slice(subticks, func(i, j int) bool {
+		return subticks[i] > subticks[j]
+	})
+}
+
+func (m *MemClobPriceTimePriority) PrintOrderbookSnapshot(
+	ctx sdk.Context,
+) string {
+	lib.AssertCheckTxMode(ctx)
+
+	var output strings.Builder
+
+	// Print header
+	output.WriteString("Orderbook Snapshot\n")
+	output.WriteString("================\n")
+
+	// Print for each CLOB pair
+	for clobPairId, orderbook := range m.orderbooks {
+		// // Only print for CLOB pair ID 5 (SOL-USD)
+		// if clobPairId != 5 {
+		// 	continue
+		// }
+
+		output.WriteString(fmt.Sprintf("CLOB Pair ID: %d\n", clobPairId))
+		output.WriteString("----------------\n")
+
+		// Print asks (sorted descending - highest ask first)
+		output.WriteString("Asks:\n")
+		output.WriteString("Price (Subticks) | Size (SOL)     | Aggregate Size (SOL)\n")
+		output.WriteString("----------------------------------------------------------\n")
+		askPrices := make([]types.Subticks, 0, len(orderbook.Asks))
+		for price := range orderbook.Asks {
+			askPrices = append(askPrices, price)
+		}
+		sortSubticksDesc(askPrices) // Sort asks in descending order
+
+		// Calculate sizes and aggregate sizes for asks (from highest to lowest price)
+		var aggregateAskSize float64 = 0
+		for _, price := range askPrices {
+			level := orderbook.Asks[price]
+			var levelSize uint64 = 0
+			current := level.LevelOrders.Front
+			for current != nil {
+				levelSize += current.Value.Order.GetBaseQuantums().ToUint64()
+				current = current.Next
+			}
+			levelSizeInSol := float64(levelSize) / 10000000.0
+			aggregateAskSize += levelSizeInSol
+			output.WriteString(fmt.Sprintf("%14d | %14.7f | %22.7f\n", price, levelSizeInSol, aggregateAskSize))
+		}
+
+		output.WriteString("\n")
+
+		// Print bids (sorted descending - highest bid first)
+		output.WriteString("Bids:\n")
+		output.WriteString("Price (Subticks) | Size (SOL)     | Aggregate Size (SOL)\n")
+		output.WriteString("----------------------------------------------------------\n")
+		bidPrices := make([]types.Subticks, 0, len(orderbook.Bids))
+		for price := range orderbook.Bids {
+			bidPrices = append(bidPrices, price)
+		}
+		sortSubticksDesc(bidPrices)
+
+		// Calculate sizes and aggregate sizes for bids (from highest to lowest price)
+		var aggregateBidSize float64 = 0
+		for _, price := range bidPrices {
+			level := orderbook.Bids[price]
+			var levelSize uint64 = 0
+			current := level.LevelOrders.Front
+			for current != nil {
+				levelSize += current.Value.Order.GetBaseQuantums().ToUint64()
+				current = current.Next
+			}
+			levelSizeInSol := float64(levelSize) / 10000000.0
+			aggregateBidSize += levelSizeInSol
+			output.WriteString(fmt.Sprintf("%14d | %14.7f | %22.7f\n", price, levelSizeInSol, aggregateBidSize))
+		}
+
+		output.WriteString("\n")
+	}
+
+	snapshot := output.String()
+	log.InfoLog(ctx, snapshot)
+	return snapshot
 }
 
 // SetMemclobGauges sets gauges for each orderbook and the operations queue based on current memclob state.
