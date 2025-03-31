@@ -301,4 +301,7 @@ func PrepareCheckState(
 
 	// Set per-orderbook gauges.
 	keeper.MemClob.SetMemclobGauges(ctx)
+
+	// DEBUG: print orderbook snapshot
+	keeper.MemClob.PrintOrderbookSnapshot(ctx)
 }

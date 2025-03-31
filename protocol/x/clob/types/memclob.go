@@ -115,6 +115,9 @@ type MemClob interface {
 	SetMemclobGauges(
 		ctx sdk.Context,
 	)
+	PrintOrderbookSnapshot(
+		ctx sdk.Context,
+	) string
 	GetMidPrice(
 		ctx sdk.Context,
 		clobPairId ClobPairId,
