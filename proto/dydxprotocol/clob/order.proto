@@ -41,7 +41,7 @@ message OrderId {
   uint32 clob_pair_id = 4;
 
   // sequence number of the order. Used for matching generated suborders to parent TWAP orders.
-  uint64 sequence_number = 5;
+  uint32 sequence_number = 5;
 }
 
 // OrdersFilledDuringLatestBlock represents a list of `OrderIds` that were
@@ -115,7 +115,7 @@ message TWAPTriggerPlacement {
   // The generated suborder given a TWAP order.
   Order order = 1 [ (gogoproto.nullable) = false ];
   // The block height at which the order was triggered.
-  uint64 trigger_block_height = 2;
+  uint64 trigger_block_time = 2;
 }
 
 // ConditionalOrderPlacement represents the placement of a conditional order in

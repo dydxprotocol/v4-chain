@@ -61,6 +61,10 @@ service Query {
   rpc StatefulOrder(QueryStatefulOrderRequest)
       returns (QueryStatefulOrderResponse) {}
 
+  // Queries the TWAP order for a given order id.
+  rpc TwapOrder(QueryStatefulOrderRequest)
+      returns (QueryTWAPOrderResponse) {}
+
   // Queries the next clob pair id.
   rpc NextClobPairId(QueryNextClobPairIdRequest)
       returns (QueryNextClobPairIdResponse) {
@@ -157,6 +161,14 @@ message QueryStatefulOrderResponse {
 
   // Triggered status.
   bool triggered = 3;
+}
+
+// QueryTWAPOrderResponse is a response message that contains the TWAP order and suborders.
+message QueryTWAPOrderResponse {
+  // TWAP order placement.
+  TWAPOrderPlacement twap_order_placement = 1 [ (gogoproto.nullable) = false ];
+  // Generated suborders
+  repeated TWAPTriggerPlacement twap_trigger_placement = 2;
 }
 
 // QueryLiquidationsConfigurationRequest is a request message for

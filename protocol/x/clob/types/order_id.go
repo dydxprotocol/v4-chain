@@ -48,10 +48,14 @@ func (o *OrderId) IsLongTermOrder() bool {
 	return o.OrderFlags == OrderIdFlags_LongTerm
 }
 
+func (o *OrderId) IsTwapSuborder() bool {
+	return o.OrderFlags == OrderIdFlags_TwapSuborder
+}
+
 // IsStatefulOrder returns whether this order is a stateful order, which is true for Long-Term
 // and conditional orders and false for Short-Term orders.
 func (o *OrderId) IsStatefulOrder() bool {
-	return o.IsLongTermOrder() || o.IsConditionalOrder()
+	return o.IsLongTermOrder() || o.IsConditionalOrder() || o.IsTwapOrder()
 }
 
 // MustBeStatefulOrder panics if the orderId is not a stateful order, else it does nothing.
