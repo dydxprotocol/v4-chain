@@ -1913,10 +1913,10 @@ func (m *MemClobPriceTimePriority) PrintOrderbookSnapshot(
 
 	// Print for each CLOB pair
 	for clobPairId, orderbook := range m.orderbooks {
-		// // Only print for CLOB pair ID 5 (SOL-USD)
-		// if clobPairId != 5 {
-		// 	continue
-		// }
+		// Only print for CLOB pair ID 5 (SOL-USD)
+		if clobPairId != 5 {
+			continue
+		}
 
 		output.WriteString(fmt.Sprintf("CLOB Pair ID: %d\n", clobPairId))
 		output.WriteString("----------------\n")
