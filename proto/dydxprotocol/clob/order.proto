@@ -98,7 +98,10 @@ message LongTermOrderPlacement {
   TransactionOrdering placement_index = 2 [ (gogoproto.nullable) = false ];
 }
 
-message TWAPOrderPlacement {
+// TwapOrderPlacement represents the placement of a TWAP order in
+// the TWAP Order State. It will store the original parent TWAP order as 
+// well as maintain the state of the remaining legs and quantums to be executed.
+message TwapOrderPlacement {
   Order order = 1 [ (gogoproto.nullable) = false ];
   // The number of legs remaining to be executed.
   uint32 remaining_legs = 2;
@@ -108,10 +111,10 @@ message TWAPOrderPlacement {
   uint32 block_height = 4;
 }
 
-// TWAPTriggerPlacement represents the placement of a TWAP suborder in
+// TwapTriggerPlacement represents the placement of a TWAP suborder in
 // state. It stores the stateful order itself, the `BlockHeight` and
 // `TransactionIndex` at which the order was placed and triggered.
-message TWAPTriggerPlacement {
+message TwapTriggerPlacement {
   // The generated suborder given a TWAP order.
   Order order = 1 [ (gogoproto.nullable) = false ];
   // The block height at which the order was triggered.
@@ -241,10 +244,11 @@ message Order {
 
   // twap_config represents the configuration for a TWAP order. This must be present 
   // for twap orders and will be ignored for all other order types.
-  TWAPOrderConfig twap_config = 12;
+  TwapOrderConfig twap_config = 12;
 }
 
-message TWAPOrderConfig {
+// TwapOrderConfig represents the necessary configuration for a TWAP order.
+message TwapOrderConfig {
   // Duration of the TWAP order execution in seconds. Must be between 300 (5 minutes)
   // and 86400 (24 hours).
   uint32 duration = 1;

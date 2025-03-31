@@ -12,7 +12,7 @@ import (
 func (k Keeper) TwapOrder(
 	c context.Context,
 	req *types.QueryStatefulOrderRequest,
-) (*types.QueryTWAPOrderResponse, error) {
+) (*types.QueryTwapOrderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
