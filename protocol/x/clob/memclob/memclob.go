@@ -1900,18 +1900,13 @@ func sortSubticksDesc(subticks []types.Subticks) {
 	})
 }
 
-func (m *MemClobPriceTimePriority) PrintOrderbookSnapshot(
+// getOrderbookSnapshot returns a formatted string of the orderbook with optional price aggregation
+func (m *MemClobPriceTimePriority) getOrderbookSnapshot(
 	ctx sdk.Context,
+	aggregationLevel uint32,
 ) string {
-	lib.AssertCheckTxMode(ctx)
-
 	var output strings.Builder
 
-	// Print header
-	output.WriteString("Orderbook Snapshot\n")
-	output.WriteString("================\n")
-
-	// Print for each CLOB pair
 	for clobPairId, orderbook := range m.orderbooks {
 		// Only print for CLOB pair ID 5 (SOL-USD)
 		if clobPairId != 5 {
@@ -1921,18 +1916,99 @@ func (m *MemClobPriceTimePriority) PrintOrderbookSnapshot(
 		output.WriteString(fmt.Sprintf("CLOB Pair ID: %d\n", clobPairId))
 		output.WriteString("----------------\n")
 
-		// Print asks (sorted descending - highest ask first)
-		output.WriteString("Asks:\n")
-		output.WriteString("Price (Subticks) | Size (SOL)     | Aggregate Size (SOL)\n")
-		output.WriteString("----------------------------------------------------------\n")
+		// Get and sort ask prices
 		askPrices := make([]types.Subticks, 0, len(orderbook.Asks))
 		for price := range orderbook.Asks {
 			askPrices = append(askPrices, price)
 		}
-		sortSubticksDesc(askPrices) // Sort asks in descending order
+		sortSubticksDesc(askPrices)
 
-		// Calculate sizes and aggregate sizes for asks (from highest to lowest price)
-		var aggregateAskSize float64 = 0
+		// Get and sort bid prices
+		bidPrices := make([]types.Subticks, 0, len(orderbook.Bids))
+		for price := range orderbook.Bids {
+			bidPrices = append(bidPrices, price)
+		}
+		sortSubticksDesc(bidPrices)
+
+		// If aggregation is requested, aggregate prices at the specified level
+		if aggregationLevel > 0 {
+			// Aggregate asks
+			aggregatedAsks := make(map[types.Subticks]float64)
+			for _, price := range askPrices {
+				aggregatedPrice := (price / types.Subticks(math.Pow10(int(aggregationLevel)))) * types.Subticks(math.Pow10(int(aggregationLevel)))
+				level := orderbook.Asks[price]
+				current := level.LevelOrders.Front
+				for current != nil {
+					aggregatedAsks[aggregatedPrice] += float64(current.Value.Order.GetBaseQuantums().ToUint64()) / 10000000.0
+					current = current.Next
+				}
+			}
+
+			// Aggregate bids
+			aggregatedBids := make(map[types.Subticks]float64)
+			for _, price := range bidPrices {
+				aggregatedPrice := (price / types.Subticks(math.Pow10(int(aggregationLevel)))) * types.Subticks(math.Pow10(int(aggregationLevel)))
+				level := orderbook.Bids[price]
+				current := level.LevelOrders.Front
+				for current != nil {
+					aggregatedBids[aggregatedPrice] += float64(current.Value.Order.GetBaseQuantums().ToUint64()) / 10000000.0
+					current = current.Next
+				}
+			}
+
+			// Print aggregated asks
+			output.WriteString("Asks (Aggregated):\n")
+			output.WriteString("Price (Subticks) | Size (SOL)     | Aggregate Size (SOL)\n")
+			output.WriteString("----------------------------------------------------------\n")
+
+			// Get unique aggregated prices and sort
+			aggregatedAskPrices := make([]types.Subticks, 0, len(aggregatedAsks))
+			for price := range aggregatedAsks {
+				aggregatedAskPrices = append(aggregatedAskPrices, price)
+			}
+			sortSubticksDesc(aggregatedAskPrices)
+
+			// Calculate and print aggregated asks
+			var totalAskSize float64 = 0
+			for _, price := range aggregatedAskPrices {
+				size := aggregatedAsks[price]
+				totalAskSize += size
+				output.WriteString(fmt.Sprintf("%14d | %14.7f | %22.7f\n", price, size, totalAskSize))
+			}
+
+			output.WriteString("\n")
+
+			// Print aggregated bids
+			output.WriteString("Bids (Aggregated):\n")
+			output.WriteString("Price (Subticks) | Size (SOL)     | Aggregate Size (SOL)\n")
+			output.WriteString("----------------------------------------------------------\n")
+
+			// Get unique aggregated prices and sort
+			aggregatedBidPrices := make([]types.Subticks, 0, len(aggregatedBids))
+			for price := range aggregatedBids {
+				aggregatedBidPrices = append(aggregatedBidPrices, price)
+			}
+			sortSubticksDesc(aggregatedBidPrices)
+
+			// Calculate and print aggregated bids
+			var totalBidSize float64 = 0
+			for _, price := range aggregatedBidPrices {
+				size := aggregatedBids[price]
+				totalBidSize += size
+				output.WriteString(fmt.Sprintf("%14d | %14.7f | %22.7f\n", price, size, totalBidSize))
+			}
+
+			output.WriteString("\n")
+			return output.String()
+		}
+
+		// Print detailed asks
+		output.WriteString("Asks:\n")
+		output.WriteString("Price (Subticks) | Size (SOL)     | Aggregate Size (SOL)\n")
+		output.WriteString("----------------------------------------------------------\n")
+
+		// Calculate sizes for asks
+		askSizes := make(map[types.Subticks]float64)
 		for _, price := range askPrices {
 			level := orderbook.Asks[price]
 			var levelSize uint64 = 0
@@ -1941,24 +2017,39 @@ func (m *MemClobPriceTimePriority) PrintOrderbookSnapshot(
 				levelSize += current.Value.Order.GetBaseQuantums().ToUint64()
 				current = current.Next
 			}
-			levelSizeInSol := float64(levelSize) / 10000000.0
-			aggregateAskSize += levelSizeInSol
-			output.WriteString(fmt.Sprintf("%14d | %14.7f | %22.7f\n", price, levelSizeInSol, aggregateAskSize))
+			askSizes[price] = float64(levelSize) / 10000000.0
+		}
+
+		// Calculate aggregate sizes from lowest to highest price
+		askPricesAsc := make([]types.Subticks, len(askPrices))
+		copy(askPricesAsc, askPrices)
+		sort.Slice(askPricesAsc, func(i, j int) bool {
+			return askPricesAsc[i] < askPricesAsc[j]
+		})
+
+		aggregateSizes := make(map[types.Subticks]float64)
+		var runningTotal float64 = 0
+		for _, price := range askPricesAsc {
+			runningTotal += askSizes[price]
+			aggregateSizes[price] = runningTotal
+		}
+
+		// Display asks in descending order
+		for _, price := range askPrices {
+			output.WriteString(fmt.Sprintf("%14d | %14.7f | %22.7f\n",
+				price,
+				askSizes[price],
+				aggregateSizes[price]))
 		}
 
 		output.WriteString("\n")
 
-		// Print bids (sorted descending - highest bid first)
+		// Print detailed bids
 		output.WriteString("Bids:\n")
 		output.WriteString("Price (Subticks) | Size (SOL)     | Aggregate Size (SOL)\n")
 		output.WriteString("----------------------------------------------------------\n")
-		bidPrices := make([]types.Subticks, 0, len(orderbook.Bids))
-		for price := range orderbook.Bids {
-			bidPrices = append(bidPrices, price)
-		}
-		sortSubticksDesc(bidPrices)
 
-		// Calculate sizes and aggregate sizes for bids (from highest to lowest price)
+		// Calculate and print bids
 		var aggregateBidSize float64 = 0
 		for _, price := range bidPrices {
 			level := orderbook.Bids[price]
@@ -1975,6 +2066,30 @@ func (m *MemClobPriceTimePriority) PrintOrderbookSnapshot(
 
 		output.WriteString("\n")
 	}
+
+	return output.String()
+}
+
+func (m *MemClobPriceTimePriority) PrintOrderbookSnapshot(
+	ctx sdk.Context,
+) string {
+	lib.AssertCheckTxMode(ctx)
+
+	var output strings.Builder
+
+	// Print header
+	output.WriteString("Orderbook Snapshot\n")
+	output.WriteString("================\n\n")
+
+	// Print aggregated view (10^7 quantums)
+	output.WriteString("Aggregated View (10^7 quantums)\n")
+	output.WriteString("===============================\n")
+	output.WriteString(m.getOrderbookSnapshot(ctx, 7))
+
+	// Print detailed view
+	output.WriteString("Detailed View\n")
+	output.WriteString("============\n")
+	output.WriteString(m.getOrderbookSnapshot(ctx, 0))
 
 	snapshot := output.String()
 	log.InfoLog(ctx, snapshot)
