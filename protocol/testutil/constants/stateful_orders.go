@@ -1425,7 +1425,7 @@ var (
 			OrderFlags:   clobtypes.OrderIdFlags_Twap,
 			ClobPairId:   0,
 		},
-		TwapConfig: &clobtypes.TWAPOrderConfig{
+		TwapConfig: &clobtypes.TwapOrderConfig{
 			Duration: 60,
 			Interval: 30,
 		},

@@ -37,7 +37,7 @@ func (k Keeper) TwapOrder(
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 
-	res := &types.QueryTWAPOrderResponse{
+	res := &types.QueryTwapOrderResponse{
 		TwapOrderPlacement:    twapOrder,
 		TwapTriggerPlacement:  triggerPlacements,
 	}

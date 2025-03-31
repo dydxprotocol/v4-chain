@@ -24,7 +24,7 @@ func (k Keeper) SetTWAPOrderPlacement(ctx sdk.Context,
 	// remaining_quantums := order.Quantums - suborder_size
 
 	// TODO: (anmol) potentially add a suborder array here which gets modified as we fire off suborders - maybe status as well?
-	twapOrderPlacement := types.TWAPOrderPlacement{
+	twapOrderPlacement := types.TwapOrderPlacement{
 		Order:             order,
 		RemainingLegs:     total_legs,
 		RemainingQuantums: order.Quantums,
@@ -42,7 +42,7 @@ func (k Keeper) SetTWAPOrderPlacement(ctx sdk.Context,
 func (k Keeper) GetTwapOrderPlacement(
 	ctx sdk.Context,
 	orderId types.OrderId,
-) (val types.TWAPOrderPlacement, found bool) {
+) (val types.TwapOrderPlacement, found bool) {
 	store := k.GetTWAPOrderPlacementStore(ctx)
 
 	b := store.Get(orderId.ToStateKey())
@@ -59,15 +59,15 @@ func (k Keeper) GetTwapOrderPlacement(
 func (k Keeper) GetTwapTriggerPlacements(
 	ctx sdk.Context,
 	orderId types.OrderId,
-) (val []*types.TWAPTriggerPlacement, found bool) {
+) (val []*types.TwapTriggerPlacement, found bool) {
 	store := k.GetTWAPTriggerOrderPlacementStore(ctx)
-	var triggerPlacements []*types.TWAPTriggerPlacement
+	var triggerPlacements []*types.TwapTriggerPlacement
 
 	iterator := store.Iterator(nil, nil)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var triggerPlacement types.TWAPTriggerPlacement
+		var triggerPlacement types.TwapTriggerPlacement
 		k.cdc.MustUnmarshal(iterator.Value(), &triggerPlacement)
 
 		if triggerPlacement.Order.OrderId.SubaccountId.Owner == orderId.SubaccountId.Owner &&
@@ -102,7 +102,7 @@ func (k Keeper) addInitialSuborderToTriggerStore(
 	suborder.OrderId.OrderFlags = types.OrderIdFlags_TwapSuborder
 	suborder.OrderId.SequenceNumber = 0
 	// Create trigger placement
-	triggerPlacement := types.TWAPTriggerPlacement{
+	triggerPlacement := types.TwapTriggerPlacement{
 		Order:              suborder,
 		TriggerBlockTime:   uint64(triggerTime),
 	}
