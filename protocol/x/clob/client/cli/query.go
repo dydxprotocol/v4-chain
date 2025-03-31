@@ -27,6 +27,5 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdGetEquityTierLimitConfig())
 	cmd.AddCommand(CmdGetLiquidationsConfiguration())
 	cmd.AddCommand(CmdQueryStatefulOrder())
-	cmd.AddCommand(CmdQueryTwapOrder())
 	return cmd
 }

@@ -1417,7 +1417,7 @@ var (
 		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_IOC,
 	}
 
-	// Long-Term reduce-only orders.
+	// TWAP orders.
 	TwapOrder_Bob_Num0_Id1_Clob0_Buy10_Price35_GTB20_RO = clobtypes.Order{
 		OrderId: clobtypes.OrderId{
 			SubaccountId: Bob_Num0,
@@ -1426,7 +1426,7 @@ var (
 			ClobPairId:   0,
 		},
 		TwapConfig: &clobtypes.TwapOrderConfig{
-			Duration: 60,
+			Duration: 300,
 			Interval: 30,
 		},
 		Side:         clobtypes.Order_SIDE_BUY,

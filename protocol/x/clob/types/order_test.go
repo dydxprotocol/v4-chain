@@ -419,7 +419,7 @@ func TestOrder_IsStatefulOrder(t *testing.T) {
 		}
 
 		expectedIsStatefulOrder := orderFlags == types.OrderIdFlags_LongTerm ||
-			orderFlags == types.OrderIdFlags_Conditional
+			orderFlags == types.OrderIdFlags_Conditional || orderFlags == types.OrderIdFlags_Twap
 		require.Equal(t, expectedIsStatefulOrder, order.IsStatefulOrder(), "OrderFlag: %d", i)
 	}
 }

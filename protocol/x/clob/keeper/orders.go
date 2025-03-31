@@ -402,12 +402,12 @@ func (k Keeper) PlaceStatefulOrder(
 			k.SetTWAPOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
 		} else {
 			k.SetLongTermOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
+			k.AddStatefulOrderIdExpiration(
+				ctx,
+				order.MustGetUnixGoodTilBlockTime(),
+				order.GetOrderId(),
+			)
 		}
-		k.AddStatefulOrderIdExpiration(
-			ctx,
-			order.MustGetUnixGoodTilBlockTime(),
-			order.GetOrderId(),
-		)
 	} else {
 		// Write the stateful order to a transient store. PerformStatefulOrderValidation will ensure that the order does
 		// not exist which will prevent MustAddUncommittedStatefulOrderPlacement from panicking.
@@ -961,6 +961,33 @@ func (k Keeper) PerformStatefulOrderValidation(
 					clobPair.StepBaseQuantums,
 				)
 			}
+		}
+	}
+
+	if order.IsTwapOrder() {
+		if order.TwapConfig == nil {
+			return errorsmod.Wrapf(
+				types.ErrInvalidPlaceOrder,
+				"TWAP order must have a TWAP config",
+			)
+		}
+		if order.TwapConfig.Interval < 30 || order.TwapConfig.Interval > 3600 {
+			return errorsmod.Wrapf(
+				types.ErrInvalidPlaceOrder,
+				"TWAP order interval must be between 30 seconds and 3600 seconds (1 hour)",
+			)
+		}
+		if order.TwapConfig.Duration < 300 || order.TwapConfig.Duration > 86400 {
+			return errorsmod.Wrapf(
+				types.ErrInvalidPlaceOrder,
+				"TWAP order duration must be between 300 seconds (5 minutes) and 86400 seconds (24 hours)",
+			)
+		}
+		if order.TwapConfig.Duration % order.TwapConfig.Interval != 0 {
+			return errorsmod.Wrapf(
+				types.ErrInvalidPlaceOrder,
+				"TWAP order duration must be a multiple of the interval",
+			)
 		}
 	}
 

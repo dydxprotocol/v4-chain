@@ -120,9 +120,7 @@ func (k Keeper) fetchStateStoresForOrder(
 		return k.GetLongTermOrderPlacementStore(ctx)
 	} else if orderId.IsTwapOrder() {
 		return k.GetTWAPOrderPlacementStore(ctx)
-	} else if orderId.IsTwapSuborder() {
-		return k.GetTWAPTriggerOrderPlacementStore(ctx)
-	}
+	} // TODO: (anmol) should a twap suborder be a long term order?
 	panic(
 		fmt.Sprintf(
 			"FetchStateStoresForOrder: orderId (%+v) not supported",
