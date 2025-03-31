@@ -1968,12 +1968,26 @@ func (m *MemClobPriceTimePriority) getOrderbookSnapshot(
 			}
 			sortSubticksDesc(aggregatedAskPrices)
 
-			// Calculate and print aggregated asks
-			var totalAskSize float64 = 0
+			// Calculate aggregate sizes from lowest to highest price
+			aggregatedAskPricesAsc := make([]types.Subticks, len(aggregatedAskPrices))
+			copy(aggregatedAskPricesAsc, aggregatedAskPrices)
+			sort.Slice(aggregatedAskPricesAsc, func(i, j int) bool {
+				return aggregatedAskPricesAsc[i] < aggregatedAskPricesAsc[j]
+			})
+
+			aggregateSizes := make(map[types.Subticks]float64)
+			var runningTotal float64 = 0
+			for _, price := range aggregatedAskPricesAsc {
+				runningTotal += aggregatedAsks[price]
+				aggregateSizes[price] = runningTotal
+			}
+
+			// Display asks in descending order with aggregated sizes
 			for _, price := range aggregatedAskPrices {
-				size := aggregatedAsks[price]
-				totalAskSize += size
-				output.WriteString(fmt.Sprintf("%14d | %14.7f | %22.7f\n", price, size, totalAskSize))
+				output.WriteString(fmt.Sprintf("%14d | %14.7f | %22.7f\n",
+					price,
+					aggregatedAsks[price],
+					aggregateSizes[price]))
 			}
 
 			output.WriteString("\n")
