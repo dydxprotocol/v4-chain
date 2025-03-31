@@ -225,6 +225,25 @@ export const CheckHistoricalBlockTradingRewardsSchema = checkSchema({
   },
 });
 
+export const CheckTickersQuerySchema = checkSchema({
+  tickers: {
+    in: ['query'],
+    optional: true,
+    custom: {
+      options: (value: string | string[]) => {
+        if (typeof value === 'string') {
+          return true; // Accept a single string
+        }
+        if (Array.isArray(value)) {
+          return value.every((ticker) => typeof ticker === 'string');
+        }
+        return false; // Reject anything else
+      },
+      errorMessage: 'tickers must be a string or an array of strings',
+    },
+  },
+});
+
 export const CheckTransferBetweenSchema = checkSchema(transferBetweenSchemaRecord);
 
 export const RegisterTokenValidationSchema = [
