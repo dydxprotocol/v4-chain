@@ -3,10 +3,10 @@ package types
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"time"
-	"encoding/binary"
 
 	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -191,8 +191,8 @@ func (o *Order) IsTwapSuborder() bool {
 	return o.OrderId.IsTwapSuborder()
 }
 
-// IsCollateralCheckRequired returns whether this order needs 
-// to pass collateral checks. This is true for all non-internal 
+// IsCollateralCheckRequired returns whether this order needs
+// to pass collateral checks. This is true for all non-internal
 // orders and for generated TWAP suborders.
 func (o *Order) IsCollateralCheckRequired(isInternalOrder bool) bool {
 	return (!isInternalOrder && !o.IsConditionalOrder()) || (isInternalOrder && o.IsTwapSuborder())
@@ -262,14 +262,14 @@ func (o *Order) GetOrderLabels() []gometrics.Label {
 
 // GetTWAPTriggerKey returns the key for a TWAP trigger order.
 func GetTWAPTriggerKey(triggerTime int64, orderId OrderId) []byte {
-    // 8 bytes for triggerTime + 32 bytes for orderId hash
-    key := make([]byte, 40)
-    
-    // Write trigger time as big-endian uint64
-    binary.BigEndian.PutUint64(key[0:8], uint64(triggerTime))
-    
-    // Write orderId hash
-    copy(key[8:], orderId.ToStateKey())
-    
-    return key
+	// 8 bytes for triggerTime + 32 bytes for orderId hash
+	key := make([]byte, 40)
+
+	// Write trigger time as big-endian uint64
+	binary.BigEndian.PutUint64(key[0:8], uint64(triggerTime))
+
+	// Write orderId hash
+	copy(key[8:], orderId.ToStateKey())
+
+	return key
 }

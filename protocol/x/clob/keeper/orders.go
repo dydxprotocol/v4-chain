@@ -984,7 +984,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 				"TWAP order duration must be between 300 seconds (5 minutes) and 86400 seconds (24 hours)",
 			)
 		}
-		if order.TwapConfig.Duration % order.TwapConfig.Interval != 0 {
+		if order.TwapConfig.Duration%order.TwapConfig.Interval != 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidPlaceOrder,
 				"TWAP order duration must be a multiple of the interval",
