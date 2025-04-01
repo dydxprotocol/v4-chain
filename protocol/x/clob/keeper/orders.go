@@ -984,14 +984,14 @@ func (k Keeper) PerformStatefulOrderValidation(
 				"TWAP order duration must be between 300 seconds (5 minutes) and 86400 seconds (24 hours)",
 			)
 		}
-		if order.TwapConfig.Duration % order.TwapConfig.Interval != 0 {
+		if order.TwapConfig.Duration%order.TwapConfig.Interval != 0 {
 			return errorsmod.Wrapf(
 				types.ErrInvalidPlaceOrder,
 				"TWAP order duration must be a multiple of the interval",
 			)
 		}
 		num_suborders := uint64(order.TwapConfig.Duration / order.TwapConfig.Interval)
-		if order.Quantums / num_suborders < clobPair.StepBaseQuantums {
+		if order.Quantums/num_suborders < clobPair.StepBaseQuantums {
 			return errorsmod.Wrapf(
 				types.ErrInvalidPlaceOrder,
 				"TWAP suborder sizes must be greater than the minimum order size for the market",

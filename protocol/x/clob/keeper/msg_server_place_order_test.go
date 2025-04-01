@@ -84,11 +84,15 @@ func TestPlaceOrder_Error(t *testing.T) {
 			ExpectedError: types.ErrStatefulOrderPreviouslyRemoved,
 		},
 		"Returns an error when TWAP order has already been removed": {
-			StatefulOrderPlacement: constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy10_Price35_GTB20_RO,
+			StatefulOrderPlacement: constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO,
 			RemovedOrderIds: []types.OrderId{
-				constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy10_Price35_GTB20_RO.OrderId,
+				constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO.OrderId,
 			},
 			ExpectedError: types.ErrStatefulOrderPreviouslyRemoved,
+		},
+		"Returns an error when TWAP suborder size is too small": {
+			StatefulOrderPlacement: constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy10_Price35_GTB20_RO,
+			ExpectedError: types.ErrInvalidPlaceOrder,
 		},
 	}
 
@@ -274,7 +278,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 			},
 		},
 		"Succeeds with twap order": {
-			StatefulOrderPlacement: constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy10_Price35_GTB20_RO,
+			StatefulOrderPlacement: constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO,
 			Subaccounts: []satypes.Subaccount{
 				{
 					Id: &constants.Bob_Num0,

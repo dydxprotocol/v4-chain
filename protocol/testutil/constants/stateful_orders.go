@@ -1435,4 +1435,22 @@ var (
 		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
 		ReduceOnly:   true,
 	}
+
+	TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO = clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: Bob_Num0,
+			ClientId:     1,
+			OrderFlags:   clobtypes.OrderIdFlags_Twap,
+			ClobPairId:   0,
+		},
+		TwapConfig: &clobtypes.TwapOrderConfig{
+			Duration: 300,
+			Interval: 30,
+		},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     1000,
+		Subticks:     35,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
+		ReduceOnly:   true,
+	}
 )

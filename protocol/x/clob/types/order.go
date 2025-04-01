@@ -195,7 +195,7 @@ func (o *Order) IsTwapSuborder() bool {
 // to pass collateral checks. This is true for all non-internal
 // orders and for generated TWAP suborders.
 func (o *Order) IsCollateralCheckRequired(isInternalOrder bool) bool {
-	return (!isInternalOrder && !o.IsConditionalOrder()) || (isInternalOrder && o.IsTwapSuborder())
+	return (!isInternalOrder && !o.IsConditionalOrder() && !o.IsTwapOrder()) || (isInternalOrder && o.IsTwapSuborder())
 }
 
 // IsPostOnlyOrder returns whether this order is a post only order.
