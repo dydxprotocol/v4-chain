@@ -169,7 +169,8 @@ type OrderId struct {
 	OrderFlags uint32 `protobuf:"varint,3,opt,name=order_flags,json=orderFlags,proto3" json:"order_flags,omitempty"`
 	// ID of the CLOB the order is created for.
 	ClobPairId uint32 `protobuf:"varint,4,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
-	// sequence number of the order. Used for matching generated suborders to parent TWAP orders.
+	// sequence number of the order. Used for matching generated suborders to
+	// parent TWAP orders.
 	SequenceNumber uint32 `protobuf:"varint,5,opt,name=sequence_number,json=sequenceNumber,proto3" json:"sequence_number,omitempty"`
 }
 
@@ -510,7 +511,8 @@ func (m *LongTermOrderPlacement) GetPlacementIndex() TransactionOrdering {
 
 // TwapOrderPlacement represents the placement of a TWAP order in
 // the TWAP Order State. It will store the original parent TWAP order as
-// well as maintain the state of the remaining legs and quantums to be executed.
+// well as maintain the state of the remaining legs and quantums
+// to be executed.
 type TwapOrderPlacement struct {
 	Order Order `protobuf:"bytes,1,opt,name=order,proto3" json:"order"`
 	// The number of legs remaining to be executed.
@@ -746,8 +748,8 @@ type Order struct {
 	// Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
 	// orderId.ClobPairId`).
 	ConditionalOrderTriggerSubticks uint64 `protobuf:"varint,11,opt,name=conditional_order_trigger_subticks,json=conditionalOrderTriggerSubticks,proto3" json:"conditional_order_trigger_subticks,omitempty"`
-	// twap_config represents the configuration for a TWAP order. This must be present
-	// for twap orders and will be ignored for all other order types.
+	// twap_config represents the configuration for a TWAP order. This must be
+	// set for twap orders and will be ignored for all other order types.
 	TwapConfig *TwapOrderConfig `protobuf:"bytes,12,opt,name=twap_config,json=twapConfig,proto3" json:"twap_config,omitempty"`
 }
 
@@ -901,11 +903,12 @@ func (*Order) XXX_OneofWrappers() []interface{} {
 
 // TwapOrderConfig represents the necessary configuration for a TWAP order.
 type TwapOrderConfig struct {
-	// Duration of the TWAP order execution in seconds. Must be between 300 (5 minutes)
-	// and 86400 (24 hours).
+	// Duration of the TWAP order execution in seconds. Must be between
+	// 300 (5 minutes) and 86400 (24 hours).
 	Duration uint32 `protobuf:"varint,1,opt,name=duration,proto3" json:"duration,omitempty"`
-	// Interval in seconds for each suborder to execute. Must be a whole number and
-	// a factor of the duration.
+	// Interval in seconds for each suborder to execute. Must be a
+	// whole number, a factor of the duration, greater than 30 seconds,
+	// and less than 3600 seconds (1 hour).
 	Interval uint32 `protobuf:"varint,2,opt,name=interval,proto3" json:"interval,omitempty"`
 }
 
