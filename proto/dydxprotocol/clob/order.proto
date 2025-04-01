@@ -40,7 +40,8 @@ message OrderId {
   // ID of the CLOB the order is created for.
   uint32 clob_pair_id = 4;
 
-  // sequence number of the order. Used for matching generated suborders to parent TWAP orders.
+  // sequence number of the order. Used for matching generated suborders to 
+  // parent TWAP orders.
   uint32 sequence_number = 5;
 }
 
@@ -100,7 +101,8 @@ message LongTermOrderPlacement {
 
 // TwapOrderPlacement represents the placement of a TWAP order in
 // the TWAP Order State. It will store the original parent TWAP order as 
-// well as maintain the state of the remaining legs and quantums to be executed.
+// well as maintain the state of the remaining legs and quantums 
+// to be executed.
 message TwapOrderPlacement {
   Order order = 1 [ (gogoproto.nullable) = false ];
   // The number of legs remaining to be executed.
@@ -242,19 +244,20 @@ message Order {
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
 
-  // twap_config represents the configuration for a TWAP order. This must be present 
-  // for twap orders and will be ignored for all other order types.
+  // twap_config represents the configuration for a TWAP order. This must be 
+  // set for twap orders and will be ignored for all other order types.
   TwapOrderConfig twap_config = 12;
 }
 
 // TwapOrderConfig represents the necessary configuration for a TWAP order.
 message TwapOrderConfig {
-  // Duration of the TWAP order execution in seconds. Must be between 300 (5 minutes)
-  // and 86400 (24 hours).
+  // Duration of the TWAP order execution in seconds. Must be between 
+  // 300 (5 minutes) and 86400 (24 hours).
   uint32 duration = 1;
 
-  // Interval in seconds for each suborder to execute. Must be a whole number and 
-  // a factor of the duration.
+  // Interval in seconds for each suborder to execute. Must be a 
+  // whole number, a factor of the duration, greater than 30 seconds, 
+  // and less than 3600 seconds (1 hour).
   uint32 interval = 2;
 }
 

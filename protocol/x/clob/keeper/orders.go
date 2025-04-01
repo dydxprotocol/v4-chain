@@ -365,32 +365,33 @@ func (k Keeper) PlaceStatefulOrder(
 		if err := k.ValidateSubaccountEquityTierLimitForStatefulOrder(ctx, order); err != nil {
 			return err
 		}
+	}
 
-		// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
-		if !order.IsConditionalOrder() {
-			updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
-				ctx,
-				order.OrderId.SubaccountId,
-				types.PendingOpenOrder{
-					RemainingQuantums: order.GetBaseQuantums(),
-					IsBuy:             order.IsBuy(),
-					Subticks:          order.GetOrderSubticks(),
-					ClobPairId:        order.GetClobPairId(),
-				},
-			)
+	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
+	// These checks should happen for all non-internal orders and for generated TWAP suborders.
+	if order.IsCollateralCheckRequired(isInternalOrder) {
+		updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
+			ctx,
+			order.OrderId.SubaccountId,
+			types.PendingOpenOrder{
+				RemainingQuantums: order.GetBaseQuantums(),
+				IsBuy:             order.IsBuy(),
+				Subticks:          order.GetOrderSubticks(),
+				ClobPairId:        order.GetClobPairId(),
+			},
+		)
 
-			if !updateResult.IsSuccess() {
-				err := types.ErrStatefulOrderCollateralizationCheckFailed
-				if updateResult.IsIsolatedSubaccountError() {
-					err = types.ErrWouldViolateIsolatedSubaccountConstraints
-				}
-				return errorsmod.Wrapf(
-					err,
-					"PlaceStatefulOrder: order (%+v), result (%s)",
-					order,
-					updateResult.String(),
-				)
+		if !updateResult.IsSuccess() {
+			err := types.ErrStatefulOrderCollateralizationCheckFailed
+			if updateResult.IsIsolatedSubaccountError() {
+				err = types.ErrWouldViolateIsolatedSubaccountConstraints
 			}
+			return errorsmod.Wrapf(
+				err,
+				"PlaceStatefulOrder: order (%+v), result (%s)",
+				order,
+				updateResult.String(),
+			)
 		}
 	}
 
