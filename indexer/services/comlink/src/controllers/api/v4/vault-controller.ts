@@ -29,6 +29,7 @@ import {
   Ordering,
   VaultPnlTicksView,
 } from '@dydxprotocol-indexer/postgres';
+import * as MegavaultHistoricalPnlCache from '@dydxprotocol-indexer/redis/build/src/caches/megavault-historical-pnl-cache';
 import Big from 'big.js';
 import bounds from 'binary-searching';
 import express from 'express';
@@ -42,6 +43,7 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import { getVaultStartPnl } from '../../../caches/vault-start-pnl';
 import config from '../../../config';
+import { redisClient } from '../../../helpers/redis/redis-controller';
 import {
   aggregateHourlyPnlTicks,
   getSubaccountResponse,
@@ -80,6 +82,27 @@ class VaultController extends Controller {
     @Query() resolution?: PnlTickInterval,
   ): Promise<MegavaultHistoricalPnlResponse> {
     const start: number = Date.now();
+
+    // Try to get data from cache first
+    const cachedData = await MegavaultHistoricalPnlCache.get(
+      resolution || PnlTickInterval.day,
+      redisClient,
+    );
+
+    if (cachedData !== null) {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_megavault_historical_pnl.cache_hit.timing`,
+        Date.now() - start,
+      );
+      return {
+        megavaultPnl: _.sortBy(cachedData.pnlTicks, 'blockTime').map(
+          (pnlTick: PnlTicksFromDatabase) => {
+            return pnlTicksToResponseObject(pnlTick);
+          }),
+      };
+    }
+
+    // If cache miss, compute the data
     const vaultSubaccounts: VaultMapping = await getVaultMapping();
     stats.timing(
       `${config.SERVICE_NAME}.${controllerName}.fetch_vaults.timing`,
@@ -134,6 +157,11 @@ class VaultController extends Controller {
       filterOutIntervalTicks(aggregatedPnlTicks, getResolution(resolution)),
       latestBlock,
       latestPnlTick,
+    );
+
+    stats.timing(
+      `${config.SERVICE_NAME}.${controllerName}.get_megavault_historical_pnl.cache_miss.timing`,
+      Date.now() - start,
     );
 
     return {
