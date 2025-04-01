@@ -279,8 +279,9 @@ export class BlockProcessor {
 
         this.sqlBlock.events[i] = {
           ...event,
-          // For skipped events, use an empty object since the SQL processor will ignore it
-          // For other events, use the decoded version of the event
+          // For skipped events, use an empty object since SQL block processor ignores them.
+          // Otherwise, use the decoded event since SQL block processor doesn't know how to decode
+          // protobuf.
           dataBytes: event.subtype === SKIPPED_EVENT_SUBTYPE ? {} : values[i],
         };
       }
