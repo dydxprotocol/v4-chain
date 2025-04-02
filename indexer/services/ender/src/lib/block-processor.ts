@@ -276,12 +276,13 @@ export class BlockProcessor {
     await Promise.all(this.sqlEventPromises).then((values) => {
       for (let i: number = 0; i < this.block.events.length; i++) {
         const event: IndexerTendermintEvent = this.block.events[i];
+
         this.sqlBlock.events[i] = {
           ...event,
-          // Specifically use the decoded version of the event instead of the bytes
-          // since the SQL block processor doesn't know how to decode protobuf
-          // natively.
-          dataBytes: values[i],
+          // For skipped events, use an empty object since SQL block processor ignores them.
+          // Otherwise, use the decoded event since SQL block processor doesn't know how to decode
+          // protobuf.
+          dataBytes: event.subtype === SKIPPED_EVENT_SUBTYPE ? {} : values[i],
         };
       }
     });
