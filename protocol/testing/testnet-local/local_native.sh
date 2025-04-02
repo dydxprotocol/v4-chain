@@ -4,6 +4,11 @@ set -eo pipefail
 # This script initializes and configures a single-validator local testnet that runs directly on the host machine
 # (without containerization). It sets up one validator and one full node with deterministic keys and accounts.
 #
+# Advantages:
+#   - Can modify binary and easily resume network in place without rebuilding containers
+#   - Ideal for testing business logic changes that do not depend on consensus
+#   - Faster iteration cycle compared to containerized setup
+#
 # Prerequisites:
 #   - Must be run from the `protocol` directory
 #   - Requires `jq` and `dasel` installed (will attempt to install via brew if missing)
