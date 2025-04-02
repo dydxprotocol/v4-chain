@@ -68,17 +68,13 @@ describe('upsertVaultHandler', () => {
 
     await onMessage(kafkaMessage);
 
-    const vaults: VaultFromDatabase[] = await VaultTable.findAll(
-      {},
-      [],
-      {},
-    );
+    const vaults: VaultFromDatabase[] = await VaultTable.findAll({}, [], {});
     expect(vaults).toHaveLength(2);
     expect(vaults[0]).toEqual({
       address: testConstants.defaultVaultAddress,
       clobPairId: '0',
       status: IndexerVaultStatus.QUOTING,
-      createdAt: block.time?.toISOString(),
+      createdAt: testConstants.defaultVault.createdAt,
       updatedAt: block.time?.toISOString(),
     });
     expect(vaults[1]).toEqual({
@@ -91,13 +87,16 @@ describe('upsertVaultHandler', () => {
   });
 
   it('should upsert an existing vault', async () => {
-    await VaultTable.create(testConstants.defaultVault);
+    const vaults: VaultFromDatabase[] = await VaultTable.findAll({}, [], {});
+    expect(vaults).toHaveLength(1);
+    expect(vaults[0].status).toEqual(IndexerVaultStatus.QUOTING);
+    const existingVaultAddr: string = vaults[0].address;
 
     const events: UpsertVaultEventV1[] = [
       {
-        address: testConstants.defaultVaultAddress,
+        address: existingVaultAddr,
         clobPairId: 0,
-        status: VaultStatus.VAULT_STATUS_CLOSE_ONLY,
+        status: VaultStatus.VAULT_STATUS_CLOSE_ONLY, // modify status from quoting to close only
       },
     ];
     const block: IndexerTendermintBlock = createBlockFromEvents(
@@ -109,13 +108,9 @@ describe('upsertVaultHandler', () => {
 
     await onMessage(kafkaMessage);
 
-    const vaults: VaultFromDatabase[] = await VaultTable.findAll(
-      {},
-      [],
-      {},
-    );
-    expect(vaults).toHaveLength(1);
-    expect(vaults[0]).toEqual({
+    const vaultsAfterUpsert: VaultFromDatabase[] = await VaultTable.findAll({}, [], {});
+    expect(vaultsAfterUpsert).toHaveLength(1);
+    expect(vaultsAfterUpsert[0]).toEqual({
       address: testConstants.defaultVault.address,
       clobPairId: testConstants.defaultVault.clobPairId,
       status: IndexerVaultStatus.CLOSE_ONLY,

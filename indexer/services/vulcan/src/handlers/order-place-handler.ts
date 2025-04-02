@@ -29,6 +29,7 @@ import {
 import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
+import { isVaultOrder } from '../helpers/orders';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
@@ -112,13 +113,17 @@ export class OrderPlaceHandler extends Handler {
       let dbOrder: OrderFromDatabase | undefined;
       if (isStatefulOrder(redisOrder.order!.orderId!.orderFlags)) {
         const orderUuid: string = OrderTable.orderIdToUuid(redisOrder.order!.orderId!);
-        dbOrder = await OrderTable.findById(orderUuid);
-        if (dbOrder === undefined) {
-          logger.crit({
-            at: 'OrderPlaceHandler#createSubaccountWebsocketMessage',
-            message: 'Stateful order not found in database',
-          });
-          throw new Error(`Stateful order not found in database: ${orderUuid}`);
+        // Since vault orders are not persisted by ender (to improve processing latency), skip
+        // looking them up in db. However, we should still send corresponding cached order update.
+        if (!isVaultOrder(redisOrder.order!.orderId!)) {
+          dbOrder = await OrderTable.findById(orderUuid);
+          if (dbOrder === undefined) {
+            logger.crit({
+              at: 'OrderPlaceHandler#createSubaccountWebsocketMessage',
+              message: 'Stateful order not found in database',
+            });
+            throw new Error(`Stateful order not found in database: ${orderUuid}`);
+          }
         }
         await this.sendCachedOrderUpdate(orderUuid, headers);
       }

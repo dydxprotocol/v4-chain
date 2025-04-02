@@ -47,6 +47,7 @@ import { Big } from 'big.js';
 import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
+import { isVaultOrder } from '../helpers/orders';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
@@ -135,7 +136,10 @@ export class OrderRemoveHandler extends Handler {
       });
     }
 
-    if (this.isStatefulOrderCancelation(orderRemove)) {
+    // Since vault orders are not persisted by ender (to improve processing latency), we
+    // should handle their cancellation as non-stateful.
+    if (this.isStatefulOrderCancelation(orderRemove) &&
+      !isVaultOrder(orderRemove.removedOrderId!)) {
       await this.handleStatefulOrderCancelation(orderRemove, removeOrderResult, headers);
       return;
     }
