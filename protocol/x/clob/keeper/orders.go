@@ -369,14 +369,16 @@ func (k Keeper) PlaceStatefulOrder(
 
 	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
 	// These checks should happen for all non-internal orders and for generated TWAP suborders.
+	// For market TWAP orders where subticks are 0, use the oracle price for collateralization check.
 	if order.IsCollateralCheckRequired(isInternalOrder) {
+		order_subticks := k.GetOrderSubticksForOrderType(ctx, order)
 		updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
 			ctx,
 			order.OrderId.SubaccountId,
 			types.PendingOpenOrder{
 				RemainingQuantums: order.GetBaseQuantums(),
 				IsBuy:             order.IsBuy(),
-				Subticks:          order.GetOrderSubticks(),
+				Subticks:          order_subticks,
 				ClobPairId:        order.GetClobPairId(),
 			},
 		)
@@ -513,6 +515,10 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 
 	for _, orderId := range placedStatefulOrderIds {
 		orderId.MustBeStatefulOrder()
+		if orderId.IsTwapOrder() {
+			// TODO (anmol): consider implications of this. technically this is not on the clob just state
+			continue
+		}
 
 		orderPlacement, exists := k.GetLongTermOrderPlacement(ctx, orderId)
 		if !exists {
@@ -966,30 +972,6 @@ func (k Keeper) PerformStatefulOrderValidation(
 	}
 
 	if order.IsTwapOrder() {
-		if order.TwapConfig == nil {
-			return errorsmod.Wrapf(
-				types.ErrInvalidPlaceOrder,
-				"TWAP order must have a TWAP config",
-			)
-		}
-		if order.TwapConfig.Interval < 30 || order.TwapConfig.Interval > 3600 {
-			return errorsmod.Wrapf(
-				types.ErrInvalidPlaceOrder,
-				"TWAP order interval must be between 30 seconds and 3600 seconds (1 hour)",
-			)
-		}
-		if order.TwapConfig.Duration < 300 || order.TwapConfig.Duration > 86400 {
-			return errorsmod.Wrapf(
-				types.ErrInvalidPlaceOrder,
-				"TWAP order duration must be between 300 seconds (5 minutes) and 86400 seconds (24 hours)",
-			)
-		}
-		if order.TwapConfig.Duration%order.TwapConfig.Interval != 0 {
-			return errorsmod.Wrapf(
-				types.ErrInvalidPlaceOrder,
-				"TWAP order duration must be a multiple of the interval",
-			)
-		}
 		num_suborders := uint64(order.TwapConfig.Duration / order.TwapConfig.Interval)
 		if order.Quantums/num_suborders < clobPair.StepBaseQuantums {
 			return errorsmod.Wrapf(
@@ -1055,6 +1037,22 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 		)
 	}
 	return nil
+}
+
+func (k Keeper) GetOrderSubticksForOrderType(ctx sdk.Context, order types.Order) types.Subticks {
+	if order.IsTwapOrder() && order.Subticks == uint64(0) {
+		// if twap market order, use the current oracle price as subticks
+		clobPairId := order.GetClobPairId()
+		clobPair, found := k.GetClobPair(ctx, clobPairId)
+		if !found {
+			panic(types.ErrInvalidClob)
+		}
+		oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+		orderSubticks := lib.BigRatRound(oraclePriceSubticksRat, false).Uint64()
+
+		return types.Subticks(orderSubticks)
+	}
+	return order.GetOrderSubticks()
 }
 
 // AddOrderToOrderbookSubaccountUpdatesCheck performs checks on the subaccount updates that will occur
@@ -1275,4 +1273,31 @@ func (k Keeper) SendOffchainMessages(
 		}
 		k.GetIndexerEventManager().SendOffchainData(update)
 	}
+}
+
+// GetOraclePriceAdjustedByPercentageSubticks returns the oracle price in subticks adjusted by a given percentage,
+// rounded to the nearest multiple of SubticksPerTick.
+// A positive percentage increases the price, while a negative percentage decreases it.
+// For example:
+//   - percentage = 0.05 means 5% higher than oracle price
+//   - percentage = -0.05 means 5% lower than oracle price
+func (k Keeper) GetOraclePriceAdjustedByPercentageSubticks(
+	ctx sdk.Context,
+	clobPair types.ClobPair,
+	percentage float64,
+) uint64 {
+	oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+
+	multiplier := new(big.Rat).SetFloat64(1.0 + percentage)
+
+	adjustedPrice := new(big.Rat).Mul(oraclePriceSubticksRat, multiplier)
+
+	// Round to the nearest multiple of SubticksPerTick
+	roundedSubticks := lib.BigRatRoundToMultiple(
+		adjustedPrice,
+		new(big.Int).SetUint64(uint64(clobPair.SubticksPerTick)),
+		percentage >= 0, // round up for positive adjustments, down for negative
+	)
+
+	return roundedSubticks.Uint64()
 }

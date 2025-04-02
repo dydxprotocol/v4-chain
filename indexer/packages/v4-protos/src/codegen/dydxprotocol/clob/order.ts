@@ -516,6 +516,9 @@ export interface LongTermOrderPlacementSDKType {
 
 export interface TwapOrderPlacement {
   order?: Order;
+  /** The total number of legs to be executed. */
+
+  totalLegs: number;
   /** The number of legs remaining to be executed. */
 
   remainingLegs: number;
@@ -535,6 +538,9 @@ export interface TwapOrderPlacement {
 
 export interface TwapOrderPlacementSDKType {
   order?: OrderSDKType;
+  /** The total number of legs to be executed. */
+
+  total_legs: number;
   /** The number of legs remaining to be executed. */
 
   remaining_legs: number;
@@ -776,6 +782,19 @@ export interface TwapOrderConfig {
    */
 
   interval: number;
+  /**
+   * Slippage percentage for each suborder. This will be applied to
+   * the oracle price each time a suborder is triggered. Must be
+   * between 0 and 5000 (0% and 50%).
+   */
+
+  slippagePercent: number;
+  /**
+   * How many seconds to add to GoodTillBlockTime for each suborder.
+   * This will be applied to the block time when the suborder is triggered.
+   */
+
+  goodTillBlockTimeOffset: number;
 }
 /** TwapOrderConfig represents the necessary configuration for a TWAP order. */
 
@@ -792,6 +811,19 @@ export interface TwapOrderConfigSDKType {
    */
 
   interval: number;
+  /**
+   * Slippage percentage for each suborder. This will be applied to
+   * the oracle price each time a suborder is triggered. Must be
+   * between 0 and 5000 (0% and 50%).
+   */
+
+  slippage_percent: number;
+  /**
+   * How many seconds to add to GoodTillBlockTime for each suborder.
+   * This will be applied to the block time when the suborder is triggered.
+   */
+
+  good_till_block_time_offset: number;
 }
 /**
  * TransactionOrdering represents a unique location in the block where a
@@ -1209,6 +1241,7 @@ export const LongTermOrderPlacement = {
 function createBaseTwapOrderPlacement(): TwapOrderPlacement {
   return {
     order: undefined,
+    totalLegs: 0,
     remainingLegs: 0,
     remainingQuantums: Long.UZERO,
     blockHeight: 0
@@ -1221,16 +1254,20 @@ export const TwapOrderPlacement = {
       Order.encode(message.order, writer.uint32(10).fork()).ldelim();
     }
 
+    if (message.totalLegs !== 0) {
+      writer.uint32(16).uint32(message.totalLegs);
+    }
+
     if (message.remainingLegs !== 0) {
-      writer.uint32(16).uint32(message.remainingLegs);
+      writer.uint32(24).uint32(message.remainingLegs);
     }
 
     if (!message.remainingQuantums.isZero()) {
-      writer.uint32(24).uint64(message.remainingQuantums);
+      writer.uint32(32).uint64(message.remainingQuantums);
     }
 
     if (message.blockHeight !== 0) {
-      writer.uint32(32).uint32(message.blockHeight);
+      writer.uint32(40).uint32(message.blockHeight);
     }
 
     return writer;
@@ -1250,14 +1287,18 @@ export const TwapOrderPlacement = {
           break;
 
         case 2:
-          message.remainingLegs = reader.uint32();
+          message.totalLegs = reader.uint32();
           break;
 
         case 3:
-          message.remainingQuantums = (reader.uint64() as Long);
+          message.remainingLegs = reader.uint32();
           break;
 
         case 4:
+          message.remainingQuantums = (reader.uint64() as Long);
+          break;
+
+        case 5:
           message.blockHeight = reader.uint32();
           break;
 
@@ -1273,6 +1314,7 @@ export const TwapOrderPlacement = {
   fromPartial(object: DeepPartial<TwapOrderPlacement>): TwapOrderPlacement {
     const message = createBaseTwapOrderPlacement();
     message.order = object.order !== undefined && object.order !== null ? Order.fromPartial(object.order) : undefined;
+    message.totalLegs = object.totalLegs ?? 0;
     message.remainingLegs = object.remainingLegs ?? 0;
     message.remainingQuantums = object.remainingQuantums !== undefined && object.remainingQuantums !== null ? Long.fromValue(object.remainingQuantums) : Long.UZERO;
     message.blockHeight = object.blockHeight ?? 0;
@@ -1559,7 +1601,9 @@ export const Order = {
 function createBaseTwapOrderConfig(): TwapOrderConfig {
   return {
     duration: 0,
-    interval: 0
+    interval: 0,
+    slippagePercent: 0,
+    goodTillBlockTimeOffset: 0
   };
 }
 
@@ -1571,6 +1615,14 @@ export const TwapOrderConfig = {
 
     if (message.interval !== 0) {
       writer.uint32(16).uint32(message.interval);
+    }
+
+    if (message.slippagePercent !== 0) {
+      writer.uint32(24).uint32(message.slippagePercent);
+    }
+
+    if (message.goodTillBlockTimeOffset !== 0) {
+      writer.uint32(32).uint32(message.goodTillBlockTimeOffset);
     }
 
     return writer;
@@ -1593,6 +1645,14 @@ export const TwapOrderConfig = {
           message.interval = reader.uint32();
           break;
 
+        case 3:
+          message.slippagePercent = reader.uint32();
+          break;
+
+        case 4:
+          message.goodTillBlockTimeOffset = reader.uint32();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1606,6 +1666,8 @@ export const TwapOrderConfig = {
     const message = createBaseTwapOrderConfig();
     message.duration = object.duration ?? 0;
     message.interval = object.interval ?? 0;
+    message.slippagePercent = object.slippagePercent ?? 0;
+    message.goodTillBlockTimeOffset = object.goodTillBlockTimeOffset ?? 0;
     return message;
   }
 

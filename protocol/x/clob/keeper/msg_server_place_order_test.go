@@ -92,7 +92,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 		},
 		"Returns an error when TWAP suborder size is too small": {
 			StatefulOrderPlacement: constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy10_Price35_GTB20_RO,
-			ExpectedError: types.ErrInvalidPlaceOrder,
+			ExpectedError:          types.ErrInvalidPlaceOrder,
 		},
 	}
 

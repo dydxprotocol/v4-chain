@@ -105,12 +105,14 @@ message LongTermOrderPlacement {
 // to be executed.
 message TwapOrderPlacement {
   Order order = 1 [ (gogoproto.nullable) = false ];
+  // The total number of legs to be executed.
+  uint32 total_legs = 2;
   // The number of legs remaining to be executed.
-  uint32 remaining_legs = 2;
+  uint32 remaining_legs = 3;
   // The number of quantums remaining to be executed.
-  uint64 remaining_quantums = 3;
+  uint64 remaining_quantums = 4;
   // The block height at which the order was placed.
-  uint32 block_height = 4;
+  uint32 block_height = 5;
 }
 
 // TwapTriggerPlacement represents the placement of a TWAP suborder in
@@ -259,6 +261,15 @@ message TwapOrderConfig {
   // whole number, a factor of the duration, greater than 30 seconds, 
   // and less than 3600 seconds (1 hour).
   uint32 interval = 2;
+
+  // Slippage percentage for each suborder. This will be applied to 
+  // the oracle price each time a suborder is triggered. Must be
+  // between 0 and 5000 (0% and 50%).
+  uint32 slippage_percent = 3;
+
+  // How many seconds to add to GoodTillBlockTime for each suborder.
+  // This will be applied to the block time when the suborder is triggered.
+  uint32 good_till_block_time_offset = 4;
 }
 
 // TransactionOrdering represents a unique location in the block where a
