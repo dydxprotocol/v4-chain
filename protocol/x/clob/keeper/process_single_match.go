@@ -292,6 +292,26 @@ func (k Keeper) ProcessSingleMatch(
 		newMakerTotalFillAmount,
 		curMakerPruneableBlockHeight,
 	)
+	taker_order := matchWithOrders.TakerOrder.MustGetOrder()
+	if taker_order.IsStatefulOrder() {
+		// Get the parent order ID by removing the TWAP suborder flag
+		parentOrderId := types.OrderId{
+			SubaccountId:   taker_order.OrderId.SubaccountId,
+			ClientId:       taker_order.OrderId.ClientId,
+			OrderFlags:     types.OrderIdFlags_Twap, // Set directly to TWAP
+			ClobPairId:     taker_order.OrderId.ClobPairId,
+			SequenceNumber: 0, // Set directly to 0
+		}
+
+		// Update the parent TWAP order state
+		if err := k.UpdateTWAPOrderStateOnSuborderFill(
+			ctx,
+			parentOrderId,
+			fillAmount.ToUint64(),
+		); err != nil {
+			return false, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+		}
+	}
 
 	return true, takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, nil
 }

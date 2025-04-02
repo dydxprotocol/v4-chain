@@ -365,32 +365,35 @@ func (k Keeper) PlaceStatefulOrder(
 		if err := k.ValidateSubaccountEquityTierLimitForStatefulOrder(ctx, order); err != nil {
 			return err
 		}
+	}
 
-		// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
-		if !order.IsConditionalOrder() {
-			updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
-				ctx,
-				order.OrderId.SubaccountId,
-				types.PendingOpenOrder{
-					RemainingQuantums: order.GetBaseQuantums(),
-					IsBuy:             order.IsBuy(),
-					Subticks:          order.GetOrderSubticks(),
-					ClobPairId:        order.GetClobPairId(),
-				},
-			)
+	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
+	// These checks should happen for all non-internal orders and for generated TWAP suborders.
+	// For market TWAP orders where subticks are 0, use the oracle price for collateralization check.
+	if order.IsCollateralCheckRequired(isInternalOrder) {
+		order_subticks := k.GetOrderSubticksForOrderType(ctx, order)
+		updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
+			ctx,
+			order.OrderId.SubaccountId,
+			types.PendingOpenOrder{
+				RemainingQuantums: order.GetBaseQuantums(),
+				IsBuy:             order.IsBuy(),
+				Subticks:          order_subticks,
+				ClobPairId:        order.GetClobPairId(),
+			},
+		)
 
-			if !updateResult.IsSuccess() {
-				err := types.ErrStatefulOrderCollateralizationCheckFailed
-				if updateResult.IsIsolatedSubaccountError() {
-					err = types.ErrWouldViolateIsolatedSubaccountConstraints
-				}
-				return errorsmod.Wrapf(
-					err,
-					"PlaceStatefulOrder: order (%+v), result (%s)",
-					order,
-					updateResult.String(),
-				)
+		if !updateResult.IsSuccess() {
+			err := types.ErrStatefulOrderCollateralizationCheckFailed
+			if updateResult.IsIsolatedSubaccountError() {
+				err = types.ErrWouldViolateIsolatedSubaccountConstraints
 			}
+			return errorsmod.Wrapf(
+				err,
+				"PlaceStatefulOrder: order (%+v), result (%s)",
+				order,
+				updateResult.String(),
+			)
 		}
 	}
 
@@ -398,12 +401,16 @@ func (k Keeper) PlaceStatefulOrder(
 	// state.
 	if lib.IsDeliverTxMode(ctx) {
 		// Write the stateful order to state and the memstore.
-		k.SetLongTermOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
-		k.AddStatefulOrderIdExpiration(
-			ctx,
-			order.MustGetUnixGoodTilBlockTime(),
-			order.GetOrderId(),
-		)
+		if order.IsTwapOrder() {
+			k.SetTWAPOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
+		} else {
+			k.SetLongTermOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
+			k.AddStatefulOrderIdExpiration(
+				ctx,
+				order.MustGetUnixGoodTilBlockTime(),
+				order.GetOrderId(),
+			)
+		}
 	} else {
 		// Write the stateful order to a transient store. PerformStatefulOrderValidation will ensure that the order does
 		// not exist which will prevent MustAddUncommittedStatefulOrderPlacement from panicking.
@@ -508,6 +515,10 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 
 	for _, orderId := range placedStatefulOrderIds {
 		orderId.MustBeStatefulOrder()
+		if orderId.IsTwapOrder() {
+			// TODO (anmol): consider implications of this. technically this is not on the clob just state
+			continue
+		}
 
 		orderPlacement, exists := k.GetLongTermOrderPlacement(ctx, orderId)
 		if !exists {
@@ -960,6 +971,16 @@ func (k Keeper) PerformStatefulOrderValidation(
 		}
 	}
 
+	if order.IsTwapOrder() {
+		num_suborders := uint64(order.TwapConfig.Duration / order.TwapConfig.Interval)
+		if order.Quantums/num_suborders < clobPair.StepBaseQuantums {
+			return errorsmod.Wrapf(
+				types.ErrInvalidPlaceOrder,
+				"TWAP suborder sizes must be greater than the minimum order size for the market",
+			)
+		}
+	}
+
 	return nil
 }
 
@@ -1016,6 +1037,22 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 		)
 	}
 	return nil
+}
+
+func (k Keeper) GetOrderSubticksForOrderType(ctx sdk.Context, order types.Order) types.Subticks {
+	if order.IsTwapOrder() && order.Subticks == uint64(0) {
+		// if twap market order, use the current oracle price as subticks
+		clobPairId := order.GetClobPairId()
+		clobPair, found := k.GetClobPair(ctx, clobPairId)
+		if !found {
+			panic(types.ErrInvalidClob)
+		}
+		oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+		orderSubticks := lib.BigRatRound(oraclePriceSubticksRat, false).Uint64()
+
+		return types.Subticks(orderSubticks)
+	}
+	return order.GetOrderSubticks()
 }
 
 // AddOrderToOrderbookSubaccountUpdatesCheck performs checks on the subaccount updates that will occur
@@ -1236,4 +1273,31 @@ func (k Keeper) SendOffchainMessages(
 		}
 		k.GetIndexerEventManager().SendOffchainData(update)
 	}
+}
+
+// GetOraclePriceAdjustedByPercentageSubticks returns the oracle price in subticks adjusted by a given percentage,
+// rounded to the nearest multiple of SubticksPerTick.
+// A positive percentage increases the price, while a negative percentage decreases it.
+// For example:
+//   - percentage = 0.05 means 5% higher than oracle price
+//   - percentage = -0.05 means 5% lower than oracle price
+func (k Keeper) GetOraclePriceAdjustedByPercentageSubticks(
+	ctx sdk.Context,
+	clobPair types.ClobPair,
+	percentage float64,
+) uint64 {
+	oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+
+	multiplier := new(big.Rat).SetFloat64(1.0 + percentage)
+
+	adjustedPrice := new(big.Rat).Mul(oraclePriceSubticksRat, multiplier)
+
+	// Round to the nearest multiple of SubticksPerTick
+	roundedSubticks := lib.BigRatRoundToMultiple(
+		adjustedPrice,
+		new(big.Int).SetUint64(uint64(clobPair.SubticksPerTick)),
+		percentage >= 0, // round up for positive adjustments, down for negative
+	)
+
+	return roundedSubticks.Uint64()
 }
