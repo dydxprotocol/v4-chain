@@ -78,6 +78,20 @@ func (k Keeper) GetTriggeredConditionalOrderPlacementStore(ctx sdk.Context) pref
 	)
 }
 
+func (k Keeper) GetTWAPOrderPlacementStore(ctx sdk.Context) prefix.Store {
+	return prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.TWAPOrderKeyPrefix),
+	)
+}
+
+func (k Keeper) GetTWAPTriggerOrderPlacementStore(ctx sdk.Context) prefix.Store {
+	return prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.TWAPTriggerOrderKeyPrefix),
+	)
+}
+
 // getTransientStore fetches a transient store used for reading and
 // updating the transient store.
 func (k Keeper) getTransientStore(ctx sdk.Context) storetypes.KVStore {
@@ -102,8 +116,10 @@ func (k Keeper) fetchStateStoresForOrder(
 			return k.GetTriggeredConditionalOrderPlacementStore(ctx)
 		}
 		return k.GetUntriggeredConditionalOrderPlacementStore(ctx)
-	} else if orderId.IsLongTermOrder() {
+	} else if orderId.IsLongTermOrder() || orderId.IsTwapSuborder() {
 		return k.GetLongTermOrderPlacementStore(ctx)
+	} else if orderId.IsTwapOrder() {
+		return k.GetTWAPOrderPlacementStore(ctx)
 	}
 	panic(
 		fmt.Sprintf(
