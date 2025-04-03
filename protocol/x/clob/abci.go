@@ -78,6 +78,9 @@ func EndBlocker(
 	// Prune any fill amounts from state which are now past their `pruneableBlockHeight`.
 	keeper.PruneStateFillAmountsForShortTermOrders(ctx)
 
+	// Place any TWAP suborders that are due
+	keeper.GenerateAndPlaceTriggeredTwapSuborders(ctx, ctx.BlockTime())
+
 	// Prune expired stateful orders completely from state.
 	expiredStatefulOrderIds := keeper.RemoveExpiredStatefulOrders(ctx, ctx.BlockTime())
 	for _, orderId := range expiredStatefulOrderIds {

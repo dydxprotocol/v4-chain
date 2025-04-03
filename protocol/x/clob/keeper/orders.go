@@ -518,7 +518,10 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 
 	for _, orderId := range placedStatefulOrderIds {
 		orderId.MustBeStatefulOrder()
-		// TODO: (anmol) check if twap error?
+		if orderId.IsTwapOrder() {
+			// TODO (anmol): consider implications of this. technically this is not on the clob just state
+			continue
+		}
 
 		orderPlacement, exists := k.GetLongTermOrderPlacement(ctx, orderId)
 		if !exists {
@@ -1232,6 +1235,33 @@ func (k Keeper) InitStatefulOrders(
 			telemetry.IncrCounter(1, types.ModuleName, metrics.PlaceOrder, metrics.Hydrate, metrics.Matched)
 		}
 	}
+}
+
+// GetOraclePriceAdjustedByPercentageSubticks returns the oracle price in subticks adjusted by a given percentage,
+// rounded to the nearest multiple of SubticksPerTick.
+// A positive percentage increases the price, while a negative percentage decreases it.
+// For example:
+//   - percentage = 0.05 means 5% higher than oracle price
+//   - percentage = -0.05 means 5% lower than oracle price
+func (k Keeper) GetOraclePriceAdjustedByPercentageSubticks(
+	ctx sdk.Context,
+	clobPair types.ClobPair,
+	percentage float64,
+) uint64 {
+	oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+
+	multiplier := new(big.Rat).SetFloat64(1.0 + percentage)
+
+	adjustedPrice := new(big.Rat).Mul(oraclePriceSubticksRat, multiplier)
+
+	// Round to the nearest multiple of SubticksPerTick
+	roundedSubticks := lib.BigRatRoundToMultiple(
+		adjustedPrice,
+		new(big.Int).SetUint64(uint64(clobPair.SubticksPerTick)),
+		percentage >= 0, // round up for positive adjustments, down for negative
+	)
+
+	return roundedSubticks.Uint64()
 }
 
 // sendOffchainMessagesWithTxHash sends all the `Message` in the offchainUpdates passed in along with
