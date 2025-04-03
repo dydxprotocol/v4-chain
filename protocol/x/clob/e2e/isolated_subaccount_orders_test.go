@@ -2,11 +2,11 @@ package clob_test
 
 import (
 	"math/big"
+	"slices"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 
 	sdkmath "cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"

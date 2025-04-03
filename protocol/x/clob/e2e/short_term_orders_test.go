@@ -2,11 +2,11 @@ package clob_test
 
 import (
 	"math/big"
+	"slices"
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
