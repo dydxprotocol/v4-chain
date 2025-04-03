@@ -14,7 +14,7 @@ import (
 
 // numOrderIdFlagsTestCases is set to 129 to verify that we run a test case where
 // `OrderFlags` is greater than one byte (proto varints are encoded with 7 bits per byte).
-const numOrderIdFlagsTestCases = 129
+const numOrderIdFlagsTestCases = 512
 
 func TestToStateKey(t *testing.T) {
 	// Success
@@ -66,7 +66,9 @@ func TestIsStatefulOrder(t *testing.T) {
 		orderId := types.OrderId{OrderFlags: orderFlags}
 
 		expectedIsStatefulOrder := orderFlags == types.OrderIdFlags_LongTerm ||
-			orderFlags == types.OrderIdFlags_Conditional
+			orderFlags == types.OrderIdFlags_Conditional ||
+			orderFlags == types.OrderIdFlags_Twap ||
+			orderFlags == types.OrderIdFlags_TwapSuborder
 		require.Equal(t, expectedIsStatefulOrder, orderId.IsStatefulOrder(), "OrderFlag: %d", i)
 	}
 }

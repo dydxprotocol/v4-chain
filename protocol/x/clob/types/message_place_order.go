@@ -9,6 +9,23 @@ import (
 
 const TypeMsgPlaceOrder = "place_order"
 
+const (
+	// the minimum interval in seconds for TWAP orders.
+	MinTwapOrderInterval uint32 = 30
+
+	// the maximum interval in seconds for TWAP orders.
+	MaxTwapOrderInterval uint32 = 3600
+
+	// the minimum duration in seconds for TWAP orders.
+	MinTwapOrderDuration uint32 = 300 // 5 minutes
+
+	// the maximum duration in seconds for TWAP orders.
+	MaxTwapOrderDuration uint32 = 86400 // 24 hours
+
+	// the maximum slippage percentage for suborders in basis points.
+	MaxTwapOrderSlippagePercent uint32 = 5000
+)
+
 var _ sdk.Msg = &MsgPlaceOrder{}
 
 func NewMsgPlaceOrder(order Order) *MsgPlaceOrder {
@@ -84,8 +101,8 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 		return errorsmod.Wrapf(ErrReduceOnlyDisabled, "reduce only orders must be short term IOC orders")
 	}
 
-	if msg.Order.Subticks == uint64(0) {
-		return errorsmod.Wrapf(ErrInvalidOrderSubticks, "order subticks cannot be 0")
+	if msg.Order.Subticks == uint64(0) && !msg.Order.IsTwapOrder() {
+		return errorsmod.Wrapf(ErrInvalidOrderSubticks, "order subticks cannot be 0 for this order type")
 	}
 
 	if orderId.IsConditionalOrder() {
@@ -105,6 +122,46 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 			return errorsmod.Wrapf(
 				ErrInvalidConditionalOrderTriggerSubticks,
 				"conditional order trigger subticks greater than 0 for non-conditional order",
+			)
+		}
+	}
+
+	if msg.Order.IsTwapOrder() {
+		if msg.Order.TwapConfig == nil {
+			return errorsmod.Wrapf(
+				ErrInvalidPlaceOrder,
+				"TWAP order must have a TWAP config",
+			)
+		}
+		if msg.Order.TwapConfig.Interval < MinTwapOrderInterval ||
+			msg.Order.TwapConfig.Interval > MaxTwapOrderInterval {
+			return errorsmod.Wrapf(
+				ErrInvalidPlaceOrder,
+				"TWAP order interval must be between %d seconds and %d seconds",
+				MinTwapOrderInterval,
+				MaxTwapOrderInterval,
+			)
+		}
+		if msg.Order.TwapConfig.Duration < MinTwapOrderDuration ||
+			msg.Order.TwapConfig.Duration > MaxTwapOrderDuration {
+			return errorsmod.Wrapf(
+				ErrInvalidPlaceOrder,
+				"TWAP order duration must be between %d seconds and %d seconds",
+				MinTwapOrderDuration,
+				MaxTwapOrderDuration,
+			)
+		}
+		if msg.Order.TwapConfig.Duration % msg.Order.TwapConfig.Interval != 0 {
+			return errorsmod.Wrapf(
+				ErrInvalidPlaceOrder,
+				"TWAP order duration must be a multiple of the interval",
+			)
+		}
+		if msg.Order.TwapConfig.SlippagePercent > MaxTwapOrderSlippagePercent {
+			return errorsmod.Wrapf(
+				ErrInvalidPlaceOrder,
+				"TWAP order slippage percent must be between 0 and %d",
+				MaxTwapOrderSlippagePercent,
 			)
 		}
 	}

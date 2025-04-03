@@ -39,6 +39,11 @@ message OrderId {
 
   // ID of the CLOB the order is created for.
   uint32 clob_pair_id = 4;
+
+  // sequence number of the order. Used for matching generated suborders to
+  // parent TWAP orders.
+  // TODO: (anmol) delete??
+  uint32 sequence_number = 5;
 }
 
 // OrdersFilledDuringLatestBlock represents a list of `OrderIds` that were
@@ -93,6 +98,32 @@ message LongTermOrderPlacement {
   // The block height and transaction index at which the order was placed.
   // Used for ordering by time priority when the chain is restarted.
   TransactionOrdering placement_index = 2 [ (gogoproto.nullable) = false ];
+}
+
+// TwapOrderPlacement represents the placement of a TWAP order in
+// the TWAP Order State. It will store the original parent TWAP order as
+// well as maintain the state of the remaining legs and quantums
+// to be executed.
+message TwapOrderPlacement {
+  Order order = 1 [ (gogoproto.nullable) = false ];
+  // The total number of legs to be executed.
+  uint32 total_legs = 2;
+  // The number of legs remaining to be executed.
+  uint32 remaining_legs = 3;
+  // The number of quantums remaining to be executed.
+  uint64 remaining_quantums = 4;
+  // The block height at which the order was placed.
+  uint32 block_height = 5;
+}
+
+// TwapTriggerPlacement represents the placement of a TWAP suborder in
+// state. It stores the stateful order itself, the `BlockHeight` and
+// `TransactionIndex` at which the order was placed and triggered.
+message TwapTriggerPlacement {
+  // The generated suborder given a TWAP order.
+  Order order = 1 [ (gogoproto.nullable) = false ];
+  // The block height at which the order was triggered.
+  uint64 trigger_block_time = 2;
 }
 
 // ConditionalOrderPlacement represents the placement of a conditional order in
@@ -215,6 +246,27 @@ message Order {
   // Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
+
+  // twap_config represents the configuration for a TWAP order. This must be
+  // set for twap orders and will be ignored for all other order types.
+  TwapOrderConfig twap_config = 12;
+}
+
+// TwapOrderConfig represents the necessary configuration for a TWAP order.
+message TwapOrderConfig {
+  // Duration of the TWAP order execution in seconds. Must be between
+  // 300 (5 minutes) and 86400 (24 hours).
+  uint32 duration = 1;
+
+  // Interval in seconds for each suborder to execute. Must be a
+  // whole number, a factor of the duration, greater than 30 seconds,
+  // and less than 3600 seconds (1 hour).
+  uint32 interval = 2;
+
+  // Slippage percentage for each suborder. This will be applied to
+  // the oracle price each time a suborder is triggered. Must be
+  // between 0 and 5000 (0% and 50%).
+  uint32 slippage_percent = 3;
 }
 
 // TransactionOrdering represents a unique location in the block where a

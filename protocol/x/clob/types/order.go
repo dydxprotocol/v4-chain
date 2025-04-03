@@ -180,6 +180,11 @@ func (o *Order) IsConditionalOrder() bool {
 	return o.OrderId.IsConditionalOrder()
 }
 
+// IsTwapOrder returns whether this order is a TWAP order.
+func (o *Order) IsTwapOrder() bool {
+	return o.OrderId.IsTwapOrder()
+}
+
 // IsPostOnlyOrder returns whether this order is a post only order.
 func (o *Order) IsPostOnlyOrder() bool {
 	return o.GetTimeInForce() == Order_TIME_IN_FORCE_POST_ONLY
