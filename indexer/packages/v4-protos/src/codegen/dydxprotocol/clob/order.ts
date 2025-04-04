@@ -308,7 +308,6 @@ export interface OrderId {
   /**
    * sequence number of the order. Used for matching generated suborders to
    * parent TWAP orders.
-   * TODO: (anmol) delete??
    */
 
   sequenceNumber: number;
@@ -354,7 +353,6 @@ export interface OrderIdSDKType {
   /**
    * sequence number of the order. Used for matching generated suborders to
    * parent TWAP orders.
-   * TODO: (anmol) delete??
    */
 
   sequence_number: number;
@@ -687,11 +685,11 @@ export interface Order {
 
   conditionalOrderTriggerSubticks: Long;
   /**
-   * twap_config represents the configuration for a TWAP order. This must be
+   * twap_parameters represent the configuration for a TWAP order. This must be
    * set for twap orders and will be ignored for all other order types.
    */
 
-  twapConfig?: TwapOrderConfig;
+  twapParameters?: TwapParameters;
 }
 /**
  * Order represents a single order belonging to a `Subaccount`
@@ -763,15 +761,15 @@ export interface OrderSDKType {
 
   conditional_order_trigger_subticks: Long;
   /**
-   * twap_config represents the configuration for a TWAP order. This must be
+   * twap_parameters represent the configuration for a TWAP order. This must be
    * set for twap orders and will be ignored for all other order types.
    */
 
-  twap_config?: TwapOrderConfigSDKType;
+  twap_parameters?: TwapParametersSDKType;
 }
-/** TwapOrderConfig represents the necessary configuration for a TWAP order. */
+/** TwapParameters represents the necessary configuration for a TWAP order. */
 
-export interface TwapOrderConfig {
+export interface TwapParameters {
   /**
    * Duration of the TWAP order execution in seconds. Must be between
    * 300 (5 minutes) and 86400 (24 hours).
@@ -792,9 +790,9 @@ export interface TwapOrderConfig {
 
   slippagePercent: number;
 }
-/** TwapOrderConfig represents the necessary configuration for a TWAP order. */
+/** TwapParameters represents the necessary configuration for a TWAP order. */
 
-export interface TwapOrderConfigSDKType {
+export interface TwapParametersSDKType {
   /**
    * Duration of the TWAP order execution in seconds. Must be between
    * 300 (5 minutes) and 86400 (24 hours).
@@ -1446,7 +1444,7 @@ function createBaseOrder(): Order {
     clientMetadata: 0,
     conditionType: 0,
     conditionalOrderTriggerSubticks: Long.UZERO,
-    twapConfig: undefined
+    twapParameters: undefined
   };
 }
 
@@ -1496,8 +1494,8 @@ export const Order = {
       writer.uint32(88).uint64(message.conditionalOrderTriggerSubticks);
     }
 
-    if (message.twapConfig !== undefined) {
-      TwapOrderConfig.encode(message.twapConfig, writer.uint32(98).fork()).ldelim();
+    if (message.twapParameters !== undefined) {
+      TwapParameters.encode(message.twapParameters, writer.uint32(98).fork()).ldelim();
     }
 
     return writer;
@@ -1557,7 +1555,7 @@ export const Order = {
           break;
 
         case 12:
-          message.twapConfig = TwapOrderConfig.decode(reader, reader.uint32());
+          message.twapParameters = TwapParameters.decode(reader, reader.uint32());
           break;
 
         default:
@@ -1582,13 +1580,13 @@ export const Order = {
     message.clientMetadata = object.clientMetadata ?? 0;
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
-    message.twapConfig = object.twapConfig !== undefined && object.twapConfig !== null ? TwapOrderConfig.fromPartial(object.twapConfig) : undefined;
+    message.twapParameters = object.twapParameters !== undefined && object.twapParameters !== null ? TwapParameters.fromPartial(object.twapParameters) : undefined;
     return message;
   }
 
 };
 
-function createBaseTwapOrderConfig(): TwapOrderConfig {
+function createBaseTwapParameters(): TwapParameters {
   return {
     duration: 0,
     interval: 0,
@@ -1596,8 +1594,8 @@ function createBaseTwapOrderConfig(): TwapOrderConfig {
   };
 }
 
-export const TwapOrderConfig = {
-  encode(message: TwapOrderConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const TwapParameters = {
+  encode(message: TwapParameters, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.duration !== 0) {
       writer.uint32(8).uint32(message.duration);
     }
@@ -1613,10 +1611,10 @@ export const TwapOrderConfig = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): TwapOrderConfig {
+  decode(input: _m0.Reader | Uint8Array, length?: number): TwapParameters {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseTwapOrderConfig();
+    const message = createBaseTwapParameters();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -1643,8 +1641,8 @@ export const TwapOrderConfig = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<TwapOrderConfig>): TwapOrderConfig {
-    const message = createBaseTwapOrderConfig();
+  fromPartial(object: DeepPartial<TwapParameters>): TwapParameters {
+    const message = createBaseTwapParameters();
     message.duration = object.duration ?? 0;
     message.interval = object.interval ?? 0;
     message.slippagePercent = object.slippagePercent ?? 0;

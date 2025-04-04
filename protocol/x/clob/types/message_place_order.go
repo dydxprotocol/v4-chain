@@ -127,14 +127,15 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 	}
 
 	if msg.Order.IsTwapOrder() {
-		if msg.Order.TwapConfig == nil {
+		if msg.Order.TwapParameters == nil {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
 				"TWAP order must have a TWAP config",
 			)
 		}
-		if msg.Order.TwapConfig.Interval < MinTwapOrderInterval ||
-			msg.Order.TwapConfig.Interval > MaxTwapOrderInterval {
+		parameters := msg.Order.TwapParameters
+		if parameters.Interval < MinTwapOrderInterval ||
+			parameters.Interval > MaxTwapOrderInterval {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
 				"TWAP order interval must be between %d seconds and %d seconds",
@@ -142,8 +143,8 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 				MaxTwapOrderInterval,
 			)
 		}
-		if msg.Order.TwapConfig.Duration < MinTwapOrderDuration ||
-			msg.Order.TwapConfig.Duration > MaxTwapOrderDuration {
+		if parameters.Duration < MinTwapOrderDuration ||
+			parameters.Duration > MaxTwapOrderDuration {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
 				"TWAP order duration must be between %d seconds and %d seconds",
@@ -151,13 +152,13 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 				MaxTwapOrderDuration,
 			)
 		}
-		if msg.Order.TwapConfig.Duration%msg.Order.TwapConfig.Interval != 0 {
+		if parameters.Duration%parameters.Interval != 0 {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
 				"TWAP order duration must be a multiple of the interval",
 			)
 		}
-		if msg.Order.TwapConfig.SlippagePercent > MaxTwapOrderSlippagePercent {
+		if parameters.SlippagePercent > MaxTwapOrderSlippagePercent {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
 				"TWAP order slippage percent must be between 0 and %d",

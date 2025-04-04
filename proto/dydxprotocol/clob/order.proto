@@ -42,7 +42,6 @@ message OrderId {
 
   // sequence number of the order. Used for matching generated suborders to
   // parent TWAP orders.
-  // TODO: (anmol) delete??
   uint32 sequence_number = 5;
 }
 
@@ -247,13 +246,13 @@ message Order {
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
 
-  // twap_config represents the configuration for a TWAP order. This must be
+  // twap_parameters represent the configuration for a TWAP order. This must be
   // set for twap orders and will be ignored for all other order types.
-  TwapOrderConfig twap_config = 12;
+  TwapParameters twap_parameters = 12;
 }
 
-// TwapOrderConfig represents the necessary configuration for a TWAP order.
-message TwapOrderConfig {
+// TwapParameters represents the necessary configuration for a TWAP order.
+message TwapParameters {
   // Duration of the TWAP order execution in seconds. Must be between
   // 300 (5 minutes) and 86400 (24 hours).
   uint32 duration = 1;
