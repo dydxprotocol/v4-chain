@@ -560,7 +560,7 @@ export interface TwapOrderPlacementSDKType {
 export interface TwapTriggerPlacement {
   /** The generated suborder given a TWAP order. */
   order?: Order;
-  /** The block height at which the order was triggered. */
+  /** The block time at which the order is triggered. */
 
   triggerBlockTime: Long;
 }
@@ -573,7 +573,7 @@ export interface TwapTriggerPlacement {
 export interface TwapTriggerPlacementSDKType {
   /** The generated suborder given a TWAP order. */
   order?: OrderSDKType;
-  /** The block height at which the order was triggered. */
+  /** The block time at which the order is triggered. */
 
   trigger_block_time: Long;
 }

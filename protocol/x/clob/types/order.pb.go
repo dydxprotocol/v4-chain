@@ -599,7 +599,7 @@ func (m *TwapOrderPlacement) GetBlockHeight() uint32 {
 type TwapTriggerPlacement struct {
 	// The generated suborder given a TWAP order.
 	Order Order `protobuf:"bytes,1,opt,name=order,proto3" json:"order"`
-	// The block height at which the order was triggered.
+	// The block time at which the order is triggered.
 	TriggerBlockTime uint64 `protobuf:"varint,2,opt,name=trigger_block_time,json=triggerBlockTime,proto3" json:"trigger_block_time,omitempty"`
 }
 
