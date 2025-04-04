@@ -371,7 +371,10 @@ func (k Keeper) PlaceStatefulOrder(
 	// These checks should happen for all non-internal orders and for generated TWAP suborders.
 	// For market TWAP orders where subticks are 0, use the oracle price for collateralization check.
 	if order.IsCollateralCheckRequired(isInternalOrder) {
-		order_subticks := k.GetSubticksForCollatCheck(ctx, order)
+		order_subticks, err := k.GetSubticksForCollatCheck(ctx, order)
+		if err != nil {
+			return err
+		}
 		updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
 			ctx,
 			order.OrderId.SubaccountId,
@@ -1036,20 +1039,20 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 	return nil
 }
 
-func (k Keeper) GetSubticksForCollatCheck(ctx sdk.Context, order types.Order) types.Subticks {
+func (k Keeper) GetSubticksForCollatCheck(ctx sdk.Context, order types.Order) (types.Subticks, error) {
 	if order.IsTwapOrder() && order.Subticks == uint64(0) {
 		// if twap market order, use the current oracle price as subticks
 		clobPairId := order.GetClobPairId()
 		clobPair, found := k.GetClobPair(ctx, clobPairId)
 		if !found {
-			panic(types.ErrInvalidClob)
+			return 0, types.ErrInvalidClob
 		}
 		oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
 		orderSubticks := lib.BigRatRound(oraclePriceSubticksRat, false).Uint64()
 
-		return types.Subticks(orderSubticks)
+		return types.Subticks(orderSubticks), nil
 	}
-	return order.GetOrderSubticks()
+	return order.GetOrderSubticks(), nil
 }
 
 // AddOrderToOrderbookSubaccountUpdatesCheck performs checks on the subaccount updates that will occur

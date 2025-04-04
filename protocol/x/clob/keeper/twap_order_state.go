@@ -45,14 +45,15 @@ func (k Keeper) GetTwapOrderPlacement(
 	return val, true
 }
 
-// GetTwapTriggerPlacements gets all TWAP trigger placements for a given orderId.
-// Returns empty slice if no trigger placements exist.
-func (k Keeper) GetTwapTriggerPlacements(
+// GetTwapTriggerPlacement gets a TWAP trigger placement for a given orderId.
+// Returns false if no trigger placement exists in store with `orderId`.
+// This iterates over the entire store because the keys in the store are
+// formatted as [timestamp, orderId].
+func (k Keeper) GetTwapTriggerPlacement(
 	ctx sdk.Context,
 	orderId types.OrderId,
-) (val []*types.TwapTriggerPlacement, found bool) {
+) (val types.TwapTriggerPlacement, found bool) {
 	store := k.GetTWAPTriggerOrderPlacementStore(ctx)
-	var triggerPlacements []*types.TwapTriggerPlacement
 
 	iterator := store.Iterator(nil, nil)
 	defer iterator.Close()
@@ -64,11 +65,12 @@ func (k Keeper) GetTwapTriggerPlacements(
 		if triggerPlacement.Order.OrderId.SubaccountId.Owner == orderId.SubaccountId.Owner &&
 			triggerPlacement.Order.OrderId.SubaccountId.Number == orderId.SubaccountId.Number &&
 			triggerPlacement.Order.OrderId.ClientId == orderId.ClientId &&
-			triggerPlacement.Order.OrderId.ClobPairId == orderId.ClobPairId {
-			triggerPlacements = append(triggerPlacements, &triggerPlacement)
+			triggerPlacement.Order.OrderId.ClobPairId == orderId.ClobPairId &&
+			triggerPlacement.Order.OrderId.SequenceNumber == orderId.SequenceNumber {
+			return triggerPlacement, true
 		}
 	}
-	return triggerPlacements, len(triggerPlacements) > 0
+	return types.TwapTriggerPlacement{}, false
 }
 
 // addSuborderToTriggerStore creates a TWAP suborder from a parent TWAP order and adds it to the trigger store.
@@ -94,8 +96,11 @@ func (k Keeper) addSuborderToTriggerStore(
 	triggerTime := ctx.BlockTime().Unix() + triggerOffset
 	suborder := twapOrderPlacement.Order
 
-	// suborder quantums set to 0 until triggered and updated based on remaining quantums and legs
+	// suborder quantums and subticks are set to 0 until triggered
+	// and updated in the end blocker based off oracle price and
+	// remaining quantums and legs
 	suborder.Quantums = 0
+	suborder.Subticks = 0
 
 	// Set the order flag to indicate this is a TWAP suborder
 	suborder.OrderId.OrderFlags = types.OrderIdFlags_TwapSuborder

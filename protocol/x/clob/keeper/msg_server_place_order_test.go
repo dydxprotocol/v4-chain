@@ -417,12 +417,17 @@ func TestPlaceOrder_Success(t *testing.T) {
 				require.Equal(t, tc.StatefulOrderPlacement, twap_order.Order)
 				require.True(t, found)
 
-				suborder_id := tc.StatefulOrderPlacement.OrderId
-				suborder_id.OrderFlags = types.OrderIdFlags_TwapSuborder
+				suborder := tc.StatefulOrderPlacement
+				suborder.OrderId.OrderFlags = types.OrderIdFlags_TwapSuborder
+				suborder.Quantums = 0
+				suborder.Subticks = 0
+				suborder.GoodTilOneof = &types.Order_GoodTilBlockTime{
+					GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 3),
+				}
 
-				twap_suborders, found_sub := ks.ClobKeeper.GetTwapTriggerPlacements(ctx, suborder_id)
-				require.True(t, found_sub)
-				require.Len(t, twap_suborders, 1)
+				twap_suborder, found_suborder := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborder.OrderId)
+				require.True(t, found_suborder)
+				require.Equal(t, suborder, twap_suborder.Order)
 			} else {
 				_, found := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.StatefulOrderPlacement.GetOrderId())
 				require.True(t, found)
