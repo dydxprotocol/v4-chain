@@ -151,7 +151,7 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 				MaxTwapOrderDuration,
 			)
 		}
-		if msg.Order.TwapConfig.Duration % msg.Order.TwapConfig.Interval != 0 {
+		if msg.Order.TwapConfig.Duration%msg.Order.TwapConfig.Interval != 0 {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
 				"TWAP order duration must be a multiple of the interval",
