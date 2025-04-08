@@ -300,7 +300,6 @@ func (k Keeper) ProcessSingleMatch(
 			ClientId:       taker_order.OrderId.ClientId,
 			OrderFlags:     types.OrderIdFlags_Twap, // Set directly to TWAP
 			ClobPairId:     taker_order.OrderId.ClobPairId,
-			SequenceNumber: 0, // Set directly to 0
 		}
 
 		// Update the parent TWAP order state

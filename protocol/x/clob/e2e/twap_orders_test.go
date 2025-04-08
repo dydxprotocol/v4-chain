@@ -63,14 +63,14 @@ func TestTwapOrderPlacementAndCatchup(t *testing.T) {
 	require.Equal(t, uint32(2), twapOrderPlacement.BlockHeight)
 
 	// Verify the first suborder was placed in the memclob
-	suborderId0 := clobtypes.OrderId{
-		SubaccountId:   constants.Alice_Num0,
-		ClientId:       0,
-		OrderFlags:     clobtypes.OrderIdFlags_TwapSuborder,
-		ClobPairId:     0,
-		SequenceNumber: 0,
+	suborderId := clobtypes.OrderId{
+		SubaccountId: constants.Alice_Num0,
+		ClientId:     0,
+		OrderFlags:   clobtypes.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
 	}
-	suborder, found := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId0)
+
+	suborder, found := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
 	require.True(t, found, "First suborder should exist in memclob")
 	require.Equal(t, uint64(20_000_000_000), suborder.Quantums) // 100B/5 = 20B per leg
 	require.Equal(t, uint64(200_000_000), suborder.Subticks)    // $20,000 oracle price
@@ -82,43 +82,39 @@ func TestTwapOrderPlacementAndCatchup(t *testing.T) {
 	require.Equal(t, clobtypes.Order_SIDE_BUY, suborder.Side) // Same side as parent order
 
 	// Verify initial suborder in trigger store
-	initialSuborder, found := tApp.App.ClobKeeper.GetTwapTriggerPlacement(
+	nextSuborder, found := tApp.App.ClobKeeper.GetTwapTriggerPlacement(
 		ctx,
-		twapOrder.Order.OrderId,
+		suborderId,
 	)
 	require.True(t, found, "TWAP trigger placement should exist")
 
-	require.Equal(t, clobtypes.OrderIdFlags_TwapSuborder, initialSuborder.Order.OrderId.OrderFlags)
-	require.Equal(t, uint32(1), initialSuborder.Order.OrderId.SequenceNumber)
-	require.Equal(t, uint64(0), initialSuborder.Order.Quantums)
-	require.Equal(t, uint64(ctx.BlockTime().Unix()+60), initialSuborder.TriggerBlockTime)
+	require.Equal(t, clobtypes.OrderIdFlags_TwapSuborder, nextSuborder.OrderId.OrderFlags)
+	require.Equal(t, uint64(ctx.BlockTime().Unix()+int64(twapOrder.Order.TwapParameters.Interval)), nextSuborder.TriggerBlockTime)
 
-	// Advance block time by 60 seconds to trigger next suborder
+	// Advance block time by 30 seconds
+	// Next suborder should not be triggered
 	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-		BlockTime: ctx.BlockTime().Add(time.Second * 60),
+		BlockTime: ctx.BlockTime().Add(time.Second * 30),
 	})
 
-	// Verify TWAP order state is updated
+	// Verify TWAP order state
 	twapOrderPlacement, found = tApp.App.ClobKeeper.GetTwapOrderPlacement(
 		ctx,
 		twapOrder.Order.OrderId,
 	)
 	require.True(t, found, "TWAP order placement should still exist")
-	require.Equal(t, uint32(3), twapOrderPlacement.RemainingLegs)                   // One leg executed
+	require.Equal(t, uint32(4), twapOrderPlacement.RemainingLegs)                   // One leg executed
 	require.Equal(t, uint64(100_000_000_000), twapOrderPlacement.RemainingQuantums) // 100B remaining - no quantums filled
 
-	suborderId1 := clobtypes.OrderId{
-		SubaccountId:   constants.Alice_Num0,
-		ClientId:       0,
-		OrderFlags:     clobtypes.OrderIdFlags_TwapSuborder,
-		ClobPairId:     0,
-		SequenceNumber: 1,
-	}
+	suborder, found = tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
+	require.False(t, found, "Suborder should have been removed from memclob due to expiry")
 
-	_, found0 := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId0)
-	require.False(t, found0, "First suborder should have been removed from memclob")
+	// Advance block time by 30 seconds to trigger next suborder
+	ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 30),
+	})
 
-	suborder1, found1 := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId1)
+	suborder1, found1 := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
 	require.True(t, found1, "Second suborder should exist in memclob")
 	require.Equal(t, uint64(25_000_000_000), suborder1.Quantums) // 100B/4 = 25B per leg (catching up)
 	require.Equal(t, uint64(200_000_000), suborder1.Subticks)    // $20,000 per oracle price (not moved)
@@ -127,14 +123,12 @@ func TestTwapOrderPlacementAndCatchup(t *testing.T) {
 	// Verify new suborder in trigger store
 	newSuborder, found := tApp.App.ClobKeeper.GetTwapTriggerPlacement(
 		ctx,
-		twapOrder.Order.OrderId,
+		suborderId,
 	)
 	require.True(t, found, "TWAP trigger placement should exist")
 
-	require.Equal(t, clobtypes.OrderIdFlags_TwapSuborder, newSuborder.Order.OrderId.OrderFlags)
-	require.Equal(t, uint32(2), newSuborder.Order.OrderId.SequenceNumber)
-	require.Equal(t, uint64(0), newSuborder.Order.Quantums)
-	require.Equal(t, uint64(ctx.BlockTime().Unix()+60), newSuborder.TriggerBlockTime)
+	require.Equal(t, clobtypes.OrderIdFlags_TwapSuborder, newSuborder.OrderId.OrderFlags)
+	require.Equal(t, uint64(ctx.BlockTime().Unix()+int64(twapOrder.Order.TwapParameters.Interval)), newSuborder.TriggerBlockTime)
 }
 
 func TestTWAPOrderWithMatchingOrders(t *testing.T) {
@@ -188,12 +182,11 @@ func TestTWAPOrderWithMatchingOrders(t *testing.T) {
 		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 
-	suborderId0 := clobtypes.OrderId{
-		SubaccountId:   constants.Alice_Num0,
-		ClientId:       0,
-		OrderFlags:     clobtypes.OrderIdFlags_TwapSuborder,
-		ClobPairId:     0,
-		SequenceNumber: 0,
+	suborderId := clobtypes.OrderId{
+		SubaccountId: constants.Alice_Num0,
+		ClientId:     0,
+		OrderFlags:   clobtypes.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
 	}
 
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
@@ -205,7 +198,7 @@ func TestTWAPOrderWithMatchingOrders(t *testing.T) {
 				OperationsQueue: []clobtypes.OperationRaw{
 					clobtestutils.NewMatchOperationRaw(
 						&clobtypes.Order{
-							OrderId:  suborderId0,
+							OrderId:  suborderId,
 							Side:     clobtypes.Order_SIDE_BUY,
 							Quantums: 25_000_000_000,
 							Subticks: 200_000_000,
@@ -231,38 +224,21 @@ func TestTWAPOrderWithMatchingOrders(t *testing.T) {
 	require.Equal(t, uint32(3), twapOrderPlacement.RemainingLegs)
 	require.Equal(t, uint64(75_000_000_000), twapOrderPlacement.RemainingQuantums) // 100B - 25B filled
 
-	// updated_resting_order, found := tApp.App.ClobKeeper.MemClob.GetOrder(matchingOrder.OrderId)
-	// require.True(t, found, "Matching order should still exist in memclob")
-	// require.Equal(t, uint64(25_000_000_000), updated_resting_order.Quantums)
-
-	// Verify second suborder is created
-	suborderId1 := clobtypes.OrderId{
-		SubaccountId:   constants.Alice_Num0,
-		ClientId:       0,
-		OrderFlags:     clobtypes.OrderIdFlags_TwapSuborder,
-		ClobPairId:     0,
-		SequenceNumber: 1,
-	}
-
 	suborder1, found1 := tApp.App.ClobKeeper.GetTwapTriggerPlacement(
 		ctx,
-		suborderId1,
+		suborderId,
 	)
 	require.True(t, found1, "Second suborder should exist in trigger store")
-	require.Equal(t, uint64(0), suborder1.Order.Quantums) // 75B/3 = 25B per leg
-	require.Equal(t, uint64(0), suborder1.Order.Subticks) // $20,000 per oracle price
 	require.Equal(t, uint64(80), suborder1.TriggerBlockTime)
-	require.Equal(t, uint32(1), suborder1.Order.OrderId.SequenceNumber)
-	require.Equal(t, clobtypes.Order_SIDE_BUY, suborder1.Order.Side) // Same side as parent order
 
-	_, placed_suborder1_found := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId1)
+	_, placed_suborder1_found := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
 	require.False(t, placed_suborder1_found, "Second suborder should not have been placed yet")
 
 	ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
 		BlockTime: ctx.BlockTime().Add(time.Second * 40),
 	})
 
-	filled_amount := tApp.App.ClobKeeper.MemClob.GetOrderFilledAmount(ctx, suborderId1)
+	filled_amount := tApp.App.ClobKeeper.MemClob.GetOrderFilledAmount(ctx, suborderId)
 	require.Equal(t, uint64(25_000_000_000), filled_amount.ToUint64())
 
 	ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
@@ -272,7 +248,7 @@ func TestTWAPOrderWithMatchingOrders(t *testing.T) {
 				OperationsQueue: []clobtypes.OperationRaw{
 					clobtestutils.NewMatchOperationRaw(
 						&clobtypes.Order{
-							OrderId:  suborderId1,
+							OrderId:  suborderId,
 							Side:     clobtypes.Order_SIDE_BUY,
 							Quantums: 25_000_000_000,
 							Subticks: 200_000_000,
@@ -298,22 +274,10 @@ func TestTWAPOrderWithMatchingOrders(t *testing.T) {
 	require.Equal(t, uint32(2), twapOrderPlacement.RemainingLegs)
 	require.Equal(t, uint64(50_000_000_000), twapOrderPlacement.RemainingQuantums) // 75B - 25B filled
 
-	// Verify third suborder is created
-	suborderId2 := clobtypes.OrderId{
-		SubaccountId:   constants.Alice_Num0,
-		ClientId:       0,
-		OrderFlags:     clobtypes.OrderIdFlags_TwapSuborder,
-		ClobPairId:     0,
-		SequenceNumber: 2,
-	}
-
 	suborder2, found2 := tApp.App.ClobKeeper.GetTwapTriggerPlacement(
 		ctx,
-		suborderId2,
+		suborderId,
 	)
 	require.True(t, found2, "Third suborder should exist in trigger store")
-	require.Equal(t, uint64(0), suborder2.Order.Quantums) // 50B/2 = 25B per leg
-	require.Equal(t, uint64(0), suborder2.Order.Subticks) // $20,000 per oracle price
-	require.Equal(t, uint64(160), suborder2.TriggerBlockTime)
-	require.Equal(t, clobtypes.Order_SIDE_BUY, suborder2.Order.Side) // Same side as parent order
+	require.Equal(t, uint64(ctx.BlockTime().Unix()+int64(twapOrder.TwapParameters.Interval)), suborder2.TriggerBlockTime)
 }

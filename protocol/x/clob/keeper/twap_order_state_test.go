@@ -254,14 +254,11 @@ func TestSetTWAPOrderPlacement(t *testing.T) {
 				OrderFlags:     types.OrderIdFlags_TwapSuborder,
 				ClobPairId:     tc.order.OrderId.ClobPairId,
 			}
-			triggerPlacement, _, found := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
+			triggerPlacement, triggerTime, found := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
 
 			require.True(t, found, "trigger placement should be found")
 			require.Equal(t, suborderId, triggerPlacement, "trigger placement should match suborderId")
-			require.Equal(t, uint32(0), triggerPlacement.Order.OrderId.SequenceNumber, "first suborder should have sequence number 0")
-			require.Equal(t, uint64(1000), triggerPlacement.TriggerBlockTime, "trigger time should match block time")
-			require.Equal(t, uint32(1003), triggerPlacement.Order.GetGoodTilBlockTime(), "GTT should be trigger time + offset")
-			require.Equal(t, uint64(0), triggerPlacement.Order.Quantums, "pending suborder should have 0 quantums until initialized in end blocker")
+			require.Equal(t, uint64(1000), triggerTime, "trigger time should match block time")
 		})
 	}
 }
