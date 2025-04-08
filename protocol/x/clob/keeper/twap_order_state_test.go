@@ -244,15 +244,23 @@ func TestSetTWAPOrderPlacement(t *testing.T) {
 			storedOrder, found := ks.ClobKeeper.GetTwapOrderPlacement(ctx, tc.order.OrderId)
 			require.True(t, found, "TWAP order should be found in store")
 			require.Equal(t, tc.order, storedOrder.Order, "stored order should match input order")
-			require.Equal(t, tc.expectedTotalLegs, storedOrder.RemainingLegs, "remaining legs should equal total legs initially")
-			require.Equal(t, tc.expectedQuantums, storedOrder.RemainingQuantums, "remaining quantums should equal initial quantums")
+			require.Equal(t,
+				tc.expectedTotalLegs,
+				storedOrder.RemainingLegs,
+				"remaining legs should equal total legs initially",
+			)
+			require.Equal(t,
+				tc.expectedQuantums,
+				storedOrder.RemainingQuantums,
+				"remaining quantums should equal initial quantums",
+			)
 
 			// Verify the first suborder was created in trigger store
 			suborderId := types.OrderId{
-				SubaccountId:   tc.order.OrderId.SubaccountId,
-				ClientId:       tc.order.OrderId.ClientId,
-				OrderFlags:     types.OrderIdFlags_TwapSuborder,
-				ClobPairId:     tc.order.OrderId.ClobPairId,
+				SubaccountId: tc.order.OrderId.SubaccountId,
+				ClientId:     tc.order.OrderId.ClientId,
+				OrderFlags:   types.OrderIdFlags_TwapSuborder,
+				ClobPairId:   tc.order.OrderId.ClobPairId,
 			}
 			triggerPlacement, triggerTime, found := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
 

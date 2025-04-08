@@ -105,14 +105,14 @@ func (k Keeper) AddSuborderToTriggerStore(
 	triggerStore.Set(triggerKey, []byte{})
 }
 
-func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context, block_time time.Time) {
+func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 	triggerStore := k.GetTWAPTriggerOrderPlacementStore(ctx)
-
+	block_time := ctx.BlockTime()
 	iterator := triggerStore.Iterator(nil, nil)
 
 	var operationsToProcess []struct {
 		keyToDelete        []byte
-		suborderToPlace       types.Order
+		suborderToPlace    types.Order
 		twapOrderPlacement types.TwapOrderPlacement
 	}
 
@@ -127,10 +127,10 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context, block_ti
 		orderId := triggerPlacement.OrderId
 
 		parentOrderId := types.OrderId{
-			SubaccountId:   orderId.SubaccountId,
-			ClientId:       orderId.ClientId,
-			OrderFlags:     types.OrderIdFlags_Twap, // Set directly to TWAP
-			ClobPairId:     orderId.ClobPairId,
+			SubaccountId: orderId.SubaccountId,
+			ClientId:     orderId.ClientId,
+			OrderFlags:   types.OrderIdFlags_Twap, // Set directly to TWAP
+			ClobPairId:   orderId.ClobPairId,
 		}
 
 		twapOrderPlacement, found := k.GetTwapOrderPlacement(ctx, parentOrderId)
@@ -142,11 +142,11 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context, block_ti
 
 		operationsToProcess = append(operationsToProcess, struct {
 			keyToDelete        []byte
-			suborderToPlace       types.Order
+			suborderToPlace    types.Order
 			twapOrderPlacement types.TwapOrderPlacement
 		}{
 			keyToDelete:        append([]byte{}, iterator.Key()...),
-			suborderToPlace:       order,
+			suborderToPlace:    order,
 			twapOrderPlacement: twapOrderPlacement,
 		})
 	}
@@ -238,7 +238,7 @@ func (k Keeper) calculateSuborderQuantums(
 
 	// Calculate the quantums for the suborder capping at 3x the original quantums per leg
 	remainingPerLeg := twapOrderPlacement.RemainingQuantums / uint64(twapOrderPlacement.RemainingLegs)
-	
+
 	suborder_quantums := lib.Min(remainingPerLeg, TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE*originalQuantumsPerLeg)
 
 	// Round down to nearest multiple of StepBaseQuantums
@@ -253,11 +253,10 @@ func (k Keeper) generateSuborder(
 	twapOrderPlacement types.TwapOrderPlacement,
 	blockTime time.Time,
 ) types.Order {
-
 	parentOrder := twapOrderPlacement.Order
 	order := types.Order{
-		OrderId: suborderId,
-		Side: twapOrderPlacement.Order.Side,
+		OrderId:    suborderId,
+		Side:       twapOrderPlacement.Order.Side,
 		ReduceOnly: twapOrderPlacement.Order.ReduceOnly,
 	}
 

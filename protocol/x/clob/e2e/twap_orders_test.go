@@ -89,7 +89,11 @@ func TestTwapOrderPlacementAndCatchup(t *testing.T) {
 	require.True(t, found, "TWAP trigger placement should exist")
 
 	require.Equal(t, clobtypes.OrderIdFlags_TwapSuborder, nextSuborder.OrderId.OrderFlags)
-	require.Equal(t, uint64(ctx.BlockTime().Unix()+int64(twapOrder.Order.TwapParameters.Interval)), nextSuborder.TriggerBlockTime)
+	require.Equal(
+		t,
+		uint64(ctx.BlockTime().Unix()+int64(twapOrder.Order.TwapParameters.Interval)),
+		nextSuborder.TriggerBlockTime,
+	)
 
 	// Advance block time by 30 seconds
 	// Next suborder should not be triggered
@@ -128,7 +132,11 @@ func TestTwapOrderPlacementAndCatchup(t *testing.T) {
 	require.True(t, found, "TWAP trigger placement should exist")
 
 	require.Equal(t, clobtypes.OrderIdFlags_TwapSuborder, newSuborder.OrderId.OrderFlags)
-	require.Equal(t, uint64(ctx.BlockTime().Unix()+int64(twapOrder.Order.TwapParameters.Interval)), newSuborder.TriggerBlockTime)
+	require.Equal(
+		t,
+		uint64(ctx.BlockTime().Unix()+int64(twapOrder.Order.TwapParameters.Interval)),
+		newSuborder.TriggerBlockTime,
+	)
 }
 
 func TestTWAPOrderWithMatchingOrders(t *testing.T) {
@@ -173,11 +181,19 @@ func TestTWAPOrderWithMatchingOrders(t *testing.T) {
 	}
 
 	// Place market order first and then TWAP order
-	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(matchingOrder)) {
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(matchingOrder),
+	) {
 		resp := tApp.CheckTx(checkTx)
 		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
 	}
-	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(twapOrder)) {
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(twapOrder),
+	) {
 		resp := tApp.CheckTx(checkTx)
 		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
 	}
