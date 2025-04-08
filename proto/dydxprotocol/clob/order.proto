@@ -115,9 +115,10 @@ message TwapOrderPlacement {
 // state. It stores the stateful order itself, the `BlockHeight` and
 // `TransactionIndex` at which the order was placed and triggered.
 message TwapTriggerPlacement {
-  // The generated suborder given a TWAP order.
-  Order order = 1 [ (gogoproto.nullable) = false ];
-  // The block height at which the order was triggered.
+  // The suborder ID for a TWAP order. This will be identical
+  // to the parent TWAP orderId except for the order_flag.
+  OrderId order_id = 1 [ (gogoproto.nullable) = false ];
+  // The block time at which the order is triggered.
   uint64 trigger_block_time = 2;
 }
 

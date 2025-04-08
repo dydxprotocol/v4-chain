@@ -546,9 +546,12 @@ export interface TwapOrderPlacementSDKType {
  */
 
 export interface TwapTriggerPlacement {
-  /** The generated suborder given a TWAP order. */
-  order?: Order;
-  /** The block height at which the order was triggered. */
+  /**
+   * The suborder ID for a TWAP order. This will be identical
+   * to the parent TWAP orderId except for the order_flag.
+   */
+  orderId?: OrderId;
+  /** The block time at which the order is triggered. */
 
   triggerBlockTime: Long;
 }
@@ -559,9 +562,12 @@ export interface TwapTriggerPlacement {
  */
 
 export interface TwapTriggerPlacementSDKType {
-  /** The generated suborder given a TWAP order. */
-  order?: OrderSDKType;
-  /** The block height at which the order was triggered. */
+  /**
+   * The suborder ID for a TWAP order. This will be identical
+   * to the parent TWAP orderId except for the order_flag.
+   */
+  order_id?: OrderIdSDKType;
+  /** The block time at which the order is triggered. */
 
   trigger_block_time: Long;
 }
@@ -1291,15 +1297,15 @@ export const TwapOrderPlacement = {
 
 function createBaseTwapTriggerPlacement(): TwapTriggerPlacement {
   return {
-    order: undefined,
+    orderId: undefined,
     triggerBlockTime: Long.UZERO
   };
 }
 
 export const TwapTriggerPlacement = {
   encode(message: TwapTriggerPlacement, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.order !== undefined) {
-      Order.encode(message.order, writer.uint32(10).fork()).ldelim();
+    if (message.orderId !== undefined) {
+      OrderId.encode(message.orderId, writer.uint32(10).fork()).ldelim();
     }
 
     if (!message.triggerBlockTime.isZero()) {
@@ -1319,7 +1325,7 @@ export const TwapTriggerPlacement = {
 
       switch (tag >>> 3) {
         case 1:
-          message.order = Order.decode(reader, reader.uint32());
+          message.orderId = OrderId.decode(reader, reader.uint32());
           break;
 
         case 2:
@@ -1337,7 +1343,7 @@ export const TwapTriggerPlacement = {
 
   fromPartial(object: DeepPartial<TwapTriggerPlacement>): TwapTriggerPlacement {
     const message = createBaseTwapTriggerPlacement();
-    message.order = object.order !== undefined && object.order !== null ? Order.fromPartial(object.order) : undefined;
+    message.orderId = object.orderId !== undefined && object.orderId !== null ? OrderId.fromPartial(object.orderId) : undefined;
     message.triggerBlockTime = object.triggerBlockTime !== undefined && object.triggerBlockTime !== null ? Long.fromValue(object.triggerBlockTime) : Long.UZERO;
     return message;
   }
