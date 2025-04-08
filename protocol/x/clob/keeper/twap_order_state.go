@@ -22,7 +22,7 @@ func (k Keeper) SetTWAPOrderPlacement(ctx sdk.Context,
 		BlockHeight:       blockHeight,
 	}
 
-	k.addSuborderToTriggerStore(ctx, twapOrderPlacement, 0, 0)
+	k.addSuborderToTriggerStore(ctx, twapOrderPlacement, 0)
 
 	twapOrderPlacementBytes := k.cdc.MustMarshal(&twapOrderPlacement)
 	store.Set(orderKey, twapOrderPlacementBytes)
@@ -62,11 +62,7 @@ func (k Keeper) GetTwapTriggerPlacement(
 		var triggerPlacement types.TwapTriggerPlacement
 		k.cdc.MustUnmarshal(iterator.Value(), &triggerPlacement)
 
-		if triggerPlacement.Order.OrderId.SubaccountId.Owner == orderId.SubaccountId.Owner &&
-			triggerPlacement.Order.OrderId.SubaccountId.Number == orderId.SubaccountId.Number &&
-			triggerPlacement.Order.OrderId.ClientId == orderId.ClientId &&
-			triggerPlacement.Order.OrderId.ClobPairId == orderId.ClobPairId &&
-			triggerPlacement.Order.OrderId.SequenceNumber == orderId.SequenceNumber {
+		if triggerPlacement.OrderId == orderId {
 			return triggerPlacement, true
 		}
 	}
@@ -79,12 +75,11 @@ func (k Keeper) GetTwapTriggerPlacement(
 func (k Keeper) addSuborderToTriggerStore(
 	ctx sdk.Context,
 	twapOrderPlacement types.TwapOrderPlacement,
-	sequenceNumber uint32,
 	triggerOffset int64,
 ) {
 	triggerStore := k.GetTWAPTriggerOrderPlacementStore(ctx)
 
-	if sequenceNumber > twapOrderPlacement.TotalLegs {
+	if twapOrderPlacement.RemainingLegs == 0 {
 		// remove the parent twap order from the store
 		store := k.GetTWAPOrderPlacementStore(ctx)
 		orderKey := twapOrderPlacement.Order.OrderId.ToStateKey()
@@ -94,29 +89,18 @@ func (k Keeper) addSuborderToTriggerStore(
 	}
 
 	triggerTime := ctx.BlockTime().Unix() + triggerOffset
-	suborder := twapOrderPlacement.Order
-
-	// suborder quantums and subticks are set to 0 until triggered
-	// and updated in the end blocker based off oracle price and
-	// remaining quantums and legs
-	suborder.Quantums = 0
-	suborder.Subticks = 0
+	suborderId := twapOrderPlacement.Order.OrderId
 
 	// Set the order flag to indicate this is a TWAP suborder
-	suborder.OrderId.OrderFlags = types.OrderIdFlags_TwapSuborder
-	suborder.OrderId.SequenceNumber = sequenceNumber
-
-	suborder.GoodTilOneof = &types.Order_GoodTilBlockTime{
-		GoodTilBlockTime: uint32(triggerTime + 3),
-	}
+	suborderId.OrderFlags = types.OrderIdFlags_TwapSuborder
 
 	// Create trigger placement
 	triggerPlacement := types.TwapTriggerPlacement{
-		Order:            suborder,
+		OrderId:          suborderId,
 		TriggerBlockTime: uint64(triggerTime),
 	}
 
 	triggerPlacementBytes := k.cdc.MustMarshal(&triggerPlacement)
-	triggerKey := types.GetTWAPTriggerKey(triggerTime, suborder.OrderId)
+	triggerKey := types.GetTWAPTriggerKey(triggerTime, suborderId)
 	triggerStore.Set(triggerKey, triggerPlacementBytes)
 }
