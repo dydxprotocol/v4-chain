@@ -39,10 +39,6 @@ message OrderId {
 
   // ID of the CLOB the order is created for.
   uint32 clob_pair_id = 4;
-
-  // sequence number of the order. Used for matching generated suborders to
-  // parent TWAP orders.
-  uint32 sequence_number = 5;
 }
 
 // OrdersFilledDuringLatestBlock represents a list of `OrderIds` that were

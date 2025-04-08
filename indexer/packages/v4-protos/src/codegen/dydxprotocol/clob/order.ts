@@ -305,12 +305,6 @@ export interface OrderId {
   /** ID of the CLOB the order is created for. */
 
   clobPairId: number;
-  /**
-   * sequence number of the order. Used for matching generated suborders to
-   * parent TWAP orders.
-   */
-
-  sequenceNumber: number;
 }
 /** OrderId refers to a single order belonging to a Subaccount. */
 
@@ -350,12 +344,6 @@ export interface OrderIdSDKType {
   /** ID of the CLOB the order is created for. */
 
   clob_pair_id: number;
-  /**
-   * sequence number of the order. Used for matching generated suborders to
-   * parent TWAP orders.
-   */
-
-  sequence_number: number;
 }
 /**
  * OrdersFilledDuringLatestBlock represents a list of `OrderIds` that were
@@ -901,8 +889,7 @@ function createBaseOrderId(): OrderId {
     subaccountId: undefined,
     clientId: 0,
     orderFlags: 0,
-    clobPairId: 0,
-    sequenceNumber: 0
+    clobPairId: 0
   };
 }
 
@@ -922,10 +909,6 @@ export const OrderId = {
 
     if (message.clobPairId !== 0) {
       writer.uint32(32).uint32(message.clobPairId);
-    }
-
-    if (message.sequenceNumber !== 0) {
-      writer.uint32(40).uint32(message.sequenceNumber);
     }
 
     return writer;
@@ -956,10 +939,6 @@ export const OrderId = {
           message.clobPairId = reader.uint32();
           break;
 
-        case 5:
-          message.sequenceNumber = reader.uint32();
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -975,7 +954,6 @@ export const OrderId = {
     message.clientId = object.clientId ?? 0;
     message.orderFlags = object.orderFlags ?? 0;
     message.clobPairId = object.clobPairId ?? 0;
-    message.sequenceNumber = object.sequenceNumber ?? 0;
     return message;
   }
 
