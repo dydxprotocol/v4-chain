@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -172,4 +173,95 @@ func setupTestTWAPOrderState(t *testing.T) (ks keepertest.ClobKeepersTestContext
 		&mocks.IndexerEventManager{},
 	)
 	return ks
+}
+
+func TestSetTWAPOrderPlacement(t *testing.T) {
+	tests := map[string]struct {
+		order             types.Order
+		blockHeight       uint32
+		expectedTotalLegs uint32
+		expectedQuantums  uint64
+	}{
+		"successfully sets TWAP order with 5 minute duration and 1 minute intervals": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					SubaccountId: constants.Alice_Num0,
+					ClientId:     1,
+					OrderFlags:   types.OrderIdFlags_Twap,
+					ClobPairId:   0,
+				},
+				Side:     types.Order_SIDE_BUY,
+				Quantums: 1000,
+				TwapParameters: &types.TwapParameters{
+					Duration: 300, // 5 minutes
+					Interval: 60,  // 1 minute
+				},
+			},
+			blockHeight:       100,
+			expectedTotalLegs: 5,
+			expectedQuantums:  1000,
+		},
+		"successfully sets TWAP order with 1 hour duration and 5 minute intervals": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					SubaccountId: constants.Alice_Num0,
+					ClientId:     2,
+					OrderFlags:   types.OrderIdFlags_Twap,
+					ClobPairId:   0,
+				},
+				Side:     types.Order_SIDE_SELL,
+				Quantums: 2000,
+				TwapParameters: &types.TwapParameters{
+					Duration: 3600, // 1 hour
+					Interval: 300,  // 5 minutes
+				},
+			},
+			blockHeight:       200,
+			expectedTotalLegs: 12,
+			expectedQuantums:  2000,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup keeper state and test parameters
+			memClob := &mocks.MemClob{}
+			memClob.On("SetClobKeeper", mock.Anything).Return()
+			ks := keepertest.NewClobKeepersTestContextWithUninitializedMemStore(
+				t,
+				memClob,
+				&mocks.BankKeeper{},
+				&mocks.IndexerEventManager{},
+			)
+
+			// Set block time for consistent testing
+			ctx := ks.Ctx.WithBlockTime(time.Unix(1000, 0))
+
+			// Set the TWAP order placement
+			ks.ClobKeeper.SetTWAPOrderPlacement(ctx, tc.order, tc.blockHeight)
+
+			// Verify the order was stored correctly
+			storedOrder, found := ks.ClobKeeper.GetTwapOrderPlacement(ctx, tc.order.OrderId)
+			require.True(t, found, "TWAP order should be found in store")
+			require.Equal(t, tc.order, storedOrder.Order, "stored order should match input order")
+			require.Equal(t, tc.expectedTotalLegs, storedOrder.RemainingLegs, "remaining legs should equal total legs initially")
+			require.Equal(t, tc.expectedQuantums, storedOrder.RemainingQuantums, "remaining quantums should equal initial quantums")
+
+			// Verify the first suborder was created in trigger store
+			suborderId := types.OrderId{
+				SubaccountId:   tc.order.OrderId.SubaccountId,
+				ClientId:       tc.order.OrderId.ClientId,
+				OrderFlags:     types.OrderIdFlags_TwapSuborder,
+				ClobPairId:     tc.order.OrderId.ClobPairId,
+			}
+			triggerPlacement, _, found := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborderId)
+
+			require.True(t, found, "trigger placement should be found")
+			require.Equal(t, suborderId, triggerPlacement, "trigger placement should match suborderId")
+			require.Equal(t, uint32(0), triggerPlacement.Order.OrderId.SequenceNumber, "first suborder should have sequence number 0")
+			require.Equal(t, uint64(1000), triggerPlacement.TriggerBlockTime, "trigger time should match block time")
+			require.Equal(t, uint32(1003), triggerPlacement.Order.GetGoodTilBlockTime(), "GTT should be trigger time + offset")
+			require.Equal(t, uint64(0), triggerPlacement.Order.Quantums, "pending suborder should have 0 quantums until initialized in end blocker")
+		})
+	}
 }

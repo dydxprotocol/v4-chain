@@ -11,6 +11,12 @@ import (
 	"time"
 )
 
+const (
+	TWAP_SUBORDER_GOOD_TIL_BLOCK_TIME_OFFSET = 3
+
+	TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE = 3
+)
+
 func (k Keeper) SetTWAPOrderPlacement(ctx sdk.Context,
 	order types.Order,
 	blockHeight uint32,
@@ -142,7 +148,11 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context, block_ti
 		order.Subticks = k.GetOraclePriceAdjustedByPercentageSubticks(ctx, clobPair, float64(slippage_adjustment)/10000.0)
 
 		// calculate the suborder quantums based on remaining quantums and legs
-		order.Quantums = k.calculateSuborderQuantums(twapOrderPlacement)
+		order.Quantums = k.calculateSuborderQuantums(twapOrderPlacement, clobPair)
+
+		order.GoodTilOneof = &types.Order_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(block_time.Unix() + TWAP_SUBORDER_GOOD_TIL_BLOCK_TIME_OFFSET),
+		}
 
 		operationsToProcess = append(operationsToProcess, struct {
 			keyToDelete        []byte
@@ -181,6 +191,7 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context, block_ti
 
 func (k Keeper) calculateSuborderQuantums(
 	twapOrderPlacement types.TwapOrderPlacement,
+	clobPair types.ClobPair,
 ) uint64 {
 	// TODO: (anmol) ensure rounding is correct. same as subticks (check factor) and min
 	// total order size > min_size * legs
@@ -188,7 +199,13 @@ func (k Keeper) calculateSuborderQuantums(
 
 	// Calculate the quantums for the suborder capping at 3x the original quantums per leg
 	remainingPerLeg := twapOrderPlacement.RemainingQuantums / uint64(twapOrderPlacement.RemainingLegs)
-	return lib.Min(remainingPerLeg, 3*originalQuantumsPerLeg)
+	
+	suborder_quantums := lib.Min(remainingPerLeg, TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE*originalQuantumsPerLeg)
+
+	// Round down to nearest multiple of StepBaseQuantums
+	suborder_quantums_rounded := suborder_quantums - (suborder_quantums % clobPair.StepBaseQuantums)
+
+	return suborder_quantums_rounded
 }
 
 func (k Keeper) DecrementTwapOrderRemainingLegs(
