@@ -1,4 +1,4 @@
-import { PnlTicksCreateObject } from '@dydxprotocol-indexer/postgres';
+import { PnlTicksCreateObject, PnlTicksFromDatabase, IsoString } from '@dydxprotocol-indexer/postgres';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 
 // Type for the result of an order being placed
@@ -85,4 +85,27 @@ export type PnlTickForSubaccounts = {
 export interface StatefulOrderUpdateInfo {
   orderId: string,
   timestamp: number,
+}
+
+// TODO: this is a copy for PnlTicksResponseObject from comlink.
+// We should move to a common package.
+export interface CachedPnlTicks {
+  id: string,
+  subaccountId: string,
+  equity: string,
+  totalPnl: string,
+  netTransfers: string,
+  createdAt: string,
+  blockHeight: string,
+  blockTime: IsoString,
+}
+
+export interface CachedVaultHistoricalPnl {
+  ticker: string,
+  historicalPnl: CachedPnlTicks[],
+}
+
+export interface CachedMegavaultPnl {
+  pnlTicks: PnlTicksFromDatabase[],
+  lastUpdated: string,
 }
