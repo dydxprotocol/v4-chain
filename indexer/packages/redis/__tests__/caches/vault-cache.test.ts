@@ -45,8 +45,6 @@ describe('vault-cache', () => {
   const mockVaultHistoricalPnl: CachedVaultHistoricalPnl[] = [{
     ticker: 'BTC-USD',
     historicalPnl: [{
-      id: mockPnlTick.id,
-      subaccountId: mockPnlTick.subaccountId,
       equity: mockPnlTick.equity,
       totalPnl: mockPnlTick.totalPnl,
       netTransfers: mockPnlTick.netTransfers,

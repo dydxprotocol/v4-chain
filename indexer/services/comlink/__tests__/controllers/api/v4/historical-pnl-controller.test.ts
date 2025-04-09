@@ -45,10 +45,6 @@ describe('pnlTicks-controller#V4', () => {
 
       const expectedPnlTickResponse: PnlTicksResponseObject = {
         ...testConstants.defaultPnlTick,
-        id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
-          testConstants.defaultPnlTick.createdAt,
-        ),
       };
 
       const expectedPnlTick2Response: any = {
@@ -101,20 +97,12 @@ describe('pnlTicks-controller#V4', () => {
 
       const expectedPnlTickResponse: PnlTicksResponseObject = {
         ...testConstants.defaultPnlTick,
-        id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
-          testConstants.defaultPnlTick.createdAt,
-        ),
       };
 
       const expectedPnlTick2Response: PnlTicksResponseObject = {
         ...testConstants.defaultPnlTick,
         createdAt,
         blockHeight,
-        id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
-          createdAt,
-        ),
       };
 
       expect(responsePage1.body.pageSize).toStrictEqual(1);
@@ -168,10 +156,6 @@ describe('pnlTicks-controller#V4', () => {
         ...testConstants.defaultPnlTick,
         createdAt,
         blockHeight,
-        id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
-          createdAt,
-        ),
       };
 
       expect(response.body.historicalPnl).toEqual(
@@ -207,10 +191,6 @@ describe('pnlTicks-controller#V4', () => {
 
       const expectedPnlTickResponse: PnlTicksResponseObject = {
         ...testConstants.defaultPnlTick,
-        id: PnlTicksTable.uuid(
-          testConstants.defaultPnlTick.subaccountId,
-          testConstants.defaultPnlTick.createdAt,
-        ),
       };
 
       expect(response.body.historicalPnl).toEqual(

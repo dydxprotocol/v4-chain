@@ -754,12 +754,6 @@
       },
       "PnlTicksResponseObject": {
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "subaccountId": {
-            "type": "string"
-          },
           "equity": {
             "type": "string"
           },
@@ -780,8 +774,6 @@
           }
         },
         "required": [
-          "id",
-          "subaccountId",
           "equity",
           "totalPnl",
           "netTransfers",

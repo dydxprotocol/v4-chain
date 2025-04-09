@@ -90,8 +90,6 @@ export interface StatefulOrderUpdateInfo {
 // TODO: this is a copy for PnlTicksResponseObject from comlink.
 // We should move to a common package.
 export interface CachedPnlTicks {
-  id: string,
-  subaccountId: string,
   equity: string,
   totalPnl: string,
   netTransfers: string,
