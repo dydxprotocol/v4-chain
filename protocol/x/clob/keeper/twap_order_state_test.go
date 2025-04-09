@@ -16,7 +16,6 @@ import (
 
 func TestTWAPOrderTriggerStoreOrderingSameOrderId(t *testing.T) {
 	ks := setupTestTWAPOrderState(t)
-
 	// Create test orders with same order ID but different timestamps
 	suborderId := types.OrderId{
 		SubaccountId: constants.Alice_Num0,
