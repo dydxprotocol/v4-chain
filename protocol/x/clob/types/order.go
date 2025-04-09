@@ -270,12 +270,21 @@ func (o *Order) GetTotalLegsTWAPOrder() uint32 {
 // GetTWAPTriggerKey returns the key for a TWAP trigger order.
 func GetTWAPTriggerKey(triggerTime int64, orderId OrderId) []byte {
 	// Write trigger time as big-endian uint64
-	timeBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(timeBytes, uint64(triggerTime))
+	timeBytes := TriggerTimeToBytes(triggerTime)
 
 	// Get marshaled orderId
 	orderIdBytes := orderId.ToStateKey()
 
 	// Combine time and orderId bytes
 	return append(timeBytes, orderIdBytes...)
+}
+
+func TriggerTimeToBytes(triggerTime int64) []byte {
+	timeBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(timeBytes, uint64(triggerTime))
+	return timeBytes
+}
+
+func TimeFromTriggerKey(triggerKey []byte) int64 {
+	return int64(binary.BigEndian.Uint64(triggerKey[0:8]))
 }

@@ -1,14 +1,10 @@
 package keeper
 
 import (
-	"encoding/binary"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-
-	"time"
 )
 
 const (
@@ -62,7 +58,7 @@ func (k Keeper) GetTwapOrderPlacement(
 func (k Keeper) GetTwapTriggerPlacement(
 	ctx sdk.Context,
 	orderId types.OrderId,
-) (o types.OrderId, t uint64, found bool) {
+) (o types.OrderId, t int64, found bool) {
 	store := k.GetTWAPTriggerOrderPlacementStore(ctx)
 
 	iterator := store.Iterator(nil, nil)
@@ -72,7 +68,7 @@ func (k Keeper) GetTwapTriggerPlacement(
 		var suborderId types.OrderId
 		k.cdc.MustUnmarshal(iterator.Key()[8:], &suborderId)
 
-		timestamp := binary.BigEndian.Uint64(iterator.Key()[0:8])
+		timestamp := types.TimeFromTriggerKey(iterator.Key())
 		if suborderId == orderId {
 			return suborderId, timestamp, true
 		}
@@ -107,8 +103,9 @@ func (k Keeper) AddSuborderToTriggerStore(
 
 func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 	triggerStore := k.GetTWAPTriggerOrderPlacementStore(ctx)
-	block_time := ctx.BlockTime()
+	blockTime := ctx.BlockTime().Unix()
 	iterator := triggerStore.Iterator(nil, nil)
+	defer iterator.Close()
 
 	var operationsToProcess []struct {
 		keyToDelete        []byte
@@ -117,14 +114,14 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 	}
 
 	for ; iterator.Valid(); iterator.Next() {
-		var triggerPlacement types.TwapTriggerPlacement
-		k.cdc.MustUnmarshal(iterator.Value(), &triggerPlacement)
+		var orderId types.OrderId
+		k.cdc.MustUnmarshal(iterator.Key()[8:], &orderId)
 
-		if triggerPlacement.TriggerBlockTime > uint64(block_time.Unix()) {
+		triggerTime := types.TimeFromTriggerKey(iterator.Key())
+
+		if triggerTime > blockTime {
 			break // all remaining suborders are in the future
 		}
-
-		orderId := triggerPlacement.OrderId
 
 		parentOrderId := types.OrderId{
 			SubaccountId: orderId.SubaccountId,
@@ -138,7 +135,7 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 			panic("parent twap order not found") // TODO: (anmol) handle order cancellation
 		}
 
-		order := k.generateSuborder(ctx, orderId, twapOrderPlacement, block_time)
+		order := k.generateSuborder(ctx, orderId, twapOrderPlacement, blockTime)
 
 		operationsToProcess = append(operationsToProcess, struct {
 			keyToDelete        []byte
@@ -234,24 +231,24 @@ func (k Keeper) calculateSuborderQuantums(
 ) uint64 {
 	// TODO: (anmol) ensure rounding is correct. same as subticks (check factor) and min
 	// total order size > min_size * legs
-	originalQuantumsPerLeg := twapOrderPlacement.Order.Quantums / uint64(twapOrderPlacement.TotalLegs)
+	originalQuantumsPerLeg := twapOrderPlacement.Order.Quantums / uint64(twapOrderPlacement.Order.GetTotalLegsTWAPOrder())
 
 	// Calculate the quantums for the suborder capping at 3x the original quantums per leg
 	remainingPerLeg := twapOrderPlacement.RemainingQuantums / uint64(twapOrderPlacement.RemainingLegs)
 
-	suborder_quantums := lib.Min(remainingPerLeg, TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE*originalQuantumsPerLeg)
+	suborderQuantums := lib.Min(remainingPerLeg, TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE*originalQuantumsPerLeg)
 
 	// Round down to nearest multiple of StepBaseQuantums
-	suborder_quantums_rounded := suborder_quantums - (suborder_quantums % clobPair.StepBaseQuantums)
+	suborderQuantumsRounded := suborderQuantums - (suborderQuantums % clobPair.StepBaseQuantums)
 
-	return suborder_quantums_rounded
+	return suborderQuantumsRounded
 }
 
 func (k Keeper) generateSuborder(
 	ctx sdk.Context,
 	suborderId types.OrderId,
 	twapOrderPlacement types.TwapOrderPlacement,
-	blockTime time.Time,
+	blockTime int64,
 ) types.Order {
 	parentOrder := twapOrderPlacement.Order
 	order := types.Order{
@@ -260,21 +257,21 @@ func (k Keeper) generateSuborder(
 		ReduceOnly: twapOrderPlacement.Order.ReduceOnly,
 	}
 
-	slippage_adjustment := parentOrder.TwapParameters.SlippagePercent
+	priceAdjustment := parentOrder.TwapParameters.PriceTolerance
 	if parentOrder.Side == types.Order_SIDE_SELL {
-		slippage_adjustment = -slippage_adjustment
+		priceAdjustment = -priceAdjustment
 	}
 
 	// calculate the suborder price with slippage adjustment
 	clobPair := k.mustGetClobPair(ctx, parentOrder.GetClobPairId())
-	order.Subticks = k.GetOraclePriceAdjustedByPercentageSubticks(ctx, clobPair, float64(slippage_adjustment)/10000.0)
+	order.Subticks = k.GetOraclePriceAdjustedByPercentageSubticks(ctx, clobPair, float64(priceAdjustment)/10000.0)
 
 	// calculate the suborder quantums based on remaining quantums and legs
 	order.Quantums = k.calculateSuborderQuantums(twapOrderPlacement, clobPair)
 
 	// set good til block time from current block time
 	order.GoodTilOneof = &types.Order_GoodTilBlockTime{
-		GoodTilBlockTime: uint32(blockTime.Unix() + TWAP_SUBORDER_GOOD_TIL_BLOCK_TIME_OFFSET),
+		GoodTilBlockTime: uint32(blockTime + TWAP_SUBORDER_GOOD_TIL_BLOCK_TIME_OFFSET),
 	}
 
 	return order

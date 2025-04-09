@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"testing"
 	"time"
@@ -44,8 +43,8 @@ func TestTWAPOrderTriggerStoreOrderingSameOrderId(t *testing.T) {
 
 	// validate timestamps are in order
 	for ; iterator.Valid(); iterator.Next() {
-		timestamp := binary.BigEndian.Uint64(iterator.Key()[0:8])
-		require.Equal(t, ks.Ctx.BlockTime().Unix()+expectedOrder[index], int64(timestamp))
+		timestamp := types.TimeFromTriggerKey(iterator.Key())
+		require.Equal(t, ks.Ctx.BlockTime().Unix()+expectedOrder[index], timestamp)
 		index++
 	}
 	require.Equal(t, len(expectedOrder), index)
@@ -266,7 +265,7 @@ func TestSetTWAPOrderPlacement(t *testing.T) {
 
 			require.True(t, found, "trigger placement should be found")
 			require.Equal(t, suborderId, triggerPlacement, "trigger placement should match suborderId")
-			require.Equal(t, uint64(1000), triggerTime, "trigger time should match block time")
+			require.Equal(t, int64(1000), triggerTime, "trigger time should match block time")
 		})
 	}
 }
