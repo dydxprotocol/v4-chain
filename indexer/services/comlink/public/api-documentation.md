@@ -1627,8 +1627,6 @@ fetch(`${baseURL}/historical-pnl?address=string&subaccountNumber=0.1`,
   "offset": 0,
   "historicalPnl": [
     {
-      "id": "string",
-      "subaccountId": "string",
       "equity": "string",
       "totalPnl": "string",
       "netTransfers": "string",
@@ -1723,8 +1721,6 @@ fetch(`${baseURL}/historical-pnl/parentSubaccountNumber?address=string&parentSub
   "offset": 0,
   "historicalPnl": [
     {
-      "id": "string",
-      "subaccountId": "string",
       "equity": "string",
       "totalPnl": "string",
       "netTransfers": "string",
@@ -3461,8 +3457,6 @@ fetch(`${baseURL}/vault/v1/megavault/historicalPnl`,
 {
   "megavaultPnl": [
     {
-      "id": "string",
-      "subaccountId": "string",
       "equity": "string",
       "totalPnl": "string",
       "netTransfers": "string",
@@ -3556,8 +3550,6 @@ fetch(`${baseURL}/vault/v1/vaults/historicalPnl`,
       "ticker": "string",
       "historicalPnl": [
         {
-          "id": "string",
-          "subaccountId": "string",
           "equity": "string",
           "totalPnl": "string",
           "netTransfers": "string",
@@ -4900,8 +4892,6 @@ This operation does not require authentication
 
 ```json
 {
-  "id": "string",
-  "subaccountId": "string",
   "equity": "string",
   "totalPnl": "string",
   "netTransfers": "string",
@@ -4916,8 +4906,6 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|id|string|true|none|none|
-|subaccountId|string|true|none|none|
 |equity|string|true|none|none|
 |totalPnl|string|true|none|none|
 |netTransfers|string|true|none|none|
@@ -4939,8 +4927,6 @@ This operation does not require authentication
   "offset": 0,
   "historicalPnl": [
     {
-      "id": "string",
-      "subaccountId": "string",
       "equity": "string",
       "totalPnl": "string",
       "netTransfers": "string",
@@ -5959,8 +5945,6 @@ or
 {
   "megavaultPnl": [
     {
-      "id": "string",
-      "subaccountId": "string",
       "equity": "string",
       "totalPnl": "string",
       "netTransfers": "string",
@@ -6016,8 +6000,6 @@ or
   "ticker": "string",
   "historicalPnl": [
     {
-      "id": "string",
-      "subaccountId": "string",
       "equity": "string",
       "totalPnl": "string",
       "netTransfers": "string",
@@ -6051,8 +6033,6 @@ or
       "ticker": "string",
       "historicalPnl": [
         {
-          "id": "string",
-          "subaccountId": "string",
           "equity": "string",
           "totalPnl": "string",
           "netTransfers": "string",
