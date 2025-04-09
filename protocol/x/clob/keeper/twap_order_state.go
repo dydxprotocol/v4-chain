@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"encoding/binary"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -12,17 +14,15 @@ func (k Keeper) SetTWAPOrderPlacement(ctx sdk.Context,
 	store := k.GetTWAPOrderPlacementStore(ctx)
 	orderKey := order.OrderId.ToStateKey()
 
-	total_legs := order.TwapParameters.Duration / order.TwapParameters.Interval
+	total_legs := order.GetTotalLegsTWAPOrder()
 
 	twapOrderPlacement := types.TwapOrderPlacement{
 		Order:             order,
-		TotalLegs:         total_legs,
 		RemainingLegs:     total_legs,
 		RemainingQuantums: order.Quantums,
-		BlockHeight:       blockHeight,
 	}
 
-	k.addSuborderToTriggerStore(ctx, twapOrderPlacement, 0)
+	k.AddSuborderToTriggerStore(ctx, k.twapToSuborderId(order.OrderId), 0)
 
 	twapOrderPlacementBytes := k.cdc.MustMarshal(&twapOrderPlacement)
 	store.Set(orderKey, twapOrderPlacementBytes)
@@ -52,55 +52,45 @@ func (k Keeper) GetTwapOrderPlacement(
 func (k Keeper) GetTwapTriggerPlacement(
 	ctx sdk.Context,
 	orderId types.OrderId,
-) (val types.TwapTriggerPlacement, found bool) {
+) (o types.OrderId, t uint64, found bool) {
 	store := k.GetTWAPTriggerOrderPlacementStore(ctx)
 
 	iterator := store.Iterator(nil, nil)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var triggerPlacement types.TwapTriggerPlacement
-		k.cdc.MustUnmarshal(iterator.Value(), &triggerPlacement)
+		var suborderId types.OrderId
+		k.cdc.MustUnmarshal(iterator.Key()[8:], &suborderId)
 
-		if triggerPlacement.OrderId == orderId {
-			return triggerPlacement, true
+		timestamp := binary.BigEndian.Uint64(iterator.Key()[0:8])
+		if suborderId == orderId {
+			return suborderId, timestamp, true
 		}
 	}
-	return types.TwapTriggerPlacement{}, false
+	return types.OrderId{}, 0, false
 }
 
-// addSuborderToTriggerStore creates a TWAP suborder from a parent TWAP order and adds it to the trigger store.
-// The suborder's size is calculated by dividing the parent order's quantums by the total number of legs.
-// The suborder is marked with the TWAP suborder flag and given the specified sequence number.
-func (k Keeper) addSuborderToTriggerStore(
+func (k Keeper) twapToSuborderId(twapOrderId types.OrderId) types.OrderId {
+	return types.OrderId{
+		SubaccountId: twapOrderId.SubaccountId,
+		ClientId:     twapOrderId.ClientId,
+		OrderFlags:   types.OrderIdFlags_TwapSuborder,
+		ClobPairId:   twapOrderId.ClobPairId,
+	}
+}
+
+// AddSuborderToTriggerStore adds a suborder to the trigger store with the
+// binary encoded [timestamp][suborderId] key.
+func (k Keeper) AddSuborderToTriggerStore(
 	ctx sdk.Context,
-	twapOrderPlacement types.TwapOrderPlacement,
+	suborderId types.OrderId,
 	triggerOffset int64,
 ) {
 	triggerStore := k.GetTWAPTriggerOrderPlacementStore(ctx)
-
-	if twapOrderPlacement.RemainingLegs == 0 {
-		// remove the parent twap order from the store
-		store := k.GetTWAPOrderPlacementStore(ctx)
-		orderKey := twapOrderPlacement.Order.OrderId.ToStateKey()
-		store.Delete(orderKey)
-		// TODO: (anmol) emit event?
-		return
-	}
-
 	triggerTime := ctx.BlockTime().Unix() + triggerOffset
-	suborderId := twapOrderPlacement.Order.OrderId
 
-	// Set the order flag to indicate this is a TWAP suborder
-	suborderId.OrderFlags = types.OrderIdFlags_TwapSuborder
-
-	// Create trigger placement
-	triggerPlacement := types.TwapTriggerPlacement{
-		OrderId:          suborderId,
-		TriggerBlockTime: uint64(triggerTime),
-	}
-
-	triggerPlacementBytes := k.cdc.MustMarshal(&triggerPlacement)
 	triggerKey := types.GetTWAPTriggerKey(triggerTime, suborderId)
-	triggerStore.Set(triggerKey, triggerPlacementBytes)
+
+	// The value in the map is not used, so we can set it to an empty byte slice.
+	triggerStore.Set(triggerKey, []byte{})
 }

@@ -260,16 +260,22 @@ func (o *Order) GetOrderLabels() []gometrics.Label {
 	)
 }
 
+func (o *Order) GetTotalLegsTWAPOrder() uint32 {
+	if o.IsTwapOrder() {
+		return o.TwapParameters.Duration / o.TwapParameters.Interval
+	}
+	return 0
+}
+
 // GetTWAPTriggerKey returns the key for a TWAP trigger order.
 func GetTWAPTriggerKey(triggerTime int64, orderId OrderId) []byte {
-	// 8 bytes for triggerTime + 32 bytes for orderId hash
-	key := make([]byte, 40)
-
 	// Write trigger time as big-endian uint64
-	binary.BigEndian.PutUint64(key[0:8], uint64(triggerTime))
+	timeBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(timeBytes, uint64(triggerTime))
 
-	// Write orderId hash
-	copy(key[8:], orderId.ToStateKey())
+	// Get marshaled orderId
+	orderIdBytes := orderId.ToStateKey()
 
-	return key
+	// Combine time and orderId bytes
+	return append(timeBytes, orderIdBytes...)
 }
