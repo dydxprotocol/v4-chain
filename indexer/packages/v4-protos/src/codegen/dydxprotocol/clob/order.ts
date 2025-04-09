@@ -504,18 +504,12 @@ export interface LongTermOrderPlacementSDKType {
 
 export interface TwapOrderPlacement {
   order?: Order;
-  /** The total number of legs to be executed. */
-
-  totalLegs: number;
   /** The number of legs remaining to be executed. */
 
   remainingLegs: number;
   /** The number of quantums remaining to be executed. */
 
   remainingQuantums: Long;
-  /** The block height at which the order was placed. */
-
-  blockHeight: number;
 }
 /**
  * TwapOrderPlacement represents the placement of a TWAP order in
@@ -526,50 +520,12 @@ export interface TwapOrderPlacement {
 
 export interface TwapOrderPlacementSDKType {
   order?: OrderSDKType;
-  /** The total number of legs to be executed. */
-
-  total_legs: number;
   /** The number of legs remaining to be executed. */
 
   remaining_legs: number;
   /** The number of quantums remaining to be executed. */
 
   remaining_quantums: Long;
-  /** The block height at which the order was placed. */
-
-  block_height: number;
-}
-/**
- * TwapTriggerPlacement represents the placement of a TWAP suborder in
- * state. It stores the stateful order itself, the `BlockHeight` and
- * `TransactionIndex` at which the order was placed and triggered.
- */
-
-export interface TwapTriggerPlacement {
-  /**
-   * The suborder ID for a TWAP order. This will be identical
-   * to the parent TWAP orderId except for the order_flag.
-   */
-  orderId?: OrderId;
-  /** The block time at which the order is triggered. */
-
-  triggerBlockTime: Long;
-}
-/**
- * TwapTriggerPlacement represents the placement of a TWAP suborder in
- * state. It stores the stateful order itself, the `BlockHeight` and
- * `TransactionIndex` at which the order was placed and triggered.
- */
-
-export interface TwapTriggerPlacementSDKType {
-  /**
-   * The suborder ID for a TWAP order. This will be identical
-   * to the parent TWAP orderId except for the order_flag.
-   */
-  order_id?: OrderIdSDKType;
-  /** The block time at which the order is triggered. */
-
-  trigger_block_time: Long;
 }
 /**
  * ConditionalOrderPlacement represents the placement of a conditional order in
@@ -777,12 +733,12 @@ export interface TwapParameters {
 
   interval: number;
   /**
-   * Slippage percentage for each suborder. This will be applied to
+   * Price tolerance for each suborder. This will be applied to
    * the oracle price each time a suborder is triggered. Must be
-   * between 0 and 5000 (0% and 50%).
+   * between 0 and 10000 (0% and 100%).
    */
 
-  slippagePercent: number;
+  priceTolerance: number;
 }
 /** TwapParameters represents the necessary configuration for a TWAP order. */
 
@@ -800,12 +756,12 @@ export interface TwapParametersSDKType {
 
   interval: number;
   /**
-   * Slippage percentage for each suborder. This will be applied to
+   * Price tolerance for each suborder. This will be applied to
    * the oracle price each time a suborder is triggered. Must be
-   * between 0 and 5000 (0% and 50%).
+   * between 0 and 10000 (0% and 100%).
    */
 
-  slippage_percent: number;
+  price_tolerance: number;
 }
 /**
  * TransactionOrdering represents a unique location in the block where a
@@ -1213,10 +1169,8 @@ export const LongTermOrderPlacement = {
 function createBaseTwapOrderPlacement(): TwapOrderPlacement {
   return {
     order: undefined,
-    totalLegs: 0,
     remainingLegs: 0,
-    remainingQuantums: Long.UZERO,
-    blockHeight: 0
+    remainingQuantums: Long.UZERO
   };
 }
 
@@ -1226,20 +1180,12 @@ export const TwapOrderPlacement = {
       Order.encode(message.order, writer.uint32(10).fork()).ldelim();
     }
 
-    if (message.totalLegs !== 0) {
-      writer.uint32(16).uint32(message.totalLegs);
-    }
-
     if (message.remainingLegs !== 0) {
-      writer.uint32(24).uint32(message.remainingLegs);
+      writer.uint32(16).uint32(message.remainingLegs);
     }
 
     if (!message.remainingQuantums.isZero()) {
-      writer.uint32(32).uint64(message.remainingQuantums);
-    }
-
-    if (message.blockHeight !== 0) {
-      writer.uint32(40).uint32(message.blockHeight);
+      writer.uint32(24).uint64(message.remainingQuantums);
     }
 
     return writer;
@@ -1259,19 +1205,11 @@ export const TwapOrderPlacement = {
           break;
 
         case 2:
-          message.totalLegs = reader.uint32();
-          break;
-
-        case 3:
           message.remainingLegs = reader.uint32();
           break;
 
-        case 4:
+        case 3:
           message.remainingQuantums = (reader.uint64() as Long);
-          break;
-
-        case 5:
-          message.blockHeight = reader.uint32();
           break;
 
         default:
@@ -1286,65 +1224,8 @@ export const TwapOrderPlacement = {
   fromPartial(object: DeepPartial<TwapOrderPlacement>): TwapOrderPlacement {
     const message = createBaseTwapOrderPlacement();
     message.order = object.order !== undefined && object.order !== null ? Order.fromPartial(object.order) : undefined;
-    message.totalLegs = object.totalLegs ?? 0;
     message.remainingLegs = object.remainingLegs ?? 0;
     message.remainingQuantums = object.remainingQuantums !== undefined && object.remainingQuantums !== null ? Long.fromValue(object.remainingQuantums) : Long.UZERO;
-    message.blockHeight = object.blockHeight ?? 0;
-    return message;
-  }
-
-};
-
-function createBaseTwapTriggerPlacement(): TwapTriggerPlacement {
-  return {
-    orderId: undefined,
-    triggerBlockTime: Long.UZERO
-  };
-}
-
-export const TwapTriggerPlacement = {
-  encode(message: TwapTriggerPlacement, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.orderId !== undefined) {
-      OrderId.encode(message.orderId, writer.uint32(10).fork()).ldelim();
-    }
-
-    if (!message.triggerBlockTime.isZero()) {
-      writer.uint32(16).uint64(message.triggerBlockTime);
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): TwapTriggerPlacement {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseTwapTriggerPlacement();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.orderId = OrderId.decode(reader, reader.uint32());
-          break;
-
-        case 2:
-          message.triggerBlockTime = (reader.uint64() as Long);
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<TwapTriggerPlacement>): TwapTriggerPlacement {
-    const message = createBaseTwapTriggerPlacement();
-    message.orderId = object.orderId !== undefined && object.orderId !== null ? OrderId.fromPartial(object.orderId) : undefined;
-    message.triggerBlockTime = object.triggerBlockTime !== undefined && object.triggerBlockTime !== null ? Long.fromValue(object.triggerBlockTime) : Long.UZERO;
     return message;
   }
 
@@ -1574,7 +1455,7 @@ function createBaseTwapParameters(): TwapParameters {
   return {
     duration: 0,
     interval: 0,
-    slippagePercent: 0
+    priceTolerance: 0
   };
 }
 
@@ -1588,8 +1469,8 @@ export const TwapParameters = {
       writer.uint32(16).uint32(message.interval);
     }
 
-    if (message.slippagePercent !== 0) {
-      writer.uint32(24).uint32(message.slippagePercent);
+    if (message.priceTolerance !== 0) {
+      writer.uint32(24).uint32(message.priceTolerance);
     }
 
     return writer;
@@ -1613,7 +1494,7 @@ export const TwapParameters = {
           break;
 
         case 3:
-          message.slippagePercent = reader.uint32();
+          message.priceTolerance = reader.uint32();
           break;
 
         default:
@@ -1629,7 +1510,7 @@ export const TwapParameters = {
     const message = createBaseTwapParameters();
     message.duration = object.duration ?? 0;
     message.interval = object.interval ?? 0;
-    message.slippagePercent = object.slippagePercent ?? 0;
+    message.priceTolerance = object.priceTolerance ?? 0;
     return message;
   }
 

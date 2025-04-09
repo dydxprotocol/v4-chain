@@ -705,6 +705,7 @@ type OperationRaw struct {
 	// a signed order placement, or an order removal.
 	//
 	// Types that are valid to be assigned to Operation:
+	//
 	//	*OperationRaw_Match
 	//	*OperationRaw_ShortTermOrderPlacement
 	//	*OperationRaw_OrderRemoval

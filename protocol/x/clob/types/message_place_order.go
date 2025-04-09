@@ -22,8 +22,8 @@ const (
 	// the maximum duration in seconds for TWAP orders.
 	MaxTwapOrderDuration uint32 = 86400 // 24 hours
 
-	// the maximum slippage percentage for suborders in basis points.
-	MaxTwapOrderSlippagePercent uint32 = 5000
+	// the maximum price tolerance for suborders in basis points.
+	MaxTwapOrderPriceTolerance uint32 = 10000
 )
 
 var _ sdk.Msg = &MsgPlaceOrder{}
@@ -101,6 +101,8 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 		return errorsmod.Wrapf(ErrReduceOnlyDisabled, "reduce only orders must be short term IOC orders")
 	}
 
+	// A TWAP order with a subticks value of 0 is treated as a market TWAP order
+	// which contains no limit price for each generated suborder.
 	if msg.Order.Subticks == uint64(0) && !msg.Order.IsTwapOrder() {
 		return errorsmod.Wrapf(ErrInvalidOrderSubticks, "order subticks cannot be 0 for this order type")
 	}
@@ -158,11 +160,11 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 				"TWAP order duration must be a multiple of the interval",
 			)
 		}
-		if parameters.SlippagePercent > MaxTwapOrderSlippagePercent {
+		if parameters.PriceTolerance > MaxTwapOrderPriceTolerance {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
-				"TWAP order slippage percent must be between 0 and %d",
-				MaxTwapOrderSlippagePercent,
+				"TWAP order price tolerance must be between 0 and %d",
+				MaxTwapOrderPriceTolerance,
 			)
 		}
 	}

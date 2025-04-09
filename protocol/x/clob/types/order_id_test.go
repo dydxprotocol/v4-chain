@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// numOrderIdFlagsTestCases is set to 129 to verify that we run a test case where
+// numOrderIdFlagsTestCases is set to 513 to verify that we run a test case where
 // `OrderFlags` is greater than one byte (proto varints are encoded with 7 bits per byte).
-const numOrderIdFlagsTestCases = 512
+const numOrderIdFlagsTestCases = 513
 
 func TestToStateKey(t *testing.T) {
 	// Success

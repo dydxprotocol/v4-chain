@@ -494,8 +494,9 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 						GoodTilBlockTime: uint32(100),
 					},
 					TwapParameters: &TwapParameters{
-						Interval: 60,
-						Duration: MinTwapOrderDuration - 1,
+						Interval:       60,
+						Duration:       MinTwapOrderDuration - 1,
+						PriceTolerance: 1000,
 					},
 				},
 			},
@@ -518,8 +519,9 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 						GoodTilBlockTime: uint32(100),
 					},
 					TwapParameters: &TwapParameters{
-						Interval: 60,
-						Duration: MaxTwapOrderDuration + 1,
+						Interval:       60,
+						Duration:       MaxTwapOrderDuration + 1,
+						PriceTolerance: 1000,
 					},
 				},
 			},
@@ -542,14 +544,15 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 						GoodTilBlockTime: uint32(100),
 					},
 					TwapParameters: &TwapParameters{
-						Interval: 60,
-						Duration: 301, // Not divisible by 60
+						Interval:       60,
+						Duration:       301, // Not divisible by 60
+						PriceTolerance: 1000,
 					},
 				},
 			},
 			err: ErrInvalidPlaceOrder,
 		},
-		"twap: slippage too high": {
+		"twap: price tolerance too high": {
 			msg: MsgPlaceOrder{
 				Order: Order{
 					OrderId: OrderId{
@@ -566,9 +569,9 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 						GoodTilBlockTime: uint32(100),
 					},
 					TwapParameters: &TwapParameters{
-						Interval:        60,
-						Duration:        300,
-						SlippagePercent: MaxTwapOrderSlippagePercent + 1,
+						Interval:       60,
+						Duration:       300,
+						PriceTolerance: MaxTwapOrderPriceTolerance + 1,
 					},
 				},
 			},
@@ -591,9 +594,9 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 						GoodTilBlockTime: uint32(100),
 					},
 					TwapParameters: &TwapParameters{
-						Interval:        60,
-						Duration:        300,
-						SlippagePercent: 1000,
+						Interval:       60,
+						Duration:       300,
+						PriceTolerance: 1000,
 					},
 				},
 			},

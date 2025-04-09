@@ -101,25 +101,10 @@ message LongTermOrderPlacement {
 // to be executed.
 message TwapOrderPlacement {
   Order order = 1 [ (gogoproto.nullable) = false ];
-  // The total number of legs to be executed.
-  uint32 total_legs = 2;
   // The number of legs remaining to be executed.
-  uint32 remaining_legs = 3;
+  uint32 remaining_legs = 2;
   // The number of quantums remaining to be executed.
-  uint64 remaining_quantums = 4;
-  // The block height at which the order was placed.
-  uint32 block_height = 5;
-}
-
-// TwapTriggerPlacement represents the placement of a TWAP suborder in
-// state. It stores the stateful order itself, the `BlockHeight` and
-// `TransactionIndex` at which the order was placed and triggered.
-message TwapTriggerPlacement {
-  // The suborder ID for a TWAP order. This will be identical
-  // to the parent TWAP orderId except for the order_flag.
-  OrderId order_id = 1 [ (gogoproto.nullable) = false ];
-  // The block time at which the order is triggered.
-  uint64 trigger_block_time = 2;
+  uint64 remaining_quantums = 3;
 }
 
 // ConditionalOrderPlacement represents the placement of a conditional order in
@@ -259,10 +244,10 @@ message TwapParameters {
   // and less than 3600 seconds (1 hour).
   uint32 interval = 2;
 
-  // Slippage percentage for each suborder. This will be applied to
+  // Price tolerance for each suborder. This will be applied to
   // the oracle price each time a suborder is triggered. Must be
-  // between 0 and 5000 (0% and 50%).
-  uint32 slippage_percent = 3;
+  // between 0 and 10000 (0% and 100%).
+  uint32 price_tolerance = 3;
 }
 
 // TransactionOrdering represents a unique location in the block where a
