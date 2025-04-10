@@ -70,6 +70,7 @@ func CmdPlaceOrder() *cobra.Command {
 							Number: argSubaccountNumber,
 						},
 						ClobPairId: argClobPairId,
+						OrderFlags: types.OrderIdFlags_ShortTerm,
 					},
 					Side:         types.Order_Side(argSide),
 					Quantums:     argQuantums,
