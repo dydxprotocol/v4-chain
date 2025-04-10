@@ -5,6 +5,7 @@ import {
   CachedMegavaultPnl,
   CachedVaultHistoricalPnl,
   CompressedVaultPnl,
+  CompressedMegavaultPnl,
   CachedPnlTicks,
 } from '../types';
 
@@ -27,48 +28,38 @@ function getVaultsHistoricalPnlTimestampKey(resolution: string): string {
 }
 
 /**
- * Compresses a CachedVaultHistoricalPnl object into a more storage-efficient format.
- * Reduces size by:
- * 1. Using arrays instead of objects with named fields
- * 2. Converting ISO dates to Unix timestamps
- * 3. Limiting decimal precision to 1 place
+ * Common function to compress a CachedPnlTicks object into a more storage-efficient format.
  *
- * @param data - The vault historical PNL data to compress
- * @returns Compressed JSON string
+ * @param tick - The PNL tick data to compress
+ * @returns [equity, totalPnl, netTransfers, createdAt, blockHeight, blockTime]
  */
-export function compressVaultPnl(data: CachedVaultHistoricalPnl): string {
-  const compressed: CompressedVaultPnl = [
-    data.ticker,
-    data.historicalPnl.map((tick) => [
-      Number(tick.equity).toFixed(1),
-      Number(tick.totalPnl).toFixed(1),
-      Number(tick.netTransfers).toFixed(1),
-      Math.floor(new Date(tick.createdAt).getTime() / 1000),
-      Number(tick.blockHeight),
-      Math.floor(new Date(tick.blockTime).getTime() / 1000),
-    ]),
+function compressPnlTick(tick: CachedPnlTicks): [number, number, number, number, number, number] {
+  return [
+    Math.round(Number(tick.equity)),
+    Math.round(Number(tick.totalPnl)),
+    Math.round(Number(tick.netTransfers)),
+    Math.floor(new Date(tick.createdAt).getTime() / 1000),
+    Number(tick.blockHeight),
+    Math.floor(new Date(tick.blockTime).getTime() / 1000),
   ];
-  return JSON.stringify(compressed);
 }
 
 /**
- * Decompresses a string created by compressVaultPnl back into a CachedVaultHistoricalPnl object.
+ * Common function to decompress a PNL tick array back into a CachedPnlTicks object.
  *
- * @param compressedData - The compressed JSON string
- * @returns The decompressed vault historical PNL data
+ * @param data - [equity, totalPnl, netTransfers, createdAt, blockHeight, blockTime]
+ * @returns The decompressed CachedPnlTicks object
  */
-export function decompressVaultPnl(compressedData: string): CachedVaultHistoricalPnl {
-  const [ticker, historicalData]: CompressedVaultPnl = JSON.parse(compressedData);
+function decompressPnlTick(
+  [e, p, n, c, h, t]: [number, number, number, number, number, number],
+): CachedPnlTicks {
   return {
-    ticker,
-    historicalPnl: historicalData.map(([e, p, n, c, h, t]) => ({
-      equity: e,
-      totalPnl: p,
-      netTransfers: n,
-      createdAt: new Date(c * 1000).toISOString(),
-      blockHeight: h.toString(),
-      blockTime: new Date(t * 1000).toISOString(),
-    })),
+    equity: e.toString(),
+    totalPnl: p.toString(),
+    netTransfers: n.toString(),
+    createdAt: new Date(c * 1000).toISOString(),
+    blockHeight: h.toString(),
+    blockTime: new Date(t * 1000).toISOString(),
   };
 }
 
@@ -85,9 +76,12 @@ export async function getVaultsHistoricalPnl(
     return null;
   }
 
-  // Parse as an array of compressed vault PNL data
-  const compressedVaults = JSON.parse(value);
-  return compressedVaults.map((compressed: string) => decompressVaultPnl(compressed));
+  // Parse the compressed vault PNL data array directly
+  const compressedVaultsArray = JSON.parse(value);
+  return compressedVaultsArray.map((compressed: CompressedVaultPnl) => ({
+    ticker: compressed[0],
+    historicalPnl: compressed[1].map(decompressPnlTick),
+  }));
 }
 
 export async function setVaultsHistoricalPnl(
@@ -97,11 +91,14 @@ export async function setVaultsHistoricalPnl(
 ): Promise<void> {
   const now = new Date().toISOString();
 
-  // Compress each vault's PNL data
-  const compressedVaults = vaultsPnl.map((vault) => compressVaultPnl(vault));
+  // Create array of compressed tuples directly without intermediate string conversion
+  const compressedVaultsArray = vaultsPnl.map((vault): CompressedVaultPnl => [
+    vault.ticker,
+    vault.historicalPnl.map(compressPnlTick),
+  ]);
 
   await Promise.all([
-    client.set(getVaultsHistoricalPnlKey(resolution), JSON.stringify(compressedVaults)),
+    client.set(getVaultsHistoricalPnlKey(resolution), JSON.stringify(compressedVaultsArray)),
     client.set(getVaultsHistoricalPnlTimestampKey(resolution), now),
   ]);
 }
@@ -126,7 +123,12 @@ export async function getMegavaultPnl(
   if (value === null) {
     return null;
   }
-  return JSON.parse(value);
+
+  // Parse the compressed megavault PNL data directly
+  const compressed: CompressedMegavaultPnl = JSON.parse(value);
+  return {
+    pnlTicks: compressed.map(decompressPnlTick),
+  };
 }
 
 export async function setMegavaultPnl(
@@ -135,12 +137,12 @@ export async function setMegavaultPnl(
   client: RedisClient,
 ): Promise<void> {
   const now = new Date().toISOString();
-  const cache: CachedMegavaultPnl = {
-    pnlTicks,
-    lastUpdated: now,
-  };
+
+  // Create compressed array directly
+  const compressed: CompressedMegavaultPnl = pnlTicks.map(compressPnlTick);
+
   await Promise.all([
-    client.set(getMegavaultHistoricalPnlKey(resolution), JSON.stringify(cache)),
+    client.set(getMegavaultHistoricalPnlKey(resolution), JSON.stringify(compressed)),
     client.set(getMegavaultHistoricalTimestampKey(resolution), now),
   ]);
 }
