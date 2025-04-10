@@ -116,10 +116,7 @@ class VaultController extends Controller {
         );
 
         return {
-          megavaultPnl: _.sortBy(cached.pnlTicks, 'blockTime').map(
-            (pnlTick: PnlTicksFromDatabase) => {
-              return pnlTicksToResponseObject(pnlTick);
-            }),
+          megavaultPnl: _.sortBy(cached.pnlTicks, 'blockTime'),
         };
       }
     }
@@ -187,7 +184,11 @@ class VaultController extends Controller {
       latestPnlTick,
     );
 
-    const sortedPnlTicks: PnlTicksFromDatabase[] = _.sortBy(pnlTicksWithCurrentTick, 'blockTime');
+    const sortedPnlTicks: PnlTicksResponseObject[] = _.sortBy(pnlTicksWithCurrentTick, 'blockTime')
+      .map(
+        (pnlTick: PnlTicksFromDatabase) => {
+          return pnlTicksToResponseObject(pnlTick);
+        });
 
     // Insert into cache.
     await VaultCache.setMegavaultPnl(
@@ -205,10 +206,7 @@ class VaultController extends Controller {
     );
 
     return {
-      megavaultPnl: sortedPnlTicks.map(
-        (pnlTick: PnlTicksFromDatabase) => {
-          return pnlTicksToResponseObject(pnlTick);
-        }),
+      megavaultPnl: sortedPnlTicks,
     };
   }
 
