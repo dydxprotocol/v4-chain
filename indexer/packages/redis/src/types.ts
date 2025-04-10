@@ -103,7 +103,17 @@ export interface CachedVaultHistoricalPnl {
   historicalPnl: CachedPnlTicks[],
 }
 
+/**
+ * Space-efficient representation of vault historical PNL data.
+ * Format: [ticker, array of [equity, totalPnl, netTransfers, createdAtTimestamp,
+ * blockHeight, blockTimeTimestamp]]
+ */
+export type CompressedVaultPnl = [
+  string,  // ticker
+  [string, string, string, number, number, number][]  // [e, p, n, c, h, t][]
+];
+
 export interface CachedMegavaultPnl {
-  pnlTicks: PnlTicksFromDatabase[],
+  pnlTicks: CachedPnlTicks[],
   lastUpdated: string,
 }

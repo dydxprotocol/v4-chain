@@ -1,8 +1,12 @@
-import { PnlTicksFromDatabase } from '@dydxprotocol-indexer/postgres';
 import { RedisClient } from 'redis';
 
 import { getAsync } from '../helpers/redis';
-import { CachedMegavaultPnl, CachedVaultHistoricalPnl } from '../types';
+import {
+  CachedMegavaultPnl,
+  CachedVaultHistoricalPnl,
+  CompressedVaultPnl,
+  CachedPnlTicks,
+} from '../types';
 
 const KEY_PREFIX: string = 'v4/vault';
 
@@ -23,6 +27,52 @@ function getVaultsHistoricalPnlTimestampKey(resolution: string): string {
 }
 
 /**
+ * Compresses a CachedVaultHistoricalPnl object into a more storage-efficient format.
+ * Reduces size by:
+ * 1. Using arrays instead of objects with named fields
+ * 2. Converting ISO dates to Unix timestamps
+ * 3. Limiting decimal precision to 1 place
+ *
+ * @param data - The vault historical PNL data to compress
+ * @returns Compressed JSON string
+ */
+export function compressVaultPnl(data: CachedVaultHistoricalPnl): string {
+  const compressed: CompressedVaultPnl = [
+    data.ticker,
+    data.historicalPnl.map((tick) => [
+      Number(tick.equity).toFixed(1),
+      Number(tick.totalPnl).toFixed(1),
+      Number(tick.netTransfers).toFixed(1),
+      Math.floor(new Date(tick.createdAt).getTime() / 1000),
+      Number(tick.blockHeight),
+      Math.floor(new Date(tick.blockTime).getTime() / 1000),
+    ]),
+  ];
+  return JSON.stringify(compressed);
+}
+
+/**
+ * Decompresses a string created by compressVaultPnl back into a CachedVaultHistoricalPnl object.
+ *
+ * @param compressedData - The compressed JSON string
+ * @returns The decompressed vault historical PNL data
+ */
+export function decompressVaultPnl(compressedData: string): CachedVaultHistoricalPnl {
+  const [ticker, historicalData]: CompressedVaultPnl = JSON.parse(compressedData);
+  return {
+    ticker,
+    historicalPnl: historicalData.map(([e, p, n, c, h, t]) => ({
+      equity: e,
+      totalPnl: p,
+      netTransfers: n,
+      createdAt: new Date(c * 1000).toISOString(),
+      blockHeight: h.toString(),
+      blockTime: new Date(t * 1000).toISOString(),
+    })),
+  };
+}
+
+/**
 * Cache for /vaults/historicalPnl endpoint
 **/
 
@@ -34,7 +84,10 @@ export async function getVaultsHistoricalPnl(
   if (value === null) {
     return null;
   }
-  return JSON.parse(value);
+
+  // Parse as an array of compressed vault PNL data
+  const compressedVaults = JSON.parse(value);
+  return compressedVaults.map((compressed: string) => decompressVaultPnl(compressed));
 }
 
 export async function setVaultsHistoricalPnl(
@@ -43,8 +96,12 @@ export async function setVaultsHistoricalPnl(
   client: RedisClient,
 ): Promise<void> {
   const now = new Date().toISOString();
+
+  // Compress each vault's PNL data
+  const compressedVaults = vaultsPnl.map((vault) => compressVaultPnl(vault));
+
   await Promise.all([
-    client.set(getVaultsHistoricalPnlKey(resolution), JSON.stringify(vaultsPnl)),
+    client.set(getVaultsHistoricalPnlKey(resolution), JSON.stringify(compressedVaults)),
     client.set(getVaultsHistoricalPnlTimestampKey(resolution), now),
   ]);
 }
@@ -74,7 +131,7 @@ export async function getMegavaultPnl(
 
 export async function setMegavaultPnl(
   resolution: string,
-  pnlTicks: PnlTicksFromDatabase[],
+  pnlTicks: CachedPnlTicks[],
   client: RedisClient,
 ): Promise<void> {
   const now = new Date().toISOString();
