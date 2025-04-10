@@ -83,6 +83,17 @@ func TestPlaceOrder_Error(t *testing.T) {
 			},
 			ExpectedError: types.ErrStatefulOrderPreviouslyRemoved,
 		},
+		"Returns an error when TWAP order has already been removed": {
+			StatefulOrderPlacement: constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO,
+			RemovedOrderIds: []types.OrderId{
+				constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO.OrderId,
+			},
+			ExpectedError: types.ErrStatefulOrderPreviouslyRemoved,
+		},
+		"Returns an error when TWAP suborder size is too small": {
+			StatefulOrderPlacement: constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy10_Price35_GTB20_RO,
+			ExpectedError:          types.ErrInvalidPlaceOrder,
+		},
 	}
 
 	// Run tests.
@@ -266,6 +277,17 @@ func TestPlaceOrder_Success(t *testing.T) {
 				},
 			},
 		},
+		"Succeeds with twap order": {
+			StatefulOrderPlacement: constants.TwapOrder_Bob_Num0_Id1_Clob0_Buy1000_Price35_GTB20_RO,
+			Subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+				},
+			},
+		},
 	}
 
 	// Run tests.
@@ -390,8 +412,22 @@ func TestPlaceOrder_Success(t *testing.T) {
 			require.NoError(t, err)
 
 			// Ensure stateful order placement exists in state.
-			_, found := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.StatefulOrderPlacement.GetOrderId())
-			require.True(t, found)
+			if tc.StatefulOrderPlacement.IsTwapOrder() {
+				twap_order, found := ks.ClobKeeper.GetTwapOrderPlacement(ctx, tc.StatefulOrderPlacement.GetOrderId())
+				require.Equal(t, tc.StatefulOrderPlacement, twap_order.Order)
+				require.True(t, found)
+
+				suborder := tc.StatefulOrderPlacement
+				suborder.OrderId.OrderFlags = types.OrderIdFlags_TwapSuborder
+
+				twap_suborder, timestamp, found_suborder := ks.ClobKeeper.GetTwapTriggerPlacement(ctx, suborder.OrderId)
+				require.Equal(t, suborder.OrderId, twap_suborder)
+				require.True(t, found_suborder)
+				require.Equal(t, timestamp, uint64(ctx.BlockTime().Unix()))
+			} else {
+				_, found := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.StatefulOrderPlacement.GetOrderId())
+				require.True(t, found)
+			}
 
 			// Ensure placement exists in memstore.
 			var placements []types.OrderId
