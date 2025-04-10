@@ -10,9 +10,11 @@ import (
 )
 
 const (
-	OrderIdFlags_ShortTerm   = uint32(0)
-	OrderIdFlags_Conditional = uint32(32)
-	OrderIdFlags_LongTerm    = uint32(64)
+	OrderIdFlags_ShortTerm    = uint32(0)
+	OrderIdFlags_Conditional  = uint32(32)
+	OrderIdFlags_LongTerm     = uint32(64)
+	OrderIdFlags_Twap         = uint32(128)
+	OrderIdFlags_TwapSuborder = uint32(256)
 )
 
 // IsShortTermOrder returns true if this order ID is for a short-term order, false if
@@ -31,6 +33,12 @@ func (o *OrderId) IsConditionalOrder() bool {
 	return o.OrderFlags == OrderIdFlags_Conditional
 }
 
+// IsTwapOrder returns true if this order ID is for a TWAP order, false if
+// not (which implies the order ID is for a short-term or long-term order).
+func (o *OrderId) IsTwapOrder() bool {
+	return o.OrderFlags == OrderIdFlags_Twap
+}
+
 // IsLongTermOrder returns true if this order ID is for a long-term order, false if
 // not (which implies the order ID is for a short-term or conditional order).
 func (o *OrderId) IsLongTermOrder() bool {
@@ -40,10 +48,14 @@ func (o *OrderId) IsLongTermOrder() bool {
 	return o.OrderFlags == OrderIdFlags_LongTerm
 }
 
+func (o *OrderId) IsTwapSuborder() bool {
+	return o.OrderFlags == OrderIdFlags_TwapSuborder
+}
+
 // IsStatefulOrder returns whether this order is a stateful order, which is true for Long-Term
 // and conditional orders and false for Short-Term orders.
 func (o *OrderId) IsStatefulOrder() bool {
-	return o.IsLongTermOrder() || o.IsConditionalOrder()
+	return o.IsLongTermOrder() || o.IsConditionalOrder() || o.IsTwapOrder() || o.IsTwapSuborder()
 }
 
 // MustBeStatefulOrder panics if the orderId is not a stateful order, else it does nothing.
