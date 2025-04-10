@@ -154,15 +154,14 @@ type OrderId struct {
 	// the same ClientId).
 	ClientId uint32 `protobuf:"fixed32,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
 	// order_flags represent order flags for the order. This field is invalid if
-	// it's greater than 127 (larger than one byte). Each bit in the first byte
-	// represents a different flag. Currently only two flags are supported.
+	// it's greater than 257. Each bit represents a different flag.
 	//
-	// Starting from the bit after the most MSB (note that the MSB is used in
-	// proto varint encoding, and therefore cannot be used): Bit 1 is set if this
-	// order is a Long-Term order (0x40, or 64 as a uint8). Bit 2 is set if this
-	// order is a Conditional order (0x20, or 32 as a uint8).
-	//
-	// If neither bit is set, the order is assumed to be a Short-Term order.
+	// The following are the valid orderId flags:
+	// ShortTerm    = uint32(0)
+	// Conditional  = uint32(32)
+	// LongTerm     = uint32(64)
+	// Twap         = uint32(128)
+	// TwapSuborder = uint32(256) (for internal use only)
 	//
 	// If both bits are set or bits other than the 2nd and 3rd are set, the order
 	// ID is invalid.
