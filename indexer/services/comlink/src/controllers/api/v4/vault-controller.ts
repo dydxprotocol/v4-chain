@@ -100,7 +100,7 @@ class VaultController extends Controller {
         redisClient,
       );
       stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl.cache_hit`,
+        `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl_cache_hit.timing`,
         Date.now() - start,
         {
           resolution: getResolution(resolution),
@@ -109,7 +109,7 @@ class VaultController extends Controller {
 
       if (cached !== null) {
         stats.increment(
-          `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl.cache_hit`,
+          `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl_cache_hit`,
           {
             resolution: getResolution(resolution),
           },
@@ -125,7 +125,7 @@ class VaultController extends Controller {
     }
 
     stats.increment(
-      `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl.cache_miss`,
+      `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl_cache_miss`,
       {
         resolution: getResolution(resolution),
       },
@@ -197,7 +197,7 @@ class VaultController extends Controller {
     );
 
     stats.timing(
-      `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl.cache_miss`,
+      `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl.cache_miss.timing`,
       Date.now() - start,
       {
         resolution: getResolution(resolution),
@@ -234,7 +234,7 @@ class VaultController extends Controller {
 
       if (cached !== null) {
         stats.timing(
-          `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl.cache_hit`,
+          `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_hit.timing`,
           Date.now() - start,
           {
             resolution: getResolution(resolution),
@@ -242,7 +242,7 @@ class VaultController extends Controller {
         );
 
         stats.increment(
-          `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl.cache_hit`,
+          `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_hit`,
           {
             resolution: getResolution(resolution),
           },
@@ -255,7 +255,7 @@ class VaultController extends Controller {
     }
 
     stats.increment(
-      `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl.cache_miss`,
+      `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_miss`,
       {
         resolution: getResolution(resolution),
       },
@@ -323,7 +323,7 @@ class VaultController extends Controller {
     const sortedVaultPnlTicks = _.sortBy(groupedVaultPnlTicks, 'ticker');
 
     stats.timing(
-      `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl.cache_miss`,
+      `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_miss.timing`,
       Date.now() - start,
       {
         resolution: getResolution(resolution),
