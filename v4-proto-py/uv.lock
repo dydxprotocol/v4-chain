@@ -148,7 +148,7 @@ wheels = [
 ]
 
 [[package]]
-name = "v4-proto-py"
+name = "v4-proto"
 version = "8.0.6"
 source = { virtual = "." }
 dependencies = [
@@ -159,7 +159,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "grpcio", specifier = ">=1.54" },
-    { name = "grpcio-tools", specifier = ">=1.54" },
-    { name = "protobuf", specifier = ">=4.23" },
+    { name = "grpcio", specifier = "~=1.71" },
+    { name = "grpcio-tools", specifier = "~=1.71" },
+    { name = "protobuf", specifier = "~=5.29" },
 ]

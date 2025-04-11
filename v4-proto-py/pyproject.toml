@@ -1,5 +1,5 @@
 [project]
-name = "v4-proto-py"
+name = "v4-proto"
 version = "8.0.6"
 authors = [
  { name="dYdX", email="contact@dydx.exchange"},
@@ -15,9 +15,9 @@ description = "dYdX v4-chain protobufs"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "grpcio>=1.54",
-    "grpcio-tools>=1.54",
-    "protobuf>=4.23",
+    "grpcio~=1.71",
+    "grpcio-tools~=1.71",
+    "protobuf~=5.29",
 ]
 
 [project.urls]
