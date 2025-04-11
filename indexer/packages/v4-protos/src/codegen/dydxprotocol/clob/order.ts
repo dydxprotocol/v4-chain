@@ -719,21 +719,21 @@ export interface OrderSDKType {
 
 export interface TwapParameters {
   /**
-   * Duration of the TWAP order execution in seconds. Must be between
-   * 300 (5 minutes) and 86400 (24 hours).
+   * Duration of the TWAP order execution in seconds. Must be in the range
+   * [300 (5 minutes), 86400 (24 hours)].
    */
   duration: number;
   /**
    * Interval in seconds for each suborder to execute. Must be a
-   * whole number, a factor of the duration, greater than 30 seconds,
-   * and less than 3600 seconds (1 hour).
+   * whole number, a factor of the duration, and in the range
+   * [30 (30 seconds), 3600 (1 hour)].
    */
 
   interval: number;
   /**
    * Price tolerance for each suborder. This will be applied to
    * the oracle price each time a suborder is triggered. Must be
-   * between 0 and 10000 (0% and 100%).
+   * be in the range [0, 10000).
    */
 
   priceTolerance: number;
@@ -742,21 +742,21 @@ export interface TwapParameters {
 
 export interface TwapParametersSDKType {
   /**
-   * Duration of the TWAP order execution in seconds. Must be between
-   * 300 (5 minutes) and 86400 (24 hours).
+   * Duration of the TWAP order execution in seconds. Must be in the range
+   * [300 (5 minutes), 86400 (24 hours)].
    */
   duration: number;
   /**
    * Interval in seconds for each suborder to execute. Must be a
-   * whole number, a factor of the duration, greater than 30 seconds,
-   * and less than 3600 seconds (1 hour).
+   * whole number, a factor of the duration, and in the range
+   * [30 (30 seconds), 3600 (1 hour)].
    */
 
   interval: number;
   /**
    * Price tolerance for each suborder. This will be applied to
    * the oracle price each time a suborder is triggered. Must be
-   * between 0 and 10000 (0% and 100%).
+   * be in the range [0, 10000).
    */
 
   price_tolerance: number;

@@ -140,7 +140,7 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 			parameters.Interval > MaxTwapOrderInterval {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
-				"TWAP order interval must be between %d seconds and %d seconds",
+				"TWAP order interval must be in the range [%d seconds, %d seconds]",
 				MinTwapOrderInterval,
 				MaxTwapOrderInterval,
 			)
@@ -149,7 +149,7 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 			parameters.Duration > MaxTwapOrderDuration {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
-				"TWAP order duration must be between %d seconds and %d seconds",
+				"TWAP order duration must be in the range [%d seconds, %d seconds]",
 				MinTwapOrderDuration,
 				MaxTwapOrderDuration,
 			)
@@ -160,10 +160,10 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 				"TWAP order duration must be a multiple of the interval",
 			)
 		}
-		if parameters.PriceTolerance > MaxTwapOrderPriceTolerance {
+		if parameters.PriceTolerance >= MaxTwapOrderPriceTolerance {
 			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
-				"TWAP order price tolerance must be between 0 and %d",
+				"TWAP order price tolerance must be in the range [0, %d)",
 				MaxTwapOrderPriceTolerance,
 			)
 		}

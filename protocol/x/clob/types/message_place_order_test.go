@@ -571,7 +571,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 					TwapParameters: &TwapParameters{
 						Interval:       60,
 						Duration:       300,
-						PriceTolerance: MaxTwapOrderPriceTolerance + 1,
+						PriceTolerance: MaxTwapOrderPriceTolerance,
 					},
 				},
 			},

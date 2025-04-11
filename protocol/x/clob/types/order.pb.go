@@ -826,16 +826,16 @@ func (*Order) XXX_OneofWrappers() []interface{} {
 
 // TwapParameters represents the necessary configuration for a TWAP order.
 type TwapParameters struct {
-	// Duration of the TWAP order execution in seconds. Must be between
-	// 300 (5 minutes) and 86400 (24 hours).
+	// Duration of the TWAP order execution in seconds. Must be in the range
+	// [300 (5 minutes), 86400 (24 hours)].
 	Duration uint32 `protobuf:"varint,1,opt,name=duration,proto3" json:"duration,omitempty"`
 	// Interval in seconds for each suborder to execute. Must be a
-	// whole number, a factor of the duration, greater than 30 seconds,
-	// and less than 3600 seconds (1 hour).
+	// whole number, a factor of the duration, and in the range
+	// [30 (30 seconds), 3600 (1 hour)].
 	Interval uint32 `protobuf:"varint,2,opt,name=interval,proto3" json:"interval,omitempty"`
 	// Price tolerance for each suborder. This will be applied to
 	// the oracle price each time a suborder is triggered. Must be
-	// between 0 and 10000 (0% and 100%).
+	// be in the range [0, 10000).
 	PriceTolerance uint32 `protobuf:"varint,3,opt,name=price_tolerance,json=priceTolerance,proto3" json:"price_tolerance,omitempty"`
 }
 
