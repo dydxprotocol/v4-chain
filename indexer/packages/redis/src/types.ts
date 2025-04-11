@@ -1,4 +1,4 @@
-import { PnlTicksCreateObject } from '@dydxprotocol-indexer/postgres';
+import { PnlTicksCreateObject, IsoString } from '@dydxprotocol-indexer/postgres';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 
 // Type for the result of an order being placed
@@ -86,3 +86,38 @@ export interface StatefulOrderUpdateInfo {
   orderId: string,
   timestamp: number,
 }
+
+export interface CachedPnlTicks {
+  equity: string,
+  totalPnl: string,
+  netTransfers: string,
+  createdAt: string,
+  blockHeight: string,
+  blockTime: IsoString,
+}
+
+export interface CachedVaultHistoricalPnl {
+  ticker: string,
+  historicalPnl: CachedPnlTicks[],
+}
+
+/**
+ * Space-efficient representation of vault historical PNL data.
+ * Format: [ticker, array of [equity, totalPnl, netTransfers, createdAtTimestamp,
+ * blockHeight, blockTimeTimestamp]]
+ */
+export type CompressedVaultPnl = [
+  string,  // ticker
+  [number, number, number, number, number, number][]  // [e, p, n, c, h, t][]
+];
+
+export interface CachedMegavaultPnl {
+  pnlTicks: CachedPnlTicks[],
+}
+
+/**
+ * Space-efficient representation of megavault PNL data.
+ * Format: array of [equity, totalPnl, netTransfers, createdAtTimestamp,
+ * blockHeight, blockTimeTimestamp]
+ */
+export type CompressedMegavaultPnl = [number, number, number, number, number, number][];
