@@ -174,6 +174,7 @@ func TestTWAPOrderKeyBytes(t *testing.T) {
 		require.Equal(t, expectedOrderId[index], orderId)
 		index++
 	}
+	
 	require.Equal(t, len(expectedOrderId), index)
 }
 
