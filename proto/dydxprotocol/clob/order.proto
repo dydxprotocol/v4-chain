@@ -23,15 +23,14 @@ message OrderId {
   fixed32 client_id = 2;
 
   // order_flags represent order flags for the order. This field is invalid if
-  // it's greater than 127 (larger than one byte). Each bit in the first byte
-  // represents a different flag. Currently only two flags are supported.
+  // it's greater than 257. Each bit represents a different flag.
   //
-  // Starting from the bit after the most MSB (note that the MSB is used in
-  // proto varint encoding, and therefore cannot be used): Bit 1 is set if this
-  // order is a Long-Term order (0x40, or 64 as a uint8). Bit 2 is set if this
-  // order is a Conditional order (0x20, or 32 as a uint8).
-  //
-  // If neither bit is set, the order is assumed to be a Short-Term order.
+  // The following are the valid orderId flags:
+  // ShortTerm    = uint32(0)
+  // Conditional  = uint32(32)
+  // LongTerm     = uint32(64)
+  // Twap         = uint32(128)
+  // TwapSuborder = uint32(256) (for internal use only)
   //
   // If both bits are set or bits other than the 2nd and 3rd are set, the order
   // ID is invalid.
@@ -93,6 +92,18 @@ message LongTermOrderPlacement {
   // The block height and transaction index at which the order was placed.
   // Used for ordering by time priority when the chain is restarted.
   TransactionOrdering placement_index = 2 [ (gogoproto.nullable) = false ];
+}
+
+// TwapOrderPlacement represents the placement of a TWAP order in
+// the TWAP Order State. It will store the original parent TWAP order as
+// well as maintain the state of the remaining legs and quantums
+// to be executed.
+message TwapOrderPlacement {
+  Order order = 1 [ (gogoproto.nullable) = false ];
+  // The number of legs remaining to be executed.
+  uint32 remaining_legs = 2;
+  // The number of quantums remaining to be executed.
+  uint64 remaining_quantums = 3;
 }
 
 // ConditionalOrderPlacement represents the placement of a conditional order in
@@ -215,6 +226,27 @@ message Order {
   // Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
+
+  // twap_parameters represent the configuration for a TWAP order. This must be
+  // set for twap orders and will be ignored for all other order types.
+  TwapParameters twap_parameters = 12;
+}
+
+// TwapParameters represents the necessary configuration for a TWAP order.
+message TwapParameters {
+  // Duration of the TWAP order execution in seconds. Must be in the range
+  // [300 (5 minutes), 86400 (24 hours)].
+  uint32 duration = 1;
+
+  // Interval in seconds for each suborder to execute. Must be a
+  // whole number, a factor of the duration, and in the range
+  // [30 (30 seconds), 3600 (1 hour)].
+  uint32 interval = 2;
+
+  // Price tolerance for each suborder. This will be applied to
+  // the oracle price each time a suborder is triggered. Must be
+  // be in the range [0, 10000).
+  uint32 price_tolerance = 3;
 }
 
 // TransactionOrdering represents a unique location in the block where a

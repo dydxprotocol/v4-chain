@@ -287,15 +287,14 @@ export interface OrderId {
   clientId: number;
   /**
    * order_flags represent order flags for the order. This field is invalid if
-   * it's greater than 127 (larger than one byte). Each bit in the first byte
-   * represents a different flag. Currently only two flags are supported.
+   * it's greater than 257. Each bit represents a different flag.
    * 
-   * Starting from the bit after the most MSB (note that the MSB is used in
-   * proto varint encoding, and therefore cannot be used): Bit 1 is set if this
-   * order is a Long-Term order (0x40, or 64 as a uint8). Bit 2 is set if this
-   * order is a Conditional order (0x20, or 32 as a uint8).
-   * 
-   * If neither bit is set, the order is assumed to be a Short-Term order.
+   * The following are the valid orderId flags:
+   * ShortTerm    = uint32(0)
+   * Conditional  = uint32(32)
+   * LongTerm     = uint32(64)
+   * Twap         = uint32(128)
+   * TwapSuborder = uint32(256) (for internal use only)
    * 
    * If both bits are set or bits other than the 2nd and 3rd are set, the order
    * ID is invalid.
@@ -326,15 +325,14 @@ export interface OrderIdSDKType {
   client_id: number;
   /**
    * order_flags represent order flags for the order. This field is invalid if
-   * it's greater than 127 (larger than one byte). Each bit in the first byte
-   * represents a different flag. Currently only two flags are supported.
+   * it's greater than 257. Each bit represents a different flag.
    * 
-   * Starting from the bit after the most MSB (note that the MSB is used in
-   * proto varint encoding, and therefore cannot be used): Bit 1 is set if this
-   * order is a Long-Term order (0x40, or 64 as a uint8). Bit 2 is set if this
-   * order is a Conditional order (0x20, or 32 as a uint8).
-   * 
-   * If neither bit is set, the order is assumed to be a Short-Term order.
+   * The following are the valid orderId flags:
+   * ShortTerm    = uint32(0)
+   * Conditional  = uint32(32)
+   * LongTerm     = uint32(64)
+   * Twap         = uint32(128)
+   * TwapSuborder = uint32(256) (for internal use only)
    * 
    * If both bits are set or bits other than the 2nd and 3rd are set, the order
    * ID is invalid.
@@ -496,6 +494,38 @@ export interface LongTermOrderPlacementSDKType {
   placement_index?: TransactionOrderingSDKType;
 }
 /**
+ * TwapOrderPlacement represents the placement of a TWAP order in
+ * the TWAP Order State. It will store the original parent TWAP order as
+ * well as maintain the state of the remaining legs and quantums
+ * to be executed.
+ */
+
+export interface TwapOrderPlacement {
+  order?: Order;
+  /** The number of legs remaining to be executed. */
+
+  remainingLegs: number;
+  /** The number of quantums remaining to be executed. */
+
+  remainingQuantums: Long;
+}
+/**
+ * TwapOrderPlacement represents the placement of a TWAP order in
+ * the TWAP Order State. It will store the original parent TWAP order as
+ * well as maintain the state of the remaining legs and quantums
+ * to be executed.
+ */
+
+export interface TwapOrderPlacementSDKType {
+  order?: OrderSDKType;
+  /** The number of legs remaining to be executed. */
+
+  remaining_legs: number;
+  /** The number of quantums remaining to be executed. */
+
+  remaining_quantums: Long;
+}
+/**
  * ConditionalOrderPlacement represents the placement of a conditional order in
  * state. It stores the stateful order itself, the `BlockHeight` and
  * `TransactionIndex` at which the order was placed and triggered.
@@ -602,6 +632,12 @@ export interface Order {
    */
 
   conditionalOrderTriggerSubticks: Long;
+  /**
+   * twap_parameters represent the configuration for a TWAP order. This must be
+   * set for twap orders and will be ignored for all other order types.
+   */
+
+  twapParameters?: TwapParameters;
 }
 /**
  * Order represents a single order belonging to a `Subaccount`
@@ -672,6 +708,58 @@ export interface OrderSDKType {
    */
 
   conditional_order_trigger_subticks: Long;
+  /**
+   * twap_parameters represent the configuration for a TWAP order. This must be
+   * set for twap orders and will be ignored for all other order types.
+   */
+
+  twap_parameters?: TwapParametersSDKType;
+}
+/** TwapParameters represents the necessary configuration for a TWAP order. */
+
+export interface TwapParameters {
+  /**
+   * Duration of the TWAP order execution in seconds. Must be in the range
+   * [300 (5 minutes), 86400 (24 hours)].
+   */
+  duration: number;
+  /**
+   * Interval in seconds for each suborder to execute. Must be a
+   * whole number, a factor of the duration, and in the range
+   * [30 (30 seconds), 3600 (1 hour)].
+   */
+
+  interval: number;
+  /**
+   * Price tolerance for each suborder. This will be applied to
+   * the oracle price each time a suborder is triggered. Must be
+   * be in the range [0, 10000).
+   */
+
+  priceTolerance: number;
+}
+/** TwapParameters represents the necessary configuration for a TWAP order. */
+
+export interface TwapParametersSDKType {
+  /**
+   * Duration of the TWAP order execution in seconds. Must be in the range
+   * [300 (5 minutes), 86400 (24 hours)].
+   */
+  duration: number;
+  /**
+   * Interval in seconds for each suborder to execute. Must be a
+   * whole number, a factor of the duration, and in the range
+   * [30 (30 seconds), 3600 (1 hour)].
+   */
+
+  interval: number;
+  /**
+   * Price tolerance for each suborder. This will be applied to
+   * the oracle price each time a suborder is triggered. Must be
+   * be in the range [0, 10000).
+   */
+
+  price_tolerance: number;
 }
 /**
  * TransactionOrdering represents a unique location in the block where a
@@ -1076,6 +1164,71 @@ export const LongTermOrderPlacement = {
 
 };
 
+function createBaseTwapOrderPlacement(): TwapOrderPlacement {
+  return {
+    order: undefined,
+    remainingLegs: 0,
+    remainingQuantums: Long.UZERO
+  };
+}
+
+export const TwapOrderPlacement = {
+  encode(message: TwapOrderPlacement, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.order !== undefined) {
+      Order.encode(message.order, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.remainingLegs !== 0) {
+      writer.uint32(16).uint32(message.remainingLegs);
+    }
+
+    if (!message.remainingQuantums.isZero()) {
+      writer.uint32(24).uint64(message.remainingQuantums);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): TwapOrderPlacement {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTwapOrderPlacement();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.order = Order.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.remainingLegs = reader.uint32();
+          break;
+
+        case 3:
+          message.remainingQuantums = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<TwapOrderPlacement>): TwapOrderPlacement {
+    const message = createBaseTwapOrderPlacement();
+    message.order = object.order !== undefined && object.order !== null ? Order.fromPartial(object.order) : undefined;
+    message.remainingLegs = object.remainingLegs ?? 0;
+    message.remainingQuantums = object.remainingQuantums !== undefined && object.remainingQuantums !== null ? Long.fromValue(object.remainingQuantums) : Long.UZERO;
+    return message;
+  }
+
+};
+
 function createBaseConditionalOrderPlacement(): ConditionalOrderPlacement {
   return {
     order: undefined,
@@ -1153,7 +1306,8 @@ function createBaseOrder(): Order {
     reduceOnly: false,
     clientMetadata: 0,
     conditionType: 0,
-    conditionalOrderTriggerSubticks: Long.UZERO
+    conditionalOrderTriggerSubticks: Long.UZERO,
+    twapParameters: undefined
   };
 }
 
@@ -1201,6 +1355,10 @@ export const Order = {
 
     if (!message.conditionalOrderTriggerSubticks.isZero()) {
       writer.uint32(88).uint64(message.conditionalOrderTriggerSubticks);
+    }
+
+    if (message.twapParameters !== undefined) {
+      TwapParameters.encode(message.twapParameters, writer.uint32(98).fork()).ldelim();
     }
 
     return writer;
@@ -1259,6 +1417,10 @@ export const Order = {
           message.conditionalOrderTriggerSubticks = (reader.uint64() as Long);
           break;
 
+        case 12:
+          message.twapParameters = TwapParameters.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1281,6 +1443,72 @@ export const Order = {
     message.clientMetadata = object.clientMetadata ?? 0;
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
+    message.twapParameters = object.twapParameters !== undefined && object.twapParameters !== null ? TwapParameters.fromPartial(object.twapParameters) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseTwapParameters(): TwapParameters {
+  return {
+    duration: 0,
+    interval: 0,
+    priceTolerance: 0
+  };
+}
+
+export const TwapParameters = {
+  encode(message: TwapParameters, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.duration !== 0) {
+      writer.uint32(8).uint32(message.duration);
+    }
+
+    if (message.interval !== 0) {
+      writer.uint32(16).uint32(message.interval);
+    }
+
+    if (message.priceTolerance !== 0) {
+      writer.uint32(24).uint32(message.priceTolerance);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): TwapParameters {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTwapParameters();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.duration = reader.uint32();
+          break;
+
+        case 2:
+          message.interval = reader.uint32();
+          break;
+
+        case 3:
+          message.priceTolerance = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<TwapParameters>): TwapParameters {
+    const message = createBaseTwapParameters();
+    message.duration = object.duration ?? 0;
+    message.interval = object.interval ?? 0;
+    message.priceTolerance = object.priceTolerance ?? 0;
     return message;
   }
 
