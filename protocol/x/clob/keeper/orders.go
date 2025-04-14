@@ -366,7 +366,26 @@ func (k Keeper) PlaceStatefulOrder(
 			return err
 		}
 	}
+	}
 
+	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
+	// These checks should happen for all non-internal orders and for generated TWAP suborders.
+	// For market TWAP orders where subticks are 0, use the oracle price for collateralization check.
+	if order.IsCollateralCheckRequired(isInternalOrder) {
+		order_subticks, err := k.GetSubticksForCollatCheck(ctx, order)
+		if err != nil {
+			return err
+		}
+		updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
+			ctx,
+			order.OrderId.SubaccountId,
+			types.PendingOpenOrder{
+				RemainingQuantums: order.GetBaseQuantums(),
+				IsBuy:             order.IsBuy(),
+				Subticks:          order_subticks,
+				ClobPairId:        order.GetClobPairId(),
+			},
+		)
 	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
 	// These checks should happen for all non-internal orders and for generated TWAP suborders.
 	// For market TWAP orders where subticks are 0, use the oracle price for collateralization check.
@@ -397,6 +416,17 @@ func (k Keeper) PlaceStatefulOrder(
 				order,
 				updateResult.String(),
 			)
+		if !updateResult.IsSuccess() {
+			err := types.ErrStatefulOrderCollateralizationCheckFailed
+			if updateResult.IsIsolatedSubaccountError() {
+				err = types.ErrWouldViolateIsolatedSubaccountConstraints
+			}
+			return errorsmod.Wrapf(
+				err,
+				"PlaceStatefulOrder: order (%+v), result (%s)",
+				order,
+				updateResult.String(),
+			)
 		}
 	}
 
@@ -404,6 +434,16 @@ func (k Keeper) PlaceStatefulOrder(
 	// state.
 	if lib.IsDeliverTxMode(ctx) {
 		// Write the stateful order to state and the memstore.
+		if order.IsTwapOrder() {
+			k.SetTWAPOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
+		} else {
+			k.SetLongTermOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
+			k.AddStatefulOrderIdExpiration(
+				ctx,
+				order.MustGetUnixGoodTilBlockTime(),
+				order.GetOrderId(),
+			)
+		}
 		if order.IsTwapOrder() {
 			k.SetTWAPOrderPlacement(ctx, order, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
 		} else {
@@ -980,11 +1020,15 @@ func (k Keeper) PerformStatefulOrderValidation(
 	}
 
 	if order.IsTwapOrder() {
-		num_suborders := uint64(order.TwapParameters.Duration / order.TwapParameters.Interval)
-		if order.Quantums/num_suborders < clobPair.StepBaseQuantums {
+		totalLegs := order.GetTotalLegsTWAPOrder()
+		minOrderSize := uint64(totalLegs) * clobPair.StepBaseQuantums
+		if order.Quantums < minOrderSize {
 			return errorsmod.Wrapf(
 				types.ErrInvalidPlaceOrder,
-				"TWAP suborder sizes must be greater than the minimum order size for the market",
+				"Generated TWAP suborder sizes (%v/%v) must be greater than min size for clob pair %v",
+				order.Quantums,
+				totalLegs,
+				clobPair.StepBaseQuantums,
 			)
 		}
 	}
@@ -1047,9 +1091,6 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 	return nil
 }
 
-// GetSubticksForCollatCheck returns the subticks for the given order.
-// If the order is a twap market order, it returns the current oracle price
-// as subticks Otherwise, it returns the order's subticks.
 func (k Keeper) GetSubticksForCollatCheck(ctx sdk.Context, order types.Order) (types.Subticks, error) {
 	if order.IsTwapOrder() && order.Subticks == uint64(0) {
 		// if twap market order, use the current oracle price as subticks
