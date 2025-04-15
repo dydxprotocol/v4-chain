@@ -731,9 +731,9 @@ export interface TwapParameters {
 
   interval: number;
   /**
-   * Price tolerance in ppm for each suborder. This will be applied to
+   * Price tolerance for each suborder. This will be applied to
    * the oracle price each time a suborder is triggered. Must be
-   * be in the range [0, 1_000_000).
+   * be in the range [0, 10000).
    */
 
   priceTolerance: number;
@@ -754,9 +754,9 @@ export interface TwapParametersSDKType {
 
   interval: number;
   /**
-   * Price tolerance in ppm for each suborder. This will be applied to
+   * Price tolerance for each suborder. This will be applied to
    * the oracle price each time a suborder is triggered. Must be
-   * be in the range [0, 1_000_000).
+   * be in the range [0, 10000).
    */
 
   price_tolerance: number;

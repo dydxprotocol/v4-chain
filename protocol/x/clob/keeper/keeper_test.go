@@ -69,7 +69,11 @@ func TestInitMemStore_StatefulOrderCount(t *testing.T) {
 	)
 
 	// Reset the stateful order count to zero.
-	ks.ClobKeeper.SetStatefulOrderCount(ks.Ctx, constants.Alice_Num0, 0)
+	ks.ClobKeeper.SetStatefulOrderCount(
+		ks.Ctx,
+		constants.Alice_Num0,
+		0,
+	)
 
 	// InitMemStore should repopulate the count.
 	ks.ClobKeeper.InitMemStore(ks.Ctx)

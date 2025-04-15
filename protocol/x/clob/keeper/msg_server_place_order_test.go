@@ -385,8 +385,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 						),
 					),
 				).Return().Once()
-			} else if tc.StatefulOrderPlacement.IsTwapOrder() {
-				// TODO: (anmol) handle indexer event here
 			} else {
 				indexerEventManager.On(
 					"AddTxnEvent",
@@ -433,15 +431,13 @@ func TestPlaceOrder_Success(t *testing.T) {
 
 			// Ensure placement exists in memstore.
 			var placements []types.OrderId
-			if !tc.StatefulOrderPlacement.IsTwapOrder() {
-				if tc.StatefulOrderPlacement.IsConditionalOrder() {
-					placements = ks.ClobKeeper.GetDeliveredConditionalOrderIds(ctx)
-				} else {
-					placements = ks.ClobKeeper.GetDeliveredLongTermOrderIds(ctx)
-				}
-				require.Len(t, placements, 1)
-				require.Equal(t, placements[0], tc.StatefulOrderPlacement.OrderId)
+			if tc.StatefulOrderPlacement.IsConditionalOrder() {
+				placements = ks.ClobKeeper.GetDeliveredConditionalOrderIds(ctx)
+			} else {
+				placements = ks.ClobKeeper.GetDeliveredLongTermOrderIds(ctx)
 			}
+			require.Len(t, placements, 1)
+			require.Equal(t, placements[0], tc.StatefulOrderPlacement.OrderId)
 
 			// Run mock assertions.
 			indexerEventManager.AssertExpectations(t)

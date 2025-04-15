@@ -63,11 +63,7 @@ func (k Keeper) SetLongTermOrderPlacement(
 
 	if !found {
 		// Increment the stateful order count.
-		k.SetStatefulOrderCount(
-			ctx,
-			order.OrderId.SubaccountId,
-			k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId)+1,
-		)
+		k.CheckAndIncrementStatefulOrderCount(ctx, order.OrderId)
 
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, metrics.StatefulOrder, metrics.Count},
@@ -146,24 +142,15 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	orderId.MustBeStatefulOrder()
 
 	store := k.fetchStateStoresForOrder(ctx, orderId)
-
-	count := k.GetStatefulOrderCount(ctx, orderId.SubaccountId)
 	orderKey := orderId.ToStateKey()
-	if store.Has(orderKey) {
-		if count == 0 {
-			log.ErrorLog(ctx, "Stateful order count is zero but order is in the store. Underflow",
-				"orderId", cometbftlog.NewLazySprintf("%+v", orderId),
-			)
-		} else {
-			count--
-		}
-	}
-
+	
 	// Delete the `StatefulOrderPlacement` from state.
 	store.Delete(orderKey)
 
 	// Set the count.
-	k.SetStatefulOrderCount(ctx, orderId.SubaccountId, count)
+	if store.Has(orderKey) {
+		k.CheckAndDecrementStatefulOrderCount(ctx, orderId)
+	}
 
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.StatefulOrderRemoved, metrics.Count},
@@ -319,19 +306,40 @@ func (k Keeper) MustRemoveStatefulOrder(
 	// If this is a Short-Term order, panic.
 	orderId.MustBeStatefulOrder()
 
-	longTermOrderPlacement, exists := k.GetLongTermOrderPlacement(ctx, orderId)
+	order, exists := k.getOrderFromStore(ctx, orderId)
 	if !exists {
 		panic(fmt.Sprintf("MustRemoveStatefulOrder: order %v does not exist", orderId))
 	}
 
-	goodTilBlockTime := longTermOrderPlacement.Order.MustGetUnixGoodTilBlockTime()
-	k.RemoveStatefulOrderIdExpiration(ctx, goodTilBlockTime, orderId)
+	// TWAP orders are not maintainted by these states because expiry and
+	// fills are updated by the generated suborders.
+	if !order.OrderId.IsTwapOrder() {
+		goodTilBlockTime := order.MustGetUnixGoodTilBlockTime()
+		k.RemoveStatefulOrderIdExpiration(ctx, goodTilBlockTime, orderId)
+		// Remove the order fill amount from state.
+		k.RemoveOrderFillAmount(ctx, orderId)
+		// Delete the Stateful order placement from state.
+	}
 
-	// Remove the order fill amount from state.
-	k.RemoveOrderFillAmount(ctx, orderId)
-
-	// Delete the Stateful order placement from state.
 	k.DeleteLongTermOrderPlacement(ctx, orderId)
+
+	if order.OrderId.IsTwapOrder() {
+		suborderId := k.twapToSuborderId(order.OrderId)
+		// GoodTilBlockTime is set to the current block time + 10 seconds.
+		// This is because an in-flight suborder will have a good-til-block time of
+		// the current block time + 3 seconds, so 10 seconds is a reasonable buffer.
+		err := k.HandleMsgCancelOrder(ctx, &types.MsgCancelOrder{
+			OrderId: suborderId,
+			GoodTilOneof: &types.MsgCancelOrder_GoodTilBlockTime{
+				GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 10),
+			},
+		})
+		// We can expect a suborder to not exist during the window while it is waiting
+		// to be triggered.
+		if err != nil && err != types.ErrStatefulOrderDoesNotExist {
+			panic(fmt.Sprintf("MustRemoveStatefulOrder: error cancelling twap order and suborder: %v", err))
+		}
+	}
 }
 
 // IsConditionalOrderTriggered checks if a given order ID is triggered or untriggered in state.
@@ -453,5 +461,36 @@ func (k Keeper) SetStatefulOrderCount(
 			subaccountId.ToStateKey(),
 			k.cdc.MustMarshal(&result),
 		)
+	}
+}
+
+func (k Keeper) CheckAndIncrementStatefulOrderCount(
+	ctx sdk.Context,
+	orderId types.OrderId,
+) {
+	if orderId.IsTwapSuborder() {
+		return
+	}
+	subaccountId := orderId.SubaccountId
+	count := k.GetStatefulOrderCount(ctx, subaccountId)
+	k.SetStatefulOrderCount(ctx, subaccountId, count+1)
+}
+
+func (k Keeper) CheckAndDecrementStatefulOrderCount(
+	ctx sdk.Context,
+	orderId types.OrderId,
+) {
+	if orderId.IsTwapSuborder() {
+		return
+	}
+
+	subaccountId := orderId.SubaccountId
+	count := k.GetStatefulOrderCount(ctx, subaccountId)
+	if count == 0 {
+		log.ErrorLog(ctx, "Stateful order count is zero but order is in the store. Underflow",
+			"orderId", cometbftlog.NewLazySprintf("%+v", orderId),
+		)
+	} else {
+		k.SetStatefulOrderCount(ctx, subaccountId, count-1)
 	}
 }

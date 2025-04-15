@@ -833,9 +833,9 @@ type TwapParameters struct {
 	// whole number, a factor of the duration, and in the range
 	// [30 (30 seconds), 3600 (1 hour)].
 	Interval uint32 `protobuf:"varint,2,opt,name=interval,proto3" json:"interval,omitempty"`
-	// Price tolerance in ppm for each suborder. This will be applied to
+	// Price tolerance for each suborder. This will be applied to
 	// the oracle price each time a suborder is triggered. Must be
-	// be in the range [0, 1_000_000).
+	// be in the range [0, 10000).
 	PriceTolerance uint32 `protobuf:"varint,3,opt,name=price_tolerance,json=priceTolerance,proto3" json:"price_tolerance,omitempty"`
 }
 

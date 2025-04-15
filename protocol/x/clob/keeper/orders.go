@@ -518,6 +518,10 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 
 	for _, orderId := range placedStatefulOrderIds {
 		orderId.MustBeStatefulOrder()
+		if orderId.IsTwapOrder() {
+			// TODO (anmol): consider implications of this. technically this is not on the clob just state
+			continue
+		}
 
 		orderPlacement, exists := k.GetLongTermOrderPlacement(ctx, orderId)
 		if !exists {
@@ -725,11 +729,11 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		}
 
 		// Fetch the highest priority order we are trying to cancel from state.
-		statefulOrderPlacement, orderToCancelExists := k.GetLongTermOrderPlacement(ctx, orderIdToCancel)
+		existingStatefulOrder, orderToCancelExists := k.getOrderFromStore(ctx, orderIdToCancel)
 
 		// The order we are cancelling must exist in uncommitted or committed state.
 		if !orderToCancelExists {
-			statefulOrderPlacement, orderToCancelExists = k.GetUncommittedStatefulOrderPlacement(ctx, orderIdToCancel)
+			statefulOrderPlacement, orderToCancelExists := k.GetUncommittedStatefulOrderPlacement(ctx, orderIdToCancel)
 
 			if !orderToCancelExists {
 				return errorsmod.Wrapf(
@@ -738,10 +742,10 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 					orderIdToCancel,
 				)
 			}
+
+			existingStatefulOrder = statefulOrderPlacement.Order
 		}
 
-		// Highest priority stateful matching order to cancel.
-		existingStatefulOrder := statefulOrderPlacement.Order
 		// Return an error if cancellation's GTBT is less than stateful order's GTBT.
 		if cancelGoodTilBlockTime < existingStatefulOrder.GetGoodTilBlockTime() {
 			return errorsmod.Wrapf(
@@ -749,7 +753,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 				"cancellation goodTilBlockTime less than stateful order goodTilBlockTime."+
 					" cancellation %+v, order %+v",
 				msgCancelOrder,
-				statefulOrderPlacement,
+				existingStatefulOrder,
 			)
 		}
 	} else {
@@ -758,6 +762,15 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		}
 	}
 	return nil
+}
+
+func (k Keeper) getOrderFromStore(ctx sdk.Context, orderId types.OrderId) (types.Order, bool) {
+	if orderId.IsTwapOrder() {
+		twapOrderPlacement, found := k.GetTwapOrderPlacement(ctx, orderId)
+		return twapOrderPlacement.Order, found
+	}
+	longTermOrderPlacement, found := k.GetLongTermOrderPlacement(ctx, orderId)
+	return longTermOrderPlacement.Order, found
 }
 
 // validateGoodTilBlock validates that the good til block (GTB) is within valid bounds, specifically
@@ -1233,28 +1246,28 @@ func (k Keeper) InitStatefulOrders(
 	}
 }
 
-// GetOraclePriceAdjustedByPercentageSubticks returns the oracle price in subticks 
-// adjusted by a given directional price tolerance in ppm, rounded to the nearest multiple 
-// of SubticksPerTick. A positive price tolerance increases the price, while a negative price 
-// tolerance decreases it.
-//
+// GetOraclePriceAdjustedByPercentageSubticks returns the oracle price in subticks adjusted by a given percentage,
+// rounded to the nearest multiple of SubticksPerTick.
+// A positive percentage increases the price, while a negative percentage decreases it.
 // For example:
-//   - price tolerance = 500_000 means 50% higher than oracle price
-//   - price tolerance = -500_000 means 50% lower than oracle price
+//   - percentage = 0.05 means 5% higher than oracle price
+//   - percentage = -0.05 means 5% lower than oracle price
 func (k Keeper) GetOraclePriceAdjustedByPercentageSubticks(
 	ctx sdk.Context,
 	clobPair types.ClobPair,
-	directionalPriceTolerancePpm int32,
+	percentage float64,
 ) uint64 {
 	oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
-	adjustment := int32(1_000_000) + directionalPriceTolerancePpm
 
-	adjustedPrice := lib.BigRatMulPpm(oraclePriceSubticksRat, uint32(adjustment))
+	multiplier := new(big.Rat).SetFloat64(1.0 + percentage)
+
+	adjustedPrice := new(big.Rat).Mul(oraclePriceSubticksRat, multiplier)
+
 	// Round to the nearest multiple of SubticksPerTick
 	roundedSubticks := lib.BigRatRoundToMultiple(
 		adjustedPrice,
 		new(big.Int).SetUint64(uint64(clobPair.SubticksPerTick)),
-		directionalPriceTolerancePpm >= 0, // round up for positive adjustments, down for negative
+		percentage >= 0, // round up for positive adjustments, down for negative
 	)
 
 	return roundedSubticks.Uint64()

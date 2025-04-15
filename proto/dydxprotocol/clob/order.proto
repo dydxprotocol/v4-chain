@@ -243,9 +243,9 @@ message TwapParameters {
   // [30 (30 seconds), 3600 (1 hour)].
   uint32 interval = 2;
 
-  // Price tolerance in ppm for each suborder. This will be applied to
+  // Price tolerance for each suborder. This will be applied to
   // the oracle price each time a suborder is triggered. Must be
-  // be in the range [0, 1_000_000).
+  // be in the range [0, 10000).
   uint32 price_tolerance = 3;
 }
 

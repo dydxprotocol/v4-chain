@@ -14,16 +14,16 @@ const (
 	MinTwapOrderInterval uint32 = 30
 
 	// the maximum interval in seconds for TWAP orders.
-	MaxTwapOrderInterval uint32 = 3_600
+	MaxTwapOrderInterval uint32 = 3600
 
 	// the minimum duration in seconds for TWAP orders.
 	MinTwapOrderDuration uint32 = 300 // 5 minutes
 
 	// the maximum duration in seconds for TWAP orders.
-	MaxTwapOrderDuration uint32 = 86_400 // 24 hours
+	MaxTwapOrderDuration uint32 = 86400 // 24 hours
 
-	// the maximum price tolerance for suborders in ppm.
-	MaxTwapOrderPriceTolerance uint32 = 1_000_000
+	// the maximum price tolerance for suborders in basis points.
+	MaxTwapOrderPriceTolerance uint32 = 10000
 )
 
 var _ sdk.Msg = &MsgPlaceOrder{}

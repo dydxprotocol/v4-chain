@@ -129,12 +129,6 @@ func (k Keeper) HandleMsgPlaceOrder(
 			order.OrderId,
 		)
 		// TODO: add indexer event here
-	} else if order.IsTwapOrder() {
-		// we should not be adding twap orders to the delivered 
-		// long term list to prevent needing to special case for 
-		// twap orders in `PlaceStatefulOrdersFromLastBlock`
-		
-		// TODO: (anmol) add indexer event here
 	} else {
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,

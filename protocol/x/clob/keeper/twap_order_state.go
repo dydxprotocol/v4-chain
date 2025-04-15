@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"math"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -14,6 +12,21 @@ const (
 
 	TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE = 3
 )
+
+type twapOperationType int
+
+const (
+	parentTwapCancelled twapOperationType = iota
+	parentTwapCompleted
+	createSuborder
+)
+
+type twapOrderOperation struct {
+	operationType      twapOperationType
+	keyToDelete        []byte
+	suborderToPlace    *types.Order
+	twapOrderPlacement *types.TwapOrderPlacement
+}
 
 func (k Keeper) SetTWAPOrderPlacement(ctx sdk.Context,
 	order types.Order,
@@ -106,15 +119,9 @@ func (k Keeper) AddSuborderToTriggerStore(
 func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 	triggerStore := k.GetTWAPTriggerOrderPlacementStore(ctx)
 	blockTime := ctx.BlockTime().Unix()
+	var operationsToProcess []twapOrderOperation
+
 	iterator := triggerStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	var operationsToProcess []struct {
-		keyToDelete        []byte
-		suborderToPlace    types.Order
-		twapOrderPlacement types.TwapOrderPlacement
-	}
-
 	for ; iterator.Valid(); iterator.Next() {
 		var orderId types.OrderId
 		k.cdc.MustUnmarshal(iterator.Key()[8:], &orderId)
@@ -134,19 +141,26 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 
 		twapOrderPlacement, found := k.GetTwapOrderPlacement(ctx, parentOrderId)
 		if !found {
-			panic("parent twap order not found") // TODO: (anmol) handle order cancellation
+			// If parent TWAP was cancelled, do not place any pending suborders.
+			operationsToProcess = append(operationsToProcess, twapOrderOperation{
+				operationType:      parentTwapCancelled,
+				keyToDelete:        append([]byte{}, iterator.Key()...),
+				suborderToPlace:    nil,
+				twapOrderPlacement: nil,
+			})
+			continue
 		}
 
-		order := k.GenerateSuborder(ctx, orderId, twapOrderPlacement, blockTime)
-
-		operationsToProcess = append(operationsToProcess, struct {
-			keyToDelete        []byte
-			suborderToPlace    types.Order
-			twapOrderPlacement types.TwapOrderPlacement
-		}{
+		operationType := createSuborder
+		order, isGenerated := k.generateSuborder(ctx, orderId, twapOrderPlacement, blockTime)
+		if !isGenerated {
+			operationType = parentTwapCompleted
+		}
+		operationsToProcess = append(operationsToProcess, twapOrderOperation{
+			operationType:      operationType,
 			keyToDelete:        append([]byte{}, iterator.Key()...),
 			suborderToPlace:    order,
-			twapOrderPlacement: twapOrderPlacement,
+			twapOrderPlacement: &twapOrderPlacement,
 		})
 	}
 	iterator.Close()
@@ -155,48 +169,53 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 		// Delete from trigger store
 		triggerStore.Delete(op.keyToDelete)
 
-		// decrement remaining legs
-		k.DecrementTwapOrderRemainingLegs(ctx, &op.twapOrderPlacement)
+		switch op.operationType {
+			case parentTwapCancelled:
+				// Suborder deleted and should not be placed
+			case parentTwapCompleted:
+				k.DeleteTWAPOrderPlacement(ctx, *op.twapOrderPlacement)
+			case createSuborder:
+				// decrement remaining legs
+				k.DecrementTwapOrderRemainingLegs(ctx, *op.twapOrderPlacement)
+				// add the next suborder to the trigger store
+				k.AddSuborderToTriggerStore(
+					ctx,
+					op.suborderToPlace.OrderId,
+					int64(op.twapOrderPlacement.Order.TwapParameters.Interval),
+				)
 
-		if op.twapOrderPlacement.RemainingLegs == 0 {
-			// remove the parent twap order from the store
-			store := k.GetTWAPOrderPlacementStore(ctx)
-			orderKey := op.twapOrderPlacement.Order.OrderId.ToStateKey()
-			store.Delete(orderKey)
-			// TODO: (anmol) handle missing parent order case
-			// TODO: (anmol) emit event?
-			continue
-		}
-
-		// add the next suborder to the trigger store
-		k.AddSuborderToTriggerStore(
-			ctx,
-			op.suborderToPlace.OrderId,
-			int64(op.twapOrderPlacement.Order.TwapParameters.Interval),
-		)
-
-		// place triggered suborder
-		err := k.HandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: op.suborderToPlace}, true)
-		if err != nil {
-			continue // TODO: (anmol) handle suborder placement failure
+				// place triggered suborder
+				err := k.HandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: *op.suborderToPlace}, true)
+				if err != nil {
+					k.DeleteTWAPOrderPlacement(ctx, *op.twapOrderPlacement)
+				}
+			default:
+				panic("unsupported twap operation type can not be processed")
 		}
 	}
 }
 
+func (k Keeper) DeleteTWAPOrderPlacement(
+	ctx sdk.Context,
+	twapOrderPlacement types.TwapOrderPlacement,
+) {
+	store := k.GetTWAPOrderPlacementStore(ctx)
+	orderKey := twapOrderPlacement.Order.OrderId.ToStateKey()
+	store.Delete(orderKey)
+}
+
 func (k Keeper) DecrementTwapOrderRemainingLegs(
 	ctx sdk.Context,
-	twapOrderPlacement *types.TwapOrderPlacement,
+	twapOrderPlacement types.TwapOrderPlacement,
 ) {
-	if twapOrderPlacement.RemainingLegs == 0 {
-		return // TODO: (anmol) handle end of twap order case
+	store := k.GetTWAPOrderPlacementStore(ctx)
+	orderKey := twapOrderPlacement.Order.OrderId.ToStateKey()
+	if twapOrderPlacement.IsCompleted() {
+		panic("twap order has already been completed")
 	}
 
 	twapOrderPlacement.RemainingLegs--
-
-	// Store updated state
-	store := k.GetTWAPOrderPlacementStore(ctx)
-	orderKey := twapOrderPlacement.Order.OrderId.ToStateKey()
-	twapOrderPlacementBytes := k.cdc.MustMarshal(twapOrderPlacement)
+	twapOrderPlacementBytes := k.cdc.MustMarshal(&twapOrderPlacement)
 	store.Set(orderKey, twapOrderPlacementBytes)
 }
 
@@ -231,41 +250,46 @@ func (k Keeper) calculateSuborderQuantums(
 	twapOrderPlacement types.TwapOrderPlacement,
 	clobPair types.ClobPair,
 ) uint64 {
-	originalQuantumsPerLeg := float64(twapOrderPlacement.Order.Quantums) / float64(twapOrderPlacement.Order.GetTotalLegsTWAPOrder())
+	// TODO: (anmol) ensure rounding is correct. same as subticks (check factor) and min
+	// total order size > min_size * legs
+	originalQuantumsPerLeg := twapOrderPlacement.Order.Quantums / uint64(twapOrderPlacement.Order.GetTotalLegsTWAPOrder())
 
 	// Calculate the quantums for the suborder capping at 3x the original quantums per leg
-	remainingPerLeg := float64(twapOrderPlacement.RemainingQuantums) / float64(twapOrderPlacement.RemainingLegs)
+	remainingPerLeg := twapOrderPlacement.RemainingQuantums / uint64(twapOrderPlacement.RemainingLegs)
+
 	suborderQuantums := lib.Min(remainingPerLeg, TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE*originalQuantumsPerLeg)
 
 	// Round down to nearest multiple of StepBaseQuantums
-	quantumsByStepBaseQuantums := uint64(math.Floor(suborderQuantums / float64(clobPair.StepBaseQuantums)))
-	suborderQuantumsRounded := quantumsByStepBaseQuantums * clobPair.StepBaseQuantums
+	suborderQuantumsRounded := suborderQuantums - (suborderQuantums % clobPair.StepBaseQuantums)
 
 	return suborderQuantumsRounded
 }
 
-func (k Keeper) GenerateSuborder(
+func (k Keeper) generateSuborder(
 	ctx sdk.Context,
 	suborderId types.OrderId,
 	twapOrderPlacement types.TwapOrderPlacement,
 	blockTime int64,
-) types.Order {
+) (*types.Order, bool) {
+	if twapOrderPlacement.IsCompleted() {
+		return nil, false
+	}
+
 	parentOrder := twapOrderPlacement.Order
 	order := types.Order{
 		OrderId:    suborderId,
 		Side:       twapOrderPlacement.Order.Side,
-		ReduceOnly: twapOrderPlacement.Order.ReduceOnly,
+		ReduceOnly: twapOrderPlacement.Order.ReduceOnly, // TODO: (anmol) client metadata?
 	}
 
-	priceTolerancePpm := int32(parentOrder.TwapParameters.PriceTolerance)
+	priceAdjustment := parentOrder.TwapParameters.PriceTolerance
 	if parentOrder.Side == types.Order_SIDE_SELL {
-		// for sell orders, we want to adjust the price down
-		priceTolerancePpm = -priceTolerancePpm
+		priceAdjustment = -priceAdjustment
 	}
 
 	// calculate the suborder price with slippage adjustment
 	clobPair := k.mustGetClobPair(ctx, parentOrder.GetClobPairId())
-	order.Subticks = k.GetOraclePriceAdjustedByPercentageSubticks(ctx, clobPair, priceTolerancePpm)
+	order.Subticks = k.GetOraclePriceAdjustedByPercentageSubticks(ctx, clobPair, float64(priceAdjustment)/10000.0)
 
 	// calculate the suborder quantums based on remaining quantums and legs
 	order.Quantums = k.calculateSuborderQuantums(twapOrderPlacement, clobPair)
@@ -275,5 +299,5 @@ func (k Keeper) GenerateSuborder(
 		GoodTilBlockTime: uint32(blockTime + TWAP_SUBORDER_GOOD_TIL_BLOCK_TIME_OFFSET),
 	}
 
-	return order
+	return &order, true
 }
