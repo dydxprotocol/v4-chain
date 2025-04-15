@@ -31,7 +31,6 @@ export default async function runTask(): Promise<void> {
       {
         sortSides: true,
         uncrossBook: true,
-        limitPerSide: 10,
       },
     );
     statOrderbook(uncrossedOrderbookLevels, market, 'uncrossed_orderbook');
@@ -42,7 +41,6 @@ export default async function runTask(): Promise<void> {
       {
         sortSides: true,
         uncrossBook: false,
-        limitPerSide: 10,
       },
     );
     statOrderbook(crossedOrderbookLevels, market, 'crossed_orderbook');
@@ -54,19 +52,24 @@ function statOrderbook(
   perpetualMarket: PerpetualMarketFromDatabase,
   stat: string,
 ) {
-  const clobPairId: string = perpetualMarket.clobPairId;
+  const ticker: string = perpetualMarket.ticker;
   // When querying the orderbook, the highest/best bid is first and the lowest/best ask is first.
   // Don't stat best bid if there are no bids in the orderbook
   if (orderbookLevels.bids.length > 0) {
     stats.gauge(
       `${config.SERVICE_NAME}.${stat}.best_bid_human`,
       Big(orderbookLevels.bids[0].humanPrice).toNumber(),
-      { clob_pair_id: clobPairId },
+      { ticker: ticker },
     );
     stats.gauge(
       `${config.SERVICE_NAME}.${stat}.best_bid_subticks`,
       priceToSubticks(orderbookLevels.bids[0].humanPrice, perpetualMarket),
-      { clob_pair_id: clobPairId },
+      { ticker: ticker },
+    );
+    stats.gauge(
+      `${config.SERVICE_NAME}.${stat}.num_bids`,
+      orderbookLevels.bids.length,
+      { ticker: ticker },
     );
   }
   // Don't stat best ask if there are no asks in the orderbook
@@ -74,19 +77,24 @@ function statOrderbook(
     stats.gauge(
       `${config.SERVICE_NAME}.${stat}.best_ask_human`,
       Big(orderbookLevels.asks[0].humanPrice).toNumber(),
-      { clob_pair_id: clobPairId },
+      { ticker: ticker },
     );
     stats.gauge(
       `${config.SERVICE_NAME}.${stat}.best_ask_subticks`,
       priceToSubticks(orderbookLevels.asks[0].humanPrice, perpetualMarket),
-      { clob_pair_id: clobPairId },
+      { ticker: ticker },
+    );
+    stats.gauge(
+      `${config.SERVICE_NAME}.${stat}.num_asks`,
+      orderbookLevels.asks.length,
+      { ticker: ticker },
     );
   }
   logger.info({
     at: 'orderbook-instrumentation#statOrderbook',
-    message: `Track ${stat} for ${clobPairId}`,
-    bids: JSON.stringify(orderbookLevels.bids),
-    asks: JSON.stringify(orderbookLevels.asks),
+    message: `Track ${stat} for ${ticker}`,
+    bids: JSON.stringify(orderbookLevels.bids.slice(0, 10)),
+    asks: JSON.stringify(orderbookLevels.asks.slice(0, 10)),
   });
 }
 
