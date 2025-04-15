@@ -6,19 +6,19 @@ import (
 	"testing"
 	"time"
 
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTWAPOrderTriggerStoreOrderingSameOrderId(t *testing.T) {
@@ -280,9 +280,9 @@ func TestSetTWAPOrderPlacement(t *testing.T) {
 func TestGenerateSuborder(t *testing.T) {
 	tests := map[string]struct {
 		twapOrderPlacement types.TwapOrderPlacement
-		blockTime        int64
-		clobPair         types.ClobPair
-		expectedOrder    types.Order
+		blockTime          int64
+		clobPair           types.ClobPair
+		expectedOrder      types.Order
 	}{
 		"buy order with positive price tolerance": {
 			twapOrderPlacement: types.TwapOrderPlacement{
@@ -293,22 +293,22 @@ func TestGenerateSuborder(t *testing.T) {
 						OrderFlags:   types.OrderIdFlags_Twap,
 						ClobPairId:   0,
 					},
-					Side: types.Order_SIDE_BUY,
+					Side:     types.Order_SIDE_BUY,
 					Quantums: 1000,
 					TwapParameters: &types.TwapParameters{
-						Duration: 360,
-						Interval: 60,
+						Duration:       360,
+						Interval:       60,
 						PriceTolerance: 500_000, // 50% tolerance
 					},
 				},
-				RemainingLegs: 5,
+				RemainingLegs:     5,
 				RemainingQuantums: 1000,
 			},
 			blockTime: 1000,
 			clobPair: types.ClobPair{
-				Id:                     0,
-				StepBaseQuantums:      100,
-				SubticksPerTick:       100,
+				Id:                        0,
+				StepBaseQuantums:          100,
+				SubticksPerTick:           100,
 				QuantumConversionExponent: -8,
 			},
 			expectedOrder: types.Order{
@@ -318,7 +318,7 @@ func TestGenerateSuborder(t *testing.T) {
 					OrderFlags:   types.OrderIdFlags_TwapSuborder,
 					ClobPairId:   0,
 				},
-				Side: types.Order_SIDE_BUY,
+				Side:     types.Order_SIDE_BUY,
 				Quantums: 200,
 				Subticks: 1500,
 				GoodTilOneof: &types.Order_GoodTilBlockTime{
@@ -335,22 +335,22 @@ func TestGenerateSuborder(t *testing.T) {
 						OrderFlags:   types.OrderIdFlags_Twap,
 						ClobPairId:   0,
 					},
-					Side: types.Order_SIDE_SELL,
+					Side:     types.Order_SIDE_SELL,
 					Quantums: 1000,
 					TwapParameters: &types.TwapParameters{
-						Duration: 360,
-						Interval: 60,
+						Duration:       360,
+						Interval:       60,
 						PriceTolerance: 500_000, // 50% tolerance
 					},
 				},
-				RemainingLegs: 5,
+				RemainingLegs:     5,
 				RemainingQuantums: 1000,
 			},
 			blockTime: 1000,
 			clobPair: types.ClobPair{
-				Id:                     0,
-				StepBaseQuantums:      100,
-				SubticksPerTick:       100,
+				Id:                        0,
+				StepBaseQuantums:          100,
+				SubticksPerTick:           100,
 				QuantumConversionExponent: -8,
 			},
 			expectedOrder: types.Order{
@@ -360,7 +360,7 @@ func TestGenerateSuborder(t *testing.T) {
 					OrderFlags:   types.OrderIdFlags_TwapSuborder,
 					ClobPairId:   0,
 				},
-				Side: types.Order_SIDE_SELL,
+				Side:     types.Order_SIDE_SELL,
 				Quantums: 200,
 				Subticks: 500,
 				GoodTilOneof: &types.Order_GoodTilBlockTime{
@@ -377,22 +377,22 @@ func TestGenerateSuborder(t *testing.T) {
 						OrderFlags:   types.OrderIdFlags_Twap,
 						ClobPairId:   0,
 					},
-					Side: types.Order_SIDE_BUY,
+					Side:     types.Order_SIDE_BUY,
 					Quantums: 1000,
 					TwapParameters: &types.TwapParameters{
-						Duration: 360,
-						Interval: 60,
+						Duration:       360,
+						Interval:       60,
 						PriceTolerance: 25_000, // 2.5% tolerance
 					},
 				},
-				RemainingLegs: 5,
+				RemainingLegs:     5,
 				RemainingQuantums: 1000,
 			},
 			blockTime: 1000,
 			clobPair: types.ClobPair{
-				Id:                     0,
-				StepBaseQuantums:      100,
-				SubticksPerTick:       100,
+				Id:                        0,
+				StepBaseQuantums:          100,
+				SubticksPerTick:           100,
 				QuantumConversionExponent: -8,
 			},
 			expectedOrder: types.Order{
@@ -402,7 +402,7 @@ func TestGenerateSuborder(t *testing.T) {
 					OrderFlags:   types.OrderIdFlags_TwapSuborder,
 					ClobPairId:   0,
 				},
-				Side: types.Order_SIDE_BUY,
+				Side:     types.Order_SIDE_BUY,
 				Quantums: 200,
 				Subticks: 1030, // 1000 * (1 + 0.025) rounded up to nearest 10
 				GoodTilOneof: &types.Order_GoodTilBlockTime{
@@ -419,22 +419,22 @@ func TestGenerateSuborder(t *testing.T) {
 						OrderFlags:   types.OrderIdFlags_Twap,
 						ClobPairId:   0,
 					},
-					Side: types.Order_SIDE_SELL,
+					Side:     types.Order_SIDE_SELL,
 					Quantums: 1000,
 					TwapParameters: &types.TwapParameters{
-						Duration: 360,
-						Interval: 60,
+						Duration:       360,
+						Interval:       60,
 						PriceTolerance: 25_000, // 2.5% tolerance
 					},
 				},
-				RemainingLegs: 5,
+				RemainingLegs:     5,
 				RemainingQuantums: 1000,
 			},
 			blockTime: 1000,
 			clobPair: types.ClobPair{
-				Id:                     0,
-				StepBaseQuantums:      100,
-				SubticksPerTick:       100,
+				Id:                        0,
+				StepBaseQuantums:          100,
+				SubticksPerTick:           100,
 				QuantumConversionExponent: -8,
 			},
 			expectedOrder: types.Order{
@@ -444,7 +444,7 @@ func TestGenerateSuborder(t *testing.T) {
 					OrderFlags:   types.OrderIdFlags_TwapSuborder,
 					ClobPairId:   0,
 				},
-				Side: types.Order_SIDE_SELL,
+				Side:     types.Order_SIDE_SELL,
 				Quantums: 200,
 				Subticks: 970, // 1000 * (1 - 0.025) rounded down to nearest 10
 				GoodTilOneof: &types.Order_GoodTilBlockTime{
@@ -461,22 +461,22 @@ func TestGenerateSuborder(t *testing.T) {
 						OrderFlags:   types.OrderIdFlags_Twap,
 						ClobPairId:   0,
 					},
-					Side: types.Order_SIDE_BUY,
+					Side:     types.Order_SIDE_BUY,
 					Quantums: 1000,
 					TwapParameters: &types.TwapParameters{
-						Duration: 360,
-						Interval: 60,
+						Duration:       360,
+						Interval:       60,
 						PriceTolerance: 25_000, // 2.5% tolerance
 					},
 				},
-				RemainingLegs: 6,
+				RemainingLegs:     6,
 				RemainingQuantums: 1000,
 			},
 			blockTime: 1000,
 			clobPair: types.ClobPair{
-				Id:                     0,
-				StepBaseQuantums:      100,
-				SubticksPerTick:       100,
+				Id:                        0,
+				StepBaseQuantums:          100,
+				SubticksPerTick:           100,
 				QuantumConversionExponent: -8,
 			},
 			expectedOrder: types.Order{
@@ -486,8 +486,8 @@ func TestGenerateSuborder(t *testing.T) {
 					OrderFlags:   types.OrderIdFlags_TwapSuborder,
 					ClobPairId:   0,
 				},
-				Side: types.Order_SIDE_BUY,
-				Quantums: 165, // 1000 / 6 = 166.67 rounded down to nearest 5 (step base quantums)
+				Side:     types.Order_SIDE_BUY,
+				Quantums: 165,  // 1000 / 6 = 166.67 rounded down to nearest 5 (step base quantums)
 				Subticks: 1030, // 1000 * (1 + 0.025) rounded up to nearest 10
 				GoodTilOneof: &types.Order_GoodTilBlockTime{
 					GoodTilBlockTime: 1003,
@@ -503,22 +503,22 @@ func TestGenerateSuborder(t *testing.T) {
 						OrderFlags:   types.OrderIdFlags_Twap,
 						ClobPairId:   0,
 					},
-					Side: types.Order_SIDE_BUY,
+					Side:     types.Order_SIDE_BUY,
 					Quantums: 1000,
 					TwapParameters: &types.TwapParameters{
-						Duration: 360,
-						Interval: 60,
+						Duration:       360,
+						Interval:       60,
 						PriceTolerance: 25_000, // 2.5% tolerance
 					},
 				},
-				RemainingLegs: 1,
+				RemainingLegs:     1,
 				RemainingQuantums: 1000,
 			},
 			blockTime: 1000,
 			clobPair: types.ClobPair{
-				Id:                     0,
-				StepBaseQuantums:      100,
-				SubticksPerTick:       100,
+				Id:                        0,
+				StepBaseQuantums:          100,
+				SubticksPerTick:           100,
 				QuantumConversionExponent: -8,
 			},
 			expectedOrder: types.Order{
@@ -528,8 +528,8 @@ func TestGenerateSuborder(t *testing.T) {
 					OrderFlags:   types.OrderIdFlags_TwapSuborder,
 					ClobPairId:   0,
 				},
-				Side: types.Order_SIDE_BUY,
-				Quantums: 500, // (1000 / 6) * 3
+				Side:     types.Order_SIDE_BUY,
+				Quantums: 500,  // (1000 / 6) * 3
 				Subticks: 1030, // 1000 * (1 + 0.025) rounded up to nearest 10
 				GoodTilOneof: &types.Order_GoodTilBlockTime{
 					GoodTilBlockTime: 1003,
@@ -584,7 +584,7 @@ func TestGenerateSuborder(t *testing.T) {
 					),
 				},
 			)
-			
+
 			clobPair := *clobtest.GenerateClobPair(
 				clobtest.WithId(tc.twapOrderPlacement.Order.OrderId.ClobPairId),
 				clobtest.WithPerpetualId(tc.twapOrderPlacement.Order.OrderId.ClobPairId),
@@ -610,4 +610,3 @@ func TestGenerateSuborder(t *testing.T) {
 		})
 	}
 }
-

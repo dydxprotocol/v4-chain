@@ -1233,9 +1233,9 @@ func (k Keeper) InitStatefulOrders(
 	}
 }
 
-// GetOraclePriceAdjustedByPercentageSubticks returns the oracle price in subticks 
-// adjusted by a given directional price tolerance in ppm, rounded to the nearest multiple 
-// of SubticksPerTick. A positive price tolerance increases the price, while a negative price 
+// GetOraclePriceAdjustedByPercentageSubticks returns the oracle price in subticks
+// adjusted by a given directional price tolerance in ppm, rounded to the nearest multiple
+// of SubticksPerTick. A positive price tolerance increases the price, while a negative price
 // tolerance decreases it.
 //
 // For example:

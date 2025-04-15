@@ -231,11 +231,19 @@ func (k Keeper) calculateSuborderQuantums(
 	twapOrderPlacement types.TwapOrderPlacement,
 	clobPair types.ClobPair,
 ) uint64 {
-	originalQuantumsPerLeg := float64(twapOrderPlacement.Order.Quantums) / float64(twapOrderPlacement.Order.GetTotalLegsTWAPOrder())
+	totalLegs := twapOrderPlacement.Order.GetTotalLegsTWAPOrder()
+	originalQuantums := twapOrderPlacement.Order.Quantums
+	originalQuantumsPerLeg := float64(originalQuantums) / float64(totalLegs)
 
 	// Calculate the quantums for the suborder capping at 3x the original quantums per leg
-	remainingPerLeg := float64(twapOrderPlacement.RemainingQuantums) / float64(twapOrderPlacement.RemainingLegs)
-	suborderQuantums := lib.Min(remainingPerLeg, TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE*originalQuantumsPerLeg)
+	remainingQuantums := twapOrderPlacement.RemainingQuantums
+	remainingLegs := twapOrderPlacement.RemainingLegs
+	remainingQuantumsPerLeg := float64(remainingQuantums) / float64(remainingLegs)
+
+	suborderQuantums := lib.Min(
+		remainingQuantumsPerLeg,
+		TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE*originalQuantumsPerLeg,
+	)
 
 	// Round down to nearest multiple of StepBaseQuantums
 	quantumsByStepBaseQuantums := uint64(math.Floor(suborderQuantums / float64(clobPair.StepBaseQuantums)))
