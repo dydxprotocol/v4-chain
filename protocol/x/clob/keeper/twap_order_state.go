@@ -197,14 +197,6 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 				"operationType", op.operationType,
 			)
 		}
-
-		if op.twapOrderPlacement.RemainingLegs > 0 {
-			k.AddSuborderToTriggerStore(
-				ctx,
-				op.suborderToPlace.OrderId,
-				int64(op.twapOrderPlacement.Order.TwapParameters.Interval),
-			)
-		}
 	}
 }
 
