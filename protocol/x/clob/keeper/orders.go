@@ -980,15 +980,11 @@ func (k Keeper) PerformStatefulOrderValidation(
 	}
 
 	if order.IsTwapOrder() {
-		totalLegs := order.GetTotalLegsTWAPOrder()
-		minOrderSize := uint64(totalLegs) * clobPair.StepBaseQuantums
-		if order.Quantums < minOrderSize {
+		num_suborders := uint64(order.TwapParameters.Duration / order.TwapParameters.Interval)
+		if order.Quantums/num_suborders < clobPair.StepBaseQuantums {
 			return errorsmod.Wrapf(
 				types.ErrInvalidPlaceOrder,
-				"Generated TWAP suborder sizes (%v/%v) must be greater than min size for clob pair %v",
-				order.Quantums,
-				totalLegs,
-				clobPair.StepBaseQuantums,
+				"TWAP suborder sizes must be greater than the minimum order size for the market",
 			)
 		}
 	}
