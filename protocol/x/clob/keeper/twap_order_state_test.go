@@ -10,9 +10,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
-	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
-	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
@@ -22,10 +19,6 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 )
 
 func TestTWAPOrderTriggerStoreOrderingBasedOffTimestamp(t *testing.T) {
