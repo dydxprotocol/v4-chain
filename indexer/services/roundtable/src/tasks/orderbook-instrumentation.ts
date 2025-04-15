@@ -59,17 +59,17 @@ function statOrderbook(
     stats.gauge(
       `${config.SERVICE_NAME}.${stat}.best_bid_human`,
       Big(orderbookLevels.bids[0].humanPrice).toNumber(),
-      { ticker: ticker },
+      { ticker },
     );
     stats.gauge(
       `${config.SERVICE_NAME}.${stat}.best_bid_subticks`,
       priceToSubticks(orderbookLevels.bids[0].humanPrice, perpetualMarket),
-      { ticker: ticker },
+      { ticker },
     );
     stats.gauge(
-      `${config.SERVICE_NAME}.${stat}.num_bids`,
+      `${config.SERVICE_NAME}.${stat}.num_bid_levels`,
       orderbookLevels.bids.length,
-      { ticker: ticker },
+      { ticker },
     );
   }
   // Don't stat best ask if there are no asks in the orderbook
@@ -77,17 +77,17 @@ function statOrderbook(
     stats.gauge(
       `${config.SERVICE_NAME}.${stat}.best_ask_human`,
       Big(orderbookLevels.asks[0].humanPrice).toNumber(),
-      { ticker: ticker },
+      { ticker },
     );
     stats.gauge(
       `${config.SERVICE_NAME}.${stat}.best_ask_subticks`,
       priceToSubticks(orderbookLevels.asks[0].humanPrice, perpetualMarket),
-      { ticker: ticker },
+      { ticker },
     );
     stats.gauge(
-      `${config.SERVICE_NAME}.${stat}.num_asks`,
+      `${config.SERVICE_NAME}.${stat}.num_ask_levels`,
       orderbookLevels.asks.length,
-      { ticker: ticker },
+      { ticker },
     );
   }
   logger.info({
