@@ -144,12 +144,13 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 
 	store := k.fetchStateStoresForOrder(ctx, orderId)
 	orderKey := orderId.ToStateKey()
+	orderExists := store.Has(orderKey)
 
 	// Delete the `StatefulOrderPlacement` from state.
 	store.Delete(orderKey)
 
 	// Set the count.
-	if store.Has(orderKey) {
+	if orderExists {
 		k.CheckAndDecrementStatefulOrderCount(ctx, orderId)
 	}
 
