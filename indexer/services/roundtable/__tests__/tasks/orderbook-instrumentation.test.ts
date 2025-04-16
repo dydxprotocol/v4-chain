@@ -95,6 +95,13 @@ describe('orderbook-instrumentation', () => {
             sizeDeltaInQuantums: '3500',
             client: redisClient,
           }),
+          OrderbookLevelsCache.updatePriceLevel({
+            ticker: perpetualMarket.ticker,
+            side: OrderSide.SELL,
+            humanPrice: '46800',
+            sizeDeltaInQuantums: '1500',
+            client: redisClient,
+          }),
         ]);
       },
       ));
@@ -102,7 +109,7 @@ describe('orderbook-instrumentation', () => {
     await orderbookInstrumentationTask();
 
     perpetualMarkets.forEach((perpetualMarket: PerpetualMarketFromDatabase) => {
-      const tags: Object = { clob_pair_id: perpetualMarket.clobPairId };
+      const tags: Object = { ticker: perpetualMarket.ticker };
 
       // Check for human prices being gauged
       expect(stats.gauge).toHaveBeenCalledWith(
@@ -116,6 +123,11 @@ describe('orderbook-instrumentation', () => {
         tags,
       );
       expect(stats.gauge).toHaveBeenCalledWith(
+        'roundtable.crossed_orderbook.num_bid_levels',
+        3,
+        tags,
+      );
+      expect(stats.gauge).toHaveBeenCalledWith(
         'roundtable.uncrossed_orderbook.best_ask_human',
         45300,
         tags,
@@ -123,6 +135,11 @@ describe('orderbook-instrumentation', () => {
       expect(stats.gauge).toHaveBeenCalledWith(
         'roundtable.crossed_orderbook.best_ask_human',
         45000,
+        tags,
+      );
+      expect(stats.gauge).toHaveBeenCalledWith(
+        'roundtable.crossed_orderbook.num_ask_levels',
+        4,
         tags,
       );
 
