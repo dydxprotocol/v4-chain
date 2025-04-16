@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	"github.com/skip-mev/slinky/service/servers/oracle/types"
+	"github.com/dydxprotocol/slinky/service/servers/oracle/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"

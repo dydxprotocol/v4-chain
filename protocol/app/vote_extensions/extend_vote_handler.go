@@ -2,8 +2,9 @@ package vote_extensions
 
 import (
 	"fmt"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	"math/big"
+
+	slinkytypes "github.com/dydxprotocol/slinky/pkg/types"
 
 	cometabci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,7 +39,7 @@ func (n NoopPriceApplier) GetPricesForValidator(_ sdk.ConsAddress) map[slinkytyp
 //     latest available market prices
 //  4. Calling the Slinky ExtendVoteHandler to handle the rest of ExtendVote
 //
-// See https://github.com/skip-mev/slinky/blob/a5b1d3d3a2723e4746b5d588c512d7cc052dc0ff/abci/ve/vote_extension.go#L77
+// See https://github.com/dydxprotocol/slinky/blob/a5b1d3d3a2723e4746b5d588c512d7cc052dc0ff/abci/ve/vote_extension.go#L77
 // for the Slinky ExtendVoteHandler logic.
 func (e *ExtendVoteHandler) ExtendVoteHandler() sdk.ExtendVoteHandler {
 	return func(ctx sdk.Context, req *cometabci.RequestExtendVote) (resp *cometabci.ResponseExtendVote, err error) {
