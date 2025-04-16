@@ -35,7 +35,7 @@ func (k Keeper) FetchOrderFromOrderId(
 	}
 
 	// For stateful orders, fetch from state. Do not fetch from untriggered conditional orders.
-	if orderId.IsLongTermOrder() {
+	if orderId.IsLongTermOrder() || orderId.IsTwapSuborder() {
 		statefulOrderPlacement, found := k.GetLongTermOrderPlacement(ctx, orderId)
 		if !found {
 			return order, errorsmod.Wrapf(
