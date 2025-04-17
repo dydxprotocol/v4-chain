@@ -6,11 +6,11 @@ import (
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	marketmaptypes "github.com/dydxprotocol/slinky/x/marketmap/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 )
 
 type PricesKeeper interface {

@@ -11,7 +11,7 @@ require (
 	github.com/cometbft/cometbft v0.38.15
 	github.com/cometbft/cometbft-db v0.15.0 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.50.10
+	github.com/cosmos/cosmos-sdk v0.50.11
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/go-playground/validator/v10 v10.14.0
@@ -51,15 +51,16 @@ require (
 	cosmossdk.io/x/circuit v0.1.1
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.1.0
-	cosmossdk.io/x/tx v0.13.5
+	cosmossdk.io/x/tx v0.13.7
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/burdiyan/kafkautil v0.0.0-20190131162249-eaf83ed22d5b
-	github.com/cosmos/cosmos-db v1.0.2
-	github.com/cosmos/iavl v1.2.0
+	github.com/cosmos/cosmos-db v1.1.0
+	github.com/cosmos/iavl v1.2.2
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/v8 v8.5.1
 	github.com/cosmos/rosetta v0.50.3
 	github.com/deckarep/golang-set/v2 v2.6.0
+	github.com/dydxprotocol/slinky v1.3.2
 	github.com/ethereum/go-ethereum v1.14.11
 	github.com/go-kit/log v0.2.1
 	github.com/gorilla/websocket v1.5.3
@@ -69,7 +70,6 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rs/zerolog v1.33.0
 	github.com/shopspring/decimal v1.3.1
-	github.com/skip-mev/slinky v1.1.0
 	github.com/spf13/viper v1.19.0
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1
@@ -185,7 +185,7 @@ require (
 	github.com/eapache/go-resiliency v1.3.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230111030713-bf00bc1b83b6 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
-	github.com/emicklei/dot v1.6.1 // indirect
+	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/ethereum/c-kzg-4844 v1.0.0 // indirect
 	github.com/ethereum/go-verkle v0.1.1-0.20240829091221-dffa7562dbe9 // indirect
 	github.com/ettle/strcase v0.2.0 // indirect

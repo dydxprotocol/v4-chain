@@ -22,6 +22,7 @@ import (
 	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 	listingmodule "github.com/dydxprotocol/v4-chain/protocol/x/listing"
 
+	marketmapmodule "github.com/dydxprotocol/slinky/x/marketmap"
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
 	affiliatesmodule "github.com/dydxprotocol/v4-chain/protocol/x/affiliates"
@@ -42,7 +43,6 @@ import (
 	subaccountsmodule "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
 	vaultmodule "github.com/dydxprotocol/v4-chain/protocol/x/vault"
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
-	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
 
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"

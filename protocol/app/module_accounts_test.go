@@ -11,6 +11,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	marketmapmoduletypes "github.com/dydxprotocol/slinky/x/marketmap/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -18,7 +19,6 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaultmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 )
 
 func TestModuleAccountsToAddresses(t *testing.T) {

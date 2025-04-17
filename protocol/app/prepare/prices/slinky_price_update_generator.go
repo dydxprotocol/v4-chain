@@ -4,11 +4,11 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/slinky/abci/strategies/aggregator"
+	"github.com/dydxprotocol/slinky/abci/strategies/codec"
+	"github.com/dydxprotocol/slinky/abci/strategies/currencypair"
+	"github.com/dydxprotocol/slinky/abci/ve"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/skip-mev/slinky/abci/strategies/aggregator"
-	"github.com/skip-mev/slinky/abci/strategies/codec"
-	"github.com/skip-mev/slinky/abci/strategies/currencypair"
-	"github.com/skip-mev/slinky/abci/ve"
 )
 
 // SlinkyPriceUpdateGenerator is an implementation of the PriceUpdateGenerator interface. This implementation

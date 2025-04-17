@@ -132,6 +132,9 @@ import (
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	// Modules
+	marketmapmodule "github.com/dydxprotocol/slinky/x/marketmap"
+	marketmapmodulekeeper "github.com/dydxprotocol/slinky/x/marketmap/keeper"
+	marketmapmoduletypes "github.com/dydxprotocol/slinky/x/marketmap/types"
 	accountplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/accountplus"
 	"github.com/dydxprotocol/v4-chain/protocol/x/accountplus/authenticator"
 	accountplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/accountplus/keeper"
@@ -198,9 +201,6 @@ import (
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
 	vestmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
-	marketmapmodulekeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 
 	// IBC
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
@@ -225,16 +225,16 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 
 	// Slinky
-	slinkyproposals "github.com/skip-mev/slinky/abci/proposals"
-	"github.com/skip-mev/slinky/abci/strategies/aggregator"
-	compression "github.com/skip-mev/slinky/abci/strategies/codec"
-	"github.com/skip-mev/slinky/abci/strategies/currencypair"
-	"github.com/skip-mev/slinky/abci/ve"
-	oracleconfig "github.com/skip-mev/slinky/oracle/config"
-	"github.com/skip-mev/slinky/pkg/math/voteweighted"
-	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
-	servicemetrics "github.com/skip-mev/slinky/service/metrics"
-	promserver "github.com/skip-mev/slinky/service/servers/prometheus"
+	slinkyproposals "github.com/dydxprotocol/slinky/abci/proposals"
+	"github.com/dydxprotocol/slinky/abci/strategies/aggregator"
+	compression "github.com/dydxprotocol/slinky/abci/strategies/codec"
+	"github.com/dydxprotocol/slinky/abci/strategies/currencypair"
+	"github.com/dydxprotocol/slinky/abci/ve"
+	oracleconfig "github.com/dydxprotocol/slinky/oracle/config"
+	"github.com/dydxprotocol/slinky/pkg/math/voteweighted"
+	oracleclient "github.com/dydxprotocol/slinky/service/clients/oracle"
+	servicemetrics "github.com/dydxprotocol/slinky/service/metrics"
+	promserver "github.com/dydxprotocol/slinky/service/servers/prometheus"
 
 	// Full Node Streaming
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming"

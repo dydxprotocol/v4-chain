@@ -7,13 +7,13 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	marketmapkeeper "github.com/dydxprotocol/slinky/x/marketmap/keeper"
+	marketmaptypes "github.com/dydxprotocol/slinky/x/marketmap/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 

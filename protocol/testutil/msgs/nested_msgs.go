@@ -6,11 +6,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
+	marketmap "github.com/dydxprotocol/slinky/x/marketmap/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
-	marketmap "github.com/skip-mev/slinky/x/marketmap/types"
 )
 
 func init() {

@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	marketmapkeeper "github.com/dydxprotocol/slinky/x/marketmap/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -25,7 +26,6 @@ import (
 	prices_keeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

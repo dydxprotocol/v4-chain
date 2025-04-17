@@ -9,6 +9,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	marketmapkeeper "github.com/dydxprotocol/slinky/x/marketmap/keeper"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -34,7 +35,6 @@ import (
 	subkeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaultkeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 	"github.com/stretchr/testify/require"
 )
 

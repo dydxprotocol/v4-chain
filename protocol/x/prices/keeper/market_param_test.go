@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	marketmapkeeper "github.com/dydxprotocol/slinky/x/marketmap/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
-	marketmapkeeper "github.com/skip-mev/slinky/x/marketmap/keeper"
 
 	errorsmod "cosmossdk.io/errors"
 

@@ -10,11 +10,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/dydxprotocol/slinky/abci/ve"
 	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/skip-mev/slinky/abci/ve"
 )
 
 var (

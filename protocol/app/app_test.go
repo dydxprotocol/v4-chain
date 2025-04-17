@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	marketmapmodule "github.com/skip-mev/slinky/x/marketmap"
+	marketmapmodule "github.com/dydxprotocol/slinky/x/marketmap"
 
 	evidencemodule "cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"

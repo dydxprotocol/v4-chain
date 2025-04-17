@@ -5,10 +5,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/skip-mev/slinky/x/marketmap/types"
+	"github.com/dydxprotocol/slinky/x/marketmap/types"
 
 	storetypes "cosmossdk.io/store/types"
-	keeper "github.com/skip-mev/slinky/x/marketmap/keeper"
+	keeper "github.com/dydxprotocol/slinky/x/marketmap/keeper"
 )
 
 func createMarketMapKeeper(

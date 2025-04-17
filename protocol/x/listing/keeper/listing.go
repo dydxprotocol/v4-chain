@@ -12,12 +12,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/dydxprotocol/slinky/x/marketmap/types/tickermetadata"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/listing/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
 )
 
 // Function to set hard cap on listed markets in module store

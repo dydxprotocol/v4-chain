@@ -3,9 +3,9 @@ package constants
 import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	slinkytypes "github.com/dydxprotocol/slinky/pkg/types"
+	marketmapmoduletypes "github.com/dydxprotocol/slinky/x/marketmap/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
-	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 )
 
 var GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
