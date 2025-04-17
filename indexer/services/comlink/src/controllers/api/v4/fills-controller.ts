@@ -137,12 +137,6 @@ class FillsController extends Controller {
       },
     );
 
-    console.log({
-      at: 'request: getFillsForParentSubaccount!!!!',
-      limit,
-      page,
-    });
-
     const {
       results: fills,
       limit: pageSize,
@@ -160,14 +154,6 @@ class FillsController extends Controller {
       [QueryableField.LIMIT],
       page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
-
-    console.log({
-      at: 'getFillsForParentSubaccount!!!!',
-      results: fills,
-      limit: pageSize,
-      offset,
-      total,
-    });
 
     const clobPairIdToPerpetualMarket: Record<
         string,
