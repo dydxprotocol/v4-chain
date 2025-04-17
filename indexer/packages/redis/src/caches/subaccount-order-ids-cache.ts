@@ -1,3 +1,5 @@
+import { promisify } from 'util';
+
 import { SubaccountTable } from '@dydxprotocol-indexer/postgres';
 import { IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
@@ -19,6 +21,33 @@ export async function getOrderIdsForSubaccount(
   client: RedisClient,
 ): Promise<string[]> {
   return _.keys(await hGetAllAsync(getSubaccountOrderIdsCacheKeyWithUUID(subaccountUuid), client));
+}
+
+/**
+ * Get order ids for a list of subaccounts.
+ * @param subaccountUuids List of indexer subaccount ids to get order ids for.
+ * @param client Redis client.
+ * @returns Map of indexer subaccount id to list of indexer order ids that belong to the subaccount.
+ */
+export async function getOrderIdsForSubaccounts(
+  subaccountUuids: string[],
+  client: RedisClient,
+): Promise<Record<string, string[]>> {
+  // Pipeline all hgetalls.
+  const multi = client.multi();
+  for (const uuid of subaccountUuids) {
+    const key = getSubaccountOrderIdsCacheKeyWithUUID(uuid);
+    multi.hgetall(key);
+  }
+  const execAsync = promisify(multi.exec).bind(multi);
+  const allOrderIds = await execAsync();
+
+  const subaccountUuidToOrderIds: Record<string, string[]> = {};
+  subaccountUuids.forEach((uuid, i) => {
+    subaccountUuidToOrderIds[uuid] = allOrderIds[i] ? Object.keys(allOrderIds[i]) : [];
+  });
+
+  return subaccountUuidToOrderIds;
 }
 
 export function getSubaccountOrderIdsCacheKey(subaccountId: IndexerSubaccountId): string {
