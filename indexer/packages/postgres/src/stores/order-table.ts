@@ -5,13 +5,11 @@ import { QueryBuilder } from 'objection';
 import {
   BUFFER_ENCODING_UTF_8,
   DEFAULT_POSTGRES_OPTIONS,
-  MAX_PARENT_SUBACCOUNTS,
-  CHILD_SUBACCOUNT_MULTIPLIER,
 } from '../constants';
-import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
+import { getSubaccountQueryForParent } from '../lib/parent-subaccount-helpers';
 import OrderModel from '../models/order-model';
 import {
   Options,
@@ -121,24 +119,9 @@ export async function findAll(
   if (subaccountId !== undefined) {
     baseQuery = baseQuery.whereIn(OrderColumns.subaccountId, subaccountId);
   } else if (parentSubaccount !== undefined) {
-    const subaccountQuery = knexReadReplica.getConnection()
-      .select('id as subaccountId')
-      .from('subaccounts')
-      .where('address', parentSubaccount.address)
-      .whereRaw(
-        `"subaccountNumber" IN (
-          SELECT generate_series(
-            ?, 
-            ? + ${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}, 
-            ${MAX_PARENT_SUBACCOUNTS}
-          )
-        )`,
-        [parentSubaccount.subaccountNumber, parentSubaccount.subaccountNumber],
-      );
-
     baseQuery = baseQuery.whereIn(
       OrderColumns.subaccountId,
-      subaccountQuery,
+      getSubaccountQueryForParent(parentSubaccount),
     );
   }
 

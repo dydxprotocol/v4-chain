@@ -137,18 +137,37 @@ class FillsController extends Controller {
       },
     );
 
-    // Get fills for all child subaccounts using the new optimized query
+    console.log({
+      at: 'request: getFillsForParentSubaccount!!!!',
+      limit,
+      page,
+    });
+
     const {
       results: fills,
       limit: pageSize,
       offset,
       total,
-    } = await FillTable.getFillsForParentSubaccount(
-      address,
-      parentSubaccountNumber,
-      limit || config.API_LIMIT_V4,
-      page,
+    } = await FillTable.findAll(
+      {
+        parentSubaccount: {
+          address,
+          subaccountNumber: parentSubaccountNumber,
+        },
+        limit,
+        page,
+      },
+      [QueryableField.LIMIT],
+      page !== undefined ? { orderBy: [[FillColumns.eventId, Ordering.ASC]] } : undefined,
     );
+
+    console.log({
+      at: 'getFillsForParentSubaccount!!!!',
+      results: fills,
+      limit: pageSize,
+      offset,
+      total,
+    });
 
     const clobPairIdToPerpetualMarket: Record<
         string,
@@ -294,6 +313,7 @@ router.get(
       address,
       parentSubaccountNumber,
       limit,
+      page,
     }: ParentSubaccountFillRequest = matchedData(req) as ParentSubaccountFillRequest;
 
     // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
@@ -307,6 +327,7 @@ router.get(
         address,
         parentSubaccountNum,
         limit,
+        page,
       );
 
       return res.send(response);
