@@ -4,7 +4,7 @@ COSMOS_VERSION=$(shell go list -m all | grep "github.com/dydxprotocol/cosmos-sdk
 COSMOS_STORE_VERSION=$(shell go list -m all | grep "cosmossdk.io/store[^/]" | awk '{print $$NF}')
 COSMOS_LOG_VERSION=$(shell go list -m all | grep "cosmossdk.io/log[^/]" | awk '{print $$NF}')
 COSMOS_GOGOPROTO_VERSION=$(shell go list -m all | grep "github.com/cosmos/gogoproto[^/]" | awk '{print $$NF}')
-SLINKY_VERSION=$(shell go list -m all | grep "github.com/dydxprotocol/slinky[^/]" | awk '{print $$NF}')
+SLINKY_VERSION=$(shell go list -m all | grep "github.com/skip-mev/slinky[^/]" | awk '{print $$NF}')
 
 mock-clean:
 	@rm -f ./mocks/*.go
@@ -61,7 +61,7 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=PriceFetcher --dir=./daemons/slinky/client --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=MarketPairFetcher --dir=./daemons/slinky/client --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=SidecarVersionChecker --dir=./daemons/slinky/client --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=OracleClient --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/slinky@$(SLINKY_VERSION)/service/clients/oracle --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=OracleClient --dir=$(GOPATH)/pkg/mod/github.com/skip-mev/slinky@$(SLINKY_VERSION)/service/clients/oracle --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ExtendVoteHandler --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=UpdateMarketPriceTxDecoder --dir=./app/process --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=AssetsKeeper --dir=./x/assets/types --recursive --output=./mocks
