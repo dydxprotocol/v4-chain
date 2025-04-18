@@ -3,15 +3,16 @@ import { DateTime } from 'luxon';
 import { QueryBuilder } from 'objection';
 
 import {
-  BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS, ZERO_TIME_ISO_8601,
-  MAX_PARENT_SUBACCOUNTS,
-  CHILD_SUBACCOUNT_MULTIPLIER,
+  BUFFER_ENCODING_UTF_8,
+  DEFAULT_POSTGRES_OPTIONS,
+  ZERO_TIME_ISO_8601,
 } from '../constants';
 import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllInjectableVariables, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
 import { VAULTS_CLOB_0_TO_999_STR_CONCAT } from '../lib/helpers';
+import { getSubaccountQueryForParent } from '../lib/parent-subaccount-helpers';
 import PnlTicksModel from '../models/pnl-ticks-model';
 import {
   Options,
@@ -91,24 +92,9 @@ export async function findAll(
   if (subaccountId !== undefined) {
     baseQuery = baseQuery.whereIn(PnlTicksColumns.subaccountId, subaccountId);
   } else if (parentSubaccount !== undefined) {
-    const subaccountQuery = knexReadReplica.getConnection()
-      .select('id as subaccountId')
-      .from('subaccounts')
-      .where('address', parentSubaccount.address)
-      .whereRaw(
-        `"subaccountNumber" IN (
-          SELECT generate_series(
-            ?, 
-            ? + ${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}, 
-            ${MAX_PARENT_SUBACCOUNTS}
-          )
-        )`,
-        [parentSubaccount.subaccountNumber, parentSubaccount.subaccountNumber],
-      );
-
     baseQuery = baseQuery.whereIn(
       PnlTicksColumns.subaccountId,
-      subaccountQuery,
+      getSubaccountQueryForParent(parentSubaccount),
     );
   }
 
