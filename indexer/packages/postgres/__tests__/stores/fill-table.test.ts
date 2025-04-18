@@ -626,7 +626,7 @@ describe('Fill store', () => {
     });
   });
 
-  describe('getFillsForParentSubaccount', () => {
+  describe('findAll - parentSubaccount', () => {
     it('successfully gets fills for parent and child subaccounts', async () => {
       // Create fills for parent and child subaccounts
       const address = 'parent_address';
@@ -684,10 +684,15 @@ describe('Fill store', () => {
       });
 
       // Test with high limit
-      const { results: fills } = await FillTable.getFillsForParentSubaccount(
-        address,
-        parentSubaccountNumber,
-        100,
+      const { results: fills } = await FillTable.findAll(
+        {
+          parentSubaccount: {
+            address,
+            subaccountNumber: parentSubaccountNumber,
+          },
+          limit: 100,
+        },
+        [],
       );
 
       expect(fills.length).toEqual(3);
@@ -697,10 +702,15 @@ describe('Fill store', () => {
       expect(fills).toEqual(expect.arrayContaining(createdFills));
 
       // Test with custom limit
-      const { results: limitedFills } = await FillTable.getFillsForParentSubaccount(
-        address,
-        parentSubaccountNumber,
-        2,
+      const { results: limitedFills } = await FillTable.findAll(
+        {
+          parentSubaccount: {
+            address,
+            subaccountNumber: parentSubaccountNumber,
+          },
+          limit: 2,
+        },
+        [],
       );
 
       expect(limitedFills.length).toEqual(2);
@@ -745,11 +755,16 @@ describe('Fill store', () => {
       }));
 
       // Test with pagination
-      const responsePageOne = await FillTable.getFillsForParentSubaccount(
-        address,
-        parentSubaccountNumber,
-        1,
-        1,
+      const responsePageOne = await FillTable.findAll(
+        {
+          parentSubaccount: {
+            address,
+            subaccountNumber: parentSubaccountNumber,
+          },
+          limit: 1,
+          page: 1,
+        },
+        [],
       );
 
       expect(responsePageOne.results.length).toEqual(1);
@@ -757,11 +772,16 @@ describe('Fill store', () => {
       expect(responsePageOne.offset).toEqual(0);
       expect(responsePageOne.total).toEqual(3);
 
-      const responsePageTwo = await FillTable.getFillsForParentSubaccount(
-        address,
-        parentSubaccountNumber,
-        1,
-        2,
+      const responsePageTwo = await FillTable.findAll(
+        {
+          parentSubaccount: {
+            address,
+            subaccountNumber: parentSubaccountNumber,
+          },
+          limit: 1,
+          page: 2,
+        },
+        [],
       );
 
       expect(responsePageTwo.results.length).toEqual(1);
@@ -769,11 +789,16 @@ describe('Fill store', () => {
       expect(responsePageTwo.offset).toEqual(1);
       expect(responsePageTwo.total).toEqual(3);
 
-      const responsePageThree = await FillTable.getFillsForParentSubaccount(
-        address,
-        parentSubaccountNumber,
-        1,
-        3,
+      const responsePageThree = await FillTable.findAll(
+        {
+          parentSubaccount: {
+            address,
+            subaccountNumber: parentSubaccountNumber,
+          },
+          limit: 1,
+          page: 3,
+        },
+        [],
       );
 
       expect(responsePageThree.results.length).toEqual(1);
@@ -782,11 +807,16 @@ describe('Fill store', () => {
       expect(responsePageThree.total).toEqual(3);
 
       // Test getting all results in one page
-      const responseAllPages = await FillTable.getFillsForParentSubaccount(
-        address,
-        parentSubaccountNumber,
-        3,
-        1,
+      const responseAllPages = await FillTable.findAll(
+        {
+          parentSubaccount: {
+            address,
+            subaccountNumber: parentSubaccountNumber,
+          },
+          limit: 3,
+          page: 1,
+        },
+        [],
       );
 
       expect(responseAllPages.results.length).toEqual(3);
@@ -796,10 +826,15 @@ describe('Fill store', () => {
     });
 
     it('returns empty array when no fills exist', async () => {
-      const { results: fills } = await FillTable.getFillsForParentSubaccount(
-        'nonexistent_address',
-        0,
-        100,
+      const { results: fills } = await FillTable.findAll(
+        {
+          parentSubaccount: {
+            address: 'nonexistent_address',
+            subaccountNumber: 0,
+          },
+          limit: 100,
+        },
+        [],
       );
 
       expect(fills).toEqual([]);

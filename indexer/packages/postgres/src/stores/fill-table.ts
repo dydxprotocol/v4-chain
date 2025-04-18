@@ -6,13 +6,12 @@ import { QueryBuilder } from 'objection';
 import {
   BUFFER_ENCODING_UTF_8,
   DEFAULT_POSTGRES_OPTIONS,
-  MAX_PARENT_SUBACCOUNTS,
-  CHILD_SUBACCOUNT_MULTIPLIER,
 } from '../constants';
 import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getUuid } from '../helpers/uuid';
+import { getSubaccountQueryForParent } from '../lib/parent-subaccount-helpers';
 import FillModel from '../models/fill-model';
 import {
   FillColumns,
@@ -28,9 +27,9 @@ import {
   Ordering,
   OrderSide,
   CostOfFills,
+  PaginationFromDatabase,
   QueryableField,
   QueryConfig,
-  PaginationFromDatabase,
 } from '../types';
 
 export function uuid(eventId: Buffer, liquidity: Liquidity): string {
@@ -107,10 +106,15 @@ export async function findAll(
     clientMetadata,
     fee,
     page,
+    parentSubaccount,
   }: FillQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PaginationFromDatabase<FillFromDatabase>> {
+  if (subaccountId !== undefined && parentSubaccount !== undefined) {
+    throw new Error('Cannot specify both subaccountId and parentSubaccount in order query');
+  }
+
   verifyAllRequiredFields(
     {
       limit,
@@ -142,6 +146,11 @@ export async function findAll(
 
   if (subaccountId !== undefined) {
     baseQuery = baseQuery.whereIn(FillColumns.subaccountId, subaccountId);
+  } else if (parentSubaccount !== undefined) {
+    baseQuery = baseQuery.whereIn(
+      FillColumns.subaccountId,
+      getSubaccountQueryForParent(parentSubaccount),
+    );
   }
 
   if (side !== undefined) {
@@ -599,47 +608,4 @@ export async function getFeesPaid(
   }
 
   return Big(result.rows[0].feesPaid);
-}
-
-/**
- * Returns fills across all subaccounts belonging to a parent subaccount.
- * A parent subaccount is defined by an address and parent subaccount number,
- * where child subaccounts have subaccount numbers in increments of 128 from the parent.
- *
- * @param address The wallet address
- * @param parentSubaccountNumber The parent subaccount number
- * @param limit Maximum number of fills to return
- * @param page Page number
- */
-export async function getFillsForParentSubaccount(
-  address: string,
-  parentSubaccountNumber: number,
-  limit: number,
-  page?: number,
-): Promise<PaginationFromDatabase<FillFromDatabase>> {
-  // Create base query to get subaccount IDs
-  const subaccountQuery = knexReadReplica.getConnection()
-    .select('id as subaccountId')
-    .from('subaccounts')
-    .where('address', address)
-    .whereRaw(
-      `"subaccountNumber" IN (
-        SELECT generate_series(
-          ?, 
-          ? + ${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}, 
-          ${MAX_PARENT_SUBACCOUNTS}
-        )
-      )`,
-      [parentSubaccountNumber, parentSubaccountNumber],
-    );
-
-  // Create the main query
-  const baseQuery = FillModel.query()
-    .whereIn(
-      'subaccountId',
-      subaccountQuery,
-    )
-    .orderBy(FillColumns.createdAtHeight, Ordering.DESC);
-
-  return handleLimitAndPagination(baseQuery, limit, page);
 }

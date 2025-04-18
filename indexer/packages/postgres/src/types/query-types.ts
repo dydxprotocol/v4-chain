@@ -175,6 +175,7 @@ export interface FillQueryConfig extends QueryConfig {
   [QueryableField.CREATED_ON_OR_AFTER]?: string,
   [QueryableField.CLIENT_METADATA]?: string,
   [QueryableField.FEE]?: string,
+  [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
 }
 
 export interface BlockQueryConfig extends QueryConfig {
