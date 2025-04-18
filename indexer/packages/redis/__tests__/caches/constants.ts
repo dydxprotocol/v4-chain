@@ -15,9 +15,11 @@ import { DateTime } from 'luxon';
 export const address: string = 'dydxprotocol174e000tqwvszgjxs7yaj844e0m9s6f0m45ws7q';
 export const subaccountNumber: number = 0;
 export const subaccountNumber2: number = 2;
+export const subaccountNumber3: number = 3;
 export const clientId: number = 12;
 export const subaccountUuid: string = SubaccountTable.uuid(address, subaccountNumber);
 export const subaccountUuid2: string = SubaccountTable.uuid(address, subaccountNumber2);
+export const subaccountUuid3: string = SubaccountTable.uuid(address, subaccountNumber3);
 export const orderId: IndexerOrderId = {
   subaccountId: {
     owner: address,
@@ -77,6 +79,28 @@ export const secondRedisOrder: RedisOrder = {
       ...order.orderId,
       clientId: order.orderId!.clientId + 1,
       clobPairId: 0,
+      orderFlags: ORDER_FLAG_SHORT_TERM,
+    },
+  },
+};
+export const redisOrderSubaccount3: RedisOrder = {
+  ...redisOrder,
+  id: OrderTable.uuid(
+    subaccountUuid3,
+    (clientId + 2).toString(),
+    '1',
+    ORDER_FLAG_SHORT_TERM.toString(),
+  ),
+  order: {
+    ...order,
+    orderId: {
+      ...order.orderId,
+      subaccountId: {
+        owner: address,
+        number: subaccountNumber3,
+      },
+      clientId: clientId + 2,
+      clobPairId: 1,
       orderFlags: ORDER_FLAG_SHORT_TERM,
     },
   },
