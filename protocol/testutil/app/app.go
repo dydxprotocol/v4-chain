@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -70,7 +71,6 @@ import (
 	vesttypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 	marketmapmoduletypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 )
 
 // localdydxprotocol Alice config/priv_validator_key.json.
