@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"time"
@@ -185,6 +186,18 @@ func (o *Order) IsTwapOrder() bool {
 	return o.OrderId.IsTwapOrder()
 }
 
+// IsTwapSuborder returns whether this order is a TWAP suborder.
+func (o *Order) IsTwapSuborder() bool {
+	return o.OrderId.IsTwapSuborder()
+}
+
+// IsCollateralCheckRequired returns whether this order needs
+// to pass collateral checks. This is true for all non-internal
+// orders and for generated TWAP suborders.
+func (o *Order) IsCollateralCheckRequired(isInternalOrder bool) bool {
+	return (!isInternalOrder && !o.IsConditionalOrder()) || (isInternalOrder && o.IsTwapSuborder())
+}
+
 // IsPostOnlyOrder returns whether this order is a post only order.
 func (o *Order) IsPostOnlyOrder() bool {
 	return o.GetTimeInForce() == Order_TIME_IN_FORCE_POST_ONLY
@@ -245,4 +258,24 @@ func (o *Order) GetOrderLabels() []gometrics.Label {
 		},
 		o.OrderId.GetOrderIdLabels()...,
 	)
+}
+
+func (o *Order) GetTotalLegsTWAPOrder() uint32 {
+	if o.IsTwapOrder() {
+		return o.TwapParameters.Duration / o.TwapParameters.Interval
+	}
+	return 0
+}
+
+// GetTWAPTriggerKey returns the key for a TWAP trigger order.
+func GetTWAPTriggerKey(triggerTime int64, orderId OrderId) []byte {
+	// Write trigger time as big-endian uint64
+	timeBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(timeBytes, uint64(triggerTime))
+
+	// Get marshaled orderId
+	orderIdBytes := orderId.ToStateKey()
+
+	// Combine time and orderId bytes
+	return append(timeBytes, orderIdBytes...)
 }
