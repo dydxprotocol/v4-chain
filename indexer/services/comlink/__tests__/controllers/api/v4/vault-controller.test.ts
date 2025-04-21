@@ -18,13 +18,14 @@ import {
   TransferTable,
   VaultPnlTicksView,
 } from '@dydxprotocol-indexer/postgres';
-import { RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
+import { PnlTicksResponseObject, RequestMethod, VaultHistoricalPnl } from '../../../../src/types';
 import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
 import { DateTime, Settings } from 'luxon';
 import Big from 'big.js';
 import config from '../../../../src/config';
 import { clearVaultStartPnl, startVaultStartPnlCache } from '../../../../src/caches/vault-start-pnl';
+import { pnlTicksToResponseObject } from '../../../../src/request-helpers/request-transformer';
 
 describe('vault-controller#V4', () => {
   const latestBlockHeight: string = '25';
@@ -159,14 +160,16 @@ describe('vault-controller#V4', () => {
         address: testConstants.defaultSubaccount.address,
         clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
       });
-      const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
+      const createdPnlTicksFromDatabase: PnlTicksFromDatabase[] = await createPnlTicks();
+      const createdPnlTicks
+      : PnlTicksResponseObject[] = createdPnlTicksFromDatabase.map(pnlTicksToResponseObject);
       // Adjust PnL by total pnl of start date
       if (startDate !== undefined) {
         for (const createdPnlTick of createdPnlTicks) {
           createdPnlTick.totalPnl = Big(createdPnlTick.totalPnl).sub('10000').toFixed();
         }
       }
-      const finalTick: PnlTicksFromDatabase = {
+      const finalTick: PnlTicksResponseObject = {
         ...createdPnlTicks[finalTickIndex],
         equity: Big(vault1Equity).toFixed(),
         blockHeight: latestBlockHeight,
@@ -316,8 +319,10 @@ describe('vault-controller#V4', () => {
         address: testConstants.defaultAddress,
         clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
       });
-      const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
-      const finalTick: PnlTicksFromDatabase = {
+      const createdPnlTicksFromDatabase: PnlTicksFromDatabase[] = await createPnlTicks();
+      const createdPnlTicks
+      : PnlTicksResponseObject[] = createdPnlTicksFromDatabase.map(pnlTicksToResponseObject);
+      const finalTick: PnlTicksResponseObject = {
         ...createdPnlTicks[currentTickIndex],
         equity: Big(vault1Equity).toFixed(),
         blockHeight: latestBlockHeight,
@@ -366,15 +371,17 @@ describe('vault-controller#V4', () => {
           clobPairId: testConstants.defaultPerpetualMarket2.clobPairId,
         }),
       ]);
-      const createdPnlTicks: PnlTicksFromDatabase[] = await createPnlTicks();
-      const finalTick1: PnlTicksFromDatabase = {
+      const createdPnlTicksFromDatabase: PnlTicksFromDatabase[] = await createPnlTicks();
+      const createdPnlTicks
+      : PnlTicksResponseObject[] = createdPnlTicksFromDatabase.map(pnlTicksToResponseObject);
+      const finalTick1: PnlTicksResponseObject = {
         ...createdPnlTicks[currentTickIndex1],
         equity: Big(vault1Equity).toFixed(),
         blockHeight: latestBlockHeight,
         blockTime: latestTime.toISO(),
         createdAt: latestTime.toISO(),
       };
-      const finalTick2: PnlTicksFromDatabase = {
+      const finalTick2: PnlTicksResponseObject = {
         ...createdPnlTicks[currentTickIndex2],
         equity: Big(vault2Equity).toFixed(),
         blockHeight: latestBlockHeight,
@@ -548,6 +555,59 @@ describe('vault-controller#V4', () => {
           },
         ],
       });
+    });
+
+    it('Get /megavault/historicalPnl returns cached results within TTL', async () => {
+      const originalCacheTtl = config.VAULT_CACHE_TTL_MS;
+      config.VAULT_CACHE_TTL_MS = 60000; // 1 minute
+
+      try {
+        // Setup: Create a vault and some PnL ticks
+        await VaultTable.create({
+          ...testConstants.defaultVault,
+          address: testConstants.defaultSubaccount.address,
+          clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+        });
+        // We still need some initial PnL data for the endpoint to return something.
+        await createPnlTicks();
+
+        // First request - should populate the cache
+        const response1: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: '/v4/vault/v1/megavault/historicalPnl?resolution=hour',
+        });
+        expect(response1.status).toBe(200);
+        expect(response1.body.megavaultPnl.length).toBeGreaterThan(0);
+
+        // Modify underlying data that affects current equity calculation
+        const newAssetSize = '999999999';
+        await AssetPositionTable.upsert({
+          ...testConstants.defaultAssetPosition, // Use existing asset details
+          subaccountId: testConstants.defaultSubaccountId, // Target the vault subaccount
+          size: newAssetSize, // Change the size
+        });
+
+        // Second request - should hit the cache and return the OLD data
+        const response2: request.Response = await sendRequest({
+          type: RequestMethod.GET,
+          path: '/v4/vault/v1/megavault/historicalPnl?resolution=hour',
+        });
+        expect(response2.status).toBe(200);
+
+        // Assert that the second response is identical to the first (cached) response
+        expect(response2.body).toEqual(response1.body);
+
+        // Verify the FINAL tick's equity in the cached response does NOT reflect the change
+        // The final tick represents the current state and would change if not cached.
+        const finalCachedTick = response2.body.megavaultPnl[response2.body.megavaultPnl.length - 1];
+        const originalFinalTick = response1.body.megavaultPnl[
+          response1.body.megavaultPnl.length - 1];
+        // Should match the original final tick equity
+        expect(finalCachedTick.equity).toEqual(originalFinalTick.equity); 
+      } finally {
+        // Restore original config value
+        config.VAULT_CACHE_TTL_MS = originalCacheTtl;
+      }
     });
   });
 

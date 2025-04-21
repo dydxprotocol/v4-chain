@@ -1,6 +1,5 @@
 import {
   stats,
-  ONE_MINUTE_IN_MILLISECONDS,
 } from '@dydxprotocol-indexer/base';
 import {
   PnlTicksFromDatabase,
@@ -91,10 +90,10 @@ class VaultController extends Controller {
       redisClient,
     );
 
-    // Check if last cached result was less than 1 minute ago.
+    // Check if the last cached result was less than the cache TTL
     if (config.VAULT_CACHE_TTL_MS > 0 &&
       cacheTimestamp !== null &&
-      Date.now() - cacheTimestamp.getTime() < ONE_MINUTE_IN_MILLISECONDS) {
+      Date.now() - cacheTimestamp.getTime() < config.VAULT_CACHE_TTL_MS) {
       const cached: CachedMegavaultPnl | null = await VaultCache.getMegavaultPnl(
         getResolution(resolution),
         redisClient,
@@ -221,10 +220,10 @@ class VaultController extends Controller {
       redisClient,
     );
 
-    // Check if last cached result was less than 1 minute ago
+    // Check if the last cached result was less than the cache TTL
     if (config.VAULT_CACHE_TTL_MS > 0 &&
       cacheTimestamp !== null &&
-      Date.now() - cacheTimestamp.getTime() < ONE_MINUTE_IN_MILLISECONDS) {
+      Date.now() - cacheTimestamp.getTime() < config.VAULT_CACHE_TTL_MS) {
       const cached: CachedVaultHistoricalPnl[] | null = await VaultCache.getVaultsHistoricalPnl(
         getResolution(resolution),
         redisClient,
@@ -318,7 +317,7 @@ class VaultController extends Controller {
       .values()
       .value();
 
-    const sortedVaultPnlTicks = _.sortBy(groupedVaultPnlTicks, 'ticker');
+    const sortedVaultPnlTicks: VaultHistoricalPnl[] = _.sortBy(groupedVaultPnlTicks, 'ticker');
 
     stats.timing(
       `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_miss.timing`,

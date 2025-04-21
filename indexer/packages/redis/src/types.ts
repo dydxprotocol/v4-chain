@@ -102,11 +102,11 @@ export interface CachedVaultHistoricalPnl {
 }
 
 /**
- * Space-efficient representation of vault historical PNL data.
+ * Redis internal, space-efficient representation of historical PNL data.
  * Format: [ticker, array of [equity, totalPnl, netTransfers, createdAtTimestamp,
  * blockHeight, blockTimeTimestamp]]
  */
-export type CompressedVaultPnl = [
+export type RedisVaultsArray = [
   string,  // ticker
   [number, number, number, number, number, number][]  // [e, p, n, c, h, t][]
 ];
@@ -116,8 +116,8 @@ export interface CachedMegavaultPnl {
 }
 
 /**
- * Space-efficient representation of megavault PNL data.
+ * Redis internal, space-efficient representation of megavault PNL data.
  * Format: array of [equity, totalPnl, netTransfers, createdAtTimestamp,
  * blockHeight, blockTimeTimestamp]
  */
-export type CompressedMegavaultPnl = [number, number, number, number, number, number][];
+export type RedisMegavaultPnl = [number, number, number, number, number, number][];
