@@ -119,13 +119,11 @@ describe('perpetual-markets-controller#V4', () => {
     it('Returns 404 with unknown ticker', async () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
-        path: `/v4/trades/perpetualMarket/${invalidTicker}`,
-        expectedStatus: 400,
+        path: `/v4/perpetualMarkets/${invalidTicker}`,
+        expectedStatus: 404,
       });
 
-      expect(response.body.errors[0]).toEqual(expect.objectContaining({
-        msg: 'ticker must be a valid ticker (BTC-USD, etc)',
-      }));
+      expect(response.body.error).toContain('Not Found');
     });
   });
 });
