@@ -20,7 +20,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { NotFoundError } from '../../../lib/errors';
+import { NotFoundError, UnexpectedServerError } from '../../../lib/errors';
 import {
   handleControllerError,
 } from '../../../lib/helpers';
@@ -83,13 +83,15 @@ class PerpetualMarketsController extends Controller {
       limit,
     }, []);
 
-    const markets: MarketFromDatabase[] = await Promise.all(
-      _.map(
-        perpetualMarkets,
-        async (perpetualMarket) => {
-          return await MarketTable.findById(perpetualMarket.marketId) as MarketFromDatabase;
-        }),
+    const markets: MarketFromDatabase[] = await MarketTable.findByIds(
+      _.map(perpetualMarkets, (p) => p.marketId),
     );
+
+    // Sanity check because this should never happen as PerpetualMarket table has a foreign
+    // key constraint on marketId in Market table.
+    if (perpetualMarkets.length !== markets.length) {
+      throw new UnexpectedServerError('Market price not found for some perpetual markets');
+    }
 
     const liquidityTiers: LiquidityTiersFromDatabase[] = _.map(
       perpetualMarkets,
