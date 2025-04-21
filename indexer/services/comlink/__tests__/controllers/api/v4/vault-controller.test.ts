@@ -603,7 +603,7 @@ describe('vault-controller#V4', () => {
         const originalFinalTick = response1.body.megavaultPnl[
           response1.body.megavaultPnl.length - 1];
         // Should match the original final tick equity
-        expect(finalCachedTick.equity).toEqual(originalFinalTick.equity); 
+        expect(finalCachedTick.equity).toEqual(originalFinalTick.equity);
       } finally {
         // Restore original config value
         config.VAULT_CACHE_TTL_MS = originalCacheTtl;
