@@ -123,7 +123,7 @@ describe('perpetual-markets-controller#V4', () => {
         expectedStatus: 404,
       });
 
-      expect(response.body.error).toContain('Not Found')
+      expect(response.body.error).toContain('Not Found');
     });
   });
 });
