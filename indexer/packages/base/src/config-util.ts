@@ -25,16 +25,10 @@
  */
 
 import { Big } from 'big.js';
-import { BigNumber } from 'bignumber.js';
 import _ from 'lodash';
 
 import { ConfigError } from './errors';
-import {
-  Bigable,
-  BigIntable,
-  BigNumberable,
-  NodeEnv,
-} from './types';
+import {  NodeEnv } from './types';
 
 // A parse function takes the name of an environment variable as an argument,
 // e.g. 'NODE_ENV', and parses and returns that variable from `process.env`.
@@ -153,9 +147,11 @@ export function parseInteger(options?: ParseOptions<number | null>): ParseFn<num
 }
 
 export function parseBigInt(): ParseFn<bigint>;
-export function parseBigInt(options: ParseOptions<BigIntable>): ParseFn<bigint>;
+export function parseBigInt(options: ParseOptions<bigint | string | number>): ParseFn<bigint>;
 export function parseBigInt(options: ParseOptions<null>): ParseFn<bigint | null>;
-export function parseBigInt(options?: ParseOptions<BigIntable | null>): ParseFn<bigint | null> {
+export function parseBigInt(
+  options?: ParseOptions<bigint | string | number | null>,
+): ParseFn<bigint | null> {
   return (varName: string) => {
     const rawValue = process.env[varName];
     if (!rawValue) {
@@ -178,30 +174,34 @@ export function parseBigInt(options?: ParseOptions<BigIntable | null>): ParseFn<
   };
 }
 
-export function parseBN(): ParseFn<BigNumber>;
-export function parseBN(options: ParseOptions<BigNumberable>): ParseFn<BigNumber>;
-export function parseBN(options: ParseOptions<null>): ParseFn<BigNumber | null>;
-export function parseBN(options?: ParseOptions<BigNumberable | null>): ParseFn<BigNumber | null> {
-  return (varName: string) => {
-    const rawValue = process.env[varName];
-    if (!rawValue) {
-      if (defaultIsValid(options)) {
-        return options.default === null ? null : new BigNumber(options.default);
-      }
-      throw new ConfigError(`Missing required env var '${varName}' (BigNumber)`);
-    }
-    const value = new BigNumber(rawValue);
-    if (value.isNaN()) {
-      throw new ConfigError(`Invalid BigNumber for env var '${varName}'`);
-    }
-    return value;
-  };
-}
+// export function parseBN(): ParseFn<BigNumber>;
+// export function parseBN(options: ParseOptions<BigNumber | string | number>): ParseFn<BigNumber>;
+// export function parseBN(options: ParseOptions<null>): ParseFn<BigNumber | null>;
+// export function parseBN(
+//   options?: ParseOptions<BigNumber | string | number | null>,
+// ): ParseFn<BigNumber | null> {
+//   return (varName: string) => {
+//     const rawValue = process.env[varName];
+//     if (!rawValue) {
+//       if (defaultIsValid(options)) {
+//         return options.default === null ? null : new BigNumberValue(options.default);
+//       }
+//       throw new ConfigError(`Missing required env var '${varName}' (BigNumber)`);
+//     }
+//     const value = new BigNumberValue(rawValue);
+//     if (value.isNaN()) {
+//       throw new ConfigError(`Invalid BigNumber for env var '${varName}'`);
+//     }
+//     return value;
+//   };
+// }
 
 export function parseBig(): ParseFn<Big>;
-export function parseBig(options: ParseOptions<Bigable>): ParseFn<Big>;
+export function parseBig(options: ParseOptions<Big | string | number>): ParseFn<Big>;
 export function parseBig(options: ParseOptions<null>): ParseFn<Big | null>;
-export function parseBig(options?: ParseOptions<Bigable | null>): ParseFn<Big | null> {
+export function parseBig(
+  options?: ParseOptions<Big | string | number | null>,
+): ParseFn<Big | null> {
   return (varName: string) => {
     const rawValue = process.env[varName];
     if (!rawValue) {

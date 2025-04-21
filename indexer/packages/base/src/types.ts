@@ -1,12 +1,3 @@
-import { Big } from 'big.js';
-import { BigNumber } from 'bignumber.js';
-
-export type BigNumberable = BigNumber | string | number;
-
-export type Bigable = Big | string | number;
-
-export type BigIntable = bigint | string | number;
-
 export enum NodeEnv {
   DEVELOPMENT = 'development',
   PRODUCTION = 'production',

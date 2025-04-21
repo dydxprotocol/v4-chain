@@ -3,13 +3,6 @@
   "version": "0.0.1",
   "description": "",
   "main": "build/index.js",
-  "devDependencies": {
-    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
-    "@osmonauts/telescope": "0.80.0",
-    "@protobufs/cosmos": "^0.0.11",
-    "@protobufs/gogoproto": "^0.0.10",
-    "typescript": "^4.7.4"
-  },
   "scripts": {
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
@@ -38,8 +31,17 @@
     "@cosmjs/tendermint-rpc": "^0.32.1",
     "@osmonauts/lcd": "^0.6.0",
     "bech32": "^2.0.0",
-    "dotenv-flow": "^3.2.0",
+    "dotenv-flow": "^4.1.0",
     "long": "^5.2.1",
     "protobufjs": "^7.2.4"
+  },
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@osmonauts/telescope": "0.80.0",
+    "@protobufs/cosmos": "^0.0.11",
+    "@protobufs/gogoproto": "^0.0.10",
+    "@types/dotenv-flow": "^3.3.3",
+    "@types/node": "^20.14.8",
+    "typescript": "^5.8.3"
   }
 }

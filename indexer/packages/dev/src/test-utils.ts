@@ -6,7 +6,7 @@
 type Fn = (...args: any[]) => any;
 type FnMock<F extends Fn> = jest.Mock<ReturnType<F>, Parameters<F>>;
 
-type ObjMock<T extends {}> = {
+type ObjMock<T> = {
   [K in keyof T]: T[K] extends Fn ? FnMock<T[K]> : ObjMock<T[K]>;
 };
 

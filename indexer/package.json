@@ -7,7 +7,7 @@
     "services/*"
   ],
   "scripts": {
-    "build:all": "pnpm recursive run build --workspace-concurrency=Infinity",
+    "build:all": "pnpm recursive run build",
     "build:prod:all": "pnpm recursive run build:prod",
     "build:watch:all": "pnpm run --parallel build:watch",
     "lint:all": "pnpm run --parallel lint",
@@ -22,6 +22,6 @@
     "@milahu/patch-package": "6.4.14"
   },
   "devDependencies": {
-    "@types/ws": "8.5.10"
+    "@types/ws": "8.18.1"
   }
 }
