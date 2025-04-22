@@ -6,7 +6,7 @@ import {
   teardown,
 } from '../../src/helpers/db-helpers';
 import { UniqueViolationError } from 'objection';
-import { defaultMarket, defaultMarket2, defaultMarket3 } from '../helpers/constants';
+import { defaultMarket, defaultMarket2 } from '../helpers/constants';
 import Transaction from '../../src/helpers/transaction';
 
 describe('Market store', () => {
@@ -85,52 +85,6 @@ describe('Market store', () => {
       defaultMarket.id,
     );
     expect(market).toEqual(undefined);
-  });
-
-  describe('findByIds', () => {
-    it('Successfully finds markets by IDs', async () => {
-      await Promise.all([
-        MarketTable.create(defaultMarket),
-        MarketTable.create(defaultMarket2),
-        MarketTable.create(defaultMarket3),
-      ]);
-
-      const markets: MarketFromDatabase[] = await MarketTable.findByIds(
-        [defaultMarket.id, defaultMarket3.id],
-      );
-
-      expect(markets).toEqual([
-        expect.objectContaining(defaultMarket),
-        expect.objectContaining(defaultMarket3),
-      ]);
-    });
-
-    it('Successfully finds markets by empty IDs', async () => {
-      await Promise.all([
-        MarketTable.create(defaultMarket),
-        MarketTable.create(defaultMarket2),
-      ]);
-
-      const markets: MarketFromDatabase[] = await MarketTable.findByIds([]);
-
-      expect(markets).toEqual([]);
-    });
-
-    it('Successfully finds markets by non-existent ID', async () => {
-      await Promise.all([
-        MarketTable.create(defaultMarket),
-        MarketTable.create(defaultMarket2),
-        MarketTable.create(defaultMarket3),
-      ]);
-
-      const markets: MarketFromDatabase[] = await MarketTable.findByIds(
-        [defaultMarket2.id, 100],
-      );
-
-      expect(markets).toEqual([
-        expect.objectContaining(defaultMarket2),
-      ]);
-    });
   });
 
   it('Successfully updates a market', async () => {

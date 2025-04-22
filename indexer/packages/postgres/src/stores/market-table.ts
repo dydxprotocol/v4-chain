@@ -110,19 +110,6 @@ export async function findById(
     .returning('*');
 }
 
-export async function findByIds(
-  ids: number[],
-  options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<MarketFromDatabase[]> {
-  const baseQuery: QueryBuilder<MarketModel> = setupBaseQuery<MarketModel>(
-    MarketModel,
-    options,
-  );
-  return baseQuery
-    .findByIds(ids)
-    .returning('*');
-}
-
 export async function findByPair(
   pair: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,

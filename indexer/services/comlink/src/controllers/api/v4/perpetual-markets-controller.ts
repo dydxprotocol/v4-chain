@@ -8,6 +8,7 @@ import {
   liquidityTierRefresher,
   LiquidityTiersMap,
   LiquidityTiersFromDatabase,
+  PerpetualMarketWithMarket,
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import {
@@ -20,7 +21,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { NotFoundError, UnexpectedServerError } from '../../../lib/errors';
+import { NotFoundError } from '../../../lib/errors';
 import {
   handleControllerError,
 } from '../../../lib/helpers';
@@ -79,30 +80,45 @@ class PerpetualMarketsController extends Controller {
       };
     }
 
-    const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll({
-      limit,
-    }, []);
-
-    const markets: MarketFromDatabase[] = await MarketTable.findByIds(
-      _.map(perpetualMarkets, (p) => p.marketId),
-    );
-
-    // Sanity check because this should never happen as PerpetualMarket table has a foreign
-    // key constraint on marketId in Market table.
-    if (perpetualMarkets.length !== markets.length) {
-      throw new UnexpectedServerError('Market price not found for some perpetual markets');
-    }
+    const perpetualWithMarkets: PerpetualMarketWithMarket[] = await PerpetualMarketTable.findAll(
+      {
+        limit,
+        joinWithMarkets: true,
+      }, []) as PerpetualMarketWithMarket[];
 
     const liquidityTiers: LiquidityTiersFromDatabase[] = _.map(
-      perpetualMarkets,
-      (perpetualMarket) => {
+      perpetualWithMarkets,
+      (p) => {
         return liquidityTierRefresher.getLiquidityTierFromId(
-          perpetualMarket.liquidityTierId,
+          p.liquidityTierId,
         ) as LiquidityTiersFromDatabase;
       });
 
     const responseObjects: PerpetualMarketResponseObject[] = _.zipWith(
-      perpetualMarkets, liquidityTiers, markets, perpetualMarketToResponseObject);
+      perpetualWithMarkets,
+      liquidityTiers,
+      (pwm, lt) => {
+        const {
+          pair,
+          exponent,
+          minPriceChangePpm,
+          oraclePrice,
+          ...perpetual
+        } = pwm;
+
+        return perpetualMarketToResponseObject(
+          perpetual,
+          lt,
+          {
+            id: pwm.marketId,
+            pair,
+            exponent,
+            minPriceChangePpm,
+            oraclePrice,
+          },
+        );
+      },
+    );
 
     return {
       markets: _.chain(responseObjects)
