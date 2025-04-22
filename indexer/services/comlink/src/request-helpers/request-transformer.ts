@@ -303,8 +303,6 @@ export function pnlTicksToResponseObject(
   pnlTicks: PnlTicksFromDatabase,
 ): PnlTicksResponseObject {
   return {
-    id: pnlTicks.id,
-    subaccountId: pnlTicks.subaccountId,
     equity: pnlTicks.equity,
     totalPnl: pnlTicks.totalPnl,
     netTransfers: pnlTicks.netTransfers,
