@@ -58,7 +58,7 @@ export class MessageForwarder {
     this.started = false;
     this.stopped = false;
     this.messageBuffer = {};
-    this.batchSending = setTimeout(() => {}, MAX_TIMEOUT_INTEGER);
+    this.batchSending = setTimeout(() => { }, MAX_TIMEOUT_INTEGER);
   }
 
   public start(): void {
@@ -290,7 +290,7 @@ export class MessageForwarder {
 
     // Buffer messages if the subscription is for batched messages
     if (this.subscriptions.batchedSubscriptions[message.channel] &&
-       this.subscriptions.batchedSubscriptions[message.channel][message.id]) {
+      this.subscriptions.batchedSubscriptions[message.channel][message.id]) {
       const bufferKey: string = this.getMessageBufferKey(
         message.channel,
         message.id,
@@ -385,16 +385,16 @@ export class MessageForwarder {
       batchedMessages,
       (c) => c.version,
     );
-    _.forEach(batchedVersionedMessages, (versionedMsgs, version) => {
-      const batchedMessagesBySubaccountNumber: _.Dictionary<VersionedContents[]> = _.groupBy(
-        versionedMsgs,
-        (c) => c.subaccountNumber,
-      );
-      _.forEach(batchedMessagesBySubaccountNumber, (msgs, subaccountNumberKey) => {
-        const subaccountNumber: number | undefined = Number.isNaN(Number(subaccountNumberKey))
-          ? undefined
-          : Number(subaccountNumberKey);
-        try {
+    try {
+      _.forEach(batchedVersionedMessages, (versionedMsgs, version) => {
+        const batchedMessagesBySubaccountNumber: _.Dictionary<VersionedContents[]> = _.groupBy(
+          versionedMsgs,
+          (c) => c.subaccountNumber,
+        );
+        _.forEach(batchedMessagesBySubaccountNumber, (msgs, subaccountNumberKey) => {
+          const subaccountNumber: number | undefined = Number.isNaN(Number(subaccountNumberKey))
+            ? undefined
+            : Number(subaccountNumberKey);
           this.forwardToClientBatch(
             msgs,
             batchedSubscriber.connectionId,
@@ -403,16 +403,17 @@ export class MessageForwarder {
             version,
             subaccountNumber,
           );
-        } catch (error) {
-          logger.error({
-            at: 'message-forwarder#forwardBatchedMessages',
-            message: error.message,
-            connectionId: batchedSubscriber.connectionId,
-            error,
-          });
-        }
+        });
       });
-    });
+    } catch (error) {
+      // catch error outside of loop to stop forwarding messages
+      logger.error({
+        at: 'message-forwarder#forwardBatchedMessages',
+        message: error.message,
+        connectionId: batchedSubscriber.connectionId,
+        error,
+      });
+    }
   }
 
   public forwardToClientBatch(

@@ -1,7 +1,8 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   InfoObject, getInstanceId, logger, safeJsonStringify, stats,
 } from '@dydxprotocol-indexer/base';
-import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 
 import config from '../config';
@@ -90,7 +91,7 @@ export class Index {
    */
   private onConnection(ws: WebSocket, req: IncomingMessage): void {
 
-    const connectionId: string = uuidv4();
+    const connectionId: string = randomUUID();
 
     this.connections[connectionId] = {
       ws,

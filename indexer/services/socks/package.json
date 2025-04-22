@@ -4,7 +4,7 @@
   "description": "",
   "main": "build/index",
   "scripts": {
-    "start": "node --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
+    "start": "node --max-semi-space-size=256 --max-old-space-size=2624 --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
     "build": "rm -rf build/ && tsc",
     "build:prod": "pnpm run build",
     "build:watch": "pnpm run build -- --watch",
@@ -23,6 +23,7 @@
     "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
     "axios": "^1.2.1",
     "body-parser": "^1.20.0",
+    "bufferutil": "^4.0.9",
     "cors": "^2.8.5",
     "dd-trace": "^3.32.1",
     "dotenv-flow": "^3.2.0",
@@ -32,7 +33,7 @@
     "lodash": "^4.17.21",
     "nocache": "^3.0.4",
     "response-time": "^2.3.2",
-    "uuid": "^8.3.2",
+    "utf-8-validate": "^6.0.5",
     "ws": "^8.16.0"
   },
   "devDependencies": {
@@ -45,7 +46,6 @@
     "@types/lodash": "^4.14.182",
     "@types/node": "^18.19.31",
     "@types/response-time": "^2.3.5",
-    "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.10",
     "jest": "^28.1.2",
     "ts-node": "^10.8.2",
