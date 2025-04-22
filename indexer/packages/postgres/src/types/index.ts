@@ -3,6 +3,7 @@ export * from './db-model-types';
 export * from './fill-types';
 export * from './order-types';
 export * from './perpetual-market-types';
+export * from './perpetual-market-with-market-types';
 export * from './perpetual-position-types';
 export * from './query-types';
 export * from './subaccount-types';

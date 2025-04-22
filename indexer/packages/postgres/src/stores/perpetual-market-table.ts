@@ -22,6 +22,7 @@ import {
   PerpetualMarketFromDatabase,
   PerpetualMarketQueryConfig,
   PerpetualMarketUpdateObject,
+  PerpetualMarketWithMarket,
   QueryableField,
   QueryConfig,
 } from '../types';
@@ -32,10 +33,11 @@ export async function findAll(
     marketId,
     liquidityTierId,
     limit,
-  }: PerpetualMarketQueryConfig,
+    joinWithMarkets = false,
+  }: PerpetualMarketQueryConfig & { joinWithMarkets?: boolean },
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<PerpetualMarketFromDatabase[]> {
+): Promise<PerpetualMarketFromDatabase[] | PerpetualMarketWithMarket[]> {
   verifyAllRequiredFields(
     {
       id,
@@ -61,6 +63,18 @@ export async function findAll(
 
   if (liquidityTierId !== undefined) {
     baseQuery = baseQuery.whereIn(PerpetualMarketColumns.liquidityTierId, liquidityTierId);
+  }
+
+  if (joinWithMarkets) {
+    baseQuery = baseQuery
+      .joinRelated('market')
+      .select([
+        `${PerpetualMarketModel.tableName}.*`,
+        'market.pair',
+        'market.exponent',
+        'market.minPriceChangePpm',
+        'market.oraclePrice',
+      ]);
   }
 
   if (options.orderBy !== undefined) {
