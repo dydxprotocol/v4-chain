@@ -4,6 +4,9 @@ import (
 	"math/big"
 
 	comettypes "github.com/cometbft/cometbft/types"
+	oracletypes "github.com/dydxprotocol/slinky/pkg/types"
+	marketmaptypes "github.com/dydxprotocol/slinky/x/marketmap/types"
+	"github.com/dydxprotocol/slinky/x/marketmap/types/tickermetadata"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/util"
@@ -12,9 +15,6 @@ import (
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
-	oracletypes "github.com/skip-mev/slinky/pkg/types"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
-	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
 	"github.com/stretchr/testify/require"
 
 	"testing"

@@ -2,19 +2,20 @@ package prices_test
 
 import (
 	"fmt"
-	cmtabci "github.com/cometbft/cometbft/abci/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
-	"github.com/skip-mev/slinky/abci/strategies/aggregator"
-	aggregatormock "github.com/skip-mev/slinky/abci/strategies/aggregator/mocks"
-	codecmock "github.com/skip-mev/slinky/abci/strategies/codec/mocks"
-	strategymock "github.com/skip-mev/slinky/abci/strategies/currencypair/mocks"
-	"github.com/skip-mev/slinky/abci/testutils"
-	vetypes "github.com/skip-mev/slinky/abci/ve/types"
-	oracletypes "github.com/skip-mev/slinky/pkg/types"
-	"github.com/stretchr/testify/suite"
 	"math/big"
 	"testing"
+
+	cmtabci "github.com/cometbft/cometbft/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/slinky/abci/strategies/aggregator"
+	aggregatormock "github.com/dydxprotocol/slinky/abci/strategies/aggregator/mocks"
+	codecmock "github.com/dydxprotocol/slinky/abci/strategies/codec/mocks"
+	strategymock "github.com/dydxprotocol/slinky/abci/strategies/currencypair/mocks"
+	"github.com/dydxprotocol/slinky/abci/testutils"
+	vetypes "github.com/dydxprotocol/slinky/abci/ve/types"
+	oracletypes "github.com/dydxprotocol/slinky/pkg/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
+	"github.com/stretchr/testify/suite"
 )
 
 type SlinkyPriceUpdateGeneratorSuite struct {
