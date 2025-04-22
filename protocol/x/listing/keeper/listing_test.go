@@ -20,10 +20,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
+	oracletypes "github.com/dydxprotocol/slinky/pkg/types"
+	marketmaptypes "github.com/dydxprotocol/slinky/x/marketmap/types"
+	"github.com/dydxprotocol/slinky/x/marketmap/types/tickermetadata"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	oracletypes "github.com/skip-mev/slinky/pkg/types"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
-	"github.com/skip-mev/slinky/x/marketmap/types/tickermetadata"
 
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
