@@ -62,6 +62,52 @@ describe('perpetual-markets-controller#V4', () => {
       expectResponseWithMarkets(response, perpetualMarkets, liquidityTiers, markets);
     });
 
+    it('Get / with out of order markets', async () => {
+      // Create markets and perpetual markets in different orders.
+      await MarketTable.create({
+        ...testConstants.defaultMarket,
+        id: 99,
+        pair: 'XXX-USD',
+      });
+      await MarketTable.create({
+        ...testConstants.defaultMarket,
+        id: 100,
+        pair: 'YYY-USD',
+      });
+      await PerpetualMarketTable.create({
+        ...testConstants.defaultPerpetualMarket,
+        id: '100',
+        marketId: 100,
+        ticker: 'YYY-USD',
+      });
+      await PerpetualMarketTable.create({
+        ...testConstants.defaultPerpetualMarket,
+        id: '99',
+        marketId: 99,
+        ticker: 'XXX-USD',
+      });
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/perpetualMarkets/',
+      });
+
+      const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
+        {}, []);
+      const markets: MarketFromDatabase[] = await MarketTable.findAll({}, []);
+      const liquidityTiers: LiquidityTiersFromDatabase[] = await Promise.all(
+        _.map(
+          perpetualMarkets,
+          async (perpetualMarket) => {
+            return await LiquidityTiersTable.findById(
+              perpetualMarket.liquidityTierId,
+            ) as LiquidityTiersFromDatabase;
+          }),
+      );
+
+      expectResponseWithMarkets(response, perpetualMarkets, liquidityTiers, markets);
+    });
+
     it('Get / gets all markets with limit', async () => {
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,

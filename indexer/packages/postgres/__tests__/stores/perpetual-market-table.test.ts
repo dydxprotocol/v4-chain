@@ -1,4 +1,6 @@
-import { MarketCreateObject, PerpetualMarketFromDatabase, PerpetualMarketStatus } from '../../src/types';
+import {
+  MarketCreateObject, PerpetualMarketFromDatabase, PerpetualMarketStatus, PerpetualMarketWithMarket,
+} from '../../src/types';
 import * as PerpetualMarketTable from '../../src/stores/perpetual-market-table';
 import * as LiquidityTiersTable from '../../src/stores/liquidity-tiers-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
@@ -11,6 +13,7 @@ import {
   invalidTicker,
 } from '../helpers/constants';
 import * as MarketTable from '../../src/stores/market-table';
+import _ from 'lodash';
 
 describe('PerpetualMarket store', () => {
   beforeAll(async () => {
@@ -61,6 +64,60 @@ describe('PerpetualMarket store', () => {
       ...defaultPerpetualMarket,
       id: '1',
     }));
+  });
+
+  it('Successfully finds all PerpetualMarkets joined with markets', async () => {
+    await Promise.all([
+      PerpetualMarketTable.create(defaultPerpetualMarket),
+      PerpetualMarketTable.create({
+        ...defaultPerpetualMarket,
+        id: '1',
+        marketId: defaultMarket2.id,
+      }),
+    ]);
+
+    const perpetualWithMarkets: PerpetualMarketWithMarket[] = await PerpetualMarketTable.findAll(
+      { joinWithMarkets: true },
+      [],
+      { readReplica: true },
+    ) as PerpetualMarketWithMarket[];
+
+    expect(perpetualWithMarkets.length).toEqual(2);
+    expect(perpetualWithMarkets[0]).toEqual({
+      ...defaultPerpetualMarket,
+      ..._.omit(defaultMarket, 'id'),
+    });
+    expect(perpetualWithMarkets[1]).toEqual({
+      ...defaultPerpetualMarket,
+      id: '1',
+      marketId: defaultMarket2.id,
+      ..._.omit(defaultMarket2, 'id'),
+    });
+  });
+
+  it('Successfully finds all PerpetualMarkets joined with markets, filter by market id', async () => {
+    await Promise.all([
+      PerpetualMarketTable.create(defaultPerpetualMarket),
+      PerpetualMarketTable.create({
+        ...defaultPerpetualMarket,
+        id: '1',
+        marketId: defaultMarket2.id,
+      }),
+    ]);
+
+    const perpetualWithMarkets: PerpetualMarketWithMarket[] = await PerpetualMarketTable.findAll(
+      { marketId: [1], joinWithMarkets: true },
+      [],
+      { readReplica: true },
+    ) as PerpetualMarketWithMarket[];
+
+    expect(perpetualWithMarkets.length).toEqual(1);
+    expect(perpetualWithMarkets[0]).toEqual({
+      ...defaultPerpetualMarket,
+      id: '1',
+      marketId: defaultMarket2.id,
+      ..._.omit(defaultMarket2, 'id'),
+    });
   });
 
   it('Successfully finds a PerpetualMarket', async () => {
