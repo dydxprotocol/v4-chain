@@ -98,6 +98,9 @@ class PerpetualMarketsController extends Controller {
       perpetualWithMarkets,
       liquidityTiers,
       (pwm, lt) => {
+        // Destructure each `perpetualWithMarket` into perpetual and market
+        // to be able to use existing perpetualMarketToResponseObject function
+        // for response transformation.
         const {
           pair,
           exponent,
