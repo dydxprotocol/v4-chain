@@ -190,10 +190,12 @@ func TestCreatePerpetual(t *testing.T) {
 					require.Equal(t, int32(-5), perpetual.Params.AtomicResolution)
 					require.Equal(t, int32(types.DefaultFundingPpm), perpetual.Params.DefaultFundingPpm)
 					require.Equal(t, uint32(types.LiquidityTier_IML_5x), perpetual.Params.LiquidityTier)
-					require.Equal(
-						t, perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
-						perpetual.Params.MarketType,
-					)
+
+					expectedMarketType := perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
+					if tc.crossLaunch {
+						expectedMarketType = perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+					}
+					require.Equal(t, expectedMarketType, perpetual.Params.MarketType)
 				}
 			},
 		)
