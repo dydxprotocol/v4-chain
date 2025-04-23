@@ -135,7 +135,7 @@ func (k Keeper) CreatePerpetual(
 			int32(marketMapDetails.Ticker.Decimals))
 
 	marketType := perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
-	if metadata.CrossLaunch == true {
+	if metadata.CrossLaunch {
 		marketType = perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
 	}
 
