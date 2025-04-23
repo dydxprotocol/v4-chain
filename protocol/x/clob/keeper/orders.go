@@ -1043,7 +1043,7 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 }
 
 // GetSubticksForCollatCheck returns the subticks for the given order.
-// If the order is a twap market order, it returns the current oracle price 
+// If the order is a twap market order, it returns the current oracle price
 // as subticks Otherwise, it returns the order's subticks.
 func (k Keeper) GetSubticksForCollatCheck(ctx sdk.Context, order types.Order) (types.Subticks, error) {
 	if order.IsTwapOrder() && order.Subticks == uint64(0) {

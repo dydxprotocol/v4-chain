@@ -48,7 +48,7 @@ func (k Keeper) GetTwapOrderPlacement(
 // GetTwapTriggerPlacement gets a TWAP trigger placement for a given orderId.
 // Returns false if no trigger placement exists in store with `orderId`.
 // This iterates over the entire store because the keys in the store are
-// formatted as [timestamp, orderId].
+// formatted as [timestamp, orderId]. This is primarily used for testing.
 func (k Keeper) GetTwapTriggerPlacement(
 	ctx sdk.Context,
 	orderId types.OrderId,

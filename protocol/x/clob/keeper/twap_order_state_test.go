@@ -55,6 +55,10 @@ func TestTWAPOrderTriggerStoreOrdering(t *testing.T) {
 	ks := setupTestTWAPOrderState(t)
 
 	// Create test orders with different timestamps and order IDs
+	// In practice, we do not expect multiple instances of the
+	// same suborderId in the trigger store, but this case is
+	// constructed as such to test the ordering of the keystore
+	// is working as expected (timestamp + orderId bytes)
 	suborderIds := []types.OrderId{
 		{
 			SubaccountId: constants.Alice_Num0,
