@@ -150,6 +150,8 @@ func TestTWAPOrderKeyBytes(t *testing.T) {
 	require.True(t, result < 0) // key1 should come before key2
 
 	ks := setupTestTWAPOrderState(t)
+	ks.ClobKeeper.AddSuborderToTriggerStore(ks.Ctx, orderId1, 5)
+	ks.ClobKeeper.AddSuborderToTriggerStore(ks.Ctx, orderId2, 5)
 
 	store := ks.ClobKeeper.GetTWAPTriggerOrderPlacementStore(ks.Ctx)
 	iterator := store.Iterator(nil, nil)
@@ -158,6 +160,7 @@ func TestTWAPOrderKeyBytes(t *testing.T) {
 		orderId1,
 		orderId2,
 	}
+
 	index := 0
 	for ; iterator.Valid(); iterator.Next() {
 		var orderId types.OrderId
@@ -165,6 +168,7 @@ func TestTWAPOrderKeyBytes(t *testing.T) {
 		require.Equal(t, expectedOrderId[index], orderId)
 		index++
 	}
+	require.Equal(t, len(expectedOrderId), index)
 }
 
 func setupTestTWAPOrderState(t *testing.T) (ks keepertest.ClobKeepersTestContext) {
