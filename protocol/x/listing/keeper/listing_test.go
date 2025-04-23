@@ -104,12 +104,19 @@ func TestCreatePerpetual(t *testing.T) {
 	tests := map[string]struct {
 		ticker         string
 		referencePrice uint64
+		crossLaunch    bool
 
 		expectedErr error
 	}{
 		"success": {
 			ticker:         "TEST-USD",
 			referencePrice: 1000000000, // $1000
+			expectedErr:    nil,
+		},
+		"success - cross launch": {
+			ticker:         "TEST-USD",
+			referencePrice: 1000000000, // $1000
+			crossLaunch:    true,
 			expectedErr:    nil,
 		},
 		"failure - reference price 0": {
@@ -138,6 +145,7 @@ func TestCreatePerpetual(t *testing.T) {
 						ReferencePrice: tc.referencePrice,
 						Liquidity:      0,
 						AggregateIDs:   nil,
+						CrossLaunch:    tc.crossLaunch,
 					},
 				)
 				require.NoError(t, err)
