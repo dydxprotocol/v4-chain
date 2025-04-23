@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTWAPOrderTriggerStoreOrderingSameOrderId(t *testing.T) {
+func TestTWAPOrderTriggerStoreOrderingBasedOffTimestamp(t *testing.T) {
 	ks := setupTestTWAPOrderState(t)
 
 	// Create test orders with same order ID but different timestamps
