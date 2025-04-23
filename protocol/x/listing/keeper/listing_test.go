@@ -104,12 +104,19 @@ func TestCreatePerpetual(t *testing.T) {
 	tests := map[string]struct {
 		ticker         string
 		referencePrice uint64
+		crossLaunch    bool
 
 		expectedErr error
 	}{
 		"success": {
 			ticker:         "TEST-USD",
 			referencePrice: 1000000000, // $1000
+			expectedErr:    nil,
+		},
+		"success - cross launch": {
+			ticker:         "TEST-USD",
+			referencePrice: 1000000000, // $1000
+			crossLaunch:    true,
 			expectedErr:    nil,
 		},
 		"failure - reference price 0": {
@@ -138,6 +145,7 @@ func TestCreatePerpetual(t *testing.T) {
 						ReferencePrice: tc.referencePrice,
 						Liquidity:      0,
 						AggregateIDs:   nil,
+						CrossLaunch:    tc.crossLaunch,
 					},
 				)
 				require.NoError(t, err)
@@ -182,10 +190,12 @@ func TestCreatePerpetual(t *testing.T) {
 					require.Equal(t, int32(-5), perpetual.Params.AtomicResolution)
 					require.Equal(t, int32(types.DefaultFundingPpm), perpetual.Params.DefaultFundingPpm)
 					require.Equal(t, uint32(types.LiquidityTier_IML_5x), perpetual.Params.LiquidityTier)
-					require.Equal(
-						t, perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
-						perpetual.Params.MarketType,
-					)
+
+					expectedMarketType := perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
+					if tc.crossLaunch {
+						expectedMarketType = perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+					}
+					require.Equal(t, expectedMarketType, perpetual.Params.MarketType)
 				}
 			},
 		)
