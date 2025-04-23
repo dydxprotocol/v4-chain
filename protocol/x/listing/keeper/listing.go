@@ -134,6 +134,11 @@ func (k Keeper) CreatePerpetual(
 		(int32(math.Floor(math.Log10(float64(metadata.ReferencePrice)))) -
 			int32(marketMapDetails.Ticker.Decimals))
 
+	marketType := perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
+	if metadata.CrossLaunch {
+		marketType = perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+	}
+
 	// Create a new perpetual
 	perpetual, err := k.PerpetualsKeeper.CreatePerpetual(
 		ctx,
@@ -142,8 +147,13 @@ func (k Keeper) CreatePerpetual(
 		marketId,
 		atomicResolution,
 		types.DefaultFundingPpm,
+<<<<<<< HEAD
 		types.LiquidityTier_Isolated,
 		perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
+=======
+		types.LiquidityTier_IML_5x,
+		marketType,
+>>>>>>> a12e3591 ([ENG-4] Add cross-margin launch for listings (#2804))
 	)
 	if err != nil {
 		return 0, err
