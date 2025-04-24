@@ -187,7 +187,6 @@ func BigDivFloor(a *big.Int, b *big.Int) *big.Int {
 	return result
 }
 
-
 // BigRatRound takes an input and a direction to round (true for up, false for down).
 // It returns the result rounded to a `*big.Int` in the specified direction.
 func BigRatRound(n *big.Rat, roundUp bool) *big.Int {
