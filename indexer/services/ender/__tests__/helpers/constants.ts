@@ -69,6 +69,13 @@ export const defaultMarketPriceUpdate2: MarketEventV1 = {
   },
 };
 
+export const defaultMarketPriceUpdate3: MarketEventV1 = {
+  marketId: 4,
+  priceUpdate: {
+    priceWithExponent: Long.fromValue(100000000, true),
+  },
+};
+
 export const defaultFundingUpdateSampleEvent: FundingEventMessage = {
   type: FundingEventV1_Type.TYPE_PREMIUM_SAMPLE,
   updates: [
