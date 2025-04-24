@@ -725,11 +725,11 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		}
 
 		// Fetch the highest priority order we are trying to cancel from state.
-		statefulOrderPlacement, orderToCancelExists := k.GetLongTermOrderPlacement(ctx, orderIdToCancel)
+		existingStatefulOrder, orderToCancelExists := k.getOrderFromStore(ctx, orderIdToCancel)
 
 		// The order we are cancelling must exist in uncommitted or committed state.
 		if !orderToCancelExists {
-			statefulOrderPlacement, orderToCancelExists = k.GetUncommittedStatefulOrderPlacement(ctx, orderIdToCancel)
+			statefulOrderPlacement, orderToCancelExists := k.GetUncommittedStatefulOrderPlacement(ctx, orderIdToCancel)
 
 			if !orderToCancelExists {
 				return errorsmod.Wrapf(
@@ -738,10 +738,10 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 					orderIdToCancel,
 				)
 			}
+
+			existingStatefulOrder = statefulOrderPlacement.Order
 		}
 
-		// Highest priority stateful matching order to cancel.
-		existingStatefulOrder := statefulOrderPlacement.Order
 		// Return an error if cancellation's GTBT is less than stateful order's GTBT.
 		if cancelGoodTilBlockTime < existingStatefulOrder.GetGoodTilBlockTime() {
 			return errorsmod.Wrapf(
@@ -749,7 +749,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 				"cancellation goodTilBlockTime less than stateful order goodTilBlockTime."+
 					" cancellation %+v, order %+v",
 				msgCancelOrder,
-				statefulOrderPlacement,
+				existingStatefulOrder,
 			)
 		}
 	} else {
@@ -758,6 +758,15 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		}
 	}
 	return nil
+}
+
+func (k Keeper) getOrderFromStore(ctx sdk.Context, orderId types.OrderId) (types.Order, bool) {
+	if orderId.IsTwapOrder() {
+		twapOrderPlacement, found := k.GetTwapOrderPlacement(ctx, orderId)
+		return twapOrderPlacement.Order, found
+	}
+	longTermOrderPlacement, found := k.GetLongTermOrderPlacement(ctx, orderId)
+	return longTermOrderPlacement.Order, found
 }
 
 // validateGoodTilBlock validates that the good til block (GTB) is within valid bounds, specifically
