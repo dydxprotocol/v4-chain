@@ -34,12 +34,12 @@ export async function getOrderIdsForSubaccounts(
   client: RedisClient,
 ): Promise<Record<string, string[]>> {
   // Pipeline all hgetalls.
-  const multi = client.multi();
+  const batch = client.batch();
   for (const uuid of subaccountUuids) {
     const key = getSubaccountOrderIdsCacheKeyWithUUID(uuid);
-    multi.hgetall(key);
+    batch.hgetall(key);
   }
-  const execAsync = promisify(multi.exec).bind(multi);
+  const execAsync = promisify(batch.exec).bind(batch);
   const allOrderIds = await execAsync();
 
   const subaccountUuidToOrderIds: Record<string, string[]> = {};
