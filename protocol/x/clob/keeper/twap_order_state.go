@@ -9,13 +9,13 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-const (
-	TWAP_SUBORDER_GOOD_TIL_BLOCK_TIME_OFFSET = 3
-)
+// TWAP_SUBORDER_GOOD_TIL_BLOCK_TIME_OFFSET is the offset in seconds added to the
+// current block time to set the good til block time for a suborder.
+const TWAP_SUBORDER_GOOD_TIL_BLOCK_TIME_OFFSET = 3
 
-var (
-	TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE = big.NewInt(3)
-)
+// TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE is the maximum multiple of the original
+// quantums per leg that a suborder can be.
+var TWAP_MAX_SUBORDER_CATCHUP_MULTIPLE = big.NewInt(3)
 
 func (k Keeper) SetTWAPOrderPlacement(ctx sdk.Context,
 	order types.Order,
@@ -144,7 +144,7 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 		twapOrderPlacement, found := k.GetTwapOrderPlacement(ctx, parentOrderId)
 		if !found {
 			// TODO: (anmol) handle order cancellation
-			return
+			continue
 		}
 
 		order := k.GenerateSuborder(ctx, orderId, twapOrderPlacement, blockTime)
