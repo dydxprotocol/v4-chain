@@ -14,12 +14,6 @@ export enum NodeEnv {
   TEST = 'test',
 }
 
-export enum BugsnagReleaseStage {
-  DEVELOPMENT = 'development',
-  PRODUCTION = 'production',
-  STAGING = 'staging',
-}
-
 export interface PagerDutyInfo {
   message: {},
   id?: string,

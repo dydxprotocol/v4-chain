@@ -42,10 +42,6 @@
     "traverse": "^0.6.6",
     "uuid": "^8.3.2",
     "winston": "^3.8.1",
-    "winston-transport": "^4.5.0",
-    "@bugsnag/core": "^7.18.0",
-    "@bugsnag/js": "^7.18.0",
-    "@bugsnag/node": "^7.18.0",
-    "@bugsnag/plugin-express": "^7.18.0"
+    "winston-transport": "^4.5.0"
   }
 }

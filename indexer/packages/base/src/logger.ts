@@ -43,8 +43,7 @@ const logger: LoggerExport = winston.createLogger({
     winston.format.json(),
   ),
 
-  // Don't have Winston exit on uncaught errors. Bugsnag will exit when it is done handling them.
-  exitOnError: false,
+  exitOnError: true,
 });
 
 export default logger;

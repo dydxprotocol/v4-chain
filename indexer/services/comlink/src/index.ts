@@ -1,8 +1,4 @@
-import {
-  logger,
-  wrapBackgroundTask,
-  startBugsnag,
-} from '@dydxprotocol-indexer/base';
+import { logger, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { perpetualMarketRefresher, liquidityTierRefresher } from '@dydxprotocol-indexer/postgres';
 
 import { startVaultStartPnlCache } from './caches/vault-start-pnl';
@@ -34,8 +30,6 @@ function startServer() {
 }
 
 async function start() {
-  startBugsnag();
-
   // Initialize PerpetualMarkets cache
   await Promise.all([
     perpetualMarketRefresher.updatePerpetualMarkets(),

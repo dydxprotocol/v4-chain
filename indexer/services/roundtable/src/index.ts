@@ -1,4 +1,4 @@
-import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
+import { logger, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { LeaderboardPnlTimeSpan, TradingRewardAggregationPeriod } from '@dydxprotocol-indexer/postgres';
 
@@ -48,7 +48,6 @@ async function start(): Promise<void> {
     at: 'index#start',
     message: `Starting in env ${config.NODE_ENV}`,
   });
-  startBugsnag();
 
   await Promise.all([
     producer.connect(),
