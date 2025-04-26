@@ -64,7 +64,10 @@ jobs:
             --platform amd64 \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$commit_hash \
             -f Dockerfile.service.remote \
-            --build-arg DD_GIT_REPOSITORY_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY \
+            --build-arg DD_ENV=$ENVIRONMENT \
             --build-arg DD_GIT_COMMIT_SHA=$GITHUB_SHA \
+            --build-arg DD_GIT_REPOSITORY_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY \
+            --build-arg DD_SERVICE=$SERVICE \
+            --build-arg DD_VERSION=$commit_hash \
             --build-arg service=$SERVICE .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
