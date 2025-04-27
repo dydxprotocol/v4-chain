@@ -1,10 +1,10 @@
+import crypto from 'node:crypto';
 import { Index } from '../../src/websocket/index';
 import WebSocket from 'ws';
 import { Wss, sendMessage } from '../../src/helpers/wss';
 import { Subscriptions } from '../../src/lib/subscription';
 import { IncomingMessage } from 'http';
 import { Socket } from 'net';
-import { v4 } from 'uuid';
 import {
   IncomingMessageType,
   OutgoingMessageType,
@@ -15,7 +15,7 @@ import {
 import { InvalidMessageHandler } from '../../src/lib/invalid-message';
 import { COUNTRY_HEADER_KEY } from '@dydxprotocol-indexer/compliance';
 
-jest.mock('uuid');
+jest.mock('node:crypto');
 jest.mock('../../src/helpers/wss');
 jest.mock('../../src/lib/subscription');
 jest.mock('../../src/lib/invalid-message');
@@ -63,7 +63,7 @@ describe('Index', () => {
 
   describe('connection', () => {
     it('adds connection to index, sends connection message, and attaches handlers', () => {
-      (v4 as unknown as jest.Mock).mockReturnValueOnce(connectionId);
+      (crypto.randomUUID as unknown as jest.Mock).mockReturnValueOnce(connectionId);
       mockConnect(websocket, new IncomingMessage(new Socket()));
 
       // Test that the connection is tracked.
@@ -93,7 +93,7 @@ describe('Index', () => {
   describe('handlers', () => {
     beforeEach(() => {
       // Connect to the index before starting each test.
-      (v4 as unknown as jest.Mock).mockReturnValueOnce(connectionId);
+      (crypto.randomUUID as unknown as jest.Mock).mockReturnValueOnce(connectionId);
       const incomingMessage: IncomingMessage = new IncomingMessage(new Socket());
       incomingMessage.headers[COUNTRY_HEADER_KEY] = countryCode;
       mockConnect(websocket, incomingMessage);

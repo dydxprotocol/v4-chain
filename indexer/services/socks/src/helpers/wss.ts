@@ -95,7 +95,7 @@ export function sendMessageString(
 ): void {
   if (ws.readyState !== WebSocket.OPEN) {
     logger.info({
-      at: 'wss#sendMessage',
+      at: 'wss#sendMessageString',
       message: 'Not sending message because websocket is not open',
       connectionId,
       readyState: ws.readyState,
@@ -125,22 +125,37 @@ export function sendMessageString(
         },
       );
       const errorLog = { // type is InfoObject in node-service-base
-        at: 'wss#sendMessage',
+        at: 'wss#sendMessageString',
         message: `Failed to send message: ${error.message}`,
         error,
         connectionId,
         code: (error as WssError)?.code,
       };
-      logger.error(errorLog);
+      if (error?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
+        // Don't log to avoid bursts when clients disconnect abruptly
+        stats.increment(
+          `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
+          1,
+          {
+            action: 'close',
+            instance: getInstanceId(),
+          },
+        );
+      } else {
+        logger.error(errorLog);
+      }
       try {
-        ws.removeAllListeners();
+        // don't remove WebsocketEvents.CLOSE as it's handled in index#disconnect
+        ws.removeAllListeners(WebsocketEvents.MESSAGE);
+        ws.removeAllListeners(WebsocketEvents.PONG);
+        ws.removeAllListeners(WebsocketEvents.ERROR);
         ws.close(
           WS_CLOSE_CODE_ABNORMAL_CLOSURE,
           `client returned ${error?.message} error`,
         );
       } catch (closeError) {
         const closeErrorLog = {
-          at: 'wss#sendMessage',
+          at: 'wss#sendMessageString',
           message: `Failed to close connection: ${closeError.message}`,
           connectionId,
           closeError,

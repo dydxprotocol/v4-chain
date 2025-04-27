@@ -754,10 +754,10 @@ importers:
       '@types/lodash': ^4.14.182
       '@types/node': ^18.19.31
       '@types/response-time': ^2.3.5
-      '@types/uuid': ^8.3.4
       '@types/ws': ^8.5.10
       axios: ^1.2.1
       body-parser: ^1.20.0
+      bufferutil: ^4.0.9
       cors: ^2.8.5
       dd-trace: ^3.32.1
       dotenv-flow: ^3.2.0
@@ -771,7 +771,7 @@ importers:
       ts-node: ^10.8.2
       tsconfig-paths: ^4.0.0
       typescript: ^4.7.4
-      uuid: ^8.3.2
+      utf-8-validate: ^6.0.5
       ws: ^8.16.0
     dependencies:
       '@dydxprotocol-indexer/base': link:../../packages/base
@@ -781,6 +781,7 @@ importers:
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
       axios: 1.2.1
       body-parser: 1.20.0
+      bufferutil: 4.0.9
       cors: 2.8.5
       dd-trace: 3.32.1
       dotenv-flow: 3.2.0
@@ -790,8 +791,8 @@ importers:
       lodash: 4.17.21
       nocache: 3.0.4
       response-time: 2.3.2
-      uuid: 8.3.2
-      ws: 8.16.0
+      utf-8-validate: 6.0.5
+      ws: 8.16.0_314410bbf163529a0116337fe6a5d0f1
     devDependencies:
       '@dydxprotocol-indexer/dev': link:../../packages/dev
       '@types/body-parser': 1.19.2
@@ -802,7 +803,6 @@ importers:
       '@types/lodash': 4.14.182
       '@types/node': 18.19.31
       '@types/response-time': 2.3.5
-      '@types/uuid': 8.3.4
       '@types/ws': 8.5.10
       jest: 28.1.2_e1489a60da1bfeaddb37cf23d6a3b371
       ts-node: 10.8.2_4ea55324100c26d4019c6e6bcc89fac6
@@ -8119,6 +8119,14 @@ packages:
       ieee754: 1.2.1
     dev: false
 
+  /bufferutil/4.0.9:
+    resolution: {integrity: sha512-WDtdLmJvAuNNPzByAYpRo2rF1Mmradw6gvWsQKf63476DDXmomT9zUiGypLcG4ibIM67vhAj8jJRdbmEws2Aqw==}
+    engines: {node: '>=6.14.2'}
+    requiresBuild: true
+    dependencies:
+      node-gyp-build: 4.6.0
+    dev: false
+
   /byline/5.0.0:
     resolution: {integrity: sha512-s6webAy+R4SR8XVuJWt2V2rGvhnrhxN+9S15GNuTK3wKPOXFF6RNc+8ug2XhH+2s4f+uudG4kUVYmYOQWL2g0Q==}
     engines: {node: '>=0.10.0'}
@@ -15387,6 +15395,14 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: false
 
+  /utf-8-validate/6.0.5:
+    resolution: {integrity: sha512-EYZR+OpIXp9Y1eG1iueg8KRsY8TuT8VNgnanZ0uA3STqhHQTLwbl+WX76/9X5OY12yQubymBpaBSmMPkSTQcKA==}
+    engines: {node: '>=6.14.2'}
+    requiresBuild: true
+    dependencies:
+      node-gyp-build: 4.6.0
+    dev: false
+
   /util-deprecate/1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
     dev: false
@@ -15657,7 +15673,7 @@ packages:
         optional: true
     dev: false
 
-  /ws/8.16.0:
+  /ws/8.16.0_314410bbf163529a0116337fe6a5d0f1:
     resolution: {integrity: sha512-HS0c//TP7Ina87TfiPUz1rQzMhHrl/SG2guqRcTOIUYD2q8uhUdNHZYJUaQ8aTGPzCh+c6oawMKW35nFl1dxyQ==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
@@ -15668,6 +15684,9 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+    dependencies:
+      bufferutil: 4.0.9
+      utf-8-validate: 6.0.5
     dev: false
 
   /xml2js/0.5.0:
