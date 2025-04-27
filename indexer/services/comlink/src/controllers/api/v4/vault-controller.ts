@@ -1,6 +1,4 @@
-import {
-  stats,
-} from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   PnlTicksFromDatabase,
   perpetualMarketRefresher,
@@ -31,7 +29,6 @@ import {
   Ordering,
   VaultPnlTicksView,
 } from '@dydxprotocol-indexer/postgres';
-import { VaultCache, CachedMegavaultPnl, CachedVaultHistoricalPnl } from '@dydxprotocol-indexer/redis';
 import Big from 'big.js';
 import bounds from 'binary-searching';
 import express from 'express';
@@ -45,7 +42,6 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import { getVaultStartPnl } from '../../../caches/vault-start-pnl';
 import config from '../../../config';
-import { redisClient } from '../../../helpers/redis/redis-controller';
 import {
   aggregateHourlyPnlTicks,
   getSubaccountResponse,
@@ -68,7 +64,6 @@ import {
   MegavaultHistoricalPnlRequest,
   VaultsHistoricalPnlRequest,
   AggregatedPnlTick,
-  PnlTicksResponseObject,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -85,48 +80,6 @@ class VaultController extends Controller {
     @Query() resolution?: PnlTickInterval,
   ): Promise<MegavaultHistoricalPnlResponse> {
     const start: number = Date.now();
-    const cacheTimestamp: Date | null = await VaultCache.getMegavaultPnlCacheTimestamp(
-      getResolution(resolution),
-      redisClient,
-    );
-
-    // Check if the last cached result was less than the cache TTL
-    if (config.VAULT_CACHE_TTL_MS > 0 &&
-      cacheTimestamp !== null &&
-      Date.now() - cacheTimestamp.getTime() < config.VAULT_CACHE_TTL_MS) {
-      const cached: CachedMegavaultPnl | null = await VaultCache.getMegavaultPnl(
-        getResolution(resolution),
-        redisClient,
-      );
-      stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl_cache_hit.timing`,
-        Date.now() - start,
-        {
-          resolution: getResolution(resolution),
-        },
-      );
-
-      if (cached !== null) {
-        stats.increment(
-          `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl_cache_hit`,
-          {
-            resolution: getResolution(resolution),
-          },
-        );
-
-        return {
-          megavaultPnl: _.sortBy(cached.pnlTicks, 'blockTime'),
-        };
-      }
-    }
-
-    stats.increment(
-      `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl_cache_miss`,
-      {
-        resolution: getResolution(resolution),
-      },
-    );
-
     const vaultSubaccounts: VaultMapping = await getVaultMapping();
     stats.timing(
       `${config.SERVICE_NAME}.${controllerName}.fetch_vaults.timing`,
@@ -183,29 +136,11 @@ class VaultController extends Controller {
       latestPnlTick,
     );
 
-    const sortedPnlTicks: PnlTicksResponseObject[] = _.sortBy(pnlTicksWithCurrentTick, 'blockTime')
-      .map(
+    return {
+      megavaultPnl: _.sortBy(pnlTicksWithCurrentTick, 'blockTime').map(
         (pnlTick: PnlTicksFromDatabase) => {
           return pnlTicksToResponseObject(pnlTick);
-        });
-
-    // Insert into cache.
-    await VaultCache.setMegavaultPnl(
-      getResolution(resolution),
-      sortedPnlTicks,
-      redisClient,
-    );
-
-    stats.timing(
-      `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl.cache_miss.timing`,
-      Date.now() - start,
-      {
-        resolution: getResolution(resolution),
-      },
-    );
-
-    return {
-      megavaultPnl: sortedPnlTicks,
+        }),
     };
   }
 
@@ -213,51 +148,6 @@ class VaultController extends Controller {
   async getVaultsHistoricalPnl(
     @Query() resolution?: PnlTickInterval,
   ): Promise<VaultsHistoricalPnlResponse> {
-    const start: number = Date.now();
-
-    const cacheTimestamp: Date | null = await VaultCache.getVaultsHistoricalPnlCacheTimestamp(
-      getResolution(resolution),
-      redisClient,
-    );
-
-    // Check if the last cached result was less than the cache TTL
-    if (config.VAULT_CACHE_TTL_MS > 0 &&
-      cacheTimestamp !== null &&
-      Date.now() - cacheTimestamp.getTime() < config.VAULT_CACHE_TTL_MS) {
-      const cached: CachedVaultHistoricalPnl[] | null = await VaultCache.getVaultsHistoricalPnl(
-        getResolution(resolution),
-        redisClient,
-      );
-
-      if (cached !== null) {
-        stats.timing(
-          `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_hit.timing`,
-          Date.now() - start,
-          {
-            resolution: getResolution(resolution),
-          },
-        );
-
-        stats.increment(
-          `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_hit`,
-          {
-            resolution: getResolution(resolution),
-          },
-        );
-
-        return {
-          vaultsPnl: cached,
-        };
-      }
-    }
-
-    stats.increment(
-      `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_miss`,
-      {
-        resolution: getResolution(resolution),
-      },
-    );
-
     const vaultSubaccounts: VaultMapping = await getVaultMapping();
     const [
       vaultPnlTicks,
@@ -306,36 +196,16 @@ class VaultController extends Controller {
           latestTicksBySubaccountId[subaccountId],
         );
 
-        // Only retain fields we need and excludes fields like `id`, `subaccountId`.
-        const pnlTicksResponseObjects
-        : PnlTicksResponseObject[] = pnlTicksWithCurrentTick.map(pnlTicksToResponseObject);
         return {
           ticker: market.ticker,
-          historicalPnl: pnlTicksResponseObjects,
+          historicalPnl: pnlTicksWithCurrentTick,
         };
       })
       .values()
       .value();
 
-    const sortedVaultPnlTicks: VaultHistoricalPnl[] = _.sortBy(groupedVaultPnlTicks, 'ticker');
-
-    stats.timing(
-      `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_miss.timing`,
-      Date.now() - start,
-      {
-        resolution: getResolution(resolution),
-      },
-    );
-
-    // Insert into cache
-    await VaultCache.setVaultsHistoricalPnl(
-      getResolution(resolution),
-      sortedVaultPnlTicks,
-      redisClient,
-    );
-
     return {
-      vaultsPnl: sortedVaultPnlTicks,
+      vaultsPnl: _.sortBy(groupedVaultPnlTicks, 'ticker'),
     };
   }
 

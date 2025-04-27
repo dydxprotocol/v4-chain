@@ -19,7 +19,6 @@ import {
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
   PnlTickInterval,
-  PnlTicksFromDatabase,
   PositionSide,
   SubaccountFromDatabase,
   TradeType,
@@ -256,6 +255,8 @@ export interface HistoricalPnlResponse extends PaginationResponse {
 }
 
 export interface PnlTicksResponseObject {
+  id: string,
+  subaccountId: string,
   equity: string,
   totalPnl: string,
   netTransfers: string,
@@ -265,7 +266,7 @@ export interface PnlTicksResponseObject {
 }
 
 export interface AggregatedPnlTick{
-  pnlTick: PnlTicksFromDatabase,
+  pnlTick: PnlTicksResponseObject,
   numTicks: number,
 }
 
