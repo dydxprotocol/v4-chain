@@ -13,7 +13,6 @@ export * as StatefulOrderUpdatesCache from './caches/stateful-order-updates-cach
 export * as StateFilledQuantumsCache from './caches/state-filled-quantums-cache';
 export * as LeaderboardPnlProcessedCache from './caches/leaderboard-processed-cache';
 export * as OrderbookMidPricesCache from './caches/orderbook-mid-prices-cache';
-export * as VaultCache from './caches/vault-cache';
 export { placeOrder } from './caches/place-order';
 export { removeOrder } from './caches/remove-order';
 export { updateOrder } from './caches/update-order';
@@ -23,12 +22,3 @@ export * from './types';
 export { redisConfigSchema } from './config';
 
 export * as redisTestConstants from '../__tests__/helpers/constants';
-
-export {
-  getVaultsHistoricalPnl,
-  setVaultsHistoricalPnl,
-  getVaultsHistoricalPnlCacheTimestamp,
-  getMegavaultPnl,
-  setMegavaultPnl,
-  getMegavaultPnlCacheTimestamp,
-} from './caches/vault-cache';

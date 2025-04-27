@@ -7,7 +7,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { PnlTicksResponseObject, RequestMethod } from '../../../../src/types';
 import request from 'supertest';
-import { pnlTickCreateObjectToResponseObject, sendRequest } from '../../../helpers/helpers';
+import { sendRequest } from '../../../helpers/helpers';
 
 describe('pnlTicks-controller#V4', () => {
   beforeAll(async () => {
@@ -43,17 +43,23 @@ describe('pnlTicks-controller#V4', () => {
           `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}`,
       });
 
-      const expectedPnlTickResponse
-      : PnlTicksResponseObject = pnlTickCreateObjectToResponseObject({
+      const expectedPnlTickResponse: PnlTicksResponseObject = {
         ...testConstants.defaultPnlTick,
-      });
+        id: PnlTicksTable.uuid(
+          testConstants.defaultPnlTick.subaccountId,
+          testConstants.defaultPnlTick.createdAt,
+        ),
+      };
 
-      const expectedPnlTick2Response
-      : PnlTicksResponseObject = pnlTickCreateObjectToResponseObject({
+      const expectedPnlTick2Response: any = {
         ...testConstants.defaultPnlTick,
         createdAt,
         blockHeight,
-      });
+        id: PnlTicksTable.uuid(
+          testConstants.defaultPnlTick.subaccountId,
+          createdAt,
+        ),
+      };
 
       expect(response.body.historicalPnl).toEqual(
         expect.arrayContaining([
@@ -93,17 +99,23 @@ describe('pnlTicks-controller#V4', () => {
           `&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&page=2&limit=1`,
       });
 
-      const expectedPnlTickResponse
-      : PnlTicksResponseObject = pnlTickCreateObjectToResponseObject({
+      const expectedPnlTickResponse: PnlTicksResponseObject = {
         ...testConstants.defaultPnlTick,
-      });
+        id: PnlTicksTable.uuid(
+          testConstants.defaultPnlTick.subaccountId,
+          testConstants.defaultPnlTick.createdAt,
+        ),
+      };
 
-      const expectedPnlTick2Response
-      : PnlTicksResponseObject = pnlTickCreateObjectToResponseObject({
+      const expectedPnlTick2Response: PnlTicksResponseObject = {
         ...testConstants.defaultPnlTick,
         createdAt,
         blockHeight,
-      });
+        id: PnlTicksTable.uuid(
+          testConstants.defaultPnlTick.subaccountId,
+          createdAt,
+        ),
+      };
 
       expect(responsePage1.body.pageSize).toStrictEqual(1);
       expect(responsePage1.body.offset).toStrictEqual(0);
@@ -152,12 +164,15 @@ describe('pnlTicks-controller#V4', () => {
           `&createdBeforeOrAtHeight=${blockHeight}`,
       });
 
-      const expectedPnlTick2Response
-      : PnlTicksResponseObject = pnlTickCreateObjectToResponseObject({
+      const expectedPnlTick2Response: PnlTicksResponseObject = {
         ...testConstants.defaultPnlTick,
         createdAt,
         blockHeight,
-      });
+        id: PnlTicksTable.uuid(
+          testConstants.defaultPnlTick.subaccountId,
+          createdAt,
+        ),
+      };
 
       expect(response.body.historicalPnl).toEqual(
         expect.arrayContaining([
@@ -190,10 +205,13 @@ describe('pnlTicks-controller#V4', () => {
           `&createdOnOrAfterHeight=${testConstants.defaultPnlTick.blockHeight}`,
       });
 
-      const expectedPnlTickResponse
-      : PnlTicksResponseObject = pnlTickCreateObjectToResponseObject({
+      const expectedPnlTickResponse: PnlTicksResponseObject = {
         ...testConstants.defaultPnlTick,
-      });
+        id: PnlTicksTable.uuid(
+          testConstants.defaultPnlTick.subaccountId,
+          testConstants.defaultPnlTick.createdAt,
+        ),
+      };
 
       expect(response.body.historicalPnl).toEqual(
         expect.arrayContaining([
