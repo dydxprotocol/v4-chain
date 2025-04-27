@@ -14,10 +14,6 @@ importers:
   packages/base:
     specifiers:
       '@aws-sdk/client-ec2': ^3.354.0
-      '@bugsnag/core': ^7.18.0
-      '@bugsnag/js': ^7.18.0
-      '@bugsnag/node': ^7.18.0
-      '@bugsnag/plugin-express': ^7.18.0
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
       '@types/big.js': ^6.1.5
       '@types/express': ^4.17.13
@@ -38,10 +34,6 @@ importers:
       winston-transport: ^4.5.0
     dependencies:
       '@aws-sdk/client-ec2': 3.658.1
-      '@bugsnag/core': 7.18.0
-      '@bugsnag/js': 7.18.0
-      '@bugsnag/node': 7.18.0
-      '@bugsnag/plugin-express': 7.18.0_@bugsnag+core@7.18.0
       axios: 1.2.1
       big.js: 6.2.1
       bignumber.js: 9.0.2
@@ -441,10 +433,6 @@ importers:
 
   services/comlink:
     specifiers:
-      '@bugsnag/core': ^7.18.0
-      '@bugsnag/js': ^7.18.0
-      '@bugsnag/node': ^7.18.0
-      '@bugsnag/plugin-express': ^7.18.0
       '@cosmjs/crypto': 0.32.1
       '@cosmjs/encoding': ^0.32.3
       '@dydxprotocol-indexer/base': workspace:^0.0.1
@@ -496,10 +484,6 @@ importers:
       tsoa: ^5.1.1
       typescript: ^4.7.4
     dependencies:
-      '@bugsnag/core': 7.18.0
-      '@bugsnag/js': 7.18.0
-      '@bugsnag/node': 7.18.0
-      '@bugsnag/plugin-express': 7.18.0_@bugsnag+core@7.18.0
       '@cosmjs/crypto': 0.32.1
       '@cosmjs/encoding': 0.32.3
       '@dydxprotocol-indexer/base': link:../../packages/base
@@ -5157,57 +5141,6 @@ packages:
       '@bufbuild/buf-win32-x64': 1.19.0-1
     dev: false
 
-  /@bugsnag/browser/7.18.0:
-    resolution: {integrity: sha512-lIdM6+mazFkkPwYSbfcBDFMLJ7++WoCuWnaVeaV3HcA7V9RHC+l5CmRSEyRatsiv2xfLPAIasTxAbCCc4WPgCg==}
-    dependencies:
-      '@bugsnag/core': 7.18.0
-    dev: false
-
-  /@bugsnag/core/7.18.0:
-    resolution: {integrity: sha512-j5YVnbrQbs2WUFnhXERPm68XooUrdNrbJISsiK5+mnbWJrdGkIw8+p5sROV72fiuuQlLtV3jiEJHlSErZggLBw==}
-    dependencies:
-      '@bugsnag/cuid': 3.0.0
-      '@bugsnag/safe-json-stringify': 6.0.0
-      error-stack-parser: 2.1.4
-      iserror: 0.0.2
-      stack-generator: 2.0.10
-    dev: false
-
-  /@bugsnag/cuid/3.0.0:
-    resolution: {integrity: sha512-LOt8aaBI+KvOQGneBtpuCz3YqzyEAehd1f3nC5yr9TIYW1+IzYKa2xWS4EiMz5pPOnRPHkyyS5t/wmSmN51Gjg==}
-    dev: false
-
-  /@bugsnag/js/7.18.0:
-    resolution: {integrity: sha512-engv7itP6E5VcqapikA/ZPgnnImxZLMRZMyu14dgld/RCjCm3XFLhGcscnN8jJkTmp366e5Xqo8Lq7y9aI6Yhw==}
-    dependencies:
-      '@bugsnag/browser': 7.18.0
-      '@bugsnag/node': 7.18.0
-    dev: false
-
-  /@bugsnag/node/7.18.0:
-    resolution: {integrity: sha512-jXFIJ3DF4AJZ16j5WsUF+Fe8zgtPdBOryRoqdNvTMWBHI6mVtTyn2clTPYjasocV9rdi9hC3cWxilLGlLacnaQ==}
-    dependencies:
-      '@bugsnag/core': 7.18.0
-      byline: 5.0.0
-      error-stack-parser: 2.1.4
-      iserror: 0.0.2
-      pump: 3.0.0
-      stack-generator: 2.0.10
-    dev: false
-
-  /@bugsnag/plugin-express/7.18.0_@bugsnag+core@7.18.0:
-    resolution: {integrity: sha512-Y8ZjX4Z9xQSfAR29yq4OMR/AOWQ1/T5RhWYu88Hk/eBJ3zuszPO/wHeuZbhDW0z1v3JmkcKishkje9prypQs2g==}
-    peerDependencies:
-      '@bugsnag/core': ^7.0.0
-    dependencies:
-      '@bugsnag/core': 7.18.0
-      iserror: 0.0.2
-    dev: false
-
-  /@bugsnag/safe-json-stringify/6.0.0:
-    resolution: {integrity: sha512-htzFO1Zc57S8kgdRK9mLcPVTW1BY2ijfH7Dk2CeZmspTWKdKqSo1iwmqrq2WtRjFlo8aRZYgLX0wFrDXF/9DLA==}
-    dev: false
-
   /@colors/colors/1.5.0:
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
     engines: {node: '>=0.1.90'}
@@ -8121,11 +8054,6 @@ packages:
       ieee754: 1.2.1
     dev: false
 
-  /byline/5.0.0:
-    resolution: {integrity: sha512-s6webAy+R4SR8XVuJWt2V2rGvhnrhxN+9S15GNuTK3wKPOXFF6RNc+8ug2XhH+2s4f+uudG4kUVYmYOQWL2g0Q==}
-    engines: {node: '>=0.10.0'}
-    dev: false
-
   /bytes/3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
     engines: {node: '>= 0.8'}
@@ -8957,12 +8885,6 @@ packages:
     resolution: {integrity: sha512-7dFHNmqeFSEt2ZBsCriorKnn3Z2pj+fd9kmI6QoWw4//DL+icEBfc0U7qJCisqrTsKTjw4fNFy2pW9OqStD84g==}
     dependencies:
       is-arrayish: 0.2.1
-
-  /error-stack-parser/2.1.4:
-    resolution: {integrity: sha512-Sk5V6wVazPhq5MhpO+AUxJn5x7XSXGl1R93Vn7i+zS15KDVxQijejNCrz8340/2bgLBjR9GtEG8ZVKONDjcqGQ==}
-    dependencies:
-      stackframe: 1.3.4
-    dev: false
 
   /es-abstract/1.20.1:
     resolution: {integrity: sha512-WEm2oBhfoI2sImeM4OF2zE2V3BYdSF+KnSi9Sidz51fQHd7+JuF8Xgcj9/0o+OWeIeIS/MiuNnlruQrJf16GQA==}
@@ -11293,10 +11215,6 @@ packages:
 
   /isarray/2.0.5:
     resolution: {integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==}
-    dev: false
-
-  /iserror/0.0.2:
-    resolution: {integrity: sha512-oKGGrFVaWwETimP3SiWwjDeY27ovZoyZPHtxblC4hCq9fXxed/jasx+ATWFFjCVSRZng8VTMsN1nDnGo6zMBSw==}
     dev: false
 
   /isexe/2.0.0:
@@ -14512,12 +14430,6 @@ packages:
       tweetnacl: 0.14.5
     dev: true
 
-  /stack-generator/2.0.10:
-    resolution: {integrity: sha512-mwnua/hkqM6pF4k8SnmZ2zfETsRUpWXREfA/goT8SLCV4iOFa4bzOX2nDipWAZFPTjLvQB82f5yaodMVhK0yJQ==}
-    dependencies:
-      stackframe: 1.3.4
-    dev: false
-
   /stack-trace/0.0.10:
     resolution: {integrity: sha512-KGzahc7puUKkzyMt+IqAep+TVNbKP+k2Lmwhub39m1AsTSkaDutx56aDCo+HLDzf/D26BIHTJWNiTG1KAJiQCg==}
     dev: false
@@ -14527,10 +14439,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       escape-string-regexp: 2.0.0
-
-  /stackframe/1.3.4:
-    resolution: {integrity: sha512-oeVtt7eWQS+Na6F//S4kJ2K2VbRlS9D43mAlMyVpVWovy9o+jfgH8O9agzANzaiLjclA0oYzUXEM4PurhSUChw==}
-    dev: false
 
   /static-extend/0.1.2:
     resolution: {integrity: sha512-72E9+uLc27Mt718pMHt9VMNiAL4LMsmDbBva8mxWUCkT07fSzEGMYUCk0XWY6lp0j6RBAG4cJ3mWuZv2OE3s0g==}

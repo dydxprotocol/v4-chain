@@ -1,4 +1,4 @@
-import { delay, logger, startBugsnag } from '@dydxprotocol-indexer/base';
+import { delay, logger } from '@dydxprotocol-indexer/base';
 import { admin, KafkaTopics, producer } from '@dydxprotocol-indexer/kafka';
 import { dbHelpers } from '@dydxprotocol-indexer/postgres';
 import { redis } from '@dydxprotocol-indexer/redis';
@@ -71,8 +71,6 @@ export async function handler(
     at: 'index#handler',
     message: `Event: ${JSON.stringify(event, null, 2)}`,
   });
-
-  startBugsnag();
 
   if (config.PREVENT_BREAKING_CHANGES_WITHOUT_FORCE && event.force !== true) {
     if (event.clear_db === true || event.reset_db === true ||

@@ -1,5 +1,5 @@
 import {
-  logger, setInstanceId, getInstanceId, startBugsnag, wrapBackgroundTask,
+  logger, setInstanceId, getInstanceId, wrapBackgroundTask,
 } from '@dydxprotocol-indexer/base';
 import { startConsumer } from '@dydxprotocol-indexer/kafka';
 import { blockHeightRefresher, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
@@ -38,8 +38,6 @@ async function start(): Promise<void> {
     at: 'index#start',
     message: `Starting in env ${config.NODE_ENV}`,
   });
-
-  startBugsnag();
 
   logger.info({
     at: 'index#start',

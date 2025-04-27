@@ -11,7 +11,6 @@ import { TransportStreamOptions } from 'winston-transport';
 import config from './config';
 import logger from './logger';
 import {
-  BugsnagTransport,
   StackTransport,
 } from './logger-transports';
 import { safeJsonStringify } from './sanitization';
@@ -34,26 +33,13 @@ const alignedWithColorsAndTime = winston.format.combine(
 );
 
 export function addTransportsToLogger(): void {
-  // Send errors to Bugsnag (won't actually send unless BUGSNAG_KEY is set to a valid key).
-  logger.add(
-    new BugsnagTransport({
-      level: 'error',
-
-      // Disable since the Bugsnag client already reports and logs unhandled errors.
-      handleExceptions: false,
-      handleRejections: false,
-    } as TransportStreamOptions),
-  );
-
   // Send stack traces of any errors to the console.
   if (config.isTest() || config.isDevelopment()) {
     logger.add(
       new StackTransport({
         level: 'error',
-
-        // Disable since the Bugsnag client already reports and logs unhandled errors.
-        handleExceptions: false,
-        handleRejections: false,
+        handleExceptions: true,
+        handleRejections: true,
       } as TransportStreamOptions),
     );
   }
@@ -65,8 +51,6 @@ export function addTransportsToLogger(): void {
         level: config.LOG_LEVEL,
         format: (config.isTest() || config.isDevelopment()) ? alignedWithColorsAndTime : undefined,
 
-        // Disable in development and test since the output is too verbose and mostly redundant with
-        // the stack logged by the Bugsnag client.
         handleExceptions: config.isProduction() || config.isStaging(),
         handleRejections: config.isProduction() || config.isStaging(),
       } as TransportStreamOptions),

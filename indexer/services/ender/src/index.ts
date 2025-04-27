@@ -1,4 +1,4 @@
-import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
+import { logger, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { stopConsumer, startConsumer } from '@dydxprotocol-indexer/kafka';
 import {
   assetRefresher, perpetualMarketRefresher, liquidityTierRefresher,
@@ -53,7 +53,6 @@ process.on('SIGTERM', async () => {
 });
 
 async function start(): Promise<void> {
-  startBugsnag();
   logger.info({
     at: 'index#start',
     message: `Connecting to redis: ${config.REDIS_URL}`,

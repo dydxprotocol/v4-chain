@@ -24,7 +24,7 @@ import {
   LastUpdateStatus,
   UpdateFunctionCodeCommand,
 } from '@aws-sdk/client-lambda';
-import { logger, startBugsnag } from '@dydxprotocol-indexer/base';
+import { logger } from '@dydxprotocol-indexer/base';
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import _ from 'lodash';
 
@@ -54,8 +54,6 @@ export async function handler(
     at: 'index#handler',
     message: `Event: ${JSON.stringify(event, null, 2)}`,
   });
-
-  startBugsnag();
 
   const region = event.region;
 
