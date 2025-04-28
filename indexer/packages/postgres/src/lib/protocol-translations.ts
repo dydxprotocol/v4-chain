@@ -64,6 +64,9 @@ const ORDER_TYPE_TO_CONDITION_TYPE_MAP: Record<OrderType, IndexerOrder_Condition
   // Unused order types
   [OrderType.MARKET]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
   [OrderType.TRAILING_STOP]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+
+  [OrderType.TWAP]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
+  [OrderType.TWAP_SUBORDER]: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
 };
 
 /**
