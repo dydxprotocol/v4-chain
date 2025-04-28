@@ -8,6 +8,7 @@ import {
   OrderTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
+  protocolTranslations,
 } from '@dydxprotocol-indexer/postgres';
 import {
   CanceledOrdersCache,
@@ -48,6 +49,20 @@ import { Handler } from './handler';
  */
 export class OrderPlaceHandler extends Handler {
   protected async handle(update: OffChainUpdateV1, headers: IHeaders): Promise<void> {
+    if (update.orderPlace?.order?.orderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+      logger.warning({
+        at: 'OrderPlaceHandler#handle',
+        message: 'Received OffChainUpdate with OrderPlace.',
+        debug: 'td0426',
+        orderId: update.orderPlace?.order?.orderId,
+        orderPlace: update.orderPlace,
+        priceLevel: protocolTranslations.subticksToPriceWithParams(
+          update.orderPlace.order?.subticks.toString() ?? '0',
+          config.ORDER_DEBUG_QUANTUM_CONVERSION_EXPONENT,
+          config.ORDER_DEBUG_ATOMIC_RESOLUTION,
+        ),
+      });
+    }
     logger.info({
       at: 'OrderPlaceHandler#handle',
       message: 'Received OffChainUpdate with OrderPlace.',
@@ -84,6 +99,20 @@ export class OrderPlaceHandler extends Handler {
     await this.removeOrderFromCanceledOrdersCache(
       OrderTable.orderIdToUuid(redisOrder.order?.orderId!),
     );
+    if (update.orderPlace?.order?.orderId?.clobPairId === config.ORDER_DEBUG_CLOB_PAIR_ID) {
+      logger.warning({
+        at: 'OrderPlaceHandler#handle',
+        message: 'OrderPlace processed',
+        debug: 'td0426',
+        orderId: update.orderPlace?.order?.orderId,
+        placeOrderResult,
+        priceLevel: protocolTranslations.subticksToPriceWithParams(
+          update.orderPlace.order?.subticks.toString() ?? '0',
+          config.ORDER_DEBUG_QUANTUM_CONVERSION_EXPONENT,
+          config.ORDER_DEBUG_ATOMIC_RESOLUTION,
+        ),
+      });
+    }
     logger.info({
       at: 'OrderPlaceHandler#handle',
       message: 'OrderPlace processed',

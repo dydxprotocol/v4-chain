@@ -41,6 +41,16 @@ export const configSchema = {
   SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_CANCELS_MISSING_ORDERS: parseBoolean({
     default: true,
   }),
+
+  ORDER_DEBUG_CLOB_PAIR_ID: parseNumber({
+    default: 5,
+  }),
+  ORDER_DEBUG_QUANTUM_CONVERSION_EXPONENT: parseNumber({
+    default: -9,
+  }),
+  ORDER_DEBUG_ATOMIC_RESOLUTION: parseNumber({
+    default: -7,
+  }),
 };
 
 export default parseSchema(configSchema);
