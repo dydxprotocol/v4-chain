@@ -175,19 +175,25 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 			store.Delete(orderKey)
 			// TODO: (anmol) handle missing parent order case
 			// TODO: (anmol) emit event?
-		} else {
-			// add the next suborder to the trigger store
-			k.AddSuborderToTriggerStore(
-				ctx,
-				op.suborderToPlace.OrderId,
-				int64(op.twapOrderPlacement.Order.TwapParameters.Interval),
-			)
 		}
 
 		// place triggered suborder
 		err := k.HandleMsgPlaceOrder(ctx, &types.MsgPlaceOrder{Order: op.suborderToPlace}, true)
 		if err != nil {
+			k.Logger(ctx).Error(
+				"Failed to place TWAP suborder",
+				"error", err.Error(),
+				"suborderId", op.suborderToPlace.OrderId,
+			)
 			continue // TODO: (anmol) handle suborder placement failure
+		}
+
+		if op.twapOrderPlacement.RemainingLegs > 0 {
+			k.AddSuborderToTriggerStore(
+				ctx,
+				op.suborderToPlace.OrderId,
+				int64(op.twapOrderPlacement.Order.TwapParameters.Interval),
+			)
 		}
 	}
 }

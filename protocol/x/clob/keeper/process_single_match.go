@@ -294,14 +294,14 @@ func (k Keeper) ProcessSingleMatch(
 	)
 
 	if !matchWithOrders.TakerOrder.IsLiquidation() {
-		taker_order := matchWithOrders.TakerOrder.MustGetOrder()
-		if taker_order.OrderId.IsTwapSuborder() {
+		takerOrder := matchWithOrders.TakerOrder.MustGetOrder()
+		if takerOrder.OrderId.IsTwapSuborder() {
 			// Get the parent order ID by removing the TWAP suborder flag
 			parentOrderId := types.OrderId{
-				SubaccountId: taker_order.OrderId.SubaccountId,
-				ClientId:     taker_order.OrderId.ClientId,
+				SubaccountId: takerOrder.OrderId.SubaccountId,
+				ClientId:     takerOrder.OrderId.ClientId,
 				OrderFlags:   types.OrderIdFlags_Twap, // Set directly to TWAP
-				ClobPairId:   taker_order.OrderId.ClobPairId,
+				ClobPairId:   takerOrder.OrderId.ClobPairId,
 			}
 
 			// Update the parent TWAP order state
