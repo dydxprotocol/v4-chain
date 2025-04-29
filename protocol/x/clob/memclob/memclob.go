@@ -2354,6 +2354,17 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 	premiumPpm int32,
 	err error,
 ) {
+	if clobPair.Id == 0 || clobPair.Id == 1 {
+		log.InfoLog(
+			ctx,
+			"!!!! GetPricePremium",
+			"clobPairId",
+			clobPair.Id,
+			"params",
+			params,
+		)
+	}
+
 	// Convert premium vote clamp to int32 (panics if underflows or overflows).
 	maxPremiumPpm := lib.MustConvertBigIntToInt32(params.MaxAbsPremiumVotePpm)
 	minPremiumPpm := -maxPremiumPpm
@@ -2394,6 +2405,17 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 	bestAsk, hasAsk := orderbook.getBestOrderOnSide(
 		false, // isBuy
 	)
+
+	if clobPair.Id == 0 || clobPair.Id == 1 {
+		log.InfoLog(
+			ctx,
+			"!!!! GetPricePremium",
+			"bestBid",
+			bestBid,
+			"bestAsk",
+			bestAsk,
+		)
+	}
 
 	if !hasBid && !hasAsk {
 		// Orderbook is empty.
@@ -2472,6 +2494,7 @@ func (m *MemClobPriceTimePriority) getPricePremiumFromSide(
 ) (
 	premiumPpm int32,
 ) {
+
 	impactPriceSubticks, hasEnoughLiquidity := m.getImpactPriceSubticks(
 		ctx,
 		clobPair,
@@ -2479,6 +2502,25 @@ func (m *MemClobPriceTimePriority) getPricePremiumFromSide(
 		isBid,
 		impactNotionalQuoteQuantums,
 	)
+
+	if clobPair.Id == 0 || clobPair.Id == 1 {
+		log.InfoLog(
+			ctx,
+			"!!!! getPricePremiumFromSide",
+			"isBid",
+			isBid,
+			"clobPairId",
+			clobPair.Id,
+			"indexPriceSubticks",
+			indexPriceSubticks,
+			"impactPriceSubticks",
+			impactPriceSubticks,
+			"impactNotionalQuoteQuantums",
+			impactNotionalQuoteQuantums,
+			"minPremiumPpm",
+			minPremiumPpm,
+		)
+	}
 
 	if !hasEnoughLiquidity {
 		// Impact Ask (Bid) is infinity (Zero), return 0 premium by definition.
