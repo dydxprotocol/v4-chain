@@ -607,9 +607,15 @@ func TestGenerateSuborder(t *testing.T) {
 				OrderFlags:   types.OrderIdFlags_TwapSuborder,
 				ClobPairId:   tc.twapOrderPlacement.Order.OrderId.ClobPairId,
 			}
-			generatedOrder := ks.ClobKeeper.GenerateSuborder(ctx, suborderId, tc.twapOrderPlacement, tc.blockTime)
+			generatedOrder, isGenerated := ks.ClobKeeper.GenerateSuborder(
+				ctx,
+				suborderId,
+				tc.twapOrderPlacement,
+				tc.blockTime,
+			)
 
 			// Verify the generated order matches expectations
+			require.True(t, isGenerated)
 			require.Equal(t, tc.expectedOrder.OrderId, generatedOrder.OrderId)
 			require.Equal(t, tc.expectedOrder.Side, generatedOrder.Side)
 			require.Equal(t, tc.expectedOrder.GoodTilOneof, generatedOrder.GoodTilOneof)
