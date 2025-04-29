@@ -225,6 +225,11 @@ var (
 		48,
 		"This field has been deprecated",
 	)
+	ErrInvalidTwapOrderPlacement = errorsmod.Register(
+		ModuleName,
+		49,
+		"Invalid TWAP order placement",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(

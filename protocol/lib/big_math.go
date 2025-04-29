@@ -174,6 +174,19 @@ func BigDivCeil(a *big.Int, b *big.Int) *big.Int {
 	return result
 }
 
+// BigDivFloor returns the floor of `a / b`.
+func BigDivFloor(a *big.Int, b *big.Int) *big.Int {
+	result, remainder := new(big.Int).QuoRem(a, b, new(big.Int))
+
+	// If the value was rounded (i.e. there is a remainder), and the exact result would be negative,
+	// then subtract 1 from the result.
+	if remainder.Sign() != 0 && (a.Sign() != b.Sign()) {
+		result.Sub(result, big.NewInt(1))
+	}
+
+	return result
+}
+
 // BigRatRound takes an input and a direction to round (true for up, false for down).
 // It returns the result rounded to a `*big.Int` in the specified direction.
 func BigRatRound(n *big.Rat, roundUp bool) *big.Int {
