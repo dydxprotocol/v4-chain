@@ -205,7 +205,6 @@ importers:
       lodash: ^4.17.21
       long: ^5.2.1
       luxon: ^3.0.1
-      moment: ^2.29.4
       objection: ^2.2.16
       objection-unique: ^1.2.2
       pg: ^8.7.3
@@ -222,7 +221,6 @@ importers:
       lodash: 4.17.21
       long: 5.2.1
       luxon: 3.0.1
-      moment: 2.29.4
       objection: 2.2.18_knex@0.21.21
       objection-unique: 1.2.2_objection@2.2.18
       pg: 8.7.3
@@ -12927,10 +12925,6 @@ packages:
 
   /module-details-from-path/1.0.3:
     resolution: {integrity: sha512-ySViT69/76t8VhE1xXHK6Ch4NcDd26gx0MzKXLO+F7NOtnqH68d9zF94nT8ZWSxXh8ELOERsnJO/sWt1xZYw5A==}
-    dev: false
-
-  /moment/2.29.4:
-    resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
     dev: false
 
   /ms/2.0.0:
