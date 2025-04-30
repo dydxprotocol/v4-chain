@@ -31,7 +31,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { redisClient } from '../../../helpers/redis/redis-controller';
+import { redisReadOnlyClient } from '../../../helpers/redis/redis-controller';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
@@ -297,7 +297,7 @@ class OrdersController extends Controller {
       RedisOrder | null,
     ] = await Promise.all([
       OrderTable.findById(orderId),
-      OrdersCache.getOrder(orderId, redisClient),
+      OrdersCache.getOrder(orderId, redisReadOnlyClient),
     ]);
 
     // Get subaccount number and subaccountId from either Redis or Postgres
@@ -658,12 +658,12 @@ async function getRedisOrderMapForSubaccountIds(
 
   const subaccountToOrderIds = await SubaccountOrderIdsCache.getOrderIdsForSubaccounts(
     subaccountIds,
-    redisClient,
+    redisReadOnlyClient,
   );
   const orderIds: string[] = _.flatten(_.values(subaccountToOrderIds));
 
   const nullableRedisOrders: (RedisOrder | null)[] = await Promise.all(
-    _.map(orderIds, (orderId: string) => OrdersCache.getOrder(orderId, redisClient)),
+    _.map(orderIds, (orderId: string) => OrdersCache.getOrder(orderId, redisReadOnlyClient)),
   );
   const redisOrders: RedisOrder[] = _.filter(
     nullableRedisOrders,
