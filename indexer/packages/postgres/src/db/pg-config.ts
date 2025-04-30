@@ -1,5 +1,5 @@
-import pg from 'pg';
 import { DateTime } from 'luxon';
+import pg from 'pg';
 
 /**
  * we need to add this line, because the default type parser
@@ -8,8 +8,8 @@ import { DateTime } from 'luxon';
  */
 
 const utcZone = {
-  zone: "utc",
-}
+  zone: 'utc',
+};
 
 pg.types.setTypeParser(
   pg.types.builtins.TIMESTAMPTZ,
