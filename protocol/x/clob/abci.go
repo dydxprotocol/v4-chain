@@ -78,9 +78,6 @@ func EndBlocker(
 	// Prune any fill amounts from state which are now past their `pruneableBlockHeight`.
 	keeper.PruneStateFillAmountsForShortTermOrders(ctx)
 
-	// Place any TWAP suborders that are due
-	keeper.GenerateAndPlaceTriggeredTwapSuborders(ctx)
-
 	// Prune expired stateful orders completely from state.
 	expiredStatefulOrderIds := keeper.RemoveExpiredStatefulOrders(ctx, ctx.BlockTime())
 	for _, orderId := range expiredStatefulOrderIds {
@@ -113,6 +110,9 @@ func EndBlocker(
 	// Update the memstore with expired order ids.
 	// These expired stateful order ids will be purged from the memclob in `Commit`.
 	processProposerMatchesEvents.ExpiredStatefulOrderIds = expiredStatefulOrderIds
+
+	// Place any TWAP suborders that are due
+	keeper.GenerateAndPlaceTriggeredTwapSuborders(ctx)
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.
 	triggeredConditionalOrderIds := keeper.MaybeTriggerConditionalOrders(ctx)
