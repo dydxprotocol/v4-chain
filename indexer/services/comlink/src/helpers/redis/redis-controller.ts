@@ -5,7 +5,7 @@ import {
 
 import config from '../../config';
 
-// Primary Redis client
+// Primary read-write Redis client
 const res: {
   client: RedisClient,
   connect: () => Promise<void>,
