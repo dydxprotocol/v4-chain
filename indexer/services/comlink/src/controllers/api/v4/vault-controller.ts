@@ -327,6 +327,8 @@ class VaultController extends Controller {
       },
     );
 
+    // FOO CHANGE
+
     // Insert into cache
     await VaultCache.setVaultsHistoricalPnl(
       getResolution(resolution),
