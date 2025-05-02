@@ -63,4 +63,5 @@ jobs:
         env:
           DB_PORT: 5432
           REDIS_URL: redis://localhost:6379
+          REDIS_READONLY_URL: redis://localhost:6379
           RATE_LIMIT_REDIS_URL: redis://localhost:6379
