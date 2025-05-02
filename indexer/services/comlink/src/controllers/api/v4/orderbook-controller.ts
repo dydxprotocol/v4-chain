@@ -9,7 +9,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { redisClient } from '../../../helpers/redis/redis-controller';
+import { redisReadOnlyClient } from '../../../helpers/redis/redis-controller';
 import { NotFoundError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -38,7 +38,7 @@ class OrderbookController extends Controller {
 
     const orderbookLevels: OrderbookLevels = await OrderbookLevelsCache.getOrderBookLevels(
       ticker,
-      redisClient,
+      redisReadOnlyClient,
       {
         sortSides: true,
         uncrossBook: true,

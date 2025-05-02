@@ -45,7 +45,7 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import { getVaultStartPnl } from '../../../caches/vault-start-pnl';
 import config from '../../../config';
-import { redisClient } from '../../../helpers/redis/redis-controller';
+import { redisClient, redisReadOnlyClient } from '../../../helpers/redis/redis-controller';
 import {
   aggregateHourlyPnlTicks,
   getSubaccountResponse,
@@ -85,18 +85,20 @@ class VaultController extends Controller {
     @Query() resolution?: PnlTickInterval,
   ): Promise<MegavaultHistoricalPnlResponse> {
     const start: number = Date.now();
+
+    // Get cache timestamp from read-only Redis
     const cacheTimestamp: Date | null = await VaultCache.getMegavaultPnlCacheTimestamp(
       getResolution(resolution),
-      redisClient,
+      redisReadOnlyClient,
     );
 
-    // Check if the last cached result was less than the cache TTL
+    // Check (from read-only Redis) if the last cached result was less than the cache TTL
     if (config.VAULT_CACHE_TTL_MS > 0 &&
       cacheTimestamp !== null &&
       Date.now() - cacheTimestamp.getTime() < config.VAULT_CACHE_TTL_MS) {
       const cached: CachedMegavaultPnl | null = await VaultCache.getMegavaultPnl(
         getResolution(resolution),
-        redisClient,
+        redisReadOnlyClient,
       );
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl_cache_hit.timing`,
@@ -189,7 +191,7 @@ class VaultController extends Controller {
           return pnlTicksToResponseObject(pnlTick);
         });
 
-    // Insert into cache.
+    // Cache in primary Redis instance
     await VaultCache.setMegavaultPnl(
       getResolution(resolution),
       sortedPnlTicks,
@@ -215,18 +217,18 @@ class VaultController extends Controller {
   ): Promise<VaultsHistoricalPnlResponse> {
     const start: number = Date.now();
 
+    // Get cache timestamp from read-only Redis
     const cacheTimestamp: Date | null = await VaultCache.getVaultsHistoricalPnlCacheTimestamp(
       getResolution(resolution),
-      redisClient,
+      redisReadOnlyClient,
     );
-
     // Check if the last cached result was less than the cache TTL
     if (config.VAULT_CACHE_TTL_MS > 0 &&
       cacheTimestamp !== null &&
       Date.now() - cacheTimestamp.getTime() < config.VAULT_CACHE_TTL_MS) {
       const cached: CachedVaultHistoricalPnl[] | null = await VaultCache.getVaultsHistoricalPnl(
         getResolution(resolution),
-        redisClient,
+        redisReadOnlyClient,
       );
 
       if (cached !== null) {
@@ -327,7 +329,7 @@ class VaultController extends Controller {
       },
     );
 
-    // Insert into cache
+    // Cache in primary Redis instance
     await VaultCache.setVaultsHistoricalPnl(
       getResolution(resolution),
       sortedVaultPnlTicks,
