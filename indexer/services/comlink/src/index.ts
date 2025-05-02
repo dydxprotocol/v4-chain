@@ -8,7 +8,7 @@ import { perpetualMarketRefresher, liquidityTierRefresher } from '@dydxprotocol-
 import { startVaultStartPnlCache } from './caches/vault-start-pnl';
 import config from './config';
 import IndexV4 from './controllers/api/index-v4';
-import { connect as connectToRedis } from './helpers/redis/redis-controller';
+import { connect as connectToRedis, connectReadOnly as connectToRedisReadOnly } from './helpers/redis/redis-controller';
 import Server from './request-helpers/server';
 
 process.on('SIGTERM', () => {
@@ -50,6 +50,12 @@ async function start() {
   logger.info({
     at: 'index#start',
     message: `Connected to redis at ${config.REDIS_URL}`,
+  });
+
+  await connectToRedisReadOnly();
+  logger.info({
+    at: 'index#start',
+    message: `Connected to read-only redis at ${config.REDIS_READONLY_URL}`,
   });
 
   startServer();
