@@ -42,6 +42,10 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import { getVaultStartPnl } from '../../../caches/vault-start-pnl';
 import config from '../../../config';
+<<<<<<< HEAD
+=======
+import { redisClient, redisReadOnlyClient } from '../../../helpers/redis/redis-controller';
+>>>>>>> 1bf9301c (refactor(comlink): Separate readonly and primary Redis on comlink (#2817))
 import {
   aggregateHourlyPnlTicks,
   getSubaccountResponse,
@@ -80,6 +84,53 @@ class VaultController extends Controller {
     @Query() resolution?: PnlTickInterval,
   ): Promise<MegavaultHistoricalPnlResponse> {
     const start: number = Date.now();
+<<<<<<< HEAD
+=======
+
+    // Get cache timestamp from read-only Redis
+    const cacheTimestamp: Date | null = await VaultCache.getMegavaultPnlCacheTimestamp(
+      getResolution(resolution),
+      redisReadOnlyClient,
+    );
+
+    // Check (from read-only Redis) if the last cached result was less than the cache TTL
+    if (config.VAULT_CACHE_TTL_MS > 0 &&
+      cacheTimestamp !== null &&
+      Date.now() - cacheTimestamp.getTime() < config.VAULT_CACHE_TTL_MS) {
+      const cached: CachedMegavaultPnl | null = await VaultCache.getMegavaultPnl(
+        getResolution(resolution),
+        redisReadOnlyClient,
+      );
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl_cache_hit.timing`,
+        Date.now() - start,
+        {
+          resolution: getResolution(resolution),
+        },
+      );
+
+      if (cached !== null) {
+        stats.increment(
+          `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl_cache_hit`,
+          {
+            resolution: getResolution(resolution),
+          },
+        );
+
+        return {
+          megavaultPnl: _.sortBy(cached.pnlTicks, 'blockTime'),
+        };
+      }
+    }
+
+    stats.increment(
+      `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl_cache_miss`,
+      {
+        resolution: getResolution(resolution),
+      },
+    );
+
+>>>>>>> 1bf9301c (refactor(comlink): Separate readonly and primary Redis on comlink (#2817))
     const vaultSubaccounts: VaultMapping = await getVaultMapping();
     stats.timing(
       `${config.SERVICE_NAME}.${controllerName}.fetch_vaults.timing`,
@@ -140,7 +191,29 @@ class VaultController extends Controller {
       megavaultPnl: _.sortBy(pnlTicksWithCurrentTick, 'blockTime').map(
         (pnlTick: PnlTicksFromDatabase) => {
           return pnlTicksToResponseObject(pnlTick);
+<<<<<<< HEAD
         }),
+=======
+        });
+
+    // Cache in primary Redis instance
+    await VaultCache.setMegavaultPnl(
+      getResolution(resolution),
+      sortedPnlTicks,
+      redisClient,
+    );
+
+    stats.timing(
+      `${config.SERVICE_NAME}.${controllerName}.megavault_historical_pnl.cache_miss.timing`,
+      Date.now() - start,
+      {
+        resolution: getResolution(resolution),
+      },
+    );
+
+    return {
+      megavaultPnl: sortedPnlTicks,
+>>>>>>> 1bf9301c (refactor(comlink): Separate readonly and primary Redis on comlink (#2817))
     };
   }
 
@@ -148,6 +221,54 @@ class VaultController extends Controller {
   async getVaultsHistoricalPnl(
     @Query() resolution?: PnlTickInterval,
   ): Promise<VaultsHistoricalPnlResponse> {
+<<<<<<< HEAD
+=======
+    const start: number = Date.now();
+
+    // Get cache timestamp from read-only Redis
+    const cacheTimestamp: Date | null = await VaultCache.getVaultsHistoricalPnlCacheTimestamp(
+      getResolution(resolution),
+      redisReadOnlyClient,
+    );
+    // Check if the last cached result was less than the cache TTL
+    if (config.VAULT_CACHE_TTL_MS > 0 &&
+      cacheTimestamp !== null &&
+      Date.now() - cacheTimestamp.getTime() < config.VAULT_CACHE_TTL_MS) {
+      const cached: CachedVaultHistoricalPnl[] | null = await VaultCache.getVaultsHistoricalPnl(
+        getResolution(resolution),
+        redisReadOnlyClient,
+      );
+
+      if (cached !== null) {
+        stats.timing(
+          `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_hit.timing`,
+          Date.now() - start,
+          {
+            resolution: getResolution(resolution),
+          },
+        );
+
+        stats.increment(
+          `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_hit`,
+          {
+            resolution: getResolution(resolution),
+          },
+        );
+
+        return {
+          vaultsPnl: cached,
+        };
+      }
+    }
+
+    stats.increment(
+      `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_miss`,
+      {
+        resolution: getResolution(resolution),
+      },
+    );
+
+>>>>>>> 1bf9301c (refactor(comlink): Separate readonly and primary Redis on comlink (#2817))
     const vaultSubaccounts: VaultMapping = await getVaultMapping();
     const [
       vaultPnlTicks,
@@ -204,6 +325,26 @@ class VaultController extends Controller {
       .values()
       .value();
 
+<<<<<<< HEAD
+=======
+    const sortedVaultPnlTicks: VaultHistoricalPnl[] = _.sortBy(groupedVaultPnlTicks, 'ticker');
+
+    stats.timing(
+      `${config.SERVICE_NAME}.${controllerName}.vaults_historical_pnl_cache_miss.timing`,
+      Date.now() - start,
+      {
+        resolution: getResolution(resolution),
+      },
+    );
+
+    // Cache in primary Redis instance
+    await VaultCache.setVaultsHistoricalPnl(
+      getResolution(resolution),
+      sortedVaultPnlTicks,
+      redisClient,
+    );
+
+>>>>>>> 1bf9301c (refactor(comlink): Separate readonly and primary Redis on comlink (#2817))
     return {
       vaultsPnl: _.sortBy(groupedVaultPnlTicks, 'ticker'),
     };
