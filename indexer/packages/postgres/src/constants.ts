@@ -126,8 +126,9 @@ export const DEFAULT_POSTGRES_OPTIONS : Options = config.USE_READ_REPLICA
     readReplica: true,
   } : {};
 
+// The maximum number of parent subaccounts per address.
 export const MAX_PARENT_SUBACCOUNTS: number = 128;
-
+// The maximum number of child subaccounts per parent subaccount.
 export const CHILD_SUBACCOUNT_MULTIPLIER: number = 1000;
 
 // From https://github.com/dydxprotocol/v4-chain/blob/protocol/v7.0.0-dev0/protocol/app/module_accounts_test.go#L41
