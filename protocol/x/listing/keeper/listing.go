@@ -134,6 +134,11 @@ func (k Keeper) CreatePerpetual(
 		(int32(math.Floor(math.Log10(float64(metadata.ReferencePrice)))) -
 			int32(marketMapDetails.Ticker.Decimals))
 
+	marketType := perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
+	if metadata.CrossLaunch {
+		marketType = perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+	}
+
 	// Create a new perpetual
 	perpetual, err := k.PerpetualsKeeper.CreatePerpetual(
 		ctx,
@@ -143,7 +148,7 @@ func (k Keeper) CreatePerpetual(
 		atomicResolution,
 		types.DefaultFundingPpm,
 		types.LiquidityTier_Isolated,
-		perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
+		marketType,
 	)
 	if err != nil {
 		return 0, err
