@@ -147,13 +147,8 @@ func (k Keeper) CreatePerpetual(
 		marketId,
 		atomicResolution,
 		types.DefaultFundingPpm,
-<<<<<<< HEAD
 		types.LiquidityTier_Isolated,
-		perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
-=======
-		types.LiquidityTier_IML_5x,
 		marketType,
->>>>>>> a12e3591 ([ENG-4] Add cross-margin launch for listings (#2804))
 	)
 	if err != nil {
 		return 0, err

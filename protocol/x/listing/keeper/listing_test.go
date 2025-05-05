@@ -189,21 +189,13 @@ func TestCreatePerpetual(t *testing.T) {
 					// Expected resolution = -6 - (Floor(log10(1000000000))-10) = -5
 					require.Equal(t, int32(-5), perpetual.Params.AtomicResolution)
 					require.Equal(t, int32(types.DefaultFundingPpm), perpetual.Params.DefaultFundingPpm)
-<<<<<<< HEAD
 					require.Equal(t, uint32(types.LiquidityTier_Isolated), perpetual.Params.LiquidityTier)
-					require.Equal(
-						t, perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
-						perpetual.Params.MarketType,
-					)
-=======
-					require.Equal(t, uint32(types.LiquidityTier_IML_5x), perpetual.Params.LiquidityTier)
 
 					expectedMarketType := perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
 					if tc.crossLaunch {
 						expectedMarketType = perpetualtypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
 					}
 					require.Equal(t, expectedMarketType, perpetual.Params.MarketType)
->>>>>>> a12e3591 ([ENG-4] Add cross-margin launch for listings (#2804))
 				}
 			},
 		)
