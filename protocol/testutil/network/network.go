@@ -21,6 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	marketmaptypes "github.com/dydxprotocol/slinky/x/marketmap/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
@@ -29,7 +30,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/ci"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/gofrs/flock"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 	"github.com/stretchr/testify/require"
 )
 

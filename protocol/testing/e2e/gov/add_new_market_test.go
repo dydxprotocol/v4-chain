@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
+	marketmaptypes "github.com/dydxprotocol/slinky/x/marketmap/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
-	marketmaptypes "github.com/skip-mev/slinky/x/marketmap/types"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

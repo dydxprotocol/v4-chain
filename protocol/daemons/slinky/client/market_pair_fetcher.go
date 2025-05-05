@@ -8,13 +8,13 @@ import (
 	"cosmossdk.io/log"
 	"google.golang.org/grpc"
 
+	slinkytypes "github.com/dydxprotocol/slinky/pkg/types"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	daemonlib "github.com/dydxprotocol/v4-chain/protocol/daemons/shared"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 )
 
 // MarketPairFetcher is a lightweight process run in a goroutine by the slinky client.

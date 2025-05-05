@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/skip-mev/slinky/abci/testutils"
+	"github.com/dydxprotocol/slinky/abci/testutils"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
