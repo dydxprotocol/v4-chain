@@ -325,6 +325,9 @@ func (k Keeper) MustRemoveStatefulOrder(
 
 	k.DeleteLongTermOrderPlacement(ctx, orderId)
 
+	// Cancelling a TWAP parent order will attempt to cancel the in-flight suborder.
+	// Since a TWAP suborder is maintained as a normal stateful order, cancelling a
+	// suborder follows the same flow as other stateful orders.
 	if order.OrderId.IsTwapOrder() {
 		suborderId := k.twapToSuborderId(order.OrderId)
 		// GoodTilBlockTime is set to the current block time + 10 seconds.
