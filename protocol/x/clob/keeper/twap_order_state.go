@@ -47,10 +47,15 @@ func (k Keeper) SetTWAPOrderPlacement(ctx sdk.Context,
 		RemainingQuantums: order.Quantums,
 	}
 
-	k.AddSuborderToTriggerStore(ctx, k.twapToSuborderId(order.OrderId), 0)
+	// Increment the stateful order count only once for TWAP orders.
+	// Suborders that are generated from a TWAP order are not counted
+	// towards the stateful order count.
+	k.CheckAndIncrementStatefulOrderCount(ctx, order.OrderId)
 
 	twapOrderPlacementBytes := k.cdc.MustMarshal(&twapOrderPlacement)
 	store.Set(orderKey, twapOrderPlacementBytes)
+
+	k.AddSuborderToTriggerStore(ctx, k.twapToSuborderId(order.OrderId), 0)
 }
 
 // GetTwapOrderPlacement gets a TWAP order placement from the store.
@@ -161,7 +166,7 @@ func (k Keeper) GenerateAndPlaceTriggeredTwapSuborders(ctx sdk.Context) {
 
 		twapOrderPlacement, found := k.GetTwapOrderPlacement(ctx, parentOrderId)
 		if !found {
-			// If parent TWAP was cancelled/found, do not place any pending suborders.
+			// If parent TWAP was cancelled/not found, do not place any pending suborders.
 			operationsToProcess = append(operationsToProcess, twapOrderOperation{
 				operationType: parentTwapCancelled,
 				keyToDelete:   append([]byte{}, iterator.Key()...),
@@ -235,7 +240,11 @@ func (k Keeper) DecrementTwapOrderRemainingLegs(
 	store := k.GetTWAPOrderPlacementStore(ctx)
 	orderKey := twapOrderPlacement.Order.OrderId.ToStateKey()
 	if twapOrderPlacement.IsCompleted() {
-		panic("twap order has already been completed")
+		k.Logger(ctx).Error(
+			"twap order has already been completed",
+			"orderId", twapOrderPlacement.Order.OrderId,
+		)
+		return
 	}
 
 	twapOrderPlacement.RemainingLegs--
