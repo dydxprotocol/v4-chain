@@ -116,6 +116,36 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 			useWithIsCheckTxContext: true,
 			expectedErr:             nil,
 		},
+		"Successfully places multiple stateful orders within the same transaction": {
+			msgs: []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On(
+					"PlaceStatefulOrder",
+					ctx,
+					constants.Msg_PlaceOrder_LongTerm,
+					false,
+				).Return(
+					nil,
+				)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             nil,
+		},
+		"Successfully places transfer and stateful order within the same transaction": {
+			msgs: []sdk.Msg{constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+				mck.On(
+					"PlaceStatefulOrder",
+					ctx,
+					constants.Msg_PlaceOrder_LongTerm,
+					false,
+				).Return(
+					nil,
+				)
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             nil,
+		},
 		"Successfully places a conditional order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder_Conditional},
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
@@ -219,6 +249,20 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		},
 		"Fails if there are a mix of off-chain and on-chain messages": {
 			msgs:                    []sdk.Msg{constants.Msg_PlaceOrder, constants.Msg_Send},
+			useWithIsCheckTxContext: true,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+		},
+		"Fails if there are multiple transfer messages": {
+			msgs: []sdk.Msg{
+				constants.Msg_Transfer, constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm,
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+		},
+		"Fails if there are non CLOB, non transfer messages": {
+			msgs: []sdk.Msg{
+				constants.Msg_Transfer, constants.Msg_Send,
+			},
 			useWithIsCheckTxContext: true,
 			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
@@ -437,6 +481,92 @@ func TestIsShortTermClobTransaction(t *testing.T) {
 	}
 }
 
+func TestIsValidClobTransaction(t *testing.T) {
+	tests := map[string]struct {
+		msgs           []sdk.Msg
+		expectedResult bool
+		expectedErr    error
+	}{
+		"Failure on non CLOB msg": {
+			msgs:        []sdk.Msg{constants.Msg_Send},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Failure on mixing long term and short term `PlaceOrder` messages": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Failure on mixing long term and short term `CancelOrder` messages": {
+			msgs:        []sdk.Msg{constants.Msg_CancelOrder_LongTerm, constants.Msg_CancelOrder},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Success on multiple long term `PlaceOrder` messages": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder_LongTerm},
+			expectedErr: nil,
+		},
+		"Success on mix of long term `PlaceOrder` and `CancelOrder` messages": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_CancelOrder_LongTerm},
+			expectedErr: nil,
+		},
+		"Success on mix of long term `PlaceOrder` and `Transfer` messages": {
+			msgs:        []sdk.Msg{constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
+			expectedErr: nil,
+		},
+		"Failure on more than one `Transfer` msg": {
+			msgs:        []sdk.Msg{constants.Msg_Transfer, constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Failure on  mix of non CLOB and `PlaceOrder` messages": {
+			msgs:        []sdk.Msg{constants.Msg_Send, constants.Msg_PlaceOrder},
+			expectedErr: sdkerrors.ErrInvalidRequest,
+		},
+		"Success for a Short-Term `CancelOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_CancelOrder},
+			expectedErr: nil,
+		},
+		"Success for a Short-Term `PlaceOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder},
+			expectedErr: nil,
+		},
+		"Success for a Stateful `PlaceOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
+			expectedErr: nil,
+		},
+		"Success for a Stateful `CancelOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
+			expectedErr: nil,
+		},
+		"Success for a Conditional `PlaceOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_PlaceOrder_Conditional},
+			expectedErr: nil,
+		},
+		"Success for a Conditional `CancelOrder` message": {
+			msgs:        []sdk.Msg{constants.Msg_CancelOrder_Conditional},
+			expectedErr: nil,
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(
+			name, func(t *testing.T) {
+				// Initialize some test setup which builds a test transaction from a slice of messages.
+				var reg codectypes.InterfaceRegistry
+				protoCfg := authtx.NewTxConfig(codec.NewProtoCodec(reg), authtx.DefaultSignModes)
+				builder := protoCfg.NewTxBuilder()
+				err := builder.SetMsgs(tc.msgs...)
+				require.NoError(t, err)
+				tx := builder.GetTx()
+
+				// Invoke the function under test.
+				err = ante.ValidateMsgsInClobTx(tx)
+
+				// Assert the results.
+				require.ErrorIs(t, tc.expectedErr, err)
+			},
+		)
+	}
+}
+
 func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 	tests := map[string]TestCase{
 		"Successfully cancels a short term order using a single message": {
@@ -478,11 +608,6 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 					),
 				).Return(nil)
 			},
-			useWithIsCheckTxContext: true,
-			expectedErr:             nil,
-		},
-		"Works with any number of off-chain messages": {
-			msgs:                    []sdk.Msg{constants.Msg_Send, constants.Msg_Send},
 			useWithIsCheckTxContext: true,
 			expectedErr:             nil,
 		},
@@ -571,6 +696,20 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 		},
 		"Fails if there are a mix of off-chain and on-chain messages": {
 			msgs:                    []sdk.Msg{constants.Msg_CancelOrder, constants.Msg_Send},
+			useWithIsCheckTxContext: true,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+		},
+		"Fails if there are multiple transfer messages": {
+			msgs: []sdk.Msg{
+				constants.Msg_Transfer, constants.Msg_Transfer, constants.Msg_CancelOrder_LongTerm,
+			},
+			useWithIsCheckTxContext: true,
+			expectedErr:             sdkerrors.ErrInvalidRequest,
+		},
+		"Fails if there are non CLOB, non transfer messages": {
+			msgs: []sdk.Msg{
+				constants.Msg_Transfer, constants.Msg_Send,
+			},
 			useWithIsCheckTxContext: true,
 			expectedErr:             sdkerrors.ErrInvalidRequest,
 		},
