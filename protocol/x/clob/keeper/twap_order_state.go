@@ -318,6 +318,20 @@ func (k Keeper) calculateSuborderQuantums(
 	return suborderQuantumsRounded.Uint64()
 }
 
+func calculateSuborderPrice(
+	parentOrder types.Order,
+	adjustedSubticks uint64,
+) uint64 {
+	if parentOrder.Subticks != 0 {
+		if parentOrder.Side == types.Order_SIDE_BUY {
+			return lib.Min(adjustedSubticks, parentOrder.Subticks)
+		} else {
+			return lib.Max(adjustedSubticks, parentOrder.Subticks)
+		}
+	}
+	return adjustedSubticks
+}
+
 // GenerateSuborder generates a suborder when it has been triggered via the
 // trigger store. The suborderId is given  by the store, and this method
 // generates the remaining required fields. Configured price tolerance is
@@ -349,8 +363,11 @@ func (k Keeper) GenerateSuborder(
 
 	// calculate the suborder price with slippage adjustment
 	clobPair := k.mustGetClobPair(ctx, parentOrder.GetClobPairId())
-	order.Subticks = k.GetOraclePriceAdjustedByPercentageSubticks(ctx, clobPair, priceTolerancePpm)
+	suborderAdjustedPrice := k.GetOraclePriceAdjustedByPercentageSubticks(ctx, clobPair, priceTolerancePpm)
 
+	// set the subticks based on the adjusted price and the limit price (if configured)
+	// by the parent twap order
+	order.Subticks = calculateSuborderPrice(parentOrder, suborderAdjustedPrice)
 	// calculate the suborder quantums based on remaining quantums and legs
 	order.Quantums = k.calculateSuborderQuantums(twapOrderPlacement, clobPair)
 

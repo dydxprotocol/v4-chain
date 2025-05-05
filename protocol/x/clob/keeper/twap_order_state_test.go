@@ -544,6 +544,92 @@ func TestGenerateSuborder(t *testing.T) {
 				},
 			},
 		},
+		"limit twap buy order with 50% price tolerance": {
+			twapOrderPlacement: types.TwapOrderPlacement{
+				Order: types.Order{
+					OrderId: types.OrderId{
+						SubaccountId: satypes.SubaccountId{Owner: "owner", Number: 1},
+						ClientId:     1,
+						OrderFlags:   types.OrderIdFlags_Twap,
+						ClobPairId:   0,
+					},
+					Side:     types.Order_SIDE_BUY,
+					Subticks: 800, // limit price for twap order
+					Quantums: 1000,
+					TwapParameters: &types.TwapParameters{
+						Duration:       360,
+						Interval:       60,
+						PriceTolerance: 500_000, // 50% tolerance
+					},
+				},
+				RemainingLegs:     5,
+				RemainingQuantums: 1000,
+			},
+			blockTime: 1000,
+			clobPair: types.ClobPair{
+				Id:                        0,
+				StepBaseQuantums:          100,
+				SubticksPerTick:           100,
+				QuantumConversionExponent: -8,
+			},
+			expectedOrder: types.Order{
+				OrderId: types.OrderId{
+					SubaccountId: satypes.SubaccountId{Owner: "owner", Number: 1},
+					ClientId:     1,
+					OrderFlags:   types.OrderIdFlags_TwapSuborder,
+					ClobPairId:   0,
+				},
+				Side:     types.Order_SIDE_BUY,
+				Quantums: 200,
+				Subticks: 800,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{
+					GoodTilBlockTime: 1003,
+				},
+			},
+		},
+		"limit twap sell order with 50% price tolerance": {
+			twapOrderPlacement: types.TwapOrderPlacement{
+				Order: types.Order{
+					OrderId: types.OrderId{
+						SubaccountId: satypes.SubaccountId{Owner: "owner", Number: 1},
+						ClientId:     1,
+						OrderFlags:   types.OrderIdFlags_Twap,
+						ClobPairId:   0,
+					},
+					Side:     types.Order_SIDE_SELL,
+					Subticks: 1200, // limit price for twap order
+					Quantums: 1000,
+					TwapParameters: &types.TwapParameters{
+						Duration:       360,
+						Interval:       60,
+						PriceTolerance: 500_000, // 50% tolerance
+					},
+				},
+				RemainingLegs:     5,
+				RemainingQuantums: 1000,
+			},
+			blockTime: 1000,
+			clobPair: types.ClobPair{
+				Id:                        0,
+				StepBaseQuantums:          100,
+				SubticksPerTick:           100,
+				QuantumConversionExponent: -8,
+			},
+			expectedOrder: types.Order{
+				OrderId: types.OrderId{
+					SubaccountId: satypes.SubaccountId{Owner: "owner", Number: 1},
+					ClientId:     1,
+					OrderFlags:   types.OrderIdFlags_TwapSuborder,
+					ClobPairId:   0,
+				},
+				Side:     types.Order_SIDE_SELL,
+				Quantums: 200,
+				Subticks: 1200,
+				GoodTilOneof: &types.Order_GoodTilBlockTime{
+					GoodTilBlockTime: 1003,
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
