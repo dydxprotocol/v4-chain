@@ -560,6 +560,3 @@ func TestTwapOrderStatefulOrderCount(t *testing.T) {
 	statefulOrderCount = tApp.App.ClobKeeper.GetStatefulOrderCount(ctx, constants.Alice_Num0)
 	require.Equal(t, uint32(0), statefulOrderCount, "Stateful order count should be 0 after completion")
 }
-
-
-
