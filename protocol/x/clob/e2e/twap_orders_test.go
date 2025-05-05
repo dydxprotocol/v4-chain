@@ -489,3 +489,77 @@ func TestTwapOrderWithThreeSuborders(t *testing.T) {
 	)
 	require.False(t, found, "No trigger placement should exist after completion")
 }
+
+func TestTwapOrderStatefulOrderCount(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Create a TWAP order with:
+	// - 300 second duration
+	// - 100 second interval
+	// This will create exactly 3 suborders
+	twapOrder := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: constants.Alice_Num0,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_Twap,
+				ClobPairId:   0,
+			},
+			Side:     clobtypes.Order_SIDE_BUY,
+			Quantums: 90_000_000_000,
+			Subticks: 0,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+				GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 300),
+			},
+			TwapParameters: &clobtypes.TwapParameters{
+				Duration:       300,
+				Interval:       100,
+				PriceTolerance: 0,
+			},
+		},
+	)
+
+	// Place the TWAP order
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, twapOrder) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Advance block
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// Verify stateful order count is 1 (only the parent TWAP order)
+	statefulOrderCount := tApp.App.ClobKeeper.GetStatefulOrderCount(ctx, constants.Alice_Num0)
+	require.Equal(t, uint32(1), statefulOrderCount, "Stateful order count should be 1")
+
+	// Advance block time by 100 seconds to trigger second suborder
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 100),
+	})
+
+	// Verify stateful order count is still 1
+	statefulOrderCount = tApp.App.ClobKeeper.GetStatefulOrderCount(ctx, constants.Alice_Num0)
+	require.Equal(t, uint32(1), statefulOrderCount, "Stateful order count should remain 1")
+
+	// Advance block time by 100 seconds to trigger third suborder
+	ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 100),
+	})
+
+	// Verify stateful order count is still 1
+	statefulOrderCount = tApp.App.ClobKeeper.GetStatefulOrderCount(ctx, constants.Alice_Num0)
+	require.Equal(t, uint32(1), statefulOrderCount, "Stateful order count should remain 1")
+
+	// Advance block time by 100 seconds to complete TWAP order
+	ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 100),
+	})
+
+	// Verify stateful order count is 0 after completion
+	statefulOrderCount = tApp.App.ClobKeeper.GetStatefulOrderCount(ctx, constants.Alice_Num0)
+	require.Equal(t, uint32(0), statefulOrderCount, "Stateful order count should be 0 after completion")
+}
+
+
+

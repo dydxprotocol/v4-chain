@@ -228,6 +228,9 @@ func (k Keeper) DeleteTWAPOrderPlacement(
 	ctx sdk.Context,
 	twapOrderPlacement types.TwapOrderPlacement,
 ) {
+	// Decrement the stateful order count for the TWAP order.
+	k.CheckAndDecrementStatefulOrderCount(ctx, twapOrderPlacement.Order.OrderId)
+
 	store := k.GetTWAPOrderPlacementStore(ctx)
 	orderKey := twapOrderPlacement.Order.OrderId.ToStateKey()
 	store.Delete(orderKey)
