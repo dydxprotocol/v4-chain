@@ -7,6 +7,7 @@ import {
   OrderFromDatabase,
   OrderSide,
   OrderTable,
+  PnlTicksCreateObject,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import e from 'express';
@@ -15,7 +16,12 @@ import request from 'supertest';
 
 import IndexV4 from '../../src/controllers/api/index-v4';
 import Server from '../../src/request-helpers/server';
-import { RequestMethod, FillResponseObject, MarketType } from '../../src/types';
+import {
+  RequestMethod,
+  FillResponseObject,
+  MarketType,
+  PnlTicksResponseObject,
+} from '../../src/types';
 
 const app: e.Express = Server(IndexV4);
 
@@ -168,4 +174,18 @@ export function fillResponseObjectFromFillCreateObject(
 
 function randomInt(range: number = 1000): number {
   return Math.floor(Math.random() * range);
+}
+
+export function pnlTickCreateObjectToResponseObject(
+  pnlTick: PnlTicksCreateObject,
+): PnlTicksResponseObject {
+  return {
+    // Leave out subaccountId
+    equity: pnlTick.equity,
+    totalPnl: pnlTick.totalPnl,
+    netTransfers: pnlTick.netTransfers,
+    createdAt: pnlTick.createdAt,
+    blockHeight: pnlTick.blockHeight,
+    blockTime: pnlTick.blockTime,
+  };
 }
