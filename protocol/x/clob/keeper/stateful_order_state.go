@@ -469,6 +469,10 @@ func (k Keeper) SetStatefulOrderCount(
 	}
 }
 
+// Increment the stateful order count only once for TWAP orders.
+// Suborders that are generated from a TWAP order are not counted
+// towards the stateful order count because technically they are
+// part of one parent order.
 func (k Keeper) CheckAndIncrementStatefulOrderCount(
 	ctx sdk.Context,
 	orderId types.OrderId,

@@ -47,9 +47,6 @@ func (k Keeper) SetTWAPOrderPlacement(ctx sdk.Context,
 		RemainingQuantums: order.Quantums,
 	}
 
-	// Increment the stateful order count only once for TWAP orders.
-	// Suborders that are generated from a TWAP order are not counted
-	// towards the stateful order count.
 	k.CheckAndIncrementStatefulOrderCount(ctx, order.OrderId)
 
 	twapOrderPlacementBytes := k.cdc.MustMarshal(&twapOrderPlacement)
