@@ -13,5 +13,5 @@ const utcZone = {
 
 pg.types.setTypeParser(
   pg.types.builtins.TIMESTAMPTZ,
-  (val) => (val === null ? null : DateTime.fromSQL(val, utcZone).toISO()),
+  (val) => (val === null ? null : DateTime.fromISO(val.replace(' ', 'T'), utcZone).toISO()),
 );
