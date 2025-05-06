@@ -66,6 +66,9 @@ export interface OrderCreateObject {
   createdAtHeight?: string,
   clientMetadata: string,
   triggerPrice?: string,
+  duration?: string | null,
+  interval?: string | null,
+  priceTolerance?: string | null,
 }
 
 export interface OrderUpdateObject {
@@ -86,6 +89,9 @@ export interface OrderUpdateObject {
   goodTilBlockTime?: string | null,
   clientMetadata?: string,
   triggerPrice?: string,
+  duration?: string | null,
+  interval?: string | null,
+  priceTolerance?: string | null,
 }
 
 export enum OrderColumns {
