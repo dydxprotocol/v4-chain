@@ -5,7 +5,9 @@ import { QueryBuilder } from 'objection';
 
 import {
   BUFFER_ENCODING_UTF_8,
+  CHILD_SUBACCOUNT_MULTIPLIER,
   DEFAULT_POSTGRES_OPTIONS,
+  MAX_PARENT_SUBACCOUNTS,
 } from '../constants';
 import { knexReadReplica } from '../helpers/knex';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
@@ -14,10 +16,12 @@ import { getUuid } from '../helpers/uuid';
 import { getSubaccountQueryForParent } from '../lib/parent-subaccount-helpers';
 import FillModel from '../models/fill-model';
 import {
+  CostOfFills,
   FillColumns,
   FillCreateObject,
   FillFromDatabase,
   FillQueryConfig,
+  FillType,
   FillUpdateObject,
   Liquidity,
   Market24HourTradeVolumes,
@@ -26,7 +30,6 @@ import {
   OrderedFillsWithFundingIndices,
   Ordering,
   OrderSide,
-  CostOfFills,
   PaginationFromDatabase,
   QueryableField,
   QueryConfig,
@@ -246,8 +249,8 @@ export async function update(
 ): Promise<FillFromDatabase | undefined> {
   const fill = await FillModel.query(
     Transaction.get(options.txId),
-  // TODO fix expression typing so we dont have to use any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // TODO fix expression typing so we dont have to use any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ).findById(fields.id).patch(fields as any).returning('*');
   // The objection types mistakenly think the query returns an array of fills.
   return fill as unknown as (FillFromDatabase | undefined);
@@ -608,4 +611,53 @@ export async function getFeesPaid(
   }
 
   return Big(result.rows[0].feesPaid);
+}
+
+/**
+ * Returns fills across all subaccounts belonging to a parent subaccount.
+ * A parent subaccount is defined by an address and parent subaccount number,
+ * where child subaccounts have subaccount numbers in increments of 128 from the parent.
+ *
+ * @param address The wallet address
+ * @param parentSubaccountNumber The parent subaccount number
+ * @param limit Maximum number of fills to return
+ * @param page Page number
+ */
+export async function getFillsForParentSubaccount(
+  address: string,
+  parentSubaccountNumber: number,
+  limit: number,
+  page?: number,
+  fillType?: FillType,
+): Promise<PaginationFromDatabase<FillFromDatabase>> {
+  // Create base query to get subaccount IDs
+  const subaccountQuery = knexReadReplica.getConnection()
+    .select('id as subaccountId')
+    .from('subaccounts')
+    .where('address', address)
+    .whereRaw(
+      `"subaccountNumber" IN (
+        SELECT generate_series(
+          ?, 
+          ? + ${MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER}, 
+          ${MAX_PARENT_SUBACCOUNTS}
+        )
+      )`,
+      [parentSubaccountNumber, parentSubaccountNumber],
+    );
+
+  // Create the main query
+  const baseQuery = FillModel.query()
+    .whereIn(
+      'subaccountId',
+      subaccountQuery,
+    )
+    .modify((queryBuilder) => {
+      if (fillType !== undefined) {
+        queryBuilder.where('type', fillType);
+      }
+    })
+    .orderBy(FillColumns.createdAtHeight, Ordering.DESC);
+
+  return handleLimitAndPagination(baseQuery, limit, page);
 }

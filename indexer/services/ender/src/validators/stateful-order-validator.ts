@@ -24,6 +24,7 @@ import { StatefulOrderPlacementHandler } from '../handlers/stateful-order/statef
 import { StatefulOrderRemovalHandler } from '../handlers/stateful-order/stateful-order-removal-handler';
 import { validateOrderAndReturnErrorMessage, validateOrderIdAndReturnErrorMessage } from './helpers';
 import { Validator } from './validator';
+import { logger } from '@dydxprotocol-indexer/base';
 
 export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
   public validate(): void {
@@ -32,14 +33,20 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       this.event.orderRemoval === undefined &&
       this.event.conditionalOrderPlacement === undefined &&
       this.event.conditionalOrderTriggered === undefined &&
-      this.event.longTermOrderPlacement === undefined
+      this.event.longTermOrderPlacement === undefined &&
+      this.event.twapOrderPlacement === undefined
     ) {
       return this.logAndThrowParseMessageError(
         'One of orderPlace, orderRemoval, conditionalOrderPlacement, conditionalOrderTriggered, ' +
-        'longTermOrderPlacement must be defined in StatefulOrderEvent',
+        'longTermOrderPlacement, or twapOrderPlacement must be defined in StatefulOrderEvent',
         { event: this.event },
       );
     }
+    logger.info({
+      message: 'StatefulOrderValidator',
+      at: 'validate',
+      event: this.event,
+    });
     if (this.event.orderPlace !== undefined) {
       this.validateOrderPlace(this.event.orderPlace);
     } else if (this.event.orderRemoval !== undefined) {
@@ -48,9 +55,9 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       this.validateConditionalOrderPlacement(this.event.conditionalOrderPlacement);
     } else if (this.event.conditionalOrderTriggered !== undefined) {
       this.validateConditionalOrderTriggered(this.event.conditionalOrderTriggered);
-    } else { // longTermOrderPlacement
+    } else if (this.event.longTermOrderPlacement !== undefined ){ 
       this.validateLongTermOrderPlacement(this.event.longTermOrderPlacement!);
-    }
+    } // validate twap?
   }
 
   private validateStatefulOrder(order: IndexerOrder): void {
@@ -206,7 +213,10 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       return ConditionalOrderPlacementHandler;
     } else if (this.event.conditionalOrderTriggered !== undefined) {
       return ConditionalOrderTriggeredHandler;
-    } else if (this.event.longTermOrderPlacement !== undefined) {
+    } else if (
+      this.event.longTermOrderPlacement !== undefined || 
+      this.event.twapOrderPlacement !== undefined
+    ) {
       return StatefulOrderPlacementHandler;
     }
     return undefined;
@@ -292,6 +302,8 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       return this.event.conditionalOrderTriggered.triggeredOrderId!.subaccountId!;
     } else if (this.event.longTermOrderPlacement !== undefined) {
       return this.event.longTermOrderPlacement.order!.orderId!.subaccountId!;
+    } else if (this.event.twapOrderPlacement !== undefined) {
+      return this.event.twapOrderPlacement.order!.orderId!.subaccountId!;
     }
     return {
       owner: '',
@@ -314,6 +326,8 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       return OrderTable.orderIdToUuid(this.event.conditionalOrderTriggered.triggeredOrderId!);
     } else if (this.event.longTermOrderPlacement !== undefined) {
       return OrderTable.orderIdToUuid(this.event.longTermOrderPlacement.order!.orderId!);
+    } else if (this.event.twapOrderPlacement !== undefined) {
+      return OrderTable.orderIdToUuid(this.event.twapOrderPlacement.order!.orderId!);
     }
     return '';
   }

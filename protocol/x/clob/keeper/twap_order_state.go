@@ -278,6 +278,7 @@ func (k Keeper) UpdateTWAPOrderRemainingQuantityOnFill(
 	twapOrderPlacementBytes := k.cdc.MustMarshal(&twapOrderPlacement)
 	store.Set(orderKey, twapOrderPlacementBytes)
 
+	// would be cleaner to send indexer event here
 	return nil
 }
 
