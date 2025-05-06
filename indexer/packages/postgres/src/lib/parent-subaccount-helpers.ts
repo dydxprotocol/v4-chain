@@ -28,8 +28,6 @@ export function getSubaccountQueryForParent(parentSubaccount: {
     .select('id as subaccountId')
     .from('subaccounts')
     .where('address', parentSubaccount.address)
-    .andWhere('subaccountNumber', '>=', parentSubaccount.subaccountNumber)
-    .andWhere('subaccountNumber', '<=', parentSubaccount.subaccountNumber + MAX_PARENT_SUBACCOUNTS * CHILD_SUBACCOUNT_MULTIPLIER)
     .andWhereRaw(
       '("subaccountNumber" - ?) % ? = 0',
       [parentSubaccount.subaccountNumber, MAX_PARENT_SUBACCOUNTS],
