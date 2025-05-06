@@ -26,7 +26,6 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-    // how do we remove values from an enum type?
     return knex.raw(formatAlterTableEnumSql(
         'orders',
         'type',
