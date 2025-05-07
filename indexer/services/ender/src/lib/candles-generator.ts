@@ -18,7 +18,6 @@ import {
   PerpetualPositionTable,
   TradeContent,
   TradeMessageContents,
-  helpers,
 } from '@dydxprotocol-indexer/postgres';
 import { CandleMessage } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -31,7 +30,7 @@ import config from '../config';
 import { KafkaPublisher } from './kafka-publisher';
 import { ConsolidatedKafkaEvent, SingleTradeMessage } from './types';
 
-type BlockCandleUpdatesMap = { [ticker: string]: BlockCandleUpdate};
+type BlockCandleUpdatesMap = { [ticker: string]: BlockCandleUpdate };
 type BlockCandleUpdate = {
   low: string,
   high: string,
@@ -43,14 +42,18 @@ type BlockCandleUpdate = {
 };
 
 type OrderbookMidPrice = string | undefined;
-
 type OpenInterestMap = { [ticker: string]: string };
+
+const utcZone = {
+  zone: 'utc',
+};
 
 export class CandlesGenerator {
   kafkaPublisher: KafkaPublisher;
   blockTimestamp: DateTime;
   txId: number;
   writeOptions: Options;
+  resolutionStartTimes: Map<CandleResolution, DateTime>;
 
   constructor(
     kafkaPublisher: KafkaPublisher,
@@ -61,6 +64,13 @@ export class CandlesGenerator {
     this.blockTimestamp = blockTimestamp;
     this.txId = txId;
     this.writeOptions = { txId: this.txId };
+    this.resolutionStartTimes = new Map(
+      Object.values(CandleResolution).map((resolution: CandleResolution) => {
+        return [
+          resolution,
+          CandlesGenerator.calculateNormalizedCandleStartTime(this.blockTimestamp, resolution),
+        ];
+      }));
   }
 
   /**
@@ -171,11 +181,13 @@ export class CandlesGenerator {
 
     const openInterestMap: OpenInterestMap = await this.getOpenInterestMap();
     const orderbookMidPriceMap = getOrderbookMidPriceMap();
+
     _.forEach(
       Object.values(perpetualMarketRefresher.getPerpetualMarketsMap()),
       (perpetualMarket: PerpetualMarketFromDatabase) => {
-        const blockCandleUpdate:
-        BlockCandleUpdate | undefined = blockCandleUpdatesMap[perpetualMarket.ticker];
+        const blockCandleUpdate: BlockCandleUpdate | undefined = blockCandleUpdatesMap[
+          perpetualMarket.ticker
+        ];
 
         _.forEach(
           Object.values(CandleResolution),
@@ -186,6 +198,7 @@ export class CandlesGenerator {
               resolution,
               openInterestMap,
               orderbookMidPriceMap[perpetualMarket.ticker],
+              this.resolutionStartTimes.get(resolution)!,
             ));
           },
         );
@@ -224,11 +237,8 @@ export class CandlesGenerator {
     resolution: CandleResolution,
     openInterestMap: OpenInterestMap,
     orderbookMidPrice: OrderbookMidPrice,
+    currentStartTime: DateTime,
   ): Promise<CandleFromDatabase | undefined>[] {
-    const currentStartTime: DateTime = CandlesGenerator.calculateNormalizedCandleStartTime(
-      this.blockTimestamp,
-      resolution,
-    );
 
     const existingCandle: CandleFromDatabase | undefined = getCandle(
       ticker,
@@ -309,13 +319,9 @@ export class CandlesGenerator {
       return _.some(
         Object.values(CandleResolution),
         (resolution: CandleResolution) => {
-          const startedAt: DateTime = helpers.calculateNormalizedCandleStartTime(
-            this.blockTimestamp,
-            resolution,
-          );
-
+          const startedAtISOString: string = this.resolutionStartTimes.get(resolution)!.toISO();
           const existingCandle: CandleFromDatabase | undefined = getCandle(ticker, resolution);
-          return existingCandle === undefined || existingCandle.startedAt !== startedAt.toISO();
+          return existingCandle === undefined || existingCandle.startedAt !== startedAtISOString;
         },
       );
     });
@@ -520,12 +526,12 @@ export class CandlesGenerator {
     time: DateTime,
     resolution: CandleResolution,
   ): DateTime {
-    const epochSeconds: number = Math.floor(time.toUTC().toSeconds());
+    const epochSeconds: number = Math.floor(time.toSeconds());
     const normalizedTimeSeconds: number = epochSeconds - (
       epochSeconds % NUM_SECONDS_IN_CANDLE_RESOLUTIONS[resolution]
     );
 
-    return DateTime.fromSeconds(normalizedTimeSeconds).toUTC();
+    return DateTime.fromSeconds(normalizedTimeSeconds, utcZone);
   }
 }
 
