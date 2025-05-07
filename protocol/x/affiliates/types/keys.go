@@ -18,4 +18,6 @@ const (
 	AffiliateTiersKey = "AT"
 
 	AffiliateWhitelistKey = "AW"
+
+	BrokerAffiliateKey = "BA:"
 )

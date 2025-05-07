@@ -103,3 +103,17 @@ func (k Keeper) AffiliateWhitelist(c context.Context,
 		Whitelist: affiliateWhitelist,
 	}, nil
 }
+
+func (k Keeper) BrokerAffiliate(c context.Context,
+	req *types.BrokerAffiliateRequest) (*types.BrokerAffiliateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	brokerAffiliate, err := k.GetBrokerAffiliate(ctx, req.GetBrokerId())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.BrokerAffiliateResponse{
+		BrokerAffiliate: brokerAffiliate,
+	}, nil
+}

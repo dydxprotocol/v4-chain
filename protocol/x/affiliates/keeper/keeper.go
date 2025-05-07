@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -388,4 +389,63 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		}
 	}
 	return nil
+}
+
+func (k Keeper) RegisterBrokerAffiliate(
+	ctx sdk.Context,
+	brokerId uint64,
+	brokerAddress string,
+	brokerFeeSharePpm uint32,
+) error {
+	store := ctx.KVStore(k.storeKey)
+	brokerAffiliate := types.BrokerAffiliate{
+		BrokerId:            brokerId,
+		BrokerAddress:       brokerAddress,
+		BrokerFeeSharePpm:   brokerFeeSharePpm,
+	}
+	brokerAffiliateBytes := k.cdc.MustMarshal(&brokerAffiliate)
+	store.Set(BrokerAffiliateKey(brokerId), brokerAffiliateBytes)
+	return nil
+}
+
+func BrokerAffiliateKey(brokerId uint64) []byte {
+	return []byte(types.BrokerAffiliateKey + ":" + strconv.FormatUint(brokerId, 10))
+}
+
+func (k Keeper) GetBrokerAffiliate(ctx sdk.Context, brokerId uint64) (types.BrokerAffiliate, error) {
+	store := ctx.KVStore(k.storeKey)
+	brokerAffiliateBytes := store.Get(BrokerAffiliateKey(brokerId))
+	if brokerAffiliateBytes == nil {
+		return types.BrokerAffiliate{}, errorsmod.Wrapf(types.ErrAffiliateNotFound, "broker ID %d", brokerId)
+	}
+	var brokerAffiliate types.BrokerAffiliate
+	if err := k.cdc.Unmarshal(brokerAffiliateBytes, &brokerAffiliate); err != nil {
+		return types.BrokerAffiliate{}, errorsmod.Wrapf(types.ErrAffiliateNotFound, "broker ID %d, error: %s", brokerId, err)
+	}
+	return brokerAffiliate, nil
+}
+
+// GetBrokerFee returns the fee amount for a broker given a broker ID and fill amount.
+// Returns 0 if broker is not found.
+func (k Keeper) GetBrokerFee(
+	ctx sdk.Context,
+	brokerId uint64,
+	fillAmount *big.Rat,
+) (*big.Rat, error) {
+	store := ctx.KVStore(k.storeKey)
+	brokerAffiliateBytes := store.Get(BrokerAffiliateKey(brokerId))
+	if brokerAffiliateBytes == nil {
+		return big.NewRat(0, 1), nil
+	}
+
+	var brokerAffiliate types.BrokerAffiliate
+	if err := k.cdc.Unmarshal(brokerAffiliateBytes, &brokerAffiliate); err != nil {
+		return big.NewRat(0, 1), errorsmod.Wrapf(types.ErrAffiliateNotFound, // for the time being
+			"broker ID %d, error: %s", brokerId, err)
+	}
+
+	// Calculate fee using ppm (parts per million)
+	fee := lib.BigRatMulPpm(fillAmount, brokerAffiliate.BrokerFeeSharePpm)
+
+	return fee, nil
 }

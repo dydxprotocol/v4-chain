@@ -60,6 +60,25 @@ func (k msgServer) UpdateAffiliateWhitelist(ctx context.Context,
 	return &types.MsgUpdateAffiliateWhitelistResponse{}, nil
 }
 
+func (k msgServer) RegisterBrokerAffiliate(ctx context.Context,
+	msg *types.MsgRegisterBrokerAffiliate) (*types.MsgRegisterBrokerAffiliateResponse, error) {
+	// if !k.Keeper.HasAuthority(msg.Authority) {
+	// 	return nil, errors.New("invalid authority")
+	// }
+
+	brokerAffiliate := msg.BrokerAffiliate
+	err := k.Keeper.RegisterBrokerAffiliate(sdk.UnwrapSDKContext(ctx),
+		brokerAffiliate.BrokerId,
+		brokerAffiliate.BrokerAddress,
+		brokerAffiliate.BrokerFeeSharePpm,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgRegisterBrokerAffiliateResponse{}, nil
+}
+
 // NewMsgServerImpl returns an implementation of the MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {

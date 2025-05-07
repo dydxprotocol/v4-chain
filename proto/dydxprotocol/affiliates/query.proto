@@ -32,6 +32,12 @@ service Query {
     option (google.api.http).get =
         "/dydxprotocol/affiliates/affiliate_whitelist";
   };
+  // Query BrokerAffiliate returns the broker affiliate for a given broker ID.
+  rpc BrokerAffiliate(BrokerAffiliateRequest)
+      returns (BrokerAffiliateResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/affiliates/broker_affiliate/{broker_id}";
+  };
 }
 
 // AffiliateInfoRequest is the request type for the Query/AffiliateInfo RPC
@@ -94,4 +100,14 @@ message AffiliateWhitelistRequest {}
 // Query/AffiliateWhitelist RPC method.
 message AffiliateWhitelistResponse {
   AffiliateWhitelist whitelist = 1 [ (gogoproto.nullable) = false ];
+}
+
+// BrokerAffiliateRequest is the request type for the Query/BrokerAffiliate RPC
+// method.
+message BrokerAffiliateRequest { uint64 broker_id = 1; }
+
+// BrokerAffiliateResponse is the response type for the Query/BrokerAffiliate
+// RPC method.
+message BrokerAffiliateResponse {
+  BrokerAffiliate broker_affiliate = 1 [ (gogoproto.nullable) = false ];
 }
