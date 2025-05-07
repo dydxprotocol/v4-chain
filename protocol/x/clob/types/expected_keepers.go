@@ -13,6 +13,7 @@ import (
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
+	affiliatesmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -191,6 +192,8 @@ type RevShareKeeper interface {
 
 type AffiliatesKeeper interface {
 	GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error)
+	GetBrokerFee(ctx sdk.Context, brokerId uint64, fillAmount *big.Int) (*big.Int, error)
+	GetBrokerAffiliate(ctx sdk.Context, brokerId uint64) (affiliatesmoduletypes.BrokerAffiliate, error)
 }
 
 type AccountPlusKeeper interface {

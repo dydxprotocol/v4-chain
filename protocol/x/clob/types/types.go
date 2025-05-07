@@ -9,6 +9,8 @@ type FillForProcess struct {
 	MakerFeeQuoteQuantums *big.Int
 	FillQuoteQuantums     *big.Int
 	ProductId             uint32
+	TakerBrokerId         uint64
+	MakerBrokerId         uint64
 	// MonthlyRollingTakerVolumeQuantums is the total taker volume for
 	// the given taker address in the last 30 days. This rolling volume
 	// does not include stats of the current block being processed.

@@ -430,22 +430,22 @@ func (k Keeper) GetBrokerAffiliate(ctx sdk.Context, brokerId uint64) (types.Brok
 func (k Keeper) GetBrokerFee(
 	ctx sdk.Context,
 	brokerId uint64,
-	fillAmount *big.Rat,
-) (*big.Rat, error) {
+	fillAmount *big.Int,
+) (*big.Int, error) {
 	store := ctx.KVStore(k.storeKey)
 	brokerAffiliateBytes := store.Get(BrokerAffiliateKey(brokerId))
 	if brokerAffiliateBytes == nil {
-		return big.NewRat(0, 1), nil
+		return big.NewInt(0), nil
 	}
 
 	var brokerAffiliate types.BrokerAffiliate
 	if err := k.cdc.Unmarshal(brokerAffiliateBytes, &brokerAffiliate); err != nil {
-		return big.NewRat(0, 1), errorsmod.Wrapf(types.ErrAffiliateNotFound, // for the time being
+		return big.NewInt(0), errorsmod.Wrapf(types.ErrAffiliateNotFound, // for the time being
 			"broker ID %d, error: %s", brokerId, err)
 	}
 
 	// Calculate fee using ppm (parts per million)
-	fee := lib.BigRatMulPpm(fillAmount, brokerAffiliate.BrokerFeeSharePpm)
+	fee := lib.BigMulPpm(fillAmount, lib.BigU(brokerAffiliate.BrokerFeeSharePpm), true)
 
 	return fee, nil
 }

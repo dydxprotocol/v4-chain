@@ -69,6 +69,13 @@ func (lo *LiquidationOrder) IsBuy() bool {
 	return lo.isBuy
 }
 
+// GetBrokerId returns the broker ID of this liquidation order.
+// This function is necessary for the `LiquidationOrder` type to implement the `MatchableOrder` interface.
+// For liquidation orders, the broker ID is always 0.
+func (lo *LiquidationOrder) GetBrokerId() uint64 {
+	return 0
+}
+
 // GetOrderHash returns the SHA256 hash of the `PerpetualLiquidationInfo` field.
 // This function is necessary for the `LiquidationOrder` type to implement the `MatchableOrder` interface.
 func (lo *LiquidationOrder) GetOrderHash() OrderHash {

@@ -223,4 +223,6 @@ type MatchableOrder interface {
 	// IsReduceOnly returns whether this is a reduce-only order.
 	// This always returns false for liquidation orders.
 	IsReduceOnly() bool
+	// GetBrokerId returns the ID of the broker affiliated with this order.
+	GetBrokerId() uint64
 }
