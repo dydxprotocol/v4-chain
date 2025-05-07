@@ -19,5 +19,5 @@ const (
 
 	AffiliateWhitelistKey = "AW"
 
-	BrokerAffiliateKey = "BA:"
+	BrokerAffiliateKeyPrefix = "BA:"
 )

@@ -22,17 +22,17 @@ type MemClobKeeper struct {
 	mock.Mock
 }
 
-// AddOrderToOrderbookSubaccountUpdatesCheck provides a mock function with given fields: ctx, subaccountId, order
-func (_m *MemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(ctx types.Context, subaccountId subaccountstypes.SubaccountId, order clobtypes.PendingOpenOrder) subaccountstypes.UpdateResult {
-	ret := _m.Called(ctx, subaccountId, order)
+// AddOrderToOrderbookSubaccountUpdatesCheck provides a mock function with given fields: ctx, brokerId, subaccountId, order
+func (_m *MemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(ctx types.Context, brokerId uint64, subaccountId subaccountstypes.SubaccountId, order clobtypes.PendingOpenOrder) subaccountstypes.UpdateResult {
+	ret := _m.Called(ctx, brokerId, subaccountId, order)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddOrderToOrderbookSubaccountUpdatesCheck")
 	}
 
 	var r0 subaccountstypes.UpdateResult
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, clobtypes.PendingOpenOrder) subaccountstypes.UpdateResult); ok {
-		r0 = rf(ctx, subaccountId, order)
+	if rf, ok := ret.Get(0).(func(types.Context, uint64, subaccountstypes.SubaccountId, clobtypes.PendingOpenOrder) subaccountstypes.UpdateResult); ok {
+		r0 = rf(ctx, brokerId, subaccountId, order)
 	} else {
 		r0 = ret.Get(0).(subaccountstypes.UpdateResult)
 	}

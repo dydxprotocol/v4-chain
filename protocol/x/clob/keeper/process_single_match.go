@@ -388,7 +388,7 @@ func (k Keeper) persistMatchedOrders(
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, insuranceFundDelta)
 	}
 
-	// apply broker fees for taker and maker seperately
+	// apply broker fees for taker and maker separately
 	brokerId := matchWithOrders.TakerOrder.GetBrokerId()
 	if brokerId != 0 {
 		brokerFee, err := k.affiliatesKeeper.GetBrokerFee(ctx, brokerId, matchWithOrders.FillAmount.ToBigInt())

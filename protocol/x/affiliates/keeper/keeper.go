@@ -397,30 +397,40 @@ func (k Keeper) RegisterBrokerAffiliate(
 	brokerAddress string,
 	brokerFeeSharePpm uint32,
 ) error {
-	store := ctx.KVStore(k.storeKey)
 	brokerAffiliate := types.BrokerAffiliate{
-		BrokerId:            brokerId,
-		BrokerAddress:       brokerAddress,
-		BrokerFeeSharePpm:   brokerFeeSharePpm,
+		BrokerId:          brokerId,
+		BrokerAddress:     brokerAddress,
+		BrokerFeeSharePpm: brokerFeeSharePpm,
 	}
 	brokerAffiliateBytes := k.cdc.MustMarshal(&brokerAffiliate)
-	store.Set(BrokerAffiliateKey(brokerId), brokerAffiliateBytes)
+
+	// Use prefix store instead of direct store access
+	prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.BrokerAffiliateKeyPrefix)).Set(
+		[]byte(strconv.FormatUint(brokerId, 10)),
+		brokerAffiliateBytes,
+	)
 	return nil
 }
 
-func BrokerAffiliateKey(brokerId uint64) []byte {
-	return []byte(types.BrokerAffiliateKey + ":" + strconv.FormatUint(brokerId, 10))
-}
+// func BrokerAffiliateKey(brokerId uint64) []byte {
+// 	return []byte(types.BrokerAffiliateKeyPrefix + ":" + strconv.FormatUint(brokerId, 10))
+// }
 
 func (k Keeper) GetBrokerAffiliate(ctx sdk.Context, brokerId uint64) (types.BrokerAffiliate, error) {
-	store := ctx.KVStore(k.storeKey)
-	brokerAffiliateBytes := store.Get(BrokerAffiliateKey(brokerId))
+	brokerAffiliateBytes := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.BrokerAffiliateKeyPrefix)).Get(
+		[]byte(strconv.FormatUint(brokerId, 10)),
+	)
 	if brokerAffiliateBytes == nil {
-		return types.BrokerAffiliate{}, errorsmod.Wrapf(types.ErrAffiliateNotFound, "broker ID %d", brokerId)
+		return types.BrokerAffiliate{}, errorsmod.Wrapf(types.ErrAffiliateNotFound, "broker ID was not found: %d", brokerId)
 	}
 	var brokerAffiliate types.BrokerAffiliate
 	if err := k.cdc.Unmarshal(brokerAffiliateBytes, &brokerAffiliate); err != nil {
-		return types.BrokerAffiliate{}, errorsmod.Wrapf(types.ErrAffiliateNotFound, "broker ID %d, error: %s", brokerId, err)
+		return types.BrokerAffiliate{}, errorsmod.Wrapf(
+			types.ErrAffiliateNotFound,
+			"broker ID ERROR %d, error: %s",
+			brokerId,
+			err,
+		)
 	}
 	return brokerAffiliate, nil
 }
@@ -432,8 +442,9 @@ func (k Keeper) GetBrokerFee(
 	brokerId uint64,
 	fillAmount *big.Int,
 ) (*big.Int, error) {
-	store := ctx.KVStore(k.storeKey)
-	brokerAffiliateBytes := store.Get(BrokerAffiliateKey(brokerId))
+	brokerAffiliateBytes := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.BrokerAffiliateKeyPrefix)).Get(
+		[]byte(strconv.FormatUint(brokerId, 10)),
+	)
 	if brokerAffiliateBytes == nil {
 		return big.NewInt(0), nil
 	}

@@ -222,19 +222,23 @@ func (k Keeper) GetAllRevShares(
 	if totalFeesShared.Cmp(netFees) > 0 {
 		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
-	
-	// TODO: (anmol) is this correct??
-	takerBrokerRevShares, err := k.getBrokerRevShare(ctx, fill.TakerBrokerId, fill)
-	if err != nil {
-		return types.RevSharesForFill{}, err
-	}
-	revShares = append(revShares, takerBrokerRevShares...)
 
-	makerBrokerRevShares, err := k.getBrokerRevShare(ctx, fill.MakerBrokerId, fill)
-	if err != nil {
-		return types.RevSharesForFill{}, err
+	// TODO: (anmol) is this correct??
+	if fill.TakerBrokerId != 0 {
+		takerBrokerRevShares, err := k.getBrokerRevShare(ctx, fill.TakerBrokerId, fill)
+		if err != nil {
+			return types.RevSharesForFill{}, err
+		}
+		revShares = append(revShares, takerBrokerRevShares...)
 	}
-	revShares = append(revShares, makerBrokerRevShares...)
+
+	if fill.MakerBrokerId != 0 {
+		makerBrokerRevShares, err := k.getBrokerRevShare(ctx, fill.MakerBrokerId, fill)
+		if err != nil {
+			return types.RevSharesForFill{}, err
+		}
+		revShares = append(revShares, makerBrokerRevShares...)
+	}
 
 	return types.RevSharesForFill{
 		AffiliateRevShare:        affiliateRevShare,

@@ -27,6 +27,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		GetCmdQueryAffiliateInfo(),
 		GetCmdQueryReferredBy(),
 		GetCmdQueryAffiliateWhitelist(),
+		GetCmdQueryBrokerAffiliate(),
 	)
 	return cmd
 }

@@ -7,13 +7,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/margin"
+	affiliatesmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
-	affiliatesmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 

@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/spf13/cast"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
+	"github.com/spf13/cast"
 )
 
 // GetTxCmd returns the transaction commands for this module.
@@ -67,10 +67,11 @@ func CmdRegisterBrokerAffiliate() *cobra.Command {
 				return err
 			}
 			msg := types.MsgRegisterBrokerAffiliate{
+				Authority: brokerAddress,
 				BrokerAffiliate: types.BrokerAffiliate{
-					BrokerId:            brokerId,
-					BrokerAddress:       brokerAddress,
-					BrokerFeeSharePpm:   brokerFeeSharePpm,
+					BrokerId:          brokerId,
+					BrokerAddress:     brokerAddress,
+					BrokerFeeSharePpm: brokerFeeSharePpm,
 				},
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
@@ -79,4 +80,3 @@ func CmdRegisterBrokerAffiliate() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
-
