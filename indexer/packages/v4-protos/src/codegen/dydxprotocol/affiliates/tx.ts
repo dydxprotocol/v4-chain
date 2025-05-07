@@ -1,4 +1,4 @@
-import { AffiliateTiers, AffiliateTiersSDKType, AffiliateWhitelist, AffiliateWhitelistSDKType } from "./affiliates";
+import { AffiliateTiers, AffiliateTiersSDKType, AffiliateWhitelist, AffiliateWhitelistSDKType, BrokerAffiliate, BrokerAffiliateSDKType } from "./affiliates";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** Message to register a referee-affiliate relationship */
@@ -73,6 +73,30 @@ export interface MsgUpdateAffiliateWhitelistResponse {}
 /** Response to MsgUpdateAffiliateWhitelist */
 
 export interface MsgUpdateAffiliateWhitelistResponseSDKType {}
+/** Message to register a broker affiliate and fees */
+
+export interface MsgRegisterBrokerAffiliate {
+  /** Authority sending this message. Will be sent by gov */
+  authority: string;
+  /** Updated broker affiliate information */
+
+  brokerAffiliate?: BrokerAffiliate;
+}
+/** Message to register a broker affiliate and fees */
+
+export interface MsgRegisterBrokerAffiliateSDKType {
+  /** Authority sending this message. Will be sent by gov */
+  authority: string;
+  /** Updated broker affiliate information */
+
+  broker_affiliate?: BrokerAffiliateSDKType;
+}
+/** Response to MsgRegisterBrokerAffiliate */
+
+export interface MsgRegisterBrokerAffiliateResponse {}
+/** Response to MsgRegisterBrokerAffiliate */
+
+export interface MsgRegisterBrokerAffiliateResponseSDKType {}
 
 function createBaseMsgRegisterAffiliate(): MsgRegisterAffiliate {
   return {
@@ -336,6 +360,95 @@ export const MsgUpdateAffiliateWhitelistResponse = {
 
   fromPartial(_: DeepPartial<MsgUpdateAffiliateWhitelistResponse>): MsgUpdateAffiliateWhitelistResponse {
     const message = createBaseMsgUpdateAffiliateWhitelistResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgRegisterBrokerAffiliate(): MsgRegisterBrokerAffiliate {
+  return {
+    authority: "",
+    brokerAffiliate: undefined
+  };
+}
+
+export const MsgRegisterBrokerAffiliate = {
+  encode(message: MsgRegisterBrokerAffiliate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.authority !== "") {
+      writer.uint32(10).string(message.authority);
+    }
+
+    if (message.brokerAffiliate !== undefined) {
+      BrokerAffiliate.encode(message.brokerAffiliate, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgRegisterBrokerAffiliate {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgRegisterBrokerAffiliate();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.authority = reader.string();
+          break;
+
+        case 2:
+          message.brokerAffiliate = BrokerAffiliate.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgRegisterBrokerAffiliate>): MsgRegisterBrokerAffiliate {
+    const message = createBaseMsgRegisterBrokerAffiliate();
+    message.authority = object.authority ?? "";
+    message.brokerAffiliate = object.brokerAffiliate !== undefined && object.brokerAffiliate !== null ? BrokerAffiliate.fromPartial(object.brokerAffiliate) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseMsgRegisterBrokerAffiliateResponse(): MsgRegisterBrokerAffiliateResponse {
+  return {};
+}
+
+export const MsgRegisterBrokerAffiliateResponse = {
+  encode(_: MsgRegisterBrokerAffiliateResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgRegisterBrokerAffiliateResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgRegisterBrokerAffiliateResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgRegisterBrokerAffiliateResponse>): MsgRegisterBrokerAffiliateResponse {
+    const message = createBaseMsgRegisterBrokerAffiliateResponse();
     return message;
   }
 

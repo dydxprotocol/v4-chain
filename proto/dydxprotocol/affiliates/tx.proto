@@ -63,6 +63,7 @@ message MsgUpdateAffiliateWhitelist {
 // Response to MsgUpdateAffiliateWhitelist
 message MsgUpdateAffiliateWhitelistResponse {}
 
+// Message to register a broker affiliate and fees
 message MsgRegisterBrokerAffiliate {
   option (cosmos.msg.v1.signer) = "authority";
   // // Authority sending this message. Will be sent by gov
@@ -71,4 +72,5 @@ message MsgRegisterBrokerAffiliate {
   BrokerAffiliate broker_affiliate = 2 [ (gogoproto.nullable) = false ];
 }
 
+// Response to MsgRegisterBrokerAffiliate
 message MsgRegisterBrokerAffiliateResponse {}

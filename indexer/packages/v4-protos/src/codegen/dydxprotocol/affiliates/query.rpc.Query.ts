@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { AffiliateInfoRequest, AffiliateInfoResponse, ReferredByRequest, ReferredByResponse, AllAffiliateTiersRequest, AllAffiliateTiersResponse, AffiliateWhitelistRequest, AffiliateWhitelistResponse } from "./query";
+import { AffiliateInfoRequest, AffiliateInfoResponse, ReferredByRequest, ReferredByResponse, AllAffiliateTiersRequest, AllAffiliateTiersResponse, AffiliateWhitelistRequest, AffiliateWhitelistResponse, BrokerAffiliateRequest, BrokerAffiliateResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -16,6 +16,9 @@ export interface Query {
   /** Query AffiliateWhitelist returns the affiliate whitelist. */
 
   affiliateWhitelist(request?: AffiliateWhitelistRequest): Promise<AffiliateWhitelistResponse>;
+  /** Query BrokerAffiliate returns the broker affiliate for a given broker ID. */
+
+  brokerAffiliate(request: BrokerAffiliateRequest): Promise<BrokerAffiliateResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -26,6 +29,7 @@ export class QueryClientImpl implements Query {
     this.referredBy = this.referredBy.bind(this);
     this.allAffiliateTiers = this.allAffiliateTiers.bind(this);
     this.affiliateWhitelist = this.affiliateWhitelist.bind(this);
+    this.brokerAffiliate = this.brokerAffiliate.bind(this);
   }
 
   affiliateInfo(request: AffiliateInfoRequest): Promise<AffiliateInfoResponse> {
@@ -52,6 +56,12 @@ export class QueryClientImpl implements Query {
     return promise.then(data => AffiliateWhitelistResponse.decode(new _m0.Reader(data)));
   }
 
+  brokerAffiliate(request: BrokerAffiliateRequest): Promise<BrokerAffiliateResponse> {
+    const data = BrokerAffiliateRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.affiliates.Query", "BrokerAffiliate", data);
+    return promise.then(data => BrokerAffiliateResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -71,6 +81,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     affiliateWhitelist(request?: AffiliateWhitelistRequest): Promise<AffiliateWhitelistResponse> {
       return queryService.affiliateWhitelist(request);
+    },
+
+    brokerAffiliate(request: BrokerAffiliateRequest): Promise<BrokerAffiliateResponse> {
+      return queryService.brokerAffiliate(request);
     }
 
   };

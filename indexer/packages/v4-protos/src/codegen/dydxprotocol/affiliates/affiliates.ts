@@ -74,6 +74,30 @@ export interface AffiliateWhitelist_TierSDKType {
 
   taker_fee_share_ppm: number;
 }
+/** BrokerAffiliate defines a broker affiliate, fee share, and address. */
+
+export interface BrokerAffiliate {
+  /** Broker ID */
+  brokerId: Long;
+  /** Broker address */
+
+  brokerAddress: string;
+  /** Broker fee share in parts-per-million */
+
+  brokerFeeSharePpm: number;
+}
+/** BrokerAffiliate defines a broker affiliate, fee share, and address. */
+
+export interface BrokerAffiliateSDKType {
+  /** Broker ID */
+  broker_id: Long;
+  /** Broker address */
+
+  broker_address: string;
+  /** Broker fee share in parts-per-million */
+
+  broker_fee_share_ppm: number;
+}
 
 function createBaseAffiliateTiers(): AffiliateTiers {
   return {
@@ -280,6 +304,71 @@ export const AffiliateWhitelist_Tier = {
     const message = createBaseAffiliateWhitelist_Tier();
     message.addresses = object.addresses?.map(e => e) || [];
     message.takerFeeSharePpm = object.takerFeeSharePpm ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseBrokerAffiliate(): BrokerAffiliate {
+  return {
+    brokerId: Long.UZERO,
+    brokerAddress: "",
+    brokerFeeSharePpm: 0
+  };
+}
+
+export const BrokerAffiliate = {
+  encode(message: BrokerAffiliate, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (!message.brokerId.isZero()) {
+      writer.uint32(8).uint64(message.brokerId);
+    }
+
+    if (message.brokerAddress !== "") {
+      writer.uint32(18).string(message.brokerAddress);
+    }
+
+    if (message.brokerFeeSharePpm !== 0) {
+      writer.uint32(24).uint32(message.brokerFeeSharePpm);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): BrokerAffiliate {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBrokerAffiliate();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.brokerId = (reader.uint64() as Long);
+          break;
+
+        case 2:
+          message.brokerAddress = reader.string();
+          break;
+
+        case 3:
+          message.brokerFeeSharePpm = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<BrokerAffiliate>): BrokerAffiliate {
+    const message = createBaseBrokerAffiliate();
+    message.brokerId = object.brokerId !== undefined && object.brokerId !== null ? Long.fromValue(object.brokerId) : Long.UZERO;
+    message.brokerAddress = object.brokerAddress ?? "";
+    message.brokerFeeSharePpm = object.brokerFeeSharePpm ?? 0;
     return message;
   }
 

@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { AffiliateInfoRequest, AffiliateInfoResponseSDKType, ReferredByRequest, ReferredByResponseSDKType, AllAffiliateTiersRequest, AllAffiliateTiersResponseSDKType, AffiliateWhitelistRequest, AffiliateWhitelistResponseSDKType } from "./query";
+import { AffiliateInfoRequest, AffiliateInfoResponseSDKType, ReferredByRequest, ReferredByResponseSDKType, AllAffiliateTiersRequest, AllAffiliateTiersResponseSDKType, AffiliateWhitelistRequest, AffiliateWhitelistResponseSDKType, BrokerAffiliateRequest, BrokerAffiliateResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -13,6 +13,7 @@ export class LCDQueryClient {
     this.referredBy = this.referredBy.bind(this);
     this.allAffiliateTiers = this.allAffiliateTiers.bind(this);
     this.affiliateWhitelist = this.affiliateWhitelist.bind(this);
+    this.brokerAffiliate = this.brokerAffiliate.bind(this);
   }
   /* Query AffiliateInfo returns the affiliate info for a given address. */
 
@@ -41,6 +42,13 @@ export class LCDQueryClient {
   async affiliateWhitelist(_params: AffiliateWhitelistRequest = {}): Promise<AffiliateWhitelistResponseSDKType> {
     const endpoint = `dydxprotocol/affiliates/affiliate_whitelist`;
     return await this.req.get<AffiliateWhitelistResponseSDKType>(endpoint);
+  }
+  /* Query BrokerAffiliate returns the broker affiliate for a given broker ID. */
+
+
+  async brokerAffiliate(params: BrokerAffiliateRequest): Promise<BrokerAffiliateResponseSDKType> {
+    const endpoint = `dydxprotocol/affiliates/broker_affiliate/${params.brokerId}`;
+    return await this.req.get<BrokerAffiliateResponseSDKType>(endpoint);
   }
 
 }

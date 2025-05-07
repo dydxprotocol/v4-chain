@@ -638,6 +638,9 @@ export interface Order {
    */
 
   twapParameters?: TwapParameters;
+  /** broker_id is the ID of the broker affiliated with this order. */
+
+  brokerId: Long;
 }
 /**
  * Order represents a single order belonging to a `Subaccount`
@@ -714,6 +717,9 @@ export interface OrderSDKType {
    */
 
   twap_parameters?: TwapParametersSDKType;
+  /** broker_id is the ID of the broker affiliated with this order. */
+
+  broker_id: Long;
 }
 /** TwapParameters represents the necessary configuration for a TWAP order. */
 
@@ -1307,7 +1313,8 @@ function createBaseOrder(): Order {
     clientMetadata: 0,
     conditionType: 0,
     conditionalOrderTriggerSubticks: Long.UZERO,
-    twapParameters: undefined
+    twapParameters: undefined,
+    brokerId: Long.UZERO
   };
 }
 
@@ -1359,6 +1366,10 @@ export const Order = {
 
     if (message.twapParameters !== undefined) {
       TwapParameters.encode(message.twapParameters, writer.uint32(98).fork()).ldelim();
+    }
+
+    if (!message.brokerId.isZero()) {
+      writer.uint32(104).uint64(message.brokerId);
     }
 
     return writer;
@@ -1421,6 +1432,10 @@ export const Order = {
           message.twapParameters = TwapParameters.decode(reader, reader.uint32());
           break;
 
+        case 13:
+          message.brokerId = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1444,6 +1459,7 @@ export const Order = {
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
     message.twapParameters = object.twapParameters !== undefined && object.twapParameters !== null ? TwapParameters.fromPartial(object.twapParameters) : undefined;
+    message.brokerId = object.brokerId !== undefined && object.brokerId !== null ? Long.fromValue(object.brokerId) : Long.UZERO;
     return message;
   }
 

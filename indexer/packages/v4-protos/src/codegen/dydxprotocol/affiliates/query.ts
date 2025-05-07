@@ -1,6 +1,6 @@
-import { AffiliateTiers, AffiliateTiersSDKType, AffiliateWhitelist, AffiliateWhitelistSDKType } from "./affiliates";
+import { AffiliateTiers, AffiliateTiersSDKType, AffiliateWhitelist, AffiliateWhitelistSDKType, BrokerAffiliate, BrokerAffiliateSDKType } from "./affiliates";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial } from "../../helpers";
+import { DeepPartial, Long } from "../../helpers";
 /**
  * AffiliateInfoRequest is the request type for the Query/AffiliateInfo RPC
  * method.
@@ -152,6 +152,46 @@ export interface AffiliateWhitelistResponse {
 
 export interface AffiliateWhitelistResponseSDKType {
   whitelist?: AffiliateWhitelistSDKType;
+}
+/**
+ * BrokerAffiliateRequest is the request type for the Query/BrokerAffiliate RPC
+ * method.
+ */
+
+export interface BrokerAffiliateRequest {
+  /**
+   * BrokerAffiliateRequest is the request type for the Query/BrokerAffiliate RPC
+   * method.
+   */
+  brokerId: Long;
+}
+/**
+ * BrokerAffiliateRequest is the request type for the Query/BrokerAffiliate RPC
+ * method.
+ */
+
+export interface BrokerAffiliateRequestSDKType {
+  /**
+   * BrokerAffiliateRequest is the request type for the Query/BrokerAffiliate RPC
+   * method.
+   */
+  broker_id: Long;
+}
+/**
+ * BrokerAffiliateResponse is the response type for the Query/BrokerAffiliate
+ * RPC method.
+ */
+
+export interface BrokerAffiliateResponse {
+  brokerAffiliate?: BrokerAffiliate;
+}
+/**
+ * BrokerAffiliateResponse is the response type for the Query/BrokerAffiliate
+ * RPC method.
+ */
+
+export interface BrokerAffiliateResponseSDKType {
+  broker_affiliate?: BrokerAffiliateSDKType;
 }
 
 function createBaseAffiliateInfoRequest(): AffiliateInfoRequest {
@@ -527,6 +567,96 @@ export const AffiliateWhitelistResponse = {
   fromPartial(object: DeepPartial<AffiliateWhitelistResponse>): AffiliateWhitelistResponse {
     const message = createBaseAffiliateWhitelistResponse();
     message.whitelist = object.whitelist !== undefined && object.whitelist !== null ? AffiliateWhitelist.fromPartial(object.whitelist) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseBrokerAffiliateRequest(): BrokerAffiliateRequest {
+  return {
+    brokerId: Long.UZERO
+  };
+}
+
+export const BrokerAffiliateRequest = {
+  encode(message: BrokerAffiliateRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (!message.brokerId.isZero()) {
+      writer.uint32(8).uint64(message.brokerId);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): BrokerAffiliateRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBrokerAffiliateRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.brokerId = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<BrokerAffiliateRequest>): BrokerAffiliateRequest {
+    const message = createBaseBrokerAffiliateRequest();
+    message.brokerId = object.brokerId !== undefined && object.brokerId !== null ? Long.fromValue(object.brokerId) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseBrokerAffiliateResponse(): BrokerAffiliateResponse {
+  return {
+    brokerAffiliate: undefined
+  };
+}
+
+export const BrokerAffiliateResponse = {
+  encode(message: BrokerAffiliateResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.brokerAffiliate !== undefined) {
+      BrokerAffiliate.encode(message.brokerAffiliate, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): BrokerAffiliateResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBrokerAffiliateResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.brokerAffiliate = BrokerAffiliate.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<BrokerAffiliateResponse>): BrokerAffiliateResponse {
+    const message = createBaseBrokerAffiliateResponse();
+    message.brokerAffiliate = object.brokerAffiliate !== undefined && object.brokerAffiliate !== null ? BrokerAffiliate.fromPartial(object.brokerAffiliate) : undefined;
     return message;
   }
 

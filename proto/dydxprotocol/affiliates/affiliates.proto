@@ -35,6 +35,7 @@ message AffiliateWhitelist {
   repeated Tier tiers = 1 [ (gogoproto.nullable) = false ];
 }
 
+// BrokerAffiliate defines a broker affiliate, fee share, and address.
 message BrokerAffiliate {
   // Broker ID
   uint64 broker_id = 1;

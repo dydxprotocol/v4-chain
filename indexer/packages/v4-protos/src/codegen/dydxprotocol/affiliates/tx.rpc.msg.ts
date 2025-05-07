@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgRegisterAffiliate, MsgRegisterAffiliateResponse, MsgUpdateAffiliateTiers, MsgUpdateAffiliateTiersResponse, MsgUpdateAffiliateWhitelist, MsgUpdateAffiliateWhitelistResponse } from "./tx";
+import { MsgRegisterAffiliate, MsgRegisterAffiliateResponse, MsgUpdateAffiliateTiers, MsgUpdateAffiliateTiersResponse, MsgUpdateAffiliateWhitelist, MsgUpdateAffiliateWhitelistResponse, MsgRegisterBrokerAffiliate, MsgRegisterBrokerAffiliateResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -12,6 +12,9 @@ export interface Msg {
   /** UpdateAffiliateWhitelist updates affiliate whitelist */
 
   updateAffiliateWhitelist(request: MsgUpdateAffiliateWhitelist): Promise<MsgUpdateAffiliateWhitelistResponse>;
+  /** RegisterBrokerAffiliate registers a broker-affiliate relationship */
+
+  registerBrokerAffiliate(request: MsgRegisterBrokerAffiliate): Promise<MsgRegisterBrokerAffiliateResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
@@ -21,6 +24,7 @@ export class MsgClientImpl implements Msg {
     this.registerAffiliate = this.registerAffiliate.bind(this);
     this.updateAffiliateTiers = this.updateAffiliateTiers.bind(this);
     this.updateAffiliateWhitelist = this.updateAffiliateWhitelist.bind(this);
+    this.registerBrokerAffiliate = this.registerBrokerAffiliate.bind(this);
   }
 
   registerAffiliate(request: MsgRegisterAffiliate): Promise<MsgRegisterAffiliateResponse> {
@@ -39,6 +43,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgUpdateAffiliateWhitelist.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.affiliates.Msg", "UpdateAffiliateWhitelist", data);
     return promise.then(data => MsgUpdateAffiliateWhitelistResponse.decode(new _m0.Reader(data)));
+  }
+
+  registerBrokerAffiliate(request: MsgRegisterBrokerAffiliate): Promise<MsgRegisterBrokerAffiliateResponse> {
+    const data = MsgRegisterBrokerAffiliate.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.affiliates.Msg", "RegisterBrokerAffiliate", data);
+    return promise.then(data => MsgRegisterBrokerAffiliateResponse.decode(new _m0.Reader(data)));
   }
 
 }
