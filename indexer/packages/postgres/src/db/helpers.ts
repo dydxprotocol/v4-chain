@@ -1,10 +1,8 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import Big from 'big.js';
-import { DateTime } from 'luxon';
 
-import { NUM_SECONDS_IN_CANDLE_RESOLUTIONS, ONE_MILLION } from '../constants';
+import { ONE_MILLION } from '../constants';
 import {
-  CandleResolution,
   FundingIndexMap, MarketFromDatabase,
   PerpetualMarketFromDatabase,
   PerpetualPositionFromDatabase,
@@ -122,16 +120,4 @@ export function getTransferType(
     }
   }
   throw new Error(`Transfer ${transfer.id} does not involve subaccount ${subaccountId}`);
-}
-
-export function calculateNormalizedCandleStartTime(
-  time: DateTime,
-  resolution: CandleResolution,
-): DateTime {
-  const epochSeconds: number = Math.floor(time.toUTC().toSeconds());
-  const normalizedTimeSeconds: number = epochSeconds - (
-    epochSeconds % NUM_SECONDS_IN_CANDLE_RESOLUTIONS[resolution]
-  );
-
-  return DateTime.fromSeconds(normalizedTimeSeconds).toUTC();
 }
