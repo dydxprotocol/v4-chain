@@ -11,11 +11,21 @@ import {
   LiquidityTiersTable,
   liquidityTierRefresher,
 } from '@dydxprotocol-indexer/postgres';
+import {
+  OrderbookMidPricesCache,
+} from '@dydxprotocol-indexer/redis';
 import { RequestMethod } from '../../../../src/types';
 import request from 'supertest';
 import { getQueryString, sendRequest } from '../../../helpers/helpers';
 import _ from 'lodash';
 import { perpetualMarketToResponseObject } from '../../../../src/request-helpers/request-transformer';
+
+jest.mock('@dydxprotocol-indexer/redis', () => ({
+  ...jest.requireActual('@dydxprotocol-indexer/redis'),
+  OrderbookMidPricesCache: {
+    getMedianPrice: jest.fn(),
+  },
+}));
 
 describe('perpetual-markets-controller#V4', () => {
   beforeAll(async () => {
@@ -30,10 +40,12 @@ describe('perpetual-markets-controller#V4', () => {
 
   afterAll(async () => {
     await dbHelpers.teardown();
+    jest.resetAllMocks();
   });
 
   afterEach(async () => {
     await dbHelpers.clearData();
+    jest.clearAllMocks();
   });
 
   describe('/', () => {
@@ -170,6 +182,132 @@ describe('perpetual-markets-controller#V4', () => {
       });
 
       expect(response.body.error).toContain('Not Found');
+    });
+  });
+
+  describe('GET /v4/perpetualMarkets/orderbookMidPrices', () => {
+    it('returns mid prices for all markets when no tickers are specified', async () => {
+      (OrderbookMidPricesCache.getMedianPrice as jest.Mock).mockImplementation((client, ticker) => {
+        const prices: {[key: string]: string} = {
+          'BTC-USD': '30000.5',
+          'ETH-USD': '2000.25',
+          'SHIB-USD': '5.75',
+        };
+        return Promise.resolve(prices[ticker]);
+      });
+
+      const response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/perpetualMarkets/orderbookMidPrices',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        'BTC-USD': '30000.5',
+        'ETH-USD': '2000.25',
+        'SHIB-USD': '5.75',
+      });
+      const numMarkets = (await PerpetualMarketTable.findAll({}, [])).length;
+      expect(OrderbookMidPricesCache.getMedianPrice).toHaveBeenCalledTimes(numMarkets);
+    });
+
+    it('returns mid prices for multiple specified tickers', async () => {
+      (OrderbookMidPricesCache.getMedianPrice as jest.Mock).mockImplementation((client, ticker) => {
+        const prices: {[key: string]: string} = {
+          'BTC-USD': '30000.5',
+          'ETH-USD': '2000.25',
+        };
+        return Promise.resolve(prices[ticker]);
+      });
+
+      const response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/perpetualMarkets/orderbookMidPrices?tickers=BTC-USD&tickers=ETH-USD',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        'BTC-USD': '30000.5',
+        'ETH-USD': '2000.25',
+      });
+
+      expect(OrderbookMidPricesCache.getMedianPrice).toHaveBeenCalledTimes(2);
+    });
+
+    it('returns mid prices for one specified ticker', async () => {
+      (OrderbookMidPricesCache.getMedianPrice as jest.Mock).mockImplementation((client, ticker) => {
+        const prices: {[key: string]: string} = {
+          'BTC-USD': '30000.5',
+          'ETH-USD': '2000.25',
+        };
+        return Promise.resolve(prices[ticker]);
+      });
+
+      const response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/perpetualMarkets/orderbookMidPrices?tickers=BTC-USD',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        'BTC-USD': '30000.5',
+      });
+
+      expect(OrderbookMidPricesCache.getMedianPrice).toHaveBeenCalledTimes(1);
+    });
+
+    it('omits markets with no mid price', async () => {
+      (OrderbookMidPricesCache.getMedianPrice as jest.Mock).mockImplementation((client, ticker) => {
+        const prices: {[key: string]: string | null} = {
+          'BTC-USD': '30000.5',
+          'ETH-USD': null,
+          'SHIB-USD': '5.75',
+        };
+        return Promise.resolve(prices[ticker]);
+      });
+
+      const response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/perpetualMarkets/orderbookMidPrices',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        'BTC-USD': '30000.5',
+        'SHIB-USD': '5.75',
+      });
+    });
+
+    it('returns an empty object when no markets have mid prices', async () => {
+      (OrderbookMidPricesCache.getMedianPrice as jest.Mock).mockResolvedValue(null);
+
+      const response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/perpetualMarkets/orderbookMidPrices',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({});
+    });
+
+    it('returns prices only for valid tickers and ignores invalid tickers', async () => {
+      (OrderbookMidPricesCache.getMedianPrice as jest.Mock).mockImplementation((client, ticker) => {
+        const prices: {[key: string]: string} = {
+          'BTC-USD': '30000.5',
+        };
+        return Promise.resolve(prices[ticker]);
+      });
+
+      const response = await sendRequest({
+        type: RequestMethod.GET,
+        path: '/v4/perpetualMarkets/orderbookMidPrices?tickers=BTC-USD&tickers=INVALID-TICKER',
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        'BTC-USD': '30000.5',
+      });
+      expect(OrderbookMidPricesCache.getMedianPrice).toHaveBeenCalledTimes(1);
     });
   });
 });
