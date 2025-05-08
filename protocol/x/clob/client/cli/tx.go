@@ -26,6 +26,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(CmdPlaceOrder())
+	cmd.AddCommand(CmdPlaceStatefulOrder())
 	cmd.AddCommand(CmdCancelOrder())
 	batchCancelCmd := CmdBatchCancel()
 	batchCancelCmd.PersistentFlags().String("clientIds", "", "A list of client ids to to batch cancel")
