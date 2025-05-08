@@ -23,5 +23,6 @@
   },
   "devDependencies": {
     "@types/ws": "8.5.10"
-  }
+  },
+  "packageManager": "pnpm@6.32.13+sha512.c3b1165da93db43b5a58adfe5334916b14ceeda5c7643e671c8b1077f4758f1ad49e3655fa302afefa1e69bfab22844cad2db98950621f4f3c0a5ed0a98b266d"
 }
