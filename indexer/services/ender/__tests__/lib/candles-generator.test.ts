@@ -17,7 +17,6 @@ import {
   testConstants,
   testMocks,
   Transaction,
-  helpers,
 } from '@dydxprotocol-indexer/postgres';
 import { CandleMessage, CandleMessage_Resolution } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -40,7 +39,7 @@ import { ORDERBOOK_MID_PRICES_CACHE_KEY_PREFIX } from '@dydxprotocol-indexer/red
 import { DateTime, Settings } from 'luxon';
 
 describe('candleHelper', () => {
-  const startedAt: DateTime = helpers.calculateNormalizedCandleStartTime(
+  const startedAt: DateTime = CandlesGenerator.calculateNormalizedCandleStartTime(
     testConstants.createdDateTime,
     CandleResolution.ONE_MINUTE,
   );
@@ -95,7 +94,7 @@ describe('candleHelper', () => {
     orderbookMidPriceClose: undefined,
     orderbookMidPriceOpen: undefined,
   };
-  const previousStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
+  const previousStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
     testConstants.createdDateTime.minus({ minutes: 1 }),
     CandleResolution.ONE_MINUTE,
   ).toISO();
@@ -137,7 +136,7 @@ describe('candleHelper', () => {
     const expectedCandles: CandleFromDatabase[] = _.map(
       Object.values(CandleResolution),
       (resolution: CandleResolution) => {
-        const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
+        const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
         ).toISO();
@@ -185,7 +184,7 @@ describe('candleHelper', () => {
     const expectedCandles: CandleFromDatabase[] = _.map(
       Object.values(CandleResolution),
       (resolution: CandleResolution) => {
-        const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
+        const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
         ).toISO();
@@ -219,7 +218,7 @@ describe('candleHelper', () => {
     const orderbookMidPriceOpen = '8000';
     await Promise.all(
       _.map(Object.values(CandleResolution), (resolution: CandleResolution) => {
-        const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
+        const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
         ).toISO();
@@ -255,7 +254,7 @@ describe('candleHelper', () => {
     const expectedCandles: CandleFromDatabase[] = _.map(
       Object.values(CandleResolution),
       (resolution: CandleResolution) => {
-        const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
+        const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
         ).toISO();
@@ -490,7 +489,7 @@ describe('candleHelper', () => {
     const orderbookMidPriceClose = '7500';
     const orderbookMidPriceOpen = '8000';
     // Set candle start time to be far in the past to ensure all candles are new
-    const startTime: IsoString = helpers.calculateNormalizedCandleStartTime(
+    const startTime: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
       testConstants.createdDateTime.minus({ minutes: 100 }),
       CandleResolution.ONE_MINUTE,
     ).toUTC().toISO();
@@ -556,7 +555,7 @@ describe('candleHelper', () => {
     const expectedCandles: CandleFromDatabase[] = _.map(
       Object.values(CandleResolution),
       (resolution: CandleResolution) => {
-        const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
+        const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
         ).toISO();
@@ -593,7 +592,7 @@ describe('candleHelper', () => {
     const orderbookMidPriceClose = '7500';
     const orderbookMidPriceOpen = '8000';
     // Set candle start time to be far in the past to ensure all candles are new
-    const startTime: IsoString = helpers.calculateNormalizedCandleStartTime(
+    const startTime: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
       testConstants.createdDateTime.minus({ minutes: 100 }),
       CandleResolution.ONE_MINUTE,
     ).toISO();
@@ -656,7 +655,7 @@ describe('candleHelper', () => {
     const expectedCandles: CandleFromDatabase[] = _.map(
       Object.values(CandleResolution),
       (resolution: CandleResolution) => {
-        const currentStartedAt: IsoString = helpers.calculateNormalizedCandleStartTime(
+        const currentStartedAt: IsoString = CandlesGenerator.calculateNormalizedCandleStartTime(
           testConstants.createdDateTime,
           resolution,
         ).toISO();

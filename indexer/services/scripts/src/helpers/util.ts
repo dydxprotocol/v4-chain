@@ -1,6 +1,4 @@
-/**
- * Helper for running an async script.
- */
+/* eslint-disable no-console */
 export function runAsyncScript(script: () => Promise<void>): void {
   script()
     .then(() => {
