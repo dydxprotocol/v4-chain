@@ -29,9 +29,6 @@ import config from '../config';
 import { BlockProcessor } from './block-processor';
 import { refreshDataCaches } from './cache-manager';
 import { CandlesGenerator } from './candles-generator';
-import {
-  dateToDateTime,
-} from './helper';
 import { KafkaPublisher } from './kafka-publisher';
 
 /**
@@ -47,15 +44,18 @@ import { KafkaPublisher } from './kafka-publisher';
 export async function onMessage(message: KafkaMessage): Promise<void> {
   stats.increment(`${config.SERVICE_NAME}.received_kafka_message`, 1);
   const start: number = Date.now();
+  const messageTime: number = Number(message.timestamp);
+
   const indexerTendermintBlock: IndexerTendermintBlock | undefined = getIndexerTendermintBlock(
     message,
   );
   if (indexerTendermintBlock === undefined) {
     return;
   }
+  const blockTime: number = indexerTendermintBlock.time!.getTime();
   stats.timing(
     `${config.SERVICE_NAME}.block_time_lag.timing`,
-    DateTime.now().diff(dateToDateTime(indexerTendermintBlock.time!)).toMillis(),
+    start - blockTime,
     STATS_NO_SAMPLING,
   );
 
@@ -64,15 +64,15 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   if (await shouldSkipBlock(blockHeight)) {
     return;
   }
-
   stats.timing(
     `${config.SERVICE_NAME}.message_time_in_queue`,
-    start - Number(message.timestamp),
+    start - messageTime,
     STATS_NO_SAMPLING,
     {
       topic: KafkaTopics.TO_ENDER,
     },
   );
+
   logger.info({
     at: 'onMessage#onMessage',
     message: 'Processing message',
@@ -97,7 +97,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
 
     const candlesGenerator: CandlesGenerator = new CandlesGenerator(
       kafkaPublisher,
-      dateToDateTime(indexerTendermintBlock.time!),
+      DateTime.fromJSDate(indexerTendermintBlock.time!),
       txId,
     );
     const candles: CandleFromDatabase[] = await candlesGenerator.updateCandles();
@@ -144,9 +144,16 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     // Throw error so the message is not acked and will be reprocessed
     throw error;
   } finally {
+    const done: number = Date.now();
     stats.timing(
       `${config.SERVICE_NAME}.processed_block.timing`,
-      Date.now() - start,
+      done - start,
+      STATS_NO_SAMPLING,
+      { success: success.toString() },
+    );
+    stats.timing(
+      `${config.SERVICE_NAME}.processed_blocktime_lag.timing`,
+      done - blockTime,
       STATS_NO_SAMPLING,
       { success: success.toString() },
     );
