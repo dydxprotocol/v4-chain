@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 
-	v_8_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.0"
 	v_8_1 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.1"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -15,7 +14,7 @@ var (
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
 	// New upgrades should be added to this slice after they are implemented.
 	Upgrades = []upgrades.Upgrade{
-		v_8_0.Upgrade,
+		v_8_1.Upgrade,
 	}
 	Forks = []upgrades.Fork{}
 )
