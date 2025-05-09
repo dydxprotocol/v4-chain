@@ -3,8 +3,8 @@ import {
   sendOrderTriggeredNotification,
 } from '../../src/helpers/notifications/notifications-functions';
 import {
-  dbHelpers,
-  OrderFromDatabase,
+  dbHelpers, FillFromDatabase, FillType, Liquidity,
+  OrderFromDatabase, OrderSide,
   PerpetualMarketFromDatabase,
   PerpetualMarketStatus,
   PerpetualMarketType,
@@ -85,16 +85,31 @@ describe('notification functions', () => {
         updatedAt: new Date().toISOString(),
         updatedAtHeight: '900001',
       } as OrderFromDatabase;
+      const mockFill: FillFromDatabase = {
+        id: '1',
+        subaccountId: defaultSubaccountId,
+        side: 'BUY',
+        liquidity: 'TAKER',
+        type: 'LIMIT',
+        clobPairId: String(defaultMarket.id),
+        size: '5',
+        price: '100.25',
+        quoteAmount: '0',
+        eventId: Buffer.from('1'),
+        transactionHash: '0x1234567890abcdef',
+        createdAt: new Date().toISOString(),
+        createdAtHeight: '900001',
+      } as FillFromDatabase;
 
-      await sendOrderFilledNotification(mockOrder, mockMarket);
+      await sendOrderFilledNotification(mockOrder, mockMarket, mockFill);
 
       // Assert that createNotification was called with correct arguments
       expect(createNotification).toHaveBeenCalledWith(
         NotificationType.ORDER_FILLED,
         {
-          AMOUNT: '10',
+          AMOUNT: '5',
           MARKET: 'BTC-USD',
-          AVERAGE_PRICE: '100.50',
+          AVERAGE_PRICE: '100.25',
         },
       );
 
