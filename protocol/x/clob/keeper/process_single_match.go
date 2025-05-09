@@ -388,6 +388,25 @@ func (k Keeper) persistMatchedOrders(
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, insuranceFundDelta)
 	}
 
+	// apply broker fees for taker and maker separately
+	brokerId := matchWithOrders.TakerOrder.GetBrokerId()
+	if brokerId != 0 {
+		brokerFee, err := k.affiliatesKeeper.GetBrokerFee(ctx, brokerId, matchWithOrders.FillAmount.ToBigInt())
+		if err != nil {
+			return satypes.UpdateCausedError, satypes.UpdateCausedError, affiliateRevSharesQuoteQuantums, err
+		}
+		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, brokerFee)
+	}
+
+	brokerId = matchWithOrders.MakerOrder.GetBrokerId()
+	if brokerId != 0 {
+		brokerFee, err := k.affiliatesKeeper.GetBrokerFee(ctx, brokerId, matchWithOrders.FillAmount.ToBigInt())
+		if err != nil {
+			return satypes.UpdateCausedError, satypes.UpdateCausedError, affiliateRevSharesQuoteQuantums, err
+		}
+		bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, brokerFee)
+	}
+
 	// Create the subaccount update.
 	updates := []satypes.Update{
 		// Taker update
@@ -473,8 +492,10 @@ func (k Keeper) persistMatchedOrders(
 	fillForProcess := types.FillForProcess{
 		TakerAddr:             matchWithOrders.TakerOrder.GetSubaccountId().Owner,
 		TakerFeeQuoteQuantums: bigTakerFeeQuoteQuantums,
+		TakerBrokerId:         matchWithOrders.TakerOrder.GetBrokerId(),
 		MakerAddr:             matchWithOrders.MakerOrder.GetSubaccountId().Owner,
 		MakerFeeQuoteQuantums: bigMakerFeeQuoteQuantums,
+		MakerBrokerId:         matchWithOrders.MakerOrder.GetBrokerId(),
 		FillQuoteQuantums:     bigFillQuoteQuantums,
 		ProductId:             perpetualId,
 		MarketId:              perpetual.Params.MarketId,

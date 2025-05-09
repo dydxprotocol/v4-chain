@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -388,4 +389,74 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		}
 	}
 	return nil
+}
+
+func (k Keeper) RegisterBrokerAffiliate(
+	ctx sdk.Context,
+	brokerId uint64,
+	brokerAddress string,
+	brokerFeeSharePpm uint32,
+) error {
+	brokerAffiliate := types.BrokerAffiliate{
+		BrokerId:          brokerId,
+		BrokerAddress:     brokerAddress,
+		BrokerFeeSharePpm: brokerFeeSharePpm,
+	}
+	brokerAffiliateBytes := k.cdc.MustMarshal(&brokerAffiliate)
+
+	// Use prefix store instead of direct store access
+	prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.BrokerAffiliateKeyPrefix)).Set(
+		[]byte(strconv.FormatUint(brokerId, 10)),
+		brokerAffiliateBytes,
+	)
+	return nil
+}
+
+// func BrokerAffiliateKey(brokerId uint64) []byte {
+// 	return []byte(types.BrokerAffiliateKeyPrefix + ":" + strconv.FormatUint(brokerId, 10))
+// }
+
+func (k Keeper) GetBrokerAffiliate(ctx sdk.Context, brokerId uint64) (types.BrokerAffiliate, error) {
+	brokerAffiliateBytes := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.BrokerAffiliateKeyPrefix)).Get(
+		[]byte(strconv.FormatUint(brokerId, 10)),
+	)
+	if brokerAffiliateBytes == nil {
+		return types.BrokerAffiliate{}, errorsmod.Wrapf(types.ErrAffiliateNotFound, "broker ID was not found: %d", brokerId)
+	}
+	var brokerAffiliate types.BrokerAffiliate
+	if err := k.cdc.Unmarshal(brokerAffiliateBytes, &brokerAffiliate); err != nil {
+		return types.BrokerAffiliate{}, errorsmod.Wrapf(
+			types.ErrAffiliateNotFound,
+			"broker ID ERROR %d, error: %s",
+			brokerId,
+			err,
+		)
+	}
+	return brokerAffiliate, nil
+}
+
+// GetBrokerFee returns the fee amount for a broker given a broker ID and fill amount.
+// Returns 0 if broker is not found.
+func (k Keeper) GetBrokerFee(
+	ctx sdk.Context,
+	brokerId uint64,
+	fillAmount *big.Int,
+) (*big.Int, error) {
+	brokerAffiliateBytes := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.BrokerAffiliateKeyPrefix)).Get(
+		[]byte(strconv.FormatUint(brokerId, 10)),
+	)
+	if brokerAffiliateBytes == nil {
+		return big.NewInt(0), nil
+	}
+
+	var brokerAffiliate types.BrokerAffiliate
+	if err := k.cdc.Unmarshal(brokerAffiliateBytes, &brokerAffiliate); err != nil {
+		return big.NewInt(0), errorsmod.Wrapf(types.ErrAffiliateNotFound, // for the time being
+			"broker ID %d, error: %s", brokerId, err)
+	}
+
+	// Calculate fee using ppm (parts per million)
+	fee := lib.BigMulPpm(fillAmount, lib.BigU(brokerAffiliate.BrokerFeeSharePpm), true)
+
+	return fee, nil
 }

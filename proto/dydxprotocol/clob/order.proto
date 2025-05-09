@@ -230,6 +230,9 @@ message Order {
   // twap_parameters represent the configuration for a TWAP order. This must be
   // set for twap orders and will be ignored for all other order types.
   TwapParameters twap_parameters = 12;
+
+  // broker_id is the ID of the broker affiliated with this order.
+  uint64 broker_id = 13;
 }
 
 // TwapParameters represents the necessary configuration for a TWAP order.

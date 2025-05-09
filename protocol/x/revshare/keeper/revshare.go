@@ -223,6 +223,23 @@ func (k Keeper) GetAllRevShares(
 		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
 
+	// TODO: (anmol) is this correct??
+	if fill.TakerBrokerId != 0 {
+		takerBrokerRevShares, err := k.getBrokerRevShare(ctx, fill.TakerBrokerId, fill)
+		if err != nil {
+			return types.RevSharesForFill{}, err
+		}
+		revShares = append(revShares, takerBrokerRevShares...)
+	}
+
+	if fill.MakerBrokerId != 0 {
+		makerBrokerRevShares, err := k.getBrokerRevShare(ctx, fill.MakerBrokerId, fill)
+		if err != nil {
+			return types.RevSharesForFill{}, err
+		}
+		revShares = append(revShares, makerBrokerRevShares...)
+	}
+
 	return types.RevSharesForFill{
 		AffiliateRevShare:        affiliateRevShare,
 		FeeSourceToQuoteQuantums: feeSourceToQuoteQuantums,
@@ -309,5 +326,30 @@ func (k Keeper) getMarketMapperRevShare(
 		RevSharePpm:       revenueSharePpm,
 	})
 
+	return revShares, nil
+}
+
+func (k Keeper) getBrokerRevShare(
+	ctx sdk.Context,
+	brokerId uint64,
+	fill clobtypes.FillForProcess,
+) ([]types.RevShare, error) {
+	revShares := []types.RevShare{}
+	brokerAffiliate, err := k.affiliatesKeeper.GetBrokerAffiliate(ctx, brokerId)
+	if err != nil {
+		return nil, err
+	}
+	brokerFeePpm := brokerAffiliate.BrokerFeeSharePpm
+	brokerFeeQuoteQuantums, err := k.affiliatesKeeper.GetBrokerFee(ctx, brokerId, fill.FillQuoteQuantums)
+	if err != nil {
+		return nil, err
+	}
+	revShares = append(revShares, types.RevShare{
+		Recipient:         brokerAffiliate.BrokerAddress,
+		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_BROKER_FEE,
+		RevShareType:      types.REV_SHARE_TYPE_BROKER,
+		QuoteQuantums:     brokerFeeQuoteQuantums,
+		RevSharePpm:       brokerFeePpm,
+	})
 	return revShares, nil
 }
