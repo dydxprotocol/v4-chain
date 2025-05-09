@@ -3,8 +3,8 @@ import {
   sendOrderTriggeredNotification,
 } from '../../src/helpers/notifications/notifications-functions';
 import {
-  dbHelpers, FillFromDatabase, FillType, Liquidity,
-  OrderFromDatabase, OrderSide,
+  dbHelpers, FillFromDatabase,
+  OrderFromDatabase,
   PerpetualMarketFromDatabase,
   PerpetualMarketStatus,
   PerpetualMarketType,
@@ -94,7 +94,7 @@ describe('notification functions', () => {
         clobPairId: String(defaultMarket.id),
         size: '5',
         price: '100.25',
-        quoteAmount: '0',
+        quoteAmount: '501.25',
         eventId: Buffer.from('1'),
         transactionHash: '0x1234567890abcdef',
         createdAt: new Date().toISOString(),
