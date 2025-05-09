@@ -11,6 +11,7 @@ import {
   SubaccountFromDatabase,
   SubaccountTable,
   FirebaseNotificationTokenTable,
+  FillFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 
 import config from '../../config';
@@ -18,6 +19,7 @@ import config from '../../config';
 export async function sendOrderFilledNotification(
   order: OrderFromDatabase,
   market: PerpetualMarketFromDatabase,
+  fill: FillFromDatabase,
 ) {
   const start = Date.now();
   try {
@@ -36,9 +38,9 @@ export async function sendOrderFilledNotification(
     const notification = createNotification(
       NotificationType.ORDER_FILLED,
       {
-        [NotificationDynamicFieldKey.AMOUNT]: order.size.toString(),
+        [NotificationDynamicFieldKey.AMOUNT]: fill.size,
         [NotificationDynamicFieldKey.MARKET]: market.ticker,
-        [NotificationDynamicFieldKey.AVERAGE_PRICE]: order.price,
+        [NotificationDynamicFieldKey.AVERAGE_PRICE]: fill.price,
       },
     );
 
