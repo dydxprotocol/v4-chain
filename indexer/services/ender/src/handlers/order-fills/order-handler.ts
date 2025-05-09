@@ -120,7 +120,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
 
     // If order is filled, send a notification to firebase
     if (order.status === OrderStatus.FILLED) {
-      await sendOrderFilledNotification(order, perpetualMarket);
+      await sendOrderFilledNotification(order, perpetualMarket, fill);
     }
 
     // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
