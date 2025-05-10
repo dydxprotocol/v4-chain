@@ -115,22 +115,16 @@ export function sendMessageString(
 
   ws.send(message, (error) => {
     if (error) {
+      const instanceId = getInstanceId();
       stats.increment(
         `${config.SERVICE_NAME}.ws_send.error`,
         1,
         config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
         {
-          instance: getInstanceId(),
+          instance: instanceId,
           code: (error as WssError)?.code,
         },
       );
-      const errorLog = { // type is InfoObject in node-service-base
-        at: 'wss#sendMessageString',
-        message: `Failed to send message: ${error.message}`,
-        error,
-        connectionId,
-        code: (error as WssError)?.code,
-      };
       if (error?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
         // Don't log to avoid bursts when clients disconnect abruptly
         stats.increment(
@@ -138,10 +132,27 @@ export function sendMessageString(
           1,
           {
             action: 'close',
-            instance: getInstanceId(),
+            instance: instanceId,
+          },
+        );
+      } else if (error?.message.includes?.('EPIPE')) {
+        // Don't log to avoid bursts when clients disconnect abruptly
+        stats.increment(
+          `${config.SERVICE_NAME}.ws_send.write_epipe_errors`,
+          1,
+          {
+            action: 'close',
+            instance: instanceId,
           },
         );
       } else {
+        const errorLog = { // type is InfoObject in node-service-base
+          at: 'wss#sendMessageString',
+          message: `Failed to send message: ${error.message}`,
+          error,
+          connectionId,
+          code: (error as WssError)?.code,
+        };
         logger.error(errorLog);
       }
       try {
@@ -154,12 +165,6 @@ export function sendMessageString(
           `client returned ${error?.message} error`,
         );
       } catch (closeError) {
-        const closeErrorLog = {
-          at: 'wss#sendMessageString',
-          message: `Failed to close connection: ${closeError.message}`,
-          connectionId,
-          closeError,
-        };
         if (closeError?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
           // This error means the underlying Socket was destroyed
           // Don't log an error as this can be expected when clients disconnect abruptly and
@@ -169,10 +174,28 @@ export function sendMessageString(
             1,
             {
               action: 'close',
-              instance: getInstanceId(),
+              instance: instanceId,
+            },
+          );
+        } else if (closeError?.message.includes?.('EPIPE')) {
+          // This error means the underlying Socket was destroyed
+          // Don't log an error as this can be expected when clients disconnect abruptly and
+          // can happen to multiple closes while the close handshake is going on
+          stats.increment(
+            `${config.SERVICE_NAME}.ws_send.write_epipe_errors`,
+            1,
+            {
+              action: 'close',
+              instance: instanceId,
             },
           );
         } else {
+          const closeErrorLog = {
+            at: 'wss#sendMessageString',
+            message: `Failed to close connection: ${closeError.message}`,
+            connectionId,
+            closeError,
+          };
           logger.error(closeErrorLog);
         }
       }
