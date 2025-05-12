@@ -81,6 +81,18 @@ export function subticksToPrice(
     .toFixed();
 }
 
+export function subticksToPriceWithParams(
+  subticks: string,
+  quantumConversionExponent: number,
+  atomicResolution: number,
+): string {
+  return Big(subticks)
+    .times(Big(10).pow(quantumConversionExponent))
+    .times(Big(10).pow(QUOTE_CURRENCY_ATOMIC_RESOLUTION))
+    .div(Big(10).pow(atomicResolution))
+    .toFixed();
+}
+
 /**
  * @param price - quote currency / base currency (human readable price)
  * @returns - quote quantums/base quantums e.g. (1e-14 USDC/1e-10 BTC)
