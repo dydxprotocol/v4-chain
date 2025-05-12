@@ -66,9 +66,9 @@ export interface OrderCreateObject {
   createdAtHeight?: string,
   clientMetadata: string,
   triggerPrice?: string,
-  duration?: string | null,
-  interval?: string | null,
-  priceTolerance?: string | null,
+  duration?: string,
+  interval?: string,
+  priceTolerance?: string,
 }
 
 export interface OrderUpdateObject {

@@ -1,3 +1,4 @@
+import { logger } from '@dydxprotocol-indexer/base';
 import { OrderTable } from '@dydxprotocol-indexer/postgres';
 import { VAULTS_CLOB_0_TO_999 } from '@dydxprotocol-indexer/postgres/build/src/lib/helpers';
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
@@ -24,7 +25,6 @@ import { StatefulOrderPlacementHandler } from '../handlers/stateful-order/statef
 import { StatefulOrderRemovalHandler } from '../handlers/stateful-order/stateful-order-removal-handler';
 import { validateOrderAndReturnErrorMessage, validateOrderIdAndReturnErrorMessage } from './helpers';
 import { Validator } from './validator';
-import { logger } from '@dydxprotocol-indexer/base';
 
 export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
   public validate(): void {
@@ -55,7 +55,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
       this.validateConditionalOrderPlacement(this.event.conditionalOrderPlacement);
     } else if (this.event.conditionalOrderTriggered !== undefined) {
       this.validateConditionalOrderTriggered(this.event.conditionalOrderTriggered);
-    } else if (this.event.longTermOrderPlacement !== undefined ){ 
+    } else if (this.event.longTermOrderPlacement !== undefined) {
       this.validateLongTermOrderPlacement(this.event.longTermOrderPlacement!);
     } // validate twap?
   }
@@ -214,7 +214,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
     } else if (this.event.conditionalOrderTriggered !== undefined) {
       return ConditionalOrderTriggeredHandler;
     } else if (
-      this.event.longTermOrderPlacement !== undefined || 
+      this.event.longTermOrderPlacement !== undefined ||
       this.event.twapOrderPlacement !== undefined
     ) {
       return StatefulOrderPlacementHandler;

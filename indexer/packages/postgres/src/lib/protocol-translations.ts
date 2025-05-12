@@ -1,10 +1,10 @@
 import { bytesToBigInt } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
+  ClobPairStatus,
   IndexerOrder,
+  IndexerOrder_ConditionType,
   IndexerOrder_Side,
   IndexerOrder_TimeInForce,
-  IndexerOrder_ConditionType,
-  ClobPairStatus,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
@@ -321,12 +321,32 @@ export function getGoodTilBlockTime(order: IndexerOrder): IsoString | undefined 
  */
 export function protocolConditionTypeToOrderType(
   protocolConditionType: IndexerOrder_ConditionType,
+  orderFlag: number = 32,
 ): OrderType {
-  if (!(protocolConditionType in CONDITION_TYPE_TO_ORDER_TYPE_MAP)) {
-    throw new Error(`Unexpected ConditionType: ${protocolConditionType}`);
+  switch (orderFlag) {
+    case 0:
+      return OrderType.LIMIT;
+    case 32:
+      switch (protocolConditionType) {
+        case IndexerOrder_ConditionType.UNRECOGNIZED:
+        case IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED:
+          return OrderType.LIMIT;
+        case IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS:
+          return OrderType.STOP_LIMIT;
+        case IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT:
+          return OrderType.TAKE_PROFIT;
+        default:
+          throw new Error(`Unexpected ConditionType: ${protocolConditionType}`);
+      }
+    case 64:
+      return OrderType.LIMIT;
+    case 128:
+      return OrderType.TWAP;
+    case 256:
+      return OrderType.TWAP_SUBORDER;
+    default:
+      throw new Error(`Unexpected OrderFlags: ${orderFlag}`);
   }
-
-  return CONDITION_TYPE_TO_ORDER_TYPE_MAP[protocolConditionType];
 }
 
 /**

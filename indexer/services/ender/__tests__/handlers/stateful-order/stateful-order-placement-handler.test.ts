@@ -182,7 +182,7 @@ describe('statefulOrderPlacementHandler', () => {
     await onMessage(kafkaMessage);
     const orderId_ = statefulOrderEvent.twapOrderPlacement ? twapOrderId : orderId;
     const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId_);
-    
+
     const testOrder = statefulOrderEvent.twapOrderPlacement ? defaultTwapOrder : defaultOrder;
     expect(order).toEqual({
       id: orderId_,

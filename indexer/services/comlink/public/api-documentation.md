@@ -2042,6 +2042,9 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
     "createdAtHeight": "string",
     "clientMetadata": "string",
     "triggerPrice": "string",
+    "duration": "string",
+    "interval": "string",
+    "priceTolerance": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -2082,6 +2085,9 @@ Status Code **200**
 |» createdAtHeight|string|false|none|none|
 |» clientMetadata|string|true|none|none|
 |» triggerPrice|string|false|none|none|
+|» duration|string|false|none|none|
+|» interval|string|false|none|none|
+|» priceTolerance|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -2243,6 +2249,9 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
     "createdAtHeight": "string",
     "clientMetadata": "string",
     "triggerPrice": "string",
+    "duration": "string",
+    "interval": "string",
+    "priceTolerance": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -2283,6 +2292,9 @@ Status Code **200**
 |» createdAtHeight|string|false|none|none|
 |» clientMetadata|string|true|none|none|
 |» triggerPrice|string|false|none|none|
+|» duration|string|false|none|none|
+|» interval|string|false|none|none|
+|» priceTolerance|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -2414,6 +2426,9 @@ fetch(`${baseURL}/orders/{orderId}`,
   "createdAtHeight": "string",
   "clientMetadata": "string",
   "triggerPrice": "string",
+  "duration": "string",
+  "interval": "string",
+  "priceTolerance": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -5272,6 +5287,9 @@ or
   "createdAtHeight": "string",
   "clientMetadata": "string",
   "triggerPrice": "string",
+  "duration": "string",
+  "interval": "string",
+  "priceTolerance": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -5303,6 +5321,9 @@ or
 |createdAtHeight|string|false|none|none|
 |clientMetadata|string|true|none|none|
 |triggerPrice|string|false|none|none|
+|duration|string|false|none|none|
+|interval|string|false|none|none|
+|priceTolerance|string|false|none|none|
 |timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |status|[APIOrderStatus](#schemaapiorderstatus)|true|none|none|
 |postOnly|boolean|true|none|none|
