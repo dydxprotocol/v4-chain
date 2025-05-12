@@ -1385,7 +1385,6 @@ func TestPlaceOrder_ReduceOnly(t *testing.T) {
 				tc.expectedCancelledReduceOnlyOrders,
 				// TODO(IND-261): Add tests for replaced reduce-only orders.
 				false,
-				false,
 			)
 		})
 	}
@@ -1668,7 +1667,6 @@ func TestPlaceOrder_LongTermReduceOnlyRemovals(t *testing.T) {
 				tc.expectedExistingMatches,
 				tc.expectedNewMatches,
 				tc.expectedCancelledReduceOnlyOrders,
-				false,
 				false,
 			)
 		})
