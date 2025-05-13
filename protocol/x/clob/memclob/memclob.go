@@ -501,16 +501,14 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		// create an order removal message first so we can remove the original price level from the orderbook.
 		// TODO (CT-884): send OrderReplaceV1 message for replacement orders and add order-replace-handler to Vulcan
 		orderId := order.OrderId
-		if existingOrder, found := orderbook.getOrder(orderId); found {
-			if order.Subticks != existingOrder.Subticks {
-				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					ctx,
-					orderId,
-					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
-					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				); success {
-					offchainUpdates.AddRemoveMessage(orderId, message)
-				}
+		if _, found := orderbook.getOrder(orderId); found {
+			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+				ctx,
+				orderId,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			); success {
+				offchainUpdates.AddRemoveMessage(orderId, message)
 			}
 		}
 		if message, success := off_chain_updates.CreateOrderPlaceMessage(
