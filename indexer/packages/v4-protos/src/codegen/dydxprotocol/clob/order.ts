@@ -638,6 +638,9 @@ export interface Order {
    */
 
   twapParameters?: TwapParameters;
+  /** builder_code is the metadata for the partner or builder of an order. */
+
+  builderCode?: BuilderCode;
 }
 /**
  * Order represents a single order belonging to a `Subaccount`
@@ -714,6 +717,9 @@ export interface OrderSDKType {
    */
 
   twap_parameters?: TwapParametersSDKType;
+  /** builder_code is the metadata for the partner or builder of an order. */
+
+  builder_code?: BuilderCodeSDKType;
 }
 /** TwapParameters represents the necessary configuration for a TWAP order. */
 
@@ -760,6 +766,32 @@ export interface TwapParametersSDKType {
    */
 
   price_tolerance: number;
+}
+/**
+ * BuilderCode represents the metadata for the partner or builder of an
+ * order. This allows them to specify a fee for providing there service
+ * which will be paid out in the event of an order fill.
+ */
+
+export interface BuilderCode {
+  /** The address of the builder to which the fee will be paid. */
+  builderAddress: string;
+  /** The fee enforced on the order in ppm. */
+
+  feePpm: number;
+}
+/**
+ * BuilderCode represents the metadata for the partner or builder of an
+ * order. This allows them to specify a fee for providing there service
+ * which will be paid out in the event of an order fill.
+ */
+
+export interface BuilderCodeSDKType {
+  /** The address of the builder to which the fee will be paid. */
+  builder_address: string;
+  /** The fee enforced on the order in ppm. */
+
+  fee_ppm: number;
 }
 /**
  * TransactionOrdering represents a unique location in the block where a
@@ -1307,7 +1339,8 @@ function createBaseOrder(): Order {
     clientMetadata: 0,
     conditionType: 0,
     conditionalOrderTriggerSubticks: Long.UZERO,
-    twapParameters: undefined
+    twapParameters: undefined,
+    builderCode: undefined
   };
 }
 
@@ -1359,6 +1392,10 @@ export const Order = {
 
     if (message.twapParameters !== undefined) {
       TwapParameters.encode(message.twapParameters, writer.uint32(98).fork()).ldelim();
+    }
+
+    if (message.builderCode !== undefined) {
+      BuilderCode.encode(message.builderCode, writer.uint32(106).fork()).ldelim();
     }
 
     return writer;
@@ -1421,6 +1458,10 @@ export const Order = {
           message.twapParameters = TwapParameters.decode(reader, reader.uint32());
           break;
 
+        case 13:
+          message.builderCode = BuilderCode.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1444,6 +1485,7 @@ export const Order = {
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
     message.twapParameters = object.twapParameters !== undefined && object.twapParameters !== null ? TwapParameters.fromPartial(object.twapParameters) : undefined;
+    message.builderCode = object.builderCode !== undefined && object.builderCode !== null ? BuilderCode.fromPartial(object.builderCode) : undefined;
     return message;
   }
 
@@ -1509,6 +1551,61 @@ export const TwapParameters = {
     message.duration = object.duration ?? 0;
     message.interval = object.interval ?? 0;
     message.priceTolerance = object.priceTolerance ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseBuilderCode(): BuilderCode {
+  return {
+    builderAddress: "",
+    feePpm: 0
+  };
+}
+
+export const BuilderCode = {
+  encode(message: BuilderCode, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.builderAddress !== "") {
+      writer.uint32(10).string(message.builderAddress);
+    }
+
+    if (message.feePpm !== 0) {
+      writer.uint32(16).uint32(message.feePpm);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): BuilderCode {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBuilderCode();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.builderAddress = reader.string();
+          break;
+
+        case 2:
+          message.feePpm = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<BuilderCode>): BuilderCode {
+    const message = createBaseBuilderCode();
+    message.builderAddress = object.builderAddress ?? "";
+    message.feePpm = object.feePpm ?? 0;
     return message;
   }
 

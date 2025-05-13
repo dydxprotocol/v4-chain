@@ -230,6 +230,9 @@ message Order {
   // twap_parameters represent the configuration for a TWAP order. This must be
   // set for twap orders and will be ignored for all other order types.
   TwapParameters twap_parameters = 12;
+
+  // builder_code is the metadata for the partner or builder of an order.
+  BuilderCode builder_code = 13;
 }
 
 // TwapParameters represents the necessary configuration for a TWAP order.
@@ -247,6 +250,17 @@ message TwapParameters {
   // the oracle price each time a suborder is triggered. Must be
   // be in the range [0, 1_000_000).
   uint32 price_tolerance = 3;
+}
+
+// BuilderCode represents the metadata for the partner or builder of an
+// order. This allows them to specify a fee for providing there service
+// which will be paid out in the event of an order fill.
+message BuilderCode {
+  // The address of the builder to which the fee will be paid.
+  string builder_address = 1;
+
+  // The fee enforced on the order in ppm.
+  uint32 fee_ppm = 2;
 }
 
 // TransactionOrdering represents a unique location in the block where a

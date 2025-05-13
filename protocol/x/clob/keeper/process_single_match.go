@@ -388,6 +388,21 @@ func (k Keeper) persistMatchedOrders(
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, insuranceFundDelta)
 	}
 
+	var makerBuilderCode *types.BuilderCode
+	var takerBuilderCode *types.BuilderCode
+	// apply broker fees for taker and maker separately
+	if !matchWithOrders.MakerOrder.IsLiquidation() {
+		makerBuilderCode = matchWithOrders.MakerOrder.MustGetOrder().BuilderCode
+		builderFee := k.affiliatesKeeper.GetBuilderFee(ctx, makerBuilderCode, matchWithOrders.FillAmount.ToBigInt())
+		bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, builderFee)
+	}
+
+	if !matchWithOrders.TakerOrder.IsLiquidation() {
+		takerBuilderCode = matchWithOrders.TakerOrder.MustGetOrder().BuilderCode
+		builderFee := k.affiliatesKeeper.GetBuilderFee(ctx, takerBuilderCode, matchWithOrders.FillAmount.ToBigInt())
+		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, builderFee)
+	}
+
 	// Create the subaccount update.
 	updates := []satypes.Update{
 		// Taker update
@@ -478,6 +493,8 @@ func (k Keeper) persistMatchedOrders(
 		FillQuoteQuantums:     bigFillQuoteQuantums,
 		ProductId:             perpetualId,
 		MarketId:              perpetual.Params.MarketId,
+		MakerBuilderCode:      makerBuilderCode,
+		TakerBuilderCode:      takerBuilderCode,
 		MonthlyRollingTakerVolumeQuantums: k.statsKeeper.GetUserStats(
 			ctx,
 			matchWithOrders.TakerOrder.GetSubaccountId().Owner,

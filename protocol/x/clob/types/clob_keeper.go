@@ -18,6 +18,7 @@ type ClobKeeper interface {
 
 	AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx sdk.Context,
+		builderCode *BuilderCode,
 		subaccountId satypes.SubaccountId,
 		order PendingOpenOrder,
 	) satypes.UpdateResult
