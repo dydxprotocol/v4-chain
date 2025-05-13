@@ -74,6 +74,9 @@ export default class OrderModel extends BaseModel {
         'triggerPrice',
         'updatedAt',
         'updatedAtHeight',
+        'duration',
+        'interval',
+        'priceTolerance',
       ],
       properties: {
         id: { type: 'string', format: 'uuid' },
