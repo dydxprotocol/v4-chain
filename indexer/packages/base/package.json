@@ -37,7 +37,7 @@
     "big.js": "^6.2.1",
     "bignumber.js": "^9.0.2",
     "dotenv-flow": "^3.2.0",
-    "hot-shots": "^9.1.0",
+    "hot-shots": "^9.2.0",
     "lodash": "^4.17.21",
     "traverse": "^0.6.6",
     "uuid": "^8.3.2",
