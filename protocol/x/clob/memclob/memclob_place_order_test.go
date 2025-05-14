@@ -306,7 +306,6 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				ordersOnBook = append(ordersOnBook, &order)
 			}
 
-			expectedReplacementOrderPriceChanged := false
 			for _, matchableOrder := range ordersOnBook {
 				// Note we assume these are regular orders since liquidation orders cannot rest on
 				// the book.
@@ -316,9 +315,6 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				matchableOrderOrder := matchableOrder.MustGetOrder()
 				if tc.expectedToReplaceOrder && matchableOrderOrder.OrderId == tc.order.OrderId &&
 					tc.order.MustCmpReplacementOrder(&matchableOrderOrder) > 0 {
-					if matchableOrderOrder.Subticks != tc.order.Subticks {
-						expectedReplacementOrderPriceChanged = true
-					}
 					continue
 				}
 
@@ -370,7 +366,6 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 				[]expectedMatch{},
 				[]types.OrderId{},
 				tc.expectedToReplaceOrder,
-				expectedReplacementOrderPriceChanged,
 			)
 		})
 	}
@@ -2200,7 +2195,6 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 				tc.expectedNewMatches,
 				[]types.OrderId{},
 				tc.expectedToReplaceOrder,
-				false,
 			)
 		})
 	}
@@ -3169,7 +3163,6 @@ func TestPlaceOrder_PostOnly(t *testing.T) {
 				[]expectedMatch{},
 				[]types.OrderId{},
 				false,
-				false,
 			)
 		})
 	}
@@ -3312,7 +3305,6 @@ func TestPlaceOrder_ImmediateOrCancel(t *testing.T) {
 				[]expectedMatch{},
 				tc.expectedCollatCheck,
 				[]types.OrderId{},
-				false,
 				false,
 			)
 		})
