@@ -73,6 +73,8 @@ func (r RevShareType) String() string {
 		return "REV_SHARE_TYPE_UNCONDITIONAL"
 	case REV_SHARE_TYPE_AFFILIATE:
 		return "REV_SHARE_TYPE_AFFILIATE"
+	case REV_SHARE_TYPE_BUILDER:
+		return "REV_SHARE_TYPE_BUILDER"
 	default:
 		return "UNKNOWN"
 	}
