@@ -19,17 +19,17 @@ main converts a hexadecimal address to bech32
 
 Usage:
 
-	go run scripts/bech32_to_hex/bech32_to_hex.go \
-		-address <bech32_address>
+	go run scripts/hex_to_bech32/hex_to_bech32.go \
+		-hex <bech32_address>
 */
 func main() {
 	// ------------ FLAGS ------------
 	var hexAddress string
-	flag.StringVar(&hexAddress, "address", "0xda49e72c3577cc08bbe5b64d4a89e8e808e22f28", "hexadecimal address")
+	flag.StringVar(&hexAddress, "hex", "0xda49e72c3577cc08bbe5b64d4a89e8e808e22f28", "hexadecimal address")
 	flag.Parse()
 
 	fmt.Println("Using the following configuration (modifiable via flags):")
-	fmt.Println("address:", hexAddress)
+	fmt.Println("hex address:", hexAddress)
 	fmt.Println()
 
 	// ------------ LOGIC ------------
