@@ -257,6 +257,13 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			expectedRevSharesForFill: types.RevSharesForFill{
 				AllRevShares: []types.RevShare{
 					{
+						Recipient:         constants.DaveAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_BUILDER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_BUILDER,
+						QuoteQuantums:     big.NewInt(1_000_000_000),
+						RevSharePpm:       10_000, // 1%
+					},
+					{
 						// BobAddress has 500000000000000000000000 coins staked
 						// via genesis. Which puts Bob at the highest tier
 						// and gives him a 15% taker fee share.
@@ -299,18 +306,24 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(1_500_000), // affiliate rev share fees
 					// unconditional + market mapper rev shares fees
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(6_300_000),
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          big.NewInt(1_000_000_000),
 				},
 				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            150_000, // affiliate rev share fee ppm
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 600_000, // unconditional + market mapper rev share fee ppm
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          10_000,  // builder rev share fee ppm
 				},
 			},
 			fill: clobtypes.FillForProcess{
-				TakerAddr:                         constants.AliceAccAddress.String(),
-				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
-				MakerAddr:                         constants.BobAccAddress.String(),
-				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
-				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				TakerAddr:             constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums: big.NewInt(10_000_000),
+				MakerAddr:             constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums: big.NewInt(2_000_000),
+				FillQuoteQuantums:     big.NewInt(100_000_000_000),
+				MakerBuilderCode: &clobtypes.BuilderCode{
+					BuilderAddress: constants.Dave_Num0.Owner,
+					FeePpm:         10_000,
+				},
 				ProductId:                         perpetualId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
 				MarketId:                          marketId,
@@ -380,10 +393,12 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(1_500_000),
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(3_900_000),
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          big.NewInt(0),
 				},
 				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            150_000,
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 600_000,
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          0,
 				},
 				AffiliateRevShare: &types.RevShare{
 					Recipient:         constants.BobAccAddress.String(),
@@ -472,10 +487,12 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(7_200_000),
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          big.NewInt(0),
 				},
 				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 600_000,
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0,
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          0,
 				},
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
@@ -528,10 +545,12 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(1_050_000),
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(1_500_000),
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          big.NewInt(0),
 				},
 				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 100_000, // 10%
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            150_000, // 15%
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          0,
 				},
 				AffiliateRevShare: &types.RevShare{
 					Recipient:         constants.BobAccAddress.String(),
@@ -589,10 +608,12 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(2_100_000),
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(1_500_000),
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          big.NewInt(0),
 				},
 				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 200_000, // 20%
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            150_000, // 15%
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          0,
 				},
 				AffiliateRevShare: &types.RevShare{
 					Recipient:         constants.BobAccAddress.String(),
@@ -658,10 +679,12 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(950_000),
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(2_500_000),
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          big.NewInt(0),
 				},
 				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 100_000, // 10%
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            250_000, // 25%
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          0,
 				},
 			},
 			fill: clobtypes.FillForProcess{
@@ -706,10 +729,12 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(0),
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          big.NewInt(0),
 				},
 				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 0,
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0,
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          0,
 				},
 			},
 			fill: clobtypes.FillForProcess{
@@ -799,10 +824,12 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE: big.NewInt(0),
 					// unconditional + market mapper rev shares fees
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(1_200_000),
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          big.NewInt(0),
 				},
 				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0,
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 600_000,
+					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          0,
 				},
 			},
 			fill: clobtypes.FillForProcess{

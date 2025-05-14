@@ -523,6 +523,7 @@ func (f *FakeMemClobKeeper) SendTakerOrderStatus(
 // Placeholder to satisfy interface implementation of types.MemClobKeeper
 func (f *FakeMemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	ctx sdk.Context,
+	builderCode *types.BuilderCode,
 	subaccountId satypes.SubaccountId,
 	order types.PendingOpenOrder,
 ) satypes.UpdateResult {

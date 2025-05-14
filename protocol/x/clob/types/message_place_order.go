@@ -128,6 +128,24 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 		}
 	}
 
+	if msg.Order.BuilderCode != nil {
+		if _, err := sdk.AccAddressFromBech32(msg.Order.BuilderCode.BuilderAddress); err != nil {
+			return errorsmod.Wrapf(
+				ErrInvalidBuilderCode,
+				"builder code address '%s' must be a valid bech32 address, but got error '%v'",
+				msg.Order.BuilderCode.BuilderAddress,
+				err.Error(),
+			)
+		}
+		if msg.Order.BuilderCode.FeePpm <= 0 || msg.Order.BuilderCode.FeePpm > 10_000 {
+			return errorsmod.Wrapf(
+				ErrInvalidBuilderCode,
+				"builder code fee ppm '%d' must be in the range (0, 10_000]",
+				msg.Order.BuilderCode.FeePpm,
+			)
+		}
+	}
+
 	if msg.Order.IsTwapOrder() {
 		if msg.Order.TwapParameters == nil {
 			return errorsmod.Wrapf(

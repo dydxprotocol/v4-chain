@@ -165,18 +165,28 @@ func (k Keeper) GetAllRevShares(
 	revShares := []types.RevShare{}
 	feeSourceToQuoteQuantums := make(map[types.RevShareFeeSource]*big.Int)
 	feeSourceToRevSharePpm := make(map[types.RevShareFeeSource]uint32)
+
 	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = big.NewInt(0)
 	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = 0
+
 	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = big.NewInt(0)
 	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = 0
+
+	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_BUILDER_FEE] = big.NewInt(0)
+	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_BUILDER_FEE] = 0
 
 	totalFeesShared := big.NewInt(0)
 	takerFees := fill.TakerFeeQuoteQuantums
 	makerFees := fill.MakerFeeQuoteQuantums
+
+	takerBuilderFee := k.affiliatesKeeper.GetBuilderFee(ctx, fill.TakerBuilderCode, fill.FillQuoteQuantums)
+	makerBuilderFee := k.affiliatesKeeper.GetBuilderFee(ctx, fill.MakerBuilderCode, fill.FillQuoteQuantums)
 	netFees := big.NewInt(0).Add(takerFees, makerFees)
+	totalBuilderFees := big.NewInt(0).Add(takerBuilderFee, makerBuilderFee)
+	totalFees := big.NewInt(0).Add(netFees, totalBuilderFees)
 
 	// when net fee is zero, no rev share is generated from the fill
-	if netFees.Sign() == 0 {
+	if totalFees.Sign() == 0 {
 		return types.RevSharesForFill{}, nil
 	}
 
@@ -196,6 +206,16 @@ func (k Keeper) GetAllRevShares(
 	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
 	if err != nil {
 		return types.RevSharesForFill{}, err
+	}
+
+	if fill.TakerBuilderCode != nil {
+		takerBuilderRevShares := k.getBuilderRevShare(ctx, *fill.TakerBuilderCode, fill)
+		revShares = append(revShares, takerBuilderRevShares...)
+	}
+
+	if fill.MakerBuilderCode != nil {
+		makerBuilderRevShares := k.getBuilderRevShare(ctx, *fill.MakerBuilderCode, fill)
+		revShares = append(revShares, makerBuilderRevShares...)
 	}
 
 	revShares = append(revShares, affiliateRevShares...)
@@ -219,7 +239,7 @@ func (k Keeper) GetAllRevShares(
 		feeSourceToRevSharePpm[revShare.RevShareFeeSource] += revShare.RevSharePpm
 	}
 	//check total fees shared is less than or equal to net fees
-	if totalFeesShared.Cmp(netFees) > 0 {
+	if totalFeesShared.Cmp(totalFees) > 0 {
 		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
 
@@ -310,4 +330,22 @@ func (k Keeper) getMarketMapperRevShare(
 	})
 
 	return revShares, nil
+}
+
+func (k Keeper) getBuilderRevShare(
+	ctx sdk.Context,
+	builderCode clobtypes.BuilderCode,
+	fill clobtypes.FillForProcess,
+) []types.RevShare {
+	revShares := []types.RevShare{}
+
+	builderFeeQuoteQuantums := k.affiliatesKeeper.GetBuilderFee(ctx, &builderCode, fill.FillQuoteQuantums)
+	revShares = append(revShares, types.RevShare{
+		Recipient:         builderCode.BuilderAddress,
+		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_BUILDER_FEE,
+		RevShareType:      types.REV_SHARE_TYPE_BUILDER,
+		QuoteQuantums:     builderFeeQuoteQuantums,
+		RevSharePpm:       builderCode.FeePpm,
+	})
+	return revShares
 }
