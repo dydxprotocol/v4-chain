@@ -59,6 +59,8 @@ export class OrderPlaceHandler extends Handler {
     const order: IndexerOrder = orderPlace.order!;
     const placementStatus: OrderPlaceV1_OrderPlacementStatus = orderPlace.placementStatus;
 
+    console.log('tian, in order place handler, order:', order, 'placement status', placementStatus);
+
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(order.orderId!.clobPairId.toString());
 
@@ -140,6 +142,13 @@ export class OrderPlaceHandler extends Handler {
         ),
         headers,
       };
+      console.log('tian, in order place handler, order', order, 'send subaccount message',
+        'redis order', redisOrder,
+        'db order', dbOrder,
+        'perpetual market', perpetualMarket,
+        'placement status', placementStatus,
+        'block height', blockHeightRefresher.getLatestBlockHeight(),
+      );
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
   }

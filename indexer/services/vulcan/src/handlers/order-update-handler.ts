@@ -62,6 +62,8 @@ export class OrderUpdateHandler extends Handler {
     this.validateOrderUpdate(update.orderUpdate!);
     const orderUpdate: OrderUpdateV1 = update.orderUpdate!;
 
+    console.log('tian, in order update handler, order:', orderUpdate);
+
     const updateResult: UpdateOrderResult = await runFuncWithTimingStat(
       updateOrder({
         updatedOrderId: orderUpdate.orderId!,

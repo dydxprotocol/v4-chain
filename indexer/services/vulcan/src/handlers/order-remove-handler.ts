@@ -85,6 +85,8 @@ export class OrderRemoveHandler extends Handler {
     const orderRemove: OrderRemoveV1 = update.orderRemove!;
     const reason: OrderRemovalReason = orderRemove.reason;
 
+    console.log('tian, in order remove handler, order:', orderRemove);
+
     this.validateOrderRemove(orderRemove);
 
     // If the Indexer sent this expire message, check to verify it's still relevant. Updates may
@@ -356,6 +358,13 @@ export class OrderRemoveHandler extends Handler {
     };
 
     if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult, stateRemainingQuantums)) {
+      console.log('tian, in order remove handler, send subaccount message',
+        'order remove', orderRemove,
+        'remove order result', removeOrderResult,
+        'canceled order', canceledOrder,
+        'perpetual market', perpetualMarket,
+        'block height', blockHeightRefresher.getLatestBlockHeight(),
+      )
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
 
