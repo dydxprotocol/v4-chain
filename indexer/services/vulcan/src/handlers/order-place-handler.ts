@@ -59,6 +59,7 @@ export class OrderPlaceHandler extends Handler {
     const order: IndexerOrder = orderPlace.order!;
     const placementStatus: OrderPlaceV1_OrderPlacementStatus = orderPlace.placementStatus;
 
+
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(order.orderId!.clobPairId.toString());
 
@@ -88,6 +89,7 @@ export class OrderPlaceHandler extends Handler {
       at: 'OrderPlaceHandler#handle',
       message: 'OrderPlace processed',
       order,
+      placementStatus,
       placeOrderResult,
     });
 
@@ -140,6 +142,15 @@ export class OrderPlaceHandler extends Handler {
         ),
         headers,
       };
+      logger.info({
+        at: 'OrderPlaceHandler#sendSubaccountMessage',
+        message: 'Sending subaccount message',
+        'redis order': redisOrder,
+        'db order': dbOrder,
+        'perpetual market': perpetualMarket,
+        'placement status': placementStatus,
+        'block height': blockHeightRefresher.getLatestBlockHeight(),
+      })
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
   }

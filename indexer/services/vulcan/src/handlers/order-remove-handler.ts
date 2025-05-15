@@ -356,6 +356,15 @@ export class OrderRemoveHandler extends Handler {
     };
 
     if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult, stateRemainingQuantums)) {
+      logger.info({
+        at: 'OrderRemoveHandler#sendSubaccountMessage',
+        message: 'Sending subaccount message',
+        orderRemove,
+        removeOrderResult,
+        canceledOrder,
+        perpetualMarket,
+        'block height': blockHeightRefresher.getLatestBlockHeight(),
+      })
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
 
