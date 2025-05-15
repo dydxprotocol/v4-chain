@@ -1294,6 +1294,15 @@ var (
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
 		ReduceOnly:   true,
 	}
+	Order_Alice_Num1_Id2_Clob0_Buy20_Price30_GTB20_RO_IOC = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Alice_Num1, ClientId: 2, ClobPairId: 0},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     20,
+		Subticks:     30,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		ReduceOnly:   true,
+		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_IOC,
+	}
 	Order_Alice_Num1_Id3_Clob1_Buy30_Price35_GTB25_RO = clobtypes.Order{
 		OrderId:      clobtypes.OrderId{SubaccountId: Alice_Num1, ClientId: 3, ClobPairId: 1},
 		Side:         clobtypes.Order_SIDE_BUY,

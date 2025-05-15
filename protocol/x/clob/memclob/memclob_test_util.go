@@ -1104,11 +1104,19 @@ func placeOrderAndVerifyExpectations(
 
 	orderbook := memclob.orderbooks[order.GetClobPairId()]
 
+	fmt.Println("filledSize:", filledSize)
+	fmt.Println("orderStatus:", orderStatus)
+	fmt.Println("offchainUpdates:", len(offchainUpdates.Messages))
+	fmt.Println("err:", err)
+	fmt.Println("orderbook.SubaccountOpenReduceOnlyOrders", orderbook.SubaccountOpenReduceOnlyOrders)
+
 	// Verify the return values are correct.
 	require.ErrorIs(t, err, expectedErr)
 	require.Equal(t, expectedFilledSize, filledSize)
 	// If no error occurred, validate the order status.
 	if expectedErr == nil {
+		fmt.Println("Order status:", orderStatus)
+		fmt.Println("Expected order status:", expectedOrderStatus)
 		require.Equal(t, expectedOrderStatus, orderStatus)
 	}
 

@@ -520,7 +520,14 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	// Attempt to match the order against the orderbook.
+	if order.TimeInForce == types.Order_TIME_IN_FORCE_IOC {
+		fmt.Println("tian, about to match IOC order", "orderId", order.OrderId)
+	}
 	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
+	if order.TimeInForce == types.Order_TIME_IN_FORCE_IOC {
+		fmt.Println("tian, finished matching IOC order", "orderId", order.OrderId,
+			"takerOrderStatus", takerOrderStatus, "err", err)
+	}
 	offchainUpdates.Append(takerOffchainUpdates)
 
 	if err != nil {
@@ -765,6 +772,10 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		branchedContext,
 		order,
 	)
+
+	if order.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_IOC {
+		fmt.Println("tian, finished mustPerformTakerOrderMatchingr", "order", order.MustGetOrder(), "takerOrderStatus", takerOrderStatus, "m.generateOrderbookUpdates", m.generateOrderbookUpdates)
+	}
 
 	// If full node streaming is on, emit the taker order and its resulting status.
 	if m.generateOrderbookUpdates {
@@ -1554,6 +1565,10 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 	takerSubaccountId := newTakerOrder.GetSubaccountId()
 	takerIsLiquidation := newTakerOrder.IsLiquidation()
 
+	if newTakerOrder.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_IOC {
+		fmt.Println("tian, in mustPerformTakerOrderMatching for IOC order", newTakerOrder.MustGetOrder())
+	}
+
 	// Store the remaining size of the taker order to determine the filled amount of an order after
 	// matching has ended.
 	// If the order is a liquidation, then the remaining size is the full size of the order.
@@ -1588,6 +1603,10 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 	//   collateralization, stop matching.
 	// - Update local bookkeeping variables with the new match. If the taker order is fully matched, stop matching.
 	for {
+		if newTakerOrder.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_IOC {
+			fmt.Println("tian, in mustPerformTakerOrderMatching for loop for order", newTakerOrder.MustGetOrder(),
+				"takerRemainingSize", takerRemainingSize)
+		}
 		var foundMakerOrder bool
 		// If the maker level order has not been initialized, then we are just starting matching and need to find the
 		// best order on the opposite side.
@@ -1715,6 +1734,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 				matchedAmount,
 				takerIsBuy,
 			)
+			fmt.Println("tian, in mustPerformTakerOrderMatching for reduce only order", newTakerOrder.MustGetOrder(), "resizedMatchAmount", resizedMatchAmount)
 
 			// If the taker reduce-only order was resized to 0, that indicates the order is on the
 			// same side as the taker's position side and this order should have failed validation.
@@ -1738,6 +1758,13 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		// and won’t affect the collateralization of future operations in the operations queue.
 		success, takerUpdateResult, makerUpdateResult, _, err := m.clobKeeper.ProcessSingleMatch(
 			ctx, &matchWithOrders, map[string]uint32{})
+		if newTakerOrder.MustGetOrder().TimeInForce == types.Order_TIME_IN_FORCE_IOC {
+			fmt.Println("tian, in mustPerformTakerOrderMatching, ProcessSingleMatch, order", newTakerOrder.MustGetOrder(),
+				"success", success,
+				"takerUpdateResult", takerUpdateResult,
+				"makerUpdateResult", makerUpdateResult,
+				"err", err)
+		}
 		if err != nil && !errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) {
 			if errors.Is(err, types.ErrLiquidationExceedsSubaccountMaxInsuranceLost) {
 				// Subaccount has reached max insurance lost block limit. Stop matching.
@@ -1860,6 +1887,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			takerStatePositionSize := m.clobKeeper.GetStatePosition(ctx, takerSubaccountId, clobPairId)
 			if takerStatePositionSize.Sign() == 0 {
 				// TODO(DEC-847): Update logic to properly remove stateful taker reduce-only orders.
+				fmt.Println("tian, in mustPerformTakerOrderMatching, setting taker order status to ReduceOnlyResized", "orderId", newTakerOrder.MustGetOrder().OrderId)
 				takerOrderStatus.OrderStatus = types.ReduceOnlyResized
 				break
 			}
@@ -2121,6 +2149,7 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 		orderbook := m.mustGetOrderbook(clobPairId)
 
 		if openReduceOnlyOrders, exists := orderbook.SubaccountOpenReduceOnlyOrders[subaccountId]; exists {
+			fmt.Println("tian, cancelling open reduce-only orders for subaccount", subaccountId)
 			// Copy the list of open reduce-only orders.
 			openReduceOnlyOrdersCopy := make([]types.OrderId, 0, len(openReduceOnlyOrders))
 			for orderId := range openReduceOnlyOrders {
@@ -2136,6 +2165,7 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 			// Remove each open reduce-only order from the memclob.
 			for _, orderId := range openReduceOnlyOrdersCopy {
 				// TODO(DEC-847): Update logic to properly remove stateful orders.
+				fmt.Println("tian, removing reduce-only order", orderId)
 				m.mustRemoveOrder(ctx, orderId)
 				if orderId.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(orderId) {
 					m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
