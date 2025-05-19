@@ -162,26 +162,29 @@ func (k Keeper) GetAllRevShares(
 	fill clobtypes.FillForProcess,
 	affiliatesWhitelistMap map[string]uint32,
 ) (types.RevSharesForFill, error) {
-	revShares := []types.RevShare{}
+	allRevShares := []types.RevShare{}
 	feeSourceToQuoteQuantums, feeSourceToRevSharePpm := buildRevShareToFeeSourceMaps()
 
 	// get the builder rev shares
-	revShares, builderFees := getBuilderRevShares(fill, revShares)
+	builderRevShares, builderFees := getBuilderRevShares(fill)
 
 	// get the protocol rev shares
 	netFees := big.NewInt(0).Add(fill.TakerFeeQuoteQuantums, fill.MakerFeeQuoteQuantums)
-	revShares, affiliateRevShare, err := k.getProtocolRevShares(
+	protocolRevShares, affiliateRevShare, err := k.getProtocolRevShares(
 		ctx,
 		fill,
 		affiliatesWhitelistMap,
 		netFees,
-		revShares,
 	)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
 
-	if len(revShares) == 0 {
+	// append the builder and protocol rev shares to the all rev shares
+	allRevShares = append(allRevShares, builderRevShares...)
+	allRevShares = append(allRevShares, protocolRevShares...)
+
+	if len(allRevShares) == 0 {
 		// if there are no builder or protocol rev shares, then exit early
 		return types.RevSharesForFill{}, nil
 	}
@@ -189,7 +192,7 @@ func (k Keeper) GetAllRevShares(
 	totalFees := big.NewInt(0).Add(netFees, builderFees)
 	totalFeesShared := big.NewInt(0)
 
-	for _, revShare := range revShares {
+	for _, revShare := range allRevShares {
 		totalFeesShared.Add(totalFeesShared, revShare.QuoteQuantums)
 
 		// Add the rev share to the total for the fee source
@@ -209,7 +212,7 @@ func (k Keeper) GetAllRevShares(
 		AffiliateRevShare:        affiliateRevShare,
 		FeeSourceToQuoteQuantums: feeSourceToQuoteQuantums,
 		FeeSourceToRevSharePpm:   feeSourceToRevSharePpm,
-		AllRevShares:             revShares,
+		AllRevShares:             allRevShares,
 	}, nil
 }
 
@@ -232,11 +235,15 @@ func buildRevShareToFeeSourceMaps() (
 	return feeSourceToQuoteQuantums, feeSourceToRevSharePpm
 }
 
+// getBuilderRevShares returns the builder rev shares for the fill.
+// These rev shares are additional fees that are charged to the taker and maker
+// in addition to the protocol fees. These fees are specified by the builder code on
+// the order itself and are paid to the configured builder address.
 func getBuilderRevShares(
 	fill clobtypes.FillForProcess,
-	revShares []types.RevShare,
 ) ([]types.RevShare, *big.Int) {
 	totalBuilderFees := big.NewInt(0)
+	revShares := []types.RevShare{}
 	if fill.TakerBuilderCode != nil {
 		takerBuilderRevShares, takerBuilderFeeQuoteQuantums := getBuilderRevShare(*fill.TakerBuilderCode, fill)
 		revShares = append(revShares, takerBuilderRevShares...)
@@ -251,16 +258,20 @@ func getBuilderRevShares(
 	return revShares, totalBuilderFees
 }
 
+// getProtocolRevShares returns the protocol rev shares for the fill
+// where the protocol fees are partitioned from the fill.
+// These rev shares are partitioned from the fill based on the affiliate rev shares,
+// unconditional rev shares, and market mapper rev shares.
 func (k Keeper) getProtocolRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
 	affiliatesWhitelistMap map[string]uint32,
 	netFees *big.Int,
-	revShares []types.RevShare,
 ) ([]types.RevShare, *types.RevShare, error) {
+	revShares := []types.RevShare{}
 	if netFees.Sign() == 0 {
 		// when net fee is zero, no protocol rev share is generated from the fill
-		return revShares, nil, nil
+		return nil, nil, nil
 	}
 
 	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
