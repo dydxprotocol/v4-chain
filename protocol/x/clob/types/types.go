@@ -3,14 +3,14 @@ package types
 import "math/big"
 
 type FillForProcess struct {
-	TakerAddr             string
-	TakerFeeQuoteQuantums *big.Int
-	MakerAddr             string
-	MakerFeeQuoteQuantums *big.Int
-	FillQuoteQuantums     *big.Int
-	ProductId             uint32
-	MakerBuilderCode      *BuilderCode
-	TakerBuilderCode      *BuilderCode
+	TakerAddr              string
+	TakerFeeQuoteQuantums  *big.Int
+	MakerAddr              string
+	MakerFeeQuoteQuantums  *big.Int
+	FillQuoteQuantums      *big.Int
+	ProductId              uint32
+	MakerBuilderCodeParams *BuilderCodeParameters
+	TakerBuilderCodeParams *BuilderCodeParameters
 	// MonthlyRollingTakerVolumeQuantums is the total taker volume for
 	// the given taker address in the last 30 days. This rolling volume
 	// does not include stats of the current block being processed.

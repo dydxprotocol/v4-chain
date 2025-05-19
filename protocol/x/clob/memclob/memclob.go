@@ -2240,9 +2240,9 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 
 		updateCheckResult := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
 			ctx,
-			makerOrder.BuilderCode,
 			makerOrder.GetSubaccountId(),
 			equivalentOrder,
+			makerOrder.BuilderCodeParameters,
 		)
 
 		if updateCheckResult == satypes.Success {

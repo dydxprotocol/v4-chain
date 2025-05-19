@@ -388,18 +388,18 @@ func (k Keeper) persistMatchedOrders(
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, insuranceFundDelta)
 	}
 
-	var makerBuilderCode *types.BuilderCode
-	var takerBuilderCode *types.BuilderCode
+	var makerBuilderCodeParams *types.BuilderCodeParameters
+	var takerBuilderCodeParams *types.BuilderCodeParameters
 	// apply broker fees for taker and maker separately
 	if !matchWithOrders.MakerOrder.IsLiquidation() {
-		makerBuilderCode = matchWithOrders.MakerOrder.MustGetOrder().BuilderCode
-		builderFee := makerBuilderCode.GetBuilderFee(matchWithOrders.FillAmount.ToBigInt())
+		makerBuilderCodeParams = matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
+		builderFee := makerBuilderCodeParams.GetBuilderFee(matchWithOrders.FillAmount.ToBigInt())
 		bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, builderFee)
 	}
 
 	if !matchWithOrders.TakerOrder.IsLiquidation() {
-		takerBuilderCode = matchWithOrders.TakerOrder.MustGetOrder().BuilderCode
-		builderFee := takerBuilderCode.GetBuilderFee(matchWithOrders.FillAmount.ToBigInt())
+		takerBuilderCodeParams = matchWithOrders.TakerOrder.MustGetOrder().BuilderCodeParameters
+		builderFee := takerBuilderCodeParams.GetBuilderFee(matchWithOrders.FillAmount.ToBigInt())
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, builderFee)
 	}
 
@@ -486,15 +486,15 @@ func (k Keeper) persistMatchedOrders(
 	}
 
 	fillForProcess := types.FillForProcess{
-		TakerAddr:             matchWithOrders.TakerOrder.GetSubaccountId().Owner,
-		TakerFeeQuoteQuantums: bigTakerFeeQuoteQuantums,
-		MakerAddr:             matchWithOrders.MakerOrder.GetSubaccountId().Owner,
-		MakerFeeQuoteQuantums: bigMakerFeeQuoteQuantums,
-		FillQuoteQuantums:     bigFillQuoteQuantums,
-		ProductId:             perpetualId,
-		MarketId:              perpetual.Params.MarketId,
-		MakerBuilderCode:      makerBuilderCode,
-		TakerBuilderCode:      takerBuilderCode,
+		TakerAddr:              matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+		TakerFeeQuoteQuantums:  bigTakerFeeQuoteQuantums,
+		MakerAddr:              matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+		MakerFeeQuoteQuantums:  bigMakerFeeQuoteQuantums,
+		FillQuoteQuantums:      bigFillQuoteQuantums,
+		ProductId:              perpetualId,
+		MarketId:               perpetual.Params.MarketId,
+		MakerBuilderCodeParams: makerBuilderCodeParams,
+		TakerBuilderCodeParams: takerBuilderCodeParams,
 		MonthlyRollingTakerVolumeQuantums: k.statsKeeper.GetUserStats(
 			ctx,
 			matchWithOrders.TakerOrder.GetSubaccountId().Owner,

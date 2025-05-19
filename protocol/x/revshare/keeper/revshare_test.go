@@ -320,7 +320,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				MakerAddr:             constants.BobAccAddress.String(),
 				MakerFeeQuoteQuantums: big.NewInt(2_000_000),
 				FillQuoteQuantums:     big.NewInt(100_000_000_000),
-				MakerBuilderCode: &clobtypes.BuilderCode{
+				MakerBuilderCodeParams: &clobtypes.BuilderCodeParameters{
 					BuilderAddress: constants.Dave_Num0.Owner,
 					FeePpm:         10_000,
 				},

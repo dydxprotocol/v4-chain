@@ -244,13 +244,13 @@ func getBuilderRevShares(
 ) ([]types.RevShare, *big.Int) {
 	totalBuilderFees := big.NewInt(0)
 	revShares := []types.RevShare{}
-	if fill.TakerBuilderCode != nil {
-		takerBuilderRevShares, takerBuilderFeeQuoteQuantums := getBuilderRevShare(*fill.TakerBuilderCode, fill)
+	if fill.TakerBuilderCodeParams != nil {
+		takerBuilderRevShares, takerBuilderFeeQuoteQuantums := getBuilderRevShare(*fill.TakerBuilderCodeParams, fill)
 		revShares = append(revShares, takerBuilderRevShares...)
 		totalBuilderFees.Add(totalBuilderFees, takerBuilderFeeQuoteQuantums)
 	}
-	if fill.MakerBuilderCode != nil {
-		makerBuilderRevShares, makerBuilderFeeQuoteQuantums := getBuilderRevShare(*fill.MakerBuilderCode, fill)
+	if fill.MakerBuilderCodeParams != nil {
+		makerBuilderRevShares, makerBuilderFeeQuoteQuantums := getBuilderRevShare(*fill.MakerBuilderCodeParams, fill)
 		revShares = append(revShares, makerBuilderRevShares...)
 		totalBuilderFees.Add(totalBuilderFees, makerBuilderFeeQuoteQuantums)
 	}
@@ -387,18 +387,18 @@ func (k Keeper) getMarketMapperRevShare(
 }
 
 func getBuilderRevShare(
-	builderCode clobtypes.BuilderCode,
+	builderCodeParams clobtypes.BuilderCodeParameters,
 	fill clobtypes.FillForProcess,
 ) ([]types.RevShare, *big.Int) {
 	revShares := []types.RevShare{}
 
-	builderFeeQuoteQuantums := builderCode.GetBuilderFee(fill.FillQuoteQuantums)
+	builderFeeQuoteQuantums := builderCodeParams.GetBuilderFee(fill.FillQuoteQuantums)
 	revShares = append(revShares, types.RevShare{
-		Recipient:         builderCode.BuilderAddress,
+		Recipient:         builderCodeParams.BuilderAddress,
 		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_BUILDER_FEE,
 		RevShareType:      types.REV_SHARE_TYPE_BUILDER,
 		QuoteQuantums:     builderFeeQuoteQuantums,
-		RevSharePpm:       builderCode.FeePpm,
+		RevSharePpm:       builderCodeParams.FeePpm,
 	})
 
 	return revShares, builderFeeQuoteQuantums

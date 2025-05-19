@@ -638,9 +638,12 @@ export interface Order {
    */
 
   twapParameters?: TwapParameters;
-  /** builder_code is the metadata for the partner or builder of an order. */
+  /**
+   * builder_code_parameters is the metadata for the
+   * partner or builder of an order specifying the fees charged.
+   */
 
-  builderCode?: BuilderCode;
+  builderCodeParameters?: BuilderCodeParameters;
 }
 /**
  * Order represents a single order belonging to a `Subaccount`
@@ -717,9 +720,12 @@ export interface OrderSDKType {
    */
 
   twap_parameters?: TwapParametersSDKType;
-  /** builder_code is the metadata for the partner or builder of an order. */
+  /**
+   * builder_code_parameters is the metadata for the
+   * partner or builder of an order specifying the fees charged.
+   */
 
-  builder_code?: BuilderCodeSDKType;
+  builder_code_parameters?: BuilderCodeParametersSDKType;
 }
 /** TwapParameters represents the necessary configuration for a TWAP order. */
 
@@ -768,12 +774,12 @@ export interface TwapParametersSDKType {
   price_tolerance: number;
 }
 /**
- * BuilderCode represents the metadata for the partner or builder of an
- * order. This allows them to specify a fee for providing there service
- * which will be paid out in the event of an order fill.
+ * BuilderCodeParameters represents the metadata for the partner or builder of
+ * an order. This allows them to specify a fee for providing there service which
+ * will be paid out in the event of an order fill.
  */
 
-export interface BuilderCode {
+export interface BuilderCodeParameters {
   /** The address of the builder to which the fee will be paid. */
   builderAddress: string;
   /** The fee enforced on the order in ppm. */
@@ -781,12 +787,12 @@ export interface BuilderCode {
   feePpm: number;
 }
 /**
- * BuilderCode represents the metadata for the partner or builder of an
- * order. This allows them to specify a fee for providing there service
- * which will be paid out in the event of an order fill.
+ * BuilderCodeParameters represents the metadata for the partner or builder of
+ * an order. This allows them to specify a fee for providing there service which
+ * will be paid out in the event of an order fill.
  */
 
-export interface BuilderCodeSDKType {
+export interface BuilderCodeParametersSDKType {
   /** The address of the builder to which the fee will be paid. */
   builder_address: string;
   /** The fee enforced on the order in ppm. */
@@ -1340,7 +1346,7 @@ function createBaseOrder(): Order {
     conditionType: 0,
     conditionalOrderTriggerSubticks: Long.UZERO,
     twapParameters: undefined,
-    builderCode: undefined
+    builderCodeParameters: undefined
   };
 }
 
@@ -1394,8 +1400,8 @@ export const Order = {
       TwapParameters.encode(message.twapParameters, writer.uint32(98).fork()).ldelim();
     }
 
-    if (message.builderCode !== undefined) {
-      BuilderCode.encode(message.builderCode, writer.uint32(106).fork()).ldelim();
+    if (message.builderCodeParameters !== undefined) {
+      BuilderCodeParameters.encode(message.builderCodeParameters, writer.uint32(106).fork()).ldelim();
     }
 
     return writer;
@@ -1459,7 +1465,7 @@ export const Order = {
           break;
 
         case 13:
-          message.builderCode = BuilderCode.decode(reader, reader.uint32());
+          message.builderCodeParameters = BuilderCodeParameters.decode(reader, reader.uint32());
           break;
 
         default:
@@ -1485,7 +1491,7 @@ export const Order = {
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
     message.twapParameters = object.twapParameters !== undefined && object.twapParameters !== null ? TwapParameters.fromPartial(object.twapParameters) : undefined;
-    message.builderCode = object.builderCode !== undefined && object.builderCode !== null ? BuilderCode.fromPartial(object.builderCode) : undefined;
+    message.builderCodeParameters = object.builderCodeParameters !== undefined && object.builderCodeParameters !== null ? BuilderCodeParameters.fromPartial(object.builderCodeParameters) : undefined;
     return message;
   }
 
@@ -1556,15 +1562,15 @@ export const TwapParameters = {
 
 };
 
-function createBaseBuilderCode(): BuilderCode {
+function createBaseBuilderCodeParameters(): BuilderCodeParameters {
   return {
     builderAddress: "",
     feePpm: 0
   };
 }
 
-export const BuilderCode = {
-  encode(message: BuilderCode, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const BuilderCodeParameters = {
+  encode(message: BuilderCodeParameters, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.builderAddress !== "") {
       writer.uint32(10).string(message.builderAddress);
     }
@@ -1576,10 +1582,10 @@ export const BuilderCode = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): BuilderCode {
+  decode(input: _m0.Reader | Uint8Array, length?: number): BuilderCodeParameters {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseBuilderCode();
+    const message = createBaseBuilderCodeParameters();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -1602,8 +1608,8 @@ export const BuilderCode = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<BuilderCode>): BuilderCode {
-    const message = createBaseBuilderCode();
+  fromPartial(object: DeepPartial<BuilderCodeParameters>): BuilderCodeParameters {
+    const message = createBaseBuilderCodeParameters();
     message.builderAddress = object.builderAddress ?? "";
     message.feePpm = object.feePpm ?? 0;
     return message;
