@@ -1089,7 +1089,7 @@ func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	quoteDelta.Sub(quoteDelta, fee)
 
 	// Subtract the builder fee from the quote delta
-	builderFee := k.affiliatesKeeper.GetBuilderFee(ctx, builderCode, order.RemainingQuantums.ToBigInt())
+	builderFee := builderCode.GetBuilderFee(order.RemainingQuantums.ToBigInt())
 	quoteDelta.Sub(quoteDelta, builderFee)
 
 	_, updateResults, err := k.subaccountsKeeper.CanUpdateSubaccounts(

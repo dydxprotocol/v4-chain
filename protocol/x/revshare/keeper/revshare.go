@@ -163,70 +163,31 @@ func (k Keeper) GetAllRevShares(
 	affiliatesWhitelistMap map[string]uint32,
 ) (types.RevSharesForFill, error) {
 	revShares := []types.RevShare{}
-	feeSourceToQuoteQuantums := make(map[types.RevShareFeeSource]*big.Int)
-	feeSourceToRevSharePpm := make(map[types.RevShareFeeSource]uint32)
+	feeSourceToQuoteQuantums, feeSourceToRevSharePpm := buildRevShareToFeeSourceMaps()
 
-	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = big.NewInt(0)
-	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = 0
+	// get the builder rev shares
+	revShares, builderFees := getBuilderRevShares(fill, revShares)
 
-	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = big.NewInt(0)
-	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = 0
+	// get the protocol rev shares
+	netFees := big.NewInt(0).Add(fill.TakerFeeQuoteQuantums, fill.MakerFeeQuoteQuantums)
+	revShares, affiliateRevShare, err := k.getProtocolRevShares(
+		ctx,
+		fill,
+		affiliatesWhitelistMap,
+		netFees,
+		revShares,
+	)
+	if err != nil {
+		return types.RevSharesForFill{}, err
+	}
 
-	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_BUILDER_FEE] = big.NewInt(0)
-	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_BUILDER_FEE] = 0
-
-	totalFeesShared := big.NewInt(0)
-	takerFees := fill.TakerFeeQuoteQuantums
-	makerFees := fill.MakerFeeQuoteQuantums
-
-	takerBuilderFee := k.affiliatesKeeper.GetBuilderFee(ctx, fill.TakerBuilderCode, fill.FillQuoteQuantums)
-	makerBuilderFee := k.affiliatesKeeper.GetBuilderFee(ctx, fill.MakerBuilderCode, fill.FillQuoteQuantums)
-	netFees := big.NewInt(0).Add(takerFees, makerFees)
-	totalBuilderFees := big.NewInt(0).Add(takerBuilderFee, makerBuilderFee)
-	totalFees := big.NewInt(0).Add(netFees, totalBuilderFees)
-
-	// when net fee is zero, no rev share is generated from the fill
-	if totalFees.Sign() == 0 {
+	if len(revShares) == 0 {
+		// if there are no builder or protocol rev shares, then exit early
 		return types.RevSharesForFill{}, nil
 	}
 
-	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
-	if err != nil {
-		return types.RevSharesForFill{}, err
-	}
-	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
-	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
-		return types.RevSharesForFill{}, types.ErrAffiliateFeesSharedGreaterThanOrEqualToNetFees
-	}
-
-	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
-	if err != nil {
-		return types.RevSharesForFill{}, err
-	}
-	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
-	if err != nil {
-		return types.RevSharesForFill{}, err
-	}
-
-	if fill.TakerBuilderCode != nil {
-		takerBuilderRevShares := k.getBuilderRevShare(ctx, *fill.TakerBuilderCode, fill)
-		revShares = append(revShares, takerBuilderRevShares...)
-	}
-
-	if fill.MakerBuilderCode != nil {
-		makerBuilderRevShares := k.getBuilderRevShare(ctx, *fill.MakerBuilderCode, fill)
-		revShares = append(revShares, makerBuilderRevShares...)
-	}
-
-	revShares = append(revShares, affiliateRevShares...)
-	revShares = append(revShares, unconditionalRevShares...)
-	revShares = append(revShares, marketMapperRevShares...)
-
-	var affiliateRevShare *types.RevShare
-	if len(affiliateRevShares) > 0 {
-		// There should only be one affiliate rev share per fill
-		affiliateRevShare = &affiliateRevShares[0]
-	}
+	totalFees := big.NewInt(0).Add(netFees, builderFees)
+	totalFeesShared := big.NewInt(0)
 
 	for _, revShare := range revShares {
 		totalFeesShared.Add(totalFeesShared, revShare.QuoteQuantums)
@@ -238,7 +199,8 @@ func (k Keeper) GetAllRevShares(
 		// Add the rev share ppm to the total for the fee source
 		feeSourceToRevSharePpm[revShare.RevShareFeeSource] += revShare.RevSharePpm
 	}
-	//check total fees shared is less than or equal to net fees
+	
+	//check total fees shared is less than or equal to the total (protocol + builder) fees
 	if totalFeesShared.Cmp(totalFees) > 0 {
 		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
@@ -249,6 +211,87 @@ func (k Keeper) GetAllRevShares(
 		FeeSourceToRevSharePpm:   feeSourceToRevSharePpm,
 		AllRevShares:             revShares,
 	}, nil
+}
+
+func buildRevShareToFeeSourceMaps () (
+	map[types.RevShareFeeSource]*big.Int,
+	map[types.RevShareFeeSource]uint32,
+) {
+	feeSourceToQuoteQuantums := make(map[types.RevShareFeeSource]*big.Int)
+	feeSourceToRevSharePpm := make(map[types.RevShareFeeSource]uint32)
+
+	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = big.NewInt(0)
+	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = 0
+
+	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = big.NewInt(0)
+	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = 0
+
+	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_BUILDER_FEE] = big.NewInt(0)
+	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_BUILDER_FEE] = 0
+	
+	return feeSourceToQuoteQuantums, feeSourceToRevSharePpm
+}
+
+func getBuilderRevShares (
+	fill clobtypes.FillForProcess,
+	revShares []types.RevShare,
+) ([]types.RevShare, *big.Int) {
+	totalBuilderFees := big.NewInt(0)
+	if fill.TakerBuilderCode != nil {
+		takerBuilderRevShares, takerBuilderFeeQuoteQuantums := getBuilderRevShare(*fill.TakerBuilderCode, fill)
+		revShares = append(revShares, takerBuilderRevShares...)
+		totalBuilderFees.Add(totalBuilderFees, takerBuilderFeeQuoteQuantums)
+	}
+	if fill.MakerBuilderCode != nil {
+		makerBuilderRevShares, makerBuilderFeeQuoteQuantums := getBuilderRevShare(*fill.MakerBuilderCode, fill)
+		revShares = append(revShares, makerBuilderRevShares...)
+		totalBuilderFees.Add(totalBuilderFees, makerBuilderFeeQuoteQuantums)
+	}
+	
+	return revShares, totalBuilderFees
+}
+
+func (k Keeper) getProtocolRevShares (
+	ctx sdk.Context,
+	fill clobtypes.FillForProcess,
+	affiliatesWhitelistMap map[string]uint32,
+	netFees *big.Int,
+	revShares []types.RevShare,
+) ([]types.RevShare, *types.RevShare, error) {
+	if netFees.Sign() == 0 {
+		// when net fee is zero, no protocol rev share is generated from the fill
+		return revShares, nil, nil
+	}
+
+	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
+	if err != nil {
+		return nil, nil, err
+	}
+	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
+	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
+		return nil, nil, types.ErrAffiliateFeesSharedGreaterThanOrEqualToNetFees
+	}
+
+	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
+	if err != nil {
+		return nil, nil, err
+	}
+	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	revShares = append(revShares, affiliateRevShares...)
+	revShares = append(revShares, unconditionalRevShares...)
+	revShares = append(revShares, marketMapperRevShares...)
+
+	var affiliateRevShare *types.RevShare
+	if len(affiliateRevShares) > 0 {
+		// there should only be one affiliate rev share per fill
+		affiliateRevShare = &affiliateRevShares[0]
+	}
+
+	return revShares, affiliateRevShare, nil
 }
 
 func (k Keeper) getAffiliateRevShares(
@@ -332,14 +375,13 @@ func (k Keeper) getMarketMapperRevShare(
 	return revShares, nil
 }
 
-func (k Keeper) getBuilderRevShare(
-	ctx sdk.Context,
+func getBuilderRevShare(
 	builderCode clobtypes.BuilderCode,
 	fill clobtypes.FillForProcess,
-) []types.RevShare {
+) ([]types.RevShare, *big.Int) {
 	revShares := []types.RevShare{}
 
-	builderFeeQuoteQuantums := k.affiliatesKeeper.GetBuilderFee(ctx, &builderCode, fill.FillQuoteQuantums)
+	builderFeeQuoteQuantums := builderCode.GetBuilderFee(fill.FillQuoteQuantums)
 	revShares = append(revShares, types.RevShare{
 		Recipient:         builderCode.BuilderAddress,
 		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_BUILDER_FEE,
@@ -347,5 +389,6 @@ func (k Keeper) getBuilderRevShare(
 		QuoteQuantums:     builderFeeQuoteQuantums,
 		RevSharePpm:       builderCode.FeePpm,
 	})
-	return revShares
+	
+	return revShares, builderFeeQuoteQuantums
 }

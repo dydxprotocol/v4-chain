@@ -723,20 +723,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 		},
 		{
 			name: "No rev shares",
-			expectedRevSharesForFill: types.RevSharesForFill{
-				AllRevShares:      []types.RevShare{},
-				AffiliateRevShare: nil,
-				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
-					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(0),
-					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(0),
-					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          big.NewInt(0),
-				},
-				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
-					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 0,
-					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0,
-					types.REV_SHARE_FEE_SOURCE_BUILDER_FEE:          0,
-				},
-			},
+			expectedRevSharesForFill: types.RevSharesForFill{},
 			fill: clobtypes.FillForProcess{
 				TakerAddr:                         constants.AliceAccAddress.String(),
 				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),

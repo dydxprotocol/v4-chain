@@ -191,7 +191,6 @@ type RevShareKeeper interface {
 
 type AffiliatesKeeper interface {
 	GetAffiliateWhitelistMap(ctx sdk.Context) (map[string]uint32, error)
-	GetBuilderFee(ctx sdk.Context, builderCode *BuilderCode, fillAmount *big.Int) *big.Int
 }
 
 type AccountPlusKeeper interface {

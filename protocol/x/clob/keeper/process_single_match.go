@@ -393,13 +393,13 @@ func (k Keeper) persistMatchedOrders(
 	// apply broker fees for taker and maker separately
 	if !matchWithOrders.MakerOrder.IsLiquidation() {
 		makerBuilderCode = matchWithOrders.MakerOrder.MustGetOrder().BuilderCode
-		builderFee := k.affiliatesKeeper.GetBuilderFee(ctx, makerBuilderCode, matchWithOrders.FillAmount.ToBigInt())
+		builderFee := makerBuilderCode.GetBuilderFee(matchWithOrders.FillAmount.ToBigInt())
 		bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, builderFee)
 	}
 
 	if !matchWithOrders.TakerOrder.IsLiquidation() {
 		takerBuilderCode = matchWithOrders.TakerOrder.MustGetOrder().BuilderCode
-		builderFee := k.affiliatesKeeper.GetBuilderFee(ctx, takerBuilderCode, matchWithOrders.FillAmount.ToBigInt())
+		builderFee := takerBuilderCode.GetBuilderFee(matchWithOrders.FillAmount.ToBigInt())
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, builderFee)
 	}
 

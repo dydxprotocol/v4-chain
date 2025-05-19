@@ -15,7 +15,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/affiliates/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 type (
@@ -389,19 +388,4 @@ func (k Keeper) AggregateAffiliateReferredVolumeForFills(
 		}
 	}
 	return nil
-}
-
-// GetBrokerFee returns the fee amount for a broker given a broker ID and fill amount.
-// Returns 0 if broker is not found.
-func (k Keeper) GetBuilderFee(
-	ctx sdk.Context,
-	builderCode *clobtypes.BuilderCode,
-	fillAmount *big.Int,
-) *big.Int {
-	if builderCode == nil {
-		return big.NewInt(0)
-	}
-
-	// Calculate fee using ppm (parts per million)
-	return lib.BigMulPpm(fillAmount, lib.BigU(builderCode.FeePpm), true)
 }
