@@ -199,7 +199,7 @@ func (k Keeper) GetAllRevShares(
 		// Add the rev share ppm to the total for the fee source
 		feeSourceToRevSharePpm[revShare.RevShareFeeSource] += revShare.RevSharePpm
 	}
-	
+
 	//check total fees shared is less than or equal to the total (protocol + builder) fees
 	if totalFeesShared.Cmp(totalFees) > 0 {
 		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
@@ -213,7 +213,7 @@ func (k Keeper) GetAllRevShares(
 	}, nil
 }
 
-func buildRevShareToFeeSourceMaps () (
+func buildRevShareToFeeSourceMaps() (
 	map[types.RevShareFeeSource]*big.Int,
 	map[types.RevShareFeeSource]uint32,
 ) {
@@ -228,11 +228,11 @@ func buildRevShareToFeeSourceMaps () (
 
 	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_BUILDER_FEE] = big.NewInt(0)
 	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_BUILDER_FEE] = 0
-	
+
 	return feeSourceToQuoteQuantums, feeSourceToRevSharePpm
 }
 
-func getBuilderRevShares (
+func getBuilderRevShares(
 	fill clobtypes.FillForProcess,
 	revShares []types.RevShare,
 ) ([]types.RevShare, *big.Int) {
@@ -247,11 +247,11 @@ func getBuilderRevShares (
 		revShares = append(revShares, makerBuilderRevShares...)
 		totalBuilderFees.Add(totalBuilderFees, makerBuilderFeeQuoteQuantums)
 	}
-	
+
 	return revShares, totalBuilderFees
 }
 
-func (k Keeper) getProtocolRevShares (
+func (k Keeper) getProtocolRevShares(
 	ctx sdk.Context,
 	fill clobtypes.FillForProcess,
 	affiliatesWhitelistMap map[string]uint32,
@@ -389,6 +389,6 @@ func getBuilderRevShare(
 		QuoteQuantums:     builderFeeQuoteQuantums,
 		RevSharePpm:       builderCode.FeePpm,
 	})
-	
+
 	return revShares, builderFeeQuoteQuantums
 }
