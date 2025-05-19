@@ -1857,6 +1857,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		makerFill.MakerOrderId = makerOrderId
 		makerFill.FillAmount = matchedAmount.ToUint64()
 		newMakerFills = append(newMakerFills, *makerFill)
+		GlobalMemPools.MakerFillPool.Put(makerFill)
 
 		// 4.
 		if newTakerOrder.IsReduceOnly() && takerRemainingSize > 0 {
