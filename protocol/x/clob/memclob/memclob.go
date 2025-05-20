@@ -520,13 +520,14 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	// Attempt to match the order against the orderbook.
-	if order.TimeInForce == types.Order_TIME_IN_FORCE_IOC {
-		fmt.Println("tian, about to match IOC order", "orderId", order.OrderId)
+	owner := order.GetSubaccountId().Owner
+	if owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+		fmt.Println("tian, in PlaceOrder, about to match order", "order", order, "offchainUpdates len", len(offchainUpdates.Messages))
 	}
 	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
-	if order.TimeInForce == types.Order_TIME_IN_FORCE_IOC {
-		fmt.Println("tian, finished matching IOC order", "orderId", order.OrderId,
-			"takerOrderStatus", takerOrderStatus, "err", err)
+	if owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+		fmt.Println("tian, in PlaceOrder, about to match order", "order", order, "offchainUpdates len", len(offchainUpdates.Messages),
+			"takerOrderStatus", takerOrderStatus, "err", err, "takerOffchainUpdates len", len(takerOffchainUpdates.Messages))
 	}
 	offchainUpdates.Append(takerOffchainUpdates)
 
@@ -567,6 +568,11 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 
 	remainingSize := takerOrderStatus.RemainingQuantums
 	orderSizeOptimisticallyFilledFromMatchingQuantums = takerOrderStatus.OrderOptimisticallyFilledQuantums
+
+	if owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+		fmt.Println("tian, in PlaceOrder, after match order", "order", order, "remainingSize", remainingSize,
+			"orderSizeOptimisticallyFilledFromMatchingQuantums", orderSizeOptimisticallyFilledFromMatchingQuantums)
+	}
 
 	// If the status of the taker order is not successful, do not attempt to add the order to the orderbook.
 	if !takerOrderStatus.OrderStatus.IsSuccess() {
@@ -611,6 +617,9 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				offchainUpdates.AddUpdateMessage(order.OrderId, message)
 			}
 		}
+		if owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+			fmt.Println("tian, in PlaceOrder, order has no remaining size", "order", order, "offchainUpdates len", len(offchainUpdates.Messages))
+		}
 		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, offchainUpdates, nil
 	}
 
@@ -639,6 +648,9 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
 			)
 		}
+		if owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+			fmt.Println("tian, in PlaceOrder, order is IOC", "order", order, "offchainUpdates len", len(offchainUpdates.Messages))
+		}
 		return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, nil
 	}
 
@@ -650,6 +662,10 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			order,
 			ctx.TxBytes(),
 		)
+	}
+
+	if owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+		fmt.Println("tian, in PlaceOrder, adding order to orderbook", "order", order, "offchainUpdates len", len(offchainUpdates.Messages))
 	}
 
 	// Add the order to the orderbook and all other bookkeeping data structures.
@@ -665,6 +681,10 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		); success {
 			offchainUpdates.AddUpdateMessage(order.OrderId, message)
 		}
+	}
+
+	if owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+		fmt.Println("tian, in PlaceOrder, added order to orderbook", "order", order, "offchainUpdates len", len(offchainUpdates.Messages))
 	}
 
 	// TODO(DEC-1347): Ensure emitted stats have tags for which ABCI callback was the caller.

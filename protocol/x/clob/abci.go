@@ -22,7 +22,9 @@ func PreBlocker(
 	ctx sdk.Context,
 	keeper types.ClobKeeper,
 ) {
+	fmt.Println("tian, begin PreBlocker", "block height", ctx.BlockHeight())
 	keeper.Initialize(ctx)
+	fmt.Println("tian, end PreBlocker", "block height", ctx.BlockHeight())
 }
 
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
@@ -35,6 +37,8 @@ func BeginBlocker(
 		log.BlockHeight, ctx.BlockHeight(),
 	)
 
+	fmt.Println("tian, begin BeginBlocker", "block height", ctx.BlockHeight())
+
 	// Initialize the set of process proposer match events for the next block effectively
 	// removing any events that occurred in the last block.
 	keeper.MustSetProcessProposerMatchesEvents(
@@ -44,6 +48,7 @@ func BeginBlocker(
 		},
 	)
 	keeper.ResetAllDeliveredOrderIds(ctx)
+	fmt.Println("tian, end BeginBlocker", "block height", ctx.BlockHeight())
 }
 
 // Precommit executes all ABCI Precommit logic respective to the clob module.
@@ -51,6 +56,7 @@ func Precommit(
 	ctx sdk.Context,
 	keeper keeper.Keeper,
 ) {
+	fmt.Println("tian, begin Precommit", "block height", ctx.BlockHeight())
 	// Process all staged finalize block events, and apply necessary side effects
 	// (e.g. MemClob orderbook creation) that could not be done during FinalizeBlock.
 	// Note: this must be done in `Precommit` which is prior to `PrepareCheckState`, when
@@ -61,6 +67,7 @@ func Precommit(
 		return
 	}
 	keeper.StreamBatchUpdatesAfterFinalizeBlock(ctx)
+	fmt.Println("tian, end Precommit", "block height", ctx.BlockHeight())
 }
 
 // EndBlocker executes all ABCI EndBlock logic respective to the clob module.
@@ -68,6 +75,7 @@ func EndBlocker(
 	ctx sdk.Context,
 	keeper keeper.Keeper,
 ) {
+	fmt.Println("tian, begin EndBlocker", "block height", ctx.BlockHeight())
 	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Handler, log.EndBlocker,
 		log.BlockHeight, ctx.BlockHeight(),
@@ -131,6 +139,7 @@ func EndBlocker(
 		metrics.InsuranceFundBalance,
 		metrics.GetMetricValueFromBigInt(keeper.GetCrossInsuranceFundBalance(ctx)),
 	)
+	fmt.Println("tian, end EndBlocker", "block height", ctx.BlockHeight())
 }
 
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
@@ -138,6 +147,7 @@ func PrepareCheckState(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 ) {
+	fmt.Println("tian, begin PrepareCheckState", "block height", ctx.BlockHeight())
 	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Handler, log.PrepareCheckState,
 		// Prepare check state is for the next block.
@@ -177,6 +187,8 @@ func PrepareCheckState(
 
 	keeper.MemClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
 
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "cleared operations queue")
+
 	// 2. Purge invalid state from the memclob.
 	offchainUpdates := types.NewOffchainUpdates()
 	offchainUpdates = keeper.MemClob.PurgeInvalidMemclobState(
@@ -187,6 +199,8 @@ func PrepareCheckState(
 		processProposerMatchesEvents.RemovedStatefulOrderIds,
 		offchainUpdates,
 	)
+
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "purged invalid membclob state")
 
 	// 3. Go through the orders two times and only place the post only orders during the first pass.
 	longTermOrderIds := keeper.GetDeliveredLongTermOrderIds(ctx)
@@ -215,6 +229,8 @@ func PrepareCheckState(
 		offchainUpdates = replayUpdates
 	}
 
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "replayed operations post only")
+
 	// 4. Place all stateful order placements included in the last block on the memclob.
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
 	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.
@@ -238,6 +254,8 @@ func PrepareCheckState(
 		metrics.Count,
 	)
 
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "placed stateful orders")
+
 	// 5. Place all conditional orders triggered in EndBlocker of last block on the memclob.
 	offchainUpdates = keeper.PlaceConditionalOrdersTriggeredInLastBlock(
 		ctx,
@@ -245,6 +263,8 @@ func PrepareCheckState(
 		offchainUpdates,
 		false, // post only
 	)
+
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "placed conditional orders")
 
 	// 6. Replay the local validator’s operations onto the book.
 	replayUpdates = keeper.MemClob.ReplayOperations(
@@ -257,6 +277,8 @@ func PrepareCheckState(
 	if replayUpdates != nil {
 		offchainUpdates = replayUpdates
 	}
+
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "replayed operations non post only")
 
 	// 7. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
 	liquidatableSubaccountIds := keeper.DaemonLiquidationInfo.GetLiquidatableSubaccountIds()
@@ -271,6 +293,8 @@ func PrepareCheckState(
 		keeper.GetSubaccountsWithPositionsInFinalSettlementMarkets(ctx)...,
 	)
 
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "attempted liquidation")
+
 	// 8. Deleverage subaccounts.
 	// TODO(CLOB-1052) - decouple steps 6 and 7 by using DaemonLiquidationInfo.NegativeTncSubaccounts
 	// as the input for this function.
@@ -278,12 +302,16 @@ func PrepareCheckState(
 		panic(err)
 	}
 
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "deleveraged")
+
 	// 9. Gate withdrawals by inserting a zero-fill deleveraging operation into the operations queue if any
 	// of the negative TNC subaccounts still have negative TNC after liquidations and deleveraging steps.
 	negativeTncSubaccountIds := keeper.DaemonLiquidationInfo.GetNegativeTncSubaccountIds()
 	if err := keeper.GateWithdrawalsIfNegativeTncSubaccountSeen(ctx, negativeTncSubaccountIds); err != nil {
 		panic(err)
 	}
+
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "gated withdrawals")
 
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
@@ -304,4 +332,6 @@ func PrepareCheckState(
 
 	// Set per-orderbook gauges.
 	keeper.MemClob.SetMemclobGauges(ctx)
+
+	fmt.Println("tian, end PrepareCheckState", "block height", ctx.BlockHeight())
 }

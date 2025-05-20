@@ -187,6 +187,11 @@ func (k Keeper) PlaceShortTermOrder(
 	order.OrderId.MustBeShortTermOrder()
 	orderLabels := order.GetOrderLabels()
 
+	owner := order.GetSubaccountId().Owner
+	if owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+		fmt.Println("tian, in PlaceShortTermOrder", "order:", order)
+	}
+
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.PlaceOrder, metrics.Latency)
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -214,6 +219,11 @@ func (k Keeper) PlaceShortTermOrder(
 		ctx,
 		msg.Order,
 	)
+
+	if owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+		fmt.Println("tian, in PlaceShortTermOrder", "orderSizeOptimisticallyFilledFromMatchingQuantums", orderSizeOptimisticallyFilledFromMatchingQuantums,
+			"orderStatus", orderStatus, "offchainUpdates len", len(offchainUpdates.GetMessages()), "err", err)
+	}
 
 	// Send off-chain updates generated from placing the order. `SendOffchainData` enqueues the
 	// the messages to be sent in a channel and should be non-blocking.
