@@ -1,0 +1,6 @@
+version: "3"
+
+services:
+  datadog-agent:
+    profiles:
+      - dont-start
