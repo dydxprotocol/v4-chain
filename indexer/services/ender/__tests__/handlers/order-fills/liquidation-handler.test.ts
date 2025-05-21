@@ -342,6 +342,7 @@ describe('LiquidationHandler', () => {
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
+        builderFee: '0',
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -362,6 +363,7 @@ describe('LiquidationHandler', () => {
         fee: defaultTakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
         hasOrderId: false,
+        builderFee: '0',
       });
 
       const expectedMakerOffchainUpdate: OffChainUpdateV1 = {
@@ -575,6 +577,7 @@ describe('LiquidationHandler', () => {
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
+        builderFee: '0',
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -595,6 +598,7 @@ describe('LiquidationHandler', () => {
         fee: defaultTakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
         hasOrderId: false,
+        builderFee: '0',
       });
 
       const expectedMakerUpdateOffchainUpdate: OffChainUpdateV1 = {
@@ -795,6 +799,7 @@ describe('LiquidationHandler', () => {
         clientMetadata: makerOrderProto.clientMetadata.toString(),
         fee: defaultMakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
+        builderFee: '0',
       });
       await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
@@ -815,6 +820,7 @@ describe('LiquidationHandler', () => {
         fee: defaultTakerFee,
         affiliateRevShare: defaultAffiliateRevShare,
         hasOrderId: false,
+        builderFee: '0',
       });
 
       const expectedMakerUpdateOffchainUpdate: OffChainUpdateV1 = {
@@ -955,6 +961,7 @@ describe('LiquidationHandler', () => {
       clientMetadata: makerOrderProto.clientMetadata.toString(),
       fee: defaultMakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
+      builderFee: '0',
     });
     await expectFillInDatabase({
       subaccountId: testConstants.defaultSubaccountId2,
@@ -975,6 +982,7 @@ describe('LiquidationHandler', () => {
       fee: defaultTakerFee,
       affiliateRevShare: defaultAffiliateRevShare,
       hasOrderId: false,
+      builderFee: '0',
     });
 
     await Promise.all([
@@ -1202,6 +1210,8 @@ function createLiquidationOrderFillEvent(
     totalFilledMaker: Long.fromValue(totalFilledMaker, true),
     totalFilledTaker: Long.fromValue(fillAmount, true),
     affiliateRevShare: Long.fromValue(defaultAffiliateRevShareQuantum, false),
+    makerBuilderFee: Long.fromValue(0, false),
+    takerBuilderFee: Long.fromValue(0, false),
   } as OrderFillEventV1;
 }
 

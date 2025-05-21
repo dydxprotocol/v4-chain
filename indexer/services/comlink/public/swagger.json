@@ -998,6 +998,12 @@
           "triggerPrice": {
             "type": "string"
           },
+          "builderAddress": {
+            "type": "string"
+          },
+          "feePpm": {
+            "type": "string"
+          },
           "timeInForce": {
             "$ref": "#/components/schemas/APITimeInForce"
           },

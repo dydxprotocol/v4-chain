@@ -2242,6 +2242,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 			ctx,
 			makerOrder.GetSubaccountId(),
 			equivalentOrder,
+			makerOrder.BuilderCodeParameters,
 		)
 
 		if updateCheckResult == satypes.Success {

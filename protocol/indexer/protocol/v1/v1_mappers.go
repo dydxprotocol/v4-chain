@@ -94,6 +94,17 @@ func OrderIdToIndexerOrderId(
 	}
 }
 
+func OrderBuilderCodeParamsToIndexerOrderBuilderCodeParams(
+	builderCodeParams *clobtypes.BuilderCodeParameters,
+) *v1types.BuilderCodeParameters {
+	if builderCodeParams == nil {
+		return nil
+	}
+	return &v1types.BuilderCodeParameters{
+		BuilderAddress: builderCodeParams.BuilderAddress,
+		FeePpm:         builderCodeParams.FeePpm,
+	}
+}
 func OrderSideToIndexerOrderSide(
 	orderSide clobtypes.Order_Side,
 ) v1types.IndexerOrder_Side {
@@ -146,6 +157,7 @@ func orderToIndexerOrder_GoodTilBlock(
 		ClientMetadata:                  order.ClientMetadata,
 		ConditionType:                   OrderConditionTypeToIndexerOrderConditionType(order.ConditionType),
 		ConditionalOrderTriggerSubticks: order.ConditionalOrderTriggerSubticks,
+		BuilderCodeParams:               OrderBuilderCodeParamsToIndexerOrderBuilderCodeParams(order.BuilderCodeParameters),
 	}
 }
 
@@ -164,6 +176,7 @@ func orderToIndexerOrder_GoodTilBlockTime(
 		ClientMetadata:                  order.ClientMetadata,
 		ConditionType:                   OrderConditionTypeToIndexerOrderConditionType(order.ConditionType),
 		ConditionalOrderTriggerSubticks: order.ConditionalOrderTriggerSubticks,
+		BuilderCodeParams:               OrderBuilderCodeParamsToIndexerOrderBuilderCodeParams(order.BuilderCodeParameters),
 	}
 }
 

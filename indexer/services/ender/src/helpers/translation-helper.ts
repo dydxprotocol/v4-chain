@@ -27,6 +27,8 @@ export function orderFillEventV1ToOrderFill(
     totalFilledTaker: event.event.totalFilledTaker,
     liquidity: event.liquidity,
     affiliateRevShare: event.event.affiliateRevShare,
+    makerBuilderFee: event.event.makerBuilderFee,
+    takerBuilderFee: event.event.takerBuilderFee,
   };
 }
 
@@ -42,6 +44,8 @@ export function orderFillWithLiquidityToOrderFillEventWithOrder(
     makerFee: orderFillWithLiquidity.makerFee,
     takerFee: orderFillWithLiquidity.takerFee,
     affiliateRevShare: orderFillWithLiquidity.affiliateRevShare,
+    makerBuilderFee: orderFillWithLiquidity.makerBuilderFee,
+    takerBuilderFee: orderFillWithLiquidity.takerBuilderFee,
   };
 }
 
@@ -57,5 +61,7 @@ export function orderFillWithLiquidityToOrderFillEventWithLiquidation(
     makerFee: orderFillWithLiquidity.makerFee,
     takerFee: orderFillWithLiquidity.takerFee,
     affiliateRevShare: orderFillWithLiquidity.affiliateRevShare,
+    makerBuilderFee: orderFillWithLiquidity.makerBuilderFee,
+    takerBuilderFee: orderFillWithLiquidity.takerBuilderFee,
   };
 }

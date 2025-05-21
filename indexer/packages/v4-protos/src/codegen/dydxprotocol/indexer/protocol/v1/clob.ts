@@ -579,6 +579,9 @@ export interface IndexerOrder {
    */
 
   conditionalOrderTriggerSubticks: Long;
+  /** builder_code_params is the metadata for the partner or builder of an order. */
+
+  builderCodeParams?: BuilderCodeParameters;
 }
 /**
  * IndexerOrderV1 represents a single order belonging to a `Subaccount`
@@ -649,6 +652,35 @@ export interface IndexerOrderSDKType {
    */
 
   conditional_order_trigger_subticks: Long;
+  /** builder_code_params is the metadata for the partner or builder of an order. */
+
+  builder_code_params?: BuilderCodeParametersSDKType;
+}
+/**
+ * BuilderCodeParameters represents the metadata for the partner or builder of
+ * an order. This allows them to specify a fee for providing there service which
+ * will be paid out in the event of an order fill.
+ */
+
+export interface BuilderCodeParameters {
+  /** The address of the builder to which the fee will be paid. */
+  builderAddress: string;
+  /** The fee enforced on the order in ppm. */
+
+  feePpm: number;
+}
+/**
+ * BuilderCodeParameters represents the metadata for the partner or builder of
+ * an order. This allows them to specify a fee for providing there service which
+ * will be paid out in the event of an order fill.
+ */
+
+export interface BuilderCodeParametersSDKType {
+  /** The address of the builder to which the fee will be paid. */
+  builder_address: string;
+  /** The fee enforced on the order in ppm. */
+
+  fee_ppm: number;
 }
 
 function createBaseIndexerOrderId(): IndexerOrderId {
@@ -738,7 +770,8 @@ function createBaseIndexerOrder(): IndexerOrder {
     reduceOnly: false,
     clientMetadata: 0,
     conditionType: 0,
-    conditionalOrderTriggerSubticks: Long.UZERO
+    conditionalOrderTriggerSubticks: Long.UZERO,
+    builderCodeParams: undefined
   };
 }
 
@@ -786,6 +819,10 @@ export const IndexerOrder = {
 
     if (!message.conditionalOrderTriggerSubticks.isZero()) {
       writer.uint32(88).uint64(message.conditionalOrderTriggerSubticks);
+    }
+
+    if (message.builderCodeParams !== undefined) {
+      BuilderCodeParameters.encode(message.builderCodeParams, writer.uint32(98).fork()).ldelim();
     }
 
     return writer;
@@ -844,6 +881,10 @@ export const IndexerOrder = {
           message.conditionalOrderTriggerSubticks = (reader.uint64() as Long);
           break;
 
+        case 12:
+          message.builderCodeParams = BuilderCodeParameters.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -866,6 +907,62 @@ export const IndexerOrder = {
     message.clientMetadata = object.clientMetadata ?? 0;
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
+    message.builderCodeParams = object.builderCodeParams !== undefined && object.builderCodeParams !== null ? BuilderCodeParameters.fromPartial(object.builderCodeParams) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseBuilderCodeParameters(): BuilderCodeParameters {
+  return {
+    builderAddress: "",
+    feePpm: 0
+  };
+}
+
+export const BuilderCodeParameters = {
+  encode(message: BuilderCodeParameters, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.builderAddress !== "") {
+      writer.uint32(10).string(message.builderAddress);
+    }
+
+    if (message.feePpm !== 0) {
+      writer.uint32(16).uint32(message.feePpm);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): BuilderCodeParameters {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBuilderCodeParameters();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.builderAddress = reader.string();
+          break;
+
+        case 2:
+          message.feePpm = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<BuilderCodeParameters>): BuilderCodeParameters {
+    const message = createBaseBuilderCodeParameters();
+    message.builderAddress = object.builderAddress ?? "";
+    message.feePpm = object.feePpm ?? 0;
     return message;
   }
 

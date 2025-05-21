@@ -527,6 +527,7 @@ func (k Keeper) PersistMatchOrdersToState(
 				),
 			)
 		}
+		// TODO: (anmol) update fill event to include builder codes
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeOrderFill,
@@ -538,6 +539,8 @@ func (k Keeper) PersistMatchOrdersToState(
 					matchWithOrders.FillAmount,
 					matchWithOrders.MakerFee,
 					matchWithOrders.TakerFee,
+					matchWithOrders.MakerBuilderFee,
+					matchWithOrders.TakerBuilderFee,
 					totalFilledMaker,
 					totalFilledTaker,
 					affiliateRevSharesQuoteQuantums,

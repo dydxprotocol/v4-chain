@@ -586,6 +586,7 @@ export const defaultFill: FillCreateObject = {
   clientMetadata: '0',
   fee: '1.1',
   affiliateRevShare: '1.10',
+  builderFee: '0',
 };
 
 export const isolatedMarketFill: FillCreateObject = {
@@ -605,6 +606,7 @@ export const isolatedMarketFill: FillCreateObject = {
   clientMetadata: '0',
   fee: '1.1',
   affiliateRevShare: '0',
+  builderFee: '0',
 };
 
 export const isolatedMarketFill2: FillCreateObject = {
@@ -624,6 +626,7 @@ export const isolatedMarketFill2: FillCreateObject = {
   clientMetadata: '0',
   fee: '1.1',
   affiliateRevShare: '0',
+  builderFee: '0',
 };
 
 // ============== Transfers ==============
