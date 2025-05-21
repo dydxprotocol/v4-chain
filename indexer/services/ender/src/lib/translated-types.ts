@@ -36,4 +36,8 @@ export interface OrderFillWithLiquidity {
   liquidity: Liquidity,
   /** Affiliate rev share in USDC quantums. */
   affiliateRevShare: Long,
+  /** Builder fee for the maker in USDC quantums. */
+  makerBuilderFee: Long,
+  /** Builder fee for the taker in USDC quantums. */
+  takerBuilderFee: Long,
 }

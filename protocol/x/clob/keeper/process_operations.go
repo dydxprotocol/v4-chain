@@ -539,6 +539,8 @@ func (k Keeper) PersistMatchOrdersToState(
 					matchWithOrders.FillAmount,
 					matchWithOrders.MakerFee,
 					matchWithOrders.TakerFee,
+					matchWithOrders.MakerBuilderFee,
+					matchWithOrders.TakerBuilderFee,
 					totalFilledMaker,
 					totalFilledTaker,
 					affiliateRevSharesQuoteQuantums,

@@ -18,6 +18,8 @@ func NewOrderFillEvent(
 	fillAmount satypes.BaseQuantums,
 	makerFee int64,
 	takerFee int64,
+	makerBuilderFee uint64,
+	takerBuilderFee uint64,
 	totalFilledMaker satypes.BaseQuantums,
 	totalFilledTaker satypes.BaseQuantums,
 	affiliateRevShareQuoteQuantums *big.Int,
@@ -31,6 +33,8 @@ func NewOrderFillEvent(
 		FillAmount:       fillAmount.ToUint64(),
 		MakerFee:         makerFee,
 		TakerFee:         takerFee,
+		MakerBuilderFee:  makerBuilderFee,
+		TakerBuilderFee:  takerBuilderFee,
 		TotalFilledMaker: totalFilledMaker.ToUint64(),
 		TotalFilledTaker: totalFilledTaker.ToUint64(),
 		// Since revshare is always less than taker fee, this will not overflow.
@@ -71,5 +75,7 @@ func NewLiquidationOrderFillEvent(
 		TotalFilledTaker: fillAmount.ToUint64(),
 		// Since revshare is always less than taker fee, this will not overflow.
 		AffiliateRevShare: affiliateRevShareQuoteQuantums.Uint64(),
+		MakerBuilderFee:  0,
+		TakerBuilderFee:  0,
 	}
 }
