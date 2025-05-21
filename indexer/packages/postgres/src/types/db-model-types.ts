@@ -75,6 +75,8 @@ export interface OrderFromDatabase extends IdBasedModelFromDatabase {
   createdAtHeight?: string,
   clientMetadata: string,
   triggerPrice?: string,
+  builderAddress?: string,
+  feePpm?: string,
 }
 
 export interface PerpetualMarketFromDatabase {
@@ -116,6 +118,7 @@ export interface FillFromDatabase {
   clientMetadata?: string,
   fee: string,
   affiliateRevShare: string,
+  builderFee: string,
 }
 
 export interface BlockFromDatabase {
