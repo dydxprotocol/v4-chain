@@ -36,6 +36,13 @@ func (k Keeper) ProcessTimestampNonce(ctx sdk.Context, acc sdk.AccountI, tsNonce
 	address := acc.GetAddress()
 
 	if !IsValidTimestampNonce(tsNonce, blockTs) {
+		k.Logger(ctx).Warn(
+			"timestamp nonce not within valid time window",
+			"tsNonce", tsNonce,
+			"blockTs", blockTs,
+			"minAcceptedTs", blockTs-MaxTimeInPastMs,
+			"maxAcceptedTs", blockTs+MaxTimeInFutureMs,
+		)
 		return fmt.Errorf("timestamp nonce %d not within valid time window", tsNonce)
 	}
 	accountState, found := k.GetAccountState(ctx, address)
