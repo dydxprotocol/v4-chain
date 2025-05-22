@@ -956,6 +956,10 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 		case *types.InternalOperation_ShortTermOrderPlacement:
 			order := operation.GetShortTermOrderPlacement().Order
 
+			if order.OrderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+				fmt.Println("tian, in ReplayOperations, short term order placement", "order", order)
+			}
+
 			// Skip post-only orders if postOnlyFilter is false or non-post-only orders if postOnlyFilter is true.
 			if postOnlyFilter != order.IsPostOnlyOrder() {
 				continue
@@ -986,6 +990,12 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				msg,
 			)
 
+			if order.OrderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+				fmt.Println("tian, in ReplayOperations, short term order placement", "order", order,
+					"orderSizeOptimisticallyFilledFromMatchingQuantums", orderSizeOptimisticallyFilledFromMatchingQuantums,
+					"orderStatus", orderStatus, "err", err, "placeOrderOffchainUpdates", len(placeOrderOffchainUpdates.Messages))
+			}
+
 			log.DebugLog(
 				ctx,
 				"Received new order",
@@ -1012,6 +1022,11 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				placeOrderOffchainUpdates,
 				existingOffchainUpdates,
 			)
+
+			if order.OrderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+				fmt.Println("tian, in ReplayOperations, short term order placement", "order", order,
+					"existingOffchainUpdates len", len(existingOffchainUpdates.Messages))
+			}
 
 		// Replay all pre-existing stateful order placements.
 		case *types.InternalOperation_PreexistingStatefulOrder:
@@ -1077,6 +1092,10 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 		case *types.InternalOperation_OrderRemoval:
 			orderId := operation.GetOrderRemoval().OrderId
 
+			if orderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+				fmt.Println("tian, in ReplayOperations, order removal", "orderId", orderId, "reason", operation.GetOrderRemoval().RemovalReason)
+			}
+
 			// Prevent double placement caused by PreexistingStatefulOrder and Order Removal
 			// both existing in local operations.
 			if _, found := placedPreexistingStatefulOrderIds[orderId]; found {
@@ -1086,6 +1105,10 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 					orderId.GetOrderIdLabels(),
 				)
 				continue
+			}
+
+			if orderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+				fmt.Println("tian, in ReplayOperations, order removal. not found in placedPreexistingStatefulOrderIds")
 			}
 
 			// Log an error if there are two Order Removals for the same OrderId
@@ -1099,10 +1122,18 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
+			if orderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+				fmt.Println("tian, in ReplayOperations, order removal. not found in placedOrderRemovalOrderIds")
+			}
+
 			// Re-place orders which were not removed by the previous block proposer to give them a "second chance".
 			// It is possible that this placement or a subsequent match operation will
 			// cause the Order Removal to be generated once again.
 			statefulOrderPlacement, found := m.clobKeeper.GetLongTermOrderPlacement(ctx, orderId)
+
+			if orderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+				fmt.Println("tian, in ReplayOperations, order removal get long term order placement", "found", found, "statefulOrderPlacement", statefulOrderPlacement)
+			}
 
 			// if not in state anymore, this means it was removed in the previous block. No-op.
 			if !found {
@@ -1118,6 +1149,10 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
+			if orderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+				fmt.Println("tian, in ReplayOperations, order removal", "orderStatus", orderStatus, "err", err, "placeOrderOffchainUpdates", len(placeOrderOffchainUpdates.Messages))
+			}
+
 			placedOrderRemovalOrderIds[orderId] = struct{}{}
 			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
 				ctx,
@@ -1128,12 +1163,16 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				placeOrderOffchainUpdates,
 				existingOffchainUpdates,
 			)
+			if orderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+				fmt.Println("tian, in ReplayOperations, order removal", "offchainUpdates len", len(existingOffchainUpdates.Messages))
+			}
 		default:
 			panic(fmt.Sprintf("unknown operation type: %T", operation.Operation))
 		}
 	}
 
 	existingOffchainUpdates.CondenseMessagesForReplay()
+	fmt.Println("tian, in ReplayOperations, existingOffchainUpdates condensed len", len(existingOffchainUpdates.Messages))
 	return existingOffchainUpdates
 }
 

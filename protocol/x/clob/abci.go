@@ -200,7 +200,7 @@ func PrepareCheckState(
 		offchainUpdates,
 	)
 
-	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "purged invalid membclob state")
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "purged invalid membclob state", "offchain updates", len(offchainUpdates.Messages))
 
 	// 3. Go through the orders two times and only place the post only orders during the first pass.
 	longTermOrderIds := keeper.GetDeliveredLongTermOrderIds(ctx)
@@ -229,7 +229,7 @@ func PrepareCheckState(
 		offchainUpdates = replayUpdates
 	}
 
-	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "replayed operations post only")
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "replayed operations post only", "offchain updates", len(offchainUpdates.Messages))
 
 	// 4. Place all stateful order placements included in the last block on the memclob.
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
@@ -254,7 +254,7 @@ func PrepareCheckState(
 		metrics.Count,
 	)
 
-	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "placed stateful orders")
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "placed stateful orders", "offchain updates", len(offchainUpdates.Messages))
 
 	// 5. Place all conditional orders triggered in EndBlocker of last block on the memclob.
 	offchainUpdates = keeper.PlaceConditionalOrdersTriggeredInLastBlock(
@@ -264,7 +264,7 @@ func PrepareCheckState(
 		false, // post only
 	)
 
-	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "placed conditional orders")
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "placed conditional orders", "offchain updates", len(offchainUpdates.Messages))
 
 	// 6. Replay the local validator’s operations onto the book.
 	replayUpdates = keeper.MemClob.ReplayOperations(
@@ -278,7 +278,7 @@ func PrepareCheckState(
 		offchainUpdates = replayUpdates
 	}
 
-	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "replayed operations non post only")
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "replayed operations non post only", "offchain updates", len(offchainUpdates.Messages))
 
 	// 7. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
 	liquidatableSubaccountIds := keeper.DaemonLiquidationInfo.GetLiquidatableSubaccountIds()
