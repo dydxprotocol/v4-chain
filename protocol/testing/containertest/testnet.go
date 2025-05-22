@@ -77,7 +77,7 @@ func NewTestnetWithPreupgradeGenesis() (testnet *Testnet, err error) {
 		return nil, err
 	}
 	testnet.isPreupgradeGenesis = true
-	return testnet, err
+	return testnet, nil
 }
 
 func (t *Testnet) Start() (err error) {
