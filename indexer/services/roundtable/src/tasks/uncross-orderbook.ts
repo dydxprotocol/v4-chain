@@ -94,13 +94,13 @@ async function uncrossOrderbook(
     { side: OrderSide.BUY, clobPairId: market.clobPairId, ticker },
   );
   for (const bid of removeBidLevels) {
-    const deleted: boolean = await OrderbookLevelsCache.deleteStalePriceLevel({
+    const deleted: boolean = await OrderbookLevelsCache.deleteStalePriceLevel(
       ticker,
-      side: OrderSide.BUY,
-      humanPrice: bid.humanPrice,
-      timeThreshold: config.STALE_ORDERBOOK_LEVEL_THRESHOLD_SECONDS,
-      client: redisClient,
-    });
+      OrderSide.BUY,
+      bid.humanPrice,
+      config.STALE_ORDERBOOK_LEVEL_THRESHOLD_SECONDS,
+      redisClient,
+    );
     if (!deleted) {
       stats.increment(
         `${config.SERVICE_NAME}.uncross_orderbook_failed`,
@@ -135,13 +135,13 @@ async function uncrossOrderbook(
     { side: OrderSide.SELL, clobPairId: market.clobPairId, ticker },
   );
   for (const ask of removeAskLevels) {
-    const deleted: boolean = await OrderbookLevelsCache.deleteStalePriceLevel({
+    const deleted: boolean = await OrderbookLevelsCache.deleteStalePriceLevel(
       ticker,
-      side: OrderSide.SELL,
-      humanPrice: ask.humanPrice,
-      timeThreshold: config.STALE_ORDERBOOK_LEVEL_THRESHOLD_SECONDS,
-      client: redisClient,
-    });
+      OrderSide.SELL,
+      ask.humanPrice,
+      config.STALE_ORDERBOOK_LEVEL_THRESHOLD_SECONDS,
+      redisClient,
+    );
     if (!deleted) {
       stats.increment(
         `${config.SERVICE_NAME}.uncross_orderbook_failed`,

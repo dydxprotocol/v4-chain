@@ -166,14 +166,13 @@ export class OrderUpdateHandler extends Handler {
     const redisOrder: RedisOrder = updateResult.order!;
 
     return runFuncWithTimingStat(
-      OrderbookLevelsCache.updatePriceLevel({
-        ticker: redisOrder.ticker,
-        side: protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
-        humanPrice: redisOrder.price,
-        // Size delta needs to be an integer
-        sizeDeltaInQuantums: sizeDeltaInQuantums.toFixed(0),
-        client: redisClient,
-      }),
+      OrderbookLevelsCache.updatePriceLevel(
+        redisOrder.ticker,
+        protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
+        redisOrder.price,
+        sizeDeltaInQuantums.toFixed(0),
+        redisClient,
+      ),
       this.generateTimingStatsOptions('update_price_level'),
     );
   }
