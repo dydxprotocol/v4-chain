@@ -424,6 +424,41 @@ func (k Keeper) TransferInsuranceFundPayments(
 	)
 }
 
+func (k Keeper) TransferBuilderFees(
+	ctx sdk.Context,
+	productId uint32,
+	builderCodeParams clobtypes.BuilderCodeParameters,
+	fillQuantums *big.Int,
+) error {
+	collateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, productId)
+	if err != nil {
+		return err
+	}
+
+	builderFeeQuantums := builderCodeParams.GetBuilderFee(fillQuantums)
+
+	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
+		ctx,
+		assettypes.AssetUsdc.Id,
+		new(big.Int).Abs(builderFeeQuantums),
+	)
+	if err != nil {
+		// Panic if USDC does not exist.
+		panic(err)
+	}
+	recipient, err := sdk.AccAddressFromBech32(builderCodeParams.BuilderAddress)
+	if err != nil {
+		return err
+	}
+
+	return k.bankKeeper.SendCoins(
+		ctx,
+		collateralPoolAddr,
+		recipient,
+		[]sdk.Coin{coinToTransfer},
+	)
+}
+
 // TransferFundsFromSubaccountToSubaccount returns an error if the call to `k.CanUpdateSubaccounts()`
 // fails. Otherwise, updates the asset quantums in the subaccounts, translates the
 // `assetId` and `quantums` into a `sdk.Coin`, and call `bankKeeper.SendCoins()` if the collateral

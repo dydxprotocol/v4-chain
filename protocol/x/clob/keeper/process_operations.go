@@ -527,7 +527,7 @@ func (k Keeper) PersistMatchOrdersToState(
 				),
 			)
 		}
-		// TODO: (anmol) update fill event to include builder codes
+		// TODO: (anmol) update fill event to include builder codes [CT-1363]
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeOrderFill,

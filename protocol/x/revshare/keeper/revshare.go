@@ -162,37 +162,28 @@ func (k Keeper) GetAllRevShares(
 	fill clobtypes.FillForProcess,
 	affiliatesWhitelistMap map[string]uint32,
 ) (types.RevSharesForFill, error) {
-	allRevShares := []types.RevShare{}
 	feeSourceToQuoteQuantums, feeSourceToRevSharePpm := buildRevShareToFeeSourceMaps()
 
-	// get the builder rev shares
-	builderRevShares, builderFees := getBuilderRevShares(fill)
-
 	// get the protocol rev shares
-	netFees := big.NewInt(0).Add(fill.TakerFeeQuoteQuantums, fill.MakerFeeQuoteQuantums)
-	protocolRevShares, affiliateRevShare, err := k.getProtocolRevShares(
+	totalFees := big.NewInt(0).Add(fill.TakerFeeQuoteQuantums, fill.MakerFeeQuoteQuantums)
+	revShares, affiliateRevShare, err := k.getProtocolRevShares(
 		ctx,
 		fill,
 		affiliatesWhitelistMap,
-		netFees,
+		totalFees,
 	)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
 
-	// append the builder and protocol rev shares to the all rev shares
-	allRevShares = append(allRevShares, builderRevShares...)
-	allRevShares = append(allRevShares, protocolRevShares...)
-
-	if len(allRevShares) == 0 {
-		// if there are no builder or protocol rev shares, then exit early
+	if len(revShares) == 0 {
+		// if there are no rev shares, then exit early
 		return types.RevSharesForFill{}, nil
 	}
 
-	totalFees := big.NewInt(0).Add(netFees, builderFees)
 	totalFeesShared := big.NewInt(0)
 
-	for _, revShare := range allRevShares {
+	for _, revShare := range revShares {
 		totalFeesShared.Add(totalFeesShared, revShare.QuoteQuantums)
 
 		// Add the rev share to the total for the fee source
@@ -212,7 +203,7 @@ func (k Keeper) GetAllRevShares(
 		AffiliateRevShare:        affiliateRevShare,
 		FeeSourceToQuoteQuantums: feeSourceToQuoteQuantums,
 		FeeSourceToRevSharePpm:   feeSourceToRevSharePpm,
-		AllRevShares:             allRevShares,
+		AllRevShares:             revShares,
 	}, nil
 }
 
@@ -229,33 +220,7 @@ func buildRevShareToFeeSourceMaps() (
 	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = big.NewInt(0)
 	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = 0
 
-	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_BUILDER_FEE] = big.NewInt(0)
-	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_BUILDER_FEE] = 0
-
 	return feeSourceToQuoteQuantums, feeSourceToRevSharePpm
-}
-
-// getBuilderRevShares returns the builder rev shares for the fill.
-// These rev shares are additional fees that are charged to the taker and maker
-// in addition to the protocol fees. These fees are specified by the builder code on
-// the order itself and are paid to the configured builder address.
-func getBuilderRevShares(
-	fill clobtypes.FillForProcess,
-) ([]types.RevShare, *big.Int) {
-	totalBuilderFees := big.NewInt(0)
-	revShares := []types.RevShare{}
-	if fill.TakerBuilderCodeParams != nil {
-		takerBuilderRevShares, takerBuilderFeeQuoteQuantums := getBuilderRevShare(*fill.TakerBuilderCodeParams, fill)
-		revShares = append(revShares, takerBuilderRevShares...)
-		totalBuilderFees.Add(totalBuilderFees, takerBuilderFeeQuoteQuantums)
-	}
-	if fill.MakerBuilderCodeParams != nil {
-		makerBuilderRevShares, makerBuilderFeeQuoteQuantums := getBuilderRevShare(*fill.MakerBuilderCodeParams, fill)
-		revShares = append(revShares, makerBuilderRevShares...)
-		totalBuilderFees.Add(totalBuilderFees, makerBuilderFeeQuoteQuantums)
-	}
-
-	return revShares, totalBuilderFees
 }
 
 // getProtocolRevShares returns the protocol rev shares for the fill
@@ -384,22 +349,4 @@ func (k Keeper) getMarketMapperRevShare(
 	})
 
 	return revShares, nil
-}
-
-func getBuilderRevShare(
-	builderCodeParams clobtypes.BuilderCodeParameters,
-	fill clobtypes.FillForProcess,
-) ([]types.RevShare, *big.Int) {
-	revShares := []types.RevShare{}
-
-	builderFeeQuoteQuantums := builderCodeParams.GetBuilderFee(fill.FillQuoteQuantums)
-	revShares = append(revShares, types.RevShare{
-		Recipient:         builderCodeParams.BuilderAddress,
-		RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_BUILDER_FEE,
-		RevShareType:      types.REV_SHARE_TYPE_BUILDER,
-		QuoteQuantums:     builderFeeQuoteQuantums,
-		RevSharePpm:       builderCodeParams.FeePpm,
-	})
-
-	return revShares, builderFeeQuoteQuantums
 }

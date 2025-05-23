@@ -24,6 +24,8 @@ const (
 
 	// the maximum price tolerance for suborders in ppm.
 	MaxTwapOrderPriceTolerance uint32 = 1_000_000
+
+	MaxBuilderCodeFeePpm uint32 = 10_000
 )
 
 var _ sdk.Msg = &MsgPlaceOrder{}
@@ -137,11 +139,12 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 				err.Error(),
 			)
 		}
-		if msg.Order.BuilderCodeParameters.FeePpm <= 0 || msg.Order.BuilderCodeParameters.FeePpm > 10_000 {
+		if msg.Order.BuilderCodeParameters.FeePpm <= 0 || msg.Order.BuilderCodeParameters.FeePpm > MaxBuilderCodeFeePpm {
 			return errorsmod.Wrapf(
 				ErrInvalidBuilderCode,
-				"builder code fee ppm '%d' must be in the range (0, 10_000]",
+				"builder code fee ppm '%d' must be in the range (0, %d]",
 				msg.Order.BuilderCodeParameters.FeePpm,
+				MaxBuilderCodeFeePpm,
 			)
 		}
 	}

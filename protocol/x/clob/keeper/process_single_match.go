@@ -388,19 +388,17 @@ func (k Keeper) persistMatchedOrders(
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, insuranceFundDelta)
 	}
 
-	var makerBuilderCodeParams *types.BuilderCodeParameters
-	var takerBuilderCodeParams *types.BuilderCodeParameters
 	// apply broker fees for taker and maker separately
 	if !matchWithOrders.MakerOrder.IsLiquidation() {
-		makerBuilderCodeParams = matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
-		builderFee := makerBuilderCodeParams.GetBuilderFee(matchWithOrders.FillAmount.ToBigInt())
-		bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, builderFee)
+		makerBuilderCodeParams := matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
+		makerBuilderFeeQuantums := makerBuilderCodeParams.GetBuilderFee(matchWithOrders.FillAmount.ToBigInt())
+		bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, makerBuilderFeeQuantums)
 	}
 
 	if !matchWithOrders.TakerOrder.IsLiquidation() {
-		takerBuilderCodeParams = matchWithOrders.TakerOrder.MustGetOrder().BuilderCodeParameters
-		builderFee := takerBuilderCodeParams.GetBuilderFee(matchWithOrders.FillAmount.ToBigInt())
-		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, builderFee)
+		takerBuilderCodeParams := matchWithOrders.TakerOrder.MustGetOrder().BuilderCodeParameters
+		takerBuilderFeeQuantums := takerBuilderCodeParams.GetBuilderFee(matchWithOrders.FillAmount.ToBigInt())
+		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, takerBuilderFeeQuantums)
 	}
 
 	// Create the subaccount update.
@@ -485,16 +483,28 @@ func (k Keeper) persistMatchedOrders(
 		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 
+	// Transfer builder fees for taker and maker builders if they exist
+	if containsBuilderParams(matchWithOrders.TakerOrder) {
+		takerBuilder := matchWithOrders.TakerOrder.MustGetOrder().BuilderCodeParameters
+		if err := k.subaccountsKeeper.TransferBuilderFees(ctx, perpetualId, *takerBuilder, bigFillQuoteQuantums); err != nil {
+			return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+		}
+	}
+	if containsBuilderParams(matchWithOrders.MakerOrder) {
+		makerBuilder := matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
+		if err := k.subaccountsKeeper.TransferBuilderFees(ctx, perpetualId, *makerBuilder, bigFillQuoteQuantums); err != nil {
+			return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+		}
+	}
+
 	fillForProcess := types.FillForProcess{
-		TakerAddr:              matchWithOrders.TakerOrder.GetSubaccountId().Owner,
-		TakerFeeQuoteQuantums:  bigTakerFeeQuoteQuantums,
-		MakerAddr:              matchWithOrders.MakerOrder.GetSubaccountId().Owner,
-		MakerFeeQuoteQuantums:  bigMakerFeeQuoteQuantums,
-		FillQuoteQuantums:      bigFillQuoteQuantums,
-		ProductId:              perpetualId,
-		MarketId:               perpetual.Params.MarketId,
-		MakerBuilderCodeParams: makerBuilderCodeParams,
-		TakerBuilderCodeParams: takerBuilderCodeParams,
+		TakerAddr:             matchWithOrders.TakerOrder.GetSubaccountId().Owner,
+		TakerFeeQuoteQuantums: bigTakerFeeQuoteQuantums,
+		MakerAddr:             matchWithOrders.MakerOrder.GetSubaccountId().Owner,
+		MakerFeeQuoteQuantums: bigMakerFeeQuoteQuantums,
+		FillQuoteQuantums:     bigFillQuoteQuantums,
+		ProductId:             perpetualId,
+		MarketId:              perpetual.Params.MarketId,
 		MonthlyRollingTakerVolumeQuantums: k.statsKeeper.GetUserStats(
 			ctx,
 			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
@@ -634,4 +644,8 @@ func getUpdatedOrderFillAmount(
 	}
 
 	return satypes.BaseQuantums(bigNewFillAmount.Uint64()), nil
+}
+
+func containsBuilderParams(order types.MatchableOrder) bool {
+	return !order.IsLiquidation() && order.MustGetOrder().BuilderCodeParameters != nil
 }
