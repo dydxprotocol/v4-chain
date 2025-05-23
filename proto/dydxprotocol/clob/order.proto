@@ -1,6 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.clob;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/clob/liquidations.proto";
