@@ -71,6 +71,24 @@ var (
 		Subticks:     10,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
 	}
+	Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB20 = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Alice_Num0, ClientId: 0, ClobPairId: 0},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     10,
+		Subticks:     10,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+	}
+	Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB20_BuilderCode = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Alice_Num0, ClientId: 0, ClobPairId: 0},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     10,
+		Subticks:     10,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		BuilderCodeParameters: &clobtypes.BuilderCodeParameters{
+			BuilderAddress: Bob_Num0.Owner,
+			FeePpm:         1000,
+		},
+	}
 	Order_Alice_Num0_Id1_Clob0_Sell5_Price15_GTB15 = clobtypes.Order{
 		OrderId:      clobtypes.OrderId{SubaccountId: Alice_Num0, ClientId: 1, ClobPairId: 0},
 		Side:         clobtypes.Order_SIDE_SELL,

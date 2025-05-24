@@ -230,6 +230,11 @@ var (
 		49,
 		"Invalid TWAP order placement",
 	)
+	ErrInvalidBuilderCode = errorsmod.Register(
+		ModuleName,
+		50,
+		"Invalid builder code",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(

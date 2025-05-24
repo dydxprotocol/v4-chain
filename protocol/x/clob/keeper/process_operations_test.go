@@ -582,6 +582,143 @@ func TestProcessProposerOperations(t *testing.T) {
 				},
 			},
 		},
+		"Succeeds with singular match of a preexisting maker and short term taker with builder code": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(1_000_000_000), // 10 BTC
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_0,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{},
+				},
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100,
+						Subticks:     10,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						BuilderCodeParameters: &types.BuilderCodeParameters{
+							BuilderAddress: constants.Carl_Num0.Owner,
+							FeePpm:         10_000,
+						},
+					},
+				),
+				clobtest.NewMatchOperationRaw(
+					&types.Order{
+						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+						Side:         types.Order_SIDE_SELL,
+						Quantums:     100,
+						Subticks:     10,
+						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+						BuilderCodeParameters: &types.BuilderCodeParameters{
+							BuilderAddress: constants.Carl_Num0.Owner,
+							FeePpm:         10_000,
+						},
+					},
+					[]types.MakerFill{
+						{
+							FillAmount:   100,
+							MakerOrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.GetOrderId(),
+						},
+					},
+				),
+			},
+			expectedMatches: []*MatchWithOrdersForTesting{
+				{
+					MatchWithOrders: types.MatchWithOrders{
+						TakerOrder: &types.Order{
+							OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+							Side:         types.Order_SIDE_SELL,
+							Quantums:     100,
+							Subticks:     10,
+							GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
+							BuilderCodeParameters: &types.BuilderCodeParameters{
+								BuilderAddress: constants.Carl_Num0.Owner,
+								FeePpm:         10_000,
+							},
+						},
+						MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+						FillAmount: 100,
+					},
+					TotalFilledMaker: 100,
+					TotalFilledTaker: 100,
+				},
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				OrderIdsFilledInLastBlock: []types.OrderId{
+					{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.GetOrderId(),
+				},
+				RemovedStatefulOrderIds: []types.OrderId{
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.GetOrderId(),
+				},
+				BlockHeight: blockHeight,
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+				constants.Bob_Num0:   big.NewInt(100_000_000_000 - 1).Int64(), // builder fee applied
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Bob_Num0: {
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000-100),
+						big.NewInt(0),
+						big.NewInt(0),
+					),
+				},
+				constants.Alice_Num0: {
+					testutil.CreateSinglePerpetualPosition(
+						0,
+						big.NewInt(1_000_000_000+100),
+						big.NewInt(0),
+						big.NewInt(0),
+					),
+				},
+				constants.Carl_Num0: {},
+			},
+		},
 		"preexisting stateful maker order partially matches with 2 short term taker orders": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
