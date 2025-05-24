@@ -2632,7 +2632,6 @@ func TestPlaceOrder_MatchOrders_CollatCheckFailure(t *testing.T) {
 		},
 		`Placing an order without a builder code parameter matches successfully with an existing sell order`: {
 			placedMatchableOrders: []types.MatchableOrder{
-				// &constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO,
 				&constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22,
 			},
 
@@ -2666,7 +2665,6 @@ func TestPlaceOrder_MatchOrders_CollatCheckFailure(t *testing.T) {
 						},
 					},
 				),
-				clobtest.NewOrderPlacementOperation(constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB20),
 			},
 			expectedInternalOperations: []types.InternalOperation{
 				types.NewShortTermOrderPlacementInternalOperation(constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22),
@@ -2686,7 +2684,6 @@ func TestPlaceOrder_MatchOrders_CollatCheckFailure(t *testing.T) {
 			because it will fail collateralization checks due to builder fees`: {
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO,
-				// &constants.Order_Bob_Num0_Id8_Clob0_Sell20_Price10_GTB22,
 			},
 
 			order:               constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB20_BuilderCode,
