@@ -570,15 +570,15 @@ describe('order-place-handler', () => {
       });
 
       // Update the price level in the order book to a value larger than the quantums of the order
-      await OrderbookLevelsCache.updatePriceLevel({
-        ticker: testConstants.defaultPerpetualMarket.ticker,
-        side: protocolTranslations.protocolOrderSideToOrderSide(
+      await OrderbookLevelsCache.updatePriceLevel(
+        testConstants.defaultPerpetualMarket.ticker,
+        protocolTranslations.protocolOrderSideToOrderSide(
           initialOrderToPlace.side,
         ),
-        humanPrice: expectedRedisOrder.price,
-        sizeDeltaInQuantums: oldPriceLevelInitialQuantums.toString(),
+        expectedRedisOrder.price,
+        oldPriceLevelInitialQuantums.toString(),
         client,
-      });
+      );
 
       // Handle the order place off-chain update with the replacement order
       await onMessage(orderReplacementMessage);

@@ -413,13 +413,13 @@ describe('OrderRemoveHandler', () => {
 
       await Promise.all([
         placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ticker: removedRedisOrder.ticker,
-          side: OrderSide.BUY,
-          humanPrice: defaultPrice,
-          sizeDeltaInQuantums: orderbookLevel,
-          client: redisClient,
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          removedRedisOrder.ticker,
+          OrderSide.BUY,
+          defaultPrice,
+          orderbookLevel,
+          redisClient,
+        ),
       ]);
 
       await Promise.all([
@@ -565,13 +565,13 @@ describe('OrderRemoveHandler', () => {
 
       await Promise.all([
         placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ticker: removedRedisOrder.ticker,
-          side: OrderSide.BUY,
-          humanPrice: defaultPrice,
-          sizeDeltaInQuantums: defaultQuantums.toString(),
-          client: redisClient,
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          removedRedisOrder.ticker,
+          OrderSide.BUY,
+          defaultPrice,
+          defaultQuantums.toString(),
+          redisClient,
+        ),
       ]);
 
       await Promise.all([
@@ -705,13 +705,13 @@ describe('OrderRemoveHandler', () => {
 
         await Promise.all([
           placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-          OrderbookLevelsCache.updatePriceLevel({
-            ticker: removedRedisOrder.ticker,
-            side: OrderSide.BUY,
-            humanPrice: defaultPrice,
-            sizeDeltaInQuantums: defaultQuantums.toString(),
-            client: redisClient,
-          }),
+          OrderbookLevelsCache.updatePriceLevel(
+            removedRedisOrder.ticker,
+            OrderSide.BUY,
+            defaultPrice,
+            defaultQuantums.toString(),
+            redisClient,
+          ),
         ]);
 
         // Must be done separately so that the subaccount and perpetualMarket have been created
@@ -837,13 +837,13 @@ describe('OrderRemoveHandler', () => {
 
         await Promise.all([
           placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-          OrderbookLevelsCache.updatePriceLevel({
-            ticker: removedRedisOrder.ticker,
-            side: OrderSide.BUY,
-            humanPrice: defaultPrice,
-            sizeDeltaInQuantums: defaultQuantums.toString(),
-            client: redisClient,
-          }),
+          OrderbookLevelsCache.updatePriceLevel(
+            removedRedisOrder.ticker,
+            OrderSide.BUY,
+            defaultPrice,
+            defaultQuantums.toString(),
+            redisClient,
+          ),
         ]);
 
         const exceedsFilledUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
@@ -989,13 +989,13 @@ describe('OrderRemoveHandler', () => {
 
         await Promise.all([
           placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-          OrderbookLevelsCache.updatePriceLevel({
-            ticker: removedRedisOrder.ticker,
-            side: OrderSide.BUY,
-            humanPrice: defaultPrice,
-            sizeDeltaInQuantums: defaultQuantums.toString(),
-            client: redisClient,
-          }),
+          OrderbookLevelsCache.updatePriceLevel(
+            removedRedisOrder.ticker,
+            OrderSide.BUY,
+            defaultPrice,
+            defaultQuantums.toString(),
+            redisClient,
+          ),
           StateFilledQuantumsCache.updateStateFilledQuantums(
             expectedOrderUuid,
             removedRedisOrder.order!.quantums.toString(),
@@ -1090,13 +1090,13 @@ describe('OrderRemoveHandler', () => {
 
         await Promise.all([
           placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-          OrderbookLevelsCache.updatePriceLevel({
-            ticker: removedRedisOrder.ticker,
-            side: OrderSide.BUY,
-            humanPrice: defaultPrice,
-            sizeDeltaInQuantums: defaultQuantums.toString(),
-            client: redisClient,
-          }),
+          OrderbookLevelsCache.updatePriceLevel(
+            removedRedisOrder.ticker,
+            OrderSide.BUY,
+            defaultPrice,
+            defaultQuantums.toString(),
+            redisClient,
+          ),
         ]);
 
         // Must be done separately so that the subaccount and perpetualMarket have been created
@@ -1307,13 +1307,13 @@ describe('OrderRemoveHandler', () => {
             redisOrder: removedRedisOrder,
             client: redisClient,
           }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ticker: removedRedisOrder.ticker,
-          side: OrderSide.BUY,
-          humanPrice: defaultPrice,
-          sizeDeltaInQuantums: defaultQuantums.toString(),
-          client: redisClient,
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          removedRedisOrder.ticker,
+          OrderSide.BUY,
+          defaultPrice,
+          defaultQuantums.toString(),
+          redisClient,
+        ),
       ]);
 
       // Must be done separately so that the subaccount and perpetualMarket have been created
@@ -1426,13 +1426,13 @@ describe('OrderRemoveHandler', () => {
             redisOrder: removedRedisOrder,
             client: redisClient,
           }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ticker: removedRedisOrder.ticker,
-          side: OrderSide.BUY,
-          humanPrice: defaultPrice,
-          sizeDeltaInQuantums: orderbookLevel,
-          client: redisClient,
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          removedRedisOrder.ticker,
+          OrderSide.BUY,
+          defaultPrice,
+          orderbookLevel,
+          redisClient,
+        ),
       ]);
 
       // Must be done separately so that the subaccount and perpetualMarket have been created
@@ -1566,13 +1566,13 @@ describe('OrderRemoveHandler', () => {
             redisOrder: removedRedisOrder,
             client: redisClient,
           }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ticker: removedRedisOrder.ticker,
-          side: OrderSide.BUY,
-          humanPrice: defaultPrice,
-          sizeDeltaInQuantums: orderbookLevel,
-          client: redisClient,
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          removedRedisOrder.ticker,
+          OrderSide.BUY,
+          defaultPrice,
+          orderbookLevel,
+          redisClient,
+        ),
       ]);
 
       const exceedsFilledUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
@@ -1700,13 +1700,13 @@ describe('OrderRemoveHandler', () => {
         // testConstants.defaultOrder has a goodTilBlock of 1150
         BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() }),
         placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ticker: removedRedisOrder.ticker,
-          side: OrderSide.BUY,
-          humanPrice: defaultPrice,
-          sizeDeltaInQuantums: orderbookLevel,
-          client: redisClient,
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          removedRedisOrder.ticker,
+          OrderSide.BUY,
+          defaultPrice,
+          orderbookLevel,
+          redisClient,
+        ),
       ]);
 
       await Promise.all([
@@ -1825,13 +1825,13 @@ describe('OrderRemoveHandler', () => {
         // testConstants.defaultOrder has a goodTilBlock of 1150
         BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() }),
         placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ticker: removedRedisOrder.ticker,
-          side: OrderSide.BUY,
-          humanPrice: defaultPrice,
-          sizeDeltaInQuantums: orderbookLevel,
-          client: redisClient,
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          removedRedisOrder.ticker,
+          OrderSide.BUY,
+          defaultPrice,
+          orderbookLevel,
+          redisClient,
+        ),
         StateFilledQuantumsCache.updateStateFilledQuantums(
           expectedOrderUuid,
           removedRedisOrder.order!.quantums.toString(),
@@ -1900,13 +1900,13 @@ describe('OrderRemoveHandler', () => {
 
         await Promise.all([
           placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-          OrderbookLevelsCache.updatePriceLevel({
-            ticker: removedRedisOrder.ticker,
-            side: OrderSide.BUY,
-            humanPrice: defaultPrice,
-            sizeDeltaInQuantums: orderbookLevel,
-            client: redisClient,
-          }),
+          OrderbookLevelsCache.updatePriceLevel(
+            removedRedisOrder.ticker,
+            OrderSide.BUY,
+            defaultPrice,
+            orderbookLevel,
+            redisClient,
+          ),
         ]);
 
         await Promise.all([
@@ -1970,13 +1970,13 @@ describe('OrderRemoveHandler', () => {
           // testConstants.defaultOrder has a goodTilBlock of 1150
           BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() }),
           placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-          OrderbookLevelsCache.updatePriceLevel({
-            ticker: removedRedisOrder.ticker,
-            side: OrderSide.BUY,
-            humanPrice: defaultPrice,
-            sizeDeltaInQuantums: orderbookLevel,
-            client: redisClient,
-          }),
+          OrderbookLevelsCache.updatePriceLevel(
+            removedRedisOrder.ticker,
+            OrderSide.BUY,
+            defaultPrice,
+            orderbookLevel,
+            redisClient,
+          ),
         ]);
 
         await Promise.all([
@@ -2046,13 +2046,13 @@ describe('OrderRemoveHandler', () => {
         // testConstants.defaultOrder has a goodTilBlock of 1150
         BlockTable.create({ blockHeight: '1151', time: DateTime.utc(2022, 6, 1).toISO() }),
         placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ticker: removedRedisOrder.ticker,
-          side: OrderSide.BUY,
-          humanPrice: defaultPrice,
-          sizeDeltaInQuantums: orderbookLevel,
-          client: redisClient,
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          removedRedisOrder.ticker,
+          OrderSide.BUY,
+          defaultPrice,
+          orderbookLevel,
+          redisClient,
+        ),
       ]);
 
       await Promise.all([
@@ -2111,13 +2111,13 @@ describe('OrderRemoveHandler', () => {
 
       await Promise.all([
         placeOrder({ redisOrder: removedRedisOrder, client: redisClient }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ticker: removedRedisOrder.ticker,
-          side: OrderSide.BUY,
-          humanPrice: defaultPrice,
-          sizeDeltaInQuantums: orderbookLevel,
-          client: redisClient,
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          removedRedisOrder.ticker,
+          OrderSide.BUY,
+          defaultPrice,
+          orderbookLevel,
+          redisClient,
+        ),
       ]);
 
       await Promise.all([

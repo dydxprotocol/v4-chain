@@ -33,60 +33,65 @@ describe('orderbooks-controller#V4', () => {
     it('Get /:ticker gets orderbook for perpetual market with the matching ticker', async () => {
       await testMocks.seedData();
       await perpetualMarketRefresher.updatePerpetualMarkets();
-      const commonPriceLevel: any = {
-        ticker: testConstants.defaultPerpetualMarket.ticker,
-        client: redisClient,
-      };
+      const ticker = testConstants.defaultPerpetualMarket.ticker;
       await Promise.all([
-        OrderbookLevelsCache.updatePriceLevel({
-          ...commonPriceLevel,
-          humanPrice: '40000.1',
-          side: OrderSide.BUY,
-          sizeDeltaInQuantums: '1000000000',
-        }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ...commonPriceLevel,
-          humanPrice: '42030.5',
-          side: OrderSide.BUY,
-          sizeDeltaInQuantums: '2000000000',
-        }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ...commonPriceLevel,
-          humanPrice: '47500',
-          side: OrderSide.BUY,
-          sizeDeltaInQuantums: '3000000000',
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          ticker,
+          OrderSide.BUY,
+          '40000.1',
+          '1000000000',
+          redisClient,
+        ),
+        OrderbookLevelsCache.updatePriceLevel(
+          ticker,
+          OrderSide.BUY,
+          '42030.5',
+          '2000000000',
+          redisClient,
+        ),
+        OrderbookLevelsCache.updatePriceLevel(
+          ticker,
+          OrderSide.BUY,
+          '47500',
+          '3000000000',
+          redisClient,
+        ),
         // crossing level that will be filtered out, should not be returned in response
-        OrderbookLevelsCache.updatePriceLevel({
-          ...commonPriceLevel,
-          humanPrice: '46050',
-          side: OrderSide.SELL,
-          sizeDeltaInQuantums: '1750000000',
-        }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ...commonPriceLevel,
-          humanPrice: '51000.4',
-          side: OrderSide.SELL,
-          sizeDeltaInQuantums: '1500000000',
-        }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ...commonPriceLevel,
-          humanPrice: '50050.2',
-          side: OrderSide.SELL,
-          sizeDeltaInQuantums: '2500000000',
-        }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ...commonPriceLevel,
-          humanPrice: '53200.6',
-          side: OrderSide.SELL,
-          sizeDeltaInQuantums: '500000000',
-        }),
-        OrderbookLevelsCache.updatePriceLevel({
-          ...commonPriceLevel,
-          humanPrice: '60300.8',
-          side: OrderSide.SELL,
-          sizeDeltaInQuantums: '250000000',
-        }),
+        OrderbookLevelsCache.updatePriceLevel(
+          ticker,
+          OrderSide.SELL,
+          '46050',
+          '1750000000',
+          redisClient,
+        ),
+        OrderbookLevelsCache.updatePriceLevel(
+          ticker,
+          OrderSide.SELL,
+          '51000.4',
+          '1500000000',
+          redisClient,
+        ),
+        OrderbookLevelsCache.updatePriceLevel(
+          ticker,
+          OrderSide.SELL,
+          '50050.2',
+          '2500000000',
+          redisClient,
+        ),
+        OrderbookLevelsCache.updatePriceLevel(
+          ticker,
+          OrderSide.SELL,
+          '53200.6',
+          '500000000',
+          redisClient,
+        ),
+        OrderbookLevelsCache.updatePriceLevel(
+          ticker,
+          OrderSide.SELL,
+          '60300.8',
+          '250000000',
+          redisClient,
+        ),
       ]);
 
       const response: request.Response = await sendRequest({

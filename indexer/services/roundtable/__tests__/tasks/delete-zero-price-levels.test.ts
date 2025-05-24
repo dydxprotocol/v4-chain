@@ -46,34 +46,34 @@ describe('delete-zero-price-levels', () => {
     await Promise.all(
       perpetualMarkets.map(async (perpetualMarket: PerpetualMarketFromDatabase): Promise<void> => {
         await Promise.all([
-          OrderbookLevelsCache.updatePriceLevel({
-            ticker: perpetualMarket.ticker,
-            side: OrderSide.BUY,
-            humanPrice: '45100',
-            sizeDeltaInQuantums: '2000',
-            client: redisClient,
-          }),
-          OrderbookLevelsCache.updatePriceLevel({
-            ticker: perpetualMarket.ticker,
-            side: OrderSide.BUY,
-            humanPrice: '45200',
-            sizeDeltaInQuantums: '0',
-            client: redisClient,
-          }),
-          OrderbookLevelsCache.updatePriceLevel({
-            ticker: perpetualMarket.ticker,
-            side: OrderSide.SELL,
-            humanPrice: '45300',
-            sizeDeltaInQuantums: '3000',
-            client: redisClient,
-          }),
-          OrderbookLevelsCache.updatePriceLevel({
-            ticker: perpetualMarket.ticker,
-            side: OrderSide.SELL,
-            humanPrice: '45400',
-            sizeDeltaInQuantums: '0',
-            client: redisClient,
-          }),
+          OrderbookLevelsCache.updatePriceLevel(
+            perpetualMarket.ticker,
+            OrderSide.BUY,
+            '45100',
+            '2000',
+            redisClient,
+          ),
+          OrderbookLevelsCache.updatePriceLevel(
+            perpetualMarket.ticker,
+            OrderSide.BUY,
+            '45200',
+            '0',
+            redisClient,
+          ),
+          OrderbookLevelsCache.updatePriceLevel(
+            perpetualMarket.ticker,
+            OrderSide.SELL,
+            '45300',
+            '3000',
+            redisClient,
+          ),
+          OrderbookLevelsCache.updatePriceLevel(
+            perpetualMarket.ticker,
+            OrderSide.SELL,
+            '45400',
+            '0',
+            redisClient,
+          ),
         ]);
       },
       ));

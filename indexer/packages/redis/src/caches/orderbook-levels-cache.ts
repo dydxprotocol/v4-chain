@@ -10,7 +10,6 @@ import { OrderbookLevels, PriceLevel } from '../types';
 import {
   deleteZeroPriceLevelScript,
   deleteStalePriceLevelScript,
-  getOrderbookSideScript,
   incrementOrderbookLevelScript,
 } from './scripts';
 
@@ -29,20 +28,14 @@ export const ORDERS_CACHE_KEY_PREFIX: string = 'v4/orderbookLevels/';
  * total size in quantums.
  * @returns The updated total size in quantums.
  */
-export async function updatePriceLevel({
-  ticker,
-  side,
-  humanPrice,
-  sizeDeltaInQuantums,
-  client,
-}: {
+export async function updatePriceLevel(
   ticker: string,
   side: OrderSide,
   humanPrice: string,
   sizeDeltaInQuantums: string,
   client: RedisClient,
-// TODO(DEC-1314): Return a string once redis client is updated to use `stringNumbers` option.
-}): Promise<number> {
+  // TODO(DEC-1314): Return a string once redis client is updated to use `stringNumbers` option.
+): Promise<number> {
   const updatedQuantums: number = await incrementOrderbookLevel(
     ticker,
     side,
@@ -101,49 +94,23 @@ async function incrementOrderbookLevel(
   sizeDeltaInQuantums: string,
   client: RedisClient,
 ): Promise<number> {
-  // Number of keys for the lua script.
-  const numKeys: number = 2;
-
-  let evalAsync: (
-    orderbookKey: string,
-    lastUpdatedKey: string,
-    priceLevel: string,
-    delta: string,
-  ) => Promise<number> = (
-    orderbookKey,
-    lastUpdatedKey,
-    priceLevel,
-    delta,
-  ) => {
-    return new Promise((resolve, reject) => {
-      const callback: Callback<number> = (
-        err: Error | null,
-        results: number,
-      ) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(results);
-      };
-      client.evalsha(
-        incrementOrderbookLevelScript.hash,
-        numKeys,
-        orderbookKey,
-        lastUpdatedKey,
-        priceLevel,
-        delta,
-        callback,
-      );
-    });
-  };
-  evalAsync = evalAsync.bind(client);
-
-  return evalAsync(
-    getKey(ticker, side),
-    getLastUpdatedKey(ticker, side),
-    humanPrice,
-    sizeDeltaInQuantums,
-  );
+  return new Promise((resolve, reject) => {
+    const callback: Callback<number> = (err: Error | null, results: number) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(results);
+    };
+    client.evalsha(
+      incrementOrderbookLevelScript.hash,
+      2,
+      getKey(ticker, side),
+      getLastUpdatedKey(ticker, side),
+      humanPrice,
+      sizeDeltaInQuantums,
+      callback,
+    );
+  });
 }
 
 /**
@@ -210,13 +177,7 @@ export async function getOrderBookLevels(
   // Default to removing zeros unless `false` is passed in
   const removeZeros: boolean = options.removeZeros ?? true;
 
-  let [
-    bids,
-    asks,
-  ]: [
-    PriceLevel[],
-    PriceLevel[],
-  ] = await Promise.all([
+  let [bids, asks]: [PriceLevel[], PriceLevel[]] = await Promise.all([
     getOrderbookSide(ticker, OrderSide.BUY, client, removeZeros),
     getOrderbookSide(ticker, OrderSide.SELL, client, removeZeros),
   ]);
@@ -245,8 +206,10 @@ export async function getOrderBookLevels(
       // 2. Give precedence to the side with the larger size in quantums.
       // 3. If both sides have the same recency and size, give precedence to the ask.
       // This is an arbitrary choice to remove crossing levels in the orderbook.
-      if (Number(bids[bi].lastUpdated) > Number(asks[ai].lastUpdated) ||
-        Number(bids[bi].quantums) > Number(asks[ai].quantums)) {
+      if (
+        Number(bids[bi].lastUpdated) > Number(asks[ai].lastUpdated) ||
+        Number(bids[bi].quantums) > Number(asks[ai].quantums)
+      ) {
         ai += 1;
       } else {
         bi += 1;
@@ -282,57 +245,28 @@ export async function getOrderBookLevels(
  * @param param0 Ticker of the exchange pair, side, human readable price level to delete.
  * @returns `boolean`, true/false for whether the level was deleted.
  */
-export async function deleteZeroPriceLevel({
-  ticker,
-  side,
-  humanPrice,
-  client,
-}: {
+export async function deleteZeroPriceLevel(
   ticker: string,
   side: OrderSide,
   humanPrice: string,
   client: RedisClient,
-}): Promise<boolean> {
-  // Number of keys for the lua script.
-  const numKeys: number = 2;
-
-  let evalAsync: (
-    orderbookKey: string,
-    lastUpdatedKey: string,
-    priceLevel: string,
-  ) => Promise<boolean> = (
-    orderbookKey,
-    lastUpdatedKey,
-    priceLevel,
-  ) => {
-    return new Promise((resolve, reject) => {
-      const callback: Callback<number> = (
-        err: Error | null,
-        results: number,
-      ) => {
-        if (err) {
-          return reject(err);
-        }
-        const deleted: number = results;
-        return resolve(deleted === 1);
-      };
-      client.evalsha(
-        deleteZeroPriceLevelScript.hash,
-        numKeys,
-        orderbookKey,
-        lastUpdatedKey,
-        priceLevel,
-        callback,
-      );
-    });
-  };
-  evalAsync = evalAsync.bind(client);
-
-  return evalAsync(
-    getKey(ticker, side),
-    getLastUpdatedKey(ticker, side),
-    humanPrice,
-  );
+): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    const callback: Callback<number> = (err: Error | null, deleted: number) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(deleted === 1);
+    };
+    client.evalsha(
+      deleteZeroPriceLevelScript.hash,
+      2,
+      getKey(ticker, side),
+      getLastUpdatedKey(ticker, side),
+      humanPrice,
+      callback,
+    );
+  });
 }
 
 /**
@@ -341,143 +275,30 @@ export async function deleteZeroPriceLevel({
  * time threshold to delete.
  * @returns `boolean`, true/false for whether the level was deleted.
  */
-export async function deleteStalePriceLevel({
-  ticker,
-  side,
-  humanPrice,
-  timeThreshold,
-  client,
-}: {
+export async function deleteStalePriceLevel(
   ticker: string,
   side: OrderSide,
   humanPrice: string,
   timeThreshold: number,
   client: RedisClient,
-}): Promise<boolean> {
-  // Number of keys for the lua script.
-  const numKeys: number = 2;
-
-  let evalAsync: (
-    orderbookKey: string,
-    lastUpdatedKey: string,
-    priceLevel: string,
-    timeInterval: number,
-  ) => Promise<boolean> = (
-    orderbookKey,
-    lastUpdatedKey,
-    priceLevel,
-    timeInterval,
-  ) => {
-    return new Promise((resolve, reject) => {
-      const callback: Callback<number> = (
-        err: Error | null,
-        results: number,
-      ) => {
-        if (err) {
-          return reject(err);
-        }
-        const deleted: number = results;
-        return resolve(deleted === 1);
-      };
-      client.evalsha(
-        deleteStalePriceLevelScript.hash,
-        numKeys,
-        orderbookKey,
-        lastUpdatedKey,
-        priceLevel,
-        timeInterval,
-        callback,
-      );
-    });
-  };
-  evalAsync = evalAsync.bind(client);
-
-  return evalAsync(
-    getKey(ticker, side),
-    getLastUpdatedKey(ticker, side),
-    humanPrice,
-    timeThreshold,
-  );
-}
-
-/**
- * Gets the quantums and lastUpdated data from the cache for the given orderbook side.
- * @param param0 Ticker of the exchange pair, side, Redis client.
- * @returns An mapping from human-readable price to objects containing data for the price point.
- * {
- *   "<human-readable-price>": {
- *     "quantums": "<quantums>",
- *     "lastUpdated": "<timestamp>",
- *   },
- *   ...
- * }
- */
-export async function getOrderbookSideData({
-  ticker,
-  side,
-  client,
-}: {
-  ticker: string,
-  side: OrderSide,
-  client: RedisClient,
-}): Promise<PriceLevel[]> {
-  // Number of keys for the lua script.
-  const numKeys: number = 2;
-
-  let evalAsync: (
-    orderbookKey: string,
-    lastUpdatedKey: string,
-  ) => Promise<string[][]> = (
-    orderbookKey,
-    lastUpdatedKey,
-  ) => {
-    return new Promise((resolve, reject) => {
-      const callback: Callback<string[][]> = (
-        err: Error | null,
-        results: string[][],
-      ) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(results);
-      };
-      client.evalsha(
-        getOrderbookSideScript.hash,
-        numKeys,
-        orderbookKey,
-        lastUpdatedKey,
-        callback,
-      );
-    });
-  };
-  evalAsync = evalAsync.bind(client);
-
-  const rawRedisResults: string[][] = await evalAsync(
-    getKey(ticker, side),
-    getLastUpdatedKey(ticker, side),
-  );
-
-  // The Lua script returns a list of lists of strings.
-  //   rawRedisResults = [<list of quantums data>, <list of lastUpdated data>].
-  //   each subarray = ['key', 'value', 'key', 'value', ...]
-  // The 1st list is a flat array of alternating key-value pairs representing prices and quantums.
-  // The 2nd is a flat array of alternating key-value pairs representing prices and lastUpdated
-  // values.
-  const quantumsMapping: { [field: string]: string } = _.fromPairs(_.chunk(rawRedisResults[0], 2));
-  const lastUpdatedMapping: { [field: string]: string } = _.fromPairs(
-    _.chunk(rawRedisResults[1], 2),
-  );
-
-  return convertToPriceLevels(ticker, side, quantumsMapping, lastUpdatedMapping);
-
-}
-
-export function getKey(ticker: string, side: OrderSide): string {
-  return `${ORDERS_CACHE_KEY_PREFIX}${ticker}/${side}`;
-}
-
-export function getLastUpdatedKey(ticker: string, side: OrderSide): string {
-  return `${getKey(ticker, side)}/lastUpdated`;
+): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    const callback: Callback<number> = (err: Error | null, deleted: number) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(deleted === 1);
+    };
+    client.evalsha(
+      deleteStalePriceLevelScript.hash,
+      2,
+      getKey(ticker, side),
+      getLastUpdatedKey(ticker, side),
+      humanPrice,
+      timeThreshold,
+      callback,
+    );
+  });
 }
 
 async function getOrderbookSide(
@@ -486,16 +307,56 @@ async function getOrderbookSide(
   client: RedisClient,
   removeZeros: boolean,
 ): Promise<PriceLevel[]> {
-  let sideLevels: PriceLevel[] = await getOrderbookSideData({ ticker, side, client });
-
+  const [quantumsByPrice, lastUpdatedByPrice] = await getTickerSideBookLastUpdated(
+    client,
+    ticker,
+    side,
+  );
+  let sideLevels: PriceLevel[] = convertToPriceLevels(
+    ticker,
+    side,
+    quantumsByPrice,
+    lastUpdatedByPrice,
+  );
   // Remove any negative levels - possible due to race condition in updatePriceLevel
+  // TODO race condition!?
   sideLevels = sideLevels.filter((level: PriceLevel) => Big(level.quantums).gte(Big(0)));
   if (removeZeros) {
-    // Remove all zero levels
     sideLevels = sideLevels.filter((level: PriceLevel) => level.quantums !== '0');
   }
 
   return sideLevels;
+}
+
+export async function getTickerSideBookLastUpdated(
+  client: RedisClient,
+  ticker: string,
+  side: OrderSide,
+): Promise<{ [field: string]: string }[]> {
+  return new Promise((resolve, reject) => {
+    const callback: Callback<{ [field: string]: string }[]> = (
+      err: Error | null,
+      results: { [field: string]: string }[],
+    ) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(results);
+    };
+    client
+      .multi()
+      .hgetall(getKey(ticker, side))
+      .hgetall(getLastUpdatedKey(ticker, side))
+      .exec(callback);
+  });
+}
+
+export function getKey(ticker: string, side: OrderSide): string {
+  return `${ORDERS_CACHE_KEY_PREFIX}${ticker}/${side}`;
+}
+
+export function getLastUpdatedKey(ticker: string, side: OrderSide): string {
+  return `${getKey(ticker, side)}/lastUpdated`;
 }
 
 function convertToPriceLevels(
@@ -520,7 +381,7 @@ function convertToPriceLevels(
     });
   }
 
-  const priceKeys: string[] = _.without(quantumsKeys, ...pricesMissingData);
+  const priceKeys: string[] = _.intersection(quantumsKeys, lastUpdatedKeys);
   return _.map(priceKeys, (price: string) => {
     return {
       humanPrice: price,

@@ -1,3 +1,8 @@
+-- DEPRECATED: This script is no longer used.
+-- executing the hmgetall commands in a multi is faster, especially
+-- under concurrency in valkey, as the script executor runs on the
+-- main thread.
+
 -- Key for the hset of price levels
 local hash = KEYS[1]
 -- Key for the hset of price levels 'last updated' data
