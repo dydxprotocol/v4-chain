@@ -29,6 +29,8 @@ export function orderFillEventV1ToOrderFill(
     affiliateRevShare: event.event.affiliateRevShare,
     makerBuilderFee: event.event.makerBuilderFee,
     takerBuilderFee: event.event.takerBuilderFee,
+    makerBuilderAddress: event.event.makerBuilderAddress,
+    takerBuilderAddress: event.event.takerBuilderAddress,
   };
 }
 
@@ -46,6 +48,8 @@ export function orderFillWithLiquidityToOrderFillEventWithOrder(
     affiliateRevShare: orderFillWithLiquidity.affiliateRevShare,
     makerBuilderFee: orderFillWithLiquidity.makerBuilderFee,
     takerBuilderFee: orderFillWithLiquidity.takerBuilderFee,
+    makerBuilderAddress: orderFillWithLiquidity.makerBuilderAddress,
+    takerBuilderAddress: orderFillWithLiquidity.takerBuilderAddress,
   };
 }
 
@@ -63,5 +67,7 @@ export function orderFillWithLiquidityToOrderFillEventWithLiquidation(
     affiliateRevShare: orderFillWithLiquidity.affiliateRevShare,
     makerBuilderFee: orderFillWithLiquidity.makerBuilderFee,
     takerBuilderFee: orderFillWithLiquidity.takerBuilderFee,
+    makerBuilderAddress: orderFillWithLiquidity.makerBuilderAddress,
+    takerBuilderAddress: orderFillWithLiquidity.takerBuilderAddress,
   };
 }

@@ -63,6 +63,7 @@ func TestNewLiquidationOrderFillEvent_Success(t *testing.T) {
 		fillAmount,
 		makerFee,
 		takerFee,
+		makerBuilderFee,
 		fillAmount,
 		affiliateRevShare,
 	)

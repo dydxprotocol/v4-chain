@@ -425,6 +425,12 @@ export interface OrderFillEventV1 {
   /** fee for taker builder in USDC quantums. */
 
   takerBuilderFee: Long;
+  /** builder address for maker */
+
+  makerBuilderAddress: string;
+  /** builder address for taker */
+
+  takerBuilderAddress: string;
 }
 /**
  * OrderFillEvent message contains all the information from an order match in
@@ -463,6 +469,12 @@ export interface OrderFillEventV1SDKType {
   /** fee for taker builder in USDC quantums. */
 
   taker_builder_fee: Long;
+  /** builder address for maker */
+
+  maker_builder_address: string;
+  /** builder address for taker */
+
+  taker_builder_address: string;
 }
 /**
  * DeleveragingEvent message contains all the information for a deleveraging
@@ -2460,7 +2472,9 @@ function createBaseOrderFillEventV1(): OrderFillEventV1 {
     totalFilledTaker: Long.UZERO,
     affiliateRevShare: Long.UZERO,
     makerBuilderFee: Long.UZERO,
-    takerBuilderFee: Long.UZERO
+    takerBuilderFee: Long.UZERO,
+    makerBuilderAddress: "",
+    takerBuilderAddress: ""
   };
 }
 
@@ -2508,6 +2522,14 @@ export const OrderFillEventV1 = {
 
     if (!message.takerBuilderFee.isZero()) {
       writer.uint32(88).uint64(message.takerBuilderFee);
+    }
+
+    if (message.makerBuilderAddress !== "") {
+      writer.uint32(98).string(message.makerBuilderAddress);
+    }
+
+    if (message.takerBuilderAddress !== "") {
+      writer.uint32(106).string(message.takerBuilderAddress);
     }
 
     return writer;
@@ -2566,6 +2588,14 @@ export const OrderFillEventV1 = {
           message.takerBuilderFee = (reader.uint64() as Long);
           break;
 
+        case 12:
+          message.makerBuilderAddress = reader.string();
+          break;
+
+        case 13:
+          message.takerBuilderAddress = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2588,6 +2618,8 @@ export const OrderFillEventV1 = {
     message.affiliateRevShare = object.affiliateRevShare !== undefined && object.affiliateRevShare !== null ? Long.fromValue(object.affiliateRevShare) : Long.UZERO;
     message.makerBuilderFee = object.makerBuilderFee !== undefined && object.makerBuilderFee !== null ? Long.fromValue(object.makerBuilderFee) : Long.UZERO;
     message.takerBuilderFee = object.takerBuilderFee !== undefined && object.takerBuilderFee !== null ? Long.fromValue(object.takerBuilderFee) : Long.UZERO;
+    message.makerBuilderAddress = object.makerBuilderAddress ?? "";
+    message.takerBuilderAddress = object.takerBuilderAddress ?? "";
     return message;
   }
 

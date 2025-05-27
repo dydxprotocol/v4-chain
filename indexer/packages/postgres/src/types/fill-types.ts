@@ -46,6 +46,7 @@ export interface FillCreateObject {
   clientMetadata?: string,
   fee: string,
   affiliateRevShare: string,
+  builderAddress: string,
   builderFee: string,
 }
 
@@ -78,6 +79,7 @@ export enum FillColumns {
   clientMetadata = 'clientMetadata',
   fee = 'fee',
   affiliateRevShare = 'affiliateRevShare',
+  builderAddress = 'builderAddress',
   builderFee = 'builderFee',
 }
 

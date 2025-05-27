@@ -8,8 +8,8 @@ import (
 
 // MatchWithOrders represents a match which occurred between two orders and the amount that was matched.
 type MatchWithOrders struct {
-	MakerOrder MatchableOrder
-	TakerOrder MatchableOrder
+	MakerOrder      MatchableOrder
+	TakerOrder      MatchableOrder
 	FillAmount      satypes.BaseQuantums
 	MakerFee        int64
 	TakerFee        int64

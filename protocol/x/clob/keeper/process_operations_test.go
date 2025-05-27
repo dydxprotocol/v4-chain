@@ -2813,6 +2813,7 @@ func setupNewMockEventManager(
 						match.FillAmount,
 						match.MakerFee,
 						match.TakerFee,
+						match.MakerBuilderFee,
 						match.TotalFilledTaker,
 						big.NewInt(0),
 					),

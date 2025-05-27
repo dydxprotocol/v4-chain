@@ -569,6 +569,8 @@ export const isolatedPerpetualPositionId: string = PerpetualPositionTable.uuid(
 
 // ============== Fills ==============
 
+export const noBuilderAddress: string = '';
+
 export const defaultFill: FillCreateObject = {
   subaccountId: defaultSubaccountId,
   side: OrderSide.BUY,
@@ -586,6 +588,7 @@ export const defaultFill: FillCreateObject = {
   clientMetadata: '0',
   fee: '1.1',
   affiliateRevShare: '1.10',
+  builderAddress: noBuilderAddress,
   builderFee: '0',
 };
 
@@ -606,6 +609,7 @@ export const isolatedMarketFill: FillCreateObject = {
   clientMetadata: '0',
   fee: '1.1',
   affiliateRevShare: '0',
+  builderAddress: noBuilderAddress,
   builderFee: '0',
 };
 
@@ -626,6 +630,7 @@ export const isolatedMarketFill2: FillCreateObject = {
   clientMetadata: '0',
   fee: '1.1',
   affiliateRevShare: '0',
+  builderAddress: noBuilderAddress,
   builderFee: '0',
 };
 

@@ -118,6 +118,7 @@ export interface FillFromDatabase {
   clientMetadata?: string,
   fee: string,
   affiliateRevShare: string,
+  builderAddress?: string,
   builderFee: string,
 }
 

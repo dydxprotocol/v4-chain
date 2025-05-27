@@ -42,6 +42,7 @@ DECLARE
     order_client_metadata bigint;
     fee numeric;
     builder_fee numeric;
+    builder_address text;
     affiliate_rev_share numeric;
     affiliate_rev numeric;
     fill_amount numeric;
@@ -85,6 +86,7 @@ BEGIN
                           power(10, asset_record."atomicResolution")::numeric);
     builder_fee = dydx_trim_scale(dydx_get_builder_fee(fill_liquidity, event_data) *
                           power(10, asset_record."atomicResolution")::numeric);
+    builder_address = dydx_get_builder_address(fill_liquidity, event_data);
     affiliate_rev_share = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'affiliateRevShare') *
                                     power(10, asset_record."atomicResolution")::numeric);
 
@@ -152,7 +154,8 @@ BEGIN
         block_height, transaction_index, event_index);
     INSERT INTO fills
         ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "orderId", "size", "price", "quoteAmount",
-         "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", "builderFee")
+         "eventId", "transactionHash", "createdAt", "createdAtHeight", "clientMetadata", "fee", "affiliateRevShare", 
+         "builderFee", "builderAddress")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, fill_liquidity),
             subaccount_uuid,
             order_side,
@@ -170,7 +173,8 @@ BEGIN
             order_client_metadata,
             fee,
             affiliate_rev_share,
-            builder_fee)
+            builder_fee,
+            NULLIF(builder_address, ''))
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */

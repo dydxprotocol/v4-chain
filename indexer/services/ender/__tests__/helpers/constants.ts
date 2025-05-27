@@ -357,6 +357,8 @@ export const defaultOrderEvent: OrderFillEventV1 = {
   affiliateRevShare: Long.fromValue(0, true),
   makerBuilderFee: Long.fromValue(0, true),
   takerBuilderFee: Long.fromValue(0, true),
+  makerBuilderAddress: testConstants.noBuilderAddress,
+  takerBuilderAddress: testConstants.noBuilderAddress,
 };
 export const defaultOrder: OrderFillEventWithOrder = {
   makerOrder: defaultMakerOrder,
@@ -369,6 +371,8 @@ export const defaultOrder: OrderFillEventWithOrder = {
   affiliateRevShare: Long.fromValue(0, true),
   makerBuilderFee: Long.fromValue(0, true),
   takerBuilderFee: Long.fromValue(0, true),
+  makerBuilderAddress: testConstants.noBuilderAddress,
+  takerBuilderAddress: testConstants.noBuilderAddress,
 };
 export const defaultLiquidationEvent: OrderFillEventV1 = {
   makerOrder: defaultMakerOrder,
@@ -381,6 +385,8 @@ export const defaultLiquidationEvent: OrderFillEventV1 = {
   affiliateRevShare: Long.fromValue(0, true),
   makerBuilderFee: Long.fromValue(0, true),
   takerBuilderFee: Long.fromValue(0, true),
+  makerBuilderAddress: testConstants.noBuilderAddress,
+  takerBuilderAddress: testConstants.noBuilderAddress,
 };
 export const defaultLiquidation: OrderFillEventWithLiquidation = {
   makerOrder: defaultMakerOrder,
@@ -393,6 +399,8 @@ export const defaultLiquidation: OrderFillEventWithLiquidation = {
   affiliateRevShare: Long.fromValue(0, true),
   makerBuilderFee: Long.fromValue(0, true),
   takerBuilderFee: Long.fromValue(0, true),
+  makerBuilderAddress: testConstants.noBuilderAddress,
+  takerBuilderAddress: testConstants.noBuilderAddress,
 };
 
 export const defaultEmptySubaccountUpdate: SubaccountUpdate = {

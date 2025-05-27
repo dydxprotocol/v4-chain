@@ -161,6 +161,8 @@ export function fillToResponseObject(
     orderId: fill.orderId,
     clientMetadata: fill.clientMetadata,
     subaccountNumber,
+    builderFee: fill.builderFee,
+    builderAddress: fill.builderAddress ?? undefined,
   };
 }
 
