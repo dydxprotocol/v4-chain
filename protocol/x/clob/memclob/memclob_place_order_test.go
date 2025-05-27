@@ -3358,7 +3358,7 @@ func TestPlaceOrder_MatchOrders_WithBuilderCode(t *testing.T) {
 					RemainingSize: 5,
 				},
 			},
-			expectedCollatCheck:        []expectedMatch{
+			expectedCollatCheck: []expectedMatch{
 				{
 					makerOrder:      &constants.Order_Alice_Num0_Id2_Clob1_Sell5_Price10_GTB15,
 					takerOrder:      &constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
