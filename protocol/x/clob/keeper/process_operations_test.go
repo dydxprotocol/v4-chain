@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -628,15 +629,50 @@ func TestProcessProposerOperations(t *testing.T) {
 				},
 			},
 			preExistingStatefulOrders: []types.Order{
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15,
+			},
+			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
+				bk.On(
+					"SendCoinsFromModuleToModule",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
+					"SendCoins",
+					mock.Anything,
+					mock.Anything,
+					constants.CarlAccAddress,
+					mock.MatchedBy(func(coins sdk.Coins) bool {
+						// Carl should receive 50_000_000_000 * 10_000ppm (500_000_000) for
+						// being the builder for the taker order
+						return coins.AmountOf(
+							"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+						).Equal(sdkmath.NewInt(500_000_000))
+					}),
+				).Return(nil).Once()
+				bk.On(
+					"SendCoins",
+					mock.Anything,
+					mock.Anything,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
+					mock.Anything,
+				).Return(nil).Once()
+				bk.On(
+					"GetBalance",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(100_000_000_000)))
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
 					types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
 						Side:         types.Order_SIDE_SELL,
-						Quantums:     100,
-						Subticks:     10,
+						Quantums:     100_000_000,    // 1 BTC
+						Subticks:     50_000_000_000, // $50,000
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
 						BuilderCodeParameters: &types.BuilderCodeParameters{
 							BuilderAddress: constants.Carl_Num0.Owner,
@@ -648,8 +684,8 @@ func TestProcessProposerOperations(t *testing.T) {
 					&types.Order{
 						OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
 						Side:         types.Order_SIDE_SELL,
-						Quantums:     100,
-						Subticks:     10,
+						Quantums:     100_000_000,
+						Subticks:     50_000_000_000,
 						GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
 						BuilderCodeParameters: &types.BuilderCodeParameters{
 							BuilderAddress: constants.Carl_Num0.Owner,
@@ -658,8 +694,8 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 					[]types.MakerFill{
 						{
-							FillAmount:   100,
-							MakerOrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.GetOrderId(),
+							FillAmount:   100_000_000,
+							MakerOrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15.GetOrderId(),
 						},
 					},
 				),
@@ -670,40 +706,45 @@ func TestProcessProposerOperations(t *testing.T) {
 						TakerOrder: &types.Order{
 							OrderId:      types.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
 							Side:         types.Order_SIDE_SELL,
-							Quantums:     100,
-							Subticks:     10,
+							Quantums:     100_000_000,    // 1 BTC
+							Subticks:     50_000_000_000, // $50,000
 							GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 25},
 							BuilderCodeParameters: &types.BuilderCodeParameters{
 								BuilderAddress: constants.Carl_Num0.Owner,
 								FeePpm:         10_000,
 							},
 						},
-						MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
-						FillAmount: 100,
+						MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15,
+						FillAmount: 100_000_000,
+						MakerFee:   10_000_000,
+						TakerFee:   25_000_000,
 					},
-					TotalFilledMaker: 100,
-					TotalFilledTaker: 100,
+					TotalFilledMaker: 100_000_000,
+					TotalFilledTaker: 100_000_000,
 				},
 			},
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
 				OrderIdsFilledInLastBlock: []types.OrderId{
 					{SubaccountId: constants.Bob_Num0, ClientId: 14, ClobPairId: 0},
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.GetOrderId(),
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15.GetOrderId(),
 				},
 				RemovedStatefulOrderIds: []types.OrderId{
-					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.GetOrderId(),
+					constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15.GetOrderId(),
 				},
 				BlockHeight: blockHeight,
 			},
 			expectedQuoteBalances: map[satypes.SubaccountId]int64{
-				constants.Alice_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
-				constants.Bob_Num0:   big.NewInt(100_000_000_000 - 1).Int64(), // builder fee applied
+				constants.Alice_Num0: big.NewInt(100_000_000_000 - 50_010_000_000).Int64(),
+				constants.Bob_Num0: big.NewInt(100_000_000_000 +
+					50_000_000_000 -
+					500_000_000 -
+					25_000_000).Int64(), // builder fee applied
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
-						big.NewInt(1_000_000_000-100),
+						big.NewInt(1_000_000_000-100_000_000),
 						big.NewInt(0),
 						big.NewInt(0),
 					),
@@ -711,7 +752,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Alice_Num0: {
 					testutil.CreateSinglePerpetualPosition(
 						0,
-						big.NewInt(1_000_000_000+100),
+						big.NewInt(1_000_000_000+100_000_000),
 						big.NewInt(0),
 						big.NewInt(0),
 					),
