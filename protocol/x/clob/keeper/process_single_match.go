@@ -399,7 +399,7 @@ func (k Keeper) persistMatchedOrders(
 		makerBuilderFeeQuantums = makerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
 		bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, makerBuilderFeeQuantums)
 
-		makerBuilderAddress = makerBuilderCodeParams.BuilderAddress
+		makerBuilderAddress = makerBuilderCodeParams.GetBuilderAddress()
 	}
 
 	if !matchWithOrders.TakerOrder.IsLiquidation() {
@@ -407,7 +407,7 @@ func (k Keeper) persistMatchedOrders(
 		takerBuilderFeeQuantums = takerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, takerBuilderFeeQuantums)
 
-		takerBuilderAddress = takerBuilderCodeParams.BuilderAddress
+		takerBuilderAddress = takerBuilderCodeParams.GetBuilderAddress()
 	}
 
 	// Create the subaccount update.
