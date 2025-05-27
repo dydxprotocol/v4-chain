@@ -491,9 +491,20 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 
 	offchainUpdates = types.NewOffchainUpdates()
 
+	if order.OrderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+		fmt.Println("tian, in PlaceOrder, before validateNewOrder", "order", order)
+	}
+
 	// Validate the order and return an error if any validation fails.
 	if err := m.validateNewOrder(ctx, order); err != nil {
+		if order.OrderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+			fmt.Println("tian, in PlaceOrder, validateNewOrder has err", err)
+		}
 		return 0, 0, offchainUpdates, err
+	}
+
+	if order.OrderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+		fmt.Println("tian, in PlaceOrder, after validateNewOrder", "order", order)
 	}
 
 	if m.generateOffchainUpdates {
@@ -1470,6 +1481,9 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 ) (
 	err error,
 ) {
+	if order.OrderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+		fmt.Println("tian, in validateNewOrder", "order", order)
+	}
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),
@@ -1518,9 +1532,17 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		existingPositionSize := m.clobKeeper.GetStatePosition(ctx, orderId.SubaccountId, order.GetClobPairId())
 		orderSize := order.GetBigQuantums()
 
+		if orderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+			fmt.Println("tian, in validateNewOrder, reduce only order", "orderId", orderId, "orderSize", orderSize,
+				"existingPositionSize", existingPositionSize)
+		}
+
 		// If the reduce-only order is not on the opposite side of the existing position size,
 		// cancel the order by returning an error.
 		if orderSize.Sign()*existingPositionSize.Sign() != -1 {
+			if orderId.SubaccountId.Owner == "dydx1mfy7wtp4wlxq3wl9kex54z0gaqywytegdqxpjv" {
+				fmt.Println("tian, in validateNewOrder, reduce only order, returning error reduce only would increase position size")
+			}
 			return types.ErrReduceOnlyWouldIncreasePositionSize
 		}
 	}
@@ -1777,6 +1799,7 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			// would have increased the maker's position size and we need to find the next best maker
 			// order. This can happen if the maker has previous matches within this matching loop
 			// that changed their position side, meaning all their resting reduce-only orders are invalid.
+			fmt.Println("tian, in mustPerformTakerOrderMatching", "maker order is reduce only", "maker order", makerOrder.Order, "resizedMatchAmount", resizedMatchAmount)
 			if resizedMatchAmount == 0 {
 				// TODO(DEC-1415): Revert this reduce-only bug patch.
 				makerOrdersToRemove = append(

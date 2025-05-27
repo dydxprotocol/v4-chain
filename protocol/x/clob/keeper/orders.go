@@ -1018,6 +1018,7 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 	// Validate that the reduce-only order is on the opposite side of the existing position.
 	if order.IsBuy() {
 		if currentPositionSize.Sign() != -1 {
+			fmt.Println("tian, in MustValidateReduceOnlyOrder, currentPositionSize", currentPositionSize, "order is buy")
 			return errorsmod.Wrapf(
 				types.ErrReduceOnlyWouldIncreasePositionSize,
 				"Reduce-only order failed validation while matching. Order: (%+v), position-size: (%+v)",
@@ -1027,6 +1028,7 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 		}
 	} else {
 		if currentPositionSize.Sign() != 1 {
+			fmt.Println("tian, in MustValidateReduceOnlyOrder, currentPositionSize", currentPositionSize, "order is sell")
 			return errorsmod.Wrapf(
 				types.ErrReduceOnlyWouldIncreasePositionSize,
 				"Reduce-only order failed validation while matching. Order: (%+v), position-size: (%+v)",

@@ -19,6 +19,7 @@ func ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
 	case clobtypes.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED:
 		reason = sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
 	case clobtypes.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
+		fmt.Println("tian, in ConvertOrderRemovalReasonToIndexerOrderRemovalReason, invalid reduce only")
 		reason = sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE
 	case clobtypes.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
 		reason = sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER
@@ -48,6 +49,7 @@ func GetOrderRemovalReason(
 ) (sharedtypes.OrderRemovalReason, error) {
 	switch {
 	case errors.Is(orderError, clobtypes.ErrReduceOnlyWouldIncreasePositionSize):
+		fmt.Println("tian, in GetOrderRemovalReason, error is reduce only would increase position size")
 		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE, nil
 	case errors.Is(orderError, clobtypes.ErrPostOnlyWouldCrossMakerOrder):
 		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER, nil
@@ -67,6 +69,7 @@ func GetOrderRemovalReason(
 	case clobtypes.ImmediateOrCancelWouldRestOnBook:
 		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK, nil
 	case clobtypes.ReduceOnlyResized:
+		fmt.Println("tian, in GetOrderRemovalReason, status is reduce only resized")
 		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE, nil
 	case clobtypes.ViolatesIsolatedSubaccountConstraints:
 		return sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS, nil
