@@ -588,6 +588,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
 				); success {
+					fmt.Println("tian, in PlaceStatefulOrdersFromLastBlock, add remove message", "orderId", order.OrderId, "message", message)
 					existingOffchainUpdates.AddRemoveMessage(order.OrderId, message)
 				}
 			}

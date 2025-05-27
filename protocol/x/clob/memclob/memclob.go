@@ -148,6 +148,7 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 			indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 		); success {
+			fmt.Println("tian, in CancelOrder, add remove message line 151", "orderIdToCancel", orderIdToCancel, "message", message)
 			offchainUpdates.AddRemoveMessage(orderIdToCancel, message)
 		}
 	}
@@ -508,6 +509,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
 				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
+				fmt.Println("tian, in PlaceOrder, add remove message line 512", "orderId", orderId, "message", message)
 				offchainUpdates.AddRemoveMessage(orderId, message)
 			}
 		}
@@ -559,6 +561,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				err,
 				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
+				fmt.Println("tian, in PlaceOrder, add remove message line 564", "orderId", order.OrderId, "message", message)
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
 		}
@@ -586,6 +589,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				nil,
 				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
+				fmt.Println("tian, in PlaceOrder, add remove message line 592", "orderId", order.OrderId, "message", message)
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
 		}
@@ -636,6 +640,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				nil,
 				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
+				fmt.Println("tian, in PlaceOrder, add remove message line 643", "orderId", order.OrderId, "message", message)
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
 		}
@@ -837,6 +842,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 				reason,
 				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
+				fmt.Println("tian, in matchOrder, add remove message line 844", "makerOrderId", makerOrderId, "message", message)
 				offchainUpdates.AddRemoveMessage(makerOrderId, message)
 			}
 		}
@@ -1221,6 +1227,7 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
 			); success {
+				fmt.Println("tian, in GenerateOffchainUpdatesForReplayPlaceOrder, add remove message line 1230", "orderId", orderId, "message", message)
 				existingOffchainUpdates.AddRemoveMessage(orderId, message)
 			}
 		}
@@ -1355,6 +1362,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
 				); success {
+					fmt.Println("tian, in PurgeInvalidMemclobState, add remove message line 1365", "statefulOrderId", statefulOrderId, "message", message)
 					existingOffchainUpdates.AddRemoveMessage(statefulOrderId, message)
 				}
 			}
@@ -1375,6 +1383,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 						indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 						ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
 					); success {
+						fmt.Println("tian, in PurgeInvalidMemclobState, add remove message line 1386", "shortTermOrderId", shortTermOrderId, "message", message)
 						existingOffchainUpdates.AddRemoveMessage(shortTermOrderId, message)
 					}
 				}
@@ -2239,6 +2248,7 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 						indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
 						ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 					); success {
+						fmt.Println("tian, in maybeCancelReduceOnlyOrders, add remove message line 2251", orderId, message)
 						offchainUpdates.AddRemoveMessage(orderId, message)
 					}
 				}

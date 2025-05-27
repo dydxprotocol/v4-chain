@@ -313,6 +313,7 @@ func PrepareCheckState(
 
 	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "gated withdrawals")
 
+	fmt.Println("tian, in PrepareCheckState", "block height", ctx.BlockHeight(), "offchainUpdates", len(offchainUpdates.Messages))
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 

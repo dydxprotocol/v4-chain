@@ -364,6 +364,7 @@ export class OrderRemoveHandler extends Handler {
         canceledOrder,
         perpetualMarket,
         'block height': blockHeightRefresher.getLatestBlockHeight(),
+        'state remaining quantums': stateRemainingQuantums.toFixed(),
       })
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
