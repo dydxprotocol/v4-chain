@@ -84,7 +84,7 @@ describe('statefulOrderPlacementHandler', () => {
     goodTilBlock: undefined,
     goodTilBlockTime,
     builderCodeParams: {
-      builderAddress: "0x123",
+      builderAddress: 'dydx123',
       feePpm: 1000,
     },
   };
