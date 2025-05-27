@@ -85,7 +85,7 @@ BEGIN
                           power(10, asset_record."atomicResolution")::numeric);
     builder_fee = dydx_trim_scale(dydx_get_builder_fee(fill_liquidity, event_data) *
                                   power(10, asset_record."atomicResolution")::numeric);
-    builder_address = dydx_get_builder_address_from_liquidity(event_data);
+    builder_address = dydx_get_builder_address(fill_liquidity, event_data);
     affiliate_rev_share = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'affiliateRevShare') *
                                     power(10, asset_record."atomicResolution")::numeric);
     order_price = dydx_trim_scale(dydx_from_jsonlib_long(order_->'subticks') *
