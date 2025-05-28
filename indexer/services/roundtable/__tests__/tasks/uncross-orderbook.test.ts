@@ -33,13 +33,13 @@ async function updatePriceLevelWithSleep({
   sizeDeltaInQuantums: string,
   client: RedisClient,
 }) {
-  await OrderbookLevelsCache.updatePriceLevel({
+  await OrderbookLevelsCache.updatePriceLevel(
     ticker,
     side,
     humanPrice,
     sizeDeltaInQuantums,
     client,
-  });
+  );
   await sleep(1000); // sleep for 1 second
 }
 
@@ -98,31 +98,37 @@ describe('uncross-orderbook', () => {
       [],
     );
     const market: PerpetualMarketFromDatabase = perpetualMarkets[0];
-    await OrderbookLevelsCache.updatePriceLevel({
-      ticker: market.ticker,
-      side: OrderSide.BUY,
-      humanPrice: '45100',
-      sizeDeltaInQuantums: '2000',
-      client: redisClient,
-    });
-    await OrderbookLevelsCache.updatePriceLevel({
-      ticker: market.ticker,
-      side: OrderSide.SELL,
-      humanPrice: '45000',
-      sizeDeltaInQuantums: '1000',
-      client: redisClient,
-    });
+    await OrderbookLevelsCache.updatePriceLevel(
+      market.ticker,
+      OrderSide.BUY,
+      '45100',
+      '2000',
+      redisClient,
+    );
+    await OrderbookLevelsCache.updatePriceLevel(
+      market.ticker,
+      OrderSide.SELL,
+      '45000',
+      '1000',
+      redisClient,
+    );
 
     await runTask();
 
-    expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).toHaveBeenCalledWith(expect.objectContaining({
-      side: OrderSide.BUY,
-      humanPrice: '45100',
-    }));
-    expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).not.toHaveBeenCalledWith(expect.objectContaining({
-      side: OrderSide.SELL,
-      humanPrice: '45000',
-    }));
+    expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).toHaveBeenCalledWith(
+      expect.any(String),
+      OrderSide.BUY,
+      '45100',
+      expect.any(Number),
+      expect.any(RedisClient),
+    );
+    expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).not.toHaveBeenCalledWith(
+      expect.any(String),
+      OrderSide.SELL,
+      '45000',
+      expect.any(Number),
+      expect.any(RedisClient),
+    );
   });
 
   it('removes first updated when there exist multiple crossed bid levels', async () => {
@@ -160,10 +166,12 @@ describe('uncross-orderbook', () => {
     // the highest bid at price level 45200 was updated after the ask at price level 45000,
     // so the ask at price level 45000 should be removed.
     expect(require('@dydxprotocol-indexer/redis/build/src/caches/orderbook-levels-cache').deleteStalePriceLevel).toHaveBeenCalledWith(
-      expect.objectContaining({
-        side: OrderSide.SELL,
-        humanPrice: '45000',
-      }));
+      expect.any(String),
+      OrderSide.SELL,
+      '45000',
+      expect.any(Number),
+      expect.any(RedisClient),
+    );
   });
 
   it('removes multiple crossed bid levels', async () => {
@@ -213,20 +221,20 @@ describe('uncross-orderbook', () => {
       [],
     );
     const market: PerpetualMarketFromDatabase = perpetualMarkets[0];
-    await OrderbookLevelsCache.updatePriceLevel({
-      ticker: market.ticker,
-      side: OrderSide.BUY,
-      humanPrice: '45100',
-      sizeDeltaInQuantums: '2000',
-      client: redisClient,
-    });
-    await OrderbookLevelsCache.updatePriceLevel({
-      ticker: market.ticker,
-      side: OrderSide.SELL,
-      humanPrice: '45000',
-      sizeDeltaInQuantums: '1000',
-      client: redisClient,
-    });
+    await OrderbookLevelsCache.updatePriceLevel(
+      market.ticker,
+      OrderSide.BUY,
+      '45100',
+      '2000',
+      redisClient,
+    );
+    await OrderbookLevelsCache.updatePriceLevel(
+      market.ticker,
+      OrderSide.SELL,
+      '45000',
+      '1000',
+      redisClient,
+    );
 
     await runTask();
 
