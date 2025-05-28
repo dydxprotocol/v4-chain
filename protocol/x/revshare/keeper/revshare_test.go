@@ -699,7 +699,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 			},
 		},
 		{
-			name:                     "No rev shares",
+			name: "No rev shares",
 			expectedRevSharesForFill: types.RevSharesForFill{
 				AllRevShares:      []types.RevShare{},
 				AffiliateRevShare: nil,
