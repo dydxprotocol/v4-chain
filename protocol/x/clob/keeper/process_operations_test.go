@@ -714,10 +714,10 @@ func TestProcessProposerOperations(t *testing.T) {
 								FeePpm:         10_000,
 							},
 						},
-						MakerOrder: &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15,
-						FillAmount: 100_000_000,
-						MakerFee:   10_000_000,
-						TakerFee:   25_000_000,
+						MakerOrder:      &constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15,
+						FillAmount:      100_000_000,
+						MakerFee:        10_000_000,
+						TakerFee:        25_000_000,
 						TakerBuilderFee: 500_000_000,
 					},
 					TotalFilledMaker: 100_000_000,
@@ -738,7 +738,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Alice_Num0: big.NewInt(100_000_000_000 - 50_010_000_000).Int64(),
 				constants.Bob_Num0: big.NewInt(100_000_000_000 +
 					50_000_000_000 -
-					500_000_000 -  // builder fee applied
+					500_000_000 - // builder fee applied
 					25_000_000).Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{

@@ -8,7 +8,7 @@ export async function up(knex: Knex): Promise<void> {
 
   await knex.schema.alterTable('fills', (table) => {
     table.string('builderAddress').nullable().defaultTo(null);
-    table.bigInteger('builderFee').nullable().defaultTo(null);
+    table.decimal('builderFee').nullable().defaultTo(null);
   });
 }
 
