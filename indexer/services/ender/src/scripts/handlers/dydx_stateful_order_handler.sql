@@ -69,9 +69,9 @@ BEGIN
         END CASE;
 
         CASE
-            WHEN order_->'builderCodeParams' IS NOT NULL THEN
-                order_record."builderAddress" = jsonb_extract_path_text(order_, 'builderCodeParams', 'builderAddress');
-                order_record."feePpm" = jsonb_extract_path_text(order_, 'builderCodeParams', 'feePpm')::bigint;
+            WHEN order_->'builderCodeParameters' IS NOT NULL THEN
+                order_record."builderAddress" = jsonb_extract_path_text(order_, 'builderCodeParameters', 'builderAddress');
+                order_record."feePpm" = jsonb_extract_path_text(order_, 'builderCodeParameters', 'feePpm')::bigint;
             ELSE
                 order_record."builderAddress" = null;
                 order_record."feePpm" = null;
