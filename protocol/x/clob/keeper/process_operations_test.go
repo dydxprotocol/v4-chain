@@ -718,6 +718,7 @@ func TestProcessProposerOperations(t *testing.T) {
 						FillAmount: 100_000_000,
 						MakerFee:   10_000_000,
 						TakerFee:   25_000_000,
+						TakerBuilderFee: 500_000_000,
 					},
 					TotalFilledMaker: 100_000_000,
 					TotalFilledTaker: 100_000_000,
@@ -737,8 +738,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Alice_Num0: big.NewInt(100_000_000_000 - 50_010_000_000).Int64(),
 				constants.Bob_Num0: big.NewInt(100_000_000_000 +
 					50_000_000_000 -
-					500_000_000 -
-					25_000_000).Int64(), // builder fee applied
+					500_000_000 -  // builder fee applied
+					25_000_000).Int64(),
 			},
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Bob_Num0: {
