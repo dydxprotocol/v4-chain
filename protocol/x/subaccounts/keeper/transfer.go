@@ -427,15 +427,13 @@ func (k Keeper) TransferInsuranceFundPayments(
 func (k Keeper) TransferBuilderFees(
 	ctx sdk.Context,
 	productId uint32,
-	builderCodeParams clobtypes.BuilderCodeParameters,
-	fillQuantums *big.Int,
+	builderFeeQuantums *big.Int,
+	builderAddress string,
 ) error {
 	collateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, productId)
 	if err != nil {
 		return err
 	}
-
-	builderFeeQuantums := builderCodeParams.GetBuilderFee(fillQuantums)
 
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
@@ -446,7 +444,7 @@ func (k Keeper) TransferBuilderFees(
 		// Panic if USDC does not exist.
 		panic(err)
 	}
-	recipient, err := sdk.AccAddressFromBech32(builderCodeParams.BuilderAddress)
+	recipient, err := sdk.AccAddressFromBech32(builderAddress)
 	if err != nil {
 		return err
 	}

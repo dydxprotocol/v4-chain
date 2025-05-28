@@ -80,8 +80,8 @@ type SubaccountsKeeper interface {
 	TransferBuilderFees(
 		ctx sdk.Context,
 		productId uint32,
-		builderCodeParams BuilderCodeParameters,
-		quantums *big.Int,
+		builderFeeQuantums *big.Int,
+		builderAddress string,
 	) error
 	GetInsuranceFundBalance(
 		ctx sdk.Context,

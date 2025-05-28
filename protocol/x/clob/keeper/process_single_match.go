@@ -495,13 +495,23 @@ func (k Keeper) persistMatchedOrders(
 	// Transfer builder fees for taker and maker builders if they exist
 	if containsBuilderParams(matchWithOrders.TakerOrder) {
 		takerBuilder := matchWithOrders.TakerOrder.MustGetOrder().BuilderCodeParameters
-		if err := k.subaccountsKeeper.TransferBuilderFees(ctx, perpetualId, *takerBuilder, bigFillQuoteQuantums); err != nil {
+		takerBuilderFeeQuantums := takerBuilder.GetBuilderFee(bigFillQuoteQuantums)
+		if err := k.subaccountsKeeper.TransferBuilderFees(ctx,
+			perpetualId,
+			takerBuilderFeeQuantums,
+			takerBuilder.BuilderAddress,
+		); err != nil {
 			return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 		}
 	}
 	if containsBuilderParams(matchWithOrders.MakerOrder) {
 		makerBuilder := matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
-		if err := k.subaccountsKeeper.TransferBuilderFees(ctx, perpetualId, *makerBuilder, bigFillQuoteQuantums); err != nil {
+		makerBuilderFeeQuantums := makerBuilder.GetBuilderFee(bigFillQuoteQuantums)
+		if err := k.subaccountsKeeper.TransferBuilderFees(ctx,
+			perpetualId,
+			makerBuilderFeeQuantums,
+			makerBuilder.BuilderAddress,
+		); err != nil {
 			return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 		}
 	}
