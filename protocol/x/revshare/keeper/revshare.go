@@ -162,26 +162,51 @@ func (k Keeper) GetAllRevShares(
 	fill clobtypes.FillForProcess,
 	affiliatesWhitelistMap map[string]uint32,
 ) (types.RevSharesForFill, error) {
-	feeSourceToQuoteQuantums, feeSourceToRevSharePpm := buildRevShareToFeeSourceMaps()
+	revShares := []types.RevShare{}
+	feeSourceToQuoteQuantums := make(map[types.RevShareFeeSource]*big.Int)
+	feeSourceToRevSharePpm := make(map[types.RevShareFeeSource]uint32)
+	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = big.NewInt(0)
+	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = 0
+	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = big.NewInt(0)
+	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = 0
 
-	// get the protocol rev shares
-	totalFees := big.NewInt(0).Add(fill.TakerFeeQuoteQuantums, fill.MakerFeeQuoteQuantums)
-	revShares, affiliateRevShare, err := k.getProtocolRevShares(
-		ctx,
-		fill,
-		affiliatesWhitelistMap,
-		totalFees,
-	)
+	totalFeesShared := big.NewInt(0)
+	takerFees := fill.TakerFeeQuoteQuantums
+	makerFees := fill.MakerFeeQuoteQuantums
+	netFees := big.NewInt(0).Add(takerFees, makerFees)
+
+	// when net fee is zero, no rev share is generated from the fill
+	if netFees.Sign() == 0 {
+		return types.RevSharesForFill{}, nil
+	}
+
+	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
+	if err != nil {
+		return types.RevSharesForFill{}, err
+	}
+	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
+	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
+		return types.RevSharesForFill{}, types.ErrAffiliateFeesSharedGreaterThanOrEqualToNetFees
+	}
+
+	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
+	if err != nil {
+		return types.RevSharesForFill{}, err
+	}
+	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
 
-	if len(revShares) == 0 {
-		// if there are no rev shares, then exit early
-		return types.RevSharesForFill{}, nil
-	}
+	revShares = append(revShares, affiliateRevShares...)
+	revShares = append(revShares, unconditionalRevShares...)
+	revShares = append(revShares, marketMapperRevShares...)
 
-	totalFeesShared := big.NewInt(0)
+	var affiliateRevShare *types.RevShare
+	if len(affiliateRevShares) > 0 {
+		// There should only be one affiliate rev share per fill
+		affiliateRevShare = &affiliateRevShares[0]
+	}
 
 	for _, revShare := range revShares {
 		totalFeesShared.Add(totalFeesShared, revShare.QuoteQuantums)
@@ -193,9 +218,8 @@ func (k Keeper) GetAllRevShares(
 		// Add the rev share ppm to the total for the fee source
 		feeSourceToRevSharePpm[revShare.RevShareFeeSource] += revShare.RevSharePpm
 	}
-
-	//check total fees shared is less than or equal to the total (protocol + builder) fees
-	if totalFeesShared.Cmp(totalFees) > 0 {
+	//check total fees shared is less than or equal to net fees
+	if totalFeesShared.Cmp(netFees) > 0 {
 		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
 
@@ -205,69 +229,6 @@ func (k Keeper) GetAllRevShares(
 		FeeSourceToRevSharePpm:   feeSourceToRevSharePpm,
 		AllRevShares:             revShares,
 	}, nil
-}
-
-func buildRevShareToFeeSourceMaps() (
-	map[types.RevShareFeeSource]*big.Int,
-	map[types.RevShareFeeSource]uint32,
-) {
-	feeSourceToQuoteQuantums := make(map[types.RevShareFeeSource]*big.Int)
-	feeSourceToRevSharePpm := make(map[types.RevShareFeeSource]uint32)
-
-	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = big.NewInt(0)
-	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = 0
-
-	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = big.NewInt(0)
-	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = 0
-
-	return feeSourceToQuoteQuantums, feeSourceToRevSharePpm
-}
-
-// getProtocolRevShares returns the protocol rev shares for the fill
-// where the protocol fees are partitioned from the fill.
-// These rev shares are partitioned from the fill based on the affiliate rev shares,
-// unconditional rev shares, and market mapper rev shares.
-func (k Keeper) getProtocolRevShares(
-	ctx sdk.Context,
-	fill clobtypes.FillForProcess,
-	affiliatesWhitelistMap map[string]uint32,
-	netFees *big.Int,
-) ([]types.RevShare, *types.RevShare, error) {
-	revShares := []types.RevShare{}
-	if netFees.Sign() == 0 {
-		// when net fee is zero, no protocol rev share is generated from the fill
-		return nil, nil, nil
-	}
-
-	affiliateRevShares, affiliateFeesShared, err := k.getAffiliateRevShares(ctx, fill, affiliatesWhitelistMap)
-	if err != nil {
-		return nil, nil, err
-	}
-	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
-	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
-		return nil, nil, types.ErrAffiliateFeesSharedGreaterThanOrEqualToNetFees
-	}
-
-	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
-	if err != nil {
-		return nil, nil, err
-	}
-	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	revShares = append(revShares, affiliateRevShares...)
-	revShares = append(revShares, unconditionalRevShares...)
-	revShares = append(revShares, marketMapperRevShares...)
-
-	var affiliateRevShare *types.RevShare
-	if len(affiliateRevShares) > 0 {
-		// there should only be one affiliate rev share per fill
-		affiliateRevShare = &affiliateRevShares[0]
-	}
-
-	return revShares, affiliateRevShare, nil
 }
 
 func (k Keeper) getAffiliateRevShares(
