@@ -34,20 +34,20 @@ export default async function runTask(): Promise<void> {
 
     const removedLevels: boolean [] = await Promise.all(_.flatten([
       _.map(zeroBidLevels, (zeroBidLevel: PriceLevel): Promise<boolean> => {
-        return OrderbookLevelsCache.deleteZeroPriceLevel({
-          ticker: perpetualMarket.ticker,
-          side: OrderSide.BUY,
-          humanPrice: zeroBidLevel.humanPrice,
-          client: redisClient,
-        });
+        return OrderbookLevelsCache.deleteZeroPriceLevel(
+          perpetualMarket.ticker,
+          OrderSide.BUY,
+          zeroBidLevel.humanPrice,
+          redisClient,
+        );
       }),
       _.map(zeroAskLevels, (zeroAskLevel: PriceLevel): Promise<boolean> => {
-        return OrderbookLevelsCache.deleteZeroPriceLevel({
-          ticker: perpetualMarket.ticker,
-          side: OrderSide.SELL,
-          humanPrice: zeroAskLevel.humanPrice,
-          client: redisClient,
-        });
+        return OrderbookLevelsCache.deleteZeroPriceLevel(
+          perpetualMarket.ticker,
+          OrderSide.SELL,
+          zeroAskLevel.humanPrice,
+          redisClient,
+        );
       }),
     ]));
 

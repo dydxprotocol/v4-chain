@@ -542,16 +542,16 @@ export class OrderRemoveHandler extends Handler {
     removeOrderResult: RemoveOrderResult,
   ): Promise<number> {
     const redisOrder: RedisOrder = removeOrderResult.removedOrder!;
-    return OrderbookLevelsCache.updatePriceLevel({
-      ticker: redisOrder.ticker,
-      side: protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
-      humanPrice: redisOrder.price,
-      sizeDeltaInQuantums: this.getSizeDeltaInQuantums(
+    return OrderbookLevelsCache.updatePriceLevel(
+      redisOrder.ticker,
+      protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
+      redisOrder.price,
+      this.getSizeDeltaInQuantums(
         removeOrderResult,
         redisOrder,
       ),
-      client: redisClient,
-    });
+      redisClient,
+    );
   }
 
   protected getSizeDeltaInQuantums(

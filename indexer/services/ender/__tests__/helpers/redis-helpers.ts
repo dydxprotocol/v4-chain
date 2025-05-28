@@ -40,11 +40,11 @@ export async function updatePriceLevel(
 ): Promise<void> {
   const quantums: string = '30';
 
-  await OrderbookLevelsCache.updatePriceLevel({
+  await OrderbookLevelsCache.updatePriceLevel(
     ticker,
     side,
-    humanPrice: price,
-    sizeDeltaInQuantums: quantums,
-    client: redisClient,
-  });
+    price,
+    quantums,
+    redisClient,
+  );
 }

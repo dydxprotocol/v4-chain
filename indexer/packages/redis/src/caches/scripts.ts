@@ -56,7 +56,6 @@ export const deleteZeroPriceLevelScript: LuaScript = newLuaScript('deleteZeroPri
 export const deleteStalePriceLevelScript: LuaScript = newLuaScript('deleteStalePriceLevel', '../scripts/delete_stale_price_level.lua');
 // Lua Scripts for updating/retrieving the orderbook levels, keeping the lastUpdated cache in sync
 export const incrementOrderbookLevelScript: LuaScript = newLuaScript('incrementOrderbookLevel', '../scripts/increment_orderbook_level.lua');
-export const getOrderbookSideScript: LuaScript = newLuaScript('getOrderbookSide', '../scripts/get_orderbook_side.lua');
 export const updateOrderScript: LuaScript = newLuaScript('updateOrder', '../scripts/update_order.lua');
 export const placeOrderScript: LuaScript = newLuaScript('placeOrder', '../scripts/place_order.lua');
 export const removeOrderScript: LuaScript = newLuaScript('removeOrder', '../scripts/remove_order.lua');
@@ -70,7 +69,6 @@ export const allLuaScripts: LuaScript[] = [
   deleteZeroPriceLevelScript,
   deleteStalePriceLevelScript,
   incrementOrderbookLevelScript,
-  getOrderbookSideScript,
   updateOrderScript,
   placeOrderScript,
   removeOrderScript,
