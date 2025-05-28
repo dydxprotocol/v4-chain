@@ -1276,6 +1276,15 @@ var (
 		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_IOC,
 		ReduceOnly:   true,
 	}
+	Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Alice_Num1, ClientId: 0, ClobPairId: 0},
+		Side:         clobtypes.Order_SIDE_SELL,
+		Quantums:     100_000_000,
+		Subticks:     50_000_000_000,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_IOC,
+		ReduceOnly:   true,
+	}
 
 	// Reduce-only orders.
 	Order_Alice_Num1_Id1_Clob0_Sell10_Price15_GTB20_RO = clobtypes.Order{
