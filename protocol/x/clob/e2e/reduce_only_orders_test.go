@@ -564,7 +564,7 @@ func TestClosePositionOrder(t *testing.T) {
 		expectedSubaccounts      []satypes.Subaccount
 		expectedOffchainMessages []msgsender.Message
 	}{
-		"Close position order (IOC reduce-only) fully matches short term order same block, maker order fully filled, match in block": {
+		"Close position order (IOC reduce-only) fully filled, maker order fully filled, match in block": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_100000USD,
 				// Initialize Alice subaccount 1 with a 1 BTC long position.
@@ -663,7 +663,7 @@ func TestClosePositionOrder(t *testing.T) {
 				}),
 			},
 		},
-		"Close position order (IOC reduce-only) fully matches short term order same block, maker order partially filled, match in block": {
+		"Close position order (IOC reduce-only) fully filled, maker order partially filled, match in block": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_100000USD,
 				// Initialize Alice subaccount 1 with a 1 BTC long position.
@@ -768,7 +768,7 @@ func TestClosePositionOrder(t *testing.T) {
 				),
 			},
 		},
-		"Close position order (IOC reduce-only) fully matches short term order same block, maker order fully filled, match not in block": {
+		"Close position order (IOC reduce-only) fully filled, maker order fully filled, match not in block": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_100000USD,
 				// Initialize Alice subaccount 1 with a 1 BTC long position.
