@@ -611,7 +611,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 						},
 						OrderFlags: OrderIdFlags_LongTerm,
 					},
-					Side: Order_SIDE_BUY,
+					Side:     Order_SIDE_BUY,
 					Quantums: uint64(42),
 					Subticks: uint64(10),
 					GoodTilOneof: &Order_GoodTilBlockTime{
@@ -619,7 +619,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 					},
 					BuilderCodeParameters: &BuilderCodeParameters{
 						BuilderAddress: "invalid_builder_address",
-						FeePpm:     1000,
+						FeePpm:         1000,
 					},
 				},
 			},
@@ -635,7 +635,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 						},
 						OrderFlags: OrderIdFlags_LongTerm,
 					},
-					Side: Order_SIDE_BUY,
+					Side:     Order_SIDE_BUY,
 					Quantums: uint64(42),
 					Subticks: uint64(10),
 					GoodTilOneof: &Order_GoodTilBlockTime{
@@ -659,7 +659,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 						},
 						OrderFlags: OrderIdFlags_LongTerm,
 					},
-					Side: Order_SIDE_BUY,
+					Side:     Order_SIDE_BUY,
 					Quantums: uint64(42),
 					Subticks: uint64(10),
 					GoodTilOneof: &Order_GoodTilBlockTime{
