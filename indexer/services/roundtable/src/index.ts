@@ -10,6 +10,7 @@ import {
   connect as connectToRedis,
 } from './helpers/redis';
 import aggregateTradingRewardsTasks from './tasks/aggregate-trading-rewards';
+import updateFundingPaymentsTask from './tasks/update-funding-payments';
 import cacheOrderbookMidPrices from './tasks/cache-orderbook-mid-prices';
 import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
 import createLeaderboardTask from './tasks/create-leaderboard';
@@ -286,6 +287,13 @@ async function start(): Promise<void> {
       cacheOrderbookMidPrices,
       'cache-orderbook-mid-prices',
       config.LOOPS_INTERVAL_MS_CACHE_ORDERBOOK_MID_PRICES,
+    );
+  }
+  if (config.LOOPS_ENABLED_UPDATE_FUNDING_PAYMENTS) {
+    startLoop(
+      updateFundingPaymentsTask,
+      'update-funding-payments',
+      config.LOOPS_INTERVAL_MS_UPDATE_FUNDING_PAYMENTS,
     );
   }
 
