@@ -120,7 +120,8 @@ export async function placeOrder({
     getOrderDataCacheKey(redisOrder.order!.orderId!),
     getSubaccountOrderIdsCacheKey(redisOrder.order!.orderId!.subaccountId!),
     ORDER_EXPIRY_CACHE_KEY,
-    Buffer.from(Uint8Array.from(RedisOrder.encode(redisOrder).finish())).toString('binary'),
+    // TODO: use String to directly convert the UInt8Array to a string
+    Buffer.from(RedisOrder.encode(redisOrder).finish()).toString('binary'),
     getOrderExpiry(redisOrder.order!).toString(),
     OrderTable.orderIdToUuid(redisOrder.order!.orderId!),
     redisOrder.order!.orderId!.orderFlags === ORDER_FLAG_SHORT_TERM,
