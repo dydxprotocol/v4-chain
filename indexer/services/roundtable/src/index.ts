@@ -289,6 +289,13 @@ async function start(): Promise<void> {
       config.LOOPS_INTERVAL_MS_CACHE_ORDERBOOK_MID_PRICES,
     );
   }
+  if (config.LOOPS_ENABLED_UPDATE_FUNDING_PAYMENTS) {
+    startLoop(
+      updateFundingPaymentsTask,
+      'update-funding-payments',
+      config.LOOPS_INTERVAL_MS_UPDATE_FUNDING_PAYMENTS,
+    );
+  }
 
   logger.info({
     at: 'index',
