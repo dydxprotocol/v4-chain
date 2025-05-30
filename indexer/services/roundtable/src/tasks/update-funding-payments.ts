@@ -46,6 +46,16 @@ export default async function runTask(): Promise<void> {
     const lastHeight: string = persistentCacheEntry?.value ?? defaultLastHeight;
     const currentHeight: string = latestBlock.blockHeight;
 
+    // Skip processing if no new blocks to process
+    if (parseInt(currentHeight) <= parseInt(lastHeight)) {
+      logger.info({
+        at,
+        message: `No new blocks to process. Current: ${currentHeight}, Last: ${lastHeight}`,
+      });
+      await Transaction.commit(txId);
+      return;
+    }
+
     // Load and execute the update_funding_payments.sql file
     const sqlPath = join(__dirname, '../scripts/update_funding_payments.sql');
     const sqlContent = readFileSync(sqlPath, 'utf8');
