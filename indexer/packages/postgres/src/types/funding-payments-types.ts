@@ -14,40 +14,40 @@ export enum FundingPaymentsColumns {
 }
 
 export interface FundingPaymentsCreateObject {
-  subaccountId: string;
-  createdAt: string;
-  createdAtHeight: string;
-  perpetualId: string;
-  ticker: string;
-  oraclePrice: string;
-  size: string;
-  side: PositionSide;
-  rate: string;
-  payment: string;
+  subaccountId: string,
+  createdAt: string,
+  createdAtHeight: string,
+  perpetualId: string,
+  ticker: string,
+  oraclePrice: string,
+  size: string,
+  side: PositionSide,
+  rate: string,
+  payment: string,
 }
 
 export interface FundingPaymentsFromDatabase {
-  subaccountId: string;
-  createdAt: string;
-  createdAtHeight: string;
-  perpetualId: string;
-  ticker: string;
-  oraclePrice: string;
-  size: string;
-  side: PositionSide;
-  rate: string;
-  payment: string;
+  subaccountId: string,
+  createdAt: string,
+  createdAtHeight: string,
+  perpetualId: string,
+  ticker: string,
+  oraclePrice: string,
+  size: string,
+  side: PositionSide,
+  rate: string,
+  payment: string,
 }
 
 export interface FundingPaymentsQueryConfig {
-  limit?: number;
-  subaccountId?: string[];
-  perpetualId?: string[];
-  ticker?: string;
-  createdAtHeight?: string;
-  createdAt?: string;
-  createdBeforeOrAtHeight?: string;
-  createdBeforeOrAt?: string;
-  createdOnOrAfterHeight?: string;
-  createdOnOrAfter?: string;
-} 
+  limit?: number,
+  subaccountId?: string[],
+  perpetualId?: string[],
+  ticker?: string,
+  createdAtHeight?: string,
+  createdAt?: string,
+  createdBeforeOrAtHeight?: string,
+  createdBeforeOrAt?: string,
+  createdOnOrAfterHeight?: string,
+  createdOnOrAfter?: string,
+}

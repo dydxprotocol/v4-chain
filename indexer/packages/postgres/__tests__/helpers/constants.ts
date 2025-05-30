@@ -1107,4 +1107,3 @@ export const defaultFundingPayment2 = {
   rate: '0.0002',
   payment: '-1.2',
 };
-
