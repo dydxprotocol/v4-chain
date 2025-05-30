@@ -126,6 +126,7 @@ export interface Connection {
   heartbeat?: NodeJS.Timeout,
   disconnect?: NodeJS.Timeout,
   countryCode?: string,
+  id: string,
 }
 
 export interface MessageToForward {

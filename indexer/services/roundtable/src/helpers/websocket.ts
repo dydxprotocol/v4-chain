@@ -104,9 +104,7 @@ export function compareAndHandleMarketsWebsocketMessage({
       version: MARKETS_WEBSOCKET_MESSAGE_VERSION,
     };
     const buffer: Buffer = Buffer.from(
-      Uint8Array.from(
-        MarketMessage.encode(marketMessage).finish(),
-      ),
+      MarketMessage.encode(marketMessage).finish(),
     );
 
     wrapBackgroundTask(publishToMarketsWebsocket(
@@ -145,5 +143,5 @@ export function getExpiredOffChainUpdateMessage(removedOrderId: IndexerOrderId):
       removalStatus: OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED,
     },
   });
-  return Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(message).finish()));
+  return Buffer.from(OffChainUpdateV1.encode(message).finish());
 }

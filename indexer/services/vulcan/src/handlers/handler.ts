@@ -57,7 +57,7 @@ export abstract class Handler {
       version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
     });
 
-    return Buffer.from(Uint8Array.from(OrderbookMessage.encode(orderbookMessage).finish()));
+    return Buffer.from(OrderbookMessage.encode(orderbookMessage).finish());
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

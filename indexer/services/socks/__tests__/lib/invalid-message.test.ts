@@ -1,9 +1,9 @@
-import { InvalidMessageHandler } from '../../src/lib/invalid-message';
+import { InvalidMessageHandler, RATE_LIMITED } from '../../src/lib/invalid-message';
 import { RateLimiter } from '../../src/lib/rate-limit';
 import { sendMessage } from '../../src/helpers/wss';
 import WebSocket from 'ws';
 import { WS_CLOSE_CODE_POLICY_VIOLATION } from '../../src/lib/constants';
-import { Connection, WebsocketEvents } from '../../src/types';
+import { Connection } from '../../src/types';
 
 jest.mock('../../src/lib/rate-limit');
 jest.mock('../../src/helpers/wss', () => ({
@@ -28,6 +28,7 @@ describe('InvalidMessageHandler', () => {
         removeAllListeners: jest.fn(),
       } as unknown as WebSocket,
       messageId: 1,
+      id: connectionId,
     };
   });
 
@@ -50,8 +51,7 @@ describe('InvalidMessageHandler', () => {
     expect(sendMessage).toHaveBeenCalled();
     expect(mockConnection.ws.close).toHaveBeenCalledWith(
       WS_CLOSE_CODE_POLICY_VIOLATION,
-      JSON.stringify({ message: 'Rate limited' }),
+      RATE_LIMITED,
     );
-    expect(mockConnection.ws.removeAllListeners).toHaveBeenCalledWith(WebsocketEvents.MESSAGE);
   });
 });

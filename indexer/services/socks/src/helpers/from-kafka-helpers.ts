@@ -40,10 +40,9 @@ export function getMessageToForward(
     throw new InvalidForwardMessageError('Got empty kafka message');
   }
 
-  const messageBinary: Uint8Array = new Uint8Array(message.value);
   switch (channel) {
     case Channel.V4_ACCOUNTS: {
-      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(messageBinary);
+      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(message.value);
       return {
         channel,
         id: getSubaccountMessageId(subaccountMessage),
@@ -52,7 +51,7 @@ export function getMessageToForward(
       };
     }
     case Channel.V4_CANDLES: {
-      const candleMessage: CandleMessage = CandleMessage.decode(messageBinary);
+      const candleMessage: CandleMessage = CandleMessage.decode(message.value);
       if (candleMessage.resolution === CandleMessage_Resolution.UNRECOGNIZED) {
         throw new InvalidForwardMessageError(`Unrecognized candle resolution: ${candleMessage.resolution}`);
       }
@@ -64,7 +63,7 @@ export function getMessageToForward(
       };
     }
     case Channel.V4_MARKETS: {
-      const marketMessage: MarketMessage = MarketMessage.decode(messageBinary);
+      const marketMessage: MarketMessage = MarketMessage.decode(message.value);
       return {
         channel,
         id: V4_MARKETS_ID,
@@ -73,7 +72,7 @@ export function getMessageToForward(
       };
     }
     case Channel.V4_ORDERBOOK: {
-      const orderbookMessage: OrderbookMessage = OrderbookMessage.decode(messageBinary);
+      const orderbookMessage: OrderbookMessage = OrderbookMessage.decode(message.value);
       return {
         channel,
         id: getTickerOrThrow(orderbookMessage.clobPairId),
@@ -82,7 +81,7 @@ export function getMessageToForward(
       };
     }
     case Channel.V4_TRADES: {
-      const tradeMessage: TradeMessage = TradeMessage.decode(messageBinary);
+      const tradeMessage: TradeMessage = TradeMessage.decode(message.value);
       return {
         channel,
         id: getTickerOrThrow(tradeMessage.clobPairId),
@@ -91,7 +90,7 @@ export function getMessageToForward(
       };
     }
     case Channel.V4_PARENT_ACCOUNTS: {
-      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(messageBinary);
+      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(message.value);
       return {
         channel,
         id: getParentSubaccountMessageId(subaccountMessage),
@@ -101,7 +100,7 @@ export function getMessageToForward(
       };
     }
     case Channel.V4_BLOCK_HEIGHT: {
-      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(messageBinary);
+      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(message.value);
       return {
         channel: Channel.V4_BLOCK_HEIGHT,
         id: V4_BLOCK_HEIGHT_ID,
@@ -121,11 +120,10 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
   if (!message || !message.value) {
     throw new InvalidForwardMessageError('Got empty kafka message');
   }
-  const messageBinary: Uint8Array = new Uint8Array(message.value);
 
   switch (topic) {
     case WebsocketTopics.TO_WEBSOCKETS_CANDLES: {
-      const candleMessage: CandleMessage = CandleMessage.decode(messageBinary);
+      const candleMessage: CandleMessage = CandleMessage.decode(message.value);
       return [{
         channel: Channel.V4_CANDLES,
         id: getCandleMessageId(candleMessage),
@@ -134,7 +132,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
       }];
     }
     case WebsocketTopics.TO_WEBSOCKETS_MARKETS: {
-      const marketMessage: MarketMessage = MarketMessage.decode(messageBinary);
+      const marketMessage: MarketMessage = MarketMessage.decode(message.value);
       return [{
         channel: Channel.V4_MARKETS,
         id: V4_MARKETS_ID,
@@ -143,7 +141,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
       }];
     }
     case WebsocketTopics.TO_WEBSOCKETS_ORDERBOOKS: {
-      const orderbookMessage: OrderbookMessage = OrderbookMessage.decode(messageBinary);
+      const orderbookMessage: OrderbookMessage = OrderbookMessage.decode(message.value);
       return [{
         channel: Channel.V4_ORDERBOOK,
         id: getTickerOrThrow(orderbookMessage.clobPairId),
@@ -152,7 +150,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
       }];
     }
     case WebsocketTopics.TO_WEBSOCKETS_TRADES: {
-      const tradeMessage: TradeMessage = TradeMessage.decode(messageBinary);
+      const tradeMessage: TradeMessage = TradeMessage.decode(message.value);
       return [{
         channel: Channel.V4_TRADES,
         id: getTickerOrThrow(tradeMessage.clobPairId),
@@ -161,7 +159,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
       }];
     }
     case WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS: {
-      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(messageBinary);
+      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(message.value);
       return [{
         channel: Channel.V4_ACCOUNTS,
         id: getSubaccountMessageId(subaccountMessage),
@@ -177,7 +175,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
       }];
     }
     case WebsocketTopics.TO_WEBSOCKETS_BLOCK_HEIGHT: {
-      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(messageBinary);
+      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(message.value);
       return [{
         channel: Channel.V4_BLOCK_HEIGHT,
         id: V4_BLOCK_HEIGHT_ID,

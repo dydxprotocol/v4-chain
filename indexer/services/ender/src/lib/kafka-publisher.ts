@@ -213,7 +213,7 @@ export class KafkaPublisher {
         topic: KafkaTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
         messages: _.map(this.blockHeightMessages, (message: BlockHeightMessage) => {
           return {
-            value: Buffer.from(Uint8Array.from(BlockHeightMessage.encode(message).finish())),
+            value: Buffer.from(BlockHeightMessage.encode(message).finish()),
           };
         }),
       });
@@ -227,10 +227,10 @@ export class KafkaPublisher {
         messages: _.map(this.subaccountMessages, (message: SubaccountMessage) => {
           return {
             key: message.subaccountId !== undefined
-              ? Buffer.from(Uint8Array.from(
+              ? Buffer.from(
                 IndexerSubaccountId.encode(message.subaccountId).finish(),
-              )) : undefined,
-            value: Buffer.from(Uint8Array.from(SubaccountMessage.encode(message).finish())),
+              ) : undefined,
+            value: Buffer.from(SubaccountMessage.encode(message).finish()),
           };
         }),
       });
@@ -248,7 +248,7 @@ export class KafkaPublisher {
         topic: KafkaTopics.TO_WEBSOCKETS_MARKETS,
         messages: _.map(this.marketMessages, (message: MarketMessage) => {
           return {
-            value: Buffer.from(Uint8Array.from(MarketMessage.encode(message).finish())),
+            value: Buffer.from(MarketMessage.encode(message).finish()),
           };
         }),
       });
@@ -259,7 +259,7 @@ export class KafkaPublisher {
         topic: KafkaTopics.TO_WEBSOCKETS_CANDLES,
         messages: _.map(this.candleMessages, (message: CandleMessage) => {
           return {
-            value: Buffer.from(Uint8Array.from(CandleMessage.encode(message).finish())),
+            value: Buffer.from(CandleMessage.encode(message).finish()),
           };
         }),
       });
@@ -271,7 +271,7 @@ export class KafkaPublisher {
         messages: _.map(this.vulcanMessages, (message: VulcanMessage) => {
           return {
             key: message.key,
-            value: Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(message.value).finish())),
+            value: Buffer.from(OffChainUpdateV1.encode(message.value).finish()),
             headers: message.headers,
           };
         }),
@@ -318,7 +318,7 @@ export class KafkaPublisher {
     const messages: ProducerMessage[] = _.chain(Object.values(groupedMergedTradeMessage))
       .map((tradeMessage: TradeMessage) => {
         return {
-          value: Buffer.from(Uint8Array.from(TradeMessage.encode(tradeMessage).finish())),
+          value: Buffer.from(TradeMessage.encode(tradeMessage).finish()),
         };
       })
       .value();

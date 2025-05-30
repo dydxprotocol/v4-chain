@@ -128,9 +128,9 @@ export class OrderPlaceHandler extends Handler {
         await this.sendCachedOrderUpdate(orderUuid, headers);
       }
       const subaccountMessage: Message = {
-        key: Buffer.from(Uint8Array.from(
+        key: Buffer.from(
           IndexerSubaccountId.encode(redisOrder.order!.orderId!.subaccountId!).finish(),
-        )),
+        ),
         value: createSubaccountWebsocketMessage(
           redisOrder,
           dbOrder,
@@ -240,7 +240,7 @@ export class OrderPlaceHandler extends Handler {
     const orderUpdateMessage: Message = {
       key: getOrderIdHash(cachedOrderUpdate.orderId!),
       value: Buffer.from(
-        Uint8Array.from(OffChainUpdateV1.encode({ orderUpdate: cachedOrderUpdate }).finish()),
+        OffChainUpdateV1.encode({ orderUpdate: cachedOrderUpdate }).finish(),
       ),
       headers,
     };

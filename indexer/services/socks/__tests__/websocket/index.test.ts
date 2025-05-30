@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { Index } from '../../src/websocket/index';
 import WebSocket from 'ws';
 import { Wss, sendMessage } from '../../src/helpers/wss';
+import { WS_CLOSE_HEARTBEAT_TIMEOUT } from '../../src/lib/constants';
 import { Subscriptions } from '../../src/lib/subscription';
 import { IncomingMessage } from 'http';
 import { Socket } from 'net';
@@ -11,6 +12,7 @@ import {
   Channel,
   ALL_CHANNELS,
   WebsocketEvents,
+  Connection,
 } from '../../src/types';
 import { InvalidMessageHandler } from '../../src/lib/invalid-message';
 import { COUNTRY_HEADER_KEY } from '@dydxprotocol-indexer/compliance';
@@ -26,8 +28,11 @@ describe('Index', () => {
   let websocket: WebSocket;
   let mockSub: Subscriptions;
   let mockConnect: (ws: WebSocket, req: IncomingMessage) => void;
+  let wsCloseSpy: jest.SpyInstance;
   let wsOnSpy: jest.SpyInstance;
   let wsPingSpy: jest.SpyInstance;
+  let wsTerminateSpy: jest.SpyInstance;
+  let disconnectSpy: jest.SpyInstance;
   let invalidMsgHandlerSpy: jest.SpyInstance;
 
   const connectionId: string = 'conId';
@@ -49,8 +54,10 @@ describe('Index', () => {
     (sendMessage as unknown as jest.Mock).mockClear();
     mockWss = new Wss();
     websocket = new WebSocket(null as any as string, [], { autoPong: true } as any);
+    wsCloseSpy = jest.spyOn(websocket, 'close');
     wsOnSpy = jest.spyOn(websocket, 'on');
     wsPingSpy = jest.spyOn(websocket, 'ping').mockImplementation(jest.fn());
+    wsTerminateSpy = jest.spyOn(websocket, 'terminate');
     mockWss.onConnection = jest.fn().mockImplementation(
       (cb: (ws: WebSocket, req: IncomingMessage) => void) => {
         mockConnect = cb;
@@ -59,6 +66,7 @@ describe('Index', () => {
     mockSub = new Subscriptions();
     invalidMsgHandlerSpy = jest.spyOn(InvalidMessageHandler.prototype, 'handleInvalidMessage');
     index = new Index(mockWss, mockSub);
+    disconnectSpy = jest.spyOn(index, 'disconnect');
   });
 
   describe('connection', () => {
@@ -235,17 +243,12 @@ describe('Index', () => {
 
     describe('close', () => {
       it('disconnects connection on close', () => {
-        jest.spyOn(websocket, 'removeAllListeners').mockImplementation(jest.fn());
-        jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
+        const connection: Connection = index.connections[connectionId];
+        expect(disconnectSpy).not.toHaveBeenCalled();
         websocket.emit(WebsocketEvents.CLOSE);
-        // Run timers for heartbeat.
         jest.runAllTimers();
-
-        expect(wsPingSpy).not.toHaveBeenCalled();
-        expect(websocket.removeAllListeners).toHaveBeenCalledTimes(1);
-        expect(websocket.terminate).toHaveBeenCalledTimes(1);
-        expect(mockSub.remove).toHaveBeenCalledWith(connectionId);
-        expect(index.connections[connectionId]).toBeUndefined();
+        expect(disconnectSpy).toHaveBeenCalledTimes(1);
+        expect(disconnectSpy).toHaveBeenCalledWith(connection);
       });
 
       it('handles reason as a Buffer object', () => {
@@ -254,7 +257,7 @@ describe('Index', () => {
         jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
         websocket.emit(WebsocketEvents.CLOSE, dummyCode, bufferReason);
 
-        expect(websocket.terminate).toHaveBeenCalledTimes(1);
+        expect(wsTerminateSpy).toHaveBeenCalledTimes(1);
         expect(mockSub.remove).toHaveBeenCalledWith(connectionId);
         expect(index.connections[connectionId]).toBeUndefined();
       });
@@ -271,7 +274,7 @@ describe('Index', () => {
 
         // Run pending timers to check connection wasn't disconnected on a timer.
         jest.runOnlyPendingTimers();
-        expect(websocket.terminate).not.toHaveBeenCalled();
+        expect(wsTerminateSpy).not.toHaveBeenCalled();
       });
     });
 
@@ -287,13 +290,14 @@ describe('Index', () => {
       it('disconnects if pong isn\'t received', () => {
         // Run pending timers to start heartbeat to attach delayed disconnect.
         jest.runOnlyPendingTimers();
-        jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
 
         expect(index.connections[connectionId].disconnect).not.toBeUndefined();
 
         // Run pending timers to check connection was disconnected on a timer.
         jest.runOnlyPendingTimers();
-        expect(websocket.terminate).toHaveBeenCalledTimes(1);
+        expect(wsTerminateSpy).toHaveBeenCalledTimes(1);
+        expect(wsCloseSpy).toHaveBeenCalledTimes(1);
+        expect(wsCloseSpy).toHaveBeenCalledWith(WS_CLOSE_HEARTBEAT_TIMEOUT, 'Heartbeat timeout');
       });
     });
   });
@@ -304,7 +308,7 @@ describe('Index', () => {
       mockConnect(websocket, new IncomingMessage(new Socket()));
       await index.close();
 
-      expect(websocket.close).toHaveBeenCalledTimes(1);
+      expect(wsCloseSpy).toHaveBeenCalledTimes(1);
       expect(mockWss.close).toHaveBeenCalledTimes(1);
     });
   });
