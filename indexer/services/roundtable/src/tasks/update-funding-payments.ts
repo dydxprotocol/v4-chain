@@ -17,7 +17,7 @@ const defaultLastHeight: string = '0';
 const statStart: string = `${config.SERVICE_NAME}.aggregate_data`;
 
 /**
- * Execute the aggregate.sql file to perform data aggregation.
+ * Execute the update_funding_payments.sql file to perform data aggregation.
  */
 export default async function runTask(): Promise<void> {
   const at: string = 'aggregate-data#runTask';
@@ -46,8 +46,8 @@ export default async function runTask(): Promise<void> {
     const lastHeight: string = persistentCacheEntry?.value ?? defaultLastHeight;
     const currentHeight: string = latestBlock.blockHeight;
 
-    // Load and execute the aggregate.sql file
-    const sqlPath = join(__dirname, '../scripts/aggregate.sql');
+    // Load and execute the update_funding_payments.sql file
+    const sqlPath = join(__dirname, '../scripts/update_funding_payments.sql');
     const sqlContent = readFileSync(sqlPath, 'utf8');
 
     // bind the last height and current height to the sql content
