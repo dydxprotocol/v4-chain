@@ -44,14 +44,24 @@ func onSubAuthenticatorsAdded(
 	data []byte,
 	authenticatorId string,
 	am *AuthenticatorManager,
-) error {
+	isAnyOf bool, // If true, the composite is AnyOf, otherwise AllOf
+) (bool, error) {
 	var initDatas []types.SubAuthenticatorInitData
 	if err := json.Unmarshal(data, &initDatas); err != nil {
-		return errorsmod.Wrapf(err, "failed to unmarshal sub-authenticator init data")
+		return false, errorsmod.Wrapf(err, "failed to unmarshal sub-authenticator init data")
 	}
 
 	if len(initDatas) <= 1 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
+		return false, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
+	}
+
+	// If authenticator type is AllOf, we just need to check if ANY of the sub-authenticators require signature verification.
+	// Use `false` as identify value for OR operation.
+	requireSigVerification := false
+	if isAnyOf {
+		// For `AnyOf`, we need to check if ALL of the sub-authenticators require signature verification.
+		// Use `true` as identify value for AND operation.
+		requireSigVerification = true
 	}
 
 	baseId := authenticatorId
@@ -59,19 +69,27 @@ func onSubAuthenticatorsAdded(
 	for id, initData := range initDatas {
 		authenticatorCode := am.GetAuthenticatorByType(initData.Type)
 		if authenticatorCode == nil {
-			return errorsmod.Wrapf(
+			return false, errorsmod.Wrapf(
 				sdkerrors.ErrInvalidRequest,
 				"sub-authenticator failed to be added in function `OnAuthenticatorAdded` as type is not registered in manager",
 			)
 		}
 		subId := compositeId(baseId, id)
-		err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Config, subId)
+		subRequireSigVerification, err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Config, subId)
 		if err != nil {
-			return errorsmod.Wrapf(
+			return false, errorsmod.Wrapf(
 				err,
 				"sub-authenticator `OnAuthenticatorAdded` failed (sub-authenticator id = %s)",
 				subId,
 			)
+		}
+
+		if isAnyOf {
+			// For `AnyOf`, we require ALL sub-authenticators to require signature verification.
+			requireSigVerification = requireSigVerification && subRequireSigVerification
+		} else {
+			// For `AllOf`, we just need ANY of sub-authenticators to require signature verification.
+			requireSigVerification = requireSigVerification || subRequireSigVerification
 		}
 
 		subAuthenticatorCount++
@@ -79,10 +97,10 @@ func onSubAuthenticatorsAdded(
 
 	// If not all sub-authenticators are registered, return an error
 	if subAuthenticatorCount != len(initDatas) {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to initialize all sub-authenticators")
+		return false, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to initialize all sub-authenticators")
 	}
 
-	return nil
+	return requireSigVerification, nil
 }
 
 func onSubAuthenticatorsRemoved(

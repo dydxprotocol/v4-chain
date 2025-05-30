@@ -144,8 +144,15 @@ func (aoa AllOf) OnAuthenticatorAdded(
 	account sdk.AccAddress,
 	config []byte,
 	authenticatorId string,
-) error {
-	return onSubAuthenticatorsAdded(ctx, account, config, authenticatorId, aoa.am)
+) (bool, error) {
+	return onSubAuthenticatorsAdded(
+		ctx,
+		account,
+		config,
+		authenticatorId,
+		aoa.am,
+		false, // isAnyOf = false
+	)
 }
 
 func (aoa AllOf) OnAuthenticatorRemoved(
