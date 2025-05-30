@@ -34,4 +34,5 @@ export * from './persistent-cache-types';
 export * from './affiliate-info-types';
 export * from './firebase-notification-token-types';
 export * from './vault-types';
+export * from './funding-payments-types';
 export { PositionSide } from './position-types';
