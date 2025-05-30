@@ -46,6 +46,8 @@ export interface FillCreateObject {
   clientMetadata?: string,
   fee: string,
   affiliateRevShare: string,
+  builderAddress: string,
+  builderFee: string,
 }
 
 export interface FillUpdateObject {
@@ -56,7 +58,7 @@ export interface FillUpdateObject {
   orderId?: string | null,
   size?: string,
   price?: string,
-  quoteAmount?: string,
+  quoteAmount?: string, // TODO: (anmol) do I need to support updates for builderFee?
 }
 
 export enum FillColumns {
@@ -77,6 +79,8 @@ export enum FillColumns {
   clientMetadata = 'clientMetadata',
   fee = 'fee',
   affiliateRevShare = 'affiliateRevShare',
+  builderAddress = 'builderAddress',
+  builderFee = 'builderFee',
 }
 
 export type CostOfFills = {

@@ -228,6 +228,10 @@ export type OrderFillEventWithOrder = {
   makerFee: Long,
   takerFee: Long,
   affiliateRevShare: Long,
+  makerBuilderFee: Long,
+  takerBuilderFee: Long,
+  makerBuilderAddress: string,
+  takerBuilderAddress: string,
 };
 
 export type OrderFillEventWithLiquidation = {
@@ -239,6 +243,10 @@ export type OrderFillEventWithLiquidation = {
   makerFee: Long,
   takerFee: Long,
   affiliateRevShare: Long,
+  makerBuilderFee: Long,
+  takerBuilderFee: Long,
+  makerBuilderAddress: string,
+  takerBuilderAddress: string,
 };
 
 export type FundingEventMessage = {
