@@ -32,7 +32,6 @@ describe('funding payments store', () => {
   });
 
   it('Successfully finds all FundingPayments', async () => {
-
     await Promise.all([
       FundingPaymentsTable.create(defaultFundingPayment),
       FundingPaymentsTable.create(defaultFundingPayment2),
