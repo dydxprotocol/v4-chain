@@ -638,6 +638,12 @@ export interface Order {
    */
 
   twapParameters?: TwapParameters;
+  /**
+   * builder_code_parameters is the metadata for the
+   * partner or builder of an order specifying the fees charged.
+   */
+
+  builderCodeParameters?: BuilderCodeParameters;
 }
 /**
  * Order represents a single order belonging to a `Subaccount`
@@ -714,6 +720,12 @@ export interface OrderSDKType {
    */
 
   twap_parameters?: TwapParametersSDKType;
+  /**
+   * builder_code_parameters is the metadata for the
+   * partner or builder of an order specifying the fees charged.
+   */
+
+  builder_code_parameters?: BuilderCodeParametersSDKType;
 }
 /** TwapParameters represents the necessary configuration for a TWAP order. */
 
@@ -760,6 +772,32 @@ export interface TwapParametersSDKType {
    */
 
   price_tolerance: number;
+}
+/**
+ * BuilderCodeParameters represents the metadata for the partner or builder of
+ * an order. This allows them to specify a fee for providing there service which
+ * will be paid out in the event of an order fill.
+ */
+
+export interface BuilderCodeParameters {
+  /** The address of the builder to which the fee will be paid. */
+  builderAddress: string;
+  /** The fee enforced on the order in ppm. */
+
+  feePpm: number;
+}
+/**
+ * BuilderCodeParameters represents the metadata for the partner or builder of
+ * an order. This allows them to specify a fee for providing there service which
+ * will be paid out in the event of an order fill.
+ */
+
+export interface BuilderCodeParametersSDKType {
+  /** The address of the builder to which the fee will be paid. */
+  builder_address: string;
+  /** The fee enforced on the order in ppm. */
+
+  fee_ppm: number;
 }
 /**
  * TransactionOrdering represents a unique location in the block where a
@@ -1307,7 +1345,8 @@ function createBaseOrder(): Order {
     clientMetadata: 0,
     conditionType: 0,
     conditionalOrderTriggerSubticks: Long.UZERO,
-    twapParameters: undefined
+    twapParameters: undefined,
+    builderCodeParameters: undefined
   };
 }
 
@@ -1359,6 +1398,10 @@ export const Order = {
 
     if (message.twapParameters !== undefined) {
       TwapParameters.encode(message.twapParameters, writer.uint32(98).fork()).ldelim();
+    }
+
+    if (message.builderCodeParameters !== undefined) {
+      BuilderCodeParameters.encode(message.builderCodeParameters, writer.uint32(106).fork()).ldelim();
     }
 
     return writer;
@@ -1421,6 +1464,10 @@ export const Order = {
           message.twapParameters = TwapParameters.decode(reader, reader.uint32());
           break;
 
+        case 13:
+          message.builderCodeParameters = BuilderCodeParameters.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1444,6 +1491,7 @@ export const Order = {
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
     message.twapParameters = object.twapParameters !== undefined && object.twapParameters !== null ? TwapParameters.fromPartial(object.twapParameters) : undefined;
+    message.builderCodeParameters = object.builderCodeParameters !== undefined && object.builderCodeParameters !== null ? BuilderCodeParameters.fromPartial(object.builderCodeParameters) : undefined;
     return message;
   }
 
@@ -1509,6 +1557,61 @@ export const TwapParameters = {
     message.duration = object.duration ?? 0;
     message.interval = object.interval ?? 0;
     message.priceTolerance = object.priceTolerance ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseBuilderCodeParameters(): BuilderCodeParameters {
+  return {
+    builderAddress: "",
+    feePpm: 0
+  };
+}
+
+export const BuilderCodeParameters = {
+  encode(message: BuilderCodeParameters, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.builderAddress !== "") {
+      writer.uint32(10).string(message.builderAddress);
+    }
+
+    if (message.feePpm !== 0) {
+      writer.uint32(16).uint32(message.feePpm);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): BuilderCodeParameters {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBuilderCodeParameters();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.builderAddress = reader.string();
+          break;
+
+        case 2:
+          message.feePpm = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<BuilderCodeParameters>): BuilderCodeParameters {
+    const message = createBaseBuilderCodeParameters();
+    message.builderAddress = object.builderAddress ?? "";
+    message.feePpm = object.feePpm ?? 0;
     return message;
   }
 
