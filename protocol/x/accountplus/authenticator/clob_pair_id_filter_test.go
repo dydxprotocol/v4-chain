@@ -76,8 +76,9 @@ func (s *ClobPairIdFilterTest) TestFilter() {
 
 	for name, tt := range tests {
 		s.Run(name, func() {
-			err := s.ClobPairIdFilter.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.whitelist), "1")
+			requireSigVerification, err := s.ClobPairIdFilter.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.whitelist), "1")
 			s.Require().NoError(err)
+			s.Require().False(requireSigVerification)
 			filter, err := s.ClobPairIdFilter.Initialize([]byte(tt.whitelist))
 			s.Require().NoError(err)
 

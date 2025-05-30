@@ -159,14 +159,14 @@ func (s SpyAuthenticator) OnAuthenticatorAdded(
 	account sdk.AccAddress,
 	config []byte,
 	authenticatorId string,
-) error {
+) (requireSigVerification bool, err error) {
 	spy, err := s.Initialize(config)
 	if err != nil {
-		return err
+		return false, err
 	}
 	spyAuth, ok := spy.(SpyAuthenticator)
 	if !ok {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to cast authenticator to SpyAuthenticator")
+		return false, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "failed to cast authenticator to SpyAuthenticator")
 	}
 
 	spyAuth.UpdateLatestCalls(ctx, func(calls LatestCalls) LatestCalls {
@@ -177,7 +177,7 @@ func (s SpyAuthenticator) OnAuthenticatorAdded(
 		}
 		return calls
 	})
-	return nil
+	return true, nil
 }
 
 func (s SpyAuthenticator) OnAuthenticatorRemoved(

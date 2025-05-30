@@ -48,7 +48,7 @@ type Authenticator interface {
 
 	// OnAuthenticatorAdded handles the addition of an authenticator to an account.
 	// It checks the data format and compatibility, to maintain account security and authenticator integrity.
-	OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) error
+	OnAuthenticatorAdded(ctx sdk.Context, account sdk.AccAddress, config []byte, authenticatorId string) (requireSigVerification bool, err error)
 
 	// OnAuthenticatorRemoved manages the removal of an authenticator from an account.
 	// This function is used for updating global data or preventing removal when necessary to maintain system stability.
