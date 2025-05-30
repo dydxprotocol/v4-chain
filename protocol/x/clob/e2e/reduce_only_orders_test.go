@@ -4,7 +4,11 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/types"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
@@ -511,6 +515,438 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 					}
 				}
 			}
+		})
+	}
+}
+
+func TestClosePositionOrder(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	CheckTx_PlaceOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10 := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: constants.Carl_Num0.Owner,
+		},
+		clobtypes.NewMsgPlaceOrder(
+			constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+		),
+	)
+	CheckTx_PlaceOrder_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10 := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: constants.Carl_Num0.Owner,
+		},
+		clobtypes.NewMsgPlaceOrder(
+			constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10,
+		),
+	)
+	CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: constants.Alice_Num1.Owner,
+		},
+		clobtypes.NewMsgPlaceOrder(
+			constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO,
+		),
+	)
+
+	tests := map[string]struct {
+		subaccounts          []satypes.Subaccount
+		orders               []clobtypes.Order
+		matchIncludedInBlock bool
+
+		expectedOrderOnMemClob   map[clobtypes.OrderId]bool
+		expectedOrderFillAmount  map[clobtypes.OrderId]uint64
+		expectedSubaccounts      []satypes.Subaccount
+		expectedOffchainMessages []msgsender.Message
+	}{
+		"Close position order (IOC reduce-only) fully filled, maker order fully filled, match in block": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_100000USD,
+				// Initialize Alice subaccount 1 with a 1 BTC long position.
+				constants.Alice_Num1_1BTC_Long_500_000USD,
+			},
+			orders: []clobtypes.Order{
+				// 1. an order from Carl that buys 1 BTC at price 50_000
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				// 2. an order from Alice that closes their position by selling 1 BTC at price 50_000
+				constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO,
+			},
+			matchIncludedInBlock: true,
+
+			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId:          false,
+				constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId: false,
+			},
+			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId:          100_000_000,
+				constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId: 100_000_000,
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						testutil.CreateSingleAssetPosition(
+							0,
+							// 100_000 usdc - 50_000 (from buying 1 btc) + 5.5 usdc maker fee
+							big.NewInt(50_005_500_000),
+						),
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(100_000_000),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						testutil.CreateSingleAssetPosition(
+							0,
+							// 500_000 usdc + 50_000 (from selling 1 btc) - 25 usdc taker fee
+							big.NewInt(549_975_000_000),
+						),
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{},
+				},
+			},
+			expectedOffchainMessages: []msgsender.Message{
+				// 1. Order place of Carl's order
+				// 2. Order update of Carl's order with 0 fill amount
+				// 3. Order place of Alice's order
+				// 4. Order update that Carl's order is fully filled
+				// 5. Order update that Alice's order is fully filled
+				off_chain_updates.MustCreateOrderPlaceMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+					0,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.Tx),
+				}),
+				off_chain_updates.MustCreateOrderPlaceMessage(
+					ctx,
+					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+					100_000_000,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId,
+					100_000_000,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
+				}),
+			},
+		},
+		"Close position order (IOC reduce-only) fully filled, maker order partially filled, match in block": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_100000USD,
+				// Initialize Alice subaccount 1 with a 1 BTC long position.
+				constants.Alice_Num1_1BTC_Long_500_000USD,
+			},
+			orders: []clobtypes.Order{
+				// 1. an order from Carl that buys 2 BTC at price 50_000
+				constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10,
+				// 2. an order from Alice that closes their position by selling 1 BTC at price 50_000
+				constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO,
+			},
+			matchIncludedInBlock: true,
+
+			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10.OrderId:          true,
+				constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId: false,
+			},
+			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10.OrderId:          100_000_000,
+				constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId: 100_000_000,
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						testutil.CreateSingleAssetPosition(
+							0,
+							// 100_000 usdc - 50_000 (from buying 1 btc) + 5.5 usdc maker fee
+							big.NewInt(50_005_500_000),
+						),
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(100_000_000),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						testutil.CreateSingleAssetPosition(
+							0,
+							// 500_000 usdc + 50_000 (from selling 1 btc) - 25 usdc taker fee
+							big.NewInt(549_975_000_000),
+						),
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{},
+				},
+			},
+			expectedOffchainMessages: []msgsender.Message{
+				// 1. Order place of Carl's order
+				// 2. Order update of Carl's order with 0 fill amount
+				// 3. Order place of Alice's order
+				// 4. Order update that Carl's order is partially filled
+				// 5. Order update that Alice's order is fully filled
+				// 6. Order update that Carl's order is partially filled (due to operations being replayed)
+				off_chain_updates.MustCreateOrderPlaceMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10.OrderId,
+					0,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10.Tx),
+				}),
+				off_chain_updates.MustCreateOrderPlaceMessage(
+					ctx,
+					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10.OrderId,
+					100_000_000,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId,
+					100_000_000,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy2BTC_Price50000_GTB10.OrderId,
+					100_000_000,
+				),
+			},
+		},
+		"Close position order (IOC reduce-only) fully filled, maker order fully filled, match not in block": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_100000USD,
+				// Initialize Alice subaccount 1 with a 1 BTC long position.
+				constants.Alice_Num1_1BTC_Long_500_000USD,
+			},
+			orders: []clobtypes.Order{
+				// 1. an order from Carl that buys 1 BTC at price 50_000
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				// 2. an order from Alice that closes their position by selling 1 BTC at price 50_000
+				constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO,
+			},
+			matchIncludedInBlock: false,
+
+			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId:          false,
+				constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId: false,
+			},
+			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId:          100_000_000,
+				constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId: 100_000_000,
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						testutil.CreateSingleAssetPosition(
+							0,
+							// 100_000 usdc - 50_000 (from buying 1 btc) + 5.5 usdc maker fee
+							big.NewInt(50_005_500_000),
+						),
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						testutil.CreateSinglePerpetualPosition(
+							0,
+							big.NewInt(100_000_000),
+							big.NewInt(0),
+							big.NewInt(0),
+						),
+					},
+				},
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						testutil.CreateSingleAssetPosition(
+							0,
+							// 500_000 usdc + 50_000 (from selling 1 btc) - 25 usdc taker fee
+							big.NewInt(549_975_000_000),
+						),
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{},
+				},
+			},
+			expectedOffchainMessages: []msgsender.Message{
+				// 1. Order place of Carl's order
+				// 2. Order update of Carl's order with 0 fill amount
+				// 3. Order place of Alice's order
+				// 4. Order update that Carl's order is fully filled
+				// 5. Order update that Alice's order is fully filled
+				// 6. Order update that Carl's order is fully filled (due to operations being replayed as match wasn't in block)
+				// 7. Order update that Alice's order is fully filled (due to operations being replayed as match wasn't in block)
+				off_chain_updates.MustCreateOrderPlaceMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+					0,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.Tx),
+				}),
+				off_chain_updates.MustCreateOrderPlaceMessage(
+					ctx,
+					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+					100_000_000,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId,
+					100_000_000,
+				).AddHeader(msgsender.MessageHeader{
+					Key:   msgsender.TransactionHashHeaderKey,
+					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.Tx),
+				}),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10.OrderId,
+					100_000_000,
+				),
+				off_chain_updates.MustCreateOrderUpdateMessage(
+					ctx,
+					constants.Order_Alice_Num1_Id0_Clob0_Sell1BTC_Price50000_GTB20_IOC_RO.OrderId,
+					100_000_000,
+				),
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+
+			tApp := testapp.NewTestAppBuilder(t).
+				WithAppOptions(map[string]interface{}{
+					indexer.MsgSenderInstanceForTest: msgSender,
+				}).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *satypes.GenesisState) {
+							genesisState.Subaccounts = tc.subaccounts
+						},
+					)
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *perptypes.GenesisState) {
+							genesisState.Params = constants.PerpetualsGenesisParams
+							genesisState.LiquidityTiers = constants.LiquidityTiers
+							genesisState.Perpetuals = []perptypes.Perpetual{
+								constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+								constants.EthUsd_20PercentInitial_10PercentMaintenance,
+							}
+						},
+					)
+					return genesis
+				}).Build()
+			ctx := tApp.InitChain()
+
+			// Place orders.
+			for _, order := range tc.orders {
+				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+					ctx,
+					tApp.App,
+					*clobtypes.NewMsgPlaceOrder(order),
+				) {
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+				}
+			}
+
+			options := testapp.AdvanceToBlockOptions{}
+			if !tc.matchIncludedInBlock {
+				options.DeliverTxsOverride = [][]byte{}
+			}
+			ctx = tApp.AdvanceToBlock(2, options)
+
+			// Verify expectations.
+			for orderId, exists := range tc.expectedOrderOnMemClob {
+				_, existsOnMemclob := tApp.App.ClobKeeper.MemClob.GetOrder(orderId)
+				require.Equal(t, exists, existsOnMemclob)
+			}
+
+			for orderId, expectedFillAmount := range tc.expectedOrderFillAmount {
+				exists, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
+				require.True(t, exists)
+				require.Equal(t, expectedFillAmount, fillAmount.ToUint64())
+			}
+
+			require.ElementsMatch(
+				t,
+				tc.expectedOffchainMessages,
+				msgSender.GetOffchainMessages(),
+			)
 		})
 	}
 }
