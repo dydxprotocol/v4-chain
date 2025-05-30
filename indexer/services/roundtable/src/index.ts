@@ -10,7 +10,6 @@ import {
   connect as connectToRedis,
 } from './helpers/redis';
 import aggregateTradingRewardsTasks from './tasks/aggregate-trading-rewards';
-import updateFundingPaymentsTask from './tasks/update-funding-payments';
 import cacheOrderbookMidPrices from './tasks/cache-orderbook-mid-prices';
 import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
 import createLeaderboardTask from './tasks/create-leaderboard';
@@ -31,6 +30,7 @@ import trackLag from './tasks/track-lag';
 import uncrossOrderbookTask from './tasks/uncross-orderbook';
 import updateAffiliateInfoTask from './tasks/update-affiliate-info';
 import updateComplianceDataTask from './tasks/update-compliance-data';
+import updateFundingPaymentsTask from './tasks/update-funding-payments';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
 import updateWalletTotalVolumeTask from './tasks/update-wallet-total-volume';
 
