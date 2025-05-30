@@ -1429,6 +1429,18 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		}
 	}
 
+	// Check if the order being replaced has at least `MinOrderBaseQuantums` of size remaining, otherwise the order
+	// is considered fully filled and cannot be placed/replaced.
+	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
+	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
+		return errorsmod.Wrapf(
+			types.ErrOrderFullyFilled,
+			"Order remaining amount is less than `MinOrderBaseQuantums`. Remaining amount: %d. Order: %+v",
+			remainingAmount,
+			order.GetOrderTextString(),
+		)
+	}
+
 	// If the order is a reduce-only order, we should ensure that the sign of the order size is the opposite of
 	// the current position size. Note that we do not validate the size/quantity of the reduce only order fill,
 	// as that will be validated if the order is matched.
@@ -1444,18 +1456,6 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		if orderSize.Sign()*existingPositionSize.Sign() != -1 {
 			return types.ErrReduceOnlyWouldIncreasePositionSize
 		}
-	}
-
-	// Check if the order being replaced has at least `MinOrderBaseQuantums` of size remaining, otherwise the order
-	// is considered fully filled and cannot be placed/replaced.
-	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
-	if !hasRemainingAmount || remainingAmount < orderbook.MinOrderBaseQuantums {
-		return errorsmod.Wrapf(
-			types.ErrOrderFullyFilled,
-			"Order remaining amount is less than `MinOrderBaseQuantums`. Remaining amount: %d. Order: %+v",
-			remainingAmount,
-			order.GetOrderTextString(),
-		)
 	}
 
 	// Immediate-or-cancel orders may only be filled once. The remaining size becomes unfillable.
