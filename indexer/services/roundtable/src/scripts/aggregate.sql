@@ -1,10 +1,17 @@
-DROP TABLE IF EXISTS subaccount_perp_positions;
-
--- This aggregate.sql file performs the second suite of tests.
 -- It calculates funding payments for subaccounts between heights $1 and $2
--- where $1 is the start height and $2 is the end height
-CREATE TABLE
-    subaccount_funding_payments AS
+-- where $1 is the start height and $2 is the end height.
+INSERT INTO funding_payments (
+    subaccount_id,
+    created_at,
+    created_at_height,
+    perpetual_id,
+    ticker,
+    oracle_price,
+    size,
+    side,
+    rate,
+    payment
+)
 WITH
     net AS (
         SELECT
@@ -12,8 +19,8 @@ WITH
             "clob_pair_id", -- align the names
             SUM(
                 CASE
-                    WHEN side = 'BUY' THEN size
-                    WHEN side = 'SELL' THEN - size
+                    WHEN side = 'LONG' THEN size
+                    WHEN side = 'SHORT' THEN - size
                 END
             ) AS net_size
         FROM
@@ -58,8 +65,7 @@ WITH
             ON (f."perpetualId") f."perpetualId" AS perpetual_id,
             f.rate,
             f."oraclePrice" AS oracle_price,
-            f."effectiveAt" AS effective_at,
-            f."effectiveAtHeight" AS effective_at_height
+            f."effectiveAt" AS effective_at
         FROM
             funding_index_updates f
         ORDER BY
@@ -68,22 +74,23 @@ WITH
     )
 SELECT
     p."subaccount_id",
+    CURRENT_TIMESTAMP as created_at,
+    $2 as created_at_height,
     p.perpetual_id,
     p.ticker,
+    f.oracle_price,
     p.net_size AS size,
     CASE
-        WHEN p.net_size > 0 THEN 'BUY'
-        WHEN p.net_size < 0 THEN 'SELL'
-        ELSE 'FLAT'
+        WHEN p.net_size > 0 THEN 'LONG'
+        ELSE 'SHORT'
     END AS side,
-    f.oracle_price,
     f.rate,
-    - p.net_size * f.oracle_price * f.rate AS payment,
-    f.effective_at,
-    f.effective_at_height
+    - p.net_size * f.oracle_price * f.rate AS payment
 FROM
     paired p
     LEFT JOIN funding f ON f.perpetual_id = p.perpetual_id
+WHERE
+    p.net_size != 0
 ORDER BY
     p."subaccount_id",
     p.perpetual_id;
