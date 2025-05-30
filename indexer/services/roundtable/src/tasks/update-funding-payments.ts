@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   PersistentCacheTable,
@@ -7,8 +10,6 @@ import {
   BlockFromDatabase,
   BlockTable,
 } from '@dydxprotocol-indexer/postgres';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { DateTime } from 'luxon';
 
 import config from '../config';
@@ -56,7 +57,7 @@ export default async function runTask(): Promise<void> {
     // Load and execute the aggregate.sql file
     const sqlPath = join(__dirname, '../scripts/aggregate.sql');
     const sqlContent = readFileSync(sqlPath, 'utf8');
-    
+
     // bind the last height and current height to the sql content
     await Transaction.get(txId)?.raw(sqlContent, [lastHeight, currentHeight]);
 
@@ -68,7 +69,7 @@ export default async function runTask(): Promise<void> {
 
     stats.timing(`${statStart}.executeAggregate`, Date.now() - taskStart);
     logger.info({ at, message: 'Successfully executed aggregate task.' });
-    
+
     await Transaction.commit(txId);
   } catch (error) {
     await Transaction.rollback(txId);
@@ -81,4 +82,4 @@ export default async function runTask(): Promise<void> {
   }
 
   stats.timing(`${config.SERVICE_NAME}.update-funding-payments.total.timing`, Date.now() - taskStart);
-} 
+}
