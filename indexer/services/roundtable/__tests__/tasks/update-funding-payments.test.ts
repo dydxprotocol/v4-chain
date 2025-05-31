@@ -40,7 +40,7 @@ describe('update-funding-payments', () => {
     await dbHelpers.clearData();
   });
 
-  it('Successful initial run to create funding payments and initialize persistent cache', async () => {
+  it('Creates funding payment from fills only (no snapshot)', async () => {
     // seed some data.
     await OrderTable.create(defaultOrder);
     await FillTable.create(defaultFill);
@@ -129,6 +129,7 @@ describe('update-funding-payments', () => {
   });
 
   it('Creates funding payment from fills only (no snapshot)', async () => {
+    await OrderTable.create(defaultOrder);
     // Create fills without any existing funding payment
     const fill = {
       ...defaultFill,
@@ -162,7 +163,7 @@ describe('update-funding-payments', () => {
     expect(persistentCache?.value).toEqual('2');
   });
 
-  it('Maintains persistent cache value across multiple runs', async () => {
+  it('Maintains persistent cache value across multiple runs and does not create funding payments if no unprocessedfunding index update', async () => {
     // Initial setup
     await OrderTable.create(defaultOrder);
     await FillTable.create(defaultFill);
@@ -193,6 +194,6 @@ describe('update-funding-payments', () => {
       {},
       [],
     );
-    expect(fundingPayments.length).toEqual(2);
+    expect(fundingPayments.length).toEqual(1);
   });
 });
