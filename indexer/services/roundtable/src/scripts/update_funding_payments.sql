@@ -1,5 +1,5 @@
--- It calculates funding payments for subaccounts between heights $1 and $2
--- where $1 is the start height and $2 is the end height.
+-- It calculates funding payments for subaccounts between the last height for which we computed 
+-- funding payments and the current height.
 INSERT INTO funding_payments (
     "subaccountId",
     "createdAt",
@@ -25,8 +25,7 @@ WITH
             ) AS net_size
         FROM
             fills
-        -- contains inclusively fills from [$1 + 1, $2]
-        WHERE "createdAtHeight" > $1 AND "createdAtHeight" <= $2
+        WHERE "createdAtHeight" > :last_height AND "createdAtHeight" <= :current_height
         GROUP BY
             "subaccountId",
             "clobPairId"
@@ -36,27 +35,25 @@ WITH
         SELECT DISTINCT ON ("subaccountId", "perpetualId")
             "subaccountId",
             "perpetualId",
+            ticker,
             size as last_snapshot_size,
             "createdAtHeight"
         FROM funding_payments
-        -- snapshot at height $1.
-        WHERE "createdAtHeight" = $1
+        WHERE "createdAtHeight" = :last_height
         ORDER BY "subaccountId", "perpetualId", "createdAtHeight" DESC
     ),
     paired AS (
         SELECT
-            n."subaccountId",
-            pm.id AS "perpetualId",
-            pm."marketId",
-            n."clobPairId",
-            pm.ticker,
+            COALESCE(n."subaccountId", lfp."subaccountId") as "subaccountId",
+            COALESCE(pm.id, lfp."perpetualId") AS "perpetualId",
+            COALESCE(pm.ticker, lfp.ticker) AS ticker,
             COALESCE(n.net_size, 0) + COALESCE(lfp.last_snapshot_size, 0) AS net_size
         FROM
             net n
-            JOIN perpetual_markets pm ON pm."clobPairId" = n."clobPairId"
-            -- okay, but what if the clob_pair_id is not in the perpetual_markets table?
-            -- how do we handle a clob_pair_id that we can't find a perpetual_id for?
-            LEFT JOIN last_funding_payment lfp ON lfp."subaccountId" = n."subaccountId" 
+            LEFT JOIN perpetual_markets pm ON pm."clobPairId" = n."clobPairId"
+            -- okay, but what if the clob_pair_id is not in the perpetual_markets table
+            -- how do we handle a clob_pair_id that we can't find a perpetual_id for
+            FULL JOIN last_funding_payment lfp ON lfp."subaccountId" = n."subaccountId" 
                 AND lfp."perpetualId" = pm.id
     ),
     funding AS (
@@ -75,7 +72,7 @@ WITH
 SELECT
     p."subaccountId",
     CURRENT_TIMESTAMP as "createdAt",
-    $2 as "createdAtHeight",
+    :current_height as "createdAtHeight",
     p."perpetualId",
     p.ticker,
     f."oraclePrice",
