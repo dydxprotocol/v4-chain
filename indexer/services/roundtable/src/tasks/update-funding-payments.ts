@@ -45,13 +45,15 @@ export default async function runTask(): Promise<void> {
 
     const lastHeight: string = persistentCacheEntry?.value ?? defaultLastHeight;
     const currentHeight: string = latestBlock.blockHeight;
-
     // Load and execute the update_funding_payments.sql file
-    const sqlPath = join(__dirname, '../scripts/update_funding_payments.sql');
+    const sqlPath = join(__dirname, '..', 'scripts', 'update_funding_payments.sql');
     const sqlContent = readFileSync(sqlPath, 'utf8');
 
     // bind the last height and current height to the sql content
-    await Transaction.get(txId)?.raw(sqlContent, [lastHeight, currentHeight]);
+    await Transaction.get(txId)?.raw(sqlContent, {
+      last_height: lastHeight,
+      current_height: currentHeight
+    });
 
     // Update the persistent cache with the current height
     await PersistentCacheTable.upsert({
