@@ -86,7 +86,9 @@ SELECT
     - p.net_size * f."oraclePrice" * f.rate AS payment
 FROM
     paired p
-    LEFT JOIN funding f ON f."perpetualId" = p."perpetualId"
+    -- inner join here because we absolutely need a funding index to calculate funding payments. 
+    -- if no funding index, no entry will be created.
+    JOIN funding f ON f."perpetualId" = p."perpetualId"
 WHERE
     p.net_size != 0
 ORDER BY
