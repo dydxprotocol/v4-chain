@@ -25,6 +25,7 @@ WITH
             ) AS net_size
         FROM
             fills
+        -- we only want fills in range [last processed height + 1, current height]
         WHERE "createdAtHeight" > :last_height AND "createdAtHeight" <= :current_height
         GROUP BY
             "subaccountId",
@@ -39,6 +40,9 @@ WITH
             size as last_snapshot_size,
             "createdAtHeight"
         FROM funding_payments
+        -- we only want the last funding payment for each subaccount and perpetual_id
+        -- this way, we can calculate current position by positions at last height
+        -- plus fills from last height + 1 to current height.
         WHERE "createdAtHeight" = :last_height
         ORDER BY "subaccountId", "perpetualId", "createdAtHeight" DESC
     ),
@@ -50,9 +54,10 @@ WITH
             COALESCE(n.net_size, 0) + COALESCE(lfp.last_snapshot_size, 0) AS net_size
         FROM
             net n
+            -- left join pm here to processed clobPairId into perpetual_id.
             LEFT JOIN perpetual_markets pm ON pm."clobPairId" = n."clobPairId"
-            -- okay, but what if the clob_pair_id is not in the perpetual_markets table
-            -- how do we handle a clob_pair_id that we can't find a perpetual_id for
+            -- full join here because we want the entries when either net or last_funding_payment is null.
+            -- no match necessary. 
             FULL JOIN last_funding_payment lfp ON lfp."subaccountId" = n."subaccountId" 
                 AND lfp."perpetualId" = pm.id
     ),
