@@ -140,6 +140,20 @@ export async function create(
   }).returning('*');
 }
 
+export async function findAllHeightsStartingAt(
+  startHeight: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<string[]> {
+  const baseQuery: QueryBuilder<FundingIndexUpdatesModel> = setupBaseQuery<FundingIndexUpdatesModel>(FundingIndexUpdatesModel, options);
+  const heights: FundingIndexUpdatesModel[] = await baseQuery
+    .distinct(FundingIndexUpdatesColumns.effectiveAtHeight)
+    .where(FundingIndexUpdatesColumns.effectiveAtHeight, '>=', startHeight)
+    .orderBy(FundingIndexUpdatesColumns.effectiveAtHeight, Ordering.ASC)
+    .returning(FundingIndexUpdatesColumns.effectiveAtHeight);
+
+  return heights.map((height: FundingIndexUpdatesModel) => height.effectiveAtHeight);
+}
+
 export async function findById(
   id: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
