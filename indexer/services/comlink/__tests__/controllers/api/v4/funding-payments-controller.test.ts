@@ -90,7 +90,7 @@ describe('funding-payments-controller#V4', () => {
       expect.arrayContaining([
         expect.objectContaining(expectedFundingPayment1),
         expect.objectContaining(expectedFundingPayment2),
-      ])
+      ]),
     );
   });
 
@@ -101,7 +101,9 @@ describe('funding-payments-controller#V4', () => {
     });
 
     expect(response.body.fundingPayments).toEqual(
-      expect.arrayContaining([expect.objectContaining(expectedFundingPayment1)])
+      expect.arrayContaining([
+        expect.objectContaining(expectedFundingPayment1),
+      ]),
     );
   });
 
@@ -115,7 +117,7 @@ describe('funding-payments-controller#V4', () => {
       expect.arrayContaining([
         expect.objectContaining(expectedFundingPayment1),
         expect.objectContaining(expectedFundingPayment2),
-      ])
+      ]),
     );
   });
 
@@ -130,7 +132,7 @@ describe('funding-payments-controller#V4', () => {
         expect.objectContaining(expectedFundingPayment1),
         expect.objectContaining(expectedFundingPayment2),
         expect.objectContaining(expectedFundingPayment3),
-      ])
+      ]),
     );
   });
 
@@ -147,7 +149,7 @@ describe('funding-payments-controller#V4', () => {
         msg: 'address must be a valid dydx address',
         param: 'address',
         value: 'inv@lid',
-      })
+      }),
     );
   });
 
@@ -164,7 +166,7 @@ describe('funding-payments-controller#V4', () => {
         location: 'query',
         param: 'subaccountNumber',
         value: 'invalid',
-      })
+      }),
     );
   });
 });
