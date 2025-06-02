@@ -59,6 +59,7 @@ export class FundingPaymentController extends Controller {
       ticker,
       createdOnOrAfter: afterOrAt,
       limit,
+      page,
     };
 
     const {
