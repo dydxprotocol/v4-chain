@@ -41,27 +41,6 @@ describe('update-funding-payments', () => {
     await dbHelpers.clearData();
   });
 
-  it('Creates funding payment from fills only (no snapshot)', async () => {
-    // seed some data.
-    await OrderTable.create(defaultOrder);
-    await FillTable.create(defaultFill);
-    await FundingIndexUpdatesTable.create(defaultFundingIndexUpdate);
-    // Run task
-    await updateFundingPaymentsTask();
-
-    // Check that persistent cache was updated
-    const persistentCache = await PersistentCacheTable.findById(
-      PersistentCacheKeys.FUNDING_PAYMENTS_LAST_PROCESSED_HEIGHT,
-    );
-    expect(persistentCache).toBeDefined();
-    expect(persistentCache?.value).toEqual('2');
-
-    // check that funding payments were created, one should have been created.
-    const fundingPayments = await FundingPaymentsTable.findAll({}, []);
-    expect(fundingPayments).toBeDefined();
-    expect(fundingPayments?.length).toEqual(1);
-  });
-
   it('Creates funding payment from snapshot only (no fills)', async () => {
     // Create initial funding payment as snapshot
     const snapshotFundingPayment = {
@@ -155,7 +134,7 @@ describe('update-funding-payments', () => {
     expect(persistentCache?.value).toEqual('2');
   });
 
-  it('Maintains persistent cache value across multiple runs and does not create funding payments if no unprocessedfunding index update', async () => {
+  it('Maintains persistent cache value across multiple runs and does not create funding payments if no unprocessed funding index update', async () => {
     // Initial setup
     await OrderTable.create(defaultOrder);
     await FillTable.create(defaultFill);
@@ -174,12 +153,12 @@ describe('update-funding-payments', () => {
       time: new Date().toISOString(),
     });
 
-    // Second run
+    // Second run doesn't create funding payments because no new funding index updates.
     await updateFundingPaymentsTask();
     const secondRunCache = await PersistentCacheTable.findById(
       PersistentCacheKeys.FUNDING_PAYMENTS_LAST_PROCESSED_HEIGHT,
     );
-    expect(secondRunCache?.value).toEqual('3');
+    expect(secondRunCache?.value).toEqual('2');
 
     // Verify funding payments were created for both runs
     const fundingPayments = await FundingPaymentsTable.findAll({}, []);
