@@ -1,10 +1,7 @@
 import { QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
-import {
-  setupBaseQuery,
-  verifyAllRequiredFields,
-} from '../helpers/stores-helpers';
+import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
 import Transaction from '../helpers/transaction';
 import { getSubaccountQueryForParent } from '../lib/parent-subaccount-helpers';
 import FundingPaymentsModel from '../models/funding-payments-model';
@@ -36,7 +33,7 @@ export async function findAll(
     parentSubaccount,
   }: FundingPaymentsQueryConfig,
   requiredFields: QueryableField[],
-  options: Options = DEFAULT_POSTGRES_OPTIONS
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<PaginationFromDatabase<FundingPaymentsFromDatabase>> {
   if (parentSubaccount !== undefined && subaccountId !== undefined) {
     throw new Error('Cannot specify both parentSubaccount and subaccountId');
@@ -55,29 +52,25 @@ export async function findAll(
       createdOnOrAfterHeight,
       createdOnOrAfter,
     } as QueryConfig,
-    requiredFields
+    requiredFields,
   );
 
-  let baseQuery: QueryBuilder<FundingPaymentsModel> =
-    setupBaseQuery<FundingPaymentsModel>(FundingPaymentsModel, options);
+  let baseQuery: QueryBuilder<FundingPaymentsModel> = setupBaseQuery<FundingPaymentsModel>(
+    FundingPaymentsModel,
+    options,
+  );
 
   if (subaccountId !== undefined) {
-    baseQuery = baseQuery.whereIn(
-      FundingPaymentsColumns.subaccountId,
-      subaccountId
-    );
+    baseQuery = baseQuery.whereIn(FundingPaymentsColumns.subaccountId, subaccountId);
   } else if (parentSubaccount !== undefined) {
     baseQuery = baseQuery.whereIn(
       FundingPaymentsColumns.subaccountId,
-      getSubaccountQueryForParent(parentSubaccount)
+      getSubaccountQueryForParent(parentSubaccount),
     );
   }
 
   if (perpetualId !== undefined) {
-    baseQuery = baseQuery.whereIn(
-      FundingPaymentsColumns.perpetualId,
-      perpetualId
-    );
+    baseQuery = baseQuery.whereIn(FundingPaymentsColumns.perpetualId, perpetualId);
   }
 
   if (ticker !== undefined) {
@@ -85,10 +78,7 @@ export async function findAll(
   }
 
   if (createdAtHeight !== undefined) {
-    baseQuery = baseQuery.where(
-      FundingPaymentsColumns.createdAtHeight,
-      createdAtHeight
-    );
+    baseQuery = baseQuery.where(FundingPaymentsColumns.createdAtHeight, createdAtHeight);
   }
 
   if (createdAt !== undefined) {
@@ -99,32 +89,24 @@ export async function findAll(
     baseQuery = baseQuery.where(
       FundingPaymentsColumns.createdAtHeight,
       '<=',
-      createdBeforeOrAtHeight
+      createdBeforeOrAtHeight,
     );
   }
 
   if (createdBeforeOrAt !== undefined) {
-    baseQuery = baseQuery.where(
-      FundingPaymentsColumns.createdAt,
-      '<=',
-      createdBeforeOrAt
-    );
+    baseQuery = baseQuery.where(FundingPaymentsColumns.createdAt, '<=', createdBeforeOrAt);
   }
 
   if (createdOnOrAfterHeight !== undefined) {
     baseQuery = baseQuery.where(
       FundingPaymentsColumns.createdAtHeight,
       '>=',
-      createdOnOrAfterHeight
+      createdOnOrAfterHeight,
     );
   }
 
   if (createdOnOrAfter !== undefined) {
-    baseQuery = baseQuery.where(
-      FundingPaymentsColumns.createdAt,
-      '>=',
-      createdOnOrAfter
-    );
+    baseQuery = baseQuery.where(FundingPaymentsColumns.createdAt, '>=', createdOnOrAfter);
   }
 
   if (options.orderBy !== undefined) {
@@ -132,10 +114,7 @@ export async function findAll(
       baseQuery = baseQuery.orderBy(column, order);
     }
   } else {
-    baseQuery = baseQuery.orderBy(
-      FundingPaymentsColumns.createdAtHeight,
-      Ordering.DESC
-    );
+    baseQuery = baseQuery.orderBy(FundingPaymentsColumns.createdAtHeight, Ordering.DESC);
   }
 
   return handleLimitAndPagination(baseQuery, limit, page);
@@ -143,7 +122,7 @@ export async function findAll(
 
 export async function create(
   fundingPaymentToCreate: FundingPaymentsCreateObject,
-  options: Options = { txId: undefined }
+  options: Options = { txId: undefined },
 ): Promise<FundingPaymentsFromDatabase> {
   return FundingPaymentsModel.query(Transaction.get(options.txId))
     .insert(fundingPaymentToCreate)
@@ -154,10 +133,12 @@ export async function findById(
   subaccountId: string,
   createdAt: string,
   ticker: string,
-  options: Options = DEFAULT_POSTGRES_OPTIONS
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<FundingPaymentsFromDatabase | undefined> {
-  const baseQuery: QueryBuilder<FundingPaymentsModel> =
-    setupBaseQuery<FundingPaymentsModel>(FundingPaymentsModel, options);
+  const baseQuery: QueryBuilder<FundingPaymentsModel> = setupBaseQuery<FundingPaymentsModel>(
+    FundingPaymentsModel,
+    options,
+  );
   return baseQuery
     .where(FundingPaymentsColumns.subaccountId, subaccountId)
     .where(FundingPaymentsColumns.createdAt, createdAt)
@@ -176,7 +157,7 @@ export async function findById(
 async function handleLimitAndPagination(
   baseQuery: QueryBuilder<FundingPaymentsModel>,
   limit?: number,
-  page?: number
+  page?: number,
 ): Promise<PaginationFromDatabase<FundingPaymentsFromDatabase>> {
   let query = baseQuery;
 
@@ -203,9 +184,7 @@ async function handleLimitAndPagination(
 
     query = query.offset(offset).limit(limit);
 
-    const results = (await query.returning(
-      '*'
-    )) as FundingPaymentsFromDatabase[];
+    const results = (await query.returning('*')) as FundingPaymentsFromDatabase[];
     return {
       results,
       limit,
