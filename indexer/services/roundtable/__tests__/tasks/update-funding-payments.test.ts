@@ -1,25 +1,26 @@
-import { stats } from '@dydxprotocol-indexer/base';
 import {
   dbHelpers,
   testMocks,
   PersistentCacheTable,
   PersistentCacheKeys,
   BlockTable,
-  Transaction,
   FillTable,
-  WalletTable,
   OrderTable,
   FundingPaymentsTable,
-  Liquidity,
   OrderSide,
-  FillType,
-  OrderType,
   FundingIndexUpdatesTable,
   PositionSide,
 } from '@dydxprotocol-indexer/postgres';
 import updateFundingPaymentsTask from '../../src/tasks/update-funding-payments';
-import { createdDateTime, defaultFill, defaultFundingIndexUpdate, defaultOrder, defaultOrderId, defaultPerpetualMarket, defaultSubaccountId, defaultTendermintEventId, defaultWallet } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
-import { ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  createdDateTime,
+  defaultFill,
+  defaultFundingIndexUpdate,
+  defaultOrder,
+  defaultPerpetualMarket,
+  defaultSubaccountId,
+  defaultTendermintEventId,
+} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('update-funding-payments', () => {
   beforeAll(async () => {
@@ -56,10 +57,7 @@ describe('update-funding-payments', () => {
     expect(persistentCache?.value).toEqual('2');
 
     // check that funding payments were created, one should have been created.
-    const fundingPayments = await FundingPaymentsTable.findAll(
-        {},
-        [],
-    );
+    const fundingPayments = await FundingPaymentsTable.findAll({}, []);
     expect(fundingPayments).toBeDefined();
     expect(fundingPayments?.length).toEqual(1);
   });
@@ -109,10 +107,7 @@ describe('update-funding-payments', () => {
     await updateFundingPaymentsTask();
 
     // Verify funding payments
-    const fundingPayments = await FundingPaymentsTable.findAll(
-      {},
-      [],
-    );
+    const fundingPayments = await FundingPaymentsTable.findAll({}, []);
     expect(fundingPayments.length).toEqual(2); // Original snapshot + new payment
     expect(fundingPayments[1]).toMatchObject({
       subaccountId: defaultSubaccountId,
@@ -144,10 +139,7 @@ describe('update-funding-payments', () => {
     await updateFundingPaymentsTask();
 
     // Verify funding payments
-    const fundingPayments = await FundingPaymentsTable.findAll(
-      {},
-      [],
-    );
+    const fundingPayments = await FundingPaymentsTable.findAll({}, []);
     expect(fundingPayments.length).toEqual(1);
     expect(fundingPayments[0]).toMatchObject({
       subaccountId: defaultSubaccountId,
@@ -190,10 +182,7 @@ describe('update-funding-payments', () => {
     expect(secondRunCache?.value).toEqual('3');
 
     // Verify funding payments were created for both runs
-    const fundingPayments = await FundingPaymentsTable.findAll(
-      {},
-      [],
-    );
+    const fundingPayments = await FundingPaymentsTable.findAll({}, []);
     expect(fundingPayments.length).toEqual(1);
   });
 });

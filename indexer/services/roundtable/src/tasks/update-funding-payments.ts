@@ -47,7 +47,7 @@ export default async function runTask(): Promise<void> {
     const currentHeight: string = latestBlock.blockHeight;
 
     // Skip processing if no new blocks to process
-    if (parseInt(currentHeight) <= parseInt(lastHeight)) {
+    if (parseInt(currentHeight, 10) <= parseInt(lastHeight, 10)) {
       logger.info({
         at,
         message: `No new blocks to process. Current: ${currentHeight}, Last: ${lastHeight}`,
@@ -63,7 +63,7 @@ export default async function runTask(): Promise<void> {
     // bind the last height and current height to the sql content
     await Transaction.get(txId)?.raw(sqlContent, {
       last_height: lastHeight,
-      current_height: currentHeight
+      current_height: currentHeight,
     });
 
     // Update the persistent cache with the current height
