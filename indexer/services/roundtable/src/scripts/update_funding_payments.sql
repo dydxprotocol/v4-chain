@@ -70,7 +70,7 @@ WITH
             f."effectiveAt" AS "effectiveAt"
         FROM
             funding_index_updates f
-        WHERE f."effectiveAtHeight" > :last_height
+        WHERE f."effectiveAtHeight" = :current_height
         ORDER BY
             f."perpetualId",
             f."effectiveAtHeight" DESC
