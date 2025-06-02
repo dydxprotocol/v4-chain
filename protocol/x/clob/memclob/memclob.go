@@ -2232,17 +2232,17 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 		// by creating an order that would have the same collat requirements. An equivalent order is
 		// simply a new order at the same price/side and size = makerOrderRemainingSize.
 		equivalentOrder := types.PendingOpenOrder{
-			RemainingQuantums: makerOrderRemainingSize,
-			IsBuy:             makerOrder.IsBuy(),
-			Subticks:          makerOrder.GetOrderSubticks(),
-			ClobPairId:        clobPair.GetClobPairId(),
+			RemainingQuantums:     makerOrderRemainingSize,
+			IsBuy:                 makerOrder.IsBuy(),
+			Subticks:              makerOrder.GetOrderSubticks(),
+			ClobPairId:            clobPair.GetClobPairId(),
+			BuilderCodeParameters: makerOrder.GetBuilderCodeParameters(),
 		}
 
 		updateCheckResult := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
 			ctx,
 			makerOrder.GetSubaccountId(),
 			equivalentOrder,
-			makerOrder.BuilderCodeParameters,
 		)
 
 		if updateCheckResult == satypes.Success {

@@ -22,17 +22,17 @@ type ClobKeeper struct {
 	mock.Mock
 }
 
-// AddOrderToOrderbookSubaccountUpdatesCheck provides a mock function with given fields: ctx, subaccountId, order, builderCodeParams
-func (_m *ClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(ctx types.Context, subaccountId subaccountstypes.SubaccountId, order clobtypes.PendingOpenOrder, builderCodeParams *clobtypes.BuilderCodeParameters) subaccountstypes.UpdateResult {
-	ret := _m.Called(ctx, subaccountId, order, builderCodeParams)
+// AddOrderToOrderbookSubaccountUpdatesCheck provides a mock function with given fields: ctx, subaccountId, order
+func (_m *ClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(ctx types.Context, subaccountId subaccountstypes.SubaccountId, order clobtypes.PendingOpenOrder) subaccountstypes.UpdateResult {
+	ret := _m.Called(ctx, subaccountId, order)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddOrderToOrderbookSubaccountUpdatesCheck")
 	}
 
 	var r0 subaccountstypes.UpdateResult
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, clobtypes.PendingOpenOrder, *clobtypes.BuilderCodeParameters) subaccountstypes.UpdateResult); ok {
-		r0 = rf(ctx, subaccountId, order, builderCodeParams)
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, clobtypes.PendingOpenOrder) subaccountstypes.UpdateResult); ok {
+		r0 = rf(ctx, subaccountId, order)
 	} else {
 		r0 = ret.Get(0).(subaccountstypes.UpdateResult)
 	}

@@ -20,7 +20,6 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		order PendingOpenOrder,
-		builderCodeParams *BuilderCodeParameters,
 	) satypes.UpdateResult
 	BatchCancelShortTermOrder(
 		ctx sdk.Context,

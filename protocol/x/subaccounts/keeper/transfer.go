@@ -424,6 +424,9 @@ func (k Keeper) TransferInsuranceFundPayments(
 	)
 }
 
+// TransferBuilderFees transfers builder code fees from the collateral pool to the builder address.
+// Prior to the transfer, the builder fees are subtracted from the trader's subaccount quote balance.
+// This function will panic if the builder fee quantums is negative - which is never expected.
 func (k Keeper) TransferBuilderFees(
 	ctx sdk.Context,
 	productId uint32,
@@ -435,10 +438,14 @@ func (k Keeper) TransferBuilderFees(
 		return err
 	}
 
+	if builderFeeQuantums.Sign() < 0 {
+		panic("builder fee quantums is negative")
+	}
+
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assettypes.AssetUsdc.Id,
-		new(big.Int).Abs(builderFeeQuantums),
+		builderFeeQuantums,
 	)
 	if err != nil {
 		// Panic if USDC does not exist.

@@ -389,8 +389,8 @@ func (k Keeper) persistMatchedOrders(
 	}
 
 	// apply broker fees for taker and maker separately
-	var makerBuilderFeeQuantums *big.Int
-	var takerBuilderFeeQuantums *big.Int
+	makerBuilderFeeQuantums := big.NewInt(0)
+	takerBuilderFeeQuantums := big.NewInt(0)
 	var makerBuilderAddress string
 	var takerBuilderAddress string
 
@@ -493,24 +493,23 @@ func (k Keeper) persistMatchedOrders(
 	}
 
 	// Transfer builder fees for taker and maker builders if they exist
-	if containsBuilderParams(matchWithOrders.TakerOrder) {
-		takerBuilder := matchWithOrders.TakerOrder.MustGetOrder().BuilderCodeParameters
-		takerBuilderFeeQuantums := takerBuilder.GetBuilderFee(bigFillQuoteQuantums)
+	// Builder code fees are tranferred directly from the collateral pool to the
+	// builder address because the builder fee is always taken out from
+	// the trader's subaccount quote balance.
+	if takerBuilderFeeQuantums.Sign() > 0 {
 		if err := k.subaccountsKeeper.TransferBuilderFees(ctx,
 			perpetualId,
 			takerBuilderFeeQuantums,
-			takerBuilder.BuilderAddress,
+			takerBuilderAddress,
 		); err != nil {
 			return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 		}
 	}
-	if containsBuilderParams(matchWithOrders.MakerOrder) {
-		makerBuilder := matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
-		makerBuilderFeeQuantums := makerBuilder.GetBuilderFee(bigFillQuoteQuantums)
+	if makerBuilderFeeQuantums.Sign() > 0 {
 		if err := k.subaccountsKeeper.TransferBuilderFees(ctx,
 			perpetualId,
 			makerBuilderFeeQuantums,
-			makerBuilder.BuilderAddress,
+			makerBuilderAddress,
 		); err != nil {
 			return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 		}
@@ -667,8 +666,4 @@ func getUpdatedOrderFillAmount(
 	}
 
 	return satypes.BaseQuantums(bigNewFillAmount.Uint64()), nil
-}
-
-func containsBuilderParams(order types.MatchableOrder) bool {
-	return !order.IsLiquidation() && order.MustGetOrder().BuilderCodeParameters != nil
 }

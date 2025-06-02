@@ -525,7 +525,6 @@ func (f *FakeMemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 	order types.PendingOpenOrder,
-	builderCodeParams *types.BuilderCodeParameters,
 ) satypes.UpdateResult {
 	return satypes.Success
 }
