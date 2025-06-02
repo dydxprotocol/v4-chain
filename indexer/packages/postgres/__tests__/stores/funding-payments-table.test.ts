@@ -1,4 +1,7 @@
-import { FundingPaymentsCreateObject, FundingPaymentsFromDatabase } from '../../src/types';
+import {
+  FundingPaymentsCreateObject,
+  FundingPaymentsFromDatabase,
+} from '../../src/types';
 import * as FundingPaymentsTable from '../../src/stores/funding-payments-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import { seedData } from '../helpers/mock-generators';
@@ -37,34 +40,38 @@ describe('funding payments store', () => {
       FundingPaymentsTable.create(defaultFundingPayment2),
     ]);
 
-    const fundingPayments: FundingPaymentsFromDatabase[] = await
-    FundingPaymentsTable.findAll(
+    const { results: fundingPayments } = await FundingPaymentsTable.findAll(
       {},
       [],
-      {},
+      {}
     );
 
     expect(fundingPayments.length).toEqual(2);
-    expect(fundingPayments[0]).toEqual(expect.objectContaining(defaultFundingPayment2));
-    expect(fundingPayments[1]).toEqual(expect.objectContaining(defaultFundingPayment));
+    expect(fundingPayments[0]).toEqual(
+      expect.objectContaining(defaultFundingPayment2)
+    );
+    expect(fundingPayments[1]).toEqual(
+      expect.objectContaining(defaultFundingPayment)
+    );
   });
 
   it('Successfully finds FundingPayments with createdAtHeight', async () => {
     await FundingPaymentsTable.create(defaultFundingPayment);
 
-    const fundingPayments: FundingPaymentsFromDatabase[] = await
-    FundingPaymentsTable.findAll(
+    const { results: fundingPayments } = await FundingPaymentsTable.findAll(
       {
         createdAtHeight: defaultFundingPayment.createdAtHeight,
       },
       [],
-      { readReplica: true },
+      { readReplica: true }
     );
 
     expect(fundingPayments.length).toEqual(1);
-    expect(fundingPayments[0]).toEqual(expect.objectContaining({
-      ...defaultFundingPayment,
-    }));
+    expect(fundingPayments[0]).toEqual(
+      expect.objectContaining({
+        ...defaultFundingPayment,
+      })
+    );
   });
 
   it('Successfully finds all FundingPayments created before or at height', async () => {
@@ -76,17 +83,18 @@ describe('funding payments store', () => {
       }),
     ]);
 
-    const fundingPayments: FundingPaymentsFromDatabase[] = await
-    FundingPaymentsTable.findAll(
+    const { results: fundingPayments } = await FundingPaymentsTable.findAll(
       {
         createdBeforeOrAtHeight: defaultFundingPayment.createdAtHeight,
       },
       [],
-      {},
+      {}
     );
 
     expect(fundingPayments.length).toEqual(1);
-    expect(fundingPayments[0]).toEqual(expect.objectContaining(defaultFundingPayment));
+    expect(fundingPayments[0]).toEqual(
+      expect.objectContaining(defaultFundingPayment)
+    );
   });
 
   it('Successfully finds all FundingPayments created before or at time', async () => {
@@ -100,28 +108,31 @@ describe('funding payments store', () => {
       FundingPaymentsTable.create(fundingPayment2),
     ]);
 
-    const fundingPayments: FundingPaymentsFromDatabase[] = await
-    FundingPaymentsTable.findAll(
+    const { results: fundingPayments } = await FundingPaymentsTable.findAll(
       {
         createdBeforeOrAt: '2000-05-25T00:00:00.000Z',
       },
       [],
-      {},
+      {}
     );
 
     expect(fundingPayments.length).toEqual(1);
-    expect(fundingPayments[0]).toEqual(expect.objectContaining(fundingPayment2));
+    expect(fundingPayments[0]).toEqual(
+      expect.objectContaining(fundingPayment2)
+    );
   });
 
   it('Successfully finds a FundingPayment by id', async () => {
     await FundingPaymentsTable.create(defaultFundingPayment);
 
-    const fundingPayment: FundingPaymentsFromDatabase | undefined = await
-    FundingPaymentsTable.findById(
-      defaultFundingPayment.subaccountId,
-      defaultFundingPayment.createdAt,
-      defaultFundingPayment.ticker,
+    const fundingPayment: FundingPaymentsFromDatabase | undefined =
+      await FundingPaymentsTable.findById(
+        defaultFundingPayment.subaccountId,
+        defaultFundingPayment.createdAt,
+        defaultFundingPayment.ticker
+      );
+    expect(fundingPayment).toEqual(
+      expect.objectContaining(defaultFundingPayment)
     );
-    expect(fundingPayment).toEqual(expect.objectContaining(defaultFundingPayment));
   });
 });
