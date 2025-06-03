@@ -47,8 +47,10 @@ export async function findAll(
     eventId,
     effectiveAt,
     effectiveAtHeight,
+    createdOnOrAfterBlockHeight,
     effectiveBeforeOrAt,
     effectiveBeforeOrAtHeight,
+    distinctFields,
   }: FundingIndexUpdatesQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
@@ -61,6 +63,7 @@ export async function findAll(
       eventId,
       effectiveAt,
       effectiveAtHeight,
+      createdOnOrAfterBlockHeight,
       effectiveBeforeOrAt,
       effectiveBeforeOrAtHeight,
     } as QueryConfig,
@@ -92,12 +95,26 @@ export async function findAll(
     baseQuery = baseQuery.where(FundingIndexUpdatesColumns.effectiveAt, '<=', effectiveBeforeOrAt);
   }
 
+  if (createdOnOrAfterBlockHeight !== undefined) {
+    baseQuery = baseQuery.where(FundingIndexUpdatesColumns.effectiveAtHeight, '>=', createdOnOrAfterBlockHeight);
+  }
+
   if (effectiveBeforeOrAtHeight !== undefined) {
     baseQuery = baseQuery.where(
       FundingIndexUpdatesColumns.effectiveAtHeight,
       '<=',
       effectiveBeforeOrAtHeight,
     );
+  }
+
+  if (distinctFields !== undefined) {
+    for (const field of distinctFields) {
+      // ensure field is a valid column
+      if (!Object.values(FundingIndexUpdatesColumns).includes(field as FundingIndexUpdatesColumns)) {
+        throw new Error(`Invalid distinct field: ${field}`);
+      }
+      baseQuery = baseQuery.distinct(field);
+    }
   }
 
   if (options.orderBy !== undefined) {

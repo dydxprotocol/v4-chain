@@ -8,6 +8,7 @@ import {
   PersistentCacheFromDatabase,
   Transaction,
   FundingIndexUpdatesTable,
+  Ordering,
 } from '@dydxprotocol-indexer/postgres';
 
 import config from '../config';
@@ -96,10 +97,25 @@ export default async function runTask(): Promise<void> {
 
   // Get all unique effectiveAtHeights from funding index updates since the last processed height.
   const lastProcessedHeight: string = await getLastProcessedHeight();
-  const fundingUpdates = await FundingIndexUpdatesTable.findAllHeightsStartingAt(
-    lastProcessedHeight,
+  const fundingUpdates = await FundingIndexUpdatesTable.findAll(
+    {
+      createdOnOrAfterBlockHeight: lastProcessedHeight,
+      distinctFields: ['effectiveAtHeight'],
+    },
+    [],
+    {
+      orderBy: [['effectiveAtHeight', Ordering.ASC]],
+    },
   );
-  for (let i = 0; i < fundingUpdates.length; i += 1) {
+  logger.info({
+    at: 'update-funding-payments#runTask',
+    message: `Found ${fundingUpdates.length} funding updates to process.`,
+  });
+
+  // Get unique heights from the funding updates
+  const fundingHeights = [...fundingUpdates.map(update => update.effectiveAtHeight)];
+
+  for (let i = 0; i < fundingHeights.length; i += 1) {
     // retry up to 3 times.
     for (let retries = 0; retries < 3; retries += 1) {
       const txId: number = await Transaction.start();
@@ -107,7 +123,7 @@ export default async function runTask(): Promise<void> {
         // start transaction with last processed height.
         const lastHeight: string = await getLastProcessedHeight();
         // get the current height from the funding index updates.
-        const currentHeight: string = fundingUpdates[i];
+        const currentHeight: string = fundingHeights[i];
         logger.info({
           at,
           message: 'Processing funding payment update for heights',
@@ -129,14 +145,14 @@ export default async function runTask(): Promise<void> {
           at,
           message: 'Error processing funding payment update, will retry, retries left',
           retriesLeft: 2 - retries,
-          end: fundingUpdates[i],
+          end: fundingHeights[i],
           error,
         });
         if (retries === 2) {
           logger.error({
             at,
             message: 'Failed to process funding payment update after 3 retries for height ending at',
-            end: fundingUpdates[i],
+            end: fundingHeights[i],
             error,
           });
           throw error;

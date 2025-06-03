@@ -290,6 +290,8 @@ export interface FundingIndexUpdatesQueryConfig extends QueryConfig {
   [QueryableField.EFFECTIVE_AT_HEIGHT]?: string,
   [QueryableField.EFFECTIVE_BEFORE_OR_AT]?: string,
   [QueryableField.EFFECTIVE_BEFORE_OR_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER_BLOCK_HEIGHT]?: string,
+  distinctFields?: string[],
 }
 
 export interface LiquidityTiersQueryConfig extends QueryConfig {
