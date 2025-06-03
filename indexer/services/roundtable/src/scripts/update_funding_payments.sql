@@ -62,7 +62,7 @@ WITH
                 AND lfp."perpetualId" = pm.id
     ),
     funding AS (
-        /* Grab the latest funding index update per perpetual_id */
+        -- Grab the latest funding index update for each perpetual.
         SELECT DISTINCT
             ON (f."perpetualId") f."perpetualId" AS "perpetualId",
             f.rate,
