@@ -8,6 +8,7 @@ import {
   PersistentCacheFromDatabase,
   Transaction,
   FundingIndexUpdatesTable,
+  FundingPaymentsTable,
 } from '@dydxprotocol-indexer/postgres';
 
 import config from '../config';
@@ -108,6 +109,12 @@ export default async function runTask(): Promise<void> {
         const lastHeight: string = await getLastProcessedHeight();
         // get the current height from the funding index updates.
         const currentHeight: string = fundingUpdates[i];
+        logger.info({
+          at,
+          message: 'Processing funding payment update for heights',
+          start: lastHeight,
+          end: currentHeight,
+        });
         // compute the funding payments.
         await processFundingPaymentUpdate(txId, lastHeight, currentHeight, sqlContent);
         logger.info({
@@ -121,11 +128,18 @@ export default async function runTask(): Promise<void> {
         await Transaction.rollback(txId);
         logger.error({
           at,
-          message: 'Error processing funding payment update',
+          message: 'Error processing funding payment update, will retry, retries left',
+          retriesLeft: 2 - retries,
           end: fundingUpdates[i],
           error,
         });
         if (retries === 2) {
+          logger.error({
+            at,
+            message: 'Failed to process funding payment update after 3 retries for height ending at',
+            end: fundingUpdates[i],
+            error,
+          });
           throw error;
         }
       } finally {
