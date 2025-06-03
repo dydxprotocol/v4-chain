@@ -53,7 +53,8 @@ export async function addStatefulOrderUpdate(
 
   return evalAsync(
     statefulOrderId,
-    Buffer.from(Uint8Array.from(OrderUpdateV1.encode(orderUpdate).finish())).toString('binary'),
+    // TODO: use String to directly convert the UInt8Array to a string
+    Buffer.from(OrderUpdateV1.encode(orderUpdate).finish()).toString('binary'),
     updateTimestamp,
   );
 }
