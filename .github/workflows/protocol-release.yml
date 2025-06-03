@@ -119,7 +119,7 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
-          twine upload -r pypi dist/*
+          twine upload --verbose -r pypi dist/*
 
   v4-proto-js-release:
     runs-on: ubuntu-latest
