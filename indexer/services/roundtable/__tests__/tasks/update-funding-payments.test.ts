@@ -90,7 +90,7 @@ describe('update-funding-payments', () => {
     await updateFundingPaymentsTask();
 
     // Verify funding payments
-    const fundingPayments = await FundingPaymentsTable.findAll({}, []);
+    const { results: fundingPayments } = await FundingPaymentsTable.findAll({}, []);
     expect(fundingPayments.length).toEqual(2); // Original snapshot + new payment
     expect(fundingPayments[1]).toMatchObject({
       subaccountId: defaultSubaccountId,
@@ -122,7 +122,7 @@ describe('update-funding-payments', () => {
     await updateFundingPaymentsTask();
 
     // Verify funding payments
-    const fundingPayments = await FundingPaymentsTable.findAll({}, []);
+    const { results: fundingPayments } = await FundingPaymentsTable.findAll({}, []);
     expect(fundingPayments.length).toEqual(1);
     expect(fundingPayments[0]).toMatchObject({
       subaccountId: defaultSubaccountId,
@@ -165,7 +165,7 @@ describe('update-funding-payments', () => {
     expect(secondRunCache?.value).toEqual('2');
 
     // Verify funding payments were created for both runs
-    const fundingPayments = await FundingPaymentsTable.findAll({}, []);
+    const { results: fundingPayments } = await FundingPaymentsTable.findAll({}, []);
     expect(fundingPayments.length).toEqual(1);
   });
 
@@ -178,7 +178,7 @@ describe('update-funding-payments', () => {
     await updateFundingPaymentsTask();
 
     // Verify funding payments
-    const fundingPayments = await FundingPaymentsTable.findAll({}, []);
+    const { results: fundingPayments } = await FundingPaymentsTable.findAll({}, []);
     expect(fundingPayments.length).toEqual(1);
     expect(fundingPayments[0]).toMatchObject({
       subaccountId: defaultSubaccountId,
@@ -213,7 +213,7 @@ describe('update-funding-payments', () => {
       effectiveAtHeight: '3',
     });
 
-    // third funding payment created from fills + snaoshot with fills as same height as
+    // third funding payment created from fills + snapshot with fills as same height as
     // third index update which means it will be included.
     await BlockTable.create({
       blockHeight: '4',
@@ -251,7 +251,7 @@ describe('update-funding-payments', () => {
     await updateFundingPaymentsTask();
 
     // assert funding payments
-    const fundingPayments = await FundingPaymentsTable.findAll(
+    const { results: fundingPayments } = await FundingPaymentsTable.findAll(
       {},
       [],
       {
