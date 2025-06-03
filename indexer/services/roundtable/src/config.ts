@@ -147,7 +147,7 @@ export const configSchema = {
     default: 5 * ONE_MINUTE_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_UPDATE_FUNDING_PAYMENTS: parseInteger({
-    default: ONE_HOUR_IN_MILLISECONDS,
+    default: ONE_MINUTE_IN_MILLISECONDS,
   }),
   // Start delay
   START_DELAY_ENABLED: parseBoolean({ default: true }),
