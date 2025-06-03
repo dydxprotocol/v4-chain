@@ -76,6 +76,7 @@ jobs:
 
   v4-proto-py-release:
     runs-on: ubuntu-latest
+    environment: release
     defaults:
       run:
         working-directory: ./v4-proto-py
