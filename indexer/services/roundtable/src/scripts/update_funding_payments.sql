@@ -15,7 +15,7 @@ WITH
     net AS (
         SELECT
             "subaccountId",
-            "clobPairId", -- align the names
+            "clobPairId",
             SUM(
                 CASE
                     WHEN side = 'BUY' THEN size
@@ -31,7 +31,7 @@ WITH
             "clobPairId"
     ),
     -- figure out what the last funding payment was.
-    last_funding_payment AS (
+    position_snapshot AS (
         SELECT DISTINCT ON ("subaccountId", "perpetualId")
             "subaccountId",
             "perpetualId",
@@ -47,18 +47,18 @@ WITH
     ),
     paired AS (
         SELECT
-            COALESCE(n."subaccountId", lfp."subaccountId") as "subaccountId",
-            COALESCE(pm.id, lfp."perpetualId") AS "perpetualId",
-            COALESCE(pm.ticker, lfp.ticker) AS ticker,
-            COALESCE(n.net_size, 0) + COALESCE(lfp.last_snapshot_size, 0) AS net_size
+            COALESCE(n."subaccountId", ps."subaccountId") as "subaccountId",
+            COALESCE(pm.id, ps."perpetualId") AS "perpetualId",
+            COALESCE(pm.ticker, ps.ticker) AS ticker,
+            COALESCE(n.net_size, 0) + COALESCE(ps.last_snapshot_size, 0) AS net_size
         FROM
             net n
             -- left join pm here to processed clobPairId into perpetual_id.
             LEFT JOIN perpetual_markets pm ON pm."clobPairId" = n."clobPairId"
-            -- full join here because we want the entries when either net or last_funding_payment is null.
+            -- full join here because we want the entries when either net or position_snapshot is null.
             -- no match necessary. 
-            FULL JOIN last_funding_payment lfp ON lfp."subaccountId" = n."subaccountId" 
-                AND lfp."perpetualId" = pm.id
+            FULL JOIN position_snapshot ps ON ps."subaccountId" = n."subaccountId" 
+                AND ps."perpetualId" = pm.id
     ),
     funding AS (
         -- Grab the latest funding index update for each perpetual.
