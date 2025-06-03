@@ -420,10 +420,12 @@ const (
 	TimestampNonce = "timestamp_nonce"
 
 	// x/ratelimit
-	Capacity           = "capacity"
-	RateLimitDenom     = "rate_limit_denom"
-	LimiterIndex       = "limiter_index"
-	UndoWithdrawAmount = "undo_withdraw_amount"
+	Capacity            = "capacity"
+	RateLimitDenom      = "rate_limit_denom"
+	LimiterIndex        = "limiter_index"
+	UndoWithdrawAmount  = "undo_withdraw_amount"
+	IbcDepositAmount    = "ibc_deposit_amount"
+	IbcWithdrawalAmount = "ibc_withdrawal_amount"
 
 	// x/authz
 	MsgExec  = "msg_exec"
