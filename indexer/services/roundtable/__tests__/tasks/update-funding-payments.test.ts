@@ -213,7 +213,7 @@ describe('update-funding-payments', () => {
       effectiveAtHeight: '3',
     });
 
-    // third funding payment created from fills + snaoshot with fills as same height as 
+    // third funding payment created from fills + snaoshot with fills as same height as
     // third index update which means it will be included.
     await BlockTable.create({
       blockHeight: '4',
@@ -227,7 +227,7 @@ describe('update-funding-payments', () => {
       clobPairId: '1',
       orderId: defaultOrderId,
       size: '10',
-      price: '20000', 
+      price: '20000',
       quoteAmount: '200000',
       eventId: defaultTendermintEventId,
       transactionHash: '', // TODO: Add a real transaction Hash
@@ -269,7 +269,7 @@ describe('update-funding-payments', () => {
         createdAtHeight: '2',
         oraclePrice: '10000',
         rate: '0.0004',
-        ticker: 'BTC-USD'
+        ticker: 'BTC-USD',
       }),
       expect.objectContaining({
         subaccountId: defaultSubaccountId,
@@ -280,7 +280,7 @@ describe('update-funding-payments', () => {
         createdAtHeight: '3',
         oraclePrice: '10000',
         rate: '0.0004',
-        ticker: 'BTC-USD'
+        ticker: 'BTC-USD',
       }),
       expect.objectContaining({
         subaccountId: defaultSubaccountId,
@@ -291,7 +291,7 @@ describe('update-funding-payments', () => {
         createdAtHeight: '4',
         oraclePrice: '10000',
         rate: '0.0004',
-        ticker: 'BTC-USD'
+        ticker: 'BTC-USD',
       }),
     ]);
   });

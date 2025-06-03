@@ -8,7 +8,6 @@ import {
   PersistentCacheFromDatabase,
   Transaction,
   FundingIndexUpdatesTable,
-  FundingPaymentsTable,
 } from '@dydxprotocol-indexer/postgres';
 
 import config from '../config';
