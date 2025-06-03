@@ -113,42 +113,42 @@ export default async function runTask(): Promise<void> {
   });
 
   // Get unique heights from the funding updates
-  const fundingHeights = [...fundingUpdates.map(update => update.effectiveAtHeight)];
+  const fundingHeights = [...fundingUpdates.map((update) => update.effectiveAtHeight)];
 
   for (let i = 0; i < fundingHeights.length; i += 1) {
-      const txId: number = await Transaction.start();
-      try {
-        // start transaction with last processed height.
-        const lastHeight: string = await getLastProcessedHeight();
-        // get the current height from the funding index updates.
-        const currentHeight: string = fundingHeights[i];
-        logger.info({
-          at,
-          message: 'Processing funding payment update for heights',
-          start: lastHeight,
-          end: currentHeight,
-        });
-        // compute the funding payments.
-        await processFundingPaymentUpdate(txId, lastHeight, currentHeight, sqlContent);
-        logger.info({
-          at,
-          message: 'Successfully processed funding payment update for heights ',
-          start: lastHeight,
-          end: currentHeight,
-        });
-        stats.timing(`${statStart}.executeAggregate`, Date.now() - taskStart);
-      } catch (error) {
-        await Transaction.rollback(txId);
-        logger.error({
-          at,
-          message: 'Error processing funding payment update',
-          end: fundingHeights[i],
-          error,
-        });
-        throw error;
-      } finally {
-        await Transaction.commit(txId);
-      }
+    const txId: number = await Transaction.start();
+    try {
+      // start transaction with last processed height.
+      const lastHeight: string = await getLastProcessedHeight();
+      // get the current height from the funding index updates.
+      const currentHeight: string = fundingHeights[i];
+      logger.info({
+        at,
+        message: 'Processing funding payment update for heights',
+        start: lastHeight,
+        end: currentHeight,
+      });
+      // compute the funding payments.
+      await processFundingPaymentUpdate(txId, lastHeight, currentHeight, sqlContent);
+      logger.info({
+        at,
+        message: 'Successfully processed funding payment update for heights ',
+        start: lastHeight,
+        end: currentHeight,
+      });
+      stats.timing(`${statStart}.executeAggregate`, Date.now() - taskStart);
+    } catch (error) {
+      await Transaction.rollback(txId);
+      logger.error({
+        at,
+        message: 'Error processing funding payment update',
+        end: fundingHeights[i],
+        error,
+      });
+      throw error;
+    } finally {
+      await Transaction.commit(txId);
+    }
   }
   stats.timing(
     `${config.SERVICE_NAME}.update-funding-payments.total.timing`,
