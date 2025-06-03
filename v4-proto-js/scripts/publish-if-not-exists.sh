@@ -16,9 +16,9 @@ if [ $? -eq 0 ]; then
 	set -e
 	# Publish with pre-release tag if it exists. Otherwise publish as latest (default tag)
 	if [ -z "$TAG" ]; then
-		npm publish
+		npm publish --loglevel verbose
 	else
-		npm publish --tag $TAG
+		npm publish --tag $TAG --loglevel verbose
 	fi
 else
 	echo "skipping publish, package $NAME@$VERSION already published"
