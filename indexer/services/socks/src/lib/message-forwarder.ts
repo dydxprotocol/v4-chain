@@ -255,13 +255,6 @@ export class MessageForwarder {
 
     if (!this.subscriptions.subscriptions[message.channel] &&
       !this.subscriptions.batchedSubscriptions[message.channel]) {
-      // logger.debug({
-      //   at: 'message-forwarder#forwardMessage',
-      //   message: 'No clients to forward to',
-      //   messageId: message.id,
-      //   messageChannel: message.channel,
-      //   contents: message.contents,
-      // });
       return;
     }
 
@@ -271,22 +264,6 @@ export class MessageForwarder {
       subscriptions = this.subscriptions.subscriptions[message.channel][id] || [];
     }
     let forwardedToSubscribers: boolean = false;
-
-    // if (subscriptions.length > 0) {
-    //   if (message.channel !== Channel.V4_ORDERBOOK ||
-    //       (
-    //         // Don't log orderbook messages unless enabled
-    //         message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
-    //       )
-    //   ) {
-    //     logger.debug({
-    //       at: 'message-forwarder#forwardMessage',
-    //       message: 'Forwarding message to clients..',
-    //       messageContents: message,
-    //       connectionIds: subscriptions.map((s: SubscriptionInfo) => s.connectionId),
-    //     });
-    //   }
-    // }
 
     // Buffer messages if the subscription is for batched messages
     if (this.subscriptions.batchedSubscriptions[message.channel] &&
@@ -361,12 +338,23 @@ export class MessageForwarder {
             .batchedSubscriptions[channelString][id];
           batchedSubscribers.forEach(
             (batchedSubscriber: SubscriptionInfo) => {
-              this.forwardBatchedVersionedMessagesBySubaccountNumber(
-                batchedMessages,
-                batchedSubscriber,
-                channel,
-                id,
-              );
+              try {
+                this.forwardBatchedVersionedMessagesBySubaccountNumber(
+                  batchedMessages,
+                  batchedSubscriber,
+                  channel,
+                  id,
+                );
+              } catch (error) {
+                // catch error outside of loop to stop forwarding messages
+                logger.error({
+                  at: 'message-forwarder#forwardBatchedMessages',
+                  message: error.message,
+                  connectionId: batchedSubscriber.connectionId,
+                  error,
+                });
+                throw error;
+              }
             },
           );
         }
@@ -385,35 +373,25 @@ export class MessageForwarder {
       batchedMessages,
       (c) => c.version,
     );
-    try {
-      _.forEach(batchedVersionedMessages, (versionedMsgs, version) => {
-        const batchedMessagesBySubaccountNumber: _.Dictionary<VersionedContents[]> = _.groupBy(
-          versionedMsgs,
-          (c) => c.subaccountNumber,
+    _.forEach(batchedVersionedMessages, (versionedMsgs, version) => {
+      const batchedMessagesBySubaccountNumber: _.Dictionary<VersionedContents[]> = _.groupBy(
+        versionedMsgs,
+        (c) => c.subaccountNumber,
+      );
+      _.forEach(batchedMessagesBySubaccountNumber, (msgs, subaccountNumberKey) => {
+        const subaccountNumber: number | undefined = Number.isNaN(Number(subaccountNumberKey))
+          ? undefined
+          : Number(subaccountNumberKey);
+        this.forwardToClientBatch(
+          msgs,
+          batchedSubscriber.connectionId,
+          channel,
+          id,
+          version,
+          subaccountNumber,
         );
-        _.forEach(batchedMessagesBySubaccountNumber, (msgs, subaccountNumberKey) => {
-          const subaccountNumber: number | undefined = Number.isNaN(Number(subaccountNumberKey))
-            ? undefined
-            : Number(subaccountNumberKey);
-          this.forwardToClientBatch(
-            msgs,
-            batchedSubscriber.connectionId,
-            channel,
-            id,
-            version,
-            subaccountNumber,
-          );
-        });
       });
-    } catch (error) {
-      // catch error outside of loop to stop forwarding messages
-      logger.error({
-        at: 'message-forwarder#forwardBatchedMessages',
-        message: error.message,
-        connectionId: batchedSubscriber.connectionId,
-        error,
-      });
-    }
+    });
   }
 
   public forwardToClientBatch(
