@@ -144,7 +144,7 @@ export async function findAllHeightsStartingAt(
   startHeight: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<string[]> {
-  const baseQuery: QueryBuilder<FundingIndexUpdatesModel> = setupBaseQuery<FundingIndexUpdatesModel>(FundingIndexUpdatesModel, options);
+  const baseQuery = setupBaseQuery<FundingIndexUpdatesModel>(FundingIndexUpdatesModel, options);
   const heights: FundingIndexUpdatesModel[] = await baseQuery
     .distinct(FundingIndexUpdatesColumns.effectiveAtHeight)
     .where(FundingIndexUpdatesColumns.effectiveAtHeight, '>=', startHeight)
