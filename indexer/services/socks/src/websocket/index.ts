@@ -9,7 +9,7 @@ import config from '../config';
 import { getCountry } from '../helpers/header-utils';
 import { createConnectedMessage, createErrorMessage, createUnsubscribedMessage } from '../helpers/message';
 import { sendMessage, Wss } from '../helpers/wss';
-import { ERR_INVALID_WEBSOCKET_FRAME, WS_CLOSE_CODE_SERVICE_RESTART } from '../lib/constants';
+import { ERR_INVALID_WEBSOCKET_FRAME, WS_CLOSE_CODE_SERVICE_RESTART, WS_CLOSE_HEARTBEAT_TIMEOUT } from '../lib/constants';
 import { InvalidMessageHandler } from '../lib/invalid-message';
 import { Subscriptions } from '../lib/subscription';
 import {
@@ -27,14 +27,10 @@ const HEARTBEAT_INTERVAL_MS: number = config.WS_HEARTBEAT_INTERVAL_MS;
 const HEARTBEAT_TIMEOUT_MS: number = config.WS_HEARTBEAT_TIMEOUT_MS;
 
 export class Index {
-  // Map of connection ids (UUID/V4) to the websocket connections.
   public connections: { [connectionId: string]: Connection };
 
-  // Websocket server.
   private wss: Wss;
-  // Subscriptions tracking object (see lib/subscriptions.ts).
   private subscriptions: Subscriptions;
-  // Handlers for pings and invalid messages.
   private invalidMessageHandler: InvalidMessageHandler;
 
   constructor(wss: Wss, subscriptions: Subscriptions) {
@@ -42,8 +38,6 @@ export class Index {
     this.connections = {};
     this.subscriptions = subscriptions;
     this.invalidMessageHandler = new InvalidMessageHandler();
-
-    // Attach the new connection handler to the websocket server.
     this.wss.onConnection((ws: WebSocket, req: IncomingMessage) => this.onConnection(ws, req));
   }
 
@@ -53,11 +47,12 @@ export class Index {
       message: 'Closing websocket server...',
     });
 
+    const restartMessage: string = JSON.stringify({ message: 'Service restarting' });
     Object.keys(this.connections).forEach((connectionId: string) => {
       try {
         this.connections[connectionId].ws.close(
           WS_CLOSE_CODE_SERVICE_RESTART,
-          JSON.stringify({ message: 'Service restarting' }),
+          restartMessage,
         );
         logger.info({
           at: 'index#close',
@@ -91,13 +86,16 @@ export class Index {
    */
   private onConnection(ws: WebSocket, req: IncomingMessage): void {
 
-    const connectionId: string = randomUUID();
+    const instanceId: string = getInstanceId();
 
+    const connectionId: string = randomUUID();
     this.connections[connectionId] = {
       ws,
       messageId: 0,
       countryCode: getCountry(req),
-    };
+      id: connectionId,
+    } as Connection;
+    const connection: Connection = this.connections[connectionId];
 
     const numConcurrentConnections: number = Object.keys(this.connections).length;
     logger.info({
@@ -113,14 +111,14 @@ export class Index {
       `${config.SERVICE_NAME}.num_connections`,
       1,
       {
-        instance: getInstanceId(),
+        instance: instanceId,
       },
     );
     stats.gauge(
       `${config.SERVICE_NAME}.num_concurrent_connections`,
       numConcurrentConnections,
       {
-        instance: getInstanceId(),
+        instance: instanceId,
       },
     );
 
@@ -135,10 +133,9 @@ export class Index {
       });
     }
 
-    // Attach message handler to connection.
     ws.on(WebsocketEvents.MESSAGE, (message: WebSocket.RawData) => {
       try {
-        this.onMessage(connectionId, message);
+        this.onMessage(connection, message);
       } catch (error) {
         logger.error({
           at: 'index#onMessage',
@@ -148,42 +145,28 @@ export class Index {
           messageContents: safeJsonStringify(message),
         });
         sendMessage(
-          this.connections[connectionId].ws,
+          connection.ws,
           connectionId,
           createErrorMessage(
             'Internal error',
             connectionId,
-            this.connections[connectionId].messageId,
+            connection.messageId,
           ),
         );
       }
     });
 
-    // Start sending periodic pings (heartbeat) to connection.
-    this.connections[connectionId].heartbeat = setInterval(
-      () => this.heartbeat(connectionId),
-      HEARTBEAT_INTERVAL_MS,
-    );
+    ws.on(WebsocketEvents.CLOSE, (code: number, reason: Buffer) => {
+      // TODO remove use as developer indicates
+      const reasonStr = safeJsonStringify(reason);
 
-    // Attach handler for pongs (response to heartbeat [ping]s) from connection.
-    this.connections[connectionId].ws.on(WebsocketEvents.PONG, () => {
-      // Clear the delayed disconnect set by the heartbeat handler when a pong is received.
-      if (this.connections[connectionId].disconnect) {
-        clearTimeout(this.connections[connectionId].disconnect);
-        delete this.connections[connectionId].disconnect;
-      }
-    });
-
-    // Do not attach handler for pings. The ws library automatically responds to pings with pongs.
-
-    // Attach handler for close events from the connection.
-    this.connections[connectionId].ws.on(WebsocketEvents.CLOSE, (code: number, reason: Buffer) => {
       logger.info({
         at: 'index#onClose',
         message: 'Connection closed',
         connectionId,
         code,
-        reason: safeJsonStringify(reason), // `reason` could be a Buffer, which cannot be logged
+        // TODO remove comment
+        reason: reasonStr, // `reason` could be a Buffer, which cannot be logged
       });
 
       stats.increment(
@@ -191,16 +174,15 @@ export class Index {
         1,
         {
           code: String(code),
-          reason: String(reason),
-          instance: getInstanceId(),
+          reason: reasonStr,
+          instance: instanceId,
         },
       );
 
-      this.disconnect(connectionId);
+      this.disconnect(connection);
     });
 
-    // Attach error handler to connection.
-    this.connections[connectionId].ws.on(WebsocketEvents.ERROR, (error: Error) => {
+    ws.on(WebsocketEvents.ERROR, (error: Error) => {
       const errorLog: InfoObject = {
         at: 'index#onError',
         message: `Connection threw error: ${error}`,
@@ -208,13 +190,25 @@ export class Index {
         error,
       };
       if (error?.message.includes?.(ERR_INVALID_WEBSOCKET_FRAME)) {
-        // Clients can send invalid frames that cause an error event, don't log an error as this can
-        // happen and there's no way to mitigate the error being emitted by the ws library
+        // Clients sending invalid frames is not considered an error
         logger.info(errorLog);
       } else {
         logger.error(errorLog);
       }
     });
+
+    ws.on(WebsocketEvents.PONG, () => {
+      // Clear the delayed disconnect set by the heartbeat handler when a pong is received.
+      if (connection.disconnect) {
+        clearTimeout(connection.disconnect);
+        delete connection.disconnect;
+      }
+    });
+
+    connection.heartbeat = setInterval(
+      () => this.heartbeat(connection),
+      HEARTBEAT_INTERVAL_MS,
+    );
   }
 
   /**
@@ -222,19 +216,22 @@ export class Index {
    * Parses then message, then forwards subscribe/unsubscribe requests to a Subscriptions object,
    * and handles pings/invalid messages.
    * @param connectionId Id of the websocket connection.
-   * @param message Message received from the websocket connection.
+   * @param message Message received from the websocket connection
    * @returns
    */
-  private onMessage(connectionId: string, message: WebSocket.Data): void {
+  private onMessage(connection: Connection, message: WebSocket.Data): void {
+    const connectionId: string = connection.id;
+    const instanceId: string = getInstanceId();
+
     stats.increment(
       `${config.SERVICE_NAME}.on_message`,
       1,
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       {
-        instance: getInstanceId(),
+        instance: instanceId,
       },
     );
-    if (!this.connections[connectionId]) {
+    if (!connection) {
       logger.info({
         at: 'index#onMessage',
         message: 'Received message for closed connection',
@@ -244,15 +241,13 @@ export class Index {
       return;
     }
 
-    const messageStr = message.toString();
-
     let parsed: IncomingMessage;
     try {
-      parsed = JSON.parse(messageStr);
+      parsed = JSON.parse(message.toString());
     } catch (error) {
       this.invalidMessageHandler.handleInvalidMessage(
         'Invalid message: could not parse',
-        this.connections[connectionId],
+        connection,
         connectionId,
       );
       return;
@@ -261,7 +256,7 @@ export class Index {
     if (!parsed.type) {
       this.invalidMessageHandler.handleInvalidMessage(
         'Invalid message: type is required',
-        this.connections[connectionId],
+        connection,
         connectionId,
       );
       return;
@@ -270,7 +265,7 @@ export class Index {
     switch (parsed.type) {
       case IncomingMessageType.SUBSCRIBE: {
         const subscribeMessage = parsed as SubscribeMessage;
-        if (!this.validateSubscriptionMessage(connectionId, subscribeMessage)) {
+        if (!this.validateSubscriptionMessage(connection, subscribeMessage)) {
           return;
         }
 
@@ -281,17 +276,18 @@ export class Index {
           messageContents: safeJsonStringify(message),
         });
 
-        this.connections[connectionId].messageId += 1;
+        // eslint-disable-next-line  no-param-reassign
+        connection.messageId += 1;
 
         // Do not wait for this.
         this.subscriptions.subscribe(
-          this.connections[connectionId].ws,
+          connection.ws,
           subscribeMessage.channel,
           connectionId,
-          this.connections[connectionId].messageId,
+          connection.messageId,
           subscribeMessage.id,
           subscribeMessage.batched,
-          this.connections[connectionId].countryCode,
+          connection.countryCode,
         ).catch((error: Error) => logger.error({
           at: 'Subscription#subscribe',
           message: `Subscribing threw error: ${error.message}`,
@@ -302,7 +298,7 @@ export class Index {
       }
       case IncomingMessageType.UNSUBSCRIBE: {
         const unsubscribeMessage = parsed as UnsubscribeMessage;
-        if (!this.validateSubscriptionMessage(connectionId, unsubscribeMessage)) {
+        if (!this.validateSubscriptionMessage(connection, unsubscribeMessage)) {
           return;
         }
 
@@ -312,14 +308,15 @@ export class Index {
           unsubscribeMessage.id,
         );
 
-        this.connections[connectionId].messageId += 1;
+        // eslint-disable-next-line  no-param-reassign
+        connection.messageId += 1;
 
         sendMessage(
-          this.connections[connectionId].ws,
+          connection.ws,
           connectionId,
           createUnsubscribedMessage(
             connectionId,
-            this.connections[connectionId].messageId,
+            connection.messageId,
             unsubscribeMessage.channel,
             unsubscribeMessage.id,
           ),
@@ -333,7 +330,7 @@ export class Index {
       default: {
         this.invalidMessageHandler.handleInvalidMessage(
           `Invalid message type: ${parsed.type}`,
-          this.connections[connectionId],
+          connection,
           connectionId,
         );
         return;
@@ -344,7 +341,7 @@ export class Index {
       1,
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       {
-        instance: getInstanceId(),
+        instance: instanceId,
       },
     );
   }
@@ -352,16 +349,15 @@ export class Index {
   /**
    * Heartbeat function to periodically send pings to a websocket connection, and disconnect if a
    * pong isn't received from the websocket connection within `HEARTBEAT_TIMEOUT_MS` from the ping.
-   * @param connectionId Id of the websocket connection heartbeat pings are sent to.
+   * @param connection websocket connection heartbeat pings are sent to
    * @returns
    */
-  private heartbeat(connectionId: string): void {
-    if (
-      !this.connections[connectionId] ||
-      this.connections[connectionId].disconnect
-    ) {
+  private heartbeat(connection: Connection): void {
+    const connectionId: string = connection.id;
+    if (!connection || connection.disconnect) {
       return;
     }
+
     try {
       logger.info({
         at: 'index#heartbeat',
@@ -369,13 +365,13 @@ export class Index {
         connectionId,
       });
 
-      // Disconnect the websocket connection after `HEARTBEAT_TIMEOUT_MS` from the ping. This
-      // timeout is cleared when a pong is received.
-      this.connections[connectionId].disconnect = setTimeout(
-        () => this.disconnect(connectionId),
+      // eslint-disable-next-line  no-param-reassign
+      connection.disconnect = setTimeout(
+        () => this.heartbeatDisconnect(connection),
         HEARTBEAT_TIMEOUT_MS,
       );
-      this.connections[connectionId].ws.ping();
+      // Fence: ping after starting timer to disconnect unhealthy outbound
+      connection.ws.ping();
     } catch (error) {
       logger.error({
         at: 'index#heartbeat',
@@ -387,12 +383,42 @@ export class Index {
   }
 
   /**
-   * Disconnect a websocket connection.
-   * @param connectionId Connection id of the websocket connection to disconnect.
+   * Attempt to close connection with heartbeat timeout error
+   * If an error occurs during closing, disconnect and log error
+   * @param connection websocket connection to disconnect
+   */
+  private heartbeatDisconnect(connection: Connection): void {
+    const connectionId: string = connection.id;
+    const ws: WebSocket = connection.ws;
+    try {
+      ws.close(
+        WS_CLOSE_HEARTBEAT_TIMEOUT,
+        'Heartbeat timeout',
+      );
+    } catch (error) {
+      this.disconnect(connection);
+      logger.error({
+        at: 'index#dc',
+        message: 'Error closing websocket after heartbeat timeout',
+        connectionId,
+        error,
+      });
+    }
+  }
+
+  /**
+   * Disconnect a websocket connection:
+   * - Remove all event listeners for the connection
+   * - Terminate the connection
+   * - Remove from subscriptions
+   * - Remove from invalid message handler rate limiter
+   * - Remove from connections map
+   * @param connection websocket connection to disconnect
    * @returns
    */
-  private disconnect(connectionId: string): void {
-    if (!this.connections[connectionId]) {
+  public disconnect(connection: Connection): void {
+    const connectionId: string = connection.id;
+    if (!connection) {
       return;
     }
     try {
@@ -402,14 +428,13 @@ export class Index {
         connectionId,
       });
 
-      // Remove periodic job sending heartbeat pings to websocket connection.
-      if (this.connections[connectionId].heartbeat) {
-        clearInterval(this.connections[connectionId].heartbeat);
+      if (connection.heartbeat) {
+        clearInterval(connection.heartbeat);
       }
-      this.connections[connectionId].ws.removeAllListeners();
-      this.connections[connectionId].ws.terminate();
+      const ws: WebSocket = connection.ws;
+      ws.removeAllListeners();
+      ws.terminate();
 
-      // Delete subscription data.
       this.subscriptions.remove(connectionId);
       this.invalidMessageHandler.handleDisconnect(connectionId);
       delete this.connections[connectionId];
@@ -426,46 +451,48 @@ export class Index {
   /**
    * Performs basic validation of a subscription message. Checks that a valid channel exists as a
    * property on the message, and that the id is valid for the channel.
-   * @param connectionId Id of connection that sent the subscription message.
-   * @param message Subscription message.
+   * @param connection connection that sent the subscription message
+   * @param message Subscripe or Unsubscribe message
    * @returns true if valid, otherwise false.
    */
   private validateSubscriptionMessage(
-    connectionId: string,
+    connection: Connection,
     message: SubscribeMessage | UnsubscribeMessage,
   ): boolean {
+    const connectionId: string = connection.id;
+    const ws: WebSocket = connection.ws;
     if (!message.channel) {
       sendMessage(
-        this.connections[connectionId].ws,
+        ws,
         connectionId,
         createErrorMessage(
           'Invalid subscribe message: channel is required',
           connectionId,
-          this.connections[connectionId].messageId,
+          connection.messageId,
         ),
       );
       return false;
     }
     if (!ALL_CHANNELS.includes(message.channel)) {
       sendMessage(
-        this.connections[connectionId].ws,
+        ws,
         connectionId,
         createErrorMessage(
           `Invalid channel: ${message.channel}`,
           connectionId,
-          this.connections[connectionId].messageId,
+          connection.messageId,
         ),
       );
       return false;
     }
     if (!this.validateSubscriptionForChannel(message)) {
       sendMessage(
-        this.connections[connectionId].ws,
+        ws,
         connectionId,
         createErrorMessage(
           `Invalid id: ${message.id}`,
           connectionId,
-          this.connections[connectionId].messageId,
+          connection.messageId,
         ),
       );
       return false;

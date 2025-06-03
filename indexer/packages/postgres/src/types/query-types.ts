@@ -361,3 +361,16 @@ export interface VaultQueryConfig extends QueryConfig {
   [QueryableField.CLOB_PAIR_ID]?: string[],
   [QueryableField.STATUS]?: string[],
 }
+
+export interface FundingPaymentsQueryConfig extends QueryConfig {
+  [QueryableField.SUBACCOUNT_ID]?: string[],
+  [QueryableField.PERPETUAL_ID]?: string[],
+  [QueryableField.TICKER]?: string,
+  [QueryableField.CREATED_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_AT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string,
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER_HEIGHT]?: string,
+  [QueryableField.CREATED_ON_OR_AFTER]?: string,
+  [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
+}
