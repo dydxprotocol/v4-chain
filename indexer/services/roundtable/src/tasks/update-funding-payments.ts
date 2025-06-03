@@ -116,8 +116,6 @@ export default async function runTask(): Promise<void> {
   const fundingHeights = [...fundingUpdates.map(update => update.effectiveAtHeight)];
 
   for (let i = 0; i < fundingHeights.length; i += 1) {
-    // retry up to 3 times.
-    for (let retries = 0; retries < 3; retries += 1) {
       const txId: number = await Transaction.start();
       try {
         // start transaction with last processed height.
@@ -143,26 +141,14 @@ export default async function runTask(): Promise<void> {
         await Transaction.rollback(txId);
         logger.error({
           at,
-          message: 'Error processing funding payment update, will retry, retries left',
-          retriesLeft: 2 - retries,
+          message: 'Error processing funding payment update',
           end: fundingHeights[i],
           error,
         });
-        if (retries === 2) {
-          logger.error({
-            at,
-            message: 'Failed to process funding payment update after 3 retries for height ending at',
-            end: fundingHeights[i],
-            error,
-          });
-          throw error;
-        }
+        throw error;
       } finally {
         await Transaction.commit(txId);
-        // break out of retry loop.
-        retries = 3;
       }
-    }
   }
   stats.timing(
     `${config.SERVICE_NAME}.update-funding-payments.total.timing`,
