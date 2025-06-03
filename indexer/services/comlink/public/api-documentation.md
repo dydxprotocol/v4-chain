@@ -1327,6 +1327,199 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
 This operation does not require authentication
 </aside>
 
+## GetFundingPayments
+
+<a id="opIdGetFundingPayments"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.get(f'{baseURL}/fundingPayments', params={
+  'address': 'string',  'subaccountNumber': '0.1'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/fundingPayments?address=string&subaccountNumber=0.1`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /fundingPayments`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|subaccountNumber|query|number(double)|true|none|
+|limit|query|number(double)|false|none|
+|ticker|query|string|false|none|
+|afterOrAt|query|[IsoString](#schemaisostring)|false|none|
+|page|query|number(double)|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
+  "fundingPayments": [
+    {
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "perpetualId": "string",
+      "ticker": "string",
+      "oraclePrice": "string",
+      "size": "string",
+      "side": "string",
+      "rate": "string",
+      "payment": "string",
+      "subaccountNumber": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[FundingPaymentResponse](#schemafundingpaymentresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetFundingPaymentsForParentSubaccount
+
+<a id="opIdGetFundingPaymentsForParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.get(f'{baseURL}/fundingPayments/parentSubaccount', params={
+  'address': 'string',  'parentSubaccountNumber': '0.1'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/fundingPayments/parentSubaccount?address=string&parentSubaccountNumber=0.1`,
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /fundingPayments/parentSubaccount`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
+|limit|query|number(double)|false|none|
+|afterOrAt|query|[IsoString](#schemaisostring)|false|none|
+|page|query|number(double)|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
+  "fundingPayments": [
+    {
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "perpetualId": "string",
+      "ticker": "string",
+      "oraclePrice": "string",
+      "size": "string",
+      "side": "string",
+      "rate": "string",
+      "payment": "string",
+      "subaccountNumber": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[FundingPaymentResponse](#schemafundingpaymentresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetHeight
 
 <a id="opIdGetHeight"></a>
@@ -4769,6 +4962,83 @@ This operation does not require authentication
 |totalResults|integer(int32)|false|none|none|
 |offset|integer(int32)|false|none|none|
 |fills|[[FillResponseObject](#schemafillresponseobject)]|true|none|none|
+
+## FundingPaymentResponseObject
+
+<a id="schemafundingpaymentresponseobject"></a>
+<a id="schema_FundingPaymentResponseObject"></a>
+<a id="tocSfundingpaymentresponseobject"></a>
+<a id="tocsfundingpaymentresponseobject"></a>
+
+```json
+{
+  "createdAt": "string",
+  "createdAtHeight": "string",
+  "perpetualId": "string",
+  "ticker": "string",
+  "oraclePrice": "string",
+  "size": "string",
+  "side": "string",
+  "rate": "string",
+  "payment": "string",
+  "subaccountNumber": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|createdAt|[IsoString](#schemaisostring)|true|none|none|
+|createdAtHeight|string|true|none|none|
+|perpetualId|string|true|none|none|
+|ticker|string|true|none|none|
+|oraclePrice|string|true|none|none|
+|size|string|true|none|none|
+|side|string|true|none|none|
+|rate|string|true|none|none|
+|payment|string|true|none|none|
+|subaccountNumber|string|true|none|none|
+
+## FundingPaymentResponse
+
+<a id="schemafundingpaymentresponse"></a>
+<a id="schema_FundingPaymentResponse"></a>
+<a id="tocSfundingpaymentresponse"></a>
+<a id="tocsfundingpaymentresponse"></a>
+
+```json
+{
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
+  "fundingPayments": [
+    {
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "perpetualId": "string",
+      "ticker": "string",
+      "oraclePrice": "string",
+      "size": "string",
+      "side": "string",
+      "rate": "string",
+      "payment": "string",
+      "subaccountNumber": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|pageSize|integer(int32)|false|none|none|
+|totalResults|integer(int32)|false|none|none|
+|offset|integer(int32)|false|none|none|
+|fundingPayments|[[FundingPaymentResponseObject](#schemafundingpaymentresponseobject)]|true|none|none|
 
 ## HeightResponse
 

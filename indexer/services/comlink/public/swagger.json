@@ -658,6 +658,81 @@
         "type": "object",
         "additionalProperties": false
       },
+      "FundingPaymentResponseObject": {
+        "properties": {
+          "createdAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          },
+          "perpetualId": {
+            "type": "string"
+          },
+          "ticker": {
+            "type": "string"
+          },
+          "oraclePrice": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "string"
+          },
+          "payment": {
+            "type": "string"
+          },
+          "subaccountNumber": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "createdAtHeight",
+          "perpetualId",
+          "ticker",
+          "oraclePrice",
+          "size",
+          "side",
+          "rate",
+          "payment",
+          "subaccountNumber"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "FundingPaymentResponse": {
+        "properties": {
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalResults": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fundingPayments": {
+            "items": {
+              "$ref": "#/components/schemas/FundingPaymentResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "fundingPayments"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "HeightResponse": {
         "properties": {
           "height": {
@@ -2259,6 +2334,140 @@
           {
             "in": "query",
             "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/fundingPayments": {
+      "get": {
+        "operationId": "GetFundingPayments",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundingPaymentResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ticker",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "afterOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/fundingPayments/parentSubaccount": {
+      "get": {
+        "operationId": "GetFundingPaymentsForParentSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundingPaymentResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parentSubaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "afterOrAt",
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"

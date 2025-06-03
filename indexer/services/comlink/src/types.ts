@@ -745,3 +745,21 @@ export interface AffiliateSnapshotResponseObject {
 export interface AffiliateTotalVolumeResponse {
   totalVolume: number | null,
 }
+
+/* ------- FUNDING PAYMENTS TYPES ------- */
+export interface FundingPaymentResponseObject {
+  createdAt: IsoString,
+  createdAtHeight: string,
+  perpetualId: string,
+  ticker: string,
+  oraclePrice: string,
+  size: string,
+  side: string,
+  rate: string,
+  payment: string,
+  subaccountNumber: string,
+}
+
+export interface FundingPaymentResponse extends PaginationResponse {
+  fundingPayments: FundingPaymentResponseObject[],
+}

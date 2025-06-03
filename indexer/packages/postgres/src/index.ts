@@ -51,6 +51,7 @@ export * as AffiliateReferredUsersTable from './stores/affiliate-referred-users-
 export * as FirebaseNotificationTokenTable from './stores/firebase-notification-token-table';
 export * as AffiliateInfoTable from './stores/affiliate-info-table';
 export * as VaultTable from './stores/vault-table';
+export * as FundingPaymentsTable from './stores/funding-payments-table';
 export * as VaultPnlTicksView from './stores/vault-pnl-ticks-view';
 
 export * as perpetualMarketRefresher from './loops/perpetual-market-refresher';
