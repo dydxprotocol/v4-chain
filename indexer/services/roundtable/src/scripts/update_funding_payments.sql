@@ -1,5 +1,4 @@
--- It calculates funding payments for subaccounts between the last height for which we computed 
--- funding payments and the current height.
+-- Calculates funding payments for all subaccounts between the most recent height up to which funding payments have been computed (exclusive) and the current height (inclusive).
 INSERT INTO funding_payments (
     "subaccountId",
     "createdAt",
