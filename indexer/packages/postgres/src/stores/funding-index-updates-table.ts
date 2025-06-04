@@ -109,7 +109,7 @@ export async function findAll(
 
   if (distinctFields !== undefined) {
     for (const field of distinctFields) {
-      // ensure field is a valid column
+      // eslint-disable-next-line max-len
       if (!Object.values(FundingIndexUpdatesColumns).includes(field as FundingIndexUpdatesColumns)) {
         throw new Error(`Invalid distinct field: ${field}`);
       }
