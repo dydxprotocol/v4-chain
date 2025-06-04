@@ -1,4 +1,5 @@
--- Calculates funding payments for all subaccounts between the most recent height up to which funding payments have been computed (exclusive) and the current height (inclusive).
+-- Calculates funding payments for all subaccounts between the most recent height up to which funding payments 
+-- have been computed (exclusive) and the current height (inclusive).
 INSERT INTO funding_payments (
     "subaccountId",
     "createdAt",
@@ -12,6 +13,7 @@ INSERT INTO funding_payments (
     payment
 )
 WITH
+    -- net computes the net size of each (subaccount, perpetual) pair.
     net AS (
         SELECT
             "subaccountId",
@@ -30,7 +32,8 @@ WITH
             "subaccountId",
             "clobPairId"
     ),
-    -- figure out what the last funding payment was.
+    -- position_snapshot computes the last snapshot size of each (subaccount, perpetual) pair.
+    -- this is retrieved from the funding_payments table.
     position_snapshot AS (
         SELECT DISTINCT ON ("subaccountId", "perpetualId")
             "subaccountId",
@@ -45,6 +48,8 @@ WITH
         WHERE "createdAtHeight" = :last_height
         ORDER BY "subaccountId", "perpetualId", "createdAtHeight" DESC
     ),
+    -- paired computes the net size of each (subaccount, perpetual) pair joined with the snapshot
+    -- to figure out the current open positions of everyone.
     paired AS (
         SELECT
             COALESCE(n."subaccountId", ps."subaccountId") as "subaccountId",
@@ -60,8 +65,8 @@ WITH
             FULL JOIN position_snapshot ps ON ps."subaccountId" = n."subaccountId" 
                 AND ps."perpetualId" = pm.id
     ),
+    -- funding computes the funding index update for each perpetual.
     funding AS (
-        -- Grab the latest funding index update for each perpetual.
         SELECT DISTINCT
             ON (f."perpetualId") f."perpetualId" AS "perpetualId",
             f.rate,
