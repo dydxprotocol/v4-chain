@@ -47,7 +47,7 @@ export async function findAll(
     eventId,
     effectiveAt,
     effectiveAtHeight,
-    createdOnOrAfterBlockHeight,
+    effectiveAtOrAfterHeight,
     effectiveBeforeOrAt,
     effectiveBeforeOrAtHeight,
     distinctFields,
@@ -63,9 +63,10 @@ export async function findAll(
       eventId,
       effectiveAt,
       effectiveAtHeight,
-      createdOnOrAfterBlockHeight,
+      effectiveAtOrAfterHeight,
       effectiveBeforeOrAt,
       effectiveBeforeOrAtHeight,
+      distinctFields,
     } as QueryConfig,
     requiredFields,
   );
@@ -95,8 +96,8 @@ export async function findAll(
     baseQuery = baseQuery.where(FundingIndexUpdatesColumns.effectiveAt, '<=', effectiveBeforeOrAt);
   }
 
-  if (createdOnOrAfterBlockHeight !== undefined) {
-    baseQuery = baseQuery.where(FundingIndexUpdatesColumns.effectiveAtHeight, '>=', createdOnOrAfterBlockHeight);
+  if (effectiveAtOrAfterHeight !== undefined) {
+    baseQuery = baseQuery.where(FundingIndexUpdatesColumns.effectiveAtHeight, '>=', effectiveAtOrAfterHeight);
   }
 
   if (effectiveBeforeOrAtHeight !== undefined) {

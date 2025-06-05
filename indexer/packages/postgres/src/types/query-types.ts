@@ -58,6 +58,7 @@ export enum QueryableField {
   EFFECTIVE_AT_HEIGHT = 'effectiveAtHeight',
   EFFECTIVE_BEFORE_OR_AT = 'effectiveBeforeOrAt',
   EFFECTIVE_BEFORE_OR_AT_HEIGHT = 'effectiveBeforeOrAtHeight',
+  EFFECTIVE_AT_OR_AFTER_HEIGHT = 'effectiveAtOrAfterHeight',
   GOOD_TIL_BLOCK_BEFORE_OR_AT = 'goodTilBlockBeforeOrAt',
   GOOD_TIL_BLOCK_AFTER = 'goodTilBlockAfter',
   GOOD_TIL_BLOCK_TIME_BEFORE_OR_AT = 'goodTilBlockTimeBeforeOrAt',
@@ -97,6 +98,7 @@ export enum QueryableField {
   TOKEN = 'token',
   ADDRESS_IN_WALLETS_TABLE = 'addressInWalletsTable',
   PARENT_SUBACCOUNT = 'parentSubaccount',
+  DISTINCT_FIELDS = 'distinctFields',
 }
 
 export interface QueryConfig {
@@ -290,8 +292,8 @@ export interface FundingIndexUpdatesQueryConfig extends QueryConfig {
   [QueryableField.EFFECTIVE_AT_HEIGHT]?: string,
   [QueryableField.EFFECTIVE_BEFORE_OR_AT]?: string,
   [QueryableField.EFFECTIVE_BEFORE_OR_AT_HEIGHT]?: string,
-  [QueryableField.CREATED_ON_OR_AFTER_BLOCK_HEIGHT]?: string,
-  distinctFields?: string[],
+  [QueryableField.EFFECTIVE_AT_OR_AFTER_HEIGHT]?: string,
+  [QueryableField.DISTINCT_FIELDS]?: string[],
 }
 
 export interface LiquidityTiersQueryConfig extends QueryConfig {
