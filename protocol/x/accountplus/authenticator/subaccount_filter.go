@@ -95,8 +95,8 @@ func (m SubaccountFilter) OnAuthenticatorAdded(
 	account sdk.AccAddress,
 	config []byte,
 	authenticatorId string,
-) error {
-	return nil
+) (requireSigVerification bool, err error) {
+	return false, nil
 }
 
 // OnAuthenticatorRemoved is a no-op in this implementation but can be used when an authenticator is removed.

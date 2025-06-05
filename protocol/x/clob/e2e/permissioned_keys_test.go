@@ -39,17 +39,33 @@ type TestSdkMsg struct {
 }
 
 func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
-	config := []aptypes.SubAuthenticatorInitData{
+	// Define the children for the inner AllOf authenticator
+	innerAllOfChildren := []aptypes.SubAuthenticatorInitData{
 		{
 			Type:   "SignatureVerification",
-			Config: constants.AlicePrivateKey.PubKey().Bytes(),
+			Config: constants.BobPrivateKey.PubKey().Bytes(),
 		},
 		{
 			Type:   "MessageFilter",
 			Config: []byte("/cosmos.bank.v1beta1.MsgSend"),
 		},
 	}
-	compositeAuthenticatorConfig, err := json.Marshal(config)
+	innerAllOfConfigBytes, err := json.Marshal(innerAllOfChildren)
+	require.NoError(t, err)
+
+	// This 'configForComposite' will be marshaled into 'compositeAuthenticatorConfig'.
+	// It represents the children for a top-level composite authenticator (e.g., AllOf or AnyOf).
+	configForComposite := []aptypes.SubAuthenticatorInitData{
+		{
+			Type:   "SignatureVerification",
+			Config: constants.AlicePrivateKey.PubKey().Bytes(), // This branch is designed to fail if Bob signs
+		},
+		{
+			Type:   "AllOf",               // The type of the second child
+			Config: innerAllOfConfigBytes, // The configuration for this AllOf child
+		},
+	}
+	compositeAuthenticatorConfig, err := json.Marshal(configForComposite)
 	require.NoError(t, err)
 
 	tests := map[string]struct {
@@ -134,8 +150,22 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 							Msg: []sdk.Msg{
 								&aptypes.MsgAddAuthenticator{
 									Sender:            constants.BobAccAddress.String(),
-									AuthenticatorType: "MessageFilter",
-									Data:              []byte("/cosmos.bank.v1beta1.MsgSend"),
+									AuthenticatorType: "AllOf",
+									Data: func() []byte {
+										config := []aptypes.SubAuthenticatorInitData{
+											{
+												Type:   "SignatureVerification",
+												Config: constants.BobPrivateKey.PubKey().Bytes(),
+											},
+											{
+												Type:   "MessageFilter",
+												Config: []byte("/cosmos.bank.v1beta1.MsgSend"),
+											},
+										}
+										bytes, err := json.Marshal(config)
+										require.NoError(t, err)
+										return bytes
+									}(),
 								},
 							},
 
@@ -266,8 +296,22 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 							Msg: []sdk.Msg{
 								&aptypes.MsgAddAuthenticator{
 									Sender:            constants.BobAccAddress.String(),
-									AuthenticatorType: "MessageFilter",
-									Data:              []byte("/cosmos.bank.v1beta1.MsgSend"),
+									AuthenticatorType: "AllOf",
+									Data: func() []byte {
+										config := []aptypes.SubAuthenticatorInitData{
+											{
+												Type:   "SignatureVerification",
+												Config: constants.BobPrivateKey.PubKey().Bytes(),
+											},
+											{
+												Type:   "MessageFilter",
+												Config: []byte("/cosmos.bank.v1beta1.MsgSend"),
+											},
+										}
+										bytes, err := json.Marshal(config)
+										require.NoError(t, err)
+										return bytes
+									}(),
 								},
 							},
 
@@ -301,8 +345,10 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 							SeqNum:     []uint64{1},
 							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey},
 
-							ExpectedRespCode: aptypes.ErrMessageTypeVerification.ABCICode(),
-							ExpectedLog:      aptypes.ErrMessageTypeVerification.Error(),
+							// Even thought the message is rejected by the message filter authenticator,
+							// the transaction error code will show top level error from the AllOf authenticator.
+							ExpectedRespCode: aptypes.ErrAllOfVerification.ABCICode(),
+							ExpectedLog:      aptypes.ErrAllOfVerification.Error(),
 						},
 					},
 				},
@@ -321,8 +367,22 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 							Msg: []sdk.Msg{
 								&aptypes.MsgAddAuthenticator{
 									Sender:            constants.BobAccAddress.String(),
-									AuthenticatorType: "ClobPairIdFilter",
-									Data:              []byte("0"),
+									AuthenticatorType: "AllOf",
+									Data: func() []byte {
+										config := []aptypes.SubAuthenticatorInitData{
+											{
+												Type:   "SignatureVerification",
+												Config: constants.BobPrivateKey.PubKey().Bytes(),
+											},
+											{
+												Type:   "ClobPairIdFilter",
+												Config: []byte("0"),
+											},
+										}
+										bytes, err := json.Marshal(config)
+										require.NoError(t, err)
+										return bytes
+									}(),
 								},
 							},
 
@@ -356,8 +416,10 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 							SeqNum:     []uint64{1},
 							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey},
 
-							ExpectedRespCode: aptypes.ErrClobPairIdVerification.ABCICode(),
-							ExpectedLog:      aptypes.ErrClobPairIdVerification.Error(),
+							// Even thought the message is rejected by the clob pair id filter authenticator,
+							// the transaction error code will show top level error from the AllOf authenticator.
+							ExpectedRespCode: aptypes.ErrAllOfVerification.ABCICode(),
+							ExpectedLog:      aptypes.ErrAllOfVerification.Error(),
 						},
 					},
 				},
@@ -376,8 +438,22 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 							Msg: []sdk.Msg{
 								&aptypes.MsgAddAuthenticator{
 									Sender:            constants.BobAccAddress.String(),
-									AuthenticatorType: "SubaccountFilter",
-									Data:              []byte("1"),
+									AuthenticatorType: "AllOf",
+									Data: func() []byte {
+										config := []aptypes.SubAuthenticatorInitData{
+											{
+												Type:   "SignatureVerification",
+												Config: constants.BobPrivateKey.PubKey().Bytes(),
+											},
+											{
+												Type:   "SubaccountFilter",
+												Config: []byte("1"),
+											},
+										}
+										bytes, err := json.Marshal(config)
+										require.NoError(t, err)
+										return bytes
+									}(),
 								},
 							},
 
@@ -411,8 +487,8 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 							SeqNum:     []uint64{1},
 							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey},
 
-							ExpectedRespCode: aptypes.ErrSubaccountVerification.ABCICode(),
-							ExpectedLog:      aptypes.ErrSubaccountVerification.Error(),
+							ExpectedRespCode: aptypes.ErrAllOfVerification.ABCICode(),
+							ExpectedLog:      aptypes.ErrAllOfVerification.Error(),
 						},
 					},
 				},
@@ -487,7 +563,9 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 								&aptypes.MsgAddAuthenticator{
 									Sender:            constants.BobAccAddress.String(),
 									AuthenticatorType: "AnyOf",
-									Data:              compositeAuthenticatorConfig,
+									// Use the global compositeAuthenticatorConfig, which now defines children
+									// suitable for this AnyOf structure leading to the desired failure.
+									Data: compositeAuthenticatorConfig,
 								},
 							},
 
@@ -517,9 +595,9 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 
 							Fees:       constants.TestFeeCoins_5Cents,
 							Gas:        0,
-							AccountNum: []uint64{1},
-							SeqNum:     []uint64{1},
-							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey},
+							AccountNum: []uint64{1},                                    // Bob's account for the order
+							SeqNum:     []uint64{1},                                    // Bob's sequence for this tx (adjust if necessary based on prior txs for Bob in this test case)
+							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey}, // Bob signs this tx
 
 							ExpectedRespCode: aptypes.ErrAnyOfVerification.ABCICode(),
 							ExpectedLog:      aptypes.ErrAnyOfVerification.Error(),
@@ -541,8 +619,22 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 							Msg: []sdk.Msg{
 								&aptypes.MsgAddAuthenticator{
 									Sender:            constants.BobAccAddress.String(),
-									AuthenticatorType: "MessageFilter",
-									Data:              []byte("/cosmos.bank.v1beta1.MsgSend"),
+									AuthenticatorType: "AllOf",
+									Data: func() []byte {
+										config := []aptypes.SubAuthenticatorInitData{
+											{
+												Type:   "SignatureVerification",
+												Config: constants.BobPrivateKey.PubKey().Bytes(),
+											},
+											{
+												Type:   "MessageFilter",
+												Config: []byte("/cosmos.bank.v1beta1.MsgSend"),
+											},
+										}
+										bytes, err := json.Marshal(config)
+										require.NoError(t, err)
+										return bytes
+									}(),
 								},
 							},
 
@@ -586,8 +678,8 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 							SeqNum:     []uint64{2},
 							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey},
 
-							ExpectedRespCode: aptypes.ErrMessageTypeVerification.ABCICode(),
-							ExpectedLog:      aptypes.ErrMessageTypeVerification.Error(),
+							ExpectedRespCode: aptypes.ErrAllOfVerification.ABCICode(),
+							ExpectedLog:      aptypes.ErrAllOfVerification.Error(),
 						},
 					},
 				},
@@ -613,7 +705,7 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			for _, block := range tc.blocks {
-				for _, msg := range block.Msgs {
+				for i, msg := range block.Msgs {
 					tx, err := testtx.GenTx(
 						ctx,
 						tApp.App.TxConfig(),
@@ -643,7 +735,7 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 						t,
 						msg.ExpectedRespCode,
 						resp.Code,
-						"Response code was not as expected",
+						"Response code was not as expected for message %d, resp =%v", i, resp,
 					)
 					require.Contains(
 						t,
