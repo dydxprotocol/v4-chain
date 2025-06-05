@@ -497,6 +497,9 @@ export function postgresOrderToResponseObject(
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(order.clobPairId)!,
     triggerPrice: order.triggerPrice ?? undefined,
     subaccountNumber,
+    duration: order.duration ?? undefined,
+    interval: order.interval ?? undefined,
+    priceTolerance: order.priceTolerance ?? undefined,
   };
 }
 
