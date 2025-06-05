@@ -133,6 +133,7 @@ export default async function runTask(): Promise<void> {
       });
       // compute the funding payments.
       await processFundingPaymentUpdate(txId, lastHeight, currentHeight, sqlContent);
+      await Transaction.commit(txId);
       logger.info({
         at,
         message: 'Successfully processed funding payment update for heights ',
@@ -149,8 +150,6 @@ export default async function runTask(): Promise<void> {
         error,
       });
       throw error;
-    } finally {
-      await Transaction.commit(txId);
     }
   }
   stats.timing(
