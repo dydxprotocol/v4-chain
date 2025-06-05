@@ -1,5 +1,6 @@
--- Calculates funding payments for all subaccounts between the most recent height up to which funding payments 
--- have been computed (exclusive) and the current height (inclusive).
+-- Computes funding payments that occurred at :current_height by aggregating fills that occurred between
+-- :last_height (exclusive) and :current_height (inclusive) on top of the state of all open positions at
+-- :last_height.
 INSERT INTO funding_payments (
     "subaccountId",
     "createdAt",
