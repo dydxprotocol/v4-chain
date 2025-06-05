@@ -77,14 +77,14 @@ async function getLastProcessedHeight(): Promise<string> {
 
 /**
  * On execution, it will gather from the funding index updates table all heights that we haven't yet
- * processed. It will then process each height in a loop. It will process by taking the funding_payment
- * table at the last processed height and aggregate the fills at the last height + 1 to the current
- * height to create a new perpetual position for the subaccount in order to compute the funding
- * payments.
+ * processed. It will then process each height in a loop. It will process by taking the
+ * funding_payment table at the last processed height and aggregate the fills at the last height + 1
+ * to the current height to create a new perpetual position for the subaccount in order to compute
+ * the funding payments.
  *
- * Let [x0, x1, ..., xn] be heights where there was a funding index update and was not previously processed. 
- * Then we will process in order [(last_processed, x0), (x0, x1), ..., (xn-1, xn)] such that each funding 
- * index update is processed.
+ * Let [x0, x1, ..., xn] be heights where there was a funding index update and was not previously
+ * processed. Then we will process in order [(last_processed, x0), (x0, x1), ..., (xn-1, xn)] such
+ * that each funding index update is processed.
  *
  * @returns void
  */
