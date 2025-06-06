@@ -1,0 +1,20 @@
+{
+    "messages": [
+      {
+        "@type": "/cosmos.staking.v1beta1.MsgUpdateParams",
+        "authority": "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky",
+        "params": {
+          "bond_denom": "adv4tnt",
+          "historical_entries": 10000,
+          "max_entries": 7,
+          "max_validators": 3,
+          "min_commission_rate": "0.000000000000000000",
+          "unbonding_time": "504h0m0s"
+        }
+      }
+    ],
+    "deposit": "1000000000000000000adv4tnt",
+    "title": "Update max_validators parameter",
+    "summary": "This proposal aims to reduce the maximum number of validators from 100 to 3 in the staking module.",
+    "expedited": true
+}

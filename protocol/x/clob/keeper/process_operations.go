@@ -527,6 +527,7 @@ func (k Keeper) PersistMatchOrdersToState(
 				),
 			)
 		}
+		// TODO: (anmol) update fill event to include builder codes [CT-1363]
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeOrderFill,
@@ -538,6 +539,8 @@ func (k Keeper) PersistMatchOrdersToState(
 					matchWithOrders.FillAmount,
 					matchWithOrders.MakerFee,
 					matchWithOrders.TakerFee,
+					matchWithOrders.MakerBuilderFee,
+					matchWithOrders.TakerBuilderFee,
 					totalFilledMaker,
 					totalFilledTaker,
 					affiliateRevSharesQuoteQuantums,
@@ -634,6 +637,8 @@ func (k Keeper) PersistMatchLiquidationToState(
 
 		// Send on-chain update for the liquidation. The events are stored in a TransientStore which should be rolled-back
 		// if the branched state is discarded, so batching is not necessary.
+		// There is potentially a maker builder fee for liquidations, but no taker builder fee since the protocol is always
+		// the taker in the case of liquidations.
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeOrderFill,
@@ -645,6 +650,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 					matchWithOrders.FillAmount,
 					matchWithOrders.MakerFee,
 					matchWithOrders.TakerFee,
+					matchWithOrders.MakerBuilderFee,
 					totalFilledMaker,
 					affiliateRevSharesQuoteQuantums,
 				),

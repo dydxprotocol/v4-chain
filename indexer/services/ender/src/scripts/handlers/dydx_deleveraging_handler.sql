@@ -23,6 +23,7 @@ CREATE OR REPLACE FUNCTION dydx_deleveraging_handler(
 DECLARE
     QUOTE_CURRENCY_ATOMIC_RESOLUTION constant numeric = -6;
     FEE constant numeric = 0;
+    BUILDER_FEE constant numeric = 0;
     AFFILIATE_REV_SHARE constant numeric = 0;
     perpetual_id bigint;
     clob_pair_id bigint;
@@ -82,7 +83,7 @@ BEGIN
         block_height, transaction_index, event_index);
     INSERT INTO fills
         ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "size", "price", "quoteAmount",
-         "eventId", "transactionHash", "createdAt", "createdAtHeight", "fee", "affiliateRevShare")
+         "eventId", "transactionHash", "createdAt", "createdAtHeight", "fee", "affiliateRevShare", "builderFee")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, 'TAKER'),
             liquidated_subaccount_uuid,
             liquidated_side,
@@ -97,12 +98,13 @@ BEGIN
             block_time,
             block_height,
             FEE,
-            AFFILIATE_REV_SHARE)
+            AFFILIATE_REV_SHARE,
+            BUILDER_FEE)
     RETURNING * INTO liquidated_fill_record;
 
     INSERT INTO fills
         ("id", "subaccountId", "side", "liquidity", "type", "clobPairId", "size", "price", "quoteAmount",
-         "eventId", "transactionHash", "createdAt", "createdAtHeight", "fee", "affiliateRevShare")
+         "eventId", "transactionHash", "createdAt", "createdAtHeight", "fee", "affiliateRevShare", "builderFee")
     VALUES (dydx_uuid_from_fill_event_parts(event_id, 'MAKER'),
                         offsetting_subaccount_uuid,
                         offsetting_side,
@@ -117,7 +119,8 @@ BEGIN
                         block_time,
                         block_height,
                         FEE,
-                        AFFILIATE_REV_SHARE)
+                        AFFILIATE_REV_SHARE,
+                        BUILDER_FEE)
     RETURNING * INTO offsetting_fill_record;
 
     /* Upsert the perpetual_position records for this deleveraging event. */

@@ -386,7 +386,6 @@ type OffChainUpdateV1 struct {
 	// OrderReplaceV1 message.
 	//
 	// Types that are valid to be assigned to UpdateMessage:
-	//
 	//	*OffChainUpdateV1_OrderPlace
 	//	*OffChainUpdateV1_OrderRemove
 	//	*OffChainUpdateV1_OrderUpdate

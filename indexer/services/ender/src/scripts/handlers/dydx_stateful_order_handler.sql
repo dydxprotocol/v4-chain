@@ -68,6 +68,15 @@ BEGIN
                 order_record."status" = 'OPEN';
         END CASE;
 
+        CASE
+            WHEN order_->'builderCodeParams' IS NOT NULL THEN
+                order_record."builderAddress" = jsonb_extract_path_text(order_, 'builderCodeParams', 'builderAddress');
+                order_record."feePpm" = jsonb_extract_path_text(order_, 'builderCodeParams', 'feePpm')::bigint;
+            ELSE
+                order_record."builderAddress" = null;
+                order_record."feePpm" = null;
+        END CASE;
+
         INSERT INTO orders VALUES (order_record.*) ON CONFLICT ("id") DO
             UPDATE SET
                        "subaccountId" = order_record."subaccountId",
@@ -87,7 +96,9 @@ BEGIN
                        "updatedAtHeight" = order_record."updatedAtHeight",
                        "type" = order_record."type",
                        "status" = order_record."status",
-                       "triggerPrice" = order_record."triggerPrice"
+                       "triggerPrice" = order_record."triggerPrice",
+                       "builderAddress" = order_record."builderAddress",
+                       "feePpm" = order_record."feePpm"
         RETURNING * INTO order_record;
 
         RETURN jsonb_build_object(
