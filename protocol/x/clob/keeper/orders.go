@@ -375,14 +375,16 @@ func (k Keeper) PlaceStatefulOrder(
 		if err != nil {
 			return err
 		}
+
 		updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
 			ctx,
 			order.OrderId.SubaccountId,
 			types.PendingOpenOrder{
-				RemainingQuantums: order.GetBaseQuantums(),
-				IsBuy:             order.IsBuy(),
-				Subticks:          order_subticks,
-				ClobPairId:        order.GetClobPairId(),
+				RemainingQuantums:     order.GetBaseQuantums(),
+				IsBuy:                 order.IsBuy(),
+				Subticks:              order_subticks,
+				ClobPairId:            order.GetClobPairId(),
+				BuilderCodeParameters: order.GetBuilderCodeParameters(),
 			},
 		)
 
@@ -1085,6 +1087,13 @@ func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	}
 	fee := lib.BigMulPpm(bigFillQuoteQuantums, lib.BigI(makerFeePpm), true)
 	quoteDelta.Sub(quoteDelta, fee)
+
+	// Subtract the builder fee from the quote delta
+	builderFee := order.BuilderCodeParameters.GetBuilderFee(
+		order.RemainingQuantums.ToBigInt(),
+	)
+	quoteDelta.Sub(quoteDelta, builderFee)
+
 	_, updateResults, err := k.subaccountsKeeper.CanUpdateSubaccounts(
 		ctx,
 		[]satypes.Update{

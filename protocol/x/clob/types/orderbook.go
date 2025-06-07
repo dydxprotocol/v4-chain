@@ -67,6 +67,8 @@ type PendingOpenOrder struct {
 	Subticks Subticks
 	// The ID of the CLOB this order would be placed on.
 	ClobPairId ClobPairId
+	// The builder code parameters for this order.
+	BuilderCodeParameters *BuilderCodeParameters
 }
 
 // AddOrderToOrderbookCollateralizationCheckFn defines a function interface that can be used for verifying

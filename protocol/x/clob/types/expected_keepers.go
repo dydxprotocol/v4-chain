@@ -77,6 +77,12 @@ type SubaccountsKeeper interface {
 		amount *big.Int,
 		perpetualId uint32,
 	) error
+	TransferBuilderFees(
+		ctx sdk.Context,
+		productId uint32,
+		builderFeeQuantums *big.Int,
+		builderAddress string,
+	) error
 	GetInsuranceFundBalance(
 		ctx sdk.Context,
 		perpetualId uint32,

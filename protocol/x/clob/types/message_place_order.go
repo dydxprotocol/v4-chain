@@ -24,6 +24,8 @@ const (
 
 	// the maximum price tolerance for suborders in ppm.
 	MaxTwapOrderPriceTolerance uint32 = 1_000_000
+
+	MaxBuilderCodeFeePpm uint32 = 10_000
 )
 
 var _ sdk.Msg = &MsgPlaceOrder{}
@@ -124,6 +126,25 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 			return errorsmod.Wrapf(
 				ErrInvalidConditionalOrderTriggerSubticks,
 				"conditional order trigger subticks greater than 0 for non-conditional order",
+			)
+		}
+	}
+
+	if msg.Order.BuilderCodeParameters != nil {
+		if _, err := sdk.AccAddressFromBech32(msg.Order.BuilderCodeParameters.BuilderAddress); err != nil {
+			return errorsmod.Wrapf(
+				ErrInvalidBuilderCode,
+				"builder code address '%s' must be a valid bech32 address, but got error '%v'",
+				msg.Order.BuilderCodeParameters.BuilderAddress,
+				err.Error(),
+			)
+		}
+		if msg.Order.BuilderCodeParameters.FeePpm <= 0 || msg.Order.BuilderCodeParameters.FeePpm > MaxBuilderCodeFeePpm {
+			return errorsmod.Wrapf(
+				ErrInvalidBuilderCode,
+				"builder code fee ppm '%d' must be in the range (0, %d]",
+				msg.Order.BuilderCodeParameters.FeePpm,
+				MaxBuilderCodeFeePpm,
 			)
 		}
 	}
