@@ -439,7 +439,10 @@ func (k Keeper) TransferBuilderFees(
 	}
 
 	if builderFeeQuantums.Sign() < 0 {
-		panic("builder fee quantums is negative")
+		panic(fmt.Sprintf("builder fee quantums is negative: address: %s, quantums: %s",
+			builderAddress,
+			builderFeeQuantums.String(),
+		))
 	}
 
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(

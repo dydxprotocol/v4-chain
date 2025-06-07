@@ -389,19 +389,18 @@ func (k Keeper) persistMatchedOrders(
 	}
 
 	// apply broker fees for taker and maker separately
-	makerBuilderFeeQuantums := big.NewInt(0)
-	takerBuilderFeeQuantums := big.NewInt(0)
-	var makerBuilderAddress string
-	var takerBuilderAddress string
 
-	if !matchWithOrders.MakerOrder.IsLiquidation() {
-		makerBuilderCodeParams := matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
-		makerBuilderFeeQuantums = makerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
-		bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, makerBuilderFeeQuantums)
-
-		makerBuilderAddress = makerBuilderCodeParams.GetBuilderAddress()
+	if matchWithOrders.MakerOrder.IsLiquidation() {
+		panic("maker order can not be a liquidation order")
 	}
 
+	makerBuilderCodeParams := matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
+	makerBuilderFeeQuantums := makerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
+	bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, makerBuilderFeeQuantums)
+	makerBuilderAddress := makerBuilderCodeParams.GetBuilderAddress()
+
+	takerBuilderFeeQuantums := big.NewInt(0)
+	var takerBuilderAddress string
 	if !matchWithOrders.TakerOrder.IsLiquidation() {
 		takerBuilderCodeParams := matchWithOrders.TakerOrder.MustGetOrder().BuilderCodeParameters
 		takerBuilderFeeQuantums = takerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
