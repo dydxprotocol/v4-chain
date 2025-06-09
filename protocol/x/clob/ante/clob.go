@@ -183,39 +183,6 @@ func (cd ClobDecorator) AnteHandle(
 	return next(ctx, tx, simulate)
 }
 
-// IsSingleClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
-// (`MsgPlaceOrder` or `MsgCancelOrder` or `MsgBatchCancel`). If `msgs` consist of multiple
-// clob messages, or a mix of on-chain and clob messages, an error is returned.
-func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
-	msgs := tx.GetMsgs()
-	var hasMessage = false
-
-	for _, msg := range msgs {
-		switch msg.(type) {
-		case *types.MsgCancelOrder, *types.MsgPlaceOrder, *types.MsgBatchCancel:
-			hasMessage = true
-		}
-
-		if hasMessage {
-			break
-		}
-	}
-
-	if !hasMessage {
-		return false, nil
-	}
-
-	numMsgs := len(msgs)
-	if numMsgs > 1 {
-		return false, errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"a transaction containing MsgCancelOrder or MsgPlaceOrder or MsgBatchCancel may not contain more than one message",
-		)
-	}
-
-	return true, nil
-}
-
 // IsShortTermClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
 // (`MsgPlaceOrder` or `MsgCancelOrder` or `MsgBatchCancel`) which references a Short-Term Order.
 // If `msgs` consist of multiple clob messages, or a mix of on-chain and clob messages, an error is returned.
