@@ -27,14 +27,14 @@ func (dec FreeInfiniteGasDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	isSingleClobMsgTx, err := clobante.IsSingleClobMsgTx(tx)
+	hasClobMsg := clobante.HasClobMsg(tx)
 	if err != nil {
 		return ctx, err
 	}
 
-	// If this is a single clob msg tx, or a single app-injected msg tx, then set the gas meter to
+	// If this is a clob msg tx, or a single app-injected msg tx, then set the gas meter to
 	// FreeInfiniteGasMeter.
-	if isSingleClobMsgTx || libante.IsSingleAppInjectedMsg(tx.GetMsgs()) {
+	if hasClobMsg || libante.IsSingleAppInjectedMsg(tx.GetMsgs()) {
 		newCtx = ctx.WithGasMeter(types.NewFreeInfiniteGasMeter())
 		return next(newCtx, tx, simulate)
 	}
