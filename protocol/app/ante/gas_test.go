@@ -1,14 +1,15 @@
 package ante_test
 
 import (
+	"reflect"
+	"testing"
+
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	"reflect"
-	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -72,31 +73,31 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 			msgOne: constants.Msg_CancelOrder,
 			msgTwo: constants.Msg_Transfer,
 
-			expectedErr: sdkerrors.ErrInvalidRequest,
+			expectFreeInfiniteGasMeter: true,
 		},
-		"no freeInfiniteGasMeter: mult msgs, two MsgCancelOrder": {
+		"yes freeInfiniteGasMeter: mult msgs, two MsgCancelOrder": {
 			msgOne: constants.Msg_CancelOrder,
 			msgTwo: constants.Msg_CancelOrder,
 
-			expectedErr: sdkerrors.ErrInvalidRequest,
+			expectFreeInfiniteGasMeter: true,
 		},
-		"no freeInfiniteGasMeter: mult msgs, MsgPlaceOrder with Transfer": {
+		"yes freeInfiniteGasMeter: mult msgs, MsgPlaceOrder with Transfer": {
 			msgOne: constants.Msg_PlaceOrder,
 			msgTwo: constants.Msg_Transfer,
 
-			expectedErr: sdkerrors.ErrInvalidRequest,
+			expectFreeInfiniteGasMeter: true,
 		},
-		"no freeInfiniteGasMeter: mult msgs, two MsgPlaceOrder": {
+		"yes freeInfiniteGasMeter: mult msgs, two MsgPlaceOrder": {
 			msgOne: constants.Msg_PlaceOrder,
 			msgTwo: constants.Msg_PlaceOrder,
 
-			expectedErr: sdkerrors.ErrInvalidRequest,
+			expectFreeInfiniteGasMeter: true,
 		},
 		"no freeInfiniteGasMeter: mult msgs, MsgPlaceOrder and MsgCancelOrder": {
 			msgOne: constants.Msg_PlaceOrder,
 			msgTwo: constants.Msg_CancelOrder,
 
-			expectedErr: sdkerrors.ErrInvalidRequest,
+			expectFreeInfiniteGasMeter: true,
 		},
 	}
 
