@@ -1,10 +1,10 @@
 package containertest
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"strings"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -45,8 +45,11 @@ type Testnet struct {
 // In some cases, resources could be initialized but not properly cleaned up. The error will reflect this.
 func NewTestnet() (testnet *Testnet, err error) {
 	// Generate unique ID for this testnet instance to avoid conflicts
-	rand.Seed(time.Now().UnixNano())
-	uniqueId := fmt.Sprintf("%d", rand.Intn(1000000))
+	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		return nil, err
+	}
+	uniqueId := fmt.Sprintf("%d", n.Int64())
 
 	testnet = &Testnet{
 		Nodes:    make(map[string]*Node),
@@ -138,7 +141,7 @@ func (t *Testnet) cleanupExistingResources() {
 	for moniker := range monikers() {
 		containerName := fmt.Sprintf("testnet-local-%s-%s", moniker, t.uniqueId)
 		if container, err := t.pool.Client.InspectContainer(containerName); err == nil {
-			t.pool.Client.RemoveContainer(docker.RemoveContainerOptions{
+			_ = t.pool.Client.RemoveContainer(docker.RemoveContainerOptions{
 				ID:    container.ID,
 				Force: true,
 			})
@@ -150,7 +153,7 @@ func (t *Testnet) cleanupExistingResources() {
 	if networks, err := t.pool.Client.ListNetworks(); err == nil {
 		for _, network := range networks {
 			if network.Name == networkName {
-				t.pool.Client.RemoveNetwork(network.ID)
+				_ = t.pool.Client.RemoveNetwork(network.ID)
 				break
 			}
 		}
