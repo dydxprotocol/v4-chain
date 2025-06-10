@@ -82,7 +82,7 @@ WITH
     )
 SELECT
     p."subaccountId",
-    CURRENT_TIMESTAMP as "createdAt",
+    f."effectiveAt" as "createdAt",
     :current_height as "createdAtHeight",
     p."perpetualId",
     p.ticker,
