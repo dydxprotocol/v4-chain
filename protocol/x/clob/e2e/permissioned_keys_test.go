@@ -595,9 +595,10 @@ func TestPlaceOrder_PermissionedKeys_Failures(t *testing.T) {
 
 							Fees:       constants.TestFeeCoins_5Cents,
 							Gas:        0,
-							AccountNum: []uint64{1},                                    // Bob's account for the order
-							SeqNum:     []uint64{1},                                    // Bob's sequence for this tx (adjust if necessary based on prior txs for Bob in this test case)
-							Signers:    []cryptotypes.PrivKey{constants.BobPrivateKey}, // Bob signs this tx
+							AccountNum: []uint64{1}, // Bob's account for the order
+							// Bob's sequence for this tx (adjust if necessary based on prior txs for Bob in this test case)
+							SeqNum:  []uint64{1},
+							Signers: []cryptotypes.PrivKey{constants.BobPrivateKey}, // Bob signs this tx
 
 							ExpectedRespCode: aptypes.ErrAnyOfVerification.ABCICode(),
 							ExpectedLog:      aptypes.ErrAnyOfVerification.Error(),

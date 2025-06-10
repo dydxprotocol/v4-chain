@@ -55,7 +55,8 @@ func onSubAuthenticatorsAdded(
 		return false, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "no sub-authenticators provided")
 	}
 
-	// If authenticator type is AllOf, we just need to check if ANY of the sub-authenticators require signature verification.
+	// If authenticator type is AllOf, we just need to check if ANY of the sub-authenticators require
+	// signature verification.
 	// Use `false` as identify value for OR operation.
 	requireSigVerification := false
 	if isAnyOf {
@@ -75,7 +76,12 @@ func onSubAuthenticatorsAdded(
 			)
 		}
 		subId := compositeId(baseId, id)
-		subRequireSigVerification, err := authenticatorCode.OnAuthenticatorAdded(ctx, account, initData.Config, subId)
+		subRequireSigVerification, err := authenticatorCode.OnAuthenticatorAdded(
+			ctx,
+			account,
+			initData.Config,
+			subId,
+		)
 		if err != nil {
 			return false, errorsmod.Wrapf(
 				err,
