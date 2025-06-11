@@ -601,6 +601,101 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 				},
 			},
 		},
+		"invalid builder address": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:     Order_SIDE_BUY,
+					Quantums: uint64(42),
+					Subticks: uint64(10),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					BuilderCodeParameters: &BuilderCodeParameters{
+						BuilderAddress: "invalid_builder_address",
+						FeePpm:         1000,
+					},
+				},
+			},
+			err: ErrInvalidBuilderCode,
+		},
+		"builder code parameters: zero fee ppm": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:     Order_SIDE_BUY,
+					Quantums: uint64(42),
+					Subticks: uint64(10),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					BuilderCodeParameters: &BuilderCodeParameters{
+						BuilderAddress: sample.AccAddress(),
+						FeePpm:         0,
+					},
+				},
+			},
+			err: ErrInvalidBuilderCode,
+		},
+		"builder code parameters: above 10_000 fee ppm": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:     Order_SIDE_BUY,
+					Quantums: uint64(42),
+					Subticks: uint64(10),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					BuilderCodeParameters: &BuilderCodeParameters{
+						BuilderAddress: sample.AccAddress(),
+						FeePpm:         MaxBuilderCodeFeePpm + 1,
+					},
+				},
+			},
+			err: ErrInvalidBuilderCode,
+		},
+		"valid builder code parameters": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:     Order_SIDE_BUY,
+					Quantums: uint64(42),
+					Subticks: uint64(10),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					BuilderCodeParameters: &BuilderCodeParameters{
+						BuilderAddress: sample.AccAddress(),
+						FeePpm:         MaxBuilderCodeFeePpm,
+					},
+				},
+			},
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
