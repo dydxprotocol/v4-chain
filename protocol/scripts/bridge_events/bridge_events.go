@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"math/big"
 	"sort"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -111,8 +112,8 @@ func main() {
 	// Iterate over each event and populate the above fields
 	for _, log := range logs {
 		event := libeth.BridgeLogToEvent(log, denom)
-		aei.NextId = lib.Max(aei.NextId, event.Id+1)
-		aei.EthBlockHeight = lib.Max(aei.EthBlockHeight, log.BlockNumber)
+		aei.NextId = max(aei.NextId, event.Id+1)
+		aei.EthBlockHeight = max(aei.EthBlockHeight, log.BlockNumber)
 
 		// Add amount to total bridged amount.
 		totalAmountBridged.Add(totalAmountBridged, event.Coin.Amount.BigInt())
