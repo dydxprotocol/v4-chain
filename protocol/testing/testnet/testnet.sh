@@ -6,7 +6,7 @@ set -eo pipefail
 
 source "./vars.sh"
 
-CHAIN_ID="dydx-testnet-1"
+CHAIN_ID="dydx-testnet-4"
 
 # Define dependencies for this script.
 # `jq` and `dasel` are used to manipulate json and yaml files respectively.
