@@ -292,9 +292,9 @@ async function start(): Promise<void> {
       updateFundingPaymentsTask,
       'update-funding-payments',
       config.LOOPS_INTERVAL_MS_UPDATE_FUNDING_PAYMENTS,
-      // extended lock multiplier for 12 hours to ensure no race since on the first run,
+      // extended lock multiplier for 12 hours since on the first run,
       // the task takes a while to complete.
-      720,
+      config.UPDATE_FUNDING_PAYMENTS_LOCK_MULTIPLIER,
     );
   }
 

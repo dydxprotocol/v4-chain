@@ -161,6 +161,7 @@ export const configSchema = {
   UNCROSS_ORDERBOOK_LOCK_MULTIPLIER: parseInteger({ default: 1 }),
   PNL_TICK_UPDATE_LOCK_MULTIPLIER: parseInteger({ default: 20 }),
   SUBACCOUNT_USERNAME_GENERATOR_LOCK_MULTIPLIER: parseInteger({ default: 5 }),
+  UPDATE_FUNDING_PAYMENTS_LOCK_MULTIPLIER: parseInteger({ default: 720 }),
 
   // Maximum number of running tasks - set this equal to PG_POOL_MIN in .env, default is 2
   MAX_CONCURRENT_RUNNING_TASKS: parseInteger({ default: 2 }),
