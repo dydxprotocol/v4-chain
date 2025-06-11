@@ -26,6 +26,10 @@ const (
 	AttributeKeyIsLiquidation                           = "is_liquidation"
 	AttributeKeyIsDeleverage                            = "is_deleverage"
 	AttributeKeyPerpetualId                             = "perpetual_id"
+	AttributeKeyTakerBuilderAddress                     = "taker_builder_address"
+	AttributeKeyMakerBuilderAddress                     = "maker_builder_address"
+	AttributeKeyTakerBuilderFeeQuantums                 = "taker_builder_fee_quantums"
+	AttributeKeyMakerBuilderFeeQuantums                 = "maker_builder_fee_quantums"
 )
 
 // NewCreateMatchEvent constructs a new match sdk.Event.
@@ -42,6 +46,10 @@ func NewCreateMatchEvent(
 	isLiquidation bool,
 	isDeleverage bool,
 	perpetualId uint32,
+	takerBuilderAddress string,
+	makerBuilderAddress string,
+	takerBuilderFee *big.Int,
+	makerBuilderFee *big.Int,
 ) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeMatch,
@@ -59,5 +67,9 @@ func NewCreateMatchEvent(
 		sdk.NewAttribute(AttributeKeyIsLiquidation, fmt.Sprint(isLiquidation)),
 		sdk.NewAttribute(AttributeKeyIsDeleverage, fmt.Sprint(isDeleverage)),
 		sdk.NewAttribute(AttributeKeyPerpetualId, fmt.Sprint(perpetualId)),
+		sdk.NewAttribute(AttributeKeyTakerBuilderAddress, takerBuilderAddress),
+		sdk.NewAttribute(AttributeKeyMakerBuilderAddress, makerBuilderAddress),
+		sdk.NewAttribute(AttributeKeyTakerBuilderFeeQuantums, takerBuilderFee.String()),
+		sdk.NewAttribute(AttributeKeyMakerBuilderFeeQuantums, makerBuilderFee.String()),
 	)
 }

@@ -6,6 +6,7 @@ package types
 import (
 	encoding_binary "encoding/binary"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	types "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -606,6 +607,15 @@ type Order struct {
 	// Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
 	// orderId.ClobPairId`).
 	ConditionalOrderTriggerSubticks uint64 `protobuf:"varint,11,opt,name=conditional_order_trigger_subticks,json=conditionalOrderTriggerSubticks,proto3" json:"conditional_order_trigger_subticks,omitempty"`
+<<<<<<< HEAD
+=======
+	// twap_parameters represent the configuration for a TWAP order. This must be
+	// set for twap orders and will be ignored for all other order types.
+	TwapParameters *TwapParameters `protobuf:"bytes,12,opt,name=twap_parameters,json=twapParameters,proto3" json:"twap_parameters,omitempty"`
+	// builder_code_parameters is the metadata for the
+	// partner or builder of an order specifying the fees charged.
+	BuilderCodeParameters *BuilderCodeParameters `protobuf:"bytes,13,opt,name=builder_code_parameters,json=builderCodeParameters,proto3" json:"builder_code_parameters,omitempty"`
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 }
 
 func (m *Order) Reset()         { *m = Order{} }
@@ -741,6 +751,23 @@ func (m *Order) GetConditionalOrderTriggerSubticks() uint64 {
 	return 0
 }
 
+<<<<<<< HEAD
+=======
+func (m *Order) GetTwapParameters() *TwapParameters {
+	if m != nil {
+		return m.TwapParameters
+	}
+	return nil
+}
+
+func (m *Order) GetBuilderCodeParameters() *BuilderCodeParameters {
+	if m != nil {
+		return m.BuilderCodeParameters
+	}
+	return nil
+}
+
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 // XXX_OneofWrappers is for the internal use of the proto package.
 func (*Order) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
@@ -749,6 +776,135 @@ func (*Order) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+<<<<<<< HEAD
+=======
+// TwapParameters represents the necessary configuration for a TWAP order.
+type TwapParameters struct {
+	// Duration of the TWAP order execution in seconds. Must be in the range
+	// [300 (5 minutes), 86400 (24 hours)].
+	Duration uint32 `protobuf:"varint,1,opt,name=duration,proto3" json:"duration,omitempty"`
+	// Interval in seconds for each suborder to execute. Must be a
+	// whole number, a factor of the duration, and in the range
+	// [30 (30 seconds), 3600 (1 hour)].
+	Interval uint32 `protobuf:"varint,2,opt,name=interval,proto3" json:"interval,omitempty"`
+	// Price tolerance in ppm for each suborder. This will be applied to
+	// the oracle price each time a suborder is triggered. Must be
+	// be in the range [0, 1_000_000).
+	PriceTolerance uint32 `protobuf:"varint,3,opt,name=price_tolerance,json=priceTolerance,proto3" json:"price_tolerance,omitempty"`
+}
+
+func (m *TwapParameters) Reset()         { *m = TwapParameters{} }
+func (m *TwapParameters) String() string { return proto.CompactTextString(m) }
+func (*TwapParameters) ProtoMessage()    {}
+func (*TwapParameters) Descriptor() ([]byte, []int) {
+	return fileDescriptor_673c6f4faa93736b, []int{9}
+}
+func (m *TwapParameters) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TwapParameters) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TwapParameters.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TwapParameters) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TwapParameters.Merge(m, src)
+}
+func (m *TwapParameters) XXX_Size() int {
+	return m.Size()
+}
+func (m *TwapParameters) XXX_DiscardUnknown() {
+	xxx_messageInfo_TwapParameters.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TwapParameters proto.InternalMessageInfo
+
+func (m *TwapParameters) GetDuration() uint32 {
+	if m != nil {
+		return m.Duration
+	}
+	return 0
+}
+
+func (m *TwapParameters) GetInterval() uint32 {
+	if m != nil {
+		return m.Interval
+	}
+	return 0
+}
+
+func (m *TwapParameters) GetPriceTolerance() uint32 {
+	if m != nil {
+		return m.PriceTolerance
+	}
+	return 0
+}
+
+// BuilderCodeParameters represents the metadata for the partner or builder of
+// an order. This allows them to specify a fee for providing there service which
+// will be paid out in the event of an order fill.
+type BuilderCodeParameters struct {
+	// The address of the builder to which the fee will be paid.
+	BuilderAddress string `protobuf:"bytes,1,opt,name=builder_address,json=builderAddress,proto3" json:"builder_address,omitempty"`
+	// The fee enforced on the order in ppm.
+	FeePpm uint32 `protobuf:"varint,2,opt,name=fee_ppm,json=feePpm,proto3" json:"fee_ppm,omitempty"`
+}
+
+func (m *BuilderCodeParameters) Reset()         { *m = BuilderCodeParameters{} }
+func (m *BuilderCodeParameters) String() string { return proto.CompactTextString(m) }
+func (*BuilderCodeParameters) ProtoMessage()    {}
+func (*BuilderCodeParameters) Descriptor() ([]byte, []int) {
+	return fileDescriptor_673c6f4faa93736b, []int{10}
+}
+func (m *BuilderCodeParameters) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BuilderCodeParameters) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BuilderCodeParameters.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BuilderCodeParameters) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BuilderCodeParameters.Merge(m, src)
+}
+func (m *BuilderCodeParameters) XXX_Size() int {
+	return m.Size()
+}
+func (m *BuilderCodeParameters) XXX_DiscardUnknown() {
+	xxx_messageInfo_BuilderCodeParameters.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BuilderCodeParameters proto.InternalMessageInfo
+
+func (m *BuilderCodeParameters) GetBuilderAddress() string {
+	if m != nil {
+		return m.BuilderAddress
+	}
+	return ""
+}
+
+func (m *BuilderCodeParameters) GetFeePpm() uint32 {
+	if m != nil {
+		return m.FeePpm
+	}
+	return 0
+}
+
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 // TransactionOrdering represents a unique location in the block where a
 // transaction was placed. This proto includes both block height and the
 // transaction index that the specific transaction was placed. This information
@@ -764,7 +920,11 @@ func (m *TransactionOrdering) Reset()         { *m = TransactionOrdering{} }
 func (m *TransactionOrdering) String() string { return proto.CompactTextString(m) }
 func (*TransactionOrdering) ProtoMessage()    {}
 func (*TransactionOrdering) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return fileDescriptor_673c6f4faa93736b, []int{8}
+=======
+	return fileDescriptor_673c6f4faa93736b, []int{11}
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 }
 func (m *TransactionOrdering) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -828,7 +988,11 @@ func (m *StreamLiquidationOrder) Reset()         { *m = StreamLiquidationOrder{}
 func (m *StreamLiquidationOrder) String() string { return proto.CompactTextString(m) }
 func (*StreamLiquidationOrder) ProtoMessage()    {}
 func (*StreamLiquidationOrder) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return fileDescriptor_673c6f4faa93736b, []int{9}
+=======
+	return fileDescriptor_673c6f4faa93736b, []int{12}
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 }
 func (m *StreamLiquidationOrder) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -904,6 +1068,11 @@ func init() {
 	proto.RegisterType((*LongTermOrderPlacement)(nil), "dydxprotocol.clob.LongTermOrderPlacement")
 	proto.RegisterType((*ConditionalOrderPlacement)(nil), "dydxprotocol.clob.ConditionalOrderPlacement")
 	proto.RegisterType((*Order)(nil), "dydxprotocol.clob.Order")
+<<<<<<< HEAD
+=======
+	proto.RegisterType((*TwapParameters)(nil), "dydxprotocol.clob.TwapParameters")
+	proto.RegisterType((*BuilderCodeParameters)(nil), "dydxprotocol.clob.BuilderCodeParameters")
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 	proto.RegisterType((*TransactionOrdering)(nil), "dydxprotocol.clob.TransactionOrdering")
 	proto.RegisterType((*StreamLiquidationOrder)(nil), "dydxprotocol.clob.StreamLiquidationOrder")
 }
@@ -911,6 +1080,7 @@ func init() {
 func init() { proto.RegisterFile("dydxprotocol/clob/order.proto", fileDescriptor_673c6f4faa93736b) }
 
 var fileDescriptor_673c6f4faa93736b = []byte{
+<<<<<<< HEAD
 	// 1091 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0xcd, 0x6e, 0xdb, 0xc6,
 	0x13, 0x17, 0x65, 0xd9, 0x96, 0x47, 0x1f, 0x61, 0x36, 0x1f, 0x7f, 0x45, 0xf9, 0x5b, 0x56, 0x85,
@@ -981,6 +1151,92 @@ var fileDescriptor_673c6f4faa93736b = []byte{
 	0xef, 0x5f, 0x7c, 0xea, 0x9c, 0xd9, 0xd4, 0xeb, 0x2c, 0x90, 0xf3, 0xf8, 0x3f, 0x48, 0x34, 0x5a,
 	0x38, 0x5a, 0x93, 0xf0, 0xe7, 0x7f, 0x05, 0x00, 0x00, 0xff, 0xff, 0x9c, 0x15, 0xc3, 0x1c, 0x9c,
 	0x09, 0x00, 0x00,
+=======
+	// 1317 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0xcd, 0x6e, 0xdb, 0xc6,
+	0x13, 0x37, 0x6d, 0xd9, 0x96, 0xc7, 0x96, 0x2c, 0x6f, 0xe2, 0x44, 0x76, 0xfe, 0x76, 0x1c, 0x21,
+	0xff, 0xd4, 0x45, 0x10, 0x19, 0x75, 0x83, 0x02, 0x45, 0xd1, 0x83, 0xe5, 0x0f, 0x98, 0xb5, 0x62,
+	0x29, 0x14, 0x13, 0x20, 0x41, 0xd1, 0xed, 0x8a, 0x5c, 0xd1, 0x8b, 0x2c, 0xb9, 0x0c, 0xb9, 0x4c,
+	0xa2, 0x7b, 0x1f, 0xa0, 0x8f, 0xd0, 0x4b, 0x0f, 0xbd, 0xf7, 0xd8, 0x07, 0xc8, 0x31, 0xe8, 0xa9,
+	0xa7, 0xa2, 0x4d, 0x9e, 0xa1, 0xf7, 0x62, 0x97, 0x94, 0x4c, 0xfa, 0xa3, 0x45, 0x91, 0x1e, 0x7a,
+	0xe3, 0xfc, 0x66, 0xf6, 0xb7, 0xf3, 0xb5, 0xc3, 0x81, 0x35, 0x77, 0xe8, 0xbe, 0x0a, 0x23, 0x21,
+	0x85, 0x23, 0xf8, 0x96, 0xc3, 0x45, 0x7f, 0x4b, 0x44, 0x2e, 0x8d, 0x9a, 0x1a, 0x43, 0x4b, 0x79,
+	0x75, 0x53, 0xa9, 0x57, 0x57, 0x1c, 0x11, 0xfb, 0x22, 0xc6, 0x1a, 0xdd, 0x4a, 0x85, 0xd4, 0x7a,
+	0xf5, 0xaa, 0x27, 0x3c, 0x91, 0xe2, 0xea, 0x2b, 0x43, 0x3f, 0x2c, 0x5c, 0x11, 0x27, 0x7d, 0xe2,
+	0x38, 0x22, 0x09, 0x64, 0x9c, 0xfb, 0xce, 0x4c, 0x6f, 0x9f, 0xf7, 0x86, 0xb3, 0xe7, 0x09, 0x73,
+	0x89, 0x64, 0x22, 0xc8, 0xae, 0x69, 0xfc, 0x64, 0xc0, 0x6c, 0x47, 0x39, 0x69, 0xba, 0xe8, 0x21,
+	0x54, 0x4e, 0x59, 0x30, 0x73, 0xeb, 0xc6, 0x86, 0xb1, 0x39, 0xbf, 0x7d, 0xa7, 0x59, 0x70, 0x3c,
+	0x77, 0x69, 0xb3, 0x37, 0xfe, 0x36, 0xdd, 0x56, 0xe9, 0xf5, 0xaf, 0x37, 0x27, 0xac, 0x85, 0x38,
+	0x87, 0xa1, 0x1b, 0x30, 0xe7, 0x70, 0x46, 0x53, 0xba, 0xc9, 0x0d, 0x63, 0x73, 0xd6, 0x2a, 0xa7,
+	0x80, 0xe9, 0xa2, 0x9b, 0x30, 0xaf, 0xf3, 0x83, 0x07, 0x9c, 0x78, 0x71, 0x7d, 0x6a, 0xc3, 0xd8,
+	0xac, 0x58, 0xa0, 0xa1, 0x03, 0x85, 0xa0, 0x0d, 0x58, 0x50, 0x7e, 0xe3, 0x90, 0xb0, 0x48, 0x11,
+	0x94, 0x52, 0x0b, 0x85, 0x75, 0x09, 0x8b, 0x4c, 0xb7, 0xf1, 0x15, 0xac, 0x69, 0xef, 0xe3, 0x03,
+	0xc6, 0x39, 0x75, 0xf7, 0x92, 0x88, 0x05, 0x5e, 0x9b, 0x48, 0x1a, 0xcb, 0x16, 0x17, 0xce, 0x33,
+	0xf4, 0x39, 0xcc, 0xa5, 0x77, 0x30, 0x37, 0xae, 0x1b, 0x1b, 0x53, 0x9b, 0xf3, 0xdb, 0xab, 0xcd,
+	0x73, 0x85, 0x68, 0x66, 0x29, 0xc8, 0x62, 0x28, 0x8b, 0x54, 0x8c, 0x1b, 0x4f, 0x61, 0xa5, 0x2b,
+	0x24, 0x0d, 0x24, 0x23, 0x9c, 0x0f, 0xbb, 0x51, 0x12, 0x90, 0x3e, 0xa7, 0xe9, 0x95, 0xef, 0xcb,
+	0x4d, 0xa1, 0xaa, 0x55, 0xca, 0xf5, 0x9e, 0x24, 0x92, 0xaa, 0x84, 0x0c, 0x18, 0xe7, 0x98, 0xf8,
+	0x2a, 0x7d, 0x3a, 0xfd, 0x25, 0x0b, 0x14, 0xb4, 0xa3, 0x11, 0xb4, 0x0d, 0xcb, 0x61, 0xe6, 0x03,
+	0xee, 0xab, 0xf8, 0xf0, 0x09, 0x65, 0xde, 0x89, 0xd4, 0xa9, 0xad, 0x58, 0x57, 0x46, 0x4a, 0x1d,
+	0xfb, 0xa1, 0x56, 0x35, 0xbe, 0x84, 0x1b, 0x9a, 0x7d, 0x90, 0x70, 0x7d, 0x9d, 0xcd, 0x7c, 0xda,
+	0xe3, 0xcc, 0xa1, 0x8f, 0x09, 0x4f, 0xe8, 0xfb, 0x06, 0xf1, 0xbd, 0x01, 0xd7, 0xda, 0x22, 0xf0,
+	0x6c, 0x1a, 0xf9, 0xda, 0xa6, 0xcb, 0x89, 0x43, 0x7d, 0x1a, 0x48, 0x74, 0x1f, 0xa6, 0xb5, 0x59,
+	0xd6, 0x46, 0xf5, 0xcb, 0x58, 0x33, 0xce, 0xd4, 0x18, 0x3d, 0x82, 0xc5, 0x70, 0x44, 0x81, 0x59,
+	0xe0, 0xd2, 0x57, 0x3a, 0xb8, 0x73, 0x6d, 0xa8, 0xcf, 0xdb, 0x11, 0x09, 0x62, 0xe2, 0xa8, 0x86,
+	0xd6, 0x54, 0x2c, 0xf0, 0x32, 0xb6, 0xea, 0x98, 0xc4, 0x54, 0x1c, 0x8d, 0xef, 0x0c, 0x40, 0xf6,
+	0x4b, 0x12, 0xfe, 0x2b, 0x3e, 0xfe, 0x1f, 0xaa, 0x11, 0xf5, 0x09, 0x0b, 0x58, 0xe0, 0x61, 0x4e,
+	0xbd, 0x38, 0xcb, 0x7f, 0x65, 0x8c, 0xb6, 0xa9, 0x17, 0xa3, 0x7b, 0x80, 0x4e, 0xcd, 0x9e, 0x27,
+	0x24, 0x90, 0x89, 0x9f, 0xb6, 0x79, 0xc9, 0x5a, 0x1a, 0x6b, 0x1e, 0x66, 0x8a, 0xc6, 0x1f, 0x06,
+	0xac, 0xec, 0x8a, 0xc0, 0x65, 0x2a, 0x1c, 0xc2, 0xff, 0xc3, 0xd9, 0x44, 0x47, 0x50, 0x91, 0x11,
+	0xf3, 0x3c, 0xd5, 0x36, 0x9a, 0x74, 0xea, 0x9f, 0x90, 0x5a, 0x0b, 0xd9, 0xe1, 0xb4, 0x34, 0x3f,
+	0x94, 0x61, 0x5a, 0xab, 0xd0, 0x67, 0x50, 0x1e, 0xf5, 0x62, 0x16, 0xe6, 0xdf, 0xb7, 0xe2, 0x6c,
+	0xd6, 0x8a, 0xe8, 0x23, 0x28, 0xc5, 0xcc, 0xa5, 0x3a, 0xbe, 0xea, 0xf6, 0xda, 0x65, 0x07, 0x9b,
+	0x3d, 0xe6, 0x52, 0x4b, 0x9b, 0xa2, 0x55, 0x28, 0x9f, 0x29, 0xcb, 0x58, 0x56, 0xba, 0x38, 0xe9,
+	0x4b, 0xe6, 0x3c, 0x8b, 0xf5, 0xdc, 0x29, 0x59, 0x63, 0x19, 0xdd, 0x81, 0xaa, 0x27, 0x84, 0x8b,
+	0x25, 0xe3, 0xe9, 0x33, 0xac, 0x4f, 0xab, 0xfa, 0x1f, 0x4e, 0x58, 0x0b, 0x0a, 0xb7, 0x19, 0x4f,
+	0x87, 0xcf, 0x16, 0x5c, 0x29, 0xda, 0x61, 0xc9, 0x7c, 0x5a, 0x9f, 0x51, 0x73, 0xf0, 0x70, 0xc2,
+	0xaa, 0xe5, 0x8d, 0xd5, 0xb3, 0x44, 0x87, 0x50, 0x51, 0x16, 0x98, 0x05, 0x78, 0x20, 0x22, 0x87,
+	0xd6, 0x67, 0x75, 0x30, 0xb7, 0x2f, 0x0d, 0x46, 0x9d, 0x32, 0x83, 0x03, 0x65, 0x6b, 0xcd, 0xcb,
+	0x53, 0x41, 0x8d, 0x92, 0x88, 0xba, 0x89, 0x43, 0xb1, 0x08, 0xf8, 0xb0, 0x5e, 0xde, 0x30, 0x36,
+	0xcb, 0x16, 0xa4, 0x50, 0x27, 0xe0, 0x43, 0xf4, 0x01, 0x2c, 0x66, 0x93, 0xd9, 0xa7, 0x92, 0xb8,
+	0x44, 0x92, 0xfa, 0x9c, 0x6e, 0xe2, 0x6a, 0x0a, 0x3f, 0xc8, 0x50, 0xf4, 0x00, 0xaa, 0xce, 0xa8,
+	0x2b, 0xb1, 0x1c, 0x86, 0xb4, 0x0e, 0xda, 0xa9, 0x3b, 0x97, 0x3a, 0x35, 0x6e, 0x62, 0x7b, 0x18,
+	0x52, 0xab, 0xe2, 0xe4, 0x45, 0x74, 0x04, 0x0d, 0xe7, 0xb4, 0xc9, 0x71, 0x5a, 0xef, 0x51, 0x33,
+	0x8d, 0x33, 0x3e, 0xaf, 0x33, 0x7e, 0xd3, 0x39, 0xf3, 0x1c, 0xec, 0xd4, 0xae, 0x37, 0x2a, 0xc4,
+	0x17, 0xb0, 0x28, 0x5f, 0x92, 0x10, 0x87, 0x24, 0x22, 0x3e, 0x95, 0x34, 0x8a, 0xeb, 0x0b, 0xba,
+	0x6f, 0x6e, 0x5d, 0xd4, 0x89, 0x2f, 0x49, 0xd8, 0x1d, 0x1b, 0x5a, 0x55, 0x59, 0x90, 0xd1, 0xd7,
+	0x70, 0xbd, 0x9f, 0x30, 0xae, 0xdc, 0x71, 0x84, 0x4b, 0xf3, 0x9c, 0x15, 0xcd, 0xb9, 0x79, 0x01,
+	0x67, 0x2b, 0x3d, 0xb1, 0x2b, 0x5c, 0x9a, 0xa3, 0x5e, 0xee, 0x5f, 0x04, 0x37, 0x3e, 0x85, 0x92,
+	0x6a, 0x3e, 0x74, 0x15, 0x6a, 0x3d, 0x73, 0x6f, 0x1f, 0x3f, 0x3a, 0xee, 0x75, 0xf7, 0x77, 0xcd,
+	0x03, 0x73, 0x7f, 0xaf, 0x36, 0x81, 0x16, 0xa0, 0xac, 0xd1, 0xd6, 0xa3, 0x27, 0x35, 0x03, 0x55,
+	0x60, 0x4e, 0x4b, 0xbd, 0xfd, 0x76, 0xbb, 0x36, 0xd9, 0xf8, 0xc6, 0x80, 0xf9, 0x5c, 0xad, 0xd1,
+	0x1a, 0xac, 0xd8, 0xe6, 0x83, 0x7d, 0x6c, 0x1e, 0xe3, 0x83, 0x8e, 0xb5, 0x7b, 0x96, 0x6b, 0x19,
+	0x96, 0x8a, 0x6a, 0xb3, 0xb3, 0x5b, 0x33, 0xd0, 0x0d, 0xb8, 0x5e, 0x84, 0xbb, 0x9d, 0x9e, 0x8d,
+	0x3b, 0xc7, 0xed, 0x27, 0xb5, 0x49, 0xd4, 0x80, 0xd5, 0xa2, 0xf2, 0xc0, 0x6c, 0xb7, 0x71, 0xc7,
+	0xc2, 0x47, 0x66, 0xbb, 0x5d, 0x9b, 0x5a, 0x9d, 0x2c, 0x1b, 0x0d, 0x1f, 0x2a, 0x85, 0xe2, 0xa2,
+	0x75, 0x58, 0xdd, 0xed, 0x1c, 0xef, 0x99, 0xb6, 0xd9, 0x39, 0xc6, 0xf6, 0x93, 0xee, 0x59, 0x47,
+	0xfe, 0x07, 0xf5, 0x33, 0xfa, 0x9e, 0xdd, 0xe9, 0xe2, 0x76, 0xa7, 0xd7, 0xab, 0x19, 0x17, 0x9c,
+	0xb6, 0x77, 0x8e, 0xf6, 0x71, 0xd7, 0xea, 0x1c, 0x98, 0x76, 0x6d, 0xb2, 0x55, 0xcb, 0xbd, 0x33,
+	0x11, 0x50, 0x31, 0x68, 0x3c, 0x87, 0x6a, 0xb1, 0x8c, 0xea, 0x9d, 0xba, 0x49, 0xa4, 0x77, 0x1a,
+	0x3d, 0x33, 0x2a, 0xd6, 0x58, 0x56, 0x3a, 0x16, 0x48, 0x1a, 0xbd, 0x20, 0x3c, 0x9b, 0xd0, 0x63,
+	0x59, 0xf5, 0x7f, 0x18, 0x31, 0x87, 0x62, 0x29, 0x38, 0x8d, 0x48, 0xe0, 0xd0, 0x6c, 0x01, 0xa9,
+	0x6a, 0xd8, 0x1e, 0xa1, 0x8d, 0x18, 0x96, 0x2f, 0xac, 0x32, 0xda, 0x81, 0xc5, 0x51, 0xc3, 0x10,
+	0xd7, 0x8d, 0x68, 0x1c, 0x6b, 0x07, 0xe6, 0x5a, 0xf5, 0x9f, 0x7f, 0xbc, 0x77, 0x35, 0x5b, 0xe6,
+	0x76, 0x52, 0x4d, 0x4f, 0xea, 0xc1, 0x57, 0xcd, 0x0e, 0x64, 0x28, 0xba, 0x0e, 0xb3, 0x03, 0x4a,
+	0x71, 0x18, 0xfa, 0x99, 0x7f, 0x33, 0x03, 0x4a, 0xbb, 0xa1, 0xdf, 0xa0, 0x70, 0xe5, 0x82, 0xc1,
+	0x89, 0x6e, 0xc1, 0x42, 0xe1, 0xb7, 0x9f, 0x06, 0x3c, 0xdf, 0x3f, 0xfd, 0xdd, 0xa3, 0xbb, 0xb0,
+	0x24, 0x4f, 0x4f, 0xe6, 0x66, 0x7e, 0xc5, 0xaa, 0xe5, 0x14, 0xe9, 0xe8, 0xfd, 0xdd, 0x80, 0x6b,
+	0x3d, 0x19, 0x51, 0xe2, 0xb7, 0x4f, 0x57, 0xc3, 0x74, 0x16, 0x3f, 0x86, 0x5a, 0x6e, 0x5d, 0xc4,
+	0x2c, 0x18, 0x88, 0x6c, 0x26, 0xdf, 0xbd, 0xe0, 0x1d, 0x74, 0x69, 0x14, 0x52, 0x99, 0x10, 0x9e,
+	0xe3, 0x31, 0x83, 0x81, 0xb0, 0x16, 0x79, 0x11, 0x38, 0xb7, 0xd3, 0x4d, 0x9e, 0xdd, 0xe9, 0xd0,
+	0x32, 0xcc, 0xb0, 0x18, 0xf7, 0x93, 0xa1, 0x2e, 0x48, 0xd9, 0x9a, 0x66, 0x71, 0x2b, 0x19, 0x16,
+	0x86, 0x75, 0xe9, 0x2f, 0x86, 0xf5, 0x74, 0x71, 0x58, 0xb7, 0xba, 0xaf, 0xdf, 0xae, 0x1b, 0x6f,
+	0xde, 0xae, 0x1b, 0xbf, 0xbd, 0x5d, 0x37, 0xbe, 0x7d, 0xb7, 0x3e, 0xf1, 0xe6, 0xdd, 0xfa, 0xc4,
+	0x2f, 0xef, 0xd6, 0x27, 0x9e, 0x7e, 0xe2, 0x31, 0x79, 0x92, 0xf4, 0x9b, 0x8e, 0xf0, 0xb7, 0x0a,
+	0xcb, 0xf2, 0x8b, 0xfb, 0xf7, 0x9c, 0x13, 0xc2, 0x82, 0xad, 0x31, 0xf2, 0x2a, 0x5d, 0xa0, 0xd5,
+	0xf8, 0x8b, 0xfb, 0x33, 0x1a, 0xfe, 0xf8, 0xcf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x3f, 0x57, 0x13,
+	0xa7, 0xf0, 0x0b, 0x00, 0x00,
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 }
 
 func (m *OrderId) Marshal() (dAtA []byte, err error) {
@@ -1294,6 +1550,33 @@ func (m *Order) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+<<<<<<< HEAD
+=======
+	if m.BuilderCodeParameters != nil {
+		{
+			size, err := m.BuilderCodeParameters.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintOrder(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6a
+	}
+	if m.TwapParameters != nil {
+		{
+			size, err := m.TwapParameters.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintOrder(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x62
+	}
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 	if m.ConditionalOrderTriggerSubticks != 0 {
 		i = encodeVarintOrder(dAtA, i, uint64(m.ConditionalOrderTriggerSubticks))
 		i--
@@ -1386,6 +1669,82 @@ func (m *Order_GoodTilBlockTime) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	dAtA[i] = 0x35
 	return len(dAtA) - i, nil
 }
+<<<<<<< HEAD
+=======
+func (m *TwapParameters) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TwapParameters) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TwapParameters) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PriceTolerance != 0 {
+		i = encodeVarintOrder(dAtA, i, uint64(m.PriceTolerance))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Interval != 0 {
+		i = encodeVarintOrder(dAtA, i, uint64(m.Interval))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Duration != 0 {
+		i = encodeVarintOrder(dAtA, i, uint64(m.Duration))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BuilderCodeParameters) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BuilderCodeParameters) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BuilderCodeParameters) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.FeePpm != 0 {
+		i = encodeVarintOrder(dAtA, i, uint64(m.FeePpm))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.BuilderAddress) > 0 {
+		i -= len(m.BuilderAddress)
+		copy(dAtA[i:], m.BuilderAddress)
+		i = encodeVarintOrder(dAtA, i, uint64(len(m.BuilderAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 func (m *TransactionOrdering) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1635,6 +1994,17 @@ func (m *Order) Size() (n int) {
 	if m.ConditionalOrderTriggerSubticks != 0 {
 		n += 1 + sovOrder(uint64(m.ConditionalOrderTriggerSubticks))
 	}
+<<<<<<< HEAD
+=======
+	if m.TwapParameters != nil {
+		l = m.TwapParameters.Size()
+		n += 1 + l + sovOrder(uint64(l))
+	}
+	if m.BuilderCodeParameters != nil {
+		l = m.BuilderCodeParameters.Size()
+		n += 1 + l + sovOrder(uint64(l))
+	}
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 	return n
 }
 
@@ -1656,6 +2026,43 @@ func (m *Order_GoodTilBlockTime) Size() (n int) {
 	n += 5
 	return n
 }
+<<<<<<< HEAD
+=======
+func (m *TwapParameters) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Duration != 0 {
+		n += 1 + sovOrder(uint64(m.Duration))
+	}
+	if m.Interval != 0 {
+		n += 1 + sovOrder(uint64(m.Interval))
+	}
+	if m.PriceTolerance != 0 {
+		n += 1 + sovOrder(uint64(m.PriceTolerance))
+	}
+	return n
+}
+
+func (m *BuilderCodeParameters) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.BuilderAddress)
+	if l > 0 {
+		n += 1 + l + sovOrder(uint64(l))
+	}
+	if m.FeePpm != 0 {
+		n += 1 + sovOrder(uint64(m.FeePpm))
+	}
+	return n
+}
+
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 func (m *TransactionOrdering) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2683,6 +3090,289 @@ func (m *Order) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.ConditionalOrderTriggerSubticks |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+<<<<<<< HEAD
+=======
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TwapParameters", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowOrder
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthOrder
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthOrder
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TwapParameters == nil {
+				m.TwapParameters = &TwapParameters{}
+			}
+			if err := m.TwapParameters.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BuilderCodeParameters", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowOrder
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthOrder
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthOrder
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BuilderCodeParameters == nil {
+				m.BuilderCodeParameters = &BuilderCodeParameters{}
+			}
+			if err := m.BuilderCodeParameters.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipOrder(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthOrder
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TwapParameters) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowOrder
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TwapParameters: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TwapParameters: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+			}
+			m.Duration = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowOrder
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Duration |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Interval", wireType)
+			}
+			m.Interval = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowOrder
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Interval |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PriceTolerance", wireType)
+			}
+			m.PriceTolerance = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowOrder
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PriceTolerance |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
+		default:
+			iNdEx = preIndex
+			skippy, err := skipOrder(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthOrder
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BuilderCodeParameters) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowOrder
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BuilderCodeParameters: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BuilderCodeParameters: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BuilderAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowOrder
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthOrder
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthOrder
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BuilderAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeePpm", wireType)
+			}
+			m.FeePpm = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowOrder
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FeePpm |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

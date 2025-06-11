@@ -1,6 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.clob;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/clob/liquidations.proto";
@@ -215,6 +216,45 @@ message Order {
   // Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
+<<<<<<< HEAD
+=======
+
+  // twap_parameters represent the configuration for a TWAP order. This must be
+  // set for twap orders and will be ignored for all other order types.
+  TwapParameters twap_parameters = 12;
+
+  // builder_code_parameters is the metadata for the
+  // partner or builder of an order specifying the fees charged.
+  BuilderCodeParameters builder_code_parameters = 13;
+}
+
+// TwapParameters represents the necessary configuration for a TWAP order.
+message TwapParameters {
+  // Duration of the TWAP order execution in seconds. Must be in the range
+  // [300 (5 minutes), 86400 (24 hours)].
+  uint32 duration = 1;
+
+  // Interval in seconds for each suborder to execute. Must be a
+  // whole number, a factor of the duration, and in the range
+  // [30 (30 seconds), 3600 (1 hour)].
+  uint32 interval = 2;
+
+  // Price tolerance in ppm for each suborder. This will be applied to
+  // the oracle price each time a suborder is triggered. Must be
+  // be in the range [0, 1_000_000).
+  uint32 price_tolerance = 3;
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
+}
+
+// BuilderCodeParameters represents the metadata for the partner or builder of
+// an order. This allows them to specify a fee for providing there service which
+// will be paid out in the event of an order fill.
+message BuilderCodeParameters {
+  // The address of the builder to which the fee will be paid.
+  string builder_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The fee enforced on the order in ppm.
+  uint32 fee_ppm = 2;
 }
 
 // TransactionOrdering represents a unique location in the block where a
