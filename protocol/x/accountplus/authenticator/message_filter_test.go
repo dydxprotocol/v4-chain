@@ -92,7 +92,8 @@ func (s *MessageFilterTest) TestBankSend() {
 
 	for name, tt := range tests {
 		s.Run(name, func() {
-			err := s.MessageFilter.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.msgType), "1")
+			requireSigVerification, err := s.MessageFilter.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.msgType), "1")
+			s.Require().False(requireSigVerification)
 			s.Require().NoError(err)
 			filter, err := s.MessageFilter.Initialize([]byte(tt.msgType))
 			s.Require().NoError(err)
