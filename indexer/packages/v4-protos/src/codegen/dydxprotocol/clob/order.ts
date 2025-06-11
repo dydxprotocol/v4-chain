@@ -602,6 +602,21 @@ export interface Order {
    */
 
   conditionalOrderTriggerSubticks: Long;
+<<<<<<< HEAD
+=======
+  /**
+   * twap_parameters represent the configuration for a TWAP order. This must be
+   * set for twap orders and will be ignored for all other order types.
+   */
+
+  twapParameters?: TwapParameters;
+  /**
+   * builder_code_parameters is the metadata for the
+   * partner or builder of an order specifying the fees charged.
+   */
+
+  builderCodeParameters?: BuilderCodeParameters;
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 }
 /**
  * Order represents a single order belonging to a `Subaccount`
@@ -672,6 +687,93 @@ export interface OrderSDKType {
    */
 
   conditional_order_trigger_subticks: Long;
+<<<<<<< HEAD
+=======
+  /**
+   * twap_parameters represent the configuration for a TWAP order. This must be
+   * set for twap orders and will be ignored for all other order types.
+   */
+
+  twap_parameters?: TwapParametersSDKType;
+  /**
+   * builder_code_parameters is the metadata for the
+   * partner or builder of an order specifying the fees charged.
+   */
+
+  builder_code_parameters?: BuilderCodeParametersSDKType;
+}
+/** TwapParameters represents the necessary configuration for a TWAP order. */
+
+export interface TwapParameters {
+  /**
+   * Duration of the TWAP order execution in seconds. Must be in the range
+   * [300 (5 minutes), 86400 (24 hours)].
+   */
+  duration: number;
+  /**
+   * Interval in seconds for each suborder to execute. Must be a
+   * whole number, a factor of the duration, and in the range
+   * [30 (30 seconds), 3600 (1 hour)].
+   */
+
+  interval: number;
+  /**
+   * Price tolerance in ppm for each suborder. This will be applied to
+   * the oracle price each time a suborder is triggered. Must be
+   * be in the range [0, 1_000_000).
+   */
+
+  priceTolerance: number;
+}
+/** TwapParameters represents the necessary configuration for a TWAP order. */
+
+export interface TwapParametersSDKType {
+  /**
+   * Duration of the TWAP order execution in seconds. Must be in the range
+   * [300 (5 minutes), 86400 (24 hours)].
+   */
+  duration: number;
+  /**
+   * Interval in seconds for each suborder to execute. Must be a
+   * whole number, a factor of the duration, and in the range
+   * [30 (30 seconds), 3600 (1 hour)].
+   */
+
+  interval: number;
+  /**
+   * Price tolerance in ppm for each suborder. This will be applied to
+   * the oracle price each time a suborder is triggered. Must be
+   * be in the range [0, 1_000_000).
+   */
+
+  price_tolerance: number;
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
+}
+/**
+ * BuilderCodeParameters represents the metadata for the partner or builder of
+ * an order. This allows them to specify a fee for providing there service which
+ * will be paid out in the event of an order fill.
+ */
+
+export interface BuilderCodeParameters {
+  /** The address of the builder to which the fee will be paid. */
+  builderAddress: string;
+  /** The fee enforced on the order in ppm. */
+
+  feePpm: number;
+}
+/**
+ * BuilderCodeParameters represents the metadata for the partner or builder of
+ * an order. This allows them to specify a fee for providing there service which
+ * will be paid out in the event of an order fill.
+ */
+
+export interface BuilderCodeParametersSDKType {
+  /** The address of the builder to which the fee will be paid. */
+  builder_address: string;
+  /** The fee enforced on the order in ppm. */
+
+  fee_ppm: number;
 }
 /**
  * TransactionOrdering represents a unique location in the block where a
@@ -1153,7 +1255,13 @@ function createBaseOrder(): Order {
     reduceOnly: false,
     clientMetadata: 0,
     conditionType: 0,
+<<<<<<< HEAD
     conditionalOrderTriggerSubticks: Long.UZERO
+=======
+    conditionalOrderTriggerSubticks: Long.UZERO,
+    twapParameters: undefined,
+    builderCodeParameters: undefined
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
   };
 }
 
@@ -1203,6 +1311,17 @@ export const Order = {
       writer.uint32(88).uint64(message.conditionalOrderTriggerSubticks);
     }
 
+<<<<<<< HEAD
+=======
+    if (message.twapParameters !== undefined) {
+      TwapParameters.encode(message.twapParameters, writer.uint32(98).fork()).ldelim();
+    }
+
+    if (message.builderCodeParameters !== undefined) {
+      BuilderCodeParameters.encode(message.builderCodeParameters, writer.uint32(106).fork()).ldelim();
+    }
+
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
     return writer;
   },
 
@@ -1259,6 +1378,17 @@ export const Order = {
           message.conditionalOrderTriggerSubticks = (reader.uint64() as Long);
           break;
 
+<<<<<<< HEAD
+=======
+        case 12:
+          message.twapParameters = TwapParameters.decode(reader, reader.uint32());
+          break;
+
+        case 13:
+          message.builderCodeParameters = BuilderCodeParameters.decode(reader, reader.uint32());
+          break;
+
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
         default:
           reader.skipType(tag & 7);
           break;
@@ -1281,6 +1411,131 @@ export const Order = {
     message.clientMetadata = object.clientMetadata ?? 0;
     message.conditionType = object.conditionType ?? 0;
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
+<<<<<<< HEAD
+=======
+    message.twapParameters = object.twapParameters !== undefined && object.twapParameters !== null ? TwapParameters.fromPartial(object.twapParameters) : undefined;
+    message.builderCodeParameters = object.builderCodeParameters !== undefined && object.builderCodeParameters !== null ? BuilderCodeParameters.fromPartial(object.builderCodeParameters) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseTwapParameters(): TwapParameters {
+  return {
+    duration: 0,
+    interval: 0,
+    priceTolerance: 0
+  };
+}
+
+export const TwapParameters = {
+  encode(message: TwapParameters, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.duration !== 0) {
+      writer.uint32(8).uint32(message.duration);
+    }
+
+    if (message.interval !== 0) {
+      writer.uint32(16).uint32(message.interval);
+    }
+
+    if (message.priceTolerance !== 0) {
+      writer.uint32(24).uint32(message.priceTolerance);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): TwapParameters {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTwapParameters();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.duration = reader.uint32();
+          break;
+
+        case 2:
+          message.interval = reader.uint32();
+          break;
+
+        case 3:
+          message.priceTolerance = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<TwapParameters>): TwapParameters {
+    const message = createBaseTwapParameters();
+    message.duration = object.duration ?? 0;
+    message.interval = object.interval ?? 0;
+    message.priceTolerance = object.priceTolerance ?? 0;
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
+    return message;
+  }
+
+};
+
+function createBaseBuilderCodeParameters(): BuilderCodeParameters {
+  return {
+    builderAddress: "",
+    feePpm: 0
+  };
+}
+
+export const BuilderCodeParameters = {
+  encode(message: BuilderCodeParameters, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.builderAddress !== "") {
+      writer.uint32(10).string(message.builderAddress);
+    }
+
+    if (message.feePpm !== 0) {
+      writer.uint32(16).uint32(message.feePpm);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): BuilderCodeParameters {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBuilderCodeParameters();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.builderAddress = reader.string();
+          break;
+
+        case 2:
+          message.feePpm = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<BuilderCodeParameters>): BuilderCodeParameters {
+    const message = createBaseBuilderCodeParameters();
+    message.builderAddress = object.builderAddress ?? "";
+    message.feePpm = object.feePpm ?? 0;
     return message;
   }
 

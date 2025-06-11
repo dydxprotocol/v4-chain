@@ -409,6 +409,296 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 			},
 			err: ErrInvalidConditionalOrderTriggerSubticks,
 		},
+<<<<<<< HEAD
+=======
+		"twap: missing config": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_Twap,
+					},
+					Side:     Order_SIDE_BUY,
+					Subticks: uint64(10),
+					Quantums: uint64(42),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+				},
+			},
+			err: ErrInvalidPlaceOrder,
+		},
+		"twap: interval too small": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_Twap,
+					},
+					Side:     Order_SIDE_BUY,
+					Subticks: uint64(10),
+					Quantums: uint64(42),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					TwapParameters: &TwapParameters{
+						Interval: MinTwapOrderInterval - 1,
+						Duration: 300,
+					},
+				},
+			},
+			err: ErrInvalidPlaceOrder,
+		},
+		"twap: interval too large": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_Twap,
+					},
+					Side:     Order_SIDE_BUY,
+					Subticks: uint64(10),
+					Quantums: uint64(42),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					TwapParameters: &TwapParameters{
+						Interval: MaxTwapOrderInterval + 1,
+						Duration: 300,
+					},
+				},
+			},
+			err: ErrInvalidPlaceOrder,
+		},
+		"twap: duration too small": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_Twap,
+					},
+					Side:     Order_SIDE_BUY,
+					Subticks: uint64(10),
+					Quantums: uint64(42),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					TwapParameters: &TwapParameters{
+						Interval:       60,
+						Duration:       MinTwapOrderDuration - 1,
+						PriceTolerance: 1000,
+					},
+				},
+			},
+			err: ErrInvalidPlaceOrder,
+		},
+		"twap: duration too large": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_Twap,
+					},
+					Side:     Order_SIDE_BUY,
+					Subticks: uint64(10),
+					Quantums: uint64(42),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					TwapParameters: &TwapParameters{
+						Interval:       60,
+						Duration:       MaxTwapOrderDuration + 1,
+						PriceTolerance: 1000,
+					},
+				},
+			},
+			err: ErrInvalidPlaceOrder,
+		},
+		"twap: duration not multiple of interval": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_Twap,
+					},
+					Side:     Order_SIDE_BUY,
+					Subticks: uint64(10),
+					Quantums: uint64(42),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					TwapParameters: &TwapParameters{
+						Interval:       60,
+						Duration:       301, // Not divisible by 60
+						PriceTolerance: 1000,
+					},
+				},
+			},
+			err: ErrInvalidPlaceOrder,
+		},
+		"twap: price tolerance too high": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_Twap,
+					},
+					Side:     Order_SIDE_BUY,
+					Subticks: uint64(10),
+					Quantums: uint64(42),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					TwapParameters: &TwapParameters{
+						Interval:       60,
+						Duration:       300,
+						PriceTolerance: MaxTwapOrderPriceTolerance,
+					},
+				},
+			},
+			err: ErrInvalidPlaceOrder,
+		},
+		"twap: valid config": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_Twap,
+					},
+					Side:     Order_SIDE_BUY,
+					Subticks: uint64(10),
+					Quantums: uint64(42),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					TwapParameters: &TwapParameters{
+						Interval:       60,
+						Duration:       300,
+						PriceTolerance: 1000,
+					},
+				},
+			},
+		},
+		"invalid builder address": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:     Order_SIDE_BUY,
+					Quantums: uint64(42),
+					Subticks: uint64(10),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					BuilderCodeParameters: &BuilderCodeParameters{
+						BuilderAddress: "invalid_builder_address",
+						FeePpm:         1000,
+					},
+				},
+			},
+			err: ErrInvalidBuilderCode,
+		},
+		"builder code parameters: zero fee ppm": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:     Order_SIDE_BUY,
+					Quantums: uint64(42),
+					Subticks: uint64(10),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					BuilderCodeParameters: &BuilderCodeParameters{
+						BuilderAddress: sample.AccAddress(),
+						FeePpm:         0,
+					},
+				},
+			},
+			err: ErrInvalidBuilderCode,
+		},
+		"builder code parameters: above 10_000 fee ppm": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:     Order_SIDE_BUY,
+					Quantums: uint64(42),
+					Subticks: uint64(10),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					BuilderCodeParameters: &BuilderCodeParameters{
+						BuilderAddress: sample.AccAddress(),
+						FeePpm:         MaxBuilderCodeFeePpm + 1,
+					},
+				},
+			},
+			err: ErrInvalidBuilderCode,
+		},
+		"valid builder code parameters": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:     Order_SIDE_BUY,
+					Quantums: uint64(42),
+					Subticks: uint64(10),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					BuilderCodeParameters: &BuilderCodeParameters{
+						BuilderAddress: sample.AccAddress(),
+						FeePpm:         MaxBuilderCodeFeePpm,
+					},
+				},
+			},
+		},
+>>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
