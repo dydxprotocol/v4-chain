@@ -66,6 +66,9 @@ create_full_nodes() {
 		# Create the folder structure required for using cosmovisor.
 		cosmovisor init /bin/dydxprotocold
 
+		# Override cosmovisor's default symlink to point to current verson's binary.
+		ln -sf $DAEMON_HOME/cosmovisor/upgrades/$CURRENT_VERSION $DAEMON_HOME/cosmovisor/current
+
 		cp -r "$HOME/cosmovisor" "$FULL_NODE_HOME_DIR/"
 	done
 }
