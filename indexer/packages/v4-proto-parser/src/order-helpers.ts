@@ -11,7 +11,7 @@ import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from './constants';
  * @returns
  */
 export function getOrderIdHash(orderId: IndexerOrderId): Buffer {
-  const bytes: Buffer = Buffer.from(Uint8Array.from(IndexerOrderId.encode(orderId).finish()));
+  const bytes: Buffer = Buffer.from(IndexerOrderId.encode(orderId).finish());
   return createHash('sha256').update(bytes).digest();
 }
 

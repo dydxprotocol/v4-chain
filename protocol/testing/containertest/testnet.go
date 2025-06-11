@@ -1,7 +1,9 @@
 package containertest
 
 import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -13,14 +15,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	"github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3/docker"
 )
-
-// For now all this config data like peers and monikers are hard coded to match the local net.
-// In the future we'll pull stuff from a config.
-const persistentPeers = "17e5e45691f0d01449c84fd4ae87279578cdd7ec@testnet-local-alice:26656," +
-	"b69182310be02559483e42c77b7b104352713166@testnet-local-bob:26656," +
-	"47539956aaa8e624e0f1d926040e54908ad0eb44@testnet-local-carl:26656," +
-	"5882428984d83b03d0c907c1f0af343534987052@testnet-local-dave:26656"
 
 // Resources will expire in 10 minutes
 const resourceLifetimeSecs = 600
@@ -42,14 +38,23 @@ type Testnet struct {
 	pool                *dockertest.Pool
 	network             *dockertest.Network
 	exchangeServer      *pricefeed_testutil.ExchangeServer
+	uniqueId            string
 }
 
 // NewTestnet returns a new Testnet. If creation fails, an error is returned.
 // In some cases, resources could be initialized but not properly cleaned up. The error will reflect this.
 func NewTestnet() (testnet *Testnet, err error) {
+	// Generate unique ID for this testnet instance to avoid conflicts
+	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		return nil, err
+	}
+	uniqueId := fmt.Sprintf("%d", n.Int64())
+
 	testnet = &Testnet{
-		Nodes:   make(map[string]*Node),
-		keyring: keyring.NewInMemory(constants.TestEncodingCfg.Codec),
+		Nodes:    make(map[string]*Node),
+		keyring:  keyring.NewInMemory(constants.TestEncodingCfg.Codec),
+		uniqueId: uniqueId,
 	}
 	testnet.pool, err = dockertest.NewPool("")
 	if err != nil {
@@ -97,9 +102,13 @@ func (t *Testnet) Start() (err error) {
 
 // initialize sets up all state that needs to be cleaned up. Returns error immediately upon a failure.
 func (t *Testnet) initialize() (err error) {
+	// Clean up any existing containers/networks with the same names first
+	t.cleanupExistingResources()
+
 	// NB: Docker lets you create multiple networks with the same name. ID, however, is unique.
 	// Consider not using the same name in the future if it proves to be a problem.
-	t.network, err = t.pool.CreateNetwork("test-network")
+	networkName := fmt.Sprintf("test-network-%s", t.uniqueId)
+	t.network, err = t.pool.CreateNetwork(networkName)
 	if err != nil {
 		return err
 	}
@@ -126,6 +135,31 @@ func (t *Testnet) initialize() (err error) {
 	return nil
 }
 
+// cleanupExistingResources removes any existing containers/networks that might conflict
+func (t *Testnet) cleanupExistingResources() {
+	// Try to remove containers with our unique names if they exist
+	for moniker := range monikers() {
+		containerName := fmt.Sprintf("testnet-local-%s-%s", moniker, t.uniqueId)
+		if container, err := t.pool.Client.InspectContainer(containerName); err == nil {
+			_ = t.pool.Client.RemoveContainer(docker.RemoveContainerOptions{
+				ID:    container.ID,
+				Force: true,
+			})
+		}
+	}
+
+	// Try to remove network if it exists
+	networkName := fmt.Sprintf("test-network-%s", t.uniqueId)
+	if networks, err := t.pool.Client.ListNetworks(); err == nil {
+		for _, network := range networks {
+			if network.Name == networkName {
+				_ = t.pool.Client.RemoveNetwork(network.ID)
+				break
+			}
+		}
+	}
+}
+
 func (t *Testnet) initializeNode(moniker string) (*Node, error) {
 	var entrypointCommand string
 	if t.isPreupgradeGenesis {
@@ -134,14 +168,23 @@ func (t *Testnet) initializeNode(moniker string) (*Node, error) {
 		entrypointCommand = "dydxprotocold"
 	}
 
+	// Generate dynamic persistent peers using the unique ID
+	persistentPeers := fmt.Sprintf(
+		"17e5e45691f0d01449c84fd4ae87279578cdd7ec@testnet-local-alice-%s:26656,"+
+			"b69182310be02559483e42c77b7b104352713166@testnet-local-bob-%s:26656,"+
+			"47539956aaa8e624e0f1d926040e54908ad0eb44@testnet-local-carl-%s:26656,"+
+			"5882428984d83b03d0c907c1f0af343534987052@testnet-local-dave-%s:26656",
+		t.uniqueId, t.uniqueId, t.uniqueId, t.uniqueId)
+
 	resource, err := t.pool.RunWithOptions(
 		&dockertest.RunOptions{
-			Name:       fmt.Sprintf("testnet-local-%s", moniker),
+			Name:       fmt.Sprintf("testnet-local-%s-%s", moniker, t.uniqueId),
 			Repository: "dydxprotocol-container-test",
 			Tag:        "",
 			NetworkID:  t.network.Network.ID,
 			ExposedPorts: []string{
-				"26657",
+				"26657/tcp",
+				"9090/tcp",
 			},
 			Entrypoint: []string{
 				entrypointCommand,

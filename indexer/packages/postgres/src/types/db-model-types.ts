@@ -318,6 +318,19 @@ export interface VaultFromDatabase {
   updatedAt: IsoString,
 }
 
+export interface FundingPaymentsFromDatabase {
+  subaccountId: string,
+  perpetualId: string,
+  ticker: string,
+  createdAt: string,
+  createdAtHeight: string,
+  oraclePrice: string,
+  size: string,
+  side: PositionSide,
+  rate: string,
+  payment: string,
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string }, };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:

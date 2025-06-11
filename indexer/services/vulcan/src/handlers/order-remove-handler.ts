@@ -235,9 +235,9 @@ export class OrderRemoveHandler extends Handler {
     }
 
     const subaccountMessage: Message = {
-      key: Buffer.from(Uint8Array.from(
+      key: Buffer.from(
         IndexerSubaccountId.encode(orderRemove.removedOrderId!.subaccountId!).finish(),
-      )),
+      ),
       value: this.createSubaccountWebsocketMessageFromPostgresOrder(
         order,
         orderRemove,
@@ -300,9 +300,9 @@ export class OrderRemoveHandler extends Handler {
           this.generateTimingStatsOptions('find_order'),
         );
         const subaccountMessage: Message = {
-          key: Buffer.from(Uint8Array.from(
+          key: Buffer.from(
             IndexerSubaccountId.encode(orderRemove.removedOrderId!.subaccountId!).finish(),
-          )),
+          ),
           value: this.createSubaccountWebsocketMessageFromOrderRemoveMessage(
             canceledOrder,
             orderRemove,
@@ -342,9 +342,9 @@ export class OrderRemoveHandler extends Handler {
     }
 
     const subaccountMessage: Message = {
-      key: Buffer.from(Uint8Array.from(
+      key: Buffer.from(
         IndexerSubaccountId.encode(orderRemove.removedOrderId!.subaccountId!).finish(),
-      )),
+      ),
       value: this.createSubaccountWebsocketMessageFromRemoveOrderResult(
         removeOrderResult,
         canceledOrder,
@@ -653,7 +653,7 @@ export class OrderRemoveHandler extends Handler {
       version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
     });
 
-    return Buffer.from(Uint8Array.from(SubaccountMessage.encode(subaccountMessage).finish()));
+    return Buffer.from(SubaccountMessage.encode(subaccountMessage).finish());
   }
 
   protected createSubaccountWebsocketMessageFromRemoveOrderResult(
@@ -715,7 +715,7 @@ export class OrderRemoveHandler extends Handler {
       version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
     });
 
-    return Buffer.from(Uint8Array.from(SubaccountMessage.encode(subaccountMessage).finish()));
+    return Buffer.from(SubaccountMessage.encode(subaccountMessage).finish());
   }
 
   protected createSubaccountWebsocketMessageFromPostgresOrder(
@@ -763,7 +763,7 @@ export class OrderRemoveHandler extends Handler {
       version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
     });
 
-    return Buffer.from(Uint8Array.from(SubaccountMessage.encode(subaccountMessage).finish()));
+    return Buffer.from(SubaccountMessage.encode(subaccountMessage).finish());
   }
 
   protected isStatefulOrderCancelation(

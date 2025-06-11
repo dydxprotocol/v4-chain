@@ -116,5 +116,5 @@ export function createSubaccountWebsocketMessage(
     version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
   });
 
-  return Buffer.from(Uint8Array.from(SubaccountMessage.encode(subaccountMessage).finish()));
+  return Buffer.from(SubaccountMessage.encode(subaccountMessage).finish());
 }

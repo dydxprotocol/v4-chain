@@ -4,6 +4,8 @@ import { Channel, WebsocketTopics } from '../types';
 // 4000 - 4999 is reserved for private use
 // 1006 can't be used as it's not meant to be used by endpoints
 // Reference https://datatracker.ietf.org/doc/html/rfc6455#section-7.4.1
+export const WS_CLOSE_GOING_AWAY: number = 1001;
+export const WS_CLOSE_HEARTBEAT_TIMEOUT: number = 1011;
 export const WS_CLOSE_CODE_ABNORMAL_CLOSURE: number = 4000;
 export const WS_CLOSE_CODE_POLICY_VIOLATION: number = 1008;
 export const WS_CLOSE_CODE_SERVICE_RESTART: number = 1012;

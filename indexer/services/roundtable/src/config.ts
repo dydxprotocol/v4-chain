@@ -62,6 +62,7 @@ export const configSchema = {
   LOOPS_ENABLED_DELETE_OLD_FIREBASE_NOTIFICATION_TOKENS: parseBoolean({ default: true }),
   LOOPS_ENABLED_REFRESH_VAULT_PNL: parseBoolean({ default: true }),
   LOOPS_ENABLED_CACHE_ORDERBOOK_MID_PRICES: parseBoolean({ default: true }),
+  LOOPS_ENABLED_UPDATE_FUNDING_PAYMENTS: parseBoolean({ default: true }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -145,7 +146,9 @@ export const configSchema = {
   LOOPS_INTERVAL_MS_REFRESH_VAULT_PNL: parseInteger({
     default: 5 * ONE_MINUTE_IN_MILLISECONDS,
   }),
-
+  LOOPS_INTERVAL_MS_UPDATE_FUNDING_PAYMENTS: parseInteger({
+    default: ONE_MINUTE_IN_MILLISECONDS,
+  }),
   // Start delay
   START_DELAY_ENABLED: parseBoolean({ default: true }),
   MAX_START_DELAY_MS: parseInteger({ default: 3 * ONE_MINUTE_IN_MILLISECONDS }),
@@ -158,6 +161,7 @@ export const configSchema = {
   UNCROSS_ORDERBOOK_LOCK_MULTIPLIER: parseInteger({ default: 1 }),
   PNL_TICK_UPDATE_LOCK_MULTIPLIER: parseInteger({ default: 20 }),
   SUBACCOUNT_USERNAME_GENERATOR_LOCK_MULTIPLIER: parseInteger({ default: 5 }),
+  UPDATE_FUNDING_PAYMENTS_LOCK_MULTIPLIER: parseInteger({ default: 720 }),
 
   // Maximum number of running tasks - set this equal to PG_POOL_MIN in .env, default is 2
   MAX_CONCURRENT_RUNNING_TASKS: parseInteger({ default: 2 }),
