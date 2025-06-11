@@ -71,7 +71,7 @@ export class FundingPaymentController extends Controller {
       queryConfig,
       [QueryableField.LIMIT],
       page !== undefined
-        ? { orderBy: [['createdAt', Ordering.DESC]] }
+        ? { orderBy: [['createdAtHeight', Ordering.DESC]] }
         : undefined,
     );
 
@@ -112,7 +112,10 @@ export class FundingPaymentController extends Controller {
     );
 
     const queryConfig: FundingPaymentsQueryConfig = {
-      subaccountId: Object.keys(childIdtoSubaccountNumber),
+      parentSubaccount: {
+        address,
+        subaccountNumber: parentSubaccountNumber,
+      },
       createdOnOrAfter: afterOrAt,
       limit,
       page,
@@ -127,7 +130,7 @@ export class FundingPaymentController extends Controller {
       queryConfig,
       [QueryableField.LIMIT],
       page !== undefined
-        ? { orderBy: [['createdAt', Ordering.DESC]] }
+        ? { orderBy: [['createdAtHeight', Ordering.DESC]] }
         : undefined,
     );
 
