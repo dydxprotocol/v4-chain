@@ -50,8 +50,8 @@ func (m MockAuthenticator) OnAuthenticatorAdded(
 	account sdk.AccAddress,
 	config []byte,
 	authenticatorId string,
-) error {
-	return nil
+) (bool, error) {
+	return true, nil
 }
 
 func (m MockAuthenticator) Type() string {
@@ -122,8 +122,8 @@ func (m MockAuthenticatorFail) OnAuthenticatorAdded(
 	account sdk.AccAddress,
 	config []byte,
 	authenticatorId string,
-) error {
-	return nil
+) (bool, error) {
+	return true, nil
 }
 
 func (m MockAuthenticatorFail) Track(ctx sdk.Context, request types.AuthenticationRequest) error {

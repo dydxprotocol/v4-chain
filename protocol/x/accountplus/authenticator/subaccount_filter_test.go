@@ -76,7 +76,13 @@ func (s *SubaccountFilterTest) TestFilter() {
 
 	for name, tt := range tests {
 		s.Run(name, func() {
-			err := s.SubaccountFilter.OnAuthenticatorAdded(s.Ctx, sdk.AccAddress{}, []byte(tt.whitelist), "1")
+			requireSigVerification, err := s.SubaccountFilter.OnAuthenticatorAdded(
+				s.Ctx,
+				sdk.AccAddress{},
+				[]byte(tt.whitelist),
+				"1",
+			)
+			s.Require().False(requireSigVerification)
 			s.Require().NoError(err)
 			filter, err := s.SubaccountFilter.Initialize([]byte(tt.whitelist))
 			s.Require().NoError(err)

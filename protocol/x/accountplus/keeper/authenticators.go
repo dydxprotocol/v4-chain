@@ -90,9 +90,17 @@ func (k Keeper) AddAuthenticator(
 	id := k.InitializeOrGetNextAuthenticatorId(ctx)
 
 	// Each authenticator has a custom OnAuthenticatorAdded function
-	err := impl.OnAuthenticatorAdded(ctx, account, config, strconv.FormatUint(id, 10))
+	requireSigVerification, err := impl.OnAuthenticatorAdded(ctx, account, config, strconv.FormatUint(id, 10))
 	if err != nil {
 		return 0, errors.Wrapf(err, "`OnAuthenticatorAdded` failed on authenticator type %s", authenticatorType)
+	}
+
+	if !requireSigVerification {
+		return 0, fmt.Errorf(
+			"unsafe: authenticator tree does not require signature verification all possible paths, type = %v, config = %v",
+			authenticatorType,
+			config,
+		)
 	}
 
 	k.SetNextAuthenticatorId(ctx, id+1)
