@@ -117,4 +117,30 @@ describe('funding payments store', () => {
     );
     expect(fPayment).toEqual(expect.objectContaining(defaultFundingPayment));
   });
+
+  it('supports pagination', async () => {
+    await Promise.all([
+      FundingPaymentsTable.create(defaultFundingPayment),
+      FundingPaymentsTable.create(defaultFundingPayment2),
+    ]);
+
+    const { results: fundingPayments } = await FundingPaymentsTable.findAll(
+      {
+        page: 1,
+        limit: 1,
+      },
+      [],
+    );
+    expect(fundingPayments.length).toEqual(1);
+    expect(fundingPayments[0]).toEqual(expect.objectContaining(defaultFundingPayment2));
+    const { results: fundingPayments2 } = await FundingPaymentsTable.findAll(
+      {
+        page: 2,
+        limit: 1,
+      },
+      [],
+    );
+    expect(fundingPayments2.length).toEqual(1);
+    expect(fundingPayments2[0]).toEqual(expect.objectContaining(defaultFundingPayment));
+  });
 });

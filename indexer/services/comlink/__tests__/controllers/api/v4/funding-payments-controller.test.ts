@@ -7,10 +7,7 @@ import {
   testConstants,
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
-import {
-  FundingPaymentResponseObject,
-  RequestMethod,
-} from '../../../../src/types';
+import { FundingPaymentResponseObject, RequestMethod } from '../../../../src/types';
 import request from 'supertest';
 import { sendRequest } from '../../../helpers/helpers';
 
@@ -42,8 +39,7 @@ describe('funding-payments-controller#V4', () => {
     side: testConstants.defaultFundingPayment.side,
     rate: testConstants.defaultFundingPayment.rate,
     payment: testConstants.defaultFundingPayment.payment,
-    subaccountNumber:
-      testConstants.defaultSubaccount.subaccountNumber.toString(),
+    subaccountNumber: testConstants.defaultSubaccount.subaccountNumber.toString(),
   };
 
   const expectedFundingPayment2: FundingPaymentResponseObject = {
@@ -101,22 +97,21 @@ describe('funding-payments-controller#V4', () => {
     });
 
     expect(response.body.fundingPayments).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining(expectedFundingPayment1),
-      ]),
+      expect.arrayContaining([expect.objectContaining(expectedFundingPayment1)]),
     );
   });
 
-  it('Get /fundingPayments with afterOrAt filter', async () => {
+  it('Get /fundingPayments with createdOnOrAfter filter', async () => {
     const response: request.Response = await sendRequest({
       type: RequestMethod.GET,
-      path: `/v4/fundingPayments?address=${testConstants.defaultAddress}&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&afterOrAt=${testConstants.defaultFundingPayment.createdAt}`,
+      path: `/v4/fundingPayments?address=${testConstants.defaultAddress}&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&createdOnOrAfter=${fundingPayment1.createdAt}`,
     });
 
     expect(response.body.fundingPayments).toEqual(
       expect.arrayContaining([
         expect.objectContaining(expectedFundingPayment1),
         expect.objectContaining(expectedFundingPayment2),
+        expect.objectContaining(expectedFundingPayment3),
       ]),
     );
   });
@@ -133,6 +128,26 @@ describe('funding-payments-controller#V4', () => {
         expect.objectContaining(expectedFundingPayment2),
         expect.objectContaining(expectedFundingPayment3),
       ]),
+    );
+  });
+
+  it('Gets /fundingPayments/parentSubaccount with pagination', async () => {
+    const response: request.Response = await sendRequest({
+      type: RequestMethod.GET,
+      path: `/v4/fundingPayments/parentSubaccount?address=${testConstants.defaultAddress}&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&limit=1&page=1`,
+    });
+
+    expect(response.body.fundingPayments.length).toEqual(1);
+    const response2: request.Response = await sendRequest({
+      type: RequestMethod.GET,
+      path: `/v4/fundingPayments/parentSubaccount?address=${testConstants.defaultAddress}&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&limit=1&page=2`,
+    });
+
+    expect(response2.body.fundingPayments.length).toEqual(1);
+
+    // expects page 1 and page 2 to be different
+    expect(response.body.fundingPayments[0]).not.toEqual(
+      response2.body.fundingPayments[0],
     );
   });
 
