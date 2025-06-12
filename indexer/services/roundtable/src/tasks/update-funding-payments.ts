@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { logger } from '@dydxprotocol-indexer/base';
 import {
   PersistentCacheTable,
   PersistentCacheKeys,
@@ -11,10 +11,7 @@ import {
   Ordering,
 } from '@dydxprotocol-indexer/postgres';
 
-import config from '../config';
-
 const defaultLastHeight: string = '0';
-const statStart: string = `${config.SERVICE_NAME}.aggregate_data`;
 
 /**
  * Process funding payment updates between the specified start and end heights.
