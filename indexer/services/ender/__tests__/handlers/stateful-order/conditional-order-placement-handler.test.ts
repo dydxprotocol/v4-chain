@@ -161,6 +161,9 @@ describe('conditionalOrderPlacementHandler', () => {
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
+      duration: null,
+      interval: null,
+      priceTolerance: null,
     });
     expectOrderSubaccountKafkaMessage(
       producerSendMock,
@@ -223,6 +226,9 @@ describe('conditionalOrderPlacementHandler', () => {
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
+      duration: null,
+      interval: null,
+      priceTolerance: null,
     });
     expectOrderSubaccountKafkaMessage(
       producerSendMock,

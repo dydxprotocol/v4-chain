@@ -23,6 +23,8 @@ export class StatefulOrderPlacementHandler
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
     if (this.event.orderPlace !== undefined) {
       orderId = OrderTable.orderIdToUuid(this.event.orderPlace!.order!.orderId!);
+    } else if (this.event.twapOrderPlacement !== undefined) {
+      orderId = OrderTable.orderIdToUuid(this.event.twapOrderPlacement!.order!.orderId!);
     } else {
       orderId = OrderTable.orderIdToUuid(this.event.longTermOrderPlacement!.order!.orderId!);
     }
@@ -40,6 +42,8 @@ export class StatefulOrderPlacementHandler
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
     if (this.event.orderPlace !== undefined) {
       order = this.event.orderPlace!.order!;
+    } else if (this.event.twapOrderPlacement !== undefined) {
+      order = this.event.twapOrderPlacement!.order!;
     } else {
       order = this.event.longTermOrderPlacement!.order!;
     }
