@@ -56,7 +56,7 @@ async function processFundingPaymentUpdate(
 }
 
 /**
- * Get the last processed height from the persistent cache table.
+ * Get from persistent cache table the height where funding payments were last processed.
  * If no last processed height is found, use the default value 0.
  *
  * @returns The last processed height.
@@ -90,19 +90,18 @@ async function getLastProcessedHeight(): Promise<string> {
  */
 export default async function runTask(): Promise<void> {
   const at: string = 'update-funding-payments#runTask';
-  logger.info({ at, message: 'Starting update funding payments task.' });
-  const taskStart: number = Date.now();
+  logger.info({ at, message: 'Starting task' });
 
-  // Load and execute the update_funding_payments.sql file
+  // Load funding payments SQL script.
   const sqlPath = join(__dirname, '..', 'scripts', 'update_funding_payments.sql');
   const sqlContent = readFileSync(sqlPath, 'utf8');
 
-  // Get all unique effectiveAtHeights from funding index updates since the last processed height.
+  // Get all funding index updates that occurred after last processed height.
+  // TODO: Move this logic directly into funding payments SQL script.
   const lastProcessedHeight: string = await getLastProcessedHeight();
-  // TODO: Integrate this with the .sql script that we execute later.
   const fundingUpdates = await FundingIndexUpdatesTable.findAll(
     {
-      effectiveAtOrAfterHeight: lastProcessedHeight,
+      effectiveAtOrAfterHeight: lastProcessedHeight + 1,
       distinctFields: ['effectiveAtHeight'],
     },
     [],
@@ -111,49 +110,43 @@ export default async function runTask(): Promise<void> {
     },
   );
   logger.info({
-    at: 'update-funding-payments#runTask',
-    message: `Found ${fundingUpdates.length} funding updates to process.`,
+    at,
+    message: `Found ${fundingUpdates.length} funding index updates to process.`,
   });
 
-  // Get unique heights from the funding updates
+  // Get unique heights from funding updates.
   const fundingHeights = [...fundingUpdates.map((update) => update.effectiveAtHeight)];
 
   for (let i = 0; i < fundingHeights.length; i += 1) {
     const txId: number = await Transaction.start();
     try {
-      // start transaction with last processed height.
       const lastHeight: string = await getLastProcessedHeight();
-      // get the current height from the funding index updates.
       const currentHeight: string = fundingHeights[i];
       logger.info({
         at,
-        message: 'Processing funding payment update for heights',
-        start: lastHeight,
-        end: currentHeight,
+        message: 'Computing funding payments',
+        positionSnapshotHeight: lastHeight,
+        fundingOccurredAtHeight: currentHeight,
       });
-      // compute the funding payments.
+      // Compute funding payments where last height is last height that funding payments
+      // were process and current height is the height of current funding index update.
       await processFundingPaymentUpdate(txId, lastHeight, currentHeight, sqlContent);
       await Transaction.commit(txId);
       logger.info({
         at,
-        message: 'Successfully processed funding payment update for heights ',
-        start: lastHeight,
-        end: currentHeight,
+        message: 'Successfully computed funding payments',
+        positionSnapshotHeight: lastHeight,
+        fundingOccurredAtHeight: currentHeight,
       });
-      stats.timing(`${statStart}.executeAggregate`, Date.now() - taskStart);
     } catch (error) {
       await Transaction.rollback(txId);
       logger.error({
         at,
-        message: 'Error processing funding payment update',
-        end: fundingHeights[i],
+        message: 'Error computing funding payments',
+        fundingOccurredAtHeight: fundingHeights[i],
         error,
       });
       throw error;
     }
   }
-  stats.timing(
-    `${config.SERVICE_NAME}.update-funding-payments.total.timing`,
-    Date.now() - taskStart,
-  );
 }
