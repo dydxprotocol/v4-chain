@@ -96,6 +96,8 @@ export default class OrderModel extends BaseModel {
         triggerPrice: { type: ['string', 'null'], default: null, pattern: NonNegativeNumericPattern },
         updatedAt: { type: 'string', format: 'date-time' },
         updatedAtHeight: { type: 'string', pattern: IntegerPattern },
+        builderAddress: { type: ['string', 'null'], default: null },
+        feePpm: { type: ['string', 'null'], default: null },
       },
     };
   }

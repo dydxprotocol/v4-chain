@@ -545,6 +545,7 @@ export async function expectFillInDatabase({
   fee,
   affiliateRevShare,
   hasOrderId = true,
+  builderFee = '0.00',
 }: {
   subaccountId: string,
   clientId: string,
@@ -564,6 +565,7 @@ export async function expectFillInDatabase({
   fee: string,
   affiliateRevShare: string,
   hasOrderId?: boolean,
+  builderFee?: string,
 }): Promise<void> {
   const fillId: string = FillTable.uuid(eventId, liquidity);
   const fill: FillFromDatabase | undefined = await FillTable.findById(fillId);
@@ -586,6 +588,7 @@ export async function expectFillInDatabase({
     clientMetadata,
     fee,
     affiliateRevShare,
+    builderFee,
   }));
 }
 
@@ -618,6 +621,8 @@ export async function expectOrderInDatabase({
   clientMetadata,
   updatedAt,
   updatedAtHeight,
+  builderAddress,
+  feePpm,
 }: {
   subaccountId: string,
   clientId: string,
@@ -635,6 +640,8 @@ export async function expectOrderInDatabase({
   clientMetadata: string,
   updatedAt: IsoString,
   updatedAtHeight: string,
+  builderAddress?: string,
+  feePpm?: string,
 }): Promise<void> {
   const orderId: string = OrderTable.uuid(subaccountId, clientId, clobPairId, orderFlags);
   const orderFromDatabase: OrderFromDatabase | undefined = await
@@ -659,6 +666,8 @@ export async function expectOrderInDatabase({
     clientMetadata,
     updatedAt,
     updatedAtHeight,
+    builderAddress: builderAddress ?? null,
+    feePpm: feePpm ?? null,
   }));
 }
 

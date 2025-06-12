@@ -47,7 +47,7 @@ import {
 } from '../../src/helpers/kafka-helper';
 import { DateTime } from 'luxon';
 import { convertToSubaccountMessage } from '../../src/lib/helper';
-import { defaultBlock } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import { defaultBlock, noBuilderFee } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('kafka-publisher', () => {
   let producerSendMock: jest.SpyInstance;
@@ -287,6 +287,7 @@ describe('kafka-publisher', () => {
       clientMetadata: '0',
       fee: '1.1',
       affiliateRevShare: '0',
+      builderFee: noBuilderFee,
     };
     const order: OrderFromDatabase = {
       ...testConstants.defaultOrderGoodTilBlockTime,

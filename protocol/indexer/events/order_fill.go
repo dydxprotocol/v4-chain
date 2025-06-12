@@ -18,21 +18,29 @@ func NewOrderFillEvent(
 	fillAmount satypes.BaseQuantums,
 	makerFee int64,
 	takerFee int64,
+	makerBuilderFee uint64,
+	takerBuilderFee uint64,
 	totalFilledMaker satypes.BaseQuantums,
 	totalFilledTaker satypes.BaseQuantums,
 	affiliateRevShareQuoteQuantums *big.Int,
 ) *OrderFillEventV1 {
 	indexerTakerOrder := v1.OrderToIndexerOrder(takerOrder)
+	makerBuilderAddress := getBuilderAddress(makerOrder)
+	takerBuilderAddress := getBuilderAddress(takerOrder)
 	return &OrderFillEventV1{
 		MakerOrder: v1.OrderToIndexerOrder(makerOrder),
 		TakerOrder: &OrderFillEventV1_Order{
 			Order: &indexerTakerOrder,
 		},
-		FillAmount:       fillAmount.ToUint64(),
-		MakerFee:         makerFee,
-		TakerFee:         takerFee,
-		TotalFilledMaker: totalFilledMaker.ToUint64(),
-		TotalFilledTaker: totalFilledTaker.ToUint64(),
+		FillAmount:          fillAmount.ToUint64(),
+		MakerFee:            makerFee,
+		TakerFee:            takerFee,
+		MakerBuilderFee:     makerBuilderFee,
+		TakerBuilderFee:     takerBuilderFee,
+		MakerBuilderAddress: makerBuilderAddress,
+		TakerBuilderAddress: takerBuilderAddress,
+		TotalFilledMaker:    totalFilledMaker.ToUint64(),
+		TotalFilledTaker:    totalFilledTaker.ToUint64(),
 		// Since revshare is always less than taker fee, this will not overflow.
 		AffiliateRevShare: affiliateRevShareQuoteQuantums.Uint64(),
 	}
@@ -47,12 +55,14 @@ func NewLiquidationOrderFillEvent(
 	fillAmount satypes.BaseQuantums,
 	makerFee int64,
 	takerFee int64,
+	makerBuilderFee uint64,
 	totalFilledMaker satypes.BaseQuantums,
 	affiliateRevShareQuoteQuantums *big.Int,
 ) *OrderFillEventV1 {
 	if !liquidationTakerOrder.IsLiquidation() {
 		panic(fmt.Sprintf("liquidationTakerOrder is not a liquidation order: %v", liquidationTakerOrder))
 	}
+
 	liquidationOrder := LiquidationOrderV1{
 		Liquidated:  v1.SubaccountIdToIndexerSubaccountId(liquidationTakerOrder.GetSubaccountId()),
 		ClobPairId:  liquidationTakerOrder.GetClobPairId().ToUint32(),
@@ -61,6 +71,8 @@ func NewLiquidationOrderFillEvent(
 		IsBuy:       liquidationTakerOrder.IsBuy(),
 		Subticks:    uint64(liquidationTakerOrder.GetOrderSubticks()),
 	}
+
+	makerBuilderAddress := getBuilderAddress(makerOrder)
 	return &OrderFillEventV1{
 		MakerOrder:       v1.OrderToIndexerOrder(makerOrder),
 		TakerOrder:       &OrderFillEventV1_LiquidationOrder{LiquidationOrder: &liquidationOrder},
@@ -70,6 +82,17 @@ func NewLiquidationOrderFillEvent(
 		TotalFilledMaker: totalFilledMaker.ToUint64(),
 		TotalFilledTaker: fillAmount.ToUint64(),
 		// Since revshare is always less than taker fee, this will not overflow.
-		AffiliateRevShare: affiliateRevShareQuoteQuantums.Uint64(),
+		AffiliateRevShare:   affiliateRevShareQuoteQuantums.Uint64(),
+		MakerBuilderAddress: makerBuilderAddress,
+		MakerBuilderFee:     makerBuilderFee,
+		TakerBuilderFee:     0, // protocol generated liquidation orders have no builder fee
 	}
+}
+
+func getBuilderAddress(order clobtypes.Order) string {
+	builderAddress := ""
+	if order.GetBuilderCodeParameters() != nil {
+		builderAddress = order.GetBuilderCodeParameters().GetBuilderAddress()
+	}
+	return builderAddress
 }
