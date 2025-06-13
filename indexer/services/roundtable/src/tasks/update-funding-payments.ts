@@ -97,12 +97,23 @@ export default async function runTask(): Promise<void> {
   const sqlPath = join(__dirname, '..', 'scripts', 'update_funding_payments.sql');
   const sqlContent = readFileSync(sqlPath, 'utf8');
 
+<<<<<<< HEAD
   // Get all unique effectiveAtHeights from funding index updates since the last processed height.
   const lastProcessedHeight: string = await getLastProcessedHeight();
   // TODO: Integrate this with the .sql script that we execute later.
   const fundingUpdates = await FundingIndexUpdatesTable.findAll(
     {
       effectiveAtOrAfterHeight: lastProcessedHeight,
+=======
+  // Get all funding index updates that occurred after last processed height.
+  // TODO: Move this logic directly into funding payments SQL script.
+  const searchUnprocessedFundingIndexHeightStart: string = (
+    parseInt(await getLastProcessedHeight(), 10) + 1
+  ).toString();
+  const fundingUpdates = await FundingIndexUpdatesTable.findAll(
+    {
+      effectiveAtOrAfterHeight: searchUnprocessedFundingIndexHeightStart,
+>>>>>>> 47b2231c (Add pagination to com link funding payments. (#2900))
       distinctFields: ['effectiveAtHeight'],
     },
     [],

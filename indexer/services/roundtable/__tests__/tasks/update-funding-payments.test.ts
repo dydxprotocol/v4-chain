@@ -108,7 +108,7 @@ describe('update-funding-payments', () => {
 
   it('Creates funding payment from fills only (no snapshot)', async () => {
     await OrderTable.create(defaultOrder);
-    // Create fills without any existing funding payment
+    // Create fills without any existing funding payments
     const fill = {
       ...defaultFill,
       side: OrderSide.BUY,
