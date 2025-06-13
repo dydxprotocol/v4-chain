@@ -288,3 +288,8 @@ func TriggerTimeToBytes(triggerTime int64) []byte {
 func TimeFromTriggerKey(triggerKey []byte) int64 {
 	return int64(binary.BigEndian.Uint64(triggerKey[0:8]))
 }
+
+// IsCompleted returns true if the TWAP order has no remaining legs to execute.
+func (t *TwapOrderPlacement) IsCompleted() bool {
+	return t.RemainingLegs == 0
+}
