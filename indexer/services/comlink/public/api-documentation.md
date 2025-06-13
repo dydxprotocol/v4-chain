@@ -1333,7 +1333,7 @@ headers = {
 baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/fundingPayments', params={
-  'address': 'string',  'subaccountNumber': '0.1'
+  'address': 'string',  'subaccountNumber': '0'
 }, headers = headers)
 
 print(r.json())
@@ -1350,7 +1350,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
-fetch(`${baseURL}/fundingPayments?address=string&subaccountNumber=0.1`,
+fetch(`${baseURL}/fundingPayments?address=string&subaccountNumber=0`,
 {
   method: 'GET',
 
@@ -1430,7 +1430,7 @@ headers = {
 baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
 r = requests.get(f'{baseURL}/fundingPayments/parentSubaccount', params={
-  'address': 'string',  'parentSubaccountNumber': '0.1'
+  'address': 'string',  'parentSubaccountNumber': '0'
 }, headers = headers)
 
 print(r.json())
@@ -1447,7 +1447,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
-fetch(`${baseURL}/fundingPayments/parentSubaccount?address=string&parentSubaccountNumber=0.1`,
+fetch(`${baseURL}/fundingPayments/parentSubaccount?address=string&parentSubaccountNumber=0`,
 {
   method: 'GET',
 
