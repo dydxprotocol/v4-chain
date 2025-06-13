@@ -178,7 +178,7 @@ export interface FillResponseObject {
    * @isInt
    */
   subaccountNumber: number,
-  builderFee: string,
+  builderFee?: string,
   builderAddress?: string,
 }
 

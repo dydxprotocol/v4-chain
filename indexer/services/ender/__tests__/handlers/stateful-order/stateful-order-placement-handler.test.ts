@@ -183,7 +183,7 @@ describe('statefulOrderPlacementHandler', () => {
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: defaultOrder.builderCodeParams?.builderAddress,
-      feePpm: defaultOrder.builderCodeParams?.feePpm,
+      feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
     });
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {
@@ -260,7 +260,7 @@ describe('statefulOrderPlacementHandler', () => {
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
       builderAddress: defaultOrder.builderCodeParams?.builderAddress,
-      feePpm: defaultOrder.builderCodeParams?.feePpm,
+      feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
     });
     // TODO[IND-20]: Add tests for vulcan messages
   });

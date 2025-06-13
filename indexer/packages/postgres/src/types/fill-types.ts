@@ -46,8 +46,8 @@ export interface FillCreateObject {
   clientMetadata?: string,
   fee: string,
   affiliateRevShare: string,
-  builderAddress: string,
-  builderFee: string,
+  builderAddress?: string,
+  builderFee?: string,
 }
 
 export interface FillUpdateObject {

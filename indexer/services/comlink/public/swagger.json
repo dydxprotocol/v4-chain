@@ -632,8 +632,7 @@
           "affiliateRevShare",
           "createdAt",
           "createdAtHeight",
-          "subaccountNumber",
-          "builderFee"
+          "subaccountNumber"
         ],
         "type": "object",
         "additionalProperties": false

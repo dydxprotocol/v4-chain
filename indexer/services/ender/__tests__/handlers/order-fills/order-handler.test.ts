@@ -1837,6 +1837,10 @@ function createOrderFillEvent(
   fillAmount: number,
   totalFilledMaker: number,
   totalFilledTaker: number,
+  makerBuilderFee: number = 0,
+  takerBuilderFee: number = 0,
+  makerBuilderAddress: string = testConstants.noBuilderAddress,
+  takerBuilderAddress: string = testConstants.noBuilderAddress,
 ): OrderFillEventV1 {
   return {
     makerOrder: makerOrderProto,
@@ -1847,10 +1851,10 @@ function createOrderFillEvent(
     totalFilledMaker: Long.fromValue(totalFilledMaker, true),
     totalFilledTaker: Long.fromValue(totalFilledTaker, true),
     affiliateRevShare: Long.fromValue(defaultAffiliateRevShareQuantum, false),
-    makerBuilderFee: Long.fromValue(0, false),
-    takerBuilderFee: Long.fromValue(0, false),
-    makerBuilderAddress: testConstants.noBuilderAddress,
-    takerBuilderAddress: testConstants.noBuilderAddress,
+    makerBuilderFee: Long.fromValue(makerBuilderFee, false),
+    takerBuilderFee: Long.fromValue(takerBuilderFee, false),
+    makerBuilderAddress,
+    takerBuilderAddress,
   } as OrderFillEventV1;
 }
 

@@ -119,7 +119,7 @@ export interface FillFromDatabase {
   fee: string,
   affiliateRevShare: string,
   builderAddress?: string,
-  builderFee: string,
+  builderFee?: string,
 }
 
 export interface BlockFromDatabase {

@@ -188,7 +188,7 @@ BEGIN
             order_client_metadata,
             fee,
             affiliate_rev_share,
-            builder_fee,
+            NULLIF(builder_fee, 0),
             NULLIF(builder_address, ''))
     RETURNING * INTO fill_record;
 

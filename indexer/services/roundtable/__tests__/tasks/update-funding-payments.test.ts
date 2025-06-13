@@ -24,8 +24,6 @@ import {
   defaultPerpetualMarket,
   defaultSubaccountId,
   defaultTendermintEventId,
-  noBuilderAddress,
-  noBuilderFee,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('update-funding-payments', () => {
@@ -238,8 +236,6 @@ describe('update-funding-payments', () => {
       clientMetadata: '0',
       fee: '1.1',
       affiliateRevShare: '1.10',
-      builderAddress: noBuilderAddress,
-      builderFee: noBuilderFee,
     });
     await FundingIndexUpdatesTable.create({
       perpetualId: defaultPerpetualMarket.id,

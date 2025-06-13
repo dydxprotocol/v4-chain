@@ -4919,7 +4919,7 @@ This operation does not require authentication
 |orderId|string|false|none|none|
 |clientMetadata|string|false|none|none|
 |subaccountNumber|integer(int32)|true|none|none|
-|builderFee|string|true|none|none|
+|builderFee|string|false|none|none|
 |builderAddress|string|false|none|none|
 
 ## FillResponse

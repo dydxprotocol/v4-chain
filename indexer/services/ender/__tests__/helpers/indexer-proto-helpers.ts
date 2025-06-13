@@ -408,6 +408,8 @@ export function createOrder({
   timeInForce,
   reduceOnly,
   clientMetadata,
+  builderAddress,
+  feePpm,
 }: {
   subaccountId: IndexerSubaccountId,
   clientId: number,
@@ -420,6 +422,8 @@ export function createOrder({
   timeInForce: IndexerOrder_TimeInForce,
   reduceOnly: boolean,
   clientMetadata: number,
+  builderAddress?: string,
+  feePpm?: number,
 }): IndexerOrder {
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   let orderJSON: any = {
@@ -436,6 +440,17 @@ export function createOrder({
     reduceOnly,
     clientMetadata,
   };
+
+  if (builderAddress !== undefined && feePpm !== undefined) {
+    orderJSON = {
+      ...orderJSON,
+      builderCodeParams: {
+        builderAddress,
+        feePpm,
+      },
+    };
+  }
+
   if (goodTilOneof.goodTilBlock !== undefined) {
     orderJSON = {
       ...orderJSON,
@@ -545,7 +560,8 @@ export async function expectFillInDatabase({
   fee,
   affiliateRevShare,
   hasOrderId = true,
-  builderFee = '0.00',
+  builderAddress = null,
+  builderFee = null,
 }: {
   subaccountId: string,
   clientId: string,
@@ -565,7 +581,8 @@ export async function expectFillInDatabase({
   fee: string,
   affiliateRevShare: string,
   hasOrderId?: boolean,
-  builderFee?: string,
+  builderAddress?: string | null,
+  builderFee?: string | null,
 }): Promise<void> {
   const fillId: string = FillTable.uuid(eventId, liquidity);
   const fill: FillFromDatabase | undefined = await FillTable.findById(fillId);
@@ -588,6 +605,7 @@ export async function expectFillInDatabase({
     clientMetadata,
     fee,
     affiliateRevShare,
+    builderAddress,
     builderFee,
   }));
 }
@@ -641,7 +659,7 @@ export async function expectOrderInDatabase({
   updatedAt: IsoString,
   updatedAtHeight: string,
   builderAddress?: string,
-  feePpm?: string,
+  feePpm?: number,
 }): Promise<void> {
   const orderId: string = OrderTable.uuid(subaccountId, clientId, clobPairId, orderFlags);
   const orderFromDatabase: OrderFromDatabase | undefined = await
