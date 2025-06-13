@@ -6,7 +6,12 @@ import (
 	"testing"
 	"time"
 
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+
 	"github.com/cometbft/cometbft/crypto/tmhash"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -1811,5 +1816,222 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 				require.Equal(t, expectedSubaccount, subaccount)
 			}
 		})
+	}
+}
+
+func TestMultiplePlaceOrdersInSingleTransaction(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Get subaccounts for indexer expectation assertions
+	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
+	aliceSubaccount1 := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num1)
+
+	// Create multiple orders for Alice
+	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5 := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: *aliceSubaccount.Id,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+				ClobPairId:   0,
+			},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     10_000_000_000, // 1 BTC
+			Subticks:     500_000_000,    // 50k USDC / BTC
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
+		},
+	)
+
+	LongTermPlaceOrder_Alice_Num0_Id1_Clob0_Buy1_Price50000_GTBT5 := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: *aliceSubaccount.Id,
+				ClientId:     1,
+				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+				ClobPairId:   0,
+			},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     10_000_000_000, // 1 BTC
+			Subticks:     500_000_000,    // 50k USDC / BTC
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
+		},
+	)
+
+	// Long term orders for Alice's subaccount 1
+	LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy1_Price50000_GTBT5 := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: *aliceSubaccount1.Id,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+				ClobPairId:   0,
+			},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     10_000_000_000, // 1 BTC
+			Subticks:     500_000_000,    // 50k USDC / BTC
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
+		},
+	)
+
+	// Create a short-term order for Alice
+	ShortTermPlaceOrder_Alice_Num0_Id2_Clob0_Buy1_Price50000_GTB20 := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: *aliceSubaccount.Id,
+				ClientId:     2,
+				ClobPairId:   0,
+			},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     10_000_000_000, // 1 BTC
+			Subticks:     500_000_000,    // 50k USDC / BTC
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		},
+	)
+
+	// Create a cancel order for Alice's first long-term order
+	CancelOrder_Alice_Num0_Id0_Clob0 := *clobtypes.NewMsgCancelOrderStateful(
+		LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
+		5, // Cancel at block 5
+	)
+
+	// Create a transfer message to Alice's subaccount
+	//TransferToAlice_Num0 := *sendingtypes.NewMsgDepositToSubaccount(
+	//	constants.AliceAccAddress.String(),
+	//	*aliceSubaccount.Id,
+	//	assettypes.AssetUsdc.Id,
+	//	100_000_000_000, // 100k USDC
+	//)
+
+	// Create a transfer message from Alice's subaccount 0 to Alice's subaccount 1
+	Transfer_Alice_Num0_To_Alice_Num1 := *sendingtypes.NewMsgCreateTransfer(
+		&sendingtypes.Transfer{
+			Sender:    constants.Alice_Num0,
+			Recipient: constants.Alice_Num1,
+			AssetId:   assettypes.AssetUsdc.Id,
+			Amount:    100_000_000_000, // 100k USDC
+		},
+	)
+
+	// Create test cases
+	tests := map[string]struct {
+		msgs                     []sdk.Msg
+		expectedOrdersInMemclob  map[clobtypes.OrderId]bool
+		expectedOrderFillAmounts map[clobtypes.OrderId]uint64
+		expectedSubaccounts      []satypes.Subaccount
+		expectedErr              string
+	}{
+		"Successfully places multiple long-term orders in single transaction": {
+			msgs: []sdk.Msg{
+				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+				&LongTermPlaceOrder_Alice_Num0_Id1_Clob0_Buy1_Price50000_GTBT5,
+			},
+			expectedOrdersInMemclob: map[clobtypes.OrderId]bool{
+				LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId: true,
+				LongTermPlaceOrder_Alice_Num0_Id1_Clob0_Buy1_Price50000_GTBT5.Order.OrderId: true,
+			},
+			expectedSubaccounts: []satypes.Subaccount{aliceSubaccount},
+		},
+		"Fails when mixing long-term and short-term orders": {
+			msgs: []sdk.Msg{
+				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+				&ShortTermPlaceOrder_Alice_Num0_Id2_Clob0_Buy1_Price50000_GTB20,
+			},
+			expectedErr: "a transaction containing short term MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
+		},
+		"Successfully places and cancels order in single transaction": {
+			msgs: []sdk.Msg{
+				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+				&CancelOrder_Alice_Num0_Id0_Clob0,
+			},
+			expectedOrdersInMemclob: map[clobtypes.OrderId]bool{
+				LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId: false,
+			},
+			expectedSubaccounts: []satypes.Subaccount{aliceSubaccount},
+		},
+		"Successfully transfers and places order in single transaction": {
+			msgs: []sdk.Msg{
+				&Transfer_Alice_Num0_To_Alice_Num1,
+				&LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy1_Price50000_GTBT5,
+			},
+			expectedOrdersInMemclob: map[clobtypes.OrderId]bool{
+				LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId: true,
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						testutil.CreateSingleAssetPosition(
+							0,
+							new(big.Int).Add(
+								aliceSubaccount.GetUsdcPosition(),
+								new(big.Int).SetInt64(100_000_000_000), // 100k USDC transfer
+							),
+						),
+					},
+					MarginEnabled: true,
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(
+			name, func(t *testing.T) {
+				msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+				appOpts := map[string]interface{}{
+					indexer.MsgSenderInstanceForTest: msgSender,
+				}
+				tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
+				ctx := tApp.InitChain()
+
+				// Create a transaction with multiple messages
+				tx := testapp.MustMakeCheckTx(
+					ctx,
+					tApp.App,
+					testapp.MustMakeCheckTxOptions{
+						AccAddressForSigning: constants.AliceAccAddress.String(),
+						Gas:                  100_000,
+						FeeAmt:               constants.TestFeeCoins_5Cents,
+					},
+					tc.msgs...,
+				)
+
+				// Check that CheckTx succeeds
+				checkTxResp := tApp.CheckTx(tx)
+				if tc.expectedErr != "" {
+					require.Conditionf(t, checkTxResp.IsErr, "Expected CheckTx to error. Response: %+v", checkTxResp)
+					require.Contains(t, checkTxResp.Log, tc.expectedErr)
+					return
+				}
+				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+				// Advance to block 3
+				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
+				// Check that the orders are placed and filled
+				//require.Equal(t, tc.expectedOffchainMessagesCheckTx, msgSender.GetOffchainMessages())
+				//require.Equal(t, tc.expectedOffchainMessagesAfterBlock, msgSender.GetOffchainMessages())
+				//require.Equal(t, tc.expectedOnchainMessagesAfterBlock, msgSender.GetOnchainMessages())
+
+				// Verify orders in memclob
+				for orderId, shouldExist := range tc.expectedOrdersInMemclob {
+					_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, orderId)
+					require.Equal(t, shouldExist, exists)
+				}
+
+				//// Verify fill amounts
+				//for orderId, expectedFillAmount := range tc.expectedOrderFillAmounts {
+				//	_, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
+				//	require.Equal(t, expectedFillAmount, fillAmount.ToUint64())
+				//}
+
+				// Verify subaccounts
+				for _, expectedSubaccount := range tc.expectedSubaccounts {
+					subaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.Id)
+					require.Equal(t, expectedSubaccount, subaccount)
+				}
+			},
+		)
 	}
 }
