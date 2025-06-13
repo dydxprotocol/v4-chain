@@ -95,10 +95,12 @@ export default async function runTask(): Promise<void> {
 
   // Get all funding index updates that occurred after last processed height.
   // TODO: Move this logic directly into funding payments SQL script.
-  const lastProcessedHeight: string = await getLastProcessedHeight();
+  const searchUnprocessedFundingIndexHeightStart: string = (
+    parseInt(await getLastProcessedHeight(), 10) + 1
+  ).toString();
   const fundingUpdates = await FundingIndexUpdatesTable.findAll(
     {
-      effectiveAtOrAfterHeight: lastProcessedHeight + 1,
+      effectiveAtOrAfterHeight: searchUnprocessedFundingIndexHeightStart,
       distinctFields: ['effectiveAtHeight'],
     },
     [],
