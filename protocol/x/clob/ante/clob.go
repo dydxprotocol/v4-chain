@@ -34,12 +34,17 @@ var (
 //   - The underlying `PlaceStatefulOrder`, `PlaceShortTermOrder`, `CancelStatefulOrder`, or `CancelShortTermOrder`
 //     methods on the keeper return errors.
 type ClobDecorator struct {
-	clobKeeper types.ClobKeeper
+	clobKeeper    types.ClobKeeper
+	sendingKeeper sendingtypes.SendingKeeper
 }
 
-func NewClobDecorator(clobKeeper types.ClobKeeper) ClobDecorator {
+func NewClobDecorator(
+	clobKeeper types.ClobKeeper,
+	sendingKeeper sendingtypes.SendingKeeper,
+) ClobDecorator {
 	return ClobDecorator{
 		clobKeeper,
+		sendingKeeper,
 	}
 }
 
@@ -174,6 +179,19 @@ func (cd ClobDecorator) AnteHandle(
 				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				log.Error, err,
 			)
+
+		case *sendingtypes.MsgCreateTransfer:
+			// We allow a single transfer msg to be batched with a PlaceOrder msg.
+			// This is primarily used to transfer collateral to an isolated subaccount for an isolated position order.
+			if err := cd.sendingKeeper.ProcessTransfer(ctx, msg.Transfer); err != nil {
+				log.DebugLog(
+					ctx,
+					"Failed to process transfer msg in clob ante handler",
+					log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+					log.Error, err,
+				)
+				return ctx, err
+			}
 		}
 		if err != nil {
 			return ctx, err

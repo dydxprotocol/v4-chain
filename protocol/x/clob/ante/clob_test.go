@@ -54,7 +54,8 @@ func runTestCase(t *testing.T, tc TestCase) {
 	mockClobKeeper := &mocks.ClobKeeper{}
 	mockClobKeeper.On("Logger", mock.Anything).Return(log.NewNopLogger()).Maybe()
 	mockClobKeeper.On("IsInMemStructuresInitialized").Return(true).Maybe()
-	cd := ante.NewClobDecorator(mockClobKeeper)
+	mockSendingKeeper := &mocks.SendingKeeper{}
+	cd := ante.NewClobDecorator(mockClobKeeper, mockSendingKeeper)
 	antehandler := sdk.ChainAnteDecorators(cd)
 	if tc.setupMocks != nil {
 		tc.setupMocks(ctx, mockClobKeeper)

@@ -1895,14 +1895,6 @@ func TestMultiplePlaceOrdersInSingleTransaction(t *testing.T) {
 		5, // Cancel at block 5
 	)
 
-	// Create a transfer message to Alice's subaccount
-	//TransferToAlice_Num0 := *sendingtypes.NewMsgDepositToSubaccount(
-	//	constants.AliceAccAddress.String(),
-	//	*aliceSubaccount.Id,
-	//	assettypes.AssetUsdc.Id,
-	//	100_000_000_000, // 100k USDC
-	//)
-
 	// Create a transfer message from Alice's subaccount 0 to Alice's subaccount 1
 	Transfer_Alice_Num0_To_Alice_Num1 := *sendingtypes.NewMsgCreateTransfer(
 		&sendingtypes.Transfer{
@@ -1955,7 +1947,7 @@ func TestMultiplePlaceOrdersInSingleTransaction(t *testing.T) {
 				&LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy1_Price50000_GTBT5,
 			},
 			expectedOrdersInMemclob: map[clobtypes.OrderId]bool{
-				LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId: true,
+				LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId: true,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -1964,12 +1956,12 @@ func TestMultiplePlaceOrdersInSingleTransaction(t *testing.T) {
 						testutil.CreateSingleAssetPosition(
 							0,
 							new(big.Int).Add(
-								aliceSubaccount.GetUsdcPosition(),
+								aliceSubaccount1.GetUsdcPosition(),
 								new(big.Int).SetInt64(100_000_000_000), // 100k USDC transfer
 							),
 						),
 					},
-					MarginEnabled: true,
+					MarginEnabled: false,
 				},
 			},
 		},
@@ -2009,22 +2001,11 @@ func TestMultiplePlaceOrdersInSingleTransaction(t *testing.T) {
 				// Advance to block 3
 				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
-				// Check that the orders are placed and filled
-				//require.Equal(t, tc.expectedOffchainMessagesCheckTx, msgSender.GetOffchainMessages())
-				//require.Equal(t, tc.expectedOffchainMessagesAfterBlock, msgSender.GetOffchainMessages())
-				//require.Equal(t, tc.expectedOnchainMessagesAfterBlock, msgSender.GetOnchainMessages())
-
 				// Verify orders in memclob
 				for orderId, shouldExist := range tc.expectedOrdersInMemclob {
 					_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, orderId)
 					require.Equal(t, shouldExist, exists)
 				}
-
-				//// Verify fill amounts
-				//for orderId, expectedFillAmount := range tc.expectedOrderFillAmounts {
-				//	_, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
-				//	require.Equal(t, expectedFillAmount, fillAmount.ToUint64())
-				//}
 
 				// Verify subaccounts
 				for _, expectedSubaccount := range tc.expectedSubaccounts {
