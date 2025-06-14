@@ -6,7 +6,7 @@ set -eo pipefail
 
 source "./vars.sh"
 
-CHAIN_ID="dydx-testnet-1"
+CHAIN_ID="dydx-testnet-4"
 
 # Define dependencies for this script.
 # `jq` and `dasel` are used to manipulate json and yaml files respectively.
@@ -84,6 +84,9 @@ create_validators() {
 		# Create the folder structure required for using cosmovisor.
 		cosmovisor init /bin/dydxprotocold
 
+		# Override cosmovisor's default symlink to point to current version's binary.
+		ln -sf $DAEMON_HOME/cosmovisor/upgrades/$CURRENT_VERSION $DAEMON_HOME/cosmovisor/current
+
 		cp -r "$HOME/cosmovisor" "$VAL_HOME_DIR/"
 	done
 
@@ -108,6 +111,9 @@ create_validators() {
 
 		# Create the folder structure required for using cosmovisor.
 		cosmovisor init /bin/dydxprotocold
+
+		# Override cosmovisor's default symlink to point to current version's binary.
+		ln -sf $DAEMON_HOME/cosmovisor/upgrades/$CURRENT_VERSION $DAEMON_HOME/cosmovisor/current
 
 		cp -r "$HOME/cosmovisor" "$FULL_NODE_HOME_DIR/"
 	done

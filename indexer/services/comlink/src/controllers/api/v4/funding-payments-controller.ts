@@ -23,9 +23,11 @@ import {
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
-  CheckLimitSchema,
   CheckParentSubaccountSchema,
+  CheckPaginationSchema,
   CheckSubaccountSchema,
+  CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
+  CheckTickerOptionalQuerySchema,
 } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -71,7 +73,7 @@ export class FundingPaymentController extends Controller {
       queryConfig,
       [QueryableField.LIMIT],
       page !== undefined
-        ? { orderBy: [['createdAt', Ordering.DESC]] }
+        ? { orderBy: [['createdAtHeight', Ordering.DESC]] }
         : undefined,
     );
 
@@ -112,7 +114,10 @@ export class FundingPaymentController extends Controller {
     );
 
     const queryConfig: FundingPaymentsQueryConfig = {
-      subaccountId: Object.keys(childIdtoSubaccountNumber),
+      parentSubaccount: {
+        address,
+        subaccountNumber: parentSubaccountNumber,
+      },
       createdOnOrAfter: afterOrAt,
       limit,
       page,
@@ -127,7 +132,7 @@ export class FundingPaymentController extends Controller {
       queryConfig,
       [QueryableField.LIMIT],
       page !== undefined
-        ? { orderBy: [['createdAt', Ordering.DESC]] }
+        ? { orderBy: [['createdAtHeight', Ordering.DESC]] }
         : undefined,
     );
 
@@ -151,20 +156,22 @@ router.get(
   '/',
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
-  ...CheckLimitSchema,
+  ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
+  ...CheckPaginationSchema,
+  ...CheckTickerOptionalQuerySchema,
   handleValidationErrors,
   complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     const {
-      address, subaccountNumber, limit, ticker, afterOrAt, page,
+      address, subaccountNumber, limit, ticker, createdOnOrAfter, page,
     } = matchedData(req) as {
       address: string,
       subaccountNumber: number,
       limit?: number,
       ticker?: string,
-      afterOrAt?: IsoString,
+      createdOnOrAfter?: IsoString,
       page?: number,
     };
 
@@ -175,7 +182,7 @@ router.get(
         subaccountNumber,
         limit,
         ticker,
-        afterOrAt,
+        createdOnOrAfter,
         page,
       );
 
@@ -201,19 +208,21 @@ router.get(
   '/parentSubaccount',
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckParentSubaccountSchema,
-  ...CheckLimitSchema,
+  ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
+  ...CheckPaginationSchema,
+  ...CheckTickerOptionalQuerySchema,
   handleValidationErrors,
   complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     const {
-      address, parentSubaccountNumber, limit, afterOrAt, page,
+      address, parentSubaccountNumber, limit, page, createdOnOrAfter,
     } = matchedData(req) as {
       address: string,
       parentSubaccountNumber: number,
       limit?: number,
-      afterOrAt?: IsoString,
+      createdOnOrAfter?: IsoString,
       page?: number,
     };
 
@@ -225,7 +234,7 @@ router.get(
         address,
         parentSubaccountNum,
         limit,
-        afterOrAt,
+        createdOnOrAfter,
         page,
       );
 

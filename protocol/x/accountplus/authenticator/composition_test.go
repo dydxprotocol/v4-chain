@@ -687,7 +687,9 @@ func (s *AggregatedAuthenticatorsTest) TestNestedAuthenticatorCalls() {
 		}
 
 		// make calls
-		s.Require().NoError(auth.OnAuthenticatorAdded(s.Ctx, authReq.Account, data, authReq.AuthenticatorId))
+		requireSigVerification, err := auth.OnAuthenticatorAdded(s.Ctx, authReq.Account, data, authReq.AuthenticatorId)
+		s.Require().NoError(err)
+		s.Require().True(requireSigVerification)
 		s.Require().NoError(auth.Authenticate(s.Ctx, authReq))
 		s.Require().NoError(auth.Track(s.Ctx, authReq))
 		s.Require().NoError(auth.ConfirmExecution(s.Ctx, authReq))

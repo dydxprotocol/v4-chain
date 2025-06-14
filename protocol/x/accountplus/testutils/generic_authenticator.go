@@ -88,11 +88,11 @@ func (t TestingAuthenticator) OnAuthenticatorAdded(
 	account sdk.AccAddress,
 	config []byte,
 	authenticatorId string,
-) error {
+) (requireSigVerification bool, err error) {
 	if t.BlockAddition {
-		return fmt.Errorf("authenticator could not be added")
+		return false, fmt.Errorf("authenticator could not be added")
 	}
-	return nil
+	return true, nil
 }
 
 func (t TestingAuthenticator) OnAuthenticatorRemoved(
