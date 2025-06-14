@@ -11,10 +11,9 @@ import (
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
@@ -1907,7 +1906,7 @@ func TestMultiplePlaceOrdersInSingleTransaction(t *testing.T) {
 
 	// Create test cases
 	tests := map[string]struct {
-		msgs                     []sdk.Msg
+		msgs                     []sdktypes.Msg
 		expectedOrdersInMemclob  map[clobtypes.OrderId]bool
 		expectedOrderFillAmounts map[clobtypes.OrderId]uint64
 		expectedSubaccounts      []satypes.Subaccount

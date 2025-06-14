@@ -25,7 +25,7 @@ import (
 
 type TestCase struct {
 	msgs                      []sdk.Msg
-	setupMocks                func(ctx sdk.Context, mck *mocks.ClobKeeper)
+	setupMocks func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper)
 	useWithIsCheckTxContext   bool
 	useWithIsRecheckTxContext bool
 	isSimulate                bool
@@ -58,7 +58,7 @@ func runTestCase(t *testing.T, tc TestCase) {
 	cd := ante.NewClobDecorator(mockClobKeeper, mockSendingKeeper)
 	antehandler := sdk.ChainAnteDecorators(cd)
 	if tc.setupMocks != nil {
-		tc.setupMocks(ctx, mockClobKeeper)
+		tc.setupMocks(ctx, mockClobKeeper, mockSendingKeeper)
 	}
 
 	// Create Test Transaction.
@@ -90,7 +90,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 	tests := map[string]TestCase{
 		"Successfully places a short term order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("PlaceShortTermOrder",
 					ctx,
 					constants.Msg_PlaceOrder,
@@ -105,7 +105,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		},
 		"Successfully places a stateful order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_LongTerm,
@@ -119,7 +119,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		},
 		"Successfully places multiple stateful orders within the same transaction": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder_LongTerm, constants.Msg_PlaceOrder_LongTerm},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On(
 					"PlaceStatefulOrder",
 					ctx,
@@ -134,12 +134,19 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		},
 		"Successfully places transfer and stateful order within the same transaction": {
 			msgs: []sdk.Msg{constants.Msg_Transfer, constants.Msg_PlaceOrder_LongTerm},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On(
 					"PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_LongTerm,
 					false,
+				).Return(
+					nil,
+				)
+				sendingmck.On(
+					"ProcessTransfer",
+					ctx,
+					constants.Msg_Transfer.Transfer,
 				).Return(
 					nil,
 				)
@@ -149,7 +156,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		},
 		"Successfully places a conditional order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder_Conditional},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_Conditional,
@@ -192,7 +199,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		},
 		"PlaceStatefulOrder is called on keeper during re-check": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_LongTerm,
@@ -206,7 +213,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		},
 		"Fails if PlaceShortTermOrder returns an error": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("PlaceShortTermOrder",
 					ctx,
 					constants.Msg_PlaceOrder,
@@ -221,7 +228,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		},
 		"Fails if PlaceStatefulOrder returns an error": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder_LongTerm},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_LongTerm,
@@ -289,7 +296,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 		},
 		"Successfully places a short term order using a single message with timeout height >= goodTilBlock": {
 			msgs: []sdk.Msg{constants.Msg_PlaceOrder},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("PlaceShortTermOrder",
 					ctx,
 					constants.Msg_PlaceOrder,
@@ -498,7 +505,7 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 	tests := map[string]TestCase{
 		"Successfully cancels a short term order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_CancelOrder},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("CancelShortTermOrder",
 					ctx,
 					clobtypes.NewMsgCancelOrderShortTerm(
@@ -512,7 +519,7 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 		},
 		"Successfully cancels a long term order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("CancelStatefulOrder",
 					ctx,
 					clobtypes.NewMsgCancelOrderStateful(
@@ -526,7 +533,7 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 		},
 		"Successfully cancels a conditional order using a single message": {
 			msgs: []sdk.Msg{constants.Msg_CancelOrder_Conditional},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("CancelStatefulOrder",
 					ctx,
 					clobtypes.NewMsgCancelOrderStateful(
@@ -569,7 +576,7 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 		},
 		"CancelStatefulOrder is called on keeper during re-check": {
 			msgs: []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("CancelStatefulOrder",
 					ctx,
 					clobtypes.NewMsgCancelOrderStateful(
@@ -585,7 +592,7 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 		},
 		"Fails if CancelShortTermOrder returns an error": {
 			msgs: []sdk.Msg{constants.Msg_CancelOrder},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("CancelShortTermOrder",
 					ctx,
 					clobtypes.NewMsgCancelOrderShortTerm(
@@ -599,7 +606,7 @@ func TestClobDecorator_MsgCancelOrder(t *testing.T) {
 		},
 		"Fails if CancelStatefulOrder returns an error": {
 			msgs: []sdk.Msg{constants.Msg_CancelOrder_LongTerm},
-			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
+			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper) {
 				mck.On("CancelStatefulOrder",
 					ctx,
 					clobtypes.NewMsgCancelOrderStateful(
