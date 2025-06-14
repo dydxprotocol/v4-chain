@@ -13,7 +13,6 @@ import (
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
@@ -1913,7 +1912,7 @@ func TestMultiplePlaceOrdersInSingleTransaction(t *testing.T) {
 		expectedErr              string
 	}{
 		"Successfully places multiple long-term orders in single transaction": {
-			msgs: []sdk.Msg{
+			msgs: []sdktypes.Msg{
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
 				&LongTermPlaceOrder_Alice_Num0_Id1_Clob0_Buy1_Price50000_GTBT5,
 			},
@@ -1924,14 +1923,15 @@ func TestMultiplePlaceOrdersInSingleTransaction(t *testing.T) {
 			expectedSubaccounts: []satypes.Subaccount{aliceSubaccount},
 		},
 		"Fails when mixing long-term and short-term orders": {
-			msgs: []sdk.Msg{
+			msgs: []sdktypes.Msg{
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
 				&ShortTermPlaceOrder_Alice_Num0_Id2_Clob0_Buy1_Price50000_GTB20,
 			},
-			expectedErr: "a transaction containing short term MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
+			expectedErr: "a transaction containing short term MsgCancelOrder or MsgPlaceOrder " +
+				"may not contain more than one message",
 		},
 		"Successfully places and cancels order in single transaction": {
-			msgs: []sdk.Msg{
+			msgs: []sdktypes.Msg{
 				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
 				&CancelOrder_Alice_Num0_Id0_Clob0,
 			},
@@ -1941,7 +1941,7 @@ func TestMultiplePlaceOrdersInSingleTransaction(t *testing.T) {
 			expectedSubaccounts: []satypes.Subaccount{aliceSubaccount},
 		},
 		"Successfully transfers and places order in single transaction": {
-			msgs: []sdk.Msg{
+			msgs: []sdktypes.Msg{
 				&Transfer_Alice_Num0_To_Alice_Num1,
 				&LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy1_Price50000_GTBT5,
 			},

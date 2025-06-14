@@ -25,7 +25,7 @@ import (
 
 type TestCase struct {
 	msgs                      []sdk.Msg
-	setupMocks func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper)
+	setupMocks                func(ctx sdk.Context, mck *mocks.ClobKeeper, sendingmck *mocks.SendingKeeper)
 	useWithIsCheckTxContext   bool
 	useWithIsRecheckTxContext bool
 	isSimulate                bool
