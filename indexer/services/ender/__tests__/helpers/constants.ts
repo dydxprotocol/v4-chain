@@ -355,6 +355,10 @@ export const defaultOrderEvent: OrderFillEventV1 = {
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
   affiliateRevShare: Long.fromValue(0, true),
+  makerBuilderFee: Long.fromValue(0, true),
+  takerBuilderFee: Long.fromValue(0, true),
+  makerBuilderAddress: testConstants.noBuilderAddress,
+  takerBuilderAddress: testConstants.noBuilderAddress,
 };
 export const defaultOrder: OrderFillEventWithOrder = {
   makerOrder: defaultMakerOrder,
@@ -365,6 +369,10 @@ export const defaultOrder: OrderFillEventWithOrder = {
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
   affiliateRevShare: Long.fromValue(0, true),
+  makerBuilderFee: Long.fromValue(0, true),
+  takerBuilderFee: Long.fromValue(0, true),
+  makerBuilderAddress: testConstants.noBuilderAddress,
+  takerBuilderAddress: testConstants.noBuilderAddress,
 };
 export const defaultLiquidationEvent: OrderFillEventV1 = {
   makerOrder: defaultMakerOrder,
@@ -375,6 +383,10 @@ export const defaultLiquidationEvent: OrderFillEventV1 = {
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
   affiliateRevShare: Long.fromValue(0, true),
+  makerBuilderFee: Long.fromValue(0, true),
+  takerBuilderFee: Long.fromValue(0, true),
+  makerBuilderAddress: testConstants.noBuilderAddress,
+  takerBuilderAddress: testConstants.noBuilderAddress,
 };
 export const defaultLiquidation: OrderFillEventWithLiquidation = {
   makerOrder: defaultMakerOrder,
@@ -385,6 +397,10 @@ export const defaultLiquidation: OrderFillEventWithLiquidation = {
   totalFilledMaker: Long.fromValue(0, true),
   totalFilledTaker: Long.fromValue(0, true),
   affiliateRevShare: Long.fromValue(0, true),
+  makerBuilderFee: Long.fromValue(0, true),
+  takerBuilderFee: Long.fromValue(0, true),
+  makerBuilderAddress: testConstants.noBuilderAddress,
+  takerBuilderAddress: testConstants.noBuilderAddress,
 };
 
 export const defaultEmptySubaccountUpdate: SubaccountUpdate = {

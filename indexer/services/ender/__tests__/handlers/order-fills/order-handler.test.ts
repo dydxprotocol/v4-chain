@@ -1,19 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import {
-  IndexerOrder,
-  IndexerOrder_Side,
-  IndexerOrder_TimeInForce,
-  IndexerOrderId,
-  IndexerSubaccountId,
-  IndexerTendermintBlock,
-  IndexerTendermintEvent,
-  OrderFillEventV1,
-  Timestamp,
-  OffChainUpdateV1,
-  OrderRemovalReason,
-  OrderRemoveV1_OrderRemovalStatus,
-} from '@dydxprotocol-indexer/v4-protos';
-import { redis, CanceledOrdersCache } from '@dydxprotocol-indexer/redis';
+import { producer } from '@dydxprotocol-indexer/kafka';
 import {
   assetRefresher,
   CandleFromDatabase,
@@ -39,16 +25,43 @@ import {
   testMocks,
   TimeInForce,
 } from '@dydxprotocol-indexer/postgres';
+import { CanceledOrdersCache, redis } from '@dydxprotocol-indexer/redis';
+import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  IndexerOrder,
+  IndexerOrder_Side,
+  IndexerOrder_TimeInForce,
+  IndexerOrderId,
+  IndexerSubaccountId,
+  IndexerTendermintBlock,
+  IndexerTendermintEvent,
+  OffChainUpdateV1,
+  OrderFillEventV1,
+  OrderRemovalReason,
+  OrderRemoveV1_OrderRemovalStatus,
+  Timestamp,
+} from '@dydxprotocol-indexer/v4-protos';
+import Big from 'big.js';
 import { KafkaMessage } from 'kafkajs';
+import Long from 'long';
 import { DateTime } from 'luxon';
+import { updateBlockCache } from '../../../src/caches/block-cache';
+import { clearCandlesMap } from '../../../src/caches/candle-cache';
 import {
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
   STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
   SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
 } from '../../../src/constants';
-import { producer } from '@dydxprotocol-indexer/kafka';
+import { OrderHandler } from '../../../src/handlers/order-fills/order-handler';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
+import { redisClient } from '../../../src/helpers/redis/redis-controller';
+import { getWeightedAverage } from '../../../src/lib/helper';
 import { onMessage } from '../../../src/lib/on-message';
+import { DydxIndexerSubtypes } from '../../../src/lib/types';
+import {
+  defaultOrder, defaultOrderEvent, defaultPreviousHeight, defaultTakerOrder,
+} from '../../helpers/constants';
 import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
@@ -61,19 +74,6 @@ import {
   expectPerpetualPosition,
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
-import Big from 'big.js';
-import { getWeightedAverage } from '../../../src/lib/helper';
-import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
-import { updateBlockCache } from '../../../src/caches/block-cache';
-import {
-  defaultOrder, defaultOrderEvent, defaultPreviousHeight, defaultTakerOrder,
-} from '../../helpers/constants';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
-import { OrderHandler } from '../../../src/handlers/order-fills/order-handler';
-import { clearCandlesMap } from '../../../src/caches/candle-cache';
-import Long from 'long';
-import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
-import { redisClient } from '../../../src/helpers/redis/redis-controller';
 import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
@@ -532,7 +532,7 @@ describe('OrderHandler', () => {
       }
       // create initial orders
       await Promise.all([
-      // maker order
+        // maker order
         OrderTable.create({
           subaccountId: testConstants.defaultSubaccountId,
           clientId: '0',
@@ -1837,6 +1837,10 @@ function createOrderFillEvent(
   fillAmount: number,
   totalFilledMaker: number,
   totalFilledTaker: number,
+  makerBuilderFee: number = 0,
+  takerBuilderFee: number = 0,
+  makerBuilderAddress: string = testConstants.noBuilderAddress,
+  takerBuilderAddress: string = testConstants.noBuilderAddress,
 ): OrderFillEventV1 {
   return {
     makerOrder: makerOrderProto,
@@ -1847,6 +1851,10 @@ function createOrderFillEvent(
     totalFilledMaker: Long.fromValue(totalFilledMaker, true),
     totalFilledTaker: Long.fromValue(totalFilledTaker, true),
     affiliateRevShare: Long.fromValue(defaultAffiliateRevShareQuantum, false),
+    makerBuilderFee: Long.fromValue(makerBuilderFee, false),
+    takerBuilderFee: Long.fromValue(takerBuilderFee, false),
+    makerBuilderAddress,
+    takerBuilderAddress,
   } as OrderFillEventV1;
 }
 
