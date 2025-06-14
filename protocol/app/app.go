@@ -2003,6 +2003,7 @@ func (app *App) buildAnteHandler(txConfig client.TxConfig) sdk.AnteHandler {
 			PerpetualsKeeper:  app.PerpetualsKeeper,
 			PricesKeeper:      app.PricesKeeper,
 			MarketMapKeeper:   &app.MarketMapKeeper,
+			SendingKeeper:     app.SendingKeeper,
 		},
 	)
 	if err != nil {

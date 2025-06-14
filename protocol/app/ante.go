@@ -3,6 +3,8 @@ package app
 import (
 	"sync"
 
+	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachemulti"
 	storetypes "cosmossdk.io/store/types"
@@ -36,6 +38,7 @@ type HandlerOptions struct {
 	PerpetualsKeeper  perpetualstypes.PerpetualsKeeper
 	PricesKeeper      pricestypes.PricesKeeper
 	MarketMapKeeper   customante.MarketMapKeeper
+	SendingKeeper     sending.SendingKeeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -107,6 +110,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "market map keeper is required for ante builder")
 	}
 
+	if options.SendingKeeper == nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrLogic, "sending keeper is required for ante builder")
+	}
+
 	h := &lockingAnteHandler{
 		authStoreKey:             options.AuthStoreKey,
 		setupContextDecorator:    ante.NewSetUpContextDecorator(),
@@ -150,7 +157,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			options.TxFeeChecker,
 		),
 		clobRateLimit: clobante.NewRateLimitDecorator(options.ClobKeeper),
-		clob:          clobante.NewClobDecorator(options.ClobKeeper),
+		clob:          clobante.NewClobDecorator(options.ClobKeeper, options.SendingKeeper),
 		marketUpdates: customante.NewValidateMarketUpdateDecorator(
 			options.PerpetualsKeeper, options.PricesKeeper, options.MarketMapKeeper,
 		),
