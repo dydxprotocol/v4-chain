@@ -34,6 +34,8 @@ func (dec FreeInfiniteGasDecorator) AnteHandle(
 
 	// If this is a clob msg tx, or a single app-injected msg tx, then set the gas meter to
 	// FreeInfiniteGasMeter.
+	// ValidateClobMsgTx will enforce that at most 1 transfer msg is allowed in a clob msg tx,
+	// which makes it safe to set the gas meter to FreeInfiniteGasMeter
 	if hasClobMsg || libante.IsSingleAppInjectedMsg(tx.GetMsgs()) {
 		newCtx = ctx.WithGasMeter(types.NewFreeInfiniteGasMeter())
 		return next(newCtx, tx, simulate)
