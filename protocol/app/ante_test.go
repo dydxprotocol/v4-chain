@@ -30,6 +30,7 @@ func newHandlerOptions() app.HandlerOptions {
 		PerpetualsKeeper:  dydxApp.PerpetualsKeeper,
 		PricesKeeper:      dydxApp.PricesKeeper,
 		MarketMapKeeper:   &dydxApp.MarketMapKeeper,
+		SendingKeeper:     dydxApp.SendingKeeper,
 	}
 }
 
@@ -72,6 +73,10 @@ func TestNewAnteHandler_Error(t *testing.T) {
 		"nil ClobKeeper": {
 			handlerMutation: func(options *app.HandlerOptions) { options.ClobKeeper = nil },
 			errorMsg:        "clob keeper is required for ante builder",
+		},
+		"nil SendingKeeper": {
+			handlerMutation: func(options *app.HandlerOptions) { options.SendingKeeper = nil },
+			errorMsg:        "sending keeper is required for ante builder",
 		},
 		"nil Codec": {
 			handlerMutation: func(options *app.HandlerOptions) { options.Codec = nil },
