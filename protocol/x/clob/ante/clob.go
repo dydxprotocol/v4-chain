@@ -34,12 +34,17 @@ var (
 //   - The underlying `PlaceStatefulOrder`, `PlaceShortTermOrder`, `CancelStatefulOrder`, or `CancelShortTermOrder`
 //     methods on the keeper return errors.
 type ClobDecorator struct {
-	clobKeeper types.ClobKeeper
+	clobKeeper    types.ClobKeeper
+	sendingKeeper sendingtypes.SendingKeeper
 }
 
-func NewClobDecorator(clobKeeper types.ClobKeeper) ClobDecorator {
+func NewClobDecorator(
+	clobKeeper types.ClobKeeper,
+	sendingKeeper sendingtypes.SendingKeeper,
+) ClobDecorator {
 	return ClobDecorator{
 		clobKeeper,
+		sendingKeeper,
 	}
 }
 
@@ -174,6 +179,19 @@ func (cd ClobDecorator) AnteHandle(
 				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				log.Error, err,
 			)
+
+		case *sendingtypes.MsgCreateTransfer:
+			// We allow a single transfer msg to be batched with a PlaceOrder msg.
+			// This is primarily used to transfer collateral to an isolated subaccount for an isolated position order.
+			if err := cd.sendingKeeper.ProcessTransfer(ctx, msg.Transfer); err != nil {
+				log.DebugLog(
+					ctx,
+					"Failed to process transfer msg in clob ante handler",
+					log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+					log.Error, err,
+				)
+				return ctx, err
+			}
 		}
 		if err != nil {
 			return ctx, err
@@ -181,39 +199,6 @@ func (cd ClobDecorator) AnteHandle(
 	}
 
 	return next(ctx, tx, simulate)
-}
-
-// IsSingleClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
-// (`MsgPlaceOrder` or `MsgCancelOrder` or `MsgBatchCancel`). If `msgs` consist of multiple
-// clob messages, or a mix of on-chain and clob messages, an error is returned.
-func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
-	msgs := tx.GetMsgs()
-	var hasMessage = false
-
-	for _, msg := range msgs {
-		switch msg.(type) {
-		case *types.MsgCancelOrder, *types.MsgPlaceOrder, *types.MsgBatchCancel:
-			hasMessage = true
-		}
-
-		if hasMessage {
-			break
-		}
-	}
-
-	if !hasMessage {
-		return false, nil
-	}
-
-	numMsgs := len(msgs)
-	if numMsgs > 1 {
-		return false, errorsmod.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"a transaction containing MsgCancelOrder or MsgPlaceOrder or MsgBatchCancel may not contain more than one message",
-		)
-	}
-
-	return true, nil
 }
 
 // IsShortTermClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
