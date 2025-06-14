@@ -91,7 +91,7 @@ func (k Keeper) getEquityTierLimitForSubaccount(
 		)
 	}
 
-	return equityTierLimit, risk.NC, nil
+	return equityTierLimit, nil, nil
 }
 
 // ValidateSubaccountEquityTierLimitForStatefulOrder returns an error if adding the order would exceed the equity

@@ -1964,6 +1964,14 @@ func TestMultiplePlaceOrdersInSingleTransaction(t *testing.T) {
 				},
 			},
 		},
+		"Fails when mixing transfer and short-term orders": {
+			msgs: []sdktypes.Msg{
+				&Transfer_Alice_Num0_To_Alice_Num1,
+				&ShortTermPlaceOrder_Alice_Num0_Id2_Clob0_Buy1_Price50000_GTB20,
+			},
+			expectedErr: "a transaction containing short term MsgCancelOrder or MsgPlaceOrder " +
+				"may not contain more than one message",
+		},
 	}
 
 	for name, tc := range tests {
