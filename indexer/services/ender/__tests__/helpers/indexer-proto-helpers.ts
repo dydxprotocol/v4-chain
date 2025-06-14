@@ -408,6 +408,8 @@ export function createOrder({
   timeInForce,
   reduceOnly,
   clientMetadata,
+  builderAddress,
+  feePpm,
 }: {
   subaccountId: IndexerSubaccountId,
   clientId: number,
@@ -420,6 +422,8 @@ export function createOrder({
   timeInForce: IndexerOrder_TimeInForce,
   reduceOnly: boolean,
   clientMetadata: number,
+  builderAddress?: string,
+  feePpm?: number,
 }): IndexerOrder {
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   let orderJSON: any = {
@@ -436,6 +440,17 @@ export function createOrder({
     reduceOnly,
     clientMetadata,
   };
+
+  if (builderAddress !== undefined && feePpm !== undefined) {
+    orderJSON = {
+      ...orderJSON,
+      builderCodeParams: {
+        builderAddress,
+        feePpm,
+      },
+    };
+  }
+
   if (goodTilOneof.goodTilBlock !== undefined) {
     orderJSON = {
       ...orderJSON,
@@ -545,6 +560,8 @@ export async function expectFillInDatabase({
   fee,
   affiliateRevShare,
   hasOrderId = true,
+  builderAddress = null,
+  builderFee = null,
 }: {
   subaccountId: string,
   clientId: string,
@@ -564,6 +581,8 @@ export async function expectFillInDatabase({
   fee: string,
   affiliateRevShare: string,
   hasOrderId?: boolean,
+  builderAddress?: string | null,
+  builderFee?: string | null,
 }): Promise<void> {
   const fillId: string = FillTable.uuid(eventId, liquidity);
   const fill: FillFromDatabase | undefined = await FillTable.findById(fillId);
@@ -586,6 +605,8 @@ export async function expectFillInDatabase({
     clientMetadata,
     fee,
     affiliateRevShare,
+    builderAddress,
+    builderFee,
   }));
 }
 
@@ -618,6 +639,8 @@ export async function expectOrderInDatabase({
   clientMetadata,
   updatedAt,
   updatedAtHeight,
+  builderAddress,
+  feePpm,
 }: {
   subaccountId: string,
   clientId: string,
@@ -635,6 +658,8 @@ export async function expectOrderInDatabase({
   clientMetadata: string,
   updatedAt: IsoString,
   updatedAtHeight: string,
+  builderAddress?: string,
+  feePpm?: number,
 }): Promise<void> {
   const orderId: string = OrderTable.uuid(subaccountId, clientId, clobPairId, orderFlags);
   const orderFromDatabase: OrderFromDatabase | undefined = await
@@ -659,6 +684,8 @@ export async function expectOrderInDatabase({
     clientMetadata,
     updatedAt,
     updatedAtHeight,
+    builderAddress: builderAddress ?? null,
+    feePpm: feePpm ?? null,
   }));
 }
 
