@@ -366,6 +366,27 @@ func (k Keeper) persistMatchedOrders(
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, insuranceFundDelta)
 	}
 
+	// apply broker fees for taker and maker separately
+
+	if matchWithOrders.MakerOrder.IsLiquidation() {
+		panic("maker order can not be a liquidation order")
+	}
+
+	makerBuilderCodeParams := matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
+	makerBuilderFeeQuantums := makerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
+	bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, makerBuilderFeeQuantums)
+	makerBuilderAddress := makerBuilderCodeParams.GetBuilderAddress()
+
+	takerBuilderFeeQuantums := big.NewInt(0)
+	var takerBuilderAddress string
+	if !matchWithOrders.TakerOrder.IsLiquidation() {
+		takerBuilderCodeParams := matchWithOrders.TakerOrder.MustGetOrder().BuilderCodeParameters
+		takerBuilderFeeQuantums = takerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
+		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, takerBuilderFeeQuantums)
+
+		takerBuilderAddress = takerBuilderCodeParams.GetBuilderAddress()
+	}
+
 	// Create the subaccount update.
 	updates := []satypes.Update{
 		// Taker update
@@ -448,6 +469,29 @@ func (k Keeper) persistMatchedOrders(
 		return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
 	}
 
+	// Transfer builder fees for taker and maker builders if they exist
+	// Builder code fees are tranferred directly from the collateral pool to the
+	// builder address because the builder fee is always taken out from
+	// the trader's subaccount quote balance.
+	if takerBuilderFeeQuantums.Sign() > 0 {
+		if err := k.subaccountsKeeper.TransferBuilderFees(ctx,
+			perpetualId,
+			takerBuilderFeeQuantums,
+			takerBuilderAddress,
+		); err != nil {
+			return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+		}
+	}
+	if makerBuilderFeeQuantums.Sign() > 0 {
+		if err := k.subaccountsKeeper.TransferBuilderFees(ctx,
+			perpetualId,
+			makerBuilderFeeQuantums,
+			makerBuilderAddress,
+		); err != nil {
+			return takerUpdateResult, makerUpdateResult, affiliateRevSharesQuoteQuantums, err
+		}
+	}
+
 	fillForProcess := types.FillForProcess{
 		TakerAddr:             matchWithOrders.TakerOrder.GetSubaccountId().Owner,
 		TakerFeeQuoteQuantums: bigTakerFeeQuoteQuantums,
@@ -521,6 +565,10 @@ func (k Keeper) persistMatchedOrders(
 			isTakerLiquidation,
 			false,
 			perpetualId,
+			takerBuilderAddress,
+			makerBuilderAddress,
+			takerBuilderFeeQuantums,
+			makerBuilderFeeQuantums,
 		),
 	)
 

@@ -1,6 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.clob;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/clob/liquidations.proto";
@@ -215,6 +216,21 @@ message Order {
   // Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
+
+  // builder_code_parameters is the metadata for the
+  // partner or builder of an order specifying the fees charged.
+  BuilderCodeParameters builder_code_parameters = 12;
+}
+
+// BuilderCodeParameters represents the metadata for the partner or builder of
+// an order. This allows them to specify a fee for providing there service which
+// will be paid out in the event of an order fill.
+message BuilderCodeParameters {
+  // The address of the builder to which the fee will be paid.
+  string builder_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The fee enforced on the order in ppm.
+  uint32 fee_ppm = 2;
 }
 
 // TransactionOrdering represents a unique location in the block where a
