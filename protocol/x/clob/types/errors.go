@@ -225,19 +225,11 @@ var (
 		48,
 		"This field has been deprecated",
 	)
-<<<<<<< HEAD
-=======
-	ErrInvalidTwapOrderPlacement = errorsmod.Register(
-		ModuleName,
-		49,
-		"Invalid TWAP order placement",
-	)
 	ErrInvalidBuilderCode = errorsmod.Register(
 		ModuleName,
-		50,
+		49,
 		"Invalid builder code",
 	)
->>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(
