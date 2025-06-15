@@ -9,28 +9,10 @@ import (
 
 const TypeMsgPlaceOrder = "place_order"
 
-<<<<<<< HEAD
-=======
 const (
-	// the minimum interval in seconds for TWAP orders.
-	MinTwapOrderInterval uint32 = 30
-
-	// the maximum interval in seconds for TWAP orders.
-	MaxTwapOrderInterval uint32 = 3_600
-
-	// the minimum duration in seconds for TWAP orders.
-	MinTwapOrderDuration uint32 = 300 // 5 minutes
-
-	// the maximum duration in seconds for TWAP orders.
-	MaxTwapOrderDuration uint32 = 86_400 // 24 hours
-
-	// the maximum price tolerance for suborders in ppm.
-	MaxTwapOrderPriceTolerance uint32 = 1_000_000
-
 	MaxBuilderCodeFeePpm uint32 = 10_000
 )
 
->>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 var _ sdk.Msg = &MsgPlaceOrder{}
 
 func NewMsgPlaceOrder(order Order) *MsgPlaceOrder {
@@ -131,8 +113,6 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 		}
 	}
 
-<<<<<<< HEAD
-=======
 	if msg.Order.BuilderCodeParameters != nil {
 		if _, err := sdk.AccAddressFromBech32(msg.Order.BuilderCodeParameters.BuilderAddress); err != nil {
 			return errorsmod.Wrapf(
@@ -152,47 +132,5 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 		}
 	}
 
-	if msg.Order.IsTwapOrder() {
-		if msg.Order.TwapParameters == nil {
-			return errorsmod.Wrapf(
-				ErrInvalidPlaceOrder,
-				"TWAP order must have a TWAP config",
-			)
-		}
-		parameters := msg.Order.TwapParameters
-		if parameters.Interval < MinTwapOrderInterval ||
-			parameters.Interval > MaxTwapOrderInterval {
-			return errorsmod.Wrapf(
-				ErrInvalidPlaceOrder,
-				"TWAP order interval must be in the range [%d seconds, %d seconds]",
-				MinTwapOrderInterval,
-				MaxTwapOrderInterval,
-			)
-		}
-		if parameters.Duration < MinTwapOrderDuration ||
-			parameters.Duration > MaxTwapOrderDuration {
-			return errorsmod.Wrapf(
-				ErrInvalidPlaceOrder,
-				"TWAP order duration must be in the range [%d seconds, %d seconds]",
-				MinTwapOrderDuration,
-				MaxTwapOrderDuration,
-			)
-		}
-		if parameters.Duration%parameters.Interval != 0 {
-			return errorsmod.Wrapf(
-				ErrInvalidPlaceOrder,
-				"TWAP order duration must be a multiple of the interval",
-			)
-		}
-		if parameters.PriceTolerance >= MaxTwapOrderPriceTolerance {
-			return errorsmod.Wrapf(
-				ErrInvalidPlaceOrder,
-				"TWAP order price tolerance must be in the range [0, %d)",
-				MaxTwapOrderPriceTolerance,
-			)
-		}
-	}
-
->>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 	return nil
 }
