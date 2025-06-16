@@ -67,18 +67,41 @@ WITH
                 AND ps."perpetualId" = pm.id
     ),
     -- funding computes the funding index update for each perpetual.
-    funding AS (
+    new_funding AS (
         SELECT DISTINCT
             ON (f."perpetualId") f."perpetualId" AS "perpetualId",
             f.rate,
             f."oraclePrice" AS "oraclePrice",
-            f."effectiveAt" AS "effectiveAt"
+            f."effectiveAt" AS "effectiveAt",
+            f."fundingIndex" AS "fundingIndex"
         FROM
             funding_index_updates f
         WHERE f."effectiveAtHeight" = :current_height
         ORDER BY
             f."perpetualId",
             f."effectiveAtHeight" DESC
+    ),
+    last_funding AS (
+        SELECT DISTINCT
+            ON (f."perpetualId") f."perpetualId" AS "perpetualId",
+            f."fundingIndex" AS "fundingIndex"
+        FROM
+            funding_index_updates f
+        WHERE f."effectiveAtHeight" = :last_height
+        ORDER BY
+            f."perpetualId",
+            f."effectiveAtHeight" DESC
+    ),
+    overall_funding AS (
+        SELECT
+            nf."perpetualId" AS "perpetualId",
+            nf.rate AS rate,
+            nf."oraclePrice" AS "oraclePrice",
+            nf."effectiveAt" AS "effectiveAt",
+            nf."fundingIndex" - COALESCE(lf."fundingIndex", 0) AS "fundingIndexDelta"
+        FROM
+            new_funding nf
+            LEFT JOIN last_funding lf ON nf."perpetualId" = lf."perpetualId"
     )
 SELECT
     p."subaccountId",
@@ -93,12 +116,12 @@ SELECT
         ELSE 'SHORT'
     END AS side,
     f.rate,
-    - p.net_size * f."oraclePrice" * f.rate AS payment
+    - p.net_size * f."fundingIndexDelta" AS payment
 FROM
     paired p
     -- inner join here because we absolutely need a funding index to calculate funding payments. 
     -- if no funding index, no entry will be created.
-    JOIN funding f ON f."perpetualId" = p."perpetualId"
+    JOIN overall_funding f ON f."perpetualId" = p."perpetualId"
 WHERE
     p.net_size != 0
 ORDER BY
