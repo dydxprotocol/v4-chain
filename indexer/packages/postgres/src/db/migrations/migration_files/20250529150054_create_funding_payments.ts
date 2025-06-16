@@ -17,6 +17,7 @@ export async function up(knex: Knex): Promise<void> {
       ]).notNullable();
       table.decimal('rate', null).notNullable();
       table.decimal('payment', null).notNullable();
+      table.decimal('fundingIndex', null).notNullable();
 
       // Primary key
       table.primary(['subaccountId', 'createdAt', 'ticker']);

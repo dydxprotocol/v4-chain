@@ -98,7 +98,8 @@ WITH
             nf.rate AS rate,
             nf."oraclePrice" AS "oraclePrice",
             nf."effectiveAt" AS "effectiveAt",
-            nf."fundingIndex" - COALESCE(lf."fundingIndex", 0) AS "fundingIndexDelta"
+            nf."fundingIndex" - COALESCE(lf."fundingIndex", 0) AS "fundingIndexDelta",
+            nf."fundingIndex" AS "fundingIndex"
         FROM
             new_funding nf
             LEFT JOIN last_funding lf ON nf."perpetualId" = lf."perpetualId"
@@ -111,6 +112,7 @@ SELECT
     p.ticker,
     f."oraclePrice",
     p.net_size AS size,
+    f."fundingIndex" AS "fundingIndex",
     CASE
         WHEN p.net_size > 0 THEN 'LONG'
         ELSE 'SHORT'
