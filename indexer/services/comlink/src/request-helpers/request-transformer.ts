@@ -595,5 +595,6 @@ export function fundingPaymentsToResponseObject(
     side: fundingPayments.side,
     rate: fundingPayments.rate,
     payment: fundingPayments.payment,
+    fundingIndex: fundingPayments.fundingIndex,
   };
 }
