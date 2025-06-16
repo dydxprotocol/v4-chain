@@ -150,6 +150,20 @@ message IndexerOrder {
   // Must be a multiple of ClobPair.SubticksPerTick (where `ClobPair.Id =
   // orderId.ClobPairId`).
   uint64 conditional_order_trigger_subticks = 11;
+
+  // builder_code_params is the metadata for the partner or builder of an order.
+  BuilderCodeParameters builder_code_params = 12;
+}
+
+// BuilderCodeParameters represents the metadata for the partner or builder of
+// an order. This allows them to specify a fee for providing there service which
+// will be paid out in the event of an order fill.
+message BuilderCodeParameters {
+  // The address of the builder to which the fee will be paid.
+  string builder_address = 1;
+
+  // The fee enforced on the order in ppm.
+  uint32 fee_ppm = 2;
 }
 
 // Status of the CLOB.

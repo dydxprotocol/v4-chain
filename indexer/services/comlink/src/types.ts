@@ -178,6 +178,8 @@ export interface FillResponseObject {
    * @isInt
    */
   subaccountNumber: number,
+  builderFee?: string,
+  builderAddress?: string,
 }
 
 /* ------- TRANSFER TYPES ------- */
