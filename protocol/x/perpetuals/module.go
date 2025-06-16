@@ -154,3 +154,13 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	EndBlocker(sdkCtx, am.keeper)
 	return nil
 }
+
+// PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
+func (am AppModule) PrepareCheckState(ctx context.Context) error {
+	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyPrepareCheckStater)
+	PrepareCheckState(
+		lib.UnwrapSDKContext(ctx, types.ModuleName),
+		am.keeper,
+	)
+	return nil
+}
