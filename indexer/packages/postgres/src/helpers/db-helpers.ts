@@ -10,7 +10,6 @@ const layer2Tables = [
   'fills',
   'subaccount_usernames',
   'leaderboard_pnl',
-  'funding_payments',
 ];
 
 const layer1Tables = [
