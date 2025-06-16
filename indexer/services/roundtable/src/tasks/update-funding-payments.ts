@@ -89,8 +89,8 @@ async function getLastProcessedHeight(): Promise<string> {
  * @returns void
  */
 export default async function runTask(): Promise<void> {
-  const at: string = 'aggregate-data#runTask';
-  logger.info({ at, message: 'Starting aggregate data task.' });
+  const at: string = 'update-funding-payments#runTask';
+  logger.info({ at, message: 'Starting update funding payments task.' });
   const taskStart: number = Date.now();
 
   // Load and execute the update_funding_payments.sql file

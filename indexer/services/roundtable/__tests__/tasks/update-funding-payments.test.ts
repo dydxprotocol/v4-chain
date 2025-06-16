@@ -209,7 +209,7 @@ describe('update-funding-payments', () => {
       rate: '0.0004',
       oraclePrice: '10000',
       fundingIndex: '10050',
-      effectiveAt: createdDateTime.toISO(),
+      effectiveAt: new Date().toISOString(),
       effectiveAtHeight: '3',
     });
 
@@ -243,7 +243,7 @@ describe('update-funding-payments', () => {
       rate: '0.0004',
       oraclePrice: '10000',
       fundingIndex: '10050',
-      effectiveAt: createdDateTime.toISO(),
+      effectiveAt: new Date().toISOString(),
       effectiveAtHeight: '4',
     });
 
