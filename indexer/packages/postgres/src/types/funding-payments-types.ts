@@ -11,6 +11,7 @@ export enum FundingPaymentsColumns {
   side = 'side',
   rate = 'rate',
   payment = 'payment',
+  fundingIndex = 'fundingIndex',
 }
 
 export interface FundingPaymentsCreateObject {
@@ -24,4 +25,5 @@ export interface FundingPaymentsCreateObject {
   side: PositionSide,
   rate: string,
   payment: string,
+  fundingIndex: string,
 }

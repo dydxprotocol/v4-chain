@@ -58,6 +58,7 @@ describe('update-funding-payments', () => {
       side: PositionSide.LONG,
       rate: '0.0001',
       payment: '5',
+      fundingIndex: '5',
     };
     await BlockTable.create({
       blockHeight: '3',

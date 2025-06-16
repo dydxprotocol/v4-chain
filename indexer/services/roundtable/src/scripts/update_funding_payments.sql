@@ -6,12 +6,13 @@ INSERT INTO funding_payments (
     "createdAt",
     "createdAtHeight",
     "perpetualId",
-    ticker,
+    "ticker",
     "oraclePrice",
-    size,
-    side,
-    rate,
-    payment
+    "size",
+    "fundingIndex",
+    "side",
+    "rate",
+    "payment"
 )
 WITH
     -- net computes the net size of each (subaccount, perpetual) pair.
@@ -98,7 +99,8 @@ WITH
             nf.rate AS rate,
             nf."oraclePrice" AS "oraclePrice",
             nf."effectiveAt" AS "effectiveAt",
-            nf."fundingIndex" - COALESCE(lf."fundingIndex", 0) AS "fundingIndexDelta"
+            nf."fundingIndex" - COALESCE(lf."fundingIndex", 0) AS "fundingIndexDelta",
+            nf."fundingIndex" AS "fundingIndex"
         FROM
             new_funding nf
             LEFT JOIN last_funding lf ON nf."perpetualId" = lf."perpetualId"
@@ -108,15 +110,16 @@ SELECT
     f."effectiveAt" as "createdAt",
     :current_height as "createdAtHeight",
     p."perpetualId",
-    p.ticker,
+    p."ticker",
     f."oraclePrice",
-    p.net_size AS size,
+    p.net_size AS "size",
+    f."fundingIndex" AS "fundingIndex",
     CASE
         WHEN p.net_size > 0 THEN 'LONG'
         ELSE 'SHORT'
     END AS side,
-    f.rate,
-    - p.net_size * f."fundingIndexDelta" AS payment
+    f."rate",
+    - p.net_size * f."fundingIndexDelta" AS "payment"
 FROM
     paired p
     -- inner join here because we absolutely need a funding index to calculate funding payments. 
