@@ -371,10 +371,10 @@ func (k Keeper) PlaceStatefulOrder(
 				ctx,
 				order.OrderId.SubaccountId,
 				types.PendingOpenOrder{
-					RemainingQuantums:  order.GetBaseQuantums(),
-					IsBuy:             	order.IsBuy(),
-					Subticks:          	order.GetOrderSubticks(),
-					ClobPairId:        	order.GetClobPairId(),
+					RemainingQuantums:     order.GetBaseQuantums(),
+					IsBuy:                 order.IsBuy(),
+					Subticks:              order.GetOrderSubticks(),
+					ClobPairId:            order.GetClobPairId(),
 					BuilderCodeParameters: order.GetBuilderCodeParameters(),
 				},
 			)
