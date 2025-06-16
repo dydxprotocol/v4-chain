@@ -167,6 +167,14 @@ message OrderFillEventV1 {
   uint64 total_filled_taker = 8;
   // rev share for affiliates in USDC quantums.
   uint64 affiliate_rev_share = 9;
+  // fee for maker builder in USDC quantums.
+  uint64 maker_builder_fee = 10;
+  // fee for taker builder in USDC quantums.
+  uint64 taker_builder_fee = 11;
+  // builder address for maker
+  string maker_builder_address = 12;
+  // builder address for taker
+  string taker_builder_address = 13;
 }
 
 // DeleveragingEvent message contains all the information for a deleveraging
