@@ -225,6 +225,11 @@ var (
 		48,
 		"This field has been deprecated",
 	)
+	ErrInvalidBuilderCode = errorsmod.Register(
+		ModuleName,
+		49,
+		"Invalid builder code",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(
