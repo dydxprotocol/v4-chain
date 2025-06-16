@@ -329,6 +329,7 @@ export interface FundingPaymentsFromDatabase {
   side: PositionSide,
   rate: string,
   payment: string,
+  fundingIndex: string,
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:

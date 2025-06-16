@@ -55,6 +55,7 @@ export default class FundingPaymentsModel extends Model {
         'side',
         'rate',
         'payment',
+        'fundingIndex',
       ],
       properties: {
         subaccountId: { type: 'string', format: 'uuid' },
@@ -67,6 +68,7 @@ export default class FundingPaymentsModel extends Model {
         side: { type: 'string', enum: [...Object.values(PositionSide)] },
         rate: { type: 'string', pattern: NumericPattern },
         payment: { type: 'string', pattern: NumericPattern },
+        fundingIndex: { type: 'string', pattern: NumericPattern },
       },
     };
   }
@@ -83,6 +85,7 @@ export default class FundingPaymentsModel extends Model {
       side: 'string',
       rate: 'string',
       payment: 'string',
+      fundingIndex: 'string',
     };
   }
 
@@ -96,4 +99,5 @@ export default class FundingPaymentsModel extends Model {
   side!: PositionSide;
   rate!: string;
   payment!: string;
+  fundingIndex!: string;
 }
