@@ -1079,3 +1079,31 @@ export const defaultVault: VaultCreateObject = {
   createdAt: createdDateTime.toISO(),
   updatedAt: createdDateTime.toISO(),
 };
+
+// ============== Funding Payments ==============
+
+export const defaultFundingPayment = {
+  subaccountId: defaultSubaccountId,
+  createdAt: DateTime.utc().toISO(),
+  createdAtHeight: '1',
+  perpetualId: defaultPerpetualMarket.id,
+  ticker: defaultPerpetualMarket.ticker,
+  oraclePrice: '50000',
+  size: '1',
+  side: PositionSide.LONG,
+  rate: '0.0001',
+  payment: '5',
+};
+
+export const defaultFundingPayment2 = {
+  subaccountId: defaultSubaccountId2,
+  createdAt: DateTime.utc().toISO(),
+  createdAtHeight: '2',
+  perpetualId: defaultPerpetualMarket2.id,
+  ticker: defaultPerpetualMarket2.ticker,
+  oraclePrice: '3000',
+  size: '2',
+  side: PositionSide.SHORT,
+  rate: '0.0002',
+  payment: '-1.2',
+};

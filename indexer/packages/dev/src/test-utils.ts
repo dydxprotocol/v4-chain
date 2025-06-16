@@ -7,7 +7,11 @@ type Fn = (...args: any[]) => any;
 type FnMock<F extends Fn> = jest.Mock<ReturnType<F>, Parameters<F>>;
 
 type ObjMock<T extends {}> = {
-  [K in keyof T]: T[K] extends Fn ? FnMock<T[K]> : ObjMock<T[K]>;
+  [K in keyof T]: T[K] extends Fn
+    ? FnMock<T[K]>
+    : T[K] extends object
+      ? ObjMock<T[K]>
+      : T[K];
 };
 
 type Module = { [param: string]: Fn };
