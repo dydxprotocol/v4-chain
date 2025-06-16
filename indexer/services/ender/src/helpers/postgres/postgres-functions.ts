@@ -67,6 +67,8 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_from_protocol_time_in_force.sql',
   'dydx_from_serializable_int.sql',
   'dydx_get_fee_from_liquidity.sql',
+  'dydx_get_builder_fee_from_liquidity.sql',
+  'dydx_get_builder_address_from_liquidity.sql',
   'dydx_get_order_status.sql',
   'dydx_get_perpetual_market_for_clob_pair.sql',
   'dydx_get_market_for_id.sql',

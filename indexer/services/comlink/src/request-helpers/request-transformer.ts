@@ -161,6 +161,8 @@ export function fillToResponseObject(
     orderId: fill.orderId,
     clientMetadata: fill.clientMetadata,
     subaccountNumber,
+    builderFee: fill.builderFee ?? undefined,
+    builderAddress: fill.builderAddress ?? undefined,
   };
 }
 
@@ -492,6 +494,8 @@ export function postgresOrderToResponseObject(
     createdAtHeight: order.createdAtHeight ?? undefined,
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(order.clobPairId)!,
     triggerPrice: order.triggerPrice ?? undefined,
+    builderAddress: order.builderAddress ?? undefined,
+    feePpm: order.feePpm ?? undefined,
     subaccountNumber,
   };
 }
@@ -524,6 +528,8 @@ export function redisOrderToResponseObject(
     orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
     clientMetadata: redisOrder.order!.clientMetadata.toString(),
     subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
+    builderAddress: redisOrder.order!.builderCodeParams?.builderAddress ?? undefined,
+    feePpm: redisOrder.order!.builderCodeParams?.feePpm.toString() ?? undefined,
   };
 }
 

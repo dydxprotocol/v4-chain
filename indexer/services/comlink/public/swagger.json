@@ -611,6 +611,12 @@
           "subaccountNumber": {
             "type": "integer",
             "format": "int32"
+          },
+          "builderFee": {
+            "type": "string"
+          },
+          "builderAddress": {
+            "type": "string"
           }
         },
         "required": [
@@ -1004,6 +1010,12 @@
             "type": "string"
           },
           "triggerPrice": {
+            "type": "string"
+          },
+          "builderAddress": {
+            "type": "string"
+          },
+          "feePpm": {
             "type": "string"
           },
           "timeInForce": {

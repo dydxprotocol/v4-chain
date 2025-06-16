@@ -63,6 +63,8 @@ export interface OrderCreateObject {
   createdAtHeight?: string,
   clientMetadata: string,
   triggerPrice?: string,
+  builderAddress?: string,
+  feePpm?: string,
 }
 
 export interface OrderUpdateObject {

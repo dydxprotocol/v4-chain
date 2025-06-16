@@ -374,6 +374,8 @@ func (k Keeper) persistMatchedOrders(
 
 	makerBuilderCodeParams := matchWithOrders.MakerOrder.MustGetOrder().BuilderCodeParameters
 	makerBuilderFeeQuantums := makerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
+	matchWithOrders.MakerBuilderFee = makerBuilderFeeQuantums.Uint64()
+
 	bigMakerQuoteBalanceDelta.Sub(bigMakerQuoteBalanceDelta, makerBuilderFeeQuantums)
 	makerBuilderAddress := makerBuilderCodeParams.GetBuilderAddress()
 
@@ -384,6 +386,7 @@ func (k Keeper) persistMatchedOrders(
 		takerBuilderFeeQuantums = takerBuilderCodeParams.GetBuilderFee(bigFillQuoteQuantums)
 		bigTakerQuoteBalanceDelta.Sub(bigTakerQuoteBalanceDelta, takerBuilderFeeQuantums)
 
+		matchWithOrders.TakerBuilderFee = takerBuilderFeeQuantums.Uint64()
 		takerBuilderAddress = takerBuilderCodeParams.GetBuilderAddress()
 	}
 
