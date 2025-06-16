@@ -40,6 +40,7 @@ describe('funding-payments-controller#V4', () => {
     rate: testConstants.defaultFundingPayment.rate,
     payment: testConstants.defaultFundingPayment.payment,
     subaccountNumber: testConstants.defaultSubaccount.subaccountNumber.toString(),
+    fundingIndex: testConstants.defaultFundingPayment.fundingIndex,
   };
 
   const expectedFundingPayment2: FundingPaymentResponseObject = {
