@@ -28,6 +28,7 @@ import {
   TransferFromDatabase,
   TransferType,
   parentSubaccountHelpers,
+  FundingPaymentsFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
@@ -60,6 +61,7 @@ import {
   TradeResponseObject,
   TransferResponseObject,
   TraderSearchResponse,
+  FundingPaymentResponseObject,
 } from '../types';
 
 /**
@@ -575,5 +577,23 @@ export function tradingRewardToResponse(
     tradingReward: tradingReward.amount,
     createdAt: tradingReward.blockTime,
     createdAtHeight: tradingReward.blockHeight,
+  };
+}
+
+export function fundingPaymentsToResponseObject(
+  fundingPayments: FundingPaymentsFromDatabase,
+  subaccountNumber: number,
+): FundingPaymentResponseObject {
+  return {
+    subaccountNumber: subaccountNumber.toString(),
+    createdAt: fundingPayments.createdAt,
+    createdAtHeight: fundingPayments.createdAtHeight,
+    perpetualId: fundingPayments.perpetualId,
+    ticker: fundingPayments.ticker,
+    oraclePrice: fundingPayments.oraclePrice,
+    size: fundingPayments.size,
+    side: fundingPayments.side,
+    rate: fundingPayments.rate,
+    payment: fundingPayments.payment,
   };
 }
