@@ -689,6 +689,9 @@
           },
           "subaccountNumber": {
             "type": "string"
+          },
+          "fundingIndex": {
+            "type": "string"
           }
         },
         "required": [
@@ -701,7 +704,8 @@
           "side",
           "rate",
           "payment",
-          "subaccountNumber"
+          "subaccountNumber",
+          "fundingIndex"
         ],
         "type": "object",
         "additionalProperties": false

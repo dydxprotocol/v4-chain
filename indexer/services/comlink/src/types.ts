@@ -766,6 +766,7 @@ export interface FundingPaymentResponseObject {
   rate: string,
   payment: string,
   subaccountNumber: string,
+  fundingIndex: string,
 }
 
 export interface FundingPaymentResponse extends PaginationResponse {

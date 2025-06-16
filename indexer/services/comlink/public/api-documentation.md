@@ -1397,7 +1397,8 @@ fetch(`${baseURL}/fundingPayments?address=string&subaccountNumber=0.1`,
       "side": "string",
       "rate": "string",
       "payment": "string",
-      "subaccountNumber": "string"
+      "subaccountNumber": "string",
+      "fundingIndex": "string"
     }
   ]
 }
@@ -1493,7 +1494,8 @@ fetch(`${baseURL}/fundingPayments/parentSubaccount?address=string&parentSubaccou
       "side": "string",
       "rate": "string",
       "payment": "string",
-      "subaccountNumber": "string"
+      "subaccountNumber": "string",
+      "fundingIndex": "string"
     }
   ]
 }
@@ -4966,7 +4968,8 @@ This operation does not require authentication
   "side": "string",
   "rate": "string",
   "payment": "string",
-  "subaccountNumber": "string"
+  "subaccountNumber": "string",
+  "fundingIndex": "string"
 }
 
 ```
@@ -4985,6 +4988,7 @@ This operation does not require authentication
 |rate|string|true|none|none|
 |payment|string|true|none|none|
 |subaccountNumber|string|true|none|none|
+|fundingIndex|string|true|none|none|
 
 ## FundingPaymentResponse
 
@@ -5009,7 +5013,8 @@ This operation does not require authentication
       "side": "string",
       "rate": "string",
       "payment": "string",
-      "subaccountNumber": "string"
+      "subaccountNumber": "string",
+      "fundingIndex": "string"
     }
   ]
 }
