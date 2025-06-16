@@ -1093,6 +1093,7 @@ export const defaultFundingPayment = {
   side: PositionSide.LONG,
   rate: '0.0001',
   payment: '5',
+  fundingIndex: '5',
 };
 
 export const defaultFundingPayment2 = {
@@ -1106,4 +1107,5 @@ export const defaultFundingPayment2 = {
   side: PositionSide.SHORT,
   rate: '0.0002',
   payment: '-1.2',
+  fundingIndex: '5.6',
 };
