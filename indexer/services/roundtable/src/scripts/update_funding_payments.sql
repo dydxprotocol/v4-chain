@@ -6,12 +6,13 @@ INSERT INTO funding_payments (
     "createdAt",
     "createdAtHeight",
     "perpetualId",
-    ticker,
+    "ticker",
     "oraclePrice",
-    size,
-    side,
-    rate,
-    payment
+    "size",
+    "fundingIndex",
+    "side",
+    "rate",
+    "payment"
 )
 WITH
     -- net computes the net size of each (subaccount, perpetual) pair.
@@ -79,21 +80,53 @@ WITH
         ORDER BY
             f."perpetualId",
             f."effectiveAtHeight" DESC
+<<<<<<< HEAD
+=======
+    ),
+    last_funding AS (
+        SELECT DISTINCT
+            ON (f."perpetualId") f."perpetualId" AS "perpetualId",
+            f."fundingIndex" AS "fundingIndex"
+        FROM
+            funding_index_updates f
+        WHERE f."effectiveAtHeight" = :last_height
+        ORDER BY
+            f."perpetualId",
+            f."effectiveAtHeight" DESC
+    ),
+    overall_funding AS (
+        SELECT
+            nf."perpetualId" AS "perpetualId",
+            nf.rate AS rate,
+            nf."oraclePrice" AS "oraclePrice",
+            nf."effectiveAt" AS "effectiveAt",
+            nf."fundingIndex" - COALESCE(lf."fundingIndex", 0) AS "fundingIndexDelta",
+            nf."fundingIndex" AS "fundingIndex"
+        FROM
+            new_funding nf
+            LEFT JOIN last_funding lf ON nf."perpetualId" = lf."perpetualId"
+>>>>>>> 2e84a3ae (Add funding index column (#2905))
     )
 SELECT
     p."subaccountId",
     f."effectiveAt" as "createdAt",
     :current_height as "createdAtHeight",
     p."perpetualId",
-    p.ticker,
+    p."ticker",
     f."oraclePrice",
-    p.net_size AS size,
+    p.net_size AS "size",
+    f."fundingIndex" AS "fundingIndex",
     CASE
         WHEN p.net_size > 0 THEN 'LONG'
         ELSE 'SHORT'
     END AS side,
+<<<<<<< HEAD
     f.rate,
     - p.net_size * f."oraclePrice" * f.rate AS payment
+=======
+    f."rate",
+    - p.net_size * f."fundingIndexDelta" AS "payment"
+>>>>>>> 2e84a3ae (Add funding index column (#2905))
 FROM
     paired p
     -- inner join here because we absolutely need a funding index to calculate funding payments. 
