@@ -14,7 +14,8 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "postinstall": "patch-package"
   },
   "author": "",
   "license": "AGPL-3.0",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@milahu/patch-package": "6.4.14",
     "@types/jest": "^28.1.4",
     "@types/node": "^18.0.3",
     "jest": "^28.1.2",
