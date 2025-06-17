@@ -3,6 +3,28 @@
 # declared package:
 #   kafkajs: ^2.2.4
 #
+diff --git a/node_modules/kafkajs/src/network/connection.js b/node_modules/kafkajs/src/network/connection.js
+index dded584..50492b4 100644
+--- a/node_modules/kafkajs/src/network/connection.js
++++ b/node_modules/kafkajs/src/network/connection.js
+@@ -393,7 +393,7 @@ module.exports = class Connection {
+       this.logDebug(`Request ${requestInfo(request)}`, {
+         correlationId,
+         expectResponse,
+-        size: Buffer.byteLength(requestPayload.buffer),
++        size: Buffer.byteLength(requestPayload.view()),
+       })
+ 
+       return new Promise((resolve, reject) => {
+@@ -406,7 +406,7 @@ module.exports = class Connection {
+             expectResponse,
+             requestTimeout,
+             sendRequest: () => {
+-              this.socket.write(requestPayload.buffer, 'binary')
++              this.socket.write(requestPayload.view(), 'binary')
+             },
+           })
+         } catch (e) {
 diff --git a/node_modules/kafkajs/src/protocol/decoder.js b/node_modules/kafkajs/src/protocol/decoder.js
 index e2834d0..fcabd2f 100644
 --- a/node_modules/kafkajs/src/protocol/decoder.js
@@ -92,3 +114,56 @@ index e2834d0..fcabd2f 100644
    }
  
    forward(size) {
+diff --git a/node_modules/kafkajs/src/protocol/encoder.js b/node_modules/kafkajs/src/protocol/encoder.js
+index 290bb97..cb381a9 100644
+--- a/node_modules/kafkajs/src/protocol/encoder.js
++++ b/node_modules/kafkajs/src/protocol/encoder.js
+@@ -92,6 +92,10 @@ module.exports = class Encoder {
+     return this.buf.slice(0, this.offset)
+   }
+ 
++  view() {
++    return this.buf.subarray(0, this.offset)
++  }
++
+   writeInt8(value) {
+     this.ensureAvailable(INT8_SIZE)
+     this.buf.writeInt8(value, this.offset)
+@@ -400,6 +404,6 @@ module.exports = class Encoder {
+   }
+ 
+   toJSON() {
+-    return this.buffer.toJSON()
++    return this.view().toJSON()
+   }
+ }
+diff --git a/node_modules/kafkajs/src/protocol/recordBatch/v0/index.js b/node_modules/kafkajs/src/protocol/recordBatch/v0/index.js
+index 599a940..4d754a9 100644
+--- a/node_modules/kafkajs/src/protocol/recordBatch/v0/index.js
++++ b/node_modules/kafkajs/src/protocol/recordBatch/v0/index.js
+@@ -72,10 +72,10 @@ const RecordBatch = async ({
+   const batch = new Encoder()
+     .writeInt32(partitionLeaderEpoch)
+     .writeInt8(MAGIC_BYTE)
+-    .writeUInt32(crc32C(batchBody.buffer))
++    .writeUInt32(crc32C(batchBody.view()))
+     .writeEncoder(batchBody)
+ 
+-  return new Encoder().writeInt64(firstOffset).writeBytes(batch.buffer)
++  return new Encoder().writeInt64(firstOffset).writeBytes(batch.view())
+ }
+ 
+ const compressRecords = async (compression, records) => {
+diff --git a/node_modules/kafkajs/src/protocol/requests/fetch/v4/decodeMessages.js b/node_modules/kafkajs/src/protocol/requests/fetch/v4/decodeMessages.js
+index abae0f5..58e9008 100644
+--- a/node_modules/kafkajs/src/protocol/requests/fetch/v4/decodeMessages.js
++++ b/node_modules/kafkajs/src/protocol/requests/fetch/v4/decodeMessages.js
+@@ -17,7 +17,7 @@ const decodeMessages = async decoder => {
+ 
+   const messagesBuffer = decoder.readBytes(messagesSize)
+   const messagesDecoder = new Decoder(messagesBuffer)
+-  const magicByte = messagesBuffer.slice(MAGIC_OFFSET).readInt8(0)
++  const magicByte = messagesBuffer.subarray(MAGIC_OFFSET).readInt8(0)
+ 
+   if (magicByte === MAGIC_BYTE) {
+     const records = []
