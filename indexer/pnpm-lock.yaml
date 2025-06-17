@@ -6,10 +6,8 @@ importers:
     specifiers:
       '@milahu/patch-package': 6.4.14
       '@types/ws': 8.5.10
-      kafkajs: ^2.2.4
     dependencies:
       '@milahu/patch-package': 6.4.14
-      kafkajs: 2.2.4
     devDependencies:
       '@types/ws': 8.5.10
 
