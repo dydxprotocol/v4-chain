@@ -20,7 +20,7 @@ import {
   IncomingMessageType,
   SubscribeMessage,
   UnsubscribeMessage,
-  WebsocketEvents,
+  WebsocketEvent,
 } from '../types';
 
 const HEARTBEAT_INTERVAL_MS: number = config.WS_HEARTBEAT_INTERVAL_MS;
@@ -133,7 +133,7 @@ export class Index {
       });
     }
 
-    ws.on(WebsocketEvents.MESSAGE, (message: WebSocket.RawData) => {
+    ws.on(WebsocketEvent.MESSAGE, (message: WebSocket.RawData) => {
       try {
         this.onMessage(connection, message);
       } catch (error) {
@@ -156,7 +156,7 @@ export class Index {
       }
     });
 
-    ws.on(WebsocketEvents.CLOSE, (code: number, reason: Buffer) => {
+    ws.on(WebsocketEvent.CLOSE, (code: number, reason: Buffer) => {
       // TODO remove use as developer indicates
       const reasonStr = safeJsonStringify(reason);
 
@@ -182,7 +182,7 @@ export class Index {
       this.disconnect(connection);
     });
 
-    ws.on(WebsocketEvents.ERROR, (error: Error) => {
+    ws.on(WebsocketEvent.ERROR, (error: Error) => {
       const errorLog: InfoObject = {
         at: 'index#onError',
         message: `Connection threw error: ${error}`,
@@ -197,7 +197,7 @@ export class Index {
       }
     });
 
-    ws.on(WebsocketEvents.PONG, () => {
+    ws.on(WebsocketEvent.PONG, () => {
       // Clear the delayed disconnect set by the heartbeat handler when a pong is received.
       if (connection.disconnect) {
         clearTimeout(connection.disconnect);

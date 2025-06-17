@@ -142,7 +142,7 @@ export interface ResponseWithBody extends express.Response {
   body: unknown,
 }
 
-export enum WebsocketTopics {
+export enum WebsocketTopic {
   TO_WEBSOCKETS_ORDERBOOKS = 'to-websockets-orderbooks',
   TO_WEBSOCKETS_SUBACCOUNTS = 'to-websockets-subaccounts',
   TO_WEBSOCKETS_TRADES = 'to-websockets-trades',
@@ -151,7 +151,7 @@ export enum WebsocketTopics {
   TO_WEBSOCKETS_BLOCK_HEIGHT = 'to-websockets-block-height',
 }
 
-export enum WebsocketEvents {
+export enum WebsocketEvent {
   CLOSE = 'close',
   CONNECTION = 'connection',
   ERROR = 'error',
