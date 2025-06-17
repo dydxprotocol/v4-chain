@@ -126,7 +126,7 @@ FROM
     -- if no funding index, no entry will be created.
     JOIN overall_funding f ON f."perpetualId" = p."perpetualId"
 WHERE
-    p.net_size != 0
+    "payment" != 0
 ORDER BY
     p."subaccountId",
     p."perpetualId";
