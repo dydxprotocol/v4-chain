@@ -1,9 +1,9 @@
-import { getChannels, getMessageToForward, getMessagesToForward } from '../../src/helpers/from-kafka-helpers';
+import { getChannels, getMessagesToForward } from '../../src/helpers/from-kafka-helpers';
 import { InvalidForwardMessageError, InvalidTopicError } from '../../src/lib/errors';
 import {
   Channel,
   MessageToForward,
-  WebsocketTopics,
+  WebsocketTopic,
 } from '../../src/types';
 import {
   btcTicker,
@@ -11,7 +11,6 @@ import {
   defaultAccNumber,
   defaultContents,
   defaultOwner,
-  invalidChannel,
   invalidClobPairId,
   invalidTopic,
   marketsMessage,
@@ -46,25 +45,28 @@ import {
 describe('from-kafka-helpers', () => {
   describe('getChannel', () => {
     it.each([
-      [WebsocketTopics.TO_WEBSOCKETS_CANDLES, [Channel.V4_CANDLES]],
-      [WebsocketTopics.TO_WEBSOCKETS_MARKETS, [Channel.V4_MARKETS]],
-      [WebsocketTopics.TO_WEBSOCKETS_ORDERBOOKS, [Channel.V4_ORDERBOOK]],
+      [WebsocketTopic.TO_WEBSOCKETS_CANDLES, [Channel.V4_CANDLES]],
+      [WebsocketTopic.TO_WEBSOCKETS_MARKETS, [Channel.V4_MARKETS]],
+      [WebsocketTopic.TO_WEBSOCKETS_ORDERBOOKS, [Channel.V4_ORDERBOOK]],
       [
-        WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS,
+        WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS,
         [Channel.V4_ACCOUNTS, Channel.V4_PARENT_ACCOUNTS],
       ],
-      [WebsocketTopics.TO_WEBSOCKETS_TRADES, [Channel.V4_TRADES]],
-      [WebsocketTopics.TO_WEBSOCKETS_BLOCK_HEIGHT, [Channel.V4_BLOCK_HEIGHT]],
-    ])('gets correct channel for topic %s', (topic: WebsocketTopics, channels: Channel[]) => {
+      [WebsocketTopic.TO_WEBSOCKETS_TRADES, [Channel.V4_TRADES]],
+      [WebsocketTopic.TO_WEBSOCKETS_BLOCK_HEIGHT, [Channel.V4_BLOCK_HEIGHT]],
+    ])('gets correct channel for topic %s', (topic: WebsocketTopic, channels: Channel[]) => {
       expect(getChannels(topic)).toEqual(channels);
     });
 
     it('throws InvalidTopicError for invalid topic', () => {
-      expect(() => { getChannels(invalidTopic); }).toThrow(new InvalidTopicError(invalidTopic));
+      expect(
+        () => { getChannels(invalidTopic as WebsocketTopic); })
+        .toThrow(new InvalidTopicError(invalidTopic as WebsocketTopic),
+        );
     });
   });
 
-  describe('getMessageToForward', () => {
+  describe('getMessagesToForward', () => {
     beforeAll(async () => {
       await dbHelpers.migrate();
       await testMocks.seedData();
@@ -80,10 +82,10 @@ describe('from-kafka-helpers', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(SubaccountMessage.encode(subaccountMessage).finish())),
       );
-      const messageToForward: MessageToForward = getMessageToForward(
-        Channel.V4_ACCOUNTS,
+      const messageToForward: MessageToForward = getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS,
         message,
-      );
+      )![0];
 
       expect(messageToForward.channel).toEqual(Channel.V4_ACCOUNTS);
       expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
@@ -94,10 +96,10 @@ describe('from-kafka-helpers', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(CandleMessage.encode(candlesMessage).finish())),
       );
-      const messageToForward: MessageToForward = getMessageToForward(
-        Channel.V4_CANDLES,
+      const messageToForward: MessageToForward = getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_CANDLES,
         message,
-      );
+      ).pop()!;
 
       expect(messageToForward.channel).toEqual(Channel.V4_CANDLES);
       expect(messageToForward.id).toEqual(`${btcTicker}/${CandleResolution.ONE_MINUTE}`);
@@ -108,7 +110,10 @@ describe('from-kafka-helpers', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(MarketMessage.encode(marketsMessage).finish())),
       );
-      const messageToForward: MessageToForward = getMessageToForward(Channel.V4_MARKETS, message);
+      const messageToForward: MessageToForward = getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_MARKETS,
+        message,
+      ).pop()!;
 
       expect(messageToForward.channel).toEqual(Channel.V4_MARKETS);
       expect(messageToForward.id).toEqual(V4_MARKETS_ID);
@@ -119,10 +124,10 @@ describe('from-kafka-helpers', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(OrderbookMessage.encode(orderbookMessage).finish())),
       );
-      const messageToForward: MessageToForward = getMessageToForward(
-        Channel.V4_ORDERBOOK,
+      const messageToForward: MessageToForward = getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_ORDERBOOKS,
         message,
-      );
+      ).pop()!;
 
       expect(messageToForward.channel).toEqual(Channel.V4_ORDERBOOK);
       expect(messageToForward.id).toEqual(btcTicker);
@@ -133,10 +138,10 @@ describe('from-kafka-helpers', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(TradeMessage.encode(tradesMessage).finish())),
       );
-      const messageToForward: MessageToForward = getMessageToForward(
-        Channel.V4_TRADES,
+      const messageToForward: MessageToForward = getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_TRADES,
         message,
-      );
+      ).pop()!;
 
       expect(messageToForward.channel).toEqual(Channel.V4_TRADES);
       expect(messageToForward.id).toEqual(btcTicker);
@@ -147,10 +152,10 @@ describe('from-kafka-helpers', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(SubaccountMessage.encode(childSubaccountMessage).finish())),
       );
-      const messageToForward: MessageToForward = getMessageToForward(
-        Channel.V4_PARENT_ACCOUNTS,
+      const messageToForward: MessageToForward = getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS,
         message,
-      );
+      )![1];
 
       expect(messageToForward.channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
       expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
@@ -164,7 +169,7 @@ describe('from-kafka-helpers', () => {
         Buffer.from(Uint8Array.from(BlockHeightMessage.encode(defaultBlockHeightMessage).finish())),
       );
       const messageToForward: MessageToForward = getMessagesToForward(
-        WebsocketTopics.TO_WEBSOCKETS_BLOCK_HEIGHT,
+        WebsocketTopic.TO_WEBSOCKETS_BLOCK_HEIGHT,
         message,
       ).pop()!;
       expect(messageToForward.channel).toEqual(Channel.V4_BLOCK_HEIGHT);
@@ -200,10 +205,10 @@ describe('from-kafka-helpers', () => {
           },
         ).finish())),
       );
-      const messageToForward: MessageToForward = getMessageToForward(
-        Channel.V4_PARENT_ACCOUNTS,
+      const messageToForward: MessageToForward = getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS,
         message,
-      );
+      )![1];
 
       expect(messageToForward.channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
       expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
@@ -272,10 +277,10 @@ describe('from-kafka-helpers', () => {
           },
         ).finish())),
       );
-      const messageToForward: MessageToForward = getMessageToForward(
-        Channel.V4_PARENT_ACCOUNTS,
+      const messageToForward: MessageToForward = getMessagesToForward(
+        WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS,
         message,
-      );
+      )![1];
 
       expect(messageToForward.channel).toEqual(Channel.V4_PARENT_ACCOUNTS);
       expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
@@ -287,7 +292,9 @@ describe('from-kafka-helpers', () => {
     it('throws InvalidForwardMessageError for empty message', () => {
       const message: KafkaMessage = createKafkaMessage(null);
 
-      expect(() => { getMessageToForward(Channel.V4_ACCOUNTS, message); }).toThrow(
+      expect(() => {
+        getMessagesToForward(WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS, message);
+      }).toThrow(
         new InvalidForwardMessageError('Got empty kafka message'),
       );
     });
@@ -295,8 +302,8 @@ describe('from-kafka-helpers', () => {
     it('throws InvalidForwardMessageError for invalid channel', () => {
       const message: KafkaMessage = createKafkaMessage(Buffer.from(''));
 
-      expect(() => { getMessageToForward((invalidChannel as Channel), message); }).toThrow(
-        new InvalidForwardMessageError(`Unknown channel: ${invalidChannel}`),
+      expect(() => { getMessagesToForward((invalidTopic as WebsocketTopic), message); }).toThrow(
+        new InvalidForwardMessageError(`Unknown topic: ${invalidTopic}`),
       );
     });
 
@@ -309,7 +316,9 @@ describe('from-kafka-helpers', () => {
         Buffer.from(Uint8Array.from(CandleMessage.encode(invalidCandlesMessage).finish())),
       );
 
-      expect(() => { getMessageToForward(Channel.V4_CANDLES, message); }).toThrow(
+      expect(() => {
+        getMessagesToForward(WebsocketTopic.TO_WEBSOCKETS_CANDLES, message);
+      }).toThrow(
         new InvalidForwardMessageError(`Invalid clob pair id: ${invalidClobPairId}`),
       );
     });
@@ -323,7 +332,9 @@ describe('from-kafka-helpers', () => {
         Buffer.from(Uint8Array.from(OrderbookMessage.encode(invalidOrderbookMessage).finish())),
       );
 
-      expect(() => { getMessageToForward(Channel.V4_ORDERBOOK, message); }).toThrow(
+      expect(() => {
+        getMessagesToForward(WebsocketTopic.TO_WEBSOCKETS_ORDERBOOKS, message);
+      }).toThrow(
         new InvalidForwardMessageError(`Invalid clob pair id: ${invalidClobPairId}`),
       );
     });
@@ -337,7 +348,7 @@ describe('from-kafka-helpers', () => {
         Buffer.from(Uint8Array.from(TradeMessage.encode(invalidTradeMessage).finish())),
       );
 
-      expect(() => { getMessageToForward(Channel.V4_TRADES, message); }).toThrow(
+      expect(() => { getMessagesToForward(WebsocketTopic.TO_WEBSOCKETS_TRADES, message); }).toThrow(
         new InvalidForwardMessageError(`Invalid clob pair id: ${invalidClobPairId}`),
       );
     });

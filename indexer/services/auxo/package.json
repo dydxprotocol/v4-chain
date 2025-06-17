@@ -11,7 +11,8 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "postinstall": "patch-package"
   },
   "author": "",
   "license": "AGPL-3.0",
@@ -36,7 +37,8 @@
     "jest": "^28.1.2",
     "ts-node": "^10.8.2",
     "tsconfig-paths": "^4.0.0",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "@milahu/patch-package": "6.4.14"
   },
   "repository": {
     "type": "git",

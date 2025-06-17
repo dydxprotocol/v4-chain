@@ -27,6 +27,7 @@ import {
   Channel,
   SubscriptionInfo,
   Connection,
+  WebsocketTopic,
 } from '../types';
 import { Index } from '../websocket/index';
 import { MAX_TIMEOUT_INTEGER } from './constants';
@@ -199,7 +200,7 @@ export class MessageForwarder {
       offset: message.offset,
     };
 
-    const channels: Channel[] = getChannels(topic);
+    const channels: Channel[] = getChannels(topic as WebsocketTopic);
     if (channels.length === 0) {
       logger.error({
         ...errProps,
@@ -211,8 +212,7 @@ export class MessageForwarder {
     errProps.channels = channels;
 
     // Decode the message based on the topic
-    const messagesToForward = getMessagesToForward(topic, message);
-    for (const messageToForward of messagesToForward) {
+    for (const messageToForward of getMessagesToForward(topic, message)) {
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
       const end: number = Date.now();
