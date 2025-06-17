@@ -328,8 +328,6 @@ func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 			// Delete the order from state and decrement the stateful order count.
 			types.LongTermOrderPlacementKeyPrefix +
 				orderToStringId(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20),
-			types.StatefulOrderCountPrefix +
-				orderToStringSubaccountId(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20),
 			// Write the order to state and increment the stateful order count.
 			types.NextStatefulOrderBlockTransactionIndexKey,
 			types.LongTermOrderPlacementKeyPrefix +
@@ -339,8 +337,6 @@ func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 			// Delete the order from state and decrement the stateful order count.
 			types.LongTermOrderPlacementKeyPrefix +
 				orderToStringId(constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25),
-			types.StatefulOrderCountPrefix +
-				orderToStringSubaccountId(constants.LongTermOrder_Alice_Num0_Id1_Clob1_Sell65_Price15_GTBT25),
 			// Write the order to state and increment the stateful order count.
 			types.NextStatefulOrderBlockTransactionIndexKey,
 			types.LongTermOrderPlacementKeyPrefix +
@@ -350,8 +346,6 @@ func TestGetSetDeleteLongTermOrderState(t *testing.T) {
 			// Delete the order from state and decrement the stateful order count.
 			types.LongTermOrderPlacementKeyPrefix +
 				orderToStringId(constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10),
-			types.StatefulOrderCountPrefix +
-				orderToStringSubaccountId(constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10),
 			// Write the order to state and increment the stateful order count.
 			types.NextStatefulOrderBlockTransactionIndexKey,
 			types.LongTermOrderPlacementKeyPrefix +
