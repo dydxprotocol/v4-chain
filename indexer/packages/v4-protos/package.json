@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/dydxprotocol/indexer#readme",
   "dependencies": {
-    "@bufbuild/buf": "1.19.0-1",
+    "@bufbuild/buf": "1.55.0",
     "@cosmjs/amino": "^0.32.1",
     "@cosmjs/proto-signing": "^0.32.1",
     "@cosmjs/stargate": "^0.32.1",
@@ -40,6 +40,6 @@
     "bech32": "^2.0.0",
     "dotenv-flow": "^3.2.0",
     "long": "^5.2.1",
-    "protobufjs": "^7.2.4"
+    "protobufjs": "^7.5.3"
   }
 }

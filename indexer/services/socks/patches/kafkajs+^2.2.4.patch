@@ -137,6 +137,51 @@ index 290bb97..cb381a9 100644
 +    return this.view().toJSON()
    }
  }
+diff --git a/node_modules/kafkajs/src/protocol/recordBatch/record/v0/decoder.js b/node_modules/kafkajs/src/protocol/recordBatch/record/v0/decoder.js
+index 641fdd2..c0b9d91 100644
+--- a/node_modules/kafkajs/src/protocol/recordBatch/record/v0/decoder.js
++++ b/node_modules/kafkajs/src/protocol/recordBatch/record/v0/decoder.js
+@@ -32,8 +32,8 @@ module.exports = (decoder, batchContext = {}) => {
+     timestampType === TimestampTypes.LOG_APPEND_TIME && maxTimestamp
+       ? maxTimestamp
+       : Long.fromValue(firstTimestamp)
+-          .add(timestampDelta)
+-          .toString()
++        .add(timestampDelta)
++        .toString()
+ 
+   const offsetDelta = decoder.readVarInt()
+   const offset = Long.fromValue(firstOffset)
+@@ -42,18 +42,17 @@ module.exports = (decoder, batchContext = {}) => {
+ 
+   const key = decoder.readVarIntBytes()
+   const value = decoder.readVarIntBytes()
+-  const headers = decoder.readVarIntArray(HeaderDecoder).reduce(
+-    (obj, { key, value }) => ({
+-      ...obj,
+-      [key]:
+-        obj[key] === undefined
+-          ? value
+-          : Array.isArray(obj[key])
+-          ? obj[key].concat([value])
+-          : [obj[key], value],
+-    }),
+-    {}
+-  )
++  const headers = decoder.readVarIntArray(HeaderDecoder).reduce((obj, { key, value }) => {
++    const existing = obj[key];
++    if (existing === undefined) {
++      obj[key] = value;
++    } else if (Array.isArray(existing)) {
++      existing.push(value);
++    } else {
++      obj[key] = [existing, value];
++    }
++    return obj;
++  }, Object.create(null));
+ 
+   return {
+     magicByte,
 diff --git a/node_modules/kafkajs/src/protocol/recordBatch/v0/index.js b/node_modules/kafkajs/src/protocol/recordBatch/v0/index.js
 index 599a940..4d754a9 100644
 --- a/node_modules/kafkajs/src/protocol/recordBatch/v0/index.js
