@@ -83,6 +83,10 @@ describe('statefulOrderPlacementHandler', () => {
     },
     goodTilBlock: undefined,
     goodTilBlockTime,
+    builderCodeParams: {
+      builderAddress: 'dydx123',
+      feePpm: 1000,
+    },
   };
   const defaultStatefulOrderLongTermEvent: StatefulOrderEventV1 = {
     longTermOrderPlacement: {
@@ -178,6 +182,8 @@ describe('statefulOrderPlacementHandler', () => {
       triggerPrice: null,
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
+      builderAddress: defaultOrder.builderCodeParams?.builderAddress,
+      feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
     });
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {
@@ -253,6 +259,8 @@ describe('statefulOrderPlacementHandler', () => {
       triggerPrice: null,
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
+      builderAddress: defaultOrder.builderCodeParams?.builderAddress,
+      feePpm: defaultOrder.builderCodeParams?.feePpm.toString(),
     });
     // TODO[IND-20]: Add tests for vulcan messages
   });

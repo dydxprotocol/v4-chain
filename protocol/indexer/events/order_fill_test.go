@@ -21,6 +21,8 @@ var (
 	fillAmount            = satypes.BaseQuantums(5)
 	makerFee              = int64(-2)
 	takerFee              = int64(5)
+	makerBuilderFee       = uint64(0)
+	takerBuilderFee       = uint64(0)
 	affiliateRevShare     = big.NewInt(0)
 )
 
@@ -31,6 +33,8 @@ func TestNewOrderFillEvent_Success(t *testing.T) {
 		fillAmount,
 		makerFee,
 		takerFee,
+		makerBuilderFee,
+		takerBuilderFee,
 		fillAmount,
 		fillAmount,
 		affiliateRevShare,
@@ -59,6 +63,7 @@ func TestNewLiquidationOrderFillEvent_Success(t *testing.T) {
 		fillAmount,
 		makerFee,
 		takerFee,
+		makerBuilderFee,
 		fillAmount,
 		affiliateRevShare,
 	)

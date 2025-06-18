@@ -1202,6 +1202,10 @@ function createLiquidationOrderFillEvent(
     totalFilledMaker: Long.fromValue(totalFilledMaker, true),
     totalFilledTaker: Long.fromValue(fillAmount, true),
     affiliateRevShare: Long.fromValue(defaultAffiliateRevShareQuantum, false),
+    makerBuilderFee: Long.fromValue(0, false),
+    takerBuilderFee: Long.fromValue(0, false),
+    makerBuilderAddress: testConstants.noBuilderAddress,
+    takerBuilderAddress: testConstants.noBuilderAddress,
   } as OrderFillEventV1;
 }
 

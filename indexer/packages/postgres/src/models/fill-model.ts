@@ -8,10 +8,10 @@ import {
   NumericPattern,
 } from '../lib/validators';
 import {
+  FillType,
+  IsoString,
   Liquidity,
   OrderSide,
-  IsoString,
-  FillType,
 } from '../types';
 
 export default class FillModel extends Model {
@@ -88,6 +88,8 @@ export default class FillModel extends Model {
         clientMetadata: { type: ['string', 'null'], pattern: IntegerPattern },
         fee: { type: 'string', pattern: NumericPattern },
         affiliateRevShare: { type: 'string', pattern: NonNegativeNumericPattern },
+        builderFee: { type: ['string', 'null'], default: null },
+        builderAddress: { type: ['string', 'null'], default: null },
       },
     };
   }
@@ -117,6 +119,8 @@ export default class FillModel extends Model {
       clientMetadata: 'string',
       fee: 'string',
       affiliateRevShare: 'string',
+      builderFee: 'string',
+      builderAddress: 'string',
     };
   }
 
@@ -153,4 +157,8 @@ export default class FillModel extends Model {
   fee!: string;
 
   affiliateRevShare!: string;
+
+  builderFee!: string;
+
+  builderAddress!: string;
 }
