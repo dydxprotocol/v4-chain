@@ -1200,7 +1200,9 @@ fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
       "createdAtHeight": "string",
       "orderId": "string",
       "clientMetadata": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0,
+      "builderFee": "string",
+      "builderAddress": "string"
     }
   ]
 }
@@ -1311,7 +1313,9 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
       "createdAtHeight": "string",
       "orderId": "string",
       "clientMetadata": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0,
+      "builderFee": "string",
+      "builderAddress": "string"
     }
   ]
 }
@@ -2041,6 +2045,8 @@ fetch(`${baseURL}/orders?address=string&subaccountNumber=0.1`,
     "createdAtHeight": "string",
     "clientMetadata": "string",
     "triggerPrice": "string",
+    "builderAddress": "string",
+    "feePpm": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -2081,6 +2087,8 @@ Status Code **200**
 |» createdAtHeight|string|false|none|none|
 |» clientMetadata|string|true|none|none|
 |» triggerPrice|string|false|none|none|
+|» builderAddress|string|false|none|none|
+|» feePpm|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -2235,6 +2243,8 @@ fetch(`${baseURL}/orders/parentSubaccountNumber?address=string&parentSubaccountN
     "createdAtHeight": "string",
     "clientMetadata": "string",
     "triggerPrice": "string",
+    "builderAddress": "string",
+    "feePpm": "string",
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
@@ -2275,6 +2285,8 @@ Status Code **200**
 |» createdAtHeight|string|false|none|none|
 |» clientMetadata|string|true|none|none|
 |» triggerPrice|string|false|none|none|
+|» builderAddress|string|false|none|none|
+|» feePpm|string|false|none|none|
 |» timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |» status|any|true|none|none|
 
@@ -2403,6 +2415,8 @@ fetch(`${baseURL}/orders/{orderId}`,
   "createdAtHeight": "string",
   "clientMetadata": "string",
   "triggerPrice": "string",
+  "builderAddress": "string",
+  "feePpm": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -4701,7 +4715,9 @@ This operation does not require authentication
   "createdAtHeight": "string",
   "orderId": "string",
   "clientMetadata": "string",
-  "subaccountNumber": 0
+  "subaccountNumber": 0,
+  "builderFee": "string",
+  "builderAddress": "string"
 }
 
 ```
@@ -4725,6 +4741,8 @@ This operation does not require authentication
 |orderId|string|false|none|none|
 |clientMetadata|string|false|none|none|
 |subaccountNumber|integer(int32)|true|none|none|
+|builderFee|string|false|none|none|
+|builderAddress|string|false|none|none|
 
 ## FillResponse
 
@@ -4754,7 +4772,9 @@ This operation does not require authentication
       "createdAtHeight": "string",
       "orderId": "string",
       "clientMetadata": "string",
-      "subaccountNumber": 0
+      "subaccountNumber": 0,
+      "builderFee": "string",
+      "builderAddress": "string"
     }
   ]
 }
@@ -5267,6 +5287,8 @@ or
   "createdAtHeight": "string",
   "clientMetadata": "string",
   "triggerPrice": "string",
+  "builderAddress": "string",
+  "feePpm": "string",
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
@@ -5298,6 +5320,8 @@ or
 |createdAtHeight|string|false|none|none|
 |clientMetadata|string|true|none|none|
 |triggerPrice|string|false|none|none|
+|builderAddress|string|false|none|none|
+|feePpm|string|false|none|none|
 |timeInForce|[APITimeInForce](#schemaapitimeinforce)|true|none|none|
 |status|[APIOrderStatus](#schemaapiorderstatus)|true|none|none|
 |postOnly|boolean|true|none|none|

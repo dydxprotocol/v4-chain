@@ -1,5 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import { IndexerOrder, IndexerOrder_Side } from '@dydxprotocol-indexer/v4-protos';
+import { BuilderCodeParameters, IndexerOrder, IndexerOrder_Side } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
 import * as OrderTable from '../stores/order-table';
@@ -46,6 +46,14 @@ export function convertToIndexerOrderWithSubaccount(
   const triggerSubticks: Long = (order.triggerPrice === undefined || order.triggerPrice === null)
     ? Long.fromValue(0, true)
     : Long.fromString(priceToSubticks(order.triggerPrice, perpetualMarket), true);
+  let builderCodeParameters: BuilderCodeParameters | undefined;
+
+  if (order.builderAddress && order.feePpm) {
+    builderCodeParameters = {
+      builderAddress: order.builderAddress,
+      feePpm: Number(order.feePpm),
+    };
+  }
   const indexerOrder: IndexerOrder = {
     orderId: {
       subaccountId: {
@@ -71,6 +79,7 @@ export function convertToIndexerOrderWithSubaccount(
     clientMetadata: Number(order.clientMetadata),
     conditionType: orderTypeToProtocolConditionType(order.type),
     conditionalOrderTriggerSubticks: triggerSubticks,
+    builderCodeParams: builderCodeParameters,
   };
 
   return indexerOrder;

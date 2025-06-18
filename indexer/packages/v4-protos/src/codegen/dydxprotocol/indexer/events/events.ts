@@ -419,6 +419,18 @@ export interface OrderFillEventV1 {
   /** rev share for affiliates in USDC quantums. */
 
   affiliateRevShare: Long;
+  /** fee for maker builder in USDC quantums. */
+
+  makerBuilderFee: Long;
+  /** fee for taker builder in USDC quantums. */
+
+  takerBuilderFee: Long;
+  /** builder address for maker */
+
+  makerBuilderAddress: string;
+  /** builder address for taker */
+
+  takerBuilderAddress: string;
 }
 /**
  * OrderFillEvent message contains all the information from an order match in
@@ -451,6 +463,18 @@ export interface OrderFillEventV1SDKType {
   /** rev share for affiliates in USDC quantums. */
 
   affiliate_rev_share: Long;
+  /** fee for maker builder in USDC quantums. */
+
+  maker_builder_fee: Long;
+  /** fee for taker builder in USDC quantums. */
+
+  taker_builder_fee: Long;
+  /** builder address for maker */
+
+  maker_builder_address: string;
+  /** builder address for taker */
+
+  taker_builder_address: string;
 }
 /**
  * DeleveragingEvent message contains all the information for a deleveraging
@@ -2446,7 +2470,11 @@ function createBaseOrderFillEventV1(): OrderFillEventV1 {
     takerFee: Long.ZERO,
     totalFilledMaker: Long.UZERO,
     totalFilledTaker: Long.UZERO,
-    affiliateRevShare: Long.UZERO
+    affiliateRevShare: Long.UZERO,
+    makerBuilderFee: Long.UZERO,
+    takerBuilderFee: Long.UZERO,
+    makerBuilderAddress: "",
+    takerBuilderAddress: ""
   };
 }
 
@@ -2486,6 +2514,22 @@ export const OrderFillEventV1 = {
 
     if (!message.affiliateRevShare.isZero()) {
       writer.uint32(72).uint64(message.affiliateRevShare);
+    }
+
+    if (!message.makerBuilderFee.isZero()) {
+      writer.uint32(80).uint64(message.makerBuilderFee);
+    }
+
+    if (!message.takerBuilderFee.isZero()) {
+      writer.uint32(88).uint64(message.takerBuilderFee);
+    }
+
+    if (message.makerBuilderAddress !== "") {
+      writer.uint32(98).string(message.makerBuilderAddress);
+    }
+
+    if (message.takerBuilderAddress !== "") {
+      writer.uint32(106).string(message.takerBuilderAddress);
     }
 
     return writer;
@@ -2536,6 +2580,22 @@ export const OrderFillEventV1 = {
           message.affiliateRevShare = (reader.uint64() as Long);
           break;
 
+        case 10:
+          message.makerBuilderFee = (reader.uint64() as Long);
+          break;
+
+        case 11:
+          message.takerBuilderFee = (reader.uint64() as Long);
+          break;
+
+        case 12:
+          message.makerBuilderAddress = reader.string();
+          break;
+
+        case 13:
+          message.takerBuilderAddress = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2556,6 +2616,10 @@ export const OrderFillEventV1 = {
     message.totalFilledMaker = object.totalFilledMaker !== undefined && object.totalFilledMaker !== null ? Long.fromValue(object.totalFilledMaker) : Long.UZERO;
     message.totalFilledTaker = object.totalFilledTaker !== undefined && object.totalFilledTaker !== null ? Long.fromValue(object.totalFilledTaker) : Long.UZERO;
     message.affiliateRevShare = object.affiliateRevShare !== undefined && object.affiliateRevShare !== null ? Long.fromValue(object.affiliateRevShare) : Long.UZERO;
+    message.makerBuilderFee = object.makerBuilderFee !== undefined && object.makerBuilderFee !== null ? Long.fromValue(object.makerBuilderFee) : Long.UZERO;
+    message.takerBuilderFee = object.takerBuilderFee !== undefined && object.takerBuilderFee !== null ? Long.fromValue(object.takerBuilderFee) : Long.UZERO;
+    message.makerBuilderAddress = object.makerBuilderAddress ?? "";
+    message.takerBuilderAddress = object.takerBuilderAddress ?? "";
     return message;
   }
 
