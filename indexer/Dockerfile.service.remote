@@ -48,7 +48,7 @@ COPY ./services/${service}/.env* ./services/${service}/
 
 # Copy service dependency patches
 RUN mkdir -p ./services/${service}/patches
-COPY ./services/${service}/patches ./services/${service}/patches
+COPY ./services/${service}/patches* ./services/${service}/patches/ || echo "No patches found"
 
 # Copy container start script
 COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
