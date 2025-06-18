@@ -365,51 +365,18 @@ func (k Keeper) PlaceStatefulOrder(
 			return err
 		}
 
-<<<<<<< HEAD
 		// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
 		if !order.IsConditionalOrder() {
 			updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
 				ctx,
 				order.OrderId.SubaccountId,
 				types.PendingOpenOrder{
-					RemainingQuantums: order.GetBaseQuantums(),
-					IsBuy:             order.IsBuy(),
-					Subticks:          order.GetOrderSubticks(),
-					ClobPairId:        order.GetClobPairId(),
+					RemainingQuantums:     order.GetBaseQuantums(),
+					IsBuy:                 order.IsBuy(),
+					Subticks:              order.GetOrderSubticks(),
+					ClobPairId:            order.GetClobPairId(),
+					BuilderCodeParameters: order.GetBuilderCodeParameters(),
 				},
-=======
-	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
-	// These checks should happen for all non-internal orders and for generated TWAP suborders.
-	// For market TWAP orders where subticks are 0, use the oracle price for collateralization check.
-	if order.IsCollateralCheckRequired(isInternalOrder) {
-		order_subticks, err := k.GetSubticksForCollatCheck(ctx, order)
-		if err != nil {
-			return err
-		}
-
-		updateResult := k.AddOrderToOrderbookSubaccountUpdatesCheck(
-			ctx,
-			order.OrderId.SubaccountId,
-			types.PendingOpenOrder{
-				RemainingQuantums:     order.GetBaseQuantums(),
-				IsBuy:                 order.IsBuy(),
-				Subticks:              order_subticks,
-				ClobPairId:            order.GetClobPairId(),
-				BuilderCodeParameters: order.GetBuilderCodeParameters(),
-			},
-		)
-
-		if !updateResult.IsSuccess() {
-			err := types.ErrStatefulOrderCollateralizationCheckFailed
-			if updateResult.IsIsolatedSubaccountError() {
-				err = types.ErrWouldViolateIsolatedSubaccountConstraints
-			}
-			return errorsmod.Wrapf(
-				err,
-				"PlaceStatefulOrder: order (%+v), result (%s)",
-				order,
-				updateResult.String(),
->>>>>>> b38aa70f ([CT-1362] Support Builder Codes in the Protocol (#2837))
 			)
 
 			if !updateResult.IsSuccess() {
