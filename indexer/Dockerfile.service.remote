@@ -5,7 +5,7 @@ ARG service
 
 ARG DD_GIT_REPOSITORY_URL
 ARG DD_GIT_COMMIT_SHA
-ENV DD_GIT_REPOSITORY_URL=${DD_GIT_REPOSITORY_URL} 
+ENV DD_GIT_REPOSITORY_URL=${DD_GIT_REPOSITORY_URL}
 ENV DD_GIT_COMMIT_SHA=${DD_GIT_COMMIT_SHA}
 
 RUN apk add --no-cache bash jq aws-cli
@@ -45,6 +45,10 @@ COPY ./packages/notifications/build ./packages/notifications/build/
 COPY ./services/${service}/package.json ./services/${service}/
 COPY ./services/${service}/build ./services/${service}/build
 COPY ./services/${service}/.env* ./services/${service}/
+
+# Copy service dependency patches
+RUN mkdir -p ./services/${service}/patches
+COPY ./services/${service}/patches ./services/${service}/patches
 
 # Copy container start script
 COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
