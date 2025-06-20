@@ -211,8 +211,7 @@ export class MessageForwarder {
     errProps.channels = channels;
 
     // Decode the message based on the topic
-    const messagesToForward = getMessagesToForward(topic, message);
-    for (const messageToForward of messagesToForward) {
+    for (const messageToForward of getMessagesToForward(topic, message)) {
       const startForwardMessage: number = Date.now();
       this.forwardMessage(messageToForward);
       const end: number = Date.now();
