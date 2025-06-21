@@ -1386,6 +1386,8 @@ func New(
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
 		clobmoduletypes.ModuleName,
+		// Outage troubleshooting
+		perpetualsmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderEndBlockers(

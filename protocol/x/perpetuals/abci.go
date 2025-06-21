@@ -2,6 +2,7 @@ package perpetuals
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
@@ -15,4 +16,15 @@ func EndBlocker(ctx sdk.Context, k types.PerpetualsKeeper) {
 	// first so that new samples are processed in `MaybeProcessNewFundingTickEpoch`.
 	k.MaybeProcessNewFundingSampleEpoch(ctx)
 	k.MaybeProcessNewFundingTickEpoch(ctx)
+}
+
+func PrepareCheckState(
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+) {
+	// Outage troubleshooting:
+	msgAddPremiumVotes := keeper.GetAddPremiumVotes(ctx)
+	if msgAddPremiumVotes == nil {
+		keeper.Logger(ctx).Error("MsgAddPremiumVotes is be nil")
+	}
 }
