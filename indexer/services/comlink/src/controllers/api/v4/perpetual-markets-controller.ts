@@ -10,6 +10,7 @@ import {
   LiquidityTiersFromDatabase,
   PerpetualMarketWithMarket,
 } from '@dydxprotocol-indexer/postgres';
+import { OrderbookMidPricesCache } from '@dydxprotocol-indexer/redis';
 import express from 'express';
 import {
   matchedData,
@@ -21,12 +22,13 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { redisClient } from '../../../helpers/redis/redis-controller';
 import { NotFoundError } from '../../../lib/errors';
 import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { CheckLimitSchema, CheckTickerOptionalQuerySchema } from '../../../lib/validation/schemas';
+import { CheckLimitSchema, CheckTickerOptionalQuerySchema, CheckTickersQuerySchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { perpetualMarketToResponseObject } from '../../../request-helpers/request-transformer';
@@ -129,6 +131,28 @@ class PerpetualMarketsController extends Controller {
         .value(),
     };
   }
+
+  @Get('/orderbookMidPrices')
+  async getOrderbookMidPrices(
+    @Query() tickers?: string[],
+  ): Promise<{ [ticker: string]: string }> {
+    // Convert tickers to an array if it's a single string
+    const tickersArray: string[] = typeof tickers === 'string' ? [tickers] : tickers || [];
+
+    const perpetualMarkets: PerpetualMarketFromDatabase[] = tickersArray.length > 0
+      ? await PerpetualMarketTable.findAll({ tickers: tickersArray }, [])
+      : await PerpetualMarketTable.findAll({}, []);
+
+    const orderbookMidPrices: { [ticker: string]: string } = {};
+    for (const market of perpetualMarkets) {
+      const price = await OrderbookMidPricesCache.getMedianPrice(redisClient, market.ticker);
+      if (price !== null) {
+        orderbookMidPrices[market.ticker] = price;
+      }
+    }
+
+    return orderbookMidPrices;
+  }
 }
 
 router.get(
@@ -167,6 +191,38 @@ router.get(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.get_perpetual_markets.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.get(
+  '/orderbookMidPrices',
+  rateLimiterMiddleware(getReqRateLimiter),
+  ...CheckTickersQuerySchema,
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    const { tickers }: { tickers?: string[] } = matchedData(req);
+
+    try {
+      const controller: PerpetualMarketsController = new PerpetualMarketsController();
+      const response = await controller.getOrderbookMidPrices(tickers);
+
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'PerpetualMarketController GET /orderbookMidPrices',
+        'OrderbookMidPrices error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_orderbook_mid_prices.timing`,
         Date.now() - start,
       );
     }

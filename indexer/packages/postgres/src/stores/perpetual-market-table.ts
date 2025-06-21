@@ -32,6 +32,7 @@ export async function findAll(
     id,
     marketId,
     liquidityTierId,
+    tickers,
     limit,
     joinWithMarkets = false,
   }: PerpetualMarketQueryConfig & { joinWithMarkets?: boolean },
@@ -59,6 +60,10 @@ export async function findAll(
 
   if (marketId !== undefined) {
     baseQuery = baseQuery.whereIn(PerpetualMarketColumns.marketId, marketId);
+  }
+
+  if (tickers !== undefined) {
+    baseQuery = baseQuery.whereIn(PerpetualMarketColumns.ticker, tickers);
   }
 
   if (liquidityTierId !== undefined) {

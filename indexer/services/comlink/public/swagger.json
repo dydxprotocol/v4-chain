@@ -3161,6 +3161,41 @@
         ]
       }
     },
+    "/perpetualMarkets/orderbookMidPrices": {
+      "get": {
+        "operationId": "GetOrderbookMidPrices",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {},
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tickers",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
     "/perpetualPositions": {
       "get": {
         "operationId": "ListPositions",
