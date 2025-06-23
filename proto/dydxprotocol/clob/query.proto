@@ -15,6 +15,8 @@ import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
 import "dydxprotocol/subaccounts/streaming.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/prices/streaming.proto";
+import "cosmos_proto/cosmos.proto";
+
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
@@ -57,6 +59,11 @@ service Query {
     option (google.api.http).get = "/dydxprotocol/clob/liquidations_config";
   }
 
+  rpc StatefulOrderCount(QueryStatefulOrderCountRequest)
+      returns (QueryStatefulOrderCountResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/stateful_order_count/{owner}/{subaccount_number}";
+  }
+
   // Queries the stateful order for a given order id.
   rpc StatefulOrder(QueryStatefulOrderRequest)
       returns (QueryStatefulOrderResponse) {}
@@ -73,6 +80,19 @@ service Query {
   // such as order placements, updates, and fills.
   rpc StreamOrderbookUpdates(StreamOrderbookUpdatesRequest)
       returns (stream StreamOrderbookUpdatesResponse);
+}
+
+// QueryStatefulOrderCountRequest is a request message for StatefulOrderCount.
+message QueryStatefulOrderCountRequest {
+  // Flattened subaccount id for easier REST queries.
+  string owner = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  uint32 subaccount_number = 2;
+}
+
+// QueryStatefulOrderCountResponse is a response message for StatefulOrderCount.
+message QueryStatefulOrderCountResponse {
+  // Count of stateful orders.
+  uint32 count = 1;
 }
 
 // QueryGetClobPairRequest is request type for the ClobPair method.
