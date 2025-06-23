@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats, STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
 import {
   PersistentCacheTable,
   PersistentCacheKeys,
@@ -49,6 +49,12 @@ async function processFundingPaymentUpdate(
       value: end,
     },
     { txId },
+  );
+
+  stats.gauge(
+    'update-funding-payments.last_processed_height',
+    parseInt(end, 10),
+    STATS_NO_SAMPLING,
   );
 }
 
@@ -113,9 +119,14 @@ export default async function runTask(): Promise<void> {
     message: `Found ${fundingUpdates.length} funding index updates to process.`,
   });
 
+  stats.gauge(
+    'update-funding-payments.num_funding_index_updates_to_process',
+    fundingUpdates.length,
+    STATS_NO_SAMPLING,
+  );
+
   // Get unique heights from funding updates.
   const fundingHeights = [...fundingUpdates.map((update) => update.effectiveAtHeight)];
-
   for (let i = 0; i < fundingHeights.length; i += 1) {
     const txId: number = await Transaction.start();
     try {
