@@ -297,12 +297,19 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 		}
 	}
 
+	debugAddress := map[string]struct{}{
+		"dydx1m93n2784h9cz3rsppn9au97cs6c5p2rkc03fq2": {},
+		"dydx1celra8fx7ecggspe7e3mekc8ee7j59s7canaf3": {},
+	}
+
 	untriggeredConditionalOrders := k.GetAllUntriggeredConditionalOrders(ctx)
 	for _, order := range untriggeredConditionalOrders {
 		subaccountId := order.GetSubaccountId()
-		if subaccountId.Owner == "dydx1m93n2784h9cz3rsppn9au97cs6c5p2rkc03fq2" {
+		if _, exists := debugAddress[subaccountId.Owner]; exists {
 			k.Logger(ctx).Info(
-				"!!!! Debug: untriggered conditional order in state for dydx1m93n2784h9cz3rsppn9au97cs6c5p2rkc03fq2",
+				"!!!! Debug: untriggered conditional order in state",
+				"owner",
+				subaccountId.Owner,
 				"subaccount_id",
 				subaccountId,
 				"order",
@@ -315,9 +322,11 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 	statefulOrders := k.GetAllStatefulOrders(ctx)
 	for _, order := range statefulOrders {
 		subaccountId := order.GetSubaccountId()
-		if subaccountId.Owner == "dydx1m93n2784h9cz3rsppn9au97cs6c5p2rkc03fq2" {
+		if _, exists := debugAddress[subaccountId.Owner]; exists {
 			k.Logger(ctx).Info(
-				"!!!! Debug: initializing stateful order for dydx1m93n2784h9cz3rsppn9au97cs6c5p2rkc03fq2",
+				"!!!! Debug: initializing stateful order",
+				"owner",
+				subaccountId.Owner,
 				"subaccount_id",
 				subaccountId,
 				"order",
