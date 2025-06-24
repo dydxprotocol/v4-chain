@@ -18,6 +18,7 @@ alice_address = "dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4"
 bob_address = "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs"
 mainnet_node = "https://dydx-ops-rpc.kingnodes.com:443"
 mainnet_chain = "dydx-mainnet-1"
+PROPOSAL_STATUS_PASSED = 3
 
 def get_proposal_id(node, chain):
     cmd = [
@@ -49,7 +50,9 @@ def vote_for(node, chain, proposal_id, person):
         "--fees=5000000000000000adv4tnt",
         "--yes"
     ]
-    subprocess.run(cmd)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise Exception(f"Failed to vote: {result.stderr}")
 
 def make_alice_authority(node, chain):
     print("Making alice an authority")
@@ -108,7 +111,9 @@ def make_alice_authority(node, chain):
         "--yes"
     ]
     
-    subprocess.run(cmd)
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise Exception(f"Failed to submit proposal: {result.stderr}")
     # delete the temporary file
     os.remove(tmp_file_path)
     print("voting for alice to be an authority")
@@ -135,7 +140,7 @@ def make_alice_authority(node, chain):
     with tempfile.NamedTemporaryFile(mode='w', suffix='.json') as tmp_file:
         subprocess.run(cmd, stdout=tmp_file)
         result = load_yml(tmp_file.name)
-        if result['proposal']['status'] == 3:
+        if result['proposal']['status'] == PROPOSAL_STATUS_PASSED:
             print("proposal passed, alice is now an authority")
             return True
         else:
@@ -213,73 +218,75 @@ def main():
     make_alice_authority(args.node, args.chain_id)
     # determine what markets we need
     temp_dir = tempfile.mkdtemp()
-    sync_market_map(temp_dir, args.node, args.chain_id)
-    toAdd = markets_to_add(temp_dir)
-    counter = 0
-    for name, market_data in toAdd.items():
-        if market_data['marketmap'] is not None:
-            # 3 retries for each market.
-            for i in range(3):
-                try:
-                    # Execute the marketmap create-markets command
-                    print(f"Adding {name} to market map")
-                    cmd = [
-                        "dydxprotocold",
-                        "tx",
-                        "marketmap",
-                        "create-markets",
-                        f"--create-markets={json.dumps(market_data['marketmap'])}",
-                        "--node=https://validator.v4staging.dydx.exchange:443",
-                        "--chain-id=dydxprotocol-testnet", 
-                        "--from=alice",
-                        "--keyring-backend=test",
-                        "--fees=5000000000000000adv4tnt", 
-                        "--yes"
-                    ]
-                    
-                    result = subprocess.run(cmd, capture_output=True, text=True)
-                    if result.returncode != 0:
-                        raise Exception(f"Failed to add {name} to market map")
-                    print("stdout:", result.stdout)
-                    print("stderr:", result.stderr)
-                    print("returncode:", result.returncode)
-                    print("waiting 5 seconds for market to be created")
-                    time.sleep(5)
-                    print("market created, launching market")
-                    # no use checking the error log here, it will not fail here.
-                    print("Launching market: ", market_data['marketmap']['ticker']['currency_pair']['Base'] + '-' + market_data['marketmap']['ticker']['currency_pair']['Quote'])
-                    
-                    cmd = [
-                        "dydxprotocold",
-                        "tx", 
-                        "listing",
-                        "create-market",
-                        market_data['marketmap']['ticker']['currency_pair']['Base'] + '-' + market_data['marketmap']['ticker']['currency_pair']['Quote'],
-                        alice_address,
-                        "--from=alice", # bob has a decent amount of native tokens in subaccount 0 for gas. 
-                        "--node=https://validator.v4staging.dydx.exchange:443",
-                        "--chain-id=dydxprotocol-testnet",
-                        "--keyring-backend=test",
-                        "--fees=11270250000000000adv4tnt",
-                        "--gas=auto",
-                        "--yes"
-                    ]
-                    
-                    result = subprocess.run(cmd, capture_output=True, text=True)
-                    if result.returncode != 0:
-                        raise Exception(f"Failed to launch {name}")
-                    print("stdout:", result.stdout)
-                    print("stderr:", result.stderr)
-                    print("returncode:", result.returncode)
-                    time.sleep(2)
-                    counter += 1
-                    break
-                except Exception as e:
-                    print(e)    
-                    print(f"got exception, retrying {i+1} time(s)")
-        if counter >= args.number_markets:
-            break
-    shutil.rmtree(temp_dir)
+    try: 
+        sync_market_map(temp_dir, args.node, args.chain_id)
+        toAdd = markets_to_add(temp_dir)
+        counter = 0
+        for name, market_data in toAdd.items():
+            if market_data['marketmap'] is not None:
+                # 3 retries for each market.
+                for i in range(3):
+                    try:
+                        # Execute the marketmap create-markets command
+                        print(f"Adding {name} to market map")
+                        cmd = [
+                            "dydxprotocold",
+                            "tx",
+                            "marketmap",
+                            "create-markets",
+                            f"--create-markets={json.dumps(market_data['marketmap'])}",
+                            "--node=https://validator.v4staging.dydx.exchange:443",
+                            "--chain-id=dydxprotocol-testnet", 
+                            "--from=alice",
+                            "--keyring-backend=test",
+                            "--fees=5000000000000000adv4tnt", 
+                            "--yes"
+                        ]
+                        
+                        result = subprocess.run(cmd, capture_output=True, text=True)
+                        if result.returncode != 0:
+                            raise Exception(f"Failed to add {name} to market map")
+                        print("stdout:", result.stdout)
+                        print("stderr:", result.stderr)
+                        print("returncode:", result.returncode)
+                        print("waiting 5 seconds for market to be created")
+                        time.sleep(5)
+                        print("market created, launching market")
+                        # no use checking the error log here, it will not fail here.
+                        print("Launching market: ", market_data['marketmap']['ticker']['currency_pair']['Base'] + '-' + market_data['marketmap']['ticker']['currency_pair']['Quote'])
+                        
+                        cmd = [
+                            "dydxprotocold",
+                            "tx", 
+                            "listing",
+                            "create-market",
+                            market_data['marketmap']['ticker']['currency_pair']['Base'] + '-' + market_data['marketmap']['ticker']['currency_pair']['Quote'],
+                            alice_address,
+                            "--from=alice", # bob has a decent amount of native tokens in subaccount 0 for gas. 
+                            "--node=https://validator.v4staging.dydx.exchange:443",
+                            "--chain-id=dydxprotocol-testnet",
+                            "--keyring-backend=test",
+                            "--fees=11270250000000000adv4tnt",
+                            "--gas=auto",
+                            "--yes"
+                        ]
+                        
+                        result = subprocess.run(cmd, capture_output=True, text=True)
+                        if result.returncode != 0:
+                            raise Exception(f"Failed to launch {name}")
+                        print("stdout:", result.stdout)
+                        print("stderr:", result.stderr)
+                        print("returncode:", result.returncode)
+                        time.sleep(2)
+                        counter += 1
+                        break
+                    except Exception as e:
+                        print(e)    
+                        print(f"got exception, retrying {i+1} time(s)")
+            if counter >= args.number_markets:
+                break
+    finally:
+        shutil.rmtree(temp_dir)
 
 if __name__ == "__main__":
     main()
