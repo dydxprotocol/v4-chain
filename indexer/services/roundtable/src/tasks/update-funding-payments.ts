@@ -53,7 +53,7 @@ async function processFundingPaymentUpdate(
     { txId },
   );
 
-  stats.gauge(`${config.SERVICE_NAME}.last_processed_height`, parseInt(end, 10));
+  stats.gauge(`${config.SERVICE_NAME}.update_funding_payments.last_processed_height`, parseInt(end, 10));
 }
 
 /**
@@ -118,7 +118,7 @@ export default async function runTask(): Promise<void> {
   });
 
   stats.gauge(
-    `${config.SERVICE_NAME}.num_funding_index_updates_to_process`,
+    `${config.SERVICE_NAME}.update_funding_payments.num_funding_index_updates_to_process`,
     fundingUpdates.length,
   );
 
