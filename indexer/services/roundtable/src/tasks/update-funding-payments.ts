@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { logger, stats, STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   PersistentCacheTable,
   PersistentCacheKeys,
@@ -10,6 +10,8 @@ import {
   FundingIndexUpdatesTable,
   Ordering,
 } from '@dydxprotocol-indexer/postgres';
+
+import config from '../config';
 
 const defaultLastHeight: string = '0';
 
@@ -30,7 +32,7 @@ async function processFundingPaymentUpdate(
   // Skip processing if no new blocks to process
   if (parseInt(end, 10) <= parseInt(start, 10)) {
     logger.info({
-      at: 'update-funding-payments#processFundingPaymentUpdate',
+      at: `${config.SERVICE_NAME}#processFundingPaymentUpdate`,
       message: `No new blocks to process. Current: ${end}, Last: ${start}`,
     });
     return;
@@ -51,11 +53,7 @@ async function processFundingPaymentUpdate(
     { txId },
   );
 
-  stats.gauge(
-    'update-funding-payments.last_processed_height',
-    parseInt(end, 10),
-    STATS_NO_SAMPLING,
-  );
+  stats.gauge('update-funding-payments.last_processed_height', parseInt(end, 10));
 }
 
 /**
@@ -70,7 +68,7 @@ async function getLastProcessedHeight(): Promise<string> {
   );
   if (!lastCache) {
     logger.info({
-      at: 'update-funding-payments#getLastProcessedHeight',
+      at: `${config.SERVICE_NAME}#getLastProcessedHeight`,
       message: `No previous ${PersistentCacheKeys.FUNDING_PAYMENTS_LAST_PROCESSED_HEIGHT} found in persistent cache table. Will use default value: ${defaultLastHeight}`,
     });
     return defaultLastHeight;
@@ -92,7 +90,7 @@ async function getLastProcessedHeight(): Promise<string> {
  * @returns void
  */
 export default async function runTask(): Promise<void> {
-  const at: string = 'update-funding-payments#runTask';
+  const at: string = `${config.SERVICE_NAME}#runTask`;
   logger.info({ at, message: 'Starting task' });
 
   // Load funding payments SQL script.
@@ -122,7 +120,6 @@ export default async function runTask(): Promise<void> {
   stats.gauge(
     'update-funding-payments.num_funding_index_updates_to_process',
     fundingUpdates.length,
-    STATS_NO_SAMPLING,
   );
 
   // Get unique heights from funding updates.
