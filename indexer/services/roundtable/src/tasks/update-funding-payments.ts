@@ -32,7 +32,7 @@ async function processFundingPaymentUpdate(
   // Skip processing if no new blocks to process
   if (parseInt(end, 10) <= parseInt(start, 10)) {
     logger.info({
-      at: `${config.SERVICE_NAME}#processFundingPaymentUpdate`,
+      at: 'update-funding-payments#processFundingPaymentUpdate',
       message: `No new blocks to process. Current: ${end}, Last: ${start}`,
     });
     return;
@@ -53,7 +53,7 @@ async function processFundingPaymentUpdate(
     { txId },
   );
 
-  stats.gauge('update-funding-payments.last_processed_height', parseInt(end, 10));
+  stats.gauge(`${config.SERVICE_NAME}.last_processed_height`, parseInt(end, 10));
 }
 
 /**
@@ -68,7 +68,7 @@ async function getLastProcessedHeight(): Promise<string> {
   );
   if (!lastCache) {
     logger.info({
-      at: `${config.SERVICE_NAME}#getLastProcessedHeight`,
+      at: 'update-funding-payments#getLastProcessedHeight',
       message: `No previous ${PersistentCacheKeys.FUNDING_PAYMENTS_LAST_PROCESSED_HEIGHT} found in persistent cache table. Will use default value: ${defaultLastHeight}`,
     });
     return defaultLastHeight;
@@ -90,7 +90,7 @@ async function getLastProcessedHeight(): Promise<string> {
  * @returns void
  */
 export default async function runTask(): Promise<void> {
-  const at: string = `${config.SERVICE_NAME}#runTask`;
+  const at: string = 'update-funding-payments#runTask';
   logger.info({ at, message: 'Starting task' });
 
   // Load funding payments SQL script.
@@ -118,7 +118,7 @@ export default async function runTask(): Promise<void> {
   });
 
   stats.gauge(
-    'update-funding-payments.num_funding_index_updates_to_process',
+    `${config.SERVICE_NAME}.num_funding_index_updates_to_process`,
     fundingUpdates.length,
   );
 
