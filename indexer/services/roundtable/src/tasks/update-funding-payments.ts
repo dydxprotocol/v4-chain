@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   PersistentCacheTable,
   PersistentCacheKeys,
@@ -10,6 +10,8 @@ import {
   FundingIndexUpdatesTable,
   Ordering,
 } from '@dydxprotocol-indexer/postgres';
+
+import config from '../config';
 
 const defaultLastHeight: string = '0';
 
@@ -50,6 +52,8 @@ async function processFundingPaymentUpdate(
     },
     { txId },
   );
+
+  stats.gauge(`${config.SERVICE_NAME}.update_funding_payments.last_processed_height`, parseInt(end, 10));
 }
 
 /**
@@ -113,9 +117,13 @@ export default async function runTask(): Promise<void> {
     message: `Found ${fundingUpdates.length} funding index updates to process.`,
   });
 
+  stats.gauge(
+    `${config.SERVICE_NAME}.update_funding_payments.num_funding_index_updates_to_process`,
+    fundingUpdates.length,
+  );
+
   // Get unique heights from funding updates.
   const fundingHeights = [...fundingUpdates.map((update) => update.effectiveAtHeight)];
-
   for (let i = 0; i < fundingHeights.length; i += 1) {
     const txId: number = await Transaction.start();
     try {
