@@ -328,7 +328,7 @@ importers:
       bech32: ^2.0.0
       dotenv-flow: ^3.2.0
       long: ^5.2.1
-      protobufjs: ^7.5.3
+      protobufjs: 7.5.3
       typescript: ^4.7.4
     dependencies:
       '@bufbuild/buf': 1.55.0
@@ -6403,7 +6403,7 @@ packages:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.2
-      '@types/node': 18.0.3
+      '@types/node': 22.5.4
       long: 4.0.0
     dev: true
 
@@ -13776,7 +13776,7 @@ packages:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.2
-      '@types/node': 18.19.31
+      '@types/node': 22.5.4
       long: 4.0.0
     dev: false
 
