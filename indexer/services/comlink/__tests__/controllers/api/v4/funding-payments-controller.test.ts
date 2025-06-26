@@ -29,6 +29,12 @@ describe('funding-payments-controller#V4', () => {
     createdAt: '2000-05-25T00:00:02.000Z',
   };
 
+  const fundingPayment4: FundingPaymentsCreateObject = {
+    ...testConstants.defaultFundingPayment,
+    createdAt: '2000-05-25T00:00:03.000Z',
+    payment: '0',
+  };
+
   const expectedFundingPayment1: FundingPaymentResponseObject = {
     createdAt: '2000-05-25T00:00:00.000Z',
     createdAtHeight: testConstants.defaultFundingPayment.createdAtHeight,
@@ -55,6 +61,12 @@ describe('funding-payments-controller#V4', () => {
     createdAt: '2000-05-25T00:00:02.000Z',
   };
 
+  const expectedFundingPayment4: FundingPaymentResponseObject = {
+    ...expectedFundingPayment1,
+    createdAt: '2000-05-25T00:00:03.000Z',
+    payment: '0',
+  };
+
   beforeAll(async () => {
     await dbHelpers.clearData();
     await dbHelpers.migrate();
@@ -68,6 +80,7 @@ describe('funding-payments-controller#V4', () => {
       FundingPaymentsTable.create(fundingPayment1),
       FundingPaymentsTable.create(fundingPayment2),
       FundingPaymentsTable.create(fundingPayment3),
+      FundingPaymentsTable.create(fundingPayment4),
     ]);
     await perpetualMarketRefresher.updatePerpetualMarkets();
   });
@@ -87,6 +100,7 @@ describe('funding-payments-controller#V4', () => {
       expect.arrayContaining([
         expect.objectContaining(expectedFundingPayment1),
         expect.objectContaining(expectedFundingPayment2),
+        expect.objectContaining(expectedFundingPayment4),
       ]),
     );
   });
@@ -113,6 +127,7 @@ describe('funding-payments-controller#V4', () => {
         expect.objectContaining(expectedFundingPayment1),
         expect.objectContaining(expectedFundingPayment2),
         expect.objectContaining(expectedFundingPayment3),
+        expect.objectContaining(expectedFundingPayment4),
       ]),
     );
   });
@@ -128,6 +143,7 @@ describe('funding-payments-controller#V4', () => {
         expect.objectContaining(expectedFundingPayment1),
         expect.objectContaining(expectedFundingPayment2),
         expect.objectContaining(expectedFundingPayment3),
+        expect.objectContaining(expectedFundingPayment4),
       ]),
     );
   });
@@ -183,6 +199,21 @@ describe('funding-payments-controller#V4', () => {
         param: 'subaccountNumber',
         value: 'invalid',
       }),
+    );
+  });
+
+  it('Get /fundingPayments with paymentGreaterThanOrEqual filter omits 0 payment', async () => {
+    const response: request.Response = await sendRequest({
+      type: RequestMethod.GET,
+      path: `/v4/fundingPayments?address=${testConstants.defaultAddress}&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&paymentGreaterThanOrEqual=0`,
+    });
+
+    expect(response.body.fundingPayments).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(expectedFundingPayment1),
+        expect.objectContaining(expectedFundingPayment2),
+        expect.objectContaining(expectedFundingPayment3),
+      ]),
     );
   });
 });

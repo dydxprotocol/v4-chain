@@ -22,6 +22,7 @@ export async function findAll(
     limit,
     subaccountId,
     perpetualId,
+    paymentGreaterThan,
     ticker,
     createdAtHeight,
     createdAt,
@@ -79,6 +80,10 @@ export async function findAll(
 
   if (createdAtHeight !== undefined) {
     baseQuery = baseQuery.where(FundingPaymentsColumns.createdAtHeight, createdAtHeight);
+  }
+
+  if (paymentGreaterThan !== undefined) {
+    baseQuery = baseQuery.where(FundingPaymentsColumns.payment, '>=', paymentGreaterThan);
   }
 
   if (createdAt !== undefined) {
