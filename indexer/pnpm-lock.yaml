@@ -145,7 +145,7 @@ importers:
       '@types/uuid': ^8.3.4
       dotenv-flow: ^3.2.0
       jest: ^28.1.2
-      kafkajs: ^2.2.4
+      kafkajs: 2.2.4
       lodash: ^4.17.21
       typescript: ^4.7.4
       uuid: ^8.3.2
