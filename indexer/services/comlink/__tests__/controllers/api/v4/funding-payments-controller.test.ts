@@ -122,7 +122,7 @@ describe('funding-payments-controller#V4', () => {
   it('Get /fundingPayments with ticker filter', async () => {
     const response: request.Response = await sendRequest({
       type: RequestMethod.GET,
-      path: `/v4/fundingPayments?address=${testConstants.defaultAddress}&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&ticker=${testConstants.defaultPerpetualMarket.ticker}&showZeroPayments=true`,
+      path: `/v4/fundingPayments?address=${testConstants.defaultAddress}&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&ticker=${testConstants.defaultPerpetualMarket.ticker}&zeroPayments=true`,
     });
 
     expect(response.body.fundingPayments).toEqual(
@@ -133,7 +133,7 @@ describe('funding-payments-controller#V4', () => {
   it('Get /fundingPayments with createdOnOrAfter filter', async () => {
     const response: request.Response = await sendRequest({
       type: RequestMethod.GET,
-      path: `/v4/fundingPayments?address=${testConstants.defaultAddress}&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&createdOnOrAfter=${fundingPayment1.createdAt}&showZeroPayments=true`,
+      path: `/v4/fundingPayments?address=${testConstants.defaultAddress}&subaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&createdOnOrAfter=${fundingPayment1.createdAt}&zeroPayments=true`,
     });
 
     expect(response.body.fundingPayments).toEqual(
@@ -150,7 +150,7 @@ describe('funding-payments-controller#V4', () => {
   it('Get /fundingPayments/parentSubaccount', async () => {
     const response: request.Response = await sendRequest({
       type: RequestMethod.GET,
-      path: `/v4/fundingPayments/parentSubaccount?address=${testConstants.defaultAddress}&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&showZeroPayments=true`,
+      path: `/v4/fundingPayments/parentSubaccount?address=${testConstants.defaultAddress}&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&zeroPayments=true`,
     });
 
     expect(response.body.fundingPayments).toEqual(
@@ -167,13 +167,13 @@ describe('funding-payments-controller#V4', () => {
   it('Gets /fundingPayments/parentSubaccount with pagination', async () => {
     const response: request.Response = await sendRequest({
       type: RequestMethod.GET,
-      path: `/v4/fundingPayments/parentSubaccount?address=${testConstants.defaultAddress}&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&showZeroPayments=true&limit=1&page=1`,
+      path: `/v4/fundingPayments/parentSubaccount?address=${testConstants.defaultAddress}&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&zeroPayments=true&limit=1&page=1`,
     });
 
     expect(response.body.fundingPayments.length).toEqual(1);
     const response2: request.Response = await sendRequest({
       type: RequestMethod.GET,
-      path: `/v4/fundingPayments/parentSubaccount?address=${testConstants.defaultAddress}&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&showZeroPayments=true&limit=1&page=2`,
+      path: `/v4/fundingPayments/parentSubaccount?address=${testConstants.defaultAddress}&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}&zeroPayments=true&limit=1&page=2`,
     });
 
     expect(response2.body.fundingPayments.length).toEqual(1);
