@@ -99,6 +99,7 @@ export enum QueryableField {
   ADDRESS_IN_WALLETS_TABLE = 'addressInWalletsTable',
   PARENT_SUBACCOUNT = 'parentSubaccount',
   DISTINCT_FIELDS = 'distinctFields',
+  ZERO_PAYMENTS = 'zeroPayments',
 }
 
 export interface QueryConfig {
@@ -377,4 +378,5 @@ export interface FundingPaymentsQueryConfig extends QueryConfig {
   [QueryableField.CREATED_ON_OR_AFTER_HEIGHT]?: string,
   [QueryableField.CREATED_ON_OR_AFTER]?: string,
   [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
+  [QueryableField.ZERO_PAYMENTS]?: boolean,
 }
