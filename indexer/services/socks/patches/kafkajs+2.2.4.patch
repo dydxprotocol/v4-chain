@@ -182,6 +182,75 @@ index 641fdd2..c0b9d91 100644
  
    return {
      magicByte,
+diff --git a/node_modules/kafkajs/src/protocol/recordBatch/v0/decoder.js b/node_modules/kafkajs/src/protocol/recordBatch/v0/decoder.js
+index 1d3e204..f7172a4 100644
+--- a/node_modules/kafkajs/src/protocol/recordBatch/v0/decoder.js
++++ b/node_modules/kafkajs/src/protocol/recordBatch/v0/decoder.js
+@@ -8,6 +8,19 @@ const TIMESTAMP_TYPE_FLAG_MASK = 0x8
+ const TRANSACTIONAL_FLAG_MASK = 0x10
+ const CONTROL_FLAG_MASK = 0x20
+ 
++const codecCache = new Map();
++
++function getCodec(attributes) {
++  const cachedCodec = codecCache.get(attributes)
++  // if the codec is null, look it up and cache it and return it
++  if (cachedCodec === null) {
++    const lookupCodec = lookupCodecByAttributes(attributes)
++    this.cache.set(attributes, lookupCodec)
++    return lookupCodec
++  };
++}
++
++
+ /**
+  * v0
+  * RecordBatch =>
+@@ -65,28 +78,22 @@ module.exports = async fetchDecoder => {
+       ? TimestampTypes.LOG_APPEND_TIME
+       : TimestampTypes.CREATE_TIME
+ 
+-  const codec = lookupCodecByAttributes(attributes)
+-
+-  const recordContext = {
+-    firstOffset,
+-    firstTimestamp,
+-    partitionLeaderEpoch,
+-    inTransaction,
+-    isControlBatch,
+-    lastOffsetDelta,
+-    producerId,
+-    producerEpoch,
+-    firstSequence,
+-    maxTimestamp,
+-    timestampType,
+-  }
+-
+-  const records = await decodeRecords(codec, decoder, { ...recordContext, magicByte })
+-
+-  return {
+-    ...recordContext,
+-    records,
+-  }
++  var recordContext = Object.create(null)
++  recordContext.firstOffset = firstOffset
++  recordContext.firstTimestamp = firstTimestamp
++  recordContext.partitionLeaderEpoch = partitionLeaderEpoch
++  recordContext.inTransaction = inTransaction
++  recordContext.isControlBatch = isControlBatch
++  recordContext.lastOffsetDelta = lastOffsetDelta
++  recordContext.producerId = producerId
++  recordContext.producerEpoch = producerEpoch
++  recordContext.firstSequence = firstSequence
++  recordContext.maxTimestamp = maxTimestamp
++  recordContext.timestampType = timestampType
++  recordContext.magicByte = magicByte
++  recordContext.records = await decodeRecords(getCodec(attributes), decoder, recordContext)
++
++  return recordContext
+ }
+ 
+ const decodeRecords = async (codec, recordsDecoder, recordContext) => {
 diff --git a/node_modules/kafkajs/src/protocol/recordBatch/v0/index.js b/node_modules/kafkajs/src/protocol/recordBatch/v0/index.js
 index 599a940..4d754a9 100644
 --- a/node_modules/kafkajs/src/protocol/recordBatch/v0/index.js
