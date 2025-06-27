@@ -28,6 +28,7 @@ import {
   CheckSubaccountSchema,
   CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   CheckTickerOptionalQuerySchema,
+  CheckShowZeroPaymentsOptionalParamSchema,
 } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -50,6 +51,7 @@ export class FundingPaymentController extends Controller {
       @Query() ticker?: string,
       @Query() afterOrAt?: IsoString,
       @Query() page?: number,
+      @Query() showZeroPayments?: boolean,
   ): Promise<FundingPaymentResponse> {
     const subaccountId: string = SubaccountTable.uuid(
       address,
@@ -62,6 +64,7 @@ export class FundingPaymentController extends Controller {
       createdOnOrAfter: afterOrAt,
       limit,
       page,
+      paymentNonZero: !showZeroPayments,
     };
 
     const {
@@ -73,7 +76,7 @@ export class FundingPaymentController extends Controller {
       queryConfig,
       [QueryableField.LIMIT],
       page !== undefined
-        ? { orderBy: [['createdAtHeight', Ordering.DESC]] }
+        ? { orderBy: [['createdAtHeight', Ordering.DESC], ['createdAt', Ordering.DESC]] }
         : undefined,
     );
 
@@ -103,6 +106,7 @@ export class FundingPaymentController extends Controller {
       @Query() limit?: number,
       @Query() afterOrAt?: IsoString,
       @Query() page?: number,
+      @Query() showZeroPayments?: boolean,
   ): Promise<FundingPaymentResponse> {
     const childIdtoSubaccountNumber: Record<string, number> = {};
     getChildSubaccountNums(parentSubaccountNumber).forEach(
@@ -121,6 +125,7 @@ export class FundingPaymentController extends Controller {
       createdOnOrAfter: afterOrAt,
       limit,
       page,
+      paymentNonZero: !showZeroPayments,
     };
 
     const {
@@ -132,7 +137,7 @@ export class FundingPaymentController extends Controller {
       queryConfig,
       [QueryableField.LIMIT],
       page !== undefined
-        ? { orderBy: [['createdAtHeight', Ordering.DESC]] }
+        ? { orderBy: [['createdAtHeight', Ordering.DESC], ['createdAt', Ordering.DESC]] }
         : undefined,
     );
 
@@ -159,13 +164,14 @@ router.get(
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   ...CheckPaginationSchema,
   ...CheckTickerOptionalQuerySchema,
+  ...CheckShowZeroPaymentsOptionalParamSchema,
   handleValidationErrors,
   complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     const {
-      address, subaccountNumber, limit, ticker, createdOnOrAfter, page,
+      address, subaccountNumber, limit, ticker, createdOnOrAfter, page, showZeroPayments,
     } = matchedData(req) as {
       address: string,
       subaccountNumber: number,
@@ -173,6 +179,7 @@ router.get(
       ticker?: string,
       createdOnOrAfter?: IsoString,
       page?: number,
+      showZeroPayments?: boolean,
     };
 
     try {
@@ -184,6 +191,7 @@ router.get(
         ticker,
         createdOnOrAfter,
         page,
+        showZeroPayments,
       );
 
       return res.send(response);
@@ -211,19 +219,21 @@ router.get(
   ...CheckLimitAndCreatedBeforeOrAtAndOnOrAfterSchema,
   ...CheckPaginationSchema,
   ...CheckTickerOptionalQuerySchema,
+  ...CheckShowZeroPaymentsOptionalParamSchema,
   handleValidationErrors,
   complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     const {
-      address, parentSubaccountNumber, limit, page, createdOnOrAfter,
+      address, parentSubaccountNumber, limit, page, createdOnOrAfter, showZeroPayments,
     } = matchedData(req) as {
       address: string,
       parentSubaccountNumber: number,
       limit?: number,
       createdOnOrAfter?: IsoString,
       page?: number,
+      showZeroPayments?: boolean,
     };
 
     const parentSubaccountNum: number = +parentSubaccountNumber;
@@ -236,6 +246,7 @@ router.get(
         limit,
         createdOnOrAfter,
         page,
+        showZeroPayments,
       );
 
       return res.send(response);

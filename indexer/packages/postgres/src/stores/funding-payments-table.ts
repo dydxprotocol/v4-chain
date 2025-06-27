@@ -22,7 +22,7 @@ export async function findAll(
     limit,
     subaccountId,
     perpetualId,
-    paymentGreaterThan,
+    paymentNonZero,
     ticker,
     createdAtHeight,
     createdAt,
@@ -43,6 +43,7 @@ export async function findAll(
   verifyAllRequiredFields(
     {
       limit,
+      page,
       subaccountId,
       perpetualId,
       ticker,
@@ -82,8 +83,8 @@ export async function findAll(
     baseQuery = baseQuery.where(FundingPaymentsColumns.createdAtHeight, createdAtHeight);
   }
 
-  if (paymentGreaterThan !== undefined) {
-    baseQuery = baseQuery.where(FundingPaymentsColumns.payment, '>=', paymentGreaterThan);
+  if (paymentNonZero !== undefined && paymentNonZero) {
+    baseQuery = baseQuery.where(FundingPaymentsColumns.payment, '!=', '0');
   }
 
   if (createdAt !== undefined) {
