@@ -26,7 +26,7 @@ index dded584..50492b4 100644
            })
          } catch (e) {
 diff --git a/node_modules/kafkajs/src/protocol/decoder.js b/node_modules/kafkajs/src/protocol/decoder.js
-index e2834d0..7e846e4 100644
+index e2834d0..fcabd2f 100644
 --- a/node_modules/kafkajs/src/protocol/decoder.js
 +++ b/node_modules/kafkajs/src/protocol/decoder.js
 @@ -90,8 +90,7 @@ module.exports = class Decoder {
@@ -35,7 +35,7 @@ index e2834d0..7e846e4 100644
  
 -    const stringBuffer = this.buffer.slice(this.offset, this.offset + byteLength)
 -    const value = stringBuffer.toString('utf8')
-+    const value = this.buffer.subarray(this.offset, this.offset + byteLength).toString('utf8')
++    const value = this.buffer.toString('utf8', this.offset, this.offset + byteLength)
      this.offset += byteLength
      return value
    }
@@ -45,7 +45,7 @@ index e2834d0..7e846e4 100644
  
 -    const stringBuffer = this.buffer.slice(this.offset, this.offset + byteLength)
 -    const value = stringBuffer.toString('utf8')
-+    const value = this.buffer.subarray(this.offset, this.offset + byteLength).toString('utf8', 0, byteLength)
++    const value = this.buffer.toString('utf8', this.offset, this.offset + byteLength)
      this.offset += byteLength
      return value
    }
@@ -56,7 +56,7 @@ index e2834d0..7e846e4 100644
 -    const stringBuffer = this.buffer.slice(this.offset, this.offset + byteLength - 1)
 -    const value = stringBuffer.toString('utf8')
 -
-+    const value = this.buffer.subarray(this.offset, this.offset + byteLength - 1).toString('utf8')
++    const value = this.buffer.toString('utf8', this.offset, this.offset + byteLength - 1)
      this.offset += byteLength - 1
      return value
    }
@@ -137,6 +137,24 @@ index 290bb97..cb381a9 100644
 +    return this.view().toJSON()
    }
  }
+diff --git a/node_modules/kafkajs/src/protocol/recordBatch/header/v0/decoder.js b/node_modules/kafkajs/src/protocol/recordBatch/header/v0/decoder.js
+index a1f56d5..076bef8 100644
+--- a/node_modules/kafkajs/src/protocol/recordBatch/header/v0/decoder.js
++++ b/node_modules/kafkajs/src/protocol/recordBatch/header/v0/decoder.js
+@@ -1,4 +1,8 @@
+-module.exports = decoder => ({
+-  key: decoder.readVarIntString(),
+-  value: decoder.readVarIntBytes(),
+-})
++function decoder(decoder) {
++  const value = Object.create(null)
++  value.key = decoder.readVarIntString()
++  value.value = decoder.readVarIntBytes()
++  return value
++}
++
++module.exports = decoder
+\ No newline at end of file
 diff --git a/node_modules/kafkajs/src/protocol/recordBatch/record/v0/decoder.js b/node_modules/kafkajs/src/protocol/recordBatch/record/v0/decoder.js
 index 641fdd2..c0b9d91 100644
 --- a/node_modules/kafkajs/src/protocol/recordBatch/record/v0/decoder.js
