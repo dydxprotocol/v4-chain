@@ -7,7 +7,7 @@ import {
   ERR_WRITE_STREAM_DESTROYED,
   WEBSOCKET_NOT_OPEN,
 } from '../lib/constants';
-import { IncomingMessage, OutgoingMessage, WebsocketEvents } from '../types';
+import { IncomingMessage, OutgoingMessage, WebsocketEvent } from '../types';
 
 function incrementSendErrorStats(instanceId: string, error: WssError): void {
   stats.increment(
@@ -67,7 +67,7 @@ export class Wss {
 
     this.started = true;
 
-    this.wss.on(WebsocketEvents.ERROR, (error: Error) => {
+    this.wss.on(WebsocketEvent.ERROR, (error: Error) => {
       logger.error({
         at: 'wss#onError',
         message: `WebSocket server threw error: ${error.message}`,
@@ -80,12 +80,12 @@ export class Wss {
         at: 'wss#onListening',
         message: 'Listening for websocket connections',
       });
-      this.wss.on(WebsocketEvents.LISTENING, resolve);
+      this.wss.on(WebsocketEvent.LISTENING, resolve);
     });
   }
 
   public onConnection(callback: (ws: WebSocket, req: IncomingMessage) => void): void {
-    this.wss.on(WebsocketEvents.CONNECTION, callback);
+    this.wss.on(WebsocketEvent.CONNECTION, callback);
   }
 
   public async close(): Promise<void> {
@@ -100,7 +100,7 @@ export class Wss {
     this.closed = true;
 
     await new Promise((resolve) => {
-      this.wss.on(WebsocketEvents.CLOSE, resolve);
+      this.wss.on(WebsocketEvent.CLOSE, resolve);
     });
   }
 }
