@@ -22,7 +22,7 @@ export async function findAll(
     limit,
     subaccountId,
     perpetualId,
-    paymentNonZero,
+    zeroPayments,
     ticker,
     createdAtHeight,
     createdAt,
@@ -83,7 +83,7 @@ export async function findAll(
     baseQuery = baseQuery.where(FundingPaymentsColumns.createdAtHeight, createdAtHeight);
   }
 
-  if (paymentNonZero !== undefined && paymentNonZero) {
+  if (zeroPayments !== undefined && !zeroPayments) {
     baseQuery = baseQuery.where(FundingPaymentsColumns.payment, '!=', '0');
   }
 

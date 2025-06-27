@@ -199,14 +199,14 @@ const checkTickerOptionalQuerySchema: ParamSchema = {
   optional: true,
 };
 
-const checkShowZeroPaymentsOptionalParamSchema: ParamSchema = {
+const checkZeroPaymentsOptionalParamSchema: ParamSchema = {
   in: 'query',
   optional: true,
   isBoolean: true,
 };
 
-export const CheckShowZeroPaymentsOptionalParamSchema = checkSchema({
-  showZeroPayments: checkShowZeroPaymentsOptionalParamSchema,
+export const CheckZeroPaymentsOptionalParamSchema = checkSchema({
+  zeroPayments: checkZeroPaymentsOptionalParamSchema,
 });
 
 export const CheckTickerParamSchema = checkSchema({
