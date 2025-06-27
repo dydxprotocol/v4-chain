@@ -206,7 +206,7 @@ const checkZeroPaymentsOptionalParamSchema: ParamSchema = {
 };
 
 export const CheckZeroPaymentsOptionalParamSchema = checkSchema({
-  zeroPayments: checkZeroPaymentsOptionalParamSchema,
+  showZeroPayments: checkZeroPaymentsOptionalParamSchema,
 });
 
 export const CheckTickerParamSchema = checkSchema({

@@ -76,7 +76,7 @@ export class FundingPaymentController extends Controller {
       queryConfig,
       [QueryableField.LIMIT],
       page !== undefined
-        ? { orderBy: [['createdAtHeight', Ordering.DESC], ['createdAt', Ordering.DESC]] }
+        ? { orderBy: [['createdAtHeight', Ordering.DESC]] }
         : undefined,
     );
 
@@ -137,7 +137,7 @@ export class FundingPaymentController extends Controller {
       queryConfig,
       [QueryableField.LIMIT],
       page !== undefined
-        ? { orderBy: [['createdAtHeight', Ordering.DESC], ['createdAt', Ordering.DESC]] }
+        ? { orderBy: [['createdAtHeight', Ordering.DESC]] }
         : undefined,
     );
 
@@ -171,7 +171,7 @@ router.get(
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     const {
-      address, subaccountNumber, limit, ticker, createdOnOrAfter, page, zeroPayments,
+      address, subaccountNumber, limit, ticker, createdOnOrAfter, page, showZeroPayments,
     } = matchedData(req) as {
       address: string,
       subaccountNumber: number,
@@ -179,7 +179,7 @@ router.get(
       ticker?: string,
       createdOnOrAfter?: IsoString,
       page?: number,
-      zeroPayments?: boolean,
+      showZeroPayments?: boolean,
     };
 
     try {
@@ -191,7 +191,7 @@ router.get(
         ticker,
         createdOnOrAfter,
         page,
-        zeroPayments,
+        showZeroPayments,
       );
 
       return res.send(response);
@@ -226,14 +226,14 @@ router.get(
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     const {
-      address, parentSubaccountNumber, limit, page, createdOnOrAfter, zeroPayments,
+      address, parentSubaccountNumber, limit, page, createdOnOrAfter, showZeroPayments,
     } = matchedData(req) as {
       address: string,
       parentSubaccountNumber: number,
       limit?: number,
       createdOnOrAfter?: IsoString,
       page?: number,
-      zeroPayments?: boolean,
+      showZeroPayments?: boolean,
     };
 
     const parentSubaccountNum: number = +parentSubaccountNumber;
@@ -246,7 +246,7 @@ router.get(
         limit,
         createdOnOrAfter,
         page,
-        zeroPayments,
+        showZeroPayments,
       );
 
       return res.send(response);

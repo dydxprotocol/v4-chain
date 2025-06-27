@@ -83,7 +83,7 @@ export async function findAll(
     baseQuery = baseQuery.where(FundingPaymentsColumns.createdAtHeight, createdAtHeight);
   }
 
-  if (zeroPayments !== undefined && !zeroPayments) {
+  if (zeroPayments === undefined || !zeroPayments) {
     baseQuery = baseQuery.where(FundingPaymentsColumns.payment, '!=', '0');
   }
 
