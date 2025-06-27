@@ -1376,6 +1376,7 @@ fetch(`${baseURL}/fundingPayments?address=string&subaccountNumber=0.1`,
 |ticker|query|string|false|none|
 |afterOrAt|query|[IsoString](#schemaisostring)|false|none|
 |page|query|number(double)|false|none|
+|zeroPayments|query|boolean|false|none|
 
 > Example responses
 
@@ -1473,6 +1474,7 @@ fetch(`${baseURL}/fundingPayments/parentSubaccount?address=string&parentSubaccou
 |limit|query|number(double)|false|none|
 |afterOrAt|query|[IsoString](#schemaisostring)|false|none|
 |page|query|number(double)|false|none|
+|zeroPayments|query|boolean|false|none|
 
 > Example responses
 

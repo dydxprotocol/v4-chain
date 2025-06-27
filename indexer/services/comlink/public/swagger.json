@@ -2381,6 +2381,14 @@
               "format": "double",
               "type": "number"
             }
+          },
+          {
+            "in": "query",
+            "name": "zeroPayments",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ]
       }
@@ -2443,6 +2451,14 @@
             "schema": {
               "format": "double",
               "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "zeroPayments",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           }
         ]
