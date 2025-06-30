@@ -25,4 +25,9 @@ export const ECS_SERVICE_NAMES: EcsServiceNames[] = [
   EcsServiceNames.VULCAN,
 ];
 
+export const ECS_DB_WRITER_SERVICE_NAMES: EcsServiceNames[] = [
+  EcsServiceNames.ENDER,
+  EcsServiceNames.ROUNDTABLE,
+];
+
 export const SERVICE_NAME_SUFFIX: string = 'service-container';
