@@ -59,13 +59,16 @@ export async function handler(
 
   const region = event.region;
 
+  const ecs: ECSClient = new ECSClient({ region });
   try {
     // Initialize clients
-    const ecs: ECSClient = new ECSClient({ region });
     const lambda: LambdaClient = new LambdaClient({ region });
     const ecr: ECRClient = new ECRClient({ region });
     // 1. Upgrade Bazooka
     await upgradeBazooka(lambda, ecr, event);
+
+    // 1.a. Stop ender prior to upgrading database
+    await stopEnder(ecs, event);
 
     // 2. Run db migration in Bazooka,
     // boolean flag used to determine if new kafka topics should be created
@@ -90,6 +93,7 @@ export async function handler(
     // 4. Upgrade all ECS Services (comlink, ender, roundtable, socks, vulcan)
     await upgradeEcsServices(ecs, event, taskDefinitionArnMap);
   } catch (error) {
+    await startEnder(ecs, event);
     logger.error({
       at: 'index#handler',
       message: 'Error upgrading services',
@@ -421,6 +425,50 @@ async function waitForTaskDefinitionToRegister(
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function stopEnder(
+  ecs: ECSClient,
+  event: APIGatewayEvent & AuxoEventJson,
+): Promise<void> {
+  logger.info({
+    at: 'index#stopEnder',
+    message: 'Stopping ender',
+  });
+  const ecsPrefix: string = `${event.prefix}-indexer-${event.regionAbbrev}`;
+  const response: UpdateServiceCommandOutput = await ecs.send(new UpdateServiceCommand({
+    cluster: `${ecsPrefix}-cluster`,
+    service: `${ecsPrefix}-ender`,
+    desiredCount: 0,
+  }));
+
+  logger.info({
+    at: 'index#stopEnder',
+    message: 'Stopped ender',
+    response,
+  });
+}
+
+async function startEnder(
+  ecs: ECSClient,
+  event: APIGatewayEvent & AuxoEventJson,
+): Promise<void> {
+  logger.info({
+    at: 'index#startEnder',
+    message: 'Starting ender',
+  });
+  const ecsPrefix: string = `${event.prefix}-indexer-${event.regionAbbrev}`;
+  const response: UpdateServiceCommandOutput = await ecs.send(new UpdateServiceCommand({
+    cluster: `${ecsPrefix}-cluster`,
+    service: `${ecsPrefix}-ender`,
+    desiredCount: 1,
+  }));
+
+  logger.info({
+    at: 'index#startEnder',
+    message: 'Started ender',
+    response,
+  });
 }
 
 async function upgradeEcsServices(
