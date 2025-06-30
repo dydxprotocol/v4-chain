@@ -34,6 +34,7 @@ import {
   BAZOOKA_DB_MIGRATION_PAYLOAD,
   BAZOOKA_LAMBDA_FUNCTION_NAME,
   ECS_SERVICE_NAMES,
+  ECS_DB_WRITER_SERVICE_NAMES,
   SERVICE_NAME_SUFFIX,
 } from './constants';
 import { AuxoEventJson, EcsServiceNames, TaskDefinitionArnMap } from './types';
@@ -60,6 +61,12 @@ export async function handler(
   const region = event.region;
 
   const ecs: ECSClient = new ECSClient({ region });
+  const dbWriterTaskCounts: _.Dictionary<number> = await getRunningTaskCounts(
+    ecs,
+    event,
+    ECS_DB_WRITER_SERVICE_NAMES,
+  );
+
   try {
     // Initialize clients
     const lambda: LambdaClient = new LambdaClient({ region });
@@ -68,7 +75,7 @@ export async function handler(
     await upgradeBazooka(lambda, ecr, event);
 
     // 1.a. Stop ender prior to upgrading database
-    await stopEnder(ecs, event);
+    await stopDBWriterServices(ecs, event, ECS_DB_WRITER_SERVICE_NAMES);
 
     // 2. Run db migration in Bazooka,
     // boolean flag used to determine if new kafka topics should be created
@@ -93,13 +100,14 @@ export async function handler(
     // 4. Upgrade all ECS Services (comlink, ender, roundtable, socks, vulcan)
     await upgradeEcsServices(ecs, event, taskDefinitionArnMap);
   } catch (error) {
-    await startEnder(ecs, event);
     logger.error({
       at: 'index#handler',
       message: 'Error upgrading services',
       error,
     });
     throw error;
+  } finally {
+    await startDBWriterServices(ecs, event, dbWriterTaskCounts);
   }
 
   return {
@@ -297,8 +305,9 @@ async function createNewEcsTaskDefinition(
     taskDefinition,
   );
 
-  const serviceContainerDefinition:
-  ContainerDefinition = taskDefinition.containerDefinitions![serviceContainerDefinitionIndex];
+  const serviceContainerDefinition: ContainerDefinition = taskDefinition.containerDefinitions![
+    serviceContainerDefinitionIndex
+  ];
   if (serviceContainerDefinition.image === undefined) {
     logger.error({
       at: 'index#createNewEcsTaskDefinition',
@@ -319,23 +328,24 @@ async function createNewEcsTaskDefinition(
     message: 'Registering new task definition',
     taskDefinitionName,
   });
-  const registerResult:
-  RegisterTaskDefinitionCommandOutput = await ecs.send(new RegisterTaskDefinitionCommand({
-    family: taskDefinition.family,
-    taskRoleArn: taskDefinition.taskRoleArn,
-    executionRoleArn: taskDefinition.executionRoleArn,
-    networkMode: taskDefinition.networkMode,
-    containerDefinitions: updatedContainerDefinitions,
-    volumes: taskDefinition.volumes,
-    placementConstraints: taskDefinition.placementConstraints,
-    requiresCompatibilities: taskDefinition.requiresCompatibilities,
-    cpu: taskDefinition.cpu,
-    memory: taskDefinition.memory,
-    ipcMode: taskDefinition.ipcMode,
-    proxyConfiguration: taskDefinition.proxyConfiguration,
-    inferenceAccelerators: taskDefinition.inferenceAccelerators,
-    runtimePlatform: taskDefinition.runtimePlatform,
-  }));
+  const registerResult: RegisterTaskDefinitionCommandOutput = await ecs.send(
+    new RegisterTaskDefinitionCommand({
+      family: taskDefinition.family,
+      taskRoleArn: taskDefinition.taskRoleArn,
+      executionRoleArn: taskDefinition.executionRoleArn,
+      networkMode: taskDefinition.networkMode,
+      containerDefinitions: updatedContainerDefinitions,
+      volumes: taskDefinition.volumes,
+      placementConstraints: taskDefinition.placementConstraints,
+      requiresCompatibilities: taskDefinition.requiresCompatibilities,
+      cpu: taskDefinition.cpu,
+      memory: taskDefinition.memory,
+      ipcMode: taskDefinition.ipcMode,
+      proxyConfiguration: taskDefinition.proxyConfiguration,
+      inferenceAccelerators: taskDefinition.inferenceAccelerators,
+      runtimePlatform: taskDefinition.runtimePlatform,
+    }),
+  );
 
   if (registerResult.taskDefinition === undefined ||
     registerResult.taskDefinition.taskDefinitionArn === undefined
@@ -354,9 +364,8 @@ async function createNewEcsTaskDefinition(
 function getServiceContainerDefinitionIndex(
   taskDefinition: TaskDefinition,
 ): number {
-  const containerDefinitions:
-  ContainerDefinition[] | undefined = taskDefinition.containerDefinitions;
-  if (containerDefinitions === undefined || containerDefinitions.length === 0) {
+  const containers: ContainerDefinition[] | undefined = taskDefinition.containerDefinitions;
+  if (containers === undefined || containers.length === 0) {
     logger.error({
       at: 'index#getServiceTaskDefinition',
       message: 'No container definitions found in the task definition',
@@ -365,9 +374,9 @@ function getServiceContainerDefinitionIndex(
     throw new Error('No container definitions found in the task definition');
   }
 
-  const index: number = containerDefinitions.findIndex(
-    (containerDefinition: ContainerDefinition) => {
-      return _.endsWith(containerDefinition.name, SERVICE_NAME_SUFFIX);
+  const index: number = containers.findIndex(
+    (container: ContainerDefinition) => {
+      return _.endsWith(container.name, SERVICE_NAME_SUFFIX);
     },
   );
   if (index >= 0) {
@@ -377,7 +386,7 @@ function getServiceContainerDefinitionIndex(
   logger.error({
     at: 'index#getServiceTaskDefinition',
     message: 'No service container definition found in the task definition',
-    containerDefinitions,
+    containerDefinitions: containers,
   });
   throw new Error('No service container definition found in the task definition');
 }
@@ -390,8 +399,7 @@ async function waitForTaskDefinitionToRegister(
   ecs: ECSClient,
   registerResult: RegisterTaskDefinitionCommandOutput,
 ): Promise<void> {
-  const taskDefinition:
-  string = `${registerResult.taskDefinition!.family}:${registerResult.taskDefinition!.revision}`;
+  const taskDefinition: string = `${registerResult.taskDefinition!.family}:${registerResult.taskDefinition!.revision}`;
   for (let i = 0; i <= config.MAX_TASK_DEFINITION_WAIT_TIME_MS; i += config.SLEEP_TIME_MS) {
     const describeResult: DescribeTaskDefinitionCommandOutput = await ecs.send(
       new DescribeTaskDefinitionCommand({
@@ -427,47 +435,59 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function stopEnder(
+async function stopDBWriterServices(
   ecs: ECSClient,
   event: APIGatewayEvent & AuxoEventJson,
+  serviceNames: string[],
 ): Promise<void> {
   logger.info({
-    at: 'index#stopEnder',
-    message: 'Stopping ender',
+    at: 'index#stopDBWriterServices',
+    message: `Stopping database writer services: ${serviceNames}`,
   });
   const ecsPrefix: string = `${event.prefix}-indexer-${event.regionAbbrev}`;
-  const response: UpdateServiceCommandOutput = await ecs.send(new UpdateServiceCommand({
-    cluster: `${ecsPrefix}-cluster`,
-    service: `${ecsPrefix}-ender`,
-    desiredCount: 0,
-  }));
+  await Promise.all(
+    _.map(
+      serviceNames,
+      (serviceName: string) => ecs.send(new UpdateServiceCommand({
+        cluster: `${ecsPrefix}-cluster`,
+        service: `${ecsPrefix}-${serviceName}`,
+        desiredCount: 0,
+      }),
+      ),
+    ),
+  );
 
   logger.info({
-    at: 'index#stopEnder',
-    message: 'Stopped ender',
-    response,
+    at: 'index#stopDBWriterServices',
+    message: `Stopped database writer services: ${serviceNames}`,
   });
 }
 
-async function startEnder(
+async function startDBWriterServices(
   ecs: ECSClient,
   event: APIGatewayEvent & AuxoEventJson,
+  dbWriterTaskCounts: _.Dictionary<number>,
 ): Promise<void> {
   logger.info({
-    at: 'index#startEnder',
-    message: 'Starting ender',
+    at: 'index#startDBWriterServices',
+    message: `Starting database writer services: ${dbWriterTaskCounts.keys}`,
   });
   const ecsPrefix: string = `${event.prefix}-indexer-${event.regionAbbrev}`;
-  const response: UpdateServiceCommandOutput = await ecs.send(new UpdateServiceCommand({
-    cluster: `${ecsPrefix}-cluster`,
-    service: `${ecsPrefix}-ender`,
-    desiredCount: 1,
-  }));
+  await Promise.all(
+    _.map(
+      ECS_DB_WRITER_SERVICE_NAMES,
+      (serviceName: EcsServiceNames) => ecs.send(new UpdateServiceCommand({
+        cluster: `${ecsPrefix}-cluster`,
+        service: `${ecsPrefix}-ender`,
+        desiredCount: dbWriterTaskCounts[serviceName],
+      }),
+      ),
+    ),
+  );
 
   logger.info({
-    at: 'index#startEnder',
-    message: 'Started ender',
-    response,
+    at: 'index#startDBWriterServices',
+    message: `Started database writer services: ${dbWriterTaskCounts.keys}`,
   });
 }
 
@@ -572,4 +592,45 @@ async function upgradeEcsService(
     taskDefinitionArn,
     response,
   });
+}
+
+async function getRunningTaskCounts(
+  ecs: ECSClient,
+  event: APIGatewayEvent & AuxoEventJson,
+  serviceNames: string[],
+): Promise<_.Dictionary<number>> {
+  const ecsPrefix: string = `${event.prefix}-indexer-${event.regionAbbrev}`;
+  const response: DescribeServicesCommandOutput = await ecs.send(new DescribeServicesCommand({
+    cluster: `${ecsPrefix}-cluster`,
+    services: serviceNames,
+    include: [],
+  }));
+
+  if (response === undefined || response.services === undefined) {
+    logger.error({
+      at: 'index#getRunningTaskCounts',
+      message: `No services found: ${serviceNames}`,
+      serviceNames,
+      response,
+    });
+    throw new Error(`No services found: ${serviceNames}`);
+  }
+
+  const runningTaskCounts: _.Dictionary<number> = {};
+  for (const service of response.services) {
+    if (
+      service === undefined ||
+      service.runningCount === undefined ||
+      service.serviceName === undefined
+    ) {
+      logger.error({
+        at: 'index#getRunningTaskCounts',
+        message: `No running task count found for ${service}`,
+        service,
+      });
+      throw new Error(`No running task count found for ${service}`);
+    }
+    runningTaskCounts[service.serviceName] = service.runningCount;
+  }
+  return runningTaskCounts;
 }
