@@ -470,7 +470,7 @@ async function startDBWriterServices(
 ): Promise<void> {
   logger.info({
     at: 'index#startDBWriterServices',
-    message: `Starting database writer services: ${dbWriterTaskCounts.keys}`,
+    message: `Starting database writer services: ${Object.keys(dbWriterTaskCounts)}`,
   });
   const ecsPrefix: string = `${event.prefix}-indexer-${event.regionAbbrev}`;
   await Promise.all(
@@ -478,7 +478,7 @@ async function startDBWriterServices(
       ECS_DB_WRITER_SERVICE_NAMES,
       (serviceName: EcsServiceNames) => ecs.send(new UpdateServiceCommand({
         cluster: `${ecsPrefix}-cluster`,
-        service: `${ecsPrefix}-ender`,
+        service: `${ecsPrefix}-${serviceName}`,
         desiredCount: dbWriterTaskCounts[serviceName],
       }),
       ),
@@ -487,7 +487,7 @@ async function startDBWriterServices(
 
   logger.info({
     at: 'index#startDBWriterServices',
-    message: `Started database writer services: ${dbWriterTaskCounts.keys}`,
+    message: `Started database writer services: ${Object.keys(dbWriterTaskCounts)}`,
   });
 }
 
