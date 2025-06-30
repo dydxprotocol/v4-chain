@@ -470,7 +470,8 @@ async function startDBWriterServices(
 ): Promise<void> {
   logger.info({
     at: 'index#startDBWriterServices',
-    message: `Starting database writer services: ${Object.keys(dbWriterTaskCounts)}`,
+    message: 'Starting database writer services',
+    taskCounts: dbWriterTaskCounts,
   });
   const ecsPrefix: string = `${event.prefix}-indexer-${event.regionAbbrev}`;
   await Promise.all(
@@ -487,7 +488,8 @@ async function startDBWriterServices(
 
   logger.info({
     at: 'index#startDBWriterServices',
-    message: `Started database writer services: ${Object.keys(dbWriterTaskCounts)}`,
+    message: 'Started database writer services',
+    taskCounts: dbWriterTaskCounts,
   });
 }
 
@@ -636,7 +638,7 @@ async function getRunningTaskCounts(
       throw new Error(`No running task count found for ${service}`);
     }
     // Extract service name from full service name (e.g., 'prefix-indexer-region-ender' -> 'ender')
-    const shortServiceName = service.serviceName.split('-').pop()!;
+    const shortServiceName = service.serviceName.replace(`${ecsPrefix}-`, '');
     runningTaskCounts[shortServiceName] = service.runningCount;
   }
   return runningTaskCounts;
