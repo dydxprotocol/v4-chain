@@ -711,6 +711,7 @@ importers:
       '@types/node': ^18.0.3
       '@types/yargs': ^16.0.0
       big.js: ^6.0.2
+      csv-parse: ^5.6.0
       dotenv-flow: ^3.2.0
       jest: ^28.1.2
       kafkajs: ^2.2.4
@@ -727,6 +728,7 @@ importers:
       '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
       big.js: 6.2.1
+      csv-parse: 5.6.0
       dotenv-flow: 3.2.0
       kafkajs: 2.2.4
       lodash: 4.17.21
@@ -8561,6 +8563,10 @@ packages:
 
   /crypto-randomuuid/1.0.0:
     resolution: {integrity: sha512-/RC5F4l1SCqD/jazwUF6+t34Cd8zTSAGZ7rvvZu1whZUhD2a5MOGKjSGowoGcpj/cbVZk1ZODIooJEQQq3nNAA==}
+    dev: false
+
+  /csv-parse/5.6.0:
+    resolution: {integrity: sha512-l3nz3euub2QMg5ouu5U09Ew9Wf6/wQ8I++ch1loQ0ljmzhmfZYrH9fflS22i/PQEvsPvxCwxgz5q7UB8K1JO4Q==}
     dev: false
 
   /d/1.0.1:
