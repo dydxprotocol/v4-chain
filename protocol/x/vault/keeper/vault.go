@@ -125,7 +125,7 @@ func (k Keeper) GetSubaccountEquity(
 	return risk.NC, nil
 }
 
-// GetVaultInventory returns the inventory of a vault in a given perpeutal (in base quantums).
+// GetVaultInventoryInPerpetual returns the inventory of a vault in a given perpeutal (in base quantums).
 func (k Keeper) GetVaultInventoryInPerpetual(
 	ctx sdk.Context,
 	vaultId types.VaultId,
@@ -189,7 +189,7 @@ func (k Keeper) GetVaultClobPerpAndMarket(
 	return clobPair, perpetual, marketParam, marketPrice, nil
 }
 
-// DecommissionVaults decommissions all deactivated vaults that have non-positive equities.
+// DecommissionNonPositiveEquityVaults decommissions all deactivated vaults that have non-positive equities.
 func (k Keeper) DecommissionNonPositiveEquityVaults(
 	ctx sdk.Context,
 ) {
