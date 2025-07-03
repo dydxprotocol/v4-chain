@@ -19,101 +19,16 @@ import { KafkaMessage } from 'kafkajs';
 
 import { TOPIC_TO_CHANNEL, V4_BLOCK_HEIGHT_ID, V4_MARKETS_ID } from '../lib/constants';
 import { InvalidForwardMessageError, InvalidTopicError } from '../lib/errors';
-import { Channel, MessageToForward, WebsocketTopics } from '../types';
+import { Channel, MessageToForward, WebsocketTopic } from '../types';
 
-export function getChannels(topic: string): Channel[] {
-  if (!Object.values(WebsocketTopics)
+export function getChannels(topic: WebsocketTopic): Channel[] {
+  if (!Object.values(WebsocketTopic)
     .some((topicName: string) => { return topicName === topic; })) {
     throw new InvalidTopicError(topic);
   }
 
-  const topicEnum: WebsocketTopics = <WebsocketTopics> topic;
+  const topicEnum: WebsocketTopic = <WebsocketTopic> topic;
   return TOPIC_TO_CHANNEL[topicEnum];
-}
-
-// TODO: remove this function and fix all tests to use getMessagesToForward instead
-export function getMessageToForward(
-  channel: Channel,
-  message: KafkaMessage,
-): MessageToForward {
-  if (!message || !message.value) {
-    throw new InvalidForwardMessageError('Got empty kafka message');
-  }
-
-  switch (channel) {
-    case Channel.V4_ACCOUNTS: {
-      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(message.value);
-      return {
-        channel,
-        id: getSubaccountMessageId(subaccountMessage),
-        contents: JSON.parse(subaccountMessage.contents),
-        version: subaccountMessage.version,
-      };
-    }
-    case Channel.V4_CANDLES: {
-      const candleMessage: CandleMessage = CandleMessage.decode(message.value);
-      if (candleMessage.resolution === CandleMessage_Resolution.UNRECOGNIZED) {
-        throw new InvalidForwardMessageError(`Unrecognized candle resolution: ${candleMessage.resolution}`);
-      }
-      return {
-        channel,
-        id: getCandleMessageId(candleMessage),
-        contents: JSON.parse(candleMessage.contents),
-        version: candleMessage.version,
-      };
-    }
-    case Channel.V4_MARKETS: {
-      const marketMessage: MarketMessage = MarketMessage.decode(message.value);
-      return {
-        channel,
-        id: V4_MARKETS_ID,
-        contents: JSON.parse(marketMessage.contents),
-        version: marketMessage.version,
-      };
-    }
-    case Channel.V4_ORDERBOOK: {
-      const orderbookMessage: OrderbookMessage = OrderbookMessage.decode(message.value);
-      return {
-        channel,
-        id: getTickerOrThrow(orderbookMessage.clobPairId),
-        contents: JSON.parse(orderbookMessage.contents),
-        version: orderbookMessage.version,
-      };
-    }
-    case Channel.V4_TRADES: {
-      const tradeMessage: TradeMessage = TradeMessage.decode(message.value);
-      return {
-        channel,
-        id: getTickerOrThrow(tradeMessage.clobPairId),
-        contents: JSON.parse(tradeMessage.contents),
-        version: tradeMessage.version,
-      };
-    }
-    case Channel.V4_PARENT_ACCOUNTS: {
-      const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(message.value);
-      return {
-        channel,
-        id: getParentSubaccountMessageId(subaccountMessage),
-        subaccountNumber: subaccountMessage.subaccountId!.number,
-        contents: getParentSubaccountContents(subaccountMessage),
-        version: subaccountMessage.version,
-      };
-    }
-    case Channel.V4_BLOCK_HEIGHT: {
-      const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(message.value);
-      return {
-        channel: Channel.V4_BLOCK_HEIGHT,
-        id: V4_BLOCK_HEIGHT_ID,
-        version: blockHeightMessage.version,
-        contents: {
-          blockHeight: blockHeightMessage.blockHeight,
-          time: blockHeightMessage.time,
-        },
-      };
-    }
-    default:
-      throw new InvalidForwardMessageError(`Unknown channel: ${channel}`);
-  }
 }
 
 export function getMessagesToForward(topic: string, message: KafkaMessage): MessageToForward[] {
@@ -122,7 +37,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
   }
 
   switch (topic) {
-    case WebsocketTopics.TO_WEBSOCKETS_CANDLES: {
+    case WebsocketTopic.TO_WEBSOCKETS_CANDLES: {
       const candleMessage: CandleMessage = CandleMessage.decode(message.value);
       return [{
         channel: Channel.V4_CANDLES,
@@ -131,7 +46,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
         version: candleMessage.version,
       }];
     }
-    case WebsocketTopics.TO_WEBSOCKETS_MARKETS: {
+    case WebsocketTopic.TO_WEBSOCKETS_MARKETS: {
       const marketMessage: MarketMessage = MarketMessage.decode(message.value);
       return [{
         channel: Channel.V4_MARKETS,
@@ -140,7 +55,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
         version: marketMessage.version,
       }];
     }
-    case WebsocketTopics.TO_WEBSOCKETS_ORDERBOOKS: {
+    case WebsocketTopic.TO_WEBSOCKETS_ORDERBOOKS: {
       const orderbookMessage: OrderbookMessage = OrderbookMessage.decode(message.value);
       return [{
         channel: Channel.V4_ORDERBOOK,
@@ -149,7 +64,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
         version: orderbookMessage.version,
       }];
     }
-    case WebsocketTopics.TO_WEBSOCKETS_TRADES: {
+    case WebsocketTopic.TO_WEBSOCKETS_TRADES: {
       const tradeMessage: TradeMessage = TradeMessage.decode(message.value);
       return [{
         channel: Channel.V4_TRADES,
@@ -158,7 +73,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
         version: tradeMessage.version,
       }];
     }
-    case WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS: {
+    case WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS: {
       const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(message.value);
       return [{
         channel: Channel.V4_ACCOUNTS,
@@ -174,7 +89,7 @@ export function getMessagesToForward(topic: string, message: KafkaMessage): Mess
         version: subaccountMessage.version,
       }];
     }
-    case WebsocketTopics.TO_WEBSOCKETS_BLOCK_HEIGHT: {
+    case WebsocketTopic.TO_WEBSOCKETS_BLOCK_HEIGHT: {
       const blockHeightMessage: BlockHeightMessage = BlockHeightMessage.decode(message.value);
       return [{
         channel: Channel.V4_BLOCK_HEIGHT,
@@ -232,10 +147,7 @@ function getParentSubaccountContents(msg: SubaccountMessage): SubaccountMessageC
     return contents;
   }
 
-  const senderAddress: string = contents.transfers.sender.address;
-  const recipientAddress: string = contents.transfers.recipient.address;
-
-  if (senderAddress !== recipientAddress) {
+  if (contents.transfers.sender.address !== contents.transfers.recipient.address) {
     return contents;
   }
 
