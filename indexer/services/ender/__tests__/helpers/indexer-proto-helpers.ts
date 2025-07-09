@@ -37,7 +37,7 @@ import {
   MarketColumns,
   UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
-import { getOrderIdHash, ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash, ORDER_FLAG_CONDITIONAL, ORDER_FLAG_TWAP } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   LiquidationOrderV1,
   MarketMessage,
@@ -752,6 +752,10 @@ function isConditionalOrder(order: OrderFromDatabase): boolean {
   return Number(order.orderFlags) === ORDER_FLAG_CONDITIONAL;
 }
 
+function isTwapOrder(order: OrderFromDatabase): boolean {
+  return Number(order.orderFlags) === ORDER_FLAG_TWAP;
+}
+
 export function expectOrderSubaccountKafkaMessage(
   producerSendMock: jest.SpyInstance,
   subaccountIdProto: IndexerSubaccountId,
@@ -768,6 +772,15 @@ export function expectOrderSubaccountKafkaMessage(
   let orderObject: OrderSubaccountMessageContents;
 
   if (isConditionalOrder(order)) {
+    orderObject = {
+      ...order!,
+      timeInForce: apiTranslations.orderTIFToAPITIF(order!.timeInForce),
+      postOnly: apiTranslations.isOrderTIFPostOnly(order!.timeInForce),
+      goodTilBlock: order!.goodTilBlock,
+      goodTilBlockTime: order!.goodTilBlockTime,
+      ticker,
+    };
+  } else if (isTwapOrder(order)) {
     orderObject = {
       ...order!,
       timeInForce: apiTranslations.orderTIFToAPITIF(order!.timeInForce),

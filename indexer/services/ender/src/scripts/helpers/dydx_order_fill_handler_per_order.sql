@@ -89,7 +89,7 @@ BEGIN
     builder_address = dydx_get_builder_address(fill_liquidity, event_data);
     affiliate_rev_share = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'affiliateRevShare') *
                                     power(10, asset_record."atomicResolution")::numeric);
-
+    fill_type = CASE WHEN (order_->'orderId'->>'orderFlags')::bigint = 256 THEN 'TWAP_SUBORDER' ELSE fill_type END;
     order_uuid = dydx_uuid_from_order_id(order_->'orderId');
     subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));
     order_side = dydx_from_protocol_order_side(order_->'side');
@@ -145,7 +145,7 @@ BEGIN
         INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
             "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
-            "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm")
+            "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight", "builderAddress", "feePpm", "duration", "interval", "priceTolerance")
         VALUES (order_record.*);
     END IF;
 
