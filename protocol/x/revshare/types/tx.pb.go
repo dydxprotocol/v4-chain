@@ -6,6 +6,10 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -14,9 +18,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -328,6 +329,156 @@ func (m *MsgUpdateUnconditionalRevShareConfigResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateUnconditionalRevShareConfigResponse proto.InternalMessageInfo
 
+// Message to set the order router revenue share
+type OrderRouterRevShares struct {
+	// The address of the order router.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// The share of the revenue to be paid to the order router.
+	SharePpm uint32 `protobuf:"varint,2,opt,name=share_ppm,json=sharePpm,proto3" json:"share_ppm,omitempty"`
+}
+
+func (m *OrderRouterRevShares) Reset()         { *m = OrderRouterRevShares{} }
+func (m *OrderRouterRevShares) String() string { return proto.CompactTextString(m) }
+func (*OrderRouterRevShares) ProtoMessage()    {}
+func (*OrderRouterRevShares) Descriptor() ([]byte, []int) {
+	return fileDescriptor_460d8062a262197e, []int{6}
+}
+func (m *OrderRouterRevShares) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OrderRouterRevShares) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OrderRouterRevShares.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OrderRouterRevShares) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OrderRouterRevShares.Merge(m, src)
+}
+func (m *OrderRouterRevShares) XXX_Size() int {
+	return m.Size()
+}
+func (m *OrderRouterRevShares) XXX_DiscardUnknown() {
+	xxx_messageInfo_OrderRouterRevShares.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OrderRouterRevShares proto.InternalMessageInfo
+
+func (m *OrderRouterRevShares) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *OrderRouterRevShares) GetSharePpm() uint32 {
+	if m != nil {
+		return m.SharePpm
+	}
+	return 0
+}
+
+// Governance message to create or update the order router revenue share
+type MsgSetOrderRouterRevShares struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// The order router rev shares to create or update.
+	OrderRouterRevShares []OrderRouterRevShares `protobuf:"bytes,2,rep,name=order_router_rev_shares,json=orderRouterRevShares,proto3" json:"order_router_rev_shares"`
+}
+
+func (m *MsgSetOrderRouterRevShares) Reset()         { *m = MsgSetOrderRouterRevShares{} }
+func (m *MsgSetOrderRouterRevShares) String() string { return proto.CompactTextString(m) }
+func (*MsgSetOrderRouterRevShares) ProtoMessage()    {}
+func (*MsgSetOrderRouterRevShares) Descriptor() ([]byte, []int) {
+	return fileDescriptor_460d8062a262197e, []int{7}
+}
+func (m *MsgSetOrderRouterRevShares) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetOrderRouterRevShares) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetOrderRouterRevShares.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetOrderRouterRevShares) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetOrderRouterRevShares.Merge(m, src)
+}
+func (m *MsgSetOrderRouterRevShares) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetOrderRouterRevShares) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetOrderRouterRevShares.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetOrderRouterRevShares proto.InternalMessageInfo
+
+func (m *MsgSetOrderRouterRevShares) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgSetOrderRouterRevShares) GetOrderRouterRevShares() []OrderRouterRevShares {
+	if m != nil {
+		return m.OrderRouterRevShares
+	}
+	return nil
+}
+
+// Response to MsgSetOrderRouterRevShares
+type MsgSetOrderRouterRevSharesResponse struct {
+}
+
+func (m *MsgSetOrderRouterRevSharesResponse) Reset() {
+	*m = MsgSetOrderRouterRevSharesResponse{}
+}
+func (m *MsgSetOrderRouterRevSharesResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgSetOrderRouterRevSharesResponse) ProtoMessage() {}
+func (*MsgSetOrderRouterRevSharesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_460d8062a262197e, []int{8}
+}
+func (m *MsgSetOrderRouterRevSharesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetOrderRouterRevSharesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetOrderRouterRevSharesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetOrderRouterRevSharesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetOrderRouterRevSharesResponse.Merge(m, src)
+}
+func (m *MsgSetOrderRouterRevSharesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetOrderRouterRevSharesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetOrderRouterRevSharesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetOrderRouterRevSharesResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgSetMarketMapperRevenueShare)(nil), "dydxprotocol.revshare.MsgSetMarketMapperRevenueShare")
 	proto.RegisterType((*MsgSetMarketMapperRevenueShareResponse)(nil), "dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse")
@@ -335,45 +486,54 @@ func init() {
 	proto.RegisterType((*MsgSetMarketMapperRevShareDetailsForMarketResponse)(nil), "dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse")
 	proto.RegisterType((*MsgUpdateUnconditionalRevShareConfig)(nil), "dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfig")
 	proto.RegisterType((*MsgUpdateUnconditionalRevShareConfigResponse)(nil), "dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfigResponse")
+	proto.RegisterType((*OrderRouterRevShares)(nil), "dydxprotocol.revshare.OrderRouterRevShares")
+	proto.RegisterType((*MsgSetOrderRouterRevShares)(nil), "dydxprotocol.revshare.MsgSetOrderRouterRevShares")
+	proto.RegisterType((*MsgSetOrderRouterRevSharesResponse)(nil), "dydxprotocol.revshare.MsgSetOrderRouterRevSharesResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/revshare/tx.proto", fileDescriptor_460d8062a262197e) }
 
 var fileDescriptor_460d8062a262197e = []byte{
-	// 515 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4b, 0xa9, 0x4c, 0xa9,
-	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x2f, 0x4a, 0x2d, 0x2b, 0xce, 0x48, 0x2c,
-	0x4a, 0xd5, 0x2f, 0xa9, 0xd0, 0x03, 0x0b, 0x0a, 0x89, 0x22, 0xcb, 0xeb, 0xc1, 0xe4, 0xa5, 0x24,
-	0x93, 0xf3, 0x8b, 0x73, 0xf3, 0x8b, 0xe3, 0xc1, 0x32, 0xfa, 0x10, 0x0e, 0x44, 0x87, 0x94, 0x38,
-	0x84, 0xa7, 0x9f, 0x5b, 0x9c, 0xae, 0x5f, 0x66, 0x08, 0xa2, 0xa0, 0x12, 0x22, 0xe9, 0xf9, 0xe9,
-	0xf9, 0x10, 0x0d, 0x20, 0x16, 0x54, 0x54, 0x09, 0xbb, 0x03, 0x0a, 0x12, 0x8b, 0x12, 0x73, 0x61,
-	0x46, 0xaa, 0x60, 0x57, 0x03, 0x63, 0x40, 0x54, 0x29, 0xed, 0x65, 0xe4, 0x92, 0xf3, 0x2d, 0x4e,
-	0x0f, 0x4e, 0x2d, 0xf1, 0x4d, 0x2c, 0xca, 0x06, 0x91, 0x05, 0x05, 0xa9, 0x45, 0x41, 0xa9, 0x65,
-	0xa9, 0x79, 0xa5, 0xa9, 0xc1, 0x20, 0x85, 0x42, 0x66, 0x5c, 0x9c, 0x89, 0xa5, 0x25, 0x19, 0xf9,
-	0x45, 0x99, 0x25, 0x95, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c, 0x4e, 0x12, 0x97, 0xb6, 0xe8, 0x8a,
-	0x40, 0x3d, 0xe0, 0x98, 0x92, 0x52, 0x94, 0x5a, 0x5c, 0x1c, 0x5c, 0x52, 0x94, 0x99, 0x97, 0x1e,
-	0x84, 0x50, 0x2a, 0x14, 0xcc, 0xc5, 0x06, 0x71, 0x90, 0x04, 0x93, 0x02, 0xa3, 0x06, 0xb7, 0x91,
-	0xa9, 0x1e, 0xd6, 0x60, 0xd1, 0xc3, 0x65, 0x71, 0x00, 0x58, 0xb3, 0x13, 0xcb, 0x89, 0x7b, 0xf2,
-	0x0c, 0x41, 0x50, 0xa3, 0xac, 0xf8, 0x9a, 0x9e, 0x6f, 0xd0, 0x42, 0x58, 0xa2, 0xa4, 0xc1, 0xa5,
-	0x86, 0xdf, 0xf9, 0x41, 0xa9, 0xc5, 0x05, 0xf9, 0x79, 0xc5, 0xa9, 0x4a, 0x8f, 0x19, 0xb9, 0xb4,
-	0xb0, 0x2a, 0x05, 0x2b, 0x73, 0x49, 0x2d, 0x49, 0xcc, 0xcc, 0x29, 0x76, 0xcb, 0x2f, 0x82, 0xc8,
-	0x92, 0xed, 0x6b, 0x69, 0x2e, 0xce, 0x5c, 0xb0, 0x09, 0xf1, 0x99, 0x29, 0x60, 0x8f, 0xf3, 0x06,
-	0x71, 0x40, 0x04, 0x3c, 0x53, 0x84, 0x02, 0xe0, 0x41, 0xc2, 0x0c, 0x0e, 0x12, 0x23, 0xe2, 0x82,
-	0x04, 0xd9, 0x85, 0x04, 0xc2, 0xc3, 0x84, 0xcb, 0x88, 0x78, 0x4f, 0xc2, 0xc3, 0xe6, 0x00, 0x23,
-	0x97, 0x8a, 0x6f, 0x71, 0x7a, 0x68, 0x41, 0x4a, 0x62, 0x49, 0x6a, 0x68, 0x5e, 0x72, 0x7e, 0x5e,
-	0x4a, 0x66, 0x49, 0x66, 0x7e, 0x5e, 0x62, 0x0e, 0x4c, 0xab, 0x73, 0x7e, 0x5e, 0x5a, 0x66, 0x3a,
-	0xd9, 0xa1, 0x12, 0xc0, 0xc5, 0x96, 0x0c, 0x36, 0x01, 0x9a, 0x16, 0x70, 0x79, 0x1c, 0x8f, 0xdd,
-	0x30, 0x8f, 0x43, 0xcc, 0xc1, 0xf0, 0xb8, 0x1e, 0x97, 0x0e, 0x31, 0x3e, 0x80, 0x79, 0xd9, 0xe8,
-	0x2f, 0x33, 0x17, 0xb3, 0x6f, 0x71, 0xba, 0xd0, 0x64, 0x46, 0x2e, 0x69, 0x7c, 0xa9, 0x1f, 0x67,
-	0xaa, 0xc5, 0x9b, 0xea, 0xa4, 0x6c, 0xc9, 0xd2, 0x06, 0x73, 0x9d, 0xd0, 0x76, 0x46, 0x2e, 0x75,
-	0x62, 0x53, 0xaa, 0x23, 0x29, 0x56, 0x61, 0x35, 0x42, 0xca, 0x93, 0x62, 0x23, 0xe0, 0x2e, 0x5f,
-	0xca, 0xc8, 0xa5, 0x48, 0x38, 0x1d, 0x59, 0xe3, 0xb6, 0x90, 0xa0, 0x66, 0x29, 0x67, 0x0a, 0x34,
-	0xc3, 0xdc, 0xe9, 0x14, 0x72, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9,
-	0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x56,
-	0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x28, 0x65, 0x68, 0x99, 0x89,
-	0x6e, 0x72, 0x46, 0x62, 0x66, 0x9e, 0x3e, 0x5c, 0xa4, 0x02, 0xa9, 0xf0, 0xaf, 0x2c, 0x48, 0x2d,
-	0x4e, 0x62, 0x03, 0x4b, 0x19, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0xaf, 0x6a, 0x66, 0x3f, 0x22,
-	0x06, 0x00, 0x00,
+	// 611 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x3f, 0x6f, 0xd3, 0x40,
+	0x1c, 0xcd, 0x11, 0x54, 0xe8, 0x55, 0x30, 0x58, 0x41, 0x0d, 0xa9, 0x64, 0x4a, 0x54, 0x20, 0x2a,
+	0xc4, 0x16, 0xa6, 0x30, 0x14, 0x31, 0x34, 0x41, 0x48, 0x1d, 0xa2, 0x46, 0x0e, 0x5d, 0x58, 0xac,
+	0xab, 0x7d, 0x5c, 0x2c, 0x62, 0x9f, 0x75, 0x77, 0x89, 0x92, 0x95, 0x4f, 0x80, 0xc4, 0x67, 0x60,
+	0x67, 0x40, 0x62, 0x42, 0x62, 0xec, 0x58, 0x31, 0xc1, 0x82, 0x50, 0x32, 0xf0, 0x29, 0x90, 0x90,
+	0xef, 0xec, 0x24, 0xa8, 0xce, 0x1f, 0xd2, 0x25, 0xb1, 0x7f, 0x7f, 0xde, 0xef, 0xbd, 0x77, 0xbe,
+	0x3b, 0xa8, 0x7b, 0x03, 0xaf, 0x1f, 0x31, 0x2a, 0xa8, 0x4b, 0x3b, 0x26, 0xc3, 0x3d, 0xde, 0x46,
+	0x0c, 0x9b, 0xa2, 0x6f, 0xc8, 0xa0, 0x76, 0x63, 0x3a, 0x6f, 0xa4, 0xf9, 0xd2, 0x4d, 0x97, 0xf2,
+	0x80, 0x72, 0x47, 0x66, 0x4c, 0xf5, 0xa2, 0x3a, 0x4a, 0x9b, 0xea, 0xcd, 0x0c, 0x38, 0x31, 0x7b,
+	0x0f, 0xe3, 0xbf, 0x24, 0x51, 0x20, 0x94, 0x50, 0xd5, 0x10, 0x3f, 0x25, 0xd1, 0x72, 0x36, 0x81,
+	0x08, 0x31, 0x14, 0xa4, 0x90, 0x3b, 0xd9, 0x35, 0xe9, 0x83, 0xaa, 0x2a, 0x7f, 0x01, 0x50, 0x6f,
+	0x70, 0xd2, 0xc2, 0xa2, 0x81, 0xd8, 0x9b, 0xf8, 0x37, 0x8a, 0x30, 0xb3, 0x71, 0x0f, 0x87, 0x5d,
+	0xdc, 0x8a, 0x0b, 0xb5, 0x27, 0x70, 0x1d, 0x75, 0x45, 0x9b, 0x32, 0x5f, 0x0c, 0x8a, 0x60, 0x1b,
+	0x54, 0xd6, 0x6b, 0xc5, 0x6f, 0x9f, 0xaa, 0x85, 0x44, 0xc0, 0x81, 0xe7, 0x31, 0xcc, 0x79, 0x4b,
+	0x30, 0x3f, 0x24, 0xf6, 0xa4, 0x54, 0x6b, 0xc1, 0x35, 0x45, 0xa8, 0x78, 0x69, 0x1b, 0x54, 0x36,
+	0xac, 0xc7, 0x46, 0xa6, 0x2d, 0xc6, 0xac, 0xc1, 0x4d, 0xd9, 0x5c, 0xbb, 0x7c, 0xfa, 0xf3, 0x56,
+	0xce, 0x4e, 0xa0, 0xf6, 0xaf, 0xbf, 0xfd, 0xfd, 0x71, 0x77, 0x32, 0xa4, 0x5c, 0x81, 0x77, 0xe7,
+	0xd3, 0xb7, 0x31, 0x8f, 0x68, 0xc8, 0x71, 0x79, 0x04, 0xe0, 0x6e, 0x66, 0xa9, 0x2c, 0x7b, 0x8e,
+	0x05, 0xf2, 0x3b, 0xfc, 0x05, 0x65, 0x2a, 0xbb, 0xb2, 0xea, 0x2d, 0xb8, 0x1e, 0x48, 0x04, 0xc7,
+	0xf7, 0xa4, 0xf0, 0x6b, 0xf6, 0x55, 0x15, 0x38, 0xf4, 0xb4, 0xe6, 0xd8, 0x92, 0xbc, 0xb4, 0xc4,
+	0x5a, 0xce, 0x92, 0x69, 0x86, 0x0b, 0xfc, 0xd8, 0x83, 0xd6, 0xf2, 0x22, 0xc7, 0xde, 0x7c, 0x05,
+	0x70, 0xa7, 0xc1, 0xc9, 0x71, 0xe4, 0x21, 0x81, 0x8f, 0x43, 0x97, 0x86, 0x9e, 0x2f, 0x7c, 0x1a,
+	0xa2, 0x4e, 0xda, 0x5a, 0xa7, 0xe1, 0x6b, 0x9f, 0xac, 0xec, 0x4a, 0x13, 0xae, 0xb9, 0x12, 0x21,
+	0xf9, 0x16, 0x66, 0x09, 0x9f, 0x33, 0x3b, 0x15, 0xae, 0x70, 0xce, 0x09, 0x37, 0xe0, 0x83, 0x65,
+	0x14, 0x8c, 0x25, 0x13, 0x58, 0x38, 0x62, 0x1e, 0x66, 0x36, 0xed, 0x8a, 0x89, 0x43, 0x5c, 0xb3,
+	0xe0, 0x15, 0xa4, 0x54, 0x2c, 0xd4, 0x97, 0x16, 0xc6, 0x6b, 0x2e, 0xe9, 0x3b, 0x51, 0x14, 0xa4,
+	0x6b, 0x2e, 0x03, 0xcd, 0x28, 0x28, 0xff, 0x00, 0xf0, 0x4e, 0x83, 0x93, 0x3a, 0xc3, 0x48, 0xe0,
+	0x23, 0xa6, 0x18, 0x66, 0x8e, 0x5e, 0xd5, 0xdc, 0x36, 0xdc, 0xa4, 0x31, 0x9e, 0xc3, 0x24, 0xa0,
+	0xc3, 0x70, 0xcf, 0x91, 0xe3, 0xe3, 0x9d, 0x97, 0xaf, 0x6c, 0x58, 0xf7, 0x67, 0xb8, 0x9d, 0xc5,
+	0x22, 0xb1, 0xb9, 0x40, 0x33, 0x72, 0xe7, 0x4c, 0x37, 0x61, 0x75, 0x29, 0x69, 0xa9, 0xeb, 0xd6,
+	0x9f, 0x3c, 0xcc, 0x37, 0x38, 0xd1, 0xde, 0x03, 0xb8, 0x35, 0xef, 0xcc, 0x99, 0x79, 0x56, 0xcc,
+	0xdd, 0xeb, 0xa5, 0x67, 0x2b, 0xb5, 0xa5, 0xec, 0xb4, 0xcf, 0x00, 0xde, 0x5b, 0xf6, 0x7c, 0x38,
+	0xf8, 0x9f, 0x51, 0x99, 0x10, 0xa5, 0xc3, 0x0b, 0x43, 0x8c, 0x99, 0x7f, 0x00, 0xf0, 0xf6, 0xe2,
+	0xdd, 0xfb, 0x74, 0xf6, 0xc0, 0x85, 0xcd, 0xa5, 0xfa, 0x05, 0x9a, 0x53, 0x9e, 0xb5, 0x97, 0xa7,
+	0x43, 0x1d, 0x9c, 0x0d, 0x75, 0xf0, 0x6b, 0xa8, 0x83, 0x77, 0x23, 0x3d, 0x77, 0x36, 0xd2, 0x73,
+	0xdf, 0x47, 0x7a, 0xee, 0xd5, 0x3e, 0xf1, 0x45, 0xbb, 0x7b, 0x62, 0xb8, 0x34, 0x30, 0xff, 0xb9,
+	0xb9, 0x7a, 0x7b, 0x55, 0xb7, 0x8d, 0xfc, 0xd0, 0x1c, 0x47, 0xfa, 0x53, 0x57, 0xee, 0x20, 0xc2,
+	0xfc, 0x64, 0x4d, 0xa6, 0x1e, 0xfd, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x3f, 0xc4, 0x20, 0x56, 0x98,
+	0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -443,6 +603,8 @@ type MsgServer interface {
 	SetMarketMapperRevShareDetailsForMarket(context.Context, *MsgSetMarketMapperRevShareDetailsForMarket) (*MsgSetMarketMapperRevShareDetailsForMarketResponse, error)
 	// UpdateUnconditionalRevShareConfig sets the unconditional revshare config
 	UpdateUnconditionalRevShareConfig(context.Context, *MsgUpdateUnconditionalRevShareConfig) (*MsgUpdateUnconditionalRevShareConfigResponse, error)
+	// SetOrderRouterRevShares sets the revenue share for an order router.
+	SetOrderRouterRevShares(context.Context, *MsgSetOrderRouterRevShares) (*MsgSetOrderRouterRevSharesResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -732,6 +894,108 @@ func (m *MsgUpdateUnconditionalRevShareConfigResponse) MarshalToSizedBuffer(dAtA
 	return len(dAtA) - i, nil
 }
 
+func (m *OrderRouterRevShares) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OrderRouterRevShares) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OrderRouterRevShares) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.SharePpm != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.SharePpm))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetOrderRouterRevShares) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetOrderRouterRevShares) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetOrderRouterRevShares) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.OrderRouterRevShares) > 0 {
+		for iNdEx := len(m.OrderRouterRevShares) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.OrderRouterRevShares[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetOrderRouterRevSharesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetOrderRouterRevSharesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetOrderRouterRevSharesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -810,6 +1074,50 @@ func (m *MsgUpdateUnconditionalRevShareConfig) Size() (n int) {
 }
 
 func (m *MsgUpdateUnconditionalRevShareConfigResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *OrderRouterRevShares) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.SharePpm != 0 {
+		n += 1 + sovTx(uint64(m.SharePpm))
+	}
+	return n
+}
+
+func (m *MsgSetOrderRouterRevShares) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.OrderRouterRevShares) > 0 {
+		for _, e := range m.OrderRouterRevShares {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgSetOrderRouterRevSharesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1315,6 +1623,273 @@ func (m *MsgUpdateUnconditionalRevShareConfigResponse) Unmarshal(dAtA []byte) er
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateUnconditionalRevShareConfigResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OrderRouterRevShares) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OrderRouterRevShares: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OrderRouterRevShares: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SharePpm", wireType)
+			}
+			m.SharePpm = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SharePpm |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetOrderRouterRevShares) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetOrderRouterRevShares: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetOrderRouterRevShares: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OrderRouterRevShares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OrderRouterRevShares = append(m.OrderRouterRevShares, OrderRouterRevShares{})
+			if err := m.OrderRouterRevShares[len(m.OrderRouterRevShares)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetOrderRouterRevSharesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetOrderRouterRevSharesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetOrderRouterRevSharesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

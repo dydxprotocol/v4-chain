@@ -24,6 +24,10 @@ service Msg {
   // UpdateUnconditionalRevShareConfig sets the unconditional revshare config
   rpc UpdateUnconditionalRevShareConfig(MsgUpdateUnconditionalRevShareConfig)
       returns (MsgUpdateUnconditionalRevShareConfigResponse);
+
+  // SetOrderRouterRevShares sets the revenue share for an order router.
+  rpc SetOrderRouterRevShares(MsgSetOrderRouterRevShares)
+      returns (MsgSetOrderRouterRevSharesResponse);
 }
 
 // Message to set the market mapper revenue share
@@ -71,3 +75,26 @@ message MsgUpdateUnconditionalRevShareConfig {
 
 // Response to MsgUpdateUnconditionalRevShareConfig
 message MsgUpdateUnconditionalRevShareConfigResponse {}
+
+// Message to set the order router revenue share
+message OrderRouterRevShares {
+  // The address of the order router.
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The share of the revenue to be paid to the order router.
+  uint32 share_ppm = 2;
+}
+
+// Governance message to create or update the order router revenue share
+message MsgSetOrderRouterRevShares {
+  // The address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The order router rev shares to create or update.
+  repeated OrderRouterRevShares order_router_rev_shares = 2
+      [ (gogoproto.nullable) = false ];
+}
+
+// Response to MsgSetOrderRouterRevShares
+message MsgSetOrderRouterRevSharesResponse {}

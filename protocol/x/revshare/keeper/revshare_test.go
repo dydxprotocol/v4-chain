@@ -173,6 +173,18 @@ func TestGetMarketMapperRevenueShareForMarket(t *testing.T) {
 	}
 }
 
+func TestKeeper_TestGetSetOrderRouterRevShares(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RevShareKeeper
+
+	k.SetOrderRouterRevShares(ctx, constants.AliceAccAddress.String(), 100_000)
+
+	revShares, err := k.GetOrderRouterRevShares(ctx, constants.AliceAccAddress.String())
+	require.NoError(t, err)
+	require.Equal(t, uint32(100_000), revShares)
+}
+
 func TestValidateRevShareSafety(t *testing.T) {
 	tests := map[string]struct {
 		revShareConfig             types.UnconditionalRevShareConfig

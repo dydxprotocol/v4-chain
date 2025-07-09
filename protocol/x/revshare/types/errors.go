@@ -41,4 +41,9 @@ var (
 		7,
 		"affiliate fees shared greater than or equal to net fees",
 	)
+	ErrOrderRouterRevShareNotFound = errorsmod.Register(
+		ModuleName,
+		8,
+		"order router rev share not found",
+	)
 )
