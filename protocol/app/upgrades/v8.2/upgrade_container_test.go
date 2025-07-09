@@ -1,6 +1,6 @@
 //go:build all || container_test
 
-package v_8_1_test
+package v_8_2_test
 
 import (
 	"testing"
@@ -24,7 +24,7 @@ func TestStateUpgrade(t *testing.T) {
 	preUpgradeSetups(node, t)
 	preUpgradeChecks(node, t)
 
-	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_8_1.UpgradeName)
+	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_8_2.UpgradeName)
 	require.NoError(t, err)
 
 	postUpgradeChecks(node, t)
