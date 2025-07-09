@@ -25,7 +25,7 @@ import {
   OutgoingMessage,
   OutgoingMessageType,
   SubscribedMessage,
-  WebsocketEvents,
+  WebsocketEvent,
 } from '../../src/types';
 import { Admin } from 'kafkajs';
 import { BlockHeightMessage, SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
@@ -246,7 +246,7 @@ describe('message-forwarder', () => {
     const ws = new WebSocket(WS_HOST);
     let connectionId: string;
 
-    ws.on(WebsocketEvents.MESSAGE, async (message) => {
+    ws.on(WebsocketEvent.MESSAGE, async (message) => {
       const msg: OutgoingMessage = JSON.parse(message.toString()) as OutgoingMessage;
       if (msg.message_id === 0) {
         connectionId = msg.connection_id;
@@ -327,7 +327,7 @@ describe('message-forwarder', () => {
     const ws = new WebSocket(WS_HOST);
     let connectionId: string;
 
-    ws.on(WebsocketEvents.MESSAGE, async (message) => {
+    ws.on(WebsocketEvent.MESSAGE, async (message) => {
       const msg: OutgoingMessage = JSON.parse(message.toString()) as OutgoingMessage;
       if (msg.message_id === 0) {
         connectionId = msg.connection_id;
@@ -398,7 +398,7 @@ describe('message-forwarder', () => {
     const ws = new WebSocket(WS_HOST);
     let connectionId: string;
 
-    ws.on(WebsocketEvents.MESSAGE, async (message) => {
+    ws.on(WebsocketEvent.MESSAGE, async (message) => {
       const msg: OutgoingMessage = JSON.parse(message.toString()) as OutgoingMessage;
       if (msg.message_id === 0) {
         connectionId = msg.connection_id;
@@ -486,7 +486,7 @@ describe('message-forwarder', () => {
     const ws = new WebSocket(WS_HOST);
     let connectionId: string;
 
-    ws.on(WebsocketEvents.MESSAGE, async (message) => {
+    ws.on(WebsocketEvent.MESSAGE, async (message) => {
       const msg: OutgoingMessage = JSON.parse(message.toString()) as OutgoingMessage;
       if (msg.message_id === 0) {
         connectionId = msg.connection_id;
@@ -565,7 +565,7 @@ describe('message-forwarder', () => {
     const ws = new WebSocket(WS_HOST);
     let connectionId: string;
 
-    ws.on(WebsocketEvents.MESSAGE, async (message) => {
+    ws.on(WebsocketEvent.MESSAGE, async (message) => {
       const msg: OutgoingMessage = JSON.parse(message.toString()) as OutgoingMessage;
       if (msg.message_id === 0) {
         connectionId = msg.connection_id;

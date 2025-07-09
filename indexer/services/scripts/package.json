@@ -14,7 +14,8 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "postinstall": "patch-package"
   },
   "author": "",
   "license": "AGPL-3.0",
@@ -24,6 +25,7 @@
     "@dydxprotocol-indexer/kafka": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
+    "@milahu/patch-package": "6.4.14",
     "dotenv-flow": "^3.2.0",
     "long": "^5.2.1",
     "big.js": "^6.0.2",
