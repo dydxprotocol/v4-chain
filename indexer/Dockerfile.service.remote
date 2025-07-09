@@ -3,14 +3,11 @@ FROM dydxprotocol/indexer-node:16-alpine
 ENV NODE_ENV=development
 ARG service
 
-<<<<<<< HEAD
-=======
 ARG DD_GIT_REPOSITORY_URL
 ARG DD_GIT_COMMIT_SHA
-ENV DD_GIT_REPOSITORY_URL=${DD_GIT_REPOSITORY_URL}
+ENV DD_GIT_REPOSITORY_URL=${DD_GIT_REPOSITORY_URL} 
 ENV DD_GIT_COMMIT_SHA=${DD_GIT_COMMIT_SHA}
 
->>>>>>> 71b58040 ((perf) patch kafkajs and protobufjs (#2960))
 RUN apk add --no-cache bash jq aws-cli
 RUN adduser -S dydx
 RUN mkdir -p /home/dydx/app
