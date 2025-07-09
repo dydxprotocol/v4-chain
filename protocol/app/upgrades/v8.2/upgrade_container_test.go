@@ -5,7 +5,7 @@ package v_8_2_test
 import (
 	"testing"
 
-	v_8_1 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.1"
+	v_8_2 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v8.2"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
