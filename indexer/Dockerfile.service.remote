@@ -3,6 +3,14 @@ FROM dydxprotocol/indexer-node:16-alpine
 ENV NODE_ENV=development
 ARG service
 
+<<<<<<< HEAD
+=======
+ARG DD_GIT_REPOSITORY_URL
+ARG DD_GIT_COMMIT_SHA
+ENV DD_GIT_REPOSITORY_URL=${DD_GIT_REPOSITORY_URL}
+ENV DD_GIT_COMMIT_SHA=${DD_GIT_COMMIT_SHA}
+
+>>>>>>> 71b58040 ((perf) patch kafkajs and protobufjs (#2960))
 RUN apk add --no-cache bash jq aws-cli
 RUN adduser -S dydx
 RUN mkdir -p /home/dydx/app
@@ -40,6 +48,16 @@ COPY ./packages/notifications/build ./packages/notifications/build/
 COPY ./services/${service}/package.json ./services/${service}/
 COPY ./services/${service}/build ./services/${service}/build
 COPY ./services/${service}/.env* ./services/${service}/
+
+# Copy service dependency patches
+RUN mkdir -p ./services/${service}/patches
+COPY ./services/${service}/patches ./services/${service}/patches/
+
+# Copy package dependency patches
+RUN mkdir -p ./packages/v4-protos/patches
+COPY ./packages/v4-protos/patches ./packages/v4-protos/patches/
+RUN mkdir -p ./packages/kafka/patches
+COPY ./packages/kafka/patches ./packages/kafka/patches/
 
 # Copy container start script
 COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/

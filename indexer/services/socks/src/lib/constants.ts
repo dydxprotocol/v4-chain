@@ -1,4 +1,4 @@
-import { Channel, WebsocketTopics } from '../types';
+import { Channel, WebsocketTopic } from '../types';
 
 // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code
 // 4000 - 4999 is reserved for private use
@@ -23,13 +23,13 @@ export const WEBSOCKET_NOT_OPEN: string = 'ws not open';
 export const V4_MARKETS_ID: string = 'v4_markets';
 export const V4_BLOCK_HEIGHT_ID: string = 'v4_block_height';
 
-export const TOPIC_TO_CHANNEL: Record<WebsocketTopics, Channel[]> = {
-  [WebsocketTopics.TO_WEBSOCKETS_CANDLES]: [Channel.V4_CANDLES],
-  [WebsocketTopics.TO_WEBSOCKETS_MARKETS]: [Channel.V4_MARKETS],
-  [WebsocketTopics.TO_WEBSOCKETS_ORDERBOOKS]: [Channel.V4_ORDERBOOK],
-  [WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS]: [Channel.V4_ACCOUNTS, Channel.V4_PARENT_ACCOUNTS],
-  [WebsocketTopics.TO_WEBSOCKETS_TRADES]: [Channel.V4_TRADES],
-  [WebsocketTopics.TO_WEBSOCKETS_BLOCK_HEIGHT]: [Channel.V4_BLOCK_HEIGHT],
+export const TOPIC_TO_CHANNEL: Record<WebsocketTopic, Channel[]> = {
+  [WebsocketTopic.TO_WEBSOCKETS_CANDLES]: [Channel.V4_CANDLES],
+  [WebsocketTopic.TO_WEBSOCKETS_MARKETS]: [Channel.V4_MARKETS],
+  [WebsocketTopic.TO_WEBSOCKETS_ORDERBOOKS]: [Channel.V4_ORDERBOOK],
+  [WebsocketTopic.TO_WEBSOCKETS_SUBACCOUNTS]: [Channel.V4_ACCOUNTS, Channel.V4_PARENT_ACCOUNTS],
+  [WebsocketTopic.TO_WEBSOCKETS_TRADES]: [Channel.V4_TRADES],
+  [WebsocketTopic.TO_WEBSOCKETS_BLOCK_HEIGHT]: [Channel.V4_BLOCK_HEIGHT],
 };
 
 export const MAX_TIMEOUT_INTEGER: number = 2147483647;

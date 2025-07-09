@@ -11,7 +11,7 @@ import {
   OutgoingMessageType,
   Channel,
   ALL_CHANNELS,
-  WebsocketEvents,
+  WebsocketEvent,
   Connection,
 } from '../../src/types';
 import { InvalidMessageHandler } from '../../src/lib/invalid-message';
@@ -81,10 +81,10 @@ describe('Index', () => {
 
       // Test that handlers are attached.
       expect(wsOnSpy).toHaveBeenCalledTimes(4);
-      expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvents.MESSAGE, expect.anything());
-      expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvents.CLOSE, expect.anything());
-      expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvents.ERROR, expect.anything());
-      expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvents.PONG, expect.anything());
+      expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvent.MESSAGE, expect.anything());
+      expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvent.CLOSE, expect.anything());
+      expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvent.ERROR, expect.anything());
+      expect(wsOnSpy).toHaveBeenCalledWith(WebsocketEvent.PONG, expect.anything());
 
       // Test that a connection messages is sent.
       expect(sendMessage).toHaveBeenCalledTimes(1);
@@ -161,7 +161,7 @@ describe('Index', () => {
           ],
         // eslint-disable-next-line  no-loop-func
         ])(`handles invalid ${type} message: %s`, (_name: string, message: string, err: string) => {
-          websocket.emit(WebsocketEvents.MESSAGE, message);
+          websocket.emit(WebsocketEvent.MESSAGE, message);
 
           // Should be the second call, first call is to send the connected message.
           expect(sendMessage).toHaveBeenNthCalledWith(
@@ -192,7 +192,7 @@ describe('Index', () => {
           id,
           batched: isBatched,
         });
-        websocket.emit(WebsocketEvents.MESSAGE, JSON.stringify(subMessage));
+        websocket.emit(WebsocketEvent.MESSAGE, JSON.stringify(subMessage));
 
         expect(mockSub.subscribe).toHaveBeenCalledTimes(1);
         expect(mockSub.subscribe).toHaveBeenCalledWith(
@@ -218,7 +218,7 @@ describe('Index', () => {
           channel,
           id,
         });
-        websocket.emit(WebsocketEvents.MESSAGE, JSON.stringify(unSubMessage));
+        websocket.emit(WebsocketEvent.MESSAGE, JSON.stringify(unSubMessage));
 
         expect(mockSub.unsubscribe).toHaveBeenCalledTimes(1);
         expect(mockSub.unsubscribe).toHaveBeenCalledWith(
@@ -245,7 +245,7 @@ describe('Index', () => {
       it('disconnects connection on close', () => {
         const connection: Connection = index.connections[connectionId];
         expect(disconnectSpy).not.toHaveBeenCalled();
-        websocket.emit(WebsocketEvents.CLOSE);
+        websocket.emit(WebsocketEvent.CLOSE);
         jest.runAllTimers();
         expect(disconnectSpy).toHaveBeenCalledTimes(1);
         expect(disconnectSpy).toHaveBeenCalledWith(connection);
@@ -255,7 +255,7 @@ describe('Index', () => {
         const dummyCode: number = 21;
         const bufferReason: Buffer = Buffer.from('bufferReason');
         jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
-        websocket.emit(WebsocketEvents.CLOSE, dummyCode, bufferReason);
+        websocket.emit(WebsocketEvent.CLOSE, dummyCode, bufferReason);
 
         expect(wsTerminateSpy).toHaveBeenCalledTimes(1);
         expect(mockSub.remove).toHaveBeenCalledWith(connectionId);
@@ -268,7 +268,7 @@ describe('Index', () => {
         // Run pending timers to start heartbeat to attach delayed disconnect.
         jest.runOnlyPendingTimers();
         jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
-        websocket.emit(WebsocketEvents.PONG);
+        websocket.emit(WebsocketEvent.PONG);
 
         expect(index.connections[connectionId].disconnect).toBeUndefined();
 
