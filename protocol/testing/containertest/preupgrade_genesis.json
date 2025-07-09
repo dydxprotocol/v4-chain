@@ -995,7 +995,7 @@
                 }
               }
             ],
-            "memo": "17e5e45691f0d01449c84fd4ae87279578cdd7ec@172.17.0.3:26656",
+            "memo": "17e5e45691f0d01449c84fd4ae87279578cdd7ec@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -1024,7 +1024,7 @@
             "tip": null
           },
           "signatures": [
-            "POWeH0CNzrc8Xm6uyf6/zd+b5MsJKktrwwql36ZxfF1AnKiibA/L4V8xUKy4IBMR0czFNC2XTm5rKpV2Qu6/Ow=="
+            "if2HfLoAml9gqflexUHYvYyFWf0AzkQ7t/Mw+P8DuSdfr5dVSB4cCv9+wwDbE4NyLUE7cNVQMaoOQ8V1K2NOIQ=="
           ]
         },
         {
@@ -1057,7 +1057,7 @@
                 }
               }
             ],
-            "memo": "47539956aaa8e624e0f1d926040e54908ad0eb44@172.17.0.3:26656",
+            "memo": "47539956aaa8e624e0f1d926040e54908ad0eb44@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -1086,7 +1086,7 @@
             "tip": null
           },
           "signatures": [
-            "WbfHBen6+atbFg4xNs3IfAQ0dWZGaseAqQQQ3TPRVSkOcPHQQtcJsYoFDB+/l+bVdL3RosrIE5BWba4NfSaUDQ=="
+            "wWCZzrfbEQ5C2BD+6uJClE+nSrpdP6wI5PQ/mZgmXHEYhOypO28ERxdOxfFxsrkQM/+ld4wdKaBN22xLQvUaVA=="
           ]
         },
         {
@@ -1119,7 +1119,7 @@
                 }
               }
             ],
-            "memo": "5882428984d83b03d0c907c1f0af343534987052@172.17.0.3:26656",
+            "memo": "5882428984d83b03d0c907c1f0af343534987052@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -1148,7 +1148,7 @@
             "tip": null
           },
           "signatures": [
-            "vgwRg79LG2qXD7a2bTQ3Vdh/W014BNN7iFIVPo/kL4F0uPPkj1jXBuwMTu0ZGKhyRs2WkD2xu85jDxTvxwbWsA=="
+            "GvnYbASVMlHB3gQG4MxLTTU+fHXQql4pREOwhtrpj/I+8/ml7oc63xKT0vrzu1/c3Esvgp33xvZ03ma+6Mkw+w=="
           ]
         },
         {
@@ -1181,7 +1181,7 @@
                 }
               }
             ],
-            "memo": "b69182310be02559483e42c77b7b104352713166@172.17.0.3:26656",
+            "memo": "b69182310be02559483e42c77b7b104352713166@172.17.0.2:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -1210,7 +1210,7 @@
             "tip": null
           },
           "signatures": [
-            "5wgtDLRGpZJxPzc1Lnz1+vjeKRUZRfUyh98kwmzeB5AAshjDq9f98msfCJY6CMvtIuA1+euusLUZri8HEvQ4BA=="
+            "pI4b5CW4xkYgkOB2ivPlelk2oDB5B/DjqWEPUZKOD3s0Evnmqgqx8l197Ue4NgO4d0rDmBvmWYwJOa+09ZPEKQ=="
           ]
         }
       ]
