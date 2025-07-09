@@ -32,6 +32,10 @@ export const baseConfigSchema = {
   }),
   SERVICE_NAME: parseString({ default: '' }),
 
+  TURNKEY_API_BASE_URL: parseString({ default: 'https://api.turnkey.com' }),
+  TURNKEY_API_KEY: parseString({ default: '' }),
+  TURNKEY_API_SECRET: parseString({ default: '' }),
+
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),
   ENABLE_LOGS_IN_TEST: parseBoolean({ default: false }),
