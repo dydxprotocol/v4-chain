@@ -46,6 +46,16 @@ COPY ./services/${service}/package.json ./services/${service}/
 COPY ./services/${service}/build ./services/${service}/build
 COPY ./services/${service}/.env* ./services/${service}/
 
+# Copy service dependency patches
+RUN mkdir -p ./services/${service}/patches
+COPY ./services/${service}/patches ./services/${service}/patches/
+
+# Copy package dependency patches
+RUN mkdir -p ./packages/v4-protos/patches
+COPY ./packages/v4-protos/patches ./packages/v4-protos/patches/
+RUN mkdir -p ./packages/kafka/patches
+COPY ./packages/kafka/patches ./packages/kafka/patches/
+
 # Copy container start script
 COPY ./scripts/container-run.sh /home/dydx/app/services/$service/scripts/
 

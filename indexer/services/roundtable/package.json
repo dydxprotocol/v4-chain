@@ -11,7 +11,8 @@
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "postinstall": "patch-package"
   },
   "author": "",
   "license": "AGPL-3.0",
@@ -23,6 +24,7 @@
     "@dydxprotocol-indexer/redis": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
+    "@milahu/patch-package": "6.4.14",
     "aws-sdk": "^2.1399.0",
     "big.js": "^6.2.1",
     "dd-trace": "^3.32.1",

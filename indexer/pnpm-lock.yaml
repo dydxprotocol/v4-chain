@@ -139,13 +139,14 @@ importers:
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
+      '@milahu/patch-package': 6.4.14
       '@types/jest': ^28.1.4
       '@types/lodash': ^4.14.182
       '@types/node': ^18.0.3
       '@types/uuid': ^8.3.4
       dotenv-flow: ^3.2.0
       jest: ^28.1.2
-      kafkajs: ^2.2.4
+      kafkajs: 2.2.4
       lodash: ^4.17.21
       typescript: ^4.7.4
       uuid: ^8.3.2
@@ -153,6 +154,7 @@ importers:
       '@dydxprotocol-indexer/base': link:../base
       '@dydxprotocol-indexer/postgres': link:../postgres
       '@dydxprotocol-indexer/v4-protos': link:../v4-protos
+      '@milahu/patch-package': 6.4.14
       dotenv-flow: 3.2.0
       kafkajs: 2.2.4
       lodash: 4.17.21
@@ -320,6 +322,7 @@ importers:
       '@cosmjs/stargate': ^0.32.1
       '@cosmjs/tendermint-rpc': ^0.32.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
+      '@milahu/patch-package': 6.4.14
       '@osmonauts/lcd': ^0.6.0
       '@osmonauts/telescope': 0.80.0
       '@protobufs/cosmos': ^0.0.11
@@ -327,7 +330,7 @@ importers:
       bech32: ^2.0.0
       dotenv-flow: ^3.2.0
       long: ^5.2.1
-      protobufjs: ^7.2.4
+      protobufjs: 7.5.3
       typescript: ^4.7.4
     dependencies:
       '@bufbuild/buf': 1.19.0-1
@@ -335,11 +338,12 @@ importers:
       '@cosmjs/proto-signing': 0.32.1
       '@cosmjs/stargate': 0.32.1
       '@cosmjs/tendermint-rpc': 0.32.1
+      '@milahu/patch-package': 6.4.14
       '@osmonauts/lcd': 0.6.0
       bech32: 2.0.0
       dotenv-flow: 3.2.0
       long: 5.2.1
-      protobufjs: 7.2.4
+      protobufjs: 7.5.3
     devDependencies:
       '@dydxprotocol-indexer/dev': link:../dev
       '@osmonauts/telescope': 0.80.0
@@ -354,6 +358,7 @@ importers:
       '@aws-sdk/client-lambda': ^3.353.0
       '@dydxprotocol-indexer/base': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
+      '@milahu/patch-package': 6.4.14
       '@types/aws-lambda': ^8.10.108
       '@types/jest': ^28.1.4
       '@types/lodash': ^4.14.182
@@ -373,6 +378,7 @@ importers:
       '@aws-sdk/client-ecs': 3.353.0
       '@aws-sdk/client-lambda': 3.353.0
       '@dydxprotocol-indexer/base': link:../../packages/base
+      '@milahu/patch-package': 6.4.14
       dotenv-flow: 3.2.0
       kafkajs: 2.2.4
       lodash: 4.17.21
@@ -399,6 +405,7 @@ importers:
       '@dydxprotocol-indexer/redis': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-proto-parser': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
+      '@milahu/patch-package': 6.4.14
       '@types/aws-lambda': ^8.10.108
       '@types/jest': ^28.1.4
       '@types/lodash': ^4.14.182
@@ -422,6 +429,7 @@ importers:
       '@dydxprotocol-indexer/redis': link:../../packages/redis
       '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
+      '@milahu/patch-package': 6.4.14
       big.js: 6.2.1
       dotenv-flow: 3.2.0
       kafkajs: 2.2.4
@@ -564,6 +572,7 @@ importers:
       '@dydxprotocol-indexer/redis': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-proto-parser': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
+      '@milahu/patch-package': 6.4.14
       '@types/big.js': ^6.1.5
       '@types/jest': ^28.1.4
       '@types/lodash': ^4.14.182
@@ -591,6 +600,7 @@ importers:
       '@dydxprotocol-indexer/redis': link:../../packages/redis
       '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
+      '@milahu/patch-package': 6.4.14
       big.js: 6.2.1
       dd-trace: 3.32.1
       dotenv-flow: 3.2.0
@@ -644,6 +654,7 @@ importers:
       '@dydxprotocol-indexer/redis': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-proto-parser': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
+      '@milahu/patch-package': 6.4.14
       '@types/big.js': ^6.1.5
       '@types/jest': ^28.1.4
       '@types/lodash': ^4.14.182
@@ -674,6 +685,7 @@ importers:
       '@dydxprotocol-indexer/redis': link:../../packages/redis
       '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
+      '@milahu/patch-package': 6.4.14
       aws-sdk: 2.1399.0
       big.js: 6.2.1
       dd-trace: 3.32.1
@@ -707,6 +719,7 @@ importers:
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-proto-parser': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
+      '@milahu/patch-package': 6.4.14
       '@types/jest': ^28.1.4
       '@types/node': ^18.0.3
       '@types/yargs': ^16.0.0
@@ -726,6 +739,7 @@ importers:
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
       '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
+      '@milahu/patch-package': 6.4.14
       big.js: 6.2.1
       dotenv-flow: 3.2.0
       kafkajs: 2.2.4
@@ -750,6 +764,7 @@ importers:
       '@dydxprotocol-indexer/kafka': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
+      '@milahu/patch-package': 6.4.14
       '@types/body-parser': ^1.19.2
       '@types/cors': ^2.8.12
       '@types/express': ^4.17.13
@@ -768,7 +783,7 @@ importers:
       express: ^4.18.1
       express-request-id: ^1.4.0
       jest: ^28.1.2
-      kafkajs: ^2.2.4
+      kafkajs: 2.2.4
       lodash: ^4.17.21
       nocache: ^3.0.4
       response-time: ^2.3.2
@@ -783,6 +798,7 @@ importers:
       '@dydxprotocol-indexer/kafka': link:../../packages/kafka
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
+      '@milahu/patch-package': 6.4.14
       axios: 1.2.1
       body-parser: 1.20.0
       bufferutil: 4.0.9
@@ -822,6 +838,7 @@ importers:
       '@dydxprotocol-indexer/redis': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-proto-parser': workspace:^0.0.1
       '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
+      '@milahu/patch-package': 6.4.14
       '@types/big.js': ^6.1.5
       '@types/jest': ^28.1.4
       '@types/luxon': 3.0.0
@@ -845,6 +862,7 @@ importers:
       '@dydxprotocol-indexer/redis': link:../../packages/redis
       '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
       '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
+      '@milahu/patch-package': 6.4.14
       big.js: 6.2.1
       dd-trace: 3.32.1
       dotenv-flow: 3.2.0
@@ -5975,7 +5993,7 @@ packages:
       '@jest/schemas': 28.1.3
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 18.0.3
+      '@types/node': 22.5.4
       '@types/yargs': 17.0.10
       chalk: 4.1.2
     dev: true
@@ -6379,7 +6397,7 @@ packages:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.2
-      '@types/node': 18.0.3
+      '@types/node': 22.5.4
       long: 4.0.0
     dev: true
 
@@ -6970,13 +6988,13 @@ packages:
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 18.0.3
+      '@types/node': 22.5.4
     dev: true
 
   /@types/graceful-fs/4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}
     dependencies:
-      '@types/node': 18.0.3
+      '@types/node': 22.5.4
 
   /@types/istanbul-lib-coverage/2.0.4:
     resolution: {integrity: sha512-z/QT1XN4K4KYuslS23k62yDIDLwLFkzxOuMplDtObz0+y7VqJCaO2o+SPwHCvLFZh7xazvvoor2tA/hPz9ee7g==}
@@ -7050,12 +7068,12 @@ packages:
     resolution: {integrity: sha512-ArgCD39YpyyrtFKIqMDvjz79jto5fcI/SVUs2HwB+f0dAzq68yqOdyaSivLiLugSziTpNXLQrVb7RZFmdZzbhA==}
     dependencies:
       undici-types: 5.26.5
+    dev: true
 
   /@types/node/22.5.4:
     resolution: {integrity: sha512-FDuKUJQm/ju9fT/SeX/6+gBzoPzlVCzfzmGkwKvRHQVxi4BntVbyIwf6a4Xn62mrvndLiml6z/UBXIdEVjQLXg==}
     dependencies:
       undici-types: 6.19.8
-    dev: false
 
   /@types/parse-package-name/0.1.0:
     resolution: {integrity: sha512-+vF4M3Cd3Ec22Uwb+OKhDrSAcXQ5I6evRx+1letx4KzfzycU+AOEDHnCifus8In11i8iYNFXPfzg9HWTcC1h+Q==}
@@ -8239,7 +8257,6 @@ packages:
   /ci-info/3.9.0:
     resolution: {integrity: sha512-NIxF55hv4nSqQswkAeiOi1r83xy8JldOFDTWiug55KBu9Jnblncd2U6ViHmYgHf01TPZS77NJBhBMKdWj9HQMQ==}
     engines: {node: '>=8'}
-    dev: false
 
   /cipher-base/1.0.4:
     resolution: {integrity: sha512-Kkht5ye6ZGmwv40uUDZztayT2ThLQGfnj/T71N/XzeZeo3nf8foyW7zGTsPYkEya3m5f3cAypH+qe7YOrM1U2Q==}
@@ -10434,6 +10451,7 @@ packages:
 
   /glob/7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
     dependencies:
       fs.realpath: 1.0.0
       inflight: 1.0.6
@@ -10876,6 +10894,7 @@ packages:
 
   /inflight/1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
+    deprecated: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
     dependencies:
       once: 1.4.0
       wrappy: 1.0.2
@@ -11817,7 +11836,7 @@ packages:
     dependencies:
       '@jest/types': 28.1.3
       '@types/graceful-fs': 4.1.5
-      '@types/node': 18.0.3
+      '@types/node': 22.5.4
       anymatch: 3.1.2
       fb-watchman: 2.0.1
       graceful-fs: 4.2.10
@@ -12019,9 +12038,9 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     dependencies:
       '@jest/types': 28.1.3
-      '@types/node': 18.0.3
+      '@types/node': 22.5.4
       chalk: 4.1.2
-      ci-info: 3.3.2
+      ci-info: 3.9.0
       graceful-fs: 4.2.10
       picomatch: 2.3.1
     dev: true
@@ -12062,7 +12081,7 @@ packages:
     resolution: {integrity: sha512-CqRA220YV/6jCo8VWvAt1KKx6eek1VIHMPeLEbpcfSfkEeWyBNppynM/o6q+Wmw+sOhos2ml34wZbSX3G13//g==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     dependencies:
-      '@types/node': 18.0.3
+      '@types/node': 22.5.4
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: true
@@ -13765,7 +13784,7 @@ packages:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.2
-      '@types/node': 18.19.31
+      '@types/node': 22.5.4
       long: 4.0.0
     dev: false
 
@@ -13807,6 +13826,25 @@ packages:
       long: 5.2.1
     dev: false
     optional: true
+
+  /protobufjs/7.5.3:
+    resolution: {integrity: sha512-sildjKwVqOI2kmFDiXQ6aEB0fjYTafpEvIBs8tOR8qI4spuL9OPROLVu2qZqi/xgCfsHIwVqlaF8JBjWFHnKbw==}
+    engines: {node: '>=12.0.0'}
+    requiresBuild: true
+    dependencies:
+      '@protobufjs/aspromise': 1.1.2
+      '@protobufjs/base64': 1.1.2
+      '@protobufjs/codegen': 2.0.4
+      '@protobufjs/eventemitter': 1.1.0
+      '@protobufjs/fetch': 1.1.0
+      '@protobufjs/float': 1.0.2
+      '@protobufjs/inquire': 1.1.0
+      '@protobufjs/path': 1.1.2
+      '@protobufjs/pool': 1.1.0
+      '@protobufjs/utf8': 1.1.0
+      '@types/node': 22.5.4
+      long: 5.2.1
+    dev: false
 
   /proxy-addr/2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
@@ -14141,6 +14179,7 @@ packages:
 
   /rimraf/3.0.2:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
     dependencies:
       glob: 7.2.3
@@ -15281,10 +15320,10 @@ packages:
 
   /undici-types/5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+    dev: true
 
   /undici-types/6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
-    dev: false
 
   /unicode-canonical-property-names-ecmascript/2.0.0:
     resolution: {integrity: sha512-yY5PpDlfVIU5+y/BSCxAJRBIS1Zc2dDG3Ujq+sR0U+JjUevW2JhocOF+soROYDSaAezOzOKuyyixhD6mBknSmQ==}

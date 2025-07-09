@@ -1,5 +1,7 @@
 import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
 
+import { WebsocketTopic } from '../types';
+
 export class InvalidForwardMessageError extends Error {
   constructor(message: string) {
     super(`Invalid forwarded message. Error: ${message}.`);
@@ -15,7 +17,7 @@ export class InvalidChannelError extends Error {
 }
 
 export class InvalidTopicError extends Error {
-  constructor(topic: string) {
+  constructor(topic: WebsocketTopic) {
     super(`Invalid topic: ${topic}`);
     this.name = 'InvalidTopicError';
   }
