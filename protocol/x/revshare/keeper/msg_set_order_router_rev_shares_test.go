@@ -91,7 +91,7 @@ func TestSetOrderRouterRevShares(t *testing.T) {
 				ctx := tApp.InitChain()
 				k := tApp.App.RevShareKeeper
 				ms := keeper.NewMsgServerImpl(k)
-				_, err := ms.Keeper.SetOrderRouterRevShares(ctx, tc.msg)
+				_, err := ms.SetOrderRouterRevShares(ctx, tc.msg)
 				if tc.expectedErr != "" {
 					require.Error(t, err)
 					require.Contains(t, err.Error(), tc.expectedErr)
