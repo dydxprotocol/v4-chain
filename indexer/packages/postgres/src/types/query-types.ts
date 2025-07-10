@@ -90,6 +90,7 @@ export enum QueryableField {
   STARTED_AT_HEIGHT_BEFORE_OR_AT = 'startedAtHeightBeforeOrAt',
   REASON = 'reason',
   USERNAME = 'username',
+  EMAIL = 'email',
   TIMESPAN = 'timeSpan',
   RANK = 'rank',
   AFFILIATE_ADDRESS = 'affiliateAddress',
@@ -100,6 +101,10 @@ export enum QueryableField {
   PARENT_SUBACCOUNT = 'parentSubaccount',
   DISTINCT_FIELDS = 'distinctFields',
   ZERO_PAYMENTS = 'zeroPayments',
+  SUBORG_ID = 'suborgId',
+  SVM_ADDRESS = 'svmAddress',
+  EVM_ADDRESS = 'evmAddress',
+  DYDX_ADDRESS = 'dydxAddress',
 }
 
 export interface QueryConfig {
@@ -379,4 +384,9 @@ export interface FundingPaymentsQueryConfig extends QueryConfig {
   [QueryableField.CREATED_ON_OR_AFTER]?: string,
   [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
   [QueryableField.ZERO_PAYMENTS]?: boolean,
+}
+
+export interface TurnkeyUserQueryConfig extends QueryConfig {
+  [QueryableField.SVM_ADDRESS]?: string,
+  [QueryableField.EVM_ADDRESS]?: string,
 }
