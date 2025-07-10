@@ -16,6 +16,8 @@ export async function up(knex: Knex): Promise<void> {
       // Indexes
       table.index(['svmAddress'], 'idx_turnkey_users_svm_address');
       table.index(['evmAddress'], 'idx_turnkey_users_evm_address');
+      // used to validate that user is already a user.
+      table.index(['email'], 'idx_turnkey_users_email');
     });
 }
 

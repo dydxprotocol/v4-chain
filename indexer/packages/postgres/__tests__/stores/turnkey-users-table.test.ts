@@ -37,6 +37,16 @@ describe('TurnkeyUser store', () => {
     createdAt: '2023-01-02T00:00:00.000Z',
   };
 
+  const defaultTurnkeyUser3 = {
+    suborgId: 'suborg-3',
+    username: 'user3',
+    svmAddress: 'SVM987654321',
+    evmAddress: '0x9876543210fedcba9876543210fedcba98765433',
+    salt: 'salt3',
+    dydxAddress: 'dydx1xyz789',
+    createdAt: '2023-01-02T00:00:00.000Z',
+  };
+
   it('Successfully creates a TurnkeyUser', async () => {
     const createdUser = await TurnkeyUserTable.create(defaultTurnkeyUser1);
     expect(createdUser).toEqual(expect.objectContaining(defaultTurnkeyUser1));
@@ -104,6 +114,37 @@ describe('TurnkeyUser store', () => {
     });
   });
 
+  describe('findByEmail', () => {
+    it('Successfully finds a TurnkeyUser by email', async () => {
+      await TurnkeyUserTable.create(defaultTurnkeyUser1);
+      await TurnkeyUserTable.create(defaultTurnkeyUser2);
+
+      const user: TurnkeyUserFromDatabase | undefined = await TurnkeyUserTable.findByEmail(
+        defaultTurnkeyUser1.email,
+      );
+
+      expect(user).toEqual(expect.objectContaining(defaultTurnkeyUser1));
+    });
+
+    it('Returns undefined when TurnkeyUser not found by email', async () => {
+      await TurnkeyUserTable.create(defaultTurnkeyUser1);
+
+      const user: TurnkeyUserFromDatabase | undefined = await TurnkeyUserTable.findByEmail(
+        'nonexistent@example.com',
+      );
+
+      expect(user).toBeUndefined();
+    });
+
+    it('Returns undefined when email is empty', async () => {
+      await TurnkeyUserTable.create(defaultTurnkeyUser3);
+
+      const user: TurnkeyUserFromDatabase | undefined = await TurnkeyUserTable.findByEmail('');
+
+      expect(user).toBeUndefined();
+    });
+  });
+
   describe('Edge cases', () => {
     it('Handles case sensitivity for EVM addresses', async () => {
       await TurnkeyUserTable.create(defaultTurnkeyUser1);
@@ -124,6 +165,25 @@ describe('TurnkeyUser store', () => {
 
       expect(userByEmptyEvm).toBeUndefined();
       expect(userByEmptySvm).toBeUndefined();
+    });
+
+    it('Handles email case sensitivity', async () => {
+      await TurnkeyUserTable.create(defaultTurnkeyUser1);
+
+      // Test with uppercase version of the email
+      const upperCaseEmail = defaultTurnkeyUser1.email.toUpperCase();
+      const user = await TurnkeyUserTable.findByEmail(upperCaseEmail);
+
+      // This should not find the user as emails are case-sensitive in the database
+      expect(user).toBeUndefined();
+    });
+
+    it('Handles empty email search', async () => {
+      await TurnkeyUserTable.create(defaultTurnkeyUser1);
+
+      const userByEmptyEmail = await TurnkeyUserTable.findByEmail('');
+
+      expect(userByEmptyEmail).toBeUndefined();
     });
   });
 });

@@ -39,6 +39,20 @@ export async function findBySvmAddress(
     .returning('*');
 }
 
+export async function findByEmail(
+  email: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<TurnkeyUserFromDatabase | undefined> {
+  const baseQuery: QueryBuilder<TurnkeyUserModel> = setupBaseQuery<TurnkeyUserModel>(
+    TurnkeyUserModel,
+    options,
+  );
+  return baseQuery
+    .where(TurnkeyUserColumns.email, email)
+    .first()
+    .returning('*');
+}
+
 export async function create(
   turnkeyUserToCreate: TurnkeyUserCreateObject,
   options: Options = { txId: undefined },
