@@ -178,7 +178,8 @@ func TestKeeper_TestGetSetOrderRouterRevShares(t *testing.T) {
 	ctx := tApp.InitChain()
 	k := tApp.App.RevShareKeeper
 
-	k.SetOrderRouterRevShares(ctx, constants.AliceAccAddress.String(), 100_000)
+	err := k.SetOrderRouterRevShares(ctx, constants.AliceAccAddress.String(), 100_000)
+	require.NoError(t, err)
 
 	revShares, err := k.GetOrderRouterRevShares(ctx, constants.AliceAccAddress.String())
 	require.NoError(t, err)
