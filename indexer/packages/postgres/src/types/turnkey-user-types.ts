@@ -7,7 +7,7 @@ export interface TurnkeyUserCreateObject {
   svmAddress: string,
   evmAddress: string,
   salt: string,
-  dydxAddress: string,
+  dydxAddress?: string,
   createdAt: string,
 }
 
