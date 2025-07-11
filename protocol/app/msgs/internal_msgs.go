@@ -190,6 +190,8 @@ var (
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse": nil,
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":                     &revshare.MsgSetMarketMapperRevenueShare{}, //nolint:lll
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse":             nil,
+		"/dydxprotocol.revshare.MsgSetOrderRouterRevShares":                         &revshare.MsgSetOrderRouterRevShares{}, //nolint:lll
+		"/dydxprotocol.revshare.MsgSetOrderRouterRevSharesResponse":                 nil,
 		"/dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfig":               &revshare.MsgUpdateUnconditionalRevShareConfig{}, //nolint:lll
 		"/dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfigResponse":       nil,
 

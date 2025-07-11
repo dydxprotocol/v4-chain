@@ -89,3 +89,29 @@ func CmdQueryUnconditionalRevShareConfig() *cobra.Command {
 
 	return cmd
 }
+
+func CmdQueryOrderRouterRevShares() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "order-router-rev-shares [address]",
+		Short: "order router rev shares",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.OrderRouterRevShares(
+				context.Background(),
+				&types.QueryOrderRouterRevShares{
+					Address: args[0],
+				},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
