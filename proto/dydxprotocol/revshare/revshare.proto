@@ -30,7 +30,7 @@ message UnconditionalRevShareConfig {
 // Message to set the order router revenue share
 message OrderRouterRevShares {
   // The address of the order router.
-  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // The share of the revenue to be paid to the order router.
   uint32 share_ppm = 2;

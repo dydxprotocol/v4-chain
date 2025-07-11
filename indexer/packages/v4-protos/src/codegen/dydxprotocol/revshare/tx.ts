@@ -82,24 +82,6 @@ export interface MsgUpdateUnconditionalRevShareConfigResponse {}
 /** Response to MsgUpdateUnconditionalRevShareConfig */
 
 export interface MsgUpdateUnconditionalRevShareConfigResponseSDKType {}
-/** Message to set the order router revenue share */
-
-export interface OrderRouterRevShares {
-  /** The address of the order router. */
-  address: string;
-  /** The share of the revenue to be paid to the order router. */
-
-  sharePpm: number;
-}
-/** Message to set the order router revenue share */
-
-export interface OrderRouterRevSharesSDKType {
-  /** The address of the order router. */
-  address: string;
-  /** The share of the revenue to be paid to the order router. */
-
-  share_ppm: number;
-}
 /** Governance message to create or update the order router revenue share */
 
 export interface MsgSetOrderRouterRevShares {
@@ -400,64 +382,6 @@ export const MsgUpdateUnconditionalRevShareConfigResponse = {
 
 };
 
-<<<<<<< HEAD
-function createBaseOrderRouterRevShares(): OrderRouterRevShares {
-  return {
-    address: "",
-    sharePpm: 0
-  };
-}
-
-export const OrderRouterRevShares = {
-  encode(message: OrderRouterRevShares, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.address !== "") {
-      writer.uint32(10).string(message.address);
-    }
-
-    if (message.sharePpm !== 0) {
-      writer.uint32(16).uint32(message.sharePpm);
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): OrderRouterRevShares {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseOrderRouterRevShares();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.address = reader.string();
-          break;
-
-        case 2:
-          message.sharePpm = reader.uint32();
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<OrderRouterRevShares>): OrderRouterRevShares {
-    const message = createBaseOrderRouterRevShares();
-    message.address = object.address ?? "";
-    message.sharePpm = object.sharePpm ?? 0;
-    return message;
-  }
-
-};
-
-=======
->>>>>>> add_governance
 function createBaseMsgSetOrderRouterRevShares(): MsgSetOrderRouterRevShares {
   return {
     authority: "",
