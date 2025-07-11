@@ -36,7 +36,7 @@
     "nocache": "^3.0.4",
     "response-time": "^2.3.2",
     "utf-8-validate": "^6.0.5",
-    "ws": "^8.16.0"
+    "ws": "8.18.3"
   },
   "devDependencies": {
     "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
