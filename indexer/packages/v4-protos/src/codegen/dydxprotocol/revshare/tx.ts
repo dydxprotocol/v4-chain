@@ -1,5 +1,5 @@
 import { MarketMapperRevenueShareParams, MarketMapperRevenueShareParamsSDKType } from "./params";
-import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType, UnconditionalRevShareConfig, UnconditionalRevShareConfigSDKType } from "./revshare";
+import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType, UnconditionalRevShareConfig, UnconditionalRevShareConfigSDKType, OrderRouterRevShares, OrderRouterRevSharesSDKType } from "./revshare";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** Message to set the market mapper revenue share */
@@ -400,6 +400,7 @@ export const MsgUpdateUnconditionalRevShareConfigResponse = {
 
 };
 
+<<<<<<< HEAD
 function createBaseOrderRouterRevShares(): OrderRouterRevShares {
   return {
     address: "",
@@ -455,6 +456,8 @@ export const OrderRouterRevShares = {
 
 };
 
+=======
+>>>>>>> add_governance
 function createBaseMsgSetOrderRouterRevShares(): MsgSetOrderRouterRevShares {
   return {
     authority: "",
