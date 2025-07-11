@@ -1582,6 +1582,22 @@
         "type": "object",
         "additionalProperties": false
       },
+      "TurnkeyAuthResponse": {
+        "properties": {
+          "subOrgId": {
+            "type": "string"
+          },
+          "salt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subOrgId",
+          "salt"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "MegavaultHistoricalPnlResponse": {
         "properties": {
           "megavaultPnl": {
@@ -3673,6 +3689,55 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/turnkey/signin": {
+      "post": {
+        "operationId": "SignIn",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnkeyAuthResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "signinMethod",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "email",
+                "social",
+                "passkey"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "userEmail",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "targetPublicKey",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ]

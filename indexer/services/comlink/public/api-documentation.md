@@ -3599,6 +3599,93 @@ fetch(`${baseURL}/transfers/between?sourceAddress=string&sourceSubaccountNumber=
 This operation does not require authentication
 </aside>
 
+## SignIn
+
+<a id="opIdSignIn"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+# For the deployment by DYDX token holders, use
+# baseURL = 'https://indexer.dydx.trade/v4'
+baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
+
+r = requests.post(f'{baseURL}/turnkey/signin', params={
+  'signinMethod': 'email'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+// For the deployment by DYDX token holders, use
+// const baseURL = 'https://indexer.dydx.trade/v4';
+const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
+
+fetch(`${baseURL}/turnkey/signin?signinMethod=email`,
+{
+  method: 'POST',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /turnkey/signin`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|signinMethod|query|string|true|none|
+|userEmail|query|string|false|none|
+|targetPublicKey|query|string|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|signinMethod|email|
+|signinMethod|social|
+|signinMethod|passkey|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "subOrgId": "string",
+  "salt": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[TurnkeyAuthResponse](#schematurnkeyauthresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetMegavaultHistoricalPnl
 
 <a id="opIdGetMegavaultHistoricalPnl"></a>
@@ -6234,6 +6321,28 @@ or
 |offset|integer(int32)|false|none|none|
 |transfersSubset|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 |totalNetTransfers|string|true|none|none|
+
+## TurnkeyAuthResponse
+
+<a id="schematurnkeyauthresponse"></a>
+<a id="schema_TurnkeyAuthResponse"></a>
+<a id="tocSturnkeyauthresponse"></a>
+<a id="tocsturnkeyauthresponse"></a>
+
+```json
+{
+  "subOrgId": "string",
+  "salt": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|subOrgId|string|true|none|none|
+|salt|string|true|none|none|
 
 ## MegavaultHistoricalPnlResponse
 
