@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	OneMillion        = uint32(1_000_000)
-	TenThousand       = uint32(10_000)
-	OneHundred        = uint32(100)
-	MaxPriceChangePpm = uint32(10_000)
+	OneMillion         = uint32(1_000_000)
+	OneHundredThousand = uint32(100_000)
+	TenThousand        = uint32(10_000)
+	OneHundred         = uint32(100)
+	MaxPriceChangePpm  = uint32(10_000)
 	// 10^6 quantums == 1 USD.
 	QuoteCurrencyAtomicResolution = int32(-6)
 
