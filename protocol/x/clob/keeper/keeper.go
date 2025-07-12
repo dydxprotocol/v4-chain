@@ -319,11 +319,12 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 	}
 
 	placedStatefulOrders := k.GetAllPlacedStatefulOrders(ctx)
+	counter := 0
 	for _, order := range placedStatefulOrders {
 		subaccountId := order.GetSubaccountId()
-		if _, exists := debugAddress[subaccountId.Owner]; exists {
+		if order.IsConditionalOrder() && order.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
 			k.Logger(ctx).Info(
-				"!!!! Debug: placed stateful order in state",
+				"!!!! Debug: placed IOC conditional order in state",
 				"owner",
 				subaccountId.Owner,
 				"subaccount_id",
@@ -331,8 +332,21 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 				"order",
 				order,
 			)
+			counter++
 		}
+		// if _, exists := debugAddress[subaccountId.Owner]; exists {
+		// 	k.Logger(ctx).Info(
+		// 		"!!!! Debug: placed stateful order in state",
+		// 		"owner",
+		// 		subaccountId.Owner,
+		// 		"subaccount_id",
+		// 		subaccountId,
+		// 		"order",
+		// 		order,
+		// 	)
+		// }
 	}
+	k.Logger(ctx).Info("!!!! Debug: counter", "counter", counter)
 
 	// Ensure that the stateful order count is accurately represented in the memstore on restart.
 	statefulOrders := k.GetAllStatefulOrders(ctx)
