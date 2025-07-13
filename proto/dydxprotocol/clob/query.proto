@@ -57,6 +57,11 @@ service Query {
     option (google.api.http).get = "/dydxprotocol/clob/liquidations_config";
   }
 
+  rpc StatefulOrderCount(QueryStatefulOrderCountRequest)
+      returns (QueryStatefulOrderCountResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/stateful_order_count";
+  }
+
   // Queries the stateful order for a given order id.
   rpc StatefulOrder(QueryStatefulOrderRequest)
       returns (QueryStatefulOrderResponse) {}
@@ -73,6 +78,18 @@ service Query {
   // such as order placements, updates, and fills.
   rpc StreamOrderbookUpdates(StreamOrderbookUpdatesRequest)
       returns (stream StreamOrderbookUpdatesResponse);
+}
+
+// QueryStatefulOrderCountRequest is a request message for StatefulOrderCount.
+message QueryStatefulOrderCountRequest {
+  // Subaccount id to query.
+  dydxprotocol.subaccounts.SubaccountId  subaccount_id = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryStatefulOrderCountResponse is a response message for StatefulOrderCount.
+message QueryStatefulOrderCountResponse {
+  // Count of stateful orders.
+  uint32 count = 1;
 }
 
 // QueryGetClobPairRequest is request type for the ClobPair method.

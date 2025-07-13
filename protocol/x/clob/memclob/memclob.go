@@ -426,6 +426,11 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 	return offchainUpdates
 }
 
+// Added for debugging purposes.
+func ShouldLogForGhostOrderDebug(order types.Order) bool {
+	return order.IsStatefulOrder() && order.ReduceOnly && order.TimeInForce == types.Order_TIME_IN_FORCE_IOC && order.IsStatefulOrder()
+}
+
 // GetOperationsRaw fetches the operations to propose in the next block in raw format
 // for placement into MsgProposedOperations.
 func (m *MemClobPriceTimePriority) GetOperationsRaw(ctx sdk.Context) (
@@ -520,7 +525,13 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	// Attempt to match the order against the orderbook.
+	if ShouldLogForGhostOrderDebug(order) {
+		ctx.Logger().Warn("Debug: before matchOrder", "order", order)
+	}
 	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
+	if ShouldLogForGhostOrderDebug(order) {
+		ctx.Logger().Warn("Debug: after matchOrder", "takerOrderStatus", takerOrderStatus, "takerOffchainUpdates", takerOffchainUpdates, "err", err)
+	}
 	offchainUpdates.Append(takerOffchainUpdates)
 
 	if err != nil {
@@ -563,6 +574,9 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 
 	// If the status of the taker order is not successful, do not attempt to add the order to the orderbook.
 	if !takerOrderStatus.OrderStatus.IsSuccess() {
+		if ShouldLogForGhostOrderDebug(order) {
+			ctx.Logger().Warn("Debug: Would send order removal message", "orderId", order.OrderId, "takerOrderStatus", takerOrderStatus)
+		}
 		if m.generateOffchainUpdates {
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
@@ -589,6 +603,10 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, offchainUpdates, nil
 	}
 
+	if ShouldLogForGhostOrderDebug(order) {
+		ctx.Logger().Warn("Debug: remainingSize", "remainingSize", remainingSize, "timeInForce", order.GetTimeInForce())
+	}
+
 	// If the order has no remaining size, we do not have to add the order to the orderbook and we can return early.
 	if remainingSize == 0 {
 		// If the status of the taker order after matching is success and the order has no remaining size, send an
@@ -610,6 +628,9 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	// If this is an IOC order, cancel the remaining size since IOC orders cannot be maker orders.
 	if order.GetTimeInForce() == types.Order_TIME_IN_FORCE_IOC {
 		orderStatus := types.ImmediateOrCancelWouldRestOnBook
+		if ShouldLogForGhostOrderDebug(order) {
+			ctx.Logger().Warn("Debug: Would send order removal message for IOC order with non-zero remaining size", "orderId", order.OrderId, "orderStatus", orderStatus)
+		}
 		if m.generateOffchainUpdates {
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
@@ -627,6 +648,9 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		// long-term orders cannot use IOC, so we know this stateful order
 		// is conditional. Remove the conditional order.
 		if order.IsStatefulOrder() && !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+			if ShouldLogForGhostOrderDebug(order) {
+				ctx.Logger().Warn("Debug: Adding order removal to operations queue for conditional IOC order", "orderId", order.OrderId)
+			}
 			m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
 				order.OrderId,
 				types.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
