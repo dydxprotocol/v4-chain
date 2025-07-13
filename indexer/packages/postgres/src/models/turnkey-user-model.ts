@@ -17,7 +17,6 @@ export default class TurnkeyUserModel extends BaseModel {
         'svmAddress',
         'evmAddress',
         'salt',
-        'dydxAddress',
         'createdAt',
       ],
       properties: {
@@ -27,7 +26,7 @@ export default class TurnkeyUserModel extends BaseModel {
         svmAddress: { type: 'string' },
         evmAddress: { type: 'string' },
         salt: { type: 'string' },
-        dydxAddress: { type: 'string' },
+        dydxAddress: { type: ['string', 'null'] },
         createdAt: { type: 'string' },
       },
     };
