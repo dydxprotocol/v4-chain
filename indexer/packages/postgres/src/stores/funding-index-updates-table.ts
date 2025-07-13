@@ -1,5 +1,4 @@
 import Big from 'big.js';
-import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
 import { BUFFER_ENCODING_UTF_8, DEFAULT_POSTGRES_OPTIONS } from '../constants';
@@ -198,6 +197,24 @@ export async function findFundingIndexMap(
   effectiveBeforeOrAtHeight: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<FundingIndexMap> {
+  const fundingIndexUpdatesQuery: QueryBuilder<FundingIndexUpdatesModel> = setupBaseQuery<
+    FundingIndexUpdatesModel>(
+      FundingIndexUpdatesModel,
+      options,
+    )
+    .distinctOn(FundingIndexUpdatesColumns.perpetualId)
+    .where(FundingIndexUpdatesColumns.effectiveAtHeight, '<=', effectiveBeforeOrAtHeight)
+    // Optimization to reduce number of rows needed to scan
+    .where(
+      FundingIndexUpdatesColumns.effectiveAtHeight,
+      '>',
+      // Why do we scan more than one hour of blocks?
+      Big(effectiveBeforeOrAtHeight).minus(FOUR_HOUR_OF_BLOCKS).toFixed(),
+    )
+    .orderBy(FundingIndexUpdatesColumns.perpetualId)
+    .orderBy(FundingIndexUpdatesColumns.effectiveAtHeight, Ordering.DESC)
+    .returning('*');
+
   // TODO(IND-39): Remove this default when the database is seeded using events emitted from
   // protocol during genesis.
   // Default funding index per perpetual market is 0.
@@ -206,40 +223,19 @@ export async function findFundingIndexMap(
     [],
     options,
   );
-  const initialFundingIndexMap: FundingIndexMap = _.reduce(perpetualMarkets,
-    (acc: FundingIndexMap, perpetualMarket: PerpetualMarketFromDatabase): FundingIndexMap => {
-      acc[perpetualMarket.id] = Big(0);
-      return acc;
-    },
-    {},
-  );
 
-  const baseQuery: QueryBuilder<FundingIndexUpdatesModel> = setupBaseQuery<
-    FundingIndexUpdatesModel>(
-      FundingIndexUpdatesModel,
-      options,
-    );
+  const bigZero = Big(0);
+  const fundingIndexMap: FundingIndexMap = Object.create(null);
+  for (const perpetualMarket of perpetualMarkets) {
+    fundingIndexMap[perpetualMarket.id] = bigZero;
+  }
 
-  const fundingIndexUpdates: FundingIndexUpdatesFromDatabase[] = await baseQuery
-    .distinctOn(FundingIndexUpdatesColumns.perpetualId)
-    .where(FundingIndexUpdatesColumns.effectiveAtHeight, '<=', effectiveBeforeOrAtHeight)
-    // Optimization to reduce number of rows needed to scan
-    .where(
-      FundingIndexUpdatesColumns.effectiveAtHeight,
-      '>',
-      Big(effectiveBeforeOrAtHeight).minus(FOUR_HOUR_OF_BLOCKS).toFixed(),
-    )
-    .orderBy(FundingIndexUpdatesColumns.perpetualId)
-    .orderBy(FundingIndexUpdatesColumns.effectiveAtHeight, Ordering.DESC)
-    .returning('*');
+  const fundingIndexUpdates: FundingIndexUpdatesFromDatabase[] = await fundingIndexUpdatesQuery;
+  for (const fundingIndexUpdate of fundingIndexUpdates) {
+    fundingIndexMap[fundingIndexUpdate.perpetualId] = Big(fundingIndexUpdate.fundingIndex);
+  }
 
-  return _.reduce(fundingIndexUpdates,
-    (acc: FundingIndexMap, fundingIndexUpdate: FundingIndexUpdatesFromDatabase) => {
-      acc[fundingIndexUpdate.perpetualId] = Big(fundingIndexUpdate.fundingIndex);
-      return acc;
-    },
-    initialFundingIndexMap,
-  );
+  return fundingIndexMap;
 }
 
 /**
@@ -259,8 +255,8 @@ export async function findFundingIndexMaps(
     .filter((parsedHeight: number): boolean => { return !Number.isNaN(parsedHeight); })
     .sort();
   // Get the min height to limit the search to blocks 4 hours or before the min height.
-  const minHeight: number = heightNumbers[0];
-  const maxheight: number = heightNumbers[heightNumbers.length - 1];
+  const minHeight = Big(heightNumbers[0]).minus(FOUR_HOUR_OF_BLOCKS).toFixed();
+  const maxHeight = Big(heightNumbers[heightNumbers.length - 1]).toFixed();
 
   const result: {
     rows: FundingIndexUpdatesFromDatabaseWithSearchHeight[],
@@ -273,17 +269,15 @@ export async function findFundingIndexMaps(
       "funding_index_updates",
       unnest(ARRAY[${heightNumbers.join(',')}]) AS "searchHeight"
     WHERE
-      "effectiveAtHeight" > ${Big(minHeight).minus(FOUR_HOUR_OF_BLOCKS).toFixed()} AND
-      "effectiveAtHeight" <= ${Big(maxheight)} AND
+      "effectiveAtHeight" > ${minHeight} AND
+      "effectiveAtHeight" <= ${maxHeight} AND
       "effectiveAtHeight" <= "searchHeight"
     ORDER BY
       "perpetualId",
       "searchHeight",
       "effectiveAtHeight" DESC
     `,
-  ) as unknown as {
-    rows: FundingIndexUpdatesFromDatabaseWithSearchHeight[],
-  };
+  );
 
   const perpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
     {},
@@ -291,15 +285,14 @@ export async function findFundingIndexMaps(
     options,
   );
 
-  const fundingIndexMaps:{[blockHeight: string]: FundingIndexMap} = {};
+  const bigZero = Big(0);
+  const fundingIndexMaps:{[blockHeight: string]: FundingIndexMap} = Object.create(null);
   for (const height of effectiveBeforeOrAtHeights) {
-    fundingIndexMaps[height] = _.reduce(perpetualMarkets,
-      (acc: FundingIndexMap, perpetualMarket: PerpetualMarketFromDatabase): FundingIndexMap => {
-        acc[perpetualMarket.id] = Big(0);
-        return acc;
-      },
-      {},
-    );
+    const fundingIndexMap: FundingIndexMap = Object.create(null);
+    for (const perpetualMarket of perpetualMarkets) {
+      fundingIndexMap[perpetualMarket.id] = bigZero;
+    }
+    fundingIndexMaps[height] = fundingIndexMap;
   }
   for (const funding of result.rows) {
     fundingIndexMaps[funding.searchHeight][funding.perpetualId] = Big(funding.fundingIndex);
