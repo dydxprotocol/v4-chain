@@ -53,6 +53,20 @@ export async function findByEmail(
     .returning('*');
 }
 
+export async function findBySuborgId(
+  suborgId: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<TurnkeyUserFromDatabase | undefined> {
+  const baseQuery: QueryBuilder<TurnkeyUserModel> = setupBaseQuery<TurnkeyUserModel>(
+    TurnkeyUserModel,
+    options,
+  );
+  return baseQuery
+    .where(TurnkeyUserColumns.suborgId, suborgId)
+    .first()
+    .returning('*');
+}
+
 export async function create(
   turnkeyUserToCreate: TurnkeyUserCreateObject,
   options: Options = { txId: undefined },
