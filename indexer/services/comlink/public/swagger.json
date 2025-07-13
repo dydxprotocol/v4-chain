@@ -1584,7 +1584,16 @@
       },
       "TurnkeyAuthResponse": {
         "properties": {
-          "subOrgId": {
+          "organizationId": {
+            "type": "string"
+          },
+          "apiKeyId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "session": {
             "type": "string"
           },
           "salt": {
@@ -1592,7 +1601,6 @@
           }
         },
         "required": [
-          "subOrgId",
           "salt"
         ],
         "type": "object",
@@ -3735,6 +3743,22 @@
           {
             "in": "query",
             "name": "targetPublicKey",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "provider",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "oidcToken",
             "required": false,
             "schema": {
               "type": "string"

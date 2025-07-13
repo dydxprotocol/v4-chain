@@ -34,6 +34,14 @@ function startServer() {
 }
 
 async function start() {
+  logger.info({
+    at: 'index#start',
+    message: 'Starting server',
+    params: {
+      NODE_ENV: process.env.NODE_ENV,
+      DB_PORT: config.TURNKEY_API_PUBLIC_KEY,
+    },
+  });
   startBugsnag();
 
   // Initialize PerpetualMarkets cache
@@ -45,7 +53,6 @@ async function start() {
   wrapBackgroundTask(liquidityTierRefresher.start(), true, 'startUpdateLiquidityTiers');
   // Initialize cache for vault start PnL
   await startVaultStartPnlCache();
-
   await connectToRedis();
   logger.info({
     at: 'index#start',

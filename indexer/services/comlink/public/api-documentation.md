@@ -3656,6 +3656,8 @@ fetch(`${baseURL}/turnkey/signin?signinMethod=email`,
 |signinMethod|query|string|true|none|
 |userEmail|query|string|false|none|
 |targetPublicKey|query|string|false|none|
+|provider|query|string|false|none|
+|oidcToken|query|string|false|none|
 
 #### Enumerated Values
 
@@ -3671,7 +3673,10 @@ fetch(`${baseURL}/turnkey/signin?signinMethod=email`,
 
 ```json
 {
-  "subOrgId": "string",
+  "organizationId": "string",
+  "apiKeyId": "string",
+  "userId": "string",
+  "session": "string",
   "salt": "string"
 }
 ```
@@ -6331,7 +6336,10 @@ or
 
 ```json
 {
-  "subOrgId": "string",
+  "organizationId": "string",
+  "apiKeyId": "string",
+  "userId": "string",
+  "session": "string",
   "salt": "string"
 }
 
@@ -6341,7 +6349,10 @@ or
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|subOrgId|string|true|none|none|
+|organizationId|string|false|none|none|
+|apiKeyId|string|false|none|none|
+|userId|string|false|none|none|
+|session|string|false|none|none|
 |salt|string|true|none|none|
 
 ## MegavaultHistoricalPnlResponse
