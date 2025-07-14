@@ -68,10 +68,11 @@ message QueryUnconditionalRevShareConfigResponse {
 
 // Queries order router rev shares
 message QueryOrderRouterRevShare {
-  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
 // Response type for QueryOrderRouterRevShare
 message QueryOrderRouterRevShareResponse {
-  OrderRouterRevShare order_router_rev_share = 1 [ (gogoproto.nullable) = false ];
+  OrderRouterRevShare order_router_rev_share = 1
+      [ (gogoproto.nullable) = false ];
 }
