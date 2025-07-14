@@ -8,13 +8,11 @@ var (
 		1,
 		"invalid address",
 	)
-
 	ErrInvalidRevenueSharePpm = errorsmod.Register(
 		ModuleName,
 		2,
 		"invalid revenue share ppm",
 	)
-
 	ErrMarketMapperRevShareDetailsNotFound = errorsmod.Register(
 		ModuleName,
 		3,
@@ -25,7 +23,6 @@ var (
 		4,
 		"invalid unconditional revshare config",
 	)
-
 	ErrRevShareSafetyViolation = errorsmod.Register(
 		ModuleName,
 		5,
@@ -45,5 +42,10 @@ var (
 		ModuleName,
 		8,
 		"order router rev share not found",
+	)
+	ErrInvalidRequest = errorsmod.Register(
+		ModuleName,
+		9,
+		"invalid request",
 	)
 )
