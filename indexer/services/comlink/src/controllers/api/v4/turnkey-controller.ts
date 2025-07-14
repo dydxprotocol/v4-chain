@@ -2,7 +2,7 @@ import { randomBytes } from 'crypto';
 
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
-import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
+import { TurnkeyApiClient, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import {
@@ -40,7 +40,7 @@ interface CreateSuborgParams {
   oidcToken?: string,
   authenticatorName?: string,
   challenge?: string,
-  attestation?: TurnkeyApiTypes['v1Attestation'],
+  attestation?: string,
 }
 interface GetSuborgParams {
   email?: string,
@@ -89,9 +89,7 @@ class TurnkeyController extends Controller {
       @Query() provider?: string,
       @Query() oidcToken?: string,
       @Query() challenge?: string,
-      @Query() credentialId?: string,
-      @Query() clientDataJson?: string,
-      @Query() attestationObject?: string,
+      @Query() attestation?: string,
   ): Promise<TurnkeyAuthResponse> {
     // Determine authentication method
     if (signinMethod === 'email') {
@@ -160,15 +158,10 @@ class TurnkeyController extends Controller {
         throw new Error(`Social Signin Error: ${error}`);
       }
     } else if (signinMethod === 'passkey') {
-      if (!challenge || !credentialId || !clientDataJson || !attestationObject) {
-        throw new Error('challenge, credentialId, clientDataJson, and attestationObject are required for passkey signin');
+      if (!challenge || !attestation) {
+        throw new Error('challenge and attestation are required for passkey signin');
       }
-      return this.passkeySignin(challenge, 'Passkey', {
-        credentialId,
-        clientDataJson,
-        attestationObject,
-        transports: [],
-      });
+      return this.passkeySignin(challenge, 'Passkey', attestation);
     }
     throw new Error('Invalid signin method. Must be one of: email, social, passkey');
   }
@@ -223,10 +216,13 @@ class TurnkeyController extends Controller {
 
     const authenticators = [];
     if (params.authenticatorName && params.challenge && params.attestation) {
+
+      // serialize the attestation object.
+      const attestationObject = JSON.parse(params.attestation);
       authenticators.push({
         authenticatorName: params.authenticatorName,
         challenge: params.challenge,
-        attestation: params.attestation,
+        attestation: attestationObject,
       });
     }
     const subOrg = await this.parentApiClient.createSubOrganization({
@@ -364,6 +360,7 @@ class TurnkeyController extends Controller {
     };
   }
 
+  // creates a suborg if one doesn't already exist.
   private async socialSignin(
     provider: string,
     oidcToken: string,
@@ -392,16 +389,16 @@ class TurnkeyController extends Controller {
     };
   }
 
-  // does not return a session as there's no way to stamp it serverside.
+  // does not return a session as front end can just call the stampLogin endpoint.
   // front end should just call the stampLogin endpoint and use this signin method
   // as a way to get the salt.
   private async passkeySignin(
     challenge: string,
     authenticatorName: string,
-    attestation: TurnkeyApiTypes['v1Attestation'],
+    attestation: string,
   ): Promise<TurnkeyAuthResponse> {
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
-      credentialId: attestation.credentialId,
+      credentialId: attestation,
     });
     if (!suborg) {
       suborg = await this.createSuborg({
@@ -488,38 +485,18 @@ const SignInValidationSchema = checkSchema({
     errorMessage: 'Target public key must be a string',
   },
   // Passkey params
-  // challenge: {
-  //   in: ['body'],
-  //   optional: true,
-  //   isString: true,
-  //   errorMessage: 'Challenge must be a string',
-  // },
-  // authenticatorName: {
-  //   in: ['body'],
-  //   optional: true,
-  //   isString: true,
-  //   errorMessage: 'Authenticator name must be a string',
-  // },
-  // 'attestation.credentialId': {
-  //   in: ['body'],
-  //   optional: true,
-  //   isString: true,
-  //   errorMessage: 'Attestation credential ID must be a string',
-  // },
-  // 'attestation.clientDataJson': {
-  //   in: ['body'],
-  //   optional: true,
-  //   isString: true,
-  //   errorMessage: 'Attestation client data JSON must be a string',
-  // },
-  // 'attestation.attestationObject': {
-  //   in: ['body'],
-  //   optional: true,
-  //   isString: true,
-  //   errorMessage: 'Attestation object must be a string',
-  // },
-  // Email params
-  // Social params
+  challenge: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Challenge must be a string',
+  },
+  attestation: {
+    in: ['body'],
+    optional: true,
+    isString: true,
+    errorMessage: 'Attestation must be a string',
+  },
   provider: {
     in: ['body'],
     optional: true,
@@ -534,107 +511,7 @@ const SignInValidationSchema = checkSchema({
   },
 });
 
-// const RegisterValidationSchema = checkSchema({
-//   email: {
-//     in: ['body'],
-//     optional: true,
-//     isEmail: true,
-//     errorMessage: 'Must be a valid email address',
-//   },
-//   oauthProvider: {
-//     in: ['body'],
-//     optional: true,
-//     isIn: {
-//       options: [['google', 'github', 'apple']],
-//     },
-//     errorMessage: 'Must be one of: google, github, apple',
-//   },
-//   oauthToken: {
-//     in: ['body'],
-//     optional: true,
-//     isString: true,
-//     errorMessage: 'OAuth token must be a string',
-//   },
-//   passkeyCredential: {
-//     in: ['body'],
-//     optional: true,
-//     isString: true,
-//     errorMessage: 'Passkey credential must be a string',
-//   },
-//   passkeyChallenge: {
-//     in: ['body'],
-//     optional: true,
-//     isString: true,
-//     errorMessage: 'Passkey challenge must be a string',
-//   },
-//   address: {
-//     in: ['body'],
-//     isString: true,
-//     custom: {
-//       options: (value: string) => value.startsWith('dydx1'),
-//     },
-//     errorMessage: 'Address must be a valid dYdX address starting with dydx1',
-//   },
-//   timestamp: {
-//     in: ['body'],
-//     isInt: true,
-//     errorMessage: 'Timestamp must be an integer',
-//   },
-//   message: {
-//     in: ['body'],
-//     isString: true,
-//     errorMessage: 'Message must be a string',
-//   },
-//   signedMessage: {
-//     in: ['body'],
-//     optional: true,
-//     isString: true,
-//     errorMessage: 'Signed message must be a string',
-//   },
-//   pubKey: {
-//     in: ['body'],
-//     optional: true,
-//     isString: true,
-//     errorMessage: 'Public key must be a string',
-//   },
-//   walletIsKeplr: {
-//     in: ['body'],
-//     optional: true,
-//     isBoolean: true,
-//     errorMessage: 'walletIsKeplr must be a boolean',
-//   },
-// });
-
-// const AddressValidationSchema = checkSchema({
-//   address: {
-//     in: ['params'],
-//     isString: true,
-//     custom: {
-//       options: (value: string) => value.startsWith('dydx1'),
-//     },
-//     errorMessage: 'Address must be a valid dYdX address starting with dydx1',
-//   },
-// });
-
-// const InitiatePasskeyValidationSchema = checkSchema({
-//   address: {
-//     in: ['body'],
-//     isString: true,
-//     custom: {
-//       options: (value: string) => value.startsWith('dydx1'),
-//     },
-//     errorMessage: 'Address must be a valid dYdX address starting with dydx1',
-//   },
-//   action: {
-//     in: ['body'],
-//     isIn: {
-//       options: [['register', 'authenticate']],
-//     },
-//     errorMessage: 'Action must be either register or authenticate',
-//   },
-// });
-
-// Express routes
+// Express route
 router.post(
   '/signin',
   rateLimiterMiddleware(getReqRateLimiter),
@@ -651,6 +528,8 @@ router.post(
         targetPublicKey: string,
         provider: string,
         oidcToken: string,
+        challenge: string,
+        attestation: string,
       };
 
       const controller: TurnkeyController = new TurnkeyController();
@@ -667,6 +546,8 @@ router.post(
         body.targetPublicKey,
         body.provider,
         body.oidcToken,
+        body.challenge,
+        body.attestation,
       );
 
       return res.send(response);
