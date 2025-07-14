@@ -1,6 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.revshare;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types";
@@ -24,4 +25,13 @@ message UnconditionalRevShareConfig {
   }
   // Configs for each recipient.
   repeated RecipientConfig configs = 1 [ (gogoproto.nullable) = false ];
+}
+
+// Message to set the order router revenue share
+message OrderRouterRevShare {
+  // The address of the order router.
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The share of the revenue to be paid to the order router.
+  uint32 share_ppm = 2;
 }

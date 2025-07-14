@@ -11,3 +11,8 @@ func Uint32ToKey(i uint32) []byte {
 	binary.BigEndian.PutUint32(bytes, uint32(i))
 	return bytes
 }
+
+// BytesToUint32 converts a 4-byte slice in big-endian format to a uint32.
+func BytesToUint32(bytes []byte) uint32 {
+	return binary.BigEndian.Uint32(bytes)
+}

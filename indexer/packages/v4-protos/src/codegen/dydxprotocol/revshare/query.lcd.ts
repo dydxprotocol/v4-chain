@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryMarketMapperRevenueShareParams, QueryMarketMapperRevenueShareParamsResponseSDKType, QueryMarketMapperRevShareDetails, QueryMarketMapperRevShareDetailsResponseSDKType, QueryUnconditionalRevShareConfig, QueryUnconditionalRevShareConfigResponseSDKType } from "./query";
+import { QueryMarketMapperRevenueShareParams, QueryMarketMapperRevenueShareParamsResponseSDKType, QueryMarketMapperRevShareDetails, QueryMarketMapperRevShareDetailsResponseSDKType, QueryUnconditionalRevShareConfig, QueryUnconditionalRevShareConfigResponseSDKType, QueryOrderRouterRevShare, QueryOrderRouterRevShareResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -12,6 +12,7 @@ export class LCDQueryClient {
     this.marketMapperRevenueShareParams = this.marketMapperRevenueShareParams.bind(this);
     this.marketMapperRevShareDetails = this.marketMapperRevShareDetails.bind(this);
     this.unconditionalRevShareConfig = this.unconditionalRevShareConfig.bind(this);
+    this.orderRouterRevShare = this.orderRouterRevShare.bind(this);
   }
   /* MarketMapperRevenueShareParams queries the revenue share params for the
    market mapper */
@@ -34,6 +35,13 @@ export class LCDQueryClient {
   async unconditionalRevShareConfig(_params: QueryUnconditionalRevShareConfig = {}): Promise<QueryUnconditionalRevShareConfigResponseSDKType> {
     const endpoint = `dydxprotocol/revshare/unconditional_rev_share`;
     return await this.req.get<QueryUnconditionalRevShareConfigResponseSDKType>(endpoint);
+  }
+  /* Queries order router rev share */
+
+
+  async orderRouterRevShare(params: QueryOrderRouterRevShare): Promise<QueryOrderRouterRevShareResponseSDKType> {
+    const endpoint = `dydxprotocol/revshare/order_router_rev_share/${params.address}`;
+    return await this.req.get<QueryOrderRouterRevShareResponseSDKType>(endpoint);
   }
 
 }
