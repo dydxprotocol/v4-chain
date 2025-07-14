@@ -213,6 +213,50 @@ func (k Keeper) GetAllRevShares(
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
+
+	var orderRouterRevShares []types.RevShare
+	// No affiliate fees shared, so we can generate order router rev shares
+	if affiliateRevShares == nil {
+		takerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
+		if err != nil {
+			return types.RevSharesForFill{}, err
+		}
+
+		makerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
+		if err != nil {
+			return types.RevSharesForFill{}, err
+		}
+
+		// Orders can have 2 rev share ids, we need to calculate each side separately
+		// This is taker ppm * min(taker, taker - maker_rebate)
+		takerFeesSide := lib.BigMin(takerFees, takerFees.Add(takerFees, makerFees))
+		takerRevShare := lib.BigMulPpm(lib.BigU(takerOrderRouterRevSharePpm), takerFeesSide, false)
+
+		// maker ppm * max(0, maker)
+		makerFeeSide := lib.BigMax(lib.BigI(0), makerFees)
+		makerRevShare := lib.BigMulPpm(makerFeeSide,
+			lib.BigU(makerOrderRouterRevSharePpm),
+			false,
+		)
+
+		orderRouterRevShares = []types.RevShare{
+			{
+				Recipient:         fill.TakerOrderRouterAddr,
+				RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+				RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+				QuoteQuantums:     takerRevShare,
+				RevSharePpm:       takerOrderRouterRevSharePpm,
+			},
+			{
+				Recipient:         fill.MakerOrderRouterAddr,
+				RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_MAKER_FEE,
+				RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+				QuoteQuantums:     makerRevShare,
+				RevSharePpm:       makerOrderRouterRevSharePpm,
+			},
+		}
+	}
+
 	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
 	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
 		return types.RevSharesForFill{}, types.ErrAffiliateFeesSharedGreaterThanOrEqualToNetFees
@@ -228,6 +272,9 @@ func (k Keeper) GetAllRevShares(
 	}
 
 	revShares = append(revShares, affiliateRevShares...)
+	if orderRouterRevShares != nil {
+		revShares = append(revShares, orderRouterRevShares...)
+	}
 	revShares = append(revShares, unconditionalRevShares...)
 	revShares = append(revShares, marketMapperRevShares...)
 
@@ -256,6 +303,7 @@ func (k Keeper) GetAllRevShares(
 		AffiliateRevShare:        affiliateRevShare,
 		FeeSourceToQuoteQuantums: feeSourceToQuoteQuantums,
 		FeeSourceToRevSharePpm:   feeSourceToRevSharePpm,
+		OrderRouterRevShares:     orderRouterRevShares,
 		AllRevShares:             revShares,
 	}, nil
 }

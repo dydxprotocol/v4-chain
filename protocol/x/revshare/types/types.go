@@ -43,6 +43,7 @@ const (
 	REV_SHARE_FEE_SOURCE_UNSPECIFIED RevShareFeeSource = iota
 	REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE
 	REV_SHARE_FEE_SOURCE_TAKER_FEE
+	REV_SHARE_FEE_SOURCE_MAKER_FEE
 )
 
 type RevShareType int
@@ -52,12 +53,14 @@ const (
 	REV_SHARE_TYPE_MARKET_MAPPER
 	REV_SHARE_TYPE_UNCONDITIONAL
 	REV_SHARE_TYPE_AFFILIATE
+	REV_SHARE_TYPE_ORDER_ROUTER
 )
 
 type RevSharesForFill struct {
 	AffiliateRevShare        *RevShare
 	FeeSourceToQuoteQuantums map[RevShareFeeSource]*big.Int
 	FeeSourceToRevSharePpm   map[RevShareFeeSource]uint32
+	OrderRouterRevShares     []RevShare
 	AllRevShares             []RevShare
 }
 
@@ -71,6 +74,8 @@ func (r RevShareType) String() string {
 		return "REV_SHARE_TYPE_UNCONDITIONAL"
 	case REV_SHARE_TYPE_AFFILIATE:
 		return "REV_SHARE_TYPE_AFFILIATE"
+	case REV_SHARE_TYPE_ORDER_ROUTER:
+		return "REV_SHARE_TYPE_ORDER_ROUTER"
 	default:
 		return "UNKNOWN"
 	}

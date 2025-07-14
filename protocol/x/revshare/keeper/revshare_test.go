@@ -317,6 +317,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            150_000, // affiliate rev share fee ppm
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 600_000, // unconditional + market mapper rev share fee ppm
 				},
+				OrderRouterRevShares: nil,
 			},
 			fill: clobtypes.FillForProcess{
 				TakerAddr:                         constants.AliceAccAddress.String(),
@@ -405,6 +406,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					QuoteQuantums:     big.NewInt(1_500_000),
 					RevSharePpm:       150_000,
 				},
+				OrderRouterRevShares: nil,
 			},
 			fill: clobtypes.FillForProcess{
 				TakerAddr:                         constants.AliceAccAddress.String(),
@@ -490,6 +492,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 600_000,
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0,
 				},
+				OrderRouterRevShares: nil,
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -553,6 +556,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					QuoteQuantums:     big.NewInt(1_500_000),
 					RevSharePpm:       150_000, // 15%
 				},
+				OrderRouterRevShares: nil,
 			},
 			fill: clobtypes.FillForProcess{
 				TakerAddr:                         constants.AliceAccAddress.String(),
@@ -614,6 +618,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					QuoteQuantums:     big.NewInt(1_500_000),
 					RevSharePpm:       150_000, // 15%
 				},
+				OrderRouterRevShares: nil,
 			},
 			fill: clobtypes.FillForProcess{
 				TakerAddr:                         constants.AliceAccAddress.String(),
@@ -668,6 +673,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					QuoteQuantums:     big.NewInt(2_500_000),
 					RevSharePpm:       250_000, // 25%
 				},
+				OrderRouterRevShares: nil,
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(950_000),
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(2_500_000),
@@ -685,6 +691,8 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
 				ProductId:                         marketId,
 				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+				TakerOrderRouterAddr:              constants.CarlAccAddress.String(),
+				MakerOrderRouterAddr:              constants.DaveAccAddress.String(),
 			},
 			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
 				affiliatesKeeper *affiliateskeeper.Keeper) {
@@ -700,6 +708,182 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
 					constants.BobAccAddress.String())
 				require.NoError(t, err)
+
+				// Set order router rev shares
+				err = keeper.SetOrderRouterRevShare(ctx, constants.CarlAccAddress.String(), 100_000) // 10%
+				require.NoError(t, err)
+				err = keeper.SetOrderRouterRevShare(ctx, constants.DaveAccAddress.String(), 200_000) // 20%
+				require.NoError(t, err)
+
+				err = affiliatesKeeper.SetAffiliateWhitelist(ctx, affiliatetypes.AffiliateWhitelist{
+					Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
+						{
+							Addresses:        []string{constants.BobAccAddress.String()},
+							TakerFeeSharePpm: 250_000, // 25%
+						},
+					},
+				})
+				require.NoError(t, err)
+			},
+		},
+		{
+			name: "Rev share prioritizes affiliates over order router rev shares",
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares: []types.RevShare{
+					{
+						Recipient:         constants.BobAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+						QuoteQuantums:     big.NewInt(2_500_000),
+						RevSharePpm:       250_000, // 25%
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
+						RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+						QuoteQuantums:     big.NewInt(950_000),
+						RevSharePpm:       100_000, // 10%
+					},
+				},
+				AffiliateRevShare: &types.RevShare{
+					Recipient:         constants.BobAccAddress.String(),
+					RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+					RevShareType:      types.REV_SHARE_TYPE_AFFILIATE,
+					QuoteQuantums:     big.NewInt(2_500_000),
+					RevSharePpm:       250_000, // 25%
+				},
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(950_000),
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(2_500_000),
+				},
+				OrderRouterRevShares: nil,
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 100_000, // 10%
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            250_000, // 25%
+				},
+			},
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         marketId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+				TakerOrderRouterAddr:              constants.CarlAccAddress.String(),
+				MakerOrderRouterAddr:              constants.DaveAccAddress.String(),
+			},
+			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
+				affiliatesKeeper *affiliateskeeper.Keeper) {
+				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
+					Address:         constants.AliceAccAddress.String(),
+					RevenueSharePpm: 100_000, // 10%
+					ValidDays:       1,
+				})
+				require.NoError(t, err)
+
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
+				err = affiliatesKeeper.RegisterAffiliate(ctx, constants.AliceAccAddress.String(),
+					constants.BobAccAddress.String())
+				require.NoError(t, err)
+
+				err = keeper.SetOrderRouterRevShare(ctx, constants.CarlAccAddress.String(), 100_000) // 10%
+				require.NoError(t, err)
+				err = keeper.SetOrderRouterRevShare(ctx, constants.DaveAccAddress.String(), 200_000) // 20%
+				require.NoError(t, err)
+
+				err = affiliatesKeeper.SetAffiliateWhitelist(ctx, affiliatetypes.AffiliateWhitelist{
+					Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
+						{
+							Addresses:        []string{constants.BobAccAddress.String()},
+							TakerFeeSharePpm: 250_000, // 25%
+						},
+					},
+				})
+				require.NoError(t, err)
+			},
+		},
+		{
+			name: "Rev share populates order router rev share if affiliates is empty",
+			expectedRevSharesForFill: types.RevSharesForFill{
+				AllRevShares: []types.RevShare{
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+						QuoteQuantums:     big.NewInt(950_000),
+						RevSharePpm:       100_000, // 10%
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+						QuoteQuantums:     big.NewInt(950_000),
+						RevSharePpm:       200_000, // 10%
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
+						RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
+						QuoteQuantums:     big.NewInt(950_000),
+						RevSharePpm:       100_000, // 10%
+					},
+				},
+				AffiliateRevShare: nil,
+				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
+					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(950_000),
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(2_500_000),
+				},
+				OrderRouterRevShares: []types.RevShare{
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+						QuoteQuantums:     big.NewInt(950_000),
+						RevSharePpm:       100_000, // 10%
+					},
+					{
+						Recipient:         constants.AliceAccAddress.String(),
+						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+						RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+						QuoteQuantums:     big.NewInt(950_000),
+						RevSharePpm:       200_000, // 10%
+					},
+				},
+				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
+					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 100_000, // 10%
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            250_000, // 25%
+				},
+			},
+			fill: clobtypes.FillForProcess{
+				TakerAddr:                         constants.AliceAccAddress.String(),
+				TakerFeeQuoteQuantums:             big.NewInt(10_000_000),
+				MakerAddr:                         constants.BobAccAddress.String(),
+				MakerFeeQuoteQuantums:             big.NewInt(2_000_000),
+				FillQuoteQuantums:                 big.NewInt(100_000_000_000),
+				ProductId:                         marketId,
+				MonthlyRollingTakerVolumeQuantums: 1_000_000_000_000,
+				TakerOrderRouterAddr:              constants.CarlAccAddress.String(),
+				MakerOrderRouterAddr:              constants.DaveAccAddress.String(),
+			},
+			setup: func(tApp *testapp.TestApp, ctx sdk.Context, keeper *keeper.Keeper,
+				affiliatesKeeper *affiliateskeeper.Keeper) {
+				err := keeper.SetMarketMapperRevenueShareParams(ctx, types.MarketMapperRevenueShareParams{
+					Address:         constants.AliceAccAddress.String(),
+					RevenueSharePpm: 100_000, // 10%
+					ValidDays:       1,
+				})
+				require.NoError(t, err)
+
+				err = affiliatesKeeper.UpdateAffiliateTiers(ctx, affiliatetypes.DefaultAffiliateTiers)
+				require.NoError(t, err)
+
+				err = keeper.SetOrderRouterRevShare(ctx, constants.CarlAccAddress.String(), 100_000) // 10%
+				require.NoError(t, err)
+				err = keeper.SetOrderRouterRevShare(ctx, constants.DaveAccAddress.String(), 200_000) // 20%
+				require.NoError(t, err)
+
 				err = affiliatesKeeper.SetAffiliateWhitelist(ctx, affiliatetypes.AffiliateWhitelist{
 					Tiers: []affiliatetypes.AffiliateWhitelist_Tier{
 						{
@@ -724,6 +908,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 0,
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            0,
 				},
+				OrderRouterRevShares: nil,
 			},
 			fill: clobtypes.FillForProcess{
 				TakerAddr:                         constants.AliceAccAddress.String(),

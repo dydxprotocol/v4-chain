@@ -78,6 +78,17 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 		return errorsmod.Wrapf(ErrInvalidOrderQuantums, "order size quantums cannot be 0")
 	}
 
+	if msg.Order.OrderRouterAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(msg.Order.OrderRouterAddress); err != nil {
+			return errorsmod.Wrapf(
+				ErrInvalidOrderRouterAddress,
+				"order router address '%s' must be a valid bech32 address, but got error '%v'",
+				msg.Order.OrderRouterAddress,
+				err.Error(),
+			)
+		}
+	}
+
 	orderId := msg.Order.GetOrderId()
 	if orderId.IsShortTermOrder() {
 		// This also implicitly verifies that GoodTilBlockTime is not set / is zero for short-term orders.

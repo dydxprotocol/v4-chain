@@ -529,6 +529,8 @@ func (k Keeper) persistMatchedOrders(
 			ctx,
 			matchWithOrders.TakerOrder.GetSubaccountId().Owner,
 		).TakerNotional,
+		TakerOrderRouterAddr: matchWithOrders.TakerOrder.GetOrderRouterAddress(),
+		MakerOrderRouterAddr: matchWithOrders.MakerOrder.GetOrderRouterAddress(),
 	}
 
 	// Distribute the fee amount from subacounts module to fee collector and rev share accounts

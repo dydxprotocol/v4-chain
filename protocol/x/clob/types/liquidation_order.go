@@ -133,6 +133,12 @@ func (o *LiquidationOrder) IsReduceOnly() bool {
 	return false
 }
 
+// GetOrderRouterAddress returns the order router address of this liquidation order.
+// This function is necessary for the `LiquidationOrder` type to implement the `MatchableOrder` interface.
+func (o *LiquidationOrder) GetOrderRouterAddress() string {
+	return ""
+}
+
 // GetDeltaQuantums returns the delta quantums of this liquidation order.
 func (o *LiquidationOrder) GetDeltaQuantums() *big.Int {
 	deltaQuantums := o.GetBaseQuantums().ToBigInt()
