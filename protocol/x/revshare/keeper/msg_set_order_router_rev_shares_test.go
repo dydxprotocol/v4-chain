@@ -15,69 +15,55 @@ import (
 func TestSetOrderRouterRevShares(t *testing.T) {
 	tests := map[string]struct {
 		// Msg
-		msg *types.MsgSetOrderRouterRevShares
+		msg *types.MsgSetOrderRouterRevShare
 		// Expected error
 		expectedErr string
 	}{
 		"Success - Set revenue share": {
-			msg: &types.MsgSetOrderRouterRevShares{
+			msg: &types.MsgSetOrderRouterRevShare{
 				Authority: lib.GovModuleAddress.String(),
-				OrderRouterRevShares: []types.OrderRouterRevShares{
-					{
-						Address:  constants.AliceAccAddress.String(),
-						SharePpm: 100_000,
-					},
-					{
-						Address:  constants.BobAccAddress.String(),
-						SharePpm: 100_000,
-					},
+				OrderRouterRevShare: types.OrderRouterRevShare{
+					Address:  constants.AliceAccAddress.String(),
+					SharePpm: 100_000,
 				},
 			},
 			expectedErr: "",
 		},
 		"Failure - Invalid Authority": {
-			msg: &types.MsgSetOrderRouterRevShares{
+			msg: &types.MsgSetOrderRouterRevShare{
 				Authority: constants.AliceAccAddress.String(),
-				OrderRouterRevShares: []types.OrderRouterRevShares{
-					{
-						Address:  constants.AliceAccAddress.String(),
-						SharePpm: 100_000,
-					},
+				OrderRouterRevShare: types.OrderRouterRevShare{
+					Address:  constants.AliceAccAddress.String(),
+					SharePpm: 100_000,
 				},
 			},
 			expectedErr: "invalid authority",
 		},
 		"Failure - Empty Authority": {
-			msg: &types.MsgSetOrderRouterRevShares{
-				OrderRouterRevShares: []types.OrderRouterRevShares{
-					{
-						Address:  constants.AliceAccAddress.String(),
-						SharePpm: 100_000,
-					},
+			msg: &types.MsgSetOrderRouterRevShare{
+				OrderRouterRevShare: types.OrderRouterRevShare{
+					Address:  constants.AliceAccAddress.String(),
+					SharePpm: 100_000,
 				},
 			},
 			expectedErr: "invalid authority",
 		},
 		"Failure - Invalid revenue share address": {
-			msg: &types.MsgSetOrderRouterRevShares{
+			msg: &types.MsgSetOrderRouterRevShare{
 				Authority: lib.GovModuleAddress.String(),
-				OrderRouterRevShares: []types.OrderRouterRevShares{
-					{
-						Address:  "invalid_address",
-						SharePpm: 100_000,
-					},
+				OrderRouterRevShare: types.OrderRouterRevShare{
+					Address:  "invalid_address",
+					SharePpm: 100_000,
 				},
 			},
 			expectedErr: "invalid address",
 		},
 		"Failure - Invalid revenue share ppm": {
-			msg: &types.MsgSetOrderRouterRevShares{
+			msg: &types.MsgSetOrderRouterRevShare{
 				Authority: lib.GovModuleAddress.String(),
-				OrderRouterRevShares: []types.OrderRouterRevShares{
-					{
-						Address:  constants.AliceAccAddress.String(),
-						SharePpm: 1_000_000,
-					},
+				OrderRouterRevShare: types.OrderRouterRevShare{
+					Address:  constants.AliceAccAddress.String(),
+					SharePpm: 1_000_000,
 				},
 			},
 			expectedErr: "rev share safety violation: rev shares greater than or equal to allowed amount:",

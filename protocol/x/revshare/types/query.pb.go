@@ -293,22 +293,22 @@ func (m *QueryUnconditionalRevShareConfigResponse) GetConfig() UnconditionalRevS
 }
 
 // Queries order router rev shares
-type QueryOrderRouterRevShares struct {
+type QueryOrderRouterRevShare struct {
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
-func (m *QueryOrderRouterRevShares) Reset()         { *m = QueryOrderRouterRevShares{} }
-func (m *QueryOrderRouterRevShares) String() string { return proto.CompactTextString(m) }
-func (*QueryOrderRouterRevShares) ProtoMessage()    {}
-func (*QueryOrderRouterRevShares) Descriptor() ([]byte, []int) {
+func (m *QueryOrderRouterRevShare) Reset()         { *m = QueryOrderRouterRevShare{} }
+func (m *QueryOrderRouterRevShare) String() string { return proto.CompactTextString(m) }
+func (*QueryOrderRouterRevShare) ProtoMessage()    {}
+func (*QueryOrderRouterRevShare) Descriptor() ([]byte, []int) {
 	return fileDescriptor_13d50c6e3048e744, []int{6}
 }
-func (m *QueryOrderRouterRevShares) XXX_Unmarshal(b []byte) error {
+func (m *QueryOrderRouterRevShare) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryOrderRouterRevShares) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryOrderRouterRevShare) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryOrderRouterRevShares.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryOrderRouterRevShare.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -318,42 +318,42 @@ func (m *QueryOrderRouterRevShares) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *QueryOrderRouterRevShares) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryOrderRouterRevShares.Merge(m, src)
+func (m *QueryOrderRouterRevShare) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryOrderRouterRevShare.Merge(m, src)
 }
-func (m *QueryOrderRouterRevShares) XXX_Size() int {
+func (m *QueryOrderRouterRevShare) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryOrderRouterRevShares) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryOrderRouterRevShares.DiscardUnknown(m)
+func (m *QueryOrderRouterRevShare) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryOrderRouterRevShare.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryOrderRouterRevShares proto.InternalMessageInfo
+var xxx_messageInfo_QueryOrderRouterRevShare proto.InternalMessageInfo
 
-func (m *QueryOrderRouterRevShares) GetAddress() string {
+func (m *QueryOrderRouterRevShare) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-// Response type for QueryOrderRouterRevShares
-type QueryOrderRouterRevSharesResponse struct {
-	OrderRouterRevShares OrderRouterRevShares `protobuf:"bytes,1,opt,name=order_router_rev_shares,json=orderRouterRevShares,proto3" json:"order_router_rev_shares"`
+// Response type for QueryOrderRouterRevShare
+type QueryOrderRouterRevShareResponse struct {
+	OrderRouterRevShare OrderRouterRevShare `protobuf:"bytes,1,opt,name=order_router_rev_share,json=orderRouterRevShare,proto3" json:"order_router_rev_share"`
 }
 
-func (m *QueryOrderRouterRevSharesResponse) Reset()         { *m = QueryOrderRouterRevSharesResponse{} }
-func (m *QueryOrderRouterRevSharesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryOrderRouterRevSharesResponse) ProtoMessage()    {}
-func (*QueryOrderRouterRevSharesResponse) Descriptor() ([]byte, []int) {
+func (m *QueryOrderRouterRevShareResponse) Reset()         { *m = QueryOrderRouterRevShareResponse{} }
+func (m *QueryOrderRouterRevShareResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryOrderRouterRevShareResponse) ProtoMessage()    {}
+func (*QueryOrderRouterRevShareResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_13d50c6e3048e744, []int{7}
 }
-func (m *QueryOrderRouterRevSharesResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryOrderRouterRevShareResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryOrderRouterRevSharesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryOrderRouterRevShareResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryOrderRouterRevSharesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryOrderRouterRevShareResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -363,23 +363,23 @@ func (m *QueryOrderRouterRevSharesResponse) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *QueryOrderRouterRevSharesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryOrderRouterRevSharesResponse.Merge(m, src)
+func (m *QueryOrderRouterRevShareResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryOrderRouterRevShareResponse.Merge(m, src)
 }
-func (m *QueryOrderRouterRevSharesResponse) XXX_Size() int {
+func (m *QueryOrderRouterRevShareResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryOrderRouterRevSharesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryOrderRouterRevSharesResponse.DiscardUnknown(m)
+func (m *QueryOrderRouterRevShareResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryOrderRouterRevShareResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryOrderRouterRevSharesResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryOrderRouterRevShareResponse proto.InternalMessageInfo
 
-func (m *QueryOrderRouterRevSharesResponse) GetOrderRouterRevShares() OrderRouterRevShares {
+func (m *QueryOrderRouterRevShareResponse) GetOrderRouterRevShare() OrderRouterRevShare {
 	if m != nil {
-		return m.OrderRouterRevShares
+		return m.OrderRouterRevShare
 	}
-	return OrderRouterRevShares{}
+	return OrderRouterRevShare{}
 }
 
 func init() {
@@ -389,53 +389,53 @@ func init() {
 	proto.RegisterType((*QueryMarketMapperRevShareDetailsResponse)(nil), "dydxprotocol.revshare.QueryMarketMapperRevShareDetailsResponse")
 	proto.RegisterType((*QueryUnconditionalRevShareConfig)(nil), "dydxprotocol.revshare.QueryUnconditionalRevShareConfig")
 	proto.RegisterType((*QueryUnconditionalRevShareConfigResponse)(nil), "dydxprotocol.revshare.QueryUnconditionalRevShareConfigResponse")
-	proto.RegisterType((*QueryOrderRouterRevShares)(nil), "dydxprotocol.revshare.QueryOrderRouterRevShares")
-	proto.RegisterType((*QueryOrderRouterRevSharesResponse)(nil), "dydxprotocol.revshare.QueryOrderRouterRevSharesResponse")
+	proto.RegisterType((*QueryOrderRouterRevShare)(nil), "dydxprotocol.revshare.QueryOrderRouterRevShare")
+	proto.RegisterType((*QueryOrderRouterRevShareResponse)(nil), "dydxprotocol.revshare.QueryOrderRouterRevShareResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/revshare/query.proto", fileDescriptor_13d50c6e3048e744) }
 
 var fileDescriptor_13d50c6e3048e744 = []byte{
-	// 618 bytes of a gzipped FileDescriptorProto
+	// 615 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x53, 0x41, 0x6f, 0xd3, 0x3e,
-	0x1c, 0xad, 0xff, 0xfa, 0xd3, 0x31, 0x23, 0x2e, 0x56, 0x11, 0x5b, 0x8b, 0xc2, 0x66, 0x40, 0x9a,
-	0x34, 0x2d, 0x99, 0x0a, 0x63, 0x53, 0x25, 0x34, 0x28, 0xbb, 0x80, 0x34, 0x6d, 0xa4, 0x70, 0xe1,
-	0x12, 0x79, 0x89, 0x49, 0x23, 0xda, 0x38, 0x38, 0x69, 0xb5, 0x6a, 0x8c, 0xc3, 0xee, 0x48, 0x48,
-	0x7c, 0x15, 0x3e, 0x02, 0x87, 0xdd, 0x98, 0xe0, 0xc2, 0x09, 0x50, 0xcb, 0x81, 0x8f, 0x81, 0x62,
-	0x3b, 0x69, 0x91, 0x92, 0xac, 0xdd, 0x2d, 0xfd, 0xf9, 0xbd, 0xe7, 0xf7, 0x7e, 0xf5, 0x83, 0xcb,
-	0xce, 0xc0, 0x39, 0x0c, 0x38, 0x8b, 0x98, 0xcd, 0x3a, 0x06, 0xa7, 0xfd, 0xb0, 0x4d, 0x38, 0x35,
-	0xde, 0xf4, 0x28, 0x1f, 0xe8, 0x62, 0x8e, 0xae, 0x4d, 0x42, 0xf4, 0x04, 0x52, 0x5d, 0xb4, 0x59,
-	0xd8, 0x65, 0xa1, 0x25, 0x4e, 0x0c, 0xf9, 0x43, 0x32, 0xaa, 0x15, 0x97, 0xb9, 0x4c, 0xce, 0xe3,
-	0x2f, 0x35, 0xbd, 0xe1, 0x32, 0xe6, 0x76, 0xa8, 0x41, 0x02, 0xcf, 0x20, 0xbe, 0xcf, 0x22, 0x12,
-	0x79, 0xcc, 0x4f, 0x38, 0x38, 0xdb, 0x48, 0x40, 0x38, 0xe9, 0x26, 0x98, 0xdb, 0xd9, 0x98, 0xe4,
-	0x43, 0xa2, 0xf0, 0x1d, 0x78, 0xeb, 0x59, 0x6c, 0x7f, 0x97, 0xf0, 0xd7, 0x34, 0xda, 0x25, 0x41,
-	0x40, 0xb9, 0x49, 0xfb, 0xd4, 0xef, 0xd1, 0x56, 0x0c, 0xdb, 0x17, 0x92, 0xf8, 0x04, 0xc0, 0xd5,
-	0x29, 0x70, 0x26, 0x0d, 0x03, 0xe6, 0x87, 0x14, 0xb5, 0x60, 0x59, 0x9a, 0x59, 0x00, 0x4b, 0x60,
-	0xe5, 0x4a, 0x7d, 0x43, 0xcf, 0xdc, 0x8b, 0x5e, 0x2c, 0xd7, 0xfc, 0xff, 0xf4, 0xc7, 0xcd, 0x92,
-	0xa9, 0xa4, 0xf0, 0x36, 0x5c, 0xca, 0xf2, 0x20, 0x08, 0x3b, 0x34, 0x22, 0x5e, 0x27, 0x44, 0x35,
-	0x38, 0xdf, 0x15, 0xc7, 0x96, 0xe7, 0x88, 0xbb, 0xaf, 0x9a, 0x97, 0xe5, 0xe0, 0x89, 0x83, 0xdf,
-	0xc1, 0x95, 0xf3, 0x04, 0xd2, 0x04, 0x26, 0x9c, 0x73, 0xe4, 0x48, 0x45, 0xa8, 0x4f, 0x17, 0x61,
-	0x52, 0x4c, 0xf9, 0x4f, 0x84, 0x30, 0x56, 0x01, 0x5e, 0xf8, 0x36, 0xf3, 0x1d, 0x2f, 0xfe, 0x47,
-	0x49, 0x27, 0xe1, 0x3c, 0x66, 0xfe, 0x2b, 0xcf, 0xc5, 0x6f, 0x95, 0xc7, 0x02, 0x4c, 0xea, 0x71,
-	0x1f, 0x96, 0x6d, 0x31, 0x39, 0xc7, 0x62, 0x81, 0x56, 0xb2, 0x62, 0xa9, 0x83, 0xf7, 0xe0, 0xa2,
-	0xb8, 0x7d, 0x8f, 0x3b, 0x94, 0x9b, 0xac, 0x17, 0x8d, 0x33, 0x85, 0xa8, 0x0e, 0xe7, 0x88, 0xe3,
-	0x70, 0x1a, 0xca, 0x95, 0xcc, 0x37, 0x17, 0xbe, 0x7e, 0x5a, 0xab, 0xa8, 0xc7, 0xfc, 0x48, 0x9e,
-	0xb4, 0x22, 0xee, 0xf9, 0xae, 0x99, 0x00, 0xf1, 0x7b, 0x00, 0x97, 0x73, 0x15, 0xd3, 0x20, 0x6d,
-	0x78, 0x9d, 0xc5, 0xe7, 0x16, 0x17, 0x00, 0x8b, 0xd3, 0xbe, 0x25, 0xac, 0x27, 0xcb, 0x5f, 0xcd,
-	0x49, 0x96, 0xa5, 0xaa, 0x22, 0x55, 0x58, 0xc6, 0x59, 0xfd, 0x4f, 0x19, 0x5e, 0x12, 0x7e, 0xd0,
-	0x4f, 0x00, 0xb5, 0xe2, 0xe7, 0x87, 0x1a, 0x39, 0xb7, 0x4e, 0xd1, 0x84, 0x6a, 0xf3, 0xe2, 0xdc,
-	0x64, 0x2d, 0xf8, 0xc1, 0xc9, 0xb7, 0xdf, 0x1f, 0xff, 0xdb, 0x44, 0x1b, 0x46, 0x76, 0x97, 0xd5,
-	0x4b, 0xef, 0x0a, 0x9d, 0xf1, 0xd2, 0x2c, 0xd9, 0x17, 0x34, 0x02, 0xb0, 0x56, 0xd4, 0x95, 0xcd,
-	0x19, 0x2c, 0x4e, 0x12, 0xab, 0xdb, 0x17, 0x24, 0xa6, 0xc1, 0x9e, 0x8a, 0x60, 0x3b, 0xa8, 0x39,
-	0x63, 0x30, 0x55, 0x24, 0xe3, 0x28, 0xed, 0xf8, 0x31, 0xfa, 0x02, 0x60, 0xad, 0xe0, 0x81, 0x17,
-	0xa7, 0x2c, 0x20, 0x16, 0xa7, 0x9c, 0xa2, 0x9e, 0xf8, 0xbe, 0x48, 0xb9, 0x8e, 0xf4, 0x9c, 0x94,
-	0xbd, 0x49, 0x8d, 0x71, 0x4a, 0xf4, 0x19, 0xc0, 0x4a, 0x66, 0x01, 0xd7, 0x8b, 0x1c, 0x65, 0x31,
-	0xaa, 0x5b, 0xb3, 0x32, 0x52, 0xf3, 0x0f, 0x85, 0xf9, 0x06, 0xda, 0xca, 0x31, 0x9f, 0xd3, 0x57,
-	0xe3, 0x48, 0x35, 0xff, 0xb8, 0xf9, 0xfc, 0x74, 0xa8, 0x81, 0xb3, 0xa1, 0x06, 0x7e, 0x0d, 0x35,
-	0xf0, 0x61, 0xa4, 0x95, 0xce, 0x46, 0x5a, 0xe9, 0xfb, 0x48, 0x2b, 0xbd, 0x6c, 0xb8, 0x5e, 0xd4,
-	0xee, 0x1d, 0xe8, 0x36, 0xeb, 0xfe, 0xab, 0xde, 0xbf, 0xb7, 0x66, 0xb7, 0x89, 0xe7, 0x1b, 0xe9,
-	0xe4, 0x70, 0x7c, 0x63, 0x34, 0x08, 0x68, 0x78, 0x50, 0x16, 0x47, 0x77, 0xff, 0x06, 0x00, 0x00,
-	0xff, 0xff, 0x62, 0x50, 0xc1, 0x36, 0x8c, 0x07, 0x00, 0x00,
+	0x1c, 0xad, 0xff, 0xfa, 0xd3, 0x31, 0x23, 0x2e, 0xde, 0x40, 0xa5, 0x45, 0x61, 0x18, 0x90, 0x26,
+	0xd0, 0x12, 0x54, 0x18, 0x15, 0x93, 0x50, 0x45, 0xd9, 0x05, 0xa4, 0xc1, 0x48, 0xe1, 0xc2, 0x25,
+	0xf2, 0x12, 0x93, 0x46, 0xb4, 0x71, 0x70, 0xd2, 0x6a, 0xd5, 0x18, 0x87, 0xdd, 0xb8, 0x21, 0xf1,
+	0x55, 0xf8, 0x00, 0x1c, 0x77, 0x63, 0x82, 0x0b, 0x27, 0x40, 0xed, 0x3e, 0x08, 0xaa, 0xed, 0xa4,
+	0x45, 0xa4, 0x5e, 0xbb, 0x5b, 0xfa, 0xfb, 0xbd, 0xf7, 0xfc, 0x9e, 0xeb, 0x07, 0xaf, 0x7a, 0x7d,
+	0x6f, 0x37, 0xe2, 0x2c, 0x61, 0x2e, 0x6b, 0x5b, 0x9c, 0xf6, 0xe2, 0x16, 0xe1, 0xd4, 0x7a, 0xdb,
+	0xa5, 0xbc, 0x6f, 0x8a, 0x39, 0xba, 0x30, 0x09, 0x31, 0x53, 0x48, 0xf9, 0x92, 0xcb, 0xe2, 0x0e,
+	0x8b, 0x1d, 0xb1, 0xb1, 0xe4, 0x0f, 0xc9, 0x28, 0x2f, 0xfb, 0xcc, 0x67, 0x72, 0x3e, 0xfa, 0x52,
+	0xd3, 0xcb, 0x3e, 0x63, 0x7e, 0x9b, 0x5a, 0x24, 0x0a, 0x2c, 0x12, 0x86, 0x2c, 0x21, 0x49, 0xc0,
+	0xc2, 0x94, 0x83, 0xf3, 0x8d, 0x44, 0x84, 0x93, 0x4e, 0x8a, 0xb9, 0x9e, 0x8f, 0x49, 0x3f, 0x24,
+	0x0a, 0xdf, 0x80, 0xd7, 0x9e, 0x8f, 0xec, 0x6f, 0x11, 0xfe, 0x86, 0x26, 0x5b, 0x24, 0x8a, 0x28,
+	0xb7, 0x69, 0x8f, 0x86, 0x5d, 0xda, 0x1c, 0xc1, 0xb6, 0x85, 0x24, 0x3e, 0x00, 0xf0, 0xd6, 0x0c,
+	0x38, 0x9b, 0xc6, 0x11, 0x0b, 0x63, 0x8a, 0x9a, 0xb0, 0x28, 0xcd, 0x94, 0xc0, 0x0a, 0x58, 0x3d,
+	0x57, 0x5d, 0x37, 0x73, 0xef, 0xc5, 0xd4, 0xcb, 0x35, 0xfe, 0x3f, 0xfc, 0x79, 0xa5, 0x60, 0x2b,
+	0x29, 0x5c, 0x87, 0x2b, 0x79, 0x1e, 0x04, 0x61, 0x93, 0x26, 0x24, 0x68, 0xc7, 0xa8, 0x02, 0x17,
+	0x3b, 0x62, 0xed, 0x04, 0x9e, 0x38, 0xfb, 0xbc, 0x7d, 0x56, 0x0e, 0x1e, 0x7b, 0xf8, 0x3d, 0x5c,
+	0x3d, 0x49, 0x20, 0x4b, 0x60, 0xc3, 0x05, 0x4f, 0x8e, 0x54, 0x84, 0xea, 0x6c, 0x11, 0x26, 0xc5,
+	0x94, 0xff, 0x54, 0x08, 0x63, 0x15, 0xe0, 0x65, 0xe8, 0xb2, 0xd0, 0x0b, 0x46, 0xff, 0x28, 0x69,
+	0xa7, 0x9c, 0x47, 0x2c, 0x7c, 0x1d, 0xf8, 0xf8, 0x9d, 0xf2, 0xa8, 0xc1, 0x64, 0x1e, 0xb7, 0x61,
+	0xd1, 0x15, 0x93, 0x13, 0x2c, 0x6a, 0xb4, 0xd2, 0x2b, 0x96, 0x3a, 0xf8, 0x29, 0x2c, 0x89, 0xd3,
+	0x9f, 0x71, 0x8f, 0x72, 0x9b, 0x75, 0x93, 0x71, 0x26, 0x54, 0x85, 0x0b, 0xc4, 0xf3, 0x38, 0x8d,
+	0xe5, 0x8d, 0x2c, 0x36, 0x4a, 0xdf, 0x3e, 0xaf, 0x2d, 0xab, 0xb7, 0xfc, 0x50, 0x6e, 0x9a, 0x09,
+	0x0f, 0x42, 0xdf, 0x4e, 0x81, 0xf8, 0x03, 0x50, 0x91, 0x73, 0x04, 0xb3, 0x18, 0x14, 0x5e, 0x64,
+	0xa3, 0xb5, 0xc3, 0xc5, 0xde, 0xe1, 0xb4, 0xe7, 0x08, 0xe3, 0x2a, 0xd6, 0xcd, 0x29, 0xb1, 0x72,
+	0x34, 0x55, 0x9c, 0x25, 0xf6, 0xef, 0xaa, 0x7a, 0x5c, 0x84, 0x67, 0x84, 0x17, 0xf4, 0x0b, 0x40,
+	0x43, 0xff, 0xf2, 0xd0, 0xc6, 0x94, 0x33, 0x67, 0x28, 0x41, 0xb9, 0x71, 0x7a, 0x6e, 0x7a, 0x27,
+	0xf8, 0xc1, 0xc1, 0xf7, 0xe3, 0x4f, 0xff, 0xd5, 0xd0, 0xba, 0x95, 0x5f, 0x63, 0xf5, 0xc8, 0x3b,
+	0x42, 0x67, 0x7c, 0x63, 0x8e, 0xac, 0x0a, 0x1a, 0x02, 0x58, 0xd1, 0xd5, 0xa4, 0x36, 0x87, 0xc5,
+	0x49, 0x62, 0xb9, 0x7e, 0x4a, 0x62, 0x16, 0xec, 0x89, 0x08, 0xb6, 0x89, 0x1a, 0x73, 0x06, 0x53,
+	0x1d, 0xb2, 0xf6, 0xb2, 0x7a, 0xef, 0xa3, 0xaf, 0x00, 0x56, 0x34, 0x6f, 0x5b, 0x9f, 0x52, 0x43,
+	0xd4, 0xa7, 0x9c, 0xa1, 0x99, 0xf8, 0x9e, 0x48, 0x79, 0x1b, 0x99, 0x53, 0x52, 0x76, 0x27, 0x35,
+	0xc6, 0x29, 0xd1, 0x17, 0x00, 0x97, 0xf2, 0xba, 0x67, 0xe9, 0x0c, 0xe5, 0x10, 0xca, 0xb5, 0x39,
+	0x09, 0x99, 0xf3, 0xba, 0x70, 0x7e, 0x1f, 0xd5, 0xa6, 0x38, 0xcf, 0x6f, 0xaa, 0xb5, 0xa7, 0x1a,
+	0xbf, 0xdf, 0x78, 0x71, 0x38, 0x30, 0xc0, 0xd1, 0xc0, 0x00, 0xbf, 0x07, 0x06, 0xf8, 0x38, 0x34,
+	0x0a, 0x47, 0x43, 0xa3, 0xf0, 0x63, 0x68, 0x14, 0x5e, 0x6d, 0xf8, 0x41, 0xd2, 0xea, 0xee, 0x98,
+	0x2e, 0xeb, 0xfc, 0x2d, 0xde, 0xbb, 0xbb, 0xe6, 0xb6, 0x48, 0x10, 0x5a, 0xd9, 0x64, 0x77, 0x7c,
+	0x60, 0xd2, 0x8f, 0x68, 0xbc, 0x53, 0x14, 0xab, 0x3b, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x8e,
+	0x48, 0xb9, 0xa9, 0x83, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -457,8 +457,8 @@ type QueryClient interface {
 	MarketMapperRevShareDetails(ctx context.Context, in *QueryMarketMapperRevShareDetails, opts ...grpc.CallOption) (*QueryMarketMapperRevShareDetailsResponse, error)
 	// Queries unconditional revenue share config
 	UnconditionalRevShareConfig(ctx context.Context, in *QueryUnconditionalRevShareConfig, opts ...grpc.CallOption) (*QueryUnconditionalRevShareConfigResponse, error)
-	// Queries order router rev shares
-	OrderRouterRevShares(ctx context.Context, in *QueryOrderRouterRevShares, opts ...grpc.CallOption) (*QueryOrderRouterRevSharesResponse, error)
+	// Queries order router rev share
+	OrderRouterRevShare(ctx context.Context, in *QueryOrderRouterRevShare, opts ...grpc.CallOption) (*QueryOrderRouterRevShareResponse, error)
 }
 
 type queryClient struct {
@@ -496,9 +496,9 @@ func (c *queryClient) UnconditionalRevShareConfig(ctx context.Context, in *Query
 	return out, nil
 }
 
-func (c *queryClient) OrderRouterRevShares(ctx context.Context, in *QueryOrderRouterRevShares, opts ...grpc.CallOption) (*QueryOrderRouterRevSharesResponse, error) {
-	out := new(QueryOrderRouterRevSharesResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.revshare.Query/OrderRouterRevShares", in, out, opts...)
+func (c *queryClient) OrderRouterRevShare(ctx context.Context, in *QueryOrderRouterRevShare, opts ...grpc.CallOption) (*QueryOrderRouterRevShareResponse, error) {
+	out := new(QueryOrderRouterRevShareResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.revshare.Query/OrderRouterRevShare", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -514,8 +514,8 @@ type QueryServer interface {
 	MarketMapperRevShareDetails(context.Context, *QueryMarketMapperRevShareDetails) (*QueryMarketMapperRevShareDetailsResponse, error)
 	// Queries unconditional revenue share config
 	UnconditionalRevShareConfig(context.Context, *QueryUnconditionalRevShareConfig) (*QueryUnconditionalRevShareConfigResponse, error)
-	// Queries order router rev shares
-	OrderRouterRevShares(context.Context, *QueryOrderRouterRevShares) (*QueryOrderRouterRevSharesResponse, error)
+	// Queries order router rev share
+	OrderRouterRevShare(context.Context, *QueryOrderRouterRevShare) (*QueryOrderRouterRevShareResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -531,8 +531,8 @@ func (*UnimplementedQueryServer) MarketMapperRevShareDetails(ctx context.Context
 func (*UnimplementedQueryServer) UnconditionalRevShareConfig(ctx context.Context, req *QueryUnconditionalRevShareConfig) (*QueryUnconditionalRevShareConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnconditionalRevShareConfig not implemented")
 }
-func (*UnimplementedQueryServer) OrderRouterRevShares(ctx context.Context, req *QueryOrderRouterRevShares) (*QueryOrderRouterRevSharesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method OrderRouterRevShares not implemented")
+func (*UnimplementedQueryServer) OrderRouterRevShare(ctx context.Context, req *QueryOrderRouterRevShare) (*QueryOrderRouterRevShareResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OrderRouterRevShare not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -593,20 +593,20 @@ func _Query_UnconditionalRevShareConfig_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_OrderRouterRevShares_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryOrderRouterRevShares)
+func _Query_OrderRouterRevShare_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryOrderRouterRevShare)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).OrderRouterRevShares(ctx, in)
+		return srv.(QueryServer).OrderRouterRevShare(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.revshare.Query/OrderRouterRevShares",
+		FullMethod: "/dydxprotocol.revshare.Query/OrderRouterRevShare",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).OrderRouterRevShares(ctx, req.(*QueryOrderRouterRevShares))
+		return srv.(QueryServer).OrderRouterRevShare(ctx, req.(*QueryOrderRouterRevShare))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -628,8 +628,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_UnconditionalRevShareConfig_Handler,
 		},
 		{
-			MethodName: "OrderRouterRevShares",
-			Handler:    _Query_OrderRouterRevShares_Handler,
+			MethodName: "OrderRouterRevShare",
+			Handler:    _Query_OrderRouterRevShare_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -809,7 +809,7 @@ func (m *QueryUnconditionalRevShareConfigResponse) MarshalToSizedBuffer(dAtA []b
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryOrderRouterRevShares) Marshal() (dAtA []byte, err error) {
+func (m *QueryOrderRouterRevShare) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -819,12 +819,12 @@ func (m *QueryOrderRouterRevShares) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryOrderRouterRevShares) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryOrderRouterRevShare) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryOrderRouterRevShares) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryOrderRouterRevShare) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -839,7 +839,7 @@ func (m *QueryOrderRouterRevShares) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryOrderRouterRevSharesResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryOrderRouterRevShareResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -849,18 +849,18 @@ func (m *QueryOrderRouterRevSharesResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryOrderRouterRevSharesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryOrderRouterRevShareResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryOrderRouterRevSharesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryOrderRouterRevShareResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size, err := m.OrderRouterRevShares.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.OrderRouterRevShare.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -946,7 +946,7 @@ func (m *QueryUnconditionalRevShareConfigResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryOrderRouterRevShares) Size() (n int) {
+func (m *QueryOrderRouterRevShare) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -959,13 +959,13 @@ func (m *QueryOrderRouterRevShares) Size() (n int) {
 	return n
 }
 
-func (m *QueryOrderRouterRevSharesResponse) Size() (n int) {
+func (m *QueryOrderRouterRevShareResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.OrderRouterRevShares.Size()
+	l = m.OrderRouterRevShare.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
@@ -1394,7 +1394,7 @@ func (m *QueryUnconditionalRevShareConfigResponse) Unmarshal(dAtA []byte) error 
 	}
 	return nil
 }
-func (m *QueryOrderRouterRevShares) Unmarshal(dAtA []byte) error {
+func (m *QueryOrderRouterRevShare) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1417,10 +1417,10 @@ func (m *QueryOrderRouterRevShares) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryOrderRouterRevShares: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryOrderRouterRevShare: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryOrderRouterRevShares: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryOrderRouterRevShare: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1476,7 +1476,7 @@ func (m *QueryOrderRouterRevShares) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryOrderRouterRevSharesResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryOrderRouterRevShareResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1499,15 +1499,15 @@ func (m *QueryOrderRouterRevSharesResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryOrderRouterRevSharesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryOrderRouterRevShareResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryOrderRouterRevSharesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryOrderRouterRevShareResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OrderRouterRevShares", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field OrderRouterRevShare", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1534,7 +1534,7 @@ func (m *QueryOrderRouterRevSharesResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.OrderRouterRevShares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.OrderRouterRevShare.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

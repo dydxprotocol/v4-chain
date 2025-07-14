@@ -1,5 +1,5 @@
 import { MarketMapperRevenueShareParams, MarketMapperRevenueShareParamsSDKType } from "./params";
-import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType, UnconditionalRevShareConfig, UnconditionalRevShareConfigSDKType, OrderRouterRevShares, OrderRouterRevSharesSDKType } from "./revshare";
+import { MarketMapperRevShareDetails, MarketMapperRevShareDetailsSDKType, UnconditionalRevShareConfig, UnconditionalRevShareConfigSDKType, OrderRouterRevShare, OrderRouterRevShareSDKType } from "./revshare";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** Queries for the default market mapper revenue share params */
@@ -58,23 +58,23 @@ export interface QueryUnconditionalRevShareConfigResponseSDKType {
 }
 /** Queries order router rev shares */
 
-export interface QueryOrderRouterRevShares {
+export interface QueryOrderRouterRevShare {
   address: string;
 }
 /** Queries order router rev shares */
 
-export interface QueryOrderRouterRevSharesSDKType {
+export interface QueryOrderRouterRevShareSDKType {
   address: string;
 }
-/** Response type for QueryOrderRouterRevShares */
+/** Response type for QueryOrderRouterRevShare */
 
-export interface QueryOrderRouterRevSharesResponse {
-  orderRouterRevShares?: OrderRouterRevShares;
+export interface QueryOrderRouterRevShareResponse {
+  orderRouterRevShare?: OrderRouterRevShare;
 }
-/** Response type for QueryOrderRouterRevShares */
+/** Response type for QueryOrderRouterRevShare */
 
-export interface QueryOrderRouterRevSharesResponseSDKType {
-  order_router_rev_shares?: OrderRouterRevSharesSDKType;
+export interface QueryOrderRouterRevShareResponseSDKType {
+  order_router_rev_share?: OrderRouterRevShareSDKType;
 }
 
 function createBaseQueryMarketMapperRevenueShareParams(): QueryMarketMapperRevenueShareParams {
@@ -325,14 +325,14 @@ export const QueryUnconditionalRevShareConfigResponse = {
 
 };
 
-function createBaseQueryOrderRouterRevShares(): QueryOrderRouterRevShares {
+function createBaseQueryOrderRouterRevShare(): QueryOrderRouterRevShare {
   return {
     address: ""
   };
 }
 
-export const QueryOrderRouterRevShares = {
-  encode(message: QueryOrderRouterRevShares, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryOrderRouterRevShare = {
+  encode(message: QueryOrderRouterRevShare, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.address !== "") {
       writer.uint32(10).string(message.address);
     }
@@ -340,10 +340,10 @@ export const QueryOrderRouterRevShares = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryOrderRouterRevShares {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryOrderRouterRevShare {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryOrderRouterRevShares();
+    const message = createBaseQueryOrderRouterRevShare();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -362,40 +362,40 @@ export const QueryOrderRouterRevShares = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryOrderRouterRevShares>): QueryOrderRouterRevShares {
-    const message = createBaseQueryOrderRouterRevShares();
+  fromPartial(object: DeepPartial<QueryOrderRouterRevShare>): QueryOrderRouterRevShare {
+    const message = createBaseQueryOrderRouterRevShare();
     message.address = object.address ?? "";
     return message;
   }
 
 };
 
-function createBaseQueryOrderRouterRevSharesResponse(): QueryOrderRouterRevSharesResponse {
+function createBaseQueryOrderRouterRevShareResponse(): QueryOrderRouterRevShareResponse {
   return {
-    orderRouterRevShares: undefined
+    orderRouterRevShare: undefined
   };
 }
 
-export const QueryOrderRouterRevSharesResponse = {
-  encode(message: QueryOrderRouterRevSharesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.orderRouterRevShares !== undefined) {
-      OrderRouterRevShares.encode(message.orderRouterRevShares, writer.uint32(10).fork()).ldelim();
+export const QueryOrderRouterRevShareResponse = {
+  encode(message: QueryOrderRouterRevShareResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.orderRouterRevShare !== undefined) {
+      OrderRouterRevShare.encode(message.orderRouterRevShare, writer.uint32(10).fork()).ldelim();
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryOrderRouterRevSharesResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryOrderRouterRevShareResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryOrderRouterRevSharesResponse();
+    const message = createBaseQueryOrderRouterRevShareResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.orderRouterRevShares = OrderRouterRevShares.decode(reader, reader.uint32());
+          message.orderRouterRevShare = OrderRouterRevShare.decode(reader, reader.uint32());
           break;
 
         default:
@@ -407,9 +407,9 @@ export const QueryOrderRouterRevSharesResponse = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryOrderRouterRevSharesResponse>): QueryOrderRouterRevSharesResponse {
-    const message = createBaseQueryOrderRouterRevSharesResponse();
-    message.orderRouterRevShares = object.orderRouterRevShares !== undefined && object.orderRouterRevShares !== null ? OrderRouterRevShares.fromPartial(object.orderRouterRevShares) : undefined;
+  fromPartial(object: DeepPartial<QueryOrderRouterRevShareResponse>): QueryOrderRouterRevShareResponse {
+    const message = createBaseQueryOrderRouterRevShareResponse();
+    message.orderRouterRevShare = object.orderRouterRevShare !== undefined && object.orderRouterRevShare !== null ? OrderRouterRevShare.fromPartial(object.orderRouterRevShare) : undefined;
     return message;
   }
 
