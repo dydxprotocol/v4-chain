@@ -89,7 +89,6 @@ class TurnkeyController extends Controller {
       @Query() provider?: string,
       @Query() oidcToken?: string,
       @Query() challenge?: string,
-      @Query() authenticatorName?: string,
       @Query() credentialId?: string,
       @Query() clientDataJson?: string,
       @Query() attestationObject?: string,
