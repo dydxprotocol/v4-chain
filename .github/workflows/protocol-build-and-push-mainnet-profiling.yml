@@ -18,3 +18,4 @@ jobs:
     with:
       ECR_REPOSITORY: mainnet-full-node-profiling
       GOFLAGS: '-toolexec=orchestrion toolexec'
+    secrets: inherit
