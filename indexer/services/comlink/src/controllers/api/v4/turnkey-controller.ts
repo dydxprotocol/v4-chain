@@ -179,6 +179,7 @@ class TurnkeyController extends Controller {
     return randomBytes(16).toString('hex');
   }
 
+  // returns the suborgId plus salt if the user exists.
   private async getSuborg(p: GetSuborgParams): Promise<TurnkeyCreateSuborgResponse | undefined> {
     if (p.email) {
       const user = await TurnkeyUsersTable.findByEmail(p.email);
@@ -222,6 +223,7 @@ class TurnkeyController extends Controller {
     return undefined;
   }
 
+  // returns the suborgId plus salt and adds the user to the turnkey users table store.
   private async createSuborg(params: CreateSuborgParams): Promise<TurnkeyCreateSuborgResponse> {
     const oauthProviders = [];
     if (params.oidcToken && params.providerName) {
@@ -349,7 +351,7 @@ class TurnkeyController extends Controller {
     };
   }
 
-  // Private helper methods
+  // email signin creates a suborg if it doesn't already exist.
   private async emailSignin(
     userEmail: string,
     targetPublicKey: string,
@@ -386,7 +388,7 @@ class TurnkeyController extends Controller {
     };
   }
 
-  // creates a suborg if one doesn't already exist.
+  // creates a suborg if one doesn't already exist, then login with the oidc token.
   private async socialSignin(
     provider: string,
     oidcToken: string,
