@@ -2,7 +2,7 @@ import { randomBytes } from 'crypto';
 
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
-import { TurnkeyApiClient, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
+import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import {
@@ -38,6 +38,14 @@ interface CreateSuborgParams {
   email?: string,
   providerName?: string,
   oidcToken?: string,
+  authenticatorName?: string,
+  challenge?: string,
+  attestation?: TurnkeyApiTypes['v1Attestation'],
+}
+interface GetSuborgParams {
+  email?: string,
+  oidcToken?: string,
+  credentialId?: string,
 }
 
 @Route('turnkey')
@@ -80,6 +88,11 @@ class TurnkeyController extends Controller {
       @Query() targetPublicKey?: string,
       @Query() provider?: string,
       @Query() oidcToken?: string,
+      @Query() challenge?: string,
+      @Query() authenticatorName?: string,
+      @Query() credentialId?: string,
+      @Query() clientDataJson?: string,
+      @Query() attestationObject?: string,
   ): Promise<TurnkeyAuthResponse> {
     // Determine authentication method
     if (signinMethod === 'email') {
@@ -132,7 +145,7 @@ class TurnkeyController extends Controller {
           at: 'TurnkeyController#signIn',
           message: 'Social signin',
         });
-        const resp = await this.handleSocialSignIn(provider, oidcToken, targetPublicKey);
+        const resp = await this.socialSignin(provider, oidcToken, targetPublicKey);
         logger.info({
           at: 'TurnkeyController#signIn',
           message: 'Social auth response',
@@ -147,12 +160,57 @@ class TurnkeyController extends Controller {
       } catch (error) {
         throw new Error(`Social Signin Error: ${error}`);
       }
+    } else if (signinMethod === 'passkey') {
+      if (!challenge || !credentialId || !clientDataJson || !attestationObject) {
+        throw new Error('challenge, credentialId, clientDataJson, and attestationObject are required for passkey signin');
+      }
+      return this.passkeySignin(challenge, 'Passkey', {
+        credentialId,
+        clientDataJson,
+        attestationObject,
+        transports: [],
+      });
     }
     throw new Error('Invalid signin method. Must be one of: email, social, passkey');
   }
 
   private getUUID(): string {
     return randomBytes(16).toString('hex');
+  }
+
+  private async getSuborg(p: GetSuborgParams): Promise<TurnkeyCreateSuborgResponse | undefined> {
+    if (p.email) {
+      const user = await TurnkeyUsersTable.findByEmail(p.email);
+      if (user) {
+        // return the suborg id and salt.
+        return {
+          subOrgId: user.suborgId,
+          salt: user.salt,
+        };
+      }
+    }
+
+    // if we don't have an email, we need to find the suborg id by oidc token or credential id.
+    let suborgId: string;
+    if (p.oidcToken) {
+      suborgId = await this.getSuborgByOIDCToken(p.oidcToken);
+    } else if (p.credentialId) {
+      suborgId = await this.getSuborgByCredentialId(p.credentialId);
+    } else {
+      throw new Error('Email is required to create a suborg');
+    }
+
+    // find it in our table.
+    if (suborgId) {
+      const user = await TurnkeyUsersTable.findBySuborgId(suborgId);
+      if (user) {
+        return {
+          subOrgId: suborgId,
+          salt: user?.salt || '',
+        };
+      }
+    }
+    return undefined;
   }
 
   private async createSuborg(params: CreateSuborgParams): Promise<TurnkeyCreateSuborgResponse> {
@@ -163,6 +221,15 @@ class TurnkeyController extends Controller {
         oidcToken: params.oidcToken,
       });
     }
+
+    const authenticators = [];
+    if (params.authenticatorName && params.challenge && params.attestation) {
+      authenticators.push({
+        authenticatorName: params.authenticatorName,
+        challenge: params.challenge,
+        attestation: params.attestation,
+      });
+    }
     const subOrg = await this.parentApiClient.createSubOrganization({
       subOrganizationName: this.getUUID(),
       rootUsers: [
@@ -170,7 +237,7 @@ class TurnkeyController extends Controller {
           userName: 'End User',
           userEmail: params.email,
           apiKeys: [],
-          authenticators: [],
+          authenticators,
           oauthProviders,
         },
         {
@@ -270,17 +337,10 @@ class TurnkeyController extends Controller {
     if (!this.isValidEmail(userEmail)) {
       throw new Error('Invalid email format');
     }
-    let suborg: TurnkeyCreateSuborgResponse;
-    // search user by email in table to see if they're already a user.
-    const user = await TurnkeyUsersTable.findByEmail(userEmail);
-    if (user) {
-      // return the suborg id and salt.
-      suborg = {
-        subOrgId: user.suborgId,
-        salt: user.salt,
-      };
-    } else {
-      // if user does not exist, create suborg with email set as root user
+    let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
+      email: userEmail,
+    });
+    if (!suborg) {
       suborg = await this.createSuborg({
         email: userEmail,
       });
@@ -305,43 +365,16 @@ class TurnkeyController extends Controller {
     };
   }
 
-  private async handleSocialSignIn(
+  private async socialSignin(
     provider: string,
     oidcToken: string,
     targetPublicKey: string,
   ): Promise<TurnkeyAuthResponse> {
-    let suborg: TurnkeyCreateSuborgResponse = {
-      subOrgId: '',
-      salt: '',
-    };
-    // search user by email in table to see if they're already a user.
-    const suborgId = await this.getSuborg(oidcToken);
-    logger.info({
-      at: 'TurnkeyController#handleSocialSignIn',
-      message: 'Suborg ID found for user ',
-      params: {
-        suborgId,
-      },
+    let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
+      oidcToken,
     });
-    if (suborgId) {
-      const user = await TurnkeyUsersTable.findBySuborgId(suborgId);
-      if (user) {
-        suborg = {
-          subOrgId: suborgId,
-          salt: user?.salt || '',
-        };
-      } else {
-        logger.info({
-          at: 'TurnkeyController#handleSocialSignIn',
-          message: 'User is a turnkey user but not in our database, therefore, we did not create the user.',
-          params: {
-            suborgId,
-          },
-        });
-        throw new Error('User is a turnkey user but not in our database, therefore, we did not create the user.');
-      }
-    } else {
-      // if user does not exist, create suborg with email set as root user
+
+    if (!suborg) {
       suborg = await this.createSuborg({
         providerName: provider,
         oidcToken,
@@ -360,42 +393,30 @@ class TurnkeyController extends Controller {
     };
   }
 
-  // private async handlePasskeySignIn(
-  //   userName: string,
-  //   challenge: string,
-  //   authenticatorName: string,
-  //   attestation: {
-  //     credentialId: string,
-  //     clientDataJson: string,
-  //     attestationObject: string,
-  //     transports?: string[],
-  //   },
-  // ): Promise<TurnkeyAuthResponse> {
-  //   // Call Turnkey's v1/submit/stamp_login endpoint using passkey as a stamp
-  //   // This is a placeholder - in production, you would call the actual Turnkey API
-  //   const subOrgId = this.generateSubOrgId();
-  //   const walletId = this.generateWalletId();
-  //   const salt = this.generateSalt();
+  // does not return a session as there's no way to stamp it serverside.
+  // front end should just call the stampLogin endpoint and use this signin method
+  // as a way to get the salt.
+  private async passkeySignin(
+    challenge: string,
+    authenticatorName: string,
+    attestation: TurnkeyApiTypes['v1Attestation'],
+  ): Promise<TurnkeyAuthResponse> {
+    let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
+      credentialId: attestation.credentialId,
+    });
+    if (!suborg) {
+      suborg = await this.createSuborg({
+        authenticatorName,
+        challenge,
+        attestation,
+      });
+    }
 
-  //   return {
-  //     subOrgId,
-  //     wallet: {
-  //       id: walletId,
-  //       name: userName,
-  //       accounts: [
-  //         {
-  //           address: 'ethereum_address_placeholder',
-  //           path: "m/44'/60'/0'/0/0",
-  //         },
-  //         {
-  //           address: 'solana_address_placeholder',
-  //           path: "m/44'/501'/0'/0'",
-  //         },
-  //       ],
-  //     },
-  //     salt,
-  //   };
-  // }
+    return {
+      session: suborg.subOrgId,
+      salt: suborg.salt,
+    };
+  }
 
   // Utility methods
   private isValidEmail(email: string): boolean {
@@ -425,11 +446,21 @@ class TurnkeyController extends Controller {
   }
 
   // this function assumes every user has only one suborg if they have an account with us.
-  private async getSuborg(oidcToken: string): Promise<string> {
+  private async getSuborgByOIDCToken(oidcToken: string): Promise<string> {
     const response = await this.parentApiClient.getSubOrgIds({
       organizationId: config.TURNKEY_ORGANIZATION_ID,
       filterType: 'OIDC_TOKEN',
       filterValue: oidcToken,
+    });
+    return response.organizationIds?.[0] || '';
+  }
+
+  // this function assumes every user has only one suborg if they have an account with us.
+  private async getSuborgByCredentialId(credentialId: string): Promise<string> {
+    const response = await this.parentApiClient.getSubOrgIds({
+      organizationId: config.TURNKEY_ORGANIZATION_ID,
+      filterType: 'CREDENTIAL_ID',
+      filterValue: credentialId,
     });
     return response.organizationIds?.[0] || '';
   }
