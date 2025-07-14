@@ -16,5 +16,5 @@ jobs:
   build-and-push-mainnet:
     uses: './.github/workflows/protocol-build-and-push-mainnet-base.yml'
     with:
-      ECR_REPOSITORY: mainnet-full-node
-      GOFLAGS: ''
+      ECR_REPOSITORY: mainnet-full-node-profiling
+      GOFLAGS: '-toolexec=orchestrion toolexec'
