@@ -2,11 +2,12 @@ import { randomBytes } from 'crypto';
 
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
-import { TurnkeyApiClient, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
+import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import {
   Controller, Post, Route, Query,
+  Queries,
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
@@ -40,7 +41,7 @@ interface CreateSuborgParams {
   oidcToken?: string,
   authenticatorName?: string,
   challenge?: string,
-  attestation?: string,
+  attestation?: TurnkeyApiTypes['v1Attestation'],
 }
 interface GetSuborgParams {
   email?: string,
@@ -89,7 +90,7 @@ class TurnkeyController extends Controller {
       @Query() provider?: string,
       @Query() oidcToken?: string,
       @Query() challenge?: string,
-      @Query() attestation?: string,
+      @Queries() attestation?: TurnkeyApiTypes['v1Attestation'],
   ): Promise<TurnkeyAuthResponse> {
     // Determine authentication method
     if (signinMethod === 'email') {
@@ -122,7 +123,7 @@ class TurnkeyController extends Controller {
         };
 
       } catch (error) {
-        throw new Error(`in Signin: ${error}`);
+        throw new Error(`Email Signin: ${error}`);
       }
     } else if (signinMethod === 'social') {
       if (!provider || !oidcToken || !targetPublicKey) {
@@ -161,7 +162,15 @@ class TurnkeyController extends Controller {
       if (!challenge || !attestation) {
         throw new Error('challenge and attestation are required for passkey signin');
       }
-      return this.passkeySignin(challenge, 'Passkey', attestation);
+      try {
+        const resp = await this.passkeySignin(challenge, 'Passkey', attestation);
+        return {
+          organizationId: resp.organizationId,
+          salt: resp.salt,
+        };
+      } catch (error) {
+        throw new Error(`Passkey Signin Error: ${error}`);
+      }
     }
     throw new Error('Invalid signin method. Must be one of: email, social, passkey');
   }
@@ -188,6 +197,14 @@ class TurnkeyController extends Controller {
       suborgId = await this.getSuborgByOIDCToken(p.oidcToken);
     } else if (p.credentialId) {
       suborgId = await this.getSuborgByCredentialId(p.credentialId);
+      logger.info({
+        at: 'TurnkeyController#getSuborg',
+        message: 'Found suborg by credential id',
+        params: {
+          credentialId: p.credentialId,
+          suborgId,
+        },
+      });
     } else {
       throw new Error('Email is required to create a suborg');
     }
@@ -218,11 +235,20 @@ class TurnkeyController extends Controller {
     if (params.authenticatorName && params.challenge && params.attestation) {
 
       // serialize the attestation object.
-      const attestationObject = JSON.parse(params.attestation);
       authenticators.push({
         authenticatorName: params.authenticatorName,
         challenge: params.challenge,
-        attestation: attestationObject,
+        attestation: params.attestation,
+      });
+
+      logger.info({
+        at: 'TurnkeyController#createSuborg',
+        message: 'Creating suborg with authenticator',
+        params: {
+          authenticator: params.authenticatorName,
+          challenge: params.challenge,
+          attestation: params.attestation,
+        },
       });
     }
     const subOrg = await this.parentApiClient.createSubOrganization({
@@ -395,10 +421,10 @@ class TurnkeyController extends Controller {
   private async passkeySignin(
     challenge: string,
     authenticatorName: string,
-    attestation: string,
+    attestation: TurnkeyApiTypes['v1Attestation'],
   ): Promise<TurnkeyAuthResponse> {
     let suborg: TurnkeyCreateSuborgResponse | undefined = await this.getSuborg({
-      credentialId: attestation,
+      credentialId: attestation.credentialId,
     });
     if (!suborg) {
       suborg = await this.createSuborg({
@@ -409,7 +435,7 @@ class TurnkeyController extends Controller {
     }
 
     return {
-      session: suborg.subOrgId,
+      organizationId: suborg.subOrgId,
       salt: suborg.salt,
     };
   }
@@ -494,7 +520,7 @@ const SignInValidationSchema = checkSchema({
   attestation: {
     in: ['body'],
     optional: true,
-    isString: true,
+    isObject: true,
     errorMessage: 'Attestation must be a string',
   },
   provider: {
@@ -529,7 +555,7 @@ router.post(
         provider: string,
         oidcToken: string,
         challenge: string,
-        attestation: string,
+        attestation: TurnkeyApiTypes['v1Attestation'],
       };
 
       const controller: TurnkeyController = new TurnkeyController();
@@ -549,6 +575,14 @@ router.post(
         body.challenge,
         body.attestation,
       );
+
+      logger.info({
+        at: 'TurnkeyController POST /signin',
+        message: 'Signin response',
+        params: {
+          response,
+        },
+      });
 
       return res.send(response);
     } catch (error) {
