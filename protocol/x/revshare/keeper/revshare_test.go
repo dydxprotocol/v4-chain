@@ -173,15 +173,15 @@ func TestGetMarketMapperRevenueShareForMarket(t *testing.T) {
 	}
 }
 
-func TestKeeper_TestGetSetOrderRouterRevShares(t *testing.T) {
+func TestKeeper_TestGetSetOrderRouterRevShare(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.RevShareKeeper
 
-	err := k.SetOrderRouterRevShares(ctx, constants.AliceAccAddress.String(), 100_000)
+	err := k.SetOrderRouterRevShare(ctx, constants.AliceAccAddress.String(), 100_000)
 	require.NoError(t, err)
 
-	revShares, err := k.GetOrderRouterRevShares(ctx, constants.AliceAccAddress.String())
+	revShares, err := k.GetOrderRouterRevShare(ctx, constants.AliceAccAddress.String())
 	require.NoError(t, err)
 	require.Equal(t, uint32(100_000), revShares)
 }

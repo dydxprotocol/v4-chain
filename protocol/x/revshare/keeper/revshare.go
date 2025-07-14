@@ -106,26 +106,26 @@ func (k Keeper) GetMarketMapperRevenueShareForMarket(ctx sdk.Context, marketId u
 	return revShareAddr, revShareParams.RevenueSharePpm, nil
 }
 
-func (k Keeper) GetOrderRouterRevShares(ctx sdk.Context, orderRouterAddr string) (uint32, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OrderRouterRevSharesPrefix))
+func (k Keeper) GetOrderRouterRevShare(ctx sdk.Context, orderRouterAddr string) (uint32, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OrderRouterRevSharePrefix))
 	orderRouterBech32Addr, err := sdk.AccAddressFromBech32(orderRouterAddr)
 	if err != nil {
 		return 0, types.ErrInvalidAddress.Wrapf("order router address is not valid: %s", orderRouterAddr)
 	}
 
-	orderRouterRevSharesBytes := store.Get(
+	orderRouterRevShareBytes := store.Get(
 		[]byte(orderRouterBech32Addr),
 	)
 
-	if orderRouterRevSharesBytes == nil {
+	if orderRouterRevShareBytes == nil {
 		return 0, types.ErrOrderRouterRevShareNotFound
 	}
 
-	return lib.BytesToUint32(orderRouterRevSharesBytes), nil
+	return lib.BytesToUint32(orderRouterRevShareBytes), nil
 }
 
-func (k Keeper) SetOrderRouterRevShares(ctx sdk.Context, orderRouterAddr string, revSharePpm uint32) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OrderRouterRevSharesPrefix))
+func (k Keeper) SetOrderRouterRevShare(ctx sdk.Context, orderRouterAddr string, revSharePpm uint32) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OrderRouterRevSharePrefix))
 	orderRouterBech32Addr, err := sdk.AccAddressFromBech32(orderRouterAddr)
 	if err != nil {
 		return types.ErrInvalidAddress.Wrapf("order router address is not valid: %s", orderRouterAddr)

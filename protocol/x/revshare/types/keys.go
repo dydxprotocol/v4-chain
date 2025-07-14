@@ -20,5 +20,5 @@ const (
 	UnconditionalRevShareConfigKey = "UnconditionalRevShareConfig"
 
 	// Key prefix for storing OrderRouterRevShareParams
-	OrderRouterRevSharesPrefix = "OrderRouterRevShare:"
+	OrderRouterRevSharePrefix = "OrderRouterRevShare:"
 )

@@ -123,7 +123,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*revshare.MsgSetMarketMapperRevenueShare,
 		*revshare.MsgSetMarketMapperRevShareDetailsForMarket,
 		*revshare.MsgUpdateUnconditionalRevShareConfig,
-		*revshare.MsgSetOrderRouterRevShares,
+		*revshare.MsgSetOrderRouterRevShare,
 
 		// rewards
 		*rewards.MsgUpdateParams,

@@ -292,8 +292,8 @@ var (
 		// revshare
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShare":                     {},
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevenueShareResponse":             {},
-		"/dydxprotocol.revshare.MsgSetOrderRouterRevShares":                         {},
-		"/dydxprotocol.revshare.MsgSetOrderRouterRevSharesResponse":                 {},
+		"/dydxprotocol.revshare.MsgSetOrderRouterRevShare":                          {},
+		"/dydxprotocol.revshare.MsgSetOrderRouterRevShareResponse":                  {},
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarket":         {},
 		"/dydxprotocol.revshare.MsgSetMarketMapperRevShareDetailsForMarketResponse": {},
 		"/dydxprotocol.revshare.MsgUpdateUnconditionalRevShareConfig":               {},

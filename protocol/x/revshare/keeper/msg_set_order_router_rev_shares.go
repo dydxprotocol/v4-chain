@@ -14,10 +14,10 @@ const (
 	kMaxOrderRouterRevSharePpm = lib.OneHundredThousand * 5
 )
 
-func (k msgServer) SetOrderRouterRevShares(
+func (k msgServer) SetOrderRouterRevShare(
 	goCtx context.Context,
-	msg *types.MsgSetOrderRouterRevShares,
-) (*types.MsgSetOrderRouterRevSharesResponse, error) {
+	msg *types.MsgSetOrderRouterRevShare,
+) (*types.MsgSetOrderRouterRevShareResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Check if sender is authorized to set revenue share
