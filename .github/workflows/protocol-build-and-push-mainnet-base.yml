@@ -10,9 +10,9 @@ on:  # yamllint disable-line rule:truthy
         required: true
         type: string
     secrets:
-      AWS_ACCESS_KEY_ID:
+      AWS_ACCESS_KEY_ID_VALIDATOR_MAINNET:
         required: true
-      AWS_SECRET_ACCESS_KEY:
+      AWS_SECRET_ACCESS_KEY_VALIDATOR_MAINNET:
         required: true
 
 jobs:
