@@ -41,7 +41,8 @@ func TestQueryOrderRouterRevShare(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.RevShareKeeper
 
-			k.SetOrderRouterRevShare(ctx, constants.AliceAccAddress.String(), 500_000)
+			setErr := k.SetOrderRouterRevShare(ctx, constants.AliceAccAddress.String(), 500_000)
+			require.NoError(t, setErr)
 
 			resp, err := k.OrderRouterRevShare(ctx, &types.QueryOrderRouterRevShare{
 				Address: tc.config.Address,
