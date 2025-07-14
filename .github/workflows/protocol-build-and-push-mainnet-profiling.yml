@@ -1,4 +1,4 @@
-name: Protocol Build & Push Image to AWS ECR
+name: Protocol Profiling Build & Push Image to AWS ECR
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
