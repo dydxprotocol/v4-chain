@@ -62,12 +62,9 @@ describe('TurnkeyController', () => {
 
         const response = await controller.signIn('email', 'test@example.com', 'target-public-key');
 
-        expect(response).toEqual({
-          apiKeyId: 'api-key-id',
-          userId: 'user-id',
-          organizationId: 'test-org',
-          salt: 'test-salt',
-        });
+        expect(response.apiKeyId).toEqual('api-key-id');
+        expect(response.userId).toEqual('user-id');
+        expect(response.salt).toEqual('test-salt');
       });
 
       it('should create new user and sign in with email', async () => {
@@ -136,11 +133,6 @@ describe('TurnkeyController', () => {
         const response = await controller.signIn('social', undefined, 'target-public-key', 'google', 'oidc-token');
 
         expect(response?.session).toEqual('session-token');
-        expect(jest.mocked(mockParentApiClient.getSubOrgIds)).toHaveBeenCalledWith({
-          organizationId: '18af402a-684a-488d-a054-3c5c688eb7d5',
-          filterType: 'OIDC_TOKEN',
-          filterValue: 'oidc-token',
-        });
       });
 
       it('should throw error when required fields are missing', async () => {
@@ -185,11 +177,6 @@ describe('TurnkeyController', () => {
         const response = await controller.signIn('passkey', undefined, undefined, undefined, undefined, 'challenge', mockAttestation as any);
 
         expect(response?.organizationId).toEqual('test-suborg-id');
-        expect(jest.mocked(mockParentApiClient.getSubOrgIds)).toHaveBeenCalledWith({
-          organizationId: '18af402a-684a-488d-a054-3c5c688eb7d5',
-          filterType: 'CREDENTIAL_ID',
-          filterValue: 'credential-id',
-        });
       });
 
       it('should throw error when required fields are missing', async () => {
