@@ -16,38 +16,16 @@ import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
+import {
+  SigninMethod,
+  TurnkeyAuthResponse,
+  TurnkeyCreateSuborgResponse,
+  CreateSuborgParams,
+  GetSuborgParams,
+} from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'turnkey-controller';
-
-interface TurnkeyAuthResponse {
-  organizationId?: string,
-  apiKeyId?: string,
-  userId?: string,
-  session?: string,
-  salt: string,
-}
-
-interface TurnkeyCreateSuborgResponse {
-  subOrgId: string,
-  apiKeyId?: string,
-  userId?: string,
-  salt: string,
-}
-
-interface CreateSuborgParams {
-  email?: string,
-  providerName?: string,
-  oidcToken?: string,
-  authenticatorName?: string,
-  challenge?: string,
-  attestation?: TurnkeyApiTypes['v1Attestation'],
-}
-interface GetSuborgParams {
-  email?: string,
-  oidcToken?: string,
-  credentialId?: string,
-}
 
 @Route('turnkey')
 export class TurnkeyController extends Controller {
@@ -89,7 +67,7 @@ export class TurnkeyController extends Controller {
 
   @Post('/signin')
   async signIn(
-    @Query() signinMethod: 'email' | 'social' | 'passkey',
+    @Query() signinMethod: SigninMethod,
       @Query() userEmail?: string,
       @Query() targetPublicKey?: string,
       @Query() provider?: string,
@@ -98,7 +76,7 @@ export class TurnkeyController extends Controller {
       @Queries() attestation?: TurnkeyApiTypes['v1Attestation'],
   ): Promise<TurnkeyAuthResponse> {
     // Determine authentication method
-    if (signinMethod === 'email') {
+    if (signinMethod === SigninMethod.EMAIL) {
       if (!userEmail || !targetPublicKey) {
         throw new Error('userEmail is required for email signin');
       }
@@ -130,7 +108,7 @@ export class TurnkeyController extends Controller {
       } catch (error) {
         throw new Error(`Email Signin: ${error}`);
       }
-    } else if (signinMethod === 'social') {
+    } else if (signinMethod === SigninMethod.SOCIAL) {
       if (!provider || !oidcToken || !targetPublicKey) {
         logger.info({
           at: 'TurnkeyController#signIn',
@@ -163,7 +141,7 @@ export class TurnkeyController extends Controller {
       } catch (error) {
         throw new Error(`Social Signin Error: ${error}`);
       }
-    } else if (signinMethod === 'passkey') {
+    } else if (signinMethod === SigninMethod.PASSKEY) {
       if (!challenge || !attestation) {
         throw new Error('challenge and attestation are required for passkey signin');
       }
@@ -177,7 +155,7 @@ export class TurnkeyController extends Controller {
         throw new Error(`Passkey Signin Error: ${error}`);
       }
     }
-    throw new Error('Invalid signin method. Must be one of: email, social, passkey');
+    throw new Error(`Invalid signin method. Must be one of: ${SigninMethod.EMAIL}, ${SigninMethod.SOCIAL}, ${SigninMethod.PASSKEY}`);
   }
 
   private getUUID(): string {
@@ -508,9 +486,9 @@ const SignInValidationSchema = checkSchema({
   signinMethod: {
     in: ['body'],
     isIn: {
-      options: [['social', 'passkey', 'email']],
+      options: [[SigninMethod.SOCIAL, SigninMethod.PASSKEY, SigninMethod.EMAIL]],
     },
-    errorMessage: 'Must be one of: social, passkey, email',
+    errorMessage: `Must be one of: ${SigninMethod.SOCIAL}, ${SigninMethod.PASSKEY}, ${SigninMethod.EMAIL}`,
   },
   userEmail: {
     in: ['body'],
@@ -563,7 +541,7 @@ router.post(
 
     try {
       const body = matchedData(req) as {
-        signinMethod: 'email',
+        signinMethod: SigninMethod,
         userEmail: string,
         targetPublicKey: string,
         provider: string,
