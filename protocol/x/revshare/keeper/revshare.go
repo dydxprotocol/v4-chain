@@ -110,7 +110,7 @@ func (k Keeper) GetOrderRouterRevShare(ctx sdk.Context, orderRouterAddr string) 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OrderRouterRevSharePrefix))
 	orderRouterBech32Addr, err := sdk.AccAddressFromBech32(orderRouterAddr)
 	if err != nil {
-		return 0, types.ErrInvalidAddress.Wrapf("order router address is not valid: %s", orderRouterAddr)
+		return 0, types.ErrInvalidAddress
 	}
 
 	orderRouterRevShareBytes := store.Get(
@@ -128,7 +128,7 @@ func (k Keeper) SetOrderRouterRevShare(ctx sdk.Context, orderRouterAddr string, 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OrderRouterRevSharePrefix))
 	orderRouterBech32Addr, err := sdk.AccAddressFromBech32(orderRouterAddr)
 	if err != nil {
-		return types.ErrInvalidAddress.Wrapf("order router address is not valid: %s", orderRouterAddr)
+		return types.ErrInvalidAddress
 	}
 
 	store.Set([]byte(orderRouterBech32Addr), lib.Uint32ToKey(revSharePpm))
@@ -198,6 +198,8 @@ func (k Keeper) GetAllRevShares(
 	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_TAKER_FEE] = 0
 	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = big.NewInt(0)
 	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE] = 0
+	feeSourceToQuoteQuantums[types.REV_SHARE_FEE_SOURCE_MAKER_FEE] = big.NewInt(0)
+	feeSourceToRevSharePpm[types.REV_SHARE_FEE_SOURCE_MAKER_FEE] = 0
 
 	totalFeesShared := big.NewInt(0)
 	takerFees := fill.TakerFeeQuoteQuantums
@@ -216,15 +218,22 @@ func (k Keeper) GetAllRevShares(
 
 	var orderRouterRevShares []types.RevShare
 	// No affiliate fees shared, so we can generate order router rev shares
-	if affiliateRevShares == nil {
-		takerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
-		if err != nil {
-			return types.RevSharesForFill{}, err
+	if affiliateRevShares == nil && (fill.TakerOrderRouterAddr != "" || fill.MakerOrderRouterAddr != "") {
+		var takerOrderRouterRevSharePpm uint32 = 0
+		var makerOrderRouterRevSharePpm uint32 = 0
+		orderRouterRevShares = []types.RevShare{}
+		if fill.TakerOrderRouterAddr != "" {
+			takerOrderRouterRevSharePpm, err = k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
+			if err != nil {
+				return types.RevSharesForFill{}, err
+			}
 		}
 
-		makerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
-		if err != nil {
-			return types.RevSharesForFill{}, err
+		if fill.MakerOrderRouterAddr != "" {
+			makerOrderRouterRevSharePpm, err = k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
+			if err != nil {
+				return types.RevSharesForFill{}, err
+			}
 		}
 
 		// Orders can have 2 rev share ids, we need to calculate each side separately
@@ -239,21 +248,23 @@ func (k Keeper) GetAllRevShares(
 			false,
 		)
 
-		orderRouterRevShares = []types.RevShare{
-			{
+		if fill.TakerOrderRouterAddr != "" {
+			orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
 				Recipient:         fill.TakerOrderRouterAddr,
 				RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 				RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
 				QuoteQuantums:     takerRevShare,
 				RevSharePpm:       takerOrderRouterRevSharePpm,
-			},
-			{
+			})
+		}
+		if fill.MakerOrderRouterAddr != "" {
+			orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
 				Recipient:         fill.MakerOrderRouterAddr,
 				RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_MAKER_FEE,
 				RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
 				QuoteQuantums:     makerRevShare,
 				RevSharePpm:       makerOrderRouterRevSharePpm,
-			},
+			})
 		}
 	}
 
@@ -294,7 +305,7 @@ func (k Keeper) GetAllRevShares(
 		// Add the rev share ppm to the total for the fee source
 		feeSourceToRevSharePpm[revShare.RevShareFeeSource] += revShare.RevSharePpm
 	}
-	//check total fees shared is less than or equal to net fees
+	// Check total fees shared is less than or equal to net fees
 	if totalFeesShared.Cmp(netFees) > 0 {
 		return types.RevSharesForFill{}, types.ErrTotalFeesSharedExceedsNetFees
 	}
