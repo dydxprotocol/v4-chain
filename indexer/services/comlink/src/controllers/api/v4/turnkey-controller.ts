@@ -24,7 +24,7 @@ import {
   GetSuborgParams,
 } from '../../../types';
 
-const router: express.Router = express.Router();
+export const router: express.Router = express.Router();
 const controllerName: string = 'turnkey-controller';
 
 @Route('turnkey')
@@ -594,4 +594,3 @@ router.post(
   },
 );
 
-export default router;
