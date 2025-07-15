@@ -644,7 +644,10 @@ export interface Order {
    */
 
   builderCodeParameters?: BuilderCodeParameters;
-  /** order_router_address is the address of the order router that placed the order. */
+  /**
+   * order_router_address is the address of the order router that placed the
+   * order.
+   */
 
   orderRouterAddress: string;
 }
@@ -729,7 +732,10 @@ export interface OrderSDKType {
    */
 
   builder_code_parameters?: BuilderCodeParametersSDKType;
-  /** order_router_address is the address of the order router that placed the order. */
+  /**
+   * order_router_address is the address of the order router that placed the
+   * order.
+   */
 
   order_router_address: string;
 }

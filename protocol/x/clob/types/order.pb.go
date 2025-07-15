@@ -678,7 +678,8 @@ type Order struct {
 	// builder_code_parameters is the metadata for the
 	// partner or builder of an order specifying the fees charged.
 	BuilderCodeParameters *BuilderCodeParameters `protobuf:"bytes,13,opt,name=builder_code_parameters,json=builderCodeParameters,proto3" json:"builder_code_parameters,omitempty"`
-	// order_router_address is the address of the order router that placed the order.
+	// order_router_address is the address of the order router that placed the
+	// order.
 	OrderRouterAddress string `protobuf:"bytes,14,opt,name=order_router_address,json=orderRouterAddress,proto3" json:"order_router_address,omitempty"`
 }
 
