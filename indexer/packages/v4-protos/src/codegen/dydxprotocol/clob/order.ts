@@ -1418,7 +1418,7 @@ export const Order = {
     }
 
     if (message.orderRouterAddress !== "") {
-      writer.string(message.orderRouterAddress);
+      writer.uint32(114).string(message.orderRouterAddress);
     }
 
     return writer;
