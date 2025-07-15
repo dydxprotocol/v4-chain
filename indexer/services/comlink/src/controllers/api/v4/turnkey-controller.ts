@@ -182,14 +182,8 @@ export class TurnkeyController extends Controller {
       suborgId = await this.getSuborgByOIDCToken(p.oidcToken);
     } else if (p.credentialId) {
       suborgId = await this.getSuborgByCredentialId(p.credentialId);
-      logger.info({
-        at: 'TurnkeyController#getSuborg',
-        message: 'Found suborg by credential id',
-        params: {
-          credentialId: p.credentialId,
-          suborgId,
-        },
-      });
+    } else if (p.email) {
+      suborgId = await this.getSuborgByEmail(p.email);
     } else {
       throw new Error('Email is required to create a suborg');
     }
@@ -437,22 +431,6 @@ export class TurnkeyController extends Controller {
     return emailRegex.test(email);
   }
 
-  private generateChallenge(): string {
-    return Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
-  }
-
-  private generateSessionToken(): string {
-    return Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
-  }
-
-  private generateSubOrgId(): string {
-    return Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString('hex');
-  }
-
-  private generateWalletId(): string {
-    return Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString('hex');
-  }
-
   // default 32 bytes.
   private generateSalt(bytes: number = 32): string {
     return randomBytes(bytes).toString('hex');
@@ -475,6 +453,16 @@ export class TurnkeyController extends Controller {
       organizationId: config.TURNKEY_ORGANIZATION_ID,
       filterType: 'CREDENTIAL_ID',
       filterValue: credentialId,
+    });
+    return response.organizationIds?.[0] || '';
+  }
+
+  // this function assumes every user has only one suborg if they have an account with us.
+  private async getSuborgByEmail(email: string): Promise<string> {
+    const response = await this.parentApiClient.getSubOrgIds({
+      organizationId: config.TURNKEY_ORGANIZATION_ID,
+      filterType: 'EMAIL',
+      filterValue: email,
     });
     return response.organizationIds?.[0] || '';
   }
@@ -593,4 +581,3 @@ router.post(
     }
   },
 );
-
