@@ -24,7 +24,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryRevShareDetailsForMarket())
 	cmd.AddCommand(CmdQueryOrderRouterRevShare())
 	cmd.AddCommand(CmdQueryUnconditionalRevShareConfig())
-	cmd.AddCommand(CmdQueryOrderRouterRevShare())
 
 	return cmd
 }
