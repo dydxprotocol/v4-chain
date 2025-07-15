@@ -776,7 +776,6 @@ export interface FundingPaymentResponse extends PaginationResponse {
   fundingPayments: FundingPaymentResponseObject[],
 }
 
-
 /* ------- TURNKEY TYPES ------- */
 export interface TurnkeyAuthResponse {
   organizationId?: string,

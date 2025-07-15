@@ -1,6 +1,6 @@
 import { randomBytes } from 'crypto';
 
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
@@ -25,6 +25,7 @@ import {
 } from '../../../types';
 
 // Polyfill fetch globally as it's needed by the turnkey sdk.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 (global as any).fetch = fetch;
 
 export const router: express.Router = express.Router();
