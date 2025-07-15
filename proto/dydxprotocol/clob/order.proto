@@ -236,8 +236,10 @@ message Order {
   // partner or builder of an order specifying the fees charged.
   BuilderCodeParameters builder_code_parameters = 13;
 
-  // order_router_address is the address of the order router that placed the order.
-  string order_router_address = 14 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // order_router_address is the address of the order router that placed the
+  // order.
+  string order_router_address = 14
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
 // TwapParameters represents the necessary configuration for a TWAP order.
