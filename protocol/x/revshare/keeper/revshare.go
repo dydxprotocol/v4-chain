@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"math/big"
 
 	"cosmossdk.io/store/prefix"
@@ -325,7 +326,7 @@ func (k Keeper) getOrderRouterRevShares(
 	takerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
 	if err != nil {
 		// We can ignore invalid order router addresses for takers, assume rev share is 0
-		if err == types.ErrOrderRouterRevShareNotFound {
+		if errors.Is(err, types.ErrOrderRouterRevShareNotFound) {
 			k.Logger(ctx).Error("order router rev share not found for taker: " + fill.TakerOrderRouterAddr)
 		} else {
 			return nil, err
@@ -347,7 +348,7 @@ func (k Keeper) getOrderRouterRevShares(
 	makerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
 	if err != nil {
 		// We can ignore invalid order router addresses for makers, assume rev share is 0
-		if err == types.ErrOrderRouterRevShareNotFound {
+		if errors.Is(err, types.ErrOrderRouterRevShareNotFound) {
 			k.Logger(ctx).Error("order router rev share not found for maker: " + fill.MakerOrderRouterAddr)
 		} else {
 			return nil, err
