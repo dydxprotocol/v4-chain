@@ -5,6 +5,7 @@ import { TurnkeyUsersTable } from '@dydxprotocol-indexer/postgres';
 import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '@turnkey/sdk-server';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
+import fetch from 'node-fetch';
 import {
   Controller, Post, Route, Body,
 } from 'tsoa';
@@ -22,6 +23,9 @@ import {
   CreateSuborgParams,
   GetSuborgParams,
 } from '../../../types';
+
+// Polyfill fetch globally as it's needed by the turnkey sdk.
+(global as any).fetch = fetch;
 
 export const router: express.Router = express.Router();
 const controllerName: string = 'turnkey-controller';
@@ -43,15 +47,6 @@ export class TurnkeyController extends Controller {
 
   constructor(turnkeyClient?: TurnkeyApiClient, bridgeSenderTurnkeyClient?: TurnkeyApiClient) {
     super();
-    logger.info({
-      at: 'TurnkeyController#constructor',
-      message: 'TurnkeyController constructor',
-      params: {
-        TURNKEY_API_BASE_URL: config.TURNKEY_API_BASE_URL,
-        TURNKEY_API_PRIVATE_KEY: config.TURNKEY_API_PRIVATE_KEY,
-        TURNKEY_API_PUBLIC_KEY: config.TURNKEY_API_PUBLIC_KEY,
-      },
-    });
     if (turnkeyClient) {
       this.parentApiClient = turnkeyClient;
     } else {
@@ -93,19 +88,7 @@ export class TurnkeyController extends Controller {
         throw new Error('userEmail is required for email signin');
       }
       try {
-        logger.info({
-          at: 'TurnkeyController#signIn',
-          message: 'Email signin',
-        });
         const resp = await this.emailSignin(userEmail, targetPublicKey!);
-        logger.info({
-          at: 'TurnkeyController#signIn',
-          message: 'Email auth response',
-          params: {
-            resp,
-          },
-        });
-
         if (resp.userId === undefined || resp.apiKeyId === undefined) {
           throw new Error('Could not send email auth bundle');
         }
@@ -122,30 +105,10 @@ export class TurnkeyController extends Controller {
       }
     } else if (signinMethod === SigninMethod.SOCIAL) {
       if (!provider || !oidcToken || !targetPublicKey) {
-        logger.info({
-          at: 'TurnkeyController#signIn',
-          message: 'Social signin error',
-          params: {
-            provider,
-            oidcToken,
-            targetPublicKey,
-          },
-        });
         throw new Error('provider, oidcToken, and targetPublicKey are required for social signin');
       }
       try {
-        logger.info({
-          at: 'TurnkeyController#signIn',
-          message: 'Social signin',
-        });
         const resp = await this.socialSignin(provider, oidcToken, targetPublicKey);
-        logger.info({
-          at: 'TurnkeyController#signIn',
-          message: 'Social auth response',
-          params: {
-            resp,
-          },
-        });
         return {
           session: resp.session,
           salt: resp.salt,
@@ -233,15 +196,6 @@ export class TurnkeyController extends Controller {
         attestation: params.attestation,
       });
 
-      logger.info({
-        at: 'TurnkeyController#createSuborg',
-        message: 'Creating suborg with authenticator',
-        params: {
-          authenticator: params.authenticatorName,
-          challenge: params.challenge,
-          attestation: params.attestation,
-        },
-      });
     }
     const subOrg = await this.parentApiClient.createSubOrganization({
       subOrganizationName: this.getUUID(),
@@ -283,14 +237,6 @@ export class TurnkeyController extends Controller {
             addressFormat: 'ADDRESS_FORMAT_SOLANA',
           },
         ],
-      },
-    });
-
-    logger.info({
-      at: 'TurnkeyController#createSuborg',
-      message: 'Created suborg',
-      params: {
-        subOrg,
       },
     });
 
@@ -551,22 +497,8 @@ router.post(
       };
 
       const controller: TurnkeyController = new TurnkeyController();
-      logger.info({
-        at: 'TurnkeyController POST /signin',
-        message: 'Signin request',
-        params: {
-          body,
-        },
-      });
-      const response = await controller.signIn(body);
 
-      logger.info({
-        at: 'TurnkeyController POST /signin',
-        message: 'Signin response',
-        params: {
-          response,
-        },
-      });
+      const response = await controller.signIn(body);
 
       return res.send(response);
     } catch (error) {
