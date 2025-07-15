@@ -487,7 +487,6 @@ export class TurnkeyController extends Controller {
       filterType: 'OIDC_TOKEN',
       filterValue: oidcToken,
     });
-    console.log('response', response.organizationIds);
 
     return response.organizationIds?.[0] || '';
   }
@@ -499,7 +498,6 @@ export class TurnkeyController extends Controller {
       filterType: 'CREDENTIAL_ID',
       filterValue: credentialId,
     });
-    console.log('response', response.organizationIds);
     return response.organizationIds?.[0] || '';
   }
 
