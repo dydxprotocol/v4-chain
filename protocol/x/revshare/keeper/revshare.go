@@ -107,6 +107,9 @@ func (k Keeper) GetMarketMapperRevenueShareForMarket(ctx sdk.Context, marketId u
 }
 
 func (k Keeper) GetOrderRouterRevShare(ctx sdk.Context, orderRouterAddr string) (uint32, error) {
+	if orderRouterAddr == "" {
+		return 0, nil
+	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OrderRouterRevSharePrefix))
 	orderRouterBech32Addr, err := sdk.AccAddressFromBech32(orderRouterAddr)
 	if err != nil {
@@ -218,53 +221,10 @@ func (k Keeper) GetAllRevShares(
 
 	var orderRouterRevShares []types.RevShare
 	// No affiliate fees shared, so we can generate order router rev shares
-	if affiliateRevShares == nil && (fill.TakerOrderRouterAddr != "" || fill.MakerOrderRouterAddr != "") {
-		var takerOrderRouterRevSharePpm uint32 = 0
-		var makerOrderRouterRevSharePpm uint32 = 0
-		orderRouterRevShares = []types.RevShare{}
-		if fill.TakerOrderRouterAddr != "" {
-			takerOrderRouterRevSharePpm, err = k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
-			if err != nil {
-				return types.RevSharesForFill{}, err
-			}
-		}
-
-		if fill.MakerOrderRouterAddr != "" {
-			makerOrderRouterRevSharePpm, err = k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
-			if err != nil {
-				return types.RevSharesForFill{}, err
-			}
-		}
-
-		// Orders can have 2 rev share ids, we need to calculate each side separately
-		// This is taker ppm * min(taker, taker - maker_rebate)
-		takerFeesSide := lib.BigMin(takerFees, takerFees.Add(takerFees, makerFees))
-		takerRevShare := lib.BigMulPpm(lib.BigU(takerOrderRouterRevSharePpm), takerFeesSide, false)
-
-		// maker ppm * max(0, maker)
-		makerFeeSide := lib.BigMax(lib.BigI(0), makerFees)
-		makerRevShare := lib.BigMulPpm(makerFeeSide,
-			lib.BigU(makerOrderRouterRevSharePpm),
-			false,
-		)
-
-		if fill.TakerOrderRouterAddr != "" {
-			orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
-				Recipient:         fill.TakerOrderRouterAddr,
-				RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
-				RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
-				QuoteQuantums:     takerRevShare,
-				RevSharePpm:       takerOrderRouterRevSharePpm,
-			})
-		}
-		if fill.MakerOrderRouterAddr != "" {
-			orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
-				Recipient:         fill.MakerOrderRouterAddr,
-				RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_MAKER_FEE,
-				RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
-				QuoteQuantums:     makerRevShare,
-				RevSharePpm:       makerOrderRouterRevSharePpm,
-			})
+	if affiliateRevShares == nil {
+		orderRouterRevShares, err = k.getOrderRouterRevShares(ctx, fill, takerFees, makerFees)
+		if err != nil {
+			return types.RevSharesForFill{}, err
 		}
 	}
 
@@ -349,6 +309,61 @@ func (k Keeper) getAffiliateRevShares(
 			RevSharePpm:       feeSharePpm,
 		},
 	}, feesShared, nil
+}
+
+func (k Keeper) getOrderRouterRevShares(
+	ctx sdk.Context,
+	fill clobtypes.FillForProcess,
+	takerFees *big.Int,
+	makerFees *big.Int,
+) ([]types.RevShare, error) {
+	if fill.TakerOrderRouterAddr == "" && fill.MakerOrderRouterAddr == "" {
+		return nil, nil
+	}
+
+	orderRouterRevShares := []types.RevShare{}
+	takerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	makerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Orders can have 2 rev share ids, we need to calculate each side separately
+	// This is taker ppm * min(taker, taker - maker_rebate)
+	takerFeesSide := lib.BigMin(takerFees, takerFees.Add(takerFees, makerFees))
+	takerRevShare := lib.BigMulPpm(lib.BigU(takerOrderRouterRevSharePpm), takerFeesSide, false)
+
+	// maker ppm * max(0, maker)
+	makerFeeSide := lib.BigMax(lib.BigI(0), makerFees)
+	makerRevShare := lib.BigMulPpm(makerFeeSide,
+		lib.BigU(makerOrderRouterRevSharePpm),
+		false,
+	)
+
+	if fill.TakerOrderRouterAddr != "" {
+		orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
+			Recipient:         fill.TakerOrderRouterAddr,
+			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
+			RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+			QuoteQuantums:     takerRevShare,
+			RevSharePpm:       takerOrderRouterRevSharePpm,
+		})
+	}
+	if fill.MakerOrderRouterAddr != "" {
+		orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
+			Recipient:         fill.MakerOrderRouterAddr,
+			RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_MAKER_FEE,
+			RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
+			QuoteQuantums:     makerRevShare,
+			RevSharePpm:       makerOrderRouterRevSharePpm,
+		})
+	}
+
+	return orderRouterRevShares, nil
 }
 
 func (k Keeper) getUnconditionalRevShares(
