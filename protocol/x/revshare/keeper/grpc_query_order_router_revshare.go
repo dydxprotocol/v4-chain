@@ -12,7 +12,7 @@ func (k Keeper) OrderRouterRevShare(
 	req *types.QueryOrderRouterRevShare,
 ) (*types.QueryOrderRouterRevShareResponse, error) {
 	if req == nil {
-		return nil, types.ErrInvalidRequest
+		return nil, types.ErrEmptyRequest
 	}
 	revSharePpm, err := k.GetOrderRouterRevShare(sdk.UnwrapSDKContext(ctx), req.Address)
 	if err != nil {

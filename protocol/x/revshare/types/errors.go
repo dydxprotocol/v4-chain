@@ -43,9 +43,9 @@ var (
 		8,
 		"order router rev share not found",
 	)
-	ErrInvalidRequest = errorsmod.Register(
+	ErrEmptyRequest = errorsmod.Register(
 		ModuleName,
 		9,
-		"invalid request",
+		"empty request",
 	)
 )
