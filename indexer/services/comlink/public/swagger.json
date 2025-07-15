@@ -1606,6 +1606,74 @@
         "type": "object",
         "additionalProperties": false
       },
+      "SigninMethod": {
+        "enum": [
+          "email",
+          "social",
+          "passkey"
+        ],
+        "type": "string"
+      },
+      "SignInRequest": {
+        "properties": {
+          "signinMethod": {
+            "$ref": "#/components/schemas/SigninMethod"
+          },
+          "userEmail": {
+            "type": "string"
+          },
+          "targetPublicKey": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "oidcToken": {
+            "type": "string"
+          },
+          "challenge": {
+            "type": "string"
+          },
+          "attestation": {
+            "properties": {
+              "transports": {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "AUTHENTICATOR_TRANSPORT_BLE",
+                    "AUTHENTICATOR_TRANSPORT_INTERNAL",
+                    "AUTHENTICATOR_TRANSPORT_NFC",
+                    "AUTHENTICATOR_TRANSPORT_USB",
+                    "AUTHENTICATOR_TRANSPORT_HYBRID"
+                  ]
+                },
+                "type": "array"
+              },
+              "attestationObject": {
+                "type": "string"
+              },
+              "clientDataJson": {
+                "type": "string"
+              },
+              "credentialId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "transports",
+              "attestationObject",
+              "clientDataJson",
+              "credentialId"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "signinMethod"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "MegavaultHistoricalPnlResponse": {
         "properties": {
           "megavaultPnl": {
@@ -3718,53 +3786,17 @@
           }
         },
         "security": [],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "signinMethod",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "email",
-                "social",
-                "passkey"
-              ]
-            }
-          },
-          {
-            "in": "query",
-            "name": "userEmail",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "targetPublicKey",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "provider",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "oidcToken",
-            "required": false,
-            "schema": {
-              "type": "string"
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInRequest"
+              }
             }
           }
-        ]
+        }
       }
     },
     "/vault/v1/megavault/historicalPnl": {

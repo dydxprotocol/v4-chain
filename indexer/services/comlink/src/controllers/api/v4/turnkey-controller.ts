@@ -6,8 +6,7 @@ import { TurnkeyApiClient, TurnkeyApiTypes, Turnkey as TurnkeyServerSDK } from '
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
 import {
-  Controller, Post, Route, Query,
-  Queries,
+  Controller, Post, Route, Body,
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
@@ -26,6 +25,16 @@ import {
 
 export const router: express.Router = express.Router();
 const controllerName: string = 'turnkey-controller';
+
+interface SignInRequest {
+  signinMethod: SigninMethod,
+  userEmail?: string,
+  targetPublicKey?: string,
+  provider?: string,
+  oidcToken?: string,
+  challenge?: string,
+  attestation?: TurnkeyApiTypes['v1Attestation'],
+}
 
 @Route('turnkey')
 export class TurnkeyController extends Controller {
@@ -67,14 +76,17 @@ export class TurnkeyController extends Controller {
 
   @Post('/signin')
   async signIn(
-    @Query() signinMethod: SigninMethod,
-      @Query() userEmail?: string,
-      @Query() targetPublicKey?: string,
-      @Query() provider?: string,
-      @Query() oidcToken?: string,
-      @Query() challenge?: string,
-      @Queries() attestation?: TurnkeyApiTypes['v1Attestation'],
+    @Body() body: SignInRequest,
   ): Promise<TurnkeyAuthResponse> {
+    const {
+      signinMethod,
+      userEmail,
+      targetPublicKey,
+      provider,
+      oidcToken,
+      challenge,
+      attestation,
+    } = body;
     // Determine authentication method
     if (signinMethod === SigninMethod.EMAIL) {
       if (!userEmail || !targetPublicKey) {
@@ -546,15 +558,7 @@ router.post(
           body,
         },
       });
-      const response = await controller.signIn(
-        body.signinMethod,
-        body.userEmail,
-        body.targetPublicKey,
-        body.provider,
-        body.oidcToken,
-        body.challenge,
-        body.attestation,
-      );
+      const response = await controller.signIn(body);
 
       logger.info({
         at: 'TurnkeyController POST /signin',

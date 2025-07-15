@@ -22,7 +22,7 @@ import SparklinesController from './v4/sparklines-controller';
 import TimeController from './v4/time-controller';
 import TradesController from './v4/trades-controller';
 import TransfersController from './v4/transfers-controller';
-import TurnkeyController from './v4/turnkey-controller';
+import { router as TurnkeyController } from './v4/turnkey-controller';
 import VaultController from './v4/vault-controller';
 
 // Keep routers in alphabetical order

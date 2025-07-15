@@ -3608,6 +3608,7 @@ This operation does not require authentication
 ```python
 import requests
 headers = {
+  'Content-Type': 'application/json',
   'Accept': 'application/json'
 }
 
@@ -3615,17 +3616,31 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
-r = requests.post(f'{baseURL}/turnkey/signin', params={
-  'signinMethod': 'email'
-}, headers = headers)
+r = requests.post(f'{baseURL}/turnkey/signin', headers = headers)
 
 print(r.json())
 
 ```
 
 ```javascript
-
+const inputBody = '{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  }
+}';
 const headers = {
+  'Content-Type':'application/json',
   'Accept':'application/json'
 };
 
@@ -3633,10 +3648,10 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
-fetch(`${baseURL}/turnkey/signin?signinMethod=email`,
+fetch(`${baseURL}/turnkey/signin`,
 {
   method: 'POST',
-
+  body: inputBody,
   headers: headers
 })
 .then(function(res) {
@@ -3649,23 +3664,32 @@ fetch(`${baseURL}/turnkey/signin?signinMethod=email`,
 
 `POST /turnkey/signin`
 
+> Body parameter
+
+```json
+{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  }
+}
+```
+
 ### Parameters
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|signinMethod|query|string|true|none|
-|userEmail|query|string|false|none|
-|targetPublicKey|query|string|false|none|
-|provider|query|string|false|none|
-|oidcToken|query|string|false|none|
-
-#### Enumerated Values
-
-|Parameter|Value|
-|---|---|
-|signinMethod|email|
-|signinMethod|social|
-|signinMethod|passkey|
+|body|body|[SignInRequest](#schemasigninrequest)|true|none|
 
 > Example responses
 
@@ -6354,6 +6378,75 @@ or
 |userId|string|false|none|none|
 |session|string|false|none|none|
 |salt|string|true|none|none|
+
+## SigninMethod
+
+<a id="schemasigninmethod"></a>
+<a id="schema_SigninMethod"></a>
+<a id="tocSsigninmethod"></a>
+<a id="tocssigninmethod"></a>
+
+```json
+"email"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|email|
+|*anonymous*|social|
+|*anonymous*|passkey|
+
+## SignInRequest
+
+<a id="schemasigninrequest"></a>
+<a id="schema_SignInRequest"></a>
+<a id="tocSsigninrequest"></a>
+<a id="tocssigninrequest"></a>
+
+```json
+{
+  "signinMethod": "email",
+  "userEmail": "string",
+  "targetPublicKey": "string",
+  "provider": "string",
+  "oidcToken": "string",
+  "challenge": "string",
+  "attestation": {
+    "transports": [
+      "AUTHENTICATOR_TRANSPORT_BLE"
+    ],
+    "attestationObject": "string",
+    "clientDataJson": "string",
+    "credentialId": "string"
+  }
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|signinMethod|[SigninMethod](#schemasigninmethod)|true|none|none|
+|userEmail|string|false|none|none|
+|targetPublicKey|string|false|none|none|
+|provider|string|false|none|none|
+|oidcToken|string|false|none|none|
+|challenge|string|false|none|none|
+|attestation|object|false|none|none|
+|» transports|[string]|true|none|none|
+|» attestationObject|string|true|none|none|
+|» clientDataJson|string|true|none|none|
+|» credentialId|string|true|none|none|
 
 ## MegavaultHistoricalPnlResponse
 

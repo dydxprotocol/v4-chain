@@ -61,7 +61,11 @@ describe('TurnkeyController', () => {
           },
         } as any);
 
-        const response = await controller.signIn(SigninMethod.EMAIL, 'test@example.com', 'target-public-key');
+        const response = await controller.signIn({
+          signinMethod: SigninMethod.EMAIL,
+          userEmail: 'test@example.com',
+          targetPublicKey: 'target-public-key',
+        });
 
         expect(response.apiKeyId).toEqual('api-key-id');
         expect(response.userId).toEqual('user-id');
@@ -91,7 +95,11 @@ describe('TurnkeyController', () => {
           user: { userId: 'user-id', userEmail: 'test2@example.com', authenticators: [] },
         } as any);
 
-        const response = await controller.signIn(SigninMethod.EMAIL, 'test2@example.com', 'target-public-key');
+        const response = await controller.signIn({
+          signinMethod: SigninMethod.EMAIL,
+          userEmail: 'test2@example.com',
+          targetPublicKey: 'target-public-key',
+        });
 
         expect(jest.mocked(mockParentApiClient.createSubOrganization)).toHaveBeenCalled();
 
@@ -109,11 +117,18 @@ describe('TurnkeyController', () => {
       });
 
       it('should throw error for invalid email format', async () => {
-        await expect(controller.signIn(SigninMethod.EMAIL, 'invalid-email', 'target-public-key')).rejects.toThrow();
+        await expect(controller.signIn({
+          signinMethod: SigninMethod.EMAIL,
+          userEmail: 'invalid-email',
+          targetPublicKey: 'target-public-key',
+        })).rejects.toThrow();
       });
 
       it('should throw error when required fields are missing', async () => {
-        await expect(controller.signIn(SigninMethod.EMAIL, 'test@example.com')).rejects.toThrow();
+        await expect(controller.signIn({
+          signinMethod: SigninMethod.EMAIL,
+          userEmail: 'test@example.com',
+        })).rejects.toThrow();
       });
     });
 
@@ -131,13 +146,22 @@ describe('TurnkeyController', () => {
             },
           },
         } as any);
-        const response = await controller.signIn(SigninMethod.SOCIAL, undefined, 'target-public-key', 'google', 'oidc-token');
+        const response = await controller.signIn({
+          signinMethod: SigninMethod.SOCIAL,
+          targetPublicKey: 'target-public-key',
+          provider: 'google',
+          oidcToken: 'oidc-token',
+        });
 
         expect(response?.session).toEqual('session-token');
       });
 
       it('should throw error when required fields are missing', async () => {
-        await expect(controller.signIn(SigninMethod.SOCIAL, undefined, 'target-public-key', 'google')).rejects.toThrow();
+        await expect(controller.signIn({
+          signinMethod: SigninMethod.SOCIAL,
+          targetPublicKey: 'target-public-key',
+          provider: 'google',
+        })).rejects.toThrow();
       });
     });
 
@@ -164,7 +188,11 @@ describe('TurnkeyController', () => {
           user: { userId: 'user-id-2', authenticators: [{ credentialId: 'credential-id' }] },
         } as any);
 
-        const response = await controller.signIn(SigninMethod.PASSKEY, undefined, undefined, undefined, undefined, 'challenge', mockAttestation as any);
+        const response = await controller.signIn({
+          signinMethod: SigninMethod.PASSKEY,
+          challenge: 'challenge',
+          attestation: mockAttestation as any,
+        });
 
         expect(response?.organizationId).toEqual('test-suborg-id-2');
         expect(response?.salt).toBeDefined();
@@ -175,13 +203,21 @@ describe('TurnkeyController', () => {
           organizationIds: ['test-suborg-id'],
         } as any);
 
-        const response = await controller.signIn(SigninMethod.PASSKEY, undefined, undefined, undefined, undefined, 'challenge', mockAttestation as any);
+        const response = await controller.signIn({
+          signinMethod: SigninMethod.PASSKEY,
+          challenge: 'challenge',
+          attestation: mockAttestation as any,
+        });
 
         expect(response?.organizationId).toEqual('test-suborg-id');
       });
 
       it('should throw error when required fields are missing', async () => {
-        await expect(controller.signIn(SigninMethod.PASSKEY, undefined, undefined, undefined, undefined, 'challenge', undefined)).rejects.toThrow();
+        await expect(controller.signIn({
+          signinMethod: SigninMethod.PASSKEY,
+          challenge: 'challenge',
+          attestation: undefined,
+        })).rejects.toThrow();
       });
     });
   });
