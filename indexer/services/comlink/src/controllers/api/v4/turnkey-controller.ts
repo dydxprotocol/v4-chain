@@ -50,11 +50,11 @@ interface GetSuborgParams {
 }
 
 @Route('turnkey')
-class TurnkeyController extends Controller {
+export class TurnkeyController extends Controller {
   private parentApiClient: TurnkeyApiClient;
   private bridgeSenderApiClient: TurnkeyApiClient;
 
-  constructor() {
+  constructor(turnkeyClient?: TurnkeyApiClient, bridgeSenderTurnkeyClient?: TurnkeyApiClient) {
     super();
     logger.info({
       at: 'TurnkeyController#constructor',
@@ -65,21 +65,26 @@ class TurnkeyController extends Controller {
         TURNKEY_API_PUBLIC_KEY: config.TURNKEY_API_PUBLIC_KEY,
       },
     });
-    const turnkeyClient = new TurnkeyServerSDK({
-      apiBaseUrl: config.TURNKEY_API_BASE_URL,
-      apiPrivateKey: config.TURNKEY_API_PRIVATE_KEY,
-      apiPublicKey: config.TURNKEY_API_PUBLIC_KEY,
-      defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
-    });
-    this.parentApiClient = turnkeyClient.apiClient();
-
-    const bridgeSenderTurnkeyClient = new TurnkeyServerSDK({
-      apiBaseUrl: config.TURNKEY_API_BASE_URL,
-      apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY,
-      apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY,
-      defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
-    });
-    this.bridgeSenderApiClient = bridgeSenderTurnkeyClient.apiClient();
+    if (turnkeyClient) {
+      this.parentApiClient = turnkeyClient;
+    } else {
+      this.parentApiClient = new TurnkeyServerSDK({
+        apiBaseUrl: config.TURNKEY_API_BASE_URL,
+        apiPrivateKey: config.TURNKEY_API_PRIVATE_KEY,
+        apiPublicKey: config.TURNKEY_API_PUBLIC_KEY,
+        defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
+      }).apiClient();
+    }
+    if (bridgeSenderTurnkeyClient) {
+      this.bridgeSenderApiClient = bridgeSenderTurnkeyClient;
+    } else {
+      this.bridgeSenderApiClient = new TurnkeyServerSDK({
+        apiBaseUrl: config.TURNKEY_API_BASE_URL,
+        apiPrivateKey: config.TURNKEY_API_SENDER_PRIVATE_KEY,
+        apiPublicKey: config.TURNKEY_API_SENDER_PUBLIC_KEY,
+        defaultOrganizationId: config.TURNKEY_ORGANIZATION_ID,
+      }).apiClient();
+    }
   }
 
   @Post('/signin')
@@ -190,6 +195,7 @@ class TurnkeyController extends Controller {
           salt: user.salt,
         };
       }
+      return undefined;
     }
 
     // if we don't have an email, we need to find the suborg id by oidc token or credential id.
@@ -331,12 +337,17 @@ class TurnkeyController extends Controller {
     });
     // TODO: set the policies on api user
 
-    // Check that the subOrg.rootUserIds[0] is the end user
+    // Best efforts to check that the subOrg.rootUserIds[0] is the end user
     const user = await this.bridgeSenderApiClient.getUser({
       organizationId: subOrg.subOrganizationId,
       userId: subOrg.rootUserIds?.[0] as string,
     });
-    if (user.user.userEmail !== params.email) {
+    if (
+      user.user.authenticators.length > 0 &&
+      user.user.authenticators[0].credentialId !== params.attestation?.credentialId
+    ) {
+      throw new Error('End User not found');
+    } else if (user.user.userEmail && user.user.userEmail !== params.email) {
       throw new Error('End User not found');
     }
     // Remove the Delegated Account from the root quorum.
@@ -476,6 +487,8 @@ class TurnkeyController extends Controller {
       filterType: 'OIDC_TOKEN',
       filterValue: oidcToken,
     });
+    console.log('response', response.organizationIds);
+
     return response.organizationIds?.[0] || '';
   }
 
@@ -486,6 +499,7 @@ class TurnkeyController extends Controller {
       filterType: 'CREDENTIAL_ID',
       filterValue: credentialId,
     });
+    console.log('response', response.organizationIds);
     return response.organizationIds?.[0] || '';
   }
 
