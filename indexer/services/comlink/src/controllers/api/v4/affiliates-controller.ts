@@ -10,13 +10,16 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
+import { AccountVerificationRequiredAction, validateSignature } from '../../../helpers/compliance/compliance-utils';
 import {
+  Body,
   Controller, Get, Query, Route,
+  Post,
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { NotFoundError, UnexpectedServerError } from '../../../lib/errors';
+import { InvalidParamError, NotFoundError, UnexpectedServerError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -31,6 +34,8 @@ import {
   AffiliateSnapshotRequest,
   AffiliateTotalVolumeResponse,
   AffiliateTotalVolumeRequest,
+  CreateReferralCodeResponse,
+  CreateReferralCodeRequest,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -120,6 +125,58 @@ class AffiliatesController extends Controller {
 
     return {
       address,
+    };
+  }
+
+  @Post('/code')
+  async updateCode(
+    @Body() body: {
+      address: string,
+      newCode: string,
+    },
+  ): Promise<CreateReferralCodeResponse> {
+    const {
+      address,
+      newCode,
+    }: {
+      address: string;
+      newCode: string;
+    } = body;
+
+    // Check if the referral code already exists.
+    // There is a unique constraint but doing this allows us to have a better error message.
+    const existingUsernameRow = await SubaccountUsernamesTable.findByUsername(
+      newCode
+    );
+    if (existingUsernameRow) {
+      throw new InvalidParamError(`Referral code already exists`);
+    }
+
+    const subAccount = await SubaccountTable.findAll(
+      {
+        address,
+        subaccountNumber: 0,
+      },
+      []
+    );
+    // There is a code-level restriction, but it is possible to have more than one subaccount for an address
+    // It is also possible for there to be no username, if the task to create it has not run yet
+    if (subAccount.length !== 1) {
+      throw new InvalidParamError(`Referral code does not exist`);
+    }
+
+    const subaccountId = subAccount[0].id;
+
+    // there are assumptions here that
+    // 1. There is only one entry per subaccountId
+    // 2. There is already an entry for the subaccountId
+    await SubaccountUsernamesTable.update({
+      username: newCode,
+      subaccountId,
+    });
+
+    return {
+      referralCode: newCode,
     };
   }
 
@@ -281,6 +338,88 @@ router.get(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.get_address.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.post(
+  '/code',
+  ...checkSchema({
+    address: {
+      in: ['body'],
+      isString: true,
+      errorMessage: 'address must be a valid string',
+    },
+    newCode: {
+      in: ['body'],
+      isString: true,
+      errorMessage: 'newCode must be a valid string',
+      isLength: {
+        options: { min: 3, max: 32 },
+      },
+    },
+    signedMessage: {
+      in: ['body'],
+      isString: true,
+      errorMessage: 'signedMessage must be a valid string',
+    },
+    pubkey: {
+      in: ['body'],
+      isString: true,
+      errorMessage: 'pubkey must be a valid string',
+    },
+    timestamp: {
+      in: ['body'],
+      isInt: true,
+      errorMessage: 'timestamp must be a valid integer',
+    },
+  }),
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+
+    const {
+      address,
+      newCode,
+      signedMessage,
+      pubkey,
+      timestamp,
+    }: CreateReferralCodeRequest = req.body;
+
+    try {
+      const failedValidationResponse = await validateSignature(
+        res,
+        AccountVerificationRequiredAction.UPDATE_CODE,
+        address,
+        timestamp,
+        newCode,
+        signedMessage,
+        pubkey,
+      );
+      if (failedValidationResponse) {
+        return failedValidationResponse;
+      }
+
+      const controller: AffiliatesController = new AffiliatesController();
+      const response: CreateReferralCodeResponse = await controller.updateCode({
+        address,
+        newCode,
+      });
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'AffiliatesController POST /code',
+        'Affiliates code error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.create_code.timing`,
         Date.now() - start,
       );
     }
