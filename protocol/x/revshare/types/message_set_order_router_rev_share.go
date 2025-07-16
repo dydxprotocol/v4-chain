@@ -7,14 +7,16 @@ import (
 )
 
 const (
-	kMaxOrderRouterRevSharePpm = lib.OneHundredThousand * 5
+	// 80% of the revenue share is the max allowed. Realistically this will be lower,
+	// set it high so we don't need a protocol upgrade to change this
+	kMaxOrderRouterRevSharePpm = lib.OneHundredThousand * 8
 )
 
 var _ types.Msg = &MsgSetOrderRouterRevShare{}
 
-// ValidateBasic performs validation to check that order router rev share is under 50%
+// ValidateBasic performs validation to check that order router rev share is under 80%
 func (msg *MsgSetOrderRouterRevShare) ValidateBasic() error {
-	// Maximum fee share is 500_000 ppm
+	// Maximum fee share is 800_000 ppm
 	if msg.OrderRouterRevShare.SharePpm > kMaxOrderRouterRevSharePpm {
 		return errorsmod.Wrapf(
 			ErrInvalidRevenueSharePpm,
