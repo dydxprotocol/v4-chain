@@ -21,8 +21,7 @@ export async function findByEvmAddress(
   );
   return baseQuery
     .where(TurnkeyUserColumns.evmAddress, evmAddress)
-    .first()
-    .returning('*');
+    .first();
 }
 
 export async function findBySvmAddress(
@@ -35,8 +34,7 @@ export async function findBySvmAddress(
   );
   return baseQuery
     .where(TurnkeyUserColumns.svmAddress, svmAddress)
-    .first()
-    .returning('*');
+    .first();
 }
 
 export async function findByEmail(
@@ -49,8 +47,7 @@ export async function findByEmail(
   );
   return baseQuery
     .where(TurnkeyUserColumns.email, email)
-    .first()
-    .returning('*');
+    .first();
 }
 
 export async function findBySuborgId(
@@ -63,8 +60,7 @@ export async function findBySuborgId(
   );
   return baseQuery
     .where(TurnkeyUserColumns.suborgId, suborgId)
-    .first()
-    .returning('*');
+    .first();
 }
 
 export async function create(
