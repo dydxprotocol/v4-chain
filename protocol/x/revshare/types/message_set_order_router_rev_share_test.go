@@ -48,5 +48,4 @@ func TestMsgSetOrderRouterRevShare_ValidateBasic(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
-
 }
