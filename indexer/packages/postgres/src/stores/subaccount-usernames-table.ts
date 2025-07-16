@@ -145,3 +145,27 @@ export async function findByAddress(
 
   return result.rows;
 }
+
+export async function update(
+  subaccountUsernameToUpdate: SubaccountUsernamesCreateObject,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<SubaccountUsernamesFromDatabase[]> {
+  return SubaccountUsernamesModel.query(Transaction.get(options.txId))
+    .update({
+      ...subaccountUsernameToUpdate,
+    })
+    .where(
+      SubaccountUsernamesColumns.subaccountId,
+      subaccountUsernameToUpdate.subaccountId
+    )
+    .returning("*");
+}
+
+export async function deleteBySubaccountId(
+  subaccountId: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<void> {
+  await SubaccountUsernamesModel.query(Transaction.get(options.txId))
+    .delete()
+    .where(SubaccountUsernamesColumns.subaccountId, subaccountId);
+}

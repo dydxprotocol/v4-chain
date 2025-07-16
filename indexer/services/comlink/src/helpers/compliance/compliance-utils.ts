@@ -19,6 +19,7 @@ export enum ComplianceAction {
 
 export enum AccountVerificationRequiredAction {
   REGISTER_TOKEN = 'REGISTER_TOKEN',
+  UPDATE_CODE = 'UPDATE_CODE',
 }
 
 export function getGeoComplianceReason(

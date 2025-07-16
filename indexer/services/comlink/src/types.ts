@@ -31,6 +31,8 @@ import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import express from 'express';
 
+import { AccountVerificationRequiredAction } from './helpers/compliance/compliance-utils';
+
 /* ------- GENERAL/UNCATEGORIZED TYPES ------- */
 
 export interface ResponseWithBody extends express.Response {
@@ -730,6 +732,17 @@ export interface AffiliateMetadataResponse {
 
 export interface AffiliateAddressResponse {
   address: string,
+}
+
+export interface CreateReferralCodeRequest {
+  address: string,
+  newCode: string,
+  signedMessage: string, // base64 encoded
+  pubkey: string, // base64 encoded
+  timestamp: number, // UNIX timestamp in seconds
+}
+export interface CreateReferralCodeResponse {
+  referralCode: string,
 }
 
 export interface AffiliateSnapshotResponse {
