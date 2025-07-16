@@ -16,35 +16,35 @@ describe('TurnkeyUser store', () => {
   });
 
   const defaultTurnkeyUser1 = {
-    suborgId: 'suborg-1',
+    suborg_id: 'suborg-1',
     username: 'user1',
     email: 'user1@example.com',
-    svmAddress: 'SVM123456789',
-    evmAddress: '0x1234567890abcdef1234567890abcdef12345678',
+    svm_address: 'SVM123456789',
+    evm_address: '0x1234567890abcdef1234567890abcdef12345678',
     salt: 'salt1',
-    dydxAddress: 'dydx1abc123',
-    createdAt: '2023-01-01T00:00:00.000Z',
+    dydx_address: 'dydx1abc123',
+    created_at: '2023-01-01T00:00:00.000Z',
   };
 
   const defaultTurnkeyUser2 = {
-    suborgId: 'suborg-2',
+    suborg_id: 'suborg-2',
     username: 'user2',
     email: 'user2@example.com',
-    svmAddress: 'SVM987654321',
-    evmAddress: '0x9876543210fedcba9876543210fedcba98765432',
+    svm_address: 'SVM987654321',
+    evm_address: '0x9876543210fedcba9876543210fedcba98765432',
     salt: 'salt2',
-    dydxAddress: 'dydx1xyz789',
-    createdAt: '2023-01-02T00:00:00.000Z',
+    dydx_address: 'dydx1xyz789',
+    created_at: '2023-01-02T00:00:00.000Z',
   };
 
   const defaultTurnkeyUser3 = {
-    suborgId: 'suborg-3',
+    suborg_id: 'suborg-3',
     username: 'user3',
-    svmAddress: 'SVM987654321',
-    evmAddress: '0x9876543210fedcba9876543210fedcba98765433',
+    svm_address: 'SVM987654321',
+    evm_address: '0x9876543210fedcba9876543210fedcba98765433',
     salt: 'salt3',
-    dydxAddress: 'dydx1xyz789',
-    createdAt: '2023-01-02T00:00:00.000Z',
+    dydx_address: 'dydx1xyz789',
+    created_at: '2023-01-02T00:00:00.000Z',
   };
 
   it('Successfully creates a TurnkeyUser', async () => {
@@ -54,7 +54,7 @@ describe('TurnkeyUser store', () => {
 
   it('Successfully upserts a TurnkeyUser', async () => {
     await TurnkeyUserTable.upsert(defaultTurnkeyUser1);
-    const user = await TurnkeyUserTable.findByEvmAddress(defaultTurnkeyUser1.evmAddress);
+    const user = await TurnkeyUserTable.findByEvmAddress(defaultTurnkeyUser1.evm_address);
     expect(user).toEqual(expect.objectContaining(defaultTurnkeyUser1));
 
     // Update with upsert
@@ -64,7 +64,7 @@ describe('TurnkeyUser store', () => {
       email: 'updated_user1@example.com',
     };
     await TurnkeyUserTable.upsert(updatedUser);
-    const updatedResult = await TurnkeyUserTable.findByEvmAddress(defaultTurnkeyUser1.evmAddress);
+    const updatedResult = await TurnkeyUserTable.findByEvmAddress(defaultTurnkeyUser1.evm_address);
     expect(updatedResult).toEqual(expect.objectContaining(updatedUser));
   });
 
@@ -74,7 +74,7 @@ describe('TurnkeyUser store', () => {
       await TurnkeyUserTable.create(defaultTurnkeyUser2);
 
       const user: TurnkeyUserFromDatabase | undefined = await TurnkeyUserTable.findByEvmAddress(
-        defaultTurnkeyUser1.evmAddress,
+        defaultTurnkeyUser1.evm_address,
       );
 
       expect(user).toEqual(expect.objectContaining(defaultTurnkeyUser1));
@@ -97,7 +97,7 @@ describe('TurnkeyUser store', () => {
       await TurnkeyUserTable.create(defaultTurnkeyUser2);
 
       const user: TurnkeyUserFromDatabase | undefined = await TurnkeyUserTable.findBySvmAddress(
-        defaultTurnkeyUser2.svmAddress,
+        defaultTurnkeyUser2.svm_address,
       );
 
       expect(user).toEqual(expect.objectContaining(defaultTurnkeyUser2));
@@ -150,7 +150,7 @@ describe('TurnkeyUser store', () => {
       await TurnkeyUserTable.create(defaultTurnkeyUser1);
 
       // Test with uppercase version of the address
-      const upperCaseEvmAddress = defaultTurnkeyUser1.evmAddress.toUpperCase();
+      const upperCaseEvmAddress = defaultTurnkeyUser1.evm_address.toUpperCase();
       const user = await TurnkeyUserTable.findByEvmAddress(upperCaseEvmAddress);
 
       // This should not find the user as EVM addresses are case-sensitive in the database

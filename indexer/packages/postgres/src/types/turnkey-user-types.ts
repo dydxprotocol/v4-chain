@@ -1,23 +1,23 @@
 /* ------- TURNKEY USER TYPES ------- */
 
 export interface TurnkeyUserCreateObject {
-  suborgId: string,
+  suborg_id: string,
   username?: string,
   email?: string,
-  svmAddress: string,
-  evmAddress: string,
+  svm_address: string,
+  evm_address: string,
   salt: string,
-  dydxAddress?: string,
-  createdAt: string,
+  dydx_address?: string,
+  created_at: string,
 }
 
 export enum TurnkeyUserColumns {
-  suborgId = 'suborgId',
+  suborg_id = 'suborg_id',
   username = 'username',
   email = 'email',
-  svmAddress = 'svmAddress',
-  evmAddress = 'evmAddress',
+  svm_address = 'svm_address',
+  evm_address = 'evm_address',
   salt = 'salt',
-  dydxAddress = 'dydxAddress',
-  createdAt = 'createdAt',
+  dydx_address = 'dydx_address',
+  created_at = 'created_at',
 }
