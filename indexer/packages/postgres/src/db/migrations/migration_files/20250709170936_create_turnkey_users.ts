@@ -4,18 +4,18 @@ export async function up(knex: Knex): Promise<void> {
   return knex
     .schema
     .createTable('turnkey_users', (table) => {
-      table.text('suborgId').primary(); // Primary key
+      table.text('suborg_id').primary(); // Primary key
       table.text('username').nullable(); // optional
-      table.text('email').nullable(); // optional
-      table.text('svmAddress').notNullable(); // indexed
-      table.text('evmAddress').notNullable(); // indexed
+      table.text('email').nullable().unique(); // optional but unique
+      table.text('svm_address').notNullable(); // indexed
+      table.text('evm_address').notNullable(); // indexed
       table.text('salt').notNullable(); // used to generate dydx keypair when combining the onboarding signature
-      table.text('dydxAddress').nullable();
-      table.timestamp('createdAt').notNullable();
+      table.text('dydx_address').nullable();
+      table.timestamp('created_at').notNullable();
 
       // Indexes
-      table.index(['svmAddress'], 'idx_turnkey_users_svm_address');
-      table.index(['evmAddress'], 'idx_turnkey_users_evm_address');
+      table.index(['svm_address'], 'idx_turnkey_users_svm_address');
+      table.index(['evm_address'], 'idx_turnkey_users_evm_address');
       // used to validate that user is already a user.
       table.index(['email'], 'idx_turnkey_users_email');
     });
