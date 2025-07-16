@@ -334,7 +334,7 @@ func (k Keeper) getOrderRouterRevShares(
 	} else if fill.TakerOrderRouterAddr != "" {
 		// Orders can have 2 rev share ids, we need to calculate each side separately
 		// This is taker ppm * min(taker, taker - maker_rebate)
-		takerFeesSide := lib.BigMin(takerFees, takerFees.Add(takerFees, makerFees))
+		takerFeesSide := lib.BigMin(takerFees, new(big.Int).Add(takerFees, makerFees))
 		takerRevShare := lib.BigMulPpm(lib.BigU(takerOrderRouterRevSharePpm), takerFeesSide, false)
 		orderRouterRevShares = append(orderRouterRevShares, types.RevShare{
 			Recipient:         fill.TakerOrderRouterAddr,

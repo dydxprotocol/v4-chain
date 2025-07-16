@@ -826,7 +826,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 						Recipient:         constants.CarlAccAddress.String(),
 						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 						RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
-						QuoteQuantums:     big.NewInt(1_200_000),
+						QuoteQuantums:     big.NewInt(1_000_000),
 						RevSharePpm:       100_000, // 10%
 					},
 					{
@@ -840,14 +840,14 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 						Recipient:         constants.AliceAccAddress.String(),
 						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 						RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
-						QuoteQuantums:     big.NewInt(1_200_000),
+						QuoteQuantums:     big.NewInt(1_000_000),
 						RevSharePpm:       100_000, // 10%
 					},
 				},
 				AffiliateRevShare: nil,
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(1_200_000),
-					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(1_200_000),
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(1_000_000),
 					types.REV_SHARE_FEE_SOURCE_MAKER_FEE:            big.NewInt(400_000),
 				},
 				OrderRouterRevShares: []types.RevShare{
@@ -855,7 +855,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 						Recipient:         constants.CarlAccAddress.String(),
 						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 						RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
-						QuoteQuantums:     big.NewInt(1_200_000),
+						QuoteQuantums:     big.NewInt(1_000_000),
 						RevSharePpm:       100_000, // 10%
 					},
 					{
@@ -919,7 +919,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 						Recipient:         constants.CarlAccAddress.String(),
 						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 						RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
-						QuoteQuantums:     big.NewInt(1_200_000),
+						QuoteQuantums:     big.NewInt(1_000_000),
 						RevSharePpm:       100_000, // 10%
 					},
 					{
@@ -933,7 +933,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				AffiliateRevShare: nil,
 				FeeSourceToQuoteQuantums: map[types.RevShareFeeSource]*big.Int{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: big.NewInt(1_200_000),
-					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(1_200_000),
+					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            big.NewInt(1_000_000),
 					types.REV_SHARE_FEE_SOURCE_MAKER_FEE:            big.NewInt(0),
 				},
 				OrderRouterRevShares: []types.RevShare{
@@ -941,7 +941,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 						Recipient:         constants.CarlAccAddress.String(),
 						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_TAKER_FEE,
 						RevShareType:      types.REV_SHARE_TYPE_ORDER_ROUTER,
-						QuoteQuantums:     big.NewInt(1_200_000),
+						QuoteQuantums:     big.NewInt(1_000_000),
 						RevSharePpm:       100_000, // 10%
 					},
 				},
