@@ -385,8 +385,3 @@ export interface FundingPaymentsQueryConfig extends QueryConfig {
   [QueryableField.PARENT_SUBACCOUNT]?: ParentSubaccount,
   [QueryableField.ZERO_PAYMENTS]?: boolean,
 }
-
-export interface TurnkeyUserQueryConfig extends QueryConfig {
-  [QueryableField.SVM_ADDRESS]?: string,
-  [QueryableField.EVM_ADDRESS]?: string,
-}
