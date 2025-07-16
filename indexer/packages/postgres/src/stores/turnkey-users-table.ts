@@ -79,6 +79,8 @@ export async function upsert(
   const turnkeyUsers: TurnkeyUserModel[] = await TurnkeyUserModel.query(
     Transaction.get(options.txId),
   ).upsert(turnkeyUserToUpsert).returning('*');
-  // should only ever be one turnkey user
+  if (turnkeyUsers.length === 0) {
+    throw new Error('Upsert failed to return records');
+  }
   return turnkeyUsers[0];
 }
