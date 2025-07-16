@@ -840,7 +840,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 						Recipient:         constants.AliceAccAddress.String(),
 						RevShareFeeSource: types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE,
 						RevShareType:      types.REV_SHARE_TYPE_MARKET_MAPPER,
-						QuoteQuantums:     big.NewInt(1_000_000),
+						QuoteQuantums:     big.NewInt(1_200_000),
 						RevSharePpm:       100_000, // 10%
 					},
 				},
@@ -948,7 +948,7 @@ func TestKeeper_GetAllRevShares_Valid(t *testing.T) {
 				FeeSourceToRevSharePpm: map[types.RevShareFeeSource]uint32{
 					types.REV_SHARE_FEE_SOURCE_NET_PROTOCOL_REVENUE: 100_000, // 10%
 					types.REV_SHARE_FEE_SOURCE_TAKER_FEE:            100_000, // 10%
-					types.REV_SHARE_FEE_SOURCE_MAKER_FEE:            0,       // 20%
+					types.REV_SHARE_FEE_SOURCE_MAKER_FEE:            0,       // 0%
 				},
 			},
 			fill: clobtypes.FillForProcess{
