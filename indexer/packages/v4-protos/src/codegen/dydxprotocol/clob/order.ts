@@ -1359,7 +1359,7 @@ function createBaseOrder(): Order {
     conditionalOrderTriggerSubticks: Long.UZERO,
     twapParameters: undefined,
     builderCodeParameters: undefined,
-    orderRouterAddress: ""
+    orderRouterAddress: undefined
   };
 }
 
@@ -1417,7 +1417,7 @@ export const Order = {
       BuilderCodeParameters.encode(message.builderCodeParameters, writer.uint32(106).fork()).ldelim();
     }
 
-    if (message.orderRouterAddress !== "") {
+    if (message.orderRouterAddress !== undefined) {
       writer.uint32(114).string(message.orderRouterAddress);
     }
 
@@ -1513,7 +1513,7 @@ export const Order = {
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
     message.twapParameters = object.twapParameters !== undefined && object.twapParameters !== null ? TwapParameters.fromPartial(object.twapParameters) : undefined;
     message.builderCodeParameters = object.builderCodeParameters !== undefined && object.builderCodeParameters !== null ? BuilderCodeParameters.fromPartial(object.builderCodeParameters) : undefined;
-    message.orderRouterAddress = object.orderRouterAddress ?? "";
+    message.orderRouterAddress = object.orderRouterAddress ?? undefined;
     return message;
   }
 
