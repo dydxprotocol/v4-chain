@@ -6,28 +6,28 @@ export default class TurnkeyUserModel extends BaseModel {
   }
 
   static get idColumn() {
-    return 'suborgId';
+    return 'suborg_id';
   }
 
   static get jsonSchema() {
     return {
       type: 'object',
       required: [
-        'suborgId',
-        'svmAddress',
-        'evmAddress',
+        'suborg_id',
+        'svm_address',
+        'evm_address',
         'salt',
-        'createdAt',
+        'created_at',
       ],
       properties: {
-        suborgId: { type: 'string' },
+        suborg_id: { type: 'string' },
         username: { type: ['string', 'null'] },
         email: { type: ['string', 'null'] },
-        svmAddress: { type: 'string' },
-        evmAddress: { type: 'string' },
+        svm_address: { type: 'string' },
+        evm_address: { type: 'string' },
         salt: { type: 'string' },
-        dydxAddress: { type: ['string', 'null'] },
-        createdAt: { type: 'string' },
+        dydx_address: { type: ['string', 'null'] },
+        created_at: { type: 'string' },
       },
     };
   }
@@ -38,30 +38,30 @@ export default class TurnkeyUserModel extends BaseModel {
    */
   static get sqlToJsonConversions() {
     return {
-      suborgId: 'string',
+      suborg_id: 'string',
       username: 'string',
       email: 'string',
-      svmAddress: 'string',
-      evmAddress: 'string',
+      svm_address: 'string',
+      evm_address: 'string',
       salt: 'string',
-      dydxAddress: 'string',
-      createdAt: 'string',
+      dydx_address: 'string',
+      created_at: 'string',
     };
   }
 
-  suborgId!: string;
+  suborg_id!: string;
 
   username?: string;
 
   email?: string;
 
-  svmAddress!: string;
+  svm_address!: string;
 
-  evmAddress!: string;
+  evm_address!: string;
 
   salt!: string;
 
-  dydxAddress?: string;
+  dydx_address?: string;
 
-  createdAt!: string;
+  created_at!: string;
 }

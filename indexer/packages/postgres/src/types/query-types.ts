@@ -101,10 +101,10 @@ export enum QueryableField {
   PARENT_SUBACCOUNT = 'parentSubaccount',
   DISTINCT_FIELDS = 'distinctFields',
   ZERO_PAYMENTS = 'zeroPayments',
-  SUBORG_ID = 'suborgId',
-  SVM_ADDRESS = 'svmAddress',
-  EVM_ADDRESS = 'evmAddress',
-  DYDX_ADDRESS = 'dydxAddress',
+  SUBORG_ID = 'suborg_id',
+  SVM_ADDRESS = 'svm_address',
+  EVM_ADDRESS = 'evm_address',
+  DYDX_ADDRESS = 'dydx_address',
 }
 
 export interface QueryConfig {

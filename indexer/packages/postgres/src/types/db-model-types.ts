@@ -337,14 +337,14 @@ export interface FundingPaymentsFromDatabase {
 }
 
 export interface TurnkeyUserFromDatabase {
-  suborgId: string,
+  suborg_id: string,
   username?: string,
   email?: string,
-  svmAddress: string,
-  evmAddress: string,
+  svm_address: string,
+  evm_address: string,
   salt: string,
-  dydxAddress?: string,
-  createdAt: string,
+  dydx_address?: string,
+  created_at: string,
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:

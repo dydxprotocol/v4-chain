@@ -20,7 +20,7 @@ export async function findByEvmAddress(
     options,
   );
   return baseQuery
-    .where(TurnkeyUserColumns.evmAddress, evmAddress)
+    .where(TurnkeyUserColumns.evm_address, evmAddress)
     .first();
 }
 
@@ -33,7 +33,7 @@ export async function findBySvmAddress(
     options,
   );
   return baseQuery
-    .where(TurnkeyUserColumns.svmAddress, svmAddress)
+    .where(TurnkeyUserColumns.svm_address, svmAddress)
     .first();
 }
 
@@ -59,7 +59,7 @@ export async function findBySuborgId(
     options,
   );
   return baseQuery
-    .where(TurnkeyUserColumns.suborgId, suborgId)
+    .where(TurnkeyUserColumns.suborg_id, suborgId)
     .first();
 }
 
