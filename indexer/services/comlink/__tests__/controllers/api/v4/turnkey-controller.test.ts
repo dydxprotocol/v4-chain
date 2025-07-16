@@ -17,7 +17,6 @@ describe('TurnkeyController', () => {
   };
 
   beforeAll(async () => {
-    await TurnkeyUsersTable.create(mockUser);
     await dbHelpers.clearData();
     await dbHelpers.migrate();
     mockParentApiClient = {

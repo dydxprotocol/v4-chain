@@ -34,14 +34,6 @@ function startServer() {
 }
 
 async function start() {
-  logger.info({
-    at: 'index#start',
-    message: 'Starting server',
-    params: {
-      NODE_ENV: process.env.NODE_ENV,
-      DB_PORT: config.TURNKEY_API_PUBLIC_KEY,
-    },
-  });
   startBugsnag();
 
   // Initialize PerpetualMarkets cache
@@ -54,16 +46,8 @@ async function start() {
   // Initialize cache for vault start PnL
   await startVaultStartPnlCache();
   await connectToRedis();
-  logger.info({
-    at: 'index#start',
-    message: `Connected to redis at ${config.REDIS_URL}`,
-  });
 
   await connectToRedisReadOnly();
-  logger.info({
-    at: 'index#start',
-    message: `Connected to read-only redis at ${config.REDIS_READONLY_URL}`,
-  });
 
   startServer();
 }
