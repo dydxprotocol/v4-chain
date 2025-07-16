@@ -1,0 +1,67 @@
+import BaseModel from './base-model';
+
+export default class TurnkeyUserModel extends BaseModel {
+  static get tableName() {
+    return 'turnkey_users';
+  }
+
+  static get idColumn() {
+    return 'suborg_id';
+  }
+
+  static get jsonSchema() {
+    return {
+      type: 'object',
+      required: [
+        'suborg_id',
+        'svm_address',
+        'evm_address',
+        'salt',
+        'created_at',
+      ],
+      properties: {
+        suborg_id: { type: 'string' },
+        username: { type: ['string', 'null'] },
+        email: { type: ['string', 'null'] },
+        svm_address: { type: 'string' },
+        evm_address: { type: 'string' },
+        salt: { type: 'string' },
+        dydx_address: { type: ['string', 'null'] },
+        created_at: { type: 'string' },
+      },
+    };
+  }
+
+  /**
+   * A mapping from column name to JSON conversion expected.
+   * See getSqlConversionForDydxModelTypes for valid conversions.
+   */
+  static get sqlToJsonConversions() {
+    return {
+      suborg_id: 'string',
+      username: 'string',
+      email: 'string',
+      svm_address: 'string',
+      evm_address: 'string',
+      salt: 'string',
+      dydx_address: 'string',
+      created_at: 'string',
+    };
+  }
+
+  suborg_id!: string;
+
+  username?: string;
+
+  email?: string;
+
+  svm_address!: string;
+
+  evm_address!: string;
+
+  salt!: string;
+
+  dydx_address?: string;
+
+  created_at!: string;
+}

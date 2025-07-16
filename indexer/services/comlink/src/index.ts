@@ -45,18 +45,9 @@ async function start() {
   wrapBackgroundTask(liquidityTierRefresher.start(), true, 'startUpdateLiquidityTiers');
   // Initialize cache for vault start PnL
   await startVaultStartPnlCache();
-
   await connectToRedis();
-  logger.info({
-    at: 'index#start',
-    message: `Connected to redis at ${config.REDIS_URL}`,
-  });
 
   await connectToRedisReadOnly();
-  logger.info({
-    at: 'index#start',
-    message: `Connected to read-only redis at ${config.REDIS_READONLY_URL}`,
-  });
 
   startServer();
 }
