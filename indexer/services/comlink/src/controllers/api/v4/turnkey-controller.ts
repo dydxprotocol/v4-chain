@@ -145,7 +145,7 @@ export class TurnkeyController extends Controller {
       if (user) {
         // return the suborg id and salt.
         return {
-          subOrgId: user.suborgId,
+          subOrgId: user.suborg_id,
           salt: user.salt,
         };
       }
@@ -169,7 +169,7 @@ export class TurnkeyController extends Controller {
       const user = await TurnkeyUsersTable.findBySuborgId(suborgId);
       if (user) {
         return {
-          subOrgId: suborgId,
+          subOrgId: user?.suborg_id || '',
           salt: user?.salt || '',
         };
       }
@@ -259,12 +259,12 @@ export class TurnkeyController extends Controller {
     const salt = this.generateSalt(32);
     // first add to turnkey_users table
     await TurnkeyUsersTable.create({
-      suborgId: subOrg.subOrganizationId,
+      suborg_id: subOrg.subOrganizationId,
       email: params.email,
-      svmAddress,
-      evmAddress,
+      svm_address: svmAddress,
+      evm_address: evmAddress,
       salt,
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     });
     // TODO: set the policies on api user
 

@@ -8,12 +8,12 @@ describe('TurnkeyController', () => {
   let mockBridgeSenderApiClient: TurnkeyApiClient;
   let controller: TurnkeyController;
   const mockUser: TurnkeyUserCreateObject = {
-    suborgId: 'test-org',
+    suborg_id: 'test-org',
     email: 'test@example.com',
     salt: 'test-salt',
-    createdAt: new Date().toISOString(),
-    evmAddress: '0x1234567890123456789012345678901234567890',
-    svmAddress: 'dydx1234567890123456789012345678901234567890',
+    created_at: new Date().toISOString(),
+    evm_address: '0x1234567890123456789012345678901234567890',
+    svm_address: 'dydx1234567890123456789012345678901234567890',
   };
 
   beforeAll(async () => {
@@ -106,9 +106,9 @@ describe('TurnkeyController', () => {
         const createdUser = await TurnkeyUsersTable.findByEmail('test2@example.com');
         expect(createdUser).toBeDefined();
         expect(createdUser?.email).toEqual('test2@example.com');
-        expect(createdUser?.suborgId).toEqual('test-suborg-id');
-        expect(createdUser?.evmAddress).toEqual('0x123');
-        expect(createdUser?.svmAddress).toEqual('svm-address');
+        expect(createdUser?.suborg_id).toEqual('test-suborg-id');
+        expect(createdUser?.evm_address).toEqual('0x123');
+        expect(createdUser?.svm_address).toEqual('svm-address');
         expect(createdUser?.salt).toBeDefined();
         expect(response?.apiKeyId).toEqual('api-key-id');
         expect(response?.userId).toEqual('user-id');
