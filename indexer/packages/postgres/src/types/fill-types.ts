@@ -48,6 +48,7 @@ export interface FillCreateObject {
   affiliateRevShare: string,
   builderAddress?: string,
   builderFee?: string,
+  orderRouterAddress?: string
 }
 
 export interface FillUpdateObject {

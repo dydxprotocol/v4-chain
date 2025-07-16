@@ -1202,7 +1202,8 @@ fetch(`${baseURL}/fills?address=string&subaccountNumber=0.1`,
       "clientMetadata": "string",
       "subaccountNumber": 0,
       "builderFee": "string",
-      "builderAddress": "string"
+      "builderAddress": "string",
+      "orderRouterAddress": "string",
     }
   ]
 }
@@ -1304,7 +1305,8 @@ fetch(`${baseURL}/fills/parentSubaccount?address=string&parentSubaccountNumber=0
       "clientMetadata": "string",
       "subaccountNumber": 0,
       "builderFee": "string",
-      "builderAddress": "string"
+      "builderAddress": "string",
+      "orderRotuerAddress": "string"
     }
   ]
 }

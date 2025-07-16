@@ -596,6 +596,10 @@ func (k Keeper) persistMatchedOrders(
 			makerBuilderAddress,
 			takerBuilderFeeQuantums,
 			makerBuilderFeeQuantums,
+			matchWithOrders.TakerOrder.GetOrderRouterAddress(),
+			matchWithOrders.MakerOrder.GetOrderRouterAddress(),
+			matchWithOrders.TakerOrder.GetOrderRouterFeeQuantums(),
+			matchWithOrders.MakerOrder.GetOrderRouterFeeQuantums(),
 		),
 	)
 

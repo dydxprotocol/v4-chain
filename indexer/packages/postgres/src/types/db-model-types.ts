@@ -77,6 +77,7 @@ export interface OrderFromDatabase extends IdBasedModelFromDatabase {
   triggerPrice?: string,
   builderAddress?: string,
   feePpm?: string,
+  orderRouterAddress?: string
 }
 
 export interface PerpetualMarketFromDatabase {
@@ -120,6 +121,7 @@ export interface FillFromDatabase {
   affiliateRevShare: string,
   builderAddress?: string,
   builderFee?: string,
+  orderRouterAddress?: string
 }
 
 export interface BlockFromDatabase {

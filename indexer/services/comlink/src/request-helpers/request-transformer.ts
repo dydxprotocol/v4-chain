@@ -165,6 +165,7 @@ export function fillToResponseObject(
     subaccountNumber,
     builderFee: fill.builderFee ?? undefined,
     builderAddress: fill.builderAddress ?? undefined,
+    orderRouterAddress: fill.orderRouterAddress ?? undefined
   };
 }
 
@@ -500,6 +501,7 @@ export function postgresOrderToResponseObject(
     triggerPrice: order.triggerPrice ?? undefined,
     builderAddress: order.builderAddress ?? undefined,
     feePpm: order.feePpm ?? undefined,
+    orderRouterAddress: order.orderRouterAddress ?? undefined,
     subaccountNumber,
   };
 }
@@ -533,6 +535,7 @@ export function redisOrderToResponseObject(
     clientMetadata: redisOrder.order!.clientMetadata.toString(),
     subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
     builderAddress: redisOrder.order!.builderCodeParams?.builderAddress ?? undefined,
+    orderRouterAddress: redisOrder.order!.orderRouterAddress ?? undefined,
     feePpm: redisOrder.order!.builderCodeParams?.feePpm.toString() ?? undefined,
   };
 }

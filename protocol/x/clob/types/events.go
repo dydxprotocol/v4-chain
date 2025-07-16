@@ -30,6 +30,10 @@ const (
 	AttributeKeyMakerBuilderAddress                     = "maker_builder_address"
 	AttributeKeyTakerBuilderFeeQuantums                 = "taker_builder_fee_quantums"
 	AttributeKeyMakerBuilderFeeQuantums                 = "maker_builder_fee_quantums"
+	AttributeKeyTakerOrderRouterAddress                 = "taker_order_router_address"
+	AttributeKeyMakerOrderRouterAddress                 = "maker_order_router_address"
+	AttributeKeyTakerOrderRouterFeeQuantums             = "taker_order_router_fee_quantums"
+	AttributeKeyMakerOrderRouterFeeQuantums             = "maker_order_router_fee_quantums"
 )
 
 // NewCreateMatchEvent constructs a new match sdk.Event.
@@ -50,6 +54,10 @@ func NewCreateMatchEvent(
 	makerBuilderAddress string,
 	takerBuilderFee *big.Int,
 	makerBuilderFee *big.Int,
+	takerOrderRouterAddress string,
+	makerOrderRouterAddress string,
+	takerOrderRouterFee *big.Int,
+	makerOrderRouterFee *big.Int,
 ) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeMatch,
@@ -71,5 +79,9 @@ func NewCreateMatchEvent(
 		sdk.NewAttribute(AttributeKeyMakerBuilderAddress, makerBuilderAddress),
 		sdk.NewAttribute(AttributeKeyTakerBuilderFeeQuantums, takerBuilderFee.String()),
 		sdk.NewAttribute(AttributeKeyMakerBuilderFeeQuantums, makerBuilderFee.String()),
+		sdk.NewAttribute(AttributeKeyTakerOrderRouterAddress, takerOrderRouterAddress),
+		sdk.NewAttribute(AttributeKeyMakerOrderRouterAddress, makerOrderRouterAddress),
+		sdk.NewAttribute(AttributeKeyTakerOrderRouterFeeQuantums, takerOrderRouterFee.String()),
+		sdk.NewAttribute(AttributeKeyMakerOrderRouterFeeQuantums, makerOrderRouterFee.String()),
 	)
 }
