@@ -1359,7 +1359,7 @@ function createBaseOrder(): Order {
     conditionalOrderTriggerSubticks: Long.UZERO,
     twapParameters: undefined,
     builderCodeParameters: undefined,
-    orderRouterAddress: undefined
+    orderRouterAddress: ""
   };
 }
 
