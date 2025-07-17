@@ -9,14 +9,18 @@ import { body, checkSchema, ParamSchema } from 'express-validator';
 
 import config from '../../config';
 
+const addressSchema = {
+  isString: true as const,
+  custom: {
+    options: isValidAddress,
+  },
+  errorMessage: 'address must be a valid dydx address',
+};
+
 export const CheckSubaccountSchema = checkSchema({
   address: {
     in: ['params', 'query'],
-    isString: true,
-    custom: {
-      options: isValidAddress,
-    },
-    errorMessage: 'address must be a valid dydx address',
+    ...addressSchema,
   },
   subaccountNumber: {
     in: ['params', 'query'],
@@ -30,11 +34,7 @@ export const CheckSubaccountSchema = checkSchema({
 export const CheckParentSubaccountSchema = checkSchema({
   address: {
     in: ['params', 'query'],
-    isString: true,
-    custom: {
-      options: isValidAddress,
-    },
-    errorMessage: 'address must be a valid dydx address',
+    ...addressSchema,
   },
   parentSubaccountNumber: {
     in: ['params', 'query'],
@@ -289,11 +289,7 @@ export const RegisterTokenValidationSchema = [
 export const UpdateReferralCodeSchema = checkSchema({
   address: {
     in: ['body'],
-    isString: true,
-    custom: {
-      options: isValidDydxAddress,
-    },
-    errorMessage: 'address must be a valid string',
+    ...addressSchema,
   },
   newCode: {
     in: ['body'],

@@ -61,7 +61,6 @@ describe('affiliates-controller#V4', () => {
   describe('GET /metadata', () => {
     beforeEach(async () => {
       await testMocks.seedData();
-      await SubaccountUsernamesTable.create(testConstants.defaultSubaccountUsername);
     });
 
     afterEach(async () => {
@@ -178,7 +177,6 @@ describe('affiliates-controller#V4', () => {
   describe('GET /address', () => {
     beforeEach(async () => {
       await testMocks.seedData();
-      await SubaccountUsernamesTable.create(testConstants.defaultSubaccountUsername);
     });
 
     afterEach(async () => {
@@ -216,10 +214,6 @@ describe('affiliates-controller#V4', () => {
 
     beforeEach(async () => {
       await testMocks.seedData();
-      await SubaccountUsernamesTable.create({
-        username: 'DefaultCode123',
-        subaccountId: defaultSubaccountId,
-      });
       verifySignatureMock.mockResolvedValue(true);
       fromFixedLengthMock.mockResolvedValue({} as ExtendedSecp256k1Signature);
       verifyADR36AminoMock.mockReturnValue(true);
@@ -229,7 +223,6 @@ describe('affiliates-controller#V4', () => {
     });
 
     afterEach(async () => {
-      await SubaccountUsernamesTable.deleteBySubaccountId(defaultSubaccountId);
       await dbHelpers.clearData();
     });
 
@@ -344,20 +337,13 @@ describe('affiliates-controller#V4', () => {
 
     beforeEach(async () => {
       await testMocks.seedData();
-      // Create username for defaultWallet
-      await SubaccountUsernamesTable.create(testConstants.defaultSubaccountUsername);
-
       // Create defaultWallet2, subaccount, and username
       await WalletTable.create(testConstants.defaultWallet2);
       await SubaccountTable.create(testConstants.defaultSubaccountDefaultWalletAddress);
-      await SubaccountUsernamesTable.create(
-        testConstants.subaccountUsernameWithDefaultWalletAddress,
-      );
 
       // Create defaultWallet3, create subaccount, create username
       await WalletTable.create(testConstants.defaultWallet3);
       await SubaccountTable.create(testConstants.defaultSubaccountWithAlternateAddress);
-      await SubaccountUsernamesTable.create(testConstants.subaccountUsernameWithAlternativeAddress);
 
       // Create affiliate infos
       await Promise.all([
