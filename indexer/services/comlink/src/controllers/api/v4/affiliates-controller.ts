@@ -22,6 +22,7 @@ import { AccountVerificationRequiredAction, validateSignature } from '../../../h
 import { InvalidParamError, NotFoundError, UnexpectedServerError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { UpdateReferralCodeSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
@@ -347,36 +348,7 @@ router.get(
 
 router.post(
   '/code',
-  ...checkSchema({
-    address: {
-      in: ['body'],
-      isString: true,
-      errorMessage: 'address must be a valid string',
-    },
-    newCode: {
-      in: ['body'],
-      isString: true,
-      errorMessage: 'newCode must be a valid string',
-      isLength: {
-        options: { min: 3, max: 32 },
-      },
-    },
-    signedMessage: {
-      in: ['body'],
-      isString: true,
-      errorMessage: 'signedMessage must be a valid string',
-    },
-    pubKey: {
-      in: ['body'],
-      isString: true,
-      errorMessage: 'pubKey must be a valid string',
-    },
-    timestamp: {
-      in: ['body'],
-      isInt: true,
-      errorMessage: 'timestamp must be a valid integer',
-    },
-  }),
+  ...UpdateReferralCodeSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {

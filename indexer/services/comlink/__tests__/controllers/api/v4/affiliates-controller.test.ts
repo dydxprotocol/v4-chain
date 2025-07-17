@@ -307,19 +307,33 @@ describe('affiliates-controller#V4', () => {
       });
     });
 
-    it('should fail to create a referral code if it is too short or too long', async () => {
-      await sendRequest({
-        type: RequestMethod.POST,
-        path: '/v4/affiliates/code',
-        body: mockCreateCodeRequest('1', testConstants.defaultWallet.address),
-        expectedStatus: 400,
-      });
-      await sendRequest({
-        type: RequestMethod.POST,
-        path: '/v4/affiliates/code',
-        body: mockCreateCodeRequest('1234567890123456789012345678901234567890', testConstants.defaultWallet.address),
-        expectedStatus: 400,
-      });
+    it('should fail for invalid codes and succeed for valid codes', async () => {
+      const validCodes = [
+        '1234567890',
+        'foobar123',
+        'foobar3319',
+      ];
+      const invalidCodes = [
+        '1',
+        '1234567890123456789012345678901234567890',
+        'foobar*123',
+      ];
+      for (const code of validCodes) {
+        await sendRequest({
+          type: RequestMethod.POST,
+          path: '/v4/affiliates/code',
+          body: mockCreateCodeRequest(code, testConstants.defaultWallet.address),
+          expectedStatus: 200,
+        });
+      }
+      for (const code of invalidCodes) {
+        await sendRequest({
+          type: RequestMethod.POST,
+          path: '/v4/affiliates/code',
+          body: mockCreateCodeRequest(code, testConstants.defaultWallet.address),
+          expectedStatus: 400,
+        });
+      }
     });
   });
 

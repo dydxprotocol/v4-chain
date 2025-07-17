@@ -286,6 +286,47 @@ export const RegisterTokenValidationSchema = [
     }),
 ];
 
+export const UpdateReferralCodeSchema = checkSchema({
+  address: {
+    in: ['body'],
+    isString: true,
+    custom: {
+      options: isValidDydxAddress,
+    },
+    errorMessage: 'address must be a valid string',
+  },
+  newCode: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'newCode must be a valid string',
+    custom: {
+      options: validateReferralCode,
+    },
+  },
+  signedMessage: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'signedMessage must be a valid string',
+  },
+  pubKey: {
+    in: ['body'],
+    isString: true,
+    errorMessage: 'pubKey must be a valid string',
+  },
+  timestamp: {
+    in: ['body'],
+    isInt: true,
+    errorMessage: 'timestamp must be a valid integer',
+  },
+});
+
+function validateReferralCode(code: string): boolean {
+  if (code.length < 3 || code.length > 32 || !/^[a-zA-Z0-9]*$/.test(code)) {
+    return false;
+  }
+  return true;
+}
+
 function verifyIsBech32(address: string): Error | undefined {
   try {
     decode(address);
