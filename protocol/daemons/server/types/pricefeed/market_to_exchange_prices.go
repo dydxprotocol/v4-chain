@@ -73,7 +73,7 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 		exchangeToPrice, ok := mte.marketToExchangePrices[marketId]
 		if !ok {
 			// No market price info yet, skip this market.
-			logger.Warn("No market price info", metrics.MarketId, marketId)
+			// logger.Warn("No market price info", metrics.MarketId, marketId)
 			telemetry.IncrCounterWithLabels(
 				[]string{
 					metrics.PricefeedServer,

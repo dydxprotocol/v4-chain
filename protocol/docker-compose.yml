@@ -63,6 +63,8 @@ services:
       - ./localnet/dydxprotocol1:/dydxprotocol/chain/.bob/data
     ports:
       - "26658:26657"
+    logging:
+      driver: none
 
   dydxprotocold2:
     image: local:dydxprotocol
@@ -89,6 +91,8 @@ services:
       - DAEMON_HOME=/dydxprotocol/chain/.carl
     volumes:
       - ./localnet/dydxprotocol2:/dydxprotocol/chain/.carl/data
+    logging:
+      driver: none
 
   dydxprotocold3:
     image: local:dydxprotocol
@@ -115,6 +119,8 @@ services:
       - DAEMON_HOME=/dydxprotocol/chain/.dave
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
+    logging:
+      driver: none
   slinky0:
     image: ghcr.io/skip-mev/slinky-sidecar:v1.1.0
     entrypoint: >
@@ -131,12 +137,14 @@ services:
     ports:
       - "8080:8080"
       - "8002:8002" # metrics
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./contrib/prometheus:/etc/prometheus/
-    ports:
-      - "9091:9090"
+    logging:
+      driver: none
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   volumes:
+  #     - ./contrib/prometheus:/etc/prometheus/
+  #   ports:
+  #     - "9091:9090"
   datadog-agent:
     image: public.ecr.aws/datadog/agent:7
     environment:
