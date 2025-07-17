@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"math/big"
 
 	"cosmossdk.io/store/prefix"
@@ -324,12 +323,9 @@ func (k Keeper) getOrderRouterRevShares(
 	orderRouterRevShares := []types.RevShare{}
 	takerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.TakerOrderRouterAddr)
 	if err != nil {
-		// We can ignore invalid order router addresses for takers, assume rev share is 0
-		if errors.Is(err, types.ErrOrderRouterRevShareNotFound) {
-			k.Logger(ctx).Error("order router rev share not found for taker: " + fill.TakerOrderRouterAddr)
-		} else {
-			return nil, err
-		}
+		// This should never happen
+		k.Logger(ctx).Error("order router rev share not found for taker: " + fill.TakerOrderRouterAddr)
+		return nil, err
 	} else if fill.TakerOrderRouterAddr != "" {
 		// Orders can have 2 rev share ids, we need to calculate each side separately
 		// This is taker ppm * min(taker, taker - maker_rebate)
@@ -346,12 +342,9 @@ func (k Keeper) getOrderRouterRevShares(
 
 	makerOrderRouterRevSharePpm, err := k.GetOrderRouterRevShare(ctx, fill.MakerOrderRouterAddr)
 	if err != nil {
-		// We can ignore invalid order router addresses for makers, assume rev share is 0
-		if errors.Is(err, types.ErrOrderRouterRevShareNotFound) {
-			k.Logger(ctx).Error("order router rev share not found for maker: " + fill.MakerOrderRouterAddr)
-		} else {
-			return nil, err
-		}
+		// This should never happen
+		k.Logger(ctx).Error("order router rev share not found for maker: " + fill.MakerOrderRouterAddr)
+		return nil, err
 	} else if fill.MakerOrderRouterAddr != "" {
 		// maker ppm * max(0, maker)
 		makerFeeSide := lib.BigMax(lib.BigI(0), makerFees)
