@@ -326,7 +326,9 @@ func (k Keeper) getOrderRouterRevShares(
 		// This should never happen
 		k.Logger(ctx).Error("order router rev share not found for taker: " + fill.TakerOrderRouterAddr)
 		return nil, err
-	} else if fill.TakerOrderRouterAddr != "" {
+	}
+
+	if fill.TakerOrderRouterAddr != "" {
 		// Orders can have 2 rev share ids, we need to calculate each side separately
 		// This is taker ppm * min(taker, taker - maker_rebate)
 		takerFeesSide := lib.BigMin(takerFees, new(big.Int).Add(takerFees, makerFees))
@@ -345,7 +347,9 @@ func (k Keeper) getOrderRouterRevShares(
 		// This should never happen
 		k.Logger(ctx).Error("order router rev share not found for maker: " + fill.MakerOrderRouterAddr)
 		return nil, err
-	} else if fill.MakerOrderRouterAddr != "" {
+	}
+
+	if fill.MakerOrderRouterAddr != "" {
 		// maker ppm * max(0, maker)
 		makerFeeSide := lib.BigMax(lib.BigI(0), makerFees)
 		makerRevShare := lib.BigMulPpm(makerFeeSide,
