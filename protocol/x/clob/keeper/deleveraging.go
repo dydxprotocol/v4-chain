@@ -586,6 +586,10 @@ func (k Keeper) ProcessDeleveraging(
 			"",
 			big.NewInt(0),
 			big.NewInt(0),
+			"",
+			"",
+			big.NewInt(0),
+			big.NewInt(0),
 		),
 	)
 

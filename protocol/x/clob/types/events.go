@@ -55,7 +55,7 @@ func NewCreateMatchEvent(
 	takerBuilderFee *big.Int,
 	makerBuilderFee *big.Int,
 	takerOrderRouterAddress string,
-	MakerOrderRouterAddress string,
+	makerOrderRouterAddress string,
 	takerOrderRouterFeeQuoteQuantums *big.Int,
 	makerOrderRouterFeeQuoteQuantums *big.Int,
 ) sdk.Event {
