@@ -31,8 +31,6 @@ import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import express from 'express';
 
-import { AccountVerificationRequiredAction } from './helpers/compliance/compliance-utils';
-
 /* ------- GENERAL/UNCATEGORIZED TYPES ------- */
 
 export interface ResponseWithBody extends express.Response {

@@ -156,9 +156,9 @@ export async function update(
     })
     .where(
       SubaccountUsernamesColumns.subaccountId,
-      subaccountUsernameToUpdate.subaccountId
+      subaccountUsernameToUpdate.subaccountId,
     )
-    .returning("*");
+    .returning('*');
 }
 
 export async function deleteBySubaccountId(

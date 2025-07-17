@@ -10,7 +10,6 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { checkSchema, matchedData } from 'express-validator';
-import { AccountVerificationRequiredAction, validateSignature } from '../../../helpers/compliance/compliance-utils';
 import {
   Body,
   Controller, Get, Query, Route,
@@ -19,6 +18,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
+import { AccountVerificationRequiredAction, validateSignature } from '../../../helpers/compliance/compliance-utils';
 import { InvalidParamError, NotFoundError, UnexpectedServerError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -139,17 +139,17 @@ class AffiliatesController extends Controller {
       address,
       newCode,
     }: {
-      address: string;
-      newCode: string;
+      address: string,
+      newCode: string,
     } = body;
 
     // Check if the referral code already exists.
     // There is a unique constraint but doing this allows us to have a better error message.
     const existingUsernameRow = await SubaccountUsernamesTable.findByUsername(
-      newCode
+      newCode,
     );
     if (existingUsernameRow) {
-      throw new InvalidParamError(`Referral code already exists`);
+      throw new InvalidParamError('Referral code already exists');
     }
 
     const subAccount = await SubaccountTable.findAll(
@@ -157,12 +157,13 @@ class AffiliatesController extends Controller {
         address,
         subaccountNumber: 0,
       },
-      []
+      [],
     );
-    // There is a code-level restriction, but it is possible to have more than one subaccount for an address
+    // There is a code-level restriction, but it is possible to
+    // have more than one subaccount for an address
     // It is also possible for there to be no username, if the task to create it has not run yet
     if (subAccount.length !== 1) {
-      throw new InvalidParamError(`Referral code does not exist`);
+      throw new InvalidParamError('Referral code does not exist');
     }
 
     const subaccountId = subAccount[0].id;
