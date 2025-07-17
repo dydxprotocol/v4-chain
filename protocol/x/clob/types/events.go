@@ -80,7 +80,7 @@ func NewCreateMatchEvent(
 		sdk.NewAttribute(AttributeKeyTakerBuilderFeeQuantums, takerBuilderFee.String()),
 		sdk.NewAttribute(AttributeKeyMakerBuilderFeeQuantums, makerBuilderFee.String()),
 		sdk.NewAttribute(AttributeKeyTakerOrderRouterAddress, takerOrderRouterAddress),
-		sdk.NewAttribute(AttributeKeyMakerOrderRouterAddress, MakerOrderRouterAddress),
+		sdk.NewAttribute(AttributeKeyMakerOrderRouterAddress, makerOrderRouterAddress),
 		sdk.NewAttribute(AttributeKeyTakerOrderRouterFeeQuoteQuantums, takerOrderRouterFeeQuoteQuantums.String()),
 		sdk.NewAttribute(AttributeKeyMakerOrderRouterFeeQuoteQuantums, makerOrderRouterFeeQuoteQuantums.String()),
 	)
