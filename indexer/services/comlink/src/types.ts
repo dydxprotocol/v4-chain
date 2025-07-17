@@ -736,7 +736,7 @@ export interface CreateReferralCodeRequest {
   address: string,
   newCode: string,
   signedMessage: string, // base64 encoded
-  pubkey: string, // base64 encoded
+  pubKey: string, // base64 encoded
   timestamp: number, // UNIX timestamp in seconds
 }
 export interface CreateReferralCodeResponse {

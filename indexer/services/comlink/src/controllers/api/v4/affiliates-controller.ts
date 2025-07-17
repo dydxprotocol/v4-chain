@@ -366,10 +366,10 @@ router.post(
       isString: true,
       errorMessage: 'signedMessage must be a valid string',
     },
-    pubkey: {
+    pubKey: {
       in: ['body'],
       isString: true,
-      errorMessage: 'pubkey must be a valid string',
+      errorMessage: 'pubKey must be a valid string',
     },
     timestamp: {
       in: ['body'],
@@ -386,7 +386,7 @@ router.post(
       address,
       newCode,
       signedMessage,
-      pubkey,
+      pubKey,
       timestamp,
     }: CreateReferralCodeRequest = req.body;
 
@@ -398,7 +398,7 @@ router.post(
         timestamp,
         newCode,
         signedMessage,
-        pubkey,
+        pubKey,
       );
       if (failedValidationResponse) {
         return failedValidationResponse;

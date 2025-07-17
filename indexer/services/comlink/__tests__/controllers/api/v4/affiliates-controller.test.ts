@@ -238,7 +238,7 @@ describe('affiliates-controller#V4', () => {
       newCode: code,
       action: AccountVerificationRequiredAction.UPDATE_CODE,
       signedMessage: 'signedMessage',
-      pubkey: address || testConstants.defaultWallet.address,
+      pubKey: address || testConstants.defaultWallet.address,
       timestamp: DateTime.now().toSeconds(),
     });
 
