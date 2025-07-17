@@ -275,7 +275,6 @@ func (k Keeper) GetAllRevShares(
 		AffiliateRevShare:        affiliateRevShare,
 		FeeSourceToQuoteQuantums: feeSourceToQuoteQuantums,
 		FeeSourceToRevSharePpm:   feeSourceToRevSharePpm,
-		OrderRouterRevShares:     orderRouterRevShares,
 		AllRevShares:             revShares,
 	}, nil
 }

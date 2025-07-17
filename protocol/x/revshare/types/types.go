@@ -60,7 +60,6 @@ type RevSharesForFill struct {
 	AffiliateRevShare        *RevShare
 	FeeSourceToQuoteQuantums map[RevShareFeeSource]*big.Int
 	FeeSourceToRevSharePpm   map[RevShareFeeSource]uint32
-	OrderRouterRevShares     []RevShare
 	AllRevShares             []RevShare
 }
 
