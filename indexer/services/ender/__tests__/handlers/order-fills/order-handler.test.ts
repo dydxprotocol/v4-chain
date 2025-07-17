@@ -26,7 +26,12 @@ import {
   TimeInForce,
 } from '@dydxprotocol-indexer/postgres';
 import { CanceledOrdersCache, redis } from '@dydxprotocol-indexer/redis';
-import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  ORDER_FLAG_LONG_TERM,
+  ORDER_FLAG_SHORT_TERM,
+  ORDER_FLAG_TWAP,
+  ORDER_FLAG_TWAP_SUBORDER,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
   IndexerOrder_Side,
@@ -1461,6 +1466,234 @@ describe('OrderHandler', () => {
       ),
       expectStateFilledQuantums(
         OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+        orderFillEvent.totalFilledTaker.toString(),
+      ),
+    ]);
+  });
+
+  it('creates twap fills and orders', async () => {
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const makerQuantums: number = 100;
+    const makerSubticks: number = 1_000_000;
+
+    const makerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_BUY,
+      quantums: makerQuantums,
+      subticks: makerSubticks,
+      goodTilOneof: {
+        goodTilBlock: 10,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+      reduceOnly: false,
+      clientMetadata: 0,
+    });
+
+    const takerSubticks: number = 150_000;
+    const takerQuantums: number = 10;
+    const takerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId2,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_SELL,
+      quantums: takerQuantums,
+      subticks: takerSubticks,
+      goodTilOneof: {
+        goodTilBlockTime: 10,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_TWAP.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: true,
+      clientMetadata: 0,
+      duration: 300,
+      interval: 30,
+      priceTolerance: 10000,
+    });
+
+    const takerSuborderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId2,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_SELL,
+      quantums: 1, // takerQuantums / (duration / interval)
+      subticks: takerSubticks,
+      goodTilOneof: {
+        goodTilBlockTime: 10,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_TWAP_SUBORDER.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: true,
+      clientMetadata: 0
+    });
+
+    // create initial PerpetualPositions with closed previous positions
+    await Promise.all([
+      // previous position for subaccount 1
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+        size: '0',
+        status: PerpetualPositionStatus.CLOSED,
+        openEventId: testConstants.defaultTendermintEventId,
+      }),
+      // previous position for subaccount 2
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+        subaccountId: testConstants.defaultSubaccountId2,
+        size: '0',
+        status: PerpetualPositionStatus.CLOSED,
+        openEventId: testConstants.defaultTendermintEventId,
+      }),
+      // initial position for subaccount 2
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+      }),
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+        subaccountId: testConstants.defaultSubaccountId2,
+      }),
+    ]);
+
+    const fillAmount: number = 1;
+    const orderFillEvent: OrderFillEventV1 = createOrderFillEvent(
+      makerOrderProto,
+      takerSuborderProto,
+      fillAmount,
+      fillAmount,
+      fillAmount,
+    );
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
+      orderFillEvent,
+      transactionIndex,
+      eventIndex,
+      height: parseInt(defaultHeight, 10),
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    // This price should be in fixed-point notation rather than exponential notation (1e-8)
+    const makerOrderSize: string = '1'; // quantums in human = 1e2 * 1e-2 = 1
+    const makerPrice: string = '0.00000000000001'; // quote currency / base currency = 1e6 * 1e-16 * 1e-6 / 1e-2 = 1e-14
+    const takerPrice: string = '0.0000000000000015'; // quote currency / base currency = 1.5e5 * 1e-16 * 1e-6 / 1e-2 = 1.5e-15
+    const totalFilled: string = '0.01'; // fillAmount in human = 1e1 * 1e-2 = 1e-1
+    await expectOrderInDatabase({
+      subaccountId: testConstants.defaultSubaccountId,
+      clientId: '0',
+      size: makerOrderSize,
+      totalFilled,
+      price: makerPrice,
+      status: OrderStatus.OPEN, // orderSize > totalFilled so status is open
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
+      orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
+      timeInForce: TimeInForce.GTT,
+      reduceOnly: false,
+      goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
+      goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
+      clientMetadata: makerOrderProto.clientMetadata.toString(),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+    });
+
+    const takerOrderSize: string = '0.01'; // quantums in human = 1e1 * 1e-2 = 1e-1
+    await expectOrderInDatabase({
+      subaccountId: testConstants.defaultSubaccountId2,
+      clientId: '0',
+      size: takerOrderSize,
+      totalFilled,
+      price: takerPrice,
+      status: OrderStatus.FILLED, // orderSize == totalFilled so status is filled
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(takerSuborderProto.side),
+      orderFlags: takerSuborderProto.orderId!.orderFlags.toString(),
+      timeInForce: TimeInForce.IOC,
+      reduceOnly: true,
+      goodTilBlock: protocolTranslations.getGoodTilBlock(takerSuborderProto)?.toString(),
+      goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerSuborderProto),
+      clientMetadata: takerOrderProto.clientMetadata.toString(),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+      // duration: takerOrderProto.twapParameters!.duration,
+      // interval: takerOrderProto.twapParameters!.interval,
+      // priceTolerance: takerOrderProto.twapParameters!.priceTolerance,
+    });
+
+    const eventId: Buffer = TendermintEventTable.createEventId(
+      defaultHeight,
+      transactionIndex,
+      eventIndex,
+    );
+
+    const quoteAmount: string = '0.0000000000000001'; // quote amount is price * fillAmount = 1e-14 * 1e-1 = 1e-15
+    await expectFillInDatabase({
+      subaccountId: testConstants.defaultSubaccountId,
+      clientId: '0',
+      liquidity: Liquidity.MAKER,
+      size: totalFilled,
+      price: makerPrice,
+      quoteAmount,
+      eventId,
+      transactionHash: defaultTxHash,
+      createdAt: defaultDateTime.toISO(),
+      createdAtHeight: defaultHeight,
+      type: FillType.LIMIT,
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
+      orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
+      clientMetadata: makerOrderProto.clientMetadata.toString(),
+      fee: defaultMakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
+    });
+    await expectFillInDatabase({
+      subaccountId: testConstants.defaultSubaccountId2,
+      clientId: '0',
+      liquidity: Liquidity.TAKER,
+      size: totalFilled,
+      price: makerPrice,
+      quoteAmount,
+      eventId,
+      transactionHash: defaultTxHash,
+      createdAt: defaultDateTime.toISO(),
+      createdAtHeight: defaultHeight,
+      type: FillType.TWAP_SUBORDER,
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      side: protocolTranslations.protocolOrderSideToOrderSide(takerSuborderProto.side),
+      orderFlags: takerSuborderProto.orderId!.orderFlags.toString(),
+      clientMetadata: takerSuborderProto.clientMetadata.toString(),
+      fee: defaultTakerFee,
+      affiliateRevShare: defaultAffiliateRevShare,
+    });
+
+    await Promise.all([
+      expectDefaultOrderAndFillSubaccountKafkaMessages(
+        producerSendMock,
+        eventId,
+        ORDER_FLAG_SHORT_TERM,
+        ORDER_FLAG_TWAP_SUBORDER, // ? is this correct?
+        testConstants.defaultPerpetualMarket3.id,
+        testConstants.defaultPerpetualMarket3.clobPairId,
+      ),
+      expectDefaultTradeKafkaMessageFromTakerFillId(
+        producerSendMock,
+        eventId,
+      ),
+      expectCandlesUpdated(),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+        orderFillEvent.totalFilledMaker.toString(),
+      ),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(takerSuborderProto.orderId!),
         orderFillEvent.totalFilledTaker.toString(),
       ),
     ]);
