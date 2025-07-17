@@ -11,6 +11,7 @@ const layer2Tables = [
   'subaccount_usernames',
   'leaderboard_pnl',
   'funding_payments',
+  'turnkey_users',
 ];
 
 const layer1Tables = [
