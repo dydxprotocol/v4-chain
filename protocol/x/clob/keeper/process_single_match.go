@@ -579,7 +579,7 @@ func (k Keeper) persistMatchedOrders(
 
 	takerOrderRouterFeeQuoteQuantums := big.NewInt(0)
 	makerOrderRouterFeeQuoteQuantums := big.NewInt(0)
-	for _, revShare := range revSharesForFill.AllRevShares {
+	for _, revShare := range revSharesForFill.OrderRouterRevShares {
 		if revShare.Recipient == matchWithOrders.TakerOrder.GetOrderRouterAddress() &&
 			revShare.RevShareType == revsharetypes.REV_SHARE_TYPE_ORDER_ROUTER {
 			takerOrderRouterFeeQuoteQuantums.Add(takerOrderRouterFeeQuoteQuantums, revShare.QuoteQuantums)
@@ -588,12 +588,6 @@ func (k Keeper) persistMatchedOrders(
 			revShare.RevShareType == revsharetypes.REV_SHARE_TYPE_ORDER_ROUTER {
 			makerOrderRouterFeeQuoteQuantums.Add(makerOrderRouterFeeQuoteQuantums, revShare.QuoteQuantums)
 		}
-	}
-	if matchWithOrders.TakerOrder.GetOrderRouterAddress() != "" {
-		takerOrderRouterFeeQuoteQuantums = big.NewInt(0)
-	}
-	if matchWithOrders.MakerOrder.GetOrderRouterAddress() != "" {
-		makerOrderRouterFeeQuoteQuantums = big.NewInt(0)
 	}
 
 	// Emit an event indicating a match occurred.
