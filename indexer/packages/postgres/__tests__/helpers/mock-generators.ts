@@ -1,14 +1,14 @@
-import * as SubaccountUsernamesTable from "../../src/stores/subaccount-usernames-table";
-import * as AssetTable from "../../src/stores/asset-table";
-import * as BlockTable from "../../src/stores/block-table";
-import * as FirebaseNotificationTokenTable from "../../src/stores/firebase-notification-token-table";
-import * as LiquidityTiersTable from "../../src/stores/liquidity-tiers-table";
-import * as MarketTable from "../../src/stores/market-table";
-import * as PerpetualMarketTable from "../../src/stores/perpetual-market-table";
-import * as SubaccountTable from "../../src/stores/subaccount-table";
-import * as TendermintEventTable from "../../src/stores/tendermint-event-table";
-import * as VaultTable from "../../src/stores/vault-table";
-import * as WalletTable from "../../src/stores/wallet-table";
+import * as AssetTable from '../../src/stores/asset-table';
+import * as BlockTable from '../../src/stores/block-table';
+import * as FirebaseNotificationTokenTable from '../../src/stores/firebase-notification-token-table';
+import * as LiquidityTiersTable from '../../src/stores/liquidity-tiers-table';
+import * as MarketTable from '../../src/stores/market-table';
+import * as PerpetualMarketTable from '../../src/stores/perpetual-market-table';
+import * as SubaccountTable from '../../src/stores/subaccount-table';
+import * as SubaccountUsernamesTable from '../../src/stores/subaccount-usernames-table';
+import * as TendermintEventTable from '../../src/stores/tendermint-event-table';
+import * as VaultTable from '../../src/stores/vault-table';
+import * as WalletTable from '../../src/stores/wallet-table';
 import {
   defaultAsset,
   defaultAsset2,
@@ -42,7 +42,7 @@ import {
   defaultVault,
   defaultSubaccountUsername2,
   defaultSubaccountUsername,
-} from "./constants";
+} from './constants';
 
 export async function seedAdditionalSubaccounts() {
   await Promise.all([
