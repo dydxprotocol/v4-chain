@@ -644,6 +644,12 @@ export interface Order {
    */
 
   builderCodeParameters?: BuilderCodeParameters;
+  /**
+   * order_router_address is the address of the order router that placed the
+   * order.
+   */
+
+  orderRouterAddress: string;
 }
 /**
  * Order represents a single order belonging to a `Subaccount`
@@ -726,6 +732,12 @@ export interface OrderSDKType {
    */
 
   builder_code_parameters?: BuilderCodeParametersSDKType;
+  /**
+   * order_router_address is the address of the order router that placed the
+   * order.
+   */
+
+  order_router_address: string;
 }
 /** TwapParameters represents the necessary configuration for a TWAP order. */
 
@@ -1346,7 +1358,8 @@ function createBaseOrder(): Order {
     conditionType: 0,
     conditionalOrderTriggerSubticks: Long.UZERO,
     twapParameters: undefined,
-    builderCodeParameters: undefined
+    builderCodeParameters: undefined,
+    orderRouterAddress: ""
   };
 }
 
@@ -1402,6 +1415,10 @@ export const Order = {
 
     if (message.builderCodeParameters !== undefined) {
       BuilderCodeParameters.encode(message.builderCodeParameters, writer.uint32(106).fork()).ldelim();
+    }
+
+    if (message.orderRouterAddress !== "") {
+      writer.uint32(114).string(message.orderRouterAddress);
     }
 
     return writer;
@@ -1468,6 +1485,10 @@ export const Order = {
           message.builderCodeParameters = BuilderCodeParameters.decode(reader, reader.uint32());
           break;
 
+        case 14:
+          message.orderRouterAddress = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1492,6 +1513,7 @@ export const Order = {
     message.conditionalOrderTriggerSubticks = object.conditionalOrderTriggerSubticks !== undefined && object.conditionalOrderTriggerSubticks !== null ? Long.fromValue(object.conditionalOrderTriggerSubticks) : Long.UZERO;
     message.twapParameters = object.twapParameters !== undefined && object.twapParameters !== null ? TwapParameters.fromPartial(object.twapParameters) : undefined;
     message.builderCodeParameters = object.builderCodeParameters !== undefined && object.builderCodeParameters !== null ? BuilderCodeParameters.fromPartial(object.builderCodeParameters) : undefined;
+    message.orderRouterAddress = object.orderRouterAddress ?? "";
     return message;
   }
 

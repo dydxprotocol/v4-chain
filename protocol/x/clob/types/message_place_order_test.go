@@ -696,6 +696,48 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 				},
 			},
 		},
+		"invalid order router address": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:     Order_SIDE_BUY,
+					Quantums: uint64(42),
+					Subticks: uint64(10),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					OrderRouterAddress: "invalid_order_router_address",
+				},
+			},
+			err: ErrInvalidOrderRouterAddress,
+		},
+		"valid order router address": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:     Order_SIDE_BUY,
+					Quantums: uint64(42),
+					Subticks: uint64(10),
+					GoodTilOneof: &Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(100),
+					},
+					OrderRouterAddress: sample.AccAddress(),
+				},
+			},
+			err: nil,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

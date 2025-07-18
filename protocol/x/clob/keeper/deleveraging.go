@@ -582,6 +582,12 @@ func (k Keeper) ProcessDeleveraging(
 			false, // IsLiquidation is false since this isn't a liquidation match.
 			true,  // IsDeleverage is true since this is a deleveraging match.
 			perpetualId,
+			// Builder Code Params
+			"",
+			"",
+			big.NewInt(0),
+			big.NewInt(0),
+			// Order Router Rev Share Params
 			"",
 			"",
 			big.NewInt(0),

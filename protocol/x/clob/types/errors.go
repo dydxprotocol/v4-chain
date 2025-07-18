@@ -547,4 +547,11 @@ var (
 		10001,
 		"Subaccount cannot open more orders due to equity tier limit.",
 	)
+
+	// Order router errors.
+	ErrInvalidOrderRouterAddress = errorsmod.Register(
+		ModuleName,
+		11000,
+		"Invalid order router address",
+	)
 )

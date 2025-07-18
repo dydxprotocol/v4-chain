@@ -28,6 +28,7 @@ type RevShareKeeper interface {
 		marketId uint32,
 		params types.MarketMapperRevShareDetails,
 	)
+	SetOrderRouterRevShare(ctx sdk.Context, orderRouterAddress string, revSharePpm uint32) error
 }
 
 // MarketMapKeeper defines the expected marketmap keeper used for simulations.

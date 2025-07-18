@@ -187,6 +187,13 @@ func (k Keeper) PlaceShortTermOrder(
 	order.OrderId.MustBeShortTermOrder()
 	orderLabels := order.GetOrderLabels()
 
+	if _, err := k.revshareKeeper.GetOrderRouterRevShare(
+		ctx,
+		order.GetOrderRouterAddress(),
+	); err != nil {
+		return 0, 0, err
+	}
+
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.PlaceOrder, metrics.Latency)
 	defer func() {
 		telemetry.IncrCounterWithLabels(
@@ -365,6 +372,13 @@ func (k Keeper) PlaceStatefulOrder(
 		if err := k.ValidateSubaccountEquityTierLimitForStatefulOrder(ctx, order); err != nil {
 			return err
 		}
+	}
+
+	if _, err := k.revshareKeeper.GetOrderRouterRevShare(
+		ctx,
+		order.GetOrderRouterAddress(),
+	); err != nil {
+		return err
 	}
 
 	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.

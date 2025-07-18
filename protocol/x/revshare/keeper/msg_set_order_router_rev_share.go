@@ -6,7 +6,14 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
+)
+
+const (
+	// 80% of the revenue share is the max allowed. Realistically this will be lower,
+	// set it high so we don't need a protocol upgrade to change this
+	kMaxOrderRouterRevSharePpm = lib.OneHundredThousand * 8
 )
 
 func (k msgServer) SetOrderRouterRevShare(
@@ -21,6 +28,13 @@ func (k msgServer) SetOrderRouterRevShare(
 			govtypes.ErrInvalidSigner,
 			"invalid authority %s",
 			msg.Authority,
+		)
+	}
+
+	if msg.OrderRouterRevShare.SharePpm > kMaxOrderRouterRevSharePpm {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidRevenueSharePpm,
+			"rev share safety violation: rev shares greater than or equal to allowed amount",
 		)
 	}
 

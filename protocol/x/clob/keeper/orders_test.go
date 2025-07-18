@@ -31,6 +31,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	rewardtypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -73,6 +74,25 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			feeParams: constants.PerpetualFeeParams,
 
 			order: constants.Order_Carl_Num0_Id1_Clob0_Buy1BTC_Price49999,
+
+			expectedOrderStatus: types.Success,
+			expectedFilledSize:  0,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
+		},
+		"Can place an order with a valid order router address": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc},
+			feeParams: constants.PerpetualFeeParams,
+
+			order: constants.Order_Carl_Num0_Id1_Clob0_Buy1BTC_WithValidOrderRouter,
 
 			expectedOrderStatus: types.Success,
 			expectedFilledSize:  0,
@@ -345,6 +365,31 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
 			},
 		},
+		"Cannot open an order with an invalid order router address": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			clobs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			// Same setup as the above two tests, but the order is for a slightly higher price that
+			// cannot be collateralized without the rebate.
+			feeParams: constants.PerpetualFeeParamsMakerRebate,
+
+			order: types.Order{
+				OrderId:            types.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 0, ClobPairId: 0},
+				Side:               types.Order_SIDE_BUY,
+				Quantums:           10,
+				Subticks:           100_001_000_000,
+				GoodTilOneof:       &types.Order_GoodTilBlock{GoodTilBlock: 20},
+				OrderRouterAddress: constants.CarlAccAddress.String(),
+			},
+
+			expectedErr: revsharetypes.ErrOrderRouterRevShareNotFound,
+		},
 		`New order should be undercollateralized when matching when previous fills make it undercollateralized when using
 				maker orders subticks, but would be collateralized if using taker order subticks`: {
 			perpetuals: []perptypes.Perpetual{
@@ -559,6 +604,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			// Set up USDC asset in assets module.
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			err = ks.PricesKeeper.RevShareKeeper.SetOrderRouterRevShare(
+				ctx, constants.AliceAccAddress.String(), 100_000)
 			require.NoError(t, err)
 
 			// Create all perpetuals.
@@ -1157,6 +1206,21 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: blockHeight + 5},
 			},
 			expectedErr: "must be a multiple of the ClobPair's StepBaseQuantums",
+		},
+		"Fails if Order router address is not found": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					ClobPairId:   uint32(0),
+				},
+				Side:               types.Order_SIDE_BUY,
+				Quantums:           600,
+				Subticks:           78,
+				GoodTilOneof:       &types.Order_GoodTilBlock{GoodTilBlock: blockHeight + 5},
+				OrderRouterAddress: constants.AliceAccAddress.String(),
+			},
+			expectedErr: "order router rev share not found",
 		},
 		"Fails if GoodTilBlock is in the past": {
 			order: types.Order{
@@ -2094,10 +2158,12 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			orders: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_WithOrderRouterAddress,
 			},
 			expectedOrderPlacementCalls: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_WithOrderRouterAddress,
 			},
 		},
 		"does not place orders with GTBT equal to block time": {
@@ -2178,6 +2244,12 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+			err := ks.PricesKeeper.RevShareKeeper.SetOrderRouterRevShare(
+				ks.Ctx,
+				constants.AliceAccAddress.String(),
+				100_000,
+			)
+			require.NoError(t, err)
 
 			ctx := ks.Ctx.WithBlockHeight(int64(100)).WithBlockTime(time.Unix(5, 0))
 			ctx = ctx.WithIsCheckTx(true)
@@ -2188,7 +2260,7 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
