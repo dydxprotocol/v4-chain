@@ -2158,12 +2158,12 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			orders: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_WithOrderRouterAddress,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_WithOrderRouterAddress,
 			},
 			expectedOrderPlacementCalls: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_WithOrderRouterAddress,
+				constants.LongTermOrder_Carl_Num0_Id0_Clob0_WithOrderRouterAddress,
 			},
 		},
 		"does not place orders with GTBT equal to block time": {
@@ -2244,6 +2244,12 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			ks.MarketMapKeeper.InitGenesis(ks.Ctx, constants.MarketMap_DefaultGenesisState)
 			prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 			perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+			err := ks.PricesKeeper.RevShareKeeper.SetOrderRouterRevShare(
+				ks.Ctx,
+				constants.AliceAccAddress.String(),
+				100_000,
+			)
+			require.NoError(t, err)
 
 			ctx := ks.Ctx.WithBlockHeight(int64(100)).WithBlockTime(time.Unix(5, 0))
 			ctx = ctx.WithIsCheckTx(true)
@@ -2251,13 +2257,6 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 				Height:    100,
 				Timestamp: time.Unix(int64(5), 0),
 			})
-
-			err := ks.PricesKeeper.RevShareKeeper.SetOrderRouterRevShare(
-				ctx,
-				constants.AliceAccAddress.String(),
-				100_000,
-			)
-			require.NoError(t, err)
 
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()

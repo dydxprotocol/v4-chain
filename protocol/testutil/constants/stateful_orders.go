@@ -66,9 +66,9 @@ var (
 		Subticks:     10,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 15},
 	}
-	LongTermOrder_Alice_Num0_Id0_Clob0_WithOrderRouterAddress = clobtypes.Order{
+	LongTermOrder_Carl_Num0_Id0_Clob0_WithOrderRouterAddress = clobtypes.Order{
 		OrderId: clobtypes.OrderId{
-			SubaccountId: Alice_Num0,
+			SubaccountId: Carl_Num0,
 			ClientId:     0,
 			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 			ClobPairId:   0,
