@@ -27,7 +27,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	feetypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -381,11 +380,11 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			feeParams: constants.PerpetualFeeParamsMakerRebate,
 
 			order: types.Order{
-				OrderId:            clobtypes.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 0, ClobPairId: 0},
-				Side:               clobtypes.Order_SIDE_BUY,
+				OrderId:            types.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 0, ClobPairId: 0},
+				Side:               types.Order_SIDE_BUY,
 				Quantums:           10,
 				Subticks:           100_001_000_000,
-				GoodTilOneof:       &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+				GoodTilOneof:       &types.Order_GoodTilBlock{GoodTilBlock: 20},
 				OrderRouterAddress: constants.CarlAccAddress.String(),
 			},
 
