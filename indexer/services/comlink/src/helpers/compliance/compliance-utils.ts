@@ -11,7 +11,7 @@ import { DateTime } from 'luxon';
 import {
   WRITE_REQUEST_TTL_SECONDS,
   DYDX_ADDRESS_PREFIX,
-} from "../../lib/constants";
+} from '../../lib/constants';
 import { create4xxResponse } from '../../lib/helpers';
 
 export enum ComplianceAction {
@@ -67,15 +67,15 @@ export async function validateSignature(
   if (!address.startsWith(DYDX_ADDRESS_PREFIX)) {
     return create4xxResponse(
       res,
-      `Address ${address} is not a valid dYdX V4 address`
+      `Address ${address} is not a valid dYdX V4 address`,
     );
   }
 
-  const pubkeyArray: Uint8Array = new Uint8Array(Buffer.from(pubkey, "base64"));
+  const pubkeyArray: Uint8Array = new Uint8Array(Buffer.from(pubkey, 'base64'));
   if (address !== generateAddress(pubkeyArray)) {
     return create4xxResponse(
       res,
-      `Address ${address} does not correspond to the pubkey provided ${pubkey}`
+      `Address ${address} does not correspond to the pubkey provided ${pubkey}`,
     );
   }
 
@@ -84,29 +84,30 @@ export async function validateSignature(
   if (Math.abs(now - timestamp) > WRITE_REQUEST_TTL_SECONDS) {
     return create4xxResponse(
       res,
-      `Timestamp is not within the valid range of ${WRITE_REQUEST_TTL_SECONDS} seconds`
+      `Timestamp is not within the valid range of ${WRITE_REQUEST_TTL_SECONDS} seconds`,
     );
   }
 
   // Prepare the message for verification
   const messageToSign: string = `${message}:${action}"${
-    currentStatus || ""
+    currentStatus || ''
   }:${timestamp}`;
   const messageHash: Uint8Array = sha256(Buffer.from(messageToSign));
   const signedMessageArray: Uint8Array = new Uint8Array(
-    Buffer.from(signedMessage, "base64")
+    Buffer.from(signedMessage, 'base64'),
   );
-  const signature: ExtendedSecp256k1Signature =
-    ExtendedSecp256k1Signature.fromFixedLength(signedMessageArray);
+  const signature: ExtendedSecp256k1Signature = ExtendedSecp256k1Signature.fromFixedLength(
+    signedMessageArray,
+  );
 
   // Verify the signature
   const isValidSignature: boolean = await Secp256k1.verifySignature(
     signature,
     messageHash,
-    pubkeyArray
+    pubkeyArray,
   );
   if (!isValidSignature) {
-    return create4xxResponse(res, "Signature verification failed");
+    return create4xxResponse(res, 'Signature verification failed');
   }
 
   return undefined;
