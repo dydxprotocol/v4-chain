@@ -206,7 +206,7 @@ describe('affiliates-controller#V4', () => {
     });
   });
 
-  describe('POST /code', () => {
+  describe('POST /referralCode', () => {
     const defaultSubaccountId = SubaccountTable.uuid(
       testConstants.defaultSubaccount.address,
       testConstants.defaultSubaccount.subaccountNumber,
@@ -239,7 +239,7 @@ describe('affiliates-controller#V4', () => {
       const newCode = 'NewCode12345';
       const response2: request.Response = await sendRequest({
         type: RequestMethod.POST,
-        path: '/v4/affiliates/code',
+        path: '/v4/affiliates/referralCode',
         body: mockCreateCodeRequest(newCode),
         expectedStatus: 200,
       });
@@ -275,7 +275,7 @@ describe('affiliates-controller#V4', () => {
       jest.spyOn(stats, 'increment');
       await sendRequest({
         type: RequestMethod.POST,
-        path: '/v4/affiliates/code',
+        path: '/v4/affiliates/referralCode',
         body: mockCreateCodeRequest(newCode, invalidAddress),
         expectedStatus: 400,  // helper performs expect on status
       });
@@ -285,7 +285,7 @@ describe('affiliates-controller#V4', () => {
       const newCode = 'NewCode123';
       await sendRequest({
         type: RequestMethod.POST,
-        path: '/v4/affiliates/code',
+        path: '/v4/affiliates/referralCode',
         body: mockCreateCodeRequest(newCode, testConstants.defaultWallet.address),
         expectedStatus: 200,
       });
@@ -293,7 +293,7 @@ describe('affiliates-controller#V4', () => {
       toBech32Mock.mockReturnValue(testConstants.defaultWallet2.address);
       await sendRequest({
         type: RequestMethod.POST,
-        path: '/v4/affiliates/code',
+        path: '/v4/affiliates/referralCode',
         body: mockCreateCodeRequest(newCode, testConstants.defaultWallet2.address),
         expectedStatus: 400,
         errorMsg: 'Referral code already exists',
@@ -314,7 +314,7 @@ describe('affiliates-controller#V4', () => {
       for (const code of validCodes) {
         await sendRequest({
           type: RequestMethod.POST,
-          path: '/v4/affiliates/code',
+          path: '/v4/affiliates/referralCode',
           body: mockCreateCodeRequest(code, testConstants.defaultWallet.address),
           expectedStatus: 200,
         });
@@ -322,7 +322,7 @@ describe('affiliates-controller#V4', () => {
       for (const code of invalidCodes) {
         await sendRequest({
           type: RequestMethod.POST,
-          path: '/v4/affiliates/code',
+          path: '/v4/affiliates/referralCode',
           body: mockCreateCodeRequest(code, testConstants.defaultWallet.address),
           expectedStatus: 400,
         });
