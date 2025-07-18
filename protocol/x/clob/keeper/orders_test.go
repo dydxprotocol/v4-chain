@@ -1216,7 +1216,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 					ClobPairId:   uint32(0),
 				},
 				Side:               types.Order_SIDE_BUY,
-				Quantums:           599,
+				Quantums:           600,
 				Subticks:           78,
 				GoodTilOneof:       &types.Order_GoodTilBlock{GoodTilBlock: blockHeight + 5},
 				OrderRouterAddress: constants.AliceAccAddress.String(),
