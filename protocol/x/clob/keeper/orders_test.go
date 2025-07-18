@@ -83,6 +83,25 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
 			},
 		},
+		"Can place an order with a valid order router address": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			clobs:     []types.ClobPair{constants.ClobPair_Btc},
+			feeParams: constants.PerpetualFeeParams,
+
+			order: constants.Order_Carl_Num0_Id1_Clob0_Buy1BTC_WithValidOrderRouter,
+
+			expectedOrderStatus: types.Success,
+			expectedFilledSize:  0,
+			expectedOpenInterests: map[uint32]*big.Int{
+				// unchanged, no match happened
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
+			},
+		},
 		"Can place an order on the orderbook in a different market than their current perpetual position": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
@@ -367,7 +386,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				Quantums:           10,
 				Subticks:           100_001_000_000,
 				GoodTilOneof:       &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
-				OrderRouterAddress: constants.Carl_Num0.Owner,
+				OrderRouterAddress: constants.CarlAccAddress.String(),
 			},
 
 			expectedErr: revsharetypes.ErrOrderRouterRevShareNotFound,
@@ -586,6 +605,10 @@ func TestPlaceShortTermOrder(t *testing.T) {
 
 			// Set up USDC asset in assets module.
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			err = ks.PricesKeeper.RevShareKeeper.SetOrderRouterRevShare(
+				ctx, constants.AliceAccAddress.String(), 100_000)
 			require.NoError(t, err)
 
 			// Create all perpetuals.
@@ -1196,7 +1219,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				Quantums:           599,
 				Subticks:           78,
 				GoodTilOneof:       &types.Order_GoodTilBlock{GoodTilBlock: blockHeight + 5},
-				OrderRouterAddress: constants.Carl_Num0.Owner,
+				OrderRouterAddress: constants.AliceAccAddress.String(),
 			},
 			expectedErr: "order router rev share not found",
 		},
@@ -2136,10 +2159,12 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 			orders: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_WithOrderRouterAddress,
 			},
 			expectedOrderPlacementCalls: []types.Order{
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_WithOrderRouterAddress,
 			},
 		},
 		"does not place orders with GTBT equal to block time": {
@@ -2228,9 +2253,16 @@ func TestPlaceStatefulOrdersFromLastBlock(t *testing.T) {
 				Timestamp: time.Unix(int64(5), 0),
 			})
 
+			err := ks.PricesKeeper.RevShareKeeper.SetOrderRouterRevShare(
+				ctx,
+				constants.AliceAccAddress.String(),
+				100_000,
+			)
+			require.NoError(t, err)
+
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", constants.ClobPair_Btc).Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPairAndMemStructs(
 				ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
