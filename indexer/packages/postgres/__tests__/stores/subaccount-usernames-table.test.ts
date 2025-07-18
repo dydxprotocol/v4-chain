@@ -31,16 +31,7 @@ describe('SubaccountUsernames store', () => {
     await teardown();
   });
 
-  it('Successfully creates a SubaccountUsername', async () => {
-    await SubaccountUsernamesTable.create(defaultSubaccountUsername);
-  });
-
   it('Successfully finds all SubaccountUsernames', async () => {
-    await Promise.all([
-      SubaccountUsernamesTable.create(defaultSubaccountUsername),
-      SubaccountUsernamesTable.create(defaultSubaccountUsername2),
-    ]);
-
     const subaccountUsernames:
     SubaccountUsernamesFromDatabase[] = await SubaccountUsernamesTable.findAll(
       {},
@@ -54,11 +45,6 @@ describe('SubaccountUsernames store', () => {
   });
 
   it('Successfully finds SubaccountUsername with subaccountId', async () => {
-    await Promise.all([
-      SubaccountUsernamesTable.create(defaultSubaccountUsername),
-      SubaccountUsernamesTable.create(defaultSubaccountUsername2),
-    ]);
-
     const subaccountUsername:
     SubaccountUsernamesFromDatabase | undefined = await SubaccountUsernamesTable.findByUsername(
       defaultSubaccountUsername.username,
@@ -67,7 +53,6 @@ describe('SubaccountUsernames store', () => {
   });
 
   it('Duplicate SubaccountUsername creation fails', async () => {
-    await SubaccountUsernamesTable.create(defaultSubaccountUsername);
     await expect(SubaccountUsernamesTable.create(duplicatedSubaccountUsername)).rejects.toThrow();
   });
 
@@ -80,7 +65,6 @@ describe('SubaccountUsernames store', () => {
       subaccountNumber: 0,
     }, [], {});
     const subaccountLength = subaccounts.length;
-    await SubaccountUsernamesTable.create(defaultSubaccountUsername);
     const subaccountIds: SubaccountsWithoutUsernamesResult[] = await
     SubaccountUsernamesTable.getSubaccountZerosWithoutUsernames(1000);
     expect(subaccountIds.length).toEqual(subaccountLength - 1);
@@ -88,9 +72,6 @@ describe('SubaccountUsernames store', () => {
 
   it('Get username using address', async () => {
     await Promise.all([
-      // Add username for defaultWallet
-      SubaccountUsernamesTable.create(defaultSubaccountUsername),
-      SubaccountUsernamesTable.create(defaultSubaccountUsername2),
       // Add one username for alternativeWallet
       WalletTable.create(defaultWallet2),
       SubaccountUsernamesTable.create(subaccountUsernameWithAlternativeAddress),

@@ -31,10 +31,10 @@ describe('social-trading-controller', () => {
     const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll({}, []);
     const subaccount: SubaccountFromDatabase = subaccounts[0];
 
-    const subaccountUsernames: SubaccountUsernamesFromDatabase = await
-    SubaccountUsernamesTable.create({
+    const newUsername = 'test_username';
+    await SubaccountUsernamesTable.update({
       subaccountId: subaccount.id,
-      username: 'test_username',
+      username: newUsername,
     });
 
     const response: request.Response = await sendRequest({
@@ -47,7 +47,7 @@ describe('social-trading-controller', () => {
       result: {
         address: subaccount.address,
         subaccountNumber: subaccount.subaccountNumber,
-        username: subaccountUsernames.username,
+        username: newUsername,
         subaccountId: subaccount.id,
       },
     });

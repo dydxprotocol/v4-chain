@@ -33,4 +33,4 @@ export const SPARKLINE_TIME_PERIOD_TO_LOOKBACK_MAP
 
 export const DYDX_ADDRESS_PREFIX: string = 'dydx';
 
-export const GEOBLOCK_REQUEST_TTL_SECONDS: number = 30;
+export const WRITE_REQUEST_TTL_SECONDS: number = 30;
