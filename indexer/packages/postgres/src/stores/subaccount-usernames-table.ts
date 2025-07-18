@@ -160,3 +160,12 @@ export async function update(
     )
     .returning('*');
 }
+
+export async function deleteBySubaccountId(
+  subaccountId: string,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<void> {
+  await SubaccountUsernamesModel.query(Transaction.get(options.txId))
+    .delete()
+    .where(SubaccountUsernamesColumns.subaccountId, subaccountId);
+}
