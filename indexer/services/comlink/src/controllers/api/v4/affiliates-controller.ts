@@ -164,7 +164,9 @@ class AffiliatesController extends Controller {
     // have more than one subaccount for an address
     // It is also possible for there to be no username, if the task to create it has not run yet
     if (subAccount.length !== 1) {
-      throw new InvalidParamError('Referral code does not exist');
+      throw new InvalidParamError(
+        'Referral code update not available yet - please try again later',
+      );
     }
 
     const subaccountId = subAccount[0].id;
