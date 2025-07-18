@@ -1919,7 +1919,7 @@
         ]
       }
     },
-    "/affiliates/code": {
+    "/affiliates/referralCode": {
       "post": {
         "operationId": "UpdateCode",
         "responses": {
