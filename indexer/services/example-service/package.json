@@ -21,7 +21,7 @@
   "devDependencies": {
     "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
     "@types/jest": "29.5.14",
-    "@types/node": "^18.0.3",
+    "@types/node": "20.19.3",
     "jest": "^29.7.0",
     "ts-node": "^10.8.2",
     "tsconfig-paths": "^4.0.0",
