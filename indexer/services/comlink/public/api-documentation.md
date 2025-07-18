@@ -598,7 +598,7 @@ headers = {
 # baseURL = 'https://indexer.dydx.trade/v4'
 baseURL = 'https://indexer.v4testnet.dydx.exchange/v4'
 
-r = requests.post(f'{baseURL}/affiliates/code', headers = headers)
+r = requests.post(f'{baseURL}/affiliates/referralCode', headers = headers)
 
 print(r.json())
 
@@ -618,7 +618,7 @@ const headers = {
 // const baseURL = 'https://indexer.dydx.trade/v4';
 const baseURL = 'https://indexer.v4testnet.dydx.exchange/v4';
 
-fetch(`${baseURL}/affiliates/code`,
+fetch(`${baseURL}/affiliates/referralCode`,
 {
   method: 'POST',
   body: inputBody,
@@ -632,7 +632,7 @@ fetch(`${baseURL}/affiliates/code`,
 
 ```
 
-`POST /affiliates/code`
+`POST /affiliates/referralCode`
 
 > Body parameter
 

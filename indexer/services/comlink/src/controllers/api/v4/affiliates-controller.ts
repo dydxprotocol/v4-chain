@@ -129,7 +129,7 @@ class AffiliatesController extends Controller {
     };
   }
 
-  @Post('/code')
+  @Post('/referralCode')
   async updateCode(
     @Body() body: {
       address: string,
@@ -349,7 +349,7 @@ router.get(
 );
 
 router.post(
-  '/code',
+  '/referralCode',
   ...UpdateReferralCodeSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
