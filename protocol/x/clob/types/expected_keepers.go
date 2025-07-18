@@ -193,6 +193,8 @@ type RevShareKeeper interface {
 	) (
 		revsharetypes.RevSharesForFill, error,
 	)
+	GetOrderRouterRevShare(ctx sdk.Context, orderRouterRevShare string) (
+		uint32, error)
 }
 
 type AffiliatesKeeper interface {

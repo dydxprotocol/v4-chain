@@ -27,10 +27,12 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	feetypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
+	revsharetypes "github.com/dydxprotocol/v4-chain/protocol/x/revshare/types"
 	rewardtypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -344,6 +346,31 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				// unchanged, no match happened
 				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000),
 			},
+		},
+		"Cannot open an order with an invalid order router address": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short,
+			},
+			clobs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			// Same setup as the above two tests, but the order is for a slightly higher price that
+			// cannot be collateralized without the rebate.
+			feeParams: constants.PerpetualFeeParamsMakerRebate,
+
+			order: types.Order{
+				OrderId:            clobtypes.OrderId{SubaccountId: constants.Carl_Num0, ClientId: 0, ClobPairId: 0},
+				Side:               clobtypes.Order_SIDE_BUY,
+				Quantums:           10,
+				Subticks:           100_001_000_000,
+				GoodTilOneof:       &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+				OrderRouterAddress: constants.Carl_Num0.Owner,
+			},
+
+			expectedErr: revsharetypes.ErrOrderRouterRevShareNotFound,
 		},
 		`New order should be undercollateralized when matching when previous fills make it undercollateralized when using
 				maker orders subticks, but would be collateralized if using taker order subticks`: {
@@ -1157,6 +1184,21 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: blockHeight + 5},
 			},
 			expectedErr: "must be a multiple of the ClobPair's StepBaseQuantums",
+		},
+		"Fails if Order router address is not found": {
+			order: types.Order{
+				OrderId: types.OrderId{
+					ClientId:     0,
+					SubaccountId: constants.Alice_Num0,
+					ClobPairId:   uint32(0),
+				},
+				Side:               types.Order_SIDE_BUY,
+				Quantums:           599,
+				Subticks:           78,
+				GoodTilOneof:       &types.Order_GoodTilBlock{GoodTilBlock: blockHeight + 5},
+				OrderRouterAddress: constants.Carl_Num0.Owner,
+			},
+			expectedErr: "order router rev share not found",
 		},
 		"Fails if GoodTilBlock is in the past": {
 			order: types.Order{
