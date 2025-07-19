@@ -24,7 +24,7 @@ COPY ./packages/notifications/ ./packages/notifications/
 COPY tsconfig.json ./
 
 # Install pnpm
-RUN npm install -g pnpm@6
+RUN npm install -g pnpm@8
 
 # Install npm modules using pnpm
 RUN pnpm install --loglevel warn --frozen-lockfile --unsafe-perm
