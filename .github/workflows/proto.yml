@@ -95,7 +95,7 @@ jobs:
           node-version: 20
       - working-directory: ./indexer
         run: |
-          npm install -g pnpm@6.34.0
+          npm install -g pnpm@8.15.9
           pnpm install --loglevel warn --frozen-lockfile
           cd packages/v4-protos && npm run build:verify-proto
   v4-proto-py-gen:
