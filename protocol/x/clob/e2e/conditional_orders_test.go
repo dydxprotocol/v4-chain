@@ -2528,7 +2528,6 @@ func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
 		subaccounts                        []satypes.Subaccount
 		orders                             []clobtypes.Order
 		priceUpdateForFirstBlock           *prices.MsgUpdateMarketPrices
-		priceUpdateForSecondBlock          *prices.MsgUpdateMarketPrices
 		expectedInTriggeredStateAfterBlock map[uint32]map[clobtypes.OrderId]bool
 		expectedExistInState               map[clobtypes.OrderId]bool
 		expectedOrderOnMemClob             map[clobtypes.OrderId]bool
@@ -2568,7 +2567,6 @@ func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
 					prices.NewMarketPriceUpdate(0, 5_000_300_000), // Trigger the conditional order
 				},
 			},
-			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
 
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {
@@ -2689,28 +2687,10 @@ func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
 				}
 			}
 
-			// Advance to block 3 to process the operations from block 2
 			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
-			// Advance to next block
-			deliverTxsOverride = make([][]byte, 0)
-			deliverTxsOverride = append(deliverTxsOverride, constants.ValidEmptyMsgProposedOperationsTxBytes)
-
-			if tc.priceUpdateForSecondBlock != nil {
-				txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
-				require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForSecondBlock))
-				priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
-				require.NoError(t, err)
-				deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
-			}
-
-			ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: deliverTxsOverride,
-			})
-
-			// Verify conditional order triggering for blocks 3 and 4
+			// Verify conditional order triggering for block 3
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[3]; ok {
-				// We check this after advancing to block 4, so the operations from block 3 have been processed
 				for orderId, triggered := range expectedTriggeredOrders {
 					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 3)
 				}
