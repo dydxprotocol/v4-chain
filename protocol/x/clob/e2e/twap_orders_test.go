@@ -295,3 +295,268 @@ func TestTWAPOrderWithMatchingOrders(t *testing.T) {
 	require.True(t, found2, "Third suborder should exist in trigger store")
 	require.Equal(t, ctx.BlockTime().Unix()+int64(twapOrder.TwapParameters.Interval), triggerTime)
 }
+
+func TestTwapOrderCancellation(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Create a TWAP order with:
+	// - 300 second duration (5 minutes)
+	// - 60 second interval
+	// This will create 5 suborders total
+	twapOrder := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: constants.Alice_Num0,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_Twap,
+				ClobPairId:   0,
+			},
+			Side:     clobtypes.Order_SIDE_BUY,
+			Quantums: 100_000_000_000, // 10 BTC
+			Subticks: 0,               // market TWAP order
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+				GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 300), // 5 minutes from now
+			},
+			TwapParameters: &clobtypes.TwapParameters{
+				Duration:       300, // 5 minutes
+				Interval:       60,  // 1 minute
+				PriceTolerance: 0,   // 0% slippage off oracle price
+			},
+		},
+	)
+
+	// Place the TWAP order
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, twapOrder) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Advance block time to trigger first suborder
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 60),
+	})
+
+	// Verify first suborder was created
+	suborderId := clobtypes.OrderId{
+		SubaccountId: constants.Alice_Num0,
+		ClientId:     0,
+		OrderFlags:   clobtypes.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
+	}
+	suborder, found := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
+	require.True(t, found, "First suborder should exist in memclob")
+	require.Equal(t, uint64(20_000_000_000), suborder.Quantums) // 100B/5 = 20B per leg
+
+	// Cancel the TWAP order
+	cancelMsg := clobtypes.MsgCancelOrder{
+		OrderId: twapOrder.Order.OrderId,
+		GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlockTime{
+			// 5 minutes and 30 seconds from now
+			GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 330),
+		},
+	}
+
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, cancelMsg) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Advance block to deliver cancellation message
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
+	// Verify TWAP order was removed from state
+	_, found = tApp.App.ClobKeeper.GetTwapOrderPlacement(
+		ctx,
+		twapOrder.Order.OrderId,
+	)
+	require.False(t, found, "TWAP order placement should be removed")
+
+	// Verify suborder was removed from memclob
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
+	require.False(t, found, "Suborder should be removed from memclob")
+
+	// Verify no more suborders will be triggered
+	tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 60),
+	})
+
+	// Verify no new suborder was created
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
+	require.False(t, found, "No new suborder should be created after cancellation")
+}
+
+func TestTwapOrderWithThreeSuborders(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Create a TWAP order with:
+	// - 300 second duration
+	// - 100 second interval
+	// This will create exactly 3 suborders
+	twapOrder := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: constants.Alice_Num0,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_Twap,
+				ClobPairId:   0,
+			},
+			Side:     clobtypes.Order_SIDE_BUY,
+			Quantums: 90_000_000_000,
+			Subticks: 0,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+				GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 90),
+			},
+			TwapParameters: &clobtypes.TwapParameters{
+				Duration:       300,
+				Interval:       100,
+				PriceTolerance: 0,
+			},
+		},
+	)
+
+	// Place the TWAP order
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, twapOrder) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Advance block
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// Verify the parent TWAP order state
+	twapOrderPlacement, found := tApp.App.ClobKeeper.GetTwapOrderPlacement(
+		ctx,
+		twapOrder.Order.OrderId,
+	)
+	require.True(t, found, "TWAP order placement should exist in state")
+	require.Equal(t, twapOrder.Order, twapOrderPlacement.Order)
+	require.Equal(t, uint32(2), twapOrderPlacement.RemainingLegs) // 3 original legs - 1 triggered
+	require.Equal(t, uint64(90_000_000_000), twapOrderPlacement.RemainingQuantums)
+
+	// Verify first suborder was created
+	suborderId := clobtypes.OrderId{
+		SubaccountId: constants.Alice_Num0,
+		ClientId:     0,
+		OrderFlags:   clobtypes.OrderIdFlags_TwapSuborder,
+		ClobPairId:   0,
+	}
+	suborder, found := tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
+	require.True(t, found, "First suborder should exist in memclob")
+	require.Equal(t, uint64(30_000_000_000), suborder.Quantums) // 90B/3 = 30B per leg
+
+	// Advance block time by 100 seconds to trigger second suborder
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 100),
+	})
+
+	// Verify second suborder was created
+	suborder, found = tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
+	require.True(t, found, "Second suborder should exist in memclob")
+	require.Equal(t, uint64(45_000_000_000), suborder.Quantums) // 90B/2 = 45B per leg
+
+	// Advance block time by 100 seconds to trigger third suborder
+	ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 100),
+	})
+
+	// Verify third suborder was created
+	suborder, found = tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
+	require.True(t, found, "Third suborder should exist in memclob")
+	require.Equal(t, uint64(90_000_000_000), suborder.Quantums) // 90B/1 = 90B for last leg
+
+	// Advance block time by 100 seconds to complete TWAP order
+	ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 100),
+	})
+
+	// Verify TWAP order was removed from state
+	_, found = tApp.App.ClobKeeper.GetTwapOrderPlacement(
+		ctx,
+		twapOrder.Order.OrderId,
+	)
+	require.False(t, found, "TWAP order placement should be removed")
+
+	// Verify no more suborders will be triggered
+	_, found = tApp.App.ClobKeeper.MemClob.GetOrder(suborderId)
+	require.False(t, found, "No new suborder should be created after completion")
+
+	// Verify no entries in trigger store
+	_, _, found = tApp.App.ClobKeeper.GetTwapTriggerPlacement(
+		ctx,
+		suborderId,
+	)
+	require.False(t, found, "No trigger placement should exist after completion")
+}
+
+func TestTwapOrderStatefulOrderCount(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Create a TWAP order with:
+	// - 300 second duration
+	// - 100 second interval
+	// This will create exactly 3 suborders
+	twapOrder := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: constants.Alice_Num0,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_Twap,
+				ClobPairId:   0,
+			},
+			Side:     clobtypes.Order_SIDE_BUY,
+			Quantums: 90_000_000_000,
+			Subticks: 0,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+				GoodTilBlockTime: uint32(ctx.BlockTime().Unix() + 300),
+			},
+			TwapParameters: &clobtypes.TwapParameters{
+				Duration:       300,
+				Interval:       100,
+				PriceTolerance: 0,
+			},
+		},
+	)
+
+	// Place the TWAP order
+	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, twapOrder) {
+		resp := tApp.CheckTx(checkTx)
+		require.True(t, resp.IsOK(), "Expected CheckTx to succeed. Response: %+v", resp)
+	}
+
+	// Advance block
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// Verify stateful order count is 1 (only the parent TWAP order)
+	statefulOrderCount := tApp.App.ClobKeeper.GetStatefulOrderCount(ctx, constants.Alice_Num0)
+	require.Equal(t, uint32(1), statefulOrderCount, "Stateful order count should be 1")
+
+	// Advance block time by 100 seconds to trigger second suborder
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 100),
+	})
+
+	// Verify stateful order count is still 1
+	statefulOrderCount = tApp.App.ClobKeeper.GetStatefulOrderCount(ctx, constants.Alice_Num0)
+	require.Equal(t, uint32(1), statefulOrderCount, "Stateful order count should remain 1")
+
+	// Advance block time by 100 seconds to trigger third suborder
+	ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 100),
+	})
+
+	// Verify stateful order count is still 1
+	statefulOrderCount = tApp.App.ClobKeeper.GetStatefulOrderCount(ctx, constants.Alice_Num0)
+	require.Equal(t, uint32(1), statefulOrderCount, "Stateful order count should remain 1")
+
+	// Advance block time by 100 seconds to complete TWAP order
+	ctx = tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{
+		BlockTime: ctx.BlockTime().Add(time.Second * 100),
+	})
+
+	// Verify stateful order count is 0 after completion
+	statefulOrderCount = tApp.App.ClobKeeper.GetStatefulOrderCount(ctx, constants.Alice_Num0)
+	require.Equal(t, uint32(0), statefulOrderCount, "Stateful order count should be 0 after completion")
+}
