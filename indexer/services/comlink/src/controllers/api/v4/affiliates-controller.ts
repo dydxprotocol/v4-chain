@@ -401,6 +401,7 @@ router.post(
   },
 );
 
+// Keplr wallet does uses a completely different signature format, so we need to have a separate endpoint for it
 router.post(
   '/referralCode-keplr',
   ...UpdateReferralCodeSchema(false),
