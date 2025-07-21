@@ -20,7 +20,7 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { AccountVerificationRequiredAction, validateSignature, validateSignatureKeplr } from '../../../helpers/compliance/compliance-utils';
 import { InvalidParamError, NotFoundError, UnexpectedServerError } from '../../../lib/errors';
-import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
+import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { UpdateReferralCodeSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -171,13 +171,17 @@ class AffiliatesController extends Controller {
 
     const subaccountId = subAccount[0].id;
 
-    // there are assumptions here that
-    // 1. There is only one entry per subaccountId
-    // 2. There is already an entry for the subaccountId
-    await SubaccountUsernamesTable.update({
-      username: newCode,
-      subaccountId,
-    });
+    try {
+      // there are assumptions here that
+      // 1. There is only one entry per subaccountId
+      // 2. There is already an entry for the subaccountId
+      await SubaccountUsernamesTable.update({
+        username: newCode,
+        subaccountId,
+      });
+    } catch (error) {
+      throw new UnexpectedServerError('Failed to update referral code - please try again later');
+    }
 
     return {
       referralCode: newCode,
@@ -431,17 +435,12 @@ router.post(
       }
 
       const controller: AffiliatesController = new AffiliatesController();
-      try {
-        const response: CreateReferralCodeResponse = await controller.updateCode({
-          address,
-          newCode,
-        });
-        return res.send(response);
+      const response: CreateReferralCodeResponse = await controller.updateCode({
+        address,
+        newCode,
+      });
+      return res.send(response);
 
-      } catch (error) {
-        // catch any database errors
-        return create4xxResponse(res, 'Failed to update referral code - please try again later');
-      }
     } catch (error) {
       return handleControllerError(
         'AffiliatesController POST /referralCode-keplr',
