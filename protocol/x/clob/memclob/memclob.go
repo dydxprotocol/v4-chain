@@ -586,6 +586,16 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				)
 			}
 		}
+		// If stateful reduce-only taker order was resized to zero (position closed), add Order Removal
+		// to operations queue to remove the order from state.
+		if takerOrderStatus.OrderStatus == types.ReduceOnlyResized && order.IsStatefulOrder() {
+			if !m.operationsToPropose.IsOrderRemovalInOperationsQueue(order.OrderId) {
+				m.operationsToPropose.MustAddOrderRemovalToOperationsQueue(
+					order.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
+				)
+			}
+		}
 		return orderSizeOptimisticallyFilledFromMatchingQuantums, takerOrderStatus.OrderStatus, offchainUpdates, nil
 	}
 

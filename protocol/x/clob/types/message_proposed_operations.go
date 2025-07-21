@@ -40,12 +40,8 @@ func (msg *MsgProposedOperations) ValidateBasic() error {
 					orderId,
 				)
 			case OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
-				// TODO: remove this case when reduce-only orders are enabled.
-				return errorsmod.Wrapf(
-					ErrInvalidMsgProposedOperations,
-					"order removals for invalid reduce-only orders are not allowed. Reduce-only orders"+
-						" are not currently supported.",
-				)
+				// Reduce-only order removals are now supported.
+				// Validation will be performed in PersistOrderRemovalToState.
 			}
 
 		default:
