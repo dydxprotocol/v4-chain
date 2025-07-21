@@ -18,7 +18,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { AccountVerificationRequiredAction, validateSignature } from '../../../helpers/compliance/compliance-utils';
+import { AccountVerificationRequiredAction, validateSignature, validateSignatureKeplr } from '../../../helpers/compliance/compliance-utils';
 import { InvalidParamError, NotFoundError, UnexpectedServerError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -350,7 +350,7 @@ router.get(
 
 router.post(
   '/referralCode',
-  ...UpdateReferralCodeSchema,
+  ...UpdateReferralCodeSchema(true),
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
@@ -386,8 +386,58 @@ router.post(
       return res.send(response);
     } catch (error) {
       return handleControllerError(
-        'AffiliatesController POST /code',
-        'Affiliates code error',
+        'AffiliatesController POST /referralCode',
+        'Affiliates referral code error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.create_code.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.post(
+  '/referralCode-keplr',
+  ...UpdateReferralCodeSchema(false),
+  handleValidationErrors,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+
+    const {
+      address,
+      newCode,
+      signedMessage,
+      pubKey,
+    }: CreateReferralCodeRequest = req.body;
+
+    try {
+      const failedValidationResponse = await validateSignatureKeplr(
+        res,
+        address,
+        newCode,
+        signedMessage,
+        pubKey,
+      );
+      if (failedValidationResponse) {
+        return failedValidationResponse;
+      }
+
+      const controller: AffiliatesController = new AffiliatesController();
+      const response: CreateReferralCodeResponse = await controller.updateCode({
+        address,
+        newCode,
+      });
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'AffiliatesController POST /referralCode-keplr',
+        'Affiliates referral code error',
         error,
         req,
         res,

@@ -286,7 +286,7 @@ export const RegisterTokenValidationSchema = [
     }),
 ];
 
-export const UpdateReferralCodeSchema = checkSchema({
+export const UpdateReferralCodeSchema = (withTimestamp: boolean = true) => checkSchema({
   address: {
     in: ['body'],
     ...addressSchema,
@@ -309,11 +309,13 @@ export const UpdateReferralCodeSchema = checkSchema({
     isString: true,
     errorMessage: 'pubKey must be a valid string',
   },
-  timestamp: {
-    in: ['body'],
-    isInt: true,
-    errorMessage: 'timestamp must be a valid integer',
-  },
+  ...(withTimestamp ? {
+    timestamp: {
+      in: ['body'],
+      isInt: true,
+      errorMessage: 'timestamp must be a valid integer',
+    },
+  } : {}),
 });
 
 function validateReferralCode(code: string): boolean {

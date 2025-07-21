@@ -264,6 +264,41 @@ describe('affiliates-controller#V4', () => {
       }]);
     });
 
+    it('should update a referral code for a valid address for keplr if it already exists', async () => {
+      const newCode = 'NewCode12345';
+      const newRequest = mockCreateCodeRequest(newCode);
+      const response2: request.Response = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/affiliates/referralCode-keplr',
+        body: {
+          ...newRequest,
+          // these two are not used in the keplr version of the request
+          timestamp: undefined,
+          action: undefined,
+        },
+        expectedStatus: 200,
+      });
+
+      expect(response2.body).toEqual({
+        referralCode: newCode,
+      });
+
+      // query the database to check if the referral code was updated
+      const usernameRow = await SubaccountUsernamesTable.findByUsername(newCode);
+      expect(usernameRow).toEqual({
+        username: newCode,
+        subaccountId: defaultSubaccountId,
+      });
+
+      const usernameRowByAddress = await SubaccountUsernamesTable.findByAddress([
+        testConstants.defaultWallet.address,
+      ]);
+      expect(usernameRowByAddress).toEqual([{
+        username: newCode,
+        address: testConstants.defaultWallet.address,
+      }]);
+    });
+
     it('should fail to create a referral code for an invalid address', async () => {
       const invalidAddress = 'invalidAddress';
       const newCode = 'NewCode123';
