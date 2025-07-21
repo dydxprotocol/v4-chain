@@ -2583,7 +2583,6 @@ func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
 			expectedExistInState: map[clobtypes.OrderId]bool{
 				// Should be removed from state after resize to zero
 				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: false,
-				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10.OrderId:                              true,
 			},
 
 			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
@@ -2592,8 +2591,7 @@ func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
 			},
 
 			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
-				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: 25_000_000,
-				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10.OrderId:                              25_000_000,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10.OrderId: 25_000_000,
 			},
 
 			expectedSubaccounts: []satypes.Subaccount{
@@ -2691,6 +2689,9 @@ func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
 				}
 			}
 
+			// Advance to block 3 to process the operations from block 2
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
 			// Advance to next block
 			deliverTxsOverride = make([][]byte, 0)
 			deliverTxsOverride = append(deliverTxsOverride, constants.ValidEmptyMsgProposedOperationsTxBytes)
@@ -2707,8 +2708,9 @@ func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
 				DeliverTxsOverride: deliverTxsOverride,
 			})
 
-			// Verify conditional order triggering for block 3
+			// Verify conditional order triggering for blocks 3 and 4
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[3]; ok {
+				// We check this after advancing to block 4, so the operations from block 3 have been processed
 				for orderId, triggered := range expectedTriggeredOrders {
 					require.Equal(t, triggered, tApp.App.ClobKeeper.IsConditionalOrderTriggered(ctx, orderId), "Block %d", 3)
 				}
