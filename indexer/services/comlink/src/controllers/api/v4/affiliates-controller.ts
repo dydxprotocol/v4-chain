@@ -20,7 +20,7 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { AccountVerificationRequiredAction, validateSignature, validateSignatureKeplr } from '../../../helpers/compliance/compliance-utils';
 import { InvalidParamError, NotFoundError, UnexpectedServerError } from '../../../lib/errors';
-import { handleControllerError } from '../../../lib/helpers';
+import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { UpdateReferralCodeSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -431,11 +431,17 @@ router.post(
       }
 
       const controller: AffiliatesController = new AffiliatesController();
-      const response: CreateReferralCodeResponse = await controller.updateCode({
-        address,
-        newCode,
-      });
-      return res.send(response);
+      try {
+        const response: CreateReferralCodeResponse = await controller.updateCode({
+          address,
+          newCode,
+        });
+        return res.send(response);
+
+      } catch (error) {
+        // catch any database errors
+        return create4xxResponse(res, 'Failed to update referral code - please try again later');
+      }
     } catch (error) {
       return handleControllerError(
         'AffiliatesController POST /referralCode-keplr',
