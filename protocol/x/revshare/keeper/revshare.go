@@ -220,24 +220,29 @@ func (k Keeper) GetAllRevShares(
 	}
 
 	var orderRouterRevShares []types.RevShare
+	netFeesSubRevenueShare := netFees
 	// No affiliate fees shared, so we can generate order router rev shares
 	if affiliateRevShares == nil {
 		orderRouterRevShares, err = k.getOrderRouterRevShares(ctx, fill, takerFees, makerFees)
 		if err != nil {
 			return types.RevSharesForFill{}, err
 		}
+		for _, revShare := range orderRouterRevShares {
+			netFeesSubRevenueShare.Sub(netFeesSubRevenueShare, revShare.QuoteQuantums)
+		}
+	} else {
+		netFeesSubRevenueShare = new(big.Int).Sub(netFees, affiliateFeesShared)
 	}
 
-	netFeesSubAffiliateFeesShared := new(big.Int).Sub(netFees, affiliateFeesShared)
-	if netFeesSubAffiliateFeesShared.Sign() <= 0 {
+	if netFeesSubRevenueShare.Sign() <= 0 {
 		return types.RevSharesForFill{}, types.ErrAffiliateFeesSharedGreaterThanOrEqualToNetFees
 	}
 
-	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubAffiliateFeesShared)
+	unconditionalRevShares, err := k.getUnconditionalRevShares(ctx, netFeesSubRevenueShare)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
-	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubAffiliateFeesShared)
+	marketMapperRevShares, err := k.getMarketMapperRevShare(ctx, fill.MarketId, netFeesSubRevenueShare)
 	if err != nil {
 		return types.RevSharesForFill{}, err
 	}
