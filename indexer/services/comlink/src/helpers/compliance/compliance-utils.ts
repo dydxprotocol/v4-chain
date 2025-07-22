@@ -8,7 +8,10 @@ import { verifyADR36Amino } from '@keplr-wallet/cosmos';
 import express from 'express';
 import { DateTime } from 'luxon';
 
-import { GEOBLOCK_REQUEST_TTL_SECONDS, DYDX_ADDRESS_PREFIX } from '../../lib/constants';
+import {
+  WRITE_REQUEST_TTL_SECONDS,
+  DYDX_ADDRESS_PREFIX,
+} from '../../lib/constants';
 import { create4xxResponse } from '../../lib/helpers';
 
 export enum ComplianceAction {
@@ -19,6 +22,7 @@ export enum ComplianceAction {
 
 export enum AccountVerificationRequiredAction {
   REGISTER_TOKEN = 'REGISTER_TOKEN',
+  UPDATE_CODE = 'UPDATE_CODE',
 }
 
 export function getGeoComplianceReason(
@@ -75,21 +79,26 @@ export async function validateSignature(
     );
   }
 
-  // Verify the timestamp is within GEOBLOCK_REQUEST_TTL_SECONDS seconds of the current time
+  // Verify the timestamp is within WRITE_REQUEST_TTL_SECONDS seconds of the current time
   const now = DateTime.now().toSeconds();
-  if (Math.abs(now - timestamp) > GEOBLOCK_REQUEST_TTL_SECONDS) {
+  if (Math.abs(now - timestamp) > WRITE_REQUEST_TTL_SECONDS) {
     return create4xxResponse(
       res,
-      `Timestamp is not within the valid range of ${GEOBLOCK_REQUEST_TTL_SECONDS} seconds`,
+      `Timestamp is not within the valid range of ${WRITE_REQUEST_TTL_SECONDS} seconds`,
     );
   }
 
   // Prepare the message for verification
-  const messageToSign: string = `${message}:${action}"${currentStatus || ''}:${timestamp}`;
+  const messageToSign: string = `${message}:${action}"${
+    currentStatus || ''
+  }:${timestamp}`;
   const messageHash: Uint8Array = sha256(Buffer.from(messageToSign));
-  const signedMessageArray: Uint8Array = new Uint8Array(Buffer.from(signedMessage, 'base64'));
-  const signature: ExtendedSecp256k1Signature = ExtendedSecp256k1Signature
-    .fromFixedLength(signedMessageArray);
+  const signedMessageArray: Uint8Array = new Uint8Array(
+    Buffer.from(signedMessage, 'base64'),
+  );
+  const signature: ExtendedSecp256k1Signature = ExtendedSecp256k1Signature.fromFixedLength(
+    signedMessageArray,
+  );
 
   // Verify the signature
   const isValidSignature: boolean = await Secp256k1.verifySignature(
@@ -98,10 +107,7 @@ export async function validateSignature(
     pubkeyArray,
   );
   if (!isValidSignature) {
-    return create4xxResponse(
-      res,
-      'Signature verification failed',
-    );
+    return create4xxResponse(res, 'Signature verification failed');
   }
 
   return undefined;
