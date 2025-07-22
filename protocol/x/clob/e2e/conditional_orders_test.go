@@ -2585,7 +2585,8 @@ func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
 
 			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
 				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: false,
-				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10.OrderId:                              false, // Fully filled
+				// Fully filled
+				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10.OrderId: false,
 			},
 
 			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
@@ -2699,7 +2700,15 @@ func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
 			// Verify expectations
 			for orderId, exists := range tc.expectedOrderOnMemClob {
 				_, existsOnMemclob := tApp.App.ClobKeeper.MemClob.GetOrder(orderId)
-				require.Equal(t, exists, existsOnMemclob, "Order %v expected on memclob: %v, actual: %v", orderId, exists, existsOnMemclob)
+				require.Equal(
+					t,
+					exists,
+					existsOnMemclob,
+					"Order %v expected on memclob: %v, actual: %v",
+					orderId,
+					exists,
+					existsOnMemclob,
+				)
 			}
 
 			for orderId, expectedFillAmount := range tc.expectedOrderFillAmount {
@@ -2713,7 +2722,15 @@ func TestConditionalIOCReduceOnlyOrders(t *testing.T) {
 			// Verify orders are removed from state
 			for orderId, expectedExists := range tc.expectedExistInState {
 				_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, orderId)
-				require.Equal(t, expectedExists, found, "Order %v expected exists in state: %v, actual: %v", orderId, expectedExists, found)
+				require.Equal(
+					t,
+					expectedExists,
+					found,
+					"Order %v expected exists in state: %v, actual: %v",
+					orderId,
+					expectedExists,
+					found,
+				)
 			}
 
 			for _, subaccount := range tc.expectedSubaccounts {
